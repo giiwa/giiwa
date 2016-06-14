@@ -1,0 +1,15 @@
+
+<div class='head'>$lang.get('demo.detail.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/demo' >$lang.get('a.demo')</a>
+	<a href='/admin/demo/detail?id=$id' class='selected'>$lang.get('a.detail')</a>
+</div>
+
+<p><b>id:</b>$b.id</p>
+<p><b>name:</b>$!b.name</p>
+<p><b>name:</b><pre>$!b.content</pre></p>
+<p><b>updated:</b>$lang.format($b.updated, 'yyyy-MM-dd HH:mm:ss')</p>
+<p><b>created:</b>$lang.format($b.created, 'yyyy-MM-dd HH:mm:ss')</p>

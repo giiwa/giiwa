@@ -1,0 +1,227 @@
+.fileupload {
+	display: inline-block;
+	position: relative;
+}
+
+.fileupload .fileupload-file {
+	width: 100%;
+	height: 100%;
+	display: inline-block;
+	position: absolute;
+	overflow: hidden;
+	left: 0;
+	top: 0;
+}
+
+.fileupload .fileupload-btns {
+	margin: 20px;
+	position: relative;
+	width: initial !important;
+}
+
+.fileupload .btn {
+	display: inline-block;
+	margin-bottom: 0;
+	font-weight: 400;
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	background-image: none;
+	border: 1px solid transparent;
+	white-space: nowrap;
+	padding: 6px 12px;
+	font-size: 14px;
+	line-height: 1.42857143;
+	border-radius: 4px;
+	-webkit-user-select: none;
+	overflow: hidden;
+	position: relative;
+	color: #fff;
+	background-color: #009df5;
+	-webkit-transition: 0.5s ease;
+	-moz-transition: 0.5s ease;
+	-o-transition: 0.5s ease;
+	-ms-transition: 0.5s ease;
+	transition: 0.5s ease;
+	text-decoration: none;
+}
+
+.fileupload a.btn {
+	padding: 3px 12px;
+}
+
+.fileupload .btn:hover {
+	background-color: #1f5dc4;
+	border-color: #1F5DC4;
+	box-shadow: 0px 0px 6px #4d90fe;
+}
+
+.fileupload .fileupload-file input {
+	position: absolute;
+	left: -900%;
+	top: -500%;
+	padding: 0;
+	margin: 0;
+	opacity: 0.01;
+	cursor: pointer;
+	zoom: 10;
+-moz-transform: scale(10);
+-moz-transform-origin: top left;
+}
+
+.fileupload  .state {
+	display: none;
+	padding: 20px;
+	background: #ffd;
+	border: 1px solid #dd9;
+	color: #a94442;
+	margin: 20px;
+	border-radius: 4px;
+}
+
+.fileupload .file-item {
+	margin: 2px 0;
+	display: inline-block;
+}
+
+.fileupload .fileupload-progress {
+	width: 200px;
+	height: 22px;
+	background: #aaa;
+	display: inline-block;
+	position: relative;
+	overflow: hidden;
+	background-color: #C0BBBB;
+	border-radius: 4px;
+	-webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, .4);
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, .4);
+	margin: 2px 10px;
+	float: left;
+	-webkit-transition: width .6s ease;
+	transition: width .6s ease;
+}
+
+.fileupload .fileupload-cancel,.fileupload .fileupload-resume {
+	float: left;
+	line-height: 22px;
+	display: inline-block;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	-webkit-transition: 0.5s ease;
+	-moz-transition: 0.5s ease;
+	-o-transition: 0.5s ease;
+	-ms-transition: 0.5s ease;
+	transition: 0.5s ease;
+	font-family: inherit;
+	box-sizing: border-box;
+	font-size: 1rem;
+	text-align: center;
+	border: none;
+	text-shadow: none;
+	-webkit-border-radius: 6.4px;
+	-moz-border-radius: 6.4px;
+	border-radius: 6.4px;
+	-webkit-border-radius: 0.4rem;
+	-moz-border-radius: 0.4rem;
+	border-radius: 0.4rem;
+	vertical-align: middle;
+	cursor: pointer;
+	background-color: #009df5;
+	color: #fff;
+	padding: 0px 10px;
+	margin: 2px 0;
+	text-decoration: none;
+}
+
+.fileupload .fileupload-cancel:hover,.fileupload .fileupload-resume:hover
+	{
+	background-color: #1B65A2;
+}
+
+.fileupload .fileupload-cancel:active,.fileupload .fileupload-resume:active
+	{
+	background-color: #15446B;
+}
+
+.fileupload .fileupload-resume {
+	display: none;
+}
+
+.fileupload .fileupload-filename {
+	line-height: 26px;
+	height: 26px;
+	display: inline-block;
+	float: left;
+	width: 150px;
+	overflow: hidden;
+	word-break: break-all;
+	-webkit-transition: width .6s ease;
+	transition: width .6s ease;
+}
+
+.fileupload .upload-done .fileupload-filename {
+	width: initial;
+}
+
+.fileupload .fileupload-progress .fileupload-bar {
+	display: inline-block;
+	position: relative;
+	left: 0;
+	float: left;
+	height: 100%;
+	font-size: 12px;
+	line-height: 20px;
+	text-align: center;
+	background-color: #758799;
+	-webkit-box-shadow: inset 0 0 2px rgba(0, 0, 0, .15);
+	box-shadow: inset 0 0 2px rgba(0, 0, 0, .15);
+	-webkit-transition: width .6s ease;
+	transition: width .6s ease;
+}
+
+.fileupload .upload-done .fileupload-progress {
+	width: 100px;
+}
+
+.fileupload .fileupload-message {
+	position: absolute;
+	left: 0;
+	top: 5px;
+	font-size: 11px;
+	width: 100%;
+	text-align: center;
+	color: #fff;
+	line-height: 13px;
+}
+
+.fileupload .notes {
+	margin: 20px;
+	background-color: #fff;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	-webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+	box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+	padding: 20px;
+	border-color: #ddd;
+}
+
+.fileupload .btn-upload input {
+	opacity: 0.01;
+	position: absolute;
+	left: -;
+	top: 0;
+	font-size: 0;
+	direction: ltr;
+	cursor: pointer;
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+.fileupload a.disabled {
+	background: #eee !important;
+	color: #aaa !important;
+	box-shadow: none !important;
+	border-color: #aaa !important;
+}

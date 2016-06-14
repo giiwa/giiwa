@@ -1,0 +1,110 @@
+<project name="giiwa" default="package" basedir=".">
+
+	<property file="src/main/webapp/modules/default/module.ini" />
+
+	<tstamp>
+		<format property="TODAY" pattern="yyMMdd" locale="zh,CN" />
+		<format property="BUILDNO" pattern="yyMMddHHmm" locale="zh,CN" />
+	</tstamp>
+
+	<target name="package" description="build sever all" depends="tar, zip">
+	</target>
+
+	<target name="zip" description="build sever all">
+		<delete file="target/upgrade" />
+
+		<replaceregexp byline="true">
+			<fileset file="target/giiwa-${version}/modules/default/view/release.txt" />
+			<regexp pattern="^build=\d+" />
+			<substitution expression="build=${BUILDNO}" />
+		</replaceregexp>
+
+		<replaceregexp byline="true">
+			<fileset file="target/giiwa-${version}/modules/default/module.ini" />
+			<regexp pattern="^build=\d+" />
+			<substitution expression="build=${BUILDNO}" />
+		</replaceregexp>
+
+		<copy todir="target/upgrade">
+			<fileset dir="target/giiwa-${version}" />
+		</copy>
+
+		<copy todir="target/upgrade/modules/default/WEB-INF">
+			<fileset dir="target/giiwa-${version}/WEB-INF">
+				<exclude name="**/classes/**" />
+			</fileset>
+		</copy>
+
+		<zip destfile="target/giiwa-${version}-upgrade-${BUILDNO}.zip">
+			<fileset dir="target/upgrade/modules/default">
+				<exclude name="**/WEB-INF/classes/**" />
+				<exclude name="**/model/com/**" />
+			</fileset>
+		</zip>
+
+		<copy todir="../archives">
+			<fileset file="target/giiwa-${version}-upgrade-${BUILDNO}.zip" />
+		</copy>
+
+	</target>
+
+	<target name="tar" description="build sever all">
+		<delete file="target/giiwa" />
+
+		<replaceregexp byline="true">
+			<fileset file="target/giiwa-${version}/modules/default/view/release.txt" />
+			<regexp pattern="^build=\d+" />
+			<substitution expression="build=${BUILDNO}" />
+		</replaceregexp>
+
+		<replaceregexp byline="true">
+			<fileset file="target/giiwa-${version}/modules/default/module.ini" />
+			<regexp pattern="^build=\d+" />
+			<substitution expression="build=${BUILDNO}" />
+		</replaceregexp>
+
+		<copy todir="target/giiwa">
+			<fileset dir="target/../tomcat" />
+		</copy>
+
+		<copy todir="target/giiwa/giiwa">
+			<fileset dir="target/giiwa-${version}">
+				<exclude name="**/modules/default/WEB-INF" />
+			</fileset>
+		</copy>
+
+		<tar destfile="target/giiwa-${version}.tar">
+			<tarfileset dir="target/giiwa" prefix="giiwa">
+				<exclude name="**/WEB-INF/classes/**" />
+				<exclude name="**/model/com/**" />
+			</tarfileset>
+			
+			<tarfileset dir="target/giiwa" prefix="giiwa" filemode="755">
+				<include name="**/*.sh" />
+				<include name="install" />
+			</tarfileset>
+		</tar>
+
+		<gzip destfile="target/giiwa-${version}-${BUILDNO}.tar.gz" src="target/giiwa-${version}.tar" />
+
+		<delete file="target/giiwa-${version}.tar" />
+
+		<copy todir="../archieves">
+			<fileset file="target/giiwa-${version}-${BUILDNO}.tar.gz" />
+		</copy>
+
+	</target>
+
+	<target name="help" description="display the Help message">
+		<echo message="Quick Start web application" />
+		<echo message="===========================" />
+		<echo />
+		<echo message="Main targets:" />
+		<echo />
+		<echo message="deploy                 copy all to /opt/d/joe/www" />
+		<echo message="help                  display the Help message" />
+		<echo />
+		<echo />
+	</target>
+
+</project>

@@ -1,0 +1,45 @@
+.chart {
+	position: relative;
+}
+
+.chart .toolbar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 10;
+}
+
+.chart .toolbar a {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	background: #f1f1f1 url(/images/pie.png) no-repeat 5px 5px;
+	background-size: 16px;
+	padding: 5px;
+	border: 1px solid #ddd;
+	float: left;
+	margin: 0 1px;
+}
+
+.chart .toolbar a:hover {
+	border-color: #4d90fe !important;
+	outline: 0;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px
+		rgba(77, 144, 254, .6);
+	-moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px
+		rgba(77, 144, 254, .6);
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px
+		rgba(77, 144, 254, .6)
+}
+
+.chart .toolbar a.pie {
+	background-image: url(/images/pie.png);
+}
+
+.chart .toolbar a.bar {
+	background-image: url(/images/bar.png);
+}
+
+.chart .toolbar a.line {
+	background-image: url(/images/line.png);
+}

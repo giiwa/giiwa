@@ -1,0 +1,55 @@
+<div class='head'>$lang.get('role.index.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/role' class='selected'>$lang.get('a.role')</a>
+</div>
+
+#set($edit = $me.hasAccess('access.user.admin'))
+
+<table id='role-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>$lang.get('role.name')</th>
+			<th>$lang.get('role.memo')</th>
+#if($edit)
+			<th></th>
+#end			
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$f.id</td>
+		<td>$f.name</td>
+		<td>#if($f.memo)$f.memo#end</td>
+	#if($edit)
+		<td>
+			<a href="/admin/role/edit?id=$f.id">$lang.get('a.edit')</a>
+			<a href="javascript:;" onclick="_delete('$f.id', this)">$lang.get('a.delete')</a>
+		</td>
+	#end
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+<div class='btns'>
+#if($edit)
+	<a href='/admin/role/create'>$lang.get('a.create')</a>
+#end
+</div>
+
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post('/admin/role/delete', {id: id}, function(d){
+			$(o).parent().parent().remove();
+		})
+	}
+}
+</script>

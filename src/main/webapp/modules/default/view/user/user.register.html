@@ -1,0 +1,47 @@
+#parse('/user/head.html')
+
+	<div id='wrapper' class='register'>
+		<div id='head'>
+			<div class='center'>
+				<div class='logo'>$lang.get('site.logo')</div>
+			</div>
+		</div>
+
+		<div id="content">
+			<div class='center'>
+				<div class='outter'>
+					<div class='inner'>
+					<form method="post">
+					#if($message)<div class='message'>$message</div>#end
+						<div class="title">
+							<span class="lock"></span>$lang.get('user.register')
+						</div>
+						<div class="left">
+							<div><label><h3>$lang.get('user.name'):</h3><input type="text" name="name" value=""><g>$lang.get('user.name.note')</g></label></div>
+							<div><label><h3>$lang.get('user.nickname'):</h3><input type="text" name="nickname" value=""></label></div>
+							<div><label><h3>$lang.get('user.email'):</h3><input type="text" name="email" value=""><g>$lang.get('user.email.note')</g></label></div>
+							<div><label><h3>$lang.get('user.mobile'):</h3><input type="text" name="mobile" value=""><g>$lang.get('user.mobile.note')</g></label></div>
+							<div><label><h3>$lang.get('user.password'):</h3><input type="password" name="pwd" value=""></label></div>
+							<div class="btn">
+								<button type="submit">$lang.get('btn.register')</button>
+							</div>
+						</div>
+					</form>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id='foot'>
+			<div class='center'>
+				<div class='links'>$lang.get('user.foot.links')</div>
+				<div class='copyright'>
+					<span class='copyright'>$lang.get('copyright')</span> <span
+						class='designed'>$lang.get('designedby')</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+#parse('/user/foot.html')

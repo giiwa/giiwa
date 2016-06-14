@@ -1,0 +1,123 @@
+<div class='head'>$lang.get('oplog.index.title')</div>
+
+<div class='notes'>
+	$!lang.get('oplog.notes')
+</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/oplog' class='selected'>$lang.get('a.oplog')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/oplog' method='get' #if($currentpage>0) style='display:none' #end > 
+		<span><label><h3>$lang.get('log.starttime'):</h3>
+				<input type='text' name='starttime'
+				value=#if($starttime) '$starttime' #else '' #end /></label></span> <span><label><h3>$lang.get('log.endtime'):</h3>
+				<input type='text' name='endtime'
+				value=#if($endtime) '$endtime' #else '' #end /></label></span> 
+#if($me.hasAccess('access.log.admin'))
+				<span><label><h3>$lang.get('log.user'):</h3>
+				<input type='text' name='uid' value=#if($uid)
+				'$uid' #else '' #end /></label></span> 
+#end				
+				<span><label><h3>$lang.get('log.ip'):</h3>
+				<input type='text' name='ip' value=#if($ip) '$ip' #else '' #end /></label></span> <span><label><h3>$lang.get('log.system'):</h3>
+				<input type='text' name='_system' 
+				value=#if($_system) '$_system' #else '' #end /></label></span> <span><label><h3>$lang.get('log.module'):</h3>
+				<input type='text' name='_module' 
+				value=#if($_module) '$_module' #else '' #end /></label></span> 
+				<span><label><h3>$lang.get('log.type'):</h3>
+				<select name='type'>
+					<option value=''>$lang.get('log.type_all')</option>
+					<option value='0' #if($type == 0) selected #end>$lang.get('log.type_0')</option>
+					<option value='1' #if($type == 1) selected #end>$lang.get('log.type_1')</option>
+					<option value='2' #if($type == 2) selected #end>$lang.get('log.type_2')</option>
+				</select>
+			</label></span>
+
+		<span class='line'></span>
+		<span><label><h3>$lang.get('sort.by'):</h3>
+			<select name='sortby'>
+				<option value='created' #if($sortby == 'created') selected #end>$lang.get('log.created')</option>
+				<option value='system' #if($sortby == 'system') selected #end>$lang.get('log.system')</option>
+				<option value='module' #if($sortby == 'module') selected #end>$lang.get('log.module')</option>
+			</select>
+			<select name='sortby_type'>
+				<option value='' #if($sortby_type == '') selected #end>$lang.get('sortby.type_')</option>
+				<option value='desc' #if($sortby_type == 'desc') selected #end>$lang.get('sortby.type_desc')</option>
+			</select></label></span>
+
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+
+	<div class='s1tab #if($currentpage>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table id='log-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th class='date'>$lang.get('log.created')</th>
+			<th class='type'>$lang.get('log.type')</th>
+			<th class='user'>$lang.get('user.name')</th>
+			<th class='ip'>$lang.get('log.ip')</th>
+			<th class='system'>$lang.get('log.system')</th>
+			<th class='module'>$lang.get('log.module')</th>
+			<th class='op'>$lang.get('log.op')</th>
+			<th class='breif' style='width: 30%'>$lang.get('log.message')</th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach($f in $list)
+		<tr class='log_type_$f.type'>
+			<td>$lang.format($f.created, 'yy-MM-dd HH:mm:ss')</td>
+			<td class='type'>#if($f.type)$lang.get("log.type_$f.type")#end</td>
+			<td>#if($f.user)<i class='user'>$!f.user.nickname</i>#end</td>
+			<td>$!f.ip</td>
+			<td>$!f.system</td>
+			<td>#if($f.module)$lang.get("$f.module")#end</td>
+			<td>#if($f.op)$lang.get("$f.op")#end</td>
+			<td #if($f.message) onclick='_showmore(this);' class='more' #end> 
+				$!f.brief
+				<div class='more'>$!f.message</div>
+			</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+
+#parse('/widget/goto.page.html')
+
+<div class='btns'>
+	<a href='javascript:;' onclick='_deleteall();'>$lang.get('a.clean')</a>
+</div>
+
+<script>
+function _deleteall() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post('/admin/oplog/deleteall', {}, function(d) {
+			processing && processing.hide();
+			reload();
+		});
+	}
+}
+
+function _showmore(obj){
+	var e = $(obj);
+	e = e.parent().find('div.more');
+	if(e.css('display') == 'block') {
+		e.hide();
+	} else {
+		e.show();
+	}
+}
+
+$(function() {
+	$('#log-table').tablesorter();
+})
+</script>

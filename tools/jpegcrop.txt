@@ -1,0 +1,113 @@
+Release history
+===============
+
+2011.05:
+  - Show problematic JPEG files. Thank to Bob Friesenhahn for the hint.
+2011:
+  - Minor improvement by library update 8c.
+2010.01:
+  - New IJG JPEG 8 pre-release version code base.
+    New option "Save With Zoom" for "lossless" rescaling
+    of JPEG images.
+2009.04:
+  - New IJG JPEG 7 pre-release version code base.
+    The load interface is already capable for the coming
+    v8 smartscale extension.
+    v8 development will start immediately after v7 release.
+2008.08:
+  - Minor corrections and cosmetic changes.
+    Thanks for new program icons and images to Niko Lackovic.
+2004.06:
+  - Minor improvements and optimizations.
+2003.04:
+  - Right mouse button sets zoom level directly in zoom slider control.
+2003.01:
+  - New zoom control providing 16 zoom levels from 12.5% (1/8) to 200%
+    (2/1) in 12.5% (1/8) increments. Corresponds to new "djpeg -scale
+    N/8" feature for ALL N=1...16 in "Zoom Reload" mode.
+  - "Zoom Reload" and "16-Bit Dither (FixPix)" are now ON by default.
+    May change via Preferences.
+2002.03.12:
+  - Added 2:3 enlarged zoom view.
+2002.03:
+  - Added 1:2 enlarged zoom view. Uses a new unique JPEG specific
+    upsampling algorithm in "Zoom Reload" mode which is both fast
+    and of highest quality.
+2002.02.23:
+  - Jpegcrop now uses faster algorithms for downscale in "Zoom Reload"
+    mode. See http://jpegclub.org/jidctred/ for more information.
+2002.02:
+  - Added Progressive Coding and Grayscale Reduction options.
+2002.01:
+  - Added "Zoom Reload" option in "Preferences": Causes the image to
+    reload for resampled zoom view using "djpeg -scale" option.
+2001.05.13:
+  - "Define Frame Parameters" (right mouse button popup menu) extended
+    with direct crop specification. Allows exchange of crop parameters
+    via copy and paste with other applications such as cPicture.
+2001.05.07:
+  - Added Zoom View option to support handling of large images.
+2001.05:
+  - Added "Edit - Select All" menu command to reset selection.
+2001.02:
+  - Preserve File Time option added. Default is on.
+2001.01:
+  - Improved Exif operation. Avoid problem with the Fuji Exif Viewer.
+    Thanks to Sebastian Djupsjöbacka for the feedback.
+    See http://jpegclub.org/exifpatch.html for more information.
+2K.07:
+  - It is now possible to overwrite the original file. Use with care!
+    Thanks to Michael Timler for the hint.
+2K.06.10:
+  - 16-Bit Dither (FixPix) option added in "Preferences".
+    See http://sylvana.net/fixpix/ for explanation.
+    Thanks to Pierre Geneves for the suggestion.
+2K.06:
+  - "Crop Mask" mode added.
+    Thanks to Harald Margraf for the suggestion.
+2K.05:
+  - Lossless transformation (rotation, flipping, etc.) operations added.
+2K.04:
+  - Option "Endpoint Snap" added:
+    While dragging the frame snap the endpoint on the block grid.
+    This is recommended and is therefore the default setting now.
+    It results in complete MCUs in the output image, which is
+    advantageous under certain conditions.
+    Thanks to Jim for the suggestion.
+2K.01:
+  - Save and Load of Preferences added.
+99.11:
+  - Added "Preferences" Feature: Allows selection of "Entropy Coding
+    Method" (Huffmann default/Huffman optimized) and "Marker Copy
+    Option" (None/Comments/All).
+    Thanks to Jann Traschewski for the suggestion.
+99.07:
+  - Initial version.
+
+
+Jpegcrop - lossless cropping and rotation of JPEG files
+=======================================================
+
+You simply select a frame in the displayed image and save it as new file
+without recompression (see also right mouse popup menu).
+The left and upper border of the cropped frame are automatically
+restricted to the MCU boundaries (16*8 in most digicam pics, 16*16 or 8*8
+otherwise) by the program in all selection processes, so you see directly
+the effective crop area.  This automatic adaption is actually the main
+feature regarding the lossless cropping.  The visible block margin grid
+(toggle by menu/button) in the displayed image is also an important
+feature in this regard.
+
+In the status bar the actual selection coordinates are tracked, in the
+same format as used with the commandline "jpegtran" utility
+("-crop WxH+X+Y" : width, height, x-offset, y-offset).
+The "Jpegcrop" program uses the original (beta) transformation support
+code of the IJG software, with direct function calls.
+(Note that the "Save Frame As" action will cause the file to be re-read
+and processed in "jpegtran" manner which avoids the recompression.)
+
+The source code of the program (VC++ 6.0 with MFC) is freely available
+for download from the JPEGclub.org site.
+
+Happy Jpeging,
+Guido

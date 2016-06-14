@@ -1,0 +1,68 @@
+OptiPNG 0.5: Advanced PNG optimizer.
+Copyright (C) 2001-2006 Cosmin Truta.
+
+This program is open-source software. See LICENSE for more details.
+
+Portions of this software are based in part on the work of:
+  Jean-loup Gailly and Mark Adler (zlib)
+  Glenn Randers-Pehrson and the PNG Development Group (libpng)
+  Miyasaka Masaru (BMP support)
+  David Koblas (GIF support)
+
+Compiled with libpng version 1.2.8-optipng and zlib version 1.2.3-optipng
+
+Usage:
+    optipng [options] files ...
+Files:
+    Image files of type: PNG, BMP, GIF, or PNM
+Basic options:
+    -h, -help		show this help
+    -v			verbose mode / show copyright, version and build info
+    -o  <level>		optimization level (0-7)		default 2
+    -i  <type>		interlace type (0-1)			default <input>
+    -k, -keep		keep a backup of the modified files
+    -log		log messages to "optipng.log"
+    -q, -quiet		quiet mode
+Advanced options:
+    -zc <levels>	zlib compression levels (1-9)		default 9
+    -zm <levels>	zlib memory levels (1-9)		default 8
+    -zs <strategies>	zlib compression strategies (0-3)	default 0-3
+    -zw <window size>	zlib window size (32k,16k,8k,4k,2k,1k,512)
+    -f  <filters>	PNG delta filters (0-5)			default 0,5
+    -nb			no bit depth reduction
+    -nc			no color type reduction
+    -no			no output (simulation mode)
+    -np			no palette reduction
+    -nz			no IDAT recompression (also disable reductions)
+    -fix		enable error recovery
+    -force		write a new output, even if it is bigger than the input
+    -full		produce a full report on IDAT (might reduce speed)
+    -preserve		preserve file attributes if possible
+    --			stop option switch parsing
+Optimization level presets:
+    -o0  <=>  -nz
+    -o1  <=>  [apply libpng heuristics]		(1 trial)
+    -o2  <=>  -zc9 -zm8 -zs0-3 -f0,5		(8 trials)
+    -o3  <=>  -zc9 -zm8-9 -zs0-3 -f0,5		(16 trials)
+    -o4  <=>  -zc9 -zm8 -zs0-3 -f0-5		(24 trials)
+    -o5  <=>  -zc9 -zm8-9 -zs0-3 -f0-5		(48 trials)
+    -o6  <=>  -zc1-9 -zm8 -zs0-3 -f0-5		(120 trials)
+    -o7  <=>  -zc1-9 -zm8-9 -zs0-3 -f0-5	(240 trials)
+Examples:
+    optipng -o5 file.png			(moderately slow)
+    optipng -o7 file.png			(very slow)
+    optipng -i1 -zc4,9 -zs0-2 -f0-2,4-5 file1.png file2.png
+Notes:
+  - The options are cummulative; e.g.
+    -f0 -f5  <=>  -f0,5
+    -zs0 -zs1 -zs2  <=>  -zs0,1,2  <=>  -zs0-2
+  - The option letters are case-insensitive.
+  - The libpng heuristics consist of:
+    -o1  <=>  -zc9 -zm8 -zs0 -f0		(if PLTE is present)
+    -o1  <=>  -zc9 -zm8 -zs1 -f5		(if PLTE is not present)
+  - The zlib window size is set to a minimum that does not affect
+    the compression ratio.
+  - The output file will have all IDAT in a single chunk, even if
+    no recompression is performed.
+  - The most exhaustive search  -zc1-9 -zm1-9 -zs0-3 -f0-5  (1080 trials)
+    is offered only as an advanced option, and it is not recommended.
