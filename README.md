@@ -1,4 +1,5 @@
 <h1>Giiwa</h1>
+<p><img src="http://giiwa.org/images/giiwa.png"/></p>
 <p>Java Web framework, ripad development, provides module/plugin management, using MV in web developing.</p>
 <p><img src="http://giiwa.org/docs/images/mv.png"/></p>
 <p>Please see <a href="http://giiwa.org">giiwa.org</a> to learn more about giiwa.</p>
