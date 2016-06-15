@@ -280,10 +280,6 @@ public class setting extends Model {
       this.set("mongo_user", ConfigGlobal.s("mongo[prod].user", null));
       this.set("db_url", ConfigGlobal.s("db.url", null));
 
-      this.set("mq_enabled", ConfigGlobal.s("mq.enabled", null));
-      this.set("mq_url", ConfigGlobal.s("mq.url", null));
-      this.set("mq_group", ConfigGlobal.s("mq.group", null));
-
       this.set("page", "/admin/setting.system.html");
     }
 

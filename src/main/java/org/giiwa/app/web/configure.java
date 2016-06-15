@@ -99,11 +99,6 @@ public class configure extends Model {
     conf.setProperty("mongo[prod].user", user);
     conf.setProperty("mongo[prod].password", pwd);
 
-    String mqenabled = this.getString("mq.enabled");
-    String mqurl = this.getHtml("mq.url");
-    conf.setProperty("mq.enabled", "true".equals(mqenabled) ? "yes" : "no");
-    conf.setProperty("mq.url", mqurl);
-
     String node = this.getString("node");
     String systemcode = this.getString("systemcode");
     conf.setProperty("node", node);

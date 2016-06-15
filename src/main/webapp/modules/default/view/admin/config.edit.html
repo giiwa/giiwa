@@ -62,7 +62,7 @@
 			</form>
 		</div>
 
-		<div id="system" class='panel' data-next="mq" data-prev="mongo">
+		<div id="system" class='panel' data-next="cache" data-prev="mongo">
 			<div class='head'>$lang.get('configure.title.system')</div>	
 			<form method=“post”>
 				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!system.s('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
@@ -75,20 +75,7 @@
 			</form>
 		</div>		
 
-		<div id="mq" class='panel' data-next="admin" data-prev="system" data-check='check_mq'>
-			<div class='head'>$lang.get('configure.title.mq')</div>	
-			<form method=“post”>
-				<div><label><h3>Enabled：</h3><input type='checkbox' name='enabled'  #if($!system.s('mq.enabled', '')=='yes') checked=checked #end/></label></div>
-				<div><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!system.s('mq.url', '')"/><g>failover:(tcp://[host]:61616)?timeout=3000&jms.prefetchPolicy.all=2&jms.useAsyncSend=true</g></label></div>
-				
-				<div class='btns'>
-						<a class='prev'>$lang.get('a.prev')</a>
-						<a class='next'>$lang.get('a.next')</a>
-				</div>
-			</form>
-		</div>
-
-		<div id="cache" class='panel' data-next="admn" data-prev="mq" data-check='check_cache'>
+		<div id="cache" class='panel' data-next="admin" data-prev="system" data-check='check_cache'>
 			<div class='head'>Cache</div>	
 			<form method=“post”>
 				<div><label><h3>URL：</h3><input type='text' name='url' value="$!system.s('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
