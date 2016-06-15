@@ -217,6 +217,7 @@ public class DefaultListener implements LifeListener {
     setting.register("system", setting.system.class);
     setting.register("sync", setting.sync.class);
     setting.register("smtp", setting.mail.class);
+    setting.register("counter", setting.counter.class);
 
     NtpTask.owner.schedule(X.AMINUTE);
     new CleanupTask(conf).schedule(X.AMINUTE);

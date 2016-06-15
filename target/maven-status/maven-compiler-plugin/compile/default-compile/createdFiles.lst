@@ -155,6 +155,7 @@ org/giiwa/framework/bean/Response.class
 org/giiwa/core/task/Task$1.class
 org/giiwa/app/web/version.class
 org/giiwa/core/cache/Cachable.class
+org/giiwa/app/web/admin/setting$counter.class
 org/giiwa/core/cache/Cache.class
 org/giiwa/app/web/alive.class
 org/giiwa/framework/noti/Sms.class

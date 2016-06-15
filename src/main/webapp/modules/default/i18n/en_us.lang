@@ -348,3 +348,7 @@ a.admin=Admin
 a.features=Features
 a.apidocs=APIdocs
 a.modules=Modules
+a.setting.counter=Counter
+label.counter=Counter script
+counter.notes=The site access counter script, you can get this script code in your page like <code>$!system.get('site.counter')</code>.
+counter.setting.title=Site counter script

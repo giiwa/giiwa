@@ -320,4 +320,28 @@ public class setting extends Model {
     }
 
   }
+  
+  public static class counter extends setting {
+
+    /* (non-Javadoc)
+     * @see org.giiwa.app.web.admin.setting#set()
+     */
+    @Override
+    public void set() {
+      ConfigGlobal.setConfig("site.counter", this.getHtml("counter"));
+
+      this.set(X.MESSAGE, lang.get("save.success"));
+
+      get();
+    }
+
+    /* (non-Javadoc)
+     * @see org.giiwa.app.web.admin.setting#get()
+     */
+    @Override
+    public void get() {
+      this.set("page", "/admin/setting.counter.html");
+    }
+
+  }
 }
