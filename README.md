@@ -1,6 +1,6 @@
 <h1><img height='46' src="http://giiwa.org/images/giiwa.png" alt="giiwa"/></h1>
-<p>Giiwa is a Java Web framework, purpose are simplifying and ripad development, make it's easy to re-use and override across projects.</p>
-<p>To meet the goal, Giiwa provides module management, and simplified MV development as below. Please see <a href="http://giiwa.org">giiwa.org</a> to learn more about giiwa.</p>
+<p>Giiwa is a Java Web framework, the aim is to simplify and develop fast, projects can be reused and overrided.</p>
+<p>To achieve the goal, Giiwa use module management, and simplified MV development model. Please see <a href="http://giiwa.org">giiwa.org</a> to learn more about Giiwa.</p>
 <p><img src="http://giiwa.org/docs/images/mv.png" alt="MV developing"/></p>
 
 <h2>Downloading</h2>
