@@ -21,7 +21,7 @@ case "$1" in
 		#checking mongo
 		sudo mkdir -p /opt/data/db
 		sudo cp giiwa/modules/default/view/admin/clone/opt/mongodb/bin/m.sh /opt/mongodb/bin
-		sudo ugo+x /opt/mongodb/bin/m.sh
+		sudo chmod ugo+x /opt/mongodb/bin/m.sh
 		;;
 	*)
 		echo "Usage: install {appdog|postgresql|mongo}"
