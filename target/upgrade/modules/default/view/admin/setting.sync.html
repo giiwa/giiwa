@@ -1,0 +1,42 @@
+<div class='notes'>
+	$lang.get('sync.notes')
+</div>
+
+<div>
+	<label><h3>$lang.get('sync.remote'):</h3><input type='text' name='sync_url' value='$!sync_url' /><g>http://[host]/data</g></label>
+</div>
+<div>
+	<label><h3>Appkey:</h3><input type='text' name='sync_appkey' value='$!sync_appkey' /><g>$lang.get('sync.appkey.hint')</g></label>
+</div>
+<div>
+	<label><h3>Secret:</h3><input type='text' name='sync_secret' value='$!sync_secret' /><g>$lang.get('sync.secret.hint')</g></label>
+</div>
+
+#foreach($c in $groups)
+<div>
+	<label><h3>$lang.get("sync_$c")</h3>:
+		<select name='sync_$c'>
+			<option value=''></option>
+			#if($t.support($c, 'set'))
+			<option value='set' #if($t.setting($c) == 'set') selected #end>$lang.get('sync.set.auto')</option>
+			#end
+			#if($t.support($c, 'mset'))
+			<option value='mget' #if($t.setting($c) == 'mget') selected #end>$lang.get('sync.set.manual')</option>
+			#end
+			#if($t.support($c, 'get'))
+			<option value='get' #if($t.setting($c) == 'get') selected #end>$lang.get('sync.get.auto')</option>
+			#end
+		</select>
+		#if($t.collections($c).size() == 1)
+			<g> $lang.format($t.lasttime($c), 'yyyy-MM-dd HH:mm:ss')</g>
+		#end
+	</label>
+	#if($t.collections($c).size() > 1)
+	<div class='sync_notes'>
+		#foreach($c1 in $t.collections($c))
+		<label><g>$lang.get("sync_$c1"):  $lang.format($t.lasttime($c1), 'yyyy-MM-dd HH:mm:ss'), </g></label>
+		#end
+	</div>
+	#end
+</div>
+#end

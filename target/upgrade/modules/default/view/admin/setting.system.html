@@ -1,0 +1,27 @@
+	<div><label><h3>$lang.get('base.setting.title'):</h3><g>$lang.get('base.setting.notes')</g></label></div>
+	<hr/>
+	<div><label><h3>language:</h3>
+		<select name='language'>
+			<option value='en_us' #if($language == 'en_us') selected #end>en_us</option>
+			<option value='zh_cn' #if($language == 'zh_cn') selected #end>zh_cn</option>
+		</select>
+		<g>$lang.get('language.hint')</g>
+	</label></div>
+	<div><label><h3>Run level:</h3>
+		<select name='level'>
+			<option value='debug' #if($level == 'debug') selected #end>debug</option>
+			<option value='production' #if($level == 'production') selected #end>production</option>
+		</select>
+		<g>$lang.get('type.hint')</g>
+	</label></div>
+	<div><label><h3>node:</h3><i>$!node</i><g>$lang.get('node.hint')</g></label></div>
+	<div><label><h3>system.code:</h3><i>$!system_code</i><g>$lang.get('system.code.hint')</g></label></div>
+	<div><label><h3>cache.url:</h3><i>$!cache_url</i><g>$lang.get('cache.url.hint')</g></label></div>
+	<div><label><h3>cache.group:</h3><i>$!cache_group</i><g>$lang.get('cache.group.hint')</g></label></div>
+	<div><label><h3>mongo[prod].url:</h3><i>$!mongo_url</i><g>$lang.get('mongo[prod].url.hint')</g></label></div>
+	<div><label><h3>mongo[prod].db:</h3><i>$!mongo_db</i><g>$lang.get('mongo[prod].db.hint')</g></label></div>
+	<div><label><h3>mongo[prod].user:</h3><i>$!mongo_user</i><g>$lang.get('mongo[prod].user.hint')</g></label></div>
+	<div><label><h3>db.url:</h3><i>$!db_url</i><g>$lang.get('db.url.hint')</g></label></div>
+	<div><label><h3>mq.enabled:</h3><i>$!mq_enabled</i><g>$lang.get('mq.enabled.hint')</g></label></div>
+	<div><label><h3>mq.url:</h3><i>$!mq_url</i><g>$lang.get('mq.url.hint')</g></label></div>
+	<div><label><h3>mq.group:</h3><i>$!mq_group</i><g>$lang.get('mq.group.hint')</g></label></div>

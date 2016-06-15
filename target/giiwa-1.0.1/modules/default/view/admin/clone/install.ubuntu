@@ -1,0 +1,41 @@
+#check and install nginx
+apt-get -y install nginx
+
+#check and install postgresql
+apt-get -y install postgresql-9.3
+ 
+#check and install mongodb
+apt-get -y install mongodb
+ 
+#check and install sysv-rc-conf
+apt-get -y install sysv-rc-conf
+ 
+#install appdog
+mv appdog /etc/init.d/
+ 
+#config nginx
+rm -rf /etc/nginx/conf.d/*
+mv demo.conf /etc/nginx/conf.d/
+ 
+#install jdk
+tar xcf jdk.tar.gz -C /opt/ 
+rm -rf jdk.tar.gz
+
+#install tomcat
+tar xcf tomcat.tar.gz -C /opt/ 
+rm -rf tomcat.tar.gz
+
+#install giiwa
+mkdir /opt/www/
+tar xcf giiwa.tar.gz -C /opt/www/
+rm -rf giiwa.tar.gz
+
+mkdir /opt/logs
+mkdir /opt/data
+mkdir /opt/data/mongo
+
+mkdir /etc/appdog
+mv apps.conf /etc/appdog/
+ 
+sudo -S -u postgres psql -f dbinit.sql
+rm dbinit.sql

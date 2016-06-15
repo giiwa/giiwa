@@ -1,0 +1,36 @@
+<div class='head'>$lang.get('appkey.edit.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/appkey' >$lang.get('a.appkey')</a>
+	<a href='/admin/appkey/edit?appkey=$appkey' class='selected'>$lang.get('a.edit')</a>
+</div>
+
+<form action='/admin/appkey/edit'  method='post' class='form' enctype="multipart/form-data">
+	<input type='hidden' name="appkey" value="$appkey">
+	<div><label><h3>$lang.get('label.appkey'):</h3><i>$appkey</i></label></div>
+	<div><label><h3>$lang.get('head.secret'):</h3><input type='text' name='secret' readonly="readonly"  value=#if($key) '$key' #else '' #end/><a class='btn' style='margin-left: 10px;' href='javascript:;' onclick='_newkey();'>$lang.get('a.newkey')</a></label></div>
+	<div><label><h3>$lang.get('label.logout'):</h3><input type='text' name='logout' value= #if($logout)'$logout' #else '' #end /></label></div>
+	<div><label><h3>$lang.get('label.contact'):</h3><input type='text' name='contact' value= #if($contact)'$contact' #else '' #end /></label></div>
+	<div><label><h3>$lang.get('label.phone'):</h3><input type='text' name='phone' value= #if($phone)'$phone' #else '' #end /></label></div>
+	<div><label><h3>$lang.get('label.email'):</h3><input type='text' name='email' value= #if($email)'$email' #else '' #end /></label></div>
+	<div><label><h3>$lang.get('label.memo'):</h3><input type='text' name='memo' value= #if($memo)'$memo' #else '' #end /></label></div>
+	<div><label><h3>$lang.get('label.lock'):</h3></label><input type="checkbox" name='locked' #if($locked >0) checked="checked" #end/></label></div>
+	<div><label><h3>$lang.get('label.setrule'):</h3>
+		<textarea name='setrule'>$!setrule</textarea>
+	</label></div>
+	<div><label><h3>$lang.get('label.getrule'):</h3>
+		<textarea name='getrule'>$!getrule</textarea>
+	</label></div>
+
+	<button type='submit'>$lang.get('btn.save')</button>
+</form>
+
+<script>
+function _newkey(){
+	$.post('/admin/appkey/newkey', {}, function(d){
+		$('form input[name=secret]').val(d);
+	})
+}
+</script>

@@ -1,0 +1,74 @@
+<div class='head'>$lang.get('keyfield.index.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/keyfield' class='selected'>$lang.get('a.keyfield')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/keyfield' method='get' #if($currentpage>0) style='display:none' #end >
+		<span><label><h3>$lang.get('keyfield.collection'):</h3><input type='text' name='collection' value='$!collection'/></label></span>
+		<span><label><h3>$lang.get('keyfield.status'):</h3>
+			<select name='status'>
+				<option value=''></option>
+				<option value='done' #if($status=='done') selected #end>已执行</option>
+			</select>
+		</label></span>
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+	
+	<div class='s1tab #if($currentpage>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table id='keyfield-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('keyfield.collection')</th>
+			<th>$lang.get('keyfield.q')</th>
+			<th>$lang.get('keyfield.status')</th>
+			<th>$lang.get('keyfield.created')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr class='keyfield-status-$f.status'>
+		<td>$!f.collection</td>
+		<td>$!f.q</td>
+		<td>$lang.get("keyfield.status_$!f.status")</td>
+		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
+		<td>
+			<a href='javascript:;' onclick='_delete("$f.id", this)'>$lang.get("a.delete")</a>
+			<a href="/admin/keyfield/run?id=$f.id">$lang.get("a.run")</a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+<script>
+$(function(){
+	$('#keyfield-table').tablesorter();
+})
+
+function _delete(id, o){
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post("/admin/keyfield/delete", {id:id}, function(d){
+			processing && processing.hide();
+			var p = $(o).parent();
+			while(p.length > 0 && p.length > 0 && !p.is('tr')) {
+				p = p.parent();
+			}
+			if(p.length > 0) {
+				p.remove();
+			}
+		})
+	}
+}
+</script>

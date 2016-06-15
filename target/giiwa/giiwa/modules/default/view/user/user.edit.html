@@ -1,0 +1,36 @@
+<div class='head'>$lang.get('user.edit.me.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<form action='/user/edit'  method='post' class='form' enctype="multipart/form-data">
+	<input type='hidden' name='name' value='$!name'/>
+	<div><label><h3>$lang.get('user.name'):</h3><i>$!name</i></label></div>
+	<div><label><h3>$lang.get('user.nickname'):</h3><input type='text' name='nickname' value='$!nickname'/></label></div>
+	<div><label><h3>$lang.get('user.title'):</h3><input type='text' name='title' value='$!title' /></label></div>
+	<div><label><h3>$lang.get('user.email'):</h3><input type='text' name='email' value='$!email' /></label></div>
+	<div><label><h3>$lang.get('user.phone'):</h3><input type='text' name='phone' value='$!phone' /></label></div>
+
+	<div>
+		<button type='submit'>$lang.get('btn.save')</button>
+		<a class='btn' href='javascript:;' onclick="$('#password').dialog();">$lang.get('a.password')</a>	
+	</div>
+</form>
+
+<div id='password' title="$lang.get('user.edit.password')" style="display:none">
+	<div><label><h3>$lang.get('user.new.password'):</h3><input type='password' name='password' value=''/></label></div>
+	<button onclick='_password();'>$lang.get('btn.ok')</button>
+</div>
+
+<script>
+function _password() {
+	$('#password').dialog('close');
+	var v = $('#password input[name=password]').val();
+	$.post('/user/edit', {password:v}, function(d){
+		if(d.state == 200) {
+			$.message("$lang.get('save.success')");
+		} else {
+			$.error(d.message);
+		}
+	})
+}
+</script>

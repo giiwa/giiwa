@@ -1,0 +1,72 @@
+<div class='head'>$lang.get('backup.index.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/backup' class='selected'>$lang.get('a.backup')</a>
+</div>
+
+<table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>$lang.get('head.created')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$!f.name</td>
+		<td>$lang.format($f.lastModified(), 'yyyy-MM-dd HH:m')</td>
+		<td>
+			<a href='javascript:;' onclick='_recover("$f.name")'>$lang.get('a.recover')</a>
+			<a href='javascript:;' onclick='_delete("$f.name")'>$lang.get('a.delete')</a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<div class='btns'>
+	<a href='/admin/backup/now'>$lang.get('a.backup')</a>
+</div>
+
+<script>
+function _delete(name) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post('/admin/backup/delete', {name: name}, function(d){
+			processing && processing.hide();
+			reload();
+		});
+	}
+}
+function _recover(name){
+	if(confirm("$lang.get('title.data_will_be_replaced')")) {
+		processing && processing.show();
+		$.post('/admin/backup/restore', {name: name}, function(d){
+			processing && processing.hide();
+			_recovering();
+		});
+	}
+}
+
+function _recovering(){
+	processing && processing.show();
+	$.post('/admin/backup/restoring', {}, function(d){
+		processing && processing.hide();
+		if(d.state == 200) {
+			$.message(d.message);
+		} else if(d.state == 201){
+			$.message(d.message);
+			
+			setTimeout(function(){
+				_recovering();
+			}, 5000);
+		} else if(d.message) {
+			$.error(d.message);
+		}
+	});
+}
+</script>

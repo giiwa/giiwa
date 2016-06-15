@@ -1,0 +1,54 @@
+<div class='head'>$lang.get('role.create.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/role'>$lang.get('a.role')</a>
+	<a href='/admin/role/create' class='selected'>$lang.get('a.create')</a>
+</div>
+
+<form action='/admin/role/create'  method='post' class='form'>
+	<div><label><h3>$lang.get('role.name')(<r>*</r>)</h3>:<input type='text' bad="1" onblur="verify(this, '/admin/role/verify')" name='name' value=#if($name) '$name' #else '' #end/></label></div>
+	<div><label><h3>$lang.get('role.memo')</h3>:<input type='text' name='memo' value=#if($memo) '$memo' #else '' #end/></label></div>	
+	
+	<div class='accesses'>
+		<div class='access_title'><label><h3>$lang.get("access.points")</h3><input type='checkbox' onclick='selectall();'>$lang.get('select.all.access')</label></div>
+			<table id='access-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+				<thead>
+					<tr>
+						<th>$lang.get('access.group')</th>
+						<th>$lang.get('access.name')</th>
+					</tr>
+				</thead>
+				<tbody>
+			#foreach($a in $accesses.keySet())
+				<tr>
+					<td>$lang.get("group.$a")</td>
+					<td>
+						#foreach($p in $accesses.get($a))
+							<label><input type="checkbox" name="access" value="$p.name" #if($r.has($p)) checked="true" #end/>$lang.get($p.name)</label>
+						#end
+					</td>
+				</tr>
+			#end
+				</tbody>
+			</table>
+
+	</div>
+	<div><button type='submit'>$lang.get('btn.create')</button></div></form>
+
+<script>
+function selectall(){
+	var ch = $('.access_title input[type=checkbox]');
+	if (ch.length > 0) {
+		var en = ch[0].checked;
+		var t = $(this);
+		$('#access-table td input[type=checkbox]').each(function(i, e) {
+			if(! e.disabled) {
+				e.checked = en;
+			}
+		});
+	}
+}
+</script>	
+

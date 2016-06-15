@@ -1,0 +1,30 @@
+
+<script type="text/javascript" src="/js/jquery.ui.widget.js"></script>
+<script type="text/javascript" src="/js/jquery.fileupload.js"></script>
+<script type="text/javascript" src="/js/jquery.fileupload-ui.js"></script>
+<script type="text/javascript" src="/js/jquery.fileupload-process.js"></script>
+<script type="text/javascript" src="/js/jquery.iframe-transport.js"></script>
+<script type="text/javascript" src="/js/fileupload.js"></script>
+
+<div class='fileupload'>
+	<div class='upload-btn'>
+		<span class='btn-upload btn'> <i></i> <span>$lang.get('a.upload')</span>
+			<input id="fileupload" type="file" name="file" multiple />
+		</span>
+	</div>
+
+	<div class='state upload'>
+		<table>
+			<tr>
+				<td><span class='name'></span></td>
+				<td style='width: 40%'><span id='progress'> <span
+						class='bar'></span>
+				</span>
+					<p id='error'></p></td>
+				<td><a href='javascript:;' onclick='_stopfileupload();'
+					class='btn stop'><i class='glyphicon'></i>$lang.get('a.pause')</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>

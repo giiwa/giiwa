@@ -1,0 +1,52 @@
+<div class='head'>$lang.get('repo.index.title')</div>
+
+<div class='notes'>
+	$lang.get('repo.notes')
+</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/repo' class='selected'>$lang.get('a.repo')</a>
+</div>
+
+<table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>ID</th>
+			<th>Name</th>
+			<th>Size</th>
+			<th>$lang.get('head.created')</th>
+			<th>User</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$!f.id</td>
+		<td>$!f.name</td>
+		<td>$lang.size($f.total)</td>
+		<td>$lang.format($f.created, 'yyyy-MM-dd HH:m')</td>
+		<td>$!f.user.name</td>
+		<td>
+			<a href='javascript:;' onclick='_delete("$f.id", this)'>$lang.get('a.delete')</a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post('/admin/repo/delete', {id: id}, function(d){
+			processing && processing.hide();
+			$(o).parent().parent().remove();
+		});
+	}
+}
+</script>

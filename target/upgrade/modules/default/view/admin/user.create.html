@@ -1,0 +1,43 @@
+<div class='head'>$lang.get('user.create.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/user'>$lang.get('a.user')</a>
+	<a href='/admin/user/create' class='selected'>$lang.get('a.create')</a>
+</div>
+
+<form action='/admin/user/create'  method='post' class='form' enctype="multipart/form-data">
+	<div><label><h3>$lang.get('user.name')<r>*</r></h3>:<input type='text' onblur="verify(this, '/user/verify');" name='name' value=#if($name) '$name' #else '' bad="1"  #end/><g>$lang.get("user.name.note")</g></label></div>
+	<div><label><h3>$lang.get('user.nickname')</h3>:<input type='text' name='nickname' value=#if($nickname) '$nickname' #else '' #end/></label></div>
+	<div><label><h3>$lang.get('user.password')</h3>:<input type='text' onblur="verify(this, '/user/verify')" name='password' value=#if($password)'$password' #else '111111' #end /></label></div>
+	<div><label><h3>$lang.get('user.title')</h3>:<input type='text' name='title' value='$!title' /></label></div>
+	<div><label><h3>$lang.get('user.email')</h3>:<input type='text' name='phone' value= '$!email' /></label></div>
+	<div><label><h3>$lang.get('user.phone')</h3>:<input type='text' name='phone' value= '$!phone'  /></label></div>
+
+	<table id='user-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+		<thead>
+			<tr>
+				<th>$lang.get('role.name')</th>
+			</tr>
+		</thead>
+		<tbody>
+	#foreach($r in $roles)
+		<tr>
+			<td><label><input type="checkbox" name="role" value="$r.id" #if($u.isRole($r)) checked="true" #end>$r.name</label></label></td>
+		</tr>
+	#end
+		</tbody>
+	</table>
+
+	<div><button type='submit'>$lang.get('btn.create')</button></div>
+</form>
+
+<script>
+function _confirm(obj){
+	var that = $(obj).parent().parent();
+	that.find('input').attr('bad', "0");
+	that.find("note").html("lang.get('user.name.confirmed')");
+	that.find("confirm").hide();
+}
+</script>

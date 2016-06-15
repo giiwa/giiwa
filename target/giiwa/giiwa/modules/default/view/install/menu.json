@@ -1,0 +1,87 @@
+[{
+			'name' : 'admin',
+			seq : 10,
+			'childs' : [{
+						name : 'menu.system',
+						classes : 'icon-cog',
+						access : 'access.config.admin',
+						seq : 10,
+						childs : [{
+									name : 'menu.setting',
+									load : '/admin/setting',
+									classes : 'icon-cogs',
+									seq : 10
+								}, {
+									name : 'menu.module',
+									load : '/admin/module',
+									seq : 20,
+									classes : 'icon-google-drive'
+								}, {
+									name : 'menu.log',
+									seq : 30,
+									classes : 'icon-list',
+									childs : [{
+												name : 'menu.oplog',
+												load : '/admin/oplog',
+												seq : 10,
+												classes : 'icon-file-text'
+											}, {
+												name : 'menu.accesslog',
+												load : '/admin/accesslog',
+												seq : 20,
+												classes : 'icon-list'
+											}, {
+												name : 'menu.keyfield',
+												load : '/admin/keyfield',
+												seq : 30,
+												classes : 'icon-wrench'
+											}]
+								}, {
+									name : 'menu.repo',
+									load : '/admin/repo',
+									seq : 40,
+									classes : 'icon-cloud'
+								}, {
+									name : 'menu.backup',
+									load : '/admin/backup',
+									seq : 50,
+									access : 'access.config.admin',
+									classes : 'icon-floppy-disk'
+								}, {
+									name : 'menu.appkey',
+									load : '/admin/appkey',
+									seq : 60,
+									classes : 'icon-power-cord'
+								}]
+					}, {
+						name : 'menu.usermgr',
+						classes : 'icon-users',
+						access : 'access.user.admin|access.role.admin',
+						seq : 20,
+						childs : [{
+									name : 'menu.user',
+									load : '/admin/user',
+									access : 'access.user.admin',
+									seq : 10,
+									classes : 'icon-user'
+								}, {
+									name : 'menu.role',
+									load : '/admin/role',
+									access : 'access.role.admin',
+									seq : 20,
+									classes : 'icon-shield'
+								},]
+					},]
+		}, {
+			'name' : 'home',
+			seq : 20,
+			childs : []
+		}, {
+			'name' : 'user',
+			seq : 30,
+			childs : []
+		}, {
+			role : 'USER',
+			memo : '普通用户',
+			access : ''
+		}]

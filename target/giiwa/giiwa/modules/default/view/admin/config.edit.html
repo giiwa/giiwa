@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<meta name="viewport"  content="width=device-width, height=device-height,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+<link rel="shortcut icon" href="/favicon.ico"
+	type="image/vnd.microsoft.icon" />
+<title>$!lang.get('browser.title')</title>
+<meta name="description" content="$lang.get('browser.description')"/>
+<link href='/css/icons.css' rel='stylesheet' />
+<link href='/css/giiwa_v$!{module.module("default").build}.css' rel='stylesheet' />
+<link href='/css/configure_v$!{module.module("default").build}.css' rel='stylesheet' />
+
+<script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="/js/jquery.easing.1.3.js"></script>
+
+</head>
+<body>
+
+	<div id='head'>
+		<div class='center'>
+			<div id="logo"><img src="/images/giiwa.png"></div>
+		</div>
+	</div>
+	
+<div id="content">
+	<div class='center'>
+
+		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
+			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
+			<form method=“post”>
+				<div><label><h3>URL：</h3><input type='text' name='url' value="$!system.s('mongo[prod].url','')"/><g>127.0.0.1:27018 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
+				<div><label><h3>DB：</h3><input type='text' name='db' value="$!system.s('mongo[prod].db','demo')"/></label></div>
+				<div><label><h3>User：</h3><input type='text' name='user' value="$!system.s('mongo[prod].user','')"/></label></div>
+				<div><label><h3>Password：</h3><input type='password' name='pwd' value="$!system.s('mongo[prod].password','')"/></label></div>
+				<div class='btns'>
+						<a class='next'>$lang.get('a.next')</a>
+				</div>
+			</form>
+		</div>
+
+		<div id="db" class='panel' data-next="system" data-prev='mongo' data-check='check_db'>
+			<div class='head'>$!lang.get('configure.title.rdbs')</div>	
+			<form method=“post”>
+				<div><label><h3>Driver：</h3>
+					<select name='driver' onchange='_ondriver();'>
+						<option value='org.postgresql.Driver' #if($system.s('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
+						<option value='com.mysql.jdbc.Driver' #if($system.s('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
+						<option value='oracle.jdbc.OracleDriver' #if($system.s('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+					</select>
+				</label></div>
+				<div class='url'><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!system.s('db.url', '')"/>
+					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=giiwa&password=g123123</g>
+					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=giiwa&password=g123123&useUnicode=true&characterEncoding=UTF-8</g>
+					<g class='oracle' style='display:none'>...</g>
+				</label></div>
+				
+				<div class='btns'>
+						<a class='prev'>$lang.get('a.prev')</a>
+						<a class='next'>$lang.get('a.next')</a>
+				</div>
+			</form>
+		</div>
+
+		<div id="system" class='panel' data-next="mq" data-prev="mongo">
+			<div class='head'>$lang.get('configure.title.system')</div>	
+			<form method=“post”>
+				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!system.s('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
+				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='text' name='code' value="$!system.s('system.code','')"/><g>同一个分布式节点编号相同</g></label></div>
+				
+				<div class='btns'>
+						<a class='prev'>$lang.get('a.prev')</a>
+						<a class='next'>$lang.get('a.next')</a>
+				</div>
+			</form>
+		</div>		
+
+		<div id="mq" class='panel' data-next="admin" data-prev="system" data-check='check_mq'>
+			<div class='head'>$lang.get('configure.title.mq')</div>	
+			<form method=“post”>
+				<div><label><h3>Enabled：</h3><input type='checkbox' name='enabled'  #if($!system.s('mq.enabled', '')=='yes') checked=checked #end/></label></div>
+				<div><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!system.s('mq.url', '')"/><g>failover:(tcp://[host]:61616)?timeout=3000&jms.prefetchPolicy.all=2&jms.useAsyncSend=true</g></label></div>
+				
+				<div class='btns'>
+						<a class='prev'>$lang.get('a.prev')</a>
+						<a class='next'>$lang.get('a.next')</a>
+				</div>
+			</form>
+		</div>
+
+		<div id="cache" class='panel' data-next="admn" data-prev="mq" data-check='check_cache'>
+			<div class='head'>Cache</div>	
+			<form method=“post”>
+				<div><label><h3>URL：</h3><input type='text' name='url' value="$!system.s('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
+				
+				<div class='btns'>
+						<a class='prev'>$lang.get('a.prev')</a>
+						<a class='next'>$lang.get('a.next')</a>
+				</div>
+			</form>
+		</div>		
+
+		<div id="admin" class='panel' data-prev="cache">
+			<div class='head'>$lang.get('configure.title.admin')</div>	
+			<form method=“post”>
+				<div><label><h3>Admin：</h3><input type='text' name='admin' value='admin'/></label></div>
+				<div><label><h3>Password：</h3><input type='password' name='password' value=''/></label></div>
+				
+				<div class='btns'>
+						<a class='prev'>$lang.get('a.prev')</a>
+						<a class='done'>$lang.get('a.done')</a>
+				</div>
+			</form>
+		</div>		
+					
+	</div>
+</div>
+
+	<div id='foot'>
+	<div class='center'>
+		<div class='links'>$lang.get('user.foot.links')</div>
+		<div class='copyright'>
+			<span class='copyright'>$lang.get('copyright')</span> <span
+				class='designed'>$lang.get('designedby')</span>
+			<span>please refer {giiwa.home}/giiwa.properties</span>
+		</div>
+		<div class="foot-shield"></div>
+	</div>
+</div>
+<div id="processing" style="display: none;">
+	<div class="bg"></div>
+	<div class="img">
+		<img src="/images/loading2.gif">
+	</div>
+</div>
+
+<script>
+function _ondriver(){
+	var driver = $('select[name=driver]').val();
+	if(driver.indexOf('postgresql') > -1) {
+		$('#db .url g').hide();
+		$('#db .url g.postgresql').show();
+	} else if(driver.indexOf('mysql')) {
+		$('#db .url g').hide();
+		$('#db .url g.mysql').show();
+	} else {
+		$('#db .url g').hide();
+		$('#db .url g.oracle').show();
+	}
+}
+$(function(){
+	$('.panel .btns a.prev').click(function(e){
+		var a = $(this);
+		var p = a.parent();
+		while(p.length > 0 && !p.hasClass('panel')) {
+			p = p.parent();
+		}
+		
+		if(p.length > 0) {
+			var prev = p.attr('data-prev');
+			if(prev) {
+				p.fadeOut();
+				prev = $('#' + prev);
+				prev.fadeIn();
+				$('#content').css('height', (prev.height() + prev.offset().top) + 'px');
+			}
+		}
+	});
+
+	$('.panel .btns a.next').click(function(e){
+		var a = $(this);
+		var p = a.parent();
+		while(p.length > 0 && !p.hasClass('panel')) {
+			p = p.parent();
+		}
+			
+		if(p.length > 0) {
+			var check = p.attr('data-check');
+			if(check && window[check]) {
+				window[check](function(){
+					var next = p.attr('data-next');
+					if(next) {
+						p.fadeOut();
+						next = $('#' + next);
+						next.fadeIn();
+						$('#content').css('height', (next.height() + next.offset().top) + 'px');
+					}
+				})
+			} else {
+				var next = p.attr('data-next');
+				if(next) {
+					p.fadeOut();
+					next = $('#' + next);
+					next.fadeIn();
+					$('#content').css('height', (next.height() + next.offset().top) + 'px');
+				}
+			}
+		}
+	});
+	
+	$('.panel .btns a.done').click(function(e){
+		//save
+		var p = {};
+		p["db.driver"] = $('#db select[name=driver]').val();
+		p["db.url"] = $('#db input[name=url]').val();
+		p["mongo.url"] = $('#mongo input[name=url]').val();
+		p["mongo.db"] = $('#mongo input[name=db]').val();
+		p["mongo.user"] = $('#mongo input[name=user]').val();
+		p["mongo.pwd"] = $('#mongo input[name=pwd]').val();
+		p["node"] = $('#system input[name=node]').val();
+		p["code"] = $('#system input[name=code]').val();
+		p["mq.enabled"] = $('#mq input[name=enabled]').prop('checked');
+		p["mq.url"] = $('#mq input[name=url]').val();
+		p["cache.url"] = $('#cache input[name=url]').val();
+		p["admin"] = $('#admin input[name=admin]').val();
+		p["password"] = $('#admin input[name=password]').val();
+		
+		processing && processing.show();
+		$.post('/configure/save', p, function(d){
+			processing && processing.hide();
+			
+			if(d.state == 200) {
+				$.message("$lang.get('auto.restarting')");
+				setTimeout(function(){
+					window.location.href="/";
+				}, 5000);
+			}
+		});
+	});
+	
+	var mongo = $('#mongo');
+	$('#content').css('height', (mongo.height() + mongo.offset().top) + 'px');
+
+	$('#db select[name=driver]').trigger('change');
+	
+})
+function check_db(f){
+	processing && processing.show();
+	var  p = {op:'db'};
+	p.driver = $('#db select[name=driver]').val();
+	p.url = $('#db input[name=url]').val();
+	$.post('/configure/check', p, function(d){
+		processing && processing.hide();
+		if(d.state == 200) {
+			f();
+		} else {
+			$.error(d.message);
+		}
+	})
+}
+function check_mongo(f){
+	processing && processing.show();
+	var  p = {op:'mongo'};
+	p.db = $('#mongo input[name=db]').val();
+	p.url = $('#mongo input[name=url]').val();
+	p.user = $('#mongo input[name=user]').val();
+	p.pwd = $('#mongo input[name=pwd]').val();
+	$.post('/configure/check', p, function(d){
+		processing && processing.hide();
+		if(d.state == 200) {
+			f();
+		} else {
+			$.error(d.message);
+		}
+	})
+}
+function check_mq(f){
+	processing && processing.show();
+	var  p = {op:'mq'};
+	$.post('/configure/check', {}, function(d){
+		processing && processing.hide();
+		f();
+	})
+}
+function check_cache(f){
+	processing && processing.show();
+	var  p = {op:'cache'};
+	$.post('/configure/check', p, function(d){
+		processing && processing.hide();
+		f();
+	})
+}
+function check_admin(f){
+	processing && processing.show();
+	var  p = {op:'admin'};
+	$.post('/configure/check', p, function(d){
+		processing && processing.hide();
+		f();
+	})
+}
+var processing = {
+		show:function(){
+			$('#processing').show();
+		},
+		hide:function(){
+			$('#processing').hide();
+		}
+	};
+</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+#content {
+	margin: 0 auto;
+	margin-top: 120px;
+	text-align: left;
+}
+
+#logo {
+	margin: 10px 0 0 0;
+}
+
+.center {
+	width: 500px;
+}
+
+#content .center {
+	width: 500px;
+}
+
+#content .panel {
+	display: none;
+	position: absolute;
+	top: 30px;
+	left: 0;
+	width: 100%;
+}
+
+label h3 {
+	width: 120px;
+	text-align: left;
+}
+
+.panel form>div {
+	margin: 10px 0;
+	line-height: 36px;
+}

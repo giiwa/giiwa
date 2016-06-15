@@ -1,0 +1,29 @@
+#!/bin/bash
+
+case "$1" in
+	appdog)
+		#install appdog
+		if test -e /etc/init.d/appdog
+		then
+        		echo "appdog has been installed, skip"
+		else
+        		echo "installing appdog ..."
+        		sudo cp giiwa/modules/default/view/admin/clone/init.d/appdog /etc/init.d/appdog
+        		sudo cp -r giiwa/modules/default/view/admin/clone/appdog /etc/
+        		sudo chkconfig /etc/init.d/appdog on
+		fi
+		;;
+	postgresql)
+		#initial postgresql
+		sudo -u postgres psql < giiwa/modules/default/view/admin/clone/dbinit.sql
+		;;
+	mongo)
+		#checking mongo
+		sudo mkdir -p /opt/data/db
+		sudo cp giiwa/modules/default/view/admin/clone/opt/mongodb/bin/m.sh /opt/mongodb/bin
+		sudo ugo+x /opt/mongodb/bin/m.sh
+		;;
+	*)
+		echo "Usage: install {appdog|postgresql|mongo}"
+esac
+
