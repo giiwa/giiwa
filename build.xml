@@ -85,12 +85,12 @@
 			</tarfileset>
 		</tar>
 
-		<gzip destfile="target/giiwa-${version}-${BUILDNO}.tar.gz" src="target/giiwa-${version}.tar" />
+		<gzip destfile="target/giiwa-${version}-${BUILDNO}.tgz" src="target/giiwa-${version}.tar" />
 
 		<delete file="target/giiwa-${version}.tar" />
 
 		<copy todir="../archieves">
-			<fileset file="target/giiwa-${version}-${BUILDNO}.tar.gz" />
+			<fileset file="target/giiwa-${version}-${BUILDNO}.tgz" />
 		</copy>
 
 	</target>
