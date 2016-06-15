@@ -23,7 +23,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.ConfigGlobal;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Bean.V;
-import org.giiwa.core.mq.MQ;
 import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.HTTPMethod;
@@ -84,12 +83,6 @@ public class Controller {
      */
     Module.init(conf);
 
-    if (MQ.init(conf)) {
-      /**
-       * mq enabled, create a web queue
-       */
-
-    }
   }
 
   /**

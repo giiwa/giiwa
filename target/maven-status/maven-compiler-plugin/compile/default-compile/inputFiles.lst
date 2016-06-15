@@ -87,7 +87,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/OpLog.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/version.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Repo.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/mq/IStub.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/VCode.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/utils/Shell.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Base64.java
@@ -101,7 +100,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Menu.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/module.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/configure.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/mq/MQ.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/DES.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/LifeListener.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/GClassLoader.java

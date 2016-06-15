@@ -5,7 +5,6 @@ org/giiwa/framework/bean/Stat$IConvertor.class
 org/giiwa/framework/utils/Host$Eth.class
 org/giiwa/app/web/configure.class
 org/giiwa/framework/bean/User$Lock.class
-org/giiwa/core/mq/IStub.class
 org/giiwa/framework/web/Model$PathMapping.class
 org/giiwa/framework/bean/Appkey.class
 org/giiwa/framework/web/PageLabel.class
@@ -54,7 +53,6 @@ org/giiwa/framework/bean/Stats.class
 org/giiwa/app/web/admin/dashboard.class
 org/giiwa/app/web/data.class
 org/giiwa/framework/web/GClassLoader.class
-org/giiwa/core/mq/MQ$Receiver.class
 org/giiwa/framework/utils/Http.class
 org/giiwa/app/web/DefaultListener$SorterTask.class
 org/giiwa/app/web/admin/role.class
@@ -72,7 +70,6 @@ org/giiwa/core/vengine/VEngine.class
 org/giiwa/framework/web/Sitemap.class
 org/giiwa/core/base/Format.class
 org/giiwa/core/cache/impl/FileCache.class
-org/giiwa/core/mq/MQ$Mode.class
 org/giiwa/app/web/upload.class
 org/giiwa/framework/sync/SyncTask$1.class
 org/giiwa/app/web/user.class
@@ -92,7 +89,6 @@ org/giiwa/core/base/Html.class
 org/giiwa/core/bean/KeyField.class
 org/giiwa/core/bean/Bean.class
 org/giiwa/core/cache/impl/MemCache.class
-org/giiwa/core/mq/MQ.class
 org/giiwa/framework/bean/AccessLog.class
 org/giiwa/framework/sync/SyncTask$Type.class
 org/giiwa/framework/web/Path.class
@@ -113,7 +109,6 @@ org/giiwa/app/web/admin/setting.class
 org/giiwa/app/web/admin/repo.class
 org/giiwa/framework/utils/Host$Disk.class
 org/giiwa/app/web/index.class
-org/giiwa/core/mq/MQ$1.class
 org/giiwa/framework/utils/FileUtil$Version.class
 org/giiwa/framework/web/DummyModel.class
 org/giiwa/framework/noti/Email$giiwaAuthenticator.class
