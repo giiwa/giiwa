@@ -1,7 +1,9 @@
 <h1>Giiwa</h1>
 <p><img src="http://giiwa.org/images/giiwa.png"/></p>
-<p>Java Web framework, ripad development, provides module/plugin management, using MV in web developing.</p>
+<p>Giiwa is a Java Web framework, purpose are simplifying and ripad development, re-use and override across projects rather than copy/paste.</p>
+<p>To meet the goal, Giiwa provides module management, and simplified MV development as below.</p>
 <p><img src="http://giiwa.org/docs/images/mv.png"/></p>
+
 <p>Please see <a href="http://giiwa.org">giiwa.org</a> to learn more about giiwa.</p>
 
 <h2>Downloading</h2>
