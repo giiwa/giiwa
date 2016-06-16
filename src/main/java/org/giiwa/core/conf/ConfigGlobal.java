@@ -31,185 +31,206 @@ import com.mongodb.DBObject;
 @DBMapping(collection = "gi_config")
 public class ConfigGlobal extends Bean {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 1L;
+  /** The Constant serialVersionUID. */
+  private static final long   serialVersionUID = 1L;
 
-    Object var;
+  Object                      var;
 
-    private static ConfigGlobal owner = new ConfigGlobal();
+  private static ConfigGlobal owner            = new ConfigGlobal();
 
-    public static ConfigGlobal getInstance() {
-        return owner;
+  public static ConfigGlobal getInstance() {
+    return owner;
+  }
+
+  /**
+   * get the int value.
+   *
+   * @param name
+   *          the name
+   * @param defaultValue
+   *          the default value
+   * @return the int
+   */
+  public static int i(String name, int defaultValue) {
+    ConfigGlobal c = getConfig(name);
+    if (c != null) {
+      return Bean.toInt(c.var);
     }
 
-    /**
-     * get the int value.
-     *
-     * @param name
-     *          the name
-     * @param defaultValue
-     *          the default value
-     * @return the int
-     */
-    public static int i(String name, int defaultValue) {
-        ConfigGlobal c = getConfig(name);
-        if (c != null) {
-            return Bean.toInt(c.var);
-        }
+    c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
+    if (c != null) {
+      data.put(name, c);
+      return Bean.toInt(c.var);
+    } else {
+      c = new ConfigGlobal();
+      c.var = conf.getInt(name, defaultValue);
+      data.put(name, c);
+      return Bean.toInt(c.var);
+    }
+  }
 
-        c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
-        if (c != null) {
-            data.put(name, c);
-            return Bean.toInt(c.var);
-        } else {
-            c = new ConfigGlobal();
-            c.var = conf.getInt(name, defaultValue);
-            data.put(name, c);
-            return Bean.toInt(c.var);
-        }
+  /**
+   * get the setting by name
+   * 
+   * @param name
+   *          the name
+   * @return Object of the value
+   */
+  public Object get(String name) {
+    ConfigGlobal c = getConfig(name);
+    if (c != null) {
+      return c.var;
     }
 
-    /**
-     * get the double value.
-     *
-     * @param name
-     *          the name
-     * @param defaultValue
-     *          the default value
-     * @return the double
-     */
-    public static double d(String name, double defaultValue) {
-        ConfigGlobal c = getConfig(name);
-        if (c != null) {
-            return Bean.toDouble(c.var);
-        }
+    c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
+    if (c != null) {
+      data.put(name, c);
+      return c.var;
+    }
+    return X.EMPTY;
+  }
 
-        c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
-        if (c != null) {
-            data.put(name, c);
-            return Bean.toDouble(c.var);
-        } else {
-            c = new ConfigGlobal();
-            c.var = conf.getDouble(name, defaultValue);
-            data.put(name, c);
-            return Bean.toDouble(c.var);
-        }
+  /**
+   * get the double value.
+   *
+   * @param name
+   *          the name
+   * @param defaultValue
+   *          the default value
+   * @return the double
+   */
+  public static double d(String name, double defaultValue) {
+    ConfigGlobal c = getConfig(name);
+    if (c != null) {
+      return Bean.toDouble(c.var);
     }
 
-    /**
-     * get the string value.
-     *
-     * @param name
-     *          the name
-     * @param defaultValue
-     *          the default value
-     * @return the string
-     */
-    public static String s(String name, String defaultValue) {
-        ConfigGlobal c = getConfig(name);
-        if (c != null) {
-            return c.var != null ? c.var.toString() : null;
-        }
+    c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
+    if (c != null) {
+      data.put(name, c);
+      return Bean.toDouble(c.var);
+    } else {
+      c = new ConfigGlobal();
+      c.var = conf.getDouble(name, defaultValue);
+      data.put(name, c);
+      return Bean.toDouble(c.var);
+    }
+  }
 
-        c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
-        if (c != null) {
-            data.put(name, c);
-            return c.var != null ? c.var.toString() : null;
-        } else {
-            c = new ConfigGlobal();
-            c.var = conf.getString(name, defaultValue);
-            data.put(name, c);
-            return c.var != null ? c.var.toString() : null;
-        }
+  /**
+   * get the string value.
+   *
+   * @param name
+   *          the name
+   * @param defaultValue
+   *          the default value
+   * @return the string
+   */
+  public static String s(String name, String defaultValue) {
+    ConfigGlobal c = getConfig(name);
+    if (c != null) {
+      return c.var != null ? c.var.toString() : null;
     }
 
-    /**
-     * get the long value.
-     *
-     * @param name
-     *          the name
-     * @param defaultValue
-     *          the default value
-     * @return the long
-     */
-    public static long l(String name, long defaultValue) {
-        ConfigGlobal c = getConfig(name);
-        if (c != null) {
-            return Bean.toLong(c.var);
-        }
+    c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
+    if (c != null) {
+      data.put(name, c);
+      return c.var != null ? c.var.toString() : null;
+    } else {
+      c = new ConfigGlobal();
+      c.var = conf.getString(name, defaultValue);
+      data.put(name, c);
+      return c.var != null ? c.var.toString() : null;
+    }
+  }
 
-        c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
-        if (c != null) {
-            data.put(name, c);
-            return Bean.toLong(c.var);
-        } else {
-            c = new ConfigGlobal();
-            c.var = conf.getLong(name, defaultValue);
-            data.put(name, c);
-            return Bean.toLong(c.var);
-        }
+  /**
+   * get the long value.
+   *
+   * @param name
+   *          the name
+   * @param defaultValue
+   *          the default value
+   * @return the long
+   */
+  public static long l(String name, long defaultValue) {
+    ConfigGlobal c = getConfig(name);
+    if (c != null) {
+      return Bean.toLong(c.var);
     }
 
-    /**
-     * get the current time.
-     *
-     * @return long of current time
-     * @deprecated
-     */
-    public static long now() {
-        return System.currentTimeMillis();
+    c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
+    if (c != null) {
+      data.put(name, c);
+      return Bean.toLong(c.var);
+    } else {
+      c = new ConfigGlobal();
+      c.var = conf.getLong(name, defaultValue);
+      data.put(name, c);
+      return Bean.toLong(c.var);
+    }
+  }
+
+  /**
+   * get the current time.
+   *
+   * @return long of current time
+   * @deprecated
+   */
+  public static long now() {
+    return System.currentTimeMillis();
+  }
+
+  /**
+   * Sets the value of the name in database, it will remove the configuration
+   * value if value is null.
+   *
+   * @param name
+   *          the name
+   * @param o
+   *          the value
+   */
+  public synchronized static void setConfig(String name, Object o) {
+    if (X.isEmpty(name)) {
+      return;
     }
 
-    /**
-     * Sets the value of the name in database, it will remove the configuration
-     * value if value is null.
-     *
-     * @param name
-     *          the name
-     * @param o
-     *          the value
-     */
-    public synchronized static void setConfig(String name, Object o) {
-        if (X.isEmpty(name)) {
-            return;
-        }
+    data.remove(name);
 
-        data.remove(name);
-
-        if (o == null) {
-            Bean.delete(new BasicDBObject(X._ID, name), ConfigGlobal.class);
-            return;
-        }
-
-        if (Bean.exists(new BasicDBObject(X._ID, name), ConfigGlobal.class)) {
-            Bean.updateCollection(name, V.create("var", o), ConfigGlobal.class);
-        } else {
-            Bean.insertCollection(V.create("var", o).set(X._ID, name), ConfigGlobal.class);
-        }
+    if (o == null) {
+      Bean.delete(new BasicDBObject(X._ID, name), ConfigGlobal.class);
+      return;
     }
 
-    @Override
-    protected void load(DBObject d) {
-        var = d.get("var");
+    if (Bean.exists(new BasicDBObject(X._ID, name), ConfigGlobal.class)) {
+      Bean.updateCollection(name, V.create("var", o), ConfigGlobal.class);
+    } else {
+      Bean.insertCollection(V.create("var", o).set(X._ID, name), ConfigGlobal.class);
+    }
+  }
+
+  @Override
+  protected void load(DBObject d) {
+    var = d.get("var");
+  }
+
+  /**
+   * Gets the.
+   * 
+   * @param name
+   *          the name
+   * @return the system config
+   */
+  private static ConfigGlobal getConfig(String name) {
+    ConfigGlobal c = data.get(name);
+    if (c != null && c.age() < X.AMINUTE * 10) {
+      return c;
     }
 
-    /**
-     * Gets the.
-     * 
-     * @param name
-     *            the name
-     * @return the system config
-     */
-    private static ConfigGlobal getConfig(String name) {
-        ConfigGlobal c = data.get(name);
-        if (c != null && c.age() < X.AMINUTE * 10) {
-            return c;
-        }
+    return null;
+  }
 
-        return null;
-    }
-
-    /** The data. */
-    transient static private Map<String, ConfigGlobal> data = new HashMap<String, ConfigGlobal>();
+  /** The data. */
+  transient static private Map<String, ConfigGlobal> data = new HashMap<String, ConfigGlobal>();
 
 }

@@ -18,8 +18,7 @@ import org.giiwa.framework.web.*;
 
 // TODO: Auto-generated Javadoc
 /**
- * web api: /admin/setting
- * <br>
+ * web api: /admin/setting <br>
  * use to custom setting, all module configuration MUST inherit from this class,
  * and override the "set" and "get" method
  * 
@@ -159,7 +158,9 @@ public class setting extends Model {
 
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
   @Path(login = true, access = "access.config.admin")
@@ -178,7 +179,9 @@ public class setting extends Model {
 
   public static class sync extends setting {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#reset()
      */
     @Override
@@ -189,7 +192,9 @@ public class setting extends Model {
       super.reset();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#set()
      */
     @Override
@@ -225,7 +230,9 @@ public class setting extends Model {
       get();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#get()
      */
     @Override
@@ -245,7 +252,9 @@ public class setting extends Model {
 
   public static class system extends setting {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#set()
      */
     @Override
@@ -262,7 +271,9 @@ public class setting extends Model {
       get();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#get()
      */
     @Override
@@ -287,7 +298,9 @@ public class setting extends Model {
 
   public static class mail extends setting {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#set()
      */
     @Override
@@ -304,7 +317,9 @@ public class setting extends Model {
       get();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#get()
      */
     @Override
@@ -320,10 +335,12 @@ public class setting extends Model {
     }
 
   }
-  
+
   public static class counter extends setting {
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#set()
      */
     @Override
@@ -335,11 +352,14 @@ public class setting extends Model {
       get();
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.giiwa.app.web.admin.setting#get()
      */
     @Override
     public void get() {
+//      this.set("counter", ConfigGlobal.s("site.counter", X.EMPTY));
       this.set("page", "/admin/setting.counter.html");
     }
 

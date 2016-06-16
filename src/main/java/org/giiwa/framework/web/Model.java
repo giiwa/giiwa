@@ -1313,7 +1313,7 @@ public class Model {
           byte[] bb = new byte[in.available()];
           in.read(bb);
           in.close();
-          return Html.removeTag(new String(bb, "UTF8"), "script");
+          return new String(bb, "UTF8");
         }
         return null;
       } else {
@@ -1321,11 +1321,7 @@ public class Model {
         String[] ss = req.getParameterValues(name);
         if (ss != null && ss.length > 0) {
           String s = ss[ss.length - 1];
-          if (all) {
-            return s;
-          } else {
-            return Html.removeTag(s, "script");
-          }
+          return s;
         }
 
         return null;
