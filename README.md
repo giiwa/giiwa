@@ -4,7 +4,7 @@
 <p><img src="http://giiwa.org/docs/images/mv.png" alt="MV developing"/></p>
 
 <h2>Downloading</h2>
-<p>Latest Giiwa version is available <a href="http://giiwa.org/archive/giiwa-1.0.1.tgz">giiwa-1.0.1.tgz</a>.</p>
+<p>Latest Giiwa version is available <a href="http://giiwa.org/archive/giiwa-1.0.2.tgz">giiwa-1.0.2.tgz</a>.</p>
 
 <h2>Obtaining the Source</h2>
 <p>The official Git repository is at:</p>
