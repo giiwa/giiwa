@@ -217,6 +217,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   protected static int delete(DBObject query, Class<? extends Bean> t) {
+    if (!Bean.isConfigured()) {
+      return 0;
+    }
+
     String collection = getCollection(t);
     if (collection != null) {
       delete(collection, query);
@@ -1440,6 +1444,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return Bean the instance of the Class
    */
   protected static <T extends Bean> T load(DBObject query, Class<T> t) {
+    if (!Bean.isConfigured()) {
+      return null;
+    }
+
     String collection = getCollection(t);
     if (collection != null) {
       try {
@@ -2221,6 +2229,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return int
    */
   final protected static int insertCollection(String collection, V v, String db) {
+    if (!Bean.isConfigured()) {
+      return 0;
+    }
+
     BasicDBObject d = new BasicDBObject();
 
     v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
@@ -2304,6 +2316,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return int of updated
    */
   final protected static int updateCollection(String collection, DBObject q, V v, boolean adding) {
+    if (!Bean.isConfigured()) {
+      return 0;
+    }
+    
     BasicDBObject d = new BasicDBObject();
 
     v.set("updated", System.currentTimeMillis());
@@ -4563,6 +4579,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @SuppressWarnings("unchecked")
   public static List<Object> distinct(String key, BasicDBObject q, Class<? extends Bean> t) {
+    if (!Bean.isConfigured()) {
+      return null;
+    }
+
     String collection = Bean.getCollection(t);
     if (!X.isEmpty(collection)) {
       TimeStamp t1 = TimeStamp.create();

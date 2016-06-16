@@ -32,123 +32,128 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
  */
 public class TemplateLoader extends ClasspathResourceLoader {
 
-    static Log log = LogFactory.getLog(TemplateLoader.class);
+  static Log               log   = LogFactory.getLog(TemplateLoader.class);
 
-    /**
-     * cache the file
-     */
-    static Map<String, File> cache = new HashMap<String, File>();
+  /**
+   * cache the file
+   */
+  static Map<String, File> cache = new HashMap<String, File>();
 
-    /**
-     * Clean.
-     */
-    public static void clean() {
-        cache.clear();
-    }
+  /**
+   * Clean.
+   */
+  public static void clean() {
+    cache.clear();
+  }
 
-    @Override
-    public boolean isCachingOn() {
-        return true;
-    }
+  @Override
+  public boolean isCachingOn() {
+    return true;
+  }
 
-    /**
-     * load template from the setting module, this make the template will be
-     * overload in child
-     * 
-     * @param resource
-     * @return File
-     */
-    private File getFile(String resource) {
-        File f = cache.get(resource);
-        try {
-            if (f == null && Module.home != null) {
-                f = Module.home.getFile(resource);
+  /**
+   * load template from the setting module, this make the template will be
+   * overload in child
+   * 
+   * @param resource
+   * @return File
+   */
+  private File getFile(String resource) {
+    File f = cache.get(resource);
+    try {
+      if (f == null && Module.home != null) {
+        f = Module.home.getFile(resource);
 
-                if (f != null) {
-                    cache.put(resource, f);
-                    log.info(resource + "=>" + f.getCanonicalPath());
-                }
-            }
-
-        } catch (Exception e) {
-            cache.remove(resource);
-        }
-        return f;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
-     * getLastModified(org.apache.velocity.runtime.resource.Resource)
-     */
-    @Override
-    public long getLastModified(Resource resource) {
-        File f = getFile(resource.getName());
         if (f != null) {
-            return f.lastModified();
+          cache.put(resource, f);
+          log.info(resource + "=>" + f.getCanonicalPath());
+        } else if (log.isDebugEnabled()) {
+          // not found the file
+          log.debug("not exists, resource=" + resource);
         }
-        return 0;
+      }
+
+    } catch (Exception e) {
+      cache.remove(resource);
     }
+    return f;
+  }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
-     * getResourceStream(java.lang.String)
-     */
-    @Override
-    public InputStream getResourceStream(String name) throws ResourceNotFoundException {
-        File f = getFile(name);
-        if (f != null) {
-            try {
-                return new FileInputStream(f);
-            } catch (FileNotFoundException e) {
-                log.error(e);
-            }
-        }
-        return null;
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
+   * getLastModified(org.apache.velocity.runtime.resource.Resource)
+   */
+  @Override
+  public long getLastModified(Resource resource) {
+    File f = getFile(resource.getName());
+    if (f != null) {
+      return f.lastModified();
     }
+    return 0;
+  }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#init
-     * (org.apache.commons.collections.ExtendedProperties)
-     */
-    @Override
-    public void init(ExtendedProperties configuration) {
-        super.init(configuration);
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
+   * getResourceStream(java.lang.String)
+   */
+  @Override
+  public InputStream getResourceStream(String name) throws ResourceNotFoundException {
+    File f = getFile(name);
+    if (f != null) {
+      try {
+        return new FileInputStream(f);
+      } catch (FileNotFoundException e) {
+        log.error(e);
+      }
     }
+    return null;
+  }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
-     * isSourceModified(org.apache.velocity.runtime.resource.Resource)
-     */
-    @Override
-    public boolean isSourceModified(Resource resource) {
-        if (resource == null)
-            return true;
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#init
+   * (org.apache.commons.collections.ExtendedProperties)
+   */
+  @Override
+  public void init(ExtendedProperties configuration) {
+    super.init(configuration);
+  }
 
-        File f = getFile(resource.getName());
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
+   * isSourceModified(org.apache.velocity.runtime.resource.Resource)
+   */
+  @Override
+  public boolean isSourceModified(Resource resource) {
+    if (resource == null)
+      return true;
 
-        return f == null || f.lastModified() != resource.getLastModified();
-    }
+    File f = getFile(resource.getName());
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.velocity.runtime.resource.loader.ResourceLoader#resourceExists
-     * (java.lang.String)
-     */
-    @Override
-    public boolean resourceExists(String name) {
-        File f = getFile(name);
-        return f != null;
-    }
+    return f == null || f.lastModified() != resource.getLastModified();
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.apache.velocity.runtime.resource.loader.ResourceLoader#resourceExists
+   * (java.lang.String)
+   */
+  @Override
+  public boolean resourceExists(String name) {
+    if (log.isDebugEnabled())
+      log.debug("exists? name=" + name);
+    File f = getFile(name);
+    return f != null;
+  }
 
 }

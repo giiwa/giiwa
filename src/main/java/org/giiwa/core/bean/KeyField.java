@@ -35,207 +35,211 @@ import com.mongodb.DBObject;
 @DBMapping(collection = "gi_key")
 public class KeyField extends Bean {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
+  /**
+   * 
+   */
+  private static final long serialVersionUID = 1L;
 
-    public String getId() {
-        return this.getString(X._ID);
+  public String getId() {
+    return this.getString(X._ID);
+  }
+
+  public String getCollection() {
+    return this.getString("collection");
+  }
+
+  public String getQ() {
+    return this.getString("q");
+  }
+
+  /**
+   * Load.
+   *
+   * @param id
+   *          the id
+   * @return the key field
+   */
+  // -------------------
+  public static KeyField load(String id) {
+    return Bean.load(new BasicDBObject(X._ID, id), KeyField.class);
+  }
+
+  /**
+   * Load.
+   *
+   * @param q
+   *          the q
+   * @param order
+   *          the order
+   * @param s
+   *          the s
+   * @param n
+   *          the n
+   * @return the beans
+   */
+  public static Beans<KeyField> load(BasicDBObject q, BasicDBObject order, int s, int n) {
+    return Bean.load(q, order, s, n, KeyField.class);
+  }
+
+  /**
+   * Delete all.
+   */
+  public static void deleteAll() {
+    Bean.delete(new BasicDBObject(), KeyField.class);
+  }
+
+  /**
+   * Delete.
+   *
+   * @param id
+   *          the id
+   */
+  public static void delete(String id) {
+    Bean.delete(new BasicDBObject(X._ID, id), KeyField.class);
+  }
+
+  /**
+   * Update.
+   *
+   * @param id
+   *          the id
+   * @param v
+   *          the v
+   */
+  public static void update(String id, V v) {
+    Bean.updateCollection(id, v, KeyField.class);
+  }
+
+  /**
+   * Creates the.
+   *
+   * @param collection
+   *          the collection
+   * @param q
+   *          the q
+   * @param order
+   *          the order
+   */
+  public static void create(final String collection, final DBObject q, final DBObject order) {
+    if (!Bean.isConfigured()) {
+      return;
     }
+    new Task() {
+      @Override
+      public void onExecute() {
+        BasicDBObject r = new BasicDBObject();
+        if (q != null) {
+          for (String s : q.keySet()) {
+            Object v = q.get(s);
 
-    public String getCollection() {
-        return this.getString("collection");
-    }
-
-    public String getQ() {
-        return this.getString("q");
-    }
-
-    /**
-     * Load.
-     *
-     * @param id
-     *          the id
-     * @return the key field
-     */
-    // -------------------
-    public static KeyField load(String id) {
-        return Bean.load(new BasicDBObject(X._ID, id), KeyField.class);
-    }
-
-    /**
-     * Load.
-     *
-     * @param q
-     *          the q
-     * @param order
-     *          the order
-     * @param s
-     *          the s
-     * @param n
-     *          the n
-     * @return the beans
-     */
-    public static Beans<KeyField> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-        return Bean.load(q, order, s, n, KeyField.class);
-    }
-
-    /**
-     * Delete all.
-     */
-    public static void deleteAll() {
-        Bean.delete(new BasicDBObject(), KeyField.class);
-    }
-
-    /**
-     * Delete.
-     *
-     * @param id
-     *          the id
-     */
-    public static void delete(String id) {
-        Bean.delete(new BasicDBObject(X._ID, id), KeyField.class);
-    }
-
-    /**
-     * Update.
-     *
-     * @param id
-     *          the id
-     * @param v
-     *          the v
-     */
-    public static void update(String id, V v) {
-        Bean.updateCollection(id, v, KeyField.class);
-    }
-
-    /**
-     * Creates the.
-     *
-     * @param collection
-     *          the collection
-     * @param q
-     *          the q
-     * @param order
-     *          the order
-     */
-    public static void create(final String collection, final DBObject q, final DBObject order) {
-        new Task() {
-            @Override
-            public void onExecute() {
-                BasicDBObject r = new BasicDBObject();
-                if (q != null) {
-                    for (String s : q.keySet()) {
-                        Object v = q.get(s);
-
-                        if (!X._ID.equals(s) && !s.startsWith("$") && !r.containsField(s)) {
-                            r.append(s, 1);
-                        }
-
-                        if (v instanceof DBObject) {
-                            general((DBObject) v, r);
-                        } else if (v instanceof List) {
-                            general((List) v, r);
-                        }
-
-                    }
-                }
-
-                if (order != null) {
-                    for (String s : order.keySet()) {
-                        Object v = order.get(s);
-
-                        if (!X._ID.equals(s) && !s.startsWith("$") && !r.containsField(s)) {
-                            r.append(s, 1);
-                        }
-
-                        if (v instanceof DBObject) {
-                            general((DBObject) v, r);
-                        } else if (v instanceof List) {
-                            general((List) v, r);
-                        }
-
-                    }
-                }
-
-                if (r.size() > 0) {
-                    String id = UID.id(collection, r);
-                    if (!exists(id)) {
-                        log.debug("r=" + r);
-
-                        Bean.insertCollection(V.create(X._ID, id).set("collection", collection).set("q", r.toString()).set("created", System.currentTimeMillis()), KeyField.class);
-                    }
-                }
+            if (!X._ID.equals(s) && !s.startsWith("$") && !r.containsField(s)) {
+              r.append(s, 1);
             }
 
-        }.schedule(0);
-
-    }
-
-    private static boolean exists(String id) {
-        return Bean.exists(new BasicDBObject(X._ID, id), KeyField.class);
-    }
-
-    private static void general(List l, BasicDBObject r) {
-        for (int i = 0; i < l.size(); i++) {
-            Object v = l.get(i);
             if (v instanceof DBObject) {
-                general((DBObject) v, r);
+              general((DBObject) v, r);
             } else if (v instanceof List) {
-                general((List) v, r);
+              general((List) v, r);
             }
+
+          }
         }
-    }
 
-    private static void general(DBObject q, BasicDBObject r) {
-        if (q instanceof BasicDBList) {
-            BasicDBList l = (BasicDBList) q;
-            for (int i = 0; i < l.size(); i++) {
-                Object v = l.get(i);
-                if (v instanceof DBObject) {
-                    general((DBObject) v, r);
-                } else if (v instanceof List) {
-                    general((List) v, r);
-                }
+        if (order != null) {
+          for (String s : order.keySet()) {
+            Object v = order.get(s);
+
+            if (!X._ID.equals(s) && !s.startsWith("$") && !r.containsField(s)) {
+              r.append(s, 1);
             }
-        } else {
-            for (String s : q.keySet()) {
-                Object v = q.get(s);
-                if (v instanceof DBObject) {
-                    general((DBObject) v, r);
-                } else if (!X._ID.equals(s) && !s.startsWith("$") && !r.containsField(s)) {
-                    r.append(s, 1);
-                }
+
+            if (v instanceof DBObject) {
+              general((DBObject) v, r);
+            } else if (v instanceof List) {
+              general((List) v, r);
             }
+
+          }
         }
+
+        if (r.size() > 0) {
+          String id = UID.id(collection, r);
+          if (!exists(id)) {
+            log.debug("r=" + r);
+
+            Bean.insertCollection(V.create(X._ID, id).set("collection", collection).set("q", r.toString())
+                .set("created", System.currentTimeMillis()), KeyField.class);
+          }
+        }
+      }
+
+    }.schedule(0);
+
+  }
+
+  private static boolean exists(String id) {
+    return Bean.exists(new BasicDBObject(X._ID, id), KeyField.class);
+  }
+
+  private static void general(List l, BasicDBObject r) {
+    for (int i = 0; i < l.size(); i++) {
+      Object v = l.get(i);
+      if (v instanceof DBObject) {
+        general((DBObject) v, r);
+      } else if (v instanceof List) {
+        general((List) v, r);
+      }
     }
+  }
 
-    /**
-     * Run.
-     */
-    public void run() {
-        new Task() {
-
-            @Override
-            public void onExecute() {
-                try {
-                    String q = getQ();
-                    String collection = getCollection();
-                    JSONObject jo = JSONObject.fromObject(q);
-                    BasicDBObject keys = new BasicDBObject();
-                    for (Object name : jo.keySet()) {
-                        keys.append((String) name, 1);
-                    }
-                    Bean.getCollection(collection).ensureIndex(keys);
-                } catch (Exception e) {
-                    log.error(e.getMessage(), e);
-                }
-            }
-
-        }.schedule(0);
-
-        update(this.getId(), V.create("status", "done"));
+  private static void general(DBObject q, BasicDBObject r) {
+    if (q instanceof BasicDBList) {
+      BasicDBList l = (BasicDBList) q;
+      for (int i = 0; i < l.size(); i++) {
+        Object v = l.get(i);
+        if (v instanceof DBObject) {
+          general((DBObject) v, r);
+        } else if (v instanceof List) {
+          general((List) v, r);
+        }
+      }
+    } else {
+      for (String s : q.keySet()) {
+        Object v = q.get(s);
+        if (v instanceof DBObject) {
+          general((DBObject) v, r);
+        } else if (!X._ID.equals(s) && !s.startsWith("$") && !r.containsField(s)) {
+          r.append(s, 1);
+        }
+      }
     }
+  }
+
+  /**
+   * Run.
+   */
+  public void run() {
+    new Task() {
+
+      @Override
+      public void onExecute() {
+        try {
+          String q = getQ();
+          String collection = getCollection();
+          JSONObject jo = JSONObject.fromObject(q);
+          BasicDBObject keys = new BasicDBObject();
+          for (Object name : jo.keySet()) {
+            keys.append((String) name, 1);
+          }
+          Bean.getCollection(collection).ensureIndex(keys);
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+        }
+      }
+
+    }.schedule(0);
+
+    update(this.getId(), V.create("status", "done"));
+  }
 
 }

@@ -63,6 +63,7 @@ public class Module {
    */
   String              path;
 
+  String              viewroot;
   /**
    * the id of the module, MUST unique, and also is a sequence of the loading:
    * biggest first
@@ -346,13 +347,13 @@ public class Module {
    */
   public File getFile(String resource, boolean inFloor) {
     try {
-      File f = new File(path + "/view/" + resource);
+      File f = new File(viewroot + File.separator + resource);
       if (f.exists()) {
         /**
          * test the file is still in the path? if not, then do not allow to
          * access, avoid user using "../../" to access system file
          */
-        if (f.getCanonicalPath().startsWith(path + "/view")) {
+        if (f.getCanonicalPath().startsWith(viewroot)) {
           return f;
         }
       }
@@ -642,6 +643,8 @@ public class Module {
         t.pack = p.containsKey("package") ? p.getString("package") : null;
         t.lifelistener = p.containsKey("lifelistener") ? p.getString("lifelistener") : null;
         t.path = f.getParent();
+        t.viewroot = new File(t.path + File.separator + "view").getCanonicalPath();
+
         if (p.containsKey("id")) {
           t.id = p.getInt("id");
         } else {
@@ -964,11 +967,11 @@ public class Module {
   public File loadResource(String uri, boolean infloor) {
 
     try {
-      File f = new File(path + "/view" + uri);
+      File f = new File(viewroot + File.separator + uri);
       // log.debug("testing: " + f.getAbsolutePath() + ", exists?" +
       // f.exists());
 
-      if (f.exists() && f.getCanonicalPath().startsWith(path + "/view"))
+      if (f.exists() && f.getCanonicalPath().startsWith(viewroot))
         return f;
 
       if (infloor) {
@@ -995,11 +998,11 @@ public class Module {
    */
   public Template getTemplate(String viewname, boolean allowEmpty) {
     try {
-      viewname = viewname.replaceAll("/", File.separator);
-      File f = new File(path + File.separator + "view" + File.separator + viewname);
+      // viewname = viewname.replaceAll("/", File.separator);
+      File f = new File(viewroot + File.separator + viewname);
       // System.out.println(f.getAbsolutePath());
 
-      if (f.exists() && f.getCanonicalPath().startsWith(path + File.separator + "view")) {
+      if (f.exists() && f.getCanonicalPath().startsWith(viewroot)) {
         return Velocity.getTemplate(viewname, "UTF-8");
       }
 
