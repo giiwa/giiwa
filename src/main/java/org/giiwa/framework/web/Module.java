@@ -25,6 +25,7 @@ import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.Velocity;
+import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
@@ -548,6 +549,8 @@ public class Module {
         m._init(_conf);
 
       }
+      Menu.cleanup();
+
       /**
        * initialize template loader for velocity
        */
@@ -557,8 +560,6 @@ public class Module {
       p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
       p.setProperty("file.resource.loader.class", "org.giiwa.framework.web.TemplateLoader");
       Velocity.init(p);
-
-      Menu.cleanup();
 
       // the the default locale
       String locale = null;
@@ -697,20 +698,8 @@ public class Module {
         /**
          * force: using default lifelistener to initialize the install script
          */
-        Module m = modules.get(0);
-        String name = m.lifelistener;
-        if (!X.isEmpty(name)) {
-
-          Class<?> c = Class.forName(name, true, classLoader);
-          Object o = c.newInstance();
-
-          if (o instanceof LifeListener) {
-
-            LifeListener l = (LifeListener) o;
-
-            l.upgrade(conf, this);
-          }
-        }
+        DefaultListener d = new DefaultListener();
+        d.upgrade(conf, this);
       }
 
       /**
@@ -1190,33 +1179,17 @@ public class Module {
     enabled = b;
 
     if (b) {
-      modules.put(id, this);
+      // install it
+      init(this);
+
     } else {
-      modules.remove(id);
-    }
-
-    if (modules.size() > 0) {
-      home = modules.lastEntry().getValue();
-    }
-
-    if (!b) {
-
+      // uninstall it
       try {
         if (this.id > 0) {
-          Module m = modules.get(0);
-          String name = m.lifelistener;
-          if (name != null) {
-            Class<?> c = Class.forName(name, true, classLoader);
-            Object o = c.newInstance();
-
-            if (o instanceof LifeListener) {
-
-              LifeListener l = (LifeListener) o;
-
-              l.upgrade(_conf, this);
-            }
-          }
+          DefaultListener d = new DefaultListener();
+          d.uninstall(_conf, this);
         }
+
         if (this.lifelistener != null) {
           String name = lifelistener;
           if (name != null) {
@@ -1225,7 +1198,7 @@ public class Module {
 
             if (o instanceof LifeListener) {
 
-              log.info("initializing: " + name);
+              log.info("uninstall: " + name);
               LifeListener l = (LifeListener) o;
 
               l.onStop();
@@ -1235,7 +1208,13 @@ public class Module {
         }
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+      } finally {
+        modules.remove(id);
       }
+    }
+
+    if (modules.size() > 0) {
+      home = modules.lastEntry().getValue();
     }
 
     store();
@@ -1429,6 +1408,7 @@ public class Module {
          * to initialize
          */
         m.path = new File(Model.HOME + "/modules/" + m.name).getCanonicalPath();
+        m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
 
         /**
          * loading the models

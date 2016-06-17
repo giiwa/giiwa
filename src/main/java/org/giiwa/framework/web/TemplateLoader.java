@@ -150,8 +150,8 @@ public class TemplateLoader extends ClasspathResourceLoader {
    */
   @Override
   public boolean resourceExists(String name) {
-    if (log.isDebugEnabled())
-      log.debug("exists? name=" + name);
+    // if (log.isDebugEnabled())
+    // log.debug("exists? name=" + name);
     File f = getFile(name);
     return f != null;
   }

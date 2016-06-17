@@ -217,9 +217,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   protected static int delete(DBObject query, Class<? extends Bean> t) {
-    if (!Bean.isConfigured()) {
-      return 0;
-    }
 
     String collection = getCollection(t);
     if (collection != null) {
@@ -1444,9 +1441,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return Bean the instance of the Class
    */
   protected static <T extends Bean> T load(DBObject query, Class<T> t) {
-    if (!Bean.isConfigured()) {
-      return null;
-    }
 
     String collection = getCollection(t);
     if (collection != null) {
@@ -2229,9 +2223,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return int
    */
   final protected static int insertCollection(String collection, V v, String db) {
-    if (!Bean.isConfigured()) {
-      return 0;
-    }
 
     BasicDBObject d = new BasicDBObject();
 
@@ -2316,10 +2307,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return int of updated
    */
   final protected static int updateCollection(String collection, DBObject q, V v, boolean adding) {
-    if (!Bean.isConfigured()) {
-      return 0;
-    }
-    
+
     BasicDBObject d = new BasicDBObject();
 
     v.set("updated", System.currentTimeMillis());
@@ -4579,9 +4567,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @SuppressWarnings("unchecked")
   public static List<Object> distinct(String key, BasicDBObject q, Class<? extends Bean> t) {
-    if (!Bean.isConfigured()) {
-      return null;
-    }
 
     String collection = Bean.getCollection(t);
     if (!X.isEmpty(collection)) {
@@ -4624,7 +4609,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
         return c.count(q);
       } finally {
         if (log.isDebugEnabled())
-          log.debug("count(*) cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
+          log.debug("count, cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
       }
     }
     return 0;
