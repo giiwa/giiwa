@@ -89,7 +89,7 @@
 
 		<delete file="target/giiwa-${version}.tar" />
 
-		<copy todir="../archieves">
+		<copy todir="../archives">
 			<fileset file="target/giiwa-${version}-${BUILDNO}.tgz" />
 		</copy>
 
