@@ -456,33 +456,68 @@ public class Model {
       /**
        * default handler
        */
+      this.put("lang", lang);
+      this.put("uri", uri);
+      this.put("module", Module.home);
+      this.put("path", path);
+      this.put("request", req);
+      this.put("response", resp);
+      this.set("session", this.getSession());
+      this.set("system", ConfigGlobal.getInstance());
+      this.createQuery();
+
       switch (method.method) {
         case METHOD_GET: {
-          this.put("lang", lang);
-          this.put("uri", uri);
-          this.put("module", Module.home);
-          this.put("path", path);
-          this.put("request", req);
-          this.put("response", resp);
-          this.set("session", this.getSession());
-          this.set("system", ConfigGlobal.getInstance());
-          this.createQuery();
+
+          Method m = this.getClass().getMethod("onPost");
+          if (m != null) {
+            Path p = m.getAnnotation(Path.class);
+            if (p != null) {
+              // check ogin
+              if (p.login()) {
+                if (this.getUser() == null) {
+                  gotoLogin();
+                  return null;
+                }
+
+                // check access
+                if (!X.isEmpty(p.access())) {
+                  if (!login.hasAccess(p.access())) {
+                    deny();
+                    return null;
+                  }
+                }
+              }
+            }
+          }
 
           onGet();
 
           break;
         }
         case METHOD_POST: {
-          this.put("lang", lang);
-          this.put("uri", uri);
-          this.put("module", Module.home);
-          this.put("path", path);
-          this.put("request", req);
-          this.put("response", resp);
-          this.set("session", this.getSession());
-          this.set("system", ConfigGlobal.getInstance());
-          this.createQuery();
 
+          Method m = this.getClass().getMethod("onPost");
+          if (m != null) {
+            Path p = m.getAnnotation(Path.class);
+            if (p != null) {
+              // check ogin
+              if (p.login()) {
+                if (this.getUser() == null) {
+                  gotoLogin();
+                  return null;
+                }
+
+                // check access
+                if (!X.isEmpty(p.access())) {
+                  if (!login.hasAccess(p.access())) {
+                    deny();
+                    return null;
+                  }
+                }
+              }
+            }
+          }
           onPost();
 
           break;

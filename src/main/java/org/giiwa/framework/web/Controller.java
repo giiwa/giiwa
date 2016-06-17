@@ -155,7 +155,12 @@ public class Controller {
 
     TimeStamp t = TimeStamp.create();
 
-    uri = uri.replaceAll("//", "/");
+    /**
+     * cut-off all the "//"
+     */
+    while (uri.indexOf("//") > -1) {
+      uri = uri.replaceAll("//", "/");
+    }
 
     /**
      * test and load from cache first
