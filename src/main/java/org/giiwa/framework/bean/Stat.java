@@ -231,23 +231,29 @@ public class Stat extends Bean implements Comparable<Stat> {
   public static int insertOrUpdate(String module, String date, long uid, float count, String... f) {
     String id = UID.id(date, module, uid, Bean.toString(f));
 
-    if (!Bean.exists(new BasicDBObject("date", date).append("id", id), Stat.class)) {
-      V v = V.create("date", date).set(X._ID, id).set("id", id).set("module", module).set("uid", uid)
-          .set("count", count).set("updated", System.currentTimeMillis());
+    try {
+      if (!Bean.exists(new BasicDBObject("date", date).append("id", id), Stat.class)) {
+        V v = V.create("date", date).set(X._ID, id).set("id", id).set("module", module).set("uid", uid)
+            .set("count", count).set("updated", System.currentTimeMillis());
 
-      List<String> list = new ArrayList<String>();
-      Collections.addAll(list, f);
-      v.set("f", list);
-      return Bean.insertCollection(v, Stat.class);
+        List<String> list = new ArrayList<String>();
+        Collections.addAll(list, f);
+        v.set("f", list);
+        return Bean.insertCollection(v, Stat.class);
 
-    } else {
-      /**
-       * only update if count > original
-       */
-      return Bean.updateCollection(
-          new BasicDBObject("date", date).append("id", id).append("count", new BasicDBObject("$lt", count)),
-          V.create("count", count).set("updated", System.currentTimeMillis()), Stat.class);
+      } else {
+        /**
+         * only update if count > original
+         */
+        return Bean.updateCollection(
+            new BasicDBObject("date", date).append("id", id).append("count", new BasicDBObject("$lt", count)),
+            V.create("count", count).set("updated", System.currentTimeMillis()), Stat.class);
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
+    return -1;
+
   }
 
   /*

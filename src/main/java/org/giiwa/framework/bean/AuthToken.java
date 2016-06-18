@@ -117,13 +117,19 @@ public class AuthToken extends Bean {
     String token = UID.random(20);
     long expired = System.currentTimeMillis() + ConfigGlobal.l("token.expired", X.AWEEK);
     V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
-    if (Bean.exists(new BasicDBObject(X._ID, id), AuthToken.class)) {
-      // update
-      Bean.updateCollection(id, v, AuthToken.class);
-    } else {
-      // insert
-      Bean.insertCollection(v.set(X._ID, id), AuthToken.class);
+
+    try {
+      if (Bean.exists(new BasicDBObject(X._ID, id), AuthToken.class)) {
+        // update
+        Bean.updateCollection(id, v, AuthToken.class);
+      } else {
+        // insert
+        Bean.insertCollection(v.set(X._ID, id), AuthToken.class);
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
+
     return load(id);
   }
 

@@ -26,8 +26,7 @@ import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
- * internal class, using for module management.
- * <br>
+ * internal class, using for module management. <br>
  * collection="gi_jar"
  * 
  * @author wujun
@@ -52,12 +51,18 @@ public class Jar extends Bean {
   public static void update(String module, String name) {
     String node = Model.node();
     String id = UID.id(module, name, node);
-    if (!Bean.exists(new BasicDBObject(X._ID, id), Jar.class)) {
-      V v = V.create(X._ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
-      Bean.insertCollection(v, Jar.class);
-    } else {
-      Bean.updateCollection(id, V.create("reset", 1), Jar.class);
+
+    try {
+      if (!Bean.exists(new BasicDBObject(X._ID, id), Jar.class)) {
+        V v = V.create(X._ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
+        Bean.insertCollection(v, Jar.class);
+      } else {
+        Bean.updateCollection(id, V.create("reset", 1), Jar.class);
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
+
   }
 
   /**

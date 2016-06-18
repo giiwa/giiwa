@@ -24,8 +24,7 @@ import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
- * Role.
- * <br>
+ * Role. <br>
  * collection="gi_role"
  * 
  * @author yjiang
@@ -80,12 +79,16 @@ public class Role extends Bean {
     }
 
     long id = UID.next("role.id");
-    while (Bean.exists(new BasicDBObject(X._ID, id), Role.class)) {
-      id = UID.next("role.id");
-    }
-    if (Bean.insert(V.create(X._ID, id).set("id", id).set("name", name).set("memo", memo).set("updated",
-        System.currentTimeMillis()), Role.class) > 0) {
-      return id;
+    try {
+      while (Bean.exists(new BasicDBObject(X._ID, id), Role.class)) {
+        id = UID.next("role.id");
+      }
+      if (Bean.insert(V.create(X._ID, id).set("id", id).set("name", name).set("memo", memo).set("updated",
+          System.currentTimeMillis()), Role.class) > 0) {
+        return id;
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
 
     return -1;
@@ -123,10 +126,15 @@ public class Role extends Bean {
    */
   public static void setAccess(long rid, String name) {
 
-    if (!Bean.exists(new BasicDBObject("rid", rid).append("name", name), RoleAccess.class)) {
-      Bean.insertCollection(V.create("rid", rid).set("name", name).set(X._ID, UID.id(rid, name)), RoleAccess.class);
-      Bean.updateCollection(rid, V.create("updated", System.currentTimeMillis()), Role.class);
+    try {
+      if (!Bean.exists(new BasicDBObject("rid", rid).append("name", name), RoleAccess.class)) {
+        Bean.insertCollection(V.create("rid", rid).set("name", name).set(X._ID, UID.id(rid, name)), RoleAccess.class);
+        Bean.updateCollection(rid, V.create("updated", System.currentTimeMillis()), Role.class);
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
+
   }
 
   /**
@@ -172,7 +180,12 @@ public class Role extends Bean {
    * @return true, if successful
    */
   public static boolean exist(long rid) {
-    return Bean.exists(new BasicDBObject(X._ID, rid), Role.class);
+    try {
+      return Bean.exists(new BasicDBObject(X._ID, rid), Role.class);
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
+    }
+    return false;
   }
 
   private static Role load(long rid) {

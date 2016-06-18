@@ -487,14 +487,18 @@ public class Repo extends Bean {
             }
           }
 
-          if (Bean.exists(new BasicDBObject(X._ID, getId()), Entity.class)) {
-            Bean.updateCollection(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()),
-                Entity.class);
-          } else {
-            Bean.insertCollection(
-                V.create(X._ID, getId()).set("uid", 0).set("total", pp).set("tag", tag).set("expired", getExpired())
-                    .set("created", System.currentTimeMillis()).set("flag", flag).set("name", name),
-                Entity.class);
+          try {
+            if (Bean.exists(new BasicDBObject(X._ID, getId()), Entity.class)) {
+              Bean.updateCollection(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()),
+                  Entity.class);
+            } else {
+              Bean.insertCollection(
+                  V.create(X._ID, getId()).set("uid", 0).set("total", pp).set("tag", tag).set("expired", getExpired())
+                      .set("created", System.currentTimeMillis()).set("flag", flag).set("name", name),
+                  Entity.class);
+            }
+          } catch (Exception e1) {
+            log.error(e1.getMessage(), e1);
           }
 
           /**

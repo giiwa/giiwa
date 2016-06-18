@@ -1283,7 +1283,7 @@ public class Model {
     String s = getString(name);
     if (!X.isEmpty(s)) {
       if (s.getBytes().length > maxlength) {
-        s = new Html(s).text(maxlength);
+        s = Html.create(s).text(maxlength);
       }
     }
 
@@ -1306,7 +1306,7 @@ public class Model {
     String s = getString(name);
     if (!X.isEmpty(s)) {
       if (s.getBytes().length > maxlength) {
-        s = new Html(s).text(maxlength);
+        s = Html.create(s).text(maxlength);
       }
     } else {
       s = defaultvalue;
@@ -1381,7 +1381,7 @@ public class Model {
     String html = getHtml(name);
     if (!X.isEmpty(html)) {
       if (html.getBytes().length >= maxlength) {
-        html = new Html(html).text(maxlength);
+        html = Html.create(html).text(maxlength);
       }
     }
     return html;
@@ -1402,7 +1402,7 @@ public class Model {
     String html = getHtml(name);
     if (!X.isEmpty(html)) {
       if (html.getBytes().length >= maxlength) {
-        html = new Html(html).text(maxlength);
+        html = Html.create(html).text(maxlength);
       }
     } else {
       html = defaultvalue;

@@ -28,8 +28,7 @@ import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
- * Menu.
- * <br>
+ * Menu. <br>
  * collection="gi_menu"
  * 
  * @author yjiang
@@ -229,20 +228,25 @@ public class Menu extends Bean {
     String node = Model.node();
 
     BasicDBObject q = new BasicDBObject().append("parent", parent).append("name", name).append("node", node);
-    if (!Bean.exists(q, Menu.class)) {
-      long id = UID.next("menu.id");
-      while (Bean.exists(new BasicDBObject(X._ID, id), Menu.class)) {
-        id = UID.next("menu.id");
+
+    try {
+      if (!Bean.exists(q, Menu.class)) {
+        long id = UID.next("menu.id");
+        while (Bean.exists(new BasicDBObject(X._ID, id), Menu.class)) {
+          id = UID.next("menu.id");
+        }
+        Bean.insertCollection(v.set(X._ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
+            Menu.class);
+
+      } else {
+        /**
+         * update
+         */
+        Bean.updateCollection(q, v, Menu.class);
+
       }
-      Bean.insertCollection(v.set(X._ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
-          Menu.class);
-
-    } else {
-      /**
-       * update
-       */
-      Bean.updateCollection(q, v, Menu.class);
-
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
 
     long count = Bean.count(new BasicDBObject("parent", parent), Menu.class);

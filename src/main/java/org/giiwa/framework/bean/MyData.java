@@ -65,12 +65,17 @@ public class MyData extends Bean {
   public static long create(long uid, String table, V v) {
     long id = UID.next("userdata.id");
 
-    while (Bean.exists(new BasicDBObject(X._ID, id), MyData.class)) {
-      id = UID.next("userdata.id");
+    try {
+      while (Bean.exists(new BasicDBObject(X._ID, id), MyData.class)) {
+        id = UID.next("userdata.id");
+      }
+      Bean.insertCollection(v.set(X._ID, id, true).set("id", id, true).set("uid", uid, true).set("table", table, true),
+          MyData.class);
+      return id;
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
-    Bean.insertCollection(v.set(X._ID, id, true).set("id", id, true).set("uid", uid, true).set("table", table, true),
-        MyData.class);
-    return id;
+    return -1;
   }
 
   /**

@@ -100,9 +100,13 @@ public class Access extends Bean {
       return true;
     }
 
-    if (Bean.exists(new BasicDBObject(X._ID, name), Access.class)) {
-      cache.add(name);
-      return true;
+    try {
+      if (Bean.exists(new BasicDBObject(X._ID, name), Access.class)) {
+        cache.add(name);
+        return true;
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
     return false;
   }

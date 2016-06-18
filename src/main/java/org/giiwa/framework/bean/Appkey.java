@@ -23,8 +23,7 @@ import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
- * the Appkey.
- * <br>
+ * the Appkey. <br>
  * collection="gi_appkey"
  * 
  * @author wujun
@@ -60,9 +59,13 @@ public class Appkey extends Bean {
    * @return the int
    */
   public static int create(String appkey, V v) {
-    if (!Bean.exists(new BasicDBObject().append(X.ID, appkey), Appkey.class)) {
-      return Bean.insertCollection(
-          v.set(X._ID, appkey).set("appkey", appkey).set("created", System.currentTimeMillis()), Appkey.class);
+    try {
+      if (!Bean.exists(new BasicDBObject().append(X.ID, appkey), Appkey.class)) {
+        return Bean.insertCollection(
+            v.set(X._ID, appkey).set("appkey", appkey).set("created", System.currentTimeMillis()), Appkey.class);
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
     return 0;
   }

@@ -381,10 +381,12 @@ public class X {
    * To double.
    * 
    * @param v
-   *          the v
+   *          the value object
+   * @param defaultValue
+   *          the default value when the v is null or parse error
    * @return the double
    */
-  public static double toDouble(Object v) {
+  public static double toDouble(Object v, double defaultValue) {
     if (v != null) {
       if (v instanceof Integer) {
         return (Integer) v;
@@ -422,7 +424,7 @@ public class X {
 
       }
     }
-    return 0;
+    return defaultValue;
   }
 
   /**

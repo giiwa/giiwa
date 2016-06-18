@@ -35,167 +35,172 @@ import org.jsoup.select.Elements;
  */
 public class Html {
 
-	/** The delegator. */
-	ParserDelegator delegator = new ParserDelegator();
+  /** The delegator. */
+  ParserDelegator delegator = new ParserDelegator();
 
-	/** The log. */
-	static Log log = LogFactory.getLog(Html.class);
+  /** The log. */
+  static Log      log       = LogFactory.getLog(Html.class);
 
-	/** The d. */
-	Document d = null;
+  /** The d. */
+  Document        d         = null;
 
-	/**
-	 * Instantiates a new html.
-	 * 
-	 * @param html
-	 *            the html
-	 */
-	public Html(String html) {
-		if (html != null) {
-			d = Jsoup.parse(html);
-		}
-	}
+  private Html(String html) {
+    if (html != null) {
+      d = Jsoup.parse(html);
+    }
+  }
 
-	/**
-	 * Removes the tag.
-	 * 
-	 * @param html
-	 *            the html
-	 * @param tag
-	 *            the tag
-	 * @return the string
-	 */
-	public static String removeTag(String html, String tag) {
-		if (html == null)
-			return null;
+  /**
+   * create a Html object by html string
+   * 
+   * @param html
+   *          the html string
+   * @return Html object
+   */
+  public static Html create(String html) {
+    return new Html(html);
+  }
 
-		StringBuilder sb = new StringBuilder();
-		int p = 0;
-		int len = html.length();
-		while (p < len) {
-			int i = html.indexOf("<" + tag, p);
-			if (i > -1) {
-				sb.append(html.substring(p, i));
-				i = html.indexOf("</" + tag + ">", i);
-				if (i > -1) {
-					p = i + tag.length() + 3;
-				} else {
-					break;
-				}
-			} else {
-				sb.append(html.substring(p));
-				break;
-			}
-		}
+  /**
+   * Removes the tag.
+   * 
+   * @param html
+   *          the html
+   * @param tag
+   *          the tag
+   * @return the string
+   */
+  public static String removeTag(String html, String tag) {
+    if (html == null)
+      return null;
 
-		return sb.toString();
-	}
+    StringBuilder sb = new StringBuilder();
+    int p = 0;
+    int len = html.length();
+    while (p < len) {
+      int i = html.indexOf("<" + tag, p);
+      if (i > -1) {
+        sb.append(html.substring(p, i));
+        i = html.indexOf("</" + tag + ">", i);
+        if (i > -1) {
+          p = i + tag.length() + 3;
+        } else {
+          break;
+        }
+      } else {
+        sb.append(html.substring(p));
+        break;
+      }
+    }
 
-	/**
+    return sb.toString();
+  }
+
+  /**
    * get the title of the HTML.
    *
    * @return the string
    */
-	public String title() {
-		if (d != null) {
-			return d.title();
-		}
+  public String title() {
+    if (d != null) {
+      return d.title();
+    }
 
-		return null;
-	}
+    return null;
+  }
 
-	transient String body;
+  transient String body;
 
-	/**
-	 * Body.
-	 * 
-	 * @return the string
-	 */
-	public String body() {
-		if (body == null && d != null) {
-			d.select("iframe").remove();
-			body = d.html();
-		}
+  /**
+   * Body.
+   * 
+   * @return the string
+   */
+  public String body() {
+    if (body == null && d != null) {
+      d.select("iframe").remove();
+      body = d.html();
+    }
 
-		return body;
-	}
+    return body;
+  }
 
-	/**
+  /**
    * Body.
    *
    * @param len
    *          the len
    * @return the string
    */
-	public String body(int len) {
-		body();
+  public String body(int len) {
+    body();
 
-		if (body != null && body.length() > len) {
-			body = body.substring(0, len - 3) + "...";
-		}
+    if (body != null && body.length() > len) {
+      body = body.substring(0, len - 3) + "...";
+    }
 
-		return body;
-	}
+    return body;
+  }
 
-	transient String text;
+  transient String text;
 
-	/**
-	 * Text.
-	 * 
-	 * @return the string
-	 */
-	public String text() {
-		if (text == null && d != null) {
-			String s = d.text();
-			text = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-		}
+  /**
+   * Text.
+   * 
+   * @return the string
+   */
+  public String text() {
+    if (text == null && d != null) {
+      String s = d.text();
+      text = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
 
-		return text;
-	}
+    return text;
+  }
 
-	/**
+  /**
    * Text.
    *
    * @param len
    *          the len
    * @return the string
    */
-	public String text(int len) {
-		text();
+  public String text(int len) {
+    text();
 
-		if (text != null && text.getBytes().length > len) {
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < text.length() && sb.toString().getBytes().length < len - 5; i++) {
-				sb.append(text.charAt(i));
-			}
-			text = sb.append("...").toString();
-		}
+    if (text != null && text.getBytes().length > len) {
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < text.length() && sb.toString().getBytes().length < len - 5; i++) {
+        sb.append(text.charAt(i));
+      }
+      text = sb.append("...").toString();
+    }
 
-		return text;
-	}
+    return text;
+  }
 
-	/**
+  /**
    * get the tags.
    *
    * @param tag
    *          the name of the tag
    * @return List
    */
-	public List<Element> get(String tag) {
-		if (d != null) {
-			Elements es = d.getElementsByTag(tag);
-			List<Element> list = new ArrayList<Element>();
-			for (int i = 0; i < es.size(); i++) {
-				Element e = es.get(i);
-				list.add(e);
-			}
-			return list;
+  public List<Element> get(String tag) {
+    if (d != null) {
+      Elements es = d.getElementsByTag(tag);
+      List<Element> list = new ArrayList<Element>();
+      for (int i = 0; i < es.size(); i++) {
+        Element e = es.get(i);
+        list.add(e);
+      }
+      return list;
 
-		}
-		return null;
-	}
+    }
+    return null;
+  }
 
-	/**
+  /**
    * find the element by the selector <br>
    * .
    *
@@ -211,119 +216,119 @@ public class Html {
    * @return Element
    */
 
-	public Element find(String selector) {
-		String[] ss = selector.split(" ");
-		Element e = d;
-		for (String s : ss) {
-			if (X.isEmpty(s)) {
-				continue;
-			}
-			e = _find(e, s);
-		}
-		return e;
-	}
+  public Element find(String selector) {
+    String[] ss = selector.split(" ");
+    Element e = d;
+    for (String s : ss) {
+      if (X.isEmpty(s)) {
+        continue;
+      }
+      e = _find(e, s);
+    }
+    return e;
+  }
 
-	private Element _find(Element e, String s) {
-		if (e == null) {
-			return null;
-		}
+  private Element _find(Element e, String s) {
+    if (e == null) {
+      return null;
+    }
 
-		String[] s1 = s.split("[()]");
-		s = s1[0];
-		String s2 = s1.length > 1 ? s1[1] : null;
-		if (s.startsWith("#")) {
-			s = s.substring(1);
-			e = e.getElementById(s);
-		} else if (s.startsWith(".")) {
-			s = s.substring(1);
-			Elements es = e.getElementsByAttributeValue("class", s);
-			if (es != null && es.size() > 0) {
-				if (s2 == null) {
-					e = es.get(0);
-				} else {
-					for (int i = 0; i < es.size(); i++) {
-						Element e1 = es.get(i);
-						if (e1.text().indexOf(s2) > -1) {
-							// found
-							e = e1;
-							break;
-						}
-					}
-				}
-			} else {
-				e = null;
-			}
-		} else {
-			String[] ss = s.split("\\.");
-			if (ss.length == 1) {
-				Elements es = e.getElementsByTag(ss[0]);
-				if (es != null && es.size() > 0) {
-					if (s2 == null) {
-						e = es.get(0);
-					} else {
-						for (int i = 0; i < es.size(); i++) {
-							Element e1 = es.get(i);
-							if (e1.text().indexOf(s2) > -1) {
-								// found
-								e = e1;
-								break;
-							}
-						}
-					}
-				} else {
-					e = null;
-				}
-			} else if (ss.length == 2) {
-				Elements es = e.getElementsByTag(ss[0]);
-				if (es != null && es.size() > 0) {
-					for (int i = 0; i < es.size(); i++) {
-						e = _find(es.get(i), "." + ss[1]);
-						if (e != null) {
-							// found
-							break;
-						}
-					}
-				} else {
-					e = null;
-				}
-			} else {
-				e = null;
-			}
-		}
-		return e;
-	}
+    String[] s1 = s.split("[()]");
+    s = s1[0];
+    String s2 = s1.length > 1 ? s1[1] : null;
+    if (s.startsWith("#")) {
+      s = s.substring(1);
+      e = e.getElementById(s);
+    } else if (s.startsWith(".")) {
+      s = s.substring(1);
+      Elements es = e.getElementsByAttributeValue("class", s);
+      if (es != null && es.size() > 0) {
+        if (s2 == null) {
+          e = es.get(0);
+        } else {
+          for (int i = 0; i < es.size(); i++) {
+            Element e1 = es.get(i);
+            if (e1.text().indexOf(s2) > -1) {
+              // found
+              e = e1;
+              break;
+            }
+          }
+        }
+      } else {
+        e = null;
+      }
+    } else {
+      String[] ss = s.split("\\.");
+      if (ss.length == 1) {
+        Elements es = e.getElementsByTag(ss[0]);
+        if (es != null && es.size() > 0) {
+          if (s2 == null) {
+            e = es.get(0);
+          } else {
+            for (int i = 0; i < es.size(); i++) {
+              Element e1 = es.get(i);
+              if (e1.text().indexOf(s2) > -1) {
+                // found
+                e = e1;
+                break;
+              }
+            }
+          }
+        } else {
+          e = null;
+        }
+      } else if (ss.length == 2) {
+        Elements es = e.getElementsByTag(ss[0]);
+        if (es != null && es.size() > 0) {
+          for (int i = 0; i < es.size(); i++) {
+            e = _find(es.get(i), "." + ss[1]);
+            if (e != null) {
+              // found
+              break;
+            }
+          }
+        } else {
+          e = null;
+        }
+      } else {
+        e = null;
+      }
+    }
+    return e;
+  }
 
-	/**
-	 * Removes the.
-	 * 
-	 * @param q
-	 *            the q
-	 * @return the html
-	 */
-	public Html remove(String q) {
-		if (d != null) {
-			d.select(q).remove();
-		}
-		return this;
-	}
+  /**
+   * Removes the.
+   * 
+   * @param q
+   *          the q
+   * @return the html
+   */
+  public Html remove(String q) {
+    if (d != null) {
+      d.select(q).remove();
+    }
+    return this;
+  }
 
-	/**
+  /**
    * The main method.
    *
    * @param args
    *          the arguments
    */
-	public static void main(String[] args) {
-		String s = "<div id='aaa' class='b'>aaaaa<span class='a'>dddd</span><span class='a'>aaaaaa</span></div>";
-		Html h = new Html(s);
-		Element e = h.find("div");
-		System.out.println("1:" + e);
-		e = h.find("div span");
-		System.out.println("2:" + e);
-		System.out.println("3:" + h.find("div.b"));
-		System.out.println("4:" + h.find("div.b span.a"));
-		System.out.println("5:" + h.find("#aaa .a"));
-		System.out.println("5:" + h.find("#aaa .a(aaaa)"));
+  public static void main(String[] args) {
+    String s = "<div id='aaa' class='b'>aaaaa<span class='a'>dddd</span><span class='a'>aaaaaa</span></div>";
+    Html h = new Html(s);
+    Element e = h.find("div");
+    System.out.println("1:" + e);
+    e = h.find("div span");
+    System.out.println("2:" + e);
+    System.out.println("3:" + h.find("div.b"));
+    System.out.println("4:" + h.find("div.b span.a"));
+    System.out.println("5:" + h.find("#aaa .a"));
+    System.out.println("5:" + h.find("#aaa .a(aaaa)"));
 
-	}
+  }
 }

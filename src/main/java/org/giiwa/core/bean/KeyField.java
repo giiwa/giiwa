@@ -22,6 +22,7 @@ import net.sf.json.JSONObject;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 
 // TODO: Auto-generated Javadoc
@@ -163,12 +164,16 @@ public class KeyField extends Bean {
         }
 
         if (r.size() > 0) {
-          String id = UID.id(collection, r);
-          if (!exists(id)) {
-            log.debug("r=" + r);
+          try {
+            String id = UID.id(collection, r);
+            if (!exists(id)) {
+              log.debug("r=" + r);
 
-            Bean.insertCollection(V.create(X._ID, id).set("collection", collection).set("q", r.toString())
-                .set("created", System.currentTimeMillis()), KeyField.class);
+              Bean.insertCollection(V.create(X._ID, id).set("collection", collection).set("q", r.toString())
+                  .set("created", System.currentTimeMillis()), KeyField.class);
+            }
+          } catch (Exception e1) {
+            log.error(e1.getMessage(), e1);
           }
         }
       }
@@ -177,7 +182,7 @@ public class KeyField extends Bean {
 
   }
 
-  private static boolean exists(String id) {
+  private static boolean exists(String id) throws Exception {
     return Bean.exists(new BasicDBObject(X._ID, id), KeyField.class);
   }
 
@@ -231,7 +236,10 @@ public class KeyField extends Bean {
           for (Object name : jo.keySet()) {
             keys.append((String) name, 1);
           }
-          Bean.getCollection(collection).ensureIndex(keys);
+          DBCollection c = Bean.getCollection(collection);
+          if (c != null) {
+            c.ensureIndex(keys);
+          }
         } catch (Exception e) {
           log.error(e.getMessage(), e);
         }

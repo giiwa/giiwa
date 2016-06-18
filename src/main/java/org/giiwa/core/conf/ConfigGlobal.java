@@ -54,18 +54,18 @@ public class ConfigGlobal extends Bean {
   public static int i(String name, int defaultValue) {
     ConfigGlobal c = getConfig(name);
     if (c != null) {
-      return Bean.toInt(c.var);
+      return X.toInt(c.var, defaultValue);
     }
 
     c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
     if (c != null) {
       data.put(name, c);
-      return Bean.toInt(c.var);
+      return X.toInt(c.var, defaultValue);
     } else {
       c = new ConfigGlobal();
       c.var = conf.getInt(name, defaultValue);
       data.put(name, c);
-      return Bean.toInt(c.var);
+      return X.toInt(c.var, defaultValue);
     }
   }
 
@@ -102,18 +102,18 @@ public class ConfigGlobal extends Bean {
   public static double d(String name, double defaultValue) {
     ConfigGlobal c = getConfig(name);
     if (c != null) {
-      return Bean.toDouble(c.var);
+      return X.toDouble(c.var, defaultValue);
     }
 
     c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
     if (c != null) {
       data.put(name, c);
-      return Bean.toDouble(c.var);
+      return X.toDouble(c.var, defaultValue);
     } else {
       c = new ConfigGlobal();
       c.var = conf.getDouble(name, defaultValue);
       data.put(name, c);
-      return Bean.toDouble(c.var);
+      return X.toDouble(c.var, defaultValue);
     }
   }
 
@@ -156,18 +156,18 @@ public class ConfigGlobal extends Bean {
   public static long l(String name, long defaultValue) {
     ConfigGlobal c = getConfig(name);
     if (c != null) {
-      return Bean.toLong(c.var);
+      return X.toLong(c.var, defaultValue);
     }
 
     c = Bean.load(new BasicDBObject(X._ID, name), ConfigGlobal.class);
     if (c != null) {
       data.put(name, c);
-      return Bean.toLong(c.var);
+      return X.toLong(c.var, defaultValue);
     } else {
       c = new ConfigGlobal();
       c.var = conf.getLong(name, defaultValue);
       data.put(name, c);
-      return Bean.toLong(c.var);
+      return X.toLong(c.var, defaultValue);
     }
   }
 
@@ -202,10 +202,14 @@ public class ConfigGlobal extends Bean {
       return;
     }
 
-    if (Bean.exists(new BasicDBObject(X._ID, name), ConfigGlobal.class)) {
-      Bean.updateCollection(name, V.create("var", o), ConfigGlobal.class);
-    } else {
-      Bean.insertCollection(V.create("var", o).set(X._ID, name), ConfigGlobal.class);
+    try {
+      if (Bean.exists(new BasicDBObject(X._ID, name), ConfigGlobal.class)) {
+        Bean.updateCollection(name, V.create("var", o), ConfigGlobal.class);
+      } else {
+        Bean.insertCollection(V.create("var", o).set(X._ID, name), ConfigGlobal.class);
+      }
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
     }
   }
 

@@ -156,8 +156,12 @@ public class User extends Bean {
     Long id = (Long) v.value("id");
     if (id == null) {
       id = UID.next("user.id");
-      while (Bean.exists(new BasicDBObject(X._ID, id), User.class)) {
-        id = UID.next("user.id");
+      try {
+        while (Bean.exists(new BasicDBObject(X._ID, id), User.class)) {
+          id = UID.next("user.id");
+        }
+      } catch (Exception e1) {
+        log.error(e1.getMessage(), e1);
       }
     }
     if (log.isDebugEnabled())
@@ -725,7 +729,12 @@ public class User extends Bean {
    * @return boolean
    */
   public static boolean exists(BasicDBObject q) {
-    return Bean.exists(q, User.class);
+    try {
+      return Bean.exists(q, User.class);
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
+    }
+    return false;
   }
 
   /**
@@ -736,7 +745,12 @@ public class User extends Bean {
    * @return boolean
    */
   public static boolean exists(long id) {
-    return Bean.exists(new BasicDBObject(X._ID, id), User.class);
+    try {
+      return Bean.exists(new BasicDBObject(X._ID, id), User.class);
+    } catch (Exception e1) {
+      log.error(e1.getMessage(), e1);
+    }
+    return false;
   }
 
 }

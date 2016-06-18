@@ -81,6 +81,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   private static Map<String, DB> mongo            = new HashMap<String, DB>();
 
   public static boolean isConfigured() {
+    getDB();
     return mongo.size() > 0;
   }
 
@@ -207,13 +208,16 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   protected static int delete(String collection, DBObject query) {
     try {
       DBCollection db = Bean.getCollection(collection);
-      db.remove(query);
-      return 1;
+      if (db != null) {
+        db.remove(query);
+        return 1;
+      }
+      return -1;
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error(e.getMessage(), e);
     }
-    return 0;
+    return -1;
   }
 
   protected static int delete(DBObject query, Class<? extends Bean> t) {
@@ -659,6 +663,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * parse a object to a integer.
    * 
+   * @deprecated please refer X.toInt()
    * @param v
    *          the v
    * @param defaultValue
@@ -672,6 +677,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * parse a object to float, the default value is "0".
    * 
+   * @deprecated please refer X.toFloat()
    * @param v
    *          the v
    * @return the float
@@ -683,6 +689,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * parse a object to a float with defaultvalue.
    * 
+   * @deprecated please refer X.toFloat()
    * @param v
    *          the v
    * @param defaultValue
@@ -696,12 +703,13 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * To double.
    * 
+   * @deprecated please refer X.toDouble()
    * @param v
    *          the v
    * @return the double
    */
   public static double toDouble(Object v) {
-    return X.toDouble(v);
+    return X.toDouble(v, -1);
   }
 
   final protected int insertOrUpdate(String where, Object[] args, V sets) {
@@ -1203,10 +1211,12 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   protected static <T extends Bean> T load(String collection, DBObject query, T b) {
     try {
       DBCollection db = Bean.getCollection(collection);
-      DBObject d = db.findOne(query);
-      if (d != null) {
-        b.load(d);
-        return b;
+      if (db != null) {
+        DBObject d = db.findOne(query);
+        if (d != null) {
+          b.load(d);
+          return b;
+        }
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
@@ -1221,26 +1231,28 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     TimeStamp t = TimeStamp.create();
     try {
       DBCollection db = Bean.getCollection(collection);
-      if (Bean.DEBUG)
-        KeyField.create(collection, query, order);
+      if (db != null) {
+        if (Bean.DEBUG)
+          KeyField.create(collection, query, order);
 
-      cur = db.find(query);
-      if (order != null) {
-        cur.sort(order);
-      }
+        cur = db.find(query);
+        if (order != null) {
+          cur.sort(order);
+        }
 
-      if (cur.hasNext()) {
-        DBObject d = cur.next();
-        if (log.isDebugEnabled())
-          log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order=" + order
-              + ", result=" + d.get(X._ID));
+        if (cur.hasNext()) {
+          DBObject d = cur.next();
+          if (log.isDebugEnabled())
+            log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
+                + order + ", result=" + d.get(X._ID));
 
-        b.load(d);
-        return b;
-      } else {
-        if (log.isDebugEnabled())
-          log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order=" + order
-              + ", result=" + null);
+          b.load(d);
+          return b;
+        } else {
+          if (log.isDebugEnabled())
+            log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
+                + order + ", result=" + null);
+        }
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
@@ -1329,40 +1341,42 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     DBCursor cur = null;
     try {
       db = Bean.getCollection(collection);
-      cur = db.find(query);
+      if (db != null) {
+        cur = db.find(query);
 
-      if (Bean.DEBUG)
-        KeyField.create(collection, query, orderBy);
+        if (Bean.DEBUG)
+          KeyField.create(collection, query, orderBy);
 
-      if (orderBy != null) {
-        cur.sort(orderBy);
+        if (orderBy != null) {
+          cur.sort(orderBy);
+        }
+
+        Beans<T> bs = new Beans<T>();
+        bs.total = cur.count();
+        cur.skip(offset);
+        bs.list = new ArrayList<T>();
+
+        if (limit < 0)
+          limit = Integer.MAX_VALUE;
+
+        while (cur.hasNext() && limit > 0) {
+          DBObject d = cur.next();
+          T b = clazz.newInstance();
+          b.load(d);
+          bs.list.add(b);
+          limit--;
+        }
+
+        if (log.isDebugEnabled())
+          log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
+              + orderBy + ", result=" + (bs == null || bs.getList() == null ? "null" : bs.getList().size()));
+
+        if (t.past() > 10000) {
+          log.warn("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
+              + orderBy + ", result=" + (bs == null || bs.getList() == null ? "null" : bs.getList().size()));
+        }
+        return bs;
       }
-
-      Beans<T> bs = new Beans<T>();
-      bs.total = cur.count();
-      cur.skip(offset);
-      bs.list = new ArrayList<T>();
-
-      if (limit < 0)
-        limit = Integer.MAX_VALUE;
-
-      while (cur.hasNext() && limit > 0) {
-        DBObject d = cur.next();
-        T b = clazz.newInstance();
-        b.load(d);
-        bs.list.add(b);
-        limit--;
-      }
-
-      if (log.isDebugEnabled())
-        log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order=" + orderBy
-            + ", result=" + (bs == null || bs.getList() == null ? "null" : bs.getList().size()));
-
-      if (t.past() > 10000) {
-        log.warn("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order=" + orderBy
-            + ", result=" + (bs == null || bs.getList() == null ? "null" : bs.getList().size()));
-      }
-      return bs;
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error("query=" + query + ", order=" + orderBy, e);
@@ -1505,16 +1519,18 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(e.getMessage(), e);
+        log.error(query, e);
     }
     return null;
   }
 
   /**
-   * Load data by default, get all fields and set in map
+   * Load data by default, get all fields and set in map.<br>
+   * it will be invoked when load data from RDBS DB <br>
+   * By default, it will load all data in Bean Map.
    * 
    * @param r
-   *          the r
+   *          the ResultSet of RDBS
    * @throws SQLException
    *           the SQL exception
    */
@@ -1537,10 +1553,12 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * Load by default, get all columns to a map
+   * Load by default, get all columns to a map<br>
+   * it will invoked when load data from the MongoDB<br>
+   * by default, will load all data in Bean Map.
    * 
    * @param d
-   *          the d
+   *          the DBObject
    */
   protected void load(DBObject d) {
 
@@ -2224,22 +2242,26 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   final protected static int insertCollection(String collection, V v, String db) {
 
-    BasicDBObject d = new BasicDBObject();
+    DBCollection c = Bean.getCollection(X.isEmpty(db) ? "prod" : db, collection);
+    if (c != null) {
+      BasicDBObject d = new BasicDBObject();
 
-    v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
-    for (String name : v.names()) {
-      d.append(name, v.value(name));
-    }
+      v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
+      for (String name : v.names()) {
+        d.append(name, v.value(name));
+      }
 
-    try {
-      WriteResult r = Bean.getCollection(X.isEmpty(db) ? "prod" : db, collection).insert(d);
+      try {
 
-      if (log.isDebugEnabled())
-        log.debug("inserted collection=" + collection + ", d=" + d);
-      return 1;
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(e.getMessage(), e);
+        WriteResult r = c.insert(d);
+
+        if (log.isDebugEnabled())
+          log.debug("inserted collection=" + collection + ", d=" + d);
+        return 1;
+      } catch (Exception e) {
+        if (log.isErrorEnabled())
+          log.error(e.getMessage(), e);
+      }
     }
     return 0;
   }
@@ -2317,8 +2339,8 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     }
 
     try {
-      WriteResult r = Bean.getCollection(collection).update(q, new BasicDBObject().append("$set", d), adding, true,
-          WriteConcern.SAFE);
+      DBCollection c = Bean.getCollection(collection);
+      WriteResult r = c.update(q, new BasicDBObject().append("$set", d), adding, true, WriteConcern.SAFE);
 
       if (log.isDebugEnabled())
         log.debug("updated collection=" + collection + ", q=" + q + ", d=" + d + ", n=" + r.getN() + ",result=" + r);
@@ -2476,13 +2498,13 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * The Class V. of value, used to generate the "values" of SQL
+   * Values in SQL, used to insert or update data both RDBS and Mongo<br>
+   * 
    */
   public static final class V {
 
     /** The list. */
-    // private List<Entity> list = new ArrayList<Entity>();
-    private Map<String, Object> m = new LinkedHashMap<String, Object>();
+    private Map<String, Object> m = new HashMap<String, Object>();
 
     /**
      * get the names.
@@ -2542,7 +2564,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     }
 
     /**
-     * Sets the value if not exists, ignore if exists.
+     * Sets the value if not exists, ignored if name exists.
      *
      * @param name
      *          the name
@@ -2585,17 +2607,17 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
      *          the json
      * @return V
      */
-    public V copy(Map<Object, Object> jo) {
+    public V copy(Map<String, Object> jo) {
       if (jo == null)
         return this;
 
-      for (Object s : jo.keySet()) {
+      for (String s : jo.keySet()) {
         if (jo.containsKey(s)) {
           Object o = jo.get(s);
           if (X.isEmpty(o)) {
-            set(s.toString(), X.EMPTY);
+            set(s, X.EMPTY);
           } else {
-            set(s.toString(), o);
+            set(s, o);
           }
         }
       }
@@ -2612,7 +2634,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
      *          the name string
      * @return V
      */
-    public V copy(Map<Object, Object> jo, String... names) {
+    public V copy(Map<String, Object> jo, String... names) {
       if (jo == null || names == null)
         return this;
 
@@ -2667,69 +2689,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     }
 
     /**
-     * copy the name in jo, the format of name is: ["name", "table field name"].
-     *
-     * @param jo
-     *          the data map
-     * @param names
-     *          the name to copy, if null then copy all names
-     * @return V
-     */
-    public V copy(Map<Object, Object> jo, String[]... names) {
-      if (jo == null || names == null)
-        return this;
-
-      for (String s[] : names) {
-        if (s.length > 1) {
-          if (jo.containsKey(s[0])) {
-            Object o = jo.get(s[0]);
-            if (o == null || "".equals(o))
-              continue;
-
-            set(s[1], jo.get(s[0]));
-          }
-        } else {
-          if (jo.containsKey(s[0])) {
-            Object o = jo.get(s[0]);
-            if (o == null || "".equals(o))
-              continue;
-
-            set(s[0], jo.get(s[0]));
-          }
-        }
-      }
-
-      return this;
-    }
-
-    /**
-     * copy the checkbox value in V, "on"="on", otherwise="off".
-     *
-     * @param jo
-     *          the json
-     * @param names
-     *          the name string
-     * @return V
-     */
-    public V copyCheckbox(Map<Object, Object> jo, String... names) {
-      if (jo == null || names == null || names.length == 0)
-        return this;
-
-      for (String s : names) {
-        if (jo.containsKey(s)) {
-          Object o = jo.get(s);
-          if (X.isEmpty(o)) {
-            set(s, "off");
-          } else if ("on".equals(o)) {
-            set(s, "on");
-          }
-        }
-      }
-
-      return this;
-    }
-
-    /**
      * get the value by name, return null if not presented.
      *
      * @param name
@@ -2737,10 +2696,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
      * @return Object, return null if not presented
      */
     public Object value(String name) {
-      if (m.containsKey(name)) {
-        return m.get(name);
-      }
-      return null;
+      return m.get(name);
     }
 
     /**
@@ -2762,42 +2718,13 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
      *          the names to copy
      * @return V
      */
-    public V copyInt(Map<Object, Object> jo, String... names) {
+    public V copyInt(Map<String, Object> jo, String... names) {
       if (jo == null || names == null)
         return this;
 
       for (String s : names) {
         if (jo.containsKey(s)) {
           set(s, Bean.toInt(jo.get(s)));
-        }
-      }
-
-      return this;
-    }
-
-    /**
-     * copy the value in jo, the format of name is: ["name", "table field name"
-     * ].
-     *
-     * @param jo
-     *          the jo
-     * @param names
-     *          the names
-     * @return V
-     */
-    public V copyInt(Map<Object, Object> jo, String[]... names) {
-      if (jo == null || names == null)
-        return this;
-
-      for (String s[] : names) {
-        if (s.length > 1) {
-          if (jo.containsKey(s[0])) {
-            set(s[1], Bean.toInt(jo.get(s[0])));
-          }
-        } else {
-          if (jo.containsKey(s[0])) {
-            set(s[0], Bean.toInt(jo.get(s[0])));
-          }
         }
       }
 
@@ -2813,42 +2740,13 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
      *          the names to copy, if null, copy nothing
      * @return V
      */
-    public V copyLong(Map<Object, Object> jo, String... names) {
+    public V copyLong(Map<String, Object> jo, String... names) {
       if (jo == null || names == null)
         return this;
 
       for (String s : names) {
         if (jo.containsKey(s)) {
           set(s, Bean.toLong(jo.get(s)));
-        }
-      }
-
-      return this;
-    }
-
-    /**
-     * copy the value in jo, the format of name is: ["name", "table field name"
-     * ].
-     *
-     * @param jo
-     *          the map to copy
-     * @param names
-     *          the names
-     * @return V
-     */
-    public V copyLong(Map<Object, Object> jo, String[]... names) {
-      if (jo == null || names == null)
-        return this;
-
-      for (String s[] : names) {
-        if (s.length > 1) {
-          if (jo.containsKey(s[0])) {
-            set(s[1], Bean.toLong(jo.get(s[0])));
-          }
-        } else {
-          if (jo.containsKey(s[0])) {
-            set(s[0], Bean.toLong(jo.get(s[0])));
-          }
         }
       }
 
@@ -3023,6 +2921,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * get the list of the column
    * 
+   * @deprecated
    * @param <T>
    *          the generic Bean Class
    * @param col
@@ -3177,6 +3076,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * get the list of the col.
    * 
+   * @deprecated
    * @param <T>
    *          the generic Bean Class
    * @param table
@@ -3275,13 +3175,14 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * get the key-value in the bean to json.
+   * get the key-value in the bean to json.<br>
+   * drop all the data which the name endsWith("_obj")
    *
    * @param jo
    *          the map
    * @return boolean, return true if success
    */
-  public boolean toJSON(Map<Object, Object> jo) {
+  public boolean toJSON(Map<String, Object> jo) {
     if (extra != null && extra.size() > 0 && jo != null) {
       for (String name : extra.keySet()) {
         Object o = extra.get(name);
@@ -3310,6 +3211,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * convert the object to integer, default "0", this convert is safe and trying
    * to convert more digital to integer.
    *
+   * @deprecated please refer X.toInt()
    * @param v
    *          the object
    * @return int of the value
@@ -3387,6 +3289,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * convert the v to long data, this is safe convert, and trying convert more
    * data to long.
    *
+   * @deprecated please refer X.toLong()
    * @param v
    *          the value
    * @return long
@@ -3398,6 +3301,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * convert the v to long, if failed using defaultValue, please refer X.toLong
    *
+   * @deprecated please refer X.toLong()
    * @param v
    *          the v
    * @param defaultValue
@@ -3767,7 +3671,8 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   private Map<String, Object> extra = null;
 
   /**
-   * create the data as json
+   * create the data as json.<br>
+   * drop all the data which the name endsWith("_obj")
    * 
    * @return JSONObject
    */
@@ -3784,7 +3689,8 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * the {@code W} Class used to create SQL "where" conditions
+   * the {@code W} Class used to create SQL "where" conditions<br>
+   * this is for RDBS Query anly
    * 
    * @author joe
    * 
@@ -4375,8 +4281,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @param t
    *          the Class of Bean
    * @return boolean, return true if exists, otherwise return false
+   * @throws Exception
+   *           throw exception when occur database error
    */
-  protected static boolean exists(DBObject query, Class<? extends Bean> t) {
+  protected static boolean exists(DBObject query, Class<? extends Bean> t) throws Exception {
     String collection = getCollection(t);
     if (collection != null) {
       TimeStamp t1 = TimeStamp.create();
@@ -4387,7 +4295,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
           log.debug("exists cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + query);
       }
     }
-    return false;
+    throw new Exception("the Class<" + t.getName() + "> doest annotated by @DBMapping()!");
   }
 
   /**
@@ -4431,103 +4339,19 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * get the result by mapReduce in mongo.
-   * 
-   * @param <T>
-   *          the generic Bean Class
-   * @param x
-   *          the column name
-   * @param cols
-   *          the "Y" definition, {{"a", "aver"},{"b", "sum"}, {"c", "count"}}
-   * @param finaljs
-   *          the final js body.
-   * @param query
-   *          the query
-   * @param limit
-   *          the limit
-   * @param clazz
-   *          the Bean class
-   * @return Map
-   */
-  protected static <T extends Bean> Map<Object, Map<Object, Object>> mapreduce(String x, String[][] cols,
-      String finaljs, DBObject query, int limit, Class<T> clazz) {
-
-    String mapjs = _map(x, cols);
-    String reducejs = _reduce(cols);
-
-    try {
-      DBCollection dc = getCollection(Bean.getCollection(clazz));
-      MapReduceCommand cmd = new MapReduceCommand(dc, mapjs, reducejs, null, MapReduceCommand.OutputType.INLINE, query);
-      // set limit rows;
-      if (limit > 0) {
-        cmd.setLimit(limit);
-      }
-
-      if (!X.isEmpty(finaljs)) {
-        cmd.setFinalize(finaljs);
-      }
-
-      MapReduceOutput out = dc.mapReduce(cmd);
-      // log.debug("out=" + out);
-
-      Map<Object, Map<Object, Object>> m = new LinkedHashMap<Object, Map<Object, Object>>();
-      for (DBObject o : out.results()) {
-        Object id = o.get(X._ID);
-        Map<Object, Object> d = (Map<Object, Object>) o.get("value");
-        Map<Object, Object> v = new HashMap<Object, Object>();
-
-        for (String[] s1 : cols) {
-          String name = s1[0];
-          String f = s1.length > 1 ? s1[1] : "count";
-          int count = Bean.toInt(d.get("count"));
-          if (count > 0) {
-            if ("count".equals(f)) {
-              v.put(name, count);
-            } else if ("aver".equals(f)) {
-              Object v1 = d.get(name);
-              if (v1 instanceof Integer) {
-                v.put(name, Bean.toInt(v1) / count);
-              } else if (v1 instanceof Long) {
-                v.put(name, Bean.toLong(v1) / count);
-              } else if (v1 instanceof Float) {
-                v.put(name, Bean.toFloat(v1) / count);
-              } else if (v1 instanceof Double) {
-                v.put(name, Bean.toDouble(v1) / count);
-              }
-            } else if ("sum".equals(f)) {
-              Object v1 = d.get(name);
-              v.put(name, v1);
-            }
-          } else {
-            v.put(name, 0);
-          }
-        }
-
-        m.put(id, v);
-      }
-
-      if (log.isDebugEnabled())
-        log.debug("mapreduce: query=" + query + ", mapjs=" + mapjs + ", reducejs=" + reducejs + ", finaljs=" + finaljs
-            + ", out=" + out + ", m=" + m);
-
-      return m;
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error("\r\nmapjs=" + mapjs + "\r\nreducejs=" + reducejs + "\r\nfinaljs=" + finaljs, e);
-    }
-    return null;
-  }
-
-  /**
-   * run the command in mongo.
+   * run the command of Mongo.
    *
    * @param cmd
    *          the command
    * @return boolean, return true if "ok"
    */
   public static boolean run(String cmd) {
-    CommandResult r = Bean.getDB().command(cmd);
-    return r.ok();
+    DB d = Bean.getDB();
+    if (d != null) {
+      CommandResult r = d.command(cmd);
+      return r.ok();
+    }
+    return false;
   }
 
   /**
@@ -4536,7 +4360,11 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return Set
    */
   public static Set<String> getCollections() {
-    return Bean.getDB().getCollectionNames();
+    DB d = Bean.getDB();
+    if (d != null) {
+      return d.getCollectionNames();
+    }
+    return null;
   }
 
   /**
@@ -4547,7 +4375,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   public static void clear(String collection) {
     try {
-      Bean.getCollection(collection).remove(new BasicDBObject());
+      DBCollection c = Bean.getCollection(collection);
+      if (c != null) {
+        c.remove(new BasicDBObject());
+      }
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error(e.getMessage(), e);
@@ -4576,7 +4407,9 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
           KeyField.create(collection, new BasicDBObject(q).append(key, 1), null);
 
         DBCollection c = Bean.getCollection(collection);
-        return c.distinct(key, q);
+        if (c != null) {
+          return c.distinct(key, q);
+        }
       } catch (Exception e) {
         if (log.isErrorEnabled())
           log.error(e.getMessage(), e);
@@ -4606,7 +4439,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
           KeyField.create(collection, q, null);
 
         DBCollection c = Bean.getCollection(collection);
-        return c.count(q);
+        return c == null ? -1 : c.count(q);
       } finally {
         if (log.isDebugEnabled())
           log.debug("count, cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);

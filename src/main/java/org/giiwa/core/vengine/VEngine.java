@@ -56,6 +56,8 @@ public class VEngine {
    * @param m
    *          the data model
    * @return boolean of the test
+   * @exception Exception
+   *              throw exception when occur error
    */
   public static boolean test(String s, Map<String, Object> m) throws Exception {
     log.debug("vengine.test ...");
@@ -92,6 +94,8 @@ public class VEngine {
    * @param m
    *          the data model transfer to the sentence
    * @return boolean true it success executed, or throw the exception
+   * @exception Exception
+   *              throw exception when occur error
    */
   public static boolean execute(String s, Map<String, Object> m) throws Exception {
     log.debug("vengine.execute ...");
@@ -107,7 +111,7 @@ public class VEngine {
       log.error(s, e);
       throw e;
     }
-    
+
   }
 
   private final static String M = "#set($result.bool=(sss))";
