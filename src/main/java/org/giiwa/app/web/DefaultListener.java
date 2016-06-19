@@ -39,7 +39,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.KeyField;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.AccessLog;
@@ -51,7 +51,7 @@ import org.giiwa.framework.bean.User;
 import org.giiwa.framework.utils.FileUtil;
 import org.giiwa.framework.utils.Shell;
 import org.giiwa.framework.web.Language;
-import org.giiwa.framework.web.LifeListener;
+import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 
@@ -64,7 +64,7 @@ import com.mongodb.BasicDBObject;
  * @author joe
  * 
  */
-public class DefaultListener implements LifeListener {
+public class DefaultListener implements IListener {
 
   public static final DefaultListener owner = new DefaultListener();
 
@@ -82,7 +82,7 @@ public class DefaultListener implements LifeListener {
      * @return the string
      */
     public static String path() {
-      return ConfigGlobal.s("backup.path", "/opt/backup");
+      return Global.s("backup.path", "/opt/backup");
     }
 
     @Override
@@ -167,7 +167,7 @@ public class DefaultListener implements LifeListener {
 
     @Override
     public void onExecute() {
-      String ntp = ConfigGlobal.s("ntp.server", null);
+      String ntp = Global.s("ntp.server", null);
       if (!X.isEmpty((Object) ntp)) {
         try {
           String r = Shell.run("ntpdate -u " + ntp);
@@ -203,7 +203,7 @@ public class DefaultListener implements LifeListener {
     }
 
     if (log.isDebugEnabled()) {
-      log.debug("upgrade.enabled=" + ConfigGlobal.s(conf.getString("node") + ".upgrade.framework.enabled", "false"));
+      log.debug("upgrade.enabled=" + Global.s(conf.getString("node") + ".upgrade.framework.enabled", "false"));
     }
 
     // cleanup
@@ -338,7 +338,7 @@ public class DefaultListener implements LifeListener {
         File f = module.loadResource("/install/" + dbname + "/initial.sql", false);
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
-          int b = ConfigGlobal.i(key, 0);
+          int b = Global.i(key, 0);
           if (b == 0) {
             if (log.isWarnEnabled()) {
               log.warn("db[" + key + "] has not been initialized! initializing...");
@@ -346,7 +346,7 @@ public class DefaultListener implements LifeListener {
 
             try {
               runDBScript(f);
-              ConfigGlobal.setConfig(key, (int) 1);
+              Global.setConfig(key, (int) 1);
               if (log.isWarnEnabled()) {
                 log.warn("db[" + key + "] has been initialized! ");
               }
@@ -366,14 +366,14 @@ public class DefaultListener implements LifeListener {
         f = module.loadResource("/install/" + dbname + "/upgrade.sql", false);
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.upgrade." + dbname + "." + f.lastModified();
-          int b = ConfigGlobal.i(key, 0);
+          int b = Global.i(key, 0);
 
           if (b == 0) {
 
             try {
               runDBScript(f);
 
-              ConfigGlobal.setConfig(key, (int) 1);
+              Global.setConfig(key, (int) 1);
 
               if (log.isWarnEnabled()) {
                 log.warn("db[" + key + "] has been upgraded! ");

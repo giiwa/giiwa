@@ -14,10 +14,11 @@
 */
 package org.giiwa.core.bean;
 
+import java.util.Random;
 import java.util.UUID;
 
 import org.giiwa.core.base.*;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 
 import com.mongodb.BasicDBObject;
 
@@ -43,7 +44,7 @@ public class UID extends Bean {
    */
   public synchronized static long next(String key) {
 
-    long prefix = ConfigGlobal.l("system.code", 1) * 10000000000000L;
+    long prefix = Global.l("system.code", 1) * 10000000000000L;
 
     try {
 
@@ -163,11 +164,25 @@ public class UID extends Bean {
    * @return the string
    */
   public static String random(int length) {
+
+    Random rand = new Random(System.currentTimeMillis());
     StringBuilder sb = new StringBuilder();
     while (length > 0) {
-      int j = (int) (Math.random() * chars.length);
-      sb.append(chars[j]);
+      sb.append(chars[rand.nextInt(chars.length - 1)]);
       length--;
+    }
+    return sb.toString();
+  }
+
+  public static String random(int length, String sources) {
+    if (sources == null || sources.length() == 0) {
+      sources = new String(digitals);
+    }
+    int codesLen = sources.length();
+    Random rand = new Random(System.currentTimeMillis());
+    StringBuilder sb = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+      sb.append(sources.charAt(rand.nextInt(codesLen - 1)));
     }
     return sb.toString();
   }
@@ -180,9 +195,10 @@ public class UID extends Bean {
    * @return the string
    */
   public static String digital(int length) {
+    Random rand = new Random(System.currentTimeMillis());
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < length; i++) {
-      sb.append(digitals[(int) (Math.random() * digitals.length)]);
+      sb.append(digitals[rand.nextInt(digitals.length - 1)]);
     }
     return sb.toString();
   }

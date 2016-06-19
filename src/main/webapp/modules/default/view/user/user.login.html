@@ -1,58 +1,105 @@
 #parse('/user/head.html')
 
-	<div id='wrapper' class='login'>
-		<div id='head'>
-			<div class='center'>
-				<div class='logo'>$lang.get('site.logo')</div>
+<div id='wrapper' class='login'>
+	<div id='head'>
+		<div class='center'>
+			<div class='logo'>
+				$lang.get('site.logo')
 			</div>
 		</div>
+	</div>
 
-		<div id="content">
-			<div class='center'>
-				<div class='outter'>
-					<div class='inner'>
-						<form method="post">
-							#if($message)
-							<div class='message'>$message</div>
-							#end
-							<div class="title">
-								$lang.get('user.login')
-							</div>
-							<div class="left">
-								<div>
-									<label>$lang.get('user.name'):</label><input type="text"
-										name="name" value=#if($name) "$name" #else "" #end>
-								</div>
-								<div>
-									<label>$lang.get('user.password'):</label><input type="password"
-										name="pwd" value=#if($pwd) "$pwd" #else "" #end>
-								</div>
-								<div class="btn">
-									<button type="submit">$lang.get('btn.login')</button>
-								</div>
-							</div>
-							#if($system.s('user.register') == 'true')
-							<div class="right">
-								<a href="/user/forget">$lang.get('password.forget')?</a> <a
-									href="/user/register">$lang.get('register.user')</a>
-							</div>
-							#end
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
+	<div id="content">
+		<div class='center'>
+			<div class='outter'>
+				<div class='inner'>
+					<form method="post">
+						#if($message)
+						<div class='message'>
+							$message
+						</div>
+						#end
+						<div class="title">
+							$lang.get('user.login')
+						</div>
+						<div class="left">
+							<div>
+								<label><h3>$lang.get('user.name'):</h3>
+									<input type="text"
+									name="name" value="$!name">
+								</label>
 
-		<div id='foot'>
-			<div class='center'>
-				<div class='links'>$lang.get('user.foot.links')</div>
-				<div class='copyright'>
-					<span class='copyright'>$lang.get('copyright')</span> <span
-						class='designed'>$lang.get('designedby')</span>
+							</div>
+							<div>
+								<label><h3>$lang.get('user.password'):</h3>
+									<input type="password"
+									name="pwd" value="$!pwd">
+								</label>
+							</div>
+							<div>
+								<label><h3>$lang.get('user.captcha'):</h3>
+									<input type="text"
+									name="code" onblur="_verify(this);">
+									<img id="captcha" onclick="_oncaptcha();" style="width:80px"/> </label>
+							</div>
+							<div class="btn">
+								<button type="submit">
+									$lang.get('btn.login')
+								</button>
+							</div>
+						</div>
+						#if($system.s('user.register') == 'true')
+						<div class="right">
+							<a href="/user/forget">$lang.get('password.forget')?</a><a
+							href="/user/register">$lang.get('register.user')</a>
+						</div>
+						#end
+					</form>
 				</div>
 			</div>
 		</div>
 	</div>
 
+	<div id='foot'>
+		<div class='center'>
+			<div class='links'>
+				$lang.get('user.foot.links')
+			</div>
+			<div class='copyright'>
+				<span class='copyright'>$lang.get('copyright')</span><span
+				class='designed'>$lang.get('designedby')</span>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	function _oncaptcha() {
+		$.get('/captcha', {}, function(d) {
+			if (d.state == 200) {
+				$('#captcha').attr('src', d.uri);
+			}
+		})
+	}
+
+	function _verify(o) {
+		$.get('/captcha/verify', {
+			code : $('input[name=code]').val()
+		}, function(d) {
+			if (d.state == 200) {
+				//ok
+				$(o).removeClass('bad');
+				$(o).addClass('good');
+			} else {
+				//bad
+				$(o).removeClass('good');
+				$(o).addClass('bad');
+			}
+		})
+	}
+	$(function(){
+		_oncaptcha();
+	})
+</script>
 #parse('/user/foot.html')
 

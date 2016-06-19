@@ -25,7 +25,7 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -44,8 +44,8 @@ public class Email {
 		@Override
 		protected PasswordAuthentication getPasswordAuthentication() {
 			if (auth == null) {
-				auth = new PasswordAuthentication(ConfigGlobal.s("mail.user", "service@giiwa.com"),
-						ConfigGlobal.s("mail.password", "service123456"));
+				auth = new PasswordAuthentication(Global.s("mail.user", "service@giiwa.com"),
+						Global.s("mail.password", "service123456"));
 			}
 			return auth;
 		}
@@ -74,8 +74,8 @@ public class Email {
 			String[] contents) {
 		Properties props = new Properties();
 
-		props.setProperty("mail.transport.protocol", ConfigGlobal.s("mail.protocol", "smtp"));
-		props.setProperty("mail.host", ConfigGlobal.s("mail.host", "smtp.exmail.qq.com"));
+		props.setProperty("mail.transport.protocol", Global.s("mail.protocol", "smtp"));
+		props.setProperty("mail.host", Global.s("mail.host", "smtp.exmail.qq.com"));
 		props.setProperty("mail.smtp.auth", "true");
 
 		try {
@@ -105,8 +105,8 @@ public class Email {
 
 			message.setContent(multipart);
 			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-			InternetAddress f = new InternetAddress(ConfigGlobal.s("mail.email", "service@giiwa.com"));
-			f.setPersonal(ConfigGlobal.s("mail.email", X.EMPTY));
+			InternetAddress f = new InternetAddress(Global.s("mail.email", "service@giiwa.com"));
+			f.setPersonal(Global.s("mail.email", X.EMPTY));
 			message.setFrom(f);
 
 			transport.connect();
@@ -153,8 +153,8 @@ public class Email {
 	public static boolean send(String subject, String body, String to, String from, String displayname) {
 		Properties props = new Properties();
 
-		props.setProperty("mail.transport.protocol", ConfigGlobal.s("mail.protocol", "smtp"));
-		props.setProperty("mail.host", ConfigGlobal.s("mail.host", "smtp.exmail.qq.com"));
+		props.setProperty("mail.transport.protocol", Global.s("mail.protocol", "smtp"));
+		props.setProperty("mail.host", Global.s("mail.host", "smtp.exmail.qq.com"));
 		props.setProperty("mail.smtp.auth", "true");
 
 		try {

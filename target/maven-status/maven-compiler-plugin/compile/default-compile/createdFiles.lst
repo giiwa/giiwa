@@ -6,6 +6,7 @@ org/giiwa/framework/utils/Host$Eth.class
 org/giiwa/app/web/configure.class
 org/giiwa/framework/bean/User$Lock.class
 org/giiwa/framework/web/Model$PathMapping.class
+org/giiwa/core/conf/Global.class
 org/giiwa/framework/bean/Appkey.class
 org/giiwa/framework/web/PageLabel.class
 org/giiwa/core/db/DB.class
@@ -26,7 +27,6 @@ org/giiwa/core/base/Base64.class
 org/giiwa/core/bean/KeyField$1.class
 org/giiwa/framework/bean/VCode.class
 org/giiwa/app/web/repo.class
-org/giiwa/core/conf/ConfigGlobal.class
 org/giiwa/app/web/admin/oplog$1.class
 org/giiwa/core/base/Base32.class
 org/giiwa/framework/bean/Temp.class
@@ -45,7 +45,6 @@ org/giiwa/core/base/Digest.class
 org/giiwa/framework/bean/Session.class
 org/giiwa/core/base/RSA$Key.class
 org/giiwa/core/base/DES.class
-org/giiwa/core/conf/ConfigLocal.class
 org/giiwa/framework/bean/Menu.class
 org/giiwa/app/web/menu.class
 org/giiwa/framework/web/PageLink.class
@@ -58,6 +57,7 @@ org/giiwa/app/web/DefaultListener$SorterTask.class
 org/giiwa/app/web/admin/role.class
 org/giiwa/framework/sync/SyncTask$DataFilter.class
 org/giiwa/app/web/admin/module.class
+org/giiwa/app/web/captcha.class
 org/giiwa/framework/utils/Shell.class
 org/giiwa/framework/bean/Jar.class
 org/giiwa/app/web/admin/module$1.class
@@ -100,6 +100,7 @@ org/giiwa/core/bean/UID.class
 org/giiwa/app/web/admin/setting$sync.class
 org/giiwa/app/web/DefaultListener$BackupTask.class
 org/giiwa/app/web/admin/setting$system.class
+org/giiwa/framework/web/IListener.class
 org/giiwa/framework/web/QueryString.class
 org/giiwa/core/task/Task.class
 org/giiwa/core/base/GString.class
@@ -114,6 +115,7 @@ org/giiwa/framework/web/DummyModel.class
 org/giiwa/framework/noti/Email$giiwaAuthenticator.class
 org/giiwa/app/web/admin/system$1.class
 org/giiwa/framework/bean/Role.class
+org/giiwa/utils/image/Captcha.class
 org/giiwa/core/task/Task$2.class
 org/giiwa/app/web/admin/appkey.class
 org/giiwa/framework/bean/Stats$1.class
@@ -129,7 +131,7 @@ org/giiwa/framework/web/Module$CachedModel.class
 org/giiwa/core/bean/TimeStamp.class
 org/giiwa/framework/bean/AccessLog$1.class
 org/giiwa/app/web/DefaultListener$NtpTask.class
-org/giiwa/framework/web/LifeListener.class
+org/giiwa/core/conf/Local.class
 org/giiwa/app/web/admin/backup.class
 org/giiwa/framework/utils/Http$Response.class
 org/giiwa/core/bean/Bean$1.class
@@ -147,6 +149,7 @@ org/giiwa/framework/noti/Email.class
 org/giiwa/core/bean/Beans.class
 org/giiwa/core/bean/Bean$W$Entity.class
 org/giiwa/framework/utils/Host$Memory.class
+org/giiwa/framework/web/IFilter.class
 org/giiwa/framework/bean/Data.class
 org/giiwa/framework/utils/Http$2.class
 org/giiwa/core/bean/DBMapping.class

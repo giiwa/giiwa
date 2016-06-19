@@ -24,7 +24,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.DBMapping;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigLocal;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.task.Task;
 
 import com.mongodb.BasicDBObject;
@@ -47,7 +47,7 @@ public class AccessLog extends Bean {
   private static final long serialVersionUID = 1L;
 
   static AtomicLong         seq              = new AtomicLong(0);
-  static String             node             = ConfigLocal.getConfig().getString("node");
+  static String             node             = Local.getConfig().getString("node");
 
   /**
    * Count.

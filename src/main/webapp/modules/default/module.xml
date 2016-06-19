@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+	<id>0</id>
+	<name>default</name>
+	<package>org.giiwa.app.web</package>
+	<screenshot>/images/giiwa_128.png</screenshot>
+	<version>1.0.0</version>
+	<build>0</build>
+	<enabled>true</enabled>
+	<readme>Giiwa default module which managed the giiwa framework</readme>
+	<listener>
+		<class>org.giiwa.app.web.DefaultListener</class>
+	</listener>
+	<setting>
+		<param name="fff" value="aaa"/>
+	</setting>
+	<!--filter>
+		<pattern>/*</pattern>
+		<class>org.giiwa.web.filter</class>
+	</filter-->
+</module>

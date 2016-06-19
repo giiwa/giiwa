@@ -23,7 +23,7 @@ import org.apache.commons.configuration.Configuration;
  * @author yjiang
  * 
  */
-public interface LifeListener {
+public interface IListener {
 
     /**
      * Upgrade.

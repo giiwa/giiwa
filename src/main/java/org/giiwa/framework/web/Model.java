@@ -39,7 +39,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Bean.V;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.*;
 
 // TODO: Auto-generated Javadoc
@@ -253,6 +253,7 @@ public class Model {
     // construct var
     // init
     try {
+
       _currentmodule.set(module);
 
       this.req = req;
@@ -271,6 +272,11 @@ public class Model {
 
       // if path exists, then using pathmapping instead
       // log.debug("pathmapping=" + pathmapping);
+
+      if (!Module.home.before(this)) {
+        log.debug("handled by filter, and stop to dispatch");
+        return null;
+      }
 
       if (pathmapping != null) {
 
@@ -372,7 +378,7 @@ public class Model {
                       this.put("response", resp);
                       this.set("me", login);
                       this.set("session", this.getSession());
-                      this.set("system", ConfigGlobal.getInstance());
+                      this.set("system", Global.getInstance());
 
                       createQuery();
 
@@ -463,7 +469,7 @@ public class Model {
       this.put("request", req);
       this.put("response", resp);
       this.set("session", this.getSession());
-      this.set("system", ConfigGlobal.getInstance());
+      this.set("system", Global.getInstance());
       this.createQuery();
 
       switch (method.method) {
@@ -528,6 +534,8 @@ public class Model {
       error(e);
     } finally {
       _currentmodule.remove();
+
+      Module.home.after(this);
     }
     return null;
   }
@@ -617,7 +625,7 @@ public class Model {
         /**
          * get session.expired in seconds
          */
-        addCookie("sid", sid, Module._conf.getInt("session.expired", (int) (X.AYEAR / 1000)));
+        addCookie("sid", sid, Global.i("session.expired", -1));
       }
     }
 
@@ -946,7 +954,7 @@ public class Model {
       Session s = this.getSession();
       r = s.getInt(tagInSession);
       if (r < minValue) {
-        r = ConfigGlobal.i(tagInSession, minValue);
+        r = Global.i(tagInSession, minValue);
       }
     } else {
       Session s = this.getSession();

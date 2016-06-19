@@ -24,7 +24,7 @@ import org.giiwa.core.base.DES;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.DBMapping;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.utils.Http;
 import org.giiwa.framework.utils.Http.Response;
 
@@ -50,9 +50,9 @@ public class Publisher {
      */
     public static int publish(Bean b) throws Exception {
 
-        String url = ConfigGlobal.s("sync.url", null);
-        String appkey = ConfigGlobal.s("sync.appkey", null);
-        String secret = ConfigGlobal.s("sync.secret", null);
+        String url = Global.s("sync.url", null);
+        String appkey = Global.s("sync.appkey", null);
+        String secret = Global.s("sync.secret", null);
         if (!X.isEmpty(url) && !X.isEmpty(appkey) && !X.isEmpty(secret)) {
 
             // b.toJSON(jo);
@@ -95,9 +95,9 @@ public class Publisher {
      *           the exception
      */
     public static int publish(JSONObject jo) throws Exception {
-        String url = ConfigGlobal.s("sync.url", null);
-        String appkey = ConfigGlobal.s("sync.appkey", null);
-        String secret = ConfigGlobal.s("sync.secret", null);
+        String url = Global.s("sync.url", null);
+        String appkey = Global.s("sync.appkey", null);
+        String secret = Global.s("sync.secret", null);
         if (!X.isEmpty(url) && !X.isEmpty(appkey) && !X.isEmpty(secret)) {
 
             // JSONObject j1 = new JSONObject();

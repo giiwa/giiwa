@@ -22,7 +22,7 @@ import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Bean.V;
-import org.giiwa.core.conf.ConfigLocal;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.User;
@@ -83,7 +83,7 @@ public class configure extends Model {
       return;
     }
 
-    Configuration conf = ConfigLocal.getConfig();
+    Configuration conf = Local.getConfig();
 
     String dbdriver = this.getHtml("db.driver");
     String dburl = this.getHtml("db.url");
@@ -104,7 +104,7 @@ public class configure extends Model {
     conf.setProperty("node", node);
     conf.setProperty("system.code", systemcode);
 
-    ConfigLocal.save();
+    Local.save();
     DB.init();
     Bean.init(conf);
 

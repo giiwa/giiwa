@@ -14,13 +14,11 @@ import net.sf.json.JSONObject;
 import org.apache.commons.fileupload.FileItem;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.web.*;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -57,7 +55,7 @@ public class module extends Model {
       }
       this.response(jo);
     } else {
-      this.set("id", ConfigGlobal.i("module.id.next", 100));
+      this.set("id", Global.i("module.id.next", 100));
       this.show("/admin/module.create.html");
     }
   }
@@ -284,9 +282,9 @@ public class module extends Model {
       }
       // end of view
 
-      int id1 = ConfigGlobal.i("module.id.next", 100);
+      int id1 = Global.i("module.id.next", 100);
       if (id >= id1) {
-        ConfigGlobal.setConfig("module.id.next", id + 1);
+        Global.setConfig("module.id.next", id + 1);
       }
 
     } finally {

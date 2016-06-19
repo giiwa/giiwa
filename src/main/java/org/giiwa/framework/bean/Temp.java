@@ -29,46 +29,93 @@ import org.giiwa.core.bean.UID;
  */
 public class Temp {
 
-    public static String ROOT;
+  public static String ROOT;
 
-    /**
-     * Inits the.
-     * 
-     * @param conf
-     *            the conf
-     */
-    public static void init(Configuration conf) {
-        ROOT = conf.getString("temp.path", "/opt/temp/");
+  /**
+   * Inits the.
+   * 
+   * @param conf
+   *          the conf
+   */
+  public static void init(Configuration conf) {
+    ROOT = conf.getString("temp.path", "/opt/temp/");
+  }
+
+  private String id   = null;
+  private String name = null;
+  private File   file = null;
+
+  private Temp() {
+
+  }
+
+  /**
+   * get the Temp file for name
+   * 
+   * @param name
+   *          the file name
+   * @return the Temp
+   */
+  public static Temp create(String name) {
+    Temp t = new Temp();
+    t.name = name;
+    t.id = UID.id(System.currentTimeMillis(), UID.random());
+    t.file = get(t.id, name);
+    if (t.file.exists()) {
+      t.file.delete();
+    } else {
+      t.file.getParentFile().mkdirs();
     }
+    return t;
+  }
 
-    /**
-     * Gets the.
-     * 
-     * @param id
-     *            the id
-     * @param name
-     *            the name
-     * @return the file
-     */
-    public static File get(String id, String name) {
-        return new File(path(id, name));
-    }
+  /**
+   * get the File
+   * 
+   * @return File the file
+   */
+  public File getFile() {
+    return file;
+  }
 
-    static private String path(String path, String name) {
-        long id = Math.abs(UID.hash(path));
-        char p1 = (char) (id % 23 + 'a');
-        char p2 = (char) (id % 19 + 'A');
-        char p3 = (char) (id % 17 + 'a');
-        char p4 = (char) (id % 13 + 'A');
+  /**
+   * get the web access uri directly
+   * 
+   * @return String of uri
+   */
+  public String getUri() {
+    return "/temp/" + id + "/" + name;
+  }
 
-        StringBuilder sb = new StringBuilder(ROOT);
+  /**
+   * Gets the.
+   * 
+   * @param id
+   *          the id
+   * @param name
+   *          the name
+   * @return the file
+   */
+  public static File get(String id, String name) {
+    return new File(path(id, name));
+  }
 
-        sb.append("/").append(p1).append("/").append(p2).append("/").append(p3).append("/").append(p4).append("/").append(id);
+  static private String path(String path, String name) {
+    long id = Math.abs(UID.hash(path));
+    char p1 = (char) (id % 23 + 'a');
+    char p2 = (char) (id % 19 + 'A');
+    char p3 = (char) (id % 17 + 'a');
+    char p4 = (char) (id % 13 + 'A');
 
-        if (name != null)
-            sb.append("_").append(name);
+    StringBuilder sb = new StringBuilder(ROOT);
 
-        return sb.toString();
-    }
+    sb.append("/").append(p1).append("/").append(p2).append("/").append(p3).append("/").append(p4).append("/")
+        .append(id);
+
+    if (name != null)
+      sb.append("_").append(name);
+
+    return sb.toString();
+  }
 
 }

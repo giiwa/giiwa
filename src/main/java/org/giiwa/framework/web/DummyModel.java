@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.velocity.Template;
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -84,7 +84,7 @@ public class DummyModel extends Model {
         this.put("request", req);
         this.put("response", resp);
         this.set("session", this.getSession());
-        this.set("system", ConfigGlobal.getInstance());
+        this.set("system", Global.getInstance());
 
         show(uri);
 

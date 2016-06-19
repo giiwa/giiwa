@@ -20,7 +20,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Bean.V;
 import org.giiwa.framework.bean.AccessLog;
@@ -76,7 +76,7 @@ public class Controller {
         + System.getProperty("os.arch");
 
     Model.HOME = conf.getString("home") + "/giiwa";
-    Bean.DEBUG = X.isSame(ConfigGlobal.s("type", "debug"), "debug");
+    Bean.DEBUG = X.isSame(Global.s("type", "debug"), "debug");
 
     /**
      * initialize the module

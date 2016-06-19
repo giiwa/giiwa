@@ -25,11 +25,17 @@ import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.Velocity;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.SAXReader;
+import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Access;
 import org.giiwa.framework.bean.Jar;
 import org.giiwa.framework.bean.Menu;
@@ -42,7 +48,7 @@ import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
- * module includes: a module.ini, a group of model/view/images/css/js/language,
+ * module includes: a module.xml, a group of model/view/images/css/js/language,
  * etc. and it will handle the request, if not found the handler in the module,
  * then will let the parent to handle it
  * 
@@ -80,7 +86,7 @@ public class Module {
   /**
    * lifelistener which will be invoke in each life cycle of the module
    */
-  String              lifelistener;
+  String              listener;
 
   boolean             enabled  = false;
 
@@ -95,11 +101,87 @@ public class Module {
   String              pack;
 
   Map<String, String> settings = new TreeMap<String, String>();
+  Map<String, Object> filters  = new TreeMap<String, Object>();
 
   /**
    * readme file maybe html
    */
   String              readme;
+
+  /**
+   * handle by filter ad invoke the before
+   * 
+   * @param m
+   *          the model
+   * @return boolean
+   */
+  public boolean before(Model m) {
+    for (String name : filters.keySet()) {
+      if (m.getURI().matches(name)) {
+        Object o = filters.get(name);
+        try {
+          IFilter f = null;
+
+          if (o instanceof IFilter) {
+            f = (IFilter) o;
+          } else {
+            f = (IFilter) (Class.forName((String) o).newInstance());
+            filters.put(name, f);
+          }
+          if (!f.before(m)) {
+            return false;
+          }
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+          filters.remove(name);
+        }
+      }
+    }
+    Module m1 = floor();
+    if (m1 != null) {
+      return m1.before(m);
+    }
+    return true;
+  }
+
+  /**
+   * handle by filter and invoke the after
+   * 
+   * @param m
+   * @return boolean
+   */
+  public boolean after(Model m) {
+    for (String name : filters.keySet()) {
+      if (m.getURI().matches(name)) {
+
+        Object o = filters.get(name);
+        try {
+          IFilter f = null;
+
+          if (o instanceof IFilter) {
+            f = (IFilter) o;
+          } else {
+            f = (IFilter) (Class.forName((String) o).newInstance());
+            filters.put(name, f);
+          }
+          if (!f.after(m)) {
+            return false;
+          }
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+          filters.remove(name);
+        }
+
+      }
+    }
+
+    Module m1 = floor();
+    if (m1 != null) {
+      return m1.after(m);
+    }
+
+    return true;
+  }
 
   /*
    * (non-Javadoc)
@@ -113,12 +195,12 @@ public class Module {
   }
 
   /**
-   * parent module defined in module.ini.
+   * parent module defined in module.xml.
    * 
    * @return String of the language
    */
   public String getLanguage() {
-    return ConfigGlobal.s("language", "en_us");
+    return Global.s("language", "en_us");
   }
 
   /**
@@ -182,29 +264,60 @@ public class Module {
    * Store.
    */
   public void store() {
-    File f = new File(Model.HOME + File.separator + "modules" + File.separator + name + File.separator + "module.ini");
+    File f = new File(Model.HOME + File.separator + "modules" + File.separator + name + File.separator + "module.xml");
     try {
-      PropertiesConfiguration p = new PropertiesConfiguration();
-      p.setEncoding("utf-8");
-      // p.set
-      // p.load(new FileInputStream(f));
-      p.setProperty("name", name);
-      p.setProperty("package", pack);
-      p.setProperty("lifelistener", lifelistener);
-      p.setProperty("id", id);
-      p.setProperty("enabled", enabled);
 
-      p.setProperty("version", version);
-      p.setProperty("build", build);
-      p.setProperty("screenshot", screenshot);
-      p.setProperty("readme", readme);
+      Document doc = DocumentHelper.createDocument();
+      Element root = doc.addElement("module");
+      Element e = root.addElement("id");
+      e.setText(Integer.toString(this.id));
 
+      e = root.addElement("name");
+      e.setText(this.name);
+
+      e = root.addElement("package");
+      e.setText(this.pack);
+
+      e = root.addElement("screenshot");
+      e.setText(this.screenshot);
+      e = root.addElement("version");
+      e.setText(this.version);
+      e = root.addElement("build");
+      e.setText(this.build);
+      e = root.addElement("enabled");
+      e.setText(Boolean.toString(this.enabled).toLowerCase());
+      e = root.addElement("readme");
+      e.setText(this.readme);
+      e = root.addElement("listener");
+      e = e.addElement("class");
+      e.setText(this.listener);
+
+      e = root.addElement("setting");
       for (String name : settings.keySet()) {
-        p.setProperty(name, settings.get(name));
+        Element e1 = e.addElement("param");
+        e1.addAttribute("name", name);
+        e1.addAttribute("value", settings.get(name));
+      }
+      for (String name : filters.keySet()) {
+        e = root.addElement("filter");
+        Element e1 = e.addElement("pattern");
+        e1.setText(name);
+
+        e1 = e.addElement("class");
+        Object o = filters.get(name);
+        if (o instanceof IFilter) {
+          IFilter f1 = (IFilter) o;
+          e1.setText(f1.getClass().getName());
+        } else {
+          e1.setText((String) o);
+        }
       }
 
-      p.save(f);
-
+      OutputFormat format = OutputFormat.createPrettyPrint();
+      format.setEncoding("UTF-8");
+      XMLWriter writer = new XMLWriter(new FileOutputStream(f), format);
+      writer.write(doc);
+      writer.close();
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
@@ -283,7 +396,7 @@ public class Module {
 
       // set(s, defaultValue);
       //
-      return ConfigGlobal.s(name, defaultValue);
+      return Global.s(name, defaultValue);
     }
   }
 
@@ -444,7 +557,7 @@ public class Module {
   }
 
   public String getLifelistener() {
-    return lifelistener;
+    return listener;
   }
 
   public boolean isEnabled() {
@@ -631,52 +744,22 @@ public class Module {
       }
 
       Module t = new Module();
-      File f = new File(Model.HOME + "/modules/" + name + "/module.ini");
+      File f = new File(Model.HOME + "/modules/" + name + "/module.xml");
       if (f.exists()) {
         /**
          * initialize the module
          */
-        PropertiesConfiguration p = new PropertiesConfiguration();
-        p.setEncoding("UTF-8");
-        p.load(f);
+        SAXReader reader = new SAXReader();
+        Document document = reader.read(f);
+        Element root = document.getRootElement();
+        t._load(root);
 
-        t.name = p.getString("name");
-        t.pack = p.containsKey("package") ? p.getString("package") : null;
-        t.lifelistener = p.containsKey("lifelistener") ? p.getString("lifelistener") : null;
         t.path = f.getParent();
         t.viewroot = new File(t.path + File.separator + "view").getCanonicalPath();
 
-        if (p.containsKey("id")) {
-          t.id = p.getInt("id");
-        } else {
-          log.error("[id] missed in module:" + t.name + ", ignore the module");
-          return null;
-        }
-
-        t.enabled = p.getBoolean("enabled", false);
-        t.screenshot = p.getString("screenshot", "/images/nopic.png");
-        t.readme = p.getString("readme", null);
-        t.version = p.getString("version", null);
-        t.build = p.getString("build", null);
-
-        // Iterator<String> it = p.getKeys("setting.");
-        //
-        // while (it.hasNext()) {
-        // String s = it.next();
-        // t.settings.put(s, p.getString(s));
-        // }
-        @SuppressWarnings("unchecked")
-        Iterator<String> it = p.getKeys();
-
-        while (it.hasNext()) {
-          String s = it.next();
-          // log.debug(s);
-          if (s.startsWith("setting.")) {
-            t.settings.put(s, p.getString(s));
-          }
-        }
-
         return t;
+      } else {
+        log.warn("the module.xml doesnt exists, file=" + f.getCanonicalPath());
       }
 
     } catch (Exception e) {
@@ -684,6 +767,72 @@ public class Module {
     }
 
     return null;
+  }
+
+  private boolean _load(Element root) {
+    try {
+      // TODO Auto-generated method stub
+      List<Element> list = root.elements();
+      for (Element e1 : list) {
+        String tag = e1.getName();
+        if (X.isSame(tag, "id")) {
+          id = X.toInt(e1.getText(), Integer.MAX_VALUE);
+        } else if (X.isSame(tag, "name")) {
+          name = e1.getText();
+        } else if (X.isSame(tag, "package")) {
+          pack = e1.getText();
+        } else if (X.isSame(tag, "screenshot")) {
+          screenshot = e1.getText();
+        } else if (X.isSame(tag, "version")) {
+          version = e1.getText();
+        } else if (X.isSame(tag, "build")) {
+          build = e1.getText();
+        } else if (X.isSame(tag, "enabled")) {
+          enabled = X.isSame("true", e1.getText().toLowerCase());
+        } else if (X.isSame(tag, "readme")) {
+          readme = e1.getText();
+        } else if (X.isSame(tag, "listener")) {
+          List<Element> l2 = e1.elements();
+          for (Element e2 : l2) {
+            String tag2 = e2.getName();
+            if (X.isSame(tag2, "class")) {
+              listener = e2.getText();
+            }
+          }
+        } else if (X.isSame(tag, "setting")) {
+          List<Element> l2 = e1.elements();
+          for (Element e2 : l2) {
+            String tag2 = e2.getName();
+            if (X.isSame(tag2, "param")) {
+              String name = e2.attributeValue("name");
+              String value = e2.attributeValue("value");
+              settings.put(name, value);
+            }
+          }
+        } else if (X.isSame(tag, "filter")) {
+          List<Element> l2 = e1.elements();
+          String pattern = null;
+          String clazz = null;
+          for (Element e2 : l2) {
+            String tag2 = e2.getName();
+            if (X.isSame(tag2, "pattern")) {
+              pattern = e2.getText();
+            } else if (X.isSame(tag2, "class")) {
+              clazz = e2.getText();
+            }
+          }
+          if (!X.isEmpty(pattern) && !X.isEmpty(clazz)) {
+            filters.put(pattern, clazz);
+          }
+        }
+      }
+
+      return true;
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+
+    return false;
   }
 
   /**
@@ -705,17 +854,17 @@ public class Module {
       /**
        * loading the module's lifelistener, to initialize the install script
        */
-      if (!X.isEmpty(lifelistener)) {
-        String name = lifelistener;
+      if (!X.isEmpty(listener)) {
+        String name = listener;
         if (name != null) {
 
           Class<?> c = Class.forName(name, true, classLoader);
           Object o = c.newInstance();
 
-          if (o instanceof LifeListener) {
+          if (o instanceof IListener) {
 
             log.info("initializing: " + name);
-            LifeListener l = (LifeListener) o;
+            IListener l = (IListener) o;
 
             l.upgrade(conf, this);
 
@@ -1190,16 +1339,16 @@ public class Module {
           d.uninstall(_conf, this);
         }
 
-        if (this.lifelistener != null) {
-          String name = lifelistener;
+        if (this.listener != null) {
+          String name = listener;
           if (name != null) {
             Class<?> c = Class.forName(name, true, classLoader);
             Object o = c.newInstance();
 
-            if (o instanceof LifeListener) {
+            if (o instanceof IListener) {
 
               log.info("uninstall: " + name);
-              LifeListener l = (LifeListener) o;
+              IListener l = (IListener) o;
 
               l.onStop();
               l.uninstall(_conf, this);
@@ -1267,7 +1416,7 @@ public class Module {
    */
   public File zipTo(String file) {
     /**
-     * model, view, i18n, module.ini
+     * model, view, i18n, module.xml
      */
     try {
       File f = new File(file);
@@ -1346,7 +1495,7 @@ public class Module {
     return settings.keySet();
   }
 
-  private static String[] source = new String[] { "/model", "/view", "/i18n", "/module.ini" };
+  private static String[] source = new String[] { "/model", "/view", "/i18n", "/module.xml" };
 
   /**
    * Update lang.

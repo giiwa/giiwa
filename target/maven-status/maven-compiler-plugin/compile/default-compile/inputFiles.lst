@@ -21,7 +21,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/repo.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/sync/SyncTask.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/backup.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/conf/ConfigGlobal.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/dashboard.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/DummyModel.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/appkey.java
@@ -30,9 +29,9 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/H32.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/MyData.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/upload.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/IListener.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Module.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/user.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/conf/ConfigLocal.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/PageLabel.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/data.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/utils/image/GImage.java
@@ -46,6 +45,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/RSA.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/X.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/accesslog.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/captcha.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/User.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/UID.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/H64.java
@@ -59,6 +59,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/gauge.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/QueryString.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Response.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/IFilter.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/task/Task.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/temp.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/impl/RedisCache.java
@@ -79,6 +80,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Roles.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/menu.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/repo.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/conf/Global.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Base32.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/utils/Host.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/user.java
@@ -89,19 +91,20 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Repo.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/VCode.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/utils/Shell.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/utils/image/Captcha.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Base64.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Model.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/sync/IFilter.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/GString.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/DefaultListener.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/keyfield.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/conf/Local.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/db/DB.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Sitemap.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Menu.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/module.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/configure.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/DES.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/LifeListener.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/GClassLoader.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/Bean.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/noti/Email.java

@@ -1,6 +1,6 @@
 <project name="giiwa" default="package" basedir=".">
 
-	<property file="src/main/webapp/modules/default/module.ini" />
+	<property name="version" value="1.0.3" />
 
 	<tstamp>
 		<format property="TODAY" pattern="yyMMdd" locale="zh,CN" />
@@ -13,17 +13,8 @@
 	<target name="zip" description="build sever all">
 		<delete file="target/upgrade" />
 
-		<replaceregexp byline="true">
-			<fileset file="target/giiwa-${version}/modules/default/view/release.txt" />
-			<regexp pattern="^build=\d+" />
-			<substitution expression="build=${BUILDNO}" />
-		</replaceregexp>
-
-		<replaceregexp byline="true">
-			<fileset file="target/giiwa-${version}/modules/default/module.ini" />
-			<regexp pattern="^build=\d+" />
-			<substitution expression="build=${BUILDNO}" />
-		</replaceregexp>
+		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
+		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="version>\d+.\d+.\d+" replace="version>${version}" byline="true" />
 
 		<copy todir="target/upgrade">
 			<fileset dir="target/giiwa-${version}" />
@@ -51,17 +42,8 @@
 	<target name="tar" description="build sever all">
 		<delete file="target/giiwa" />
 
-		<replaceregexp byline="true">
-			<fileset file="target/giiwa-${version}/modules/default/view/release.txt" />
-			<regexp pattern="^build=\d+" />
-			<substitution expression="build=${BUILDNO}" />
-		</replaceregexp>
-
-		<replaceregexp byline="true">
-			<fileset file="target/giiwa-${version}/modules/default/module.ini" />
-			<regexp pattern="^build=\d+" />
-			<substitution expression="build=${BUILDNO}" />
-		</replaceregexp>
+		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
+		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="version>\d+.\d+.\d+" replace="version>${version}" byline="true" />
 
 		<copy todir="target/giiwa">
 			<fileset dir="target/../tomcat" />
@@ -78,7 +60,7 @@
 				<exclude name="**/WEB-INF/classes/**" />
 				<exclude name="**/model/com/**" />
 			</tarfileset>
-			
+
 			<tarfileset dir="target/giiwa" prefix="giiwa" filemode="755">
 				<include name="**/*.sh" />
 				<include name="install" />

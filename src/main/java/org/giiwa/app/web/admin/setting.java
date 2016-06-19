@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.sync.SyncTask;
 import org.giiwa.framework.utils.Shell;
@@ -187,7 +187,7 @@ public class setting extends Model {
     @Override
     public void reset() {
       for (String c : SyncTask.getCollections().keySet()) {
-        ConfigGlobal.setConfig("sync." + c + ".lasttime", 0L);
+        Global.setConfig("sync." + c + ".lasttime", 0L);
       }
       super.reset();
     }
@@ -201,25 +201,25 @@ public class setting extends Model {
     public void set() {
       String url = this.getString("sync_url");
       boolean changed = false;
-      if (url != null && !url.equals(ConfigGlobal.s("sync.url", X.EMPTY))) {
+      if (url != null && !url.equals(Global.s("sync.url", X.EMPTY))) {
         // was changed, reset all synced flag
         changed = true;
       }
-      ConfigGlobal.setConfig("sync.url", this.getString("sync_url"));
-      ConfigGlobal.setConfig("sync.appkey", this.getString("sync_appkey"));
-      ConfigGlobal.setConfig("sync.secret", this.getString("sync_secret"));
+      Global.setConfig("sync.url", this.getString("sync_url"));
+      Global.setConfig("sync.appkey", this.getString("sync_appkey"));
+      Global.setConfig("sync.secret", this.getString("sync_secret"));
 
       for (String group : SyncTask.getGroups()) {
         String s = this.getString("sync_" + group);
-        ConfigGlobal.setConfig("sync." + group, s);
+        Global.setConfig("sync." + group, s);
         for (String c : SyncTask.instance.collections(group)) {
-          ConfigGlobal.setConfig("sync." + c, s);
+          Global.setConfig("sync." + c, s);
         }
       }
 
       if (changed) {
         for (String c : SyncTask.getCollections().keySet()) {
-          ConfigGlobal.setConfig("sync." + c + ".lasttime", 0L);
+          Global.setConfig("sync." + c + ".lasttime", 0L);
         }
       }
 
@@ -237,9 +237,9 @@ public class setting extends Model {
      */
     @Override
     public void get() {
-      this.set("sync_url", ConfigGlobal.s("sync.url", null));
-      this.set("sync_appkey", ConfigGlobal.s("sync.appkey", null));
-      this.set("sync_secret", ConfigGlobal.s("sync.secret", null));
+      this.set("sync_url", Global.s("sync.url", null));
+      this.set("sync_appkey", Global.s("sync.appkey", null));
+      this.set("sync_secret", Global.s("sync.secret", null));
 
       // this.set("collections", SyncTask.getCollections().keySet());
       this.set("t", SyncTask.instance);
@@ -260,10 +260,10 @@ public class setting extends Model {
     @Override
     public void set() {
       String lang1 = this.getString("language");
-      ConfigGlobal.setConfig("language", lang1);
+      Global.setConfig("language", lang1);
 
       String level = this.getString("level");
-      ConfigGlobal.setConfig("level", level);
+      Global.setConfig("level", level);
       Bean.DEBUG = X.isSame(level, "debug");
 
       this.set(X.MESSAGE, lang.get("save.success"));
@@ -279,17 +279,17 @@ public class setting extends Model {
     @Override
     public void get() {
 
-      this.set("node", ConfigGlobal.s("node", null));
-      this.set("system_code", ConfigGlobal.l("system.code", 1));
-      this.set("language", ConfigGlobal.s("language", "zh_cn"));
-      this.set("level", ConfigGlobal.s("level", "debug"));
+      this.set("node", Global.s("node", null));
+      this.set("system_code", Global.l("system.code", 1));
+      this.set("language", Global.s("language", "zh_cn"));
+      this.set("level", Global.s("level", "debug"));
 
-      this.set("cache_url", ConfigGlobal.s("cache.url", null));
-      this.set("cache_group", ConfigGlobal.s("cache.group", "demo"));
-      this.set("mongo_url", ConfigGlobal.s("mongo[prod].url", null));
-      this.set("mongo_db", ConfigGlobal.s("mongo[prod].db", null));
-      this.set("mongo_user", ConfigGlobal.s("mongo[prod].user", null));
-      this.set("db_url", ConfigGlobal.s("db.url", null));
+      this.set("cache_url", Global.s("cache.url", null));
+      this.set("cache_group", Global.s("cache.group", "demo"));
+      this.set("mongo_url", Global.s("mongo[prod].url", null));
+      this.set("mongo_db", Global.s("mongo[prod].db", null));
+      this.set("mongo_user", Global.s("mongo[prod].user", null));
+      this.set("db_url", Global.s("db.url", null));
 
       this.set("page", "/admin/setting.system.html");
     }
@@ -305,12 +305,12 @@ public class setting extends Model {
      */
     @Override
     public void set() {
-      ConfigGlobal.setConfig("mail.protocol", this.getString("protocol"));
-      ConfigGlobal.setConfig("mail.host", this.getString("host"));
-      ConfigGlobal.setConfig("mail.email", this.getString("email"));
-      ConfigGlobal.setConfig("mail.title", this.getString("title"));
-      ConfigGlobal.setConfig("mail.user", this.getString("user"));
-      ConfigGlobal.setConfig("mail.passwd", this.getString("passwd"));
+      Global.setConfig("mail.protocol", this.getString("protocol"));
+      Global.setConfig("mail.host", this.getString("host"));
+      Global.setConfig("mail.email", this.getString("email"));
+      Global.setConfig("mail.title", this.getString("title"));
+      Global.setConfig("mail.user", this.getString("user"));
+      Global.setConfig("mail.passwd", this.getString("passwd"));
 
       this.set(X.MESSAGE, lang.get("save.success"));
 
@@ -324,12 +324,12 @@ public class setting extends Model {
      */
     @Override
     public void get() {
-      this.set("protocol", ConfigGlobal.s("mail.protocol", "smtp"));
-      this.set("host", ConfigGlobal.s("mail.host", X.EMPTY));
-      this.set("email", ConfigGlobal.s("mail.email", X.EMPTY));
-      this.set("title", ConfigGlobal.s("mail.title", X.EMPTY));
-      this.set("user", ConfigGlobal.s("mail.user", X.EMPTY));
-      this.set("passwd", ConfigGlobal.s("mail.passwd", X.EMPTY));
+      this.set("protocol", Global.s("mail.protocol", "smtp"));
+      this.set("host", Global.s("mail.host", X.EMPTY));
+      this.set("email", Global.s("mail.email", X.EMPTY));
+      this.set("title", Global.s("mail.title", X.EMPTY));
+      this.set("user", Global.s("mail.user", X.EMPTY));
+      this.set("passwd", Global.s("mail.passwd", X.EMPTY));
 
       this.set("page", "/admin/setting.mail.html");
     }
@@ -345,7 +345,7 @@ public class setting extends Model {
      */
     @Override
     public void set() {
-      ConfigGlobal.setConfig("site.counter", this.getHtml("counter"));
+      Global.setConfig("site.counter", this.getHtml("counter"));
 
       this.set(X.MESSAGE, lang.get("save.success"));
 

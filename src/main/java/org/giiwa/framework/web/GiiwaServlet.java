@@ -137,9 +137,9 @@ public class GiiwaServlet extends HttpServlet {
 			/**
 			 * initialize the configuration
 			 */
-			ConfigLocal.init("home", "giiwa");
+			Local.init("home", "giiwa");
 
-			Configuration conf = ConfigLocal.getConfig();
+			Configuration conf = Local.getConfig();
 
 			// TO fix a bug, giiwa.properties may store the "home"
 			conf.setProperty("home", Model.GIIWA_HOME);

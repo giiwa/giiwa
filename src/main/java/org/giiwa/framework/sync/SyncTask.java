@@ -29,7 +29,7 @@ import org.giiwa.core.base.Base64;
 import org.giiwa.core.base.DES;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Data;
 import org.giiwa.framework.bean.OpLog;
@@ -95,7 +95,7 @@ public class SyncTask extends Task {
    * @return String
    */
 	public String setting(String collection) {
-		return ConfigGlobal.s("sync." + collection, null);
+		return Global.s("sync." + collection, null);
 	}
 
 	/**
@@ -106,7 +106,7 @@ public class SyncTask extends Task {
    * @return long
    */
 	public long lasttime(String collection) {
-		return ConfigGlobal.l("sync." + collection + ".lasttime", 0);
+		return Global.l("sync." + collection + ".lasttime", 0);
 	}
 
 	/**
@@ -212,12 +212,12 @@ public class SyncTask extends Task {
 	public static void reset(String group, String collection) {
 
 		if (X.isEmpty(collection)) {
-			ConfigGlobal.setConfig("sync." + collection + ".lasttime", 0L);
+			Global.setConfig("sync." + collection + ".lasttime", 0L);
 		} else {
 			List<String> collections = groups.get(group);
 			if (collections != null && collections.size() > 0) {
 				for (String s : collections) {
-					ConfigGlobal.setConfig("sync." + s + ".lasttime", 0L);
+					Global.setConfig("sync." + s + ".lasttime", 0L);
 				}
 			}
 		}
@@ -256,7 +256,7 @@ public class SyncTask extends Task {
 	}
 
 	private void sync(final String collection, final String url, final String appkey, final String secret) {
-		String type = ConfigGlobal.s("sync." + collection, X.EMPTY);
+		String type = Global.s("sync." + collection, X.EMPTY);
 
 		if ("get".equals(type)) {
 			new Task() {
@@ -280,7 +280,7 @@ public class SyncTask extends Task {
 							order.put("updated", 1);
 						}
 
-						long updated = ConfigGlobal.l("sync." + collection + ".lasttime", 0);
+						long updated = Global.l("sync." + collection + ".lasttime", 0);
 						JSONObject q = new JSONObject();
 						q.put("$gte", updated);
 						query.put(order.keys().next(), q);
@@ -325,7 +325,7 @@ public class SyncTask extends Task {
 										long l1 = j1.getLong(order.keys().next().toString());
 										if (l1 > updated) {
 											updated = l1;
-											ConfigGlobal.setConfig("sync." + collection + ".lasttime", updated);
+											Global.setConfig("sync." + collection + ".lasttime", updated);
 										}
 									}
 
@@ -396,9 +396,9 @@ public class SyncTask extends Task {
 	@Override
 	public void onExecute() {
 
-		final String url = ConfigGlobal.s("sync.url", null);
-		final String appkey = ConfigGlobal.s("sync.appkey", null);
-		final String secret = ConfigGlobal.s("sync.secret", null);
+		final String url = Global.s("sync.url", null);
+		final String appkey = Global.s("sync.appkey", null);
+		final String secret = Global.s("sync.secret", null);
 		if (!X.isEmpty(url) && !X.isEmpty(appkey) && !X.isEmpty(secret)) {
 
 			for (String collection : collections.keySet()) {

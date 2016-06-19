@@ -113,9 +113,17 @@ html, body {
 #content input {
 	height: 26px;
 }
-
+label h3 {
+	color: #fff;
+	width: 80px;
+	text-align: left;
+}
 #wrapper.register input {
 	float: left;
+}
+
+input[name=code] {
+	width: 60px;
 }
 
 .inner .title {
@@ -160,12 +168,10 @@ label {
 }
 
 .inner label {
-	width: 120px;
 	font-size: 16px;
 }
 
 #wrapper.login label {
-	width: 80px;
 	color: #fefefe;
 }
 
@@ -174,7 +180,6 @@ label {
 }
 
 #wrapper.register label h3 {
-	width: 80px;
 	color: #fefefe;
 }
 
@@ -235,4 +240,11 @@ div.message {
 	top: 24px;
 	color: #fff;
 	display: inline-block;
+}
+
+input.good {
+	border-color: green;
+}
+input.bad {
+	border-color: red;
 }

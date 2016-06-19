@@ -22,7 +22,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.DBMapping;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.ConfigGlobal;
+import org.giiwa.core.conf.Global;
 
 import com.mongodb.BasicDBObject;
 
@@ -115,7 +115,7 @@ public class AuthToken extends Bean {
   public static AuthToken update(long uid, String sid, String ip) {
     String id = UID.id(uid, sid);
     String token = UID.random(20);
-    long expired = System.currentTimeMillis() + ConfigGlobal.l("token.expired", X.AWEEK);
+    long expired = System.currentTimeMillis() + Global.l("token.expired", X.AWEEK);
     V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
 
     try {

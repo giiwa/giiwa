@@ -6,7 +6,7 @@
 package org.giiwa.app.web.admin;
 
 import org.apache.commons.configuration.Configuration;
-import org.giiwa.core.conf.ConfigLocal;
+import org.giiwa.core.conf.Local;
 import org.giiwa.framework.web.*;
 
 /**
@@ -28,7 +28,7 @@ public class dashboard extends Model {
     @Path(login = true, access = "access.config.admin")
     public void onGet() {
 
-        Configuration conf = ConfigLocal.getConfig();
+        Configuration conf = Local.getConfig();
 
         this.set("me", this.getUser());
         this.set("uptime", lang.format(Model.UPTIME, "yy-MM-dd"));
