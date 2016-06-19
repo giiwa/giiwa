@@ -1,7 +1,7 @@
 <project name="giiwa" default="package" basedir=".">
 
-	<property name="version" value="1.0.3" />
-
+	<xmlproperty file="src/main/webapp/modules/default/module.xml"/>
+	
 	<tstamp>
 		<format property="TODAY" pattern="yyMMdd" locale="zh,CN" />
 		<format property="BUILDNO" pattern="yyMMddHHmm" locale="zh,CN" />
@@ -13,20 +13,19 @@
 	<target name="zip" description="build sever all">
 		<delete file="target/upgrade" />
 
-		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
-		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="version>\d+.\d+.\d+" replace="version>${version}" byline="true" />
+		<replaceregexp file="target/giiwa-${module.version}/modules/default/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
 
 		<copy todir="target/upgrade">
-			<fileset dir="target/giiwa-${version}" />
+			<fileset dir="target/giiwa-${module.version}" />
 		</copy>
 
 		<copy todir="target/upgrade/modules/default/WEB-INF">
-			<fileset dir="target/giiwa-${version}/WEB-INF">
+			<fileset dir="target/giiwa-${module.version}/WEB-INF">
 				<exclude name="**/classes/**" />
 			</fileset>
 		</copy>
 
-		<zip destfile="target/giiwa-${version}-upgrade-${BUILDNO}.zip">
+		<zip destfile="target/giiwa-${module.version}-upgrade-${BUILDNO}.zip">
 			<fileset dir="target/upgrade/modules/default">
 				<exclude name="**/WEB-INF/classes/**" />
 				<exclude name="**/model/com/**" />
@@ -34,7 +33,7 @@
 		</zip>
 
 		<copy todir="../archives">
-			<fileset file="target/giiwa-${version}-upgrade-${BUILDNO}.zip" />
+			<fileset file="target/giiwa-${module.version}-upgrade-${BUILDNO}.zip" />
 		</copy>
 
 	</target>
@@ -42,20 +41,19 @@
 	<target name="tar" description="build sever all">
 		<delete file="target/giiwa" />
 
-		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
-		<replaceregexp file="target/giiwa-${version}/modules/default/module.xml" match="version>\d+.\d+.\d+" replace="version>${version}" byline="true" />
+		<replaceregexp file="target/giiwa-${module.version}/modules/default/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
 
 		<copy todir="target/giiwa">
 			<fileset dir="target/../tomcat" />
 		</copy>
 
 		<copy todir="target/giiwa/giiwa">
-			<fileset dir="target/giiwa-${version}">
+			<fileset dir="target/giiwa-${module.version}">
 				<exclude name="**/modules/default/WEB-INF" />
 			</fileset>
 		</copy>
 
-		<tar destfile="target/giiwa-${version}.tar">
+		<tar destfile="target/giiwa-${module.version}.tar">
 			<tarfileset dir="target/giiwa" prefix="giiwa">
 				<exclude name="**/WEB-INF/classes/**" />
 				<exclude name="**/model/com/**" />
@@ -67,12 +65,12 @@
 			</tarfileset>
 		</tar>
 
-		<gzip destfile="target/giiwa-${version}-${BUILDNO}.tgz" src="target/giiwa-${version}.tar" />
+		<gzip destfile="target/giiwa-${module.version}-${BUILDNO}.tgz" src="target/giiwa-${module.version}.tar" />
 
-		<delete file="target/giiwa-${version}.tar" />
+		<delete file="target/giiwa-${module.version}.tar" />
 
 		<copy todir="../archives">
-			<fileset file="target/giiwa-${version}-${BUILDNO}.tgz" />
+			<fileset file="target/giiwa-${module.version}-${BUILDNO}.tgz" />
 		</copy>
 
 	</target>
