@@ -27,10 +27,16 @@ public class Captcha {
    * output the "code image" to the file
    * 
    * @param w
+   *          the width of the image
    * @param h
+   *          the height of the image
    * @param outputFile
+   *          the output file
    * @param len
+   *          the length of the code
+   * @return String of the code
    * @throws IOException
+   *           throw exception when write image to the file
    */
   public static String create(int w, int h, File outputFile, int len) throws IOException {
     if (outputFile == null) {
