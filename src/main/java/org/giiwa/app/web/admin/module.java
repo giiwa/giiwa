@@ -130,7 +130,6 @@ public class module extends Model {
 
       Document doc = DocumentHelper.createDocument();
       Element root = doc.addElement("module");
-      root.addAttribute("xsi:schemaLocation", "http://joe.mac/docs/module.xsd");
       root.addAttribute("version", "1.0");
 
       Element e = root.addElement("id");
