@@ -65,35 +65,35 @@ import org.giiwa.framework.bean.*;
  * 
  */
 public class Model {
-  protected static Log                     log            = LogFactory.getLog(Model.class);
+  public static Log                        log            = LogFactory.getLog(Model.class);
 
   public static String                     ENCODING       = "UTF-8";
 
   /**
    * the original request (http, mdc)
    */
-  protected HttpServletRequest             req;
+  public HttpServletRequest                req;
 
   /**
    * the original response
    */
-  protected HttpServletResponse            resp;
+  public HttpServletResponse               resp;
 
   /**
    * language map
    */
-  protected Language                       lang;
+  public Language                          lang;
 
   /**
    * the request method(POST, GET)
    */
-  protected HTTPMethod                     method;
+  public HTTPMethod                        method;
 
   /**
    * the response context, includes all the response key-value, used by
    * view(html)
    */
-  protected VelocityContext                context;
+  public VelocityContext                   context;
 
   /**
    * the home of the webgiiwa
@@ -113,22 +113,22 @@ public class Model {
   /**
    * locale of user
    */
-  protected String                         locale;
+  public String                            locale;
 
   /**
    * the uri of request
    */
-  protected String                         uri;
+  public String                            uri;
 
   /**
    * the module of this model
    */
-  protected Module                         module;
+  public Module                            module;
 
   /**
    * the query string of the request
    */
-  protected QueryString                    query;
+  public QueryString                       query;
 
   /**
    * cache the template by viwename, the template will be override in child
@@ -149,7 +149,7 @@ public class Model {
   /**
    * associated login user
    */
-  protected User                           login          = null;
+  public User                              login          = null;
 
   private static final ThreadLocal<Module> _currentmodule = new ThreadLocal<Module>();
 
@@ -178,7 +178,7 @@ public class Model {
   /**
    * the response status
    */
-  protected int status = HttpServletResponse.SC_OK;
+  public int status = HttpServletResponse.SC_OK;
 
   /**
    * get the response state code
@@ -194,7 +194,7 @@ public class Model {
    * 
    * @return String
    */
-  final protected String getLocale() {
+  final public String getLocale() {
     if (locale == null) {
       locale = this.getString("lang");
       if (locale == null) {
@@ -246,7 +246,7 @@ public class Model {
    *          the method
    * @return Path
    */
-  final protected Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method) {
+  final public Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method) {
 
     // created = System.currentTimeMillis();
 
@@ -554,7 +554,7 @@ public class Model {
   /**
    * Goto login.
    */
-  final protected void gotoLogin() {
+  final public void gotoLogin() {
     if (this.uri != null && this.uri.indexOf("/user/") < 0) {
       if (query == null) {
         createQuery();
@@ -637,7 +637,7 @@ public class Model {
    * 
    * @return String
    */
-  final protected String getToken() {
+  final public String getToken() {
     String token = this.getCookie("token");
     if (token == null) {
       token = this.getHeader("token");
@@ -654,7 +654,7 @@ public class Model {
    * @param url
    *          the url
    */
-  final protected void redirect(String url) {
+  final public void redirect(String url) {
     resp.setHeader("Location", url);
     setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
   }
@@ -665,18 +665,18 @@ public class Model {
    * @param model
    *          the model
    */
-  final protected void forward(String model) {
+  final public void forward(String model) {
     Controller.dispatch(model, req, resp, method);
   }
 
-  protected JSONObject mockMdc = null;
+  public JSONObject mockMdc = null;
 
   /**
    * Mock mdc.
    * 
    * @deprecated
    */
-  final protected void mockMdc() {
+  final public void mockMdc() {
     mockMdc = new JSONObject();
   }
 
@@ -724,7 +724,7 @@ public class Model {
    * @param name
    *          the name of data setted in model
    */
-  final protected void remove(String name) {
+  final public void remove(String name) {
     if (context != null) {
       context.remove(name);
     }
@@ -738,7 +738,7 @@ public class Model {
    * @param o
    *          the value object
    */
-  final protected void set(String name, Object o) {
+  final public void set(String name, Object o) {
     put(name, o);
   }
 
@@ -751,7 +751,7 @@ public class Model {
    *          the default value if the name not presented in model
    * @return Object
    */
-  final protected Object get(String name, Object defaultValue) {
+  final public Object get(String name, Object defaultValue) {
     if (context != null) {
       return context.get(name);
     }
@@ -766,7 +766,7 @@ public class Model {
    * @param value
    *          the String value
    */
-  final protected void setHeader(String name, String value) {
+  final public void setHeader(String name, String value) {
     if (resp.containsHeader(name)) {
       resp.setHeader(name, value);
     } else {
@@ -782,7 +782,7 @@ public class Model {
    * @param date
    *          the data value in header to response
    */
-  final protected void setDateHeader(String name, long date) {
+  final public void setDateHeader(String name, long date) {
     resp.setDateHeader(name, date);
   }
 
@@ -847,7 +847,7 @@ public class Model {
    *          the name
    * @return true, if has
    */
-  final protected boolean has(String name) {
+  final public boolean has(String name) {
     return context != null && context.containsKey(name);
   }
 
@@ -858,7 +858,7 @@ public class Model {
    *          the header tag
    * @return String of the header
    */
-  final protected String getHeader(String tag) {
+  final public String getHeader(String tag) {
     try {
       return req.getHeader(tag);
     } catch (Exception e) {
@@ -874,7 +874,7 @@ public class Model {
    * @param v
    *          the v
    */
-  final protected void addHeader(String tag, String v) {
+  final public void addHeader(String tag, String v) {
     try {
       resp.addHeader(tag, v);
     } catch (Exception e) {
@@ -888,7 +888,7 @@ public class Model {
    *          the tag
    * @return the int
    */
-  final protected int getInt(String tag) {
+  final public int getInt(String tag) {
     return getInt(tag, 0);
   }
 
@@ -902,7 +902,7 @@ public class Model {
    *          the tag
    * @return the int
    */
-  final protected int getInt(JSONObject jo, String tag) {
+  final public int getInt(JSONObject jo, String tag) {
     if (jo.has(tag)) {
       return Bean.toInt(jo.get(tag));
     }
@@ -924,7 +924,7 @@ public class Model {
    *          the tag in session
    * @return the int
    */
-  final protected int getInt(JSONObject jo, String tag, int minValue, String tagInSession) {
+  final public int getInt(JSONObject jo, String tag, int minValue, String tagInSession) {
     if (jo.has(tag)) {
       int i = Bean.toInt(jo.get(tag));
       if (i >= minValue) {
@@ -948,7 +948,7 @@ public class Model {
    *          the tag in session
    * @return the int
    */
-  final protected int getInt(String tag, int minValue, String tagInSession) {
+  final public int getInt(String tag, int minValue, String tagInSession) {
     int r = getInt(tag);
     if (r < minValue) {
       Session s = this.getSession();
@@ -979,7 +979,7 @@ public class Model {
    *          the default value if not presented in both.
    * @return String of the value
    */
-  final protected String getString(String tag, String tagInSession, String defaultValue) {
+  final public String getString(String tag, String tagInSession, String defaultValue) {
     String r = getString(tag);
     if (X.isEmpty(r)) {
       Session s = this.getSession();
@@ -1006,7 +1006,7 @@ public class Model {
    *          the default value
    * @return the int
    */
-  final protected int getInt(String tag, int defaultValue) {
+  final public int getInt(String tag, int defaultValue) {
     String v = this.getString(tag);
     return Bean.toInt(v, defaultValue);
   }
@@ -1020,7 +1020,7 @@ public class Model {
    *          the default value when the name not presented.
    * @return long
    */
-  final protected long getLong(String tag, long defaultvalue) {
+  final public long getLong(String tag, long defaultvalue) {
     String v = this.getString(tag);
     return Bean.toLong(v, defaultvalue);
   }
@@ -1032,7 +1032,7 @@ public class Model {
    *          the name of parameter in request.
    * @return long
    */
-  final protected long getLong(String tag) {
+  final public long getLong(String tag) {
     return getLong(tag, 0);
   }
 
@@ -1041,7 +1041,7 @@ public class Model {
    * 
    * @return Cookie[]
    */
-  final protected Cookie[] getCookie() {
+  final public Cookie[] getCookie() {
     return req.getCookies();
   }
 
@@ -1052,7 +1052,7 @@ public class Model {
    *          the name
    * @return the cookie
    */
-  final protected String getCookie(String name) {
+  final public String getCookie(String name) {
     Cookie[] cc = getCookie();
     if (cc != null) {
       for (int i = cc.length - 1; i >= 0; i--) {
@@ -1071,7 +1071,7 @@ public class Model {
    * 
    * @return HttpServletRequest
    */
-  final protected HttpServletRequest getRequest() {
+  final public HttpServletRequest getRequest() {
     return req;
   }
 
@@ -1080,7 +1080,7 @@ public class Model {
    * 
    * @return HttpServletResponse
    */
-  final protected HttpServletResponse getResponse() {
+  final public HttpServletResponse getResponse() {
     return resp;
   }
 
@@ -1089,7 +1089,7 @@ public class Model {
    * 
    * @return the string
    */
-  final protected String browser() {
+  final public String browser() {
     return this.getHeader("user-agent");
   }
 
@@ -1103,7 +1103,7 @@ public class Model {
    * @param expireseconds
    *          the expire time of seconds.
    */
-  final protected void addCookie(String key, String value, int expireseconds) {
+  final public void addCookie(String key, String value, int expireseconds) {
     if (key == null) {
       return;
     }
@@ -1134,7 +1134,7 @@ public class Model {
    * @param c
    *          the c
    */
-  final protected void addCookie(Cookie c) {
+  final public void addCookie(Cookie c) {
     if (c != null) {
       resp.addCookie(c);
     }
@@ -1145,7 +1145,7 @@ public class Model {
    * 
    * @return String
    */
-  final protected String getURI() {
+  final public String getURI() {
     return req.getRequestURI();
   }
 
@@ -1154,7 +1154,7 @@ public class Model {
    * 
    * @return String
    */
-  final protected String getPath() {
+  final public String getPath() {
     return path;
   }
 
@@ -1163,7 +1163,7 @@ public class Model {
    * 
    * @return String
    */
-  final protected String getRemoteHost() {
+  final public String getRemoteHost() {
     String remote = this.getHeader("X-Forwarded-For");
     if (remote == null) {
       remote = getHeader("X-Real-IP");
@@ -1182,7 +1182,7 @@ public class Model {
    * @return Enumeration
    */
   @SuppressWarnings("unchecked")
-  final protected Enumeration<String> getParameterNames() {
+  final public Enumeration<String> getParameterNames() {
     try {
       return req.getParameterNames();
     } catch (Exception e) {
@@ -1199,7 +1199,7 @@ public class Model {
    * 
    * @return JSONObject
    */
-  final protected JSONObject getJSON() {
+  final public JSONObject getJSON() {
     if (_json == null) {
       _json = new JSONObject();
       for (String name : this.getNames()) {
@@ -1224,7 +1224,7 @@ public class Model {
    * @deprecated
    * @return JSONObject
    */
-  final protected JSONObject getJSONNonPassword() {
+  final public JSONObject getJSONNonPassword() {
     if (_json == null) {
       getJSON();
     }
@@ -1247,7 +1247,7 @@ public class Model {
    *          the name of parameter
    * @return string of requested value
    */
-  final protected String getString(String name) {
+  final public String getString(String name) {
     try {
       if (this._multipart) {
         getFiles();
@@ -1287,7 +1287,7 @@ public class Model {
    *          the maxlength
    * @return string of value
    */
-  final protected String getString(String name, int maxlength) {
+  final public String getString(String name, int maxlength) {
     String s = getString(name);
     if (!X.isEmpty(s)) {
       if (s.getBytes().length > maxlength) {
@@ -1310,7 +1310,7 @@ public class Model {
    *          the defaultvalue
    * @return string of value
    */
-  final protected String getString(String name, int maxlength, String defaultvalue) {
+  final public String getString(String name, int maxlength, String defaultvalue) {
     String s = getString(name);
     if (!X.isEmpty(s)) {
       if (s.getBytes().length > maxlength) {
@@ -1331,7 +1331,7 @@ public class Model {
    *          the parameter name
    * @return String of value
    */
-  final protected String getHtml(String name) {
+  final public String getHtml(String name) {
     return getHtml(name, false);
   }
 
@@ -1344,7 +1344,7 @@ public class Model {
    *          whether get all data
    * @return String
    */
-  final protected String getHtml(String name, boolean all) {
+  final public String getHtml(String name, boolean all) {
     try {
       if (this._multipart) {
         getFiles();
@@ -1385,7 +1385,7 @@ public class Model {
    *          the maxlength
    * @return the html
    */
-  final protected String getHtml(String name, int maxlength) {
+  final public String getHtml(String name, int maxlength) {
     String html = getHtml(name);
     if (!X.isEmpty(html)) {
       if (html.getBytes().length >= maxlength) {
@@ -1406,7 +1406,7 @@ public class Model {
    *          the defaultvalue
    * @return String of the html
    */
-  final protected String getHtml(String name, int maxlength, String defaultvalue) {
+  final public String getHtml(String name, int maxlength, String defaultvalue) {
     String html = getHtml(name);
     if (!X.isEmpty(html)) {
       if (html.getBytes().length >= maxlength) {
@@ -1427,7 +1427,7 @@ public class Model {
    * @return String[] of request
    */
   @SuppressWarnings("unchecked")
-  final protected String[] getStrings(String name) {
+  final public String[] getStrings(String name) {
     try {
       if (this._multipart) {
         getFiles();
@@ -1471,7 +1471,7 @@ public class Model {
    * 
    * @return List of the request names
    */
-  final protected List<String> getNames() {
+  final public List<String> getNames() {
     if (this._multipart) {
       getFiles();
       return new ArrayList<String>(uploads.keySet());
@@ -1493,7 +1493,7 @@ public class Model {
    * 
    * @return Session
    */
-  final protected Session getSession() {
+  final public Session getSession() {
     return Session.load(sid());
   }
 
@@ -1504,7 +1504,7 @@ public class Model {
    *          the bf create
    * @return the http session
    */
-  final protected HttpSession getHttpSession(boolean bfCreate) {
+  final public HttpSession getHttpSession(boolean bfCreate) {
 
     return req.getSession(bfCreate);
   }
@@ -1519,7 +1519,7 @@ public class Model {
    * 
    * @return boolean
    */
-  final protected boolean isMultipart() {
+  final public boolean isMultipart() {
     return _multipart;
   }
 
@@ -1530,7 +1530,7 @@ public class Model {
    * 
    * @return User
    */
-  final protected User getUser() {
+  final public User getUser() {
     if (login == null) {
       Session s = getSession();
       login = (User) s.get("user");
@@ -1564,7 +1564,7 @@ public class Model {
    * @param u
    *          the user object associated with the session
    */
-  final protected void setUser(User u) {
+  final public void setUser(User u) {
     Session s = getSession();
     User u1 = (User) s.get("user");
     if (u != null && u1 != null && u1.getId() != u.getId()) {
@@ -1642,7 +1642,7 @@ public class Model {
    *          the parameter name
    * @return file of value, null if not presented
    */
-  final protected FileItem getFile(String name) {
+  final public FileItem getFile(String name) {
 
     getFiles();
 
@@ -1665,7 +1665,7 @@ public class Model {
    * the path of the uri, http://[host:port]/[class]/[path], usually the
    * path=method name
    */
-  protected String            path;
+  public String               path;
 
   /**
    * set the response contenttype
@@ -1673,7 +1673,7 @@ public class Model {
    * @param contentType
    *          the content type in response
    */
-  final protected void setContentType(String contentType) {
+  final public void setContentType(String contentType) {
     this.contentType = contentType;
     resp.setContentType(contentType);
   }
@@ -1683,7 +1683,7 @@ public class Model {
    * 
    * @return String of content-type
    */
-  final protected String getContentType() {
+  final public String getContentType() {
     if (contentType == null) {
       return MIME_HTML;
     } else {
@@ -1700,7 +1700,7 @@ public class Model {
    *          if not presented, allow using a empty
    * @return Template
    */
-  final protected Template getTemplate(String viewname, boolean allowEmpty) {
+  final public Template getTemplate(String viewname, boolean allowEmpty) {
     Template template = cache.get(viewname);
 
     if (template == null || template.isSourceModified()) {
@@ -1725,7 +1725,7 @@ public class Model {
    *          the "path" of the viewname is "/abc.html"<br>
    * @return boolean
    */
-  final protected boolean show(String viewname) {
+  final public boolean show(String viewname) {
     this.set("path", this.path);
     this.set("query", this.query);
 
@@ -1738,7 +1738,7 @@ public class Model {
    * @param jo
    *          the json that will be output
    */
-  final protected void response(JSONObject jo) {
+  final public void response(JSONObject jo) {
     if (jo == null) {
       responseJson("{}");
     } else {
@@ -1754,7 +1754,7 @@ public class Model {
    * @param message
    *          the message to response
    */
-  final protected void response(int state, String message) {
+  final public void response(int state, String message) {
     JSONObject jo = new JSONObject();
     jo.put(X.STATE, 200);
     jo.put(X.MESSAGE, message);
@@ -1767,7 +1767,7 @@ public class Model {
    * @param arr
    *          the array of json
    */
-  final protected void response(JSONArray arr) {
+  final public void response(JSONArray arr) {
     if (arr == null) {
       responseJson("[]");
     } else {
@@ -1793,7 +1793,7 @@ public class Model {
    *          the template name of view
    * @return string of rendered
    */
-  final protected String parse(String viewname) {
+  final public String parse(String viewname) {
     StringBuilderWriter sb = null;
     try {
 
@@ -1831,7 +1831,7 @@ public class Model {
    *          parent module
    * @return boolean
    */
-  final protected boolean show(String viewname, boolean allowOverride) {
+  final public boolean show(String viewname, boolean allowOverride) {
 
     Writer writer = null;
     try {
@@ -1882,7 +1882,7 @@ public class Model {
    *          the params array
    * @return String of the render result
    */
-  final protected String parse(String viewname, Object[]... params) {
+  final public String parse(String viewname, Object[]... params) {
 
     StringWriter writer = null;
     try {
@@ -1967,7 +1967,7 @@ public class Model {
    * @param path
    *          rewrite the path
    */
-  final protected void setPath(String path) {
+  final public void setPath(String path) {
     this.path = path;
   }
 
@@ -1980,7 +1980,7 @@ public class Model {
    *          the uri
    * @return the string
    */
-  final protected String merge(String uri) {
+  final public String merge(String uri) {
     Template template = getTemplate(uri, true);
 
     // System.out.println(viewname + "=>" + template);
@@ -2016,7 +2016,7 @@ public class Model {
    *          the type of uri
    * @return String of mime type
    */
-  protected static String getMimeType(String uri) {
+  public static String getMimeType(String uri) {
     return GiiwaServlet.config.getServletContext().getMimeType(uri);
   }
 
@@ -2026,7 +2026,7 @@ public class Model {
    * @param e
    *          the throwable
    */
-  final protected void error(Throwable e) {
+  final public void error(Throwable e) {
     if (log.isErrorEnabled())
       log.error(e.getMessage(), e);
 
@@ -2053,7 +2053,7 @@ public class Model {
   /**
    * show notfound page to end-user
    */
-  final protected void notfound() {
+  final public void notfound() {
     this.set("me", this.getUser());
     this.show("/notfound.html", true);
     this.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -2065,7 +2065,7 @@ public class Model {
    * @param statuscode
    *          the status code to response
    */
-  final protected void setStatus(int statuscode) {
+  final public void setStatus(int statuscode) {
     resp.setStatus(statuscode);
     status = statuscode;
   }
@@ -2073,7 +2073,7 @@ public class Model {
   /**
    * show deny page to end-user
    */
-  final protected void deny() {
+  final public void deny() {
     deny(null);
     setStatus(HttpServletResponse.SC_FORBIDDEN);
   }
@@ -2084,7 +2084,7 @@ public class Model {
    * @param error
    *          the error that will be displaied
    */
-  final protected void deny(String error) {
+  final public void deny(String error) {
     if (log.isWarnEnabled())
       log.warn("deny ... " + error);
     String request = this.getHeader("X-Requested-With");
@@ -2110,7 +2110,7 @@ public class Model {
    * @param f
    *          the file which deleted
    */
-  final protected void delete(File f) {
+  final public void delete(File f) {
     if (!f.exists()) {
       return;
     }
@@ -2134,29 +2134,29 @@ public class Model {
    * 
    * @return int
    */
-  final protected int getMethod() {
+  final public int getMethod() {
     return method.method;
   }
 
   /**
    * HTTP GET
    */
-  final public static int       METHOD_GET  = 1;
+  final public static int    METHOD_GET  = 1;
 
   /**
    * HTTP POST
    */
-  final public static int       METHOD_POST = 2;
+  final public static int    METHOD_POST = 2;
 
   /**
    * MIME TYPE of JSON
    */
-  final public static String    MIME_JSON   = "application/json;charset=" + ENCODING;
+  final public static String MIME_JSON   = "application/json;charset=" + ENCODING;
 
   /**
    * MIME TYPE of HTML
    */
-  final protected static String MIME_HTML   = "text/html;charset=" + ENCODING;
+  final public static String MIME_HTML   = "text/html;charset=" + ENCODING;
 
   /**
    * the utility api of copying all data in "inputstream" to "outputstream".
@@ -2292,7 +2292,7 @@ public class Model {
   /**
    * pathmapping structure: {"method", {"path", Path|Method}}
    */
-  protected Map<Integer, Map<String, PathMapping>> pathmapping;
+  public Map<Integer, Map<String, PathMapping>> pathmapping;
 
   /**
    * println the object to end-user
@@ -2300,7 +2300,7 @@ public class Model {
    * @param o
    *          the object of printing
    */
-  final protected void println(Object o) {
+  final public void println(Object o) {
     print(o);
   }
 
@@ -2310,7 +2310,7 @@ public class Model {
    * @param o
    *          the object of printing
    */
-  final protected void print(Object o) {
+  final public void print(Object o) {
     try {
       BufferedWriter writer = new BufferedWriter(resp.getWriter());
 
@@ -2331,7 +2331,7 @@ public class Model {
    *          the names that request parameters will copied
    * @return int of copied
    */
-  final protected int copy(V v, String... names) {
+  final public int copy(V v, String... names) {
     if (v == null || names == null || names.length == 0)
       return 0;
 
@@ -2353,7 +2353,7 @@ public class Model {
    *          the names that request parameters will copied
    * @return int of copied
    */
-  final protected int copyInt(V v, String... names) {
+  final public int copyInt(V v, String... names) {
     if (v == null || names == null || names.length == 0)
       return 0;
 
@@ -2375,7 +2375,7 @@ public class Model {
    *          the names that request parameters will copied
    * @return int of copied
    */
-  final protected int copyLong(V v, String... names) {
+  final public int copyLong(V v, String... names) {
     if (v == null || names == null || names.length == 0)
       return 0;
 
@@ -2399,7 +2399,7 @@ public class Model {
    *          the names that request parameters will copied
    * @return int of copied
    */
-  final protected int copyDate(V v, String format, String... names) {
+  final public int copyDate(V v, String format, String... names) {
     if (v == null || names == null || names.length == 0)
       return 0;
 
@@ -2421,7 +2421,7 @@ public class Model {
    *          the names that request parameters will copied
    * @return int of copied
    */
-  final protected int rebound(String... names) {
+  final public int rebound(String... names) {
     int count = 0;
     if (names != null && names.length > 0) {
       for (String name : names) {
