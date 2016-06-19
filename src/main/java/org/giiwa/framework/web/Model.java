@@ -1146,7 +1146,11 @@ public class Model {
    * @return String
    */
   final public String getURI() {
-    return req.getRequestURI();
+    String uri = req.getRequestURI();
+    while (uri.indexOf("//") > -1) {
+      uri = uri.replaceAll("//", "/");
+    }
+    return uri;
   }
 
   /**

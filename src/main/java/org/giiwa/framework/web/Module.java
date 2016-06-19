@@ -116,8 +116,10 @@ public class Module {
    * @return boolean
    */
   public boolean before(Model m) {
+    String uri = m.getURI();
+
     for (String name : filters.keySet()) {
-      if (m.getURI().matches(name)) {
+      if (uri.matches(name)) {
         Object o = filters.get(name);
         try {
           IFilter f = null;
