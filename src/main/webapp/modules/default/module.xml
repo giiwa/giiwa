@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<module>
+<module xsi:schemaLocation="http://joe.mac/docs/module.xsd" version="1.0">
 	<id>0</id>
 	<name>default</name>
 	<package>org.giiwa.app.web</package>
@@ -15,7 +15,7 @@
 		<param name="fff" value="aaa"/>
 	</setting>
 	<!--filter>
-		<pattern>/*</pattern>
-		<class>org.giiwa.web.filter</class>
+	<pattern>/*</pattern>
+	<class>org.giiwa.web.filter</class>
 	</filter-->
 </module>
