@@ -12,6 +12,11 @@ import java.util.zip.*;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.fileupload.FileItem;
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
@@ -22,8 +27,7 @@ import org.giiwa.framework.web.*;
 
 // TODO: Auto-generated Javadoc
 /**
- * web api: /admin/module
- * <br>
+ * web api: /admin/module <br>
  * used to manage modules
  * 
  * @author joe
@@ -117,14 +121,43 @@ public class module extends Model {
       create(out, name + "/build.xml");
       f1 = module.getFile("/admin/demo/build.xml");
       if (f1 != null) {
-        copy(out, f1, new String[] { "webdemo", name.toUpperCase() });
+        copy(out, f1);
       }
       out.closeEntry();
 
       create(out, name + "/src/").closeEntry();
-      create(out, name + "/src/module.ini");
-      println(out, "id=" + id, "enabled=true", "name=" + name, "package=" + package1, "lifelistener=" + lifelistener,
-          "screenshot=/images/demo_screenshot.png", "readme=" + readme, "version=1.0", "build=0");
+      create(out, name + "/src/module.xml");
+
+      Document doc = DocumentHelper.createDocument();
+      Element root = doc.addElement("module");
+      Element e = root.addElement("id");
+      e.setText(Integer.toString(id));
+
+      e = root.addElement("name");
+      e.setText(name);
+
+      e = root.addElement("package");
+      e.setText(package1);
+
+      e = root.addElement("screenshot");
+      e.setText("/images/demo_screenshot.png");
+      e = root.addElement("version");
+      e.setText("1.0.1");
+      e = root.addElement("build");
+      e.setText("0");
+      e = root.addElement("enabled");
+      e.setText("true");
+      e = root.addElement("readme");
+      e.setText(readme);
+      e = root.addElement("listener");
+      e = e.addElement("class");
+      e.setText(lifelistener);
+      e = root.addElement("setting");
+      OutputFormat format = OutputFormat.createPrettyPrint();
+      format.setEncoding("UTF-8");
+      XMLWriter writer = new XMLWriter(out, format);
+      writer.write(doc);
+
       out.closeEntry();
       // end of project info
 

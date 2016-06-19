@@ -4,10 +4,10 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.demo.bean.Demo;
-import org.giiwa.framework.web.LifeListener;
+import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Module;
 
-public class DemoListener implements LifeListener {
+public class DemoListener implements IListener {
 
 	static Log log = LogFactory.getLog(DemoListener.class);
 
