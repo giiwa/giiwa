@@ -132,7 +132,7 @@ public class module extends Model {
       Element root = doc.addElement("module");
       root.addAttribute("xsi:schemaLocation", "http://joe.mac/docs/module.xsd");
       root.addAttribute("version", "1.0");
-      
+
       Element e = root.addElement("id");
       e.setText(Integer.toString(id));
 
@@ -429,14 +429,15 @@ public class module extends Model {
 
     JSONObject jo = new JSONObject();
     if (e != null) {
+      String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
+      String root = Model.HOME + "/modules/" + temp + "/";
+
       try {
         ZipInputStream in = new ZipInputStream(e.getInputStream());
 
         /**
          * store all entry in temp file
          */
-        String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
-        String root = Model.HOME + "/modules/" + temp + "/";
 
         ZipEntry z = in.getNextEntry();
         byte[] bb = new byte[4 * 1024];
@@ -544,6 +545,9 @@ public class module extends Model {
         jo.put("message", lang.get("invalid.module.package"));
       } finally {
         e.close();
+
+        this.delete(new File(root));
+
       }
     } else {
       jo.put(X.STATE, 202);
