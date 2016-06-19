@@ -43,13 +43,13 @@ public class Repo extends Bean {
   private static String     ROOT;
 
   /**
-   * Inits the.
+   * Initialize the Repo, this will be invoke when giiwa startup
    * 
    * @param conf
    *          the conf
    */
   public static void init(Configuration conf) {
-    ROOT = conf.getString("repo.path", "/opt/repo/f1");
+    ROOT = conf.getString("repo.path", "/opt/repo");
   }
 
   /**

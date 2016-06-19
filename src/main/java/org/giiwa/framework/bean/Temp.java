@@ -18,6 +18,7 @@ import java.io.File;
 
 import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.bean.UID;
+import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -32,7 +33,7 @@ public class Temp {
   public static String ROOT;
 
   /**
-   * Inits the.
+   * Initialize the Temp object, this will be invoke in giiwa startup
    * 
    * @param conf
    *          the conf
