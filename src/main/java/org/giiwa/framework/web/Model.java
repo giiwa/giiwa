@@ -475,7 +475,8 @@ public class Model {
       switch (method.method) {
         case METHOD_GET: {
 
-          Method m = this.getClass().getMethod("onPost");
+          Method m = this.getClass().getMethod("onGet");
+          log.debug("m=" + m);
           if (m != null) {
             Path p = m.getAnnotation(Path.class);
             if (p != null) {
@@ -1958,8 +1959,6 @@ public class Model {
         }
       }
     }
-    if (log.isWarnEnabled())
-      log.warn("notfound the POST " + this.path);
 
     notfound();
   }
@@ -2058,6 +2057,9 @@ public class Model {
    * show notfound page to end-user
    */
   final public void notfound() {
+    if (log.isDebugEnabled())
+      log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("page notfound"));
+
     this.set("me", this.getUser());
     this.show("/notfound.html", true);
     this.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -2089,8 +2091,9 @@ public class Model {
    *          the error that will be displaied
    */
   final public void deny(String error) {
-    if (log.isWarnEnabled())
-      log.warn("deny ... " + error);
+    if (log.isDebugEnabled())
+      log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("deny " + error));
+
     String request = this.getHeader("X-Requested-With");
     if ("XMLHttpRequest".equals(request)) {
       JSONObject jo = new JSONObject();
