@@ -209,8 +209,9 @@ public class User extends Bean {
     log.debug("name=" + name + ", passwd=" + password);
     // System.out.println("name=" + name + ", passwd=" + password);
 
-    return Bean.load(new BasicDBObject("name", name).append("password", password)
-        .append("deleted", new BasicDBObject("$ne", 1)).append("remote", new BasicDBObject("$ne", 1)), User.class);
+    return Bean.load(
+        new BasicDBObject("name", name).append("password", password).append("deleted", new BasicDBObject("$ne", 1)),
+        User.class);
 
   }
 
@@ -226,30 +227,10 @@ public class User extends Bean {
    * @return User
    */
   public static User load(String name) {
-    String uid = "user://name/" + name;
-    User u1 = (User) Cache.get(uid);
-    if (u1 != null) {
-      return u1;
-    }
 
-    Beans<User> list = Bean.load(new BasicDBObject("name", name), new BasicDBObject("name", 1), 0, 100, User.class);
+    return Bean.load(new BasicDBObject("name", name).append("deleted", new BasicDBObject("$ne", 1)),
+        new BasicDBObject("name", 1), User.class);
 
-    if (list != null && list.getList() != null && list.getList().size() > 0) {
-      for (User u : list.getList()) {
-
-        /**
-         * if the user has been locked, then not allow to login
-         */
-        if (u.isLocked() || u.isDeleted())
-          continue;
-
-        u.setExpired(60);
-        Cache.set(uid, u);
-        return u;
-      }
-    }
-
-    return null;
   }
 
   /**
@@ -260,19 +241,8 @@ public class User extends Bean {
    * @return User
    */
   public static User loadById(long id) {
-    String uid = "user://id/" + id;
-    User u = (User) Cache.get(uid);
-    if (u != null && !u.expired()) {
-      return u;
-    }
 
-    u = Bean.load(new BasicDBObject(X._ID, id), User.class);
-    if (u != null) {
-      u.setExpired(60);
-      u.recache();
-    }
-
-    return u;
+    return Bean.load(new BasicDBObject(X._ID, id), User.class);
   }
 
   private void recache() {
@@ -424,12 +394,6 @@ public class User extends Bean {
     Bean.updateCollection(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
   }
 
-  public void setSid(String sid) {
-    set("sid", sid);
-
-    Bean.updateCollection(getId(), V.create("sid", sid).set("updated", System.currentTimeMillis()), User.class);
-  }
-
   private static String encrypt(String passwd) {
     if (X.isEmpty(passwd)) {
       return X.EMPTY;
@@ -461,6 +425,9 @@ public class User extends Bean {
    * @return int
    */
   public int update(V v) {
+    for (String name : v.names()) {
+      this.set(name, v.value(name));
+    }
     return update(this.getId(), v);
   }
 
