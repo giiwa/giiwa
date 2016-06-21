@@ -81,6 +81,48 @@ public class UID extends Bean {
   }
 
   /**
+   * create integer sequence for the name.
+   * 
+   * @param name
+   * @return integer
+   */
+  public synchronized static int nextInt(String name) {
+
+    try {
+
+      int v = -1;
+      UID u = Bean.load(new BasicDBObject(X._ID, name), UID.class);
+      if (u == null) {
+        v = 1;
+
+        String linkid = UID.random();
+        Bean.insertCollection(V.create(X._ID, name).set("var", v + 1).set("linkid", linkid), UID.class);
+        u = Bean.load(new BasicDBObject(X._ID, name), UID.class);
+        if (u == null) {
+          log.error("create unique sequence error");
+          return -1;
+        } else if (!linkid.equals(u.getString("linkid"))) {
+          // created by other node in cluster system
+          return nextInt(name);
+        }
+
+      } else {
+        v = X.toInt(u.get("var"), 1);
+        while (Bean.updateCollection(new BasicDBObject(X._ID, name).append("var", v), V.create("var", v + 1L),
+            UID.class) < 0) {
+          v++;
+        }
+      }
+
+      return v;
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+
+    return -1;
+  }
+
+  /**
    * generate a global random string.
    * 
    * @return the string
