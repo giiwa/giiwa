@@ -20,6 +20,7 @@ org/giiwa/framework/noti/Sms$ISender.class
 org/giiwa/app/web/DefaultListener$1.class
 org/giiwa/framework/bean/Roles.class
 org/giiwa/core/base/Zip.class
+org/giiwa/utils/image/Captcha$Code.class
 org/giiwa/framework/bean/Request.class
 org/giiwa/framework/bean/MyData.class
 org/giiwa/framework/web/Language.class
@@ -113,6 +114,7 @@ org/giiwa/app/web/index.class
 org/giiwa/framework/utils/FileUtil$Version.class
 org/giiwa/framework/web/DummyModel.class
 org/giiwa/framework/noti/Email$giiwaAuthenticator.class
+org/giiwa/utils/image/Captcha$Result.class
 org/giiwa/app/web/admin/system$1.class
 org/giiwa/framework/bean/Role.class
 org/giiwa/utils/image/Captcha.class
