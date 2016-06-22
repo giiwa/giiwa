@@ -38,6 +38,7 @@ import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
+import org.giiwa.utils.image.Captcha;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -207,12 +208,13 @@ public class user extends Model {
       String name = this.getString("name");
       String pwd = this.getString("pwd");
       String code = this.getString("code").toLowerCase();
-      Session s = this.getSession();
       JSONObject jo = new JSONObject();
 
-      if (!X.isSame(code, s.get("captcha"))) {
+      Captcha.Result r = Captcha.verify(this.sid(), code);
+
+      if (Captcha.Result.badcode == r) {
         jo.put(X.MESSAGE, lang.get("captcha.bad"));
-      } else if (X.toLong(s.get("captcha.expired"), 0) < System.currentTimeMillis()) {
+      } else if (Captcha.Result.expired == r) {
         jo.put(X.MESSAGE, lang.get("captcha.expired"));
       } else {
 

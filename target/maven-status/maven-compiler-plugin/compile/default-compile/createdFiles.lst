@@ -105,7 +105,6 @@ org/giiwa/framework/web/IListener.class
 org/giiwa/framework/web/QueryString.class
 org/giiwa/core/task/Task.class
 org/giiwa/core/base/GString.class
-org/giiwa/app/web/DefaultListener$SitemapTask.class
 org/giiwa/core/cache/ICacheSystem.class
 org/giiwa/app/web/admin/setting.class
 org/giiwa/app/web/admin/repo.class
