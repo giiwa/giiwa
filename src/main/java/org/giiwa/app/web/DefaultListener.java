@@ -221,7 +221,6 @@ public class DefaultListener implements IListener {
 
     NtpTask.owner.schedule(X.AMINUTE);
     new CleanupTask(conf).schedule(X.AMINUTE);
-    new SitemapTask().schedule(X.AMINUTE);
     // new VersionCheckTask().schedule(X.AMINUTE);
     // new SorterTask().schedule(X.AMINUTE);
     new AppdogTask().schedule(X.AMINUTE);
@@ -691,57 +690,6 @@ public class DefaultListener implements IListener {
       }
 
     }
-  }
-
-  /**
-   * create sitemap.txt for SE spider
-   * 
-   * @author joe
-   *
-   */
-  private static class SitemapTask extends Task {
-
-    @Override
-    public void onExecute() {
-
-      // get all url
-      Map<Object, Long> list = AccessLog.distinct("url");
-
-      if (list != null && list.size() > 0) {
-        String name = "sitemap.txt";
-
-        File f = Module.load("default").getFile(name);
-        if (f.exists()) {
-          f.delete();
-        }
-
-        PrintStream out = null;
-
-        try {
-          out = new PrintStream(new FileOutputStream(f));
-          out.println("/");
-          for (Object u : list.keySet()) {
-            out.println(u);
-          }
-          out.println();
-
-        } catch (Exception e) {
-          if (log.isErrorEnabled()) {
-            log.error(e.getMessage(), e);
-          }
-        } finally {
-          if (out != null) {
-            out.close();
-          }
-        }
-      }
-    }
-
-    @Override
-    public void onFinish() {
-      this.schedule(X.ADAY);
-    }
-
   }
 
   /**
