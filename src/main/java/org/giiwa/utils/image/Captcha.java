@@ -17,8 +17,15 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 
 import org.giiwa.core.bean.UID;
+import org.giiwa.core.bean.X;
+import org.giiwa.core.cache.Cache;
+import org.giiwa.core.cache.DefaultCachable;
 
 public class Captcha {
+
+  public static enum Result {
+    badcode, expired, ok
+  };
 
   private static final String VERIFY_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   private static Random       random       = new Random();
@@ -38,9 +45,9 @@ public class Captcha {
    * @throws IOException
    *           throw exception when write image to the file
    */
-  public static String create(int w, int h, File outputFile, int len) throws IOException {
+  public static boolean create(String sid, long expired, int w, int h, File outputFile, int len) throws IOException {
     if (outputFile == null) {
-      return null;
+      return false;
     }
     File dir = outputFile.getParentFile();
     if (!dir.exists()) {
@@ -52,10 +59,34 @@ public class Captcha {
       FileOutputStream fos = new FileOutputStream(outputFile);
       outputImage(w, h, fos, code.toUpperCase());
       fos.close();
-      return code;
+
+      Cache.set("//captcha/" + sid, Code.create(code, expired));
+      return true;
     } catch (IOException e) {
       throw e;
     }
+  }
+
+  /**
+   * verify the code associated
+   * 
+   * @param sid
+   *          the session id
+   * @param code
+   *          the code
+   * @return Result <br>
+   */
+  public static Result verify(String sid, String code) {
+    String id = "//captcha/" + sid;
+    Code c = (Code) Cache.get(id);
+    if (c == null) {
+      return Result.badcode;
+    } else if (!X.isSame(code, c.code)) {
+      return Result.badcode;
+    } else if (c.expired < System.currentTimeMillis()) {
+      return Result.expired;
+    }
+    return Result.ok;
   }
 
   /**
@@ -208,8 +239,25 @@ public class Captcha {
     int w = 200, h = 80;
     for (int i = 0; i < 50; i++) {
       File file = new File(dir, i + ".jpg");
-      create(w, h, file, 4);
+      create("1", System.currentTimeMillis() + 6 * X.AMINUTE, w, h, file, 4);
     }
   }
 
+  public static class Code extends DefaultCachable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    String                    code;
+    long                      expired;
+
+    static Code create(String code, long expired) {
+      Code c = new Code();
+      c.code = code;
+      c.expired = expired;
+      return c;
+    }
+  }
 }

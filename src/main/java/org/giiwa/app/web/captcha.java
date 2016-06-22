@@ -18,8 +18,8 @@ public class captcha extends Model {
     Temp t = Temp.create("code.jpg");
     try {
 
-      String code = Captcha.create(200, 60, t.getFile(), 4);
-      this.getSession().set("captcha", code).set("captcha.expired", System.currentTimeMillis() + 5 * X.AMINUTE).store();
+      Captcha.create(this.sid(), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60, t.getFile(), 4);
+
       jo.put(X.STATE, 200);
       jo.put("uri", t.getUri());
     } catch (Exception e1) {
@@ -34,20 +34,18 @@ public class captcha extends Model {
   @Path(path = "verify")
   public void verify() {
     String code = this.getString("code").toLowerCase();
-    Session s = this.getSession();
+    Captcha.Result r = Captcha.verify(this.sid(), code);
 
     JSONObject jo = new JSONObject();
-    if (X.isSame(code, s.get("captcha"))) {
-      if (X.toLong(s.get("captcha.expired"), 0) > System.currentTimeMillis()) {
-        jo.put(X.STATE, 200);
-        jo.put(X.MESSAGE, "ok");
-      } else {
-        jo.put(X.STATE, 201);
-        jo.put(X.MESSAGE, "expired");
-      }
-    } else {
+    if (Captcha.Result.badcode == r) {
       jo.put(X.STATE, 202);
       jo.put(X.MESSAGE, "bad code");
+    } else if (Captcha.Result.expired == r) {
+      jo.put(X.STATE, 201);
+      jo.put(X.MESSAGE, "expired");
+    } else {
+      jo.put(X.STATE, 200);
+      jo.put(X.MESSAGE, "ok");
     }
 
     this.response(jo);
