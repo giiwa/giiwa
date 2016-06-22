@@ -94,6 +94,11 @@
 				//bad
 				$(o).removeClass('good');
 				$(o).addClass('bad');
+
+				if(d.state == 201) {
+					//expired, then refresh
+					_oncaptcha();
+				}
 			}
 		})
 	}
