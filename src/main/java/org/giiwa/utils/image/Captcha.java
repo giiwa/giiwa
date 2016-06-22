@@ -90,6 +90,17 @@ public class Captcha {
   }
 
   /**
+   * remove the captcha code for sid
+   * 
+   * @param sid
+   *          the session id
+   */
+  public static void remove(String sid) {
+    String id = "//captcha/" + sid;
+    Cache.remove(id);
+  }
+
+  /**
    * 
    * @param w
    * @param h
