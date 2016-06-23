@@ -547,6 +547,9 @@ public class Model {
       url += "/" + path;
     }
 
+    if (url.endsWith("/")) {
+      url = url.substring(0, url.length() - 1);
+    }
     query = new QueryString(url).copy(this);
     this.set("query", query);
 
