@@ -635,7 +635,7 @@ public class User extends Bean {
      * @param uid
      * @return the number deleted
      */
-    public int cleanup(long uid) {
+    public static int cleanup(long uid) {
       return Bean.delete(new BasicDBObject("uid", uid), Lock.class);
     }
 
