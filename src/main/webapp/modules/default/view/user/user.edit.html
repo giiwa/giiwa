@@ -12,7 +12,7 @@
 
 	<div>
 		<button type='submit'>$lang.get('btn.save')</button>
-		<a class='btn' href='javascript:;' onclick="$('#password').dialog();">$lang.get('a.password')</a>	
+		<a class='btn' href='javascript:;' onclick="_showpassword()">$lang.get('a.password')</a>	
 	</div>
 </form>
 
@@ -22,6 +22,9 @@
 </div>
 
 <script>
+function _showpassword(){
+	$('#password').dialog({modal : true,close:function(e,ui){$(this).dialog('destroy');}});
+}
 function _password() {
 	$('#password').dialog('close');
 	var v = $('#password input[name=password]').val();

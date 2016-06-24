@@ -2,7 +2,7 @@
 	$lang.get('title.welcome') <b>$!me.nickname</b>
 	<span class='btns right'>
 		#if($me.hasAccess('access.config.admin'))
-		<a href='javascript:;' class='recycle' onclick="$('#restart').dialog();">$lang.get('a.restart')</a>
+		<a href='javascript:;' class='recycle' onclick="_showrestart()">$lang.get('a.restart')</a>
 		#end
 	</span></div>
 
@@ -27,6 +27,9 @@
 
 <script>
 var _timer = false;
+function _showrestart(){
+	$('#restart').dialog({modal : true,close:function(e,ui){$(this).dialog('destroy');}});
+}
 function _restart(){
 	
 	processing && processing.show();

@@ -91,7 +91,7 @@ function _ok(){
 function _id(name, id) {
 	$('#ideditor input[name=name]').val(name);
 	$('#ideditor input[name=id]').val(id);
-	$('#ideditor').dialog();
+	$('#ideditor').dialog({modal : true,close:function(e,ui){$(this).dialog('destroy');}});
 }
 
 function _download(url) {
