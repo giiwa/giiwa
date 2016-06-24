@@ -629,6 +629,16 @@ public class User extends Bean {
       return bs == null ? null : bs.getList();
     }
 
+    /**
+     * delete all user lock info for the user id
+     * 
+     * @param uid
+     * @return the number deleted
+     */
+    public int cleanup(long uid) {
+      return Bean.delete(new BasicDBObject("uid", uid), Lock.class);
+    }
+
     public long getUid() {
       return getLong("uid");
     }
