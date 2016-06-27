@@ -34,6 +34,7 @@ org/giiwa/framework/bean/Temp.class
 org/giiwa/app/web/admin/oplog.class
 org/giiwa/framework/sync/IFilter.class
 org/giiwa/framework/sync/SyncTask$2.class
+org/giiwa/framework/web/Tps.class
 org/giiwa/core/base/Char.class
 org/giiwa/core/bean/Pool.class
 org/giiwa/utils/image/GImage.class
