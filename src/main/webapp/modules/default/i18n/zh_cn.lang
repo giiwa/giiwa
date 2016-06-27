@@ -327,7 +327,6 @@ user.register=注册
 user.roles=角色
 user.sid=SID
 user.title=职位
-gauge.cpu.usage=使用率
 gauge.disk.free=空闲 （GB）
 gauge.disk.title=磁盘 （GB）
 gauge.disk.total=总共 （GB）
@@ -347,3 +346,5 @@ counter.setting.title=网站统计脚本
 user.captcha=验证码
 captcha.bad＝验证码错误
 captcha.expired=验证码过期
+gauge.tps.name=tps
+gauge.tps.title=TPS

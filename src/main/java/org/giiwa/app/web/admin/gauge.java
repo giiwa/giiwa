@@ -19,6 +19,7 @@ import net.sf.json.JSONObject;
 import org.giiwa.framework.utils.Host;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
+import org.giiwa.framework.web.Tps;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -41,19 +42,19 @@ public class gauge extends Model {
     /**
      * Cpu.
      */
-    @Path(path = "cpu", login = true, access = "access.config.admin", accesslog = false)
-    public void cpu() {
-        this.show("/admin/gauge.cpu.html");
+    @Path(path = "tps", login = true, access = "access.config.admin", accesslog = false)
+    public void tps() {
+        this.show("/admin/gauge.tps.html");
     }
 
     /**
      * Cpu_status.
      */
-    @Path(path = "cpu/status", login = true, access = "access.config.admin", accesslog = false)
-    public void cpu_status() {
+    @Path(path = "tps/status", login = true, access = "access.config.admin", accesslog = false)
+    public void tps_status() {
         // todo
         JSONObject jo = new JSONObject();
-        jo.put("usage", Host.getCpuUsage());
+        jo.put("total", Tps.get());
 
         this.response(jo);
 

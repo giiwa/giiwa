@@ -107,7 +107,6 @@ default=Default
 default.list.number=
 designedby=giiwa.org
 done=Done
-gauge.cpu.usage=Usage
 gauge.disk.free=Free (GB)
 gauge.disk.title=Disk (GB)
 gauge.disk.total=Total (GB)
@@ -355,3 +354,5 @@ counter.setting.title=Site counter script
 user.captcha=Code
 captcha.bad＝Bad code
 captcha.expired=Code expired
+gauge.tps.name=tps
+gauge.tps.title=TPS

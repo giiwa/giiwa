@@ -1,0 +1,95 @@
+<link href='/css/giiwa.css' rel='stylesheet' />
+<link href='/css/chart.css' rel='stylesheet' />
+<script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="/hc/highcharts.js"></script>
+<script type="text/javascript" src="/hc/highcharts-more.js"></script>
+
+<div id='gauge'>
+</div>
+
+<script>
+$(function () {                                                                     
+    $(document).ready(function() { 
+        Highcharts.setOptions({                                                     
+            global: {                                                               
+                useUTC: false                                                       
+            }  
+        });                                                                         
+                                                                                    
+        var chart;                                                                  
+        $('#gauge').highcharts({                                                
+            chart: {                                                                
+                type: 'spline',                                                     
+                animation: Highcharts.svg, // don't animate in old IE               
+                marginRight: 10,                                                    
+                events: {                                                           
+                    load: function() {                                              
+                                                                                    
+                        // set up the updating of the chart each second             
+                        var series = this.series[0];                                
+                        setInterval(function() {
+                        	$.post('/admin/gauge/tps/status', {}, function(d){
+								if(d.total > 0) {
+	                        		var x = (new Date()).getTime();
+		                            series.addPoint([x, d.total], true, true);                    
+								}
+                        	});
+                        }, 5000);                                                   
+                    }                                                               
+                }                                                                   
+            },                                                                      
+            credits:{
+            	enabled: false
+            },
+            title: {                                                                
+                text: "$lang.get('gauge.tps.title')"                                
+            },                                                                      
+            xAxis: {                                                                
+                type: 'datetime',                                                   
+                tickPixelInterval: 150                                              
+            },                                                                      
+            yAxis: {                                                                
+                title: {                                                            
+                    text: ''                                                   
+                },                                                                  
+                plotLines: [{                                                       
+                    value: 0,                                                       
+                    width: 1,                                                       
+                    color: '#808080'                                                
+                }]                                                                  
+            },                                                                      
+            tooltip: {                                                              
+                formatter: function() {                                             
+                        return '<b>'+ this.series.name +'</b><br>'+                
+                        Highcharts.dateFormat('%H:%M:%S', this.x) + '<br>' +
+                        Highcharts.numberFormat(this.y, 1) ;                         
+                }                                                                   
+            },                                                                      
+            legend: {                                                               
+                enabled: false                                                      
+            },                                                                      
+            exporting: {                                                            
+                enabled: false                                                      
+            },                                                                      
+            series: [{                                                              
+                name: "$lang.get('gauge.tps.name')",                                                
+                data: (function() {                                                 
+                    // generate an array of random data                             
+                    var data = [],                                                  
+                        time = (new Date()).getTime(),                              
+                        i;                                                          
+                                                                                    
+                    for (i = -9; i <= 0; i++) {                                    
+                        data.push({                                                 
+                            x: time + i * 1000,                                     
+                            y: 0                                        
+                        });                                                         
+                    }                                                               
+                    return data;                                                    
+                })()                                                                
+            }]                                                                      
+        });                                                                         
+    });                                                                             
+                                                                                    
+});                                                                                 				
+</script>

@@ -154,6 +154,7 @@ public class Controller {
   public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, Model.HTTPMethod method) {
 
     TimeStamp t = TimeStamp.create();
+    Tps.add(1);
 
     /**
      * cut-off all the "//"
