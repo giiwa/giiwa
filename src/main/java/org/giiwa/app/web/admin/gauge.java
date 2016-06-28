@@ -23,8 +23,7 @@ import org.giiwa.framework.web.Tps;
 
 // TODO: Auto-generated Javadoc
 /**
- * web api: /admin/gauge
- * <br>
+ * web api: /admin/gauge <br>
  * used to get "computer" status
  * 
  * @author joe
@@ -32,63 +31,66 @@ import org.giiwa.framework.web.Tps;
  */
 public class gauge extends Model {
 
-    /* (non-Javadoc)
-     * @see org.giiwa.framework.web.Model#onGet()
-     */
-    public void onGet() {
-        this.redirect("/user");
-    }
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  public void onGet() {
+    this.redirect("/user");
+  }
 
-    /**
-     * Cpu.
-     */
-    @Path(path = "tps", login = true, access = "access.config.admin", accesslog = false)
-    public void tps() {
-        this.show("/admin/gauge.tps.html");
-    }
+  /**
+   * Cpu.
+   */
+  @Path(path = "tps", login = true, access = "access.config.admin", accesslog = false)
+  public void tps() {
+    this.set("max", Tps.max());
+    this.show("/admin/gauge.tps.html");
+  }
 
-    /**
-     * Cpu_status.
-     */
-    @Path(path = "tps/status", login = true, access = "access.config.admin", accesslog = false)
-    public void tps_status() {
-        // todo
-        JSONObject jo = new JSONObject();
-        jo.put("total", Tps.get());
+  /**
+   * Cpu_status.
+   */
+  @Path(path = "tps/status", login = true, access = "access.config.admin", accesslog = false)
+  public void tps_status() {
+    // todo
+    JSONObject jo = new JSONObject();
+    jo.put("total", Tps.get());
 
-        this.response(jo);
+    this.response(jo);
 
-    }
+  }
 
-    /**
-     * Mem_status.
-     */
-    @Path(path = "mem/status", login = true, access = "access.config.admin", accesslog = false)
-    public void mem_status() {
-        // todo
-        JSONObject jo = new JSONObject();
-        jo.put("used", Host.getMemUsed());
+  /**
+   * Mem_status.
+   */
+  @Path(path = "mem/status", login = true, access = "access.config.admin", accesslog = false)
+  public void mem_status() {
+    // todo
+    JSONObject jo = new JSONObject();
+    jo.put("used", Host.getMemUsed());
 
-        this.response(jo);
+    this.response(jo);
 
-    }
+  }
 
-    /**
-     * Mem.
-     */
-    @Path(path = "mem", login = true, access = "access.config.admin", accesslog = false)
-    public void mem() {
-        this.set("total", Host.getMemTotal());
-        this.show("/admin/gauge.mem.html");
-    }
+  /**
+   * Mem.
+   */
+  @Path(path = "mem", login = true, access = "access.config.admin", accesslog = false)
+  public void mem() {
+    this.set("total", Host.getMemTotal());
+    this.show("/admin/gauge.mem.html");
+  }
 
-    /**
-     * Disk.
-     */
-    @Path(path = "disk", login = true, access = "access.config.admin", accesslog = false)
-    public void disk() {
-        this.set("list", Host.getDisks());
-        this.show("/admin/gauge.disk.html");
-    }
+  /**
+   * Disk.
+   */
+  @Path(path = "disk", login = true, access = "access.config.admin", accesslog = false)
+  public void disk() {
+    this.set("list", Host.getDisks());
+    this.show("/admin/gauge.disk.html");
+  }
 
 }
