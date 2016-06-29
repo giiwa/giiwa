@@ -356,3 +356,12 @@ captcha.bad＝Bad code
 captcha.expired=Code expired
 gauge.tps.name=tps
 gauge.tps.title=TPS
+btn.cancel=Cancel
+btn.delete=Delete
+btn.resume=Resume
+btn.stop=Stop
+btn.upload.module=Upload module
+hint.upload.module=Choose a module file(.zip)
+module.download.hint=Down the module file (.zip)
+msg.done=Done
+msg.stop=Stop

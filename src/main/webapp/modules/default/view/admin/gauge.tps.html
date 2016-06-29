@@ -16,22 +16,27 @@ $(function () {
             }  
         });                                                                         
                                                                                     
-        var chart;                                                                  
+        var max = $max;                                                        
         $('#gauge').highcharts({                                                
-            chart: {                                                                
+            chart: {                                          
                 type: 'spline',                                                     
                 animation: Highcharts.svg, // don't animate in old IE               
                 marginRight: 10,                                                    
                 events: {                                                           
                     load: function() {                                              
                                                                                     
-                        // set up the updating of the chart each second             
+                        // set up the updating of the chart each second 
+                        var that = this;            
                         var series = this.series[0];                                
                         setInterval(function() {
                         	$.post('/admin/gauge/tps/status', {}, function(d){
 								if(d.total > 0) {
 	                        		var x = (new Date()).getTime();
-		                            series.addPoint([x, d.total], true, true);                    
+		                            series.addPoint([x, d.total], true, true);  
+		                            if(d.total > max) {
+		                            	max = d.total;
+		                            	that.title.textStr = "$lang.get('gauge.tps.title')(max:" + max + ")";
+		                            }                  
 								}
                         	});
                         }, 5000);                                                   
@@ -42,7 +47,7 @@ $(function () {
             	enabled: false
             },
             title: {                                                                
-                text: "$lang.get('gauge.tps.title')($!max)"                                
+                text: "$lang.get('gauge.tps.title')(max:$max)"                                
             },                                                                      
             xAxis: {                                                                
                 type: 'datetime',                                                   

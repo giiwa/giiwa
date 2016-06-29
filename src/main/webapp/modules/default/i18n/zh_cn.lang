@@ -348,3 +348,12 @@ captcha.bad＝验证码错误
 captcha.expired=验证码过期
 gauge.tps.name=tps
 gauge.tps.title=TPS
+btn.cancel=取消
+btn.delete=删除
+btn.resume=上传
+btn.stop=停止
+btn.upload.module=上传模块
+hint.upload.module=选择模块包文件(.zip)
+module.download.hint=下载模块包文件(.zip)
+msg.done=完成
+msg.stop=停止

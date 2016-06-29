@@ -7,8 +7,13 @@
 		var options = $.extend({
 					tag : 'default',
 					type : 'url',
-					caption : '添加文件',
-					hint : '选择文件',
+					caption : 'Add file',
+					hint : 'Choose file',
+					btn_resume : 'Resume',
+					btn_delete : 'Delete',
+					btn_cancel : 'Cancel',
+					msg_stop : 'Stop',
+					msg_done : 'Done',
 					autoretry : true,
 					maxFileSize : 1024 * 1024 * 1024 * 100// 100G
 				}, opts);
@@ -68,7 +73,10 @@
 						var s = '';
 						s += "<div class='file-item'><span class='fileupload-filename'>"
 								+ data.files[0].name
-								+ "</span><span class='fileupload-progress'><span class='fileupload-bar-outter'><span class='fileupload-bar'></span></span><span class='fileupload-message'></span></span><a href='javascript:;' class='fileupload-cancel'>终止</a><a href='javascript:;' class='fileupload-resume'>上传</a></div>";
+								+ "</span><span class='fileupload-progress'><span class='fileupload-bar-outter'><span class='fileupload-bar'></span></span><span class='fileupload-message'></span></span><a href='javascript:;' class='fileupload-cancel'>"
+								+ options.btn_cancel
+								+ "</a><a href='javascript:;' class='fileupload-resume'>"
+								+ options.btn_resume + "</a></div>";
 						pp.find('.fileupload-state').html(s);
 						pp.find('.fileupload-cancel').click(function() {
 									options.autoretry = false;
@@ -77,7 +85,7 @@
 
 									var action = $(this).text();
 									// console.log(action);
-									if (action == '删除') {
+									if (action == options.btn_delete) {
 										var p = $(this).parent();
 										while (!p.hasClass('file-item')) {
 											p = p.parent();
@@ -92,8 +100,8 @@
 										 * add input back to btn
 										 */
 										p.remove();
-									} else if (action == '终止') {
-										$(this).text('删除');
+									} else if (action == options.btn_cancel) {
+										$(this).text(options.btn_delete);
 										pp.find('.fileupload-resume').show();
 									}
 								});
@@ -102,7 +110,7 @@
 									options.uploader
 											&& options.uploader.submit();
 									pp.find('.fileupload-resume').hide();
-									pp.find('.fileupload-cancel').text('终止');
+									pp.find('.fileupload-cancel').text(options.btn_cancel);
 								});
 
 						options.autoretry = true;
@@ -138,7 +146,7 @@
 							pp.find('.fileupload-message')
 									.text(data.result.message);
 						} else {
-							pp.find('.fileupload-message').text('停止');
+							pp.find('.fileupload-message').text(options.msg_stop);
 						}
 
 						if (data.result && data.result.error > 0) {
@@ -178,9 +186,9 @@
 							: false;
 
 					pp.find('.file-item').addClass('upload-done');
-					pp.find('.fileupload-message').text('完成');
+					pp.find('.fileupload-message').text(options.msg_done);
 					pp.find('.fileupload-message').removeClass('red');
-					pp.find('.fileupload-cancel').text('删除');
+					pp.find('.fileupload-cancel').text(options.btn_delete);
 
 					pp.find('input[type=hidden]')
 							.attr('value', data.result.url);

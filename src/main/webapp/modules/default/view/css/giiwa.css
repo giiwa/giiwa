@@ -624,7 +624,7 @@ div.tabs a {
   border-top-right-radius: 6px;
   margin-top: 1px;
   border-right: 1px solid #bbb;
-  padding: 0 20px;
+  padding: 0 30px;
 }
 div.tabs a:hover {
   color: #eee;
@@ -632,7 +632,7 @@ div.tabs a:hover {
 }
 div.tabs a.selected {
   color: #fff !important;
-  background: #3f9dd1 !important;
+  background-color: #3f9dd1 !important;
 }
 .modules.disabled .title {
   background: #aaa;
