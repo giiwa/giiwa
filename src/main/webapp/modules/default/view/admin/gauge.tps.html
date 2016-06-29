@@ -35,8 +35,8 @@ $(function () {
 		                            series.addPoint([x, d.total], true, true);  
 		                            if(d.total > max) {
 		                            	max = d.total;
-		                            	that.title.textStr = "$lang.get('gauge.tps.title')(max:" + max + ")";
-		                            }                  
+		                            	that.setTitle({text:"$lang.get('gauge.tps.title')(max:" + max + ")"});
+		                            }
 								}
                         	});
                         }, 5000);                                                   
