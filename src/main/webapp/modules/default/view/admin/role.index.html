@@ -6,7 +6,7 @@
 	<a href='/admin/role' class='selected'>$lang.get('a.role')</a>
 </div>
 
-#set($edit = $me.hasAccess('access.user.admin'))
+#set($edit = $me.hasAccess('access.role.admin'))
 
 <table id='role-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
@@ -44,6 +44,7 @@
 #end
 </div>
 
+#if($edit)
 <script>
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
@@ -53,3 +54,4 @@ function _delete(id, o) {
 	}
 }
 </script>
+#end

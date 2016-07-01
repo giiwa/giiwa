@@ -52,7 +52,7 @@ public class oplog extends Model {
 	/**
 	 * Popup2.
 	 */
-	@Path(path = "popup2", login = true, access = "access.log.query")
+	@Path(path = "popup2", login = true)
 	public void popup2() {
 		String type = this.getString("type");
 		String cate = this.getString("cate");
@@ -134,7 +134,7 @@ public class oplog extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.log.query")
+	@Path(login = true, access = "access.log.admin")
 	public void onGet() {
 
 		int s = this.getInt("s");
@@ -155,7 +155,7 @@ public class oplog extends Model {
 	/**
 	 * Export.
 	 */
-	@Path(path = "export", login = true, access = "access.log.export")
+	@Path(path = "export", login = true, access = "access.log.admin")
 	public void export() {
 
 		/**

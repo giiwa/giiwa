@@ -42,7 +42,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Repo;
@@ -189,7 +188,7 @@ public class DefaultListener implements IListener {
   /*
    * (non-Javadoc)
    * 
-   * @see org.giiwa.framework.web.LifeListener#onStart(org.apache.commons.
+   * @see org.giiwa.framework.web.IListener#onStart(org.apache.commons.
    * configuration.Configuration, org.giiwa.framework.web.Module)
    */
   public void onStart(Configuration conf, Module module) {
@@ -235,7 +234,7 @@ public class DefaultListener implements IListener {
   /*
    * (non-Javadoc)
    * 
-   * @see org.giiwa.framework.web.LifeListener#onStop()
+   * @see org.giiwa.framework.web.IListener#onStop()
    */
   public void onStop() {
   }
@@ -313,7 +312,7 @@ public class DefaultListener implements IListener {
   /*
    * (non-Javadoc)
    * 
-   * @see org.giiwa.framework.web.LifeListener#upgrade(org.apache.commons.
+   * @see org.giiwa.framework.web.IListener#upgrade(org.apache.commons.
    * configuration.Configuration, org.giiwa.framework.web.Module)
    */
   public void upgrade(Configuration conf, Module module) {
@@ -452,7 +451,7 @@ public class DefaultListener implements IListener {
   /*
    * (non-Javadoc)
    * 
-   * @see org.giiwa.framework.web.LifeListener#uninstall(org.apache.commons.
+   * @see org.giiwa.framework.web.IListener#uninstall(org.apache.commons.
    * configuration.Configuration, org.giiwa.framework.web.Module)
    */
   public void uninstall(Configuration conf, Module module) {

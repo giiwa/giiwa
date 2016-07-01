@@ -84,7 +84,7 @@ public class Module {
   String              name;
 
   /**
-   * lifelistener which will be invoke in each life cycle of the module
+   * IListener which will be invoke in each life cycle of the module
    */
   String              listener;
 
@@ -559,7 +559,7 @@ public class Module {
     return id;
   }
 
-  public String getLifelistener() {
+  public String getListener() {
     return listener;
   }
 
@@ -861,17 +861,21 @@ public class Module {
         String name = listener;
         if (name != null) {
 
-          Class<?> c = Class.forName(name, true, classLoader);
-          Object o = c.newInstance();
+          try {
+            Class<?> c = Class.forName(name, true, classLoader);
+            Object o = c.newInstance();
 
-          if (o instanceof IListener) {
+            if (o instanceof IListener) {
 
-            log.info("initializing: " + name);
-            IListener l = (IListener) o;
+              log.info("initializing: " + name);
+              IListener l = (IListener) o;
 
-            l.upgrade(conf, this);
+              l.upgrade(conf, this);
 
-            l.onStart(conf, this);
+              l.onStart(conf, this);
+            }
+          } catch (Throwable e) {
+            log.error(this.name + ", listener=" + name, e);
           }
         }
       }
