@@ -278,22 +278,32 @@ public class Module {
       e = root.addElement("name");
       e.setText(this.name);
 
-      e = root.addElement("package");
-      e.setText(this.pack);
+      if (!X.isEmpty(this.pack)) {
+        e = root.addElement("package");
+        e.setText(this.pack);
+      }
 
-      e = root.addElement("screenshot");
-      e.setText(this.screenshot);
+      if (!X.isEmpty(this.screenshot)) {
+        e = root.addElement("screenshot");
+        e.setText(this.screenshot);
+      }
       e = root.addElement("version");
       e.setText(this.version);
       e = root.addElement("build");
       e.setText(this.build);
       e = root.addElement("enabled");
       e.setText(Boolean.toString(this.enabled).toLowerCase());
-      e = root.addElement("readme");
-      e.setText(this.readme);
-      e = root.addElement("listener");
-      e = e.addElement("class");
-      e.setText(this.listener);
+
+      if (!X.isEmpty(this.readme)) {
+        e = root.addElement("readme");
+        e.setText(this.readme);
+      }
+
+      if (!X.isEmpty(this.listener)) {
+        e = root.addElement("listener");
+        e = e.addElement("class");
+        e.setText(this.listener);
+      }
 
       e = root.addElement("setting");
       for (String name : settings.keySet()) {

@@ -82,6 +82,7 @@ public class DummyModel extends Model {
         this.put("module", Module.home);
         this.put("path", path);
         this.put("request", req);
+        this.put("this", this);
         this.put("response", resp);
         this.set("session", this.getSession());
         this.set("system", Global.getInstance());

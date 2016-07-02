@@ -1,91 +1,83 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-<title>$lang.get('browser.title')</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Giiwa" > 
-<link rel="shortcut icon" href="/giiwa.png" type="image/png" />	
-<style>
-html, body {
-    width: 100%;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 14px;
-    line-height: 23px;
-    text-align: center;
-    background: #fff;
-}
-header{
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-bottom: 0px solid #fff;
-    border-radius: 0;
-    z-index: 1000;
-    display: inline-block;
-    width: 80%;
-}
-.header-left{
-	float: left;
-}
-.header-right{
-	float: right;
-}
-img{
-    height: 46px;
-}
-header a{
-	color: #0096e5;
-    font-size: 15px;
-    font-weight: normal;
-	text-decoration: none;    
-}
-header a:hover{
-	background:#0096e5;
-	color: #fff; 
-}
-p{
-	margin: 0 0 10px;
-}
-footer {
-    padding: 20px 0;
-    background: linear-gradient(0deg, rgb(68, 175, 232), rgb(0, 150, 229));
-    color: #fff;
-}
-footer a{
-	color: #fff;
-	text-decoration: none;    
-}
+	<head>
+		<meta charset="utf-8">
+		<title>$lang.get('browser.title')</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="Giiwa" >
+		<link rel="shortcut icon" href="/giiwa.png" type="image/png" />
+		<link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
 
-h3{
-	font-family: "museo-slab",sans-serif;
-	font-size: 24px;
-	margin-top: 20px;
-    margin-bottom: 10px;
-    font-weight: 500;
-    line-height: 1.1;
-}
-.text-white {
-    color: white;
-}
+		<script src="/js/jquery-2.1.4.min.js"></script>
+		<script src="/bootstrap/js/bootstrap.min.js"></script>
 
-</style>
-</head>
-<body>
-<header>
-<div class='header-left'>
-<img src='/images/giiwa.png'/>
-</div>
-<div class='header-right'>
-<a href='/admin'>Admin</a>
-</div>
-</header>
+		<style>
+			html, body {
+				width: 100%;
+				font-family: 'Open Sans', sans-serif;
+				font-size: 14px;
+				line-height: 23px;
+				text-align: center;
+				background: #fff;
+			}
+			header {
+				background: #112A44;
+				height: 56px;
+				padding: 5px 0;
+			}
+			.header-left {
+				float: left;
+			}
+			img {
+				height: 46px;
+			}
+			#main {
+				margin-top: 100px;
+			}
+			footer {
+				padding: 20px 0;
+				background: linear-gradient(0deg, rgb(68, 175, 232), rgb(0, 150, 229));
+				color: #fff;
+				position: fixed;
+				bottom: 0;
+				width: 100%;
+			}
+			footer a {
+				color: #fff;
+				text-decoration: none;
+			}
+			.text-white {
+				color: white;
+			}
 
-<footer>
-<h3>Congratulations！Start enjoying your journey.</h3>
-<p class="text-white">we are here along with you, <a href="mailto:joe.j@giiwa.org">joe.j@giiwa.org</a></p>
-<p>Powered by <a href='//giiwa.org'>giiwa.org</a> <a href="/docs/LICENSE-2.0.txt">License</a></p>
-</footer>
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class='container'>
+				<div class='header-left'>
+					<img src='/images/giiwa.png'/>
+				</div>
+			</div>
+		</header>
+		<div id="#main">
+			<div class='container'>
+				<div class='col-sm-12'>
+					<h2>Congratulations!</h2>
+					<h3>Start enjoying your journey from here.</h3>
+					<h3><a href="//giiwa.org/docs/index.html" target="_blank">Documentation</a>, <a href="/admin">Admin</a></h3>
+				</div>
+			</div>
+		</div>
 
-</body>
+		<footer>
+			<p class="text-white">
+				we are here along with you, <a href="mailto:joe.j@giiwa.org">joe.j@giiwa.org</a>
+			</p>
+			<p>
+				Powered by <a href='//giiwa.org'>giiwa.org</a><a href="/docs/LICENSE-2.0.txt">License</a>
+			</p>
+		</footer>
+
+	</body>
 </html>

@@ -376,6 +376,7 @@ public class Model {
                       // path
                       this.put("request", req);
                       this.put("response", resp);
+                      this.put("this", this);
                       this.set("me", login);
                       this.set("session", this.getSession());
                       this.set("system", Global.getInstance());
@@ -467,6 +468,7 @@ public class Model {
       this.put("module", Module.home);
       this.put("path", path);
       this.put("request", req);
+      this.put("this", this);
       this.put("response", resp);
       this.set("session", this.getSession());
       this.set("system", Global.getInstance());
@@ -575,8 +577,8 @@ public class Model {
       this.setHeader("status", "401");
       jo.put(X.STATE, 401);
 
-      jo.put(X.MESSAGE, "请重现登录！");
-      jo.put(X.ERROR, "没有登录信息！");
+      jo.put(X.MESSAGE, lang.get("login.required"));
+      jo.put(X.ERROR, lang.get("not.login"));
       // this.redirect("/user/login/popup");
       this.response(jo);
 
@@ -1845,25 +1847,29 @@ public class Model {
     try {
 
       TimeStamp t1 = TimeStamp.create();
-      Template template = getTemplate(viewname, allowOverride);
-      if (log.isDebugEnabled())
-        log.debug("finding template = " + viewname + ", cost: " + t1.past() + "ms, result=" + template);
+      if (viewname.endsWith(".jsp")) {
+        File jsp = Module.home.getFile(viewname);
 
-      // System.out.println(viewname + "=>" + template);
-      if (template != null) {
-        resp.setContentType(this.getContentType());
-
-        writer = new BufferedWriter(resp.getWriter());
-
-        TimeStamp t = TimeStamp.create();
-        template.merge(context, writer);
-        writer.flush();
+      } else {
+        Template template = getTemplate(viewname, allowOverride);
         if (log.isDebugEnabled())
-          log.debug("merge [" + viewname + "] cost: " + t.past() + "ms");
+          log.debug("finding template = " + viewname + ", cost: " + t1.past() + "ms, result=" + template);
 
-        return true;
+        // System.out.println(viewname + "=>" + template);
+        if (template != null) {
+          resp.setContentType(this.getContentType());
+
+          writer = new BufferedWriter(resp.getWriter());
+
+          TimeStamp t = TimeStamp.create();
+          template.merge(context, writer);
+          writer.flush();
+          if (log.isDebugEnabled())
+            log.debug("merge [" + viewname + "] cost: " + t.past() + "ms");
+
+          return true;
+        }
       }
-
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error(viewname, e);
@@ -2101,7 +2107,7 @@ public class Model {
     if ("XMLHttpRequest".equals(request)) {
       JSONObject jo = new JSONObject();
       jo.put(X.STATE, 202);
-      jo.put(X.MESSAGE, "你没有权限访问！");
+      jo.put(X.MESSAGE, lang.get("access.deny"));
       jo.put(X.ERROR, error);
       // this.redirect("/user/login/popup");
       this.response(jo);
