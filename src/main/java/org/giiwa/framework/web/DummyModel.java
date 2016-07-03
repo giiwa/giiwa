@@ -70,7 +70,7 @@ public class DummyModel extends Model {
       /**
        * this file exists, check is end with ".htm|.html"
        */
-      if (uri.endsWith(".htm") || uri.endsWith(".html")) {
+      if (uri.endsWith(".htm") || uri.endsWith(".html") || uri.endsWith(".jsp")) {
         /**
          * parse it as template
          */

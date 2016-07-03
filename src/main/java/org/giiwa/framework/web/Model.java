@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.http.*;
 
@@ -1847,9 +1848,18 @@ public class Model {
     try {
 
       TimeStamp t1 = TimeStamp.create();
+      log.debug("show:" + viewname, new Exception());
       if (viewname.endsWith(".jsp")) {
         File jsp = Module.home.getFile(viewname);
 
+        RequestDispatcher rd = req.getRequestDispatcher(viewname);
+        if (rd == null) {
+          log.warn("Not a valid resource path:" + viewname);
+          return false;
+        }
+
+        rd.include(req, resp);
+        return true;
       } else {
         Template template = getTemplate(viewname, allowOverride);
         if (log.isDebugEnabled())

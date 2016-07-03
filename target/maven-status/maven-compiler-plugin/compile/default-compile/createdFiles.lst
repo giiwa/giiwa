@@ -110,7 +110,6 @@ org/giiwa/core/cache/ICacheSystem.class
 org/giiwa/app/web/admin/setting.class
 org/giiwa/app/web/admin/repo.class
 org/giiwa/framework/utils/Host$Disk.class
-org/giiwa/app/web/index.class
 org/giiwa/framework/utils/FileUtil$Version.class
 org/giiwa/framework/web/DummyModel.class
 org/giiwa/framework/noti/Email$giiwaAuthenticator.class
