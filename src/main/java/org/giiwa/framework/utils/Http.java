@@ -91,13 +91,15 @@ public class Http {
    * @param url
    * @throws Exception
    */
-  public static void ping(String url) throws Exception {
+  public static int ping(String url) throws Exception {
 
     URL u = new URL(url);
     HttpURLConnection c = (HttpURLConnection) u.openConnection();
     c.connect();
+    int code = c.getResponseCode();
+    log.debug("ping=" + url + ", response.code=" + code);
     c.disconnect();
-
+    return code;
   }
 
   /**
