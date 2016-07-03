@@ -18,6 +18,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -65,23 +69,38 @@ import org.giiwa.core.bean.X;
  */
 public class Http {
 
-	static Log log = LogFactory.getLog(Http.class);
-	static int TIMEOUT = 10 * 1000;
+  static Log                 log     = LogFactory.getLog(Http.class);
+  static int                 TIMEOUT = 10 * 1000;
 
-	public static final String UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.130 Safari/537.36";
+  public static final String UA      = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.130 Safari/537.36";
 
-	/**
+  /**
    * GET response from a url.
    *
    * @param url
    *          the url
    * @return Response
    */
-	public static Response get(String url) {
-		return get(url, null);
-	}
+  public static Response get(String url) {
+    return get(url, null);
+  }
 
-	/**
+  /**
+   * ping the url, throw exception if occur error
+   * 
+   * @param url
+   * @throws Exception
+   */
+  public static void ping(String url) throws Exception {
+
+    URL u = new URL(url);
+    HttpURLConnection c = (HttpURLConnection) u.openConnection();
+    c.connect();
+    c.disconnect();
+
+  }
+
+  /**
    * POST response from a url.
    *
    * @param url
@@ -90,11 +109,11 @@ public class Http {
    *          the params
    * @return Response
    */
-	public static Response post(String url, String[][] params) {
-		return post(url, "application/x-javascript; charset=UTF8", null, params);
-	}
+  public static Response post(String url, String[][] params) {
+    return post(url, "application/x-javascript; charset=UTF8", null, params);
+  }
 
-	/**
+  /**
    * GET method.
    *
    * @param url
@@ -103,45 +122,45 @@ public class Http {
    *          the headers
    * @return Response
    */
-	public static Response get(String url, String[][] headers) {
+  public static Response get(String url, String[][] headers) {
 
-		Response r = new Response();
-		DefaultHttpClient client = getClient(url);
+    Response r = new Response();
+    DefaultHttpClient client = getClient(url);
 
-		if (client != null) {
-			HttpGet get = new HttpGet(url);
+    if (client != null) {
+      HttpGet get = new HttpGet(url);
 
-			try {
+      try {
 
-				if (headers != null && headers.length > 0) {
-					for (String[] s : headers) {
-						if (s != null && s.length > 1) {
-							get.addHeader(s[0], s[1]);
-						}
-					}
-				}
-				if (!get.containsHeader("User-Agent")) {
-					get.addHeader("User-Agent", UA);
-				}
+        if (headers != null && headers.length > 0) {
+          for (String[] s : headers) {
+            if (s != null && s.length > 1) {
+              get.addHeader(s[0], s[1]);
+            }
+          }
+        }
+        if (!get.containsHeader("User-Agent")) {
+          get.addHeader("User-Agent", UA);
+        }
 
-				log.debug("get url=" + url);
+        log.debug("get url=" + url);
 
-				HttpResponse resp = client.execute(get);
-				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
-				r.headers = resp.getAllHeaders();
+        HttpResponse resp = client.execute(get);
+        r.status = resp.getStatusLine().getStatusCode();
+        r.body = getContext(resp);
+        r.headers = resp.getAllHeaders();
 
-			} catch (Exception e) {
-				log.error(url, e);
-			} finally {
-				get.abort();
-			}
-		}
+      } catch (Exception e) {
+        log.error(url, e);
+      } finally {
+        get.abort();
+      }
+    }
 
-		return r;
-	}
+    return r;
+  }
 
-	/**
+  /**
    * POST method.
    *
    * @param url
@@ -154,11 +173,11 @@ public class Http {
    *          the params
    * @return Response
    */
-	public static Response post(String url, String contenttype, String[][] headers, String[][] params) {
-		return post(url, contenttype, headers, params, null);
-	}
+  public static Response post(String url, String contenttype, String[][] headers, String[][] params) {
+    return post(url, contenttype, headers, params, null);
+  }
 
-	/**
+  /**
    * POST.
    *
    * @param url
@@ -173,301 +192,301 @@ public class Http {
    *          the attachments
    * @return Response
    */
-	public static Response post(String url, String contenttype, String[][] headers, String[][] body,
-			Object[][] attachments) {
+  public static Response post(String url, String contenttype, String[][] headers, String[][] body,
+      Object[][] attachments) {
 
-		Response r = new Response();
+    Response r = new Response();
 
-		DefaultHttpClient client = getClient(url);
-		log.debug("url=" + url);
+    DefaultHttpClient client = getClient(url);
+    log.debug("url=" + url);
 
-		if (client != null) {
-			HttpPost post = new HttpPost(url);
-			try {
+    if (client != null) {
+      HttpPost post = new HttpPost(url);
+      try {
 
-				if (headers != null && headers.length > 0) {
-					for (String[] s : headers) {
-						if (s != null && s.length > 1) {
-							post.addHeader(s[0], s[1]);
-							log.debug("header: " + s[0] + "=" + s[1]);
-						}
-					}
-				}
+        if (headers != null && headers.length > 0) {
+          for (String[] s : headers) {
+            if (s != null && s.length > 1) {
+              post.addHeader(s[0], s[1]);
+              log.debug("header: " + s[0] + "=" + s[1]);
+            }
+          }
+        }
 
-				if (!post.containsHeader("User-Agent")) {
-					post.addHeader("User-Agent", UA);
-				}
+        if (!post.containsHeader("User-Agent")) {
+          post.addHeader("User-Agent", UA);
+        }
 
-				log.debug("post url=" + url);
+        log.debug("post url=" + url);
 
-				if (attachments == null || attachments.length == 0) {
-					if (body != null && body.length > 0) {
-						List<NameValuePair> paramList = new ArrayList<NameValuePair>();
+        if (attachments == null || attachments.length == 0) {
+          if (body != null && body.length > 0) {
+            List<NameValuePair> paramList = new ArrayList<NameValuePair>();
 
-						for (String[] s : body) {
-							if (s != null && s.length > 1) {
-								BasicNameValuePair param = new BasicNameValuePair(s[0], s[1]);
-								paramList.add(param);
-								log.debug("body: " + s[0] + "=" + s[1]);
-							}
-						}
-						post.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
-					}
-				} else {
-					MultipartEntity entity = new MultipartEntity();
-					for (Object[] f : attachments) {
-						if (f != null && f.length > 1 && f[1] instanceof File) {
-							FileBody fileBody = new FileBody((File) f[1]);
-							entity.addPart((String) f[0], fileBody);
+            for (String[] s : body) {
+              if (s != null && s.length > 1) {
+                BasicNameValuePair param = new BasicNameValuePair(s[0], s[1]);
+                paramList.add(param);
+                log.debug("body: " + s[0] + "=" + s[1]);
+              }
+            }
+            post.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
+          }
+        } else {
+          MultipartEntity entity = new MultipartEntity();
+          for (Object[] f : attachments) {
+            if (f != null && f.length > 1 && f[1] instanceof File) {
+              FileBody fileBody = new FileBody((File) f[1]);
+              entity.addPart((String) f[0], fileBody);
 
-							log.debug("file: " + f[0]);
-						}
-					}
+              log.debug("file: " + f[0]);
+            }
+          }
 
-					if (body != null && body.length > 0) {
-						for (String[] s : body) {
-							if (s != null && s.length > 1) {
-								StringBody stringBody = new StringBody(s[1]);
-								entity.addPart(s[0], stringBody);
-							}
-						}
-					}
-					post.setEntity(entity);
-				}
+          if (body != null && body.length > 0) {
+            for (String[] s : body) {
+              if (s != null && s.length > 1) {
+                StringBody stringBody = new StringBody(s[1]);
+                entity.addPart(s[0], stringBody);
+              }
+            }
+          }
+          post.setEntity(entity);
+        }
 
-				HttpResponse resp = client.execute(post);
-				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
+        HttpResponse resp = client.execute(post);
+        r.status = resp.getStatusLine().getStatusCode();
+        r.body = getContext(resp);
 
-				log.debug("got: status=" + r.status + ", body=" + r.body);
+        log.debug("got: status=" + r.status + ", body=" + r.body);
 
-			} catch (Exception e) {
-				log.error(url, e);
-			} finally {
-				post.abort();
-			}
+      } catch (Exception e) {
+        log.error(url, e);
+      } finally {
+        post.abort();
+      }
 
-		}
+    }
 
-		return r;
-	}
+    return r;
+  }
 
-	private static DefaultHttpClient getClient(String url) {
+  private static DefaultHttpClient getClient(String url) {
 
-		DefaultHttpClient client = new DefaultHttpClient();
+    DefaultHttpClient client = new DefaultHttpClient();
 
-		if (url.toLowerCase().startsWith("https://")) {
-			try {
-				SSLContext ctx = SSLContext.getInstance("TLS");
-				X509TrustManager tm = new X509TrustManager() {
+    if (url.toLowerCase().startsWith("https://")) {
+      try {
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        X509TrustManager tm = new X509TrustManager() {
 
-					public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-						// TODO Auto-generated method stub
+          public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+            // TODO Auto-generated method stub
 
-					}
+          }
 
-					public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-						// TODO Auto-generated method stub
+          public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+            // TODO Auto-generated method stub
 
-					}
+          }
 
-					public X509Certificate[] getAcceptedIssuers() {
-						// TODO Auto-generated method stub
-						return null;
-					}
-				};
-				ctx.init(null, new TrustManager[] { tm }, null);
-				SSLSocketFactory ssf = new SSLSocketFactory(ctx);
+          public X509Certificate[] getAcceptedIssuers() {
+            // TODO Auto-generated method stub
+            return null;
+          }
+        };
+        ctx.init(null, new TrustManager[] { tm }, null);
+        SSLSocketFactory ssf = new SSLSocketFactory(ctx);
 
-				ssf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-				ClientConnectionManager ccm = client.getConnectionManager();
-				SchemeRegistry sr = ccm.getSchemeRegistry();
-				sr.register(new Scheme("https", ssf, 443));
-				HttpParams params = client.getParams();
-				HttpConnectionParams.setConnectionTimeout(params, TIMEOUT);
-				HttpConnectionParams.setSoTimeout(params, TIMEOUT);
+        ssf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+        ClientConnectionManager ccm = client.getConnectionManager();
+        SchemeRegistry sr = ccm.getSchemeRegistry();
+        sr.register(new Scheme("https", ssf, 443));
+        HttpParams params = client.getParams();
+        HttpConnectionParams.setConnectionTimeout(params, TIMEOUT);
+        HttpConnectionParams.setSoTimeout(params, TIMEOUT);
 
-				client = new DefaultHttpClient(ccm, params);
+        client = new DefaultHttpClient(ccm, params);
 
-				client.setKeepAliveStrategy(keepAliveStrat);
+        client.setKeepAliveStrategy(keepAliveStrat);
 
-			} catch (Exception e) {
-				log.error(url, e);
-			}
-		}
+      } catch (Exception e) {
+        log.error(url, e);
+      }
+    }
 
-		return client;
-	}
+    return client;
+  }
 
-	private static ConnectionKeepAliveStrategy keepAliveStrat = new DefaultConnectionKeepAliveStrategy() {
-		@Override
-		public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
-			long keepAlive = super.getKeepAliveDuration(response, context);
-			if (keepAlive == -1) {
-				keepAlive = 10000;
-			}
-			return keepAlive;
-		}
-	};
+  private static ConnectionKeepAliveStrategy keepAliveStrat = new DefaultConnectionKeepAliveStrategy() {
+    @Override
+    public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+      long keepAlive = super.getKeepAliveDuration(response, context);
+      if (keepAlive == -1) {
+        keepAlive = 10000;
+      }
+      return keepAlive;
+    }
+  };
 
-	private static String getContext(HttpResponse response) {
-		String context = null;
+  private static String getContext(HttpResponse response) {
+    String context = null;
 
-		if (response.getEntity() != null) {
-			try {
-				HttpEntity entity = response.getEntity();
-				String ccs = EntityUtils.getContentCharSet(entity);
+    if (response.getEntity() != null) {
+      try {
+        HttpEntity entity = response.getEntity();
+        String ccs = EntityUtils.getContentCharSet(entity);
 
-				/**
-				 * fix the bug of http.util of apache
-				 */
-				String encoding = null;
-				if (entity.getContentEncoding() != null) {
-					encoding = entity.getContentEncoding().getValue();
-				}
+        /**
+         * fix the bug of http.util of apache
+         */
+        String encoding = null;
+        if (entity.getContentEncoding() != null) {
+          encoding = entity.getContentEncoding().getValue();
+        }
 
-				if (ccs == null) {
-					ccs = "UTF-8";
-				}
+        if (ccs == null) {
+          ccs = "UTF-8";
+        }
 
-				if (encoding != null && encoding.indexOf("gzip") > -1) {
+        if (encoding != null && encoding.indexOf("gzip") > -1) {
 
-					BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
+          BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
 
-					entity = bufferedEntity;
+          entity = bufferedEntity;
 
-					StringBuilder sb = new StringBuilder();
+          StringBuilder sb = new StringBuilder();
 
-					try {
-						GZIPInputStream in = new GZIPInputStream(bufferedEntity.getContent());
+          try {
+            GZIPInputStream in = new GZIPInputStream(bufferedEntity.getContent());
 
-						Reader reader = new InputStreamReader(in, ccs);
+            Reader reader = new InputStreamReader(in, ccs);
 
-						// String s = reader.readLine();
-						char[] buf = new char[2048];
-						int len = reader.read(buf);
-						while (len > 0) {
-							sb.append(buf, 0, len);
-							// sb.append(s).append("\r\n");
-							len = reader.read(buf);
-							// s = reader.readLine();
-						}
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					}
+            // String s = reader.readLine();
+            char[] buf = new char[2048];
+            int len = reader.read(buf);
+            while (len > 0) {
+              sb.append(buf, 0, len);
+              // sb.append(s).append("\r\n");
+              len = reader.read(buf);
+              // s = reader.readLine();
+            }
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+          }
 
-					if (sb.length() > 0) {
-						context = sb.toString();
-					}
-				}
+          if (sb.length() > 0) {
+            context = sb.toString();
+          }
+        }
 
-				if (context == null || context.length() == 0) {
-					context = _getContext(entity, ccs);
-				}
+        if (context == null || context.length() == 0) {
+          context = _getContext(entity, ccs);
+        }
 
-				// log.debug(context);
+        // log.debug(context);
 
-			} catch (Exception e) {
-				log.error(e.getMessage());// , e);
-			}
-		}
-		return context;
+      } catch (Exception e) {
+        log.error(e.getMessage());// , e);
+      }
+    }
+    return context;
 
-	}
+  }
 
-	private static String _getContext(HttpEntity entity, String charset) {
-		StringBuilder sb = new StringBuilder();
+  private static String _getContext(HttpEntity entity, String charset) {
+    StringBuilder sb = new StringBuilder();
 
-		InputStreamReader reader = null;
+    InputStreamReader reader = null;
 
-		try {
-			if (charset == null) {
-				reader = new InputStreamReader(entity.getContent());
-			} else {
-				reader = new InputStreamReader(entity.getContent(), charset);
-			}
+    try {
+      if (charset == null) {
+        reader = new InputStreamReader(entity.getContent());
+      } else {
+        reader = new InputStreamReader(entity.getContent(), charset);
+      }
 
-			char[] buf = new char[1024];
-			int len = reader.read(buf);
-			while (len > 0) {
-				sb.append(buf, 0, len);
-				len = reader.read(buf);
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		}
+      char[] buf = new char[1024];
+      int len = reader.read(buf);
+      while (len > 0) {
+        sb.append(buf, 0, len);
+        len = reader.read(buf);
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      if (reader != null) {
+        try {
+          reader.close();
+        } catch (IOException e) {
+          log.error(e.getMessage(), e);
+        }
+      }
+    }
 
-		return sb.toString();
+    return sb.toString();
 
-	}
+  }
 
-	/**
-	 * the http response
-	 * 
-	 * @author joe
-	 *
-	 */
-	public static class Response {
-		public int status;
-		public String body;
-		private Header[] headers;
+  /**
+   * the http response
+   * 
+   * @author joe
+   *
+   */
+  public static class Response {
+    public int       status;
+    public String    body;
+    private Header[] headers;
 
-		/**
-		 * get the header
-		 * 
-		 * @return Header[]
-		 */
-		public Header[] getHeader() {
-			return headers;
-		}
+    /**
+     * get the header
+     * 
+     * @return Header[]
+     */
+    public Header[] getHeader() {
+      return headers;
+    }
 
-		/**
+    /**
      * get the response header.
      *
      * @param name
      *          the name
      * @return String[]
      */
-		public String[] getHeaders(String name) {
-			List<String> list = new ArrayList<String>();
-			if (headers != null && headers.length > 0) {
-				for (Header h : headers) {
-					if (X.isSame(name, h.getName())) {
-						list.add(h.getValue());
-					}
-				}
-			}
-			if (list.size() > 0) {
-				return list.toArray(new String[list.size()]);
-			}
-			return null;
-		}
+    public String[] getHeaders(String name) {
+      List<String> list = new ArrayList<String>();
+      if (headers != null && headers.length > 0) {
+        for (Header h : headers) {
+          if (X.isSame(name, h.getName())) {
+            list.add(h.getValue());
+          }
+        }
+      }
+      if (list.size() > 0) {
+        return list.toArray(new String[list.size()]);
+      }
+      return null;
+    }
 
-		/**
+    /**
      * get the response header.
      *
      * @param name
      *          the name
      * @return String
      */
-		public String getHeader(String name) {
-			String o = null;
-			if (headers != null && headers.length > 0) {
-				for (Header h : headers) {
-					if (X.isSame(name, h.getName())) {
-						o = h.getValue();
-					}
-				}
-			}
-			return o;
-		}
-	}
+    public String getHeader(String name) {
+      String o = null;
+      if (headers != null && headers.length > 0) {
+        for (Header h : headers) {
+          if (X.isSame(name, h.getName())) {
+            o = h.getValue();
+          }
+        }
+      }
+      return o;
+    }
+  }
 }
