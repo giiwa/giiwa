@@ -1848,7 +1848,7 @@ public class Model {
     try {
 
       TimeStamp t1 = TimeStamp.create();
-      log.debug("show:" + viewname, new Exception());
+      // log.debug("show:" + viewname, new Exception());
       if (viewname.endsWith(".jsp")) {
         File jsp = Module.home.getFile(viewname);
 
