@@ -39,144 +39,144 @@ import org.giiwa.framework.web.Model.HTTPMethod;
  */
 public class GiiwaServlet extends HttpServlet {
 
-	/**
-	* 
-	*/
-	private static final long serialVersionUID = 1L;
+  /**
+  * 
+  */
+  private static final long      serialVersionUID = 1L;
 
-	protected static ServletConfig config;
+  protected static ServletConfig config;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.
-	 * HttpServletRequest , javax.servlet.http.HttpServletResponse)
-	 */
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Controller.dispatchWithContextPath(req.getRequestURI(), req, resp, new HTTPMethod(Model.METHOD_GET));
-	}
+  /*
+   * (non-Javadoc)
+   * 
+   * @see javax.servlet.http.HttpServlet#doGet(javax.servlet.http.
+   * HttpServletRequest , javax.servlet.http.HttpServletResponse)
+   */
+  @Override
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    Controller.dispatchWithContextPath(req.getRequestURI(), req, resp, new HTTPMethod(Model.METHOD_GET));
+  }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.
-	 * HttpServletRequest , javax.servlet.http.HttpServletResponse)
-	 */
-	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Controller.dispatchWithContextPath(req.getRequestURI(), req, resp, new HTTPMethod(Model.METHOD_POST));
-	}
+  /*
+   * (non-Javadoc)
+   * 
+   * @see javax.servlet.http.HttpServlet#doPost(javax.servlet.http.
+   * HttpServletRequest , javax.servlet.http.HttpServletResponse)
+   */
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    Controller.dispatchWithContextPath(req.getRequestURI(), req, resp, new HTTPMethod(Model.METHOD_POST));
+  }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
-	 */
-	@Override
-	public void init(ServletConfig config) throws ServletException {
-		GiiwaServlet.config = config;
+  /*
+   * (non-Javadoc)
+   * 
+   * @see javax.servlet.GenericServlet#init(javax.servlet.ServletConfig)
+   */
+  @Override
+  public void init(ServletConfig config) throws ServletException {
+    GiiwaServlet.config = config;
 
-		super.init(config);
+    super.init(config);
 
-	}
+  }
 
-	/**
-	 * Shutdown.
-	 */
-	public static void shutdown() {
-		System.out.println("shutdown the app");
-		System.exit(0);
-	}
+  /**
+   * Shutdown.
+   */
+  public static void shutdown() {
+    System.out.println("shutdown the app");
+    System.exit(0);
+  }
 
-	/**
-	 * Restart.
-	 */
-	public static void restart() {
-		System.out.println("restart the app");
+  /**
+   * Restart.
+   */
+  public static void restart() {
+    System.out.println("restart the app");
 
-		/**
-		 * clean cache
-		 */
-		Module.clean();
-		TemplateLoader.clean();
-		// Model.clean();
+    /**
+     * clean cache
+     */
+    Module.clean();
+    TemplateLoader.clean();
+    // Model.clean();
 
-		/**
-		 * re-initialize
-		 */
-		init(home, Controller.PATH);
-	}
+    /**
+     * re-initialize
+     */
+    init(home, Controller.PATH);
+  }
 
-	private static String home;
+  private static String home;
 
-	/**
-	 * Inits the.
-	 * 
-	 * @param home
-	 *            the home
-	 * @param contextPath
-	 *            the context path
-	 */
-	public static void init(String home, String contextPath) {
-		try {
-			GiiwaServlet.home = home;
+  /**
+   * Inits the.
+   * 
+   * @param home
+   *          the home
+   * @param contextPath
+   *          the context path
+   */
+  public static void init(String home, String contextPath) {
+    try {
+      GiiwaServlet.home = home;
 
-			Model.GIIWA_HOME = System.getenv("GIIWA_HOME");
+      Model.GIIWA_HOME = System.getenv("GIIWA_HOME");
 
-			if (X.isEmpty(Model.GIIWA_HOME)) {
-				System.out.println("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
-				System.exit(-1);
-			}
+      if (X.isEmpty(Model.GIIWA_HOME)) {
+        System.out.println("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
+        System.exit(-1);
+      }
 
-			System.out.println("giiwa is starting ...");
-			System.out.println("giiwa.home=" + Model.GIIWA_HOME);
+      System.out.println("giiwa is starting ...");
+      System.out.println("giiwa.home=" + Model.GIIWA_HOME);
 
-			System.setProperty("home", Model.GIIWA_HOME);
+      System.setProperty("home", Model.GIIWA_HOME);
 
-			/**
-			 * initialize the configuration
-			 */
-			Local.init("home", "giiwa");
+      /**
+       * initialize the configuration
+       */
+      Local.init("home", "giiwa");
 
-			Configuration conf = Local.getConfig();
+      Configuration conf = Local.getConfig();
 
-			// TO fix a bug, giiwa.properties may store the "home"
-			conf.setProperty("home", Model.GIIWA_HOME);
+      // TO fix a bug, giiwa.properties may store the "home"
+      conf.setProperty("home", Model.GIIWA_HOME);
 
-			/**
-			 * initialize the DB connections pool
-			 */
-			DB.init();
+      /**
+       * initialize the DB connections pool
+       */
+      DB.init();
 
-			/**
-			 * initialize the cache
-			 */
-			Cache.init(conf);
+      /**
+       * initialize the cache
+       */
+      Cache.init(conf);
 
-			Bean.init(conf);
+      Bean.init(conf);
 
-			Task.init(conf.getInt("thread.number", 20), conf);
+      Task.init(conf.getInt("thread.number", 20), conf);
 
-			/**
-			 * initialize the controller, this MUST place in the end !:-)
-			 */
-			Controller.init(conf, contextPath);
+      /**
+       * initialize the controller, this MUST place in the end !:-)
+       */
+      Controller.init(conf, contextPath);
 
-			/**
-			 * initialize the repo
-			 */
-			Repo.init(conf);
+      /**
+       * initialize the repo
+       */
+      Repo.init(conf);
 
-			/**
-			 * initialize the temp
-			 */
-			Temp.init(conf);
+      /**
+       * initialize the temp
+       */
+      Temp.init(conf);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
 
-	}
+  }
 
 }

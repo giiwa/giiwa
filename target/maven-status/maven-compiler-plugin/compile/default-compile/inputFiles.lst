@@ -90,6 +90,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Repo.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/VCode.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/utils/Shell.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/GiiwaFilter.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/utils/image/Captcha.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Base64.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Model.java

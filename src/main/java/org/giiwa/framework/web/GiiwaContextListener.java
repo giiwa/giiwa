@@ -16,8 +16,17 @@ package org.giiwa.framework.web;
 
 import javax.servlet.*;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.X;
+import org.giiwa.core.cache.Cache;
+import org.giiwa.core.conf.Local;
+import org.giiwa.core.db.DB;
+import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.Repo;
+import org.giiwa.framework.bean.Temp;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -28,30 +37,96 @@ import org.apache.commons.logging.LogFactory;
  */
 public class GiiwaContextListener implements ServletContextListener {
 
-    static Log log = LogFactory.getLog(GiiwaContextListener.class);
+  static Log log = LogFactory.getLog(GiiwaContextListener.class);
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.
-     * ServletContextEvent)
-     */
-    public void contextDestroyed(ServletContextEvent arg) {
+  /*
+   * (non-Javadoc)
+   * 
+   * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.
+   * ServletContextEvent)
+   */
+  public void contextDestroyed(ServletContextEvent arg) {
 
+  }
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet
+   * .ServletContextEvent)
+   */
+  public void contextInitialized(ServletContextEvent event) {
+    String home = event.getServletContext().getRealPath("/");
+
+    init(home, event.getServletContext().getContextPath());
+
+  }
+
+  /**
+   * Inits the.
+   * 
+   * @param home
+   *          the home
+   * @param contextPath
+   *          the context path
+   */
+  private static void init(String home, String contextPath) {
+    try {
+
+      Model.GIIWA_HOME = System.getenv("GIIWA_HOME");
+
+      if (X.isEmpty(Model.GIIWA_HOME)) {
+        System.out.println("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
+        System.exit(-1);
+      }
+
+      System.out.println("giiwa is starting ...");
+      System.out.println("giiwa.home=" + Model.GIIWA_HOME);
+
+      System.setProperty("home", Model.GIIWA_HOME);
+
+      /**
+       * initialize the configuration
+       */
+      Local.init("home", "giiwa");
+
+      Configuration conf = Local.getConfig();
+
+      // TO fix a bug, giiwa.properties may store the "home"
+      conf.setProperty("home", Model.GIIWA_HOME);
+
+      /**
+       * initialize the DB connections pool
+       */
+      DB.init();
+
+      /**
+       * initialize the cache
+       */
+      Cache.init(conf);
+
+      Bean.init(conf);
+
+      Task.init(conf.getInt("thread.number", 20), conf);
+
+      /**
+       * initialize the controller, this MUST place in the end !:-)
+       */
+      Controller.init(conf, contextPath);
+
+      /**
+       * initialize the repo
+       */
+      Repo.init(conf);
+
+      /**
+       * initialize the temp
+       */
+      Temp.init(conf);
+
+    } catch (Exception e) {
+      e.printStackTrace();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * javax.servlet.ServletContextListener#contextInitialized(javax.servlet
-     * .ServletContextEvent)
-     */
-    public void contextInitialized(ServletContextEvent event) {
-        String home = event.getServletContext().getRealPath("/");
-
-        GiiwaServlet.init(home, event.getServletContext().getContextPath());
-
-    }
-
+  }
 }

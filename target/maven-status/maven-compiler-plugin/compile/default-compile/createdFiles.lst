@@ -28,6 +28,7 @@ org/giiwa/core/base/Base64.class
 org/giiwa/core/bean/KeyField$1.class
 org/giiwa/framework/bean/VCode.class
 org/giiwa/app/web/repo.class
+org/giiwa/framework/web/GiiwaFilter.class
 org/giiwa/app/web/admin/oplog$1.class
 org/giiwa/core/base/Base32.class
 org/giiwa/framework/bean/Temp.class

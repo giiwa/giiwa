@@ -2665,7 +2665,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       if (v == null)
         return this;
 
-      if (names != null) {
+      if (names != null && names.length > 0) {
         for (String s : names) {
           Object o = v.value(s);
           if (X.isEmpty(o)) {

@@ -7,19 +7,17 @@ version="2.4">
 	<listener>
 		<listener-class>org.giiwa.framework.web.GiiwaContextListener</listener-class>
 	</listener>
-	<servlet>
-		<servlet-name>GiiwaServlet</servlet-name>
-		<servlet-class>org.giiwa.framework.web.GiiwaServlet</servlet-class>
-		<load-on-startup>0</load-on-startup>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>GiiwaServlet</servlet-name>
+	<filter>
+		<filter-name>giiwafilter</filter-name>
+		<filter-class>org.giiwa.framework.web.GiiwaFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>giiwafilter</filter-name>
 		<url-pattern>/*</url-pattern>
-	</servlet-mapping>
+	</filter-mapping>
 	<welcome-file-list>
 		<welcome-file>index</welcome-file>
 		<welcome-file>index.html</welcome-file>
 		<welcome-file>index.jsp</welcome-file>
 	</welcome-file-list>
-
 </web-app>

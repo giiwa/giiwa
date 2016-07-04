@@ -20,6 +20,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.FilterChain;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.http.*;
@@ -136,6 +137,8 @@ public class Model {
    * module
    */
   private static Map<String, Template>     cache          = new HashMap<String, Template>();
+
+  public static ServletContext             s️ervletContext;
 
   /**
    * the uptime of the system
@@ -1607,8 +1610,7 @@ public class Model {
       DiskFileItemFactory factory = new DiskFileItemFactory();
 
       // Configure a repository (to ensure a secure temp location is used)
-      ServletContext servletContext = GiiwaServlet.config.getServletContext();
-      File repository = (File) servletContext.getAttribute("javax.servlet.context.tempdir");
+      File repository = (File) s️ervletContext.getAttribute("javax.servlet.context.tempdir");
       factory.setRepository(repository);
 
       // Create a new file upload handler
@@ -2043,7 +2045,7 @@ public class Model {
    * @return String of mime type
    */
   public static String getMimeType(String uri) {
-    return GiiwaServlet.config.getServletContext().getMimeType(uri);
+    return s️ervletContext.getMimeType(uri);
   }
 
   /**

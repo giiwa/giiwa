@@ -14,6 +14,7 @@
 */
 package org.giiwa.framework.web;
 
+import javax.servlet.FilterChain;
 import javax.servlet.http.*;
 
 import org.apache.commons.configuration.Configuration;
@@ -327,5 +328,7 @@ public class Controller {
       if (log.isErrorEnabled())
         log.error(uri, e);
     }
+
+    return;
   }
 }
