@@ -70,7 +70,12 @@ public class DummyModel extends Model {
       /**
        * this file exists, check is end with ".htm|.html"
        */
-      if (uri.endsWith(".htm") || uri.endsWith(".html") || uri.endsWith(".jsp")) {
+      if (GiiwaFilter.isJsp(uri)) {
+
+        show(uri);
+
+        return;
+      } else if (GiiwaFilter.isVelocity(uri) || GiiwaFilter.isFreemaker(uri)) {
         /**
          * parse it as template
          */
@@ -90,6 +95,7 @@ public class DummyModel extends Model {
         show(uri);
 
         return;
+
       } else if (f.isFile()) {
         /**
          * copy the file directly

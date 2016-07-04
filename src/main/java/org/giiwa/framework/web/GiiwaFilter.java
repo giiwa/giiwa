@@ -1,6 +1,10 @@
 package org.giiwa.framework.web;
 
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -13,7 +17,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Model.HTTPMethod;
 
 public class GiiwaFilter implements Filter {
@@ -63,6 +66,49 @@ public class GiiwaFilter implements Filter {
 
     Model.s️ervletContext = config.getServletContext();
 
+    Enumeration e = config.getInitParameterNames();
+    while (e.hasMoreElements()) {
+      String name = e.nextElement().toString();
+      String value = config.getInitParameter(name);
+      m.put(name, value);
+    }
+
+    log.debug("config=" + m);
   }
+
+  /**
+   * test is jsp page
+   * 
+   * @param url
+   * @return boolean
+   */
+  public static boolean isJsp(String url) {
+    String v = m.get("jsp");
+    return v != null && url.matches(v);
+  }
+
+  /**
+   * test is velocity template
+   * 
+   * @param url
+   * @return boolean
+   */
+  public static boolean isVelocity(String url) {
+    String v = m.get("velocity");
+    return v != null && url.matches(v);
+  }
+
+  /**
+   * test is freemaker template
+   * 
+   * @param url
+   * @return boolean
+   */
+  public static boolean isFreemaker(String url) {
+    String v = m.get("freemaker");
+    return v != null && url.matches(v);
+  }
+
+  private static Map<String, String> m = new HashMap<String, String>();
 
 }

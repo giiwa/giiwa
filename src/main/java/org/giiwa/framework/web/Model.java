@@ -44,6 +44,9 @@ import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.*;
 
+import freemarker.template.Configuration;
+import freemarker.template.TemplateExceptionHandler;
+
 // TODO: Auto-generated Javadoc
 /**
  * the {@code Model} Class is base model, all class that provides web api should
@@ -136,7 +139,7 @@ public class Model {
    * cache the template by viwename, the template will be override in child
    * module
    */
-  private static Map<String, Template>     cache          = new HashMap<String, Template>();
+  private static Map<String, Object>       cache          = new HashMap<String, Object>();
 
   public static ServletContext             s️ervletContext;
 
@@ -1714,13 +1717,31 @@ public class Model {
    * @return Template
    */
   final public Template getTemplate(String viewname, boolean allowEmpty) {
-    Template template = cache.get(viewname);
+
+    Template template = (Template) cache.get(viewname);
 
     if (template == null || template.isSourceModified()) {
       /**
        * get the template from the top
        */
       template = Module.home.getTemplate(viewname, allowEmpty);
+
+      cache.put(viewname, template);
+    }
+
+    return template;
+
+  }
+
+  final public freemarker.template.Template getFreeTemplate(String viewname) {
+
+    freemarker.template.Template template = (freemarker.template.Template) cache.get(viewname);
+
+    if (template == null) {
+      /**
+       * get the template from the top
+       */
+      template = Module.home.getFreeTemplate(viewname);
 
       cache.put(viewname, template);
     }
@@ -1851,7 +1872,7 @@ public class Model {
 
       TimeStamp t1 = TimeStamp.create();
       // log.debug("show:" + viewname, new Exception());
-      if (viewname.endsWith(".jsp")) {
+      if (GiiwaFilter.isJsp(viewname)) {
         File jsp = Module.home.getFile(viewname);
         String name = jsp.getCanonicalPath().substring(Model.HOME.length());
         log.debug("viewname=" + name);
@@ -1866,8 +1887,23 @@ public class Model {
           log.debug("rd=" + rd);
         }
         rd.include(req, resp);
+        if (log.isDebugEnabled())
+          log.debug("including jsp = " + viewname + ", cost: " + t1.past() + "ms");
         return true;
-      } else {
+
+      } else if (GiiwaFilter.isFreemaker(viewname)) {
+
+        // load
+        freemarker.template.Template template = getFreeTemplate(viewname);
+        if (template != null) {
+          Writer out = new OutputStreamWriter(this.getOutputStream());
+          template.process(context, out);
+          out.flush();
+          if (log.isDebugEnabled())
+            log.debug("merge [" + viewname + "] cost: " + t1.past() + "ms");
+          return true;
+        }
+      } else if (GiiwaFilter.isVelocity(viewname)) {
         Template template = getTemplate(viewname, allowOverride);
         if (log.isDebugEnabled())
           log.debug("finding template = " + viewname + ", cost: " + t1.past() + "ms, result=" + template);
@@ -1886,6 +1922,9 @@ public class Model {
 
           return true;
         }
+      } else {
+        // copy the file to front-end
+        
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())

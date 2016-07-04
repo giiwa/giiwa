@@ -63,50 +63,53 @@ import com.mongodb.BasicDBObject;
  */
 public class Module {
 
-  static Log          log      = LogFactory.getLog(Module.class);
+  static Log                                       log      = LogFactory.getLog(Module.class);
 
   /**
    * the absolute path of the module
    */
-  String              path;
+  String                                           path;
 
-  String              viewroot;
+  String                                           viewroot;
   /**
    * the id of the module, MUST unique, and also is a sequence of the loading:
    * biggest first
    */
-  public int          id;
+  public int                                       id;
 
   /**
    * the name of the module, the name of module should be unique in whole
    * context
    */
-  String              name;
+  String                                           name;
 
   /**
    * IListener which will be invoke in each life cycle of the module
    */
-  String              listener;
+  String                                           listener;
 
-  boolean             enabled  = false;
+  boolean                                          enabled  = false;
 
-  String              version;
-  String              build;
+  String                                           version;
+  String                                           build;
 
-  String              screenshot;
+  String                                           screenshot;
 
   /**
    * the root package name of the module, which will use to mapping the handler
    */
-  String              pack;
+  String                                           pack;
 
-  Map<String, String> settings = new TreeMap<String, String>();
-  Map<String, Object> filters  = new TreeMap<String, Object>();
+  Map<String, String>                              settings = new TreeMap<String, String>();
+  Map<String, Object>                              filters  = new TreeMap<String, Object>();
 
   /**
    * readme file maybe html
    */
-  String              readme;
+  String                                           readme;
+
+  private static freemarker.template.Configuration cfg      = new freemarker.template.Configuration(
+      freemarker.template.Configuration.VERSION_2_3_24);
 
   /**
    * handle by filter ad invoke the before
@@ -1873,6 +1876,25 @@ public class Module {
       return path;
     }
 
+  }
+
+  public freemarker.template.Template getFreeTemplate(String viewname) {
+
+    try {
+      File f = Module.home.getFile(viewname);
+      if (f.exists()) {
+        return cfg.getTemplate(f.getCanonicalPath(), "UTF-8");
+      }
+
+    } catch (Exception e) {
+      /**
+       * load resource error, please restart server
+       */
+      OpLog.error("system", "load resource error", e.getMessage());
+      log.error(e.getMessage(), e);
+    }
+
+    return null;
   }
 
 }
