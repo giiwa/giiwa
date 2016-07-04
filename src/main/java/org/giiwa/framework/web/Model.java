@@ -1856,6 +1856,8 @@ public class Model {
         String name = jsp.getCanonicalPath().substring(Model.HOME.length());
         log.debug("viewname=" + name);
 
+        req.setAttribute(System.getProperty("org.apache.jasper.Constants.JSP_FILE", "org.apache.catalina.jsp_file"),
+            name);
         RequestDispatcher rd = req.getRequestDispatcher(viewname);
         if (rd == null) {
           log.warn("Not a valid resource path:" + name);
@@ -1863,7 +1865,6 @@ public class Model {
         } else {
           log.debug("rd=" + rd);
         }
-
         rd.include(req, resp);
         return true;
       } else {
