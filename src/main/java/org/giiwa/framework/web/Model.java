@@ -98,7 +98,7 @@ public class Model {
    * the response context, includes all the response key-value, used by
    * view(html)
    */
-  public VelocityContext                   context;
+  public Map<String, Object>                   context;
 
   /**
    * the home of the webgiiwa
@@ -713,7 +713,7 @@ public class Model {
     }
 
     if (context == null) {
-      context = new VelocityContext();
+      context = new HashMap<String, Object>();
     }
     if (name == null) {
       return;
@@ -1837,7 +1837,7 @@ public class Model {
       if (template != null) {
         sb = new StringBuilderWriter();
 
-        template.merge(context, sb);
+        template.merge(new VelocityContext(context), sb);
 
         return sb.toString();
       }
@@ -1915,7 +1915,7 @@ public class Model {
           writer = new BufferedWriter(resp.getWriter());
 
           TimeStamp t = TimeStamp.create();
-          template.merge(context, writer);
+          template.merge(new VelocityContext(context), writer);
           writer.flush();
           if (log.isDebugEnabled())
             log.debug("merge [" + viewname + "] cost: " + t.past() + "ms");
@@ -2057,7 +2057,7 @@ public class Model {
       if (template != null) {
         writer = new StringWriter();
 
-        template.merge(context, writer);
+        template.merge(new VelocityContext(context), writer);
         writer.flush();
         return writer.toString();
       }
