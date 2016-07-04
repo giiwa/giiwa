@@ -616,6 +616,7 @@ public class Module {
 
       // String t = SystemConfig.s("home.module", "default");
       File f = new File(Model.HOME + "/modules/");
+      cfg.setDirectoryForTemplateLoading(f.getParentFile());
 
       if (f.exists()) {
         File[] list = f.listFiles();
@@ -1883,7 +1884,7 @@ public class Module {
     try {
       File f = Module.home.getFile(viewname);
       if (f.exists()) {
-        return cfg.getTemplate(f.getCanonicalPath(), "UTF-8");
+        return cfg.getTemplate(f.getCanonicalPath().substring(Model.HOME.length()), "UTF-8");
       }
 
     } catch (Exception e) {
