@@ -128,7 +128,6 @@ org/giiwa/framework/web/Model$NameValue.class
 org/giiwa/framework/bean/Access.class
 org/giiwa/framework/bean/Repo.class
 org/giiwa/framework/utils/Publisher.class
-org/giiwa/framework/web/GiiwaServlet.class
 org/giiwa/framework/web/Module$CachedModel.class
 org/giiwa/core/bean/TimeStamp.class
 org/giiwa/framework/bean/AccessLog$1.class
