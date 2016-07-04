@@ -16,7 +16,6 @@ version="2.4">
 		<servlet-name>GiiwaServlet</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-	<jsp-config></jsp-config>
 	<welcome-file-list>
 		<welcome-file>index</welcome-file>
 		<welcome-file>index.html</welcome-file>

@@ -1851,11 +1851,15 @@ public class Model {
       // log.debug("show:" + viewname, new Exception());
       if (viewname.endsWith(".jsp")) {
         File jsp = Module.home.getFile(viewname);
+        String name = jsp.getCanonicalPath().substring(Model.HOME.length());
+        log.debug("viewname=" + name);
 
         RequestDispatcher rd = req.getRequestDispatcher(viewname);
         if (rd == null) {
-          log.warn("Not a valid resource path:" + viewname);
+          log.warn("Not a valid resource path:" + name);
           return false;
+        } else {
+          log.debug("rd=" + rd);
         }
 
         rd.include(req, resp);
