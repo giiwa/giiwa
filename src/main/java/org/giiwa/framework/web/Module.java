@@ -23,7 +23,6 @@ import java.util.zip.*;
 
 import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
-import org.apache.velocity.app.Velocity;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;

@@ -15,11 +15,6 @@
 package org.giiwa.framework.web;
 
 import java.io.*;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.velocity.Template;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.conf.Global;
 
 // TODO: Auto-generated Javadoc
@@ -54,8 +49,22 @@ public class DummyModel extends Model {
      */
     // log.debug("uri=" + uri);
 
+    if (!_onPost(uri)) {
+      for (String suffix : Controller.welcomes) {
+        if (_onPost(uri + "/" + suffix)) {
+          return;
+        }
+      }
+
+      // not found
+      this.notfound();
+    }
+
+  }
+
+  private boolean _onPost(String uri) {
     File f = Module.home.getFile(uri);
-    if (f != null && f.exists()) {
+    if (f != null && f.exists() && f.isFile()) {
       this.set(this.getJSON());
 
       this.set("me", this.getUser());
@@ -70,12 +79,9 @@ public class DummyModel extends Model {
       this.set("system", Global.getInstance());
 
       show(uri);
-      return;
+      return true;
     }
-
-    // not found
-    this.notfound();
-
+    return false;
   }
 
 }

@@ -44,7 +44,7 @@ public class GiiwaFilter implements Filter {
 
     }
 
-    chain.doFilter(req, resp);
+    // chain.doFilter(req, resp);
 
   }
 

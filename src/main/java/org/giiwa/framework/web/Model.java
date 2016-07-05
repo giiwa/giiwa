@@ -20,8 +20,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.FilterChain;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.http.*;
 
@@ -31,9 +29,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.logging.*;
-import org.apache.velocity.*;
 import org.giiwa.core.base.H64;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.Bean;
@@ -44,9 +40,6 @@ import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
-
-import freemarker.template.Configuration;
-import freemarker.template.TemplateExceptionHandler;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -1785,7 +1778,7 @@ public class Model {
       if (log.isErrorEnabled())
         log.error(viewname, e);
 
-      error(e);
+      // error(e);
     } finally {
       if (writer != null) {
         try {
@@ -1887,6 +1880,7 @@ public class Model {
     this.set("me", this.getUser());
     this.show("/notfound.html");
     this.setStatus(HttpServletResponse.SC_NOT_FOUND);
+
   }
 
   /**
