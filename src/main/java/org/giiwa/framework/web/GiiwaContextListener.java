@@ -56,6 +56,7 @@ public class GiiwaContextListener implements ServletContextListener {
    * .ServletContextEvent)
    */
   public void contextInitialized(ServletContextEvent event) {
+    
     String home = event.getServletContext().getRealPath("/");
 
     init(home, event.getServletContext().getContextPath());

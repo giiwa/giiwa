@@ -1,3 +1,4 @@
+org/giiwa/framework/web/view/VelocityTemplateLoader.class
 org/giiwa/framework/bean/Stats$2.class
 org/giiwa/app/web/admin/backup$RecoverTask.class
 org/giiwa/app/web/admin/setting$mail.class
@@ -51,6 +52,7 @@ org/giiwa/core/base/DES.class
 org/giiwa/framework/bean/Menu.class
 org/giiwa/app/web/menu.class
 org/giiwa/framework/web/PageLink.class
+org/giiwa/framework/web/view/JspView.class
 org/giiwa/framework/bean/Stats.class
 org/giiwa/app/web/admin/dashboard.class
 org/giiwa/app/web/data.class
@@ -76,6 +78,7 @@ org/giiwa/core/cache/impl/FileCache.class
 org/giiwa/app/web/upload.class
 org/giiwa/framework/sync/SyncTask$1.class
 org/giiwa/app/web/user.class
+org/giiwa/framework/web/view/FreemakerView$T.class
 org/giiwa/core/base/RSA.class
 org/giiwa/app/web/configure$1.class
 org/giiwa/framework/bean/Stat.class
@@ -101,16 +104,19 @@ org/giiwa/app/web/device.class
 org/giiwa/core/base/Hex.class
 org/giiwa/core/bean/UID.class
 org/giiwa/app/web/admin/setting$sync.class
+org/giiwa/framework/web/view/VelocityView$T.class
 org/giiwa/app/web/DefaultListener$BackupTask.class
 org/giiwa/app/web/admin/setting$system.class
 org/giiwa/framework/web/IListener.class
 org/giiwa/framework/web/QueryString.class
 org/giiwa/core/task/Task.class
+org/giiwa/framework/web/view/VelocityView.class
 org/giiwa/core/base/GString.class
 org/giiwa/core/cache/ICacheSystem.class
 org/giiwa/app/web/admin/setting.class
 org/giiwa/app/web/admin/repo.class
 org/giiwa/framework/utils/Host$Disk.class
+org/giiwa/framework/web/view/View.class
 org/giiwa/framework/utils/FileUtil$Version.class
 org/giiwa/framework/web/DummyModel.class
 org/giiwa/framework/noti/Email$giiwaAuthenticator.class
@@ -121,6 +127,7 @@ org/giiwa/utils/image/Captcha.class
 org/giiwa/core/task/Task$2.class
 org/giiwa/app/web/admin/appkey.class
 org/giiwa/framework/bean/Stats$1.class
+org/giiwa/framework/web/view/FreemakerView.class
 org/giiwa/framework/bean/User.class
 org/giiwa/framework/bean/OpLog.class
 org/giiwa/framework/utils/Host$Proc.class
@@ -135,6 +142,7 @@ org/giiwa/app/web/DefaultListener$NtpTask.class
 org/giiwa/core/conf/Local.class
 org/giiwa/app/web/admin/backup.class
 org/giiwa/framework/utils/Http$Response.class
+org/giiwa/framework/web/view/FileView.class
 org/giiwa/core/bean/Bean$1.class
 org/giiwa/app/web/DefaultListener.class
 org/giiwa/framework/bean/AuthToken.class
@@ -163,7 +171,6 @@ org/giiwa/app/web/admin/setting$counter.class
 org/giiwa/core/cache/Cache.class
 org/giiwa/app/web/alive.class
 org/giiwa/framework/noti/Sms.class
-org/giiwa/framework/web/TemplateLoader.class
 org/giiwa/core/bean/Bean$W.class
 org/giiwa/framework/utils/Host$CPU.class
 org/giiwa/app/web/temp.class

@@ -333,7 +333,7 @@ public class DefaultListener implements IListener {
         /**
          * initial the database
          */
-        File f = module.loadResource("/install/" + dbname + "/initial.sql", false);
+        File f = module.getFile("/install/" + dbname + "/initial.sql", false);
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
           int b = Global.i(key, 0);
@@ -361,7 +361,7 @@ public class DefaultListener implements IListener {
           }
         }
 
-        f = module.loadResource("/install/" + dbname + "/upgrade.sql", false);
+        f = module.getFile("/install/" + dbname + "/upgrade.sql", false);
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.upgrade." + dbname + "." + f.lastModified();
           int b = Global.i(key, 0);

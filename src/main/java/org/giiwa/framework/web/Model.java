@@ -43,6 +43,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.*;
+import org.giiwa.framework.web.view.View;
 
 import freemarker.template.Configuration;
 import freemarker.template.TemplateExceptionHandler;
@@ -98,7 +99,7 @@ public class Model {
    * the response context, includes all the response key-value, used by
    * view(html)
    */
-  public Map<String, Object>                   context;
+  public Map<String, Object>               context;
 
   /**
    * the home of the webgiiwa
@@ -134,12 +135,6 @@ public class Model {
    * the query string of the request
    */
   public QueryString                       query;
-
-  /**
-   * cache the template by viwename, the template will be override in child
-   * module
-   */
-  private static Map<String, Object>       cache          = new HashMap<String, Object>();
 
   public static ServletContext             s️ervletContext;
 
@@ -1708,65 +1703,6 @@ public class Model {
   }
 
   /**
-   * Gets the template by viewname, the viewname is relative path
-   * 
-   * @param viewname
-   *          the relative view path name
-   * @param allowEmpty
-   *          if not presented, allow using a empty
-   * @return Template
-   */
-  final public Template getTemplate(String viewname, boolean allowEmpty) {
-
-    Template template = (Template) cache.get(viewname);
-
-    if (template == null || template.isSourceModified()) {
-      /**
-       * get the template from the top
-       */
-      template = Module.home.getTemplate(viewname, allowEmpty);
-
-      cache.put(viewname, template);
-    }
-
-    return template;
-
-  }
-
-  final public freemarker.template.Template getFreeTemplate(String viewname) {
-
-    freemarker.template.Template template = (freemarker.template.Template) cache.get(viewname);
-
-    if (template == null) {
-      /**
-       * get the template from the top
-       */
-      template = Module.home.getFreeTemplate(viewname);
-
-      cache.put(viewname, template);
-    }
-
-    return template;
-  }
-
-  /**
-   * render and output the html page to end-user
-   * 
-   * @param viewname
-   *          the path of the html view, <br>
-   *          the path is the relative path refer the "/view/" path, <br>
-   *          etc. the real view file is under: ../view/abc.html, <br>
-   *          the "path" of the viewname is "/abc.html"<br>
-   * @return boolean
-   */
-  final public boolean show(String viewname) {
-    this.set("path", this.path);
-    this.set("query", this.query);
-
-    return show(viewname, false);
-  }
-
-  /**
    * output the json as "application/json" to end-user
    * 
    * @param jo
@@ -1821,114 +1757,35 @@ public class Model {
   }
 
   /**
-   * Render the template with current model and return
-   * 
-   * @param viewname
-   *          the template name of view
-   * @return string of rendered
-   */
-  final public String parse(String viewname) {
-    StringBuilderWriter sb = null;
-    try {
-
-      Template template = getTemplate(viewname, true);
-
-      // System.out.println(viewname + "=>" + template);
-      if (template != null) {
-        sb = new StringBuilderWriter();
-
-        template.merge(new VelocityContext(context), sb);
-
-        return sb.toString();
-      }
-
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(viewname, e);
-    } finally {
-      if (sb != null) {
-        sb.close();
-      }
-    }
-
-    return null;
-  }
-
-  /**
    * using current model to render the template, and show the result html page
    * to end-user.
    * 
    * @param viewname
    *          the viewname template
-   * @param allowOverride
-   *          if true and not presented, will trying load the template from
-   *          parent module
    * @return boolean
    */
-  final public boolean show(String viewname, boolean allowOverride) {
+  final public boolean show(String viewname) {
 
     Writer writer = null;
     try {
+      this.set("path", this.path);
+      this.set("query", this.query);
 
       TimeStamp t1 = TimeStamp.create();
-      // log.debug("show:" + viewname, new Exception());
-      if (GiiwaFilter.isJsp(viewname)) {
-        File jsp = Module.home.getFile(viewname);
-        String name = jsp.getCanonicalPath().substring(Model.HOME.length());
-        log.debug("viewname=" + name);
+      File file = Module.home.getFile(viewname);
+      if (file != null && file.exists()) {
+        View.merge(file, this);
 
-        req.setAttribute(System.getProperty("org.apache.jasper.Constants.JSP_FILE", "org.apache.catalina.jsp_file"),
-            name);
-        RequestDispatcher rd = req.getRequestDispatcher(viewname);
-        if (rd == null) {
-          log.warn("Not a valid resource path:" + name);
-          return false;
-        } else {
-          log.debug("rd=" + rd);
-        }
-        rd.include(req, resp);
         if (log.isDebugEnabled())
-          log.debug("including jsp = " + viewname + ", cost: " + t1.past() + "ms");
-        return true;
-
-      } else if (GiiwaFilter.isFreemaker(viewname)) {
-
-        // load
-        freemarker.template.Template template = getFreeTemplate(viewname);
-        if (template != null) {
-          Writer out = new OutputStreamWriter(this.getOutputStream());
-          template.process(context, out);
-          out.flush();
-          if (log.isDebugEnabled())
-            log.debug("merge [" + viewname + "] cost: " + t1.past() + "ms");
-          return true;
-        }
-      } else if (GiiwaFilter.isVelocity(viewname)) {
-        Template template = getTemplate(viewname, allowOverride);
-        if (log.isDebugEnabled())
-          log.debug("finding template = " + viewname + ", cost: " + t1.past() + "ms, result=" + template);
-
-        // System.out.println(viewname + "=>" + template);
-        if (template != null) {
-          resp.setContentType(this.getContentType());
-
-          writer = new BufferedWriter(resp.getWriter());
-
-          TimeStamp t = TimeStamp.create();
-          template.merge(new VelocityContext(context), writer);
-          writer.flush();
-          if (log.isDebugEnabled())
-            log.debug("merge [" + viewname + "] cost: " + t.past() + "ms");
-
-          return true;
-        }
+          log.debug("showing viewname = " + viewname + ", cost: " + t1.past() + "ms");
       } else {
-        // copy the file to front-end
-        
+        notfound();
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error(viewname, e);
+
+      error(e);
     } finally {
       if (writer != null) {
         try {
@@ -1941,66 +1798,6 @@ public class Model {
     }
 
     return false;
-  }
-
-  /**
-   * render the template with parameters and return the result
-   * 
-   * @param viewname
-   *          the relative path name of template
-   * @param params
-   *          the params array
-   * @return String of the render result
-   */
-  final public String parse(String viewname, Object[]... params) {
-
-    StringWriter writer = null;
-    try {
-
-      resp.setContentType(this.getContentType());
-
-      TimeStamp t1 = TimeStamp.create();
-      Template template = getTemplate(viewname, true);
-      if (log.isDebugEnabled())
-        log.debug("finding template = " + viewname + ", cost: " + t1.past() + "ms");
-
-      // System.out.println(viewname + "=>" + template);
-      if (template != null) {
-        writer = new StringWriter();
-
-        TimeStamp t = TimeStamp.create();
-
-        VelocityContext context = new VelocityContext();
-        if (params != null) {
-          for (Object[] p : params) {
-            if (p.length == 2) {
-              context.put(p[0].toString(), p[1]);
-            }
-          }
-        }
-        template.merge(context, writer);
-        writer.flush();
-        if (log.isDebugEnabled())
-          log.debug("merge [" + viewname + "] cost: " + t.past() + "ms");
-
-        return writer.toString();
-      }
-
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(viewname, e);
-    } finally {
-      if (writer != null) {
-        try {
-          writer.close();
-        } catch (IOException e) {
-          if (log.isErrorEnabled())
-            log.error(e);
-        }
-      }
-    }
-
-    return X.EMPTY;
   }
 
   /**
@@ -2040,44 +1837,6 @@ public class Model {
   }
 
   /**
-   * render the template with current model, and return the result, please
-   * refers to "render"
-   * 
-   * @deprecated
-   * @param uri
-   *          the uri
-   * @return the string
-   */
-  final public String merge(String uri) {
-    Template template = getTemplate(uri, true);
-
-    // System.out.println(viewname + "=>" + template);
-    StringWriter writer = null;
-    try {
-      if (template != null) {
-        writer = new StringWriter();
-
-        template.merge(new VelocityContext(context), writer);
-        writer.flush();
-        return writer.toString();
-      }
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(e.getMessage(), e);
-    } finally {
-      try {
-        if (writer != null) {
-          writer.close();
-        }
-      } catch (IOException e) {
-        if (log.isErrorEnabled())
-          log.error(e);
-      }
-    }
-    return null;
-  }
-
-  /**
    * Get the mime type.
    * 
    * @param uri
@@ -2112,7 +1871,7 @@ public class Model {
       s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
       this.set("error", s);
 
-      this.show("/error.html", true);
+      this.show("/error.html");
     }
     setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
 
@@ -2126,7 +1885,7 @@ public class Model {
       log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("page notfound"));
 
     this.set("me", this.getUser());
-    this.show("/notfound.html", true);
+    this.show("/notfound.html");
     this.setStatus(HttpServletResponse.SC_NOT_FOUND);
   }
 
@@ -2170,7 +1929,7 @@ public class Model {
     } else {
       this.set("me", this.getUser());
       this.set(X.ERROR, error);
-      this.show("/deny.html", true);
+      this.show("/deny.html");
     }
 
   }

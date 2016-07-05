@@ -54,122 +54,22 @@ public class DummyModel extends Model {
      */
     // log.debug("uri=" + uri);
 
-    File f = Module.home.loadResource(uri);
-    if (f == null || !f.exists()) {
-      int i = uri.lastIndexOf("_v");
-      if (i > 0) {
-        int j = uri.lastIndexOf(".");
-        if (j > 0) {
-          uri = uri.substring(0, i) + uri.substring(j);
-          f = Module.home.loadResource(uri);
-        }
-      }
-    }
-
+    File f = Module.home.getFile(uri);
     if (f != null && f.exists()) {
-      /**
-       * this file exists, check is end with ".htm|.html"
-       */
-      if (GiiwaFilter.isJsp(uri)) {
-
-        show(uri);
-
-        return;
-      } else if (GiiwaFilter.isVelocity(uri) || GiiwaFilter.isFreemaker(uri)) {
-        /**
-         * parse it as template
-         */
-        this.set(this.getJSON());
-
-        this.set("me", this.getUser());
-        this.put("lang", lang);
-        this.put("uri", uri);
-        this.put("module", Module.home);
-        this.put("path", path);
-        this.put("request", req);
-        this.put("this", this);
-        this.put("response", resp);
-        this.set("session", this.getSession());
-        this.set("system", Global.getInstance());
-
-        show(uri);
-
-        return;
-
-      } else if (f.isFile()) {
-        /**
-         * copy the file directly
-         */
-        // log.debug(f.getAbsolutePath());
-
-        InputStream in = null;
-        OutputStream out = null;
-        try {
-          in = new FileInputStream(f);
-          out = resp.getOutputStream();
-          this.setContentType(getMimeType(uri));
-
-          String date = this.getHeader("If-Modified-Since");
-          String date2 = lang.format(f.lastModified(), "yyyy-MM-dd HH:mm:ss z");
-          if (date != null && date.equals(date2)) {
-            resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-            return;
-          }
-
-          this.setHeader("Last-Modified", date2);
-          this.setHeader("Content-Length", Long.toString(f.length()));
-          this.setHeader("Accept-Ranges", "bytes");
-
-          // RANGE: bytes=2000070-
-          String range = this.getHeader("RANGE");
-          long start = 0;
-          long end = f.length();
-          if (range != null) {
-            String[] ss = range.split("=| |-");
-            if (ss.length > 1) {
-              start = Bean.toLong(ss[1]);
-            }
-            if (ss.length > 2) {
-              end = Bean.toLong(ss[2]);
-            }
-            // Content-Range=bytes 2000070-106786027/106786028
-            this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + f.length());
-
-          }
-
-          Model.copy(in, out, start, end, false);
-          out.flush();
-
-          return;
-        } catch (Exception e) {
-          log.error(uri, e);
-        } finally {
-          if (in != null) {
-            try {
-              in.close();
-            } catch (IOException e) {
-              log.error(e);
-            }
-          }
-        }
-      }
-    }
-
-    // check where has .html or htm
-    Template t1 = getTemplate(uri + ".html", false);
-    if (t1 != null) {
       this.set(this.getJSON());
-      show(uri + ".html");
 
-      return;
-    }
+      this.set("me", this.getUser());
+      this.put("lang", lang);
+      this.put("uri", uri);
+      this.put("module", Module.home);
+      this.put("path", path);
+      this.put("request", req);
+      this.put("this", this);
+      this.put("response", resp);
+      this.set("session", this.getSession());
+      this.set("system", Global.getInstance());
 
-    // check where has .html or htm
-    t1 = getTemplate(uri + ".htm", false);
-    if (t1 != null) {
-      this.set(this.getJSON());
-      show(uri + ".htm");
-
+      show(uri);
       return;
     }
 

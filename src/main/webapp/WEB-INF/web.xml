@@ -11,16 +11,20 @@ version="2.4">
 		<filter-name>giiwafilter</filter-name>
 		<filter-class>org.giiwa.framework.web.GiiwaFilter</filter-class>
 		<init-param>
-			<param-name>velocity</param-name>
-			<param-value>.*(.htm|.html)$</param-value>
+			<param-name>.html</param-name>
+			<param-value>org.giiwa.framework.web.view.VelocityView</param-value>
 		</init-param>
 		<init-param>
-			<param-name>jsp</param-name>
-			<param-value>.*.jsp$</param-value>
+			<param-name>.htm</param-name>
+			<param-value>org.giiwa.framework.web.view.VelocityView</param-value>
 		</init-param>
 		<init-param>
-			<param-name>freemaker</param-name>
-			<param-value>.*.ftl$</param-value>
+			<param-name>.jsp</param-name>
+			<param-value>org.giiwa.framework.web.view.JspView</param-value>
+		</init-param>
+		<init-param>
+			<param-name>.ftl</param-name>
+			<param-value>org.giiwa.framework.web.view.FreemakerView</param-value>
 		</init-param>
 	</filter>
 	<filter-mapping>
@@ -28,8 +32,9 @@ version="2.4">
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 	<welcome-file-list>
-		<welcome-file>index</welcome-file>
 		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
 		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>index.ftl</welcome-file>
 	</welcome-file-list>
 </web-app>

@@ -1,10 +1,6 @@
 package org.giiwa.framework.web;
 
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -18,12 +14,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.framework.web.Model.HTTPMethod;
+import org.giiwa.framework.web.view.View;
 
 public class GiiwaFilter implements Filter {
 
-  static Log          log         = LogFactory.getLog(GiiwaFilter.class);
-
-  static final String transparent = "/modules/.*.jsp";
+  static Log log = LogFactory.getLog(GiiwaFilter.class);
 
   @Override
   public void destroy() {
@@ -37,27 +32,19 @@ public class GiiwaFilter implements Filter {
     HttpServletRequest r1 = (HttpServletRequest) req;
     String uri = r1.getRequestURI();
 
-    if (uri.matches(transparent)) {
-      log.debug("uri=" + uri + ", transparent=" + transparent);
+    String method = r1.getMethod();
 
-      chain.doFilter(req, resp);
+    if ("GET".equalsIgnoreCase(method)) {
 
-    } else {
+      Controller.dispatch(uri, r1, (HttpServletResponse) resp, new HTTPMethod(Model.METHOD_GET));
 
-      String method = r1.getMethod();
-      // log.debug("method=" + method);
+    } else if ("POST".equalsIgnoreCase(method)) {
 
-      if ("GET".equalsIgnoreCase(method)) {
-
-        Controller.dispatch(uri, r1, (HttpServletResponse) resp, new HTTPMethod(Model.METHOD_GET));
-
-      } else if ("POST".equalsIgnoreCase(method)) {
-
-        Controller.dispatch(uri, r1, (HttpServletResponse) resp, new HTTPMethod(Model.METHOD_POST));
-
-      }
+      Controller.dispatch(uri, r1, (HttpServletResponse) resp, new HTTPMethod(Model.METHOD_POST));
 
     }
+
+    chain.doFilter(req, resp);
 
   }
 
@@ -66,49 +53,7 @@ public class GiiwaFilter implements Filter {
 
     Model.s️ervletContext = config.getServletContext();
 
-    Enumeration e = config.getInitParameterNames();
-    while (e.hasMoreElements()) {
-      String name = e.nextElement().toString();
-      String value = config.getInitParameter(name);
-      m.put(name, value);
-    }
-
-    log.debug("config=" + m);
+    View.init(config);
   }
-
-  /**
-   * test is jsp page
-   * 
-   * @param url
-   * @return boolean
-   */
-  public static boolean isJsp(String url) {
-    String v = m.get("jsp");
-    return v != null && url.matches(v);
-  }
-
-  /**
-   * test is velocity template
-   * 
-   * @param url
-   * @return boolean
-   */
-  public static boolean isVelocity(String url) {
-    String v = m.get("velocity");
-    return v != null && url.matches(v);
-  }
-
-  /**
-   * test is freemaker template
-   * 
-   * @param url
-   * @return boolean
-   */
-  public static boolean isFreemaker(String url) {
-    String v = m.get("freemaker");
-    return v != null && url.matches(v);
-  }
-
-  private static Map<String, String> m = new HashMap<String, String>();
 
 }

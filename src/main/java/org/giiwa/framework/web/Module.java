@@ -23,7 +23,6 @@ import java.util.zip.*;
 
 import org.apache.commons.configuration.*;
 import org.apache.commons.logging.*;
-import org.apache.velocity.Template;
 import org.apache.velocity.app.Velocity;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -39,7 +38,6 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Access;
 import org.giiwa.framework.bean.Jar;
 import org.giiwa.framework.bean.Menu;
-import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.utils.FileUtil;
 import org.giiwa.framework.web.Model.PathMapping;
@@ -63,53 +61,50 @@ import com.mongodb.BasicDBObject;
  */
 public class Module {
 
-  static Log                                       log      = LogFactory.getLog(Module.class);
+  static Log          log      = LogFactory.getLog(Module.class);
 
   /**
    * the absolute path of the module
    */
-  String                                           path;
+  String              path;
 
-  String                                           viewroot;
+  String              viewroot;
   /**
    * the id of the module, MUST unique, and also is a sequence of the loading:
    * biggest first
    */
-  public int                                       id;
+  public int          id;
 
   /**
    * the name of the module, the name of module should be unique in whole
    * context
    */
-  String                                           name;
+  String              name;
 
   /**
    * IListener which will be invoke in each life cycle of the module
    */
-  String                                           listener;
+  String              listener;
 
-  boolean                                          enabled  = false;
+  boolean             enabled  = false;
 
-  String                                           version;
-  String                                           build;
+  String              version;
+  String              build;
 
-  String                                           screenshot;
+  String              screenshot;
 
   /**
    * the root package name of the module, which will use to mapping the handler
    */
-  String                                           pack;
+  String              pack;
 
-  Map<String, String>                              settings = new TreeMap<String, String>();
-  Map<String, Object>                              filters  = new TreeMap<String, Object>();
+  Map<String, String> settings = new TreeMap<String, String>();
+  Map<String, Object> filters  = new TreeMap<String, Object>();
 
   /**
    * readme file maybe html
    */
-  String                                           readme;
-
-  private static freemarker.template.Configuration cfg      = new freemarker.template.Configuration(
-      freemarker.template.Configuration.VERSION_2_3_24);
+  String              readme;
 
   /**
    * handle by filter ad invoke the before
@@ -616,7 +611,6 @@ public class Module {
 
       // String t = SystemConfig.s("home.module", "default");
       File f = new File(Model.HOME + "/modules/");
-      cfg.setDirectoryForTemplateLoading(f.getParentFile());
 
       if (f.exists()) {
         File[] list = f.listFiles();
@@ -680,16 +674,6 @@ public class Module {
 
       }
       Menu.cleanup();
-
-      /**
-       * initialize template loader for velocity
-       */
-      Properties p = new Properties();
-      p.setProperty("input.encoding", "utf-8");
-      p.setProperty("output.encoding", "utf-8");
-      p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
-      p.setProperty("file.resource.loader.class", "org.giiwa.framework.web.TemplateLoader");
-      Velocity.init(p);
 
       // the the default locale
       String locale = null;
@@ -1098,91 +1082,6 @@ public class Module {
       // pathmapping.put(c, map);
       // }
       return map;
-    }
-
-    return null;
-  }
-
-  /**
-   * Load resource.
-   * 
-   * @param uri
-   *          the uri
-   * @return the file
-   */
-  public File loadResource(String uri) {
-    return loadResource(uri, true);
-  }
-
-  /**
-   * Load resource.
-   * 
-   * @param uri
-   *          the uri
-   * @param infloor
-   *          the infloor
-   * @return the file
-   */
-  public File loadResource(String uri, boolean infloor) {
-
-    try {
-      File f = new File(viewroot + File.separator + uri);
-      // log.debug("testing: " + f.getAbsolutePath() + ", exists?" +
-      // f.exists());
-
-      if (f.exists() && f.getCanonicalPath().startsWith(viewroot))
-        return f;
-
-      if (infloor) {
-        Module e = floor();
-        if (e != null) {
-          return e.loadResource(uri, infloor);
-        }
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-
-    return null;
-  }
-
-  /**
-   * Gets the template.
-   *
-   * @param viewname
-   *          the viewname
-   * @param allowEmpty
-   *          the allow empty
-   * @return the template
-   */
-  public Template getTemplate(String viewname, boolean allowEmpty) {
-    try {
-      // viewname = viewname.replaceAll("/", File.separator);
-      File f = new File(viewroot + File.separator + viewname);
-      // System.out.println(f.getAbsolutePath());
-
-      if (f.exists() && f.getCanonicalPath().startsWith(viewroot)) {
-        return Velocity.getTemplate(viewname, "UTF-8");
-      }
-
-      Module e = floor();
-      if (e != null) {
-        Model.setCurrentModule(e);
-        return e.getTemplate(viewname, allowEmpty);
-      }
-    } catch (Exception e) {
-      /**
-       * load resource error, please restart server
-       */
-      OpLog.error("system", "load resource error", e.getMessage());
-      log.error(e.getMessage(), e);
-    }
-
-    /**
-     * return empty.html
-     */
-    if (allowEmpty) {
-      return Velocity.getTemplate("empty.html", "UTF-8");
     }
 
     return null;
@@ -1877,25 +1776,6 @@ public class Module {
       return path;
     }
 
-  }
-
-  public freemarker.template.Template getFreeTemplate(String viewname) {
-
-    try {
-      File f = Module.home.getFile(viewname);
-      if (f.exists()) {
-        return cfg.getTemplate(f.getCanonicalPath().substring(Model.HOME.length()), "UTF-8");
-      }
-
-    } catch (Exception e) {
-      /**
-       * load resource error, please restart server
-       */
-      OpLog.error("system", "load resource error", e.getMessage());
-      log.error(e.getMessage(), e);
-    }
-
-    return null;
   }
 
 }

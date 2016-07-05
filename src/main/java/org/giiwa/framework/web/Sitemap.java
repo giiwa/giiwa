@@ -29,17 +29,17 @@ public class Sitemap {
   static Log log = LogFactory.getLog(Sitemap.class);
 
   /**
-	 * Adds the.
-	 * 
-	 * @param uri
-	 *            the uri
-	 */
+   * Adds the.
+   * 
+   * @param uri
+   *          the uri
+   */
   public static void add(String uri) {
 
     /**
      * find the sitemap.txt file
      */
-    File f = Module.home.loadResource("/sitemap.txt");
+    File f = Module.home.getFile("/sitemap.txt");
 
     BufferedReader in = null;
     PrintStream out = null;
