@@ -15,7 +15,7 @@
 		<param name="fff" value="aaa"/>
 	</setting>
 	<!--filter>
-	<pattern>/*</pattern>
+	<pattern>/.*</pattern>
 	<class>org.giiwa.web.filter</class>
 	</filter-->
 </module>
