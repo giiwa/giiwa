@@ -374,21 +374,9 @@ public class Menu extends Bean {
 
       if (has) {
         int seq = m.getSeq();
-        Menu m1 = map.get(seq);
-        if (m1 != null) {
-          /**
-           * get short's name first
-           */
-          if (m1.getName().indexOf(m.getName()) > -1) {
-            map.put(seq, m);
-          } else if (m.getName().indexOf(m1.getName()) > -1) {
-            map.put(seq, m1);
-          } else {
-            map.put(seq + 1, m);
-          }
-        } else {
-          map.put(seq, m);
-        }
+        while (map.containsKey(seq))
+          seq++;
+        map.put(seq, m);
       }
     }
 
