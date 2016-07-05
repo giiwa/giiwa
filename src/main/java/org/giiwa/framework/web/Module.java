@@ -949,7 +949,7 @@ public class Module {
    * @return the model
    */
   @SuppressWarnings("unchecked")
-  public Model loadModel(int method, String uri) {
+  public Model getModel(int method, String uri) {
 
     try {
 
@@ -958,7 +958,7 @@ public class Module {
       CachedModel c = null;
       synchronized (modelMap) {
         c = modelMap.get(method + "|" + uri);
-
+        // log.debug("uri=" + (method + "|" + uri));
         if (c == null) {
           /**
            * looking for the model class
@@ -973,19 +973,26 @@ public class Module {
           Map<Integer, Map<String, Model.PathMapping>> path = _loadPath(c1);
           if (path != null && path.size() > 0) {
             String u = uri;
-            if (!u.endsWith("/")) {
-              u += "/";
-            }
+            // if (!u.endsWith("/")) {
+            // u += "/";
+            // }
             for (int m1 : path.keySet()) {
-              Map<String, Model.PathMapping> p = path.get(m1);
-              for (String s : p.keySet()) {
-                c = CachedModel.create(c1, path, this);
-                _cache(m1 + "|" + u + s, c);
-              }
+              // Map<String, Model.PathMapping> p = path.get(m1);
+              // for (String s : p.keySet()) {
+              // c = CachedModel.create(c1, path, this);
+              // _cache(m1 + "|" + u + s, c);
+              // log.debug("uri=" + (m1 + "|" + u + s));
+              // }
+              c = CachedModel.create(c1, path, this);
+              _cache(m1 + "|" + u, c);
+              // log.debug("uri=" + (m1 + "|" + u));
+
             }
           } else {
             c = CachedModel.create(c1, path, this);
             _cache(method + "|" + uri, c);
+
+            // log.debug("uri=" + (method + "|" + uri));
           }
         }
       }
@@ -1006,7 +1013,7 @@ public class Module {
 
     Module e = floor();
     if (e != null) {
-      return e.loadModel(method, uri);
+      return e.getModel(method, uri);
     }
 
     return null;

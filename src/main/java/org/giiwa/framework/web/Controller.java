@@ -114,7 +114,7 @@ public class Controller {
    * @return the model
    */
   public static Model getModel(int method, String uri) {
-    return Module.home.loadModel(method, uri);
+    return Module.home.getModel(method, uri);
   }
 
   /**

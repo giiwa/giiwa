@@ -1807,7 +1807,7 @@ public class Model {
     if (module != null) {
       Module t = module.floor();
       if (t != null) {
-        Model m = t.loadModel(Model.METHOD_POST, uri);
+        Model m = t.getModel(Model.METHOD_POST, uri);
         if (m != null) {
           m.dispatch(uri, req, resp, method);
           return;

@@ -63,6 +63,7 @@ public class DummyModel extends Model {
   }
 
   private boolean _onPost(String uri) {
+    uri = uri.replaceAll("//", "/");
     File f = Module.home.getFile(uri);
     if (f != null && f.exists() && f.isFile()) {
       this.set(this.getJSON());
