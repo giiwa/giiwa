@@ -1552,11 +1552,9 @@ public class Model {
             this.setUser(login);
           }
         }
-      } else if (Bean.toInt(s.get("closed")) == 1) {
-        s.remove("closed").store();
       }
 
-      log.debug("getUser, user=" + login + " session=" + s);
+      // log.debug("getUser, user=" + login + " session=" + s);
 
     }
 
