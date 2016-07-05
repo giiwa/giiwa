@@ -34,7 +34,6 @@ import org.giiwa.core.base.H64;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Global;
