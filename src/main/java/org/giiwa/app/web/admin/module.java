@@ -155,6 +155,13 @@ public class module extends Model {
       e = e.addElement("class");
       e.setText(lifelistener);
       e = root.addElement("setting");
+      e = root.addElement("depends");
+      Element e1 = e.addElement("module");
+      e1.addAttribute("name", "default");
+      e1.addAttribute("version", Module.load("default").getVersion());
+      e1 = e.addElement("jar");
+      e1.addAttribute("url", "http://giiwa.org/aaa_1.1.jar");
+
       OutputFormat format = OutputFormat.createPrettyPrint();
       format.setEncoding("UTF-8");
       XMLWriter writer = new XMLWriter(out, format);
