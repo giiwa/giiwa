@@ -1764,13 +1764,14 @@ public class Model {
       this.set("path", this.path);
       this.set("query", this.query);
 
-      TimeStamp t1 = TimeStamp.create();
+      // TimeStamp t1 = TimeStamp.create();
       File file = Module.home.getFile(viewname);
       if (file != null && file.exists()) {
         View.merge(file, this);
 
-        if (log.isDebugEnabled())
-          log.debug("showing viewname = " + viewname + ", cost: " + t1.past() + "ms");
+        // if (log.isDebugEnabled())
+        // log.debug("showing viewname = " + viewname + ", cost: " + t1.past() +
+        // "ms");
       } else {
         notfound();
       }

@@ -54,7 +54,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 
         if (f != null) {
           cache.put(resource, f);
-          log.info(resource + "=>" + f.getCanonicalPath());
+          // log.info(resource + "=>" + f.getCanonicalPath());
         } else if (log.isDebugEnabled()) {
           // not found the file
           log.debug("not exists, resource=" + resource);
