@@ -9,7 +9,6 @@ create table tblconfig
 	d decimal(16,6) default 0
 );
 create unique index tblconfig_index_name on tblconfig(name);
-insert into tblconfig(name, s) values('db.version', '1.1');
 
 #drop table if exists dual;
 create table dual
@@ -35,30 +34,20 @@ create table tbluser
 	expired bigint,
 	sid varchar(50),
 	ip varchar(20),
-	created bigint,
-	rank int default 0,
-	workspace varchar(200),
 	address varchar(255),
 	company varchar(255),
 	title varchar(255),
 	phone varchar(50),
 	photo varchar(255),
-	total bigint default -1,
-	free bigint default 0,
-	spi varchar(50),
 	description varchar(1024),
-	special varchar(1024),
 	department varchar(100),
-	remote int default 0,
-	certid varchar(20),
 	lastfailtime bigint default 0,
 	lastfailip varchar(30),
 	failtimes int default 0,
 	deleted int default 0,
-	city varchar(255),
-	district varchar(255),
 	role varchar(255),
-	updated bigint default 0
+	updated bigint default 0,
+	created bigint
 );
 create unique index tbluser_index_id on tbluser(id);
 create index tbluser_index_name on tbluser(name);
@@ -66,7 +55,6 @@ create index tbluser_index_certid on tbluser(certid);
 create index tbluser_index_deleted on tbluser(deleted);
 create index tbluser_index_locked on tbluser(locked);
 
-insert into tbluser(id, name, certid, nickname, password, created) values(0, 'admin', '123456', 'admin', 'albqdj2cd1aun', extract(epoch from current_timestamp) * 1000::bigint);
 alter table tbluser alter id type bigint;
 
 create table tbluserrole
@@ -126,44 +114,6 @@ create index tblroleaccess_index_id on tblroleaccess(id);
 create index tblroleaccess_index_rid on tblroleaccess(rid);
 insert into tblroleaccess(rid, name) values(0, 'access.admin');
 
-#drop table if exists tblconn;
-create table tblconn
-(
-  	clientid varchar(20),
-  	phone varchar(20),
-  	alias varchar(100),
-  	password varchar(128),
-  	photo varchar(100),
-  	locked int default 0,
-  	pubkey varchar(2048),
-  	ip varchar(50),
-  	capability int default 0,
-  	created bigint,
-  	login int,
-  	logined bigint,
-  	updated bigint,
-  	address varchar(255),
-  	uid bigint default 0,
-  	sent bigint default 0,
-  	received bigint default 0
-);
-create unique index tblconn_index_clientid on tblconn(clientid);
-create index tblconn_index_phone on tblconn(phone);
-create index tblconn_index_alias on tblconn(alias);
-create index tblconn_index_uid on tblconn(uid);
-create index tblconn_index_password on tblconn(password);
-alter table tblconn alter uid type bigint;
-
-#drop table if exists tblurlmapping;
-create table tblurlmapping
-(
-	url varchar(100),
-	dest varchar(100),
-	seq int default 999
-);
-create unique index tblurlmapping_index_dest on tblurlmapping(dest);
-create index tblurlmapping_index_seq on tblurlmapping(seq);
-
 #drop table if exists tblrepo;
 create table tblrepo
 (
@@ -186,17 +136,6 @@ create index tblrepo_index_folder on tblrepo(folder);
 create index tblrepo_index_tag on tblrepo(tag);
 create index tblrepo_index_expired on tblrepo(expired);
 alter table tblrepo alter uid type bigint;
-
-#drop table if exists tblpendindex;
-create table tblpendindex
-(
-	clazz varchar(255),
-	id varchar(255),
-	created bigint
-);
-create index tblpendindex_index_clazz on tblpendindex(clazz);
-create index tblpendindex_index_id on tblpendindex(id);
-create index tblpendindex_index_created on tblpendindex(created);
 
 #drop table if exists tblkeypair;
 create table tblkeypair
@@ -263,15 +202,3 @@ create index tblmenu_index_seq on tblmenu(seq);
 create index tblmenu_index_node on tblmenu(node);
 alter table tblmenu add style varchar(255);
 alter table tblmenu add load varchar(255);
-
-create table tblload
-(
-	name varchar(255),
-	node varchar(255),
-	count int default 0,
-	updated bigint default 0
-);
-create unique index tblload_index_name_node on tblload(name, node);
-create index tblload_index_name on tblload(name);
-create index tblload_index_count on tblload(count);
-create index tblload_index_updated on tblload(updated);
