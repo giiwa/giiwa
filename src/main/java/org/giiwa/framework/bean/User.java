@@ -17,7 +17,7 @@ package org.giiwa.framework.bean;
 import java.util.*;
 
 import org.giiwa.core.bean.*;
-import org.giiwa.core.cache.Cache;
+import org.giiwa.core.db.DB;
 
 import net.sf.json.JSONObject;
 
@@ -46,7 +46,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@DBMapping(collection = "gi_user")
+@DBMapping(collection = "gi_user", table="tbluser")
 public class User extends Bean {
 
   /**

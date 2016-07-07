@@ -27,7 +27,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,8 +42,6 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MapReduceCommand;
-import com.mongodb.MapReduceOutput;
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
@@ -82,7 +79,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
 
   public static boolean isConfigured() {
     getDB();
-    return mongo.size() > 0;
+    return mongo.size() > 0 || org.giiwa.core.db.DB.isConfigured();
   }
 
   /**
@@ -2094,12 +2091,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       return -1;
     }
 
-    if (!X.isEmpty(mapping.table())) {
+    if (!X.isEmpty(mapping.collection())) {
+      return insertCollection(mapping.collection(), sets, mapping.db());
+    } else if (!X.isEmpty(mapping.table())) {
       return insert(mapping.table(), sets, mapping.db());
-    } else {
-      if (!X.isEmpty(mapping.collection())) {
-        return insertCollection(mapping.collection(), sets, mapping.db());
-      }
     }
     return -1;
   }
@@ -2443,7 +2438,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *          the db name
    * @return int
    */
-  final protected static int insert(String table, V sets, String db) {
+  private static int insert(String table, V sets, String db) {
     /**
      * create the sql statement
      */
@@ -4296,46 +4291,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       }
     }
     throw new Exception("the Class<" + t.getName() + "> doest annotated by @DBMapping()!");
-  }
-
-  /**
-   * 
-   * @param x
-   * @param cols
-   * @return
-   */
-  private static String _map(String x, String[][] cols) {
-    String s = "function(){emit(";
-    if (!X.isEmpty(x)) {
-      s += "this." + x;
-
-      s += ", {";
-      for (String s1[] : cols) {
-        s += "'" + s1[0] + "': this." + s1[0] + ",";
-      }
-      s += "'count':1});};";
-    } else {
-      s += "this." + cols[0][0];
-      s += ", {'" + cols[0][0] + "': 1, 'count':1});};";
-    }
-
-    return s;
-  }
-
-  private static String _reduce(String[][] cols) {
-
-    String s = "function(key, values) { var reduced ={";
-    for (String s1[] : cols) {
-      s += s1[0] + ":0,";
-    }
-    s += "count:0};  values.forEach(function(v){ ";
-    for (String s1[] : cols) {
-      s += "reduced." + s1[0] + " += v." + s1[0] + "; ";
-      s += "reduced.count+=v.count;";
-    }
-    s += "}); return reduced;" + "}";
-
-    return s;
   }
 
   /**

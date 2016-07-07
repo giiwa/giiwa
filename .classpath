@@ -28,6 +28,7 @@
   <classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-compress/1.1/commons-compress-1.1.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/apache/velocity/velocity/1.7/velocity-1.7.jar"/>
+  <classpathentry kind="var" path="M2_REPO/org/hsqldb/hsqldb/2.3.4/hsqldb-2.3.4.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/freemarker/freemarker/2.3.24-incubating/freemarker-2.3.24-incubating.jar"/>
   <classpathentry kind="var" path="M2_REPO/memcached/memcached/2.6.3/memcached-2.6.3.jar"/>
   <classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-log4j12/1.5.8/slf4j-log4j12-1.5.8.jar"/>

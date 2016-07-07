@@ -12,6 +12,7 @@
 <link href='/css/configure.css?$!{module.module("default").build}' rel='stylesheet' />
 
 <script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="/js/jquery.message.js"></script>
 <script type="text/javascript" src="/js/jquery.easing.1.3.js"></script>
 
 </head>
@@ -34,7 +35,7 @@
 				<div><label><h3>User：</h3><input type='text' name='user' value="$!system.s('mongo[prod].user','')"/></label></div>
 				<div><label><h3>Password：</h3><input type='password' name='pwd' value="$!system.s('mongo[prod].password','')"/></label></div>
 				<div class='btns'>
-						<a class='next'>$lang.get('a.next')</a>
+					<a class='next'>$lang.get('a.next')</a>
 				</div>
 			</form>
 		</div>
@@ -44,12 +45,16 @@
 			<form method=“post”>
 				<div><label><h3>Driver：</h3>
 					<select name='driver' onchange='_ondriver();'>
+						<option value='org.hsqldb.jdbc.JDBCDriver' #if($system.s('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
+						<option value='org.sqlite.jdbc.JDBCDriver' #if($system.s('db.driver', '') == 'org.sqlite.jdbc.JDBCDriver') selected #end>SQLite</option>
 						<option value='org.postgresql.Driver' #if($system.s('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
 						<option value='com.mysql.jdbc.Driver' #if($system.s('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
 						<option value='oracle.jdbc.OracleDriver' #if($system.s('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
 					</select>
 				</label></div>
 				<div class='url'><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!system.s('db.url', '')"/>
+					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
+					<g class='sqlite' style='display:none'>jdbc:sqlite:file:/opt/db/testdb;ifexists=false</g>
 					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=giiwa&password=g123123</g>
 					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=giiwa&password=g123123&useUnicode=true&characterEncoding=UTF-8</g>
 					<g class='oracle' style='display:none'>...</g>
@@ -62,11 +67,11 @@
 			</form>
 		</div>
 
-		<div id="system" class='panel' data-next="cache" data-prev="mongo">
+		<div id="system" class='panel' data-next="cache" data-prev="db">
 			<div class='head'>$lang.get('configure.title.system')</div>	
 			<form method=“post”>
 				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!system.s('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
-				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='text' name='code' value="$!system.s('system.code','')"/><g>同一个分布式节点编号相同</g></label></div>
+				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!system.s('system.code','1')"/><g>同一个分布式节点编号相同</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev'>$lang.get('a.prev')</a>
@@ -127,10 +132,16 @@ function _ondriver(){
 	if(driver.indexOf('postgresql') > -1) {
 		$('#db .url g').hide();
 		$('#db .url g.postgresql').show();
-	} else if(driver.indexOf('mysql')) {
+	} else if(driver.indexOf('mysql')> -1) {
 		$('#db .url g').hide();
 		$('#db .url g.mysql').show();
-	} else {
+	} else if(driver.indexOf('hsqldb') > -1){
+		$('#db .url g').hide();
+		$('#db .url g.hsqldb').show();
+	} else if(driver.indexOf('sqlite') > -1){
+		$('#db .url g').hide();
+		$('#db .url g.sqlite').show();
+	} else{
 		$('#db .url g').hide();
 		$('#db .url g.oracle').show();
 	}
@@ -204,7 +215,6 @@ $(function(){
 		
 		processing && processing.show();
 		$.post('/configure/save', p, function(d){
-			processing && processing.hide();
 			
 			if(d.state == 200) {
 				setTimeout(function(){

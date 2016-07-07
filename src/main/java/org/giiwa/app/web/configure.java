@@ -39,8 +39,7 @@ import com.mongodb.ServerAddress;
 // TODO: Auto-generated Javadoc
 /**
  * web api .<br>
- * /configure
- * <br>
+ * /configure <br>
  * used to the initial configure, once configured, it will not be accessed
  * 
  * @author joe
@@ -56,12 +55,12 @@ public class configure extends Model {
   public void onGet() {
 
     try {
-      if (Bean.isConfigured()) {
+      if (Bean.isConfigured() ) {
         this.redirect("/");
         return;
       }
 
-      this.show("/admin/config.edit.html");
+      this.show("/admin/configure.html");
 
     } catch (Exception e1) {
       log.debug(e1.getMessage(), e1);
@@ -79,6 +78,7 @@ public class configure extends Model {
     JSONObject jo = new JSONObject();
     if (Bean.isConfigured()) {
       jo.put(X.STATE, 201);
+      jo.put(X.MESSAGE, "already configured, forbidden override, must edit the giiwa.properties by manual");
       this.response(jo);
       return;
     }
@@ -110,7 +110,7 @@ public class configure extends Model {
 
     DefaultListener.owner.upgrade(conf, Module.load("default"));
 
-    String admin = this.getString("admin");
+    String admin = this.getString("admin").trim();
     String password = this.getHtml("password").trim();
 
     User u1 = User.loadById(0);
@@ -145,7 +145,7 @@ public class configure extends Model {
     String op = this.getString("op");
     if ("db".equals(op)) {
 
-      String url = this.getHtml("url");
+      String url = this.getHtml("url").trim();
       // String driver = this.getHtml("driver");
       // conf.setProperty("db.url", url);
       // conf.setProperty("db.driver", driver);
@@ -165,19 +165,19 @@ public class configure extends Model {
       }
 
     } else if ("mongo".equals(op)) {
-      String url = this.getHtml("url");
-      String dbname = this.getString("db");
-      String user = this.getString("user");
-      String pwd = this.getString("pwd");
+      String url = this.getHtml("url").trim();
+      String dbname = this.getString("db").trim();
+      String user = this.getString("user").trim();
+      String pwd = this.getString("pwd").trim();
 
-      if (X.isEmpty(url) || X.isEmpty(dbname)) {
-        jo.put(X.STATE, 201);
-        if (X.isEmpty(url)) {
-          jo.put(X.MESSAGE, "没有设置URL");
-        } else {
-          jo.put(X.MESSAGE, "没有设置DB");
-        }
-      } else {
+      if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
+        // jo.put(X.STATE, 201);
+        // if (X.isEmpty(url)) {
+        // jo.put(X.MESSAGE, "没有设置URL");
+        // } else {
+        // jo.put(X.MESSAGE, "没有设置DB");
+        // }
+        // } else {
         log.debug("url=" + url + ", db=" + dbname);
         String[] hosts = url.split(";");
 
@@ -217,6 +217,8 @@ public class configure extends Model {
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, e1.getMessage());
         }
+      } else {
+        jo.put(X.STATE, 200);
       }
     } else if ("mq".equals(op)) {
 

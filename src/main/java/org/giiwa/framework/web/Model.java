@@ -37,6 +37,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.db.DB;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
 

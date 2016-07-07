@@ -198,10 +198,6 @@ public class user extends Model {
    */
   @Path(path = "login", log = Model.METHOD_POST)
   public void login() {
-    if (!Bean.isConfigured()) {
-      this.redirect("/configure");
-      return;
-    }
 
     if (method.isPost()) {
 
