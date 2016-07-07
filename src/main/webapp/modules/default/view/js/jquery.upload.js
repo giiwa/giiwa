@@ -41,7 +41,6 @@
 
 		pp.find('.fileupload-file').append(that);
 		pp.find('.fileupload-btn').click(function() {
-
 					that.trigger('click');
 					options.autoretry = true;
 				});
@@ -106,13 +105,13 @@
 									}
 								});
 						pp.find('.fileupload-resume').click(function() {
-									options.autoretry = true;
-									options.uploader
-											&& options.uploader.submit();
-									pp.find('.fileupload-resume').hide();
-									pp.find('.fileupload-cancel').text(options.btn_cancel);
-								});
-
+							options.autoretry = true;
+							options.uploader && options.uploader.submit();
+							pp.find('.fileupload-resume').hide();
+							pp.find('.fileupload-cancel')
+									.text(options.btn_cancel);
+						});
+						pp.find('.fileupload-resume').hide();
 						options.autoretry = true;
 						options.uploader = data;
 						options.uploader.submit();
@@ -146,7 +145,8 @@
 							pp.find('.fileupload-message')
 									.text(data.result.message);
 						} else {
-							pp.find('.fileupload-message').text(options.msg_stop);
+							pp.find('.fileupload-message')
+									.text(options.msg_stop);
 						}
 
 						if (data.result && data.result.error > 0) {
