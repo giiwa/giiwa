@@ -116,39 +116,26 @@ public class DB {
   public static synchronized void init() {
     conf = Local.getConfig();
 
-    if (ds == null && conf.containsKey("db.url")) {
-      if (conf.containsKey("db.driver")) {
-        DRIVER = conf.getString("db.driver");
-      }
+    if (ds == null && !X.isEmpty(conf.getString("db.url", null))) {
+      DRIVER = conf.getString("db.driver", DRIVER);
+      URL = conf.getString("db.url", null);
 
-      if (conf.containsKey("db.url")) {
-        URL = conf.getString("db.url");
-      }
+      USER = conf.getString("db.user", null);
 
-      if (conf.containsKey("db.user")) {
-        USER = conf.getString("db.user");
-      }
+      PASSWD = conf.getString("db.passwd", null);
 
-      if (conf.containsKey("db.passwd")) {
-        PASSWD = conf.getString("db.passwd");
-      }
+      MAX_ACTIVE_NUMBER = conf.getInt("db.number", MAX_ACTIVE_NUMBER);
 
-      if (conf.containsKey("db.number")) {
-        MAX_ACTIVE_NUMBER = conf.getInt("db.number");
-      }
-
-      if (conf.containsKey("db.validation.sql")) {
-        VALIDATION_SQL = conf.getString("db.validation.sql");
-      }
+      VALIDATION_SQL = conf.getString("db.validation.sql", VALIDATION_SQL);
 
       ds = new BasicDataSource();
       ds.setDriverClassName(DRIVER);
       ds.setUrl(URL);
 
-      if (USER != null)
+      if (!X.isEmpty(USER))
         ds.setUsername(USER);
 
-      if (PASSWD != null)
+      if (!X.isEmpty(PASSWD))
         ds.setPassword(PASSWD);
 
       ds.setMaxActive(MAX_ACTIVE_NUMBER);
