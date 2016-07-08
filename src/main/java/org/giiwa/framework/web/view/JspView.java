@@ -14,6 +14,11 @@ public class JspView extends View {
     log.debug("viewname=" + name);
 
     name = name.replaceAll("\\\\", "/");
+    if (m.context != null) {
+      for (String s : m.context.keySet()) {
+        m.req.setAttribute(s, m.context.get(s));
+      }
+    }
     m.req.setAttribute(System.getProperty("org.apache.jasper.Constants.JSP_FILE", "org.apache.catalina.jsp_file"),
         name);
 
@@ -24,6 +29,7 @@ public class JspView extends View {
     } else {
       log.debug("including jsp page, name=" + name);
     }
+
     rd.include(m.req, m.resp);
 
     return true;
