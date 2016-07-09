@@ -927,6 +927,13 @@ public class Module {
         return m;
       }
 
+      c = modelMap.get(method + "|" + uri + "/" + X.NONE);
+      if (c != null) {
+        Model m = c.create(uri);
+
+        return m;
+      }
+
     } catch (Exception e) {
       // e.printStackTrace();
     }
@@ -977,14 +984,14 @@ public class Module {
             // u += "/";
             // }
             for (int m1 : path.keySet()) {
-              // Map<String, Model.PathMapping> p = path.get(m1);
-              // for (String s : p.keySet()) {
+              Map<String, Model.PathMapping> p = path.get(m1);
+              for (String s : p.keySet()) {
+                c = CachedModel.create(c1, path, this);
+                _cache(m1 + "|" + u + "/" + s, c);
+                log.debug("uri=" + (m1 + "|" + u + "/" + s));
+              }
               // c = CachedModel.create(c1, path, this);
-              // _cache(m1 + "|" + u + s, c);
-              // log.debug("uri=" + (m1 + "|" + u + s));
-              // }
-              c = CachedModel.create(c1, path, this);
-              _cache(m1 + "|" + u, c);
+              // _cache(m1 + "|" + u, c);
               // log.debug("uri=" + (m1 + "|" + u));
 
             }
