@@ -84,6 +84,7 @@ public class UID extends Bean {
    * create integer sequence for the name.
    * 
    * @param name
+   *          the name of the sequence
    * @return integer
    */
   public synchronized static int nextInt(String name) {

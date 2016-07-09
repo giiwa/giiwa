@@ -632,7 +632,7 @@ public class User extends Bean {
     /**
      * delete all user lock info for the user id
      * 
-     * @param uid
+     * @param uid the user id
      * @return the number deleted
      */
     public static int cleanup(long uid) {

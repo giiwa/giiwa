@@ -33,6 +33,10 @@ public class Captcha {
   /**
    * output the "code image" to the file
    * 
+   * @param sid
+   *          the session id
+   * @param expired
+   *          the expired timestamp
    * @param w
    *          the width of the image
    * @param h

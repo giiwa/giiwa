@@ -89,7 +89,10 @@ public class Http {
    * ping the url, throw exception if occur error
    * 
    * @param url
+   *          the url
+   * @return int of response status
    * @throws Exception
+   *           throw exception when failed
    */
   public static int ping(String url) throws Exception {
 
