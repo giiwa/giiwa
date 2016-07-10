@@ -62,6 +62,10 @@ public class DummyModel extends Model {
 
   }
 
+  public boolean isMobile() {
+    return this.browser().matches(".*(iPhone|Android).*");
+  }
+
   private boolean _onPost(String uri) {
     uri = uri.replaceAll("//", "/");
     File f = Module.home.getFile(uri);

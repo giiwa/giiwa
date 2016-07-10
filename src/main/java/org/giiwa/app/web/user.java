@@ -680,6 +680,7 @@ public class user extends Model {
       } else {
         this.set(X.ERROR, lang.get("save.failed"));
       }
+      this.set(u.getJSON());
       this.set(j);
     } else {
       User u = User.loadById(login.getId());
