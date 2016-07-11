@@ -37,7 +37,6 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.db.DB;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
 
@@ -1179,6 +1178,34 @@ public class Model {
     }
 
     return remote;
+  }
+
+  /**
+   * get local port
+   * 
+   * @return int of local port
+   */
+  final public int getPort() {
+    String port = this.getHeader("Port");
+    if (X.isEmpty(port)) {
+      return req.getLocalPort();
+    }
+
+    return X.toInt(port, -1);
+  }
+
+  /**
+   * get the local host name
+   * 
+   * @return String of local host
+   */
+  final public String getHost() {
+    String host = this.getHeader("Host");
+    if (X.isEmpty(host)) {
+      host = req.getLocalAddr();
+    }
+
+    return host;
   }
 
   /**
