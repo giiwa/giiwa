@@ -18,8 +18,7 @@ import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
 /**
- * web api: /device
- * <br>
+ * web api: /device <br>
  * used to test the device user agent
  * 
  * @author joe
@@ -27,17 +26,24 @@ import org.giiwa.framework.web.Path;
  */
 public class device extends Model {
 
-    /* (non-Javadoc)
-     * @see org.giiwa.framework.web.Model#onGet()
-     */
-    @Path()
-    public void onGet() {
-        // AccessLog.create(this.getRemoteHost(), this.path, V.create("agent",
-        // this.browser()).set("status", 200));
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  @Path()
+  public void onGet() {
+    // AccessLog.create(this.getRemoteHost(), this.path, V.create("agent",
+    // this.browser()).set("status", 200));
 
-        this.set("ip", this.getRemoteHost());
-        this.set("headers", this.getHeaders());
-        this.set("node", Model.node());
-        this.show("/device.html");
-    }
+    this.set("ip", this.getRemoteHost());
+    this.set("headers", this.getHeaders());
+    this.set("node", Model.node());
+
+    this.set("host", this.getHost());
+    this.set("port", this.getPort());
+    this.set("remote", this.getRemoteHost());
+
+    this.show("/device.html");
+  }
 }
