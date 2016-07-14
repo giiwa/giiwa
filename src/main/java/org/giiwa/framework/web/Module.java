@@ -988,7 +988,7 @@ public class Module {
               for (String s : p.keySet()) {
                 c = CachedModel.create(c1, path, this);
                 _cache(m1 + "|" + u + "/" + s, c);
-                log.debug("uri=" + (m1 + "|" + u + "/" + s));
+                // log.debug("uri=" + (m1 + "|" + u + "/" + s));
               }
               // c = CachedModel.create(c1, path, this);
               // _cache(m1 + "|" + u, c);
