@@ -116,7 +116,7 @@ html, body {
 label h3 {
 	color: #fff;
 	width: 80px;
-	text-align: left;
+	text-align: right;
 }
 #wrapper.register input {
 	float: left;
@@ -133,32 +133,11 @@ input[name=code] {
 }
 
 .inner .left {
-	float: left;
-	padding-right: 30px;
 	padding-top: 20px;
 }
 
 #wrapper.register .left {
 	padding-right: 0;
-}
-
-.inner .right {
-	float: right;
-	position: relative;
-	display: inline-block;
-	width: 150px;
-	overflow: hidden;
-	border-left: 1px solid #ddd;
-}
-
-.inner .forget .right {
-	width: 120px;
-	padding-left: 10px;
-	margin-top: 10px;
-}
-
-#wrapper.register .right {
-	width: 190px;
 }
 
 label {
@@ -179,16 +158,13 @@ label {
 	width: 100%;
 }
 
-#wrapper.register label h3 {
-	color: #fefefe;
-}
-
 #wrapper.register label g {
 	width: 130px;
 	font-size: 9px;
 	color: #ddd;
 	line-height: 18px;
 	float: left;
+	white-space: nowrap;
 }
 
 button {
@@ -208,15 +184,12 @@ button:active {
 	background-color: #142661;
 }
 
-.inner .right a {
-	width: 100%;
-	float: right;
-	display: inline-block;
+.inner a {
 	color: #f1f1f1;
 	text-decoration: none;
 }
 
-.inner .right a:hover {
+.inner a:hover {
 	color: #fff;
 	text-decoration: underline;
 }

@@ -47,13 +47,10 @@
 									$lang.get('btn.login')
 								</button>
 							</div>
+							#if($system.s('user.system', 'close') == 'open')
+							<a href="/user/register">$lang.get('register.user')</a>
+							#end
 						</div>
-						#if($system.s('user.register') == 'true')
-						<div class="right">
-							<a href="/user/forget">$lang.get('password.forget')?</a><a
-							href="/user/register">$lang.get('register.user')</a>
-						</div>
-						#end
 					</form>
 				</div>
 			</div>

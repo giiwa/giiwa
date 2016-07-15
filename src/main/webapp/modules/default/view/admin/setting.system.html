@@ -14,6 +14,22 @@
 		</select>
 		<g>$lang.get('type.hint')</g>
 	</label></div>
+	<div><label><h3>$lang.get('user.system'):</h3>
+		<select name='user_system'>
+			<option value='open' #if($user_system == 'open') selected #end>$lang.get('user.system.open')</option>
+			<option value='close' #if($user_system == 'close') selected #end>$lang.get('user.system.close')</option>
+		</select>
+		<g>$lang.get('user.system.hint')</g>
+	</label></div>
+	<div><label><h3>$lang.get('user.role'):</h3>
+		<select name='user_role'>
+			#foreach($r in $roles)
+			<option value='$r.name' #if($user_role == '$r.name') selected #end>$r.name</option>
+			#end
+		</select>
+		<g>$lang.get('user.role.hint')</g>
+	</label></div>
+	
 	<div><label><h3>node:</h3><i>$!node</i><g>$lang.get('node.hint')</g></label></div>
 	<div><label><h3>system.code:</h3><i>$!system_code</i><g>$lang.get('system.code.hint')</g></label></div>
 	<div><label><h3>cache.url:</h3><i>$!cache_url</i><g>$lang.get('cache.url.hint')</g></label></div>

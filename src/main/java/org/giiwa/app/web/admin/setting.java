@@ -12,6 +12,7 @@ import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.sync.SyncTask;
 import org.giiwa.framework.utils.Shell;
 import org.giiwa.framework.web.*;
@@ -266,6 +267,9 @@ public class setting extends Model {
       Global.setConfig("level", level);
       Bean.DEBUG = X.isSame(level, "debug");
 
+      Global.setConfig("user.system", this.getString("user_system"));
+      Global.setConfig("user.role", this.getString("user_role"));
+
       this.set(X.MESSAGE, lang.get("save.success"));
 
       get();
@@ -283,6 +287,8 @@ public class setting extends Model {
       this.set("system_code", Global.l("system.code", 1));
       this.set("language", Global.s("language", "zh_cn"));
       this.set("level", Global.s("level", "debug"));
+      this.set("user_system", Global.s("user.system", "close"));
+      this.set("user_role", Global.s("user.role", "N/A"));
 
       this.set("cache_url", Global.s("cache.url", null));
       this.set("cache_group", Global.s("cache.group", "demo"));
@@ -290,6 +296,8 @@ public class setting extends Model {
       this.set("mongo_db", Global.s("mongo[prod].db", null));
       this.set("mongo_user", Global.s("mongo[prod].user", null));
       this.set("db_url", Global.s("db.url", null));
+
+      this.set("roles", Role.load(0, 100).getList());
 
       this.set("page", "/admin/setting.system.html");
     }
@@ -359,7 +367,7 @@ public class setting extends Model {
      */
     @Override
     public void get() {
-//      this.set("counter", ConfigGlobal.s("site.counter", X.EMPTY));
+      // this.set("counter", ConfigGlobal.s("site.counter", X.EMPTY));
       this.set("page", "/admin/setting.counter.html");
     }
 

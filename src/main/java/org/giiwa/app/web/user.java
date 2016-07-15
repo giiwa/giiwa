@@ -74,8 +74,7 @@ public class user extends Model {
    */
   @Path(path = "register")
   public void register() {
-    if (!"true".equals(Global.s("user.register", "true"))) {
-      this.set(X.MESSAGE, lang.get("register.deny"));
+    if ("close".equals(Global.s("user.system", "close"))) {
       this.redirect("/user/login");
       return;
     }
