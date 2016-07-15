@@ -34,6 +34,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Appkey;
 import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
@@ -82,19 +83,19 @@ public class user extends Model {
     if (method.isPost()) {
 
       String name = this.getString("name");
-      // String email = this.getString("email");
-      // String pwd = this.getString("pwd");
-      // String nickname = this.getString("nickname");
-
-      // Map<String, String> attr = new HashMap<String, String>();
-      // attr.put("ip", this.getRemoteHost());
-      // attr.put("browser", this.browser());
 
       JSONObject jo = this.getJSON();
       try {
-        long id = User.create(V.create().copy(jo));
+        V v = V.create().copy(jo);
+        long id = User.create(v);
 
-        this.setUser(User.loadById(id));
+        String role = Global.s("user.role", "N/A");
+        Role r = Role.loadByName(role);
+        User u = User.loadById(id);
+        if (r != null) {
+          u.setRole(r.getId());
+        }
+        this.setUser(u);
         OpLog.log(User.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id);
 
         Session s = this.getSession();
