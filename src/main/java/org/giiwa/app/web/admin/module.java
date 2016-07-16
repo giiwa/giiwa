@@ -24,6 +24,7 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.web.*;
+import org.jsoup.nodes.Comment;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -154,9 +155,23 @@ public class module extends Model {
       e = root.addElement("listener");
       e = e.addElement("class");
       e.setText(lifelistener);
+
       e = root.addElement("setting");
+      e.addComment("TODO, remove it, please refer module.get(d1)");
+      Element e1 = e.addElement("param");
+      e1.setAttributeValue("name", "d1");
+      e1.setAttributeValue("value", "1");
+      
+      e = root.addElement("filter");
+      e.addComment("TODO, remove it, please refer web.IFilter");
+      e1 = e.addElement("pattern");
+      e1.setText("/user/login");
+      e1 = e.addElement("class");
+      e1.setText("org.giiwa.demo.web.UserFilter");
+
       e = root.addElement("depends");
-      Element e1 = e.addElement("module");
+      e.addComment("TODO, remove it");
+      e1 = e.addElement("module");
       e1.addAttribute("name", "default");
       e1.addAttribute("version", Module.load("default").getVersion());
       e1 = e.addElement("jar");
