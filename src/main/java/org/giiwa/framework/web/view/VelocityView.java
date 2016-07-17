@@ -10,9 +10,6 @@ import java.util.Properties;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.apache.velocity.app.VelocityEngine;
-import org.giiwa.app.web.admin.module;
-import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.framework.web.Model;
 
 public class VelocityView extends View {
@@ -61,6 +58,7 @@ public class VelocityView extends View {
         p.setProperty("input.encoding", "utf-8");
         p.setProperty("output.encoding", "utf-8");
         p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
+        p.setProperty("directive.set.null.allowed", "true");
         p.setProperty("file.resource.loader.class", "org.giiwa.framework.web.view.VelocityTemplateLoader");
         Velocity.init(p);
       }
