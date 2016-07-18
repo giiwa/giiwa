@@ -180,13 +180,24 @@ public class Html {
   }
 
   /**
+   * please refers getTags()
+   * 
+   * @deprecated
+   * @param tag
+   * @return List of element
+   */
+  public List<Element> get(String tag) {
+    return getTags(tag);
+  }
+
+  /**
    * get the tags.
    *
    * @param tag
    *          the name of the tag
    * @return List
    */
-  public List<Element> get(String tag) {
+  public List<Element> getTags(String tag) {
     if (d != null) {
       Elements es = d.getElementsByTag(tag);
       List<Element> list = new ArrayList<Element>();
@@ -215,7 +226,6 @@ public class Html {
    *          e.g: find("div.aaa(bbb)") <br>
    * @return Element
    */
-
   public Element find(String selector) {
     String[] ss = selector.split(" ");
     Element e = d;
