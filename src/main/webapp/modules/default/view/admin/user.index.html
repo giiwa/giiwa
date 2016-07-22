@@ -45,7 +45,7 @@
 		<td>$!f.email</td>
 		<td>$!f.phone</td>
 		<td>$!f.tokens.size()</td>
-		<td>#foreach($r in $f.role.list)<i class='role'>$r.name</i>#end</td>
+		<td>#foreach($r in $f.role.list)<i class='icon-shield'>$r.name</i>#end</td>
 		#if($edit)
 		<td>
 			<a href='/admin/user/edit?id=$f.id'>$lang.get('a.edit')</a>

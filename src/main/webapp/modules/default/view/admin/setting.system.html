@@ -24,7 +24,7 @@
 	<div><label><h3>$lang.get('user.role'):</h3>
 		<select name='user_role'>
 			#foreach($r in $roles)
-			<option value='$r.name' #if($user_role == '$r.name') selected #end>$r.name</option>
+			<option value='$r.name' #if($user_role == "$r.name") selected #end>$r.name</option>
 			#end
 		</select>
 		<g>$lang.get('user.role.hint')</g>
