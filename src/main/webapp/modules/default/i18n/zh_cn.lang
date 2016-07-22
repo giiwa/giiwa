@@ -344,7 +344,7 @@ label.counter=统计脚本
 counter.notes=第三方统计脚本，用于统计分析你的网站访问信息，你可以在你的页面中，通过 <code>$!system.get('site.counter')</code>添加统计该统计代码.
 counter.setting.title=网站统计脚本
 user.captcha=验证码
-captcha.bad＝验证码错误
+captcha.bad=验证码错误
 captcha.expired=验证码过期
 gauge.tps.name=tps
 gauge.tps.title=TPS
