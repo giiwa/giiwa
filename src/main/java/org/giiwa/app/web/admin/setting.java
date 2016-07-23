@@ -11,10 +11,8 @@ import java.util.Map;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.sync.SyncTask;
-import org.giiwa.framework.utils.Shell;
 import org.giiwa.framework.web.*;
 
 // TODO: Auto-generated Javadoc

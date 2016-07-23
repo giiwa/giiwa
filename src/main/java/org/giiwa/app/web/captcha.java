@@ -1,7 +1,6 @@
 package org.giiwa.app.web;
 
 import org.giiwa.core.bean.X;
-import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
