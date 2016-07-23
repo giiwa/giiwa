@@ -258,6 +258,8 @@ public class SyncTask extends Task {
   private void sync(final String collection, final String url, final String appkey, final String secret) {
     String type = Global.s("sync." + collection, X.EMPTY);
 
+    log.debug("sync type, " + collection + "=" + type);
+
     if ("get".equals(type)) {
       new Task() {
 
@@ -388,6 +390,7 @@ public class SyncTask extends Task {
             }
           } catch (Exception e) {
             log.error(e.getMessage(), e);
+
             Global.setConfig("sync.lasterror", e.getMessage());
             Global.setConfig("sync.lasterrortime", System.currentTimeMillis());
           }
@@ -406,14 +409,20 @@ public class SyncTask extends Task {
   @Override
   public void onExecute() {
 
-    final String url = Global.s("sync.url", null);
-    final String appkey = Global.s("sync.appkey", null);
-    final String secret = Global.s("sync.secret", null);
+    String url = Global.s("sync.url", null);
+    String appkey = Global.s("sync.appkey", null);
+    String secret = Global.s("sync.secret", null);
     if (!X.isEmpty(url) && !X.isEmpty(appkey) && !X.isEmpty(secret)) {
+
+      log.debug("collections=" + collections);
 
       for (String collection : collections.keySet()) {
         sync(collection, url, appkey, secret);
       }
+
+    } else {
+      Global.setConfig("sync.lasterror", "miss configuration!");
+      Global.setConfig("sync.lasterrortime", System.currentTimeMillis());
     }
 
   }
@@ -433,7 +442,7 @@ public class SyncTask extends Task {
 
     log.info("sync.task done.......................");
 
-    this.schedule(X.AHOUR);
+    this.schedule(X.AMINUTE);
   }
 
   private static class DataFilter {
