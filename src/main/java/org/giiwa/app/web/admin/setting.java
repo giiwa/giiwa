@@ -188,6 +188,8 @@ public class setting extends Model {
       for (String c : SyncTask.getCollections().keySet()) {
         Global.setConfig("sync." + c + ".lasttime", 0L);
       }
+      Global.setConfig("sync.lasterror", "");
+      Global.setConfig("sync.lasterrortime", 0L);
       super.reset();
     }
 
@@ -243,6 +245,9 @@ public class setting extends Model {
       // this.set("collections", SyncTask.getCollections().keySet());
       this.set("t", SyncTask.instance);
       this.set("groups", SyncTask.getGroups());
+
+      this.set("lasterror", Global.s("sync.lasterror", null));
+      this.set("lasterrortime", Global.l("sync.lasterrortime", 0));
 
       this.set("page", "/admin/setting.sync.html");
     }

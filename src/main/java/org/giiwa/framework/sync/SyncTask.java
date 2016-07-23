@@ -55,18 +55,18 @@ import com.mongodb.BasicDBObject;
  */
 public class SyncTask extends Task {
 
-	static Log log = LogFactory.getLog(SyncTask.class);
+  static Log             log      = LogFactory.getLog(SyncTask.class);
 
-	public static SyncTask instance = new SyncTask();
+  public static SyncTask instance = new SyncTask();
 
-	public static enum Type {
-		set, get, mset;
-	};
+  public static enum Type {
+    set, get, mset;
+  };
 
-	private static Map<String, List<String>> groups = new LinkedHashMap<String, List<String>>();
-	private static Map<String, DataFilter> collections = new LinkedHashMap<String, DataFilter>();
+  private static Map<String, List<String>> groups      = new LinkedHashMap<String, List<String>>();
+  private static Map<String, DataFilter>   collections = new LinkedHashMap<String, DataFilter>();
 
-	/**
+  /**
    * test the collection setting is support op "t".
    *
    * @param collection
@@ -75,50 +75,50 @@ public class SyncTask extends Task {
    *          the t
    * @return boolean
    */
-	public boolean support(String collection, String t) {
-		DataFilter df = collections.get(collection);
-		if (df != null && df.type != null) {
-			for (Type t1 : df.type) {
-				if (t1.toString().equals(t)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
+  public boolean support(String collection, String t) {
+    DataFilter df = collections.get(collection);
+    if (df != null && df.type != null) {
+      for (Type t1 : df.type) {
+        if (t1.toString().equals(t)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
-	/**
+  /**
    * get the setting of the collection.
    *
    * @param collection
    *          the collection
    * @return String
    */
-	public String setting(String collection) {
-		return Global.s("sync." + collection, null);
-	}
+  public String setting(String collection) {
+    return Global.s("sync." + collection, null);
+  }
 
-	/**
+  /**
    * get the lasttime of data which synced.
    *
    * @param collection
    *          the collection
    * @return long
    */
-	public long lasttime(String collection) {
-		return Global.l("sync." + collection + ".lasttime", 0);
-	}
+  public long lasttime(String collection) {
+    return Global.l("sync." + collection + ".lasttime", 0);
+  }
 
-	/**
-	 * get All Collections for syncing
-	 * 
-	 * @return Map
-	 */
-	public static Map<String, DataFilter> getCollections() {
-		return collections;
-	}
+  /**
+   * get All Collections for syncing
+   * 
+   * @return Map
+   */
+  public static Map<String, DataFilter> getCollections() {
+    return collections;
+  }
 
-	/**
+  /**
    * register the collection that can be sync, with the order:
    * "{update_time:1}".
    *
@@ -129,11 +129,11 @@ public class SyncTask extends Task {
    * @param number
    *          the number
    */
-	public static void register(String collection, String order, int number) {
-		register(collection, collection, order, number);
-	}
+  public static void register(String collection, String order, int number) {
+    register(collection, collection, order, number);
+  }
 
-	/**
+  /**
    * register a collection under the "parent" setting, with the "order".
    *
    * @param parent
@@ -145,11 +145,11 @@ public class SyncTask extends Task {
    * @param number
    *          the number
    */
-	public static void register(String parent, String collection, String order, int number) {
-		register(parent, collection, order, null, number);
-	}
+  public static void register(String parent, String collection, String order, int number) {
+    register(parent, collection, order, null, number);
+  }
 
-	/**
+  /**
    * set default type: set and get.
    *
    * @param parent
@@ -163,11 +163,11 @@ public class SyncTask extends Task {
    * @param number
    *          the number
    */
-	public static void register(String parent, String collection, String order, IFilter filter, int number) {
-		register(parent, collection, order, filter, new Type[] { Type.set, Type.get }, number);
-	}
+  public static void register(String parent, String collection, String order, IFilter filter, int number) {
+    register(parent, collection, order, filter, new Type[] { Type.set, Type.get }, number);
+  }
 
-	/**
+  /**
    * register a collection under parent, order by "order", and call filter when
    * syncing.
    *
@@ -184,23 +184,23 @@ public class SyncTask extends Task {
    * @param number
    *          the number
    */
-	public static void register(String parent, String collection, String order, IFilter filter, Type[] t, int number) {
-		DataFilter df = new DataFilter();
-		df.order = order;
-		df.filter = filter;
-		df.type = t;
-		df.number = number;
+  public static void register(String parent, String collection, String order, IFilter filter, Type[] t, int number) {
+    DataFilter df = new DataFilter();
+    df.order = order;
+    df.filter = filter;
+    df.type = t;
+    df.number = number;
 
-		collections.put(collection, df);
-		List<String> list = groups.get(parent);
-		if (list == null) {
-			list = new ArrayList<String>();
-			groups.put(parent, list);
-		}
-		list.add(collection);
-	}
+    collections.put(collection, df);
+    List<String> list = groups.get(parent);
+    if (list == null) {
+      list = new ArrayList<String>();
+      groups.put(parent, list);
+    }
+    list.add(collection);
+  }
 
-	/**
+  /**
    * reset the sync timestamp, and start to sync.
    *
    * @param group
@@ -209,225 +209,237 @@ public class SyncTask extends Task {
    *          the collection name, if it is null, then reset all the collections
    *          under the group
    */
-	public static void reset(String group, String collection) {
+  public static void reset(String group, String collection) {
 
-		if (X.isEmpty(collection)) {
-			Global.setConfig("sync." + collection + ".lasttime", 0L);
-		} else {
-			List<String> collections = groups.get(group);
-			if (collections != null && collections.size() > 0) {
-				for (String s : collections) {
-					Global.setConfig("sync." + s + ".lasttime", 0L);
-				}
-			}
-		}
+    if (X.isEmpty(collection)) {
+      Global.setConfig("sync." + collection + ".lasttime", 0L);
+    } else {
+      List<String> collections = groups.get(group);
+      if (collections != null && collections.size() > 0) {
+        for (String s : collections) {
+          Global.setConfig("sync." + s + ".lasttime", 0L);
+        }
+      }
+    }
 
-		SyncTask.start();
-	}
+    SyncTask.start();
+  }
 
-	/**
-	 * start the sync right now.
-	 */
-	public static void start() {
-		instance.schedule(0);
-	}
+  /**
+   * start the sync right now.
+   */
+  public static void start() {
+    instance.schedule(0);
+  }
 
-	/**
-	 * get groups
-	 * 
-	 * @return Set
-	 */
-	public static Set<String> getGroups() {
-		return groups.keySet();
-	}
+  /**
+   * get groups
+   * 
+   * @return Set
+   */
+  public static Set<String> getGroups() {
+    return groups.keySet();
+  }
 
-	/**
+  /**
    * get collection under a group.
    *
    * @param group
    *          the group
    * @return List
    */
-	public List<String> collections(String group) {
-		return groups.get(group);
-	}
+  public List<String> collections(String group) {
+    return groups.get(group);
+  }
 
-	private SyncTask() {
-	}
+  private SyncTask() {
+  }
 
-	private void sync(final String collection, final String url, final String appkey, final String secret) {
-		String type = Global.s("sync." + collection, X.EMPTY);
+  private void sync(final String collection, final String url, final String appkey, final String secret) {
+    String type = Global.s("sync." + collection, X.EMPTY);
 
-		if ("get".equals(type)) {
-			new Task() {
+    if ("get".equals(type)) {
+      new Task() {
 
-				@Override
-				public String getName() {
-					return "synctask." + collection;
-				}
+        @Override
+        public String getName() {
+          return "synctask." + collection;
+        }
 
-				@Override
-				public void onExecute() {
-					JSONObject req = new JSONObject();
-					JSONObject query = new JSONObject();
-					JSONObject order = new JSONObject();
+        @Override
+        public void onExecute() {
+          JSONObject req = new JSONObject();
+          JSONObject query = new JSONObject();
+          JSONObject order = new JSONObject();
 
-					try {
-						DataFilter df = collections.get(collection);
-						if (df != null && !X.isEmpty(df.order)) {
-							order = JSONObject.fromObject(df.order);
-						} else {
-							order.put("updated", 1);
-						}
+          try {
+            DataFilter df = collections.get(collection);
+            if (df != null && !X.isEmpty(df.order)) {
+              order = JSONObject.fromObject(df.order);
+            } else {
+              order.put("updated", 1);
+            }
 
-						long updated = Global.l("sync." + collection + ".lasttime", 0);
-						JSONObject q = new JSONObject();
-						q.put("$gte", updated);
-						query.put(order.keys().next(), q);
+            long updated = Global.l("sync." + collection + ".lasttime", 0);
+            JSONObject q = new JSONObject();
+            q.put("$gte", updated);
+            query.put(order.keys().next(), q);
 
-						req.put("query", query);
-						req.put("order", order);
-						req.put("collection", collection);
+            req.put("query", query);
+            req.put("order", order);
+            req.put("collection", collection);
 
-						int s = 0;
-						int n = 10;
+            int s = 0;
+            int n = 10;
 
-						boolean hasmore = true;
-						while (hasmore) {
-							hasmore = false;
+            boolean hasmore = true;
+            while (hasmore) {
+              hasmore = false;
 
-							req.put("s", s);
-							req.put("n", n);
-							req.put("_time", System.currentTimeMillis());
+              req.put("s", s);
+              req.put("n", n);
+              req.put("_time", System.currentTimeMillis());
 
-							String data = Base64.encode(DES.encode(req.toString().getBytes(), secret.getBytes()));
+              String data = Base64.encode(DES.encode(req.toString().getBytes(), secret.getBytes()));
 
-							Response r = Http.post(url, null, new String[][] { { "m", "get" } },
-									new String[][] { { "appkey", appkey }, { "data", data } });
+              Response r = Http.post(url, null, new String[][] { { "m", "get" } },
+                  new String[][] { { "appkey", appkey }, { "data", data } });
 
-							// log.debug("resp=" + r.body);
-							if (r.status == 200) {
-								JSONObject jo = JSONObject.fromObject(r.body);
-								log.debug("resp=" + jo);
+              // log.debug("resp=" + r.body);
+              if (r.status == 200) {
+                JSONObject jo = JSONObject.fromObject(r.body);
+                log.debug("resp=" + jo);
 
-								JSONArray arr = jo.getJSONArray("list");
+                JSONArray arr = jo.getJSONArray("list");
 
-								if (arr != null && arr.size() > 0) {
+                if (arr != null && arr.size() > 0) {
 
-									for (int i = 0; i < arr.size(); i++) {
-										JSONObject j1 = arr.getJSONObject(i);
-										if (df != null && df.filter != null) {
-											df.filter.process("get", j1);
-										}
+                  for (int i = 0; i < arr.size(); i++) {
+                    JSONObject j1 = arr.getJSONObject(i);
+                    if (df != null && df.filter != null) {
+                      df.filter.process("get", j1);
+                    }
 
-										Data.update(collection, j1);
+                    Data.update(collection, j1);
 
-										long l1 = j1.getLong(order.keys().next().toString());
-										if (l1 > updated) {
-											updated = l1;
-											Global.setConfig("sync." + collection + ".lasttime", updated);
-										}
-									}
+                    long l1 = j1.getLong(order.keys().next().toString());
+                    if (l1 > updated) {
+                      updated = l1;
+                      Global.setConfig("sync." + collection + ".lasttime", updated);
+                    }
+                  }
 
-									s += arr.size();
-									hasmore = arr.size() >= n;
-								}
-							} // end if "status == 200"
+                  s += arr.size();
+                  hasmore = arr.size() >= n;
+                }
+              } else {
+                // end if "status == 200"
+                Global.setConfig("sync.lasterror", r.body);
+                Global.setConfig("sync.lasterrortime", System.currentTimeMillis());
+              }
 
-						}
-					} catch (Exception e) {
-						log.error("query=" + query + " order=" + order, e);
-						OpLog.warn("sync", e.getMessage(), e.getMessage());
-					}
-				}
+            }
+          } catch (Exception e) {
+            log.error("query=" + query + " order=" + order, e);
+            OpLog.warn("sync", e.getMessage(), e.getMessage());
+            Global.setConfig("sync.lasterror", e.getMessage());
+            Global.setConfig("sync.lasterrortime", System.currentTimeMillis());
+          }
+        }
 
-			}.schedule(0);
-		} else if ("set".equals(type)) {
-			new Task() {
+      }.schedule(0);
+    } else if ("set".equals(type)) {
+      new Task() {
 
-				@Override
-				public String getName() {
-					return "synctask." + collection;
-				}
+        @Override
+        public String getName() {
+          return "synctask." + collection;
+        }
 
-				@Override
-				public void onExecute() {
+        @Override
+        public void onExecute() {
 
-					// auto push
-					BasicDBObject query = new BasicDBObject().append("synced", new BasicDBObject().append("$ne", 1));
-					BasicDBObject order = new BasicDBObject().append(X._ID, 1);
-					int s = 0;
+          // auto push
+          BasicDBObject query = new BasicDBObject().append("synced", new BasicDBObject().append("$ne", 1));
+          BasicDBObject order = new BasicDBObject().append(X._ID, 1);
+          int s = 0;
 
-					try {
-						Beans<Data> bs = Data.load(collection, query, order, s, 100);
-						JSONObject jo = new JSONObject();
-						jo.put("synced", 1);
-						DataFilter df = collections.get(collection);
+          try {
+            Beans<Data> bs = Data.load(collection, query, order, s, 100);
+            JSONObject jo = new JSONObject();
+            jo.put("synced", 1);
+            DataFilter df = collections.get(collection);
 
-						while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-							for (Data p : bs.getList()) {
-								if (df != null && df.filter != null) {
-									df.filter.process("set", p);
-								}
-								p.set("collection", collection);
+            while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
+              for (Data p : bs.getList()) {
+                if (df != null && df.filter != null) {
+                  df.filter.process("set", p);
+                }
+                p.set("collection", collection);
 
-								if (Publisher.publish(p) > 0) {
-									jo.put(X._ID, p.get(X._ID));
-									Data.update(collection, jo);
-								}
-							}
+                if (Publisher.publish(p) > 0) {
+                  jo.put(X._ID, p.get(X._ID));
+                  Data.update(collection, jo);
+                }
+              }
 
-							// s += bs.getList().size();
-							bs = Data.load(collection, query, order, s, 100);
-						}
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					}
+              // s += bs.getList().size();
+              bs = Data.load(collection, query, order, s, 100);
+            }
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            Global.setConfig("sync.lasterror", e.getMessage());
+            Global.setConfig("sync.lasterrortime", System.currentTimeMillis());
+          }
 
-				}
+        }
 
-			}.schedule(0);
-		}
-	}
+      }.schedule(0);
+    }
+  }
 
-	/* (non-Javadoc)
-	 * @see org.giiwa.core.task.Task#onExecute()
-	 */
-	@Override
-	public void onExecute() {
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.core.task.Task#onExecute()
+   */
+  @Override
+  public void onExecute() {
 
-		final String url = Global.s("sync.url", null);
-		final String appkey = Global.s("sync.appkey", null);
-		final String secret = Global.s("sync.secret", null);
-		if (!X.isEmpty(url) && !X.isEmpty(appkey) && !X.isEmpty(secret)) {
+    final String url = Global.s("sync.url", null);
+    final String appkey = Global.s("sync.appkey", null);
+    final String secret = Global.s("sync.secret", null);
+    if (!X.isEmpty(url) && !X.isEmpty(appkey) && !X.isEmpty(secret)) {
 
-			for (String collection : collections.keySet()) {
-				sync(collection, url, appkey, secret);
-			}
-		}
+      for (String collection : collections.keySet()) {
+        sync(collection, url, appkey, secret);
+      }
+    }
 
-	}
+  }
 
-	@Override
-	public String getName() {
-		return "sync.task";
-	}
+  @Override
+  public String getName() {
+    return "sync.task";
+  }
 
-	/* (non-Javadoc)
-	 * @see org.giiwa.core.task.Task#onFinish()
-	 */
-	@Override
-	public void onFinish() {
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.core.task.Task#onFinish()
+   */
+  @Override
+  public void onFinish() {
 
-		log.info("sync.task done.......................");
+    log.info("sync.task done.......................");
 
-		this.schedule(X.AHOUR);
-	}
+    this.schedule(X.AHOUR);
+  }
 
-	private static class DataFilter {
-		IFilter filter;
-		Type[] type;
-		String order;
-		int number = 10;
-	}
+  private static class DataFilter {
+    IFilter filter;
+    Type[]  type;
+    String  order;
+    int     number = 10;
+  }
 }

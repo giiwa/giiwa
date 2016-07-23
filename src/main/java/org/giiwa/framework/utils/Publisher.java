@@ -123,6 +123,9 @@ public class Publisher {
             JSONObject j = JSONObject.fromObject(r.body);
             if (j.getInt("state") == 200 && j.getInt("updated") > 0) {
                 return 1;
+            } else {
+              Global.setConfig("sync.lasterror", r.body);
+              Global.setConfig("sync.lasterrortime", System.currentTimeMillis());
             }
             // } catch (Exception e) {
             // log.error(e.getMessage(), e);

@@ -47,7 +47,7 @@
 		<td>#if($f.lastlogin>0)$lang.format($f.lastlogin)($lang.past($f.lastlogin))#end</td>
 		<td>$lang.format($f.created)</td>
 		<td>
-			<a href="/admin/app/edit?appkey=$f.appkey">$lang.get('a.edit')</a>
+			<a href="/admin/appkey/edit?appkey=$f.appkey">$lang.get('a.edit')</a>
 			<a href="javascript:;" onclick="_delete('$f.appkey', this)">$lang.get('a.delete')</a>
 		</td>
 	</tr>
