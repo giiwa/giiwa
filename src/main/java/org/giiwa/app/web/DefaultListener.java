@@ -47,6 +47,7 @@ import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.bean.User;
+import org.giiwa.framework.sync.SyncTask;
 import org.giiwa.framework.utils.FileUtil;
 import org.giiwa.framework.utils.Shell;
 import org.giiwa.framework.web.Language;
@@ -228,6 +229,8 @@ public class DefaultListener implements IListener {
      * check and initialize
      */
     User.checkAndInit();
+
+    SyncTask.start();
 
   }
 
