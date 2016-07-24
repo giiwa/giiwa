@@ -3,7 +3,7 @@
  *   Copyright (C) <2014>  <giiwa inc.>
  *
  */
-package org.giiwa.framework.utils;
+package org.giiwa.core.base;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.framework.utils;
+package org.giiwa.framework.sync;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -21,12 +21,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Base64;
 import org.giiwa.core.base.DES;
+import org.giiwa.core.base.Http;
+import org.giiwa.core.base.Http.Response;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.DBMapping;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.utils.Http;
-import org.giiwa.framework.utils.Http.Response;
 
 // TODO: Auto-generated Javadoc
 /**

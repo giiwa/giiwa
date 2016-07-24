@@ -14,9 +14,9 @@
 */
 package org.giiwa.framework.bean;
 
+import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.utils.Shell;
 import org.giiwa.framework.web.Language;
 
 import com.mongodb.BasicDBObject;

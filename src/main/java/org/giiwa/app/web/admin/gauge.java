@@ -16,7 +16,7 @@ package org.giiwa.app.web.admin;
 
 import net.sf.json.JSONObject;
 
-import org.giiwa.framework.utils.Host;
+import org.giiwa.core.base.Host;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.framework.web.Tps;

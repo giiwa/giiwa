@@ -27,15 +27,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Base64;
 import org.giiwa.core.base.DES;
+import org.giiwa.core.base.Http;
+import org.giiwa.core.base.Http.Response;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Data;
 import org.giiwa.framework.bean.OpLog;
-import org.giiwa.framework.utils.Http;
-import org.giiwa.framework.utils.Publisher;
-import org.giiwa.framework.utils.Http.Response;
 
 import com.mongodb.BasicDBObject;
 

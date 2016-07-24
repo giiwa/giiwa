@@ -30,6 +30,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
+import org.giiwa.core.base.FileUtil;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
@@ -38,7 +39,6 @@ import org.giiwa.framework.bean.Access;
 import org.giiwa.framework.bean.Jar;
 import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.User;
-import org.giiwa.framework.utils.FileUtil;
 import org.giiwa.framework.web.Model.PathMapping;
 
 import com.mongodb.BasicDBObject;

@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.giiwa.app.web.DefaultListener;
+import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.utils.Shell;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
