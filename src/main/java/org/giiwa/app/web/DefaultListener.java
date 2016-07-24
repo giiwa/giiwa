@@ -25,6 +25,7 @@ import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -171,11 +172,64 @@ public class DefaultListener implements IListener {
       if (!X.isEmpty((Object) ntp)) {
         try {
           String r = Shell.run("ntpdate -u " + ntp);
-          OpLog.info("ntp", X.EMPTY, "时钟同步： " + r);
+          OpLog.info("ntp", X.EMPTY, "NTP syncing: " + r);
         } catch (Exception e) {
-          OpLog.error("ntp", X.EMPTY, "时钟同步： " + e.getMessage());
+          OpLog.error("ntp", X.EMPTY, "NTP syncing: " + e.getMessage());
         }
       }
+    }
+
+    @Override
+    public void onFinish() {
+      this.schedule(X.AHOUR);
+    }
+  }
+
+  /**
+   * auto recycle the server, local configuration, recycle.task=时1｜时2
+   * 
+   * @author wujun
+   *
+   */
+  private static class RecycleTask extends Task {
+
+    static RecycleTask owner = new RecycleTask();
+
+    private RecycleTask() {
+    }
+
+    @Override
+    public void onExecute() {
+      String s = Global.s("recycle.task", null);
+      if (s != null && System.currentTimeMillis() - Model.UPTIME > X.AHOUR) {
+        String[] ss = s.split("|");
+
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        for (String s1 : ss) {
+          if (hour == X.toInt(s1, -1)) {
+            // yes
+            recycle();
+            break;
+          }
+        }
+      }
+    }
+
+    private void recycle() {
+      long t = X.toLong(Math.random() * X.AMINUTE, X.AMINUTE);
+      log.warn("going to recycle in [" + t / 1000 + "] seconds");
+
+      new Task() {
+
+        @Override
+        public void onExecute() {
+          // TODO Auto-generated method stub
+          System.exit(0);
+        }
+
+      }.schedule(t);
     }
 
     @Override
@@ -221,9 +275,9 @@ public class DefaultListener implements IListener {
 
     NtpTask.owner.schedule(X.AMINUTE);
     new CleanupTask(conf).schedule(X.AMINUTE);
-    // new VersionCheckTask().schedule(X.AMINUTE);
-    // new SorterTask().schedule(X.AMINUTE);
+    new SorterTask().schedule(X.AMINUTE);
     new AppdogTask().schedule(X.AMINUTE);
+    RecycleTask.owner.schedule(X.AMINUTE);
 
     /**
      * check and initialize
@@ -527,40 +581,11 @@ public class DefaultListener implements IListener {
   }
 
   /**
-   * check the new version
+   * keyfield sorter, it running when sorter.enabled=yes, global configuration
    * 
-   * @author joe
+   * @author wujun
    *
    */
-  // private static class VersionCheckTask extends Task {
-  //
-  // @Override
-  // public String getName() {
-  // return "versioncheck.task";
-  // }
-  //
-  // @Override
-  // public void onExecute() {
-  // Response res = Http.post("http://giiwa.org/version",
-  // new String[][] { { "version", Module.load("default").getVersion() },
-  // { "build", Module.load("default").getBuild() } });
-  // if (res.status == 200 && !X.isEmpty(res.body)) {
-  // JSONObject jo = JSONObject.fromObject(res.body);
-  // String ver = jo.getString("version");
-  // String build = jo.getString("build");
-  // if (!X.isSame(ver, Module.load("default").getVersion())
-  // || !X.isSame(build, Module.load("default").getBuild())) {
-  // ConfigGlobal.setConfig("notification.enabled", 1);
-  // ConfigGlobal.setConfig("notification.message",
-  // Language.getLanguage().get("notification.newbuild")
-  // + ": <a href='http://giiwa.org' target='_blank'>" + ver + "." + build +
-  // "</a>");
-  // }
-  // }
-  // }
-  //
-  // }
-
   private static class SorterTask extends Task {
 
     @Override
@@ -570,20 +595,22 @@ public class DefaultListener implements IListener {
 
     @Override
     public void onExecute() {
-      int s = 0;
 
-      BasicDBObject q = new BasicDBObject("status", new BasicDBObject("$ne", "done"));
-      BasicDBObject order = new BasicDBObject();
+      if ("yes".equals(Global.s("sorter.enabled", "no"))) {
+        int s = 0;
 
-      Beans<KeyField> bs = KeyField.load(q, order, s, 10);
-      while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
+        BasicDBObject q = new BasicDBObject("status", new BasicDBObject("$ne", "done"));
+        BasicDBObject order = new BasicDBObject();
 
-        for (KeyField f : bs.getList()) {
-          f.run();
+        Beans<KeyField> bs = KeyField.load(q, order, s, 10);
+        while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
+
+          for (KeyField f : bs.getList()) {
+            f.run();
+          }
+          s += bs.getList().size();
+          bs = KeyField.load(q, order, s, 10);
         }
-        s += bs.getList().size();
-        bs = KeyField.load(q, order, s, 10);
-
       }
     }
 
