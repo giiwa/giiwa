@@ -131,9 +131,10 @@ public class Http {
     DefaultHttpClient client = getClient(url);
 
     if (client != null) {
-      HttpGet get = new HttpGet(url);
+      HttpGet get = null;
 
       try {
+        get = new HttpGet(url);
 
         if (headers != null && headers.length > 0) {
           for (String[] s : headers) {
@@ -154,9 +155,10 @@ public class Http {
         r.headers = resp.getAllHeaders();
 
       } catch (Exception e) {
-        log.error(url, e);
+        log.error("\"" + url + "\"", e);
       } finally {
-        get.abort();
+        if (get != null)
+          get.abort();
       }
     }
 
@@ -314,7 +316,7 @@ public class Http {
         client.setKeepAliveStrategy(keepAliveStrat);
 
       } catch (Exception e) {
-        log.error(url, e);
+        log.error("\"" + url + "\"", e);
       }
     }
 
