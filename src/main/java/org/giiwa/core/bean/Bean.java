@@ -1232,13 +1232,14 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
         if (Bean.DEBUG)
           KeyField.create(collection, query, order);
 
-        cur = db.find(query);
-        if (order != null) {
-          cur.sort(order);
+        DBObject d = null;
+        if (order == null) {
+          d = db.findOne(query);
+        } else {
+          d = db.findOne(query, null, order);
         }
 
-        if (cur.hasNext()) {
-          DBObject d = cur.next();
+        if (d != null) {
           if (log.isDebugEnabled())
             log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
                 + order + ", result=" + d.get(X._ID));
@@ -1511,6 +1512,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       if (c != null) {
         if (Bean.DEBUG)
           KeyField.create(collection, query, null);
+
         DBObject d = c.findOne(query);
         return d;
       }
