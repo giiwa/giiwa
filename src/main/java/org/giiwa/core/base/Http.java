@@ -280,6 +280,9 @@ public class Http {
 
     DefaultHttpClient client = new DefaultHttpClient();
 
+    String[] ss = url.split(" ");
+    url = ss[ss.length - 1];
+
     if (url.toLowerCase().startsWith("https://")) {
       try {
         SSLContext ctx = SSLContext.getInstance("TLS");

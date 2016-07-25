@@ -126,7 +126,7 @@ public class KeyField extends Bean {
       return;
     }
 
-    log.debug("bean.debug=" + Bean.DEBUG + ", q=" + q);
+    // log.debug("bean.debug=" + Bean.DEBUG + ", q=" + q);
 
     new Task() {
       @Override
