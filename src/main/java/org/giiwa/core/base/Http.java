@@ -127,6 +127,11 @@ public class Http {
    */
   public static Response get(String url, String[][] headers) {
 
+    log.debug("url=\"" + url + "\"");
+
+    String[] ss = url.split(" ");
+    url = ss[ss.length - 1];
+
     Response r = new Response();
     DefaultHttpClient client = getClient(url);
 
@@ -279,9 +284,6 @@ public class Http {
   private static DefaultHttpClient getClient(String url) {
 
     DefaultHttpClient client = new DefaultHttpClient();
-
-    String[] ss = url.split(" ");
-    url = ss[ss.length - 1];
 
     if (url.toLowerCase().startsWith("https://")) {
       try {
