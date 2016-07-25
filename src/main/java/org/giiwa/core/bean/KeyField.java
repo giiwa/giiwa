@@ -125,6 +125,9 @@ public class KeyField extends Bean {
     if (!Bean.isConfigured()) {
       return;
     }
+
+    log.debug("bean.debug=" + Bean.DEBUG + ", q=" + q);
+
     new Task() {
       @Override
       public void onExecute() {

@@ -76,7 +76,7 @@ public class Controller {
         + System.getProperty("os.arch");
 
     Model.HOME = conf.getString("home") + "/giiwa";
-    Bean.DEBUG = X.isSame(Global.s("type", "debug"), "debug");
+    Bean.DEBUG = X.isSame(Global.s("run.level", "debug"), "debug");
 
     /**
      * initialize the module

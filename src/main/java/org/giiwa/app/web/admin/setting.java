@@ -267,7 +267,7 @@ public class setting extends Model {
       Global.setConfig("language", lang1);
 
       String level = this.getString("level");
-      Global.setConfig("level", level);
+      Global.setConfig("run.level", level);
       Bean.DEBUG = X.isSame(level, "debug");
 
       Global.setConfig("user.system", this.getString("user_system"));
@@ -289,7 +289,7 @@ public class setting extends Model {
       this.set("node", Global.s("node", null));
       this.set("system_code", Global.l("system.code", 1));
       this.set("language", Global.s("language", "zh_cn"));
-      this.set("level", Global.s("level", "debug"));
+      this.set("level", Global.s("run.level", "debug"));
       this.set("user_system", Global.s("user.system", "close"));
       this.set("user_role", Global.s("user.role", "N/A"));
 
