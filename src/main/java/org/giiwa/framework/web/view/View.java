@@ -1,11 +1,8 @@
 package org.giiwa.framework.web.view;
 
 import java.io.File;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.servlet.FilterConfig;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,17 +14,17 @@ public abstract class View {
 
   protected abstract boolean parse(File file, Model m) throws Exception;
 
-  public static void init(FilterConfig config) {
+  public static void init(Map<String, String> config) {
 
-    Enumeration e = config.getInitParameterNames();
-    while (e.hasMoreElements()) {
-      String name = e.nextElement().toString();
-      String value = config.getInitParameter(name);
-      try {
-        View v = (View) Class.forName(value).newInstance();
-        views.put(name, v);
-      } catch (Exception e1) {
-        log.error(value, e1);
+    for (String name : config.keySet()) {
+      if (name.startsWith(".")) {
+        String value = config.get(name);
+        try {
+          View v = (View) Class.forName(value).newInstance();
+          views.put(name, v);
+        } catch (Exception e1) {
+          log.error(value, e1);
+        }
       }
     }
 
@@ -49,6 +46,6 @@ public abstract class View {
     fileview.parse(file, m);
   }
 
-  private static Map<String, View> views        = new HashMap<String, View>();
+  private static Map<String, View> views    = new HashMap<String, View>();
   private static View              fileview = new FileView();
 }
