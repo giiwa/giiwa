@@ -203,7 +203,10 @@ public class user extends Model {
 
       String name = this.getString("name");
       String pwd = this.getString("pwd");
-      String code = this.getString("code").toLowerCase();
+      String code = this.getString("code");
+      if (code != null) {
+        code = code.toLowerCase();
+      }
       String type = this.getString("type");
       JSONObject jo = new JSONObject();
 
