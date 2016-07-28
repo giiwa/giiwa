@@ -210,7 +210,7 @@ public class user extends Model {
       String type = this.getString("type");
       JSONObject jo = new JSONObject();
 
-      Captcha.Result r = X.isSame("json", type) ? Captcha.Result.ok : Captcha.verify(this.sid(), code);
+      Captcha.Result r = Captcha.verify(this.sid(), code);
 
       if (Captcha.Result.badcode == r) {
         jo.put(X.MESSAGE, lang.get("captcha.bad"));
