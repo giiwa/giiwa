@@ -297,8 +297,9 @@ public class user extends Model {
           jo.put("pwd", pwd);
         }
       }
-      if ("json".equals(this.getString("type"))) {
+      if (X.isSame(type, "json")) {
         this.response(jo);
+        return;
       } else {
         this.set(jo);
       }
