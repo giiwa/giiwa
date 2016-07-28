@@ -214,8 +214,10 @@ public class user extends Model {
 
       if (Captcha.Result.badcode == r) {
         jo.put(X.MESSAGE, lang.get("captcha.bad"));
+        jo.put(X.STATE, 202);
       } else if (Captcha.Result.expired == r) {
         jo.put(X.MESSAGE, lang.get("captcha.expired"));
+        jo.put(X.STATE, 203);
       } else {
 
         User me = User.load(name, pwd);
@@ -231,6 +233,7 @@ public class user extends Model {
             me.failed(this.getRemoteHost(), sid(), this.browser());
             jo.put(X.MESSAGE, lang.get("account.locked.error"));
 
+            jo.put(X.STATE, 204);
             jo.put("name", name);
             jo.put("pwd", pwd);
           } else {
@@ -240,6 +243,7 @@ public class user extends Model {
               jo.put(X.MESSAGE, lang.get("account.locked.error"));
               jo.put("name", name);
               jo.put("pwd", pwd);
+              jo.put(X.STATE, 204);
             } else {
 
               this.setUser(me);
@@ -251,12 +255,15 @@ public class user extends Model {
 
               if ("json".equals(this.getString("type"))) {
                 jo.put("sid", sid());
+                jo.put("uid", me.getId());
                 AuthToken t = AuthToken.update(me.getId(), sid(), this.getRemoteHost());
                 if (t != null) {
                   jo.put("token", t.getToken());
                   jo.put("expired", t.getExpired());
+                  jo.put(X.STATE, 200);
                 } else {
                   jo.put(X.MESSAGE, "create authtoken error");
+                  jo.put(X.STATE, 205);
                 }
                 this.response(jo);
               } else {
@@ -274,6 +281,7 @@ public class user extends Model {
           User u = User.load(name);
           if (u == null) {
             jo.put("message", lang.get("login.name_password.error"));
+            jo.put(X.STATE, 201);
           } else {
             u.failed(this.getRemoteHost(), sid(), this.browser());
 
@@ -282,13 +290,16 @@ public class user extends Model {
 
             if (list != null && list.size() >= 6) {
               jo.put("message", lang.get("login.locked.error"));
+              jo.put(X.STATE, 204);
             } else {
               list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid());
               if (list != null && list.size() >= 3) {
                 jo.put("message", lang.get("login.locked.error"));
+                jo.put(X.STATE, 204);
               } else {
                 jo.put("message",
                     String.format(lang.get("login.name_password.error.times"), list == null ? 0 : list.size()));
+                jo.put(X.STATE, 204);
               }
             }
           }
