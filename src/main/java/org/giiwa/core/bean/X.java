@@ -232,11 +232,12 @@ public class X {
         }
       }
       s = sb.toString();
-
-      try {
-        return Long.parseLong(s);
-      } catch (Exception e) {
-        log.error(e);
+      if (s.length() > 0) {
+        try {
+          return Long.parseLong(s);
+        } catch (Exception e) {
+          log.error(e);
+        }
       }
     }
     return defaultValue;
@@ -275,10 +276,13 @@ public class X {
         }
       }
       s = sb.toString();
-      try {
-        return Integer.parseInt(s);
-      } catch (Exception e) {
-        log.error(e);
+
+      if (s.length() > 0) {
+        try {
+          return Integer.parseInt(s);
+        } catch (Exception e) {
+          log.error(e);
+        }
       }
     }
 
@@ -337,11 +341,12 @@ public class X {
       }
       s = sb.toString();
 
-      try {
-        return Float.parseFloat(s);
-      } catch (Exception e) {
-        log.error(e);
-
+      if (s.length() > 0) {
+        try {
+          return Float.parseFloat(s);
+        } catch (Exception e) {
+          log.error(e);
+        }
       }
     }
     return defaultValue;
