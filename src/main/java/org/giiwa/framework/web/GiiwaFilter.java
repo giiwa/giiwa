@@ -53,7 +53,7 @@ public class GiiwaFilter implements Filter {
       if (!X.isEmpty(value)) {
         r2.addHeader("Access-Control-Allow-Origin", value);
       }
-      
+
       Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
 
     } else if ("OPTIONS".equals(method)) {

@@ -365,3 +365,4 @@ user.system.hint=开发式: 用户可以自己注册; 自闭式: 管理员创建
 user.system.open=开放式
 user.email.note=邮箱地址
 user.mobile.note=电话号码
+login.failed=登录失败

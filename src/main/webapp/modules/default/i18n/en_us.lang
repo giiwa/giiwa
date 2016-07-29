@@ -373,3 +373,4 @@ user.system.hint=Open: user can register self; Close: admin create user
 user.system.open=Open
 user.email.note=Email address
 user.mobile.note=Phone number
+login.failed=Login failed
