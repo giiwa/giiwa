@@ -470,6 +470,18 @@ public class Module {
    * @return the file
    */
   public File getFile(String resource, boolean inFloor) {
+    return getFile(resource, inFloor, true);
+  }
+
+  /**
+   * get the file in the module box
+   * 
+   * @param resource
+   * @param inFloor
+   * @param inbox
+   * @return the File if exists, otherwise null
+   */
+  public File getFile(String resource, boolean inFloor, boolean inbox) {
     try {
       File f = new File(viewroot + File.separator + resource);
       if (f.exists()) {
@@ -477,7 +489,9 @@ public class Module {
          * test the file is still in the path? if not, then do not allow to
          * access, avoid user using "../../" to access system file
          */
-        if (f.getCanonicalPath().startsWith(viewroot)) {
+        if (inbox && f.getCanonicalPath().startsWith(viewroot)) {
+          return f;
+        } else if (f.exists()) {
           return f;
         }
       }

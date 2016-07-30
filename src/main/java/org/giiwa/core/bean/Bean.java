@@ -1350,15 +1350,21 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
         }
 
         Beans<T> bs = new Beans<T>();
-        bs.total = cur.count();
+        // TODO, ignore this as big performance
+        // bs.total = _count(cur, 0, (int) db.count());
+        // log.debug("cost=" + t.past() +"ms, count=" + bs.total);
+
         cur.skip(offset);
+        // log.debug("skip=" + t.past() +"ms, count=" + bs.total);
         bs.list = new ArrayList<T>();
 
         if (limit < 0)
           limit = Integer.MAX_VALUE;
 
         while (cur.hasNext() && limit > 0) {
+          // log.debug("hasnext=" + t.past() +"ms, count=" + bs.total);
           DBObject d = cur.next();
+          // log.debug("next=" + t.past() +"ms, count=" + bs.total);
           T b = clazz.newInstance();
           b.load(d);
           bs.list.add(b);
@@ -4391,18 +4397,55 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     String collection = Bean.getCollection(t);
     if (!X.isEmpty(collection)) {
       TimeStamp t1 = TimeStamp.create();
+      DBCursor c1 = null;
       try {
         if (Bean.DEBUG)
           KeyField.create(collection, q, null);
 
         DBCollection c = Bean.getCollection(collection);
-        return c == null ? -1 : c.count(q);
+        if (c != null) {
+          c1 = c.find(q);
+          return _count(c1, 0, (int) c.count());
+
+        }
+
       } finally {
+        if (c1 != null)
+          c1.close();
+
         if (log.isDebugEnabled())
           log.debug("count, cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
       }
     }
     return 0;
+  }
+
+  private static int _count(DBCursor c, int start, int end) {
+    if (start == end) {
+      return (int) start;
+    }
+
+    TimeStamp t = TimeStamp.create();
+    int count = (start + end) / 2;
+    DBCursor c1 = c.getCollection().find(c.getQuery());
+    try {
+      // log.debug("find=" + t.past() + "ms,count=" + count);
+      c1.skip(count);
+      // log.debug("skip=" + t.past() + "ms,count=" + count);
+      if (c1.hasNext()) {
+        // log.debug("cost=" + t.past() + "ms,count=" + count);
+        if (end - count == 1)
+          return end;
+        return _count(c, count, end);
+      } else {
+        log.debug("cost=" + t.past() + "ms,count=" + count);
+        if (count - start <= 1)
+          return count;
+        return _count(c, start, count);
+      }
+    } finally {
+      c1.close();
+    }
   }
 
 }

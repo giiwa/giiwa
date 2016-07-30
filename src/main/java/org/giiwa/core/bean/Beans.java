@@ -21,70 +21,71 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.cache.DefaultCachable;
 
 /**
- * The {@code Beans} Class used to contains the Bean in query.
- * <br>
+ * The {@code Beans} Class used to contains the Bean in query. <br>
  * it's includes the total count for the query
  * 
  * @param <T>
- *            the generic type
+ *          the generic type
  */
 public class Beans<T extends Bean> extends DefaultCachable {
 
-    /** The Constant serialVersionUID. */
-    private static final long serialVersionUID = 2L;
+  /** The Constant serialVersionUID. */
+  private static final long serialVersionUID = 2L;
 
-    /** The log. */
-    protected static Log log = LogFactory.getLog(Beans.class);
+  /** The log. */
+  protected static Log      log              = LogFactory.getLog(Beans.class);
 
-    /** The total. */
-    int total;
+  /** The total. */
+  int                       total            = -1;
 
-    /** The list. */
-    List<T> list;
+  /** The list. */
+  List<T>                   list;
 
-    /**
-     * Gets the total.
-     *
-     * @return the total
-     */
-    public int getTotal() {
-        return total;
-    }
+  /**
+   * Gets the total. please set the total first, than...
+   *
+   * @return the total
+   */
+  public int getTotal() {
+    return total;
+  }
 
-    /**
-     * Sets the total.
-     *
-     * @param total
-     *            the new total
-     */
-    public void setTotal(int total) {
-        this.total = total;
-    }
+  /**
+   * Sets the total.
+   *
+   * @param total
+   *          the new total
+   */
+  public void setTotal(int total) {
+    this.total = total;
+  }
 
-    /**
-     * Gets the list.
-     *
-     * @return the list
-     */
-    public List<T> getList() {
-        return list;
-    }
+  /**
+   * Gets the list.
+   *
+   * @return the list
+   */
+  public List<T> getList() {
+    return list;
+  }
 
-    /**
-     * Sets the list.
-     *
-     * @param list
-     *            the new list
-     */
-    public void setList(List<T> list) {
-        this.list = list;
-    }
+  /**
+   * Sets the list.
+   *
+   * @param list
+   *          the new list
+   */
+  public void setList(List<T> list) {
+    this.list = list;
+  }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#toString()
-     */
-    public String toString() {
-        return "Beans[total=" + total + ", list.size=" + (list == null ? null : list.size()) + "]";
-    }
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
+  public String toString() {
+    return "Beans[total=" + total + ", list.size=" + (list == null ? null : list.size()) + "]";
+  }
 
 }

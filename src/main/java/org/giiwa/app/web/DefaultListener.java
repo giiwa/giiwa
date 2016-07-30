@@ -390,7 +390,7 @@ public class DefaultListener implements IListener {
         /**
          * initial the database
          */
-        File f = module.getFile("/install/" + dbname + "/initial.sql", false);
+        File f = module.getFile("../resources/install/" + dbname + "/initial.sql", false, false);
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
           int b = Global.i(key, 0);
@@ -418,30 +418,6 @@ public class DefaultListener implements IListener {
           }
         }
 
-        f = module.getFile("/install/" + dbname + "/upgrade.sql", false);
-        if (f != null && f.exists()) {
-          String key = module.getName() + ".db.upgrade." + dbname + "." + f.lastModified();
-          int b = Global.i(key, 0);
-
-          if (b == 0) {
-
-            try {
-              runDBScript(f);
-
-              Global.setConfig(key, (int) 1);
-
-              if (log.isWarnEnabled()) {
-                log.warn("db[" + key + "] has been upgraded! ");
-              }
-            } catch (Exception e) {
-              if (log.isErrorEnabled()) {
-                log.error(f.getAbsolutePath(), e);
-              }
-            } finally {
-            }
-
-          }
-        }
       } else {
         if (log.isErrorEnabled()) {
           log.error("DB was miss configured, please congiure it in [" + Model.GIIWA_HOME + "/giiwa/giiwa.properties]");
@@ -459,7 +435,7 @@ public class DefaultListener implements IListener {
        * check the menus
        * 
        */
-      File f = module.getFile("/install/menu.json");
+      File f = module.getFile("../resources/menu.json", false, false);
       if (f != null && f.exists()) {
         BufferedReader reader = null;
         try {
