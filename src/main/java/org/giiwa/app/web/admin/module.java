@@ -161,7 +161,7 @@ public class module extends Model {
       Element e1 = e.addElement("param");
       e1.setAttributeValue("name", "d1");
       e1.setAttributeValue("value", "1");
-      
+
       e = root.addElement("filter");
       e.addComment("TODO, remove it, please refer web.IFilter");
       e1 = e.addElement("pattern");
@@ -206,6 +206,30 @@ public class module extends Model {
         }
       }
       // end of i18n
+
+      /**
+       * create resources info
+       */
+      create(out, name + "/src/resources/").closeEntry();
+      f1 = module.getFile("/admin/demo/src/resources/");
+      if (f1.exists()) {
+        for (File f2 : f1.listFiles()) {
+          if (f2.isFile()) {
+            create(out, name + "/src/resources/" + f2.getName());
+            copy(out, f2);
+            out.closeEntry();
+          } else if (f2.isDirectory()) {
+            create(out, name + "/src/resources/" + f2.getName() + "/").closeEntry();
+            // copy all files
+            for (File f3 : f2.listFiles()) {
+              create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName());
+              copy(out, f3);
+              out.closeEntry();
+            }
+          }
+        }
+      }
+      // end of resources
 
       /**
        * create model info
