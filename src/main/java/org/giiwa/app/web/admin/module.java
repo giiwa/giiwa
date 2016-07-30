@@ -222,9 +222,20 @@ public class module extends Model {
             create(out, name + "/src/resources/" + f2.getName() + "/").closeEntry();
             // copy all files
             for (File f3 : f2.listFiles()) {
-              create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName());
-              copy(out, f3);
-              out.closeEntry();
+              if (f3.isDirectory()) {
+                create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/").closeEntry();
+                for (File f4 : f3.listFiles()) {
+                  if (f4.isFile()) {
+                    create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/" + f4.getName());
+                    copy(out, f4);
+                    out.closeEntry();
+                  }
+                }
+              } else {
+                create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName());
+                copy(out, f3);
+                out.closeEntry();
+              }
             }
           }
         }
