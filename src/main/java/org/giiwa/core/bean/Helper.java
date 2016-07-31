@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.db.DB;
 
 import com.mongodb.BasicDBObject;
 
@@ -40,8 +41,12 @@ import net.sf.json.JSONObject;
 public class Helper {
 
   /** The log. */
-  protected static Log           log    = LogFactory.getLog(Helper.class);
-  protected static Log           sqllog = LogFactory.getLog("sql");
+  protected static Log log    = LogFactory.getLog(Helper.class);
+  protected static Log sqllog = LogFactory.getLog("sql");
+
+  public static enum DBType {
+    MONGO, RDS, NONE;
+  };
 
   /** The conf. */
   protected static Configuration conf;
@@ -49,7 +54,7 @@ public class Helper {
   /**
    * indicated whether is debug model
    */
-  public static boolean          DEBUG  = true;
+  public static boolean          DEBUG = true;
 
   /**
    * initialize the Bean with the configuration.
@@ -58,7 +63,31 @@ public class Helper {
    *          the conf
    */
   public static void init(Configuration conf) {
+
+    DB.init();
+
     Helper.conf = conf;
+
+    if (RDSHelper.isConfigured() && MongoHelper.isConfigured()) {
+      // need choose
+      if ("mongo".equals(conf.getString("primary.db", "mongo"))) {
+        primary = DBType.MONGO;
+      } else {
+        primary = DBType.RDS;
+      }
+    } else if (RDSHelper.isConfigured()) {
+      primary = DBType.RDS;
+    } else if (MongoHelper.isConfigured()) {
+      primary = DBType.MONGO;
+    }
+    primary = DBType.NONE;
+
+  }
+
+  public static DBType primary = DBType.MONGO;
+
+  public static int delete(Object id, Class<? extends Bean> t) {
+    return delete(W.create(X._ID, id), t);
   }
 
   /**
@@ -87,6 +116,10 @@ public class Helper {
     log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 
     return 0;
+  }
+
+  public static boolean exists(Object id, Class<? extends Bean> t) throws Exception {
+    return exists(W.create(X._ID, id), t);
   }
 
   /**
@@ -909,6 +942,10 @@ public class Helper {
 
   }
 
+  public static <T extends Bean> T load(Object id, Class<T> t) {
+    return load(W.create(X._ID, id), t);
+  }
+
   public static <T extends Bean> T load(W q, Class<T> t) {
     Table mapping = (Table) t.getAnnotation(Table.class);
     if (mapping == null) {
@@ -951,6 +988,10 @@ public class Helper {
     return 0;
   }
 
+  public static int update(Object id, V values, Class<? extends Bean> t) {
+    return update(W.create(X._ID, id), values, t);
+  }
+
   public static int update(W q, V values, Class<? extends Bean> t) {
     Table mapping = (Table) t.getAnnotation(Table.class);
     if (mapping == null) {
@@ -976,25 +1017,50 @@ public class Helper {
   }
 
   public static <T extends Bean> Beans<T> load(W q, int s, int n, Class<T> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
+    String table = getTable(t);
+    if (primary == DBType.MONGO) {
+      // insert into mongo
+      return MongoHelper.load(table, q.query(), q.order(), s, n, t);
+    } else if (primary == DBType.RDS) {
+      // insert into RDS
+      return RDSHelper.load(table, q.where(), q.args(), q.orderby(), s, n, t);
+    }
+
+    return null;
+  }
+
+  public static String getTable(Class<? extends Bean> t) {
+    Table table = (Table) t.getAnnotation(Table.class);
+    if (table == null || !X.isEmpty(table.name())) {
+      log.error("table missed/error in [" + t + "] declaretion");
       return null;
     }
 
-    if (MongoHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into mongo
-      return MongoHelper.load(mapping.name(), q.query(), q.order(), s, n, t);
+    return table.name();
+  }
 
-    } else if (RDSHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into RDS
-      return RDSHelper.load(q.where(), q.args(), q.orderby(), s, n, t);
+  public static long count(W q, Class<? extends Bean> t) {
+    String table = getTable(t);
+
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.count(table, q.query());
+
+      } else if (primary == DBType.MONGO) {
+        // insert into RDS
+        return RDSHelper.count(table, q.where(), q.args());
+      } else {
+        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      }
     }
 
-    log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-    return null;
+    return 0;
+  }
 
+  public static List<Object> distinct(String name, W create, Class<? extends Bean> t) {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }

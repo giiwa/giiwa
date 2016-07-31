@@ -19,6 +19,9 @@ import java.util.List;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
@@ -34,7 +37,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@Table(collection = "gi_authtoken")
+@Table(name = "gi_authtoken")
 public class AuthToken extends Bean {
 
   /**
@@ -119,12 +122,12 @@ public class AuthToken extends Bean {
     V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
 
     try {
-      if (Bean.exists(new BasicDBObject(X._ID, id), AuthToken.class)) {
+      if (Helper.exists(id, AuthToken.class)) {
         // update
-        Bean.updateCollection(id, v, AuthToken.class);
+        Helper.update(id, v, AuthToken.class);
       } else {
         // insert
-        Bean.insertCollection(v.set(X._ID, id), AuthToken.class);
+        Helper.insert(v.set(X._ID, id), AuthToken.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
@@ -141,7 +144,7 @@ public class AuthToken extends Bean {
    * @return AuthToken
    */
   public static AuthToken load(String id) {
-    return Bean.load(new BasicDBObject(X._ID, id), AuthToken.class);
+    return Helper.load(id, AuthToken.class);
   }
 
   /**
@@ -154,8 +157,9 @@ public class AuthToken extends Bean {
    * @return AuthToken
    */
   public static AuthToken load(String sid, String token) {
-    return Bean.load(new BasicDBObject("sid", sid).append("token", token).append("expired",
-        new BasicDBObject("$gt", System.currentTimeMillis())), AuthToken.class);
+    return Helper.load(
+        W.create("sid", sid).set("token", token).set("expired", new BasicDBObject("$gt", System.currentTimeMillis())),
+        AuthToken.class);
   }
 
   /**
@@ -168,19 +172,18 @@ public class AuthToken extends Bean {
    */
   public static List<String> remove(long uid) {
     List<String> list = new ArrayList<String>();
-    BasicDBObject q = new BasicDBObject("uid", uid);
-    BasicDBObject order = new BasicDBObject();
+    W q = W.create("uid", uid);
     int s = 0;
-    Beans<AuthToken> bs = load(q, order, s, 10);
+    Beans<AuthToken> bs = load(q, s, 10);
     while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
       for (AuthToken t : bs.getList()) {
         String sid = t.getSid();
         list.add(sid);
       }
       s += bs.getList().size();
-      bs = load(q, order, s, 10);
+      bs = load(q, s, 10);
     }
-    Bean.delete(new BasicDBObject("uid", uid), AuthToken.class);
+    Helper.delete(W.create("uid", uid), AuthToken.class);
     return list;
   }
 
@@ -197,8 +200,8 @@ public class AuthToken extends Bean {
    *          the n
    * @return Beans
    */
-  public static Beans<AuthToken> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-    return Bean.load(q, order, s, n, AuthToken.class);
+  public static Beans<AuthToken> load(W q, int s, int n) {
+    return Helper.load(q, s, n, AuthToken.class);
   }
 
   /**
@@ -209,8 +212,6 @@ public class AuthToken extends Bean {
    * @return Beans
    */
   public static Beans<AuthToken> load(long uid) {
-    return Bean.load(
-        new BasicDBObject("uid", uid).append("expired", new BasicDBObject("$gt", System.currentTimeMillis())),
-        new BasicDBObject(X._ID, 1), 0, 100, AuthToken.class);
+    return Helper.load(W.create("uid", uid).set("expired", new BasicDBObject("$gt", System.currentTimeMillis())), 0, 100, AuthToken.class);
   }
 }

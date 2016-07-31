@@ -23,6 +23,7 @@ import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
@@ -39,7 +40,7 @@ import com.mongodb.BasicDBObject;
  * @author joe
  * 
  */
-@Table(collection = "gi_accesslog", name = "gi_accesslog")
+@Table(name = "gi_accesslog")
 public class AccessLog extends Bean {
 
   /**
@@ -57,7 +58,7 @@ public class AccessLog extends Bean {
    *          the q
    * @return the long
    */
-  public static long count(BasicDBObject q) {
+  public static long count(W q) {
     return Helper.count(q, AccessLog.class);
   }
 
@@ -101,8 +102,8 @@ public class AccessLog extends Bean {
    *          the n
    * @return the beans
    */
-  public static Beans<AccessLog> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-    return Helper.load(q, order, s, n, AccessLog.class);
+  public static Beans<AccessLog> load(W q, int s, int n) {
+    return Helper.load(q, s, n, AccessLog.class);
   }
 
   /**
@@ -129,10 +130,10 @@ public class AccessLog extends Bean {
    * @return Map
    */
   public static Map<Object, Long> distinct(String name) {
-    List<Object> list = Bean.distinct(name, new BasicDBObject("status", 200), AccessLog.class);
+    List<Object> list = Helper.distinct(name, W.create("status", 200), AccessLog.class);
     Map<Object, Long> m = new TreeMap<Object, Long>();
     for (Object v : list) {
-      long d = Bean.count(new BasicDBObject(name, v).append("status", 200), AccessLog.class);
+      long d = Helper.count(W.create(name, v).set("status", 200), AccessLog.class);
       m.put(v, d);
     }
 

@@ -559,21 +559,6 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * load the Bean by id.
-   * 
-   * @param <T>
-   *          the generic Bean Class
-   * @param id
-   *          the object id, "_id".
-   * @param t
-   *          the Bean Class
-   * @return Bean
-   */
-  protected static <T extends Bean> T load(Object id, Class<T> t) {
-    return load(new BasicDBObject(X._ID, id), t);
-  }
-
-  /**
    * load the data by the query
    * 
    * @param <T>
@@ -1014,6 +999,15 @@ public class MongoHelper extends Helper {
     return null;
   }
 
+  public static long count(BasicDBObject q, Class<? extends Bean> t) {
+    String collection = MongoHelper.getCollection(t);
+    if (!X.isEmpty(collection)) {
+      return count(collection, q);
+    }
+    return 0;
+
+  }
+
   /**
    * count the number by the query.
    *
@@ -1023,29 +1017,26 @@ public class MongoHelper extends Helper {
    *          the t
    * @return long
    */
-  public static long count(BasicDBObject q, Class<? extends Bean> t) {
-    String collection = MongoHelper.getCollection(t);
-    if (!X.isEmpty(collection)) {
-      TimeStamp t1 = TimeStamp.create();
-      DBCursor c1 = null;
-      try {
-        if (MongoHelper.DEBUG)
-          KeyField.create(collection, q, null);
+  public static long count(String collection, BasicDBObject q) {
+    TimeStamp t1 = TimeStamp.create();
+    DBCursor c1 = null;
+    try {
+      if (MongoHelper.DEBUG)
+        KeyField.create(collection, q, null);
 
-        DBCollection c = MongoHelper.getCollection(collection);
-        if (c != null) {
-          c1 = c.find(q);
-          return _count(c1, 0, (int) c.count());
+      DBCollection c = MongoHelper.getCollection(collection);
+      if (c != null) {
+        c1 = c.find(q);
+        return _count(c1, 0, (int) c.count());
 
-        }
-
-      } finally {
-        if (c1 != null)
-          c1.close();
-
-        if (log.isDebugEnabled())
-          log.debug("count, cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
       }
+
+    } finally {
+      if (c1 != null)
+        c1.close();
+
+      if (log.isDebugEnabled())
+        log.debug("count, cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
     }
     return 0;
   }

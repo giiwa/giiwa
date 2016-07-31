@@ -30,15 +30,28 @@ import java.lang.annotation.Target;
  * @author joe
  *
  */
-@Target(ElementType.TYPE)
+@Target({ ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Field {
+public @interface Column {
 
-    /**
-     * the table name.
-     *
-     * @return String
-     */
-    String column() default X.EMPTY;
+  /**
+   * the column name.
+   *
+   * @return String
+   */
+  String name() default X.EMPTY;
+
+  /**
+   * the length of the field if it's string
+   * 
+   * @return
+   */
+  int len() default 10;
+
+  boolean nullable() default true;
+
+  boolean unique() default false;
+
+  boolean key() default false;
 
 }

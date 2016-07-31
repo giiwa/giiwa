@@ -17,6 +17,8 @@ package org.giiwa.framework.bean;
 import java.util.*;
 
 import org.giiwa.core.bean.*;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
 
 import com.mongodb.BasicDBList;
@@ -30,7 +32,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@Table(collection = "gi_role")
+@Table(name = "gi_role")
 public class Role extends Bean {
 
   /**
@@ -80,10 +82,10 @@ public class Role extends Bean {
 
     long id = UID.next("role.id");
     try {
-      while (Bean.exists(new BasicDBObject(X._ID, id), Role.class)) {
+      while (Helper.exists(W.create(X._ID, id), Role.class)) {
         id = UID.next("role.id");
       }
-      if (Bean.insert(V.create(X._ID, id).set("id", id).set("name", name).set("memo", memo).set("updated",
+      if (Helper.insert(V.create(X._ID, id).set("id", id).set("name", name).set("memo", memo).set("updated",
           System.currentTimeMillis()), Role.class) > 0) {
         return id;
       }
@@ -127,9 +129,9 @@ public class Role extends Bean {
   public static void setAccess(long rid, String name) {
 
     try {
-      if (!Bean.exists(new BasicDBObject("rid", rid).append("name", name), RoleAccess.class)) {
-        Bean.insertCollection(V.create("rid", rid).set("name", name).set(X._ID, UID.id(rid, name)), RoleAccess.class);
-        Bean.updateCollection(rid, V.create("updated", System.currentTimeMillis()), Role.class);
+      if (!Helper.exists(W.create("rid", rid).set("name", name), RoleAccess.class)) {
+        Helper.insert(V.create("rid", rid).set("name", name).set(X._ID, UID.id(rid, name)), RoleAccess.class);
+        Helper.update(W.create(X._ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
@@ -146,9 +148,9 @@ public class Role extends Bean {
    *          the name
    */
   public static void removeAccess(long rid, String name) {
-    Bean.delete(new BasicDBObject("rid", rid).append("name", name), RoleAccess.class);
+    Helper.delete(W.create("rid", rid).set("name", name), RoleAccess.class);
 
-    Bean.updateCollection(rid, V.create("updated", System.currentTimeMillis()), Role.class);
+    Helper.update(W.create(X._ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
 
   }
 
@@ -181,7 +183,7 @@ public class Role extends Bean {
    */
   public static boolean exist(long rid) {
     try {
-      return Bean.exists(new BasicDBObject(X._ID, rid), Role.class);
+      return Helper.exists(new BasicDBObject(X._ID, rid), Role.class);
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
     }

@@ -14,6 +14,7 @@
 */
 package org.giiwa.core.bean;
 
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -173,7 +174,37 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
 
     data.put(name, value);
 
+    // looking for all the fields
+    Field f1 = _getField(name);
+    if (f1 != null) {
+      try {
+        f1.set(this, value);
+      } catch (Exception e) {
+        log.error(name + "=" + value, e);
+      }
+    }
   }
+
+  private Field _getField(String columnname) {
+    Class<? extends Bean> c1 = this.getClass();
+    Map<String, Field> m = _fields.get(c1);
+    if (m == null) {
+      m = new HashMap<String, java.lang.reflect.Field>();
+      Field[] ff = this.getClass().getFields();
+      for (Field f : ff) {
+        Column f1 = f.getAnnotation(Column.class);
+        if (f1 != null) {
+          m.put(f1.name(), f);
+        }
+      }
+
+      _fields.put(c1, m);
+    }
+    return m.get(columnname);
+
+  }
+
+  private static Map<Class<? extends Bean>, Map<String, Field>> _fields = new HashMap<Class<? extends Bean>, Map<String, Field>>();
 
   /**
    * get the extra value by name from map <br>
@@ -192,6 +223,15 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     }
 
     String s = name.toString();
+    Field f = _getField(s);
+    if (f != null) {
+      try {
+        return f.get(this);
+      } catch (Exception e) {
+        log.error(name, e);
+      }
+    }
+
     if (data.containsKey(s)) {
       return data.get(s);
     }
@@ -230,6 +270,17 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   public final Object get(Object name, int i) {
     if (data == null) {
       return null;
+    }
+
+    String n1 = name.toString();
+    try {
+      Class<?> c1 = this.getClass();
+      java.lang.reflect.Field f1 = c1.getField(n1);
+      if (f1 != null) {
+        return f1.get(this);
+      }
+    } catch (Exception e) {
+
     }
 
     if (data.containsKey(name.toString())) {
@@ -320,11 +371,9 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @Override
   public final void putAll(Map<? extends String, ? extends Object> m) {
-
-    if (data == null) {
-      data = new HashMap<String, Object>();
+    for (String s : m.keySet()) {
+      set(s, m.get(s));
     }
-    data.putAll(m);
   }
 
   /**
@@ -348,6 +397,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     Set<String> names = new HashSet<String>();
     if (data != null) {
       names.addAll(data.keySet());
+
       for (String s : data.keySet()) {
         if (s.endsWith("_obj")) {
           names.remove(s);
@@ -531,7 +581,9 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     for (int i = 1; i <= cols; i++) {
       Object o = r.getObject(i);
       if (o instanceof java.sql.Date) {
+
         o = ((java.sql.Date) o).toString();
+
       } else if (o instanceof java.sql.Time) {
         o = ((java.sql.Time) o).toString();
       } else if (o instanceof java.sql.Timestamp) {
@@ -539,7 +591,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       } else if (o instanceof java.math.BigDecimal) {
         o = o.toString();
       }
-      // this.set(m.getColumnName(i), o);
+
+      String name = m.getColumnName(i);
+      this.set(name, o);
+
     }
   }
 

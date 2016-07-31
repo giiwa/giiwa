@@ -32,7 +32,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@Table(collection = "gi_data")
+@Table(name = "gi_data")
 public class Data extends Bean {
 
   /**

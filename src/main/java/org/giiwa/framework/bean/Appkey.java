@@ -30,7 +30,7 @@ import org.giiwa.core.bean.X;
  * @author wujun
  *
  */
-@Table(collection = "gi_appkey", name="gi_appkey")
+@Table(name = "gi_appkey")
 public class Appkey extends Bean {
 
   /**

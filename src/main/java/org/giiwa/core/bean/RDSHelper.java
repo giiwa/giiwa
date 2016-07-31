@@ -1874,17 +1874,6 @@ public class RDSHelper extends Helper {
   }
 
   /**
-   * refill the bean from json.
-   *
-   * @param jo
-   *          the map
-   * @return boolean
-   */
-  public boolean fromJSON(Map<Object, Object> jo) {
-    return false;
-  }
-
-  /**
    * convert the array objects to string.
    * 
    * @param arr
@@ -1926,33 +1915,6 @@ public class RDSHelper extends Helper {
   }
 
   /**
-   * convert the v to long data, this is safe convert, and trying convert more
-   * data to long.
-   *
-   * @deprecated please refer X.toLong()
-   * @param v
-   *          the value
-   * @return long
-   */
-  public static long toLong(Object v) {
-    return toLong(v, 0);
-  }
-
-  /**
-   * convert the v to long, if failed using defaultValue, please refer X.toLong
-   *
-   * @deprecated please refer X.toLong()
-   * @param v
-   *          the v
-   * @param defaultValue
-   *          the default value
-   * @return long
-   */
-  public static long toLong(Object v, long defaultValue) {
-    return X.toLong(v, defaultValue);
-  }
-
-  /**
    * load record in database.
    * 
    * @param <T>
@@ -1987,6 +1949,65 @@ public class RDSHelper extends Helper {
 
   public static boolean isConfigured() {
     return DB.isConfigured();
+  }
+
+  public static long count(String table, String where, Object[] args) {
+
+    /**
+     * create the sql statement
+     */
+    TimeStamp t = TimeStamp.create();
+
+    StringBuilder sum = new StringBuilder();
+    sum.append("select count(*) t from ").append(table);
+    if (where != null) {
+      sum.append(" where ").append(where);
+    }
+
+    // log.debug("sql:" + sql.toString());
+
+    /**
+     * search it in database
+     */
+    Connection c = null;
+    PreparedStatement p = null;
+    ResultSet r = null;
+
+    try {
+
+      c = getConnection();
+
+      if (c == null)
+        return 0;
+
+      p = c.prepareStatement(sum.toString());
+
+      int order = 1;
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
+
+          setParameter(p, order++, o);
+        }
+      }
+
+      r = p.executeQuery();
+      if (r.next()) {
+        return r.getInt("t");
+      }
+    } catch (Exception e) {
+      if (log.isErrorEnabled())
+        log.error(sum.toString() + toString(args), e);
+
+    } finally {
+      close(r, p, c);
+
+      if (t.past() > 2 && sqllog.isDebugEnabled()) {
+        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sum + "]; [" + sum + "]");
+      }
+    }
+
+    return 0;
   }
 
 }

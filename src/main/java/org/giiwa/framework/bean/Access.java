@@ -22,8 +22,9 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.giiwa.core.bean.*;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 // TODO: Auto-generated Javadoc
@@ -35,14 +36,17 @@ import com.mongodb.DBObject;
  * @author yjiang
  * 
  */
-@Table(collection = "gi_access")
+@Table(name = "gi_access")
 public class Access extends Bean {
   /**
   * 
   */
   private static final long serialVersionUID = 1L;
 
+  @Column(name = X._ID, unique = true, key = true, nullable = false)
   String                    id;
+
+  @Column(name = "name")
   String                    name;
 
   /**
@@ -82,7 +86,7 @@ public class Access extends Bean {
     if (X.isEmpty(name) || !name.startsWith("access.")) {
       log.error("error access.name: " + name, new Exception("error access name:" + name));
     } else if (!exists(name)) {
-      Bean.insertCollection(V.create(X._ID, name), Access.class);
+      Helper.insert(V.create(X._ID, name), Access.class);
     }
   }
 
@@ -101,7 +105,7 @@ public class Access extends Bean {
     }
 
     try {
-      if (Bean.exists(new BasicDBObject(X._ID, name), Access.class)) {
+      if (Helper.exists(name, Access.class)) {
         cache.add(name);
         return true;
       }
@@ -117,8 +121,7 @@ public class Access extends Bean {
    * @return the map
    */
   public static Map<String, List<Access>> load() {
-    Beans<Access> bs = Bean.load(new BasicDBObject().append(X._ID, new BasicDBObject("$ne", "access.admin")),
-        new BasicDBObject(X._ID, 1), 0, Integer.MAX_VALUE, Access.class);
+    Beans<Access> bs = Helper.load(W.create(), 0, Integer.MAX_VALUE, Access.class);
     List<Access> list = bs.getList();
     Map<String, List<Access>> r = new TreeMap<String, List<Access>>();
     String group = null;
@@ -134,12 +137,6 @@ public class Access extends Bean {
     }
 
     return r;
-  }
-
-  @Override
-  protected void load(DBObject d) {
-    name = String.valueOf(d.get(X._ID));
-    id = name;
   }
 
 }
