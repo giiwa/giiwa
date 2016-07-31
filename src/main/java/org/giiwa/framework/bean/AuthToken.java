@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
@@ -34,7 +34,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@DBMapping(collection = "gi_authtoken")
+@Table(collection = "gi_authtoken")
 public class AuthToken extends Bean {
 
   /**

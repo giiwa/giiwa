@@ -91,8 +91,8 @@ public class upload extends Model {
                 }
                 ss = range.split("-|/");
                 if (ss.length == 3) {
-                    position = Bean.toLong(ss[0]);
-                    total = Bean.toLong(ss[2]);
+                    position = X.toLong(ss[0]);
+                    total = X.toLong(ss[2]);
                 }
 
                 // log.debug(range + ", " + position + "/" + total);

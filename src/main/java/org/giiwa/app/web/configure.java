@@ -20,8 +20,9 @@ import java.util.ArrayList;
 
 import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.task.Task;
@@ -55,7 +56,7 @@ public class configure extends Model {
   public void onGet() {
 
     try {
-      if (Bean.isConfigured() ) {
+      if (Helper.isConfigured() ) {
         this.redirect("/");
         return;
       }
@@ -76,7 +77,7 @@ public class configure extends Model {
   @Path(path = "save")
   public void save() {
     JSONObject jo = new JSONObject();
-    if (Bean.isConfigured()) {
+    if (Helper.isConfigured()) {
       jo.put(X.STATE, 201);
       jo.put(X.MESSAGE, "already configured, forbidden override, must edit the giiwa.properties by manual");
       this.response(jo);
@@ -106,7 +107,7 @@ public class configure extends Model {
 
     Local.save();
     DB.init();
-    Bean.init(conf);
+    Helper.init(conf);
 
     DefaultListener.owner.upgrade(conf, Module.load("default"));
 

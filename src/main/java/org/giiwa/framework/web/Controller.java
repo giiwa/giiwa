@@ -28,7 +28,8 @@ import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Bean.V;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.HTTPMethod;
@@ -76,7 +77,7 @@ public class Controller {
         + System.getProperty("os.arch");
 
     Model.HOME = conf.getString("home") + "/giiwa";
-    Bean.DEBUG = X.isSame(Global.s("run.level", "debug"), "debug");
+    Helper.DEBUG = X.isSame(Global.s("run.level", "debug"), "debug");
 
     /**
      * initialize the module
@@ -159,7 +160,7 @@ public class Controller {
         if (u1 != null) {
           v.set("uid", u1.getId()).set("username", u1.get("name"));
         }
-        if (Bean.DEBUG)
+        if (Helper.DEBUG)
           AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
       }
 
@@ -204,7 +205,7 @@ public class Controller {
             // mo.getJSONNonPassword().toString()).set("response",
             // mo.getOutput());
             // }
-            if (Bean.DEBUG)
+            if (Helper.DEBUG)
               AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
           }
 
@@ -236,7 +237,7 @@ public class Controller {
       if (u1 != null) {
         v.set("uid", u1.getId()).set("username", u1.get("name"));
       }
-      if (Bean.DEBUG)
+      if (Helper.DEBUG)
         AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
 
       // Counter.max("web.request.max", t.past(), uri);
@@ -272,7 +273,7 @@ public class Controller {
         // mo.getJSONNonPassword().toString()).set("response",
         // mo.getOutput());
         // }
-        if (Bean.DEBUG)
+        if (Helper.DEBUG)
           AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
       }
 

@@ -19,6 +19,7 @@ import java.io.File;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
 public class FileUtil {
@@ -95,8 +96,8 @@ public class FileUtil {
         R compareTo(Version v1) {
             try {
                 for (int i = 0; i < ss.length; i++) {
-                    int i1 = Bean.toInt(ss[i]);
-                    int i2 = v1.ss.length>i ? Bean.toInt(v1.ss[i]):0;
+                    int i1 = X.toInt(ss[i]);
+                    int i2 = v1.ss.length>i ? X.toInt(v1.ss[i]):0;
 
                     if (i1 > i2) {
                         return R.HIGH;

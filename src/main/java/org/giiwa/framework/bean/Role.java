@@ -30,7 +30,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@DBMapping(collection = "gi_role")
+@Table(collection = "gi_role")
 public class Role extends Bean {
 
   /**
@@ -279,7 +279,7 @@ public class Role extends Bean {
     return Bean.delete(new BasicDBObject(X._ID, id), Role.class);
   }
 
-  @DBMapping(collection = "gi_roleaccess")
+  @Table(collection = "gi_roleaccess")
   private static class RoleAccess extends Bean {
 
     /**

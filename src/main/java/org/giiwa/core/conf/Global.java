@@ -17,8 +17,9 @@ package org.giiwa.core.conf;
 import java.util.*;
 
 import org.giiwa.core.bean.*;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 // TODO: Auto-generated Javadoc
@@ -28,15 +29,15 @@ import com.mongodb.DBObject;
  * 
  * @author yjiang
  */
-@DBMapping(collection = "gi_config")
+@Table(name = "gi_config")
 public class Global extends Bean {
 
   /** The Constant serialVersionUID. */
-  private static final long   serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-  Object                      var;
+  Object                    var;
 
-  private static Global owner            = new Global();
+  private static Global     owner            = new Global();
 
   public static Global getInstance() {
     return owner;
@@ -57,13 +58,13 @@ public class Global extends Bean {
       return X.toInt(c.var, defaultValue);
     }
 
-    c = Bean.load(new BasicDBObject(X._ID, name), Global.class);
+    c = Helper.load(W.create(X._ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return X.toInt(c.var, defaultValue);
     } else {
       c = new Global();
-      c.var = conf.getInt(name, defaultValue);
+      c.var = Local.getConfig().getInt(name, defaultValue);
       data.put(name, c);
       return X.toInt(c.var, defaultValue);
     }
@@ -82,7 +83,7 @@ public class Global extends Bean {
       return c.var;
     }
 
-    c = Bean.load(new BasicDBObject(X._ID, name), Global.class);
+    c = Helper.load(W.create(X._ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return c.var;
@@ -105,13 +106,13 @@ public class Global extends Bean {
       return X.toDouble(c.var, defaultValue);
     }
 
-    c = Bean.load(new BasicDBObject(X._ID, name), Global.class);
+    c = Helper.load(W.create(X._ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return X.toDouble(c.var, defaultValue);
     } else {
       c = new Global();
-      c.var = conf.getDouble(name, defaultValue);
+      c.var = Local.getConfig().getDouble(name, defaultValue);
       data.put(name, c);
       return X.toDouble(c.var, defaultValue);
     }
@@ -132,13 +133,13 @@ public class Global extends Bean {
       return c.var != null ? c.var.toString() : null;
     }
 
-    c = Bean.load(new BasicDBObject(X._ID, name), Global.class);
+    c = Helper.load(W.create(X._ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return c.var != null ? c.var.toString() : null;
     } else {
       c = new Global();
-      c.var = conf.getString(name, defaultValue);
+      c.var = Local.getConfig().getString(name, defaultValue);
       data.put(name, c);
       return c.var != null ? c.var.toString() : null;
     }
@@ -159,13 +160,13 @@ public class Global extends Bean {
       return X.toLong(c.var, defaultValue);
     }
 
-    c = Bean.load(new BasicDBObject(X._ID, name), Global.class);
+    c = Helper.load(W.create(X._ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return X.toLong(c.var, defaultValue);
     } else {
       c = new Global();
-      c.var = conf.getLong(name, defaultValue);
+      c.var = Local.getConfig().getLong(name, defaultValue);
       data.put(name, c);
       return X.toLong(c.var, defaultValue);
     }
@@ -198,15 +199,15 @@ public class Global extends Bean {
     data.remove(name);
 
     if (o == null) {
-      Bean.delete(new BasicDBObject(X._ID, name), Global.class);
+      Helper.delete(W.create(X._ID, name), Global.class);
       return;
     }
 
     try {
-      if (Bean.exists(new BasicDBObject(X._ID, name), Global.class)) {
-        Bean.updateCollection(name, V.create("var", o), Global.class);
+      if (Helper.exists(W.create(X._ID, name), Global.class)) {
+        Helper.update(W.create(X._ID, name), V.create("var", o), Global.class);
       } else {
-        Bean.insertCollection(V.create("var", o).set(X._ID, name), Global.class);
+        Helper.insert(V.create("var", o).set(X._ID, name), Global.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);

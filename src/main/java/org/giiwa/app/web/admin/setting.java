@@ -8,7 +8,7 @@ package org.giiwa.app.web.admin;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Role;
@@ -268,7 +268,7 @@ public class setting extends Model {
 
       String level = this.getString("level");
       Global.setConfig("run.level", level);
-      Bean.DEBUG = X.isSame(level, "debug");
+      Helper.DEBUG = X.isSame(level, "debug");
 
       Global.setConfig("user.system", this.getString("user_system"));
       Global.setConfig("user.role", this.getString("user_role"));

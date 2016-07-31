@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
@@ -68,7 +68,7 @@ public class user extends Model {
 						User u = User.loadById(id);
 						List<Long> list = new ArrayList<Long>();
 						for (String s : roles) {
-							list.add(Bean.toLong(s));
+							list.add(X.toLong(s));
 						}
 						u.setRoles(list);
 					}
@@ -158,7 +158,7 @@ public class user extends Model {
 			if (roles != null) {
 				List<Long> list = new ArrayList<Long>();
 				for (String s : roles) {
-					list.add(Bean.toLong(s));
+					list.add(X.toLong(s));
 				}
 				v.set("roles", list);
 			}
@@ -208,7 +208,7 @@ public class user extends Model {
 	public void detail() {
 		String id = this.getString("id");
 		if (id != null) {
-			long i = Bean.toLong(id, -1);
+			long i = X.toLong(id, -1);
 			User u = User.loadById(i);
 			this.set("u", u);
 

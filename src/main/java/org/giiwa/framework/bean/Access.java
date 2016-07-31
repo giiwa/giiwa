@@ -35,7 +35,7 @@ import com.mongodb.DBObject;
  * @author yjiang
  * 
  */
-@DBMapping(collection = "gi_access")
+@Table(collection = "gi_access")
 public class Access extends Bean {
   /**
   * 

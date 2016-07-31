@@ -10,8 +10,8 @@ import java.util.Map;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
@@ -122,7 +122,7 @@ public class role extends Model {
             if (ids != null) {
                 String[] ss = ids.split(",");
                 for (String s : ss) {
-                    long id = Bean.toLong(s);
+                    long id = X.toLong(s);
                     Role r = Role.loadById(id);
                     this.set("r", r);
                     JSONObject jo = new JSONObject();
@@ -154,7 +154,7 @@ public class role extends Model {
         if (ids != null) {
             String[] ss = ids.split(",");
             for (String s : ss) {
-                long id = Bean.toLong(s);
+                long id = X.toLong(s);
                 Role r = Role.loadById(id);
                 int i = Role.delete(id);
                 if (i > 0) {

@@ -18,7 +18,7 @@ import net.sf.json.JSONObject;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.X;
 
 import com.mongodb.BasicDBObject;
@@ -32,7 +32,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@DBMapping(collection = "gi_data")
+@Table(collection = "gi_data")
 public class Data extends Bean {
 
   /**

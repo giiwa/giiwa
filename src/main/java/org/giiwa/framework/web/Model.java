@@ -34,8 +34,10 @@ import org.giiwa.core.base.H64;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.MongoHelper;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
@@ -330,7 +332,7 @@ public class Model {
 
                     // check the system has been initialized
                     // ?
-                    if (!Bean.isConfigured()) {
+                    if (!Helper.isConfigured()) {
                       this.redirect("/configure");
                       return null;
                     }
@@ -909,35 +911,10 @@ public class Model {
    */
   final public int getInt(JSONObject jo, String tag) {
     if (jo.has(tag)) {
-      return Bean.toInt(jo.get(tag));
+      return X.toInt(jo.get(tag), 0);
     }
 
     return this.getInt(tag);
-  }
-
-  /**
-   * Gets the int.
-   * 
-   * @deprecated
-   * @param jo
-   *          the jo
-   * @param tag
-   *          the tag
-   * @param minValue
-   *          the min value
-   * @param tagInSession
-   *          the tag in session
-   * @return the int
-   */
-  final public int getInt(JSONObject jo, String tag, int minValue, String tagInSession) {
-    if (jo.has(tag)) {
-      int i = Bean.toInt(jo.get(tag));
-      if (i >= minValue) {
-        return i;
-      }
-    }
-
-    return this.getInt(tag, minValue, tagInSession);
   }
 
   /**
@@ -1013,7 +990,7 @@ public class Model {
    */
   final public int getInt(String tag, int defaultValue) {
     String v = this.getString(tag);
-    return Bean.toInt(v, defaultValue);
+    return X.toInt(v, defaultValue);
   }
 
   /**
@@ -1027,7 +1004,7 @@ public class Model {
    */
   final public long getLong(String tag, long defaultvalue) {
     String v = this.getString(tag);
-    return Bean.toLong(v, defaultvalue);
+    return X.toLong(v, defaultvalue);
   }
 
   /**
@@ -2235,7 +2212,7 @@ public class Model {
 
     int count = 0;
     for (String name : names) {
-      int s = Bean.toInt(this.getString(name));
+      int s = X.toInt(this.getString(name), 0);
       v.set(name, s);
       count++;
     }
@@ -2257,7 +2234,7 @@ public class Model {
 
     int count = 0;
     for (String name : names) {
-      long s = Bean.toLong(this.getString(name));
+      long s = X.toLong(this.getString(name), 0);
       v.set(name, s);
       count++;
     }

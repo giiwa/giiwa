@@ -17,7 +17,7 @@ package org.giiwa.framework.bean;
 import java.util.List;
 
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Model;
@@ -32,7 +32,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@DBMapping(collection = "gi_jar")
+@Table(collection = "gi_jar")
 public class Jar extends Bean {
 
   /**

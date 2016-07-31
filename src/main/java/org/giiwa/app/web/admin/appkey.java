@@ -9,9 +9,10 @@ import java.util.regex.Pattern;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
 import org.giiwa.framework.bean.Appkey;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.web.Model;
@@ -49,10 +50,10 @@ public class appkey extends Model {
             q.append("op", jo.get("op"));
         }
         if (!X.isEmpty(jo.get("uid"))) {
-            q.append("uid", Bean.toInt(jo.get("uid")));
+            q.append("uid", X.toInt(jo.get("uid")));
         }
         if (!X.isEmpty(jo.get("type"))) {
-            q.append("type", Bean.toInt(jo.get("type")));
+            q.append("type", X.toInt(jo.get("type")));
         }
         if (!X.isEmpty(jo.get("ip"))) {
             q.append("ip", Pattern.compile(jo.getString("ip"), Pattern.CASE_INSENSITIVE));
@@ -233,7 +234,7 @@ public class appkey extends Model {
             q.append("$or", list);
         }
         BasicDBObject order = new BasicDBObject("appkey", 1);
-        Beans<Appkey> bs = Appkey.load(q, order, s, 10);
+        Beans<Appkey> bs = Appkey.load(W.create(), s, 10);
         this.set(bs, s, n);
 
         this.query.parse("/admin/app");

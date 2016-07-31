@@ -19,7 +19,7 @@ import javax.servlet.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Local;
@@ -106,7 +106,7 @@ public class GiiwaContextListener implements ServletContextListener {
        */
       Cache.init(conf);
 
-      Bean.init(conf);
+      Helper.init(conf);
 
       Task.init(conf.getInt("thread.number", 20), conf);
 

@@ -15,14 +15,14 @@
 package org.giiwa.framework.bean;
 
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 
 import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
-@DBMapping(collection = "gi_vcode")
+@Table(collection = "gi_vcode")
 public class VCode extends Bean {
 
   /**

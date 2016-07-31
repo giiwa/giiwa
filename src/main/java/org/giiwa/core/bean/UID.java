@@ -18,6 +18,8 @@ import java.util.Random;
 import java.util.UUID;
 
 import org.giiwa.core.base.*;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 
 import com.mongodb.BasicDBObject;
@@ -29,7 +31,7 @@ import com.mongodb.BasicDBObject;
  * @author joe
  *
  */
-@DBMapping(collection = "gi_config")
+@Table(name = "gi_config")
 public class UID extends Bean {
 
   /** The Constant serialVersionUID. */
@@ -49,13 +51,14 @@ public class UID extends Bean {
     try {
 
       long v = -1;
-      UID u = Bean.load(new BasicDBObject(X._ID, key), UID.class);
+      UID u = Helper.load(W.create(X._ID, key), UID.class);
       if (u == null) {
         v = 1;
 
         String linkid = UID.random();
-        Bean.insertCollection(V.create(X._ID, key).set("var", v + 1L).set("linkid", linkid), UID.class);
-        u = Bean.load(new BasicDBObject(X._ID, key), UID.class);
+        Helper.insert(V.create(X._ID, key).set("var", v + 1L).set("linkid", linkid), UID.class);
+
+        u = Helper.load(W.create(X._ID, key), UID.class);
         if (u == null) {
           log.error("create unique sequence error");
           return -1;
@@ -65,8 +68,9 @@ public class UID extends Bean {
         }
 
       } else {
-        v = Bean.toLong(u.get("var"), 1);
-        while (Bean.updateCollection(new BasicDBObject(X._ID, key).append("var", v), V.create("var", v + 1L),
+        v = X.toLong(u.get("var"), 1);
+
+        while (Helper.update(W.create(X._ID, key).set("var", v), Helper.V.create("var", v + 1L),
             UID.class) < 0) {
           v++;
         }
@@ -92,13 +96,13 @@ public class UID extends Bean {
     try {
 
       int v = -1;
-      UID u = Bean.load(new BasicDBObject(X._ID, name), UID.class);
+      UID u = MongoHelper.load(new BasicDBObject(X._ID, name), UID.class);
       if (u == null) {
         v = 1;
 
         String linkid = UID.random();
-        Bean.insertCollection(V.create(X._ID, name).set("var", v + 1).set("linkid", linkid), UID.class);
-        u = Bean.load(new BasicDBObject(X._ID, name), UID.class);
+        MongoHelper.insertCollection(Helper.V.create(X._ID, name).set("var", v + 1).set("linkid", linkid), UID.class);
+        u = MongoHelper.load(new BasicDBObject(X._ID, name), UID.class);
         if (u == null) {
           log.error("create unique sequence error");
           return -1;
@@ -109,8 +113,8 @@ public class UID extends Bean {
 
       } else {
         v = X.toInt(u.get("var"), 1);
-        while (Bean.updateCollection(new BasicDBObject(X._ID, name).append("var", v), V.create("var", v + 1L),
-            UID.class) < 0) {
+        while (MongoHelper.updateCollection(new BasicDBObject(X._ID, name).append("var", v),
+            Helper.V.create("var", v + 1L), UID.class) < 0) {
           v++;
         }
       }

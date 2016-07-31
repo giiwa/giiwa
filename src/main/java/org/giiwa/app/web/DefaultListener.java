@@ -39,7 +39,9 @@ import org.giiwa.core.base.FileUtil;
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.KeyField;
+import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
@@ -311,7 +313,7 @@ public class DefaultListener implements IListener {
     Connection c = null;
     Statement s = null;
     try {
-      c = Bean.getConnection();
+      c = RDSHelper.getConnection();
       if (c != null) {
         in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "utf-8"));
         StringBuilder sb = new StringBuilder();
@@ -361,7 +363,7 @@ public class DefaultListener implements IListener {
       if (in != null) {
         in.close();
       }
-      Bean.close(s, c);
+      RDSHelper.close(s, c);
     }
 
   }
@@ -430,7 +432,7 @@ public class DefaultListener implements IListener {
       return;
     }
 
-    if (Bean.isConfigured()) {
+    if (Helper.isConfigured()) {
       /**
        * check the menus
        * 

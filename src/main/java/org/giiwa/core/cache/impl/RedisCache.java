@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
-import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cachable;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.cache.ICacheSystem;
@@ -60,7 +60,7 @@ public class RedisCache implements ICacheSystem {
 		String host = ss[0];
 		int port = 6379;
 		if (ss.length > 1) {
-			port = Bean.toInt(ss[1]);
+			port = X.toInt(ss[1], 0);
 		}
 		RedisCache r = new RedisCache();
 

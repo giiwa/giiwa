@@ -30,7 +30,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@DBMapping(collection = "gi_repo")
+@Table(collection = "gi_repo")
 public class Repo extends Bean {
 
   /**
@@ -308,7 +308,7 @@ public class Repo extends Bean {
    * @author yjiang
    * 
    */
-  @DBMapping(collection = "gi_repo")
+  @Table(collection = "gi_repo")
   public static class Entity extends Bean {
 
     /**

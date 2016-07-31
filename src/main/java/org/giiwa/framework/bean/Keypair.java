@@ -18,7 +18,7 @@ import org.giiwa.core.base.RSA;
 import org.giiwa.core.base.RSA.Key;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.X;
 
 import com.mongodb.BasicDBObject;
@@ -32,7 +32,7 @@ import com.mongodb.BasicDBObject;
  * @author joe
  *
  */
-@DBMapping(collection = "gi_keypair")
+@Table(collection = "gi_keypair")
 public class Keypair extends Bean {
 
   /**

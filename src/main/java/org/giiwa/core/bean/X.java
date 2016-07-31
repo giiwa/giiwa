@@ -243,6 +243,10 @@ public class X {
     return defaultValue;
   }
 
+  public static int toInt(Object v) {
+    return X.toInt(v, 0);
+  }
+
   /**
    * parse a object to a integer.
    * 
@@ -498,5 +502,10 @@ public class X {
 
   /** The Constant tz. */
   public static final TimeZone tz   = TimeZone.getTimeZone("Asia/Shanghai");
+
+  public static long toLong(Object v) {
+    // TODO Auto-generated method stub
+    return toLong(v, 0);
+  }
 
 }

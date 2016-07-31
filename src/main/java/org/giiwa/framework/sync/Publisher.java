@@ -24,7 +24,7 @@ import org.giiwa.core.base.DES;
 import org.giiwa.core.base.Http;
 import org.giiwa.core.base.Http.Response;
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 
@@ -63,7 +63,7 @@ public class Publisher {
             /**
              * get the require annotation onGet
              */
-            DBMapping mapping = (DBMapping) b.getClass().getAnnotation(DBMapping.class);
+            Table mapping = (Table) b.getClass().getAnnotation(Table.class);
             if (mapping == null) {
                 String collection = b.getString("collection");
                 if (X.isEmpty(collection)) {
@@ -71,10 +71,10 @@ public class Publisher {
                     return 0;
                 }
             } else {
-                if (!X.isEmpty(mapping.collection())) {
-                    jo.put("collection", mapping.collection());
+                if (!X.isEmpty(mapping.name())) {
+                    jo.put("collection", mapping.name());
                 } else {
-                    jo.put("table", mapping.table());
+                    jo.put("table", mapping.name());
                 }
             }
 

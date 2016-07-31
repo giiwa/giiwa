@@ -16,8 +16,8 @@ package org.giiwa.app.web;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
 import org.giiwa.framework.bean.MyData;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
@@ -51,7 +51,7 @@ public class mydata extends Model {
             for (String s : ss) {
                 String[] s1 = s.split(" ");
                 if (s1.length > 1) {
-                    o.append(s1[0], Bean.toInt(s1[1]));
+                    o.append(s1[0], X.toInt(s1[1]));
                 } else {
                     o.append(s1[0], 1);
                 }

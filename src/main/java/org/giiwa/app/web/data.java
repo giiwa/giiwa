@@ -25,8 +25,8 @@ import net.sf.json.JSONObject;
 
 import org.giiwa.core.base.DES;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
 import org.giiwa.framework.bean.Appkey;
 import org.giiwa.framework.bean.Data;
 import org.giiwa.framework.sync.IFilter;

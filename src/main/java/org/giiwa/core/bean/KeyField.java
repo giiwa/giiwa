@@ -16,6 +16,7 @@ package org.giiwa.core.bean;
 
 import java.util.List;
 
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.task.Task;
 
 import net.sf.json.JSONObject;
@@ -33,7 +34,7 @@ import com.mongodb.DBObject;
  *
  */
 
-@DBMapping(collection = "gi_key")
+@Table(name = "gi_key")
 public class KeyField extends Bean {
 
   /**
@@ -62,7 +63,7 @@ public class KeyField extends Bean {
    */
   // -------------------
   public static KeyField load(String id) {
-    return Bean.load(new BasicDBObject(X._ID, id), KeyField.class);
+    return MongoHelper.load(new BasicDBObject(X._ID, id), KeyField.class);
   }
 
   /**
@@ -79,14 +80,14 @@ public class KeyField extends Bean {
    * @return the beans
    */
   public static Beans<KeyField> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-    return Bean.load(q, order, s, n, KeyField.class);
+    return MongoHelper.load(q, order, s, n, KeyField.class);
   }
 
   /**
    * Delete all.
    */
   public static void deleteAll() {
-    Bean.delete(new BasicDBObject(), KeyField.class);
+    MongoHelper.delete(new BasicDBObject(), KeyField.class);
   }
 
   /**
@@ -96,7 +97,7 @@ public class KeyField extends Bean {
    *          the id
    */
   public static void delete(String id) {
-    Bean.delete(new BasicDBObject(X._ID, id), KeyField.class);
+    MongoHelper.delete(new BasicDBObject(X._ID, id), KeyField.class);
   }
 
   /**
@@ -108,7 +109,7 @@ public class KeyField extends Bean {
    *          the v
    */
   public static void update(String id, V v) {
-    Bean.updateCollection(id, v, KeyField.class);
+    MongoHelper.updateCollection(id, v, KeyField.class);
   }
 
   /**
@@ -122,7 +123,7 @@ public class KeyField extends Bean {
    *          the order
    */
   public static void create(final String collection, final DBObject q, final DBObject order) {
-    if (!Bean.isConfigured()) {
+    if (!MongoHelper.isConfigured()) {
       return;
     }
 
@@ -172,7 +173,7 @@ public class KeyField extends Bean {
             if (!exists(id)) {
               log.debug("r=" + r);
 
-              Bean.insertCollection(V.create(X._ID, id).set("collection", collection).set("q", r.toString())
+              MongoHelper.insertCollection(V.create(X._ID, id).set("collection", collection).set("q", r.toString())
                   .set("created", System.currentTimeMillis()), KeyField.class);
             }
           } catch (Exception e1) {
@@ -186,7 +187,7 @@ public class KeyField extends Bean {
   }
 
   private static boolean exists(String id) throws Exception {
-    return Bean.exists(new BasicDBObject(X._ID, id), KeyField.class);
+    return MongoHelper.exists(new BasicDBObject(X._ID, id), KeyField.class);
   }
 
   private static void general(List l, BasicDBObject r) {
@@ -239,7 +240,7 @@ public class KeyField extends Bean {
           for (Object name : jo.keySet()) {
             keys.append((String) name, 1);
           }
-          DBCollection c = Bean.getCollection(collection);
+          DBCollection c = MongoHelper.getCollection(collection);
           if (c != null) {
             c.ensureIndex(keys);
           }

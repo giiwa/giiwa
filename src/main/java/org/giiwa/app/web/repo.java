@@ -105,8 +105,8 @@ public class repo extends Model {
 										Model.copy(e.getInputStream(), out, false);
 										out.close();
 
-										if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), Bean.toInt(ss[0]),
-												Bean.toInt(ss[1])) < 0) {
+										if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
+										    X.toInt(ss[1])) < 0) {
 											failed = true;
 											e.reset();
 										}
@@ -132,11 +132,11 @@ public class repo extends Model {
 							if (range != null) {
 								String[] ss = range.split("(=|-)");
 								if (ss.length > 1) {
-									start = Bean.toLong(ss[1]);
+									start = X.toLong(ss[1]);
 								}
 
 								if (ss.length > 2) {
-									end = Math.min(total, Bean.toLong(ss[2]));
+									end = Math.min(total, X.toLong(ss[2]));
 								}
 							}
 
@@ -269,8 +269,8 @@ public class repo extends Model {
 									 * using scale3 to cut the middle of the
 									 * image
 									 */
-									if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), Bean.toInt(ss[0]),
-											Bean.toInt(ss[1])) < 0) {
+									if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
+											X.toInt(ss[1])) < 0) {
 										failed = true;
 										log.warn("scale3 image failed");
 										e.reset();
@@ -320,8 +320,8 @@ public class repo extends Model {
 									/**
 									 * using scale to smooth the original image
 									 */
-									if (GImage.scale(src.getAbsolutePath(), f.getAbsolutePath(), Bean.toInt(ss[0]),
-											Bean.toInt(ss[1])) < 0) {
+									if (GImage.scale(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
+											X.toInt(ss[1])) < 0) {
 										log.warn("scale3 image failed");
 										failed = true;
 										e.reset();
@@ -368,11 +368,11 @@ public class repo extends Model {
 						if (range != null) {
 							String[] ss = range.split("(=|-)");
 							if (ss.length > 1) {
-								start = Bean.toLong(ss[1]);
+								start = X.toLong(ss[1]);
 							}
 
 							if (ss.length > 2) {
-								end = Math.min(total, Bean.toLong(ss[2]));
+								end = Math.min(total, X.toLong(ss[2]));
 							}
 						}
 

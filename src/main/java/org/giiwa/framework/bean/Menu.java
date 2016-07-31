@@ -34,7 +34,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@DBMapping(collection = "gi_menu")
+@Table(collection = "gi_menu")
 public class Menu extends Bean {
 
   /**

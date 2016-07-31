@@ -585,8 +585,8 @@ public class Host {
 									if (i > 0) {
 										e = new Entity(
 												System.currentTimeMillis(),
-												((int) (100 - Bean.toFloat(s
-														.substring(0, i))) * 10) / 10f);
+												((int) (100 - X.toFloat(s
+														.substring(0, i), 0)) * 10) / 10f);
 									}
 								}
 							}
@@ -596,7 +596,7 @@ public class Host {
 				}
 			}
 
-			return e == null ? 0 : Bean.toFloat(e.value);
+			return e == null ? 0 : X.toFloat(e.value,0);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -625,9 +625,9 @@ public class Host {
 				}
 
 				// log.debug(l1);
-				list.add(new CPU(ss[0], Bean.toLong(ss[1]), Bean.toLong(ss[2]),
-						Bean.toLong(ss[3]), Bean.toLong(ss[4]), Bean
-								.toLong(ss[5])));
+				list.add(new CPU(ss[0], X.toLong(ss[1], 0), X.toLong(ss[2], 0),
+						X.toLong(ss[3], 0), X.toLong(ss[4], 0), X
+								.toLong(ss[5], 0)));
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -654,7 +654,7 @@ public class Host {
 				l1.add(s);
 			}
 
-			return ((int) (10 * Bean.toInt(l1.get(1)) / 1024 / 1024)) / 10f;
+			return ((int) (10 * X.toInt(l1.get(1), 0) / 1024 / 1024)) / 10f;
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -687,7 +687,7 @@ public class Host {
 								continue;
 							l1.add(s);
 						}
-						int total = Bean.toInt(l1.get(1));
+						int total = X.toInt(l1.get(1), 0);
 
 						r = Shell.run("cat /proc/meminfo |grep MemFree");
 						ss = r.split(" ");
@@ -697,7 +697,7 @@ public class Host {
 								continue;
 							l1.add(s);
 						}
-						int free = Bean.toInt(l1.get(1));
+						int free = X.toInt(l1.get(1), 0);
 
 						e = new Entity(System.currentTimeMillis(), ((int) 10
 								* (total - free) / 1024 / 1024) / 10f);
@@ -707,7 +707,7 @@ public class Host {
 				}
 			}
 
-			return e == null ? 0 : Bean.toFloat(e.value);
+			return e == null ? 0 : X.toFloat(e.value, 0);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -732,7 +732,7 @@ public class Host {
 					continue;
 				l1.add(s);
 			}
-			list.add(new Memory("memtotal", Bean.toInt(l1.get(1))));
+			list.add(new Memory("memtotal", X.toInt(l1.get(1))));
 
 			r = Shell.run("cat /proc/meminfo |grep MemFree");
 			ss = r.split(" ");
@@ -742,7 +742,7 @@ public class Host {
 					continue;
 				l1.add(s);
 			}
-			list.add(new Memory("memfree", Bean.toInt(l1.get(1))));
+			list.add(new Memory("memfree", X.toInt(l1.get(1))));
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -775,8 +775,8 @@ public class Host {
 
 			for (int i = 0; i < l1.size(); i += 6) {
 				if (l1.get(i).startsWith("/dev")) {
-					list.add(new Disk(l1.get(i + 5), Bean.toInt(l1.get(i + 2)),
-							Bean.toInt(l1.get(i + 3))));
+					list.add(new Disk(l1.get(i + 5), X.toInt(l1.get(i + 2)),
+							X.toInt(l1.get(i + 3))));
 				}
 			}
 		} catch (Exception e) {
@@ -817,7 +817,7 @@ public class Host {
 					continue;
 				l1.add(s);
 			}
-			int mem = Bean.toInt(l1.get(1));
+			int mem = X.toInt(l1.get(1));
 			return new Proc(name, cpu, mem);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -1268,7 +1268,7 @@ public class Host {
 		 */
 		public Proc(String name, String cpu, int mem) {
 			this.name = name;
-			this.cpu = Bean.toInt(cpu);
+			this.cpu = X.toInt(cpu);
 			this.mem = mem;
 		}
 

@@ -29,7 +29,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@DBMapping(collection = "gi_oplog")
+@Table(collection = "gi_oplog")
 public class OpLog extends Bean {
 
   private static final long serialVersionUID = 1L;

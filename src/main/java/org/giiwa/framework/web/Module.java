@@ -356,7 +356,7 @@ public class Module {
    * @return the int
    */
   public int getInt(String setting) {
-    return Bean.toInt(get(setting));
+    return X.toInt(get(setting), 0);
   }
 
   /**
@@ -367,7 +367,7 @@ public class Module {
    * @return the long
    */
   public long getLong(String setting) {
-    return Bean.toLong(get(setting));
+    return X.toLong(get(setting), 0);
   }
 
   /**

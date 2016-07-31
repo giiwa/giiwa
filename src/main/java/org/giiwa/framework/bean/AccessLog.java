@@ -21,7 +21,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Local;
@@ -31,14 +33,13 @@ import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
- * record the web access log.
- * <br>
+ * record the web access log. <br>
  * collection="gi_accesslog"
  * 
  * @author joe
  * 
  */
-@DBMapping(collection = "gi_accesslog")
+@Table(collection = "gi_accesslog", name = "gi_accesslog")
 public class AccessLog extends Bean {
 
   /**
@@ -57,7 +58,7 @@ public class AccessLog extends Bean {
    * @return the long
    */
   public static long count(BasicDBObject q) {
-    return Bean.count(q, AccessLog.class);
+    return Helper.count(q, AccessLog.class);
   }
 
   public String getUrl() {
@@ -81,7 +82,7 @@ public class AccessLog extends Bean {
       public void onExecute() {
         long created = System.currentTimeMillis();
         String id = UID.id(ip, url, created, node, seq.incrementAndGet());
-        Bean.insert(v.set(X._ID, id).set("ip", ip).set("url", url).set("created", created), AccessLog.class);
+        Helper.insert(v.set(X._ID, id).set("ip", ip).set("url", url).set("created", created), AccessLog.class);
       }
 
     }.schedule(0);
@@ -101,14 +102,14 @@ public class AccessLog extends Bean {
    * @return the beans
    */
   public static Beans<AccessLog> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-    return Bean.load(q, order, s, n, AccessLog.class);
+    return Helper.load(q, order, s, n, AccessLog.class);
   }
 
   /**
    * Cleanup.
    */
   public static void cleanup() {
-    Bean.delete(
+    Helper.delete(
         new BasicDBObject().append("created", new BasicDBObject().append("$lt", System.currentTimeMillis() - X.AMONTH)),
         AccessLog.class);
   }
@@ -117,7 +118,7 @@ public class AccessLog extends Bean {
    * Delete all.
    */
   public static void deleteAll() {
-    Bean.delete(new BasicDBObject(), AccessLog.class);
+    Helper.delete(new BasicDBObject(), AccessLog.class);
   }
 
   /**

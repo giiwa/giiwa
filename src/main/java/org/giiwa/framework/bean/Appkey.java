@@ -16,10 +16,11 @@ package org.giiwa.framework.bean;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.X;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -29,7 +30,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@DBMapping(collection = "gi_appkey")
+@Table(collection = "gi_appkey", name="gi_appkey")
 public class Appkey extends Bean {
 
   /**
@@ -60,8 +61,8 @@ public class Appkey extends Bean {
    */
   public static int create(String appkey, V v) {
     try {
-      if (!Bean.exists(new BasicDBObject().append(X.ID, appkey), Appkey.class)) {
-        return Bean.insertCollection(
+      if (!Helper.exists(W.create(X.ID, appkey), Appkey.class)) {
+        return Helper.insert(
             v.set(X._ID, appkey).set("appkey", appkey).set("created", System.currentTimeMillis()), Appkey.class);
       }
     } catch (Exception e1) {
@@ -78,7 +79,7 @@ public class Appkey extends Bean {
    * @return the app
    */
   public static Appkey load(String appkey) {
-    return Bean.load(new BasicDBObject().append(X._ID, appkey), Appkey.class);
+    return Helper.load(W.create(X._ID, appkey), Appkey.class);
   }
 
   public boolean isLocked() {
@@ -99,7 +100,7 @@ public class Appkey extends Bean {
    * @return the int
    */
   public static int update(String appkey, V v) {
-    return Bean.updateCollection(appkey, v, Appkey.class);
+    return Helper.update(W.create(X._ID, appkey), v, Appkey.class);
   }
 
   /**
@@ -115,8 +116,8 @@ public class Appkey extends Bean {
    *          the n
    * @return Beans
    */
-  public static Beans<Appkey> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-    return Bean.load(q, order, s, n, Appkey.class);
+  public static Beans<Appkey> load(W q, int s, int n) {
+    return Helper.load(q, s, n, Appkey.class);
   }
 
   /**
@@ -126,7 +127,7 @@ public class Appkey extends Bean {
    *          the appkey
    */
   public static void delete(String appkey) {
-    Bean.delete(new BasicDBObject(X._ID, appkey), Appkey.class);
+    Helper.delete(W.create(X._ID, appkey), Appkey.class);
   }
 
 }

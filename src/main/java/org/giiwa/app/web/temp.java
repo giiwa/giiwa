@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 
@@ -67,11 +68,11 @@ public class temp extends Model {
 			if (range != null) {
 				ss = range.split("(=|-)");
 				if (ss.length > 1) {
-					start = Bean.toLong(ss[1]);
+					start = X.toLong(ss[1]);
 				}
 
 				if (ss.length > 2) {
-					end = Math.min(total, Bean.toLong(ss[2]));
+					end = Math.min(total, X.toLong(ss[2]));
 				}
 			}
 

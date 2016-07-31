@@ -27,7 +27,7 @@ import org.giiwa.core.cache.DefaultCachable;
  * @param <T>
  *          the generic type
  */
-public class Beans<T extends Object> extends DefaultCachable {
+public class Beans<T extends Bean> extends DefaultCachable {
 
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 2L;

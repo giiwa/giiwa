@@ -96,10 +96,10 @@ public class oplog extends Model {
 			q.append("ip", Pattern.compile(jo.getString("ip"), Pattern.CASE_INSENSITIVE));
 		}
 		if (!X.isEmpty(jo.get("uid"))) {
-			q.append("uid", Bean.toInt(jo.get("uid")));
+			q.append("uid", X.toInt(jo.get("uid")));
 		}
 		if (!X.isEmpty(jo.get("type"))) {
-			q.append("type", Bean.toInt(jo.get("type")));
+			q.append("type", X.toInt(jo.get("type")));
 		}
 
 		if (jo.has("_module") && !X.isEmpty(jo.getString("_module"))) {

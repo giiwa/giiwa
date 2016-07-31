@@ -46,7 +46,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@DBMapping(collection = "gi_user", table="tbluser")
+@Table(collection = "gi_user", name="tbluser")
 public class User extends Bean {
 
   /**
@@ -528,7 +528,7 @@ public class User extends Bean {
    * @author joe
    *
    */
-  @DBMapping(collection = "gi_userlock")
+  @Table(collection = "gi_userlock")
   public static class Lock extends Bean {
 
     /**

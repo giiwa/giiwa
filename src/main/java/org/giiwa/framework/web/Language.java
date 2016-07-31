@@ -332,7 +332,7 @@ public class Language {
     c.setTimeInMillis(0);
     int[] d = new int[ss.length];
     for (int i = 0; i < d.length; i++) {
-      d[i] = Bean.toInt(ss[i]);
+      d[i] = X.toInt(ss[i]);
     }
 
     if (d[0] > 100) {
