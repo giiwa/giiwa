@@ -291,7 +291,7 @@ public class MongoHelper extends Helper {
    *          the name of the collection
    * @return DBCollection
    */
-  protected static DBCollection getCollection(String name) {
+  public static DBCollection getCollection(String name) {
     return getCollection("prod", name);
   }
 
