@@ -77,7 +77,7 @@ public class Jar extends Bean {
   public static void remove(String module, String name) {
     String node = Model.node();
 
-    Helper.delete(W.create("module", module).set("name", name).set("node", node), Jar.class);
+    Helper.delete(W.create("module", module).and("name", name).and("node", node), Jar.class);
   }
 
   /**
@@ -99,7 +99,7 @@ public class Jar extends Bean {
    */
   public static List<Object> loadAll(W q) {
     String node = Model.node();
-    return Helper.distinct("name", q.set("node", node), Jar.class);
+    return Helper.distinct("name", q.and("node", node), Jar.class);
   }
 
   /**
@@ -112,7 +112,7 @@ public class Jar extends Bean {
   public static List<Object> load(String name) {
     String node = Model.node();
 
-    return Helper.distinct("module", W.create("name", name).set("node", node), Jar.class);
+    return Helper.distinct("module", W.create("name", name).and("node", node), Jar.class);
   }
 
   /**
@@ -123,7 +123,7 @@ public class Jar extends Bean {
    */
   public static void reset(String module) {
     String node = Model.node();
-    Helper.update(W.create("module", module).set("node", node), V.create("reset", 0), Jar.class);
+    Helper.update(W.create("module", module).and("node", node), V.create("reset", 0), Jar.class);
   }
 
   // public static List<Object> loadNames(String module, BasicDBObject q) {

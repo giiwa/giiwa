@@ -26,8 +26,6 @@ import org.giiwa.framework.web.Model;
 
 import net.sf.json.*;
 
-import com.mongodb.BasicDBObject;
-
 // TODO: Auto-generated Javadoc
 /**
  * Menu. <br>
@@ -229,7 +227,7 @@ public class Menu extends Bean {
   private static Menu insertOrUpdate(long parent, String name, V v) {
     String node = Model.node();
 
-    W q = W.create().set("parent", parent).set("name", name).set("node", node);
+    W q = W.create().and("parent", parent).and("name", name).and("node", node);
 
     try {
       if (!Helper.exists(q, Menu.class)) {
@@ -284,7 +282,7 @@ public class Menu extends Bean {
    * @return the menu
    */
   public static Menu load(long parent, String name) {
-    Menu m = Helper.load(W.create("parent", parent).set("name", name), Menu.class);
+    Menu m = Helper.load(W.create("parent", parent).and("name", name), Menu.class);
     return m;
   }
 
@@ -383,7 +381,7 @@ public class Menu extends Bean {
    */
   public static void remove(String tag) {
     String node = Model.node();
-    Helper.delete(W.create("tag", tag).set("node", node), Menu.class);
+    Helper.delete(W.create("tag", tag).and("node", node), Menu.class);
   }
 
   /**

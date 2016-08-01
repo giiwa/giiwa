@@ -21,10 +21,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-
-// TODO: Auto-generated Javadoc
 /**
  * Role. <br>
  * collection="gi_role"
@@ -129,7 +125,7 @@ public class Role extends Bean {
   public static void setAccess(long rid, String name) {
 
     try {
-      if (!Helper.exists(W.create("rid", rid).set("name", name), RoleAccess.class)) {
+      if (!Helper.exists(W.create("rid", rid).and("name", name), RoleAccess.class)) {
         Helper.insert(V.create("rid", rid).set("name", name).set(X._ID, UID.id(rid, name)), RoleAccess.class);
         Helper.update(W.create(X._ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
       }
@@ -148,7 +144,7 @@ public class Role extends Bean {
    *          the name
    */
   public static void removeAccess(long rid, String name) {
-    Helper.delete(W.create("rid", rid).set("name", name), RoleAccess.class);
+    Helper.delete(W.create("rid", rid).and("name", name), RoleAccess.class);
 
     Helper.update(W.create(X._ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
 
@@ -183,7 +179,7 @@ public class Role extends Bean {
    */
   public static boolean exist(long rid) {
     try {
-      return Helper.exists(new BasicDBObject(X._ID, rid), Role.class);
+      return Helper.exists(rid, Role.class);
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
     }

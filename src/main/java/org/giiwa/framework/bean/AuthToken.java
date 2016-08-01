@@ -27,8 +27,6 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 
-import com.mongodb.BasicDBObject;
-
 // TODO: Auto-generated Javadoc
 /**
  * The AuthToken. <br>
@@ -157,8 +155,7 @@ public class AuthToken extends Bean {
    * @return AuthToken
    */
   public static AuthToken load(String sid, String token) {
-    return Helper.load(
-        W.create("sid", sid).set("token", token).set("expired", new BasicDBObject("$gt", System.currentTimeMillis())),
+    return Helper.load(W.create("sid", sid).and("token", token).and("expired", System.currentTimeMillis(), W.OP_GT),
         AuthToken.class);
   }
 
@@ -212,6 +209,7 @@ public class AuthToken extends Bean {
    * @return Beans
    */
   public static Beans<AuthToken> load(long uid) {
-    return Helper.load(W.create("uid", uid).set("expired", new BasicDBObject("$gt", System.currentTimeMillis())), 0, 100, AuthToken.class);
+    return Helper.load(W.create("uid", uid).and("expired", System.currentTimeMillis(), W.OP_GT), 0, 100,
+        AuthToken.class);
   }
 }

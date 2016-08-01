@@ -133,7 +133,7 @@ public class AccessLog extends Bean {
     List<Object> list = Helper.distinct(name, W.create("status", 200), AccessLog.class);
     Map<Object, Long> m = new TreeMap<Object, Long>();
     for (Object v : list) {
-      long d = Helper.count(W.create(name, v).set("status", 200), AccessLog.class);
+      long d = Helper.count(W.create(name, v).and("status", 200), AccessLog.class);
       m.put(v, d);
     }
 

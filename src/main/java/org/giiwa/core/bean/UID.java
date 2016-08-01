@@ -70,8 +70,7 @@ public class UID extends Bean {
       } else {
         v = X.toLong(u.get("var"), 1);
 
-        while (Helper.update(W.create(X._ID, key).set("var", v), Helper.V.create("var", v + 1L),
-            UID.class) < 0) {
+        while (Helper.update(W.create(X._ID, key).and("var", v), Helper.V.create("var", v + 1L), UID.class) < 0) {
           v++;
         }
       }

@@ -26,14 +26,13 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.db.DB;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 
 import net.sf.json.JSONObject;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code Bean} Class is base class for all class that database access, it
  * almost includes all methods that need for database <br>
@@ -475,12 +474,11 @@ public class Helper {
      */
     private static final int OR      = 10;
 
-    List<W>                  wlist   = new ArrayList<W>();
+    private List<W>          wlist   = new ArrayList<W>();
+    private List<Entity>     elist   = new ArrayList<Entity>();
+    private List<Entity>     order   = new ArrayList<Entity>();
 
-    List<Entity>             elist   = new ArrayList<Entity>();
-    List<Entity>             order   = new ArrayList<Entity>();
-
-    int                      cond    = AND;
+    private int              cond    = AND;
 
     private W() {
     }
@@ -519,8 +517,6 @@ public class Helper {
       return size;
     }
 
-    transient Object[] args;
-
     /**
      * create args for the SQL "where" <br>
      * return the Object[].
@@ -528,15 +524,15 @@ public class Helper {
      * @return Object[]
      */
     public Object[] args() {
-      if (args == null && (elist.size() > 0 || wlist.size() > 0)) {
+      if (elist.size() > 0 || wlist.size() > 0) {
         List<Object> l1 = new ArrayList<Object>();
 
         args(l1);
 
-        args = l1.toArray(new Object[l1.size()]);
+        return l1.toArray(new Object[l1.size()]);
       }
 
-      return args;
+      return null;
     }
 
     private void args(List<Object> list) {
@@ -562,15 +558,13 @@ public class Helper {
       return elist;
     }
 
-    private transient String where;
-
     /**
      * create the SQL "where".
      *
      * @return String
      */
     public String where() {
-      if (where == null && (elist.size() > 0 || wlist.size() > 0)) {
+      if (elist.size() > 0 || wlist.size() > 0) {
         StringBuilder sb = new StringBuilder();
         for (Entity e : elist) {
           if (sb.length() > 0) {
@@ -596,10 +590,10 @@ public class Helper {
           sb.append(" (").append(w.where()).append(") ");
         }
 
-        where = sb.toString();
+        return sb.toString();
       }
 
-      return where;
+      return null;
     }
 
     /**
@@ -611,40 +605,28 @@ public class Helper {
       return new W();
     }
 
-    transient String orderby;
-
-    /**
-     * set the order by, as "order by xxx desc, xxx".
-     *
-     * @param orderby
-     *          the orderby
-     * @return W
-     */
-    public W order(String orderby) {
-      this.orderby = orderby;
-      return this;
-    }
-
     /**
      * get the order by.
      *
      * @return String
      */
     public String orderby() {
-      return orderby;
-    }
 
-    /**
-     * set the sql and parameter.
-     *
-     * @param sql
-     *          the sql
-     * @param v
-     *          the v
-     * @return W
-     */
-    public W set(String sql, Object v) {
-      return and(sql, v, W.OP_NONE);
+      if (order.size() > 0 || order.size() > 0) {
+        StringBuilder sb = new StringBuilder("order by ");
+        for (int i = 0; i < order.size(); i++) {
+          Entity e = order.get(i);
+          if (i > 0) {
+            sb.append(",");
+          }
+          sb.append(e.name);
+          if (X.toInt(e.value) < 0) {
+            sb.append(" desc");
+          }
+        }
+        return sb.toString();
+      }
+      return null;
     }
 
     /**
@@ -698,9 +680,6 @@ public class Helper {
      * @return W
      */
     public W and(String name, Object v, int op) {
-      where = null;
-      args = null;
-
       elist.add(new Entity(name, v, op, AND));
       return this;
     }
@@ -730,8 +709,6 @@ public class Helper {
      * @return W
      */
     public W or(String name, Object v, int op) {
-      where = null;
-      args = null;
 
       elist.add(new Entity(name, v, op, OR));
 
@@ -928,34 +905,49 @@ public class Helper {
       }
     }
 
+    BasicDBObject _parse(Entity e, BasicDBObject q) {
+      switch (e.op) {
+        case W.OP_EQ:
+          q.append(e.name, e.value);
+          break;
+        case W.OP_GT:
+          q.append(e.name, new BasicDBObject("$gt", e.value));
+          break;
+        case W.OP_GTE:
+          q.append(e.name, new BasicDBObject("$gte", e.value));
+          break;
+        case W.OP_LIKE:
+          Pattern p1 = Pattern.compile(e.value.toString(), Pattern.CASE_INSENSITIVE);
+          q.append(e.name, p1);
+          break;
+        case W.OP_LT:
+          q.append(e.name, new BasicDBObject("$lt", e.value));
+          break;
+        case W.OP_LTE:
+          q.append(e.name, new BasicDBObject("$lte", e.value));
+          break;
+        case W.OP_NEQ:
+          q.append(e.name, new BasicDBObject("$ne", e.value));
+          break;
+      }
+      return q;
+    }
+
     public BasicDBObject query() {
       BasicDBObject q = new BasicDBObject();
-      if (elist.size() > 0 || wlist.size() > 0) {
+      if (elist.size() > 0) {
         for (Entity e : elist) {
-          switch (e.op) {
-            case W.OP_EQ:
-              q.append(e.name, e.value);
-              break;
-            case W.OP_GT:
-              q.append(e.name, new BasicDBObject("$gt", e.value));
-              break;
-            case W.OP_GTE:
-              q.append(e.name, new BasicDBObject("$gte", e.value));
-              break;
-            case W.OP_LIKE:
-              Pattern p1 = Pattern.compile(e.value.toString(), Pattern.CASE_INSENSITIVE);
-              q.append(e.name, p1);
-              break;
-            case W.OP_LT:
-              q.append(e.name, new BasicDBObject("$lt", e.value));
-              break;
-            case W.OP_LTE:
-              q.append(e.name, new BasicDBObject("$lte", e.value));
-              break;
-            case W.OP_NEQ:
-              q.append(e.name, new BasicDBObject("$ne", e.value));
-              break;
+          _parse(e, q);
+        }
+
+        for (W e : wlist) {
+          // or the condition in here, is $or
+          BasicDBList list = new BasicDBList();
+          for (Entity e1 : e.elist) {
+            list.add(_parse(e1, new BasicDBObject()));
           }
+
+          q.append("$or", list);
         }
       }
 
@@ -1119,4 +1111,20 @@ public class Helper {
     return null;
   }
 
+  public static void main(String[] args) {
+
+    W w = W.create("name", 1).sort("name", 1).sort("nickname", -1).sort("ddd", 1);
+    w.and("aaa", 2);
+    W w1 = W.create("a", 1).or("b", 2);
+    w.and(w1);
+    
+    System.out.println(w.where());
+    System.out.println(Bean.toString(w.args()));
+    System.out.println(w.orderby());
+
+    System.out.println("-----------");
+    System.out.println(w.query());
+    System.out.println(w.order());
+
+  }
 }
