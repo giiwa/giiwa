@@ -58,7 +58,7 @@ public class MongoHelper extends Helper {
    *          the query
    * @return the int
    */
-  protected static int delete(String collection, DBObject query) {
+  public static int delete(String collection, DBObject query) {
     try {
       DBCollection db = MongoHelper.getCollection(collection);
       if (db != null) {
@@ -73,7 +73,7 @@ public class MongoHelper extends Helper {
     return -1;
   }
 
-  protected static int delete(DBObject query, Class<? extends Bean> t) {
+  public static int delete(DBObject query, Class<? extends Bean> t) {
 
     String collection = getCollection(t);
     if (collection != null) {
@@ -144,7 +144,7 @@ public class MongoHelper extends Helper {
    *          the database
    * @return true, if successful
    */
-  protected static boolean hasDB(String database) {
+  public static boolean hasDB(String database) {
     DB g = mongo.get(database);
     if (g == null) {
       g = initDB(database);
@@ -258,7 +258,7 @@ public class MongoHelper extends Helper {
    *          the collection
    * @return DBCollection
    */
-  protected static DBCollection getCollection(String database, String collection) {
+  public static DBCollection getCollection(String database, String collection) {
     DB g = getDB(database);
 
     DBCollection d = null;
@@ -308,7 +308,7 @@ public class MongoHelper extends Helper {
    *          the clazz
    * @return the t
    */
-  protected static <T extends Bean> T load(String collection, DBObject query, Class<T> clazz) {
+  public static <T extends Bean> T load(String collection, DBObject query, Class<T> clazz) {
     try {
       return load(collection, query, clazz.newInstance());
     } catch (Exception e) {
@@ -319,7 +319,7 @@ public class MongoHelper extends Helper {
     return null;
   }
 
-  protected static <T extends Bean> T load(String collection, DBObject query, T b) {
+  public static <T extends Bean> T load(String collection, DBObject query, T b) {
     try {
       DBCollection db = MongoHelper.getCollection(collection);
       if (db != null) {
@@ -393,7 +393,7 @@ public class MongoHelper extends Helper {
    *          the Bean class
    * @return Beans
    */
-  protected static <T extends Bean> Beans<T> load(DBObject query, DBObject orderby, int offset, int limit,
+  public static <T extends Bean> Beans<T> load(DBObject query, DBObject orderby, int offset, int limit,
       Class<T> clazz) {
     String collection = getCollection(clazz);
     if (collection != null) {
@@ -416,7 +416,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return T
    */
-  protected static <T extends Bean> T load(DBObject query, DBObject order, T obj) {
+  public static <T extends Bean> T load(DBObject query, DBObject order, T obj) {
     String collection = getCollection(obj.getClass());
     if (collection != null) {
       return load(collection, query, order, obj);
@@ -444,7 +444,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return Beans
    */
-  protected static <T extends Bean> Beans<T> load(String collection, DBObject query, DBObject orderBy, int offset,
+  public static <T extends Bean> Beans<T> load(String collection, DBObject query, DBObject orderBy, int offset,
       int limit, Class<T> clazz) {
     TimeStamp t = TimeStamp.create();
     DBCollection db = null;
@@ -528,7 +528,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return Bean if failed, return null
    */
-  protected static <T extends Bean> T load(DBObject query, T t) {
+  public static <T extends Bean> T load(DBObject query, T t) {
     String collection = getCollection(t.getClass());
     if (collection != null) {
       try {
@@ -552,7 +552,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return Bean the instance of the Class
    */
-  protected static <T extends Bean> T load(DBObject query, Class<T> t) {
+  public static <T extends Bean> T load(DBObject query, Class<T> t) {
 
     String collection = getCollection(t);
     if (collection != null) {
@@ -580,7 +580,7 @@ public class MongoHelper extends Helper {
    *          the Class Bean
    * @return Bean
    */
-  protected static <T extends Bean> T load(DBObject query, DBObject order, Class<T> t) {
+  public static <T extends Bean> T load(DBObject query, DBObject order, Class<T> t) {
     String collection = getCollection(t);
     if (collection != null) {
       try {
@@ -614,7 +614,7 @@ public class MongoHelper extends Helper {
    *          the query
    * @return the DB object
    */
-  protected static DBObject load(String collection, DBObject query) {
+  public static DBObject load(String collection, DBObject query) {
     /**
      * create the sql statement
      */
@@ -639,7 +639,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return String
    */
-  final static protected String getCollection(Class<? extends Bean> clazz) {
+  final static public String getCollection(Class<? extends Bean> clazz) {
     /**
      * get the require annotation onGet
      */
@@ -662,7 +662,7 @@ public class MongoHelper extends Helper {
    *          the Class of Bean
    * @return int how many data impacted
    */
-  final protected static int insertCollection(V v, Class<? extends Bean> t) {
+  final public static int insertCollection(V v, Class<? extends Bean> t) {
     Table mapping = (Table) t.getAnnotation(Table.class);
     if (mapping == null) {
       if (log.isErrorEnabled())
@@ -687,7 +687,7 @@ public class MongoHelper extends Helper {
    *          the Class of Bean
    * @return int how many data impacted
    */
-  final protected static int updateCollection(Object id, V v, Class<? extends Bean> t) {
+  final public static int updateCollection(Object id, V v, Class<? extends Bean> t) {
     return updateCollection(id, v, t, false);
   }
 
@@ -704,7 +704,7 @@ public class MongoHelper extends Helper {
    *          if true and not exists, then insert one by values
    * @return int how many data impacted
    */
-  final protected static int updateCollection(Object id, V v, Class<? extends Bean> t, boolean adding) {
+  final public static int updateCollection(Object id, V v, Class<? extends Bean> t, boolean adding) {
     String collection = getCollection(t);
     if (collection != null && !"none".equals(collection)) {
       return updateCollection(collection, id, v, adding);
@@ -723,7 +723,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return int of updated
    */
-  final protected static int updateCollection(DBObject query, V v, Class<? extends Bean> t) {
+  final public static int updateCollection(DBObject query, V v, Class<? extends Bean> t) {
     String collection = getCollection(t);
     if (collection != null && !"none".equals(collection)) {
       return updateCollection(collection, query, v);
@@ -738,11 +738,9 @@ public class MongoHelper extends Helper {
    *          the collection name
    * @param v
    *          the values
-   * @param db
-   *          the pool name, mongo[db].url in "giiwa.properties"
    * @return int
    */
-  final protected static int insertCollection(String collection, V v) {
+  final public static int insertCollection(String collection, V v) {
 
     DBCollection c = getCollection(collection);
     if (c != null) {
@@ -779,7 +777,7 @@ public class MongoHelper extends Helper {
    *          the values
    * @return int
    */
-  final protected static int updateCollection(String collection, Object id, V v) {
+  final public static int updateCollection(String collection, Object id, V v) {
     return updateCollection(collection, id, v, false);
   }
 
@@ -796,7 +794,7 @@ public class MongoHelper extends Helper {
    *          if true and not exists, then insert a new data
    * @return int
    */
-  final protected static int updateCollection(String collection, Object id, V v, boolean adding) {
+  final public static int updateCollection(String collection, Object id, V v, boolean adding) {
 
     BasicDBObject q = new BasicDBObject().append(X._ID, id);
     return updateCollection(collection, q, v, adding);
@@ -813,7 +811,7 @@ public class MongoHelper extends Helper {
    *          the values
    * @return int of updated
    */
-  final protected static int updateCollection(String collection, DBObject q, V v) {
+  final public static int updateCollection(String collection, DBObject q, V v) {
     return updateCollection(collection, q, v, false);
   }
 
@@ -830,7 +828,7 @@ public class MongoHelper extends Helper {
    *          add if not exists
    * @return int of updated
    */
-  final protected static int updateCollection(String collection, DBObject q, V v, boolean adding) {
+  final public static int updateCollection(String collection, DBObject q, V v, boolean adding) {
 
     BasicDBObject d = new BasicDBObject();
 
@@ -879,7 +877,7 @@ public class MongoHelper extends Helper {
    * @throws Exception
    *           throw exception when occur database error
    */
-  protected static boolean exists(DBObject query, Class<? extends Bean> t) throws Exception {
+  public static boolean exists(DBObject query, Class<? extends Bean> t) throws Exception {
     String collection = getCollection(t);
     if (collection != null) {
       return exists(collection, query);
@@ -887,7 +885,7 @@ public class MongoHelper extends Helper {
     throw new Exception("the Class<" + t.getName() + "> doest annotated by @DBMapping()!");
   }
 
-  protected static boolean exists(String collection, DBObject query) throws Exception {
+  public static boolean exists(String collection, DBObject query) throws Exception {
     TimeStamp t1 = TimeStamp.create();
     boolean b = false;
     try {
@@ -949,12 +947,12 @@ public class MongoHelper extends Helper {
   /**
    * get distinct value for key by the query.
    *
+   * @param collection
+   *          the collection name
    * @param key
    *          the key that contain the value
    * @param q
    *          the query
-   * @param t
-   *          class
    * @return List of the value
    */
   @SuppressWarnings("unchecked")
@@ -988,11 +986,11 @@ public class MongoHelper extends Helper {
 
   /**
    * count the number by the query.
-   *
+   * 
+   * @param collection
+   *          the collection name
    * @param q
-   *          the q
-   * @param t
-   *          the t
+   *          the query and order
    * @return long
    */
   public static long count(String collection, BasicDBObject q) {

@@ -61,9 +61,7 @@ public class OpLog extends Bean {
    * Load.
    *
    * @param query
-   *          the query
-   * @param order
-   *          the order
+   *          the query and order
    * @param offset
    *          the offset
    * @param limit

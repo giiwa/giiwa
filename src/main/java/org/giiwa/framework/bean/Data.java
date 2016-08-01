@@ -23,8 +23,7 @@ import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
 /**
- * Freedom data storage, not specify.
- * <br>
+ * Freedom data storage, not specify. <br>
  * collection=""
  * 
  * @author wujun
@@ -47,14 +46,12 @@ public class Data extends Bean {
    *
    * @param collection
    *          the collection
-   * @param query
-   *          the query
-   * @param order
-   *          the order
+   * @param q
+   *          the query and order
    * @param s
-   *          the s
+   *          the start of number
    * @param n
-   *          the n
+   *          the number of items
    * @return the beans
    */
   public static Beans<Data> load(String collection, W q, int s, int n) {

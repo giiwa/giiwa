@@ -365,13 +365,11 @@ public class Stat extends Bean implements Comparable<Stat> {
    * Load.
    *
    * @param q
-   *          the q
-   * @param order
-   *          the order
+   *          the query and order
    * @param s
-   *          the s
+   *          the start number
    * @param n
-   *          the n
+   *          the number of items
    * @return Beans
    */
   public static Beans<Stat> load(W q, int s, int n) {

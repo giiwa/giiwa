@@ -204,13 +204,11 @@ public class AuthToken extends Bean {
    * Load.
    *
    * @param q
-   *          the q
-   * @param order
-   *          the order
+   *          the query and order
    * @param s
-   *          the s
+   *          the start number
    * @param n
-   *          the n
+   *          the number of items
    * @return Beans
    */
   public static Beans<AuthToken> load(W q, int s, int n) {

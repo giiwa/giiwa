@@ -41,14 +41,10 @@ import org.giiwa.core.db.DB;
  */
 public class RDSHelper extends Helper {
 
-  /** The log. */
-  protected static Log  log    = LogFactory.getLog(RDSHelper.class);
-  protected static Log  sqllog = LogFactory.getLog("sql");
-
   /**
    * indicated whether is debug model
    */
-  public static boolean DEBUG  = true;
+  public static boolean DEBUG = true;
 
   /**
    * update the data in db.
@@ -65,7 +61,7 @@ public class RDSHelper extends Helper {
    *          the db name
    * @return int
    */
-  protected static int update(String table, String sets, String where, Object[] whereArgs, String db) {
+  public static int update(String table, String sets, String where, Object[] whereArgs, String db) {
     /**
      * create the sql statement
      */
@@ -150,7 +146,7 @@ public class RDSHelper extends Helper {
 
   }
 
-  protected static int delete(String where, Object[] args, Class<? extends Bean> t) {
+  public static int delete(String where, Object[] args, Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
      */
@@ -173,11 +169,9 @@ public class RDSHelper extends Helper {
    *          the where conditions
    * @param whereArgs
    *          the where args.
-   * @param db
-   *          the db name
    * @return int
    */
-  protected static int delete(String table, String where, Object[] whereArgs) {
+  public static int delete(String table, String where, Object[] whereArgs) {
     /**
      * create the sql statement
      */
@@ -365,7 +359,7 @@ public class RDSHelper extends Helper {
     }
   }
 
-  final protected int insertOrUpdate(String where, Object[] args, V sets) {
+  final public int insertOrUpdate(String where, Object[] args, V sets) {
     /**
      * get the require annotation onGet
      */
@@ -390,11 +384,9 @@ public class RDSHelper extends Helper {
    *          the where args
    * @param sets
    *          the values
-   * @param db
-   *          the db name
    * @return int
    */
-  protected final static int insertOrUpdate(String table, String where, Object[] args, V sets) {
+  public final static int insertOrUpdate(String table, String where, Object[] args, V sets) {
     int i = 0;
     try {
       if (exists(table, where, args)) {
@@ -419,6 +411,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return boolean
    * @throws Exception
+   *           throw Exception
    */
   public static boolean exists(String where, Object[] args, Class<? extends Bean> t) throws Exception {
     /**
@@ -444,12 +437,11 @@ public class RDSHelper extends Helper {
    *          the where conditions.
    * @param args
    *          the where args
-   * @param db
-   *          the db name
    * @return boolean
    * @throws Exception
+   *           throw Exception if occur DB error
    */
-  protected static boolean exists(String table, String where, Object[] args) throws Exception {
+  public static boolean exists(String table, String where, Object[] args) throws Exception {
     /**
      * create the sql statement
      */
@@ -517,7 +509,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return int
    */
-  protected static int update(String where, Object[] args, V sets, Class<? extends Bean> t) {
+  public static int update(String where, Object[] args, V sets, Class<? extends Bean> t) {
     Table mapping = (Table) t.getAnnotation(Table.class);
     if (mapping == null) {
       if (log.isErrorEnabled())
@@ -543,8 +535,6 @@ public class RDSHelper extends Helper {
    *          the where args
    * @param sets
    *          the values
-   * @param db
-   *          the db name
    * @return int
    */
   public static int updateTable(String table, String where, Object[] whereArgs, V sets) {
@@ -616,11 +606,9 @@ public class RDSHelper extends Helper {
    *          the sql sentence
    * @param args
    *          the args
-   * @param db
-   *          the db name
    * @return int
    */
-  protected static int update(String sql, Object[] args) {
+  public static int update(String sql, Object[] args) {
     /**
      * /** update it in database
      */
@@ -672,12 +660,12 @@ public class RDSHelper extends Helper {
    *          the clazz
    * @return the t
    */
-  protected static <T extends Bean> T load(String table, String where, Object[] args, Class<T> clazz) {
+  public static <T extends Bean> T load(String table, String where, Object[] args, Class<T> clazz) {
     return load(table, where, args, null, clazz);
 
   }
 
-  protected static <T extends Bean> T load(String where, Object[] args, Class<T> t) {
+  public static <T extends Bean> T load(String where, Object[] args, Class<T> t) {
     /**
      * get the require annotation onGet
      */
@@ -727,7 +715,7 @@ public class RDSHelper extends Helper {
    *          the Bean
    * @return boolean
    */
-  protected static boolean load(String where, Object[] args, String orderby, Bean b) {
+  public static boolean load(String where, Object[] args, String orderby, Bean b) {
     /**
      * get the require annotation onGet
      */
@@ -754,11 +742,9 @@ public class RDSHelper extends Helper {
    *          the order sentence
    * @param b
    *          the Bean
-   * @param db
-   *          the db name
    * @return boolean
    */
-  protected static boolean load(String table, String where, Object[] args, String orderby, Bean b) {
+  public static boolean load(String table, String where, Object[] args, String orderby, Bean b) {
     /**
      * create the sql statement
      */
@@ -837,7 +823,7 @@ public class RDSHelper extends Helper {
    *          the Class Bean
    * @return the list
    */
-  protected final static <T extends Bean> List<T> load(String table, String[] cols, String where, Object[] args,
+  public final static <T extends Bean> List<T> load(String table, String[] cols, String where, Object[] args,
       Class<T> clazz) {
     return load(table, cols, where, args, null, -1, -1, clazz);
   }
@@ -857,7 +843,7 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return List
    */
-  protected final static <T extends Bean> List<T> load(String[] cols, String where, Object[] args, Class<T> clazz) {
+  public final static <T extends Bean> List<T> load(String[] cols, String where, Object[] args, Class<T> clazz) {
     return load(cols, where, args, null, -1, -1, clazz);
   }
 
@@ -882,7 +868,7 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return List
    */
-  protected final static <T extends Bean> List<T> load(String[] cols, String where, Object[] args, String orderby,
+  public final static <T extends Bean> List<T> load(String[] cols, String where, Object[] args, String orderby,
       int offset, int limit, Class<T> t) {
     /**
      * get the require annotation onGet
@@ -918,12 +904,10 @@ public class RDSHelper extends Helper {
    *          the limit
    * @param clazz
    *          the Bean Class
-   * @param db
-   *          the db name
    * @return List
    */
-  protected static <T extends Bean> List<T> load(String table, String[] cols, String where, Object[] args,
-      String orderby, int offset, int limit, Class<T> clazz) {
+  public static <T extends Bean> List<T> load(String table, String[] cols, String where, Object[] args, String orderby,
+      int offset, int limit, Class<T> clazz) {
     /**
      * create the sql statement
      */
@@ -1028,7 +1012,7 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return Beans
    */
-  protected static <T extends Bean> Beans<T> load(String where, Object[] args, String orderby, int offset, int limit,
+  public static <T extends Bean> Beans<T> load(String where, Object[] args, String orderby, int offset, int limit,
       Class<T> t) {
     /**
      * get the require annotation onGet
@@ -1062,11 +1046,9 @@ public class RDSHelper extends Helper {
    *          the limit
    * @param clazz
    *          the Bean Class
-   * @param db
-   *          the db name
    * @return Beans
    */
-  protected static <T extends Bean> Beans<T> load(String table, String where, Object[] args, String orderby, int offset,
+  public static <T extends Bean> Beans<T> load(String table, String where, Object[] args, String orderby, int offset,
       int limit, Class<T> clazz) {
     /**
      * create the sql statement
@@ -1197,7 +1179,7 @@ public class RDSHelper extends Helper {
    *          the connection
    * @return Beans
    */
-  protected static <T extends Bean> Beans<T> load(String table, String where, Object[] args, String orderby, int offset,
+  public static <T extends Bean> Beans<T> load(String table, String where, Object[] args, String orderby, int offset,
       int limit, Class<T> clazz, Connection c) {
     /**
      * create the sql statement
@@ -1310,7 +1292,7 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return int
    */
-  final protected static int insert(Collection<V> sets, Class<?> t) {
+  final public static int insert(Collection<V> sets, Class<?> t) {
     /**
      * get the require annotation onGet
      */
@@ -1334,7 +1316,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return int
    */
-  final protected static int insertTable(V sets, Class<? extends Bean> t) {
+  final public static int insertTable(V sets, Class<? extends Bean> t) {
     Table mapping = (Table) t.getAnnotation(Table.class);
     if (mapping == null) {
       if (log.isErrorEnabled())
@@ -1355,11 +1337,9 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param list
    *          the list of values
-   * @param db
-   *          the db name
    * @return int of how many data inserted
    */
-  protected static int insert(String table, Collection<V> list) {
+  public static int insert(String table, Collection<V> list) {
     if (list == null || list.size() == 0)
       return 0;
 
@@ -1429,8 +1409,6 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param sets
    *          the values
-   * @param db
-   *          the db name
    * @return int
    */
   public static int insertTable(String table, V sets) {
@@ -1504,8 +1482,7 @@ public class RDSHelper extends Helper {
    *          the db name
    * @return List
    */
-  protected static <T> List<T> loadList(String table, String col, String where, Object[] args, Class<T> clazz,
-      String db) {
+  public static <T> List<T> loadList(String table, String col, String where, Object[] args, Class<T> clazz, String db) {
     /**
      * create the sql statement
      */
@@ -1580,7 +1557,7 @@ public class RDSHelper extends Helper {
    *          the db name
    * @return String
    */
-  protected static String getString(String table, String col, String where, Object[] args, String db) {
+  public static String getString(String table, String col, String where, Object[] args, String db) {
     /**
      * create the sql statement
      */
@@ -1657,7 +1634,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return List
    */
-  protected final static <T> List<T> getList(String col, String where, Object[] args, String orderby, int s, int n,
+  public final static <T> List<T> getList(String col, String where, Object[] args, String orderby, int s, int n,
       Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
@@ -1691,7 +1668,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return T
    */
-  protected final static <T> T getOne(String col, String where, Object[] args, String orderby, int position,
+  public final static <T> T getOne(String col, String where, Object[] args, String orderby, int position,
       Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
@@ -1723,11 +1700,9 @@ public class RDSHelper extends Helper {
    *          the order sentence
    * @param position
    *          the offset
-   * @param db
-   *          the db name
    * @return T
    */
-  protected static <T> T getOne(String table, String col, String where, Object[] args, String orderby, int position) {
+  public static <T> T getOne(String table, String col, String where, Object[] args, String orderby, int position) {
 
     /**
      * create the sql statement
@@ -1806,13 +1781,11 @@ public class RDSHelper extends Helper {
    *          the offset
    * @param n
    *          the limit
-   * @param db
-   *          the db name
    * @return List
    */
   @SuppressWarnings("unchecked")
-  protected final static <T> List<T> getList(String table, String col, String where, Object[] args, String orderby,
-      int s, int n) {
+  public final static <T> List<T> getList(String table, String col, String where, Object[] args, String orderby, int s,
+      int n) {
 
     /**
      * create the sql statement
@@ -1929,8 +1902,6 @@ public class RDSHelper extends Helper {
    *          the order by sentence
    * @param clazz
    *          the Bean class
-   * @param db
-   *          the db name
    * @return Bean
    */
   public static <T extends Bean> T load(String table, String where, Object[] args, String orderby, Class<T> clazz) {

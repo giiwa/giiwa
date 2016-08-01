@@ -96,7 +96,9 @@ public class Helper {
    * delete the data , return the number that was deleted
    * 
    * @param q
+   *          the query and order
    * @param t
+   *          the Class of the Bean
    * @return int
    */
   public static int delete(W q, Class<? extends Bean> t) {
@@ -125,9 +127,13 @@ public class Helper {
    * test exists
    * 
    * @param q
+   *          the query and order
    * @param t
+   *          the class of Bean
    * @return true: exists, false: not exists
    * @throws Exception
+   *           throw Exception if the class declaration error or not db
+   *           configured
    */
   public static boolean exists(W q, Class<? extends Bean> t) throws Exception {
     String table = getTable(t);

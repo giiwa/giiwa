@@ -792,13 +792,11 @@ public class Repo extends Bean {
    * Load.
    *
    * @param q
-   *          the q
-   * @param order
-   *          the order
+   *          the query and order
    * @param s
-   *          the s
+   *          the start number
    * @param n
-   *          the n
+   *          the number of items
    * @return the beans
    */
   public static Beans<Entity> load(W q, int s, int n) {

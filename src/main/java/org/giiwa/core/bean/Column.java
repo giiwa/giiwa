@@ -24,8 +24,6 @@ import java.lang.annotation.Target;
  * the {@code Field} Class used to annotate the Bean, define the
  * collection/table mapping with the Bean
  * 
- * <pre>
- * </pre>
  * 
  * @author joe
  *

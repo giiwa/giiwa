@@ -184,6 +184,7 @@ public class Html {
    * 
    * @deprecated
    * @param tag
+   *          the html tag
    * @return List of element
    */
   public List<Element> get(String tag) {

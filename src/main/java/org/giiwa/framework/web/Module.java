@@ -475,8 +475,11 @@ public class Module {
    * get the file in the module box
    * 
    * @param resource
+   *          the resource name
    * @param inFloor
+   *          search the resource in floor
    * @param inbox
+   *          get the resource in sanbox
    * @return the File if exists, otherwise null
    */
   public File getFile(String resource, boolean inFloor, boolean inbox) {
