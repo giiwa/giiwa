@@ -21,11 +21,12 @@ import java.util.List;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -35,7 +36,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@Table(collection = "gi_stat")
+@Table(name = "gi_stat")
 public class Stat extends Bean implements Comparable<Stat> {
 
   /**
@@ -232,21 +233,20 @@ public class Stat extends Bean implements Comparable<Stat> {
     String id = UID.id(date, module, uid, Bean.toString(f));
 
     try {
-      if (!Bean.exists(new BasicDBObject("date", date).append("id", id), Stat.class)) {
+      if (!Helper.exists(W.create("date", date).and("id", id), Stat.class)) {
         V v = V.create("date", date).set(X._ID, id).set("id", id).set("module", module).set("uid", uid)
             .set("count", count).set("updated", System.currentTimeMillis());
 
         List<String> list = new ArrayList<String>();
         Collections.addAll(list, f);
         v.set("f", list);
-        return Bean.insertCollection(v, Stat.class);
+        return Helper.insert(v, Stat.class);
 
       } else {
         /**
          * only update if count > original
          */
-        return Bean.updateCollection(
-            new BasicDBObject("date", date).append("id", id).append("count", new BasicDBObject("$lt", count)),
+        return Helper.update(W.create("date", date).and("id", id).and("count", count, W.OP_LT),
             V.create("count", count).set("updated", System.currentTimeMillis()), Stat.class);
       }
     } catch (Exception e1) {
@@ -374,8 +374,8 @@ public class Stat extends Bean implements Comparable<Stat> {
    *          the n
    * @return Beans
    */
-  public static Beans<Stat> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-    return Bean.load(q, order, s, n, Stat.class);
+  public static Beans<Stat> load(W q, int s, int n) {
+    return Helper.load(q, s, n, Stat.class);
   }
 
   /**
@@ -385,8 +385,8 @@ public class Stat extends Bean implements Comparable<Stat> {
    *          the q
    * @return Stat
    */
-  public static Stat load(BasicDBObject q) {
-    return Bean.load(q, Stat.class);
+  public static Stat load(W q) {
+    return Helper.load(q, Stat.class);
   }
 
   /**
@@ -401,7 +401,7 @@ public class Stat extends Bean implements Comparable<Stat> {
    * @return Stat
    */
   public static Stat load(String module, String date, long uid) {
-    return load(new BasicDBObject("module", module).append("date", date).append("uid", uid));
+    return load(W.create("module", module).and("date", date).and("uid", uid));
   }
 
 }

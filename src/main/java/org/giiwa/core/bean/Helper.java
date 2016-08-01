@@ -21,10 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.db.DB;
 
 import com.mongodb.BasicDBObject;
@@ -426,58 +428,59 @@ public class Helper {
     /***
      * "="
      */
-    public static final int  OP_EQ    = 0;
+    public static final int  OP_EQ   = 0;
 
     /**
      * "&gt;"
      */
-    public static final int  OP_GT    = 1;
+    public static final int  OP_GT   = 1;
 
     /**
      * "&gt;="
      */
-    public static final int  OP_GT_EQ = 2;
+    public static final int  OP_GTE  = 2;
 
     /**
      * "&lt;"
      */
-    public static final int  OP_LT    = 3;
+    public static final int  OP_LT   = 3;
 
     /**
      * "&lt;="
      */
-    public static final int  OP_LT_EQ = 4;
+    public static final int  OP_LTE  = 4;
 
     /**
      * "like"
      */
-    public static final int  OP_LIKE  = 5;
+    public static final int  OP_LIKE = 5;
 
     /**
      * "!="
      */
-    public static final int  OP_NEQ   = 7;
+    public static final int  OP_NEQ  = 7;
 
     /**
      * ""
      */
-    public static final int  OP_NONE  = 8;
+    public static final int  OP_NONE = 8;
 
     /**
      * "and"
      */
-    private static final int AND      = 9;
+    private static final int AND     = 9;
 
     /**
      * "or"
      */
-    private static final int OR       = 10;
+    private static final int OR      = 10;
 
-    List<W>                  wlist    = new ArrayList<W>();
+    List<W>                  wlist   = new ArrayList<W>();
 
-    List<Entity>             elist    = new ArrayList<Entity>();
+    List<Entity>             elist   = new ArrayList<Entity>();
+    List<Entity>             order   = new ArrayList<Entity>();
 
-    int                      cond     = AND;
+    int                      cond    = AND;
 
     private W() {
     }
@@ -846,7 +849,7 @@ public class Helper {
             sb.append(">?");
             break;
           }
-          case OP_GT_EQ: {
+          case OP_GTE: {
             sb.append(">=?");
             break;
           }
@@ -854,7 +857,7 @@ public class Helper {
             sb.append("<?");
             break;
           }
-          case OP_LT_EQ: {
+          case OP_LTE: {
             sb.append("<=?");
             break;
           }
@@ -885,7 +888,7 @@ public class Helper {
               s.append(">");
               break;
             }
-            case OP_GT_EQ: {
+            case OP_GTE: {
               s.append(">=");
               break;
             }
@@ -893,7 +896,7 @@ public class Helper {
               s.append("<");
               break;
             }
-            case OP_LT_EQ: {
+            case OP_LTE: {
               s.append("<=");
               break;
             }
@@ -929,7 +932,30 @@ public class Helper {
       BasicDBObject q = new BasicDBObject();
       if (elist.size() > 0 || wlist.size() > 0) {
         for (Entity e : elist) {
-          q.append(e.name, e.value);
+          switch (e.op) {
+            case W.OP_EQ:
+              q.append(e.name, e.value);
+              break;
+            case W.OP_GT:
+              q.append(e.name, new BasicDBObject("$gt", e.value));
+              break;
+            case W.OP_GTE:
+              q.append(e.name, new BasicDBObject("$gte", e.value));
+              break;
+            case W.OP_LIKE:
+              Pattern p1 = Pattern.compile(e.value.toString(), Pattern.CASE_INSENSITIVE);
+              q.append(e.name, p1);
+              break;
+            case W.OP_LT:
+              q.append(e.name, new BasicDBObject("$lt", e.value));
+              break;
+            case W.OP_LTE:
+              q.append(e.name, new BasicDBObject("$lte", e.value));
+              break;
+            case W.OP_NEQ:
+              q.append(e.name, new BasicDBObject("$ne", e.value));
+              break;
+          }
         }
       }
 
@@ -937,7 +963,19 @@ public class Helper {
     }
 
     public BasicDBObject order() {
-      return null;
+      BasicDBObject q = new BasicDBObject();
+      if (order.size() > 0 || order.size() > 0) {
+        for (Entity e : order) {
+          q.append(e.name, e.value);
+        }
+      }
+
+      return q;
+    }
+
+    public W sort(String name, int i) {
+      order.add(new Entity(name, i, 0, 0));
+      return this;
     }
 
   }
@@ -1016,8 +1054,7 @@ public class Helper {
     return RDSHelper.isConfigured() || MongoHelper.isConfigured();
   }
 
-  public static <T extends Bean> Beans<T> load(W q, int s, int n, Class<T> t) {
-    String table = getTable(t);
+  public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) {
     if (primary == DBType.MONGO) {
       // insert into mongo
       return MongoHelper.load(table, q.query(), q.order(), s, n, t);
@@ -1027,6 +1064,11 @@ public class Helper {
     }
 
     return null;
+  }
+
+  public static <T extends Bean> Beans<T> load(W q, int s, int n, Class<T> t) {
+    String table = getTable(t);
+    return load(table, q, s, n, t);
   }
 
   public static String getTable(Class<? extends Bean> t) {
@@ -1058,8 +1100,22 @@ public class Helper {
     return 0;
   }
 
-  public static List<Object> distinct(String name, W create, Class<? extends Bean> t) {
-    // TODO Auto-generated method stub
+  public static List<Object> distinct(String name, W q, Class<? extends Bean> t) {
+    String table = getTable(t);
+
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.distinct(table, name, q.query());
+
+      } else if (primary == DBType.MONGO) {
+        // insert into RDS
+        return RDSHelper.distinct(table, name, q.where(), q.args());
+      } else {
+        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      }
+    }
+
     return null;
   }
 

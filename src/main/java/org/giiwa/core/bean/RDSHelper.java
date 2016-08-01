@@ -2010,4 +2010,67 @@ public class RDSHelper extends Helper {
     return 0;
   }
 
+  public static List<Object> distinct(String table, String name, String where, Object[] args) {
+    /**
+     * create the sql statement
+     */
+    TimeStamp t = TimeStamp.create();
+
+    StringBuilder sql = new StringBuilder();
+    sql.append("select distinct(").append(name).append(") from ").append(table);
+    if (where != null) {
+      sql.append(" where ").append(where);
+    }
+
+    // log.debug("sql:" + sql.toString());
+
+    /**
+     * search it in database
+     */
+    Connection c = null;
+    PreparedStatement p = null;
+    ResultSet r = null;
+
+    try {
+
+      c = getConnection();
+
+      if (c == null)
+        return null;
+
+      p = c.prepareStatement(sql.toString());
+
+      int order = 1;
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
+
+          setParameter(p, order++, o);
+        }
+      }
+
+      r = p.executeQuery();
+      List<Object> list = new ArrayList<Object>();
+      while (r.next()) {
+        list.add(r.getObject(1));
+      }
+
+      if (log.isDebugEnabled())
+        log.debug("load - cost=" + t.past() + "ms, collection=" + table + ", sql=" + sql + ", result=" + list);
+
+      if (t.past() > 10000) {
+        log.warn("load - cost=" + t.past() + "ms, collection=" + table + ", sql=" + sql + ", result=" + list);
+      }
+
+      return list;
+    } catch (Exception e) {
+      if (log.isErrorEnabled())
+        log.error(sql.toString() + toString(args), e);
+
+    } finally {
+      close(r, p, c);
+    }
+    return null;
+  }
+
 }

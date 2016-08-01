@@ -975,26 +975,23 @@ public class MongoHelper extends Helper {
    * @return List of the value
    */
   @SuppressWarnings("unchecked")
-  public static List<Object> distinct(String key, BasicDBObject q, Class<? extends Bean> t) {
+  public static List<Object> distinct(String collection, String key, BasicDBObject q) {
 
-    String collection = MongoHelper.getCollection(t);
-    if (!X.isEmpty(collection)) {
-      TimeStamp t1 = TimeStamp.create();
-      try {
-        if (MongoHelper.DEBUG)
-          KeyField.create(collection, new BasicDBObject(q).append(key, 1), null);
+    TimeStamp t1 = TimeStamp.create();
+    try {
+      if (MongoHelper.DEBUG)
+        KeyField.create(collection, new BasicDBObject(q).append(key, 1), null);
 
-        DBCollection c = MongoHelper.getCollection(collection);
-        if (c != null) {
-          return c.distinct(key, q);
-        }
-      } catch (Exception e) {
-        if (log.isErrorEnabled())
-          log.error(e.getMessage(), e);
-      } finally {
-        if (log.isDebugEnabled())
-          log.debug("disinct[" + key + "] cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
+      DBCollection c = MongoHelper.getCollection(collection);
+      if (c != null) {
+        return c.distinct(key, q);
       }
+    } catch (Exception e) {
+      if (log.isErrorEnabled())
+        log.error(e.getMessage(), e);
+    } finally {
+      if (log.isDebugEnabled())
+        log.debug("disinct[" + key + "] cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
     }
     return null;
   }

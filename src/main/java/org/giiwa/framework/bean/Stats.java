@@ -95,7 +95,7 @@ public class Stats {
      */
     public void set(String date, List<Stat> list) {
         if (Stats.TYPE_NUMBER.equals(type)) {
-            dates.put(Bean.toInt(date), list);
+            dates.put(X.toInt(date), list);
         } else {
             dates.put(date, list);
         }
@@ -252,7 +252,7 @@ public class Stats {
                     list = new ArrayList<Stat>();
                     // put empty in dates
                     if (Stats.TYPE_NUMBER.equals(type)) {
-                        dates.put(Bean.toInt(nextdate), list);
+                        dates.put(X.toInt(nextdate), list);
                     } else {
                         dates.put(nextdate, list);
                     }
@@ -268,7 +268,7 @@ public class Stats {
                         int ii = 0;
 
                         if (Stats.TYPE_NUMBER.equals(type)) {
-                            ii = (Integer) nextdate - Bean.toInt(s.getDate());
+                            ii = (Integer) nextdate - X.toInt(s.getDate());
                         } else {
                             ii = ((String) nextdate).compareTo(s.getDate());
                         }
@@ -462,8 +462,8 @@ public class Stats {
             sorter = new Comparator<Stat>() {
 
                 public int compare(Stat o1, Stat o2) {
-                    int d1 = Bean.toInt(o1.getDate());
-                    int d2 = Bean.toInt(o2.getDate());
+                    int d1 = X.toInt(o1.getDate());
+                    int d2 = X.toInt(o2.getDate());
 
                     log.debug("d1=" + d1 + ", d2=" + d2);
                     if (d1 > d2) {
@@ -485,13 +485,13 @@ public class Stats {
 
             List<Stat> l1 = null;
             if (Stats.TYPE_NUMBER.equals(type)) {
-                l1 = dates.get(Bean.toInt(date));
+                l1 = dates.get(X.toInt(date));
             }
 
             if (l1 == null) {
                 l1 = new ArrayList<Stat>();
                 if (Stats.TYPE_NUMBER.equals(type)) {
-                    dates.put(Bean.toInt(date), l1);
+                    dates.put(X.toInt(date), l1);
                 } else {
                     dates.put(date, l1);
                 }

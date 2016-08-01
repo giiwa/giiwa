@@ -17,12 +17,13 @@ package org.giiwa.framework.bean;
 import java.util.List;
 
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Model;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -32,7 +33,7 @@ import com.mongodb.BasicDBObject;
  * @author wujun
  *
  */
-@Table(collection = "gi_jar")
+@Table(name = "gi_jar")
 public class Jar extends Bean {
 
   /**
@@ -53,11 +54,11 @@ public class Jar extends Bean {
     String id = UID.id(module, name, node);
 
     try {
-      if (!Bean.exists(new BasicDBObject(X._ID, id), Jar.class)) {
+      if (!Helper.exists(W.create(X._ID, id), Jar.class)) {
         V v = V.create(X._ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
-        Bean.insertCollection(v, Jar.class);
+        Helper.insert(v, Jar.class);
       } else {
-        Bean.updateCollection(id, V.create("reset", 1), Jar.class);
+        Helper.update(id, V.create("reset", 1), Jar.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
@@ -76,7 +77,7 @@ public class Jar extends Bean {
   public static void remove(String module, String name) {
     String node = Model.node();
 
-    Bean.delete(new BasicDBObject("module", module).append("name", name).append("node", node), Jar.class);
+    Helper.delete(W.create("module", module).set("name", name).set("node", node), Jar.class);
   }
 
   /**
@@ -86,7 +87,7 @@ public class Jar extends Bean {
    *          the name
    */
   public static void remove(String name) {
-    Bean.delete(new BasicDBObject("name", name), Jar.class);
+    Helper.delete(W.create("name", name), Jar.class);
   }
 
   /**
@@ -96,9 +97,9 @@ public class Jar extends Bean {
    *          the q
    * @return the list
    */
-  public static List<Object> loadAll(BasicDBObject q) {
+  public static List<Object> loadAll(W q) {
     String node = Model.node();
-    return Bean.distinct("name", q.append("node", node), Jar.class);
+    return Helper.distinct("name", q.set("node", node), Jar.class);
   }
 
   /**
@@ -111,7 +112,7 @@ public class Jar extends Bean {
   public static List<Object> load(String name) {
     String node = Model.node();
 
-    return Bean.distinct("module", new BasicDBObject("name", name).append("node", node), Jar.class);
+    return Helper.distinct("module", W.create("name", name).set("node", node), Jar.class);
   }
 
   /**
@@ -122,7 +123,7 @@ public class Jar extends Bean {
    */
   public static void reset(String module) {
     String node = Model.node();
-    Bean.updateCollection(new BasicDBObject("module", module).append("node", node), V.create("reset", 0), Jar.class);
+    Helper.update(W.create("module", module).set("node", node), V.create("reset", 0), Jar.class);
   }
 
   // public static List<Object> loadNames(String module, BasicDBObject q) {

@@ -14,7 +14,7 @@
 */
 package org.giiwa.framework.bean;
 
-import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -123,7 +123,7 @@ public class Request {
    * @return the double
    */
   public double readDouble() {
-    return Bean.toDouble(readString());
+    return X.toDouble(readString(), 0);
   }
 
   /**
@@ -132,7 +132,7 @@ public class Request {
    * @return the float
    */
   public float readFloat() {
-    return Bean.toFloat(readString());
+    return X.toFloat(readString(), 0);
   }
 
   /*

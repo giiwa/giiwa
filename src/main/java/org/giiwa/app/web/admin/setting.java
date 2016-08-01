@@ -12,7 +12,6 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Role;
-import org.giiwa.framework.sync.SyncTask;
 import org.giiwa.framework.web.*;
 
 // TODO: Auto-generated Javadoc
@@ -173,84 +172,6 @@ public class setting extends Model {
     }
 
     this.println("not find page");
-
-  }
-
-  public static class sync extends setting {
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.giiwa.app.web.admin.setting#reset()
-     */
-    @Override
-    public void reset() {
-      for (String c : SyncTask.getCollections().keySet()) {
-        Global.setConfig("sync." + c + ".lasttime", 0L);
-      }
-      Global.setConfig("sync.lasterror", "");
-      Global.setConfig("sync.lasterrortime", 0L);
-      super.reset();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.giiwa.app.web.admin.setting#set()
-     */
-    @Override
-    public void set() {
-      String url = this.getString("sync_url");
-      boolean changed = false;
-      if (url != null && !url.equals(Global.s("sync.url", X.EMPTY))) {
-        // was changed, reset all synced flag
-        changed = true;
-      }
-      Global.setConfig("sync.url", this.getString("sync_url"));
-      Global.setConfig("sync.appkey", this.getString("sync_appkey"));
-      Global.setConfig("sync.secret", this.getString("sync_secret"));
-
-      for (String group : SyncTask.getGroups()) {
-        String s = this.getString("sync_" + group);
-        Global.setConfig("sync." + group, s);
-        for (String c : SyncTask.instance.collections(group)) {
-          Global.setConfig("sync." + c, s);
-        }
-      }
-
-      if (changed) {
-        for (String c : SyncTask.getCollections().keySet()) {
-          Global.setConfig("sync." + c + ".lasttime", 0L);
-        }
-      }
-
-      SyncTask.instance.schedule(1000);
-
-      this.set(X.MESSAGE, lang.get("save.success"));
-
-      get();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.giiwa.app.web.admin.setting#get()
-     */
-    @Override
-    public void get() {
-      this.set("sync_url", Global.s("sync.url", null));
-      this.set("sync_appkey", Global.s("sync.appkey", null));
-      this.set("sync_secret", Global.s("sync.secret", null));
-
-      // this.set("collections", SyncTask.getCollections().keySet());
-      this.set("t", SyncTask.instance);
-      this.set("groups", SyncTask.getGroups());
-
-      this.set("lasterror", Global.s("sync.lasterror", null));
-      this.set("lasterrortime", Global.l("sync.lasterrortime", 0));
-
-      this.set("page", "/admin/setting.sync.html");
-    }
 
   }
 

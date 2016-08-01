@@ -18,11 +18,10 @@ import net.sf.json.JSONObject;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 public class repo extends Model {
@@ -37,8 +36,8 @@ public class repo extends Model {
         int s = this.getInt("s");
         int n = this.getInt("n", 10, "number.per.page");
 
-        BasicDBObject q = new BasicDBObject();
-        Beans<Repo.Entity> bs = Repo.load(q, new BasicDBObject(), s, n);
+        W q = W.create();
+        Beans<Repo.Entity> bs = Repo.load(q, s, n);
         this.set(bs, s, n);
         this.show("/admin/repo.index.html");
 

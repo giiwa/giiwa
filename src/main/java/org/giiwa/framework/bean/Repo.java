@@ -19,8 +19,8 @@ import java.io.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.*;
-
-import com.mongodb.BasicDBObject;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -30,7 +30,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@Table(collection = "gi_repo")
+@Table(name = "gi_repo")
 public class Repo extends Bean {
 
   /**
@@ -64,7 +64,7 @@ public class Repo extends Bean {
    * @return the beans
    */
   public static Beans<Entity> list(long uid, int offset, int limit) {
-    return Bean.load(new BasicDBObject("uid", uid), new BasicDBObject("created", -1), offset, limit, Entity.class);
+    return Helper.load(W.create("uid", uid).sort("created", -1), offset, limit, Entity.class);
   }
 
   /**
@@ -79,7 +79,7 @@ public class Repo extends Bean {
    * @return the beans
    */
   public static Beans<Entity> list(String tag, int offset, int limit) {
-    return Bean.load(new BasicDBObject("tag", tag), new BasicDBObject("created", -1), offset, limit, Entity.class);
+    return Helper.load(W.create("tag", tag).sort("created", -1), offset, limit, Entity.class);
   }
 
   /**
@@ -204,11 +204,7 @@ public class Repo extends Bean {
     if (f.exists()) {
       Entity e = null;
       if (!X.isEmpty(id)) {
-        if (folder != null) {
-          e = Bean.load(new BasicDBObject("folder", folder).append(X._ID, id), Entity.class);
-        } else {
-          e = Bean.load(new BasicDBObject(X._ID, id), Entity.class);
-        }
+        e = Helper.load(id, Entity.class);
       }
 
       if (e == null) {
@@ -297,7 +293,7 @@ public class Repo extends Bean {
     /**
      * delete the info in table
      */
-    Bean.delete(new BasicDBObject(X._ID, id), Entity.class);
+    Helper.delete(id, Entity.class);
 
     return 1;
   }
@@ -308,7 +304,7 @@ public class Repo extends Bean {
    * @author yjiang
    * 
    */
-  @Table(collection = "gi_repo")
+  @Table(name = "gi_repo")
   public static class Entity extends Bean {
 
     /**
@@ -488,11 +484,10 @@ public class Repo extends Bean {
           }
 
           try {
-            if (Bean.exists(new BasicDBObject(X._ID, getId()), Entity.class)) {
-              Bean.updateCollection(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()),
-                  Entity.class);
+            if (Helper.exists(getId(), Entity.class)) {
+              Helper.update(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()), Entity.class);
             } else {
-              Bean.insertCollection(
+              Helper.insert(
                   V.create(X._ID, getId()).set("uid", 0).set("total", pp).set("tag", tag).set("expired", getExpired())
                       .set("created", System.currentTimeMillis()).set("flag", flag).set("name", name),
                   Entity.class);
@@ -694,7 +689,7 @@ public class Repo extends Bean {
      * @return the int
      */
     public int update(V v) {
-      return Bean.updateCollection(getId(), v, Entity.class);
+      return Helper.update(getId(), v, Entity.class);
     }
 
     /**
@@ -714,7 +709,7 @@ public class Repo extends Bean {
       }
       f1.renameTo(f2);
 
-      Bean.updateCollection(getId(), V.create("folder", folder), Entity.class);
+      Helper.update(getId(), V.create("folder", folder), Entity.class);
 
     }
 
@@ -806,7 +801,7 @@ public class Repo extends Bean {
    *          the n
    * @return the beans
    */
-  public static Beans<Entity> load(BasicDBObject q, BasicDBObject order, int s, int n) {
-    return Bean.load(q, order, s, n, Entity.class);
+  public static Beans<Entity> load(W q, int s, int n) {
+    return Helper.load(q, s, n, Entity.class);
   }
 }

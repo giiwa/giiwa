@@ -14,20 +14,18 @@
 */
 package org.giiwa.app.web;
 
-import java.awt.image.BufferedImage;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpSession;
 
 import org.giiwa.core.base.Base64;
 import org.giiwa.core.base.DES;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
@@ -43,8 +41,6 @@ import org.giiwa.utils.image.Captcha;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -380,9 +376,8 @@ public class user extends Model {
     }
 
     int s = 0;
-    BasicDBObject q = new BasicDBObject();
-    BasicDBObject order = new BasicDBObject(X._ID, 1);
-    Beans<Appkey> bs = Appkey.load(q, order, s, 10);
+    W q = W.create().sort(X._ID, 1);
+    Beans<Appkey> bs = Appkey.load(q, s, 10);
     while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
       for (Appkey a : bs.getList()) {
         String key = "sso.oauth." + a.getAppkey();
@@ -395,7 +390,7 @@ public class user extends Model {
         }
       }
       s += bs.getList().size();
-      bs = Appkey.load(q, order, s, 10);
+      bs = Appkey.load(q, s, 10);
 
     }
 
@@ -416,12 +411,12 @@ public class user extends Model {
 
     JSONObject jo = new JSONObject();
     if ("name".equals(name)) {
-      if (User.exists(new BasicDBObject("name", value))) {
+      if (User.exists(W.create("name", value))) {
 
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, lang.get("user.name.exists"));
 
-      } else if (User.exists(new BasicDBObject("name", value))) {
+      } else if (User.exists(W.create("name", value))) {
         jo.put(X.STATE, 202);
         jo.put(X.MESSAGE, lang.get("user.override.exists"));
       } else {
@@ -469,7 +464,7 @@ public class user extends Model {
     if (!X.isEmpty(access)) {
       list = User.loadByAccess(access);
     } else {
-      Beans<User> bs = User.load(new BasicDBObject(X._ID, new BasicDBObject("$gt", 0)), 0, 1000);
+      Beans<User> bs = User.load(W.create().and(X._ID, 0, W.OP_GT), 0, 1000);
       if (bs != null) {
         list = bs.getList();
       }
@@ -816,7 +811,7 @@ public class user extends Model {
     if (method.isPost()) {
       String email = this.getString("email");
       int s = 0;
-      BasicDBObject q = new BasicDBObject("email", email);
+      W q = W.create("email", email);
       Beans<User> bs = User.load(q, s, 10);
       List<String> list = new ArrayList<String>();
       while (bs != null && bs.getList() != null && bs.getList().size() > 0) {

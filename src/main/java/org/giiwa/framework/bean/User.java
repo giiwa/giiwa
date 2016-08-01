@@ -17,12 +17,10 @@ package org.giiwa.framework.bean;
 import java.util.*;
 
 import org.giiwa.core.bean.*;
-import org.giiwa.core.db.DB;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 
 import net.sf.json.JSONObject;
-
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -46,7 +44,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@Table(collection = "gi_user", name="tbluser")
+@Table(name = "gi_user")
 public class User extends Bean {
 
   /**
@@ -157,7 +155,7 @@ public class User extends Bean {
     if (id == null) {
       id = UID.next("user.id");
       try {
-        while (Bean.exists(new BasicDBObject(X._ID, id), User.class)) {
+        while (Helper.exists(id, User.class)) {
           id = UID.next("user.id");
         }
       } catch (Exception e1) {
@@ -167,7 +165,7 @@ public class User extends Bean {
     if (log.isDebugEnabled())
       log.debug("v=" + v);
 
-    Bean.insertCollection(
+    Helper.insert(
         v.set(X._ID, id).set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis()),
         User.class);
 
@@ -209,9 +207,7 @@ public class User extends Bean {
     log.debug("name=" + name + ", passwd=" + password);
     // System.out.println("name=" + name + ", passwd=" + password);
 
-    return Bean.load(
-        new BasicDBObject("name", name).append("password", password).append("deleted", new BasicDBObject("$ne", 1)),
-        User.class);
+    return Helper.load(W.create("name", name).and("password", password).and("deleted", 1, W.OP_NEQ), User.class);
 
   }
 
@@ -228,8 +224,7 @@ public class User extends Bean {
    */
   public static User load(String name) {
 
-    return Bean.load(new BasicDBObject("name", name).append("deleted", new BasicDBObject("$ne", 1)),
-        new BasicDBObject("name", 1), User.class);
+    return Helper.load(W.create("name", name).and("deleted", 1, W.OP_NEQ).sort("name", 1), User.class);
 
   }
 
@@ -242,7 +237,7 @@ public class User extends Bean {
    */
   public static User loadById(long id) {
 
-    return Bean.load(new BasicDBObject(X._ID, id), User.class);
+    return Helper.load(id, User.class);
   }
 
   private void recache() {
@@ -260,22 +255,22 @@ public class User extends Bean {
   public static List<User> loadByAccess(String access) {
 
     Beans<Role> bs = Role.loadByAccess(access, 0, 1000);
-    BasicDBObject q = new BasicDBObject();
+    W q = W.create();
     if (bs != null && bs.getList() != null) {
       if (bs.getList().size() > 1) {
-        BasicDBList list = new BasicDBList();
+        W list = W.create();
         for (Role a : bs.getList()) {
-          list.add(new BasicDBObject("role", a.getId()));
+          list.or("role", a.getId());
         }
-        q.append("$or", list);
+        q.and(list);
       } else if (bs.getList().size() == 1) {
-        q.append("role", bs.getList().get(0).getId());
+        q.and("role", bs.getList().get(0).getId());
       }
     }
 
-    q.append("deleted", new BasicDBObject("$ne", 1));
+    q.and("deleted", 1, W.OP_NEQ);
 
-    Beans<User> us = Bean.load(q, new BasicDBObject("name", 1), 0, Integer.MAX_VALUE, User.class);
+    Beans<User> us = Helper.load(q.sort("name", 1), 0, Integer.MAX_VALUE, User.class);
     return us == null ? null : us.getList();
 
   }
@@ -362,7 +357,7 @@ public class User extends Bean {
 
       role = null;
 
-      Bean.updateCollection(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
+      Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
     }
   }
 
@@ -380,7 +375,7 @@ public class User extends Bean {
       // remove it
       roles.remove(rid);
       role = null;
-      Bean.updateCollection(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
+      Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
     }
   }
 
@@ -391,7 +386,7 @@ public class User extends Bean {
     List<Long> roles = (List<Long>) this.get("roles");
     roles.clear();
 
-    Bean.updateCollection(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
+    Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
   }
 
   private static String encrypt(String passwd) {
@@ -412,9 +407,8 @@ public class User extends Bean {
    *          the number
    * @return Beans
    */
-  public static Beans<User> load(BasicDBObject q, int offset, int limit) {
-    return Bean.load(q.append(X._ID, new BasicDBObject("$gt", 0)), new BasicDBObject("name", 1), offset, limit,
-        User.class);
+  public static Beans<User> load(W q, int offset, int limit) {
+    return Helper.load(q.and(X._ID, 0, W.OP_GT).sort("name", 1), offset, limit, User.class);
   }
 
   /**
@@ -451,7 +445,7 @@ public class User extends Bean {
     } else {
       v.remove("password");
     }
-    return Bean.updateCollection(id, v.set("updated", System.currentTimeMillis()), User.class);
+    return Helper.update(id, v.set("updated", System.currentTimeMillis()), User.class);
   }
 
   /***
@@ -461,7 +455,7 @@ public class User extends Bean {
    *          the list of role id
    */
   public void setRoles(List<Long> roles) {
-    Bean.updateCollection(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
+    Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
   }
 
   /**
@@ -487,8 +481,7 @@ public class User extends Bean {
    * @return the int
    */
   public int logout() {
-    return Bean.updateCollection(getId(), V.create("sid", X.EMPTY).set("updated", System.currentTimeMillis()),
-        User.class);
+    return Helper.update(getId(), V.create("sid", X.EMPTY).set("updated", System.currentTimeMillis()), User.class);
   }
 
   /**
@@ -510,9 +503,9 @@ public class User extends Bean {
     /**
      * cleanup the old sid for the old logined user
      */
-    Bean.updateCollection(new BasicDBObject("sid", sid), V.create("sid", X.EMPTY), User.class);
+    Helper.update(W.create("sid", sid), V.create("sid", X.EMPTY), User.class);
 
-    return Bean.updateCollection(getId(),
+    return Helper.update(getId(),
         V.create("lastlogintime", System.currentTimeMillis()).set("logintimes", getInt("logintimes")).set("ip", ip)
             .set("failtimes", 0).set("locked", 0).set("lockexpired", 0).set("sid", sid)
             .set("updated", System.currentTimeMillis()),
@@ -528,7 +521,7 @@ public class User extends Bean {
    * @author joe
    *
    */
-  @Table(collection = "gi_userlock")
+  @Table(name = "gi_userlock")
   public static class Lock extends Bean {
 
     /**
@@ -550,7 +543,7 @@ public class User extends Bean {
      * @return the int
      */
     public static int locked(long uid, String sid, String host, String useragent) {
-      return Bean.insertCollection(V.create("uid", uid).set("sid", sid).set("host", host).set("useragent", useragent)
+      return Helper.insert(V.create("uid", uid).set("sid", sid).set("host", host).set("useragent", useragent)
           .set("created", System.currentTimeMillis()), Lock.class);
     }
 
@@ -562,7 +555,7 @@ public class User extends Bean {
      * @return the int
      */
     public static int removed(long uid) {
-      return Bean.delete(new BasicDBObject("uid", uid), Lock.class);
+      return Helper.delete(W.create("uid", uid), Lock.class);
     }
 
     /**
@@ -575,7 +568,7 @@ public class User extends Bean {
      * @return the int
      */
     public static int removed(long uid, String sid) {
-      return Bean.delete(new BasicDBObject("uid", uid).append("sid", sid), Lock.class);
+      return Helper.delete(W.create("uid", uid).and("sid", sid), Lock.class);
     }
 
     /**
@@ -588,8 +581,8 @@ public class User extends Bean {
      * @return the list
      */
     public static List<Lock> load(long uid, long time) {
-      Beans<Lock> bs = Bean.load(new BasicDBObject("uid", uid).append("created", new BasicDBObject("$gt", time)),
-          new BasicDBObject("created", 1), 0, Integer.MAX_VALUE, Lock.class);
+      Beans<Lock> bs = Helper.load(W.create("uid", uid).and("created", time, W.OP_GT).sort("created", 1), 0,
+          Integer.MAX_VALUE, Lock.class);
       return bs == null ? null : bs.getList();
     }
 
@@ -605,9 +598,9 @@ public class User extends Bean {
      * @return the list
      */
     public static List<Lock> loadBySid(long uid, long time, String sid) {
-      Beans<Lock> bs = Bean.load(
-          new BasicDBObject("uid", uid).append("created", new BasicDBObject("$gt", time)).append("sid", sid),
-          new BasicDBObject("created", 1), 0, Integer.MAX_VALUE, Lock.class);
+      Beans<Lock> bs = Helper.load(
+          W.create("uid", uid).and("created", time, W.OP_GT).and("sid", sid).sort("created", 1), 0, Integer.MAX_VALUE,
+          Lock.class);
       return bs == null ? null : bs.getList();
     }
 
@@ -623,20 +616,21 @@ public class User extends Bean {
      * @return the list
      */
     public static List<Lock> loadByHost(long uid, long time, String host) {
-      Beans<Lock> bs = Bean.load(
-          new BasicDBObject("uid", uid).append("created", new BasicDBObject("$gt", time)).append("host", host),
-          new BasicDBObject("created", 1), 0, Integer.MAX_VALUE, Lock.class);
+      Beans<Lock> bs = Helper.load(
+          W.create("uid", uid).and("created", time, W.OP_GT).and("host", host).sort("created", 1), 0, Integer.MAX_VALUE,
+          Lock.class);
       return bs == null ? null : bs.getList();
     }
 
     /**
      * delete all user lock info for the user id
      * 
-     * @param uid the user id
+     * @param uid
+     *          the user id
      * @return the number deleted
      */
     public static int cleanup(long uid) {
-      return Bean.delete(new BasicDBObject("uid", uid), Lock.class);
+      return Helper.delete(W.create("uid", uid), Lock.class);
     }
 
     public long getUid() {
@@ -669,7 +663,7 @@ public class User extends Bean {
    * @return int how many was deleted
    */
   public static int delete(long id) {
-    return Bean.delete(new BasicDBObject(X._ID, id), User.class);
+    return Helper.delete(id, User.class);
   }
 
   public List<AuthToken> getTokens() {
@@ -690,7 +684,7 @@ public class User extends Bean {
    * "admin" user, with "admin" as password
    */
   public static void checkAndInit() {
-    if (Bean.isConfigured()) {
+    if (Helper.isConfigured()) {
       List<User> list = User.loadByAccess("access.config.admin");
       if (list == null || list.size() == 0) {
         User.create(V.create("id", 0L).set("name", "admin").set("password", "admin").set("title", "Admin"));
@@ -705,9 +699,9 @@ public class User extends Bean {
    *          the query
    * @return boolean
    */
-  public static boolean exists(BasicDBObject q) {
+  public static boolean exists(W q) {
     try {
-      return Bean.exists(q, User.class);
+      return Helper.exists(q, User.class);
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
     }
@@ -723,7 +717,7 @@ public class User extends Bean {
    */
   public static boolean exists(long id) {
     try {
-      return Bean.exists(new BasicDBObject(X._ID, id), User.class);
+      return Helper.exists(id, User.class);
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
     }

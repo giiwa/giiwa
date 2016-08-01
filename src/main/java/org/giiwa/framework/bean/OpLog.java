@@ -16,10 +16,10 @@ package org.giiwa.framework.bean;
 
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.*;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Language;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -29,7 +29,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@Table(collection = "gi_oplog")
+@Table(name = "gi_oplog")
 public class OpLog extends Bean {
 
   private static final long serialVersionUID = 1L;
@@ -44,7 +44,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int remove() {
-    return Bean.delete(new BasicDBObject(), OpLog.class);
+    return Helper.delete(W.create(), OpLog.class);
   }
 
   /**
@@ -53,9 +53,7 @@ public class OpLog extends Bean {
    */
   public static void cleanup() {
     // TODO
-    Bean.delete(
-        new BasicDBObject().append("created", new BasicDBObject().append("$lt", System.currentTimeMillis() - X.AMONTH)),
-        OpLog.class);
+    Helper.delete(W.create().and("created", System.currentTimeMillis() - X.AMONTH, W.OP_LT), OpLog.class);
 
   }
 
@@ -72,23 +70,8 @@ public class OpLog extends Bean {
    *          the limit
    * @return Beans
    */
-  public static Beans<OpLog> load(BasicDBObject query, BasicDBObject order, int offset, int limit) {
-    return Bean.load(query, order, offset, limit, OpLog.class);
-  }
-
-  /**
-   * Load.
-   *
-   * @param query
-   *          the query
-   * @param offset
-   *          the offset
-   * @param limit
-   *          the limit
-   * @return the beans
-   */
-  public static Beans<OpLog> load(BasicDBObject query, int offset, int limit) {
-    return load(query, new BasicDBObject().append("created", -1), offset, limit);
+  public static Beans<OpLog> load(W query, int offset, int limit) {
+    return Helper.load(query, offset, limit, OpLog.class);
   }
 
   /**
@@ -268,29 +251,6 @@ public class OpLog extends Bean {
       this.set("user_obj", User.loadById(this.getLong("uid")));
     }
     return (User) this.get("user_obj");
-  }
-
-  /**
-   * Load.
-   *
-   * @param where
-   *          the where
-   * @param args
-   *          the args
-   * @param s
-   *          the s
-   * @param n
-   *          the n
-   * @return the beans
-   */
-  /*
-   * (non-Javadoc)
-   * 
-   * @see com.giiwa.bean.Exportable#load(java.lang.String, java.lang.Object[],
-   * int, int)
-   */
-  public Beans<OpLog> load(String where, Object[] args, int s, int n) {
-    return Bean.load(where, args, "order by created", s, n, OpLog.class);
   }
 
   public String getExportableId() {
@@ -476,7 +436,7 @@ public class OpLog extends Bean {
     } else {
       v.set("brief", brief).set("message", message);
     }
-    int i = Bean.insertCollection(v, OpLog.class);
+    int i = Helper.insert(v, OpLog.class);
 
     if (i > 0) {
       // Category.update(system, module, op);

@@ -18,21 +18,21 @@ import org.giiwa.core.base.RSA;
 import org.giiwa.core.base.RSA.Key;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.X;
 
-import com.mongodb.BasicDBObject;
-
 // TODO: Auto-generated Javadoc
 /**
- * RSA key pair.
- * <br>
+ * RSA key pair. <br>
  * collection="gi_keypair"
  * 
  * @author joe
  *
  */
-@Table(collection = "gi_keypair")
+@Table(name = "gi_keypair")
 public class Keypair extends Bean {
 
   /**
@@ -61,7 +61,7 @@ public class Keypair extends Bean {
     Key k = RSA.generate(length);
     if (k != null) {
       long created = System.currentTimeMillis();
-      if (Bean.insertCollection(V.create(X._ID, created).set("created", created).set("length", length).set("memo", memo)
+      if (Helper.insert(V.create(X._ID, created).set("created", created).set("length", length).set("memo", memo)
           .set("pubkey", k.pub_key).set("prikey", k.pri_key), Keypair.class) > 0) {
         return created;
       }
@@ -80,7 +80,7 @@ public class Keypair extends Bean {
    * @return the beans
    */
   public static Beans<Keypair> load(int s, int n) {
-    return Bean.load(new BasicDBObject(), new BasicDBObject(X._ID, -1), s, n, Keypair.class);
+    return Helper.load(W.create(), s, n, Keypair.class);
   }
 
   /**
@@ -93,7 +93,7 @@ public class Keypair extends Bean {
    * @return the int
    */
   public static int update(long created, V v) {
-    return Bean.updateCollection(created, v, Keypair.class);
+    return Helper.update(created, v, Keypair.class);
   }
 
   /*
@@ -139,7 +139,7 @@ public class Keypair extends Bean {
    * @return the keypair
    */
   public static Keypair load(long created) {
-    return Bean.load(new BasicDBObject(X._ID, created), Keypair.class);
+    return Helper.load(W.create(X._ID, created), Keypair.class);
   }
 
   /**
@@ -149,7 +149,7 @@ public class Keypair extends Bean {
    *          the created
    */
   public static void delete(long created) {
-    Bean.delete(new BasicDBObject(X._ID, created), Keypair.class);
+    Helper.delete(W.create(X._ID, created), Keypair.class);
   }
 
 }

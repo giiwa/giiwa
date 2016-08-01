@@ -16,6 +16,7 @@ package org.giiwa.app.web.admin;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
@@ -24,8 +25,7 @@ import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
- * web api: /admin/accesslog
- * <br>
+ * web api: /admin/accesslog <br>
  * used to access the "accesslog"
  * 
  * @author joe
@@ -33,54 +33,56 @@ import com.mongodb.BasicDBObject;
  */
 public class accesslog extends Model {
 
-    /* (non-Javadoc)
-     * @see org.giiwa.framework.web.Model#onGet()
-     */
-    @Path(login = true, access = "acess.config.admin")
-    public void onGet() {
-        String uri = this.getString("guri");
-        String ip = this.getString("ip");
-        String gsid = this.getString("gsid");
-        String sortby = this.getString("sortby");
-        int sortby_type = this.getInt("sortby_type", -1);
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  @Path(login = true, access = "acess.config.admin")
+  public void onGet() {
+    String uri = this.getString("guri");
+    String ip = this.getString("ip");
+    String gsid = this.getString("gsid");
+    String sortby = this.getString("sortby");
+    int sortby_type = this.getInt("sortby_type", -1);
 
-        BasicDBObject q = new BasicDBObject();
-        if (!X.isEmpty(uri)) {
-            q.append("url", uri);
-            this.set("guri", uri);
-        }
-        if (!X.isEmpty(ip)) {
-            q.append("ip", ip);
-            this.set("ip", ip);
-        }
-        if (!X.isEmpty(gsid)) {
-            q.append("sid", gsid);
-            this.set("gsid", gsid);
-        }
-        int s = this.getInt("s");
-        int n = this.getInt("n", 10, "number.per.page");
-
-        if (X.isEmpty(sortby)) {
-            sortby = "created";
-        }
-        this.set("sortby", sortby);
-        this.set("sortby_type", sortby_type);
-
-        BasicDBObject order = new BasicDBObject(sortby, sortby_type);
-        Beans<AccessLog> bs = AccessLog.load(q, order, s, n);
-
-        this.set(bs, s, n);
-
-        this.query.path("/admin/accesslog");
-        this.show("/admin/accesslog.index.html");
+    W q = W.create();
+    if (!X.isEmpty(uri)) {
+      q.and("url", uri);
+      this.set("guri", uri);
     }
-
-    /**
-     * Deleteall.
-     */
-    @Path(path = "deleteall", login = true, access = "acess.config.admin")
-    public void deleteall() {
-        AccessLog.deleteAll();
+    if (!X.isEmpty(ip)) {
+      q.and("ip", ip);
+      this.set("ip", ip);
     }
+    if (!X.isEmpty(gsid)) {
+      q.and("sid", gsid);
+      this.set("gsid", gsid);
+    }
+    int s = this.getInt("s");
+    int n = this.getInt("n", 10, "number.per.page");
+
+    if (X.isEmpty(sortby)) {
+      sortby = "created";
+    }
+    this.set("sortby", sortby);
+    this.set("sortby_type", sortby_type);
+
+    q.sort(sortby, sortby_type);
+    Beans<AccessLog> bs = AccessLog.load(q, s, n);
+
+    this.set(bs, s, n);
+
+    this.query.path("/admin/accesslog");
+    this.show("/admin/accesslog.index.html");
+  }
+
+  /**
+   * Deleteall.
+   */
+  @Path(path = "deleteall", login = true, access = "acess.config.admin")
+  public void deleteall() {
+    AccessLog.deleteAll();
+  }
 
 }

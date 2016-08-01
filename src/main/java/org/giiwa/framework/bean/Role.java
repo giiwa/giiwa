@@ -104,7 +104,7 @@ public class Role extends Bean {
   public List<String> getAccesses() {
 
     if (!this.containsKey("accesses")) {
-      List<Object> list = Bean.distinct("name", new BasicDBObject("rid", this.getId()), RoleAccess.class);
+      List<Object> list = Helper.distinct("name", W.create("rid", this.getId()), RoleAccess.class);
 
       this.set("accesses", list);
 
@@ -194,7 +194,7 @@ public class Role extends Bean {
     Role r = (Role) Cache.get("role://" + rid);
 
     if (r == null) {
-      r = Bean.load(new BasicDBObject(X._ID, rid), Role.class);
+      r = Helper.load(rid, Role.class);
     }
 
     if (r != null) {
@@ -213,7 +213,7 @@ public class Role extends Bean {
    * @return the role
    */
   public static Role loadByName(String name) {
-    return Bean.load(new BasicDBObject("name", name), Role.class);
+    return Helper.load(W.create("name", name), Role.class);
   }
 
   public long getId() {
@@ -234,7 +234,7 @@ public class Role extends Bean {
    * @return the beans
    */
   public static Beans<Role> load(int offset, int limit) {
-    return Bean.load(new BasicDBObject(), new BasicDBObject("name", 1), offset, limit, Role.class);
+    return Helper.load(W.create().sort("name", 1), offset, limit, Role.class);
   }
 
   /**
@@ -245,7 +245,7 @@ public class Role extends Bean {
    * @return the role
    */
   public static Role loadById(long id) {
-    return Bean.load(new BasicDBObject(X._ID, id), Role.class);
+    return Helper.load(id, Role.class);
   }
 
   /**
@@ -256,15 +256,15 @@ public class Role extends Bean {
    * @return the int
    */
   public int update(V v) {
-    return Bean.updateCollection(this.getId(), v.set("updated", System.currentTimeMillis()), Role.class);
+    return Helper.update(this.getId(), v.set("updated", System.currentTimeMillis()), Role.class);
   }
 
   public void setAccess(String[] accesses) {
     if (accesses != null) {
-      Bean.delete(new BasicDBObject("rid", this.getId()), RoleAccess.class);
+      Helper.delete(W.create("rid", this.getId()), RoleAccess.class);
 
       for (String a : accesses) {
-        Bean.insertCollection(V.create("rid", this.getId()).set("name", a).set(X._ID, UID.id(this.getId(), a)),
+        Helper.insert(V.create("rid", this.getId()).set("name", a).set(X._ID, UID.id(this.getId(), a)),
             RoleAccess.class);
       }
     }
@@ -278,10 +278,10 @@ public class Role extends Bean {
    * @return the int
    */
   public static int delete(long id) {
-    return Bean.delete(new BasicDBObject(X._ID, id), Role.class);
+    return Helper.delete(id, Role.class);
   }
 
-  @Table(collection = "gi_roleaccess")
+  @Table(name = "gi_roleaccess")
   private static class RoleAccess extends Bean {
 
     /**
@@ -303,22 +303,21 @@ public class Role extends Bean {
    * @return the beans
    */
   public static Beans<Role> loadByAccess(String access, int s, int n) {
-    Beans<RoleAccess> bs = Bean.load(new BasicDBObject("name", access), new BasicDBObject("rid", 1), 0,
-        Integer.MAX_VALUE, RoleAccess.class);
+    Beans<RoleAccess> bs = Helper.load(W.create("name", access).sort("rid", 1), 0, Integer.MAX_VALUE, RoleAccess.class);
 
-    BasicDBObject q = new BasicDBObject();
+    W q = W.create();
     if (bs != null && bs.getList() != null) {
       if (bs.getList().size() > 1) {
-        BasicDBList list = new BasicDBList();
+        W w1 = W.create();
         for (RoleAccess a : bs.getList()) {
-          list.add(new BasicDBObject(X._ID, a.getLong("rid")));
+          w1.or(X._ID, a.getLong("rid"));
         }
-        q.append("$or", list);
+        q.and(w1);
       } else if (bs.getList().size() == 1) {
-        q.append(X._ID, bs.getList().get(0).getLong("rid"));
+        q.and(X._ID, bs.getList().get(0).getLong("rid"));
       }
     }
 
-    return Bean.load(q, new BasicDBObject("name", 1), s, n, Role.class);
+    return Helper.load(q.sort("name", 1), s, n, Role.class);
   }
 }

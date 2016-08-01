@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.giiwa.core.bean.*;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.framework.web.Model;
 
 import net.sf.json.*;
@@ -34,7 +36,7 @@ import com.mongodb.BasicDBObject;
  * @author yjiang
  * 
  */
-@Table(collection = "gi_menu")
+@Table(name = "gi_menu")
 public class Menu extends Bean {
 
   /**
@@ -227,32 +229,32 @@ public class Menu extends Bean {
   private static Menu insertOrUpdate(long parent, String name, V v) {
     String node = Model.node();
 
-    BasicDBObject q = new BasicDBObject().append("parent", parent).append("name", name).append("node", node);
+    W q = W.create().set("parent", parent).set("name", name).set("node", node);
 
     try {
-      if (!Bean.exists(q, Menu.class)) {
+      if (!Helper.exists(q, Menu.class)) {
         long id = UID.next("menu.id");
-        while (Bean.exists(new BasicDBObject(X._ID, id), Menu.class)) {
+        while (Helper.exists(W.create(X._ID, id), Menu.class)) {
           id = UID.next("menu.id");
         }
-        Bean.insertCollection(v.set(X._ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
+        Helper.insert(v.set(X._ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
             Menu.class);
 
       } else {
         /**
          * update
          */
-        Bean.updateCollection(q, v, Menu.class);
+        Helper.update(q, v, Menu.class);
 
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
     }
 
-    long count = Bean.count(new BasicDBObject("parent", parent), Menu.class);
-    Bean.updateCollection(parent, V.create("childs", count), Menu.class);
+    long count = Helper.count(W.create("parent", parent), Menu.class);
+    Helper.update(parent, V.create("childs", count), Menu.class);
 
-    return Bean.load(q, Menu.class);
+    return Helper.load(q, Menu.class);
   }
 
   public String getTip() {
@@ -268,7 +270,7 @@ public class Menu extends Bean {
    */
   public static Beans<Menu> submenu(long id) {
     // load it
-    Beans<Menu> bb = Bean.load(new BasicDBObject("parent", id), new BasicDBObject("seq", -1), 0, -1, Menu.class);
+    Beans<Menu> bb = Helper.load(W.create("parent", id).sort("seq", -1), 0, -1, Menu.class);
     return bb;
   }
 
@@ -282,7 +284,7 @@ public class Menu extends Bean {
    * @return the menu
    */
   public static Menu load(long parent, String name) {
-    Menu m = Bean.load(new BasicDBObject("parent", parent).append("name", name), Menu.class);
+    Menu m = Helper.load(W.create("parent", parent).set("name", name), Menu.class);
     return m;
   }
 
@@ -296,23 +298,13 @@ public class Menu extends Bean {
   }
 
   /**
-   * Removes the by tag.
-   * 
-   * @param tag
-   *          the tag
-   */
-  public void removeByTag(String tag) {
-    Bean.delete("tag=?", new String[] { tag }, Menu.class);
-  }
-
-  /**
    * Removes the.
    * 
    * @param id
    *          the id
    */
   public static void remove(long id) {
-    Bean.delete(new BasicDBObject(X.ID, id), Menu.class);
+    Helper.delete(W.create(X.ID, id), Menu.class);
 
     /**
      * remove all the sub
@@ -391,7 +383,7 @@ public class Menu extends Bean {
    */
   public static void remove(String tag) {
     String node = Model.node();
-    Bean.delete(new BasicDBObject("tag", tag).append("node", node), Menu.class);
+    Helper.delete(W.create("tag", tag).set("node", node), Menu.class);
   }
 
   /**
@@ -399,7 +391,7 @@ public class Menu extends Bean {
    */
   public static void reset() {
     String node = Model.node();
-    Bean.updateCollection(new BasicDBObject("node", node), V.create("seq", -1), Menu.class);
+    Helper.update(W.create("node", node), V.create("seq", -1), Menu.class);
   }
 
   /**
@@ -407,7 +399,7 @@ public class Menu extends Bean {
    */
   public static void cleanup() {
     String node = Model.node();
-    Bean.delete(new BasicDBObject("seq", new BasicDBObject("$lt", 0)).append("node", node), Menu.class);
+    Helper.delete(W.create("node", node).and("seq", 0, W.OP_LT), Menu.class);
   }
 
   public String getStyle() {

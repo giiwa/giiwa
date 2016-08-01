@@ -52,7 +52,6 @@ import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.bean.User;
-import org.giiwa.framework.sync.SyncTask;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
@@ -271,7 +270,6 @@ public class DefaultListener implements IListener {
     // }
 
     setting.register("system", setting.system.class);
-    setting.register("sync", setting.sync.class);
     setting.register("smtp", setting.mail.class);
     setting.register("counter", setting.counter.class);
 
@@ -285,8 +283,6 @@ public class DefaultListener implements IListener {
      * check and initialize
      */
     User.checkAndInit();
-
-    SyncTask.start();
 
   }
 

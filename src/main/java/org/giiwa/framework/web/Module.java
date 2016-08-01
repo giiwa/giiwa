@@ -31,8 +31,8 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.base.FileUtil;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Access;
@@ -40,8 +40,6 @@ import org.giiwa.framework.bean.Jar;
 import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.PathMapping;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -704,7 +702,7 @@ public class Module {
        */
       boolean changed = false;
 
-      List<Object> names = Jar.loadAll(new BasicDBObject("reset", 0));
+      List<Object> names = Jar.loadAll(W.create("reset", 0));
       if (names != null && names.size() > 0) {
         for (Object name : names) {
           List<Object> modules = Jar.load(name.toString());
