@@ -42,7 +42,7 @@ import com.mongodb.WriteResult;
 public class MongoHelper extends Helper {
 
   /** The mongo. */
-  private static Map<String, DB> mongo  = new HashMap<String, DB>();
+  private static Map<String, DB> mongo = new HashMap<String, DB>();
 
   public static boolean isConfigured() {
     getDB();
@@ -744,7 +744,7 @@ public class MongoHelper extends Helper {
    */
   final protected static int insertCollection(String collection, V v) {
 
-    DBCollection c = MongoHelper.getCollection("prod");
+    DBCollection c = getCollection(collection);
     if (c != null) {
       BasicDBObject d = new BasicDBObject();
 
@@ -758,7 +758,7 @@ public class MongoHelper extends Helper {
         WriteResult r = c.insert(d);
 
         if (log.isDebugEnabled())
-          log.debug("inserted collection=" + collection + ", d=" + d);
+          log.debug("inserted collection=" + collection + ", d=" + d + ", r=" + r);
         return 1;
       } catch (Exception e) {
         if (log.isErrorEnabled())
@@ -889,12 +889,14 @@ public class MongoHelper extends Helper {
 
   protected static boolean exists(String collection, DBObject query) throws Exception {
     TimeStamp t1 = TimeStamp.create();
+    boolean b = false;
     try {
-      return MongoHelper.load(collection, query) != null;
+      b = MongoHelper.load(collection, query) != null;
     } finally {
       if (log.isDebugEnabled())
-        log.debug("exists cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + query);
+        log.debug("exists cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + query + ", result=" + b);
     }
+    return b;
   }
 
   /**

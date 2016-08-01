@@ -22,7 +22,6 @@ import org.giiwa.core.bean.Helper.W;
 
 import net.sf.json.JSONObject;
 
-// TODO: Auto-generated Javadoc
 /**
  * 
  * The {@code User} Class is base user class, all the login/access controlled in
@@ -52,13 +51,28 @@ public class User extends Bean {
   */
   private static final long serialVersionUID = 1L;
 
+  @Column(name = X._ID)
+  private long              id;
+
+  @Column(name = "name")
+  private String            name;
+
+  @Column(name = "nickname")
+  private String            nickname;
+
+  @Column(name = "title")
+  private String            title;
+
+  @Column(name = "password")
+  private String            password;
+
   /**
    * get the unique ID of the user
    * 
    * @return long
    */
   public long getId() {
-    return this.getLong(X._ID);
+    return id;
   }
 
   /**
@@ -67,7 +81,7 @@ public class User extends Bean {
    * @return String
    */
   public String getName() {
-    return this.getString("name");
+    return name;
   }
 
   /**
@@ -76,7 +90,7 @@ public class User extends Bean {
    * @return String
    */
   public String getNickname() {
-    return this.getString("nickname");
+    return nickname;
   }
 
   /**
@@ -103,7 +117,7 @@ public class User extends Bean {
    * @return String
    */
   public String getTitle() {
-    return this.getString("title");
+    return title;
   }
 
   /*
@@ -238,11 +252,6 @@ public class User extends Bean {
   public static User loadById(long id) {
 
     return Helper.load(id, User.class);
-  }
-
-  private void recache() {
-    // String uid = "user://id/" + getId();
-    // Cache.set(uid, this);
   }
 
   /**

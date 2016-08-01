@@ -27,7 +27,6 @@ org/giiwa/framework/web/Language.class
 org/giiwa/core/base/Http.class
 org/giiwa/core/base/Host$Eth.class
 org/giiwa/core/base/Base64.class
-org/giiwa/core/bean/KeyField$1.class
 org/giiwa/core/bean/Table.class
 org/giiwa/app/web/repo.class
 org/giiwa/framework/web/GiiwaFilter.class
@@ -60,7 +59,6 @@ org/giiwa/framework/web/view/JspView.class
 org/giiwa/framework/bean/Stats.class
 org/giiwa/app/web/admin/dashboard.class
 org/giiwa/framework/web/GClassLoader.class
-org/giiwa/app/web/DefaultListener$SorterTask.class
 org/giiwa/app/web/admin/role.class
 org/giiwa/core/base/Shell$IPrint.class
 org/giiwa/app/web/admin/module.class
@@ -85,14 +83,11 @@ org/giiwa/core/base/RSA.class
 org/giiwa/app/web/configure$1.class
 org/giiwa/framework/bean/Stat.class
 org/giiwa/core/bean/X.class
-org/giiwa/core/bean/KeyField$2.class
-org/giiwa/app/web/admin/keyfield.class
 org/giiwa/core/bean/Pool$ICreator.class
 org/giiwa/app/web/admin/system.class
 org/giiwa/framework/bean/Repo$Entity.class
 org/giiwa/framework/web/Paging.class
 org/giiwa/core/base/Html.class
-org/giiwa/core/bean/KeyField.class
 org/giiwa/core/bean/Bean.class
 org/giiwa/core/bean/Helper$DBType.class
 org/giiwa/core/cache/impl/MemCache.class

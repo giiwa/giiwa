@@ -178,7 +178,7 @@ alter table tblstat alter uid type bigint;
 #drop table if exists tblmenu;
 create table tblmenu
 (
-	id serial,
+	id int,
 	node varchar(50),
 	parent int,
 	name varchar(50),

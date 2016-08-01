@@ -80,8 +80,9 @@ public class Helper {
       primary = DBType.RDS;
     } else if (MongoHelper.isConfigured()) {
       primary = DBType.MONGO;
+    } else {
+      primary = DBType.NONE;
     }
-    primary = DBType.NONE;
 
   }
 
@@ -99,23 +100,20 @@ public class Helper {
    * @return int
    */
   public static int delete(W q, Class<? extends Bean> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
+    String table = getTable(t);
+
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.delete(table, q.query());
+      } else if (primary == DBType.RDS) {
+        // insert into RDS
+        return RDSHelper.delete(table, q.where(), q.args());
+      } else {
+
+        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      }
     }
-
-    if (MongoHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into mongo
-      return MongoHelper.delete(mapping.name(), q.query());
-    } else if (RDSHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into RDS
-      return RDSHelper.delete(mapping.name(), q.where(), q.args());
-    }
-
-    log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-
     return 0;
   }
 
@@ -132,21 +130,18 @@ public class Helper {
    * @throws Exception
    */
   public static boolean exists(W q, Class<? extends Bean> t) throws Exception {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      throw new Exception("mapping missed in [" + t + "] declaretion");
-    }
+    String table = getTable(t);
 
-    if (MongoHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into mongo
-      return MongoHelper.exists(mapping.name(), q.query());
-    } else if (RDSHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into RDS
-      return RDSHelper.exists(mapping.name(), q.where(), q.args());
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.exists(table, q.query());
+      } else if (primary == DBType.RDS) {
+        // insert into RDS
+        return RDSHelper.exists(table, q.where(), q.args());
+      }
     }
-
     throw new Exception("no db configured, please configure the {giiwa}/giiwa.properites");
-
   }
 
   /**
@@ -977,44 +972,41 @@ public class Helper {
   }
 
   public static <T extends Bean> T load(W q, Class<T> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return null;
+    String table = getTable(t);
+
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.load(table, q.query(), q.order(), t);
+
+      } else if (primary == DBType.RDS) {
+        // insert into RDS
+        return RDSHelper.load(table, q.where(), q.args(), q.orderby(), t);
+      } else {
+
+        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      }
     }
-
-    if (MongoHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into mongo
-      return MongoHelper.load(mapping.name(), q.query(), q.order(), t);
-
-    } else if (RDSHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into RDS
-      return RDSHelper.load(q.where(), q.args(), q.orderby(), t);
-    }
-
-    log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
     return null;
 
   }
 
   public static int insert(V values, Class<? extends Bean> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
+    String table = getTable(t);
+
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.insertCollection(table, values);
+      } else if (primary == DBType.RDS) {
+
+        // insert into RDS
+        return RDSHelper.insertTable(table, values);
+      } else {
+        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      }
     }
 
-    if (MongoHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into mongo
-      return MongoHelper.insertCollection(mapping.name(), values);
-    } else if (RDSHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into RDS
-      return RDSHelper.insertTable(mapping.name(), values);
-    }
-
-    log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
     return 0;
   }
 
@@ -1023,22 +1015,21 @@ public class Helper {
   }
 
   public static int update(W q, V values, Class<? extends Bean> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
-    }
+    String table = getTable(t);
 
-    if (MongoHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into mongo
-      return MongoHelper.updateCollection(mapping.name(), q.query(), values);
-    } else if (RDSHelper.isConfigured() && !X.isEmpty(mapping.name())) {
-      // insert into RDS
-      return RDSHelper.updateTable(mapping.name(), q.where(), q.args(), values);
-    }
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.updateCollection(table, q.query(), values);
 
-    log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      } else if (primary == DBType.RDS) {
+        // insert into RDS
+        return RDSHelper.updateTable(table, q.where(), q.args(), values);
+      } else {
+
+        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      }
+    }
     return 0;
   }
 
@@ -1065,7 +1056,7 @@ public class Helper {
 
   public static String getTable(Class<? extends Bean> t) {
     Table table = (Table) t.getAnnotation(Table.class);
-    if (table == null || !X.isEmpty(table.name())) {
+    if (table == null || X.isEmpty(table.name())) {
       log.error("table missed/error in [" + t + "] declaretion");
       return null;
     }
@@ -1117,7 +1108,7 @@ public class Helper {
     w.and("aaa", 2);
     W w1 = W.create("a", 1).or("b", 2);
     w.and(w1);
-    
+
     System.out.println(w.where());
     System.out.println(Bean.toString(w.args()));
     System.out.println(w.orderby());

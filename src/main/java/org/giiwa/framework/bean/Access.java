@@ -43,7 +43,7 @@ public class Access extends Bean {
   */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = X._ID, unique = true, key = true, nullable = false)
+  @Column(name = X._ID)
   String                    id;
 
   @Column(name = "name")

@@ -41,17 +41,4 @@ public @interface Column {
    */
   String name() default X.EMPTY;
 
-  /**
-   * the length of the field if it's string
-   * 
-   * @return
-   */
-  int len() default 10;
-
-  boolean nullable() default true;
-
-  boolean unique() default false;
-
-  boolean key() default false;
-
 }

@@ -230,19 +230,20 @@ public class Menu extends Bean {
     W q = W.create().and("parent", parent).and("name", name).and("node", node);
 
     try {
-      if (!Helper.exists(q, Menu.class)) {
-        long id = UID.next("menu.id");
-        while (Helper.exists(W.create(X._ID, id), Menu.class)) {
-          id = UID.next("menu.id");
-        }
-        Helper.insert(v.set(X._ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
-            Menu.class);
-
-      } else {
+      if (Helper.exists(q, Menu.class)) {
         /**
          * update
          */
         Helper.update(q, v, Menu.class);
+
+      } else {
+        long id = UID.next("menu.id");
+        while (Helper.exists(W.create(X._ID, id), Menu.class)) {
+          id = UID.next("menu.id");
+        }
+        
+        Helper.insert(v.set(X._ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
+            Menu.class);
 
       }
     } catch (Exception e1) {

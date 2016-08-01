@@ -36,8 +36,12 @@ public class Role extends Bean {
   */
   private static final long serialVersionUID = 1L;
 
-  // int id;
-  // String name;
+  @Column(name = X._ID)
+  private long              id;
+
+  @Column(name = "name")
+  private String            name;
+
   // String memo;
   // long updated;
 
@@ -213,11 +217,11 @@ public class Role extends Bean {
   }
 
   public long getId() {
-    return this.getLong(X._ID);
+    return id;
   }
 
   public String getName() {
-    return this.getString("name");
+    return name;
   }
 
   /**

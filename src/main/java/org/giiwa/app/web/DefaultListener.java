@@ -378,7 +378,7 @@ public class DefaultListener implements IListener {
        */
       String dbname = DB.getDriver();
 
-      if (!X.isEmpty(dbname) && DB.isConfigured()) {
+      if (!X.isEmpty(dbname) && RDSHelper.isConfigured()) {
         /**
          * initial the database
          */

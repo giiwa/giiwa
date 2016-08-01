@@ -177,10 +177,14 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     Field f1 = _getField(name);
     if (f1 != null) {
       try {
+        // log.debug("f1=" + f1 + ", value=" + value);
+        f1.setAccessible(true);
         f1.set(this, value);
       } catch (Exception e) {
         log.error(name + "=" + value, e);
       }
+      // } else {
+      // log.debug("not found the column=" + name);
     }
   }
 
@@ -189,7 +193,8 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     Map<String, Field> m = _fields.get(c1);
     if (m == null) {
       m = new HashMap<String, java.lang.reflect.Field>();
-      Field[] ff = this.getClass().getFields();
+
+      Field[] ff = c1.getDeclaredFields();
       for (Field f : ff) {
         Column f1 = f.getAnnotation(Column.class);
         if (f1 != null) {
@@ -199,6 +204,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
 
       _fields.put(c1, m);
     }
+
     return m.get(columnname);
 
   }

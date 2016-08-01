@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -43,13 +44,28 @@ public class AuthToken extends Bean {
    */
   private static final long serialVersionUID = 1L;
 
+  @Column(name = X._ID)
+  private String            id;
+
+  @Column(name = "uid")
+  private long              uid;
+
+  @Column(name = "token")
+  private String            token;
+
+  @Column(name = "expired")
+  private long              expired;
+
+  @Column(name = "sid")
+  private String            sid;
+
   /**
    * get the id
    * 
    * @return String
    */
   public String getId() {
-    return this.getString(X._ID);
+    return id;
   }
 
   /**
@@ -58,7 +74,7 @@ public class AuthToken extends Bean {
    * @return long
    */
   public long getUid() {
-    return this.containsKey("uid") ? this.getLong("uid") : -1;
+    return uid;
   }
 
   /**
@@ -67,7 +83,7 @@ public class AuthToken extends Bean {
    * @return String
    */
   public String getToken() {
-    return this.getString("token");
+    return token;
   }
 
   /**
@@ -76,7 +92,7 @@ public class AuthToken extends Bean {
    * @return long
    */
   public long getExpired() {
-    return this.getLong("expired");
+    return expired;
   }
 
   /**
@@ -99,7 +115,7 @@ public class AuthToken extends Bean {
    * @return String
    */
   public String getSid() {
-    return this.getString("sid");
+    return sid;
   }
 
   /**
