@@ -20,9 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -43,15 +40,6 @@ import com.mongodb.WriteResult;
  * 
  */
 public class MongoHelper extends Helper {
-
-  /** The log. */
-  protected static Log           log    = LogFactory.getLog(MongoHelper.class);
-  protected static Log           sqllog = LogFactory.getLog("sql");
-
-  /**
-   * indicated whether is debug model
-   */
-  public static boolean          DEBUG  = true;
 
   /** The mongo. */
   private static Map<String, DB> mongo  = new HashMap<String, DB>();
@@ -355,8 +343,6 @@ public class MongoHelper extends Helper {
     try {
       DBCollection db = MongoHelper.getCollection(collection);
       if (db != null) {
-        if (MongoHelper.DEBUG)
-          KeyField.create(collection, query, order);
 
         DBObject d = null;
         if (order == null) {
@@ -467,9 +453,6 @@ public class MongoHelper extends Helper {
       db = MongoHelper.getCollection(collection);
       if (db != null) {
         cur = db.find(query);
-
-        if (MongoHelper.DEBUG)
-          KeyField.create(collection, query, orderBy);
 
         if (orderBy != null) {
           cur.sort(orderBy);
@@ -638,8 +621,6 @@ public class MongoHelper extends Helper {
     try {
       DBCollection c = MongoHelper.getCollection(collection);
       if (c != null) {
-        if (MongoHelper.DEBUG)
-          KeyField.create(collection, query, null);
 
         DBObject d = c.findOne(query);
         return d;
@@ -979,8 +960,6 @@ public class MongoHelper extends Helper {
 
     TimeStamp t1 = TimeStamp.create();
     try {
-      if (MongoHelper.DEBUG)
-        KeyField.create(collection, new BasicDBObject(q).append(key, 1), null);
 
       DBCollection c = MongoHelper.getCollection(collection);
       if (c != null) {
@@ -1018,8 +997,6 @@ public class MongoHelper extends Helper {
     TimeStamp t1 = TimeStamp.create();
     DBCursor c1 = null;
     try {
-      if (MongoHelper.DEBUG)
-        KeyField.create(collection, q, null);
 
       DBCollection c = MongoHelper.getCollection(collection);
       if (c != null) {

@@ -30,11 +30,6 @@
 												"load" : "/admin/accesslog",
 												"seq" : 20,
 												"classes" : "icon-list"
-											}, {
-												"name" : "menu.keyfield",
-												"load" : "/admin/keyfield",
-												"seq" : 30,
-												"classes" : "icon-wrench"
 											}]
 								}, {
 									"name" : "menu.repo",

@@ -26,12 +26,10 @@ import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.Stat.IConvertor;
 import org.giiwa.framework.web.Language;
 
-// TODO: Auto-generated Javadoc
 public class Stats {
 
     static Log log = LogFactory.getLog(Stats.class);

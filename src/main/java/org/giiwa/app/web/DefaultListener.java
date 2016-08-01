@@ -37,10 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.setting;
 import org.giiwa.core.base.FileUtil;
 import org.giiwa.core.base.Shell;
-import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.KeyField;
 import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
@@ -56,8 +53,6 @@ import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
-
-import com.mongodb.BasicDBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -275,7 +270,6 @@ public class DefaultListener implements IListener {
 
     NtpTask.owner.schedule(X.AMINUTE);
     new CleanupTask(conf).schedule(X.AMINUTE);
-    new SorterTask().schedule(X.AMINUTE);
     new AppdogTask().schedule(X.AMINUTE);
     RecycleTask.owner.schedule(X.AMINUTE);
 
@@ -551,42 +545,6 @@ public class DefaultListener implements IListener {
     Map<String, FileUtil> map = new HashMap<String, FileUtil>();
     d.cleanup(f, map);
     System.out.println(map);
-
-  }
-
-  /**
-   * keyfield sorter, it running when sorter.enabled=yes, global configuration
-   * 
-   * @author wujun
-   *
-   */
-  private static class SorterTask extends Task {
-
-    @Override
-    public String getName() {
-      return "sorter.task";
-    }
-
-    @Override
-    public void onExecute() {
-
-      if ("yes".equals(Global.s("sorter.enabled", "no"))) {
-        int s = 0;
-
-        BasicDBObject q = new BasicDBObject("status", new BasicDBObject("$ne", "done"));
-        BasicDBObject order = new BasicDBObject();
-
-        Beans<KeyField> bs = KeyField.load(q, order, s, 10);
-        while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-
-          for (KeyField f : bs.getList()) {
-            f.run();
-          }
-          s += bs.getList().size();
-          bs = KeyField.load(q, order, s, 10);
-        }
-      }
-    }
 
   }
 

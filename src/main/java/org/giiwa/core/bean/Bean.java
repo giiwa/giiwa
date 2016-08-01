@@ -34,7 +34,6 @@ import com.mongodb.DBObject;
 
 import net.sf.json.JSONObject;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code Bean} Class is base class for all class that database access, it
  * almost includes all methods that need for database <br>
@@ -537,6 +536,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * 
    * @return JSONObject
    */
+  @SuppressWarnings("unchecked")
   public final JSONObject getJSON() {
     if (data == null) {
       return null;
