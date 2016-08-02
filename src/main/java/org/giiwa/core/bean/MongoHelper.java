@@ -46,7 +46,7 @@ public class MongoHelper extends Helper {
 
   public static boolean isConfigured() {
     getDB();
-    return mongo.size() > 0 || org.giiwa.core.db.DB.isConfigured();
+    return mongo.size() > 0;
   }
 
   /**

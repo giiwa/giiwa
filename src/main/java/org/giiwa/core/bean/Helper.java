@@ -84,6 +84,8 @@ public class Helper {
       primary = DBType.NONE;
     }
 
+    log.info("db.primary=" + primary + ", RDS=" + RDSHelper.isConfigured() + ", Mongo=" + MongoHelper.isConfigured());
+
   }
 
   public static DBType primary = DBType.MONGO;

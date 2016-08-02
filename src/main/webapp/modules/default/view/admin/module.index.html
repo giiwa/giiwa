@@ -44,6 +44,17 @@
 			<div class='readme icon icon-quotes-left'>
 				<span>$!m.readme<span>
 			</div>
+			#if($m.status)
+			<div class='status'>
+				$m.status
+			</div>
+			#end
+			#if($m.error)
+			<div class='status error'>
+				$m.error
+			</div>
+			#end
+			
 			<div class='btns'>
 				#if($m.id!=0)
 				<a class='disable' href='/admin/module/disable?name=$m.name'><i></i>$lang.get('a.disable')</a>

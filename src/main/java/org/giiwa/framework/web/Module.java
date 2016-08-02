@@ -211,6 +211,9 @@ public class Module {
    */
   public static Module                    home;
 
+  private String                          status;
+  private String                          error;
+
   /**
    * cache all modules by name
    */
@@ -597,6 +600,10 @@ public class Module {
     return version;
   }
 
+  public String getError() {
+    return error;
+  }
+
   public String getBuild() {
     return build;
   }
@@ -635,25 +642,30 @@ public class Module {
             // TODO
             if (m == null) {
               /**
-               * the module was invalid
+               * the module is invalid
                */
               log.info("[" + f1.getName() + "] is not a valid module");
+
             } else if (!m.enabled) {
               /**
                * the module was disabled
                */
               log.info("[" + f1.getName() + "] is disabled");
+
             } else if (modules.containsKey(m.id)) {
               /**
                * the module was duplicated, ignore this
                */
               log.error(
                   "the [id] duplicated, [" + m.name + ", " + modules.get(m.id).name + "], ignore the [" + m.name + "]");
+              m.error = Language.getLanguage().get("module.error.duplicatedid");
+
             } else if (!X.isSame(m.name, f1.getName())) {
               /**
                * the module name was invalid
                */
-              log.error("the [name] was invlaid, folder=" + f1.getName() + ", module=" + m.name);
+              log.error("the [name] is invlaid, folder=" + f1.getName() + ", module=" + m.name);
+              m.error = Language.getLanguage().get("module.error.name");
 
             } else {
               /**
@@ -1806,4 +1818,23 @@ public class Module {
 
   }
 
+  public void setError(String error) {
+    if (this.error == null) {
+      this.error = error;
+    } else {
+      this.error += "<br>" + error;
+    }
+  }
+
+  public void setStatus(String status) {
+    if (this.status == null) {
+      this.status = status;
+    } else {
+      this.status += "<br>" + status;
+    }
+  }
+
+  public String getStatus() {
+    return status;
+  }
 }

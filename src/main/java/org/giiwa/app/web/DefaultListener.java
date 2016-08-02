@@ -31,6 +31,7 @@ import java.util.Map;
 
 import net.sf.json.JSONArray;
 
+import org.apache.commons.codec.language.bm.Lang;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -397,10 +398,12 @@ public class DefaultListener implements IListener {
               if (log.isWarnEnabled()) {
                 log.warn("db[" + key + "] has been initialized! ");
               }
+              module.setStatus("db script initialized");
             } catch (Exception e) {
               if (log.isErrorEnabled()) {
                 log.error(f.getAbsolutePath(), e);
               }
+              module.setError(e.getMessage());
             }
 
           }
@@ -408,17 +411,23 @@ public class DefaultListener implements IListener {
           if (log.isWarnEnabled()) {
             log.warn("db[" + module.getName() + "." + dbname + "] not exists ! ");
           }
+          module.setStatus("RDS configured, db script not exists!");
         }
 
       } else {
         if (log.isErrorEnabled()) {
-          log.error("DB was miss configured, please congiure it in [" + Model.GIIWA_HOME + "/giiwa/giiwa.properties]");
+          log.error("DB is miss configured, please congiure it in [" + Model.GIIWA_HOME + "/giiwa/giiwa.properties]");
         }
+
+        module.setStatus("not RDS configured, ignore the db script");
       }
     } catch (Exception e) {
       if (log.isErrorEnabled()) {
         log.error("database is not configured!", e);
       }
+
+      module.setError(e.getMessage());
+
       return;
     }
 
@@ -453,6 +462,8 @@ public class DefaultListener implements IListener {
           if (log.isErrorEnabled()) {
             log.error(e.getMessage(), e);
           }
+
+          module.setError(e.getMessage());
         } finally {
           if (reader != null) {
             try {
@@ -467,8 +478,10 @@ public class DefaultListener implements IListener {
       }
     } else {
       if (log.isErrorEnabled()) {
-        log.error("Mongo was miss configured, please congiure it in [" + Model.GIIWA_HOME + "/giiwa/giiwa.properties]");
+        log.error("DB is miss configured, please congiure it in [" + Model.GIIWA_HOME + "/giiwa/giiwa.properties]");
       }
+
+      module.setError("DB is miss configured");
       return;
     }
   }

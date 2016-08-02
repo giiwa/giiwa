@@ -1,6 +1,7 @@
-#drop table if exists tblconfig;
-create table tblconfig
+#drop table if exists gi_config;
+create table gi_config
 (
+	_id varchar(50) not null,
 	name varchar(50) not null,
 	description varchar(255),
 	s varchar(8192),
@@ -8,7 +9,7 @@ create table tblconfig
 	l bigint default 0,
 	d decimal(16,6) default 0
 );
-create unique index tblconfig_index_name on tblconfig(name);
+create unique index gi_config_index_name on gi_config(name);
 
 #drop table if exists dual;
 create table dual
@@ -17,10 +18,10 @@ create table dual
 );
 insert into dual values('x');
 
-#drop table if exists tbluser;
-create table tbluser
+#drop table if exists gi_user;
+create table gi_user
 (
-	id bigint,
+	_id bigint,
 	name varchar(50),
 	nickname varchar(255),
 	email varchar(100),
@@ -49,76 +50,79 @@ create table tbluser
 	updated bigint default 0,
 	created bigint
 );
-create unique index tbluser_index_id on tbluser(id);
-create index tbluser_index_name on tbluser(name);
-create index tbluser_index_certid on tbluser(certid);
-create index tbluser_index_deleted on tbluser(deleted);
-create index tbluser_index_locked on tbluser(locked);
+create unique index gi_user_index_id on gi_user(_id);
+create index gi_user_index_name on gi_user(name);
+create index gi_user_index_certid on gi_user(certid);
+create index gi_user_index_deleted on gi_user(deleted);
+create index gi_user_index_locked on gi_user(locked);
 
-alter table tbluser alter id type bigint;
+alter table gi_user alter id type bigint;
 
-create table tbluserrole
+create table gi_userrole
 (
+	_id bigint not null,
 	uid bigint,
 	rid int,
 	created bigint
 );
-create index tbluserrole_index_uid on tbluserrole(uid);
-create unique index tbluserrole_index_uid_rid on tbluserrole(uid, rid);
-insert into tbluserrole(uid, rid) values(0, 0);
-alter table tbluserrole alter uid type bigint;
-alter table tbluserrole alter rid type int;
+create index gi_userrole_index_uid on gi_userrole(uid);
+create unique index gi_userrole_index_uid_rid on gi_userrole(uid, rid);
+insert into gi_userrole(uid, rid) values(0, 0);
+alter table gi_userrole alter uid type bigint;
+alter table gi_userrole alter rid type int;
 
 
-#drop table if exists tblrole;
-create table tblrole
+#drop table if exists gi_role;
+create table gi_role
 (
+	_id bigint not null,
 	id int,
 	name varchar(100),
 	memo varchar(255),
 	updated bigint default 0
 );
-create unique index tblrole_index_id on tblrole(id);
-insert into tblrole(id, name) values(0, 'admin');
+create unique index gi_role_index_id on gi_role(id);
+insert into gi_role(id, name) values(0, 'admin');
 
-#drop table if exists tbluserrole;
-create table tbluserrole
+#drop table if exists gi_userrole;
+create table gi_userrole
 (
+	_id bigint not null,
 	uid bigint,
 	rid int,
 	created bigint
 );
-create index tbluserrole_index_uid on tbluserrole(uid);
-create unique index tbluserrole_index_uid_rid on tbluserrole(uid, rid);
-insert into tbluserrole(uid, rid) values(0, 0);
-alter table tbluserrole alter uid type bigint;
+create index gi_userrole_index_uid on gi_userrole(uid);
+create unique index gi_userrole_index_uid_rid on gi_userrole(uid, rid);
+insert into gi_userrole(uid, rid) values(0, 0);
+alter table gi_userrole alter uid type bigint;
 
-#drop table if exists tblaccess;
-create table tblaccess
+#drop table if exists gi_access;
+create table gi_access
 (
-	id varchar(255),
+	_id varchar(255),
 	name varchar(255)
 );
-create unique index tblaccess_index_name on tblaccess(name);
-create index tblaccess_index_id on tblaccess(id);
-insert into tblaccess(name) values('access.admin');
+create unique index gi_access_index_name on gi_access(name);
+create index gi_access_index_id on gi_access(id);
+insert into gi_access(name) values('access.admin');
 
-#drop table if exists tblroleaccess;
-create table tblroleaccess
+#drop table if exists gi_roleaccess;
+create table gi_roleaccess
 (
-	id varchar(20),
+	_id varchar(20),
 	rid int,
 	name varchar(255)
 );
-create index tblroleaccess_index_id on tblroleaccess(id);
-create index tblroleaccess_index_rid on tblroleaccess(rid);
-insert into tblroleaccess(rid, name) values(0, 'access.admin');
+create index gi_roleaccess_index_id on gi_roleaccess(id);
+create index gi_roleaccess_index_rid on gi_roleaccess(rid);
+insert into gi_roleaccess(rid, name) values(0, 'access.admin');
 
-#drop table if exists tblrepo;
-create table tblrepo
+#drop table if exists gi_repo;
+create table gi_repo
 (
 	uid bigint,
-	id varchar(20),
+	_id varchar(20),
 	folder varchar(255),
 	name varchar(255),
 	total bigint,
@@ -129,28 +133,29 @@ create table tblrepo
 	expired bigint,
 	memo varchar(1024)
 );
-create unique index tblrepo_index_id on tblrepo(id);
-create index tblrepo_index_uid on tblrepo(uid);
-create index tblrepo_index_name on tblrepo(name);
-create index tblrepo_index_folder on tblrepo(folder);
-create index tblrepo_index_tag on tblrepo(tag);
-create index tblrepo_index_expired on tblrepo(expired);
-alter table tblrepo alter uid type bigint;
+create unique index gi_repo_index_id on gi_repo(_id);
+create index gi_repo_index_uid on gi_repo(uid);
+create index gi_repo_index_name on gi_repo(name);
+create index gi_repo_index_folder on gi_repo(folder);
+create index gi_repo_index_tag on gi_repo(tag);
+create index gi_repo_index_expired on gi_repo(expired);
+alter table gi_repo alter uid type bigint;
 
-#drop table if exists tblkeypair;
-create table tblkeypair
+#drop table if exists gi_keypair;
+create table gi_keypair
 (
+	_id bigint not null,
 	created bigint,
 	memo varchar(255),
 	length int,
 	pubkey varchar(2048),
 	prikey varchar(2048)
 );
-create unique index tblkeypair_index_created on tblkeypair(created);
+create unique index gi_keypair_index_created on gi_keypair(created);
 
-create table tblstat
+create table gi_stat
 (
-	id varchar(20),
+	_id varchar(20),
 	date bigint,
 	module varchar(255),
 	f0 varchar(255),
@@ -162,23 +167,23 @@ create table tblstat
 	count decimal(20, 2),
 	updated bigint
 );
-create index tblstat_index_id on tblstat(id);
-create index tblstat_index_date on tblstat(date);
-create index tblstat_index_module on tblstat(module);
-create index tblstat_index_f0 on tblstat(f0);
-create index tblstat_index_f1 on tblstat(f1);
-create index tblstat_index_f2 on tblstat(f2);
-create index tblstat_index_f3 on tblstat(f3);
-create index tblstat_index_f4 on tblstat(f4);
-create index tblstat_index_uid on tblstat(uid);
-create index tblstat_index_updated on tblstat(updated);
-alter table tblstat alter uid type bigint;
+create index gi_stat_index_id on gi_stat(_id);
+create index gi_stat_index_date on gi_stat(date);
+create index gi_stat_index_module on gi_stat(module);
+create index gi_stat_index_f0 on gi_stat(f0);
+create index gi_stat_index_f1 on gi_stat(f1);
+create index gi_stat_index_f2 on gi_stat(f2);
+create index gi_stat_index_f3 on gi_stat(f3);
+create index gi_stat_index_f4 on gi_stat(f4);
+create index gi_stat_index_uid on gi_stat(uid);
+create index gi_stat_index_updated on gi_stat(updated);
+alter table gi_stat alter uid type bigint;
 
 
-#drop table if exists tblmenu;
-create table tblmenu
+#drop table if exists gi_menu;
+create table gi_menu
 (
-	id int,
+	_id int,
 	node varchar(50),
 	parent int,
 	name varchar(50),
@@ -194,11 +199,11 @@ create table tblmenu
 	style varchar(255),
 	load varchar(255)
 );
-create index tblmenu_index_id on tblmenu(id);
-create index tblmenu_index_parent on tblmenu(parent);
-create index tblmenu_index_name on tblmenu(name);
-create index tblmenu_index_tag on tblmenu(tag);
-create index tblmenu_index_seq on tblmenu(seq);
-create index tblmenu_index_node on tblmenu(node);
-alter table tblmenu add style varchar(255);
-alter table tblmenu add load varchar(255);
+create index gi_menu_index_id on gi_menu(_id);
+create index gi_menu_index_parent on gi_menu(parent);
+create index gi_menu_index_name on gi_menu(name);
+create index gi_menu_index_tag on gi_menu(tag);
+create index gi_menu_index_seq on gi_menu(seq);
+create index gi_menu_index_node on gi_menu(node);
+alter table gi_menu add style varchar(255);
+alter table gi_menu add load varchar(255);

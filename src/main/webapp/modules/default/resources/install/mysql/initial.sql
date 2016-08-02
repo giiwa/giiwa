@@ -1,6 +1,7 @@
 #drop table if exists tblconfig;
 create table tblconfig
 (
+	_id bigint not null,
 	name varchar(50) not null,
 	description varchar(255),
 	s varchar(8192),
