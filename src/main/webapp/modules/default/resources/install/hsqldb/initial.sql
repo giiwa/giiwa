@@ -136,9 +136,9 @@ create unique index gi_keypair_index_created on gi_keypair(created);
 drop table if exists gi_menu;
 create table gi_menu
 (
-	id int,
+	id bigint,
 	node varchar(50),
-	parent int,
+	parent bigint,
 	name varchar(50),
 	url varchar(255),
 	classes varchar(100),
