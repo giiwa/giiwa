@@ -12,7 +12,7 @@
 	<div><label><h3>$lang.get('user.nickname')</h3>:<input type='text' name='nickname' value=#if($nickname) '$nickname' #else '' #end/></label></div>
 	<div><label><h3>$lang.get('user.password')</h3>:<input type='text' onblur="verify(this, '/user/verify')" name='password' value=#if($password)'$password' #else '111111' #end /></label></div>
 	<div><label><h3>$lang.get('user.title')</h3>:<input type='text' name='title' value='$!title' /></label></div>
-	<div><label><h3>$lang.get('user.email')</h3>:<input type='text' name='phone' value= '$!email' /></label></div>
+	<div><label><h3>$lang.get('user.email')</h3>:<input type='email' name='email' value= '$!email' /></label></div>
 	<div><label><h3>$lang.get('user.phone')</h3>:<input type='text' name='phone' value= '$!phone'  /></label></div>
 
 	<table id='user-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">

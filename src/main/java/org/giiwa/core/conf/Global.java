@@ -14,13 +14,9 @@
 */
 package org.giiwa.core.conf;
 
-import java.util.*;
-
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
-
-import com.mongodb.DBObject;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -35,7 +31,17 @@ public class Global extends Bean {
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 1L;
 
-  Object                    var;
+  @Column(name = X.ID)
+  String                    id;
+
+  @Column(name = "s")
+  String                    s;
+
+  @Column(name = "i")
+  int                       i;
+
+  @Column(name = "l")
+  long                      l;
 
   private static Global     owner            = new Global();
 
@@ -53,68 +59,13 @@ public class Global extends Bean {
    * @return the int
    */
   public static int i(String name, int defaultValue) {
-    Global c = getConfig(name);
-    if (c != null) {
-      return X.toInt(c.var, defaultValue);
-    }
+    Global
 
     c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      data.put(name, c);
-      return X.toInt(c.var, defaultValue);
+      return X.toInt(c.i, defaultValue);
     } else {
-      c = new Global();
-      c.var = Local.getConfig().getInt(name, defaultValue);
-      data.put(name, c);
-      return X.toInt(c.var, defaultValue);
-    }
-  }
-
-  /**
-   * get the setting by name
-   * 
-   * @param name
-   *          the name
-   * @return Object of the value
-   */
-  public Object get(String name) {
-    Global c = getConfig(name);
-    if (c != null) {
-      return c.var;
-    }
-
-    c = Helper.load(W.create(X.ID, name), Global.class);
-    if (c != null) {
-      data.put(name, c);
-      return c.var;
-    }
-    return X.EMPTY;
-  }
-
-  /**
-   * get the double value.
-   *
-   * @param name
-   *          the name
-   * @param defaultValue
-   *          the default value
-   * @return the double
-   */
-  public static double d(String name, double defaultValue) {
-    Global c = getConfig(name);
-    if (c != null) {
-      return X.toDouble(c.var, defaultValue);
-    }
-
-    c = Helper.load(W.create(X.ID, name), Global.class);
-    if (c != null) {
-      data.put(name, c);
-      return X.toDouble(c.var, defaultValue);
-    } else {
-      c = new Global();
-      c.var = Local.getConfig().getDouble(name, defaultValue);
-      data.put(name, c);
-      return X.toDouble(c.var, defaultValue);
+      return Local.getConfig().getInt(name, defaultValue);
     }
   }
 
@@ -128,20 +79,11 @@ public class Global extends Bean {
    * @return the string
    */
   public static String s(String name, String defaultValue) {
-    Global c = getConfig(name);
+    Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      return c.var != null ? c.var.toString() : null;
-    }
-
-    c = Helper.load(W.create(X.ID, name), Global.class);
-    if (c != null) {
-      data.put(name, c);
-      return c.var != null ? c.var.toString() : null;
+      return c.s != null ? c.s : defaultValue;
     } else {
-      c = new Global();
-      c.var = Local.getConfig().getString(name, defaultValue);
-      data.put(name, c);
-      return c.var != null ? c.var.toString() : null;
+      return Local.getConfig().getString(name, defaultValue);
     }
   }
 
@@ -155,20 +97,11 @@ public class Global extends Bean {
    * @return the long
    */
   public static long l(String name, long defaultValue) {
-    Global c = getConfig(name);
+    Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      return X.toLong(c.var, defaultValue);
-    }
-
-    c = Helper.load(W.create(X.ID, name), Global.class);
-    if (c != null) {
-      data.put(name, c);
-      return X.toLong(c.var, defaultValue);
+      return c.l;
     } else {
-      c = new Global();
-      c.var = Local.getConfig().getLong(name, defaultValue);
-      data.put(name, c);
-      return X.toLong(c.var, defaultValue);
+      return Local.getConfig().getLong(name, defaultValue);
     }
   }
 
@@ -196,46 +129,29 @@ public class Global extends Bean {
       return;
     }
 
-    data.remove(name);
-
     if (o == null) {
       Helper.delete(W.create(X.ID, name), Global.class);
       return;
     }
 
     try {
-      if (Helper.exists(W.create(X.ID, name), Global.class)) {
-        Helper.update(W.create(X.ID, name), V.create("var", o), Global.class);
+      V v = V.create();
+      if (o instanceof Integer) {
+        v.set("i", o);
+      } else if (o instanceof Long) {
+        v.set("l", o);
       } else {
-        Helper.insert(V.create("var", o).set(X.ID, name), Global.class);
+        v.set("s", o.toString());
+      }
+
+      if (Helper.exists(W.create(X.ID, name), Global.class)) {
+        Helper.update(W.create(X.ID, name), v, Global.class);
+      } else {
+        Helper.insert(v.set(X.ID, name), Global.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
     }
   }
-
-  @Override
-  protected void load(DBObject d) {
-    var = d.get("var");
-  }
-
-  /**
-   * Gets the.
-   * 
-   * @param name
-   *          the name
-   * @return the system config
-   */
-  private static Global getConfig(String name) {
-    Global c = data.get(name);
-    if (c != null && c.age() < X.AMINUTE * 10) {
-      return c;
-    }
-
-    return null;
-  }
-
-  /** The data. */
-  transient static private Map<String, Global> data = new HashMap<String, Global>();
 
 }

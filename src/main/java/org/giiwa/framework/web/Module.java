@@ -1081,10 +1081,7 @@ public class Module {
             if (access.startsWith("access.")) {
               log.debug("access[" + access + "] at " + c.getCanonicalName() + "." + m.getName());
 
-              String[] ss = access.split("\\|");
-              for (String s : ss) {
-                Access.set(s);
-              }
+              Access.set(access);
             } else if (!X.isEmpty(access)) {
               log.error("access error! [" + access + "] at " + c.getCanonicalName() + "." + m.getName());
             }

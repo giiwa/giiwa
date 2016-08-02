@@ -171,6 +171,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       data = new HashMap<String, Object>();
     }
 
+    name = name.toLowerCase();
     data.put(name, value);
 
     // looking for all the fields
@@ -198,7 +199,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       for (Field f : ff) {
         Column f1 = f.getAnnotation(Column.class);
         if (f1 != null) {
-          m.put(f1.name(), f);
+          m.put(f1.name().toLowerCase(), f);
         }
       }
 
@@ -227,10 +228,11 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       return null;
     }
 
-    String s = name.toString();
+    String s = name.toString().toLowerCase();
     Field f = _getField(s);
     if (f != null) {
       try {
+        f.setAccessible(true);
         return f.get(this);
       } catch (Exception e) {
         log.error(name, e);

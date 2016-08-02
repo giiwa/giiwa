@@ -55,7 +55,7 @@ public class user extends Model {
         } else {
 
           V v = V.create().copy(jo).set("locked", 0);
-
+          v.remove("role");
           long id = User.create(v);
 
           /**
@@ -143,6 +143,8 @@ public class user extends Model {
       }
       JSONObject j = this.getJSON();
       V v = V.create().copy(j);
+      v.remove("role");
+
       v.set("failtimes", this.getInt("failtimes"), true);
       if (!"on".equals(this.getString("locked"))) {
         /**
@@ -154,15 +156,19 @@ public class user extends Model {
         v.set("locked", 1, true);
       }
 
+      User.update(id, v);
+      User u = User.loadById(id);
+
       String[] roles = this.getStrings("role");
       if (roles != null) {
         List<Long> list = new ArrayList<Long>();
         for (String s : roles) {
           list.add(X.toLong(s));
         }
+
+        u.setRoles(list);
         v.set("roles", list);
       }
-      User.update(id, v);
 
       List<String> list = AuthToken.remove(id);
       if (list != null && list.size() > 0) {

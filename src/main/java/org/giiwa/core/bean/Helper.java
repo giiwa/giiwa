@@ -1080,7 +1080,7 @@ public class Helper {
         // insert into mongo
         return MongoHelper.count(table, q.query());
 
-      } else if (primary == DBType.MONGO) {
+      } else if (primary == DBType.RDS) {
         // insert into RDS
         return RDSHelper.count(table, q.where(), q.args());
       } else {
@@ -1099,7 +1099,7 @@ public class Helper {
         // insert into mongo
         return MongoHelper.distinct(table, name, q.query());
 
-      } else if (primary == DBType.MONGO) {
+      } else if (primary == DBType.RDS) {
         // insert into RDS
         return RDSHelper.distinct(table, name, q.where(), q.args());
       } else {

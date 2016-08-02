@@ -680,7 +680,7 @@ public class MongoHelper extends Helper {
    * update the collection according the Mapping(collection) declaration
    * 
    * @param id
-   *          the "_id" of the data
+   *          the "id" of the data
    * @param v
    *          the values
    * @param t
@@ -695,7 +695,7 @@ public class MongoHelper extends Helper {
    * update the mongo data
    * 
    * @param id
-   *          the "_id"
+   *          the "id"
    * @param v
    *          the values
    * @param t
@@ -787,7 +787,7 @@ public class MongoHelper extends Helper {
    * @param collection
    *          the name of collection
    * @param id
-   *          the "_id"
+   *          the "id"
    * @param v
    *          the values
    * @param adding

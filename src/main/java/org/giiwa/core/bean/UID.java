@@ -17,6 +17,8 @@ package org.giiwa.core.bean;
 import java.util.Random;
 import java.util.UUID;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -31,11 +33,9 @@ import com.mongodb.BasicDBObject;
  * @author joe
  *
  */
-@Table(name = "gi_config")
-public class UID extends Bean {
+public class UID {
 
-  /** The Constant serialVersionUID. */
-  private static final long serialVersionUID = 1L;
+  static Log log = LogFactory.getLog(UID.class);
 
   /**
    * increase and get the unique sequence number by key.
@@ -50,75 +50,32 @@ public class UID extends Bean {
 
     try {
 
-      long v = -1;
-      UID u = Helper.load(W.create(X.ID, key), UID.class);
-      if (u == null) {
-        v = 1;
+      Global f = Helper.load(key, Global.class);
 
+      long v = 1;
+      if (f == null) {
         String linkid = UID.random();
-        Helper.insert(V.create(X.ID, key).set("var", v + 1L).set("linkid", linkid), UID.class);
 
-        u = Helper.load(W.create(X.ID, key), UID.class);
-        if (u == null) {
-          log.error("create unique sequence error");
+        Helper.insert(V.create(X.ID, key).set("l", v).set("linkid", linkid), Global.class);
+        f = Helper.load(key, Global.class);
+        if (f == null) {
+          log.error("occur error when create unique id, name=" + key);
           return -1;
-        } else if (!linkid.equals(u.getString("linkid"))) {
-          // created by other node in cluster system
+        } else if (!X.isSame(f.getString("linkid"), linkid)) {
           return next(key);
         }
 
       } else {
-        v = X.toLong(u.get("var"), 1);
+        v = f.getLong("l");
+        // log.debug("v=" + v + ", f=" + f);
 
-        while (Helper.update(W.create(X.ID, key).and("var", v), Helper.V.create("var", v + 1L), UID.class) < 0) {
-          v++;
+        if (Helper.update(W.create(X.ID, key).and("l", v), V.create("l", v + 1L), Global.class) <= 0) {
+          return next(key);
         }
+        v += 1;
       }
 
       return prefix + v;
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-
-    return -1;
-  }
-
-  /**
-   * create integer sequence for the name.
-   * 
-   * @param name
-   *          the name of the sequence
-   * @return integer
-   */
-  public synchronized static int nextInt(String name) {
-
-    try {
-
-      int v = -1;
-      UID u = MongoHelper.load(new BasicDBObject(X.ID, name), UID.class);
-      if (u == null) {
-        v = 1;
-
-        String linkid = UID.random();
-        MongoHelper.insertCollection(Helper.V.create(X.ID, name).set("var", v + 1).set("linkid", linkid), UID.class);
-        u = MongoHelper.load(new BasicDBObject(X.ID, name), UID.class);
-        if (u == null) {
-          log.error("create unique sequence error");
-          return -1;
-        } else if (!linkid.equals(u.getString("linkid"))) {
-          // created by other node in cluster system
-          return nextInt(name);
-        }
-
-      } else {
-        v = X.toInt(u.get("var"), 1);
-        while (MongoHelper.updateCollection(new BasicDBObject(X.ID, name).append("var", v),
-            Helper.V.create("var", v + 1L), UID.class) < 0) {
-          v++;
-        }
-      }
-
-      return v;
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }

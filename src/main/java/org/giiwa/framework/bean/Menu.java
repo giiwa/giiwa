@@ -240,8 +240,10 @@ public class Menu extends Bean {
         long id = UID.next("menu.id");
         while (Helper.exists(W.create(X.ID, id), Menu.class)) {
           id = UID.next("menu.id");
+
+          log.debug("id=" + id);
         }
-        
+
         Helper.insert(v.set(X.ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
             Menu.class);
 

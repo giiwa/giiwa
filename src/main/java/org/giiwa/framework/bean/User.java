@@ -143,10 +143,13 @@ public class User extends Bean {
    *          the r
    * @return true, if is role
    */
-  @SuppressWarnings("unchecked")
   public boolean isRole(Role r) {
-    List<Long> roles = (List<Long>) this.get("roles");
-    return roles != null && roles.contains(r.getId());
+    try {
+      return Helper.exists(W.create("uid", this.getId()).and("rid", r.getId()), UserRole.class);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return false;
   }
 
   /**
@@ -179,8 +182,7 @@ public class User extends Bean {
     if (log.isDebugEnabled())
       log.debug("v=" + v);
 
-    Helper.insert(
-        v.set(X.ID, id).set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis()),
+    Helper.insert(v.set(X.ID, id).set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis()),
         User.class);
 
     return id;
@@ -265,15 +267,31 @@ public class User extends Bean {
 
     Beans<Role> bs = Role.loadByAccess(access, 0, 1000);
     W q = W.create();
+
     if (bs != null && bs.getList() != null) {
       if (bs.getList().size() > 1) {
         W list = W.create();
         for (Role a : bs.getList()) {
-          list.or("role", a.getId());
+          list.or("rid", a.getId());
         }
         q.and(list);
       } else if (bs.getList().size() == 1) {
-        q.and("role", bs.getList().get(0).getId());
+        q.and("rid", bs.getList().get(0).getId());
+      }
+
+    }
+
+    Beans<UserRole> b2 = Helper.load(q, 0, 1000, UserRole.class);
+    q = W.create();
+    if (b2 != null && b2.getList() != null) {
+      if (b2.getList().size() > 1) {
+        W list = W.create();
+        for (UserRole a : b2.getList()) {
+          list.or("id", a.getLong("uid"));
+        }
+        q.and(list);
+      } else if (b2.getList().size() == 1) {
+        q.and("id", b2.getList().get(0).getLong("uid"));
       }
     }
 
@@ -353,20 +371,13 @@ public class User extends Bean {
    * @param rid
    *          the role id
    */
-  @SuppressWarnings("unchecked")
   public void setRole(long rid) {
-    List<Long> roles = (List<Long>) this.get("roles");
-    if (roles == null) {
-      roles = new ArrayList<Long>();
-    }
-
-    if (!roles.contains(rid)) {
-      // add
-      roles.add(rid);
-
-      role = null;
-
-      Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
+    try {
+      if (!Helper.exists(W.create("uid", this.getId()).and("rid", rid), UserRole.class)) {
+        Helper.insert(V.create("uid", this.getId()).set("rid", rid), UserRole.class);
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
     }
   }
 
@@ -376,26 +387,16 @@ public class User extends Bean {
    * @param rid
    *          the rid
    */
-  @SuppressWarnings("unchecked")
   public void removeRole(long rid) {
-    List<Long> roles = (List<Long>) this.get("roles");
-
-    if (roles.contains(rid)) {
-      // remove it
-      roles.remove(rid);
-      role = null;
-      Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
-    }
+    Helper.delete(W.create("uid", this.getId()).and("rid", rid), UserRole.class);
   }
 
   /**
    * Removes the all roles.
    */
   public void removeAllRoles() {
-    List<Long> roles = (List<Long>) this.get("roles");
-    roles.clear();
+    Helper.delete(W.create("uid", this.getId()), UserRole.class);
 
-    Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
   }
 
   private static String encrypt(String passwd) {
@@ -464,7 +465,10 @@ public class User extends Bean {
    *          the list of role id
    */
   public void setRoles(List<Long> roles) {
-    Helper.update(getId(), V.create("roles", roles).set("updated", System.currentTimeMillis()), User.class);
+    this.removeAllRoles();
+    for (long rid : roles) {
+      this.setRole(rid);
+    }
   }
 
   /**
@@ -519,6 +523,16 @@ public class User extends Bean {
             .set("failtimes", 0).set("locked", 0).set("lockexpired", 0).set("sid", sid)
             .set("updated", System.currentTimeMillis()),
         User.class);
+
+  }
+
+  @Table(name = "gi_userrole")
+  public static class UserRole extends Bean {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
 
   }
 

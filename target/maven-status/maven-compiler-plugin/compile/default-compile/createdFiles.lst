@@ -1,8 +1,6 @@
 org/giiwa/framework/web/view/VelocityTemplateLoader.class
-org/giiwa/framework/bean/Stats$2.class
 org/giiwa/app/web/admin/backup$RecoverTask.class
 org/giiwa/app/web/admin/setting$mail.class
-org/giiwa/framework/bean/Stat$IConvertor.class
 org/giiwa/app/web/configure.class
 org/giiwa/framework/bean/User$Lock.class
 org/giiwa/framework/web/Model$PathMapping.class
@@ -56,7 +54,6 @@ org/giiwa/framework/bean/Menu.class
 org/giiwa/app/web/menu.class
 org/giiwa/framework/web/PageLink.class
 org/giiwa/framework/web/view/JspView.class
-org/giiwa/framework/bean/Stats.class
 org/giiwa/app/web/admin/dashboard.class
 org/giiwa/framework/web/GClassLoader.class
 org/giiwa/app/web/admin/role.class
@@ -81,8 +78,8 @@ org/giiwa/app/web/user.class
 org/giiwa/framework/web/view/FreemakerView$T.class
 org/giiwa/core/base/RSA.class
 org/giiwa/app/web/configure$1.class
-org/giiwa/framework/bean/Stat.class
 org/giiwa/core/bean/X.class
+org/giiwa/framework/bean/User$UserRole.class
 org/giiwa/core/bean/Pool$ICreator.class
 org/giiwa/app/web/admin/system.class
 org/giiwa/framework/bean/Repo$Entity.class
@@ -120,7 +117,6 @@ org/giiwa/framework/bean/Role.class
 org/giiwa/utils/image/Captcha.class
 org/giiwa/core/task/Task$2.class
 org/giiwa/app/web/admin/appkey.class
-org/giiwa/framework/bean/Stats$1.class
 org/giiwa/framework/web/view/FreemakerView.class
 org/giiwa/framework/bean/User.class
 org/giiwa/core/bean/Column.class

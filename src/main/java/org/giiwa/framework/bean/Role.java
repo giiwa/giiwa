@@ -55,7 +55,7 @@ public class Role extends Bean {
   public boolean has(Access a) {
     List<String> list = getAccesses();
 
-    return list == null ? false : list.contains(a.name);
+    return list == null ? false : list.contains(a.getName());
   }
 
   public String getMemo() {

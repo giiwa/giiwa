@@ -355,3 +355,5 @@ user.system.open=Open
 user.email.note=Email address
 user.mobile.note=Phone number
 login.failed=Login failed
+a.role.edit=Edit role
+group.access.role=Role

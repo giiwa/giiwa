@@ -29,7 +29,7 @@
 
 		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
 			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
-			<form method=“post”>
+			<form method="post">
 				<div><label><h3>URL：</h3><input type='text' name='url' value="$!system.s('mongo[prod].url','')"/><g>127.0.0.1:27018 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
 				<div><label><h3>DB：</h3><input type='text' name='db' value="$!system.s('mongo[prod].db','demo')"/></label></div>
 				<div><label><h3>User：</h3><input type='text' name='user' value="$!system.s('mongo[prod].user','')"/></label></div>
@@ -42,7 +42,7 @@
 
 		<div id="db" class='panel' data-next="system" data-prev='mongo' data-check='check_db'>
 			<div class='head'>$!lang.get('configure.title.rdbs')</div>	
-			<form method=“post”>
+			<form method="post">
 				<div><label><h3>Driver：</h3>
 					<select name='driver' onchange='_ondriver();'>
 						<option value='org.hsqldb.jdbc.JDBCDriver' #if($system.s('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
@@ -69,7 +69,7 @@
 
 		<div id="system" class='panel' data-next="cache" data-prev="db">
 			<div class='head'>$lang.get('configure.title.system')</div>	
-			<form method=“post”>
+			<form method="post">
 				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!system.s('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
 				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!system.s('system.code','1')"/><g>同一个分布式节点编号相同</g></label></div>
 				
@@ -82,7 +82,7 @@
 
 		<div id="cache" class='panel' data-next="admin" data-prev="system" data-check='check_cache'>
 			<div class='head'>Cache</div>	
-			<form method=“post”>
+			<form method="post">
 				<div><label><h3>URL：</h3><input type='text' name='url' value="$!system.s('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
 				
 				<div class='btns'>
@@ -94,7 +94,7 @@
 
 		<div id="admin" class='panel' data-prev="cache">
 			<div class='head'>$lang.get('configure.title.admin')</div>	
-			<form method=“post”>
+			<form method="post">
 				<div><label><h3>Admin：</h3><input type='text' name='admin' value='admin'/></label></div>
 				<div><label><h3>Password：</h3><input type='password' name='password' value=''/></label></div>
 				

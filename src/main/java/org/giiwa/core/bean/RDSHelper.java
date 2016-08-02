@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.db.DB;
 
 // TODO: Auto-generated Javadoc
@@ -491,7 +489,7 @@ public class RDSHelper extends Helper {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "]");
+        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "], args=" + Bean.toString(args));
       }
     }
   }
@@ -799,7 +797,7 @@ public class RDSHelper extends Helper {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost: " + t.past() + "ms, sql=[" + sql + "]");
+        sqllog.debug("cost: " + t.past() + "ms, sql=[" + sql + "], args=" + Bean.toString(args) + ", result=" + b);
       }
     }
 

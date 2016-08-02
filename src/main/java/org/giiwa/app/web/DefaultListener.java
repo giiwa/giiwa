@@ -399,7 +399,8 @@ public class DefaultListener implements IListener {
         /**
          * initial the database
          */
-        File f = module.getFile("../resources/install/" + dbname + "/initial.sql", false, false);
+        String filename = "../resources/install/" + dbname + "/initial.sql";
+        File f = module.getFile(filename, false, false);
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
           int b = Global.i(key, 0);
@@ -427,7 +428,7 @@ public class DefaultListener implements IListener {
           }
         } else {
           if (log.isWarnEnabled()) {
-            log.warn("db[" + module.getName() + "." + dbname + "] not exists ! ");
+            log.warn("db[" + module.getName() + "." + dbname + "] not exists ! " + filename);
           }
           module.setStatus("RDS configured, db script not exists!");
         }

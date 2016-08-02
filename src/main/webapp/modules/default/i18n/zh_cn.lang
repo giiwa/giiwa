@@ -347,3 +347,5 @@ user.system.open=开放式
 user.email.note=邮箱地址
 user.mobile.note=电话号码
 login.failed=登录失败
+a.role.edit=编辑角色
+group.access.role=角色

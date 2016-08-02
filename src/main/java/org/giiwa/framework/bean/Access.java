@@ -25,8 +25,6 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 
-import com.mongodb.DBObject;
-
 // TODO: Auto-generated Javadoc
 /**
  * access token class, it's Bean and mapping "gi_access" collection, it mapping
@@ -44,10 +42,7 @@ public class Access extends Bean {
   private static final long serialVersionUID = 1L;
 
   @Column(name = X.ID)
-  String                    id;
-
-  @Column(name = "name")
-  String                    name;
+  private String            name;
 
   /**
    * get the group name of the access name
@@ -86,7 +81,10 @@ public class Access extends Bean {
     if (X.isEmpty(name) || !name.startsWith("access.")) {
       log.error("error access.name: " + name, new Exception("error access name:" + name));
     } else if (!exists(name)) {
-      Helper.insert(V.create(X.ID, name), Access.class);
+      String[] ss = name.split("[\\|｜]");
+      for (String s : ss) {
+        Helper.insert(V.create(X.ID, s), Access.class);
+      }
     }
   }
 
@@ -127,13 +125,15 @@ public class Access extends Bean {
     String group = null;
     List<Access> last = null;
     for (Access a : list) {
-      String name = a.groupName();
-      if (group == null || !name.equals(group)) {
-        group = name;
-        last = new ArrayList<Access>();
-        r.put(group, last);
+      if (!X.isEmpty(a.name)) {
+        String name = a.groupName();
+        if (group == null || !name.equals(group)) {
+          group = name;
+          last = new ArrayList<Access>();
+          r.put(group, last);
+        }
+        last.add(a);
       }
-      last.add(a);
     }
 
     return r;

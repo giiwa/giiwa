@@ -62,14 +62,12 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Session.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Jar.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Paging.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Stats.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/impl/FileCache.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/device.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/MongoHelper.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/index.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Controller.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Keypair.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Stat.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/noti/Sms.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/impl/MemCache.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Roles.java
