@@ -528,7 +528,7 @@ public class Helper {
       if (elist.size() > 0 || wlist.size() > 0) {
         List<Object> l1 = new ArrayList<Object>();
 
-        args(l1);
+        _args(l1);
 
         return l1.toArray(new Object[l1.size()]);
       }
@@ -536,13 +536,13 @@ public class Helper {
       return null;
     }
 
-    private void args(List<Object> list) {
+    private void _args(List<Object> list) {
       for (Entity e : elist) {
         e.args(list);
       }
 
       for (W w1 : wlist) {
-        w1.args(list);
+        w1._args(list);
       }
     }
 

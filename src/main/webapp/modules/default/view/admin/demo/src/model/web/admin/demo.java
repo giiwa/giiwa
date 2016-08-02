@@ -1,15 +1,12 @@
 package org.giiwa.demo.web.admin;
 
-import java.util.regex.Pattern;
-
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Bean.V;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.demo.bean.Demo;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
-
-import com.mongodb.BasicDBObject;
 
 import net.sf.json.JSONObject;
 
@@ -20,12 +17,11 @@ public class demo extends Model {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 20, "number.per.page");
 
-		BasicDBObject q = new BasicDBObject();
+		W q = W.create();
 		String name = this.getString("name");
 
 		if (!X.isEmpty(name) && path == null) {
-			Pattern pattern = Pattern.compile(name, Pattern.CASE_INSENSITIVE);
-			q.append("name", pattern);
+			q.and("name", name, W.OP_LIKE);
 			this.set("name", name);
 		}
 		Beans<Demo> bs = Demo.load(q, s, n);

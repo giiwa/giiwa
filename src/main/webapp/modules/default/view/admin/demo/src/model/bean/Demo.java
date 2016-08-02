@@ -2,11 +2,13 @@ package org.giiwa.demo.bean;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.DBMapping;
+import org.giiwa.core.bean.Table;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-
-import com.mongodb.BasicDBObject;
 
 /**
  * Demo bean
@@ -14,7 +16,7 @@ import com.mongodb.BasicDBObject;
  * @author joe
  * 
  */
-@DBMapping(collection = "tbldemo")
+@Table(name = "tbldemo")
 public class Demo extends Bean {
 
   /**
@@ -22,16 +24,25 @@ public class Demo extends Bean {
    */
   private static final long serialVersionUID = 1L;
 
+  @Column(name = X._ID)
+  String                    id;
+
+  @Column(name = "name")
+  String                    name;
+
+  @Column(name = "content")
+  String                    content;
+
   public String getId() {
-    return this.getString(X._ID);
+    return id;
   }
 
   public String getName() {
-    return this.getString("name");
+    return name;
   }
 
   public String getContent() {
-    return this.getString("content");
+    return content;
   }
 
   // ------------
@@ -45,7 +56,7 @@ public class Demo extends Bean {
       while (exists(id)) {
         id = "d" + UID.next("demo.id");
       }
-      Bean.insert(v.set(X._ID, id), Demo.class);
+      Helper.insert(v.set(X._ID, id), Demo.class);
       return id;
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
@@ -55,7 +66,7 @@ public class Demo extends Bean {
 
   public static boolean exists(String id) {
     try {
-      return Bean.exists(new BasicDBObject(X._ID, id), Demo.class);
+      return Helper.exists(id, Demo.class);
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
     }
@@ -63,19 +74,19 @@ public class Demo extends Bean {
   }
 
   public static int update(String id, V v) {
-    return Bean.updateCollection(id, v, Demo.class);
+    return Helper.update(id, v, Demo.class);
   }
 
-  public static Beans<Demo> load(BasicDBObject q, int s, int n) {
-    return Bean.load(q, new BasicDBObject(X._ID, 1), s, n, Demo.class);
+  public static Beans<Demo> load(W q, int s, int n) {
+    return Helper.load(q.sort(X._ID, 1), s, n, Demo.class);
   }
 
   public static Demo load(String id) {
-    return Bean.load(new BasicDBObject(X._ID, id), Demo.class);
+    return Helper.load(id, Demo.class);
   }
 
   public static void delete(String id) {
-    Bean.delete(new BasicDBObject(X._ID, id), Demo.class);
+    Helper.delete(id, Demo.class);
   }
 
   public static void cleanup() {
