@@ -63,7 +63,7 @@ public class Appkey extends Bean {
     try {
       if (!Helper.exists(W.create(X.ID, appkey), Appkey.class)) {
         return Helper.insert(
-            v.set(X._ID, appkey).set("appkey", appkey).set("created", System.currentTimeMillis()), Appkey.class);
+            v.set(X.ID, appkey).set("appkey", appkey).set("created", System.currentTimeMillis()), Appkey.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
@@ -79,7 +79,7 @@ public class Appkey extends Bean {
    * @return the app
    */
   public static Appkey load(String appkey) {
-    return Helper.load(W.create(X._ID, appkey), Appkey.class);
+    return Helper.load(W.create(X.ID, appkey), Appkey.class);
   }
 
   public boolean isLocked() {
@@ -100,7 +100,7 @@ public class Appkey extends Bean {
    * @return the int
    */
   public static int update(String appkey, V v) {
-    return Helper.update(W.create(X._ID, appkey), v, Appkey.class);
+    return Helper.update(W.create(X.ID, appkey), v, Appkey.class);
   }
 
   /**
@@ -125,7 +125,7 @@ public class Appkey extends Bean {
    *          the appkey
    */
   public static void delete(String appkey) {
-    Helper.delete(W.create(X._ID, appkey), Appkey.class);
+    Helper.delete(W.create(X.ID, appkey), Appkey.class);
   }
 
 }

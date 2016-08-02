@@ -51,14 +51,14 @@ public class UID extends Bean {
     try {
 
       long v = -1;
-      UID u = Helper.load(W.create(X._ID, key), UID.class);
+      UID u = Helper.load(W.create(X.ID, key), UID.class);
       if (u == null) {
         v = 1;
 
         String linkid = UID.random();
-        Helper.insert(V.create(X._ID, key).set("var", v + 1L).set("linkid", linkid), UID.class);
+        Helper.insert(V.create(X.ID, key).set("var", v + 1L).set("linkid", linkid), UID.class);
 
-        u = Helper.load(W.create(X._ID, key), UID.class);
+        u = Helper.load(W.create(X.ID, key), UID.class);
         if (u == null) {
           log.error("create unique sequence error");
           return -1;
@@ -70,7 +70,7 @@ public class UID extends Bean {
       } else {
         v = X.toLong(u.get("var"), 1);
 
-        while (Helper.update(W.create(X._ID, key).and("var", v), Helper.V.create("var", v + 1L), UID.class) < 0) {
+        while (Helper.update(W.create(X.ID, key).and("var", v), Helper.V.create("var", v + 1L), UID.class) < 0) {
           v++;
         }
       }
@@ -95,13 +95,13 @@ public class UID extends Bean {
     try {
 
       int v = -1;
-      UID u = MongoHelper.load(new BasicDBObject(X._ID, name), UID.class);
+      UID u = MongoHelper.load(new BasicDBObject(X.ID, name), UID.class);
       if (u == null) {
         v = 1;
 
         String linkid = UID.random();
-        MongoHelper.insertCollection(Helper.V.create(X._ID, name).set("var", v + 1).set("linkid", linkid), UID.class);
-        u = MongoHelper.load(new BasicDBObject(X._ID, name), UID.class);
+        MongoHelper.insertCollection(Helper.V.create(X.ID, name).set("var", v + 1).set("linkid", linkid), UID.class);
+        u = MongoHelper.load(new BasicDBObject(X.ID, name), UID.class);
         if (u == null) {
           log.error("create unique sequence error");
           return -1;
@@ -112,7 +112,7 @@ public class UID extends Bean {
 
       } else {
         v = X.toInt(u.get("var"), 1);
-        while (MongoHelper.updateCollection(new BasicDBObject(X._ID, name).append("var", v),
+        while (MongoHelper.updateCollection(new BasicDBObject(X.ID, name).append("var", v),
             Helper.V.create("var", v + 1L), UID.class) < 0) {
           v++;
         }

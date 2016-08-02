@@ -541,6 +541,7 @@ a.page_1, a.page_2 {
 }
 .module .right {
 	margin-top: 10px;
+	display: inline-block;
 }
 .module .left .name {
 	position: absolute;
@@ -1788,6 +1789,6 @@ button.icon[type=submit] {
 .module .right .status {
 	color: #056b10;
 }
-.module .right .error {
+.module .right .error1 {
 	color: #f33;
 }

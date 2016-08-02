@@ -241,7 +241,7 @@ public class OpLog extends Bean {
   }
 
   public String getId() {
-    return this.getString(X._ID);
+    return this.getString(X.ID);
   }
 
   public User getUser() {

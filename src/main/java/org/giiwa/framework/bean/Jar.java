@@ -54,8 +54,8 @@ public class Jar extends Bean {
     String id = UID.id(module, name, node);
 
     try {
-      if (!Helper.exists(W.create(X._ID, id), Jar.class)) {
-        V v = V.create(X._ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
+      if (!Helper.exists(W.create(X.ID, id), Jar.class)) {
+        V v = V.create(X.ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
         Helper.insert(v, Jar.class);
       } else {
         Helper.update(id, V.create("reset", 1), Jar.class);

@@ -44,7 +44,7 @@ public class AuthToken extends Bean {
    */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = X._ID)
+  @Column(name = X.ID)
   private String            id;
 
   @Column(name = "uid")
@@ -141,7 +141,7 @@ public class AuthToken extends Bean {
         Helper.update(id, v, AuthToken.class);
       } else {
         // insert
-        Helper.insert(v.set(X._ID, id), AuthToken.class);
+        Helper.insert(v.set(X.ID, id), AuthToken.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);

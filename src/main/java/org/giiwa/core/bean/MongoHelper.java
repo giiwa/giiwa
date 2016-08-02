@@ -354,7 +354,7 @@ public class MongoHelper extends Helper {
         if (d != null) {
           if (log.isDebugEnabled())
             log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
-                + order + ", result=" + d.get(X._ID));
+                + order + ", result=" + d.get(X.ID));
 
           b.load(d);
           return b;
@@ -796,7 +796,7 @@ public class MongoHelper extends Helper {
    */
   final public static int updateCollection(String collection, Object id, V v, boolean adding) {
 
-    BasicDBObject q = new BasicDBObject().append(X._ID, id);
+    BasicDBObject q = new BasicDBObject().append(X.ID, id);
     return updateCollection(collection, q, v, adding);
   }
 

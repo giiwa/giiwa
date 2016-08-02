@@ -43,7 +43,7 @@ public class Access extends Bean {
   */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = X._ID)
+  @Column(name = X.ID)
   String                    id;
 
   @Column(name = "name")
@@ -86,7 +86,7 @@ public class Access extends Bean {
     if (X.isEmpty(name) || !name.startsWith("access.")) {
       log.error("error access.name: " + name, new Exception("error access name:" + name));
     } else if (!exists(name)) {
-      Helper.insert(V.create(X._ID, name), Access.class);
+      Helper.insert(V.create(X.ID, name), Access.class);
     }
   }
 

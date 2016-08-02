@@ -91,7 +91,7 @@ public class Helper {
   public static DBType primary = DBType.MONGO;
 
   public static int delete(Object id, Class<? extends Bean> t) {
-    return delete(W.create(X._ID, id), t);
+    return delete(W.create(X.ID, id), t);
   }
 
   /**
@@ -122,7 +122,7 @@ public class Helper {
   }
 
   public static boolean exists(Object id, Class<? extends Bean> t) throws Exception {
-    return exists(W.create(X._ID, id), t);
+    return exists(W.create(X.ID, id), t);
   }
 
   /**
@@ -976,7 +976,7 @@ public class Helper {
   }
 
   public static <T extends Bean> T load(Object id, Class<T> t) {
-    return load(W.create(X._ID, id), t);
+    return load(W.create(X.ID, id), t);
   }
 
   public static <T extends Bean> T load(W q, Class<T> t) {
@@ -1019,7 +1019,7 @@ public class Helper {
   }
 
   public static int update(Object id, V values, Class<? extends Bean> t) {
-    return update(W.create(X._ID, id), values, t);
+    return update(W.create(X.ID, id), values, t);
   }
 
   public static int update(W q, V values, Class<? extends Bean> t) {

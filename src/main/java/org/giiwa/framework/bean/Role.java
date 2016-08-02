@@ -36,7 +36,7 @@ public class Role extends Bean {
   */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = X._ID)
+  @Column(name = X.ID)
   private long              id;
 
   @Column(name = "name")
@@ -82,10 +82,10 @@ public class Role extends Bean {
 
     long id = UID.next("role.id");
     try {
-      while (Helper.exists(W.create(X._ID, id), Role.class)) {
+      while (Helper.exists(W.create(X.ID, id), Role.class)) {
         id = UID.next("role.id");
       }
-      if (Helper.insert(V.create(X._ID, id).set("id", id).set("name", name).set("memo", memo).set("updated",
+      if (Helper.insert(V.create(X.ID, id).set("id", id).set("name", name).set("memo", memo).set("updated",
           System.currentTimeMillis()), Role.class) > 0) {
         return id;
       }
@@ -130,8 +130,8 @@ public class Role extends Bean {
 
     try {
       if (!Helper.exists(W.create("rid", rid).and("name", name), RoleAccess.class)) {
-        Helper.insert(V.create("rid", rid).set("name", name).set(X._ID, UID.id(rid, name)), RoleAccess.class);
-        Helper.update(W.create(X._ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
+        Helper.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)), RoleAccess.class);
+        Helper.update(W.create(X.ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
@@ -150,7 +150,7 @@ public class Role extends Bean {
   public static void removeAccess(long rid, String name) {
     Helper.delete(W.create("rid", rid).and("name", name), RoleAccess.class);
 
-    Helper.update(W.create(X._ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
+    Helper.update(W.create(X.ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
 
   }
 
@@ -264,7 +264,7 @@ public class Role extends Bean {
       Helper.delete(W.create("rid", this.getId()), RoleAccess.class);
 
       for (String a : accesses) {
-        Helper.insert(V.create("rid", this.getId()).set("name", a).set(X._ID, UID.id(this.getId(), a)),
+        Helper.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)),
             RoleAccess.class);
       }
     }
@@ -310,11 +310,11 @@ public class Role extends Bean {
       if (bs.getList().size() > 1) {
         W w1 = W.create();
         for (RoleAccess a : bs.getList()) {
-          w1.or(X._ID, a.getLong("rid"));
+          w1.or(X.ID, a.getLong("rid"));
         }
         q.and(w1);
       } else if (bs.getList().size() == 1) {
-        q.and(X._ID, bs.getList().get(0).getLong("rid"));
+        q.and(X.ID, bs.getList().get(0).getLong("rid"));
       }
     }
 

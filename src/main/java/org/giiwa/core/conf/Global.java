@@ -58,7 +58,7 @@ public class Global extends Bean {
       return X.toInt(c.var, defaultValue);
     }
 
-    c = Helper.load(W.create(X._ID, name), Global.class);
+    c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return X.toInt(c.var, defaultValue);
@@ -83,7 +83,7 @@ public class Global extends Bean {
       return c.var;
     }
 
-    c = Helper.load(W.create(X._ID, name), Global.class);
+    c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return c.var;
@@ -106,7 +106,7 @@ public class Global extends Bean {
       return X.toDouble(c.var, defaultValue);
     }
 
-    c = Helper.load(W.create(X._ID, name), Global.class);
+    c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return X.toDouble(c.var, defaultValue);
@@ -133,7 +133,7 @@ public class Global extends Bean {
       return c.var != null ? c.var.toString() : null;
     }
 
-    c = Helper.load(W.create(X._ID, name), Global.class);
+    c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return c.var != null ? c.var.toString() : null;
@@ -160,7 +160,7 @@ public class Global extends Bean {
       return X.toLong(c.var, defaultValue);
     }
 
-    c = Helper.load(W.create(X._ID, name), Global.class);
+    c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       data.put(name, c);
       return X.toLong(c.var, defaultValue);
@@ -199,15 +199,15 @@ public class Global extends Bean {
     data.remove(name);
 
     if (o == null) {
-      Helper.delete(W.create(X._ID, name), Global.class);
+      Helper.delete(W.create(X.ID, name), Global.class);
       return;
     }
 
     try {
-      if (Helper.exists(W.create(X._ID, name), Global.class)) {
-        Helper.update(W.create(X._ID, name), V.create("var", o), Global.class);
+      if (Helper.exists(W.create(X.ID, name), Global.class)) {
+        Helper.update(W.create(X.ID, name), V.create("var", o), Global.class);
       } else {
-        Helper.insert(V.create("var", o).set(X._ID, name), Global.class);
+        Helper.insert(V.create("var", o).set(X.ID, name), Global.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);

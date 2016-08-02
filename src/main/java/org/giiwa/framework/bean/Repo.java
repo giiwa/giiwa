@@ -131,7 +131,7 @@ public class Repo extends Bean {
     Entity e = new Entity();
     e.set("folder", folder);
     e.set("name", name);
-    e.set(X._ID, id);
+    e.set(X.ID, id);
     e.set("total", total);
     e.set("expired", expired);
     e.set("uid", uid);
@@ -361,7 +361,7 @@ public class Repo extends Bean {
     // }
     //
     public String getId() {
-      return this.getString(X._ID);
+      return this.getString(X.ID);
     }
 
     public String getFiletype() {
@@ -488,7 +488,7 @@ public class Repo extends Bean {
               Helper.update(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()), Entity.class);
             } else {
               Helper.insert(
-                  V.create(X._ID, getId()).set("uid", 0).set("total", pp).set("tag", tag).set("expired", getExpired())
+                  V.create(X.ID, getId()).set("uid", 0).set("total", pp).set("tag", tag).set("expired", getExpired())
                       .set("created", System.currentTimeMillis()).set("flag", flag).set("name", name),
                   Entity.class);
             }

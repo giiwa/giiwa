@@ -61,7 +61,7 @@ public class Keypair extends Bean {
     Key k = RSA.generate(length);
     if (k != null) {
       long created = System.currentTimeMillis();
-      if (Helper.insert(V.create(X._ID, created).set("created", created).set("length", length).set("memo", memo)
+      if (Helper.insert(V.create(X.ID, created).set("created", created).set("length", length).set("memo", memo)
           .set("pubkey", k.pub_key).set("prikey", k.pri_key), Keypair.class) > 0) {
         return created;
       }
@@ -139,7 +139,7 @@ public class Keypair extends Bean {
    * @return the keypair
    */
   public static Keypair load(long created) {
-    return Helper.load(W.create(X._ID, created), Keypair.class);
+    return Helper.load(W.create(X.ID, created), Keypair.class);
   }
 
   /**
@@ -149,7 +149,7 @@ public class Keypair extends Bean {
    *          the created
    */
   public static void delete(long created) {
-    Helper.delete(W.create(X._ID, created), Keypair.class);
+    Helper.delete(W.create(X.ID, created), Keypair.class);
   }
 
 }

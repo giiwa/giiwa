@@ -54,9 +54,6 @@ public class X {
   /** The Constant TYPE. */
   public static final String TYPE            = "type";
 
-  /** The Constant ID. */
-  public static final String ID              = "id";
-
   /** The Constant _TYPE. */
   public static final String _TYPE           = "_type";
 
@@ -64,7 +61,7 @@ public class X {
   public static final String _LIKE           = "_like";
 
   /** The Constant _ID. */
-  public static final String _ID             = "_id";
+  public static final String ID             = "id";
 
   /** The Constant KEYWORD. */
   public static final String KEYWORD         = "keyword";

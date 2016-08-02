@@ -234,7 +234,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 
     try {
       if (!Helper.exists(W.create("date", date).and("id", id), Stat.class)) {
-        V v = V.create("date", date).set(X._ID, id).set("id", id).set("module", module).set("uid", uid)
+        V v = V.create("date", date).set(X.ID, id).set("id", id).set("module", module).set("uid", uid)
             .set("count", count).set("updated", System.currentTimeMillis());
 
         List<String> list = new ArrayList<String>();

@@ -51,7 +51,7 @@ public class User extends Bean {
   */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = X._ID)
+  @Column(name = X.ID)
   private long              id;
 
   @Column(name = "name")
@@ -180,7 +180,7 @@ public class User extends Bean {
       log.debug("v=" + v);
 
     Helper.insert(
-        v.set(X._ID, id).set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis()),
+        v.set(X.ID, id).set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis()),
         User.class);
 
     return id;
@@ -417,7 +417,7 @@ public class User extends Bean {
    * @return Beans
    */
   public static Beans<User> load(W q, int offset, int limit) {
-    return Helper.load(q.and(X._ID, 0, W.OP_GT).sort("name", 1), offset, limit, User.class);
+    return Helper.load(q.and(X.ID, 0, W.OP_GT).sort("name", 1), offset, limit, User.class);
   }
 
   /**

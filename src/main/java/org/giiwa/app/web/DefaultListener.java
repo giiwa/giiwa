@@ -31,7 +31,6 @@ import java.util.Map;
 
 import net.sf.json.JSONArray;
 
-import org.apache.commons.codec.language.bm.Lang;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -299,7 +298,10 @@ public class DefaultListener implements IListener {
    * @throws SQLException
    *           the SQL exception
    */
-  public static void runDBScript(File f) throws IOException, SQLException {
+  public static void runDBScript(File f, Module m) throws IOException, SQLException {
+
+    int count = 0;
+
     BufferedReader in = null;
     Connection c = null;
     Statement s = null;
@@ -320,11 +322,16 @@ public class DefaultListener implements IListener {
                 String sql = sb.toString().trim();
 
                 try {
-                  s = c.createStatement();
-                  s.executeUpdate(sql);
-                  s.close();
+                  if (!X.isEmpty(sql)) {
+                    s = c.createStatement();
+                    s.executeUpdate(sql);
+                    s.close();
+                    count++;
+                  }
                 } catch (Exception e) {
                   log.error(sb.toString(), e);
+
+                  m.setError(e.getMessage());
                 }
                 s = null;
                 sb = new StringBuilder();
@@ -342,14 +349,20 @@ public class DefaultListener implements IListener {
           if (log.isErrorEnabled()) {
             log.error(sb.toString(), e);
           }
+
+          m.setError(e.getMessage());
         }
       } else {
         if (log.isWarnEnabled()) {
           log.warn("database not configured !");
         }
+
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
+
+      m.setError(e.getMessage());
+
     } finally {
       if (in != null) {
         in.close();
@@ -357,6 +370,9 @@ public class DefaultListener implements IListener {
       RDSHelper.close(s, c);
     }
 
+    if (count > 0) {
+
+    }
   }
 
   /*
@@ -393,12 +409,13 @@ public class DefaultListener implements IListener {
             }
 
             try {
-              runDBScript(f);
+              runDBScript(f, module);
               Global.setConfig(key, (int) 1);
+
               if (log.isWarnEnabled()) {
                 log.warn("db[" + key + "] has been initialized! ");
               }
-              module.setStatus("db script initialized");
+
             } catch (Exception e) {
               if (log.isErrorEnabled()) {
                 log.error(f.getAbsolutePath(), e);

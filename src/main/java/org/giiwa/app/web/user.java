@@ -376,7 +376,7 @@ public class user extends Model {
     }
 
     int s = 0;
-    W q = W.create().sort(X._ID, 1);
+    W q = W.create().sort(X.ID, 1);
     Beans<Appkey> bs = Appkey.load(q, s, 10);
     while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
       for (Appkey a : bs.getList()) {
@@ -464,7 +464,7 @@ public class user extends Model {
     if (!X.isEmpty(access)) {
       list = User.loadByAccess(access);
     } else {
-      Beans<User> bs = User.load(W.create().and(X._ID, 0, W.OP_GT), 0, 1000);
+      Beans<User> bs = User.load(W.create().and(X.ID, 0, W.OP_GT), 0, 1000);
       if (bs != null) {
         list = bs.getList();
       }
