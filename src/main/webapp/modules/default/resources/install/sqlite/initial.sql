@@ -1,4 +1,4 @@
-drop table if exists gi_config;
+#drop table if exists gi_config;
 create table gi_config
 (
 	id varchar(128) not null,
@@ -11,14 +11,14 @@ create table gi_config
 );
 create unique index gi_config_index_id on gi_config(id);
 
-drop table if exists dual;
+#drop table if exists dual;
 create table dual
 (
 	x varchar(1)
 );
 insert into dual values('x');
 
-drop table if exists gi_user;
+#drop table if exists gi_user;
 create table gi_user
 (
 	id bigint,
@@ -50,7 +50,7 @@ create index gi_user_index_name on gi_user(name);
 create index gi_user_index_deleted on gi_user(deleted);
 create index gi_user_index_locked on gi_user(locked);
 
-drop table if exists gi_userrole;
+#drop table if exists gi_userrole;
 create table gi_userrole
 (
 	uid bigint,
@@ -60,7 +60,7 @@ create table gi_userrole
 create index gi_userrole_index_uid on gi_userrole(uid);
 create unique index gi_userrole_index_uid_rid on gi_userrole(uid, rid);
 
-drop table if exists gi_role;
+#drop table if exists gi_role;
 create table gi_role
 (
 	id bigint not null,
@@ -71,7 +71,7 @@ create table gi_role
 create unique index gi_role_indexid on gi_role(id);
 create index gi_role_index_name on gi_role(name);
 
-drop table if exists gi_userrole;
+#drop table if exists gi_userrole;
 create table gi_userrole
 (
 	id bigint,
@@ -82,14 +82,14 @@ create table gi_userrole
 create index gi_userrole_index_uid on gi_userrole(uid);
 create unique index gi_userrole_index_uid_rid on gi_userrole(uid, rid);
 
-drop table if exists gi_access;
+#drop table if exists gi_access;
 create table gi_access
 (
 	id varchar(255)
 );
 create unique index gi_access_indexid on gi_access(id);
 
-drop table if exists gi_roleaccess;
+#drop table if exists gi_roleaccess;
 create table gi_roleaccess
 (
 	id varchar(20),
@@ -99,7 +99,7 @@ create table gi_roleaccess
 create index gi_roleaccess_indexid on gi_roleaccess(id);
 create index gi_roleaccess_index_rid on gi_roleaccess(rid);
 
-drop table if exists gi_repo;
+#drop table if exists gi_repo;
 create table gi_repo
 (
 	uid bigint,
@@ -121,7 +121,7 @@ create index gi_repo_index_folder on gi_repo(folder);
 create index gi_repo_index_tag on gi_repo(tag);
 create index gi_repo_index_expired on gi_repo(expired);
 
-drop table if exists gi_keypair;
+#drop table if exists gi_keypair;
 create table gi_keypair
 (
 	id bigint not null,
@@ -133,7 +133,7 @@ create table gi_keypair
 );
 create unique index gi_keypair_index_created on gi_keypair(created);
 
-drop table if exists gi_menu;
+#drop table if exists gi_menu;
 create table gi_menu
 (
 	id bigint,
@@ -159,7 +159,7 @@ create index gi_menu_index_tag on gi_menu(tag);
 create index gi_menu_index_seq on gi_menu(seq);
 create index gi_menu_index_node on gi_menu(node);
 
-drop table if exists gi_accesslog;
+#drop table if exists gi_accesslog;
 create table gi_accesslog 
 (
 	uid bigint,
@@ -177,7 +177,7 @@ create table gi_accesslog
 create index gi_accesslog_index_uid on gi_accesslog(uid);
 create index gi_accesslog_index_method on gi_accesslog(method);
 
-drop table if exists gi_jar;
+#drop table if exists gi_jar;
 create table gi_jar
 (
 	id varchar(20),
@@ -192,7 +192,7 @@ create index gi_jar_index_module on gi_jar(module);
 create index gi_jar_index_name on gi_jar(name);
 create index gi_jar_index_node on gi_jar(node);
 
-drop table if exists gi_authtoken;
+#drop table if exists gi_authtoken;
 create table gi_authtoken
 (
 	id varchar(20),
@@ -209,7 +209,7 @@ create index gi_authtoken_index_uid on gi_authtoken(uid);
 create index gi_authtoken_index_sid on gi_authtoken(sid);
 create index gi_authtoken_index_token on gi_authtoken(token);
 
-drop table if exists gi_oplog;
+#drop table if exists gi_oplog;
 create table gi_oplog
 (
 	id varchar(20),
@@ -226,7 +226,7 @@ create table gi_oplog
 );
 create index gi_oplog_index_id on gi_oplog(id);
 
-drop table if exists gi_userlock;
+#drop table if exists gi_userlock;
 create table gi_userlock
 (
 	uid bigint,
@@ -237,5 +237,3 @@ create table gi_userlock
 	sid varchar(50)
 );
 create index gi_userlock_index_uid on gi_userlock(uid);
-
-
