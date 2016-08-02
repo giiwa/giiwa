@@ -60,7 +60,7 @@ public class X {
   /** The Constant _LIKE. */
   public static final String _LIKE           = "_like";
 
-  /** The Constant _ID. */
+  /** The Constant ID. */
   public static final String ID             = "id";
 
   /** The Constant KEYWORD. */

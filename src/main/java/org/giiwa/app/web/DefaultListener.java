@@ -422,7 +422,8 @@ public class DefaultListener implements IListener {
               }
               module.setError(e.getMessage());
             }
-
+          } else {
+            module.setStatus("db script initialized last time");
           }
         } else {
           if (log.isWarnEnabled()) {
@@ -475,6 +476,8 @@ public class DefaultListener implements IListener {
           JSONArray arr = JSONArray.fromObject(sb.toString());
           Menu.insertOrUpdate(arr, module.getName());
 
+          module.setStatus("menu.json initialized");
+
         } catch (Exception e) {
           if (log.isErrorEnabled()) {
             log.error(e.getMessage(), e);
@@ -492,6 +495,8 @@ public class DefaultListener implements IListener {
             }
           }
         }
+      } else {
+        module.setStatus("no menu.json");
       }
     } else {
       if (log.isErrorEnabled()) {
