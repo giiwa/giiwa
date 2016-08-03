@@ -356,10 +356,6 @@ public class Repo extends Bean {
       return getLong("total");
     }
 
-    // public long getUid() {
-    // return getLong("uid");
-    // }
-    //
     public String getId() {
       return this.getString(X.ID);
     }
