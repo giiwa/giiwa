@@ -283,7 +283,7 @@ public class Paging {
 
     list.add(new PageLabel(Integer.toString(s / ITEM_NUMBER + 1), s, ITEM_NUMBER, s, true));
 
-    if (s < total - ITEM_NUMBER) {
+    if (total < 0 || s < total - ITEM_NUMBER) {
       list.add(new PageLabel("&gt;", s + ITEM_NUMBER, ITEM_NUMBER, Integer.MAX_VALUE - 1));
 
       if (next < total) {
@@ -296,4 +296,11 @@ public class Paging {
     return list;
   }
 
+  public static void main(String[] args) {
+    System.out.println(create(10, 0, 5, 2));
+    System.out.println(create(10, 4, 5, 2));
+    System.out.println(create(-1, 0, 5, 2));
+    System.out.println(create(-1, 20, 5, 2));
+
+  }
 }

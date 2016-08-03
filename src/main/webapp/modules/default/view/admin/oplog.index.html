@@ -45,8 +45,8 @@
 				<option value='module' #if($sortby == 'module') selected #end>$lang.get('log.module')</option>
 			</select>
 			<select name='sortby_type'>
-				<option value='' #if($sortby_type == '') selected #end>$lang.get('sortby.type_')</option>
-				<option value='desc' #if($sortby_type == 'desc') selected #end>$lang.get('sortby.type_desc')</option>
+				<option value='1' #if($sortby_type == '1') selected #end>$lang.get('sortby.type_')</option>
+				<option value='-1' #if($sortby_type == '-1') selected #end>$lang.get('sortby.type_desc')</option>
 			</select></label></span>
 
 		<button type='submit' class='btns1 icon icon-search'></button>

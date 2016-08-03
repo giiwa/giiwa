@@ -118,6 +118,13 @@ public class oplog extends Model {
       q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP_LTE);
     }
 
+    String sortby = this.getString("sortby");
+    if (!X.isEmpty(sortby)) {
+      int sortby_type = this.getInt("sortby_type");
+      q.sort(sortby, sortby_type);
+    } else {
+      q.sort("created", -1);
+    }
     this.set(jo);
 
     return q;
@@ -248,7 +255,7 @@ public class oplog extends Model {
           } catch (Exception e) {
             log.error(e.getMessage(), e);
             OpLog.error(oplog.class, "export", e.getMessage(), e);
-            
+
           } finally {
             Session.load(session.sid()).remove("oplog.exporting").store();
           }

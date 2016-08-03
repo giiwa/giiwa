@@ -36,7 +36,7 @@ public class Beans<T extends Bean> extends DefaultCachable {
   protected static Log      log              = LogFactory.getLog(Beans.class);
 
   /** The total. */
-  int                       total            = -1;
+  int                       total            = -1;                            // unknown
 
   /** The list. */
   List<T>                   list;

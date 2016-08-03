@@ -21,12 +21,16 @@ package org.giiwa.framework.web;
  * 
  */
 public class PageLabel implements Comparable<PageLabel> {
-  String label;
-  int pn;
-  int s;
-  int n;
+  String  label;
+  int     pn;
+  int     s;
+  int     n;
   boolean curr;
-  int seq;
+  int     seq;
+
+  public String toString() {
+    return label;
+  }
 
   public int getPn() {
     return pn;
@@ -49,31 +53,31 @@ public class PageLabel implements Comparable<PageLabel> {
   }
 
   /**
-	 * Sets the pn.
-	 * 
-	 * @param pn
-	 *            the pn
-	 * @return the page label
-	 */
+   * Sets the pn.
+   * 
+   * @param pn
+   *          the pn
+   * @return the page label
+   */
   public PageLabel setPn(int pn) {
     this.pn = pn;
     return this;
   }
 
   /**
-	 * Instantiates a new page label.
-	 * 
-	 * @param label
-	 *            the label
-	 * @param s
-	 *            the s
-	 * @param n
-	 *            the n
-	 * @param seq
-	 *            the seq
-	 * @param iscur
-	 *            the iscur
-	 */
+   * Instantiates a new page label.
+   * 
+   * @param label
+   *          the label
+   * @param s
+   *          the s
+   * @param n
+   *          the n
+   * @param seq
+   *          the seq
+   * @param iscur
+   *          the iscur
+   */
   public PageLabel(String label, int s, int n, int seq, boolean iscur) {
     this.label = label;
     this.s = s;
@@ -83,17 +87,17 @@ public class PageLabel implements Comparable<PageLabel> {
   }
 
   /**
-	 * Instantiates a new page label.
-	 * 
-	 * @param label
-	 *            the label
-	 * @param s
-	 *            the s
-	 * @param n
-	 *            the n
-	 * @param seq
-	 *            the seq
-	 */
+   * Instantiates a new page label.
+   * 
+   * @param label
+   *          the label
+   * @param s
+   *          the s
+   * @param n
+   *          the n
+   * @param seq
+   *          the seq
+   */
   public PageLabel(String label, int s, int n, int seq) {
     this.label = label;
     this.s = s;
@@ -101,7 +105,9 @@ public class PageLabel implements Comparable<PageLabel> {
     this.seq = seq;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
   public int compareTo(PageLabel o) {
