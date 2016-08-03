@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
@@ -183,6 +185,7 @@ public class role extends Model {
     int n = this.getInt("n", 10, "number.per.page");
 
     Beans<Role> bs = Role.load(s, n);
+    bs.setTotal((int) Helper.count(W.create(), Role.class));
     this.set(bs, s, n);
 
     this.query.path("/admin/role");
