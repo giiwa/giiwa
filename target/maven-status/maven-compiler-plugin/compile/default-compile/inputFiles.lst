@@ -10,7 +10,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/oplog.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Digest.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Access.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Appkey.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/RDSHelper.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/system.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Html.java
@@ -19,8 +18,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/backup.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/dashboard.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/DummyModel.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/appkey.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/less.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/Cachable.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/H32.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/upload.java

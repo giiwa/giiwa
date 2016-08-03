@@ -5,7 +5,6 @@ org/giiwa/app/web/configure.class
 org/giiwa/framework/bean/User$Lock.class
 org/giiwa/framework/web/Model$PathMapping.class
 org/giiwa/core/conf/Global.class
-org/giiwa/framework/bean/Appkey.class
 org/giiwa/framework/web/PageLabel.class
 org/giiwa/core/base/FileUtil.class
 org/giiwa/core/db/DB.class
@@ -43,7 +42,6 @@ org/giiwa/core/bean/Pool.class
 org/giiwa/utils/image/GImage.class
 org/giiwa/core/base/H64.class
 org/giiwa/app/web/DefaultListener$RecycleTask.class
-org/giiwa/app/web/less.class
 org/giiwa/app/web/admin/accesslog.class
 org/giiwa/core/base/Digest.class
 org/giiwa/core/base/FileUtil$R.class
@@ -95,7 +93,6 @@ org/giiwa/app/web/device.class
 org/giiwa/core/base/Hex.class
 org/giiwa/core/bean/UID.class
 org/giiwa/framework/web/view/VelocityView$T.class
-org/giiwa/app/web/DefaultListener$BackupTask.class
 org/giiwa/app/web/admin/setting$system.class
 org/giiwa/framework/web/IListener.class
 org/giiwa/framework/web/QueryString.class
@@ -116,7 +113,6 @@ org/giiwa/app/web/admin/system$1.class
 org/giiwa/framework/bean/Role.class
 org/giiwa/utils/image/Captcha.class
 org/giiwa/core/task/Task$2.class
-org/giiwa/app/web/admin/appkey.class
 org/giiwa/framework/web/view/FreemakerView.class
 org/giiwa/framework/bean/User.class
 org/giiwa/core/bean/Column.class
@@ -146,6 +142,7 @@ org/giiwa/framework/noti/Email.class
 org/giiwa/core/bean/Beans.class
 org/giiwa/framework/web/IFilter.class
 org/giiwa/framework/bean/Data.class
+org/giiwa/app/web/admin/backup$BackupTask.class
 org/giiwa/app/web/admin/index.class
 org/giiwa/framework/bean/Response.class
 org/giiwa/core/task/Task$1.class

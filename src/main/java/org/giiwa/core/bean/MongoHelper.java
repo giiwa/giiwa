@@ -14,11 +14,20 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
@@ -32,7 +41,8 @@ import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
-// TODO: Auto-generated Javadoc
+import net.sf.json.JSONObject;
+
 /**
  * The {@code Bean} Class is base class for all class that database access, it
  * almost includes all methods that need for database <br>
@@ -1043,4 +1053,86 @@ public class MongoHelper extends Helper {
     }
   }
 
+  public static void backup(String filename) {
+    File f = new File(filename);
+    f.getParentFile().mkdirs();
+
+    try {
+      ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(f));
+      zip.putNextEntry(new ZipEntry("db"));
+      PrintStream out = new PrintStream(zip);
+
+      DB d = getDB();
+      Set<String> c1 = d.getCollectionNames();
+      log.debug("collections=" + c1);
+      for (String table : c1) {
+        _backup(out, d, table);
+      }
+
+      zip.closeEntry();
+      zip.close();
+
+    } catch (Exception e) {
+
+    }
+  }
+
+  private static void _backup(PrintStream out, DB d, String tablename) {
+    log.debug("backuping " + tablename);
+    DBCollection d1 = d.getCollection(tablename);
+    DBCursor c1 = d1.find();
+    int rows = 0;
+    while (c1.hasNext()) {
+      rows++;
+
+      DBObject d2 = c1.next();
+      JSONObject jo = new JSONObject();
+      jo.put("_table", tablename);
+      for (String name : d2.keySet()) {
+        jo.put(name, d2.get(name));
+      }
+      out.println(jo.toString());
+      log.debug("backup " + tablename + ", rows=" + rows);
+    }
+  }
+
+  public static void recover(File file) {
+
+    try {
+      ZipInputStream zip = new ZipInputStream(new FileInputStream(file));
+      zip.getNextEntry();
+      BufferedReader in = new BufferedReader(new InputStreamReader(zip));
+
+      DB d = getDB();
+      Set<String> c1 = d.getCollectionNames();
+      log.debug("collections=" + c1);
+      for (String table : c1) {
+        DBCollection c2 = d.getCollection(table);
+        c2.remove(new BasicDBObject());
+      }
+
+      String line = in.readLine();
+      while (line != null) {
+        _recover(line);
+        line = in.readLine();
+      }
+      zip.closeEntry();
+      in.close();
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+
+  }
+
+  private static void _recover(String json) {
+    try {
+      JSONObject jo = JSONObject.fromObject(json);
+      V v = V.create().copy(jo);
+      String tablename = jo.getString("_table");
+      v.remove("_table");
+      insertCollection(tablename, v);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+  }
 }

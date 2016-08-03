@@ -14,9 +14,17 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -27,10 +35,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.giiwa.core.db.DB;
 
-// TODO: Auto-generated Javadoc
+import net.sf.json.JSONObject;
+
 /**
  * The {@code Bean} Class is base class for all class that database access, it
  * almost includes all methods that need for database <br>
@@ -2040,6 +2052,121 @@ public class RDSHelper extends Helper {
       close(r, p, c);
     }
     return null;
+  }
+
+  public static void backup(String filename) {
+
+    File f = new File(filename);
+    f.getParentFile().mkdirs();
+    Connection c = null;
+    ResultSet r1 = null;
+
+    try {
+      ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(f));
+      zip.putNextEntry(new ZipEntry("db"));
+      PrintStream out = new PrintStream(zip);
+
+      c = getConnection();
+      DatabaseMetaData m1 = c.getMetaData();
+      r1 = m1.getTables(null, null, null, new String[] { "TABLE" });
+      while (r1.next()) {
+        _backup(out, c, r1.getString("TABLE_NAME"));
+      }
+      zip.closeEntry();
+      zip.close();
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      close(r1, c);
+    }
+
+  }
+
+  private static void _backup(PrintStream out, Connection c, String tablename) {
+
+    log.debug("backuping " + tablename);
+
+    Statement stat = null;
+    ResultSet r = null;
+    try {
+      stat = c.createStatement();
+      r = stat.executeQuery("select * from " + tablename);
+
+      int rows = 0;
+      while (r.next()) {
+        rows++;
+        ResultSetMetaData m1 = r.getMetaData();
+
+        JSONObject jo = new JSONObject();
+        jo.put("_table", tablename);
+        for (int i = 1; i <= m1.getColumnCount(); i++) {
+          Object o = r.getObject(i);
+          if (o != null) {
+            jo.put(m1.getColumnName(i), o);
+          }
+        }
+
+        out.println(jo.toString());
+      }
+
+      log.debug("backup " + tablename + ", rows=" + rows);
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      close(r, stat);
+    }
+  }
+
+  public static void recover(File file) {
+
+    Connection c = null;
+    ResultSet r1 = null;
+    Statement stat = null;
+
+    try {
+      ZipInputStream zip = new ZipInputStream(new FileInputStream(file));
+      zip.getNextEntry();
+      BufferedReader in = new BufferedReader(new InputStreamReader(zip));
+
+      c = getConnection();
+      DatabaseMetaData m1 = c.getMetaData();
+      r1 = m1.getTables(null, null, null, new String[] { "TABLE" });
+      while (r1.next()) {
+        try {
+          stat = c.createStatement();
+          stat.execute("delete from " + r1.getString("TABLE_NAME"));
+          stat.close();
+          stat = null;
+        } catch (Exception e) {
+          log.error("ignore this exception", e);
+        }
+      }
+
+      String line = in.readLine();
+      while (line != null) {
+        _recover(line, c);
+        line = in.readLine();
+      }
+      zip.closeEntry();
+      in.close();
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      close(r1, stat, c);
+    }
+  }
+
+  private static void _recover(String json, Connection c) {
+    try {
+      JSONObject jo = JSONObject.fromObject(json);
+      V v = V.create().copy(jo);
+      String tablename = jo.getString("_table");
+      v.remove("_table");
+      insertTable(tablename, v);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
   }
 
 }
