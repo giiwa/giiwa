@@ -42,11 +42,6 @@
 									"seq" : 50,
 									"access" : "access.config.admin",
 									"classes" : "icon-floppy-disk"
-								}, {
-									"name" : "menu.appkey",
-									"load" : "/admin/appkey",
-									"seq" : 60,
-									"classes" : "icon-power-cord"
 								}]
 					}, {
 						"name" : "menu.usermgr",
