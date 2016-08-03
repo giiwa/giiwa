@@ -15,21 +15,15 @@
 package org.giiwa.app.web;
 
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.servlet.http.HttpSession;
-
-import org.giiwa.core.base.Base64;
-import org.giiwa.core.base.DES;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.bean.Appkey;
 import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Role;
@@ -59,7 +53,7 @@ public class user extends Model {
   public void onGet() {
     if (login == null) {
       this.redirect("/user/login");
-    } else if (login.hasAccess("access.admin")) {
+    } else if (login.hasAccess("access.config.admin")) {
       this.redirect("/admin");
     } else {
       this.redirect("/");
@@ -117,7 +111,7 @@ public class user extends Model {
   }
 
   /**
-   * Go.
+   * redirect the web to right site
    * 
    * @return true, if successful
    */
@@ -125,35 +119,7 @@ public class user extends Model {
   public boolean go() {
 
     Session s = this.getSession();
-    if (s.has("oauth.callback")) {
-      // it's come from oauth
-      String url = (String) s.get("oauth.callback");
-      String key = (String) s.get("oauth.appkey");
-
-      try {
-
-        JSONObject jo = new JSONObject();
-        jo.put("uid", login.getId());
-        jo.put("time", System.currentTimeMillis());
-        jo.put("method", "login");
-        JSONObject j1 = new JSONObject();
-        login.toJSON(j1);
-        jo.put("user", j1);
-
-        String data = URLEncoder.encode(Base64.encode(DES.encode(jo.toString().getBytes(), key.getBytes())), "UTF-8");
-
-        if (url.indexOf("?") > 0) {
-          this.redirect(url + "&data=" + data);
-        } else {
-          this.redirect(url + "?data=" + data);
-        }
-        s.remove("oauth.callback").remove("oauth.appkey").store();
-
-        return true;
-      } catch (Exception e) {
-        log.error("url=" + url + ", key=" + key, e);
-      }
-    } else if (s.has("uri")) {
+    if (s.has("uri")) {
       String uri = (String) s.get("uri");
 
       log.debug("redirecting:" + uri);
@@ -339,59 +305,6 @@ public class user extends Model {
        */
       setUser(null);
 
-      /**
-       * test the oauth authenticated is true
-       */
-      if ("true".equals(Global.s("oauth.enabled", null))) {
-        String oauth = Global.s("oauth.url", null);
-        String appkey = Global.s("oauth.appkey", null);
-        String key = Global.s("oauth.key", null);
-        if (oauth != null && appkey != null && key != null) {
-          String callback = Global.s("oauth.callback", "");
-          try {
-            StringBuilder url = new StringBuilder(oauth);
-            if (!oauth.endsWith("/")) {
-              url.append("/");
-            }
-
-            JSONObject jo = new JSONObject();
-            jo.put("callback", callback);
-            jo.put("force", false);
-            jo.put("time", System.currentTimeMillis());
-
-            String data = Base64.encode(DES.encode(jo.toString().getBytes(), key.getBytes()));
-            data = URLEncoder.encode(data, "UTF-8");
-            log.debug("data=" + data);
-
-            url.append(appkey).append("/logout").append("?data=").append(data);
-
-            this.redirect(url.toString());
-
-            return;
-          } catch (Exception e) {
-            log.error("oauth=" + oauth + ", appkey=" + appkey + ", key=" + key, e);
-          }
-        }
-      }
-    }
-
-    int s = 0;
-    W q = W.create().sort(X.ID, 1);
-    Beans<Appkey> bs = Appkey.load(q, s, 10);
-    while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-      for (Appkey a : bs.getList()) {
-        String key = "sso.oauth." + a.getAppkey();
-        if ("1".equals(this.getSession().get(key))) {
-          this.getSession().remove(key).store();
-          if (!X.isEmpty(a.getLogout())) {
-            this.redirect(a.getLogout());
-            return;
-          }
-        }
-      }
-      s += bs.getList().size();
-      bs = Appkey.load(q, s, 10);
-
     }
 
     /**
@@ -455,7 +368,7 @@ public class user extends Model {
   }
 
   /**
-   * Popup2.
+   * get user list by "access" token
    */
   @Path(path = "popup2", login = true, access = "access.user.query")
   public void popup2() {
@@ -643,20 +556,6 @@ public class user extends Model {
   @Path(path = "dashboard", login = true)
   public void dashboard() {
 
-    /**
-     * get the total of user messages, new messages
-     */
-    // Beans<Message> bs = Message.load(login.getId(), W.create("flag",
-    // Message.FLAG_NEW), 0, 1);
-    // if (bs != null && bs.getTotal() > 0) {
-    // this.set("message_new", bs.getTotal());
-    // }
-    //
-    // bs = Message.load(login.getId(), W.create(), 0, 1);
-    // if (bs != null && bs.getTotal() > 0) {
-    // this.set("message_total", bs.getTotal());
-    // }
-
     this.show("/user/user.dashboard.html");
 
   }
@@ -702,104 +601,6 @@ public class user extends Model {
     }
 
     this.show("/user/user.edit.html");
-  }
-
-  /**
-   * Callback.
-   */
-  @Path(path = "callback")
-  public void callback() {
-    String data = this.getString("data");
-    String key = Global.s("oauth.key", null);
-    if (data != null && key != null) {
-      try {
-        // data = URLDecoder.decode(data, "UTF-8");
-        byte[] bb = Base64.decode(data);
-        bb = DES.decode(bb, key.getBytes());
-        data = new String(bb);
-
-        JSONObject jo = JSONObject.fromObject(data);
-
-        String method = jo.getString("method");
-        if ("login".equals(method)) {
-          if (jo.has("uid") && jo.has("time") && System.currentTimeMillis() - jo.getLong("time") < X.AMINUTE) {
-            int uid = jo.getInt("uid");
-
-            User me = User.loadById(uid);
-            log.debug("uid=" + uid + ", user=" + me);
-
-            if (me != null) {
-              this.setUser(me);
-
-              if ("true".equals(Global.s("cross.context", X.EMPTY))) {
-                String sessionkey = Global.s("session.key", "user");
-                JSONObject j1 = new JSONObject();
-                me.toJSON(j1);
-                HttpSession s = this.getHttpSession(true);
-                s.getServletContext().setAttribute(sessionkey, j1);
-
-                // log.debug("set session: " + s + ", "
-                // + sessionkey + "=" + j1);
-              }
-
-              this.redirect("/user/go");
-
-              return;
-            } else {
-              log.warn("can not found uid=" + uid);
-
-              /**
-               * force login again
-               */
-              String oauth = Global.s("oauth.url", null);
-              String appkey = Global.s("oauth.appkey", null);
-              key = Global.s("oauth.key", null);
-              if (oauth != null && appkey != null && key != null) {
-                String callback = Global.s("oauth.callback", "");
-                try {
-                  StringBuilder url = new StringBuilder(oauth);
-                  if (!oauth.endsWith("/")) {
-                    url.append("/");
-                  }
-                  jo = new JSONObject();
-                  jo.put("callback", callback);
-                  jo.put("force", true);
-
-                  bb = jo.toString().getBytes();
-                  bb = DES.encode(bb, key.getBytes());
-
-                  url.append(appkey).append("/login").append("?data=")
-                      .append(URLEncoder.encode(Base64.encode(bb), "UTF-8"));
-
-                  this.redirect(url.toString());
-
-                  return;
-                } catch (Exception e) {
-                  log.error("oauth=" + oauth + ", appkey=" + appkey + ", key=" + key, e);
-                }
-              }
-
-            }
-          }
-        } else if ("logout".equals(method)) {
-
-          if (jo.has("time") && System.currentTimeMillis() - jo.getLong("time") < X.AMINUTE) {
-
-            this.setUser(null);
-
-            this.redirect("/user/go");
-
-            return;
-          }
-        }
-
-      } catch (Exception e) {
-        log.error("data=" + data + ", key=" + key, e);
-      }
-    }
-
-    this.println(lang.get("callback.failed"));
-
   }
 
   /**
