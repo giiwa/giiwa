@@ -19,7 +19,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import org.apache.commons.configuration.Configuration;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
@@ -37,10 +36,8 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 
-// TODO: Auto-generated Javadoc
 /**
- * web api .<br>
- * /configure <br>
+ * web api: /configure <br>
  * used to the initial configure, once configured, it will not be accessed
  * 
  * @author joe
@@ -56,7 +53,7 @@ public class configure extends Model {
   public void onGet() {
 
     try {
-      if (Helper.isConfigured() ) {
+      if (Helper.isConfigured()) {
         this.redirect("/");
         return;
       }

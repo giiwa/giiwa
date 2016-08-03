@@ -8,10 +8,8 @@ package org.giiwa.app.web.admin;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
-// TODO: Auto-generated Javadoc
 /**
- * web api: /admin
- * <br>
+ * web api: /admin <br>
  * used to show home of admin
  * 
  * @author joe
@@ -19,39 +17,39 @@ import org.giiwa.framework.web.*;
  */
 public class index extends Model {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.giiwa.framework.web.Model#onGet()
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  @Override
+  @Path(login = true, method = Model.METHOD_GET)
+  public void onGet() {
+    /**
+     * let's post method to handle it
      */
-    @Override
-    @Path(login = true, method=Model.METHOD_GET)
-    public void onGet() {
-        /**
-         * let's post method to handle it
-         */
-        onPost();
-    }
+    onPost();
+  }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.giiwa.framework.web.Model#onPost()
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onPost()
+   */
+  @Path(login = true, method = Model.METHOD_POST)
+  public void onPost() {
+
+    User me = this.getUser();
+    /**
+     * put the user in mode
      */
-    @Path(login = true, method=Model.METHOD_POST)
-    public void onPost() {
+    this.put("me", me);
 
-        User me = this.getUser();
-        /**
-         * put the user in mode
-         */
-        this.put("me", me);
+    /**
+     * show view ...
+     */
+    this.show("/admin/index.html");
 
-        /**
-         * show view ...
-         */
-        this.show("/admin/index.html");
-
-    }
+  }
 
 }

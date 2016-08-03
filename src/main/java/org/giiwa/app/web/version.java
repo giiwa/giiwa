@@ -21,19 +21,28 @@ import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
 
+/**
+ * web api: /version<br>
+ * used to check the version
+ * 
+ * @author wujun
+ *
+ */
 public class version extends Model {
 
-    /* (non-Javadoc)
-     * @see org.giiwa.framework.web.Model#onGet()
-     */
-    @Path()
-    @Override
-    public void onGet() {
-        JSONObject jo = new JSONObject();
-        jo.put(X.STATE, 200);
-        jo.put("version", Module.load("default").getVersion());
-        jo.put("build", Module.load("default").getBuild());
-        this.response(jo);
-    }
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  @Path()
+  @Override
+  public void onGet() {
+    JSONObject jo = new JSONObject();
+    jo.put(X.STATE, 200);
+    jo.put("version", Module.load("default").getVersion());
+    jo.put("build", Module.load("default").getBuild());
+    this.response(jo);
+  }
 
 }

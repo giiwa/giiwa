@@ -7,7 +7,6 @@ package org.giiwa.app.web.admin;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
@@ -19,10 +18,6 @@ import org.giiwa.framework.web.*;
 
 import net.sf.json.JSONObject;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-
-// TODO: Auto-generated Javadoc
 /**
  * web api: /admin/user <br>
  * used to manage user

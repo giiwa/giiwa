@@ -19,14 +19,12 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 
 /**
- * web api： /temp
- * <br>
+ * web api： /temp <br>
  * used to access temporary file which created by Temp
  * 
  * @author joe
@@ -34,71 +32,71 @@ import org.giiwa.framework.web.Model;
  */
 public class temp extends Model {
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
-	 */
-	public void onGet() {
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  public void onGet() {
 
-		log.debug("temp: " + this.path);
-		if (this.path == null) {
-			this.notfound();
-			return;
-		}
+    log.debug("temp: " + this.path);
+    if (this.path == null) {
+      this.notfound();
+      return;
+    }
 
-		String[] ss = this.path.split("/");
-		if (ss.length != 2) {
-			this.notfound();
-			return;
-		}
+    String[] ss = this.path.split("/");
+    if (ss.length != 2) {
+      this.notfound();
+      return;
+    }
 
-		String name = ss[1];
-		File f = Temp.get(ss[0], name);
-		if (!f.exists()) {
-			this.notfound();
-			return;
-		}
+    String name = ss[1];
+    File f = Temp.get(ss[0], name);
+    if (!f.exists()) {
+      this.notfound();
+      return;
+    }
 
-		try {
-			String range = this.getString("RANGE");
-			long total = f.length();
-			long start = 0;
-			long end = total;
-			if (range != null) {
-				ss = range.split("(=|-)");
-				if (ss.length > 1) {
-					start = X.toLong(ss[1]);
-				}
+    try {
+      String range = this.getString("RANGE");
+      long total = f.length();
+      long start = 0;
+      long end = total;
+      if (range != null) {
+        ss = range.split("(=|-)");
+        if (ss.length > 1) {
+          start = X.toLong(ss[1]);
+        }
 
-				if (ss.length > 2) {
-					end = Math.min(total, X.toLong(ss[2]));
-				}
-			}
+        if (ss.length > 2) {
+          end = Math.min(total, X.toLong(ss[2]));
+        }
+      }
 
-			if (end <= start) {
-				end = start + 16 * 1024;
-			}
+      if (end <= start) {
+        end = start + 16 * 1024;
+      }
 
-			this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
+      this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
 
-			log.info(start + "-" + end + "/" + total);
+      log.info(start + "-" + end + "/" + total);
 
-			this.setContentType("application/octet");
+      this.setContentType("application/octet");
 
-			this.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
+      this.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
 
-			InputStream in = new FileInputStream(f);
-			OutputStream out = this.getOutputStream();
-			Model.copy(in, out, start, end, true);
+      InputStream in = new FileInputStream(f);
+      OutputStream out = this.getOutputStream();
+      Model.copy(in, out, start, end, true);
 
-			return;
+      return;
 
-		} catch (Exception e) {
-			log.error(f.getAbsolutePath(), e);
-		}
+    } catch (Exception e) {
+      log.error(f.getAbsolutePath(), e);
+    }
 
-		this.notfound();
-	}
+    this.notfound();
+  }
 
 }

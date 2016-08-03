@@ -21,9 +21,6 @@ import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
-import com.mongodb.BasicDBObject;
-
-// TODO: Auto-generated Javadoc
 /**
  * web api: /admin/accesslog <br>
  * used to access the "accesslog"

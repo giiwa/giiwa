@@ -25,10 +25,8 @@ import org.giiwa.framework.web.*;
 
 import net.sf.json.*;
 
-// TODO: Auto-generated Javadoc
 /**
- * web api： /menu
- * <br>
+ * web api： /menu <br>
  * used to get menu
  * 
  * @author joe
@@ -36,115 +34,116 @@ import net.sf.json.*;
  */
 public class menu extends Model {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.giiwa.framework.web.Model#onGet()
-     */
-    @Override
-    public void onGet() {
-        onPost();
-    }
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  @Override
+  public void onGet() {
+    onPost();
+  }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.giiwa.framework.web.Model#onPost()
-     */
-    public void onPost() {
-        User me = this.getUser();
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onPost()
+   */
+  public void onPost() {
+    User me = this.getUser();
 
-        long id = this.getLong("root");
-        String name = this.getString("name");
+    long id = this.getLong("root");
+    String name = this.getString("name");
 
-        Beans<Menu> bs = null;
-        Menu m = null;
-        if (!X.isEmpty(name)) {
-            /**
-             * load the menu by id and name
-             */
-            m = Menu.load(id, name);
+    Beans<Menu> bs = null;
+    Menu m = null;
+    if (!X.isEmpty(name)) {
+      /**
+       * load the menu by id and name
+       */
+      m = Menu.load(id, name);
 
-            if (m != null) {
-
-                /**
-                 * load the submenu of the menu
-                 */
-                bs = m.submenu();
-            }
-        } else {
-            /**
-             * load the submenu by id
-             */
-            bs = Menu.submenu(id);
-
-        }
-        List<Menu> list = bs == null ? null : bs.getList();
+      if (m != null) {
 
         /**
-         * filter out the item which no access
+         * load the submenu of the menu
          */
-        Collection<Menu> ll = Menu.filterAccess(list, me);
+        bs = m.submenu();
+      }
+    } else {
+      /**
+       * load the submenu by id
+       */
+      bs = Menu.submenu(id);
 
-        log.debug("load menu: id=" + id + ", size=" + (list == null ? 0 : list.size()) + ", filtered=" + (ll == null ? 0 : ll.size()));
+    }
+    List<Menu> list = bs == null ? null : bs.getList();
+
+    /**
+     * filter out the item which no access
+     */
+    Collection<Menu> ll = Menu.filterAccess(list, me);
+
+    log.debug("load menu: id=" + id + ", size=" + (list == null ? 0 : list.size()) + ", filtered="
+        + (ll == null ? 0 : ll.size()));
+
+    /**
+     * convert the list to json array
+     */
+    JSONArray arr = new JSONArray();
+
+    if (ll != null) {
+      Iterator<Menu> it = ll.iterator();
+
+      while (it.hasNext()) {
+        JSONObject jo = new JSONObject();
+        m = it.next();
 
         /**
-         * convert the list to json array
+         * set the text width language
          */
-        JSONArray arr = new JSONArray();
-
-        if (ll != null) {
-            Iterator<Menu> it = ll.iterator();
-
-            while (it.hasNext()) {
-                JSONObject jo = new JSONObject();
-                m = it.next();
-
-                /**
-                 * set the text width language
-                 */
-                jo.put("text", lang.get(m.getName()));
-                jo.put("id", m.getId());
-                if (!X.isEmpty(m.getClasses())) {
-                    jo.put("classes", m.getClasses());
-                }
-
-                if (!X.isEmpty(m.getStyle())) {
-                    jo.put("style", m.getStyle());
-                }
-
-                /**
-                 * set the url
-                 */
-                if (!X.isEmpty(m.getUrl())) {
-                    jo.put("url", m.getUrl());
-                }
-
-                /**
-                 * set children
-                 */
-                if (m.getChilds() > 0) {
-                    jo.put("hasChildren", true);
-                }
-
-                jo.put("seq", m.getSeq());
-                jo.put("tag", m.getTag());
-                if (!X.isEmpty(m.getLoad())) {
-                    jo.put("load", m.getLoad());
-                }
-
-                if (!X.isEmpty(m.getClick())) {
-                    jo.put("click", m.getClick());
-                }
-
-                if (!X.isEmpty(m.getContent())) {
-                    jo.put("content", m.getContent());
-                }
-
-                arr.add(jo);
-            }
+        jo.put("text", lang.get(m.getName()));
+        jo.put("id", m.getId());
+        if (!X.isEmpty(m.getClasses())) {
+          jo.put("classes", m.getClasses());
         }
 
-        this.response(arr);
+        if (!X.isEmpty(m.getStyle())) {
+          jo.put("style", m.getStyle());
+        }
+
+        /**
+         * set the url
+         */
+        if (!X.isEmpty(m.getUrl())) {
+          jo.put("url", m.getUrl());
+        }
+
+        /**
+         * set children
+         */
+        if (m.getChilds() > 0) {
+          jo.put("hasChildren", true);
+        }
+
+        jo.put("seq", m.getSeq());
+        jo.put("tag", m.getTag());
+        if (!X.isEmpty(m.getLoad())) {
+          jo.put("load", m.getLoad());
+        }
+
+        if (!X.isEmpty(m.getClick())) {
+          jo.put("click", m.getClick());
+        }
+
+        if (!X.isEmpty(m.getContent())) {
+          jo.put("content", m.getContent());
+        }
+
+        arr.add(jo);
+      }
     }
+
+    this.response(arr);
+  }
 }

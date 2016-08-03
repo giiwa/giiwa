@@ -5,6 +5,13 @@ import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.utils.image.GImage;
 
+/**
+ * web api: /admin/qcode <br>
+ * used to generate a qcode image by url
+ * 
+ * @author wujun
+ *
+ */
 public class qcode extends Model {
 
   @Path()

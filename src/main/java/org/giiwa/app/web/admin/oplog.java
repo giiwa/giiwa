@@ -24,7 +24,6 @@ import org.giiwa.framework.web.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-// TODO: Auto-generated Javadoc
 /**
  * web api: /admin/log <br>
  * used to manage oplog

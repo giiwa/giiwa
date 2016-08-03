@@ -5,21 +5,12 @@
  */
 package org.giiwa.app.web.admin;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.Statement;
-
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.*;
 
 import net.sf.json.JSONObject;
 
-import com.mongodb.DB;
-
-// TODO: Auto-generated Javadoc
 /**
  * web api: /admin/system <br>
  * used to control the "system"

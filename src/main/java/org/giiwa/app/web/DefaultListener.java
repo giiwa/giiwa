@@ -49,14 +49,12 @@ import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 
-// TODO: Auto-generated Javadoc
 /**
- * startup life listener.
+ * default startup life listener.
  * 
  * @author joe
  * 

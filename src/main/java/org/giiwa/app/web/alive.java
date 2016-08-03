@@ -21,14 +21,16 @@ import org.giiwa.framework.web.Model;
 import net.sf.json.JSONObject;
 
 /**
- * web api: /alive
+ * web api: /alive, just simple response with the uptime, thread info
  * 
  * @author wujun
  *
  */
 public class alive extends Model {
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
   public void onGet() {

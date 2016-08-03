@@ -8,8 +8,18 @@ import org.giiwa.utils.image.Captcha;
 
 import net.sf.json.JSONObject;
 
+/**
+ * web api: /captcha<br>
+ * provides web api to get the captcha image and verify
+ * 
+ * @author wujun
+ *
+ */
 public class captcha extends Model {
 
+  /**
+   * response the json with uri=[code.jpg]
+   */
   @Path()
   public void onGet() {
 
@@ -30,6 +40,9 @@ public class captcha extends Model {
     this.response(jo);
   }
 
+  /**
+   * verify the code
+   */
   @Path(path = "verify")
   public void verify() {
     String code = this.getString("code").toLowerCase();

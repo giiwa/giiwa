@@ -23,38 +23,46 @@ import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
-// TODO: Auto-generated Javadoc
+/**
+ * web api: /admin/repo <br>
+ * used to manage repo file by web
+ * 
+ * @author wujun
+ *
+ */
 public class repo extends Model {
 
-    /* (non-Javadoc)
-     * @see org.giiwa.framework.web.Model#onGet()
-     */
-    @Path(login = true, access = "access.config.admin")
-    @Override
-    public void onGet() {
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.framework.web.Model#onGet()
+   */
+  @Path(login = true, access = "access.config.admin")
+  @Override
+  public void onGet() {
 
-        int s = this.getInt("s");
-        int n = this.getInt("n", 10, "number.per.page");
+    int s = this.getInt("s");
+    int n = this.getInt("n", 10, "number.per.page");
 
-        W q = W.create();
-        Beans<Repo.Entity> bs = Repo.load(q, s, n);
-        this.set(bs, s, n);
-        this.show("/admin/repo.index.html");
+    W q = W.create();
+    Beans<Repo.Entity> bs = Repo.load(q, s, n);
+    this.set(bs, s, n);
+    this.show("/admin/repo.index.html");
 
-    }
+  }
 
-    /**
-     * Delete.
-     */
-    @Path(path = "delete", login = true, access = "access.config.admin")
-    public void delete() {
-        JSONObject jo = new JSONObject();
+  /**
+   * Delete.
+   */
+  @Path(path = "delete", login = true, access = "access.config.admin")
+  public void delete() {
+    JSONObject jo = new JSONObject();
 
-        String id = this.getString("id");
-        Repo.delete(id);
+    String id = this.getString("id");
+    Repo.delete(id);
 
-        jo.put(X.STATE, 200);
-        this.response(jo);
-    }
+    jo.put(X.STATE, 200);
+    this.response(jo);
+  }
 
 }

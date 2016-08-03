@@ -36,7 +36,6 @@ import org.giiwa.utils.image.Captcha;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-// TODO: Auto-generated Javadoc
 /**
  * web api： /user <br>
  * used to login or logout, etc.

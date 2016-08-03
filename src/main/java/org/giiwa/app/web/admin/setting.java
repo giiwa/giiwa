@@ -14,7 +14,6 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.web.*;
 
-// TODO: Auto-generated Javadoc
 /**
  * web api: /admin/setting <br>
  * use to custom setting, all module configuration MUST inherit from this class,
