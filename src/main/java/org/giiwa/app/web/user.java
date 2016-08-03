@@ -97,6 +97,8 @@ public class user extends Model {
         return;
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        OpLog.error(user.class, "register", e.getMessage(), e);
+
         this.put(X.MESSAGE, lang.get("create_user_error_1"));
         OpLog.log(User.class, "register", lang.get("create.failed") + ":" + name);
       }
@@ -283,6 +285,7 @@ public class user extends Model {
         this.getSession().set("uri", URLDecoder.decode(refer, "UTF-8")).store();
       } catch (Exception e) {
         log.error(refer, e);
+        OpLog.error(user.class, "login", e.getMessage(), e);
       }
     }
 

@@ -81,6 +81,7 @@ public class user extends Model {
         }
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        OpLog.error(user.class, "create", e.getMessage(), e);
 
         this.set(X.ERROR, lang.get("save.failed"));
 

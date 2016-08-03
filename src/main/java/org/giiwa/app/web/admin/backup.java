@@ -24,6 +24,7 @@ import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
@@ -81,6 +82,7 @@ public class backup extends Model {
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
+      OpLog.error(backup.class, "delete", e.getMessage(), e);
     }
 
   }
@@ -193,6 +195,8 @@ public class backup extends Model {
 
       } catch (Exception e) {
         log.error(e.getMessage(), e);
+        OpLog.error(backup.class, "backup", e.getMessage(), e);
+
       }
     }
 
@@ -255,6 +259,8 @@ public class backup extends Model {
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         message = e.getMessage();
+        OpLog.error(backup.class, "recover", e.getMessage(), e);
+
       }
 
     }

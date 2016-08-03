@@ -147,6 +147,8 @@ public class repo extends Model {
               return;
             } catch (IOException e1) {
               log.error(e1);
+              OpLog.error(repo.class, "download", e1.getMessage(), e1);
+
             }
           }
         }
@@ -379,6 +381,7 @@ public class repo extends Model {
             return;
           } catch (IOException e1) {
             log.error(e1);
+            OpLog.error(repo.class, "/", e1.getMessage(), e1);
           }
         }
       } finally {

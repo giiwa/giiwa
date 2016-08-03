@@ -25,6 +25,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
@@ -158,6 +159,8 @@ public class configure extends Model {
         jo.put(X.STATE, 200);
       } catch (Exception e1) {
         log.error(e1.getMessage(), e1);
+        OpLog.error(configure.class, "check", e1.getMessage(), e1);
+
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, e1.getMessage());
       }
@@ -195,6 +198,7 @@ public class configure extends Model {
             list.add(new ServerAddress(host, port));
           } catch (Exception e1) {
             log.error(e1.getMessage(), e1);
+            OpLog.error(configure.class, "check", e1.getMessage(), e1);
           }
         }
 
@@ -212,6 +216,8 @@ public class configure extends Model {
 
         } catch (Exception e1) {
           log.error(e1.getMessage(), e1);
+          OpLog.error(configure.class, "check", e1.getMessage(), e1);
+
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, e1.getMessage());
         }

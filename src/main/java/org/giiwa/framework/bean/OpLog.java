@@ -14,12 +14,16 @@
 */
 package org.giiwa.framework.bean;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Language;
+import org.giiwa.framework.web.Model;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -671,6 +675,20 @@ public class OpLog extends Bean {
     return error(module, op, brief, message, -1, null);
   }
 
+  public static int error(Class<?> module, String op, String brief, Exception e) {
+    StringWriter sw = new StringWriter();
+    PrintWriter out = new PrintWriter(sw);
+    e.printStackTrace(out);
+    String s = sw.toString();
+    String lineSeparator = java.security.AccessController
+        .doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
+    s = s.replaceAll(lineSeparator, "<br/>");
+    s = s.replaceAll(" ", "&nbsp;");
+    s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
+    return error(module, op, brief, s);
+
+  }
+
   /**
    * Error.
    * 
@@ -685,7 +703,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int error(Class<?> module, String op, String brief, String message) {
-    return error(module.getName(), op, brief, message, -1, null);
+    return error(module == null ? X.EMPTY : module.getName(), op, brief, message, -1, null);
   }
 
   /**
@@ -706,7 +724,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int error(String module, String op, String brief, String message, long uid, String ip) {
-    return error(Global.s("node", X.EMPTY), module, op, brief, message, uid, ip);
+    return error(Model.node(), module, op, brief, message, uid, ip);
   }
 
   /**

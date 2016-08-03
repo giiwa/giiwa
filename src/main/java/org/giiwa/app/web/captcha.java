@@ -1,6 +1,7 @@
 package org.giiwa.app.web;
 
 import org.giiwa.core.bean.X;
+import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
@@ -33,6 +34,8 @@ public class captcha extends Model {
       jo.put("uri", t.getUri());
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
+      OpLog.error(captcha.class, "/", e1.getMessage(), e1);
+
       jo.put(X.STATE, 201);
       jo.put(X.MESSAGE, e1.getMessage());
     }

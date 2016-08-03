@@ -247,6 +247,8 @@ public class oplog extends Model {
 
           } catch (Exception e) {
             log.error(e.getMessage(), e);
+            OpLog.error(oplog.class, "export", e.getMessage(), e);
+            
           } finally {
             Session.load(session.sid()).remove("oplog.exporting").store();
           }

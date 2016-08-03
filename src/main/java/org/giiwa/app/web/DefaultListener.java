@@ -238,6 +238,7 @@ public class DefaultListener implements IListener {
                   }
                 } catch (Exception e) {
                   log.error(sb.toString(), e);
+                  OpLog.error(null, "startup", e.getMessage(), e);
 
                   m.setError(e.getMessage());
                 }
@@ -256,6 +257,7 @@ public class DefaultListener implements IListener {
         } catch (Exception e) {
           if (log.isErrorEnabled()) {
             log.error(sb.toString(), e);
+            OpLog.error(null, "startup", e.getMessage(), e);
           }
 
           m.setError(e.getMessage());
@@ -268,6 +270,7 @@ public class DefaultListener implements IListener {
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
+      OpLog.error(null, "startup", e.getMessage(), e);
 
       m.setError(e.getMessage());
 
@@ -328,6 +331,7 @@ public class DefaultListener implements IListener {
             } catch (Exception e) {
               if (log.isErrorEnabled()) {
                 log.error(f.getAbsolutePath(), e);
+                OpLog.error(null, "startup", e.getMessage(), e);
               }
               module.setError(e.getMessage());
             }
@@ -390,6 +394,7 @@ public class DefaultListener implements IListener {
         } catch (Exception e) {
           if (log.isErrorEnabled()) {
             log.error(e.getMessage(), e);
+            OpLog.error(null, "startup", e.getMessage(), e);
           }
 
           module.setError(e.getMessage());
@@ -576,6 +581,8 @@ public class DefaultListener implements IListener {
 
             } catch (Exception e) {
               log.error(e.getMessage(), e);
+              OpLog.error(null, "startup", e.getMessage(), e);
+
             } finally {
               if (in != null) {
                 try {
@@ -702,6 +709,7 @@ public class DefaultListener implements IListener {
       } catch (Exception e) {
         if (log.isErrorEnabled()) {
           log.error(e.getMessage(), e);
+          OpLog.error(null, "startup", e.getMessage(), e);
         }
       }
 

@@ -141,6 +141,8 @@ public class upload extends Model {
       return true;
     } catch (Exception e) {
       log.error(e.getMessage(), e);
+      OpLog.error(upload.class, "/", e.getMessage(), e);
+
       if (jo == null) {
         this.set(X.ERROR, X.FAIL401);
         this.put(X.MESSAGE, lang.get(e.getMessage()));

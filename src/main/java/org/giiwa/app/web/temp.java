@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.giiwa.core.bean.X;
+import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 
@@ -94,6 +95,7 @@ public class temp extends Model {
 
     } catch (Exception e) {
       log.error(f.getAbsolutePath(), e);
+      OpLog.error(temp.class, "/", e.getMessage(), e);
     }
 
     this.notfound();

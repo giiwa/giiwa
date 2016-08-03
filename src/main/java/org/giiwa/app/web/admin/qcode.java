@@ -1,5 +1,6 @@
 package org.giiwa.app.web.admin;
 
+import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
@@ -23,6 +24,8 @@ public class qcode extends Model {
       GImage.QRCode(t.getFile(), url, 120, 120);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
+      OpLog.error(qcode.class, "/", e.getMessage(), e);
+      
     }
     this.redirect(t.getUri());
   }
