@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -306,7 +307,7 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * Load.
+   * Load the data by the query
    * 
    * @param <T>
    *          the generic type
@@ -316,7 +317,7 @@ public class MongoHelper extends Helper {
    *          the query
    * @param clazz
    *          the clazz
-   * @return the t
+   * @return the Bean
    */
   public static <T extends Bean> T load(String collection, DBObject query, Class<T> clazz) {
     try {
@@ -329,6 +330,17 @@ public class MongoHelper extends Helper {
     return null;
   }
 
+  /**
+   * load the data by the query
+   * 
+   * @param collection
+   *          the collection name
+   * @param query
+   *          the query
+   * @param b
+   *          the Bean
+   * @return the Bean
+   */
   public static <T extends Bean> T load(String collection, DBObject query, T b) {
     try {
       DBCollection db = MongoHelper.getCollection(collection);
@@ -347,6 +359,19 @@ public class MongoHelper extends Helper {
     return null;
   }
 
+  /**
+   * load the data by the query
+   * 
+   * @param collection
+   *          the collection name
+   * @param query
+   *          the query
+   * @param order
+   *          the order
+   * @param b
+   *          the Bean
+   * @return the Bean
+   */
   public static <T extends Bean> T load(String collection, DBObject query, DBObject order, T b) {
     DBCursor cur = null;
     TimeStamp t = TimeStamp.create();
@@ -866,17 +891,6 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * refill the bean from json.
-   *
-   * @param jo
-   *          the map
-   * @return boolean
-   */
-  public boolean fromJSON(Map<Object, Object> jo) {
-    return false;
-  }
-
-  /**
    * test whether the query is exists in
    * 
    * @param query
@@ -895,6 +909,17 @@ public class MongoHelper extends Helper {
     throw new Exception("the Class<" + t.getName() + "> doest annotated by @DBMapping()!");
   }
 
+  /**
+   * test the data exists ?
+   * 
+   * @param collection
+   *          the collection name
+   * @param query
+   *          the query
+   * @return true: if exists, false: not exists
+   * @throws Exception
+   *           throw Exception if occur error
+   */
   public static boolean exists(String collection, DBObject query) throws Exception {
     TimeStamp t1 = TimeStamp.create();
     boolean b = false;
@@ -985,6 +1010,15 @@ public class MongoHelper extends Helper {
     return null;
   }
 
+  /**
+   * count the data, this may cause big issue if the data is huge
+   * 
+   * @param q
+   *          the query
+   * @param t
+   *          the Class of Bean
+   * @return the number of data
+   */
   public static long count(BasicDBObject q, Class<? extends Bean> t) {
     String collection = MongoHelper.getCollection(t);
     if (!X.isEmpty(collection)) {
@@ -1053,6 +1087,12 @@ public class MongoHelper extends Helper {
     }
   }
 
+  /**
+   * backup the whole data from file
+   * 
+   * @param filename
+   *          the file name
+   */
   public static void backup(String filename) {
     File f = new File(filename);
     f.getParentFile().mkdirs();
@@ -1096,6 +1136,13 @@ public class MongoHelper extends Helper {
     }
   }
 
+  /**
+   * recover the database from the file, the old data will be erased, index will
+   * be keep
+   * 
+   * @param file
+   *          the mongo.dmp file
+   */
   public static void recover(File file) {
 
     try {
@@ -1134,5 +1181,43 @@ public class MongoHelper extends Helper {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
+  }
+
+  /**
+   * batch insert data
+   * 
+   * @param table
+   *          the collection name
+   * @param values
+   *          the collection of values
+   * @return the number of inserted, base on the version of mongo
+   */
+  public static int insertCollection(String table, Collection<V> values) {
+    DBCollection c = getCollection(table);
+    if (c != null) {
+      List<DBObject> list = new ArrayList<DBObject>(values.size());
+      for (V v : values) {
+        BasicDBObject d = new BasicDBObject();
+        v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
+        for (String name : v.names()) {
+          d.append(name, v.value(name));
+        }
+        list.add(d);
+      }
+
+      try {
+
+        WriteResult r = c.insert(list);
+
+        if (log.isDebugEnabled())
+          log.debug("inserted collection=" + table + ", list=" + list + ", r=" + r);
+        return 1;
+      } catch (Exception e) {
+        if (log.isErrorEnabled())
+          log.error(e.getMessage(), e);
+      }
+    }
+    return 0;
+
   }
 }

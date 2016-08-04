@@ -1294,30 +1294,6 @@ public class RDSHelper extends Helper {
   }
 
   /**
-   * batch insert.
-   * 
-   * @param sets
-   *          the values collection
-   * @param t
-   *          the Bean Class
-   * @return int
-   */
-  final public static int insert(Collection<V> sets, Class<?> t) {
-    /**
-     * get the require annotation onGet
-     */
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
-    }
-
-    return insert(mapping.name(), sets);
-
-  }
-
-  /**
    * insert to the table according the Map(table) declaration
    * 
    * @param sets
@@ -1338,78 +1314,6 @@ public class RDSHelper extends Helper {
       return insertTable(mapping.name(), sets);
     }
     return -1;
-  }
-
-  /**
-   * batch insert the values into the table.
-   * 
-   * @param table
-   *          the table name
-   * @param list
-   *          the list of values
-   * @return int of how many data inserted
-   */
-  public static int insert(String table, Collection<V> list) {
-    if (list == null || list.size() == 0)
-      return 0;
-
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("insert into ").append(table).append(" (");
-    StringBuilder s = new StringBuilder();
-    int total = 0;
-    V ss = list.iterator().next();
-    for (String name : ss.names()) {
-      if (s.length() > 0)
-        s.append(",");
-      s.append(name);
-      total++;
-    }
-    sql.append(s).append(") values( ");
-
-    for (int i = 0; i < total - 1; i++) {
-      sql.append("?, ");
-    }
-    sql.append("?)");
-
-    /**
-     * insert it in database
-     */
-    Connection c = null;
-    PreparedStatement p = null;
-
-    try {
-      c = getConnection();
-
-      if (c == null)
-        return -1;
-
-      p = c.prepareStatement(sql.toString());
-
-      for (V sets : list) {
-        int order = 1;
-        for (Object v : sets.m.values()) {
-          setParameter(p, order++, v);
-        }
-
-        p.addBatch();
-      }
-
-      int[] ii = p.executeBatch();
-      int r = 0;
-      for (int i : ii) {
-        r += i;
-      }
-      return r;
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(sql.toString() + list.toString(), e);
-    } finally {
-      close(p, c);
-    }
-    return 0;
   }
 
   /**
@@ -2167,6 +2071,79 @@ public class RDSHelper extends Helper {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
+  }
+
+  /**
+   * batch insert
+   * 
+   * @param table
+   *          the table name
+   * @param values
+   *          the collection of values
+   * @return the number of inserted
+   */
+  public static int insertTable(String table, Collection<V> values) {
+
+    if (values == null || values.size() == 0)
+      return 0;
+
+    /**
+     * create the sql statement
+     */
+    StringBuilder sql = new StringBuilder();
+    sql.append("insert into ").append(table).append(" (");
+    StringBuilder s = new StringBuilder();
+    int total = 0;
+    V ss = values.iterator().next();
+    for (String name : ss.names()) {
+      if (s.length() > 0)
+        s.append(",");
+      s.append(name);
+      total++;
+    }
+    sql.append(s).append(") values( ");
+
+    for (int i = 0; i < total - 1; i++) {
+      sql.append("?, ");
+    }
+    sql.append("?)");
+
+    /**
+     * insert it in database
+     */
+    Connection c = null;
+    PreparedStatement p = null;
+
+    try {
+      c = getConnection();
+
+      if (c == null)
+        return -1;
+
+      p = c.prepareStatement(sql.toString());
+
+      for (V sets : values) {
+        int order = 1;
+        for (Object v : sets.m.values()) {
+          setParameter(p, order++, v);
+        }
+
+        p.addBatch();
+      }
+
+      int[] ii = p.executeBatch();
+      int r = 0;
+      for (int i : ii) {
+        r += i;
+      }
+      return r;
+    } catch (Exception e) {
+      if (log.isErrorEnabled())
+        log.error(sql.toString() + values.toString(), e);
+    } finally {
+      close(p, c);
+    }
+    return 0;
   }
 
 }

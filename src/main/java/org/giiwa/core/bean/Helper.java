@@ -1033,6 +1033,47 @@ public class Helper {
   }
 
   /**
+   * batch insert
+   * 
+   * @param values
+   *          the collection of values
+   * @param t
+   *          the Class of Bean
+   * @return the number of inserted
+   */
+  public static int insert(Collection<V> values, Class<? extends Bean> t) {
+    String table = getTable(t);
+    return insert(table, values);
+  }
+
+  /**
+   * batch insert
+   * 
+   * @param table
+   *          the table name
+   * @param values
+   *          the collection of values
+   * @return the number of inserted
+   */
+  public static int insert(String table, Collection<V> values) {
+
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.insertCollection(table, values);
+      } else if (primary == DBType.RDS) {
+
+        // insert into RDS
+        return RDSHelper.insertTable(table, values);
+      } else {
+        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      }
+    }
+
+    return 0;
+  }
+
+  /**
    * insert into the values by the Class of T
    * 
    * @param values
