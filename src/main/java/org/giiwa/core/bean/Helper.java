@@ -126,6 +126,30 @@ public class Helper {
   }
 
   /**
+   * test the data is exists by the query
+   * 
+   * @param table
+   *          the table name
+   * @param q
+   *          the query
+   * @return true: exists, false: not exists
+   * @throws Exception
+   *           throw Exception if occur error
+   */
+  public static boolean exists(String table, W q) throws Exception {
+    if (table != null) {
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.exists(table, q.query());
+      } else if (primary == DBType.RDS) {
+        // insert into RDS
+        return RDSHelper.exists(table, q.where(), q.args());
+      }
+    }
+    throw new Exception("no db configured, please configure the {giiwa}/giiwa.properites");
+  }
+
+  /**
    * test exists
    * 
    * @param q
@@ -140,16 +164,7 @@ public class Helper {
   public static boolean exists(W q, Class<? extends Bean> t) throws Exception {
     String table = getTable(t);
 
-    if (table != null) {
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.exists(table, q.query());
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return RDSHelper.exists(table, q.where(), q.args());
-      }
-    }
-    throw new Exception("no db configured, please configure the {giiwa}/giiwa.properites");
+    return exists(table, q);
   }
 
   /**
