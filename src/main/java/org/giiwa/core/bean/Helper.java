@@ -34,7 +34,7 @@ import com.mongodb.BasicDBObject;
 import net.sf.json.JSONObject;
 
 /**
- * The {@code Bean} Class is base class for all class that database access, it
+ * The {@code Helper} Class is base class for all class that database access, it
  * almost includes all methods that need for database <br>
  * all data access MUST be inherited from it
  * 
@@ -975,10 +975,28 @@ public class Helper {
 
   }
 
+  /**
+   * load the data by id of X.ID
+   * 
+   * @param id
+   *          the id
+   * @param t
+   *          the Class of Bean
+   * @return the Bean
+   */
   public static <T extends Bean> T load(Object id, Class<T> t) {
     return load(W.create(X.ID, id), t);
   }
 
+  /**
+   * load the data by the query
+   * 
+   * @param q
+   *          the query
+   * @param t
+   *          the Class of Bean
+   * @return the Bean
+   */
   public static <T extends Bean> T load(W q, Class<T> t) {
     String table = getTable(t);
 
@@ -999,8 +1017,30 @@ public class Helper {
 
   }
 
+  /**
+   * insert into the values by the Class of T
+   * 
+   * @param values
+   *          the values
+   * @param t
+   *          the Class of Bean
+   * @return the number of inserted, 0: failed
+   */
   public static int insert(V values, Class<? extends Bean> t) {
     String table = getTable(t);
+    return insert(table, values);
+  }
+
+  /**
+   * insert the values into the "table"
+   * 
+   * @param table
+   *          the table name
+   * @param values
+   *          the values to insert
+   * @return the number of inserted, 0: failed
+   */
+  public static int insert(String table, V values) {
 
     if (table != null) {
       if (primary == DBType.MONGO) {
@@ -1018,12 +1058,49 @@ public class Helper {
     return 0;
   }
 
+  /**
+   * update the values by the id, for the Class of Bean
+   * 
+   * @param id
+   *          the id of the X.ID
+   * @param values
+   *          the values to update
+   * @param t
+   *          the Class of Bean
+   * @return the number of updated
+   */
   public static int update(Object id, V values, Class<? extends Bean> t) {
     return update(W.create(X.ID, id), values, t);
   }
 
+  /**
+   * update the values by the W for the Class of Bean
+   * 
+   * @param q
+   *          the query
+   * @param values
+   *          the values to update
+   * @param t
+   *          the Class of Ban
+   * @return the number of updated
+   */
   public static int update(W q, V values, Class<? extends Bean> t) {
     String table = getTable(t);
+    return update(table, q, values);
+  }
+
+  /**
+   * update the table by the query with the values
+   * 
+   * @param table
+   *          the table
+   * @param q
+   *          the query
+   * @param values
+   *          the values
+   * @return the number of updated
+   */
+  public static int update(String table, W q, V values) {
 
     if (table != null) {
       if (primary == DBType.MONGO) {
@@ -1041,10 +1118,31 @@ public class Helper {
     return 0;
   }
 
+  /**
+   * test is configured RDS or Mongo
+   * 
+   * @return
+   */
   public static boolean isConfigured() {
     return RDSHelper.isConfigured() || MongoHelper.isConfigured();
   }
 
+  /**
+   * load the data from the table by query, ignore the table definition for the
+   * Class
+   * 
+   * @param table
+   *          the table name
+   * @param q
+   *          the query
+   * @param s
+   *          the start
+   * @param n
+   *          the number
+   * @param t
+   *          the Class of Bean
+   * @return Beans of the T, the "total=-1" always
+   */
   public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) {
     if (primary == DBType.MONGO) {
       // insert into mongo
@@ -1057,11 +1155,31 @@ public class Helper {
     return null;
   }
 
+  /**
+   * load the data by query
+   * 
+   * @param q
+   *          the query
+   * @param s
+   *          the start
+   * @param n
+   *          the number
+   * @param t
+   *          the Class of Bean
+   * @return Beans of Class
+   */
   public static <T extends Bean> Beans<T> load(W q, int s, int n, Class<T> t) {
     String table = getTable(t);
     return load(table, q, s, n, t);
   }
 
+  /**
+   * get the table name from the Class of Bean
+   * 
+   * @param t
+   *          the Class of Bean
+   * @return the String of the table name
+   */
   public static String getTable(Class<? extends Bean> t) {
     Table table = (Table) t.getAnnotation(Table.class);
     if (table == null || X.isEmpty(table.name())) {
@@ -1072,6 +1190,15 @@ public class Helper {
     return table.name();
   }
 
+  /**
+   * count the data by the query
+   * 
+   * @param q
+   *          the query
+   * @param t
+   *          the Class of Bean
+   * @return the long of data number
+   */
   public static long count(W q, Class<? extends Bean> t) {
     String table = getTable(t);
 
@@ -1091,6 +1218,17 @@ public class Helper {
     return 0;
   }
 
+  /**
+   * get the distinct list for the name, by the query
+   * 
+   * @param name
+   *          the column name
+   * @param q
+   *          the query
+   * @param t
+   *          the Class of Bean
+   * @return the List of objects
+   */
   public static List<Object> distinct(String name, W q, Class<? extends Bean> t) {
     String table = getTable(t);
 
