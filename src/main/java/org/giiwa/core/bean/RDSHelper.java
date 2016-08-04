@@ -1832,10 +1832,26 @@ public class RDSHelper extends Helper {
     return null;
   }
 
+  /**
+   * test if confiured RDS
+   * 
+   * @return true: configured, false: no
+   */
   public static boolean isConfigured() {
     return DB.isConfigured();
   }
 
+  /**
+   * count the data
+   * 
+   * @param table
+   *          the table name
+   * @param where
+   *          the where sql
+   * @param args
+   *          the args
+   * @return the number of data
+   */
   public static long count(String table, String where, Object[] args) {
 
     /**
@@ -1895,6 +1911,19 @@ public class RDSHelper extends Helper {
     return 0;
   }
 
+  /**
+   * get distinct data list
+   * 
+   * @param table
+   *          the table name
+   * @param name
+   *          the column name
+   * @param where
+   *          the where sub sentence
+   * @param args
+   *          the args
+   * @return the list of Object
+   */
   public static List<Object> distinct(String table, String name, String where, Object[] args) {
     /**
      * create the sql statement
@@ -1958,6 +1987,12 @@ public class RDSHelper extends Helper {
     return null;
   }
 
+  /**
+   * backup the data to file
+   * 
+   * @param filename
+   *          the filename
+   */
   public static void backup(String filename) {
 
     File f = new File(filename);
@@ -2022,6 +2057,12 @@ public class RDSHelper extends Helper {
     }
   }
 
+  /**
+   * recover the data from the file
+   * 
+   * @param file
+   *          the file
+   */
   public static void recover(File file) {
 
     Connection c = null;
