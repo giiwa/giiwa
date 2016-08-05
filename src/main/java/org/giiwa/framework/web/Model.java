@@ -36,7 +36,6 @@ import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.MongoHelper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.*;
@@ -1267,12 +1266,16 @@ public class Model {
       if (c1 != null && c1.indexOf("application/json") > -1) {
         if (uploads == null) {
           BufferedReader in = req.getReader();
-          String line = in.readLine();
+
           StringBuilder sb = new StringBuilder();
-          while (line != null) {
-            sb.append(line).append("\r\n");
-            line = in.readLine();
+          char[] buff = new char[1024];
+          int len;
+          while ((len = in.read(buff)) != -1) {
+            sb.append(buff, 0, len);
           }
+
+          log.debug("params=" + sb.toString());
+
           JSONObject jo = JSONObject.fromObject(sb.toString());
           uploads = new HashMap<String, Object>();
           uploads.putAll(jo);

@@ -156,6 +156,27 @@ public class user extends Model {
     login();
   }
 
+  @Path(login = true, path = "get", log = Model.METHOD_POST)
+  public void get() {
+    long uid = this.getLong("uid", -1);
+    if (uid <= 0) {
+      uid = login.getId();
+    }
+
+    User u = User.loadById(uid);
+    JSONObject jo = new JSONObject();
+    if (u != null) {
+      jo.put("data", u.getJSON());
+      jo.put(X.STATE, 200);
+      jo.put(X.MESSAGE, "ok");
+    } else {
+      jo.put(X.STATE, 201);
+      jo.put(X.MESSAGE, "not exists");
+    }
+    this.response(jo);
+
+  }
+
   /**
    * Login.
    */
