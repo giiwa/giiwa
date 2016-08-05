@@ -36,7 +36,6 @@ import net.sf.json.JSONObject;
  * password: string of hashed
  * nickname: string of nickname
  * title: title of the user
- * roles: the roles of the user, user can has multiple roles
  * hasAccess: test whether has the access token for the user
  * </pre>
  * 
@@ -359,8 +358,14 @@ public class User extends Bean {
   @SuppressWarnings("unchecked")
   public Roles getRole() {
     if (role == null) {
-      List<Long> roles = (List<Long>) this.get("roles");
-      role = new Roles(roles);
+      Beans<UserRole> bs = Helper.load(W.create("uid", this.getId()), 0, 100, UserRole.class);
+      if (bs != null && bs.getList() != null) {
+        List<Long> roles = new ArrayList<Long>();
+        for (UserRole r : bs.getList()) {
+          roles.add(r.getLong("rid"));
+        }
+        role = new Roles(roles);
+      }
     }
     return role;
   }
@@ -533,6 +538,12 @@ public class User extends Bean {
      * 
      */
     private static final long serialVersionUID = 1L;
+
+    @Column(name = "uid")
+    long                      uid;
+
+    @Column(name = "rid")
+    long                      rid;
 
   }
 

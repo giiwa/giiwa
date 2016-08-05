@@ -153,5 +153,9 @@ public class Global extends Bean {
       log.error(e1.getMessage(), e1);
     }
   }
+  
+  public String get(String name) {
+    return s(name, null);
+  }
 
 }
