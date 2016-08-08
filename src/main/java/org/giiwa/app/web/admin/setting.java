@@ -214,7 +214,7 @@ public class setting extends Model {
     public void get() {
 
       this.set("node", Global.s("node", null));
-      this.set("system_code", Global.l("system.code", 1));
+      this.set("system_code", Global.l("system.code", 0));
       this.set("language", Global.s("language", "zh_cn"));
       this.set("level", Global.s("run.level", "debug"));
       this.set("user_system", Global.s("user.system", "close"));

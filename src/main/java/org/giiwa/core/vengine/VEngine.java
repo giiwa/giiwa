@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc

@@ -46,7 +46,7 @@ public class UID {
    */
   public synchronized static long next(String key) {
 
-    long prefix = Global.l("system.code", 1) * 10000000000000L;
+    long prefix = Global.l("system.code", 0) * 10000000000000L;
 
     try {
 
