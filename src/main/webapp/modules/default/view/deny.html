@@ -4,7 +4,11 @@
 	$lang.get('message.deny')
 <script>
 setTimeout(function(){
+	#if($url)
+	window.location.href = "$url";
+	#else
 	window.location.href = "/user/login";
+	#end
 }, 5000);
 </script>
 #end

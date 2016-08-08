@@ -202,7 +202,7 @@ menu.setting=系统设置
 menu.system=系统配置
 menu.user=帐号管理
 menu.usermgr=用户管理
-message.deny=禁止访问， 5秒后自动 <a href='/user/login'>登录</a>
+message.deny=禁止访问， 5秒后自动跳转
 module.create.notes=创建模块，直接生成 Eclipse 工程文件包 和 ant的 build.xml, 使用“ant” 直接打包成模块文件包 "??.zip"
 module.create.title=创建模块
 module.id.title=修改模块ID

@@ -214,7 +214,7 @@ menu.system=System
 menu.tools=Tools
 menu.user=Account
 menu.usermgr=User
-message.deny=Access deny, 5 seconds auto goto <a href='/user/login'>Login</a>
+message.deny=Access deny, 5 seconds auto redirect
 module.create.notes=Create a module, generate a Eclipse project with build.xml, using ant to package the module as "??.zip" which can be upload in module management directly
 module.create.title=Create a module
 module.download.hint=download the module package

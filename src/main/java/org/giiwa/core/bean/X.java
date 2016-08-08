@@ -61,7 +61,7 @@ public class X {
   public static final String _LIKE           = "_like";
 
   /** The Constant ID. */
-  public static final String ID             = "id";
+  public static final String ID              = "id";
 
   /** The Constant KEYWORD. */
   public static final String KEYWORD         = "keyword";
@@ -83,6 +83,8 @@ public class X {
 
   /** The Constant ALL. */
   public static final String ALL             = "all";
+
+  public static final String URL             = "url";
 
   /** The Constant TAGS. */
   public static final String TAGS            = "tags";

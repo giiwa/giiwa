@@ -1929,7 +1929,7 @@ public class Model {
    * show deny page to end-user
    */
   final public void deny() {
-    deny(null);
+    deny(null, null);
     setStatus(HttpServletResponse.SC_FORBIDDEN);
   }
 
@@ -1939,7 +1939,7 @@ public class Model {
    * @param error
    *          the error that will be displaied
    */
-  final public void deny(String error) {
+  final public void deny(String url, String error) {
     if (log.isDebugEnabled())
       log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("deny " + error));
 
@@ -1949,11 +1949,13 @@ public class Model {
       jo.put(X.STATE, 202);
       jo.put(X.MESSAGE, lang.get("access.deny"));
       jo.put(X.ERROR, error);
+      jo.put(X.URL, url);
       // this.redirect("/user/login/popup");
       this.response(jo);
     } else {
       this.set("me", this.getUser());
       this.set(X.ERROR, error);
+      this.set(X.URL, url);
       this.show("/deny.html");
     }
 
