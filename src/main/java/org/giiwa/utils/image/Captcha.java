@@ -16,12 +16,16 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.cache.DefaultCachable;
 
 public class Captcha {
+
+  static Log log = LogFactory.getLog(Captcha.class);
 
   public static enum Result {
     badcode, expired, ok
@@ -84,10 +88,13 @@ public class Captcha {
     String id = "//captcha/" + sid;
     Code c = (Code) Cache.get(id);
     if (c == null) {
+      log.warn("no code in cache, sid=" + sid);
       return Result.badcode;
     } else if (!X.isSame(code, c.code)) {
+      log.warn("is not same, code.server" + c.code + ", code.client=" + code);
       return Result.badcode;
     } else if (c.expired < System.currentTimeMillis()) {
+      log.warn("expired, expired=" + c.expired);
       return Result.expired;
     }
     return Result.ok;

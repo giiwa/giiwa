@@ -31,6 +31,7 @@ public class captcha extends Model {
       Captcha.create(this.sid(), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60, t.getFile(), 4);
 
       jo.put(X.STATE, 200);
+      jo.put("sid", sid());
       jo.put("uri", t.getUri() + "?" + System.currentTimeMillis());
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);

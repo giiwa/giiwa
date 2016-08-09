@@ -195,6 +195,7 @@ public class user extends Model {
       JSONObject jo = new JSONObject();
 
       Captcha.Result r = Captcha.verify(this.sid(), code);
+      Captcha.remove(this.sid());
 
       if (Captcha.Result.badcode == r) {
         jo.put(X.MESSAGE, lang.get("captcha.bad"));
