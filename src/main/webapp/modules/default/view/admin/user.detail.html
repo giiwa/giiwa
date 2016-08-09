@@ -16,7 +16,7 @@
 	
 	<div><label><h3>$lang.get('user.roles')</h3>:[
 			#foreach($r in $u.role.list) 
-				<span class='role'>$r.name</span>
+				<span class='icon-shield'>$r.name</span>
 			#end
 		]</label></div>
 	<div><label><h3>$lang.get('user.lastlogintime')</h3>:<i>#if($u.lastlogintime > 0) $lang.format($!u.lastlogintime, 'yy-MM-dd hh:mm:ss') #end</i></label></div>

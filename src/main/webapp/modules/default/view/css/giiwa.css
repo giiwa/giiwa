@@ -859,12 +859,6 @@ span.user, i.user {
 	background-size: 16px;
 	cursor: pointer;
 }
-span.role, i.role {
-	margin-left: 10px;
-	background: url(/images/role.png) no-repeat;
-	padding-left: 16px;
-	background-size: 16px;
-}
 table.tablesorter tbody tr.done td {
 	color: #888;
 }
