@@ -66,7 +66,8 @@ add.fail=Add failed
 add.success=Add success
 auto.restarting=Restarting...
 backup.index.title=Backup management
-base.setting.notes=Please see the configuration in {giiwa.home}/giiwa.properties
+global.setting.notes=Global setting, please see <a href='http://giiwa.org/docs/apidocs/org/giiwa/core/conf/Global.html' target='_blank'>Global APIdocs</a> to get more.
+base.setting.notes=Local configuration setting in {giiwa.home}/giiwa.properties, please see <a href='http://giiwa.org/docs/apidocs/org/giiwa/core/conf/Config.html' target='_blank'>Config APIdocs</a> to get more.
 base.setting.title=Setting
 browser.description=Java Web fast developing framework, high performance and effective
 browser.title=Giiwa Java Web fast development framework
@@ -270,7 +271,9 @@ smtp.setting.title=Email setting
 sort.by=Sort
 sortby.type_=ASC
 sortby.type_desc=DESC
+system.code=System Code
 system.code.hint=the code of distributed system
+system.code.hint=The system code,<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a> auto fill with this as prefix. 
 system.setting.title=System setting
 title.add.module=Add module
 title.are_u_sure_delete=Are you sure to delete?

@@ -20,12 +20,11 @@ import java.util.*;
 import org.apache.commons.configuration.*;
 import org.apache.log4j.PropertyConfigurator;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class Config is whole configuration of system, usually is a copy of
  * "giiwa.properties"
  */
-public class Local {
+public class Config {
 
 	/** The conf. */
 	private static PropertiesConfiguration conf;
@@ -48,7 +47,7 @@ public class Local {
 	 */
 	public static void init(String homePropName, String confName) throws Exception {
 
-		Local.confName = confName;
+		Config.confName = confName;
 
 		home = System.getProperty(homePropName);
 		if (home == null) {

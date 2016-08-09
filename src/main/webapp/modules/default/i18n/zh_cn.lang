@@ -64,7 +64,8 @@ account.locked.error=帐号被锁定，请1小时后再试
 add.fail=添加失败
 add.success=添加成功
 backup.index.title=备份管理
-base.setting.notes=请参考配置文件 {giiwa.home}/giiwa.properties
+global.setting.notes=全局基本设置，请参考<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/conf/Global.html' target='_blank'>Global APIdocs</a>
+base.setting.notes=本地基本设置，配置文件 {giiwa.home}/giiwa.properties,请参考<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/conf/Config.html' target='_blank'>Local APIDocs</a>
 base.setting.title=设置
 browser.description=Java Web 快速开发框架，模块化开发和运行期管理
 browser.title=Giiwa Java Web 快速开发框架
@@ -257,7 +258,8 @@ smtp.setting.title=邮件设置
 sort.by=排序
 sortby.type_=升序
 sortby.type_desc=降序
-system.code.hint=系统编码
+system.code=系统编码
+system.code.hint=系统编码，<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a>中会添加改编码为前导序号
 system.setting.title=系统设置
 title.add.module=添加模块
 title.are_u_sure_delete=确认删除?

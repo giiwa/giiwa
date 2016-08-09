@@ -18,9 +18,8 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 
-// TODO: Auto-generated Javadoc
 /**
- * The Class SystemConfig is extended of Config, it can be "overrided" by module
+ * The Class Global is extended of Config, it can be "overrided" by module
  * or configured, it stored in database
  * 
  * @author yjiang
@@ -65,7 +64,7 @@ public class Global extends Bean {
     if (c != null) {
       return X.toInt(c.i, defaultValue);
     } else {
-      return Local.getConfig().getInt(name, defaultValue);
+      return Config.getConfig().getInt(name, defaultValue);
     }
   }
 
@@ -83,7 +82,7 @@ public class Global extends Bean {
     if (c != null) {
       return c.s != null ? c.s : defaultValue;
     } else {
-      return Local.getConfig().getString(name, defaultValue);
+      return Config.getConfig().getString(name, defaultValue);
     }
   }
 
@@ -101,7 +100,7 @@ public class Global extends Bean {
     if (c != null) {
       return c.l;
     } else {
-      return Local.getConfig().getLong(name, defaultValue);
+      return Config.getConfig().getLong(name, defaultValue);
     }
   }
 

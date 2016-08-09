@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Model.HTTPMethod;
 import org.giiwa.framework.web.view.View;
 
@@ -41,7 +42,7 @@ public class GiiwaFilter implements Filter {
     String method = r1.getMethod();
 
     if ("GET".equalsIgnoreCase(method)) {
-      String value = config.get("cors.allowOrigin");
+      String value = Global.s("cross.domain", "no");
       if (!X.isEmpty(value)) {
         r2.addHeader("Access-Control-Allow-Origin", value);
       }
@@ -49,7 +50,7 @@ public class GiiwaFilter implements Filter {
       Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
 
     } else if ("POST".equalsIgnoreCase(method)) {
-      String value = config.get("cors.allowOrigin");
+      String value = Global.s("cross.domain", "no");
       if (!X.isEmpty(value)) {
         r2.addHeader("Access-Control-Allow-Origin", value);
       }
@@ -57,17 +58,11 @@ public class GiiwaFilter implements Filter {
       Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
 
     } else if ("OPTIONS".equals(method)) {
-      String value = config.get("cors.allowOrigin");
-      if (!X.isEmpty(value)) {
-        r2.setStatus(200);
-        r2.addHeader("Access-Control-Allow-Origin", value);
-        r2.addHeader("Access-Control-Allow-Headers", config.get("cors.supportedHeaders"));
-        r2.getOutputStream().write("ok".getBytes());
-      } else {
-        r2.setStatus(200);
-        r2.addHeader("Access-Control-Allow-Origin", "no");
-        r2.getOutputStream().write("forbidden".getBytes());
-      }
+      String value = Global.s("cross.domain", "no");
+      r2.setStatus(200);
+      r2.addHeader("Access-Control-Allow-Origin", value);
+      r2.addHeader("Access-Control-Allow-Headers", Global.s("cross.header", "forbidden"));
+      r2.getOutputStream().write(value.getBytes());
     } else if ("HEAD".equals(method)) {
 
     }

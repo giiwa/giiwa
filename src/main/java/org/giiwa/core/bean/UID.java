@@ -38,7 +38,8 @@ public class UID {
   static Log log = LogFactory.getLog(UID.class);
 
   /**
-   * increase and get the unique sequence number by key.
+   * increase and get the unique sequence number by key, <br>
+   * the number=[system.code] + seq
    *
    * @param key
    *          the key

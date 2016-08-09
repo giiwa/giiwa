@@ -1,4 +1,4 @@
-	<div><label><h3>$lang.get('base.setting.title'):</h3><g>$lang.get('base.setting.notes')</g></label></div>
+	<div><label><h3>$lang.get('base.setting.title'):</h3><g>$lang.get('global.setting.notes')</g></label></div>
 	<hr/>
 	<div><label><h3>language:</h3>
 		<select name='language'>
@@ -29,9 +29,20 @@
 		</select>
 		<g>$lang.get('user.role.hint')</g>
 	</label></div>
-	
+	<div><label><h3>$lang.get('system.code'):</h3>
+		<input type='number' name='system_code' value="$!system_code"/>
+		<g>$lang.get('system.code.hint')</g></label></div>
+		
+	<div><label><h3>$lang.get('cross.domain'):</h3>
+		<input type='text' name='cross_domain' value="$!cross_domain"/>
+		<g>$lang.get('cross.domain.hint')</g></label></div>
+	<div><label><h3>$lang.get('cross.header'):</h3>
+		<input type='text' name='cross_header' value="$!cross_header"/>
+		<g>$lang.get('cross.header.hint')</g></label></div>
+
+	<div><label><g>$lang.get('base.setting.notes')</g></label></div>
+	<hr/>
 	<div><label><h3>node:</h3><i>$!node</i><g>$lang.get('node.hint')</g></label></div>
-	<div><label><h3>system.code:</h3><i>$!system_code</i><g>$lang.get('system.code.hint')</g></label></div>
 	<div><label><h3>cache.url:</h3><i>$!cache_url</i><g>$lang.get('cache.url.hint')</g></label></div>
 	<div><label><h3>cache.group:</h3><i>$!cache_group</i><g>$lang.get('cache.group.hint')</g></label></div>
 	<div><label><h3>mongo[prod].url:</h3><i>$!mongo_url</i><g>$lang.get('mongo[prod].url.hint')</g></label></div>

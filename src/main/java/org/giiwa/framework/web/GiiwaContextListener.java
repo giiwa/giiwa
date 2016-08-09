@@ -22,7 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
-import org.giiwa.core.conf.Local;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Repo;
@@ -89,9 +89,9 @@ public class GiiwaContextListener implements ServletContextListener {
       /**
        * initialize the configuration
        */
-      Local.init("home", "giiwa");
+      Config.init("home", "giiwa");
 
-      Configuration conf = Local.getConfig();
+      Configuration conf = Config.getConfig();
 
       // TO fix a bug, giiwa.properties may store the "home"
       conf.setProperty("home", Model.GIIWA_HOME);

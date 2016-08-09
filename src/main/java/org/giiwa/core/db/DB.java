@@ -17,7 +17,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Local;
+import org.giiwa.core.conf.Config;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -114,7 +114,7 @@ public class DB {
    * initialize the DB object from the "giiwa.properties"
    */
   public static synchronized void init() {
-    conf = Local.getConfig();
+    conf = Config.getConfig();
 
     if (ds == null && !X.isEmpty(conf.getString("db.url", null))) {
       DRIVER = conf.getString("db.driver", DRIVER);
