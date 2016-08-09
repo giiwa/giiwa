@@ -47,7 +47,7 @@ a.setting.smtp=邮件
 a.setting.system=系统
 a.start=开始
 a.stop=停止
-a.system.setting=系统
+a.system.setting=基本设置
 a.upload=上传文件
 user.new.password=新密码
 a.user=用户
@@ -260,7 +260,7 @@ sortby.type_=升序
 sortby.type_desc=降序
 system.code=系统编码
 system.code.hint=系统编码，<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a>中会添加改编码为前导序号
-system.setting.title=系统设置
+system.setting.title=基本设置
 cross.domain=跨域访问
 cross.domain.hint=域名表达式，"*"全部，请参考 "Access-Control-Allow-Origin".
 cross.header=跨域允许头

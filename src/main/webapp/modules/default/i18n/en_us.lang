@@ -48,7 +48,7 @@ a.setting.smtp=SMTP
 a.setting.system=System
 a.start=Start
 a.stop=Stop
-a.system.setting=System
+a.system.setting=Base
 a.upload=Upload
 a.user=Account
 access.admin=Admin
@@ -274,7 +274,7 @@ sortby.type_desc=DESC
 system.code=System Code
 system.code.hint=the code of distributed system
 system.code.hint=The system code,<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a> auto fill with this as prefix. 
-system.setting.title=System setting
+system.setting.title=Base setting
 cross.domain=AllowDomain
 cross.domain.hint=The Domain pattern that allow cross access, please refer "Access-Control-Allow-Origin".
 cross.header=AllowHeader
