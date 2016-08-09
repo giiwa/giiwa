@@ -86,7 +86,6 @@ configure.title.mongo=Mongo
 configure.title.mq=Active MQ
 configure.title.rdbs=关系数据库
 configure.title.system=系统设置
-copyright=©
 create.fail=创建失败
 create.success=创建成功
 create_user_error=创建帐号失败
@@ -97,6 +96,7 @@ date.timezone=GMT+0
 db.url.hint=关系数据库服务器
 default=缺省
 default.list.number=
+copyright=Copyright © 2016
 powerby=Powered By <a href="http://giiwa.org" target="_blank">Giiwa</a>
 done=完成
 group.access=缺省
