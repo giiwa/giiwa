@@ -1,104 +1,46 @@
 #parse('/user/head.html')
 
-<div id='wrapper' class='login'>
-	<div id='head'>
-		<div class='center'>
-			<div class='logo'>
-				$lang.get('site.logo')
-			</div>
+	<div class="header">
+		<div id="messageBox" class="alert alert-error hide"><button data-dismiss="alert" class="close">×</button>
+			<label id="loginError" class="error"></label>
 		</div>
 	</div>
-
-	<div id="content">
-		<div class='center'>
-			<div class='outter'>
-				<div class='inner'>
-					<form method="post">
-						#if($message)
-						<div class='message'>
-							$message
-						</div>
-						#end
-						<div class="title">
-							$lang.get('user.login')
-						</div>
-						<div class="left">
-							<div>
-								<label><h3>$lang.get('user.name'):</h3>
-									<input type="text"
-									name="name" value="$!name">
-								</label>
-
-							</div>
-							<div>
-								<label><h3>$lang.get('user.password'):</h3>
-									<input type="password"
-									name="pwd" value="$!pwd">
-								</label>
-							</div>
-							<div>
-								<label><h3>$lang.get('user.captcha'):</h3>
-									<input type="text"
-									name="code" onblur="_verify(this);">
-									<img id="captcha" onclick="_oncaptcha();" style="width:80px"/> </label>
-							</div>
-							<div class="btn">
-								<button type="submit">
-									$lang.get('btn.login')
-								</button>
-							</div>
-							#if($system.s('user.system', 'close') == 'open')
-							<a href="/user/register">$lang.get('register.user')</a>
-							#end
-						</div>
-					</form>
-				</div>
-			</div>
+	<h1 class="form-signin-heading">$lang.get('user.login')</h1>
+	<form id="loginForm" class="form-signin" action="/user/login" method="post">
+		<div class=''>
+			<label class="input-label" for="username">$lang.get('user.name')</label>
+			<input type="text" id="username" name="name" class="form-control" required />
 		</div>
-	</div>
-
-	<div id='foot'>
-		<div class='center'>
-			<div class='links'>
-				$lang.get('user.foot.links')
-			</div>
-			<div class='copyright'>
-				<span class='copyright'>$lang.get('copyright')</span><span
-				class='designed'>$lang.get('designedby')</span>
-			</div>
+		<div class=''>
+			<label class="input-label" for="password">$lang.get('user.password')</label>
+			<input type="password" id="password" name="pwd" class="form-control" required />
 		</div>
+		<div class="validateCode" src="/jeesite/servlet/validateCodeServlet?1470778552625">
+			<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
+			<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control" style="display:inline-block;width:45px;margin-bottom:0;">
+			<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
+			<a href="javascript:" onclick="_oncaptcha();" class="mid validateCodeRefresh" style="">看不清</a>
+		</div>
+				
+		<button class="btn btn-large btn-primary" type="submit">登 录</button>
+		<div id="themeSwitch" class="dropdown">
+			<a class="dropdown-toggle" href="#">注册用户</a>&nbsp;&nbsp;
+			<a class="dropdown-toggle" href="#">忘记密码</a>
+		</div>
+	</form>
+	<div class="footer">
+		$lang.get('copyright') - $lang.get('powerby') 
 	</div>
-</div>
 
 <script>
 	function _oncaptcha() {
 		$.get('/captcha', {}, function(d) {
 			if (d.state == 200) {
-				$('#captcha').attr('src', d.uri);
+				$('#validateImg').attr('src', d.uri);
 			}
 		})
 	}
 
-	function _verify(o) {
-		$.get('/captcha/verify', {
-			code : $('input[name=code]').val()
-		}, function(d) {
-			if (d.state == 200) {
-				//ok
-				$(o).removeClass('bad');
-				$(o).addClass('good');
-			} else {
-				//bad
-				$(o).removeClass('good');
-				$(o).addClass('bad');
-
-				if(d.state == 201) {
-					//expired, then refresh
-					_oncaptcha();
-				}
-			}
-		})
-	}
 	$(function(){
 		_oncaptcha();
 	})

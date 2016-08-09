@@ -1,223 +1,58 @@
-html, body {
-	height: 100%;
-	background: url(/images/user_bg.jpg);
-	background-size: cover;
-}
-
-#wrapper {
-	width: 100% !important;
-	position: fixed;
-	background: none;
-	box-shadow: none;
-	left: 0;
-	top: 48%;
-	margin-top: -220px;
-}
-
-#wrapper.register {
-	margin-top: -250px;
-}
-
-#head {
-	background: none;
-	position: relative;
-	text-align: center;
-	height: 120px;
-}
-
-#wrapper.register #head {
-	height: 100px;
-}
-
-#head .center {
-	width: 900px;
-	text-align: center;
-	display: inline-block;
-}
-
-#content {
-	overflow: hidden;
-	background: none;
-	z-index: 1000;
-	text-align: center;
-	margin: 0;
-}
-
-#head .title g {
-	font-size: 10px;
-	margin-left: 10px;
-}
-
-#content {
-	display: inline-block;
+html, body, table {
+	background-color: #f5f5f5;
 	width: 100%;
+	text-align: center;
 }
-
-#content .center {
-	width: 850px;
-	overflow: hidden;
-	display: inline-block;
-}
-
-#foot {
-	background: none;
-}
-
-#foot .center {
-	border: 0;
-}
-
-#content .form {
-	width: 500px;
-	display: inline-block;
-	text-align: left;
-	background: #b7c7e1;
-	color: #1f1f1f;
-	position: relative;
-	box-shadow: 1px 1px 3px #456;
-	line-height: 40px;
-	border-radius: 10px;
-	margin: 40px 0;
-	padding: 20px 50px 50px;
-}
-
-#wrapper.login form, #wrapper.register form {
-	width: 380px;
-	border-radius: 10px;
-	color: #222;
-	box-shadow: 1px 1px 3px #456;
-	line-height: 40px;
-	display: inline-block;
-	text-align: left;
-	border: 4px solid #fff;
-	background-color: #4A89F0;
-	margin: 0 40px;
-	padding: 20px 30px 40px;
-}
-
-#wrapper.register form {
-	width: 420px;
-}
-
-#wrapper.login form.forget {
-	width: 460px;
-}
-
-#wrapper.register .note {
-	line-height: 20px;
-	margin-left: 130px;
-	color: #666;
-	margin-bottom: 20px;
-}
-
-#content input {
-	height: 26px;
-}
-label h3 {
-	color: #fff;
-	width: 80px;
-	text-align: right;
-}
-#wrapper.register input {
-	float: left;
-}
-
-input[name=code] {
-	width: 60px;
-}
-
-.inner .title {
-	font-size: 16pt;
-	border-bottom: 1px solid #f1f1f1;
-	color: #fefefe;
-}
-
-.inner .left {
+.header {
+	height: 80px;
 	padding-top: 20px;
 }
-
-#wrapper.register .left {
-	padding-right: 0;
+.form-signin-heading {
+	font-family: Helvetica, Georgia, Arial, sans-serif, 黑体;
+	font-size: 36px;
+	margin-bottom: 20px;
+	color: #0663a2;
 }
-
-label {
-	cursor: pointer;
-	display: inline-block;
-	margin: 0 2px 0 10px;
+.form-signin {
+	position: relative;
+	text-align: left;
+	width: 350px;
+	padding: 25px 29px 29px;
+	margin: 0 auto 20px;
+	background-color: #fff;
+	border: 1px solid #e5e5e5;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+	-moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+	box-shadow: 0 1px 2px rgba(0,0,0,.05);
 }
-
-.inner label {
+.form-signin > div {
+	margin-bottom: 15px;
+}
+.form-signin .input-label {
 	font-size: 16px;
+	line-height: 23px;
+	color: #999;
 }
 
-#wrapper.login label {
-	color: #fefefe;
+.validateCode img {
+	height: 26px;
+}
+input.form-control{
+	text-align:center;
 }
 
-#wrapper.register label {
-	width: 100%;
-}
-
-#wrapper.register label g {
-	width: 130px;
-	font-size: 9px;
-	color: #ddd;
-	line-height: 18px;
-	float: left;
-	white-space: nowrap;
-}
-
-button {
-	margin-top: 20px;
-	line-height: 20px;
-	margin-left: 90px;
-	width: 200px;
-	background-color: #314BA2;
-	padding: 6px 14px;
-}
-
-button:hover {
-	background-color: #194A74;
-}
-
-button:active {
-	background-color: #142661;
-}
-
-.inner a {
-	color: #f1f1f1;
-	text-decoration: none;
-}
-
-.inner a:hover {
-	color: #fff;
-	text-decoration: underline;
-}
-
-div.message {
-	background-color: rgba(255, 5, 5, 0.4);
-	color: #fff;
-}
-
-#head .logo {
-	position: relative;
-	float: none;
-}
-
-#head .title {
-	font-size: 15pt;
-	position: relative;
-	text-align: center;
-	width: initial;
-	left: 0;
-	top: 24px;
-	color: #fff;
+.validateCode input {
+	width: 45px;
+	margin-bottom: 0;
 	display: inline-block;
+	padding: 0;
 }
 
-input.good {
-	border-color: green;
-}
-input.bad {
-	border-color: red;
+.form-signin #themeSwitch {
+	position: absolute;
+	right: 15px;
+	bottom: 10px;
 }

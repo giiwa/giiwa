@@ -99,7 +99,7 @@ date.timezone=GMT+0
 db.url.hint=the RDBS server
 default=Default
 default.list.number=
-designedby=giiwa.org
+powerby=Powered By <a href="http://giiwa.org" target="_blank">Giiwa</a>
 done=Done
 gauge.disk.free=Free (GB)
 gauge.disk.title=Disk (GB)
