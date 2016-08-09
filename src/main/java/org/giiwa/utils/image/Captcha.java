@@ -91,7 +91,7 @@ public class Captcha {
       log.warn("no code in cache, sid=" + sid);
       return Result.badcode;
     } else if (!X.isSame(code, c.code)) {
-      log.warn("is not same, code.server" + c.code + ", code.client=" + code);
+      log.warn("is not same, code.server=" + c.code + ", code.client=" + code);
       return Result.badcode;
     } else if (c.expired < System.currentTimeMillis()) {
       log.warn("expired, expired=" + c.expired);
