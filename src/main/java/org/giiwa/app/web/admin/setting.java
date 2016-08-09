@@ -69,7 +69,7 @@ public class setting extends Model {
       } catch (Exception e) {
         log.error(name, e);
         OpLog.error(setting.class, "reset", e.getMessage(), e);
-        
+
         this.show("/admin/setting.html");
       }
     }
@@ -199,6 +199,8 @@ public class setting extends Model {
 
       Global.setConfig("user.system", this.getString("user_system"));
       Global.setConfig("user.role", this.getString("user_role"));
+      Global.setConfig("cross.domain", this.getString("cross_domain"));
+      Global.setConfig("cross.header", this.getString("cross_header"));
 
       this.set(X.MESSAGE, lang.get("save.success"));
 
@@ -219,6 +221,8 @@ public class setting extends Model {
       this.set("level", Global.s("run.level", "debug"));
       this.set("user_system", Global.s("user.system", "close"));
       this.set("user_role", Global.s("user.role", "N/A"));
+      this.set("cross_domain", Global.s("cross.domain", "no"));
+      this.set("cross_header", Global.s("cross.header", "Content-Type, accept, Origin"));
 
       this.set("cache_url", Global.s("cache.url", null));
       this.set("cache_group", Global.s("cache.group", "demo"));

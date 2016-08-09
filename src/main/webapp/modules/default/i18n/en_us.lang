@@ -275,6 +275,10 @@ system.code=System Code
 system.code.hint=the code of distributed system
 system.code.hint=The system code,<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a> auto fill with this as prefix. 
 system.setting.title=System setting
+cross.domain=AllowDomain
+cross.domain.hint=The Domain pattern that allow cross access, please refer "Access-Control-Allow-Origin".
+cross.header=AllowHeader
+cross.header.hint=The header that allow in cross access, please refer "Access-Control-Allow-Headers".
 title.add.module=Add module
 title.are_u_sure_delete=Are you sure to delete?
 title.disabled.module=Disabled modules

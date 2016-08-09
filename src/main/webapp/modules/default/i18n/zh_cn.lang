@@ -261,6 +261,10 @@ sortby.type_desc=降序
 system.code=系统编码
 system.code.hint=系统编码，<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a>中会添加改编码为前导序号
 system.setting.title=系统设置
+cross.domain=跨域访问
+cross.domain.hint=域名表达式，"*"全部，请参考 "Access-Control-Allow-Origin".
+cross.header=跨域允许头
+cross.header.hint=跨域允许的头信息，请参考 "Access-Control-Allow-Headers".
 title.add.module=添加模块
 title.are_u_sure_delete=确认删除?
 title.disabled.module=关闭的模块列表

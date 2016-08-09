@@ -64,6 +64,7 @@ org/giiwa/app/web/admin/module$1.class
 org/giiwa/app/web/admin/user.class
 org/giiwa/app/web/admin/gauge.class
 org/giiwa/core/bean/Helper$1.class
+org/giiwa/core/conf/Config.class
 org/giiwa/core/cache/DefaultCachable.class
 org/giiwa/core/base/Http$2.class
 org/giiwa/core/base/FileUtil$Version.class
@@ -127,7 +128,6 @@ org/giiwa/core/bean/TimeStamp.class
 org/giiwa/app/web/admin/qcode.class
 org/giiwa/framework/bean/AccessLog$1.class
 org/giiwa/app/web/DefaultListener$NtpTask.class
-org/giiwa/core/conf/Local.class
 org/giiwa/app/web/admin/backup.class
 org/giiwa/framework/web/view/FileView.class
 org/giiwa/app/web/DefaultListener.class
