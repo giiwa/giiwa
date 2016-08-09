@@ -11,7 +11,8 @@
 <p>The official Git repository is at:</p>
 <pre>https://github.com/giiwa/giiwa.git</pre>
 <p>Simply <code>git clone</code> the repo (or the repo you forked via the github website) and you will have the complete source.</p>
-<h2>Build and pacake giiwa</h2>
+
+<h2>Build and package giiwa</h2>
 <p><strong>Step 1</strong>), To build, by maven 2.0+, it will compile, package all dependences to giiwa.war</p>
 <pre>mvn clean package install</pre>
 <p><strong>Step 2</strong>) Package, by ant 1.8+, it will generate giiwa_x.x.x.tgz (binary package) and giiwa_upgrade_x.x.x.zip (module zip file)<p>
