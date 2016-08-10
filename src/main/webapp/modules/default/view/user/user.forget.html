@@ -29,17 +29,16 @@
 	$lang.get('copyright') - $lang.get('powerby') 
 </div>
 <script>
-	function _oncaptcha() {
-		$.get('/captcha', {}, function(d) {
-			if (d.state == 200) {
-				$('#validateImg').attr('src', d.uri);
-			}
-		})
-	}
-
-	$(function(){
-		_oncaptcha();
+function _oncaptcha() {
+	$.get('/captcha', {}, function(d) {
+		if (d.state == 200) {
+			$('#validateImg').attr('src', d.uri);
+		}
 	})
+}
+$(function(){
+	_oncaptcha();
+})
 </script>
 
 #parse('/user/foot.html')
