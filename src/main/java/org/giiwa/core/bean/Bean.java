@@ -62,7 +62,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
 
   /**
    * get the key-value in the bean to json.<br>
-   * drop all the data which the name endsWith("_obj")
    *
    * @param jo
    *          the map
@@ -72,10 +71,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     if (data != null && data.size() > 0 && jo != null) {
       for (String name : data.keySet()) {
         Object o = data.get(name);
-        if (o == null || name.endsWith("_obj")) {
-          continue;
-        }
-
         jo.put(name, o);
       }
 
@@ -401,17 +396,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @Override
   public final Set<String> keySet() {
-    Set<String> names = new HashSet<String>();
     if (data != null) {
-      names.addAll(data.keySet());
-
-      for (String s : data.keySet()) {
-        if (s.endsWith("_obj")) {
-          names.remove(s);
-        }
-      }
+      return data.keySet();
     }
-    return names;
+    return new HashSet<String>();
   }
 
   /**
@@ -425,7 +413,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * get all the Entries except "_obj" field.
+   * get all the Entries.
    *
    * @return the sets the
    */
@@ -434,7 +422,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     Set<Entry<String, Object>> ss = new HashSet<Entry<String, Object>>();
     if (data != null) {
       for (Entry<String, Object> e : data.entrySet()) {
-        if (!e.getKey().endsWith("_obj") && e.getValue() != null) {
+        if (e.getValue() != null) {
           ss.add(e);
         }
       }
@@ -540,7 +528,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
 
   /**
    * create the data as json.<br>
-   * drop all the data which the name endsWith("_obj")
    * 
    * @return JSONObject
    */

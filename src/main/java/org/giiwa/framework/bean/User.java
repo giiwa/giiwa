@@ -700,16 +700,16 @@ public class User extends Bean {
     return Helper.delete(id, User.class);
   }
 
+  private List<AuthToken> token_obj;
+
   public List<AuthToken> getTokens() {
-    List<AuthToken> list = (List<AuthToken>) this.get("token_obj");
-    if (list == null) {
+    if (token_obj == null) {
       Beans<AuthToken> bs = AuthToken.load(this.getId());
       if (bs != null && bs.getList() != null) {
-        list = bs.getList();
-        this.set("token_obj", list);
+        token_obj = bs.getList();
       }
     }
-    return list;
+    return token_obj;
 
   }
 

@@ -95,18 +95,18 @@ public class AuthToken extends Bean {
     return expired;
   }
 
+  private User user_obj;
+
   /**
    * get the user object
    * 
    * @return User
    */
   public User getUser() {
-    User u = (User) this.get("user_obj");
-    if (u == null && this.getUid() >= 0) {
-      u = User.loadById(this.getUid());
-      this.set("user_obj", u);
+    if (user_obj == null && this.getUid() >= 0) {
+      user_obj = User.loadById(this.getUid());
     }
-    return u;
+    return user_obj;
   }
 
   /**

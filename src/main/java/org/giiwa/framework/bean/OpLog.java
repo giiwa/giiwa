@@ -248,11 +248,13 @@ public class OpLog extends Bean {
     return this.getString(X.ID);
   }
 
+  private User user_obj;
+
   public User getUser() {
-    if (!this.containsKey("user_obj")) {
-      this.set("user_obj", User.loadById(this.getLong("uid")));
+    if (user_obj == null && this.getLong("uid") >= 0) {
+      user_obj = User.loadById(this.getLong("uid"));
     }
-    return (User) this.get("user_obj");
+    return user_obj;
   }
 
   public String getExportableId() {
