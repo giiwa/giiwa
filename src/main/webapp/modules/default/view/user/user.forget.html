@@ -1,9 +1,9 @@
 #parse('/user/head.html')
 
 <div class="header">
-	#if($sent)
+	#if($message)
 	<div id="messageBox" class="alert alert-error">
-		<label id="loginError" class="error">$lang.get('email.sent')</label>
+		<label id="loginError" class="error">$message</label>
 	</div>
 	#end
 </div>

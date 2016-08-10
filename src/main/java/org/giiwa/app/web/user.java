@@ -628,7 +628,7 @@ public class user extends Model {
   }
 
   /**
-   * Forget.
+   * Forget password
    */
   @Path(path = "forget")
   public void forget() {
@@ -652,7 +652,7 @@ public class user extends Model {
       }
 
       if (list.size() > 0) {
-        this.set("sent", 1);
+        this.set(X.MESSAGE, lang.get("email.sent"));
       } else {
         this.set(X.MESSAGE, lang.get("invalid.email"));
       }
