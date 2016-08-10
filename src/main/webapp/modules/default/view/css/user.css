@@ -16,6 +16,7 @@ html, body, table {
 }
 .form-signin {
 	position: relative;
+	display: inline-block;
 	text-align: left;
 	width: 350px;
 	padding: 25px 29px 29px;
@@ -53,9 +54,9 @@ input.form-control {
 }
 
 .form-signin #themeSwitch {
-	position: absolute;
-	right: 15px;
-	bottom: 10px;
+	float: right;
+	margin-top: 10px;
+	margin-bottom: 0;
 }
 
 .alert {

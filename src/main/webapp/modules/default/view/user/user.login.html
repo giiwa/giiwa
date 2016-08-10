@@ -1,40 +1,40 @@
 #parse('/user/head.html')
 
-	<div class="header">
-		#if($message)
-		<div id="messageBox" class="alert alert-error">
-			<label id="loginError" class="error">$message</label>
-		</div>
+<div class="header">
+	#if($message)
+	<div id="messageBox" class="alert alert-error">
+		<label id="loginError" class="error">$message</label>
+	</div>
+	#end
+</div>
+<h1 class="form-signin-heading icon-wink">$lang.get('user.login')</h1>
+<form id="loginForm" class="form-signin" action="/user/login" method="post">
+	<div class=''>
+		<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
+		<input type="text" id="username" name="name" class="form-control" required />
+	</div>
+	<div class=''>
+		<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
+		<input type="password" id="password" name="pwd" class="form-control" required />
+	</div>
+	<div class="validateCode" src="/jeesite/servlet/validateCodeServlet?1470778552625">
+		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
+		<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
+		<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
+		<a href="javascript:" onclick="_oncaptcha();" class="icon-opera validateCodeRefresh " style=""></a>
+	</div>
+			
+	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
+	<div id="themeSwitch" class="dropdown">
+		<a class="dropdown-toggle" href="/user/forget">$lang.get('a.forget.user')</a>
+		#if($system.s('user.system', 'close')=='open')
+		&nbsp;&nbsp;<a class="dropdown-toggle" href="/user/register">$lang.get('a.register.user')</a>
 		#end
 	</div>
-	<h1 class="form-signin-heading icon-wink">$lang.get('user.login')</h1>
-	<form id="loginForm" class="form-signin" action="/user/login" method="post">
-		<div class=''>
-			<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
-			<input type="text" id="username" name="name" class="form-control" required />
-		</div>
-		<div class=''>
-			<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
-			<input type="password" id="password" name="pwd" class="form-control" required />
-		</div>
-		<div class="validateCode" src="/jeesite/servlet/validateCodeServlet?1470778552625">
-			<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
-			<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
-			<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
-			<a href="javascript:" onclick="_oncaptcha();" class="icon-opera validateCodeRefresh " style=""></a>
-		</div>
-				
-		<button class="btn btn-large btn-primary" type="submit">登 录</button>
-		<div id="themeSwitch" class="dropdown">
-			<a class="dropdown-toggle" href="/user/forget">忘记密码</a>
-			#if($system.s('user.system', 'close')=='open')
-			&nbsp;&nbsp;<a class="dropdown-toggle" href="/user/register">注册用户</a>
-			#end
-		</div>
-	</form>
-	<div class="footer">
-		$lang.get('copyright') - $lang.get('powerby') 
-	</div>
+</form>
+<div class="footer">
+	$lang.get('copyright') - $lang.get('powerby') 
+</div>
 
 <script>
 	function _oncaptcha() {

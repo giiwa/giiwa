@@ -347,3 +347,5 @@ user.mobile.note=电话号码
 login.failed=登录失败
 a.role.edit=编辑角色
 group.access.role=角色
+a.forget.user=忘记密码
+a.register.user=注册用户

@@ -356,3 +356,5 @@ user.mobile.note=Phone number
 login.failed=Login failed
 a.role.edit=Edit role
 group.access.role=Role
+a.forget.user=Forget?
+a.register.user=Register
