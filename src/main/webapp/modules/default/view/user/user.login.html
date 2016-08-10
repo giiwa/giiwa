@@ -17,7 +17,7 @@
 		<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
 		<input type="password" id="password" name="pwd" class="form-control" required />
 	</div>
-	<div class="validateCode" src="/jeesite/servlet/validateCodeServlet?1470778552625">
+	<div class="validateCode">
 		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
 		<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
 		<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
@@ -25,10 +25,10 @@
 	</div>
 			
 	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
-	<div id="themeSwitch" class="dropdown">
-		<a class="dropdown-toggle" href="/user/forget">$lang.get('a.forget.user')</a>
+	<div id="themeSwitch">
+		<a class="icon-wondering" href="/user/forget">$lang.get('a.forget.user')</a>
 		#if($system.s('user.system', 'close')=='open')
-		&nbsp;&nbsp;<a class="dropdown-toggle" href="/user/register">$lang.get('a.register.user')</a>
+		&nbsp;&nbsp;<a href="/user/register">$lang.get('a.register.user')</a>
 		#end
 	</div>
 </form>
