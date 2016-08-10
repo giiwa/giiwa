@@ -1,31 +1,35 @@
 #parse('/user/head.html')
 
 	<div class="header">
-		<div id="messageBox" class="alert alert-error hide"><button data-dismiss="alert" class="close">×</button>
-			<label id="loginError" class="error"></label>
+		#if($message)
+		<div id="messageBox" class="alert alert-error">
+			<label id="loginError" class="error">$message</label>
 		</div>
+		#end
 	</div>
-	<h1 class="form-signin-heading">$lang.get('user.login')</h1>
+	<h1 class="form-signin-heading icon-wink">$lang.get('user.login')</h1>
 	<form id="loginForm" class="form-signin" action="/user/login" method="post">
 		<div class=''>
-			<label class="input-label" for="username">$lang.get('user.name')</label>
+			<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
 			<input type="text" id="username" name="name" class="form-control" required />
 		</div>
 		<div class=''>
-			<label class="input-label" for="password">$lang.get('user.password')</label>
+			<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
 			<input type="password" id="password" name="pwd" class="form-control" required />
 		</div>
 		<div class="validateCode" src="/jeesite/servlet/validateCodeServlet?1470778552625">
 			<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
-			<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control" style="display:inline-block;width:45px;margin-bottom:0;">
+			<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
 			<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
-			<a href="javascript:" onclick="_oncaptcha();" class="mid validateCodeRefresh" style="">看不清</a>
+			<a href="javascript:" onclick="_oncaptcha();" class="icon-opera validateCodeRefresh " style=""></a>
 		</div>
 				
 		<button class="btn btn-large btn-primary" type="submit">登 录</button>
 		<div id="themeSwitch" class="dropdown">
-			<a class="dropdown-toggle" href="/user/register">注册用户</a>&nbsp;&nbsp;
 			<a class="dropdown-toggle" href="/user/forget">忘记密码</a>
+			#if($system.s('user.system', 'close')=='open')
+			&nbsp;&nbsp;<a class="dropdown-toggle" href="/user/register">注册用户</a>
+			#end
 		</div>
 	</form>
 	<div class="footer">

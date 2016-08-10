@@ -10,8 +10,9 @@ html, body, table {
 .form-signin-heading {
 	font-family: Helvetica, Georgia, Arial, sans-serif, 黑体;
 	font-size: 36px;
-	margin-bottom: 20px;
+	line-height: 36px margin-bottom : 20px;
 	color: #0663a2;
+	font-weight: bold;
 }
 .form-signin {
 	position: relative;
@@ -40,12 +41,12 @@ html, body, table {
 .validateCode img {
 	height: 26px;
 }
-input.form-control{
-	text-align:center;
+input.form-control {
+	text-align: center;
 }
 
 .validateCode input {
-	width: 50px;
+	width: 70px;
 	margin-bottom: 0;
 	display: inline-block;
 	padding: 0;
@@ -55,4 +56,22 @@ input.form-control{
 	position: absolute;
 	right: 15px;
 	bottom: 10px;
+}
+
+.alert {
+	position: relative;
+	width: 300px;
+	margin: 0 auto;
+}
+
+#messageBox {
+	padding: 8px;
+	position: relative;
+	width: 350px;
+	margin: 0 auto;
+	color: #bd4247;
+	background-color: #f2bdb1;
+	border-color: #f0a5a4;
+	border-radius: 4px;
+	text-shadow: 0 1px 0 rgba(255,255,255,0.5);
 }
