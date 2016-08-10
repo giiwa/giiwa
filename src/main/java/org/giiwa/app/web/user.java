@@ -64,7 +64,7 @@ public class user extends Model {
    */
   @Path(path = "register")
   public void register() {
-    if ("close".equals(Global.s("user.system", "close"))) {
+    if ("close".equals(Global.getString("user.system", "close"))) {
       this.redirect("/user/login");
       return;
     }
@@ -78,7 +78,7 @@ public class user extends Model {
         V v = V.create().copy(jo);
         long id = User.create(v);
 
-        String role = Global.s("user.role", "N/A");
+        String role = Global.getString("user.role", "N/A");
         Role r = Role.loadByName(role);
         User u = User.loadById(id);
         if (r != null) {
@@ -357,7 +357,7 @@ public class user extends Model {
         jo.put(X.STATE, 202);
         jo.put(X.MESSAGE, lang.get("user.override.exists"));
       } else {
-        String allow = Global.s("user.name", "^[a-zA-Z0-9]{4,16}$");
+        String allow = Global.getString("user.name", "^[a-zA-Z0-9]{4,16}$");
 
         if (X.isEmpty(value) || !value.matches(allow)) {
           jo.put(X.STATE, 201);
@@ -371,7 +371,7 @@ public class user extends Model {
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, lang.get("user.password.format.error"));
       } else {
-        String allow = Global.s("user.password", "^[a-zA-Z0-9]{6,16}$");
+        String allow = Global.getString("user.password", "^[a-zA-Z0-9]{6,16}$");
         if (!value.matches(allow)) {
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, lang.get("user.password.format.error"));

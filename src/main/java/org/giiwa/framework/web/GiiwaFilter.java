@@ -42,7 +42,7 @@ public class GiiwaFilter implements Filter {
     String method = r1.getMethod();
 
     if ("GET".equalsIgnoreCase(method)) {
-      String value = Global.s("cross.domain", "no");
+      String value = Global.getString("cross.domain", "no");
       if (!X.isEmpty(value)) {
         r2.addHeader("Access-Control-Allow-Origin", value);
       }
@@ -50,7 +50,7 @@ public class GiiwaFilter implements Filter {
       Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
 
     } else if ("POST".equalsIgnoreCase(method)) {
-      String value = Global.s("cross.domain", "no");
+      String value = Global.getString("cross.domain", "no");
       if (!X.isEmpty(value)) {
         r2.addHeader("Access-Control-Allow-Origin", value);
       }
@@ -58,10 +58,10 @@ public class GiiwaFilter implements Filter {
       Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
 
     } else if ("OPTIONS".equals(method)) {
-      String value = Global.s("cross.domain", "no");
+      String value = Global.getString("cross.domain", "no");
       r2.setStatus(200);
       r2.addHeader("Access-Control-Allow-Origin", value);
-      r2.addHeader("Access-Control-Allow-Headers", Global.s("cross.header", "forbidden"));
+      r2.addHeader("Access-Control-Allow-Headers", Global.getString("cross.header", "forbidden"));
       r2.getOutputStream().write(value.getBytes());
     } else if ("HEAD".equals(method)) {
 

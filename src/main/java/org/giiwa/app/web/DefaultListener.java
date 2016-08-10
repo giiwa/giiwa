@@ -72,7 +72,7 @@ public class DefaultListener implements IListener {
 
     @Override
     public void onExecute() {
-      String ntp = Global.s("ntp.server", null);
+      String ntp = Global.getString("ntp.server", null);
       if (!X.isEmpty((Object) ntp)) {
         try {
           String r = Shell.run("ntpdate -u " + ntp);
@@ -104,7 +104,7 @@ public class DefaultListener implements IListener {
 
     @Override
     public void onExecute() {
-      String s = Global.s("recycle.task", null);
+      String s = Global.getString("recycle.task", null);
       if (s != null && System.currentTimeMillis() - Model.UPTIME > X.AHOUR) {
         String[] ss = s.split("|");
 
@@ -161,7 +161,7 @@ public class DefaultListener implements IListener {
     }
 
     if (log.isDebugEnabled()) {
-      log.debug("upgrade.enabled=" + Global.s(conf.getString("node") + ".upgrade.framework.enabled", "false"));
+      log.debug("upgrade.enabled=" + Global.getString(conf.getString("node") + ".upgrade.framework.enabled", "false"));
     }
 
     // cleanup
@@ -314,7 +314,7 @@ public class DefaultListener implements IListener {
         File f = module.getFile(filename, false, false);
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
-          int b = Global.i(key, 0);
+          int b = Global.getInt(key, 0);
           if (b == 0) {
             if (log.isWarnEnabled()) {
               log.warn("db[" + key + "] has not been initialized! initializing...");

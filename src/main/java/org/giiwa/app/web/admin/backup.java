@@ -152,7 +152,7 @@ public class backup extends Model {
      * @return the string
      */
     public static String path() {
-      return Global.s("backup.path", "/opt/backup");
+      return Global.getString("backup.path", "/opt/backup");
     }
 
     @Override

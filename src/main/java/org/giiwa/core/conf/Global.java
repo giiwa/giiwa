@@ -19,8 +19,8 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 
 /**
- * The Class Global is extended of Config, it can be "overrided" by module
- * or configured, it stored in database
+ * The Class Global is extended of Config, it can be "overrided" by module or
+ * configured, it stored in database
  * 
  * @author yjiang
  */
@@ -57,10 +57,8 @@ public class Global extends Bean {
    *          the default value
    * @return the int
    */
-  public static int i(String name, int defaultValue) {
-    Global
-
-    c = Helper.load(W.create(X.ID, name), Global.class);
+  public static int getInt(String name, int defaultValue) {
+    Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       return X.toInt(c.i, defaultValue);
     } else {
@@ -77,7 +75,7 @@ public class Global extends Bean {
    *          the default value
    * @return the string
    */
-  public static String s(String name, String defaultValue) {
+  public static String getString(String name, String defaultValue) {
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       return c.s != null ? c.s : defaultValue;
@@ -95,7 +93,7 @@ public class Global extends Bean {
    *          the default value
    * @return the long
    */
-  public static long l(String name, long defaultValue) {
+  public static long getLong(String name, long defaultValue) {
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       return c.l;
@@ -152,9 +150,9 @@ public class Global extends Bean {
       log.error(e1.getMessage(), e1);
     }
   }
-  
+
   public String get(String name) {
-    return s(name, null);
+    return getString(name, null);
   }
 
 }

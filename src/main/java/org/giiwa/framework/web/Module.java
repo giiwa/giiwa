@@ -198,7 +198,7 @@ public class Module {
    * @return String of the language
    */
   public String getLanguage() {
-    return Global.s("language", "en_us");
+    return Global.getString("language", "en_us");
   }
 
   /**
@@ -407,7 +407,7 @@ public class Module {
 
       // set(s, defaultValue);
       //
-      return Global.s(name, defaultValue);
+      return Global.getString(name, defaultValue);
     }
   }
 

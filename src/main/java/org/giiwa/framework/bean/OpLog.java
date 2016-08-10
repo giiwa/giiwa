@@ -174,7 +174,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int log(String module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.s("node", X.EMPTY), module, op, brief, message, uid, ip);
+    return info(Global.getString("node", X.EMPTY), module, op, brief, message, uid, ip);
   }
 
   /**
@@ -195,7 +195,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int log(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.s("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
+    return info(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
   }
 
   /**
@@ -353,7 +353,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int info(String module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.s("node", X.EMPTY), module, op, brief, message, uid, ip);
+    return info(Global.getString("node", X.EMPTY), module, op, brief, message, uid, ip);
   }
 
   /**
@@ -374,7 +374,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int info(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.s("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
+    return info(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
   }
 
   /**
@@ -446,7 +446,7 @@ public class OpLog extends Bean {
       /**
        * 记录系统日志
        */
-      if (Global.i("logger.rsyslog", 0) == 1) {
+      if (Global.getInt("logger.rsyslog", 0) == 1) {
         Language lang = Language.getLanguage();
         // 192.168.1.1#系统名称#2014-10-31#ERROR#日志消息#程序名称
         if (type == OpLog.TYPE_INFO) {
@@ -554,7 +554,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int warn(String module, String op, String brief, String message, long uid, String ip) {
-    return warn(Global.s("node", X.EMPTY), module, op, brief, message, uid, ip);
+    return warn(Global.getString("node", X.EMPTY), module, op, brief, message, uid, ip);
   }
 
   /**
@@ -575,7 +575,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int warn(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return warn(Global.s("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
+    return warn(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
   }
 
   /**
@@ -745,7 +745,7 @@ public class OpLog extends Bean {
    * @return the int
    */
   public static int error(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return error(Global.s("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
+    return error(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
   }
 
   /**

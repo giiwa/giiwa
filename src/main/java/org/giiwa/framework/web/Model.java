@@ -626,7 +626,7 @@ public class Model {
         /**
          * get session.expired in seconds
          */
-        addCookie("sid", sid, Global.i("session.expired", -1));
+        addCookie("sid", sid, Global.getInt("session.expired", -1));
       }
     }
 
@@ -935,7 +935,7 @@ public class Model {
       Session s = this.getSession();
       r = s.getInt(tagInSession);
       if (r < minValue) {
-        r = Global.i(tagInSession, minValue);
+        r = Global.getInt(tagInSession, minValue);
       }
     } else {
       Session s = this.getSession();

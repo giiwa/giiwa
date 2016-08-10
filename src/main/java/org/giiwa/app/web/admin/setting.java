@@ -215,21 +215,21 @@ public class setting extends Model {
     @Override
     public void get() {
 
-      this.set("node", Global.s("node", null));
-      this.set("system_code", Global.l("system.code", 0));
-      this.set("language", Global.s("language", "zh_cn"));
-      this.set("level", Global.s("run.level", "debug"));
-      this.set("user_system", Global.s("user.system", "close"));
-      this.set("user_role", Global.s("user.role", "N/A"));
-      this.set("cross_domain", Global.s("cross.domain", "no"));
-      this.set("cross_header", Global.s("cross.header", "Content-Type, accept, Origin"));
+      this.set("node", Global.getString("node", null));
+      this.set("system_code", Global.getLong("system.code", 0));
+      this.set("language", Global.getString("language", "zh_cn"));
+      this.set("level", Global.getString("run.level", "debug"));
+      this.set("user_system", Global.getString("user.system", "close"));
+      this.set("user_role", Global.getString("user.role", "N/A"));
+      this.set("cross_domain", Global.getString("cross.domain", "no"));
+      this.set("cross_header", Global.getString("cross.header", "Content-Type, accept, Origin"));
 
-      this.set("cache_url", Global.s("cache.url", null));
-      this.set("cache_group", Global.s("cache.group", "demo"));
-      this.set("mongo_url", Global.s("mongo[prod].url", null));
-      this.set("mongo_db", Global.s("mongo[prod].db", null));
-      this.set("mongo_user", Global.s("mongo[prod].user", null));
-      this.set("db_url", Global.s("db.url", null));
+      this.set("cache_url", Global.getString("cache.url", null));
+      this.set("cache_group", Global.getString("cache.group", "demo"));
+      this.set("mongo_url", Global.getString("mongo[prod].url", null));
+      this.set("mongo_db", Global.getString("mongo[prod].db", null));
+      this.set("mongo_user", Global.getString("mongo[prod].user", null));
+      this.set("db_url", Global.getString("db.url", null));
 
       this.set("roles", Role.load(0, 100).getList());
 
@@ -266,12 +266,12 @@ public class setting extends Model {
      */
     @Override
     public void get() {
-      this.set("protocol", Global.s("mail.protocol", "smtp"));
-      this.set("host", Global.s("mail.host", X.EMPTY));
-      this.set("email", Global.s("mail.email", X.EMPTY));
-      this.set("title", Global.s("mail.title", X.EMPTY));
-      this.set("user", Global.s("mail.user", X.EMPTY));
-      this.set("passwd", Global.s("mail.passwd", X.EMPTY));
+      this.set("protocol", Global.getString("mail.protocol", "smtp"));
+      this.set("host", Global.getString("mail.host", X.EMPTY));
+      this.set("email", Global.getString("mail.email", X.EMPTY));
+      this.set("title", Global.getString("mail.title", X.EMPTY));
+      this.set("user", Global.getString("mail.user", X.EMPTY));
+      this.set("passwd", Global.getString("mail.passwd", X.EMPTY));
 
       this.set("page", "/admin/setting.mail.html");
     }

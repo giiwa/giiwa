@@ -132,7 +132,7 @@ public class AuthToken extends Bean {
   public static AuthToken update(long uid, String sid, String ip) {
     String id = UID.id(uid, sid);
     String token = UID.random(20);
-    long expired = System.currentTimeMillis() + Global.l("token.expired", X.AWEEK);
+    long expired = System.currentTimeMillis() + Global.getLong("token.expired", X.AWEEK);
     V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
 
     try {
