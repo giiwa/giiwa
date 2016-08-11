@@ -7,7 +7,7 @@
 	<a href='/admin/user/create' class='selected'>$lang.get('a.create')</a>
 </div>
 
-<form action='/admin/user/create'  method='post' class='form' enctype="multipart/form-data">
+<form action='/admin/user/create'  method='post' class='form' >
 	<div><label><h3>$lang.get('user.name')<r>*</r></h3>:<input type='text' onblur="verify(this, '/user/verify');" name='name' value=#if($name) '$name' #else '' bad="1"  #end/><g>$lang.get("user.name.note")</g></label></div>
 	<div><label><h3>$lang.get('user.nickname')</h3>:<input type='text' name='nickname' value=#if($nickname) '$nickname' #else '' #end/></label></div>
 	<div><label><h3>$lang.get('user.password')</h3>:<input type='text' onblur="verify(this, '/user/verify')" name='password' value=#if($password)'$password' #else '111111' #end /></label></div>
