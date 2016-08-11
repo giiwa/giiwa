@@ -1,22 +1,22 @@
 <h1><img height='46' src="http://giiwa.org/images/giiwa.png" alt="giiwa"/></h1>
-<p>Giiwa is a Java Web framework, the aim is to <strong>simplify</strong> and <strong>develop fast</strong>, projects can be <strong>reused</strong> and <strong>overrided</strong>.</p>
-<p>To achieve the goal, Giiwa use module management, and simplified MV development model. Please see <a href="http://giiwa.org">giiwa.org</a> to learn more about Giiwa.</p>
+<p>Giiwa, Java Web 高性能服务器软件快速开发框架, 我们的目标是<strong>简单</strong>，<strong>快速开发</strong>, 项目之间可以 <strong>重用</strong>， <strong>“重载”</strong>。</p>
+<p>未来实现这个目标, Giiwa 使用模块化机制, 简化的MV（Model－View）开发模型。 请参考 <a href="http://giiwa.org">giiwa.org</a> 以了解更多关于Giiwa。</p>
 <p>View can be Velocity template, JSP page or FreeMaker template.</p>
 <p><img src="http://giiwa.org/docs/images/mv.png" alt="MV developing"/></p>
 
-<h2>Downloading</h2>
-<p>Latest Giiwa version is available <a href="http://giiwa.org/archive/giiwa-1.1.tgz">giiwa-1.1.tgz</a>.</p>
+<h2>下载</h2>
+<p>最新Giiwa运行包 <a href="http://giiwa.org/archive/giiwa-1.1.tgz">giiwa-1.1.tgz</a>。</p>
 
-<h2>Obtaining the Source</h2>
-<p>The official Git repository is at:</p>
+<h2>获取代码</h2>
+<p>所有最新源码已经托管在Github:</p>
 <pre>https://github.com/giiwa/giiwa.git</pre>
-<p>Simply <code>git clone</code> the repo (or the repo you forked via the github website) and you will have the complete source.</p>
+<p>使用 <code>git clone</code> 源码仓库 (或者在github的官网上直接克隆)， 你就可以获得Giiwa的全部最新代码。</p>
 
-<h2>Build and package giiwa</h2>
-<p><strong>Step 1</strong>), To build, by maven 2.0+, it will compile, package all dependences to giiwa.war</p>
+<h2>编译和打包</h2>
+<p><strong>步骤 1</strong>), 使用 maven 2.0+ 编译, 她会自动编译打包所有依赖包到 giiwa.war， 不过这还没完成（请继续步骤2）。</p>
 <pre>mvn clean package install</pre>
-<p><strong>Step 2</strong>) Package, by ant 1.8+, it will generate giiwa_x.x.x.tgz (binary package) and giiwa_upgrade_x.x.x.zip (module zip file)<p>
+<p><strong>步骤 2</strong>) 使用 ant 1.8+ 打包, 她会自动生成生成运行包文件（giiwa_x.x.tgz）和升级包文件（giiwa_upgrade_x.x.zip)。<p>
 <pre>ant</pre>
 
 <h2>License</h2>
-<p>Giiwa is licensed under the terms of the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a></p>
+<p>Giiwa 以 Apache License V2 发布和授权许可，你可以任意使用代码， <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a></p>
