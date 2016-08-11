@@ -4,6 +4,13 @@
 <p>View can be Velocity template, JSP page or FreeMaker template.</p>
 <p><img src="http://giiwa.org/docs/images/mv.png" alt="MV developing"/></p>
 
+<h2>缓存系统</h2>
+<p>框架本身支持 Memcached，Redis 或直接文件系统缓存。</p>
+
+<h2>数据库系统支持</h2>
+<p>框架为关系型数据库和Mongo提供统一的API访问。也提供数据库直接接口以便你使用某些数据库特有的特性。</p>
+<p>关系型数据库从内嵌HSQLDB， 和大部分流行数据库。</p>
+
 <h2>下载</h2>
 <p>最新Giiwa运行包 <a href="http://giiwa.org/archive/giiwa-1.1.tgz">giiwa-1.1.tgz</a>。</p>
 
