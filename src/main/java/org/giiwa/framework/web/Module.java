@@ -717,7 +717,7 @@ public class Module {
        */
       boolean changed = false;
 
-      List<Object> names = Jar.loadAll(W.create("reset", 0));
+      List<Object> names = Jar.loadAll(W.create());
       if (names != null && names.size() > 0) {
         for (Object name : names) {
           List<Object> modules = Jar.load(name.toString());
