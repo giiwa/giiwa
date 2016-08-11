@@ -26,4 +26,9 @@
 <pre>ant</pre>
 
 <h2>License</h2>
-<p>Giiwa 以 Apache License V2 发布和授权许可，你可以任意使用代码， <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a></p>
+<p>Giiwa 以 Apache License V2 发布和许可授权，也即你可以任意使用代码， <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License, Version 2.0</a></p>
+
+<h2>加入我们</h2>
+<p>你可以直接加入到我们的Github的giiwa项目中来，贡献你的程序代码。</p>
+<p>也可以开源你的模块文件包。</p>
+<p>也可以向我们报告你发现的问题，或改进建议。</p>
