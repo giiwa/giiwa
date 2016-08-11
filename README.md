@@ -22,7 +22,7 @@
 <h2>编译和打包</h2>
 <p><strong>步骤 1</strong>), 使用 maven 2.0+ 编译, 她会自动编译打包所有依赖包到 giiwa.war， 不过这还没完成（请继续步骤2）。</p>
 <pre>mvn clean package install</pre>
-<p><strong>步骤 2</strong>) 使用 ant 1.8+ 打包, 她会自动生成生成运行包文件（giiwa_x.x.tgz）和升级包文件（giiwa_upgrade_x.x.zip)。<p>
+<p><strong>步骤 2</strong>) 使用 ant 1.8+ 打包, 她会自动生成运行包文件（giiwa_x.x.tgz， 内置一个Tomcat和已经能运行的配置文件）和升级包文件（giiwa_upgrade_x.x.zip)。<p>
 <pre>ant</pre>
 
 <h2>License</h2>
