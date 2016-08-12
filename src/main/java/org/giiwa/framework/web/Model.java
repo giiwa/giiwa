@@ -1383,7 +1383,31 @@ public class Model {
    */
   final public String getHtml(String name, boolean all) {
     try {
-      if (this._multipart) {
+      String c1 = req.getContentType();
+      if (c1 != null && c1.indexOf("application/json") > -1) {
+        if (uploads == null) {
+          BufferedReader in = req.getReader();
+
+          StringBuilder sb = new StringBuilder();
+          char[] buff = new char[1024];
+          int len;
+          while ((len = in.read(buff)) != -1) {
+            sb.append(buff, 0, len);
+          }
+
+          log.debug("params=" + sb.toString());
+
+          JSONObject jo = JSONObject.fromObject(sb.toString());
+          uploads = new HashMap<String, Object>();
+          uploads.putAll(jo);
+        }
+
+        Object v1 = uploads.get(name);
+        if (v1 != null) {
+          return v1.toString();
+        }
+        return null;
+      } else if (this._multipart) {
         getFiles();
 
         FileItem i = this.getFile(name);
