@@ -185,114 +185,127 @@ public class user extends Model {
 
     if (method.isPost()) {
 
-      String name = this.getString("name");
-      String pwd = this.getString("pwd");
-      String code = this.getString("code");
-      if (code != null) {
-        code = code.toLowerCase();
-      }
+      String token = this.getString("token");
+      String sid = this.getString("sid");
       String type = this.getString("type");
+
       JSONObject jo = new JSONObject();
-
-      Captcha.Result r = Captcha.verify(this.sid(), code);
-      Captcha.remove(this.sid());
-
-      if (Captcha.Result.badcode == r) {
-        jo.put(X.MESSAGE, lang.get("captcha.bad"));
-        jo.put(X.STATE, 202);
-      } else if (Captcha.Result.expired == r) {
-        jo.put(X.MESSAGE, lang.get("captcha.expired"));
-        jo.put(X.STATE, 203);
+      AuthToken a = AuthToken.load(sid, token);
+      if (a != null) {
+        // ok, logined
+        jo.put(X.STATE, 200);
+        jo.put(X.MESSAGE, "ok");
+        jo.put("uid", a.getUid());
+        jo.put("expired", a.getExpired());
       } else {
+        String name = this.getString("name");
+        String pwd = this.getString("pwd");
+        String code = this.getString("code");
+        if (code != null) {
+          code = code.toLowerCase();
+        }
 
-        User me = User.load(name, pwd);
-        log.debug("login: " + sid() + "-" + me);
-        if (me != null) {
+        Captcha.Result r = Captcha.verify(this.sid(), code);
+        Captcha.remove(this.sid());
 
-          long uid = me.getId();
-          long time = System.currentTimeMillis() - X.AHOUR;
-          List<User.Lock> list = User.Lock.loadByHost(uid, time, this.getRemoteHost());
-
-          if (me.isLocked() || (list != null && list.size() >= 6)) {
-            // locked by the host
-            me.failed(this.getRemoteHost(), sid(), this.browser());
-            jo.put(X.MESSAGE, lang.get("account.locked.error"));
-
-            jo.put(X.STATE, 204);
-            jo.put("name", name);
-            jo.put("pwd", pwd);
-          } else {
-            list = User.Lock.loadBySid(uid, time, sid());
-            if (list != null && list.size() >= 3) {
-              me.failed(this.getRemoteHost(), sid(), this.browser());
-              jo.put(X.MESSAGE, lang.get("account.locked.error"));
-              jo.put("name", name);
-              jo.put("pwd", pwd);
-              jo.put(X.STATE, 204);
-            } else {
-
-              this.setUser(me);
-
-              /**
-               * logined, to update the stat data
-               */
-              me.logined(sid(), this.getRemoteHost());
-
-              if ("json".equals(this.getString("type"))) {
-                jo.put("sid", sid());
-                jo.put("uid", me.getId());
-                AuthToken t = AuthToken.update(me.getId(), sid(), this.getRemoteHost());
-                if (t != null) {
-                  jo.put("token", t.getToken());
-                  jo.put("expired", t.getExpired());
-                  jo.put(X.STATE, 200);
-                } else {
-                  jo.put(X.MESSAGE, "create authtoken error");
-                  jo.put(X.STATE, 205);
-                }
-                this.response(jo);
-              } else {
-                this.redirect("/user/go");
-              }
-              return;
-            }
-          }
-
+        if (Captcha.Result.badcode == r) {
+          jo.put(X.MESSAGE, lang.get("captcha.bad"));
+          jo.put(X.STATE, 202);
+        } else if (Captcha.Result.expired == r) {
+          jo.put(X.MESSAGE, lang.get("captcha.expired"));
+          jo.put(X.STATE, 203);
         } else {
 
-          OpLog.warn(User.class, "user.login", lang.get("login.failed") + ":" + name + ", ip:" + this.getRemoteHost(),
-              null);
+          User me = User.load(name, pwd);
+          log.debug("login: " + sid() + "-" + me);
+          if (me != null) {
 
-          User u = User.load(name);
-          if (u == null) {
-            jo.put("message", lang.get("login.name_password.error"));
-            jo.put(X.STATE, 201);
-          } else {
-            u.failed(this.getRemoteHost(), sid(), this.browser());
+            long uid = me.getId();
+            long time = System.currentTimeMillis() - X.AHOUR;
+            List<User.Lock> list = User.Lock.loadByHost(uid, time, this.getRemoteHost());
 
-            List<User.Lock> list = User.Lock.loadByHost(u.getId(), System.currentTimeMillis() - X.AHOUR,
-                this.getRemoteHost());
+            if (me.isLocked() || (list != null && list.size() >= 6)) {
+              // locked by the host
+              me.failed(this.getRemoteHost(), sid(), this.browser());
+              jo.put(X.MESSAGE, lang.get("account.locked.error"));
 
-            if (list != null && list.size() >= 6) {
-              jo.put("message", lang.get("login.locked.error"));
               jo.put(X.STATE, 204);
+              jo.put("name", name);
+              jo.put("pwd", pwd);
             } else {
-              list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid());
+              list = User.Lock.loadBySid(uid, time, sid());
               if (list != null && list.size() >= 3) {
+                me.failed(this.getRemoteHost(), sid(), this.browser());
+                jo.put(X.MESSAGE, lang.get("account.locked.error"));
+                jo.put("name", name);
+                jo.put("pwd", pwd);
+                jo.put(X.STATE, 204);
+              } else {
+
+                this.setUser(me);
+
+                /**
+                 * logined, to update the stat data
+                 */
+                me.logined(sid(), this.getRemoteHost());
+
+                if ("json".equals(this.getString("type"))) {
+                  jo.put("sid", sid());
+                  jo.put("uid", me.getId());
+                  AuthToken t = AuthToken.update(me.getId(), sid(), this.getRemoteHost());
+                  if (t != null) {
+                    jo.put("token", t.getToken());
+                    jo.put("expired", t.getExpired());
+                    jo.put(X.STATE, 200);
+                  } else {
+                    jo.put(X.MESSAGE, "create authtoken error");
+                    jo.put(X.STATE, 205);
+                  }
+                  this.response(jo);
+                } else {
+                  this.redirect("/user/go");
+                }
+                return;
+              }
+            }
+
+          } else {
+
+            OpLog.warn(User.class, "user.login", lang.get("login.failed") + ":" + name + ", ip:" + this.getRemoteHost(),
+                null);
+
+            User u = User.load(name);
+            if (u == null) {
+              jo.put("message", lang.get("login.name_password.error"));
+              jo.put(X.STATE, 201);
+            } else {
+              u.failed(this.getRemoteHost(), sid(), this.browser());
+
+              List<User.Lock> list = User.Lock.loadByHost(u.getId(), System.currentTimeMillis() - X.AHOUR,
+                  this.getRemoteHost());
+
+              if (list != null && list.size() >= 6) {
                 jo.put("message", lang.get("login.locked.error"));
                 jo.put(X.STATE, 204);
               } else {
-                jo.put("message",
-                    String.format(lang.get("login.name_password.error.times"), list == null ? 0 : list.size()));
-                jo.put(X.STATE, 204);
+                list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid());
+                if (list != null && list.size() >= 3) {
+                  jo.put("message", lang.get("login.locked.error"));
+                  jo.put(X.STATE, 204);
+                } else {
+                  jo.put("message",
+                      String.format(lang.get("login.name_password.error.times"), list == null ? 0 : list.size()));
+                  jo.put(X.STATE, 204);
+                }
               }
             }
-          }
 
-          jo.put("name", name);
-          jo.put("pwd", pwd);
+            jo.put("name", name);
+            jo.put("pwd", pwd);
+          }
         }
       }
+
       if (X.isSame(type, "json")) {
         this.response(jo);
         return;
