@@ -197,6 +197,8 @@ public class setting extends Model {
       Global.setConfig("run.level", level);
       Helper.DEBUG = X.isSame(level, "debug");
 
+      Global.setConfig("user.captcha", X.isSame(this.getString("user_captcha"), "on") ? 1 : 0);
+      Global.setConfig("user.token", X.isSame(this.getString("user_token"), "on") ? 1 : 0);
       Global.setConfig("user.system", this.getString("user_system"));
       Global.setConfig("user.role", this.getString("user_role"));
       Global.setConfig("cross.domain", this.getString("cross_domain"));

@@ -65,7 +65,7 @@ add.fail=添加失败
 add.success=添加成功
 backup.index.title=备份管理
 global.setting.notes=全局基本设置，请参考<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/conf/Global.html' target='_blank'>Global APIdocs</a>
-base.setting.notes=本地基本设置，配置文件 {giiwa.home}/giiwa.properties,请参考<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/conf/Config.html' target='_blank'>Local APIDocs</a>
+base.setting.notes=本地基本设置，配置文件 {giiwa.home}/giiwa.properties,请参考 <a href='http://giiwa.org/docs/apidocs/org/giiwa/core/conf/Config.html' target='_blank'>Config APIDocs</a>
 base.setting.title=设置
 browser.description=Java Web 快速开发框架，模块化开发和运行期管理
 browser.title=Giiwa Java Web 快速开发框架
@@ -349,3 +349,5 @@ a.role.edit=编辑角色
 group.access.role=角色
 a.forget.user=忘记密码
 a.register.user=注册用户
+user.captcha.hint=在登录，注册中使用随机验证码？
+user.token.hint=使用 Token ＋ SID 自动登录？Token过期时间7天

@@ -14,6 +14,13 @@
 		</select>
 		<g>$lang.get('type.hint')</g>
 	</label></div>
+	<div><label><h3>$lang.get('user.captcha'):</h3>
+		<input type='checkbox' name='user_captcha' #if($system.getInt('user.captcha',1) == 1) checked #end/>
+		<g>$lang.get('user.captcha.hint')</g></label></div>
+	<div><label><h3>$lang.get('user.token'):</h3>
+		<input type='checkbox' name='user_token' #if($system.getInt('user.token',1) == 1) checked #end/>
+		<g>$lang.get('user.token.hint')</g></label></div>
+		
 	<div><label><h3>$lang.get('user.system'):</h3>
 		<select name='user_system'>
 			<option value='open' #if($user_system == 'open') selected #end>$lang.get('user.system.open')</option>
@@ -39,7 +46,7 @@
 	<div><label><h3>$lang.get('cross.header'):</h3>
 		<input type='text' name='cross_header' value="$!cross_header"/>
 		<g>$lang.get('cross.header.hint')</g></label></div>
-
+		
 	<div><label><g>$lang.get('base.setting.notes')</g></label></div>
 	<hr/>
 	<div><label><h3>node:</h3><i>$!node</i><g>$lang.get('node.hint')</g></label></div>

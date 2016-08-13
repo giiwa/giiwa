@@ -609,13 +609,13 @@ public class Model {
    * @return the string
    */
   final public String sid(boolean newSession) {
-    if (sid == null) {
+    if (X.isEmpty(sid)) {
       sid = this.getCookie("sid");
-      if (sid == null) {
+      if (X.isEmpty(sid)) {
         sid = this.getHeader("sid");
-        if (sid == null) {
+        if (X.isEmpty(sid)) {
           sid = this.getString("sid");
-          if (sid == null && newSession) {
+          if (X.isEmpty(sid) && newSession) {
             do {
               sid = H64.toString((int) (Math.random() * Integer.MAX_VALUE)) + H64.toString(System.currentTimeMillis());
             } while (Session.exists(sid));
@@ -1598,14 +1598,15 @@ public class Model {
 
       if (login == null) {
 
-        String sid = sid();
-        String token = getToken();
-        if (!X.isEmpty(sid) && !X.isEmpty(token)) {
-          AuthToken t = AuthToken.load(sid, token);
-          if (t != null) {
-            login = t.getUser();
-
-            this.setUser(login);
+        if (Global.getInt("user.token", 1) == 1) {
+          String sid = sid();
+          String token = getToken();
+          if (!X.isEmpty(sid) && !X.isEmpty(token)) {
+            AuthToken t = AuthToken.load(sid, token);
+            if (t != null) {
+              login = t.getUser();
+              this.setUser(login);
+            }
           }
         }
       }

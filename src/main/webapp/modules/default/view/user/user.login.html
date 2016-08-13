@@ -11,19 +11,33 @@
 <form id="loginForm" class="form-signin" action="/user/login" method="post">
 	<div class=''>
 		<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
-		<input type="text" id="username" name="name" class="form-control" required />
+		<input type="text" id="username" name="name" value="$!name" class="form-control" required />
 	</div>
 	<div class=''>
 		<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
-		<input type="password" id="password" name="pwd" class="form-control" required />
+		<input type="password" id="password" name="pwd" value="$!pwd" class="form-control" required />
 	</div>
+	#if($system.getInt('user.captcha', 1) == 1)
 	<div class="validateCode">
 		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
 		<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
 		<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
 		<a href="javascript:" onclick="_oncaptcha();" class="icon-opera validateCodeRefresh " style=""></a>
+		<script>
+			function _oncaptcha() {
+				$.get('/captcha', {}, function(d) {
+					if (d.state == 200) {
+						$('#validateImg').attr('src', d.uri);
+					}
+				})
+			}
+			$(function(){
+				_oncaptcha();
+			})
+		</script>
 	</div>
-			
+	#end
+	
 	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
 	<div id="themeSwitch">
 		<a class="icon-wondering" href="/user/forget">$lang.get('a.forget.user')</a>
@@ -36,18 +50,5 @@
 	$lang.get('copyright') - $lang.get('powerby') 
 </div>
 
-<script>
-	function _oncaptcha() {
-		$.get('/captcha', {}, function(d) {
-			if (d.state == 200) {
-				$('#validateImg').attr('src', d.uri);
-			}
-		})
-	}
-
-	$(function(){
-		_oncaptcha();
-	})
-</script>
 #parse('/user/foot.html')
 

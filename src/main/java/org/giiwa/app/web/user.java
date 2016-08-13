@@ -185,12 +185,16 @@ public class user extends Model {
 
     if (method.isPost()) {
 
-      String token = this.getString("token");
-      String sid = this.getString("sid");
       String type = this.getString("type");
 
       JSONObject jo = new JSONObject();
-      AuthToken a = AuthToken.load(sid, token);
+      AuthToken a = null;
+      if (Global.getInt("user.token", 1) == 1) {
+        String token = this.getString("token");
+        String sid = this.getString("sid");
+        a = AuthToken.load(sid, token);
+      }
+
       if (a != null) {
         // ok, logined
         jo.put(X.STATE, 200);
@@ -200,13 +204,17 @@ public class user extends Model {
       } else {
         String name = this.getString("name");
         String pwd = this.getString("pwd");
-        String code = this.getString("code");
-        if (code != null) {
-          code = code.toLowerCase();
-        }
 
-        Captcha.Result r = Captcha.verify(this.sid(), code);
-        Captcha.remove(this.sid());
+        Captcha.Result r = Captcha.Result.ok;
+
+        if (Global.getInt("user.captcha", 1) == 1) {
+          String code = this.getString("code");
+          if (code != null) {
+            code = code.toLowerCase();
+          }
+          r = Captcha.verify(this.sid(), code);
+          Captcha.remove(this.sid());
+        }
 
         if (Captcha.Result.badcode == r) {
           jo.put(X.MESSAGE, lang.get("captcha.bad"));
@@ -252,14 +260,17 @@ public class user extends Model {
                 if ("json".equals(this.getString("type"))) {
                   jo.put("sid", sid());
                   jo.put("uid", me.getId());
-                  AuthToken t = AuthToken.update(me.getId(), sid(), this.getRemoteHost());
-                  if (t != null) {
-                    jo.put("token", t.getToken());
-                    jo.put("expired", t.getExpired());
-                    jo.put(X.STATE, 200);
-                  } else {
-                    jo.put(X.MESSAGE, "create authtoken error");
-                    jo.put(X.STATE, 205);
+
+                  if (Global.getInt("user.token", 1) == 1) {
+                    AuthToken t = AuthToken.update(me.getId(), sid(), this.getRemoteHost());
+                    if (t != null) {
+                      jo.put("token", t.getToken());
+                      jo.put("expired", t.getExpired());
+                      jo.put(X.STATE, 200);
+                    } else {
+                      jo.put(X.MESSAGE, "create authtoken error");
+                      jo.put(X.STATE, 205);
+                    }
                   }
                   this.response(jo);
                 } else {
