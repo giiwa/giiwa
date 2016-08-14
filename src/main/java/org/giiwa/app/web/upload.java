@@ -14,6 +14,8 @@
 */
 package org.giiwa.app.web;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.fileupload.FileItem;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
@@ -49,7 +51,7 @@ public class upload extends Model {
       store(me.getId(), file, jo);
 
     } else {
-      this.set(X.ERROR, X.FAIL201);
+      this.set(X.ERROR, HttpServletResponse.SC_UNAUTHORIZED);
       jo.put(X.MESSAGE, lang.get("login.required"));
     }
 
@@ -129,10 +131,10 @@ public class upload extends Model {
         // Session.load(sid()).set("access.repo." + id, 1).store();
       } else {
         if (jo == null) {
-          this.set(X.ERROR, X.FAIL201);
+          this.set(X.ERROR, HttpServletResponse.SC_BAD_REQUEST);
           this.put(X.MESSAGE, lang.get("repo.locked"));
         } else {
-          jo.put(X.ERROR, X.FAIL201);
+          jo.put(X.ERROR, HttpServletResponse.SC_BAD_REQUEST);
           jo.put(X.MESSAGE, lang.get("repo.locked"));
         }
         return false;
@@ -143,10 +145,10 @@ public class upload extends Model {
       OpLog.error(upload.class, "/", e.getMessage(), e);
 
       if (jo == null) {
-        this.set(X.ERROR, X.FAIL401);
+        this.set(X.ERROR, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         this.put(X.MESSAGE, lang.get(e.getMessage()));
       } else {
-        jo.put(X.ERROR, X.FAIL401);
+        jo.put(X.ERROR, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         jo.put(X.MESSAGE, lang.get(e.getMessage()));
       }
     }

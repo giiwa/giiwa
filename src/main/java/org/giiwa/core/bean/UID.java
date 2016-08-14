@@ -24,9 +24,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 
-import com.mongodb.BasicDBObject;
-
-// TODO: Auto-generated Javadoc
 /**
  * The {@code UID} Class used to create unique id, or sequence, random string
  * 
