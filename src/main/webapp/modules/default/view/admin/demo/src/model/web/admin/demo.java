@@ -2,13 +2,12 @@ package org.giiwa.demo.web.admin;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.demo.bean.Demo;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
-
-import net.sf.json.JSONObject;
 
 public class demo extends Model {
 
@@ -43,7 +42,7 @@ public class demo extends Model {
 	public void delete() {
 		String id = this.getString("id");
 		Demo.delete(id);
-		JSONObject jo = new JSONObject();
+		JSON jo = new JSON();
 		jo.put(X.STATE, 200);
 		this.response(jo);
 	}
@@ -51,7 +50,7 @@ public class demo extends Model {
 	@Path(path = "create", login = true, access = "access.demo.admin")
 	public void create() {
 		if (method.isPost()) {
-			JSONObject jo = this.getJSON();
+		  JSON jo = this.getJSON();
 			V v = V.create().copy(jo, "name");
 			v.set("content", this.getHtml("content"));
 			String id = Demo.create(v);
@@ -68,7 +67,7 @@ public class demo extends Model {
 	public void edit() {
 		String id = this.getString("id");
 		if (method.isPost()) {
-			JSONObject jo = this.getJSON();
+		  JSON jo = this.getJSON();
 			V v = V.create().copy(jo, "name");
 			v.set("content", this.getHtml("content"));
 			Demo.update(id, v);
