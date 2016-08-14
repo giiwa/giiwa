@@ -24,14 +24,13 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.db.DB;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
-
-import net.sf.json.JSONObject;
 
 import com.mongodb.Mongo;
 import com.mongodb.MongoOptions;
@@ -74,7 +73,7 @@ public class configure extends Model {
    */
   @Path(path = "save")
   public void save() {
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if (Helper.isConfigured()) {
       jo.put(X.STATE, 201);
       jo.put(X.MESSAGE, "already configured, forbidden override, must edit the giiwa.properties by manual");
@@ -137,7 +136,7 @@ public class configure extends Model {
    */
   @Path(path = "check")
   public void check() {
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
 
     // Configuration conf = Config.getConfig();
 

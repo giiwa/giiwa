@@ -14,16 +14,16 @@
 */
 package org.giiwa.app.web;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
-
-import net.sf.json.*;
 
 /**
  * web api： /menu <br>
@@ -90,13 +90,13 @@ public class menu extends Model {
     /**
      * convert the list to json array
      */
-    JSONArray arr = new JSONArray();
+    List<JSON> arr = new ArrayList<JSON>();
 
     if (ll != null) {
       Iterator<Menu> it = ll.iterator();
 
       while (it.hasNext()) {
-        JSONObject jo = new JSONObject();
+        JSON jo = new JSON();
         m = it.next();
 
         /**

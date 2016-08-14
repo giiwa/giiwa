@@ -14,11 +14,13 @@
 */
 package org.giiwa.app.web;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
-
-import net.sf.json.JSONObject;
 
 /**
  * web api: /alive, just simple response with the uptime, thread info
@@ -34,8 +36,8 @@ public class alive extends Model {
    * @see org.giiwa.framework.web.Model#onGet()
    */
   public void onGet() {
-    JSONObject jo = new JSONObject();
-    jo.put(X.STATE, 200);
+    JSON jo = new JSON();
+    jo. put(X.STATE, 200);
     jo.put("uptime", Model.UPTIME);
     jo.put("idle", Task.idleThread());
     jo.put("tasks", Task.tasksInQueue());

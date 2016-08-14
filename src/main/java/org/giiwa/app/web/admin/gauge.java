@@ -14,9 +14,8 @@
 */
 package org.giiwa.app.web.admin;
 
-import net.sf.json.JSONObject;
-
 import org.giiwa.core.base.Host;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.framework.web.Tps;
@@ -54,7 +53,7 @@ public class gauge extends Model {
   @Path(path = "tps/status", login = true, access = "access.config.admin", accesslog = false)
   public void tps_status() {
     // todo
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     jo.put("total", Tps.get());
 
     this.response(jo);
@@ -67,7 +66,7 @@ public class gauge extends Model {
   @Path(path = "mem/status", login = true, access = "access.config.admin", accesslog = false)
   public void mem_status() {
     // todo
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     jo.put("used", Host.getMemUsed());
 
     this.response(jo);

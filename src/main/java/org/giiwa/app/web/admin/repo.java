@@ -14,10 +14,9 @@
 */
 package org.giiwa.app.web.admin;
 
-import net.sf.json.JSONObject;
-
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.Model;
@@ -56,7 +55,7 @@ public class repo extends Model {
    */
   @Path(path = "delete", login = true, access = "access.config.admin")
   public void delete() {
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
 
     String id = this.getString("id");
     Repo.delete(id);

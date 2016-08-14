@@ -29,10 +29,9 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.cache.DefaultCachable;
+import org.giiwa.core.json.JSON;
 
 import com.mongodb.DBObject;
-
-import net.sf.json.JSONObject;
 
 /**
  * The {@code Bean} Class is base class for all class that database access, it
@@ -67,7 +66,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *          the map
    * @return boolean, return true if success
    */
-  public boolean toJSON(Map<String, Object> jo) {
+  public boolean toJSON(JSON jo) {
     if (data != null && data.size() > 0 && jo != null) {
       for (String name : data.keySet()) {
         Object o = data.get(name);
@@ -529,15 +528,15 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /**
    * create the data as json.<br>
    * 
-   * @return JSONObject
+   * @return JSON
    */
   @SuppressWarnings("unchecked")
-  public final JSONObject getJSON() {
+  public final JSON getJSON() {
     if (data == null) {
       return null;
     }
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
 
     toJSON(jo);
 

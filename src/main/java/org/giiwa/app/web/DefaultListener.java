@@ -27,9 +27,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import net.sf.json.JSONArray;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
@@ -43,6 +42,7 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.db.DB;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.OpLog;
@@ -386,7 +386,7 @@ public class DefaultListener implements IListener {
           /**
            * convert the string to json array
            */
-          JSONArray arr = JSONArray.fromObject(sb.toString());
+          List<JSON> arr = JSON.fromObjects(sb.toString());
           Menu.insertOrUpdate(arr, module.getName());
 
           module.setStatus("menu.json initialized");

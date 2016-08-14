@@ -22,11 +22,9 @@ import java.util.TreeMap;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
-import net.sf.json.*;
-
-// TODO: Auto-generated Javadoc
 /**
  * Menu. <br>
  * collection="gi_menu"
@@ -61,14 +59,14 @@ public class Menu extends Bean {
    * @param tag
    *          the tag
    */
-  public static void insertOrUpdate(JSONArray arr, String tag) {
+  public static void insertOrUpdate(List<JSON> arr, String tag) {
     if (arr == null) {
       return;
     }
 
     int len = arr.size();
     for (int i = 0; i < len; i++) {
-      JSONObject jo = arr.getJSONObject(i);
+      JSON jo = arr.get(i);
 
       /**
        * test and create from the "root"
@@ -131,7 +129,7 @@ public class Menu extends Bean {
    * @param parent
    *          the parent
    */
-  public static void insertOrUpdate(JSONObject jo, long parent) {
+  public static void insertOrUpdate(JSON jo, long parent) {
     try {
       // log.info(jo);
 
@@ -166,10 +164,10 @@ public class Menu extends Bean {
          * get all childs from the json
          */
         if (jo.containsKey("childs")) {
-          JSONArray arr = jo.getJSONArray("childs");
+          List<JSON> arr = jo.getList("childs");
           int len = arr.size();
           for (int i = 0; i < len; i++) {
-            JSONObject j = arr.getJSONObject(i);
+            JSON j = arr.get(i);
             if (jo.containsKey("tag")) {
               j.put("tag", jo.get("tag"));
             }

@@ -17,9 +17,8 @@ package org.giiwa.framework.noti;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.json.JSONObject;
+import org.giiwa.core.json.JSON;
 
-// TODO: Auto-generated Javadoc
 /**
  * @author wujun
  *
@@ -54,7 +53,7 @@ public class Sms {
    * @return true: success <br>
    *         false: failed
    */
-	public static boolean send(String mobile, JSONObject jo) {
+	public static boolean send(String mobile, JSON jo) {
 		for (ISender s : senders) {
 			if (s.send(mobile, jo)) {
 				return true;
@@ -78,6 +77,6 @@ public class Sms {
      * @return true: success <br>
      *         false: failed
      */
-		public boolean send(String mobile, JSONObject jo);
+		public boolean send(String mobile, JSON jo);
 	}
 }

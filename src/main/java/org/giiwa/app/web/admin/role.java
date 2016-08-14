@@ -13,10 +13,9 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
-
-import net.sf.json.JSONObject;
 
 /**
  * web api: /admin/role <br>
@@ -67,7 +66,7 @@ public class role extends Model {
     String name = this.getString("name");
     String value = this.getString("value");
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if (X.isEmpty(value)) {
       jo.put(X.STATE, 201);
       jo.put(X.MESSAGE, lang.get("name.empty.error"));
@@ -124,7 +123,8 @@ public class role extends Model {
           long id = X.toLong(s);
           Role r = Role.loadById(id);
           this.set("r", r);
-          JSONObject jo = new JSONObject();
+
+          JSON jo = new JSON();
           r.toJSON(jo);
           this.set(jo);
 

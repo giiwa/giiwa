@@ -13,10 +13,9 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
-
-import net.sf.json.JSONObject;
 
 /**
  * web api: /admin/user <br>
@@ -34,7 +33,7 @@ public class user extends Model {
   public void create() {
     if (method.isPost()) {
 
-      JSONObject jo = this.getJSON();
+      JSON jo = this.getJSON();
       String name = this.getString("name").trim();
       // String password = this.getString("password");
       try {
@@ -104,7 +103,7 @@ public class user extends Model {
   @Path(path = "delete", login = true, access = "access.user.admin")
   public void delete() {
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
 
     long id = this.getLong("id");
     if (id > 0) {
@@ -131,13 +130,13 @@ public class user extends Model {
 
       String password = this.getString("password");
       if (!X.isEmpty(password)) {
-        JSONObject jo = new JSONObject();
+        JSON jo = new JSON();
         User.update(id, V.create("password", password));
         jo.put(X.STATE, 200);
         this.response(jo);
         return;
       }
-      JSONObject j = this.getJSON();
+      JSON j = this.getJSON();
       V v = V.create().copy(j);
       v.remove("role");
 

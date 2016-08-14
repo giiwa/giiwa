@@ -23,14 +23,13 @@ import org.giiwa.core.bean.MongoHelper;
 import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
-
-import net.sf.json.JSONObject;
 
 /**
  * backup management
@@ -106,7 +105,7 @@ public class backup extends Model {
   @Path(path = "restore", login = true, access = "access.config.admin")
   public void restore() {
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
 
     String name = this.getString("name");
     task = new RecoverTask();
@@ -122,7 +121,7 @@ public class backup extends Model {
   @Path(path = "restoring", login = true, access = "access.config.admin")
   public void restoring() {
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
 
     if (task == null) {
       jo.put(X.STATE, 202);

@@ -14,11 +14,10 @@
 */
 package org.giiwa.app.web;
 
-import net.sf.json.*;
-
 import org.apache.commons.fileupload.FileItem;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
@@ -40,7 +39,7 @@ public class upload extends Model {
   @Override
   public void onPost() {
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     User me = this.getUser();
 
     if (me != null) {
@@ -62,7 +61,7 @@ public class upload extends Model {
 
   }
 
-  private boolean store(long me, FileItem file, JSONObject jo) {
+  private boolean store(long me, FileItem file, JSON jo) {
     String tag = this.getString("tag");
 
     try {

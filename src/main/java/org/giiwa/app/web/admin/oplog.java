@@ -9,20 +9,19 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.*;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 /**
  * web api: /admin/log <br>
@@ -38,7 +37,7 @@ public class oplog extends Model {
    */
   @Path(path = "deleteall", login = true, access = "access.config.admin")
   public void deleteall() {
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     OpLog.remove();
     jo.put(X.STATE, 200);
     this.response(jo);
@@ -52,13 +51,13 @@ public class oplog extends Model {
     String type = this.getString("type");
     String cate = this.getString("cate");
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
 
     List<String> list = null;// OpLog.loadCategory(type, cate);
     if (list != null && list.size() > 0) {
-      JSONArray arr = new JSONArray();
+      List<JSON> arr = new ArrayList<JSON>();
       for (String e : list) {
-        JSONObject j = new JSONObject();
+        JSON j = new JSON();
         j.put("value", e);
         if ("module".equals(type)) {
           j.put("name", lang.get("log.module_" + e));
@@ -80,7 +79,7 @@ public class oplog extends Model {
 
   }
 
-  private W getW(JSONObject jo) {
+  private W getW(JSON jo) {
 
     W q = W.create();
 
@@ -143,7 +142,7 @@ public class oplog extends Model {
 
     this.set("currentpage", s);
 
-    JSONObject jo = this.getJSON();
+    JSON jo = this.getJSON();
     W w = getW(jo);
 
     Beans<OpLog> bs = OpLog.load(w, s, n);
@@ -163,7 +162,7 @@ public class oplog extends Model {
      * export the logs to "csv" file, and redirect to the cvs file
      */
 
-    final JSONObject jo = this.getJSON();
+    final JSON jo = this.getJSON();
     final W q = getW(jo);
 
     String id = UID.id(login.get("name"), jo.toString());
@@ -265,7 +264,7 @@ public class oplog extends Model {
 
     }
 
-    JSONObject jo1 = new JSONObject();
+    JSON jo1 = new JSON();
     jo1.put(X.STATE, 200);
     jo1.put("file", "/temp/" + id + "/" + name);
     jo1.put("size", f.length());

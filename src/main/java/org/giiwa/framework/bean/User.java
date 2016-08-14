@@ -20,8 +20,6 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 
-import net.sf.json.JSONObject;
-
 /**
  * 
  * The {@code User} Class is base user class, all the login/access controlled in
@@ -185,25 +183,6 @@ public class User extends Bean {
         User.class);
 
     return id;
-  }
-
-  /**
-   * create a user from the jo.
-   *
-   * @param jo
-   *          the jo
-   * @return int
-   * @deprecated
-   */
-  public static long copy(JSONObject jo) {
-
-    V v = V.create();
-    for (Object name : jo.keySet()) {
-      v.set(name.toString(), jo.get(name));
-    }
-
-    return User.create(v);
-
   }
 
   /**

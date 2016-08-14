@@ -18,9 +18,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-import net.sf.json.JSONObject;
+import org.giiwa.core.json.JSON;
 
-// TODO: Auto-generated Javadoc
 /**
  * 
  * @author yjiang
@@ -268,7 +267,7 @@ public class QueryString implements Cloneable {
      *            the names
      * @return the query string
      */
-    public QueryString copy(JSONObject jo, String... names) {
+    public QueryString copy(JSON jo, String... names) {
         if (jo != null) {
             if (names != null && names.length > 0) {
                 for (String name : names) {
@@ -383,7 +382,7 @@ public class QueryString implements Cloneable {
      *            the jo
      * @return the query string
      */
-    public QueryString set(JSONObject jo) {
+    public QueryString set(JSON jo) {
         for (Object name : jo.keySet()) {
             Object v = jo.get(name);
 

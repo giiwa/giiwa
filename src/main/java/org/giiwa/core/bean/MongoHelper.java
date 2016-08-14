@@ -30,6 +30,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.giiwa.core.json.JSON;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
@@ -41,8 +43,6 @@ import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
-
-import net.sf.json.JSONObject;
 
 /**
  * The {@code Bean} Class is base class for all class that database access, it
@@ -1126,7 +1126,7 @@ public class MongoHelper extends Helper {
       rows++;
 
       DBObject d2 = c1.next();
-      JSONObject jo = new JSONObject();
+      JSON jo = new JSON();
       jo.put("_table", tablename);
       for (String name : d2.keySet()) {
         jo.put(name, d2.get(name));
@@ -1173,7 +1173,7 @@ public class MongoHelper extends Helper {
 
   private static void _recover(String json) {
     try {
-      JSONObject jo = JSONObject.fromObject(json);
+      JSON jo = JSON.fromObject(json);
       V v = V.create().copy(jo);
       String tablename = jo.getString("_table");
       v.remove("_table");

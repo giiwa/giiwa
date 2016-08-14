@@ -40,8 +40,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.giiwa.core.db.DB;
-
-import net.sf.json.JSONObject;
+import org.giiwa.core.json.JSON;
 
 /**
  * The {@code Bean} Class is base class for all class that database access, it
@@ -2036,7 +2035,7 @@ public class RDSHelper extends Helper {
         rows++;
         ResultSetMetaData m1 = r.getMetaData();
 
-        JSONObject jo = new JSONObject();
+        JSON jo = new JSON();
         jo.put("_table", tablename);
         for (int i = 1; i <= m1.getColumnCount(); i++) {
           Object o = r.getObject(i);
@@ -2104,7 +2103,7 @@ public class RDSHelper extends Helper {
 
   private static void _recover(String json, Connection c) {
     try {
-      JSONObject jo = JSONObject.fromObject(json);
+      JSON jo = JSON.fromObject(json);
       V v = V.create().copy(jo);
       String tablename = jo.getString("_table");
       v.remove("_table");

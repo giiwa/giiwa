@@ -14,9 +14,8 @@
 */
 package org.giiwa.app.web;
 
-import net.sf.json.JSONObject;
-
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
@@ -38,7 +37,7 @@ public class version extends Model {
   @Path()
   @Override
   public void onGet() {
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     jo.put(X.STATE, 200);
     jo.put("version", Module.load("default").getVersion());
     jo.put("build", Module.load("default").getBuild());

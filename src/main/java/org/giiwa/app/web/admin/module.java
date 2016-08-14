@@ -9,8 +9,6 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.*;
 
-import net.sf.json.JSONObject;
-
 import org.apache.commons.fileupload.FileItem;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -20,6 +18,7 @@ import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.bean.Repo.Entity;
@@ -45,7 +44,7 @@ public class module extends Model {
       /**
        * create
        */
-      JSONObject jo = new JSONObject();
+      JSON jo = new JSON();
 
       try {
         String file = createmodule();
@@ -484,7 +483,7 @@ public class module extends Model {
     String url = this.getString("url");
     Entity e = Repo.loadByUri(url);
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if (e != null) {
       String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
       String root = Model.HOME + "/modules/" + temp + "/";
@@ -691,7 +690,7 @@ public class module extends Model {
     String name = this.getString("name");
     int id = this.getInt("id");
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if (id > 0) {
       jo.put(X.STATE, 200);
       Module m = Module.load(name);

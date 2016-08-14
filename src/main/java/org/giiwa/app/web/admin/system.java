@@ -5,11 +5,10 @@
  */
 package org.giiwa.app.web.admin;
 
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.*;
-
-import net.sf.json.JSONObject;
 
 /**
  * web api: /admin/system <br>
@@ -26,7 +25,7 @@ public class system extends Model {
   @Path(path = "restart", login = true, access = "access.config.admin", log = Model.METHOD_POST)
   public void restart() {
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     User me = this.getUser();
     String pwd = this.getString("pwd");
 

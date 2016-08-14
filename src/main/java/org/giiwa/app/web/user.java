@@ -24,6 +24,7 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Role;
@@ -32,9 +33,6 @@ import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.utils.image.Captcha;
-
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 
 /**
  * web api： /user <br>
@@ -73,7 +71,7 @@ public class user extends Model {
 
       String name = this.getString("name");
 
-      JSONObject jo = this.getJSON();
+      JSON jo = this.getJSON();
       try {
         V v = V.create().copy(jo);
         long id = User.create(v);
@@ -164,7 +162,7 @@ public class user extends Model {
     }
 
     User u = User.loadById(uid);
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if (u != null) {
       jo.put("data", u.getJSON());
       jo.put(X.STATE, 200);
@@ -187,7 +185,7 @@ public class user extends Model {
 
       String type = this.getString("type");
 
-      JSONObject jo = new JSONObject();
+      JSON jo = new JSON();
       AuthToken a = null;
       if (Global.getInt("user.token", 1) == 1) {
         String token = this.getString("token");
@@ -370,7 +368,7 @@ public class user extends Model {
     String name = this.getString("name").trim();
     String value = this.getString("value").trim();
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if ("name".equals(name)) {
       if (User.exists(W.create("name", value))) {
 
@@ -431,11 +429,11 @@ public class user extends Model {
       }
     }
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if (list != null && list.size() > 0) {
-      JSONArray arr = new JSONArray();
+      List<JSON> arr = new ArrayList<JSON>();
       for (User e : list) {
-        JSONObject j = new JSONObject();
+        JSON j = new JSON();
         j.put("value", e.getId());
         j.put("name", e.get("nickname") + "(" + e.get("name") + ")");
         arr.add(j);
@@ -615,13 +613,13 @@ public class user extends Model {
   public void edit() {
     if (method.isPost()) {
       long id = login.getId();
-      JSONObject j = this.getJSON();
+      JSON j = this.getJSON();
       User u = User.loadById(id);
       if (u != null) {
         String password = this.getString("password");
         if (!X.isEmpty(password)) {
           u.update(V.create("password", password));
-          JSONObject jo = new JSONObject();
+          JSON jo = new JSON();
           jo.put(X.STATE, 200);
 
           this.response(jo);
@@ -643,7 +641,7 @@ public class user extends Model {
     } else {
       User u = User.loadById(login.getId());
       this.set("u", u);
-      JSONObject jo = new JSONObject();
+      JSON jo = new JSON();
       u.toJSON(jo);
       this.set(jo);
     }

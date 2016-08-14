@@ -23,9 +23,6 @@ import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
 import javax.servlet.http.*;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
 import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -38,6 +35,7 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
 
@@ -395,7 +393,10 @@ public class Model {
                       boolean error = false;
 
                       StringBuilder sb = new StringBuilder();
-                      JSONObject jo = JSONObject.fromObject(this.getJSON());
+                      /**
+                       * clone a new one
+                       */
+                      JSON jo = JSON.fromObject(this.getJSON());
                       if (jo.has("password")) {
                         jo.put("password", "******");
                       }
@@ -413,7 +414,7 @@ public class Model {
                         if (context.containsKey("jsonstr")) {
                           sb.append(context.get("jsonstr"));
                         } else {
-                          jo = new JSONObject();
+                          jo = JSON.create();
                           if (context.containsKey(X.MESSAGE)) {
                             jo.put(X.MESSAGE, context.get(X.MESSAGE));
                             message = jo.getString(X.MESSAGE);
@@ -566,7 +567,7 @@ public class Model {
 
     String request = this.getHeader("X-Requested-With");
     if ("XMLHttpRequest".equals(request)) {
-      JSONObject jo = new JSONObject();
+      JSON jo = JSON.create();
 
       jo.put(X.STATE, 401);
       this.setHeader("status", "401");
@@ -670,7 +671,7 @@ public class Model {
     Controller.dispatch(model, req, resp, method);
   }
 
-  public JSONObject mockMdc = null;
+  public JSON mockMdc = null;
 
   /**
    * Mock mdc.
@@ -678,7 +679,7 @@ public class Model {
    * @deprecated
    */
   final public void mockMdc() {
-    mockMdc = new JSONObject();
+    mockMdc = JSON.create();
   }
 
   /**
@@ -826,7 +827,7 @@ public class Model {
    * @param names
    *          the names that will be set back to model, if null, will set all
    */
-  final public void set(Map<Object, Object> jo, String... names) {
+  final public void set(JSON jo, String... names) {
     if (jo == null) {
       return;
     }
@@ -896,24 +897,6 @@ public class Model {
    */
   final public int getInt(String tag) {
     return getInt(tag, 0);
-  }
-
-  /**
-   * Gets the int.
-   * 
-   * @deprecated
-   * @param jo
-   *          the jo
-   * @param tag
-   *          the tag
-   * @return the int
-   */
-  final public int getInt(JSONObject jo, String tag) {
-    if (jo.has(tag)) {
-      return X.toInt(jo.get(tag), 0);
-    }
-
-    return this.getInt(tag);
   }
 
   /**
@@ -1205,16 +1188,16 @@ public class Model {
     }
   }
 
-  transient JSONObject _json;
+  private JSON _json;
 
   /**
    * get the request as JSON
    * 
    * @return JSONObject
    */
-  final public JSONObject getJSON() {
+  final public JSON getJSON() {
     if (_json == null) {
-      _json = new JSONObject();
+      _json = JSON.create();
       for (String name : this.getNames()) {
         String s = this.getString(name);
         _json.put(name, s);
@@ -1237,16 +1220,16 @@ public class Model {
    * @deprecated
    * @return JSONObject
    */
-  final public JSONObject getJSONNonPassword() {
+  final public JSON getJSONNonPassword() {
     if (_json == null) {
       getJSON();
     }
 
-    JSONObject jo = JSONObject.fromObject(_json);
+    JSON jo = JSON.fromObject(_json);
     // mix the password
     for (Object name : jo.keySet()) {
       if ("password".equals(name) || "pwd".equals(name) || "passwd".equals(name)) {
-        jo.put(name, "*******");
+        jo.put(name.toString(), "*******");
       }
     }
     return jo;
@@ -1276,7 +1259,7 @@ public class Model {
 
           log.debug("params=" + sb.toString());
 
-          JSONObject jo = JSONObject.fromObject(sb.toString());
+          JSON jo = JSON.fromObject(sb.toString());
           uploads = new HashMap<String, Object>();
           uploads.putAll(jo);
         }
@@ -1397,7 +1380,7 @@ public class Model {
 
           log.debug("params=" + sb.toString());
 
-          JSONObject jo = JSONObject.fromObject(sb.toString());
+          JSON jo = JSON.fromObject(sb.toString());
           uploads = new HashMap<String, Object>();
           uploads.putAll(jo);
         }
@@ -1756,7 +1739,7 @@ public class Model {
    * @param jo
    *          the json that will be output
    */
-  final public void response(JSONObject jo) {
+  final public void response(Map<String, Object> jo) {
     if (jo == null) {
       responseJson("{}");
     } else {
@@ -1773,7 +1756,7 @@ public class Model {
    *          the message to response
    */
   final public void response(int state, String message) {
-    JSONObject jo = new JSONObject();
+    JSON jo = JSON.create();
     jo.put(X.STATE, 200);
     jo.put(X.MESSAGE, message);
     this.response(jo);
@@ -1785,7 +1768,7 @@ public class Model {
    * @param arr
    *          the array of json
    */
-  final public void response(JSONArray arr) {
+  final public void response(List<JSON> arr) {
     if (arr == null) {
       responseJson("[]");
     } else {
@@ -1970,7 +1953,7 @@ public class Model {
 
     String request = this.getHeader("X-Requested-With");
     if ("XMLHttpRequest".equals(request)) {
-      JSONObject jo = new JSONObject();
+      JSON jo = new JSON();
       jo.put(X.STATE, 202);
       jo.put(X.MESSAGE, lang.get("access.deny"));
       jo.put(X.ERROR, error);

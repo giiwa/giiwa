@@ -27,11 +27,10 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.db.DB;
+import org.giiwa.core.json.JSON;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
-
-import net.sf.json.JSONObject;
 
 /**
  * The {@code Helper} Class is base class for all class that database access, it
@@ -737,14 +736,14 @@ public class Helper {
      * copy the name and parameter from a JSON, with "and" and "op" conditions.
      *
      * @param jo
-     *          the jo
+     *          the json
      * @param op
      *          the op
      * @param names
      *          the names
      * @return W
      */
-    public W copy(JSONObject jo, int op, String... names) {
+    public W copy(JSON jo, int op, String... names) {
       if (jo != null && names != null && names.length > 0) {
         for (String name : names) {
           if (jo.has(name)) {
@@ -764,14 +763,14 @@ public class Helper {
      * ].
      *
      * @param jo
-     *          the jo
+     *          the json
      * @param op
      *          the op
      * @param names
      *          the names
      * @return W
      */
-    public W copy(JSONObject jo, int op, String[]... names) {
+    public W copy(JSON jo, int op, String[]... names) {
       if (jo != null && names != null && names.length > 0) {
         for (String name[] : names) {
           if (name.length > 1) {

@@ -1,13 +1,12 @@
 package org.giiwa.app.web;
 
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.utils.image.Captcha;
-
-import net.sf.json.JSONObject;
 
 /**
  * web api: /captcha<br>
@@ -24,7 +23,7 @@ public class captcha extends Model {
   @Path()
   public void onGet() {
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     Temp t = Temp.create("code.jpg");
     try {
 
@@ -52,7 +51,7 @@ public class captcha extends Model {
     String code = this.getString("code").toLowerCase();
     Captcha.Result r = Captcha.verify(this.sid(), code);
 
-    JSONObject jo = new JSONObject();
+    JSON jo = new JSON();
     if (Captcha.Result.badcode == r) {
       jo.put(X.STATE, 202);
       jo.put(X.MESSAGE, "bad code");
