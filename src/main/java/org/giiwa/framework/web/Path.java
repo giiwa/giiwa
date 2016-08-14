@@ -26,8 +26,7 @@ import org.giiwa.core.bean.X;
  * 
  * <br>
  * the whole web api uri should be=
- * <tt>http://[host]/[classname]/[method path]</tt>, method including:
- * <br>
+ * <tt>http://[host]/[classname]/[method path]</tt>, method including: <br>
  * 
  * <pre>
  * path=X.NONE (no path defined)
@@ -73,20 +72,11 @@ public @interface Path {
   String access() default X.NONE;
 
   /**
-   * Log the data of request and response, default is "none".
+   * Log the data of request and response in oplog, default is 0 -> none.
    *
    * @return int
-   * @deprecated
    */
   int log() default 0;
-
-  /**
-   * the support device, default is for all.
-   *
-   * @return String
-   * @deprecated
-   */
-  String device() default X.NONE;
 
   /**
    * log the access of client info, default is true.

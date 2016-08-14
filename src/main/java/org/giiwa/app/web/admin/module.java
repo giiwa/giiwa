@@ -597,7 +597,7 @@ public class module extends Model {
          */
         e.delete();
 
-        jo.put(X.STATE, 202);
+        jo.put(X.STATE, 415); //not support
         jo.put("result", "fail");
         jo.put("message", lang.get("invalid.module.package"));
       } finally {
@@ -607,7 +607,7 @@ public class module extends Model {
 
       }
     } else {
-      jo.put(X.STATE, 202);
+      jo.put(X.STATE, 404);
       jo.put("result", "fail");
       jo.put("message", "entity not found in repo for [" + url + "]");
     }

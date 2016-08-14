@@ -39,7 +39,6 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
 
-// TODO: Auto-generated Javadoc
 /**
  * the {@code Model} Class is base model, all class that provides web api should
  * inherit it <br>
@@ -569,9 +568,8 @@ public class Model {
     if ("XMLHttpRequest".equals(request)) {
       JSON jo = JSON.create();
 
-      jo.put(X.STATE, 401);
-      this.setHeader("status", "401");
-      jo.put(X.STATE, 401);
+      jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
+      this.setHeader("status", Integer.toString(HttpServletResponse.SC_UNAUTHORIZED));
 
       jo.put(X.MESSAGE, lang.get("login.required"));
       jo.put(X.ERROR, lang.get("not.login"));
@@ -1633,6 +1631,7 @@ public class Model {
    * 
    * @return
    */
+  @SuppressWarnings("unchecked")
   final private Map<String, Object> getFiles() {
     if (uploads == null) {
       uploads = new HashMap<String, Object>();
@@ -1684,6 +1683,7 @@ public class Model {
    *          the parameter name
    * @return file of value, null if not presented
    */
+  @SuppressWarnings("unchecked")
   final public FileItem getFile(String name) {
 
     getFiles();
@@ -1739,7 +1739,7 @@ public class Model {
    * @param jo
    *          the json that will be output
    */
-  final public void response(Map<String, Object> jo) {
+  final public void response(JSON jo) {
     if (jo == null) {
       responseJson("{}");
     } else {
@@ -1757,7 +1757,7 @@ public class Model {
    */
   final public void response(int state, String message) {
     JSON jo = JSON.create();
-    jo.put(X.STATE, 200);
+    jo.put(X.STATE, HttpServletResponse.SC_OK);
     jo.put(X.MESSAGE, message);
     this.response(jo);
   }
@@ -1916,10 +1916,17 @@ public class Model {
     if (log.isDebugEnabled())
       log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("page notfound"));
 
-    this.set("me", this.getUser());
-    this.show("/notfound.html");
-    this.setStatus(HttpServletResponse.SC_NOT_FOUND);
-
+    String request = this.getHeader("X-Requested-With");
+    if ("XMLHttpRequest".equals(request)) {
+      JSON jo = new JSON();
+      jo.put(X.STATE, HttpServletResponse.SC_NOT_FOUND);
+      jo.put(X.MESSAGE, "not found");
+      this.response(jo);
+    } else {
+      this.set("me", this.getUser());
+      this.show("/notfound.html");
+      this.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    }
   }
 
   /**
@@ -1954,7 +1961,7 @@ public class Model {
     String request = this.getHeader("X-Requested-With");
     if ("XMLHttpRequest".equals(request)) {
       JSON jo = new JSON();
-      jo.put(X.STATE, 202);
+      jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
       jo.put(X.MESSAGE, lang.get("access.deny"));
       jo.put(X.ERROR, error);
       jo.put(X.URL, url);
