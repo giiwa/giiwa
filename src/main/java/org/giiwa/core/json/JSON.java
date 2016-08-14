@@ -63,6 +63,19 @@ public class JSON extends HashMap<String, Object> {
       j = g.fromJson(new String(b1), JSON.class);
     }
 
+    if (j != null) {
+      for (String name : j.keySet().toArray(new String[j.size()])) {
+        Object o = j.get(name);
+        if (o == null) {
+          j.remove(name);
+        } else if (o instanceof List) {
+          j.put(name, fromObjects(o));
+        } else if (o instanceof Map) {
+          j.put(name, fromObject(o));
+        }
+      }
+    }
+
     return j;
   }
 
