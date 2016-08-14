@@ -564,8 +564,7 @@ public class Model {
       Session.load(sid()).set("uri", this.query == null ? this.uri : this.query.path(this.uri).toString()).store();
     }
 
-    String request = this.getHeader("X-Requested-With");
-    if ("XMLHttpRequest".equals(request)) {
+    if (isAjax()) {
       JSON jo = JSON.create();
 
       jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
@@ -1725,7 +1724,7 @@ public class Model {
    * 
    * @return String of content-type
    */
-  final public String getContentType() {
+  final public String getResponseContentType() {
     if (contentType == null) {
       return MIME_HTML;
     } else {
@@ -1916,8 +1915,7 @@ public class Model {
     if (log.isDebugEnabled())
       log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("page notfound"));
 
-    String request = this.getHeader("X-Requested-With");
-    if ("XMLHttpRequest".equals(request)) {
+    if (isAjax()) {
       JSON jo = new JSON();
       jo.put(X.STATE, HttpServletResponse.SC_NOT_FOUND);
       jo.put(X.MESSAGE, "not found");
@@ -1927,6 +1925,25 @@ public class Model {
       this.show("/notfound.html");
       this.setStatus(HttpServletResponse.SC_NOT_FOUND);
     }
+  }
+
+  /**
+   * test the request is Ajax ?
+   * 
+   * @return true: yes
+   */
+  protected boolean isAjax() {
+    String request = this.getHeader("X-Requested-With");
+    if (request != null && request.equals("XMLHttpRequest")) {
+      return true;
+    }
+
+    String type = this.getHeader("Content-Type");
+    if (type != null && type.contains("application/json")) {
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -1958,8 +1975,7 @@ public class Model {
     if (log.isDebugEnabled())
       log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("deny " + error));
 
-    String request = this.getHeader("X-Requested-With");
-    if ("XMLHttpRequest".equals(request)) {
+    if (isAjax()) {
       JSON jo = new JSON();
       jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
       jo.put(X.MESSAGE, lang.get("access.deny"));

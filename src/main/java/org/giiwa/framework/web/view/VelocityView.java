@@ -21,7 +21,7 @@ public class VelocityView extends View {
 
     // System.out.println(viewname + "=>" + template);
     if (template != null) {
-      m.resp.setContentType(m.getContentType());
+      m.resp.setContentType(m.getResponseContentType());
 
       BufferedWriter writer = new BufferedWriter(m.resp.getWriter());
 
