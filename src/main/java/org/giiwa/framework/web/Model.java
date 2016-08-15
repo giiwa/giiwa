@@ -572,7 +572,6 @@ public class Model {
 
       jo.put(X.MESSAGE, lang.get("login.required"));
       jo.put(X.ERROR, lang.get("not.login"));
-      // this.redirect("/user/login/popup");
       this.response(jo);
 
     } else {
@@ -1981,7 +1980,6 @@ public class Model {
       jo.put(X.MESSAGE, lang.get("access.deny"));
       jo.put(X.ERROR, error);
       jo.put(X.URL, url);
-      // this.redirect("/user/login/popup");
       this.response(jo);
     } else {
       this.set("me", this.getUser());

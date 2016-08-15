@@ -34,7 +34,7 @@ public class user extends Model {
     if (method.isPost()) {
 
       JSON jo = this.getJSON();
-      String name = this.getString("name").trim();
+      String name = this.getString("name").trim().toLowerCase();
       // String password = this.getString("password");
       try {
 
@@ -48,7 +48,7 @@ public class user extends Model {
           this.set(X.ERROR, lang.get("user.name.exists"));
         } else {
 
-          V v = V.create().copy(jo).set("locked", 0);
+          V v = V.create("name", name).copy(jo).set("locked", 0);
           v.remove("role");
           long id = User.create(v);
 

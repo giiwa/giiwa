@@ -1785,4 +1785,13 @@ button.icon[type=submit] {
 }
 .module .right .error1 {
 	color: #f33;
+	line-height: 22px;	
+}
+
+.module .right .error1.inline {
+	height: 22px;
+	overflow: hidden;
+}
+.module .right .error1 i{
+	cursor: pointer;
 }

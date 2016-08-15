@@ -30,6 +30,8 @@ import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.User;
+import org.giiwa.framework.noti.Email;
+import org.giiwa.framework.noti.Sms;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.utils.image.Captcha;
@@ -69,11 +71,11 @@ public class user extends Model {
 
     if (method.isPost()) {
 
-      String name = this.getString("name");
+      String name = this.getString("name").trim().toLowerCase();
 
       JSON jo = this.getJSON();
       try {
-        V v = V.create().copy(jo);
+        V v = V.create("name", name).copy(jo);
         long id = User.create(v);
 
         String role = Global.getString("user.role", "N/A");
@@ -146,14 +148,6 @@ public class user extends Model {
 
   }
 
-  /**
-   * Login_popup.
-   */
-  @Path(path = "login/popup")
-  public void login_popup() {
-    login();
-  }
-
   @Path(login = true, path = "get", log = Model.METHOD_POST)
   public void get() {
     long uid = this.getLong("uid", -1);
@@ -200,7 +194,7 @@ public class user extends Model {
         jo.put("uid", a.getUid());
         jo.put("expired", a.getExpired());
       } else {
-        String name = this.getString("name");
+        String name = this.getString("name").trim().toLowerCase();
         String pwd = this.getString("pwd");
 
         Captcha.Result r = Captcha.Result.ok;
@@ -365,8 +359,8 @@ public class user extends Model {
    */
   @Path(path = "verify", login = true, access = "access.user.query")
   public void verify() {
-    String name = this.getString("name").trim();
-    String value = this.getString("value").trim();
+    String name = this.getString("name").trim().toLowerCase();
+    String value = this.getString("value").trim().toLowerCase();
 
     JSON jo = new JSON();
     if ("name".equals(name)) {
@@ -657,8 +651,9 @@ public class user extends Model {
 
     if (method.isPost()) {
       String email = this.getString("email");
+      String phone = this.getString("phone");
       int s = 0;
-      W q = W.create("email", email);
+      W q = W.create("email", email).or("phone", phone);
       Beans<User> bs = User.load(q, s, 10);
       List<String> list = new ArrayList<String>();
       while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
@@ -674,6 +669,13 @@ public class user extends Model {
       }
 
       if (list.size() > 0) {
+        if (!X.isEmpty(email)) {
+          Email.send(lang.get("user.password.reset"), "", email);
+        } else if (!X.isEmpty(phone)) {
+          JSON jo = JSON.create();
+          Sms.send(phone, jo);
+        }
+
         this.set(X.MESSAGE, lang.get("email.sent"));
       } else {
         this.set(X.MESSAGE, lang.get("invalid.email"));

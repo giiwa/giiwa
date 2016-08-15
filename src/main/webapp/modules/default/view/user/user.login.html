@@ -41,7 +41,7 @@
 	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
 	<div id="themeSwitch">
 		<a class="icon-wondering" href="/user/forget">$lang.get('a.forget.user')</a>
-		#if($system.s('user.system', 'close')=='open')
+		#if($system.getString('user.system', 'close')=='open')
 		&nbsp;&nbsp;<a href="/user/register">$lang.get('a.register.user')</a>
 		#end
 	</div>

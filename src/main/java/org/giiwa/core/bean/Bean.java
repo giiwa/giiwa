@@ -64,18 +64,31 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *
    * @param jo
    *          the map
-   * @return boolean, return true if success
    */
-  public boolean toJSON(JSON jo) {
-    if (data != null && data.size() > 0 && jo != null) {
-      for (String name : data.keySet()) {
-        Object o = data.get(name);
-        jo.put(name, o);
-      }
-
-      return true;
+  public void toJSON(JSON jo) {
+    /**
+     * get the extra data, and putall in json
+     */
+    if (data != null && data.size() > 0) {
+      jo.putAll(data);
     }
-    return false;
+
+    /**
+     * get all Column field and put them in json too
+     */
+    Map<String, Field> m1 = _getFields();
+    if (m1 != null) {
+      for (String name : m1.keySet()) {
+        Field f1 = m1.get(name);
+        f1.setAccessible(true);
+        try {
+          Object v1 = f1.get(this);
+          jo.put(name, v1);
+        } catch (Exception e) {
+          log.error(f1, e);
+        }
+      }
+    }
   }
 
   /*
@@ -166,7 +179,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
     }
 
     name = name.toLowerCase();
-    data.put(name, value);
+    // data.put(name, value);
 
     // looking for all the fields
     Field f1 = _getField(name);
@@ -174,16 +187,38 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       try {
         // log.debug("f1=" + f1 + ", value=" + value);
         f1.setAccessible(true);
-        f1.set(this, value);
+        Class<?> t1 = f1.getType();
+        // log.debug("t1=" + t1 + ", f1.name=" + f1.getName());
+        if (t1 == long.class) {
+          f1.set(this, X.toLong(value));
+        } else if (t1 == int.class) {
+          f1.set(this, X.toInt(value));
+        } else if (t1 == double.class) {
+          f1.set(this, X.toDouble(value, 0));
+        } else if (t1 == float.class) {
+          f1.set(this, X.toFloat(value, 0));
+        } else {
+          f1.set(this, value);
+        }
       } catch (Exception e) {
         log.error(name + "=" + value, e);
       }
       // } else {
       // log.debug("not found the column=" + name);
+    } else {
+      data.put(name, value);
     }
   }
 
   private Field _getField(String columnname) {
+
+    Map<String, Field> m = _getFields();
+    return m == null ? null : m.get(columnname);
+
+  }
+
+  private Map<String, Field> _getFields() {
+
     Class<? extends Bean> c1 = this.getClass();
     Map<String, Field> m = _fields.get(c1);
     if (m == null) {
@@ -199,9 +234,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
 
       _fields.put(c1, m);
     }
-
-    return m.get(columnname);
-
+    return m;
   }
 
   private static Map<Class<? extends Bean>, Map<String, Field>> _fields = new HashMap<Class<? extends Bean>, Map<String, Field>>();
@@ -532,9 +565,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @SuppressWarnings("unchecked")
   public final JSON getJSON() {
-    if (data == null) {
-      return null;
-    }
 
     JSON jo = new JSON();
 

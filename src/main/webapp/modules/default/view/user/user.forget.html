@@ -13,12 +13,6 @@
 		<label class="input-label icon-mail" for="username">$lang.get('user.email')</label>
 		<input type="email" id="username" name="email" class="form-control" required />
 	</div>
-	<div class="validateCode">
-		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
-		<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
-		<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
-		<a href="javascript:" onclick="_oncaptcha();" class="icon-opera validateCodeRefresh " style=""></a>
-	</div>
 			
 	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
 	<div id="themeSwitch">
@@ -28,18 +22,6 @@
 <div class="footer">
 	$lang.get('copyright') - $lang.get('powerby') 
 </div>
-<script>
-function _oncaptcha() {
-	$.get('/captcha', {}, function(d) {
-		if (d.state == 200) {
-			$('#validateImg').attr('src', d.uri);
-		}
-	})
-}
-$(function(){
-	_oncaptcha();
-})
-</script>
 
 #parse('/user/foot.html')
 	

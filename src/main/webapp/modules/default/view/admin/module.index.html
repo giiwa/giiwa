@@ -50,7 +50,8 @@
 			</div>
 			#end
 			#if($m.error)
-			<div class='status error1'>
+			<div class='status error1 inline'>
+				<i class='icon-arrow-right'></i>
 				$m.error
 			</div>
 			#end
@@ -188,6 +189,20 @@
 					}
 
 				});
+			}
+		});
+		
+		$('.module .right .error1 i').click(function(){
+			var e = $('.module .right .error1');
+			var e1 = $('.module .right .error1 i');
+			if(e.hasClass('inline')) {
+				e.removeClass('inline');
+				e1.removeClass('icon-arrow-right');
+				e1.addClass('icon-arrow-down');
+			} else {
+				e1.removeClass('icon-arrow-down');
+				e1.addClass('icon-arrow-right');
+				e.addClass('inline');
 			}
 		});
 	})
