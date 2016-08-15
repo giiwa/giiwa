@@ -89,6 +89,16 @@ create table gi_access
 );
 create unique index gi_access_indexid on gi_access(id);
 
+#drop table if exists gi_code;
+create table gi_code
+(
+	s1 varchar(50),
+	s2 varchar(50),
+	expired bigint,
+	created bigint
+);
+create unique index gi_code_index_s1_s2 on gi_code(s1, s2);
+
 #drop table if exists gi_roleaccess;
 create table gi_roleaccess
 (

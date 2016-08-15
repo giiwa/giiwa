@@ -81,3 +81,12 @@ input.form-control {
 	border-radius: 4px;
 	text-shadow: 0 1px 0 rgba(255,255,255,0.5);
 }
+
+#forget_tab{
+	width: 420px;
+	display: inline-block;
+}
+
+.tab-content .form-signin{
+	width: 420px;
+}

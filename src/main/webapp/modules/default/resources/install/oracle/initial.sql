@@ -237,3 +237,13 @@ create table gi_userlock
 	sid varchar(50)
 );
 create index gi_userlock_index_uid on gi_userlock(uid);
+
+#drop table if exists gi_code;
+create table gi_code
+(
+	s1 varchar(50),
+	s2 varchar(50),
+	expired bigint,
+	created bigint
+);
+create unique index gi_code_index_s1_s2 on gi_code(s1, s2);

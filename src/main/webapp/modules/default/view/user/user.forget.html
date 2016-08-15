@@ -1,27 +1,92 @@
 #parse('/user/head.html')
 
 <div class="header">
-	#if($message)
-	<div id="messageBox" class="alert alert-error">
-		<label id="loginError" class="error">$message</label>
+	<div id="messageBox" class="alert alert-error" style='display:none'>
+		<label class="error"></label>
 	</div>
-	#end
 </div>
 <h1 class="form-signin-heading icon-wondering">$lang.get('user.forget')</h1>
-<form id="loginForm" class="form-signin" action="/user/forget" method="post">
-	<div class=''>
-		<label class="input-label icon-mail" for="username">$lang.get('user.email')</label>
-		<input type="email" id="username" name="email" class="form-control" required />
-	</div>
+<ul id="forget_tab" class="nav nav-tabs">
+   <li class="active">
+      <a href="#forget_byemail" data-toggle="tab">
+         $lang.get('tab.forget.byemail')
+      </a>
+   </li>
+   <li>
+   	<a href="#forget_byphone" data-toggle="tab">
+   		$lang.get('tab.forget.byphone')
+   	</a>
+   </li>
+</ul>
+
+<div id="forget_tab_content" class="tab-content">
+	<div class='tab-pane fade in active' id='forget_byemail'>
+		<div class="form-signin">
+			<div class='form-group'>
+				<label class="input-label icon-mail" for="email">$lang.get('user.email')</label>
+				<input type="email" id="email" name="email" class="form-control" required />
+			</div>
 			
-	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
-	<div id="themeSwitch">
-		<a class="icon-wink" href="/user/login">$lang.get('a.login')</a>
+			<div class='form-group' stype='display:none'>
+				<label class="input-label icon-barcode" for="emailcode">$lang.get('user.email')</label>
+				<input type="text" id="emailcode" name="emailcode" class="form-control" required />
+			</div>
+			
+			<button class="btn btn-large btn-primary btn-block" onclick="byemail()">$lang.get('btn.ok')</button>
+			
+			<div id="themeSwitch">
+				<a class="icon-wink" href="/user/login">$lang.get('a.login')</a>
+			</div>
+		</div>
 	</div>
-</form>
+	
+	<div class='tab-pane fade' id='forget_byphone'>
+		<div class="form-signin">
+			<div class='from-group'>
+				<label class="input-label icon-mobile" for="phone">$lang.get('user.phone')</label>
+				<input type="tel" id="phone" name="phone" class="col-sm-10 form-control" required />
+				<button class='btn btn-primary col-sm-2'>$lang.get('btn.ok')</button>
+			</div>
+			<div class='from-group'>
+				<label class="input-label" for="code">$lang.get('user.code')</label>
+				<input type="text" id="code" name="code" class="col-sm-10 form-control" required />
+				<button class='btn btn-primary col-sm-2'>$lang.get('btn.ok')</button>
+			</div>
+			<div class='from-group'>
+				<label class="input-label" for="passwd">$lang.get('user.code')</label>
+				<input type="password" id="passwd" name="passwd" class="col-sm-10 form-control" required />
+			</div>
+			<div class='from-group'>
+				<label class="input-label" for="passwd2">$lang.get('user.code')</label>
+				<input type="password" id="passwd2" name="passwd2" class="col-sm-10 form-control" required />
+			</div>
+					
+			<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
+
+			<div id="themeSwitch">
+				<a class="icon-wink" href="/user/login">$lang.get('a.login')</a>
+			</div>
+		</div>
+	</div>
+</div>
+
 <div class="footer">
 	$lang.get('copyright') - $lang.get('powerby') 
 </div>
 
+<script>
+var phase = 0;
+function byemail(){
+	var p = {};
+	p.email = $('#email').val();
+	p.phase = phase;
+	p.code = $('#emailcode').val();
+	$.post('/user/forget', p, function(d){
+		var e = $('#messageBox');
+		e.find('label').html(d.message);
+		e.show();
+	});
+}	
+</script>
 #parse('/user/foot.html')
 	

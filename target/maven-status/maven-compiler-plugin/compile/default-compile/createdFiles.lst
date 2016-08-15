@@ -141,6 +141,7 @@ org/giiwa/core/cache/impl/RedisCache.class
 org/giiwa/app/web/DefaultListener$CleanupTask.class
 org/giiwa/framework/noti/Email.class
 org/giiwa/core/bean/Beans.class
+org/giiwa/framework/bean/Code.class
 org/giiwa/framework/web/IFilter.class
 org/giiwa/framework/bean/Data.class
 org/giiwa/app/web/admin/backup$BackupTask.class

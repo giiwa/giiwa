@@ -1795,7 +1795,6 @@ public class Model {
    */
   final public boolean show(String viewname) {
 
-    Writer writer = null;
     try {
       this.set("path", this.path);
       this.set("query", this.query);
@@ -1816,15 +1815,6 @@ public class Model {
         log.error(viewname, e);
 
       // error(e);
-    } finally {
-      if (writer != null) {
-        try {
-          writer.close();
-        } catch (IOException e) {
-          if (log.isErrorEnabled())
-            log.error(e);
-        }
-      }
     }
 
     return false;

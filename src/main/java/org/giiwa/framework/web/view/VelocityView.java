@@ -3,6 +3,7 @@ package org.giiwa.framework.web.view;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -10,13 +11,13 @@ import java.util.Properties;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 public class VelocityView extends View {
 
   @Override
   public boolean parse(File file, Model m) throws IOException {
-    // TODO Auto-generated method stub
     Template template = getTemplate(file);
 
     // System.out.println(viewname + "=>" + template);
@@ -31,6 +32,36 @@ public class VelocityView extends View {
       return true;
     }
     return false;
+  }
+
+  /**
+   * parse the file to string with the json
+   * 
+   * @param file
+   *          the file of the template
+   * @param m
+   *          the json
+   * @return the string of the results
+   */
+  public String parse(File file, JSON m) {
+
+    try {
+      Template template = getTemplate(file);
+
+      if (template != null) {
+
+        StringWriter w = new StringWriter();
+        BufferedWriter writer = new BufferedWriter(w);
+
+        template.merge(new VelocityContext(m), writer);
+        writer.flush();
+        writer.close();
+        return w.toString();
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return null;
   }
 
   /**

@@ -82,6 +82,16 @@ create table gi_userrole
 create index gi_userrole_index_uid on gi_userrole(uid);
 create unique index gi_userrole_index_uid_rid on gi_userrole(uid, rid);
 
+#drop table if exists gi_code;
+create table gi_code
+(
+	s1 varchar(50),
+	s2 varchar(50),
+	expired bigint,
+	created bigint
+);
+create unique index gi_code_index_s1_s2 on gi_code(s1, s2);
+
 #drop table if exists gi_access;
 create table gi_access
 (

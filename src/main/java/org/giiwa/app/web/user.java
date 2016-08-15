@@ -14,9 +14,12 @@
 */
 package org.giiwa.app.web;
 
+import java.io.File;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
@@ -26,6 +29,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.AuthToken;
+import org.giiwa.framework.bean.Code;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.bean.Session;
@@ -34,6 +38,7 @@ import org.giiwa.framework.noti.Email;
 import org.giiwa.framework.noti.Sms;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
+import org.giiwa.framework.web.view.VelocityView;
 import org.giiwa.utils.image.Captcha;
 
 /**
@@ -650,35 +655,73 @@ public class user extends Model {
   public void forget() {
 
     if (method.isPost()) {
+      JSON jo = JSON.create();
+
       String email = this.getString("email");
       String phone = this.getString("phone");
-      int s = 0;
-      W q = W.create("email", email).or("phone", phone);
-      Beans<User> bs = User.load(q, s, 10);
-      List<String> list = new ArrayList<String>();
-      while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-        for (User u : bs.getList()) {
-          if (!u.isDeleted()) {
-            String token = UID.id(u.getId(), System.currentTimeMillis());
-            u.update(V.create("reset_token", token).set("token_expired", System.currentTimeMillis() + X.ADAY));
-            list.add("/user/reset?email=" + email + "&token=" + token);
+      String code = this.getString("code");
+      int phase = this.getInt("phase");
+
+      if (!X.isEmpty(email)) {
+        if (phase == 0) {
+          // verify email and send a code
+          int s = 0;
+
+          code = UID.random(10);
+
+          StringBuilder sb = new StringBuilder();
+          W q = W.create("email", email);
+          Beans<User> bs = User.load(q, s, 10);
+          List<String> list = new ArrayList<String>();
+          while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
+            for (User u : bs.getList()) {
+              if (!u.isDeleted()) {
+                if (sb.length() > 0) {
+                  sb.append(",");
+                }
+                sb.append(u.getName());
+              }
+            }
+            s += bs.getList().size();
+            bs = User.load(q, s, 10);
+          }
+
+          if (sb.length() > 0) {
+            Code.create(code, email, V.create("expired", System.currentTimeMillis() + X.ADAY));
+            File f = module.getFile("/user/user.forget.byemail.template");
+            if (f != null) {
+              JSON j1 = JSON.create();
+              j1.put("email", email);
+              j1.put("account", sb.toString());
+              j1.put("code", code);
+
+              VelocityView v1 = new VelocityView();
+              String body = v1.parse(f, j1);
+              if (body != null) {
+                if(Email.send(lang.get("user.forget.reset"), body, email)) {
+                  jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
+                } else {
+                  jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
+                }
+              } else {
+                jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                jo.put(X.MESSAGE, lang.get("user.forget.template.error"));
+              }
+            } else {
+              jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+              jo.put(X.MESSAGE, lang.get("user.forget.template.notfound"));
+            }
+          } else {
+            jo.put(X.MESSAGE, lang.get("user.forget.noaccount"));
           }
         }
-        s += bs.getList().size();
-        bs = User.load(q, s, 10);
       }
 
-      if (list.size() > 0) {
-        if (!X.isEmpty(email)) {
-          Email.send(lang.get("user.password.reset"), "", email);
-        } else if (!X.isEmpty(phone)) {
-          JSON jo = JSON.create();
-          Sms.send(phone, jo);
-        }
-
-        this.set(X.MESSAGE, lang.get("email.sent"));
+      if (this.isAjax()) {
+        this.response(jo);
+        return;
       } else {
-        this.set(X.MESSAGE, lang.get("invalid.email"));
+        this.set(jo);
       }
       this.set("email", email);
     }
