@@ -678,7 +678,7 @@ public class user extends Model {
         } else if (phase == 1) {
           // verify code
           String code = this.getString("code");
-          Code c = Code.load(code, email);
+          Code c = Code.load(code, phone);
           if (c == null) {
             jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
             jo.put(X.MESSAGE, lang.get("email.code.bad"));
@@ -686,7 +686,7 @@ public class user extends Model {
             jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
             jo.put(X.MESSAGE, lang.get("email.code.expired"));
           } else {
-            Code.delete(code, email);
+            Code.delete(code, phone);
             jo.put(X.STATE, HttpServletResponse.SC_OK);
             jo.put(X.MESSAGE, lang.get("email.code.ok"));
           }
@@ -698,7 +698,7 @@ public class user extends Model {
             jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
             jo.put(X.MESSAGE, "user.passwd.format.error");
           } else {
-            User.update(W.create("email", email), V.create("password", passwd));
+            User.update(W.create("phone", phone), V.create("password", passwd));
             jo.put(X.STATE, HttpServletResponse.SC_OK);
             jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
           }
@@ -716,6 +716,7 @@ public class user extends Model {
         this.set(jo);
       }
       this.set("email", email);
+      this.set("phone", phone);
     }
 
     show("/user/user.forget.html");

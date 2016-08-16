@@ -379,3 +379,4 @@ user.passwd.updated=密码已经修改
 param.error=参数错误
 user.forget.phone.sent=短信验证已发送
 user.forget.phone.sent.failed=发送短信失败
+user.code=验证码

@@ -386,3 +386,6 @@ user.passwd1=Password
 user.passwd2=Retry password
 user.passwd.updated=Password changed
 param.error=Parameters error
+user.forget.phone.sent=Sent validation code success
+user.forget.phone.sent.failed=Sent code failed
+user.code=Validation code
