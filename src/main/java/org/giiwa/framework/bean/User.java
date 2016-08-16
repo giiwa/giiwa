@@ -718,9 +718,11 @@ public class User extends Bean {
    */
   public static void checkAndInit() {
     if (Helper.isConfigured()) {
-      List<User> list = User.loadByAccess("access.config.admin");
-      if (list == null || list.size() == 0) {
-        User.create(V.create("id", 0L).set("name", "admin").set("password", "admin").set("title", "Admin"));
+      if (!User.exists(0)) {
+        List<User> list = User.loadByAccess("access.config.admin");
+        if (list == null || list.size() == 0) {
+          User.create(V.create("id", 0L).set("name", "admin").set("password", "admin").set("title", "Admin"));
+        }
       }
     }
   }

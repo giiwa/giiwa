@@ -517,7 +517,7 @@ public class user extends Model {
       if (!X.isEmpty(email)) {
         if (phase == 0) {
           // verify email and send a code
-          Code c = Code.load(W.create("s1", email).sort("created", -1));
+          Code c = Code.load(W.create("s2", email).sort("created", -1));
           if (c != null && c.getUpdated() < X.AMINUTE) {
 
             jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
@@ -551,7 +551,6 @@ public class user extends Model {
                 Code.create(code, email, V.create("expired", System.currentTimeMillis() + X.ADAY));
               } else {
                 code = c.getString("s1");
-                Code.update(W.create("s1", code).and("s2", email), V.create("updated", System.currentTimeMillis()));
               }
 
               File f = module.getFile("/user/email.validation." + lang.getLocale() + ".template");
@@ -567,6 +566,8 @@ public class user extends Model {
                   if (Email.send(lang.get("mail.validation.code"), body, email)) {
                     jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
                     jo.put(X.STATE, HttpServletResponse.SC_OK);
+                    Code.update(W.create("s1", code).and("s2", email), V.create("updated", System.currentTimeMillis()));
+
                   } else {
                     jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
                     jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -616,7 +617,7 @@ public class user extends Model {
 
         if (phase == 0) {
           // verify email and send a code
-          Code c = Code.load(W.create("s1", phone).sort("created", -1));
+          Code c = Code.load(W.create("s2", phone).sort("created", -1));
           if (c != null && c.getUpdated() < X.AMINUTE) {
 
             jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
@@ -647,10 +648,9 @@ public class user extends Model {
 
               if (c == null || c.getExpired() < System.currentTimeMillis()) {
                 code = UID.digital(4);
-                Code.create(code, phone, V.create("expired", System.currentTimeMillis() + X.ADAY));
+                Code.create(code, phone, V.create("expired", System.currentTimeMillis() + X.AMINUTE * 6));
               } else {
                 code = c.getString("s1");
-                Code.update(W.create("s1", code).and("s2", phone), V.create("updated", System.currentTimeMillis()));
               }
 
               JSON j1 = JSON.create();
@@ -662,9 +662,12 @@ public class user extends Model {
               if (Sms.send(phone, j1)) {
                 jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
                 jo.put(X.STATE, HttpServletResponse.SC_OK);
+                Code.update(W.create("s1", code).and("s2", phone), V.create("updated", System.currentTimeMillis()));
+                
               } else {
                 jo.put(X.MESSAGE, lang.get("user.forget.phone.sent.failed"));
                 jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                
               }
 
             } else {

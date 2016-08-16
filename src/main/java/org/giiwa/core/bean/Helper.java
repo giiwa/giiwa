@@ -810,8 +810,8 @@ public class Helper {
     private static class Entity {
       String name;
       Object value;
-      int    op;
-      int    cond;
+      int    op;   // operation EQ, GT, ...
+      int    cond; // condition AND, OR
 
       private List<Object> args(List<Object> list) {
         if (value != null) {
@@ -819,6 +819,8 @@ public class Helper {
             for (Object o : (Object[]) value) {
               list.add(o);
             }
+          } else if (op == OP_LIKE) {
+            list.add("%" + value + "%");
           } else {
             list.add(value);
           }
@@ -913,12 +915,7 @@ public class Helper {
         this.name = name;
         this.op = op;
         this.cond = cond;
-
-        if (op == OP_LIKE) {
-          this.value = "%" + v + "%";
-        } else {
-          this.value = v;
-        }
+        this.value = v;
       }
     }
 
