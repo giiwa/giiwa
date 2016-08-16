@@ -49,6 +49,24 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   protected static Log      sqllog           = LogFactory.getLog("sql");
 
   /**
+   * get the created timestamp of the data
+   * 
+   * @return long of the created
+   */
+  public long getCreated() {
+    return X.toLong(get("created"));
+  }
+
+  /**
+   * get the updated timestamp of the data
+   * 
+   * @return long the of the updated
+   */
+  public long getUpdated() {
+    return X.toLong(get("updated"));
+  }
+
+  /**
    * refill the bean from json.
    *
    * @param jo
@@ -251,9 +269,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @SuppressWarnings("unchecked")
   public final Object get(Object name) {
-    if (data == null) {
-      return null;
-    }
 
     String s = name.toString().toLowerCase();
     Field f = _getField(s);
@@ -264,6 +279,10 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       } catch (Exception e) {
         log.error(name, e);
       }
+    }
+
+    if (data == null) {
+      return null;
     }
 
     if (data.containsKey(s)) {

@@ -27,19 +27,21 @@
 				<input type="email" id="email" name="email" class="form-control" required />
 			</div>
 			
-			<div id='emailcode1' class='form-group' style='display:none'>
+			<div id='pemailcode' class='form-group' style='display:none'>
 				<label class="input-label" for="emailcode">$lang.get('email.code')</label>
 				<input type="text" id="emailcode" name="emailcode" class="form-control" required />
 			</div>
 			
-			<div id='passwd1' class='form-group' style='display:none'>
+			<div id='ppasswd1' class='form-group' style='display:none'>
 				<label class="input-label" for="passwd1">$lang.get('email.code')</label>
-				<input type="text" id="passwd1" name="passwd1" class="form-control" required />
+				<input type='text' style='display:none'/>
+				<input type="password" id="passwd1" name="passwd1" class="form-control" onchange="_passwd1()" />
 			</div>
 
-			<div id='passwd2' class='form-group' style='display:none'>
+			<div id='ppasswd2' class='form-group' style='display:none'>
 				<label class="input-label" for="passwd2">$lang.get('email.code')</label>
-				<input type="text" id="passwd2" name="passwd2" class="form-control" required />
+				<input type='text' style='display:none'/>
+				<input type="password" id="passwd2" name="passwd2" class="form-control" onchange="_passwd1()" />
 			</div>
 			
 			<button class="btn btn-large btn-primary btn-block" onclick="byemail()">$lang.get('btn.ok')</button>
@@ -54,24 +56,22 @@
 		<div class="form-signin">
 			<div class='from-group'>
 				<label class="input-label icon-mobile" for="phone">$lang.get('user.phone')</label>
-				<input type="tel" id="phone" name="phone" class="col-sm-10 form-control" required />
-				<button class='btn btn-primary col-sm-2'>$lang.get('btn.ok')</button>
+				<input type="tel" id="phone" name="phone" class="form-control" required />
 			</div>
-			<div class='from-group'>
+			<div id='phonecode' class='from-group' style='display:none'>
 				<label class="input-label" for="code">$lang.get('user.code')</label>
-				<input type="text" id="code" name="code" class="col-sm-10 form-control" required />
-				<button class='btn btn-primary col-sm-2'>$lang.get('btn.ok')</button>
+				<input type="text" id="code" name="code" class="form-control" required />
 			</div>
-			<div class='from-group'>
-				<label class="input-label" for="passwd">$lang.get('user.code')</label>
-				<input type="password" id="passwd" name="passwd" class="col-sm-10 form-control" required />
+			<div id='ppasswd21' class='from-group' style='display:none'>
+				<label class="input-label" for="passwd21">$lang.get('user.passwd1')</label>
+				<input type="password" id="passwd21" name="passwd21" class="form-control" onchange="_passwd2()"/>
 			</div>
-			<div class='from-group'>
-				<label class="input-label" for="passwd2">$lang.get('user.code')</label>
-				<input type="password" id="passwd2" name="passwd2" class="col-sm-10 form-control" required />
+			<div id='ppasswd22' class='from-group' style='display:none'>
+				<label class="input-label" for="passwd22">$lang.get('user.passwd2')</label>
+				<input type="password" id="passwd22" name="passwd22" class="form-control" onchange="_passwd2()"/>
 			</div>
 					
-			<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
+			<button class="btn btn-large btn-primary btn-block" onclick="byphone()">$lang.get('btn.ok')</button>
 
 			<div id="themeSwitch">
 				<a class="icon-wink" href="/user/login">$lang.get('a.login')</a>
@@ -85,6 +85,40 @@
 </div>
 
 <script>
+function _passwd1() {
+	var p1 = $('#passwd1').val();
+	var p2 = $('#passwd2').val();
+	if(p1 != p2) {
+		$('#passwd1').parent().addClass('has-error');
+		$('#passwd2').parent().addClass('has-error');
+	} else if(p1.length < 1) {
+		$('#passwd1').parent().addClass('has-error');
+		$('#passwd2').parent().addClass('has-error');
+	} else {
+		$('#passwd1').parent().removeClass('has-error');
+		$('#passwd2').parent().removeClass('has-error');
+		$('#passwd1').parent().addClass('has-success');
+		$('#passwd2').parent().addClass('has-success');
+	}
+}
+
+function _passwd2() {
+	var p1 = $('#passwd21').val();
+	var p2 = $('#passwd22').val();
+	if(p1 != p2) {
+		$('#passwd21').parent().addClass('has-error');
+		$('#passwd22').parent().addClass('has-error');
+	} else if(p1.length < 1) {
+		$('#passwd21').parent().addClass('has-error');
+		$('#passwd22').parent().addClass('has-error');
+	} else {
+		$('#passwd21').parent().removeClass('has-error');
+		$('#passwd22').parent().removeClass('has-error');
+		$('#passwd21').parent().addClass('has-success');
+		$('#passwd22').parent().addClass('has-success');
+	}
+}
+
 var emailphase = 0;
 function byemail(){
 	var p = {};
@@ -99,10 +133,14 @@ function byemail(){
 		if(p1 != p2) {
 			e.find('label').html("$lang.get('user.passwd.nosame')");
 			e.show();
+			$('#passwd1').parent().addClass('has-error');
+			$('#passwd2').parent().addClass('has-error');
 			return;
 		} else if(p1.length < 1) {
 			e.find('label').html("$lang.get('user.passwd.empty')");
 			e.show();
+			$('#passwd1').parent().addClass('has-error');
+			$('#passwd2').parent().addClass('has-error');
 			return;
 		}
 		p.passwd = p1;
@@ -113,13 +151,15 @@ function byemail(){
 		e.show();
 		if(d.state == 200) {
 			if(emailphase == 0) {
-				$('#emailcode1').show();
+				$('#pemailcode').show();
 				emailphase = 1;
 			} else if(emailphase == 1) {
-				$('#emailcode1').hide();
+				$('#pemailcode').hide();
 				$('#email').attr('readonly', 'readonly');
-				$('#passwd1').show();
-				$('#passwd2').show();
+				$('label[for=email]').hide();
+				$('#email').parent().addClass('has-success');
+				$('#ppasswd1').show();
+				$('#ppasswd2').show();
 				emailphase = 2;
 			} else if(emailphase == 2) {
 				//ok
@@ -129,7 +169,60 @@ function byemail(){
 			}
 		}
 	});
-}	
+}
+
+var phonephase = 0;
+function byphone(){
+	var p = {};
+	p.phone = $('#phone').val();
+	p.phase = emailphase;
+	if(phonephase == 1) {
+		p.code = $('#phonecode').val();
+	} else if(phonephase == 2) {
+		var p1 = $('#passwd21').val();
+		var p2 = $('#passwd22').val();
+		var e = $('#messageBox');
+		if(p1 != p2) {
+			e.find('label').html("$lang.get('user.passwd.nosame')");
+			e.show();
+			$('#passwd21').parent().addClass('has-error');
+			$('#passwd22').parent().addClass('has-error');
+			return;
+		} else if(p1.length < 1) {
+			e.find('label').html("$lang.get('user.passwd.empty')");
+			e.show();
+			$('#passwd21').parent().addClass('has-error');
+			$('#passwd22').parent().addClass('has-error');
+			return;
+		}
+		p.passwd = p1;
+	}
+	$.post('/user/forget', p, function(d){
+		var e = $('#messageBox');
+		e.find('label').html(d.message);
+		e.show();
+		if(d.state == 200) {
+			if(phonephase == 0) {
+				$('#pphonecode').show();
+				emailphase = 1;
+			} else if(phonephase == 1) {
+				$('#pphonecode').hide();
+				$('#phone').attr('readonly', 'readonly');
+				$('label[for=phone]').hide();
+				$('#phone').parent().addClass('has-success');
+				$('#ppasswd21').show();
+				$('#ppasswd22').show();
+				emailphase = 2;
+			} else if(phonephase == 2) {
+				//ok
+				setTimeout(function(){
+					location.href = '/user/login';
+				}, 2000);
+			}
+		}
+	});
+}
+
 </script>
 #parse('/user/foot.html')
 	

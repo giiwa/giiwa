@@ -51,4 +51,12 @@ public class Code extends Bean {
   public static void delete(String s1, String s2) {
     Helper.delete(W.create("s1", s1).and("s2", s2), Code.class);
   }
+
+  public static Code load(W q) {
+    return Helper.load(q, Code.class);
+  }
+
+  public static int update(W q, V v) {
+    return Helper.update(q, v, Code.class);
+  }
 }

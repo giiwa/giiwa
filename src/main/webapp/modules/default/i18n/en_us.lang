@@ -382,3 +382,7 @@ user.name.rule=User name format
 user.name.rule.hint=please see <a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>Regular Expression</a> to learn more
 user.passwd.rule=User password format
 user.passwd.rule.hint=Please see <a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>Regular Expression</a> to learn more
+user.passwd1=Password
+user.passwd2=Retry password
+user.passwd.updated=Password changed
+param.error=Parameters error

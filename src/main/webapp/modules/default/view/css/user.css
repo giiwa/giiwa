@@ -10,7 +10,8 @@ html, body, table {
 .form-signin-heading {
 	font-family: Helvetica, Georgia, Arial, sans-serif, 黑体;
 	font-size: 36px;
-	line-height: 36px margin-bottom : 20px;
+	line-height: 36px;
+	margin-bottom: 20px;
 	color: #0663a2;
 	font-weight: bold;
 }
@@ -82,7 +83,7 @@ input.form-control {
 	text-shadow: 0 1px 0 rgba(255,255,255,0.5);
 }
 
-#forget_tab{
+#forget_tab {
 	width: 350px;
 	display: inline-block;
 }

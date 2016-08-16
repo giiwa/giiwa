@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.giiwa.core.json.JSON;
+import org.giiwa.framework.bean.OpLog;
 
 /**
  * @author wujun
@@ -25,9 +26,9 @@ import org.giiwa.core.json.JSON;
  */
 public class Sms {
 
-	static final List<ISender> senders = new ArrayList<ISender>();
+  static final List<ISender> senders = new ArrayList<ISender>();
 
-	/**
+  /**
    * register a sms sender.
    *
    * @param seq
@@ -35,15 +36,15 @@ public class Sms {
    * @param sender
    *          the sender
    */
-	public static void register(int seq, ISender sender) {
+  public static void register(int seq, ISender sender) {
 
-		if (sender != null && !senders.contains(sender)) {
-			senders.add(seq, sender);
-		}
+    if (sender != null && !senders.contains(sender)) {
+      senders.add(seq, sender);
+    }
 
-	}
+  }
 
-	/**
+  /**
    * send the sms.
    *
    * @param mobile
@@ -53,18 +54,20 @@ public class Sms {
    * @return true: success <br>
    *         false: failed
    */
-	public static boolean send(String mobile, JSON jo) {
-		for (ISender s : senders) {
-			if (s.send(mobile, jo)) {
-				return true;
-			}
-		}
-		return false;
-	}
+  public static boolean send(String mobile, JSON jo) {
+    OpLog.log("sms", "send", jo.toString());
 
-	public static interface ISender {
-		
-		/**
+    for (ISender s : senders) {
+      if (s.send(mobile, jo)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static interface ISender {
+
+    /**
      * send sms.
      *
      * @param mobile
@@ -77,6 +80,6 @@ public class Sms {
      * @return true: success <br>
      *         false: failed
      */
-		public boolean send(String mobile, JSON jo);
-	}
+    public boolean send(String mobile, JSON jo);
+  }
 }

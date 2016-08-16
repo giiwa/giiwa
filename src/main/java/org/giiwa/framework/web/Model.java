@@ -561,8 +561,9 @@ public class Model {
       if (query == null) {
         createQuery();
       }
-
-      Session.load(sid()).set("uri", this.query == null ? this.uri : this.query.path(this.uri).toString()).store();
+      if (!isAjax()) {
+        Session.load(sid()).set("uri", this.query == null ? this.uri : this.query.path(this.uri).toString()).store();
+      }
     }
 
     if (isAjax()) {

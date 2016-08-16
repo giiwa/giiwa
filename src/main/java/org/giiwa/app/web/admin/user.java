@@ -36,7 +36,7 @@ public class user extends Model {
 
       JSON jo = this.getJSON();
       String name = this.getString("name").trim().toLowerCase();
-      String rule = Global.getString("user.name.rule", "");
+      String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
       if (!X.isEmpty(rule) && !name.matches(rule)) {
         this.set(jo);
         this.set(X.MESSAGE, lang.get("user.name.format.error"));
@@ -245,7 +245,6 @@ public class user extends Model {
       W list = W.create();
 
       list.or("name", name, W.OP_LIKE);
-      list.or("title", name, W.OP_LIKE);
       list.or("nickname", name, W.OP_LIKE);
       q.and(list);
 

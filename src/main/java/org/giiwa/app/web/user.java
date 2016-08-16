@@ -81,8 +81,8 @@ public class user extends Model {
 
       JSON jo = this.getJSON();
 
-      String namerule = Global.getString("user.name.rule", "");
-      String passwdrule = Global.getString("user.passwd.rule", "");
+      String namerule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
+      String passwdrule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
       if (!X.isEmpty(namerule) && !name.matches(namerule)) {
         jo.put(X.MESSAGE, lang.get("user.name.format.error"));
         this.set(jo);
@@ -383,21 +383,27 @@ public class user extends Model {
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, lang.get("user.name.exists"));
 
+        OpLog.log(user.class, "verify", "name=" + name + ",value=" + value + ",exists");
+
       } else {
-        String rule = Global.getString("user.name.rule", "");
+        String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
 
         if (X.isEmpty(value) || !value.matches(rule)) {
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, lang.get("user.name.format.error"));
+
+          OpLog.log(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule);
         } else {
           jo.put(X.STATE, 200);
         }
       }
     } else if ("password".equals(name)) {
-      String rule = Global.getString("user.passwd.rule", "");
+      String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
       if (X.isEmpty(value) || !value.matches(rule)) {
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
+
+        OpLog.log(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule);
       } else {
         jo.put(X.STATE, 200);
       }
@@ -441,153 +447,6 @@ public class user extends Model {
     this.response(jo);
 
   }
-
-  // /**
-  // * Message_count.
-  // */
-  // @Path(path = "message/count", login = true)
-  // public void message_count() {
-  // JSONObject jo = new JSONObject();
-  // Beans<Message> bs = Message.load(login.getId(), W.create("flag",
-  // Message.FLAG_NEW), 0, 1);
-  // if (bs != null && bs.getTotal() > 0) {
-  // jo.put("count", bs.getTotal());
-  // } else {
-  // jo.put("count", 0);
-  // }
-  // jo.put(X.STATE, 200);
-  // this.response(jo);
-  // }
-
-  // /**
-  // * Message_delete.
-  // */
-  // @Path(path = "message/delete", login = true)
-  // public void message_delete() {
-  // String ids = this.getString("id");
-  // int updated = 0;
-  // if (ids != null) {
-  // String[] ss = ids.split(",");
-  // for (String s : ss) {
-  // updated += Message.delete(login.getId(), s);
-  // }
-  // }
-  //
-  // if (updated > 0) {
-  // this.set(X.MESSAGE, lang.get("delete_success"));
-  // } else {
-  // this.set(X.MESSAGE, lang.get("select.required"));
-  // }
-  //
-  // message();
-  // }
-
-  // /**
-  // * Message_detail.
-  // */
-  // @Path(path = "message/detail", login = true)
-  // public void message_detail() {
-  // String id = this.getString("id");
-  // if (id == null) {
-  // message();
-  // return;
-  // }
-  //
-  // Message m = Message.load(login.getId(), id);
-  // if (m == null) {
-  // message();
-  // return;
-  // }
-  //
-  // this.set("m", m);
-  //
-  // this.show("/user/message.detail.html");
-  // }
-
-  // /**
-  // * Message_mark.
-  // */
-  // @Path(path = "message/mark", login = true)
-  // public void message_mark() {
-  // String ids = this.getString("id");
-  // int updated = 0;
-  // if (ids != null) {
-  // String[] ss = ids.split(",");
-  // V v = V.create("flag", Message.FLAG_MARK);
-  // for (String s : ss) {
-  // updated += Message.update(login.getId(), s, v);
-  // }
-  // }
-  //
-  // if (updated > 0) {
-  // this.set(X.MESSAGE, lang.get("save.success"));
-  // } else {
-  // this.set(X.MESSAGE, lang.get("select.required"));
-  // }
-  //
-  // message();
-  // }
-
-  // /**
-  // * Message_done.
-  // */
-  // @Path(path = "message/done", login = true)
-  // public void message_done() {
-  // String ids = this.getString("id");
-  // int updated = 0;
-  // if (ids != null) {
-  // String[] ss = ids.split(",");
-  // V v = V.create("flag", Message.FLAG_DONE);
-  // for (String s : ss) {
-  // updated += Message.update(login.getId(), s, v);
-  // }
-  // }
-  //
-  // if (updated > 0) {
-  // this.set(X.MESSAGE, lang.get("save.success"));
-  // } else {
-  // this.set(X.MESSAGE, lang.get("select.required"));
-  // }
-  //
-  // message();
-  //
-  // }
-
-  // /**
-  // * Message.
-  // */
-  // @Path(path = "message", login = true)
-  // public void message() {
-  //
-  // JSONObject jo = this.getJSON();
-  // if (!"message".equals(this.path)) {
-  // Object o = this.getSession().get("query");
-  // if (o != null && o instanceof JSONObject) {
-  // jo.clear();
-  // jo.putAll((JSONObject) o);
-  // }
-  // } else {
-  // this.getSession().set("query", jo).store();
-  // }
-  // W w = W.create();
-  // w.copy(jo, W.OP_LIKE, "subject").copy(jo, W.OP_EQ, "flag");
-  // this.set(jo);
-  //
-  // int s = this.getInt(jo, "s");
-  // int n = this.getInt(jo, "n", 10, "default.list.number");
-  //
-  // Beans<Message> bs = Message.load(login.getId(), w, s, n);
-  // this.set(bs, s, n);
-  // if (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-  // for (Message m : bs.getList()) {
-  // if (Message.FLAG_NEW.equals(m.getFlag())) {
-  // m.update(V.create("flag", Message.FLAG_READ));
-  // }
-  // }
-  // }
-  //
-  // this.show("/user/user.message.html");
-  // }
 
   /**
    * Dashboard.
@@ -658,56 +517,72 @@ public class user extends Model {
       if (!X.isEmpty(email)) {
         if (phase == 0) {
           // verify email and send a code
-          int s = 0;
+          Code c = Code.load(W.create("s1", email).sort("created", -1));
+          if (c != null && c.getUpdated() < X.AMINUTE) {
 
-          String code = UID.random(10);
+            jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
+            jo.put(X.STATE, HttpServletResponse.SC_OK);
 
-          StringBuilder sb = new StringBuilder();
-          W q = W.create("email", email);
-          Beans<User> bs = User.load(q, s, 10);
-          while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-            for (User u : bs.getList()) {
-              if (!u.isDeleted()) {
-                if (sb.length() > 0) {
-                  sb.append(",");
+          } else {
+            int s = 0;
+
+            StringBuilder sb = new StringBuilder();
+            W q = W.create("email", email);
+            Beans<User> bs = User.load(q, s, 10);
+            while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
+              for (User u : bs.getList()) {
+                if (!u.isDeleted()) {
+                  if (sb.length() > 0) {
+                    sb.append(",");
+                  }
+                  sb.append(u.getName());
                 }
-                sb.append(u.getName());
               }
+              s += bs.getList().size();
+              bs = User.load(q, s, 10);
             }
-            s += bs.getList().size();
-            bs = User.load(q, s, 10);
-          }
 
-          if (sb.length() > 0) {
-            Code.create(code, email, V.create("expired", System.currentTimeMillis() + X.ADAY));
-            File f = module.getFile("/user/email.validation." + lang.getLocale() + ".template");
-            if (f != null) {
-              JSON j1 = JSON.create();
-              j1.put("email", email);
-              j1.put("account", sb.toString());
-              j1.put("code", code);
+            if (sb.length() > 0) {
 
-              VelocityView v1 = new VelocityView();
-              String body = v1.parse(f, j1);
-              if (body != null) {
-                if (Email.send(lang.get("mail.validation.code"), body, email)) {
-                  jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
-                  jo.put(X.STATE, HttpServletResponse.SC_OK);
+              String code = null;
+
+              if (c == null || c.getExpired() < System.currentTimeMillis()) {
+                code = UID.random(10);
+                Code.create(code, email, V.create("expired", System.currentTimeMillis() + X.ADAY));
+              } else {
+                code = c.getString("s1");
+                Code.update(W.create("s1", code).and("s2", email), V.create("updated", System.currentTimeMillis()));
+              }
+
+              File f = module.getFile("/user/email.validation." + lang.getLocale() + ".template");
+              if (f != null) {
+                JSON j1 = JSON.create();
+                j1.put("email", email);
+                j1.put("account", sb.toString());
+                j1.put("code", code);
+
+                VelocityView v1 = new VelocityView();
+                String body = v1.parse(f, j1);
+                if (body != null) {
+                  if (Email.send(lang.get("mail.validation.code"), body, email)) {
+                    jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
+                    jo.put(X.STATE, HttpServletResponse.SC_OK);
+                  } else {
+                    jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
+                    jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                  }
                 } else {
-                  jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
                   jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                  jo.put(X.MESSAGE, lang.get("user.forget.template.error"));
                 }
               } else {
                 jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                jo.put(X.MESSAGE, lang.get("user.forget.template.error"));
+                jo.put(X.MESSAGE, lang.get("user.forget.template.notfound"));
               }
             } else {
-              jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-              jo.put(X.MESSAGE, lang.get("user.forget.template.notfound"));
+              jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+              jo.put(X.MESSAGE, lang.get("user.forget.noaccount"));
             }
-          } else {
-            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
-            jo.put(X.MESSAGE, lang.get("user.forget.noaccount"));
           }
         } else if (phase == 1) {
           // verify code
@@ -727,16 +602,108 @@ public class user extends Model {
         } else if (phase == 2) {
           // change the password
           String passwd = this.getString("passwd");
-          String rule = Global.getString("user.passwd.rule", "");
+          String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
           if (!X.isEmpty(rule) && !passwd.matches(rule)) {
             jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
             jo.put(X.MESSAGE, "user.passwd.format.error");
           } else {
             User.update(W.create("email", email), V.create("password", passwd));
             jo.put(X.STATE, HttpServletResponse.SC_OK);
-            jo.put(X.MESSAGE, "user.passwd.updated");
+            jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
           }
         }
+      } else if (!X.isEmpty(phone)) {
+
+        if (phase == 0) {
+          // verify email and send a code
+          Code c = Code.load(W.create("s1", phone).sort("created", -1));
+          if (c != null && c.getUpdated() < X.AMINUTE) {
+
+            jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
+            jo.put(X.STATE, HttpServletResponse.SC_OK);
+
+          } else {
+            int s = 0;
+
+            StringBuilder sb = new StringBuilder();
+            W q = W.create("phone", phone);
+            Beans<User> bs = User.load(q, s, 10);
+            while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
+              for (User u : bs.getList()) {
+                if (!u.isDeleted()) {
+                  if (sb.length() > 0) {
+                    sb.append(",");
+                  }
+                  sb.append(u.getName());
+                }
+              }
+              s += bs.getList().size();
+              bs = User.load(q, s, 10);
+            }
+
+            if (sb.length() > 0) {
+
+              String code = null;
+
+              if (c == null || c.getExpired() < System.currentTimeMillis()) {
+                code = UID.digital(4);
+                Code.create(code, phone, V.create("expired", System.currentTimeMillis() + X.ADAY));
+              } else {
+                code = c.getString("s1");
+                Code.update(W.create("s1", code).and("s2", phone), V.create("updated", System.currentTimeMillis()));
+              }
+
+              JSON j1 = JSON.create();
+              j1.put("phone", phone);
+              j1.put("account", sb.toString());
+              j1.put("code", code);
+              j1.put("template", "user.forget.password");
+
+              if (Sms.send(phone, j1)) {
+                jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
+                jo.put(X.STATE, HttpServletResponse.SC_OK);
+              } else {
+                jo.put(X.MESSAGE, lang.get("user.forget.phone.sent.failed"));
+                jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+              }
+
+            } else {
+              jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+              jo.put(X.MESSAGE, lang.get("user.forget.noaccount"));
+            }
+          }
+        } else if (phase == 1) {
+          // verify code
+          String code = this.getString("code");
+          Code c = Code.load(code, email);
+          if (c == null) {
+            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+            jo.put(X.MESSAGE, lang.get("email.code.bad"));
+          } else if (c.getExpired() < System.currentTimeMillis()) {
+            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+            jo.put(X.MESSAGE, lang.get("email.code.expired"));
+          } else {
+            Code.delete(code, email);
+            jo.put(X.STATE, HttpServletResponse.SC_OK);
+            jo.put(X.MESSAGE, lang.get("email.code.ok"));
+          }
+        } else if (phase == 2) {
+          // change the password
+          String passwd = this.getString("passwd");
+          String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
+          if (!X.isEmpty(rule) && !passwd.matches(rule)) {
+            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+            jo.put(X.MESSAGE, "user.passwd.format.error");
+          } else {
+            User.update(W.create("email", email), V.create("password", passwd));
+            jo.put(X.STATE, HttpServletResponse.SC_OK);
+            jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
+          }
+        }
+
+      } else {
+        jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+        jo.put(X.MESSAGE, lang.get("param.error"));
       }
 
       if (this.isAjax()) {
@@ -752,4 +719,10 @@ public class user extends Model {
 
   }
 
+  public static void main(String[] args) {
+    String rule = "^[a-zA-Z0-9]{4,16}$";
+    String name = "joej";
+    System.out.println(name.matches(rule));
+
+  }
 }

@@ -1795,3 +1795,9 @@ button.icon[type=submit] {
 .module .right .error1 i{
 	cursor: pointer;
 }
+input.bad {
+	border-color: #f33;
+}
+input.good {
+	border-color: #0a8209;
+}
