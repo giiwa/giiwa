@@ -55,7 +55,7 @@ public class Sms {
    *         false: failed
    */
   public static boolean send(String mobile, JSON jo) {
-    OpLog.log("sms", "send", jo.toString());
+    OpLog.info("sms", jo.toString(), null);
 
     for (ISender s : senders) {
       if (s.send(mobile, jo)) {
