@@ -20,6 +20,7 @@ org/giiwa/core/base/Zip.class
 org/giiwa/utils/image/Captcha$Code.class
 org/giiwa/core/base/Host$Memory.class
 org/giiwa/framework/bean/Request.class
+org/giiwa/framework/noti/Email$auth.class
 org/giiwa/framework/web/Language.class
 org/giiwa/core/base/Http.class
 org/giiwa/core/base/Host$Eth.class
@@ -108,7 +109,6 @@ org/giiwa/app/web/admin/repo.class
 org/giiwa/core/bean/MongoHelper.class
 org/giiwa/framework/web/view/View.class
 org/giiwa/framework/web/DummyModel.class
-org/giiwa/framework/noti/Email$giiwaAuthenticator.class
 org/giiwa/utils/image/Captcha$Result.class
 org/giiwa/app/web/admin/system$1.class
 org/giiwa/framework/bean/Role.class
@@ -155,6 +155,7 @@ org/giiwa/core/cache/Cache.class
 org/giiwa/app/web/alive.class
 org/giiwa/framework/noti/Sms.class
 org/giiwa/core/base/Shell.class
+org/giiwa/framework/noti/Email$1.class
 org/giiwa/core/bean/RDSHelper.class
 org/giiwa/core/bean/Helper$W$Entity.class
 org/giiwa/app/web/temp.class

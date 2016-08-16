@@ -688,7 +688,7 @@ public class user extends Model {
 
           if (sb.length() > 0) {
             Code.create(code, email, V.create("expired", System.currentTimeMillis() + X.ADAY));
-            File f = module.getFile("/user/user.forget.byemail.template");
+            File f = module.getFile("/user/email.validation." + lang.getLocale() + ".template");
             if (f != null) {
               JSON j1 = JSON.create();
               j1.put("email", email);
@@ -698,7 +698,7 @@ public class user extends Model {
               VelocityView v1 = new VelocityView();
               String body = v1.parse(f, j1);
               if (body != null) {
-                if(Email.send(lang.get("user.forget.reset"), body, email)) {
+                if (Email.send(lang.get("mail.validation.code"), body, email)) {
                   jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
                 } else {
                   jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));

@@ -1,0 +1,3 @@
+<p>Dear [${account}]</p>
+<p>Validation Code:${code}</p>
+<p>Giiwa Dev Team</p>

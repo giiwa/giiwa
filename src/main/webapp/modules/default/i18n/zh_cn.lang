@@ -358,3 +358,7 @@ user.forget.email.sent=邮件已经发送
 user.forget.email.sent.failed=邮件发送失败，请联系管理员
 user.forget.template.error=邮件模版错误，请联系管理员
 user.forget.template.notfound=没有找到邮件模版，请联系管理员
+email.code=邮件中的验证码
+tab.forget.byemail=通过邮箱重置
+tab.forget.byphone=通过电话重置
+mail.validation.code=邮箱验证码

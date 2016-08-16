@@ -36,24 +36,19 @@ import org.giiwa.core.conf.Global;
  */
 public class Email {
 
-	static Log log = LogFactory.getLog(Email.class);
+  static Log log = LogFactory.getLog(Email.class);
 
-	static class giiwaAuthenticator extends Authenticator {
-		private static PasswordAuthentication auth = null;
+  private static class auth extends Authenticator {
+    public PasswordAuthentication getPasswordAuthentication() {
+      String user = Global.getString("mail.user", "service@giisoo.com");
+      String passwd = Global.getString("mail.passwd", "123456");
+      if (log.isDebugEnabled())
+        log.debug("user=" + user + ", passwd=" + passwd);
+      return new PasswordAuthentication(user, passwd);
+    }
+  }
 
-		@Override
-		protected PasswordAuthentication getPasswordAuthentication() {
-			if (auth == null) {
-				auth = new PasswordAuthentication(Global.getString("mail.user", "service@giiwa.com"),
-						Global.getString("mail.password", "service123456"));
-			}
-			return auth;
-		}
-	}
-
-	private static final giiwaAuthenticator anthenticator = new giiwaAuthenticator();
-
-	/**
+  /**
    * Send.
    *
    * @param subject
@@ -70,57 +65,59 @@ public class Email {
    *          the contents
    * @return true, if successful
    */
-	public static boolean send(String subject, String body, String to, InputStream[] attachments, String[] names,
-			String[] contents) {
-		Properties props = new Properties();
+  public static boolean send(String subject, String body, String to, InputStream[] attachments, String[] names,
+      String[] contents) {
+    Properties props = new Properties();
 
-		props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp"));
-		props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
-		props.setProperty("mail.smtp.auth", "true");
+    props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp").toLowerCase());
+    props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
+    props.setProperty("mail.smtp.auth", "true");
+    props.setProperty("mail.smtps.auth", "true");
 
-		try {
-			Session mailSession = Session.getDefaultInstance(props, anthenticator);
-			Transport transport = mailSession.getTransport();
+    try {
 
-			MimeMessage message = new MimeMessage(mailSession);
-			message.setSubject(subject, "utf-8");
+      Session mailSession = Session.getDefaultInstance(props, new auth());
+      Transport transport = mailSession.getTransport();
 
-			BodyPart messageBodyPart = new MimeBodyPart();
-			body = body.replaceAll("\r", "<br/>").replaceAll(" ", "&nbsp;");
-			messageBodyPart.setContent(body, "text/html; charset=utf-8");
-			Multipart multipart = new MimeMultipart();
-			multipart.addBodyPart(messageBodyPart);
+      MimeMessage message = new MimeMessage(mailSession);
+      message.setSubject(subject, "utf-8");
 
-			if (attachments != null) {
+      BodyPart messageBodyPart = new MimeBodyPart();
+      body = body.replaceAll("\r", "<br/>").replaceAll(" ", "&nbsp;");
+      messageBodyPart.setContent(body, "text/html; charset=utf-8");
+      Multipart multipart = new MimeMultipart();
+      multipart.addBodyPart(messageBodyPart);
 
-				for (int i = 0; i < attachments.length; i++) {
-					InputStream in = attachments[i];
-					BodyPart attachmentPart = new MimeBodyPart();
-					DataSource source = new ByteArrayDataSource(in, contents[i]);
-					attachmentPart.setDataHandler(new DataHandler(source));
-					attachmentPart.setFileName(names[i]);
-					multipart.addBodyPart(attachmentPart);
-				}
-			}
+      if (attachments != null) {
 
-			message.setContent(multipart);
-			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-			InternetAddress f = new InternetAddress(Global.getString("mail.email", "service@giiwa.com"));
-			f.setPersonal(Global.getString("mail.email", X.EMPTY));
-			message.setFrom(f);
+        for (int i = 0; i < attachments.length; i++) {
+          InputStream in = attachments[i];
+          BodyPart attachmentPart = new MimeBodyPart();
+          DataSource source = new ByteArrayDataSource(in, contents[i]);
+          attachmentPart.setDataHandler(new DataHandler(source));
+          attachmentPart.setFileName(names[i]);
+          multipart.addBodyPart(attachmentPart);
+        }
+      }
 
-			transport.connect();
-			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-			transport.close();
-			return true;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
+      message.setContent(multipart);
+      message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+      InternetAddress f = new InternetAddress(Global.getString("mail.email", "service@giiwa.com"));
+      f.setPersonal(Global.getString("mail.email", X.EMPTY));
+      message.setFrom(f);
 
-		return false;
-	}
+      transport.connect();
+      transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
+      transport.close();
+      return true;
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
 
-	/**
+    return false;
+  }
+
+  /**
    * Send.
    *
    * @param subject
@@ -131,11 +128,11 @@ public class Email {
    *          the to
    * @return true, if successful
    */
-	public static boolean send(String subject, String body, String to) {
-		return send(subject, body, to, null, null, null);
-	}
+  public static boolean send(String subject, String body, String to) {
+    return send(subject, body, to, null, null, null);
+  }
 
-	/**
+  /**
    * Send.
    *
    * @param subject
@@ -150,34 +147,36 @@ public class Email {
    *          the displayname
    * @return true, if successful
    */
-	public static boolean send(String subject, String body, String to, String from, String displayname) {
-		Properties props = new Properties();
+  public static boolean send(String subject, String body, String to, String from, String displayname) {
+    Properties props = new Properties();
 
-		props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp"));
-		props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
-		props.setProperty("mail.smtp.auth", "true");
+    props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp"));
+    props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
+    props.setProperty("mail.smtp.auth", "true");
+    props.setProperty("mail.smtps.auth", "true");
 
-		try {
-			Session mailSession = Session.getDefaultInstance(props, anthenticator);
-			Transport transport = mailSession.getTransport();
+    try {
 
-			MimeMessage message = new MimeMessage(mailSession);
-			message.setSubject(subject);
-			message.setContent(body, "text/html; charset=UTF-8");
-			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-			InternetAddress f = new InternetAddress(from);
-			f.setPersonal(displayname);
-			message.setFrom(f);
+      Session mailSession = Session.getDefaultInstance(props, new auth());
+      Transport transport = mailSession.getTransport();
 
-			transport.connect();
-			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-			transport.close();
-			return true;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
+      MimeMessage message = new MimeMessage(mailSession);
+      message.setSubject(subject);
+      message.setContent(body, "text/html; charset=UTF-8");
+      message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+      InternetAddress f = new InternetAddress(from);
+      f.setPersonal(displayname);
+      message.setFrom(f);
 
-		return false;
-	}
+      transport.connect();
+      transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
+      transport.close();
+      return true;
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+
+    return false;
+  }
 
 }

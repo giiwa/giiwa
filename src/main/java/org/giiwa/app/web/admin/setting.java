@@ -256,7 +256,7 @@ public class setting extends Model {
       Global.setConfig("mail.user", this.getString("user"));
       Global.setConfig("mail.passwd", this.getString("passwd"));
 
-      this.set(X.MESSAGE, lang.get("save.success"));
+      this.set(X.MESSAGE, lang.get("restart.required"));
 
       get();
     }
