@@ -27,6 +27,10 @@ public class Code extends Bean {
   @Column(name = "created")
   private long              created;
 
+  public long getExpired() {
+    return expired;
+  }
+
   public static int create(String s1, String s2, V v) {
     W q = W.create("s1", s1).and("s2", s2);
     try {

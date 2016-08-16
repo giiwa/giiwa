@@ -77,40 +77,49 @@ public class user extends Model {
     if (method.isPost()) {
 
       String name = this.getString("name").trim().toLowerCase();
+      String passwd = this.getString("password").trim().toLowerCase();
 
       JSON jo = this.getJSON();
-      try {
-        V v = V.create("name", name).copy(jo);
-        long id = User.create(v);
 
-        String role = Global.getString("user.role", "N/A");
-        Role r = Role.loadByName(role);
-        User u = User.loadById(id);
-        if (r != null) {
-          u.setRole(r.getId());
+      String namerule = Global.getString("user.name.rule", "");
+      String passwdrule = Global.getString("user.passwd.rule", "");
+      if (!X.isEmpty(namerule) && !name.matches(namerule)) {
+        jo.put(X.MESSAGE, lang.get("user.name.format.error"));
+        this.set(jo);
+      } else if (!X.isEmpty(passwdrule) && !passwd.matches(passwdrule)) {
+        jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
+        this.set(jo);
+      } else {
+        try {
+          V v = V.create("name", name).copy(jo);
+          long id = User.create(v);
+
+          String role = Global.getString("user.role", "N/A");
+          Role r = Role.loadByName(role);
+          User u = User.loadById(id);
+          if (r != null) {
+            u.setRole(r.getId());
+          }
+          this.setUser(u);
+          OpLog.log(User.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id);
+
+          Session s = this.getSession();
+          if (s.has("uri")) {
+            this.redirect((String) s.get("uri"));
+          } else {
+            this.redirect("/");
+          }
+
+          return;
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+          OpLog.error(user.class, "register", e.getMessage(), e);
+
+          this.put(X.MESSAGE, lang.get("create_user_error_1"));
+          OpLog.log(User.class, "register", lang.get("create.failed") + ":" + name);
         }
-        this.setUser(u);
-        OpLog.log(User.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id);
-
-        Session s = this.getSession();
-        if (s.has("uri")) {
-          this.redirect((String) s.get("uri"));
-        } else {
-          this.redirect("/");
-        }
-
-        return;
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        OpLog.error(user.class, "register", e.getMessage(), e);
-
-        this.put(X.MESSAGE, lang.get("create_user_error_1"));
-        OpLog.log(User.class, "register", lang.get("create.failed") + ":" + name);
       }
-
     }
-
-    this.set("me", this.getUser());
 
     show("/user/user.register.html");
 
@@ -374,13 +383,10 @@ public class user extends Model {
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, lang.get("user.name.exists"));
 
-      } else if (User.exists(W.create("name", value))) {
-        jo.put(X.STATE, 202);
-        jo.put(X.MESSAGE, lang.get("user.override.exists"));
       } else {
-        String allow = Global.getString("user.name", "^[a-zA-Z0-9]{4,16}$");
+        String rule = Global.getString("user.name.rule", "");
 
-        if (X.isEmpty(value) || !value.matches(allow)) {
+        if (X.isEmpty(value) || !value.matches(rule)) {
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, lang.get("user.name.format.error"));
         } else {
@@ -388,22 +394,10 @@ public class user extends Model {
         }
       }
     } else if ("password".equals(name)) {
-      if (X.isEmpty(value)) {
+      String rule = Global.getString("user.passwd.rule", "");
+      if (X.isEmpty(value) || !value.matches(rule)) {
         jo.put(X.STATE, 201);
-        jo.put(X.MESSAGE, lang.get("user.password.format.error"));
-      } else {
-        String allow = Global.getString("user.password", "^[a-zA-Z0-9]{6,16}$");
-        if (!value.matches(allow)) {
-          jo.put(X.STATE, 201);
-          jo.put(X.MESSAGE, lang.get("user.password.format.error"));
-        } else {
-          jo.put(X.STATE, 200);
-        }
-      }
-    } else {
-      if (X.isEmpty(value)) {
-        jo.put(X.STATE, 201);
-        jo.put(X.MESSAGE, lang.get("user.not.empty"));
+        jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
       } else {
         jo.put(X.STATE, 200);
       }
@@ -659,7 +653,6 @@ public class user extends Model {
 
       String email = this.getString("email");
       String phone = this.getString("phone");
-      String code = this.getString("code");
       int phase = this.getInt("phase");
 
       if (!X.isEmpty(email)) {
@@ -667,12 +660,11 @@ public class user extends Model {
           // verify email and send a code
           int s = 0;
 
-          code = UID.random(10);
+          String code = UID.random(10);
 
           StringBuilder sb = new StringBuilder();
           W q = W.create("email", email);
           Beans<User> bs = User.load(q, s, 10);
-          List<String> list = new ArrayList<String>();
           while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
             for (User u : bs.getList()) {
               if (!u.isDeleted()) {
@@ -700,8 +692,10 @@ public class user extends Model {
               if (body != null) {
                 if (Email.send(lang.get("mail.validation.code"), body, email)) {
                   jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
+                  jo.put(X.STATE, HttpServletResponse.SC_OK);
                 } else {
                   jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
+                  jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 }
               } else {
                 jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -712,7 +706,35 @@ public class user extends Model {
               jo.put(X.MESSAGE, lang.get("user.forget.template.notfound"));
             }
           } else {
+            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
             jo.put(X.MESSAGE, lang.get("user.forget.noaccount"));
+          }
+        } else if (phase == 1) {
+          // verify code
+          String code = this.getString("code");
+          Code c = Code.load(code, email);
+          if (c == null) {
+            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+            jo.put(X.MESSAGE, lang.get("email.code.bad"));
+          } else if (c.getExpired() < System.currentTimeMillis()) {
+            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+            jo.put(X.MESSAGE, lang.get("email.code.expired"));
+          } else {
+            Code.delete(code, email);
+            jo.put(X.STATE, HttpServletResponse.SC_OK);
+            jo.put(X.MESSAGE, lang.get("email.code.ok"));
+          }
+        } else if (phase == 2) {
+          // change the password
+          String passwd = this.getString("passwd");
+          String rule = Global.getString("user.passwd.rule", "");
+          if (!X.isEmpty(rule) && !passwd.matches(rule)) {
+            jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+            jo.put(X.MESSAGE, "user.passwd.format.error");
+          } else {
+            User.update(W.create("email", email), V.create("password", passwd));
+            jo.put(X.STATE, HttpServletResponse.SC_OK);
+            jo.put(X.MESSAGE, "user.passwd.updated");
           }
         }
       }

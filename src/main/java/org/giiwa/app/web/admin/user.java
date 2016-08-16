@@ -12,6 +12,7 @@ import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
@@ -35,56 +36,61 @@ public class user extends Model {
 
       JSON jo = this.getJSON();
       String name = this.getString("name").trim().toLowerCase();
-      // String password = this.getString("password");
-      try {
-
-        /**
-         * create the user
-         */
-        if (User.exists(W.create("name", name))) {
-          /**
-           * exists, create failded
-           */
-          this.set(X.ERROR, lang.get("user.name.exists"));
-        } else {
-
-          V v = V.create("name", name).copy(jo).set("locked", 0);
-          v.remove("role");
-          long id = User.create(v);
-
-          /**
-           * set the role
-           */
-          String[] roles = this.getStrings("role");
-          log.debug("roles=" + Bean.toString(roles));
-
-          if (roles != null) {
-            User u = User.loadById(id);
-            List<Long> list = new ArrayList<Long>();
-            for (String s : roles) {
-              list.add(X.toLong(s));
-            }
-            u.setRoles(list);
-          }
-
-          /**
-           * log
-           */
-          OpLog.info(user.class, "user.create", this.getJSONNonPassword().toString(), null, login.getId(),
-              this.getRemoteHost());
-
-          this.set(X.MESSAGE, lang.get("save.success"));
-
-          onGet();
-          return;
-        }
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-        OpLog.error(user.class, "create", e.getMessage(), e);
-
-        this.set(X.ERROR, lang.get("save.failed"));
-
+      String rule = Global.getString("user.name.rule", "");
+      if (!X.isEmpty(rule) && !name.matches(rule)) {
         this.set(jo);
+        this.set(X.MESSAGE, lang.get("user.name.format.error"));
+      } else {
+        try {
+
+          /**
+           * create the user
+           */
+          if (User.exists(W.create("name", name))) {
+            /**
+             * exists, create failded
+             */
+            this.set(X.ERROR, lang.get("user.name.exists"));
+          } else {
+
+            V v = V.create("name", name).copy(jo).set("locked", 0);
+            v.remove("role");
+            long id = User.create(v);
+
+            /**
+             * set the role
+             */
+            String[] roles = this.getStrings("role");
+            log.debug("roles=" + Bean.toString(roles));
+
+            if (roles != null) {
+              User u = User.loadById(id);
+              List<Long> list = new ArrayList<Long>();
+              for (String s : roles) {
+                list.add(X.toLong(s));
+              }
+              u.setRoles(list);
+            }
+
+            /**
+             * log
+             */
+            OpLog.info(user.class, "user.create", this.getJSONNonPassword().toString(), null, login.getId(),
+                this.getRemoteHost());
+
+            this.set(X.MESSAGE, lang.get("save.success"));
+
+            onGet();
+            return;
+          }
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+          OpLog.error(user.class, "create", e.getMessage(), e);
+
+          this.set(X.ERROR, lang.get("save.failed"));
+
+          this.set(jo);
+        }
       }
 
     }

@@ -366,3 +366,19 @@ user.forget.email.sent=Email already sent
 user.forget.email.sent.failed=Email sent failed, please contact Admin
 user.forget.template.error=Email template error, please contact Admin
 user.forget.template.notfound=Not found email template, please contact Admin
+email.code=Code in Email
+tab.forget.byemail=By Email
+tab.forget.byphone=By Phone
+mail.validation.code=Code in Email
+email.code.bad=Code error
+email.code.expired=Code expired
+email.code.ok=Pass verify
+user.passwd.updated=Password changed
+user.passwd.nosame=Password not same
+user.passwd.empty=Password can not empty
+user.name.format.error=Name format error
+user.passwd.format.error=Password format error
+user.name.rule=User name format
+user.name.rule.hint=please see <a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>Regular Expression</a> to learn more
+user.passwd.rule=User password format
+user.passwd.rule.hint=Please see <a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>Regular Expression</a> to learn more

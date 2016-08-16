@@ -197,6 +197,8 @@ public class setting extends Model {
       Global.setConfig("run.level", level);
       Helper.DEBUG = X.isSame(level, "debug");
 
+      Global.setConfig("user.name.rule", this.getHtml("user_name"));
+      Global.setConfig("user.passwd.rule", this.getHtml("user_passwd"));
       Global.setConfig("user.captcha", X.isSame(this.getString("user_captcha"), "on") ? 1 : 0);
       Global.setConfig("user.token", X.isSame(this.getString("user_token"), "on") ? 1 : 0);
       Global.setConfig("user.system", this.getString("user_system"));
@@ -256,7 +258,7 @@ public class setting extends Model {
       Global.setConfig("mail.user", this.getString("user"));
       Global.setConfig("mail.passwd", this.getString("passwd"));
 
-      this.set(X.MESSAGE, lang.get("restart.required"));
+      this.set(X.MESSAGE, lang.get("save.success"));
 
       get();
     }

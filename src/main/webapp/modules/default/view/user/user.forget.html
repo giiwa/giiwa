@@ -27,9 +27,19 @@
 				<input type="email" id="email" name="email" class="form-control" required />
 			</div>
 			
-			<div class='form-group' stype='display:none'>
-				<label class="input-label icon-barcode" for="emailcode">$lang.get('email.code')</label>
+			<div id='emailcode1' class='form-group' style='display:none'>
+				<label class="input-label" for="emailcode">$lang.get('email.code')</label>
 				<input type="text" id="emailcode" name="emailcode" class="form-control" required />
+			</div>
+			
+			<div id='passwd1' class='form-group' style='display:none'>
+				<label class="input-label" for="passwd1">$lang.get('email.code')</label>
+				<input type="text" id="passwd1" name="passwd1" class="form-control" required />
+			</div>
+
+			<div id='passwd2' class='form-group' style='display:none'>
+				<label class="input-label" for="passwd2">$lang.get('email.code')</label>
+				<input type="text" id="passwd2" name="passwd2" class="form-control" required />
 			</div>
 			
 			<button class="btn btn-large btn-primary btn-block" onclick="byemail()">$lang.get('btn.ok')</button>
@@ -75,16 +85,49 @@
 </div>
 
 <script>
-var phase = 0;
+var emailphase = 0;
 function byemail(){
 	var p = {};
 	p.email = $('#email').val();
-	p.phase = phase;
-	p.code = $('#emailcode').val();
+	p.phase = emailphase;
+	if(emailphase == 1) {
+		p.code = $('#emailcode').val();
+	} else if(emailphase == 2) {
+		var p1 = $('#passwd1').val();
+		var p2 = $('#passwd2').val();
+		var e = $('#messageBox');
+		if(p1 != p2) {
+			e.find('label').html("$lang.get('user.passwd.nosame')");
+			e.show();
+			return;
+		} else if(p1.length < 1) {
+			e.find('label').html("$lang.get('user.passwd.empty')");
+			e.show();
+			return;
+		}
+		p.passwd = p1;
+	}
 	$.post('/user/forget', p, function(d){
 		var e = $('#messageBox');
 		e.find('label').html(d.message);
 		e.show();
+		if(d.state == 200) {
+			if(emailphase == 0) {
+				$('#emailcode1').show();
+				emailphase = 1;
+			} else if(emailphase == 1) {
+				$('#emailcode1').hide();
+				$('#email').attr('readonly', 'readonly');
+				$('#passwd1').show();
+				$('#passwd2').show();
+				emailphase = 2;
+			} else if(emailphase == 2) {
+				//ok
+				setTimeout(function(){
+					location.href = '/user/login';
+				}, 2000);
+			}
+		}
 	});
 }	
 </script>

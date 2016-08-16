@@ -295,7 +295,6 @@ user.login.maxfailtimes=错误次数超过最大次数，请联系管理员
 user.mobile=移动电话
 user.modify.password=修改密码
 user.name=用户名
-user.name.format.error=名称格式错误
 user.name.note=4个字符以上（字符+数字）
 user.nickname=昵称
 user.not.empty=不能为空
@@ -362,3 +361,15 @@ email.code=邮件中的验证码
 tab.forget.byemail=通过邮箱重置
 tab.forget.byphone=通过电话重置
 mail.validation.code=邮箱验证码
+email.code.bad=验证码错误
+email.code.expired=验证码过期
+email.code.ok=邮箱通过验证
+user.passwd.updated=密码已经修改
+user.passwd.nosame=两次密码不一致
+user.passwd.empty=密码不能为空
+user.name.format.error=用户名格式不正确
+user.passwd.format.error=密码格式不正确
+user.name.rule=用户名格式
+user.name.rule.hint=正则表达式，请参加<a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>正则表达式语法</a>
+user.passwd.rule=用户密码格式
+user.passwd.rule.hint=正则表达式，请参加<a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>正则表达式语法</a>

@@ -334,7 +334,6 @@ public class User extends Bean {
    * 
    * @return Roles
    */
-  @SuppressWarnings("unchecked")
   public Roles getRole() {
     if (role == null) {
       Beans<UserRole> bs = Helper.load(W.create("uid", this.getId()), 0, 100, UserRole.class);
@@ -440,6 +439,27 @@ public class User extends Bean {
       v.remove("password");
     }
     return Helper.update(id, v.set("updated", System.currentTimeMillis()), User.class);
+  }
+
+  /**
+   * update the user by query
+   * 
+   * @param q
+   *          the query
+   * @param v
+   *          the value
+   * @return the number of updated
+   */
+  public static int update(W q, V v) {
+
+    String passwd = (String) v.value("password");
+    if (!X.isEmpty(passwd)) {
+      passwd = encrypt(passwd);
+      v.set("password", passwd, true);
+    } else {
+      v.remove("password");
+    }
+    return Helper.update(q, v.set("updated", System.currentTimeMillis()), User.class);
   }
 
   /***
