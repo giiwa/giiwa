@@ -53,7 +53,7 @@ public class module extends Model {
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         OpLog.error(module.class, "create", e.getMessage(), e);
-        
+
         jo.put(X.MESSAGE, e.getMessage());
         jo.put(X.STATE, 201);
 
@@ -72,6 +72,7 @@ public class module extends Model {
    * @throws Exception
    *           the exception
    */
+  @SuppressWarnings("deprecation")
   public String createmodule() throws Exception {
     int id = this.getInt("id");
     String name = this.getString("name");
@@ -107,11 +108,14 @@ public class module extends Model {
       create(out, name + "/depends/").closeEntry();
       f1 = new File(Model.HOME + "/WEB-INF/lib/");
       List<String> list = new ArrayList<String>();
-      for (File f2 : f1.listFiles()) {
-        list.add(f2.getName());
-        create(out, name + "/depends/" + f2.getName());
-        copy(out, f2);
-        out.closeEntry();
+      File[] ff1 = f1.listFiles();
+      if (ff1 != null) {
+        for (File f2 : ff1) {
+          list.add(f2.getName());
+          create(out, name + "/depends/" + f2.getName());
+          copy(out, f2);
+          out.closeEntry();
+        }
       }
 
       create(out, name + "/.classpath");
@@ -197,11 +201,14 @@ public class module extends Model {
       create(out, name + "/src/i18n/").closeEntry();
       f1 = module.getFile("/admin/demo/src/i18n/");
       if (f1.exists()) {
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/i18n/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/i18n/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            }
           }
         }
       }
@@ -213,28 +220,38 @@ public class module extends Model {
       create(out, name + "/src/resources/").closeEntry();
       f1 = module.getFile("/admin/demo/src/resources/");
       if (f1.exists()) {
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/resources/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
-          } else if (f2.isDirectory()) {
-            create(out, name + "/src/resources/" + f2.getName() + "/").closeEntry();
-            // copy all files
-            for (File f3 : f2.listFiles()) {
-              if (f3.isDirectory()) {
-                create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/").closeEntry();
-                for (File f4 : f3.listFiles()) {
-                  if (f4.isFile()) {
-                    create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/" + f4.getName());
-                    copy(out, f4);
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/resources/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            } else if (f2.isDirectory()) {
+              create(out, name + "/src/resources/" + f2.getName() + "/").closeEntry();
+              // copy all files
+              File[] ff2 = f2.listFiles();
+              if (ff2 != null) {
+                for (File f3 : ff2) {
+                  if (f3.isDirectory()) {
+                    create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/").closeEntry();
+                    File[] ff3 = f3.listFiles();
+                    if (ff3 != null) {
+                      for (File f4 : ff3) {
+                        if (f4.isFile()) {
+                          create(out,
+                              name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/" + f4.getName());
+                          copy(out, f4);
+                          out.closeEntry();
+                        }
+                      }
+                    }
+                  } else {
+                    create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName());
+                    copy(out, f3);
                     out.closeEntry();
                   }
                 }
-              } else {
-                create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName());
-                copy(out, f3);
-                out.closeEntry();
               }
             }
           }
@@ -308,55 +325,70 @@ public class module extends Model {
       create(out, name + "/src/view/").closeEntry();
       f1 = module.getFile("/admin/demo/src/view/");
       if (f1.exists()) {
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/view/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/view/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            }
           }
         }
       }
       create(out, name + "/src/view/admin/").closeEntry();
       f1 = module.getFile("/admin/demo/src/view/admin");
       if (f1 != null) {
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/view/admin/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/view/admin/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            }
           }
         }
       }
       create(out, name + "/src/view/js/").closeEntry();
       f1 = module.getFile("/admin/demo/src/view/js");
       if (f1 != null) {
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/view/js/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/view/js/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            }
           }
         }
       }
       create(out, name + "/src/view/css/").closeEntry();
       f1 = module.getFile("/admin/demo/src/view/css");
       if (f1 != null) {
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/view/css/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/view/css/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            }
           }
         }
       }
       create(out, name + "/src/view/images/").closeEntry();
       f1 = module.getFile("/admin/demo/src/view/images");
       if (f1 != null) {
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/view/images/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/view/images/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            }
           }
         }
       }
@@ -364,11 +396,14 @@ public class module extends Model {
       f1 = module.getFile("/admin/demo/src/view/install");
       if (f1 != null) {
         create(out, name + "/src/view/install/").closeEntry();
-        for (File f2 : f1.listFiles()) {
-          if (f2.isFile()) {
-            create(out, name + "/src/view/install/" + f2.getName());
-            copy(out, f2);
-            out.closeEntry();
+        ff1 = f1.listFiles();
+        if (ff1 != null) {
+          for (File f2 : ff1) {
+            if (f2.isFile()) {
+              create(out, name + "/src/view/install/" + f2.getName());
+              copy(out, f2);
+              out.closeEntry();
+            }
           }
         }
       }
@@ -388,6 +423,7 @@ public class module extends Model {
     return "/temp/" + fid + "/" + name + ".zip";
   }
 
+  @SuppressWarnings("deprecation")
   private ZipOutputStream copy(ZipOutputStream out, File f) throws Exception {
     InputStream in = null;
     try {
@@ -397,15 +433,6 @@ public class module extends Model {
       if (in != null) {
         in.close();
       }
-    }
-
-    return out;
-  }
-
-  private ZipOutputStream println(ZipOutputStream out, String... ss) throws Exception {
-    PrintStream o = new PrintStream(out);
-    for (String s : ss) {
-      o.println(s);
     }
 
     return out;
@@ -477,6 +504,7 @@ public class module extends Model {
   /**
    * Adds the.
    */
+  @SuppressWarnings("deprecation")
   @Path(path = "add", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
   public void add() {
 
@@ -597,7 +625,7 @@ public class module extends Model {
          */
         e.delete();
 
-        jo.put(X.STATE, 415); //not support
+        jo.put(X.STATE, 415); // not support
         jo.put("result", "fail");
         jo.put("message", lang.get("invalid.module.package"));
       } finally {
@@ -722,6 +750,7 @@ public class module extends Model {
   /**
    * Delete.
    */
+  @SuppressWarnings("deprecation")
   @Path(path = "delete", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
   public void delete() {
     String name = this.getString("name");

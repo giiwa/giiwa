@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Vector;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class Base64.
  * 
@@ -26,7 +25,8 @@ public class Base64 {
 			.toCharArray();
 
 	/** The nodes. */
-	private static Vector nodes = new Vector();
+	@SuppressWarnings("rawtypes")
+  private static Vector nodes = new Vector();
 
 	/**
 	 * Split string into multiple strings.
@@ -37,7 +37,8 @@ public class Base64 {
 	 *            Separator string in original string
 	 * @return Splitted string array
 	 */
-	public static String[] split(String original, String separator) {
+	@SuppressWarnings("unchecked")
+  public static String[] split(String original, String separator) {
 		nodes.removeAllElements();
 		// Parse nodes into vector
 		int index = original.indexOf(separator);

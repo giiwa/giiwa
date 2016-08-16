@@ -1886,8 +1886,7 @@ public class Model {
       PrintWriter out = new PrintWriter(sw);
       e.printStackTrace(out);
       String s = sw.toString();
-      String lineSeparator = java.security.AccessController
-          .doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
+      String lineSeparator = System.lineSeparator();
       s = s.replaceAll(lineSeparator, "<br/>");
       s = s.replaceAll(" ", "&nbsp;");
       s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");

@@ -22,7 +22,6 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 
-// TODO: Auto-generated Javadoc
 /**
  * repository of file system. <br>
  * collection="gi_repo"
@@ -406,6 +405,7 @@ public class Repo extends Bean {
       Repo.delete(getId());
     }
 
+    @SuppressWarnings("resource")
     private long store(String tag, long position, InputStream in, long total, String name, int flag)
         throws IOException {
       File f = new File(path(getFolder(), getId()));

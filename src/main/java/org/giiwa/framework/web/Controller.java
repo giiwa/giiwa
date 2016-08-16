@@ -27,14 +27,12 @@ import org.dom4j.io.SAXReader;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.HTTPMethod;
 
-// TODO: Auto-generated Javadoc
 /**
  * load module, default module
  * 
@@ -88,6 +86,7 @@ public class Controller {
     init_welcome();
   }
 
+  @SuppressWarnings("unchecked")
   private static void init_welcome() {
     try {
       SAXReader reader = new SAXReader();
@@ -130,6 +129,7 @@ public class Controller {
    * @param method
    *          the method
    */
+  @SuppressWarnings("deprecation")
   public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, Model.HTTPMethod method) {
 
     TimeStamp t = TimeStamp.create();

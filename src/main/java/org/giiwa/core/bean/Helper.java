@@ -633,7 +633,7 @@ public class Helper {
      */
     public String orderby() {
 
-      if (order.size() > 0 || order.size() > 0) {
+      if (order != null && order.size() > 0) {
         StringBuilder sb = new StringBuilder("order by ");
         for (int i = 0; i < order.size(); i++) {
           Entity e = order.get(i);
@@ -974,7 +974,7 @@ public class Helper {
 
     public BasicDBObject order() {
       BasicDBObject q = new BasicDBObject();
-      if (order.size() > 0 || order.size() > 0) {
+      if (order != null && order.size() > 0) {
         for (Entity e : order) {
           q.append(e.name, e.value);
         }

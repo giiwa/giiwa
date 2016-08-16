@@ -1395,6 +1395,7 @@ public class RDSHelper extends Helper {
    *          the db name
    * @return List
    */
+  @SuppressWarnings("unchecked")
   public static <T> List<T> loadList(String table, String col, String where, Object[] args, Class<T> clazz, String db) {
     /**
      * create the sql statement
@@ -1615,6 +1616,7 @@ public class RDSHelper extends Helper {
    *          the offset
    * @return T
    */
+  @SuppressWarnings("unchecked")
   public static <T> T getOne(String table, String col, String where, Object[] args, String orderby, int position) {
 
     /**

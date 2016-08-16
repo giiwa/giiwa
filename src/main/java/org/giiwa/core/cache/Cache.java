@@ -21,7 +21,6 @@ import org.giiwa.core.cache.impl.FileCache;
 import org.giiwa.core.cache.impl.MemCache;
 import org.giiwa.core.cache.impl.RedisCache;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code Cache} Class Cache used for cache object, the cache was grouped by
  * cluster
@@ -81,7 +80,8 @@ public class Cache {
    *          the id of object in cache system
    * @return cachable if the object not presented or expired, will return null
    */
-	public static Cachable get(String id) {
+	@SuppressWarnings("deprecation")
+  public static Cachable get(String id) {
 
 		try {
 

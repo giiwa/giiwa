@@ -9,8 +9,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.UID;
@@ -41,42 +39,6 @@ public class oplog extends Model {
     OpLog.remove();
     jo.put(X.STATE, 200);
     this.response(jo);
-  }
-
-  /**
-   * Popup2.
-   */
-  @Path(path = "popup2", login = true)
-  public void popup2() {
-    String type = this.getString("type");
-    String cate = this.getString("cate");
-
-    JSON jo = new JSON();
-
-    List<String> list = null;// OpLog.loadCategory(type, cate);
-    if (list != null && list.size() > 0) {
-      List<JSON> arr = new ArrayList<JSON>();
-      for (String e : list) {
-        JSON j = new JSON();
-        j.put("value", e);
-        if ("module".equals(type)) {
-          j.put("name", lang.get("log.module_" + e));
-        } else if ("op".equals(type)) {
-          j.put("name", lang.get("log.opt_" + e));
-        } else {
-          j.put("name", e);
-        }
-        arr.add(j);
-      }
-      jo.put("list", arr);
-      jo.put(X.STATE, 200);
-
-    } else {
-      jo.put(X.STATE, 201);
-    }
-
-    this.response(jo);
-
   }
 
   private W getW(JSON jo) {

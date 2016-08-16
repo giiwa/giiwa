@@ -37,6 +37,7 @@ public class repo extends Model {
   /**
    * Download.
    */
+  @SuppressWarnings("deprecation")
   @Path(path = "download", login = true)
   public void download() {
     if (path != null) {
@@ -164,6 +165,7 @@ public class repo extends Model {
   /**
    * Delete.
    */
+  @SuppressWarnings("deprecation")
   @Path(path = "delete", login = true)
   public void delete() {
 
@@ -197,6 +199,7 @@ public class repo extends Model {
    * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
+  @SuppressWarnings("deprecation")
   @Override
   @Path(login = false)
   public void onGet() {

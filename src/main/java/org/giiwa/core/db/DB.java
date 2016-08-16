@@ -19,7 +19,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code DB} Class used to for RDBMS database layer operation.
  * 
@@ -492,8 +491,5 @@ public class DB {
     c.setAutoCommit(true);
     return c;
   }
-
-  /** The mysql. */
-  private static Boolean mysql = null;
 
 }

@@ -47,6 +47,7 @@ public class JSON extends HashMap<String, Object> {
    *          the json
    * @return the json
    */
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static JSON fromObject(Object json) {
     JSON j = null;
     if (json instanceof Map) {
@@ -116,6 +117,7 @@ public class JSON extends HashMap<String, Object> {
     return list;
   }
 
+  @SuppressWarnings("rawtypes")
   public static <T> T fromObject(Object json, Class<T> t) {
     if (json instanceof String) {
       Gson g = new Gson();

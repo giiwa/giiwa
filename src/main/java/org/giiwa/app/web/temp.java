@@ -38,6 +38,7 @@ public class temp extends Model {
    * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
+  @SuppressWarnings("deprecation")
   public void onGet() {
 
     log.debug("temp: " + this.path);

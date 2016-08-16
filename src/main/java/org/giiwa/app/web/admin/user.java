@@ -30,6 +30,7 @@ public class user extends Model {
   /**
    * Adds the.
    */
+  @SuppressWarnings("deprecation")
   @Path(path = "create", login = true, access = "access.user.admin")
   public void create() {
     if (method.isPost()) {
@@ -106,6 +107,7 @@ public class user extends Model {
   /**
    * Delete.
    */
+  @SuppressWarnings("deprecation")
   @Path(path = "delete", login = true, access = "access.user.admin")
   public void delete() {
 
@@ -128,6 +130,7 @@ public class user extends Model {
   /**
    * Edits the user.
    */
+  @SuppressWarnings("deprecation")
   @Path(path = "edit", login = true, access = "access.user.admin")
   public void edit() {
     long id = this.getLong("id");

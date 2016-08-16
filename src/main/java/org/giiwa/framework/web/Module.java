@@ -41,7 +41,6 @@ import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.PathMapping;
 
-// TODO: Auto-generated Javadoc
 /**
  * module includes: a module.xml, a group of model/view/images/css/js/language,
  * etc. and it will handle the request, if not found the handler in the module,
@@ -635,43 +634,45 @@ public class Module {
 
       if (f.exists()) {
         File[] list = f.listFiles();
-        for (File f1 : list) {
-          if (f1.isDirectory()) {
-            Module m = load(f1.getName());
+        if (list != null) {
+          for (File f1 : list) {
+            if (f1.isDirectory()) {
+              Module m = load(f1.getName());
 
-            // TODO
-            if (m == null) {
-              /**
-               * the module is invalid
-               */
-              log.info("[" + f1.getName() + "] is not a valid module");
+              // TODO
+              if (m == null) {
+                /**
+                 * the module is invalid
+                 */
+                log.info("[" + f1.getName() + "] is not a valid module");
 
-            } else if (!m.enabled) {
-              /**
-               * the module was disabled
-               */
-              log.info("[" + f1.getName() + "] is disabled");
+              } else if (!m.enabled) {
+                /**
+                 * the module was disabled
+                 */
+                log.info("[" + f1.getName() + "] is disabled");
 
-            } else if (modules.containsKey(m.id)) {
-              /**
-               * the module was duplicated, ignore this
-               */
-              log.error(
-                  "the [id] duplicated, [" + m.name + ", " + modules.get(m.id).name + "], ignore the [" + m.name + "]");
-              m.error = Language.getLanguage().get("module.error.duplicatedid");
+              } else if (modules.containsKey(m.id)) {
+                /**
+                 * the module was duplicated, ignore this
+                 */
+                log.error("the [id] duplicated, [" + m.name + ", " + modules.get(m.id).name + "], ignore the [" + m.name
+                    + "]");
+                m.error = Language.getLanguage().get("module.error.duplicatedid");
 
-            } else if (!X.isSame(m.name, f1.getName())) {
-              /**
-               * the module name was invalid
-               */
-              log.error("the [name] is invlaid, folder=" + f1.getName() + ", module=" + m.name);
-              m.error = Language.getLanguage().get("module.error.name");
+              } else if (!X.isSame(m.name, f1.getName())) {
+                /**
+                 * the module name was invalid
+                 */
+                log.error("the [name] is invlaid, folder=" + f1.getName() + ", module=" + m.name);
+                m.error = Language.getLanguage().get("module.error.name");
 
-            } else {
-              /**
-               * cache the module
-               */
-              modules.put(m.id, m);
+              } else {
+                /**
+                 * cache the module
+                 */
+                modules.put(m.id, m);
+              }
             }
           }
         }
@@ -796,6 +797,7 @@ public class Module {
     return null;
   }
 
+  @SuppressWarnings("unchecked")
   private boolean _load(Element root) {
     try {
       // TODO Auto-generated method stub
@@ -920,11 +922,13 @@ public class Module {
 
     List<Module> list = new ArrayList<Module>();
 
-    for (File f : files) {
-      if (f.isDirectory()) {
-        Module m = load(f.getName());
-        if (m != null && !m.enabled) {
-          list.add(m);
+    if (files != null) {
+      for (File f : files) {
+        if (f.isDirectory()) {
+          Module m = load(f.getName());
+          if (m != null && !m.enabled) {
+            list.add(m);
+          }
         }
       }
     }

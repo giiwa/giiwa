@@ -71,6 +71,7 @@ public class GiiwaFilter implements Filter {
 
   }
 
+  @SuppressWarnings("rawtypes")
   @Override
   public void init(FilterConfig c1) throws ServletException {
 

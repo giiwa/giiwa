@@ -101,6 +101,7 @@ public class Role extends Bean {
    * 
    * @return the access
    */
+  @SuppressWarnings("unchecked")
   public List<String> getAccesses() {
 
     if (!this.containsKey("accesses")) {

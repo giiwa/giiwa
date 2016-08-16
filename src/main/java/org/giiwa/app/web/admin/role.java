@@ -63,7 +63,6 @@ public class role extends Model {
    */
   @Path(path = "verify", login = true, access = "access.role.admin")
   public void verify() {
-    String name = this.getString("name");
     String value = this.getString("value");
 
     JSON jo = new JSON();

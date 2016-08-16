@@ -18,9 +18,7 @@ import java.io.File;
 
 import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.bean.UID;
-import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * Create Temporary file, which can be accessed by web api, please refer
  * model("/temp")

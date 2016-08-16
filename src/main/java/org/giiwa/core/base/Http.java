@@ -58,13 +58,13 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * http utils
  * 
  * @author joe
  * 
  */
+@SuppressWarnings("deprecation")
 public class Http {
 
   static Log                 log     = LogFactory.getLog(Http.class);

@@ -39,10 +39,10 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class GImage is image utility, convert image, create QRCode image
  */
+@SuppressWarnings("deprecation")
 public class GImage {
 
     /** The log. */
@@ -65,6 +65,7 @@ public class GImage {
      * @throws Exception
      *           the exception
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public static void QRCode(File out, String text, int width, int height) throws Exception {
         int BLACK = 0xFF000000;
         int WHITE = 0xFFFFFFFF;

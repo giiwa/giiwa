@@ -106,7 +106,7 @@ public class DefaultListener implements IListener {
     public void onExecute() {
       String s = Global.getString("recycle.task", null);
       if (s != null && System.currentTimeMillis() - Model.UPTIME > X.AHOUR) {
-        String[] ss = s.split("|");
+        String[] ss = s.split("\\|");
 
         Calendar c = Calendar.getInstance();
         c.setTimeInMillis(System.currentTimeMillis());
@@ -445,9 +445,12 @@ public class DefaultListener implements IListener {
     boolean changed = false;
 
     if (f.isDirectory()) {
-      for (File f1 : f.listFiles()) {
-        if (cleanup(f1, map)) {
-          changed = true;
+      File[] ff = f.listFiles();
+      if (ff != null) {
+        for (File f1 : ff) {
+          if (cleanup(f1, map)) {
+            changed = true;
+          }
         }
       }
     } else if (f.isFile() && f.getName().endsWith(".jar")) {

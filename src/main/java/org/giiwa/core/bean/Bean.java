@@ -582,7 +582,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * 
    * @return JSON
    */
-  @SuppressWarnings("unchecked")
   public final JSON getJSON() {
 
     JSON jo = new JSON();

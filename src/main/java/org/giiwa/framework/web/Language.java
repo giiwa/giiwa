@@ -19,10 +19,8 @@ import java.util.*;
 
 import org.apache.commons.logging.*;
 import org.giiwa.core.base.Html;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * language data which located at /modules/[module]/i18n/
  * 

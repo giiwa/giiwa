@@ -25,7 +25,6 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
 
-// TODO: Auto-generated Javadoc
 /**
  * Operation Log. <br>
  * collection="gi_oplog"
@@ -682,8 +681,7 @@ public class OpLog extends Bean {
     PrintWriter out = new PrintWriter(sw);
     e.printStackTrace(out);
     String s = sw.toString();
-    String lineSeparator = java.security.AccessController
-        .doPrivileged(new sun.security.action.GetPropertyAction("line.separator"));
+    String lineSeparator = System.lineSeparator();
     s = s.replaceAll(lineSeparator, "<br/>");
     s = s.replaceAll(" ", "&nbsp;");
     s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
