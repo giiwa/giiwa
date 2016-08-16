@@ -254,7 +254,7 @@ public class user extends Model {
     int s = this.getInt("s");
     int n = this.getInt("n", 10, "number.per.page");
 
-    Beans<User> bs = User.load(q, s, n);
+    Beans<User> bs = User.load(q.and(X.ID, 0, W.OP_GT), s, n);
     this.set(bs, s, n);
 
     this.query.path("/admin/user");
