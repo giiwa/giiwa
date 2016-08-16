@@ -30,10 +30,10 @@
 		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
 			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
 			<form method="post">
-				<div><label><h3>URL：</h3><input type='text' name='url' value="$!system.getString('mongo[prod].url','')"/><g>127.0.0.1:27018 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
-				<div><label><h3>DB：</h3><input type='text' name='db' value="$!system.getString('mongo[prod].db','demo')"/></label></div>
-				<div><label><h3>User：</h3><input type='text' name='user' value="$!system.getString('mongo[prod].user','')"/></label></div>
-				<div><label><h3>Password：</h3><input type='password' name='pwd' value="$!system.getString('mongo[prod].password','')"/></label></div>
+				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>127.0.0.1:27018 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
+				<div><label><h3>DB：</h3><input type='text' name='db' value="$!global.getString('mongo[prod].db','demo')"/></label></div>
+				<div><label><h3>User：</h3><input type='text' name='user' value="$!global.getString('mongo[prod].user','')"/></label></div>
+				<div><label><h3>Password：</h3><input type='password' name='pwd' value="$!global.getString('mongo[prod].password','')"/></label></div>
 				<div class='btns'>
 					<a class='next'>$lang.get('a.next')</a>
 				</div>
@@ -45,14 +45,14 @@
 			<form method="post">
 				<div><label><h3>Driver：</h3>
 					<select name='driver' onchange='_ondriver();'>
-						<option value='org.hsqldb.jdbc.JDBCDriver' #if($system.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
-						<option value='org.sqlite.JDBCr' #if($system.getString('db.driver', '') == 'org.sqlite.JDBC') selected #end>SQLite</option>
-						<option value='org.postgresql.Driver' #if($system.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
-						<option value='com.mysql.jdbc.Driver' #if($system.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
-						<option value='oracle.jdbc.OracleDriver' #if($system.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+						<option value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
+						<option value='org.sqlite.JDBCr' #if($global.getString('db.driver', '') == 'org.sqlite.JDBC') selected #end>SQLite</option>
+						<option value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
+						<option value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
+						<option value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
 					</select>
 				</label></div>
-				<div class='url'><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!system.getString('db.url', '')"/>
+				<div class='url'><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
 					<g class='sqlite' style='display:none'>jdbc:sqlite:demo.db</g>
 					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=giiwa&password=g123123</g>
@@ -70,8 +70,8 @@
 		<div id="system" class='panel' data-next="cache" data-prev="db">
 			<div class='head'>$lang.get('configure.title.system')</div>	
 			<form method="post">
-				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!system.getString('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
-				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!system.getString('system.code','1')"/><g>同一个分布式节点编号相同</g></label></div>
+				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!global.getString('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
+				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!global.getString('system.code','1')"/><g>同一个分布式节点编号相同</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev'>$lang.get('a.prev')</a>
@@ -83,7 +83,7 @@
 		<div id="cache" class='panel' data-next="admin" data-prev="system" data-check='check_cache'>
 			<div class='head'>Cache</div>	
 			<form method="post">
-				<div><label><h3>URL：</h3><input type='text' name='url' value="$!system.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
+				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev'>$lang.get('a.prev')</a>

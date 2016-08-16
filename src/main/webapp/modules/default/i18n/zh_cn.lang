@@ -320,7 +320,7 @@ a.apidocs=APIdocs
 a.modules=模 块
 a.setting.counter=页面统计
 label.counter=统计脚本
-counter.notes=第三方统计脚本，用于统计分析你的网站访问信息，你可以在你的页面中，通过 <code>$!system.get('site.counter')</code>添加统计该统计代码.
+counter.notes=第三方统计脚本，用于统计分析你的网站访问信息，你可以在你的页面中，通过 <code>$!global.get('site.counter')</code>添加统计该统计代码.
 counter.setting.title=网站统计脚本
 user.captcha=验证码
 captcha.bad=验证码错误
@@ -370,6 +370,6 @@ user.passwd.empty=密码不能为空
 user.name.format.error=用户名格式不正确
 user.passwd.format.error=密码格式不正确
 user.name.rule=用户名格式
-user.name.rule.hint=正则表达式，请参加<a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>正则表达式语法</a>
+user.name.rule.hint=请参见<a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>正则表达式语法</a>
 user.passwd.rule=用户密码格式
-user.passwd.rule.hint=正则表达式，请参加<a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>正则表达式语法</a>
+user.passwd.rule.hint=请参见<a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>正则表达式语法</a>

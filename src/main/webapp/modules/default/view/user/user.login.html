@@ -17,7 +17,7 @@
 		<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
 		<input type="password" id="password" name="pwd" value="$!pwd" class="form-control" required />
 	</div>
-	#if($system.getInt('user.captcha', 1) == 1)
+	#if($global.getInt('user.captcha', 1) == 1)
 	<div class="validateCode">
 		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
 		<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
@@ -41,7 +41,7 @@
 	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
 	<div id="themeSwitch">
 		<a class="icon-wondering" href="/user/forget">$lang.get('a.forget.user')</a>
-		#if($system.getString('user.system', 'close')=='open')
+		#if($global.getString('user.system', 'close')=='open')
 		&nbsp;&nbsp;<a href="/user/register">$lang.get('a.register.user')</a>
 		#end
 	</div>

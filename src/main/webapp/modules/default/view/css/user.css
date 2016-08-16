@@ -83,10 +83,6 @@ input.form-control {
 }
 
 #forget_tab{
-	width: 420px;
+	width: 350px;
 	display: inline-block;
-}
-
-.tab-content .form-signin{
-	width: 420px;
 }

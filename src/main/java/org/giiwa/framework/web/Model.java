@@ -371,7 +371,7 @@ public class Model {
                       this.put("this", this);
                       this.set("me", login);
                       this.set("session", this.getSession());
-                      this.set("system", Global.getInstance());
+                      this.set("global", Global.getInstance());
 
                       createQuery();
 
@@ -466,7 +466,8 @@ public class Model {
       this.put("this", this);
       this.put("response", resp);
       this.set("session", this.getSession());
-      this.set("system", Global.getInstance());
+      this.set("global", Global.getInstance());
+
       this.createQuery();
 
       switch (method.method) {
