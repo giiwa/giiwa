@@ -126,7 +126,7 @@ public class user extends Model {
   }
 
   /**
-   * s Edits the.
+   * Edits the user.
    */
   @Path(path = "edit", login = true, access = "access.user.admin")
   public void edit() {
@@ -144,7 +144,7 @@ public class user extends Model {
       }
       JSON j = this.getJSON();
       V v = V.create().copy(j);
-      v.remove("role");
+      v.remove("role", X.ID);
 
       v.set("failtimes", this.getInt("failtimes"), true);
       if (!"on".equals(this.getString("locked"))) {

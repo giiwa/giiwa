@@ -384,8 +384,12 @@ public class Helper {
      *          the name
      * @return the v
      */
-    public V remove(String name) {
-      m.remove(name);
+    public V remove(String... name) {
+      if (name != null && name.length > 0) {
+        for (String s : name) {
+          m.remove(s);
+        }
+      }
       return this;
     }
 

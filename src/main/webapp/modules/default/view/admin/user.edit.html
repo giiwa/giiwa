@@ -7,7 +7,7 @@
 	<a href='/admin/user/edit?id=$id' class='selected'>$lang.get('a.edit')</a>
 </div>
 
-<form action='/admin/user/edit'  method='post' class='form' enctype="multipart/form-data">
+<form action='/admin/user/edit'  method='post' class='form' >
 	<input type='hidden' name="id" value="$id"/>
 	<div><label><h3>$lang.get('user.name')</h3>:<i>$!name</i></label></div>
 	<div><label><h3>$lang.get('user.nickname')</h3>:<input type='text' name='nickname' value='$!nickname'/></label></div>
