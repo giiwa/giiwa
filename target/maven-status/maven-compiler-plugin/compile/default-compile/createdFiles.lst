@@ -36,7 +36,6 @@ org/giiwa/framework/bean/Temp.class
 org/giiwa/app/web/admin/oplog.class
 org/giiwa/core/base/Shell$Logger.class
 org/giiwa/framework/web/Tps.class
-org/giiwa/core/base/Char.class
 org/giiwa/core/base/Host$CPU.class
 org/giiwa/core/base/Http$1.class
 org/giiwa/core/bean/Pool.class

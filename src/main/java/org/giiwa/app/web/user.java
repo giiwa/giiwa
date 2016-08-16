@@ -76,49 +76,69 @@ public class user extends Model {
 
     if (method.isPost()) {
 
-      String name = this.getString("name").trim().toLowerCase();
-      String passwd = this.getString("password").trim().toLowerCase();
+      Captcha.Result r1 = Captcha.Result.ok;
+
+      if (Global.getInt("user.captcha", 1) == 1) {
+        String code = this.getString("code");
+        if (code != null) {
+          code = code.toLowerCase();
+        }
+        r1 = Captcha.verify(this.sid(), code);
+        Captcha.remove(this.sid());
+      }
 
       JSON jo = this.getJSON();
 
-      String namerule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
-      String passwdrule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
-      if (!X.isEmpty(namerule) && !name.matches(namerule)) {
-        jo.put(X.MESSAGE, lang.get("user.name.format.error"));
-        this.set(jo);
-      } else if (!X.isEmpty(passwdrule) && !passwd.matches(passwdrule)) {
-        jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
-        this.set(jo);
+      if (Captcha.Result.badcode == r1) {
+        jo.put(X.MESSAGE, lang.get("captcha.bad"));
+        jo.put(X.STATE, 202);
+      } else if (Captcha.Result.expired == r1) {
+        jo.put(X.MESSAGE, lang.get("captcha.expired"));
+        jo.put(X.STATE, 203);
       } else {
-        try {
-          V v = V.create("name", name).copy(jo);
-          long id = User.create(v);
 
-          String role = Global.getString("user.role", "N/A");
-          Role r = Role.loadByName(role);
-          User u = User.loadById(id);
-          if (r != null) {
-            u.setRole(r.getId());
+        String name = this.getString("name").trim().toLowerCase();
+        String passwd = this.getString("password").trim().toLowerCase();
+
+        String namerule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
+        String passwdrule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
+        if (!X.isEmpty(namerule) && !name.matches(namerule)) {
+          jo.put(X.MESSAGE, lang.get("user.name.format.error"));
+        } else if (!X.isEmpty(passwdrule) && !passwd.matches(passwdrule)) {
+          jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
+        } else {
+          try {
+            V v = V.create("name", name).copy(jo);
+            long id = User.create(v);
+
+            String role = Global.getString("user.role", "N/A");
+            Role r = Role.loadByName(role);
+            User u = User.loadById(id);
+            if (r != null) {
+              u.setRole(r.getId());
+            }
+            this.setUser(u);
+            OpLog.log(User.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id);
+
+            Session s = this.getSession();
+            if (s.has("uri")) {
+              this.redirect((String) s.get("uri"));
+              return;
+            } else {
+              this.set(X.MESSAGE, lang.get("user.register.success"));
+              this.set("success", 1);
+            }
+
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            OpLog.error(user.class, "register", e.getMessage(), e);
+
+            this.put(X.MESSAGE, lang.get("create_user_error_1"));
+            OpLog.log(User.class, "register", lang.get("create.failed") + ":" + name);
           }
-          this.setUser(u);
-          OpLog.log(User.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id);
-
-          Session s = this.getSession();
-          if (s.has("uri")) {
-            this.redirect((String) s.get("uri"));
-          } else {
-            this.redirect("/");
-          }
-
-          return;
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-          OpLog.error(user.class, "register", e.getMessage(), e);
-
-          this.put(X.MESSAGE, lang.get("create_user_error_1"));
-          OpLog.log(User.class, "register", lang.get("create.failed") + ":" + name);
         }
       }
+      this.set(jo);
     }
 
     show("/user/user.register.html");
@@ -662,11 +682,11 @@ public class user extends Model {
                 jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
                 jo.put(X.STATE, HttpServletResponse.SC_OK);
                 Code.update(W.create("s1", code).and("s2", phone), V.create("updated", System.currentTimeMillis()));
-                
+
               } else {
                 jo.put(X.MESSAGE, lang.get("user.forget.phone.sent.failed"));
                 jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                
+
               }
 
             } else {

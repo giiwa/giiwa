@@ -367,8 +367,8 @@ email.code.ok=邮箱通过验证
 user.passwd.updated=密码已经修改
 user.passwd.nosame=两次密码不一致
 user.passwd.empty=密码不能为空
-user.name.format.error=用户名格式不正确
-user.passwd.format.error=密码格式不正确
+user.name.format.error=格式不正确,4个以上字符＋数字
+user.passwd.format.error=格式不正确,6个以上字符＋数字
 user.name.rule=用户名格式
 user.name.rule.hint=请参见<a href='http://giiwa.org/forum/topic/detail?id=10' target='_blank'>正则表达式语法</a>
 user.passwd.rule=用户密码格式
@@ -380,3 +380,4 @@ param.error=参数错误
 user.forget.phone.sent=短信验证已发送
 user.forget.phone.sent.failed=发送短信失败
 user.code=验证码
+user.register.success=新用户注册成功

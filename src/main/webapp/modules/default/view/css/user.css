@@ -87,3 +87,12 @@ input.form-control {
 	width: 350px;
 	display: inline-block;
 }
+r {
+    color: #f33;
+}
+input.bad {
+	border-color: #f33;
+}
+input.good {
+	border-color: #0a8209;
+}
