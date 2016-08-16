@@ -49,12 +49,16 @@ public class Sms {
    *
    * @param mobile
    *          the mobile
+   * @param template
+   *          the internal template code
    * @param jo
    *          the jo
    * @return true: success <br>
    *         false: failed
    */
-  public static boolean send(String mobile, JSON jo) {
+  public static boolean send(String mobile, String template, JSON jo) {
+    jo.put("template", "user.forget.password");
+
     OpLog.info("sms", jo.toString(), null);
 
     for (ISender s : senders) {

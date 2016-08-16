@@ -657,9 +657,8 @@ public class user extends Model {
               j1.put("phone", phone);
               j1.put("account", sb.toString());
               j1.put("code", code);
-              j1.put("template", "user.forget.password");
 
-              if (Sms.send(phone, j1)) {
+              if (Sms.send(phone, "user.forget.password", j1)) {
                 jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
                 jo.put(X.STATE, HttpServletResponse.SC_OK);
                 Code.update(W.create("s1", code).and("s2", phone), V.create("updated", System.currentTimeMillis()));
