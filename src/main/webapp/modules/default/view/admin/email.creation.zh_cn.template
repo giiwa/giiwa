@@ -1,3 +1,3 @@
 <p>亲爱的 [${account}]</p>
-<p>你的账号已经创建好了，你可以登录 $!global.getString('site.url', '') 使用它。</p>
+<p>你的账号已经$!global.getString('site.url', '')创建好了 ，密码：$passwd。</p>
 <p>Giiwa 开发组</p>

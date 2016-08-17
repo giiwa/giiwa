@@ -89,6 +89,7 @@ public class user extends Model {
             if (Global.getInt("user.updated.noti", 1) == 1) {
               final String email = this.getString("email");
               final String phone = this.getString("phone");
+              final String passwd = this.getString("password");
 
               if (!X.isEmpty(email) || !X.isEmpty(phone)) {
                 new Task() {
@@ -98,6 +99,7 @@ public class user extends Model {
                     if (!X.isEmpty(phone)) {
                       JSON jo = JSON.create();
                       jo.put("account", name);
+                      jo.put("passwd", passwd);
                       Sms.send(phone, "add.account", jo);
                     }
 
@@ -108,6 +110,7 @@ public class user extends Model {
                         JSON j1 = JSON.create();
                         j1.put("email", email);
                         j1.put("account", name);
+                        j1.put("passwd", passwd);
                         j1.put("lang", lang);
                         j1.put("global", Global.getInstance());
 
