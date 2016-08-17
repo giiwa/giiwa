@@ -1088,6 +1088,9 @@ public class Helper {
   public static int insert(String table, Collection<V> values) {
 
     if (table != null) {
+      for (V v : values) {
+        v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
+      }
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.insertCollection(table, values);
@@ -1129,6 +1132,7 @@ public class Helper {
   public static int insert(String table, V values) {
 
     if (table != null) {
+      values.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.insertCollection(table, values);
@@ -1189,6 +1193,8 @@ public class Helper {
   public static int update(String table, W q, V values) {
 
     if (table != null) {
+      values.set("updated", System.currentTimeMillis());
+
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.updateCollection(table, q.query(), values);

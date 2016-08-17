@@ -785,7 +785,6 @@ public class MongoHelper extends Helper {
     if (c != null) {
       BasicDBObject d = new BasicDBObject();
 
-      v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
       for (String name : v.names()) {
         d.append(name, v.value(name));
       }
@@ -871,7 +870,6 @@ public class MongoHelper extends Helper {
 
     BasicDBObject d = new BasicDBObject();
 
-    v.set("updated", System.currentTimeMillis());
     // int len = v.size();
     for (String name : v.names()) {
       d.append(name, v.value(name));
@@ -1202,7 +1200,6 @@ public class MongoHelper extends Helper {
       List<DBObject> list = new ArrayList<DBObject>(values.size());
       for (V v : values) {
         BasicDBObject d = new BasicDBObject();
-        v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
         for (String name : v.names()) {
           d.append(name, v.value(name));
         }
