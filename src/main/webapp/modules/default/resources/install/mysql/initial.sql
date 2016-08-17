@@ -54,7 +54,7 @@ create index gi_user_index_locked on gi_user(locked);
 create table gi_userrole
 (
 	uid bigint,
-	rid int,
+	rid bigint,
 	created bigint
 );
 create index gi_userrole_index_uid on gi_userrole(uid);
@@ -71,24 +71,6 @@ create table gi_role
 create unique index gi_role_indexid on gi_role(id);
 create index gi_role_index_name on gi_role(name);
 
-#drop table if exists gi_userrole;
-create table gi_userrole
-(
-	id bigint,
-	uid bigint,
-	rid int,
-	created bigint
-);
-create index gi_userrole_index_uid on gi_userrole(uid);
-create unique index gi_userrole_index_uid_rid on gi_userrole(uid, rid);
-
-#drop table if exists gi_access;
-create table gi_access
-(
-	id varchar(255)
-);
-create unique index gi_access_indexid on gi_access(id);
-
 #drop table if exists gi_code;
 create table gi_code
 (
@@ -99,11 +81,18 @@ create table gi_code
 );
 create unique index gi_code_index_s1_s2 on gi_code(s1, s2);
 
+#drop table if exists gi_access;
+create table gi_access
+(
+	id varchar(255)
+);
+create unique index gi_access_indexid on gi_access(id);
+
 #drop table if exists gi_roleaccess;
 create table gi_roleaccess
 (
 	id varchar(20),
-	rid int,
+	rid bigint,
 	name varchar(255)
 );
 create index gi_roleaccess_indexid on gi_roleaccess(id);

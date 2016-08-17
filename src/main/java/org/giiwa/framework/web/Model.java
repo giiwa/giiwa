@@ -329,7 +329,7 @@ public class Model {
                     // check the system has been initialized
                     // ?
                     if (!Helper.isConfigured()) {
-                      this.redirect("/configure");
+                      this.redirect("/setup");
                       return null;
                     }
 

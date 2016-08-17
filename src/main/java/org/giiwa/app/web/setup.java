@@ -37,17 +37,17 @@ import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 
 /**
- * web api: /configure <br>
+ * web api: /setup <br>
  * used to the initial configure, once configured, it will not be accessed
  * 
  * @author joe
  *
  */
-public class configure extends Model {
+public class setup extends Model {
 
   /**
    * the default GET handler. <br>
-   * /configure
+   * /setup
    */
   @Path()
   public void onGet() {
@@ -58,7 +58,7 @@ public class configure extends Model {
         return;
       }
 
-      this.show("/admin/configure.html");
+      this.show("/admin/setup.html");
 
     } catch (Exception e1) {
       log.debug(e1.getMessage(), e1);
@@ -69,7 +69,7 @@ public class configure extends Model {
 
   /**
    * the web api. <br>
-   * /configure/save
+   * /setup/save
    */
   @Path(path = "save")
   public void save() {
@@ -85,22 +85,38 @@ public class configure extends Model {
 
     String dbdriver = this.getHtml("db.driver");
     String dburl = this.getHtml("db.url");
-    conf.setProperty("db.driver", dbdriver);
-    conf.setProperty("db.url", dburl);
+    if (!X.isEmpty(dbdriver)) {
+      conf.setProperty("db.driver", dbdriver);
+    }
+    if (!X.isEmpty(dburl)) {
+      conf.setProperty("db.url", dburl);
+    }
 
     String mongourl = this.getHtml("mongo.url");
-    String mmongodb = this.getString("mongo.db");
+    String mongodb = this.getString("mongo.db");
     String user = this.getString("mongo.user");
     String pwd = this.getString("mongo.pwd");
-    conf.setProperty("mongo[prod].url", mongourl);
-    conf.setProperty("mongo[prod].db", mmongodb);
-    conf.setProperty("mongo[prod].user", user);
-    conf.setProperty("mongo[prod].password", pwd);
+
+    if (!X.isEmpty(mongourl)) {
+      conf.setProperty("mongo[prod].url", mongourl);
+    }
+
+    if (!X.isEmpty(mongodb)) {
+      conf.setProperty("mongo[prod].db", mongodb);
+    }
+    if (!X.isEmpty(user)) {
+      conf.setProperty("mongo[prod].user", user);
+    }
+    if (!X.isEmpty(pwd)) {
+      conf.setProperty("mongo[prod].password", pwd);
+    }
 
     String node = this.getString("node");
     String systemcode = this.getString("systemcode");
+
     conf.setProperty("node", node);
     conf.setProperty("system.code", systemcode);
+    conf.setProperty("home", null);
 
     Config.save();
     DB.init();
@@ -108,14 +124,16 @@ public class configure extends Model {
 
     DefaultListener.owner.upgrade(conf, Module.load("default"));
 
-    String admin = this.getString("admin").trim();
-    String password = this.getHtml("password").trim();
+    String admin = this.getString("admin").trim().toLowerCase();
+    String password = this.getString("password").trim();
 
     User u1 = User.loadById(0);
+    V v = V.create("name", admin).set("password", password).set("email", this.getString("email"))
+        .set("phone", this.getString("phone")).set("nickname", admin);
     if (u1 != null) {
-      User.update(0, V.create("name", admin).set("password", password));
+      User.update(0, v);
     } else {
-      User.create(V.create("name", admin).set("password", password).set("id", 0L));
+      User.create(v.set("id", 0L));
     }
 
     jo.put(X.STATE, 200);
@@ -132,7 +150,7 @@ public class configure extends Model {
 
   /**
    * web api. <br>
-   * /configure/check
+   * /setup/check
    */
   @Path(path = "check")
   public void check() {
@@ -158,7 +176,7 @@ public class configure extends Model {
         jo.put(X.STATE, 200);
       } catch (Exception e1) {
         log.error(e1.getMessage(), e1);
-        OpLog.error(configure.class, "check", e1.getMessage(), e1);
+        OpLog.error(setup.class, "check", e1.getMessage(), e1);
 
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, e1.getMessage());
@@ -197,7 +215,7 @@ public class configure extends Model {
             list.add(new ServerAddress(host, port));
           } catch (Exception e1) {
             log.error(e1.getMessage(), e1);
-            OpLog.error(configure.class, "check", e1.getMessage(), e1);
+            OpLog.error(setup.class, "check", e1.getMessage(), e1);
           }
         }
 
@@ -215,7 +233,7 @@ public class configure extends Model {
 
         } catch (Exception e1) {
           log.error(e1.getMessage(), e1);
-          OpLog.error(configure.class, "check", e1.getMessage(), e1);
+          OpLog.error(setup.class, "check", e1.getMessage(), e1);
 
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, e1.getMessage());

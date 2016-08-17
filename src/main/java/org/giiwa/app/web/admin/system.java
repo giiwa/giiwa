@@ -26,7 +26,7 @@ public class system extends Model {
   public void restart() {
 
     JSON jo = new JSON();
-    User me = this.getUser();
+    User me = User.loadById(login.getId());
     String pwd = this.getString("pwd");
 
     if (me.validate(pwd)) {

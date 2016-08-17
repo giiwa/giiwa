@@ -11,6 +11,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/oplog.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Digest.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Access.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/setup.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/RDSHelper.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/system.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Html.java
@@ -93,7 +94,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Sitemap.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Menu.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/module.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/configure.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/view/VelocityView.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/DES.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Code.java

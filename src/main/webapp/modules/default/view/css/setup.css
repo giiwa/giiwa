@@ -33,3 +33,11 @@ label h3 {
 	margin: 10px 0;
 	line-height: 36px;
 }
+#head .left {
+    float: left;
+    position: relative;
+    margin-left: 20px;
+}
+.logo img {
+    height: 50px;
+}

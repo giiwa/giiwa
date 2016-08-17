@@ -280,7 +280,7 @@ public class MongoHelper extends Helper {
 
     if (d == null) {
       if (log.isErrorEnabled())
-        log.error(database + " was miss configured, please access http://[host:port]/configure to configure");
+        log.error(database + " was miss configured, please access http://[host:port]/setup to configure");
     }
     return d;
   }

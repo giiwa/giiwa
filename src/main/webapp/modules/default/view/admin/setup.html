@@ -9,7 +9,7 @@
 <meta name="description" content="$lang.get('browser.description')"/>
 <link href='/css/icons.css' rel='stylesheet' />
 <link href='/css/giiwa.css?$!{module.module("default").build}' rel='stylesheet' />
-<link href='/css/configure.css?$!{module.module("default").build}' rel='stylesheet' />
+<link href='/css/setup.css?$!{module.module("default").build}' rel='stylesheet' />
 
 <script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
 <script type="text/javascript" src="/js/jquery.message.js"></script>
@@ -32,6 +32,7 @@
 			<form method="post">
 				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>127.0.0.1:27018 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
 				<div><label><h3>DB：</h3><input type='text' name='db' value="$!global.getString('mongo[prod].db','demo')"/></label></div>
+				<input type='text' style="display:none"/>
 				<div><label><h3>User：</h3><input type='text' name='user' value="$!global.getString('mongo[prod].user','')"/></label></div>
 				<div><label><h3>Password：</h3><input type='password' name='pwd' value="$!global.getString('mongo[prod].password','')"/></label></div>
 				<div class='btns'>
@@ -71,7 +72,7 @@
 			<div class='head'>$lang.get('configure.title.system')</div>	
 			<form method="post">
 				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!global.getString('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
-				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!global.getString('system.code','1')"/><g>同一个分布式节点编号相同</g></label></div>
+				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!global.getLong('system.code',0)"/><g>同一个分布式节点编号相同</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev'>$lang.get('a.prev')</a>
@@ -95,8 +96,10 @@
 		<div id="admin" class='panel' data-prev="cache">
 			<div class='head'>$lang.get('configure.title.admin')</div>	
 			<form method="post">
-				<div><label><h3>Admin：</h3><input type='text' name='admin' value='admin'/></label></div>
-				<div><label><h3>Password：</h3><input type='password' name='password' value=''/></label></div>
+				<div><label><h3>Admin<r>*</r>：</h3><input type='text' name='admin' value='admin'/></label></div>
+				<div><label><h3>Password<r>*</r>：</h3><input type='password' name='password' value=''/></label></div>
+				<div><label><h3>Email：</h3><input type='email' name='email' value=''/></label></div>
+				<div><label><h3>Phone：</h3><input type='tel' name='phone' value=''/></label></div>
 				
 				<div class='btns'>
 						<a class='prev'>$lang.get('a.prev')</a>
@@ -113,7 +116,7 @@
 		<div class='links'>$lang.get('user.foot.links')</div>
 		<div class='copyright'>
 			<span class='copyright'>$lang.get('copyright')</span> <span
-				class='designed'>$lang.get('designedby')</span>
+				class='designed'>$lang.get('powerby')</span>
 			<span>please refer {giiwa.home}/giiwa.properties</span>
 		</div>
 		<div class="foot-shield"></div>
@@ -212,9 +215,11 @@ $(function(){
 		p["cache.url"] = $('#cache input[name=url]').val();
 		p["admin"] = $('#admin input[name=admin]').val();
 		p["password"] = $('#admin input[name=password]').val();
+		p["email"] = $('#admin input[name=email]').val();
+		p["phone"] = $('#admin input[name=phone]').val();
 		
 		processing && processing.show();
-		$.post('/configure/save', p, function(d){
+		$.post('/setup/save', p, function(d){
 			
 			if(d.state == 200) {
 				setTimeout(function(){
@@ -235,7 +240,7 @@ function check_db(f){
 	var  p = {op:'db'};
 	p.driver = $('#db select[name=driver]').val();
 	p.url = $('#db input[name=url]').val();
-	$.post('/configure/check', p, function(d){
+	$.post('/setup/check', p, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
 			f();
@@ -251,7 +256,7 @@ function check_mongo(f){
 	p.url = $('#mongo input[name=url]').val();
 	p.user = $('#mongo input[name=user]').val();
 	p.pwd = $('#mongo input[name=pwd]').val();
-	$.post('/configure/check', p, function(d){
+	$.post('/setup/check', p, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
 			f();
@@ -263,7 +268,7 @@ function check_mongo(f){
 function check_mq(f){
 	processing && processing.show();
 	var  p = {op:'mq'};
-	$.post('/configure/check', {}, function(d){
+	$.post('/setup/check', {}, function(d){
 		processing && processing.hide();
 		f();
 	})
@@ -271,7 +276,7 @@ function check_mq(f){
 function check_cache(f){
 	processing && processing.show();
 	var  p = {op:'cache'};
-	$.post('/configure/check', p, function(d){
+	$.post('/setup/check', p, function(d){
 		processing && processing.hide();
 		f();
 	})
@@ -279,7 +284,7 @@ function check_cache(f){
 function check_admin(f){
 	processing && processing.show();
 	var  p = {op:'admin'};
-	$.post('/configure/check', p, function(d){
+	$.post('/setup/check', p, function(d){
 		processing && processing.hide();
 		f();
 	})

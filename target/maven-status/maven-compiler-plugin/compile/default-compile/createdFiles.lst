@@ -1,7 +1,6 @@
 org/giiwa/framework/web/view/VelocityTemplateLoader.class
 org/giiwa/app/web/admin/backup$RecoverTask.class
 org/giiwa/app/web/admin/setting$mail.class
-org/giiwa/app/web/configure.class
 org/giiwa/framework/bean/User$Lock.class
 org/giiwa/framework/web/Model$PathMapping.class
 org/giiwa/core/conf/Global.class
@@ -31,6 +30,7 @@ org/giiwa/framework/web/GiiwaFilter.class
 org/giiwa/core/base/Host$Proc.class
 org/giiwa/core/base/Http$Response.class
 org/giiwa/app/web/admin/oplog$1.class
+org/giiwa/app/web/setup$1.class
 org/giiwa/core/base/Base32.class
 org/giiwa/framework/bean/Temp.class
 org/giiwa/app/web/admin/oplog.class
@@ -39,6 +39,7 @@ org/giiwa/framework/web/Tps.class
 org/giiwa/core/base/Host$CPU.class
 org/giiwa/core/base/Http$1.class
 org/giiwa/core/bean/Pool.class
+org/giiwa/app/web/setup.class
 org/giiwa/utils/image/GImage.class
 org/giiwa/core/base/H64.class
 org/giiwa/app/web/DefaultListener$RecycleTask.class
@@ -76,7 +77,6 @@ org/giiwa/app/web/upload.class
 org/giiwa/app/web/user.class
 org/giiwa/framework/web/view/FreemakerView$T.class
 org/giiwa/core/base/RSA.class
-org/giiwa/app/web/configure$1.class
 org/giiwa/core/bean/X.class
 org/giiwa/framework/bean/User$UserRole.class
 org/giiwa/core/bean/Pool$ICreator.class
