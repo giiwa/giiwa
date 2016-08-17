@@ -59,7 +59,7 @@ public class Sms {
   public static boolean send(String mobile, String template, JSON jo) {
     jo.put("template", template);
 
-    OpLog.info("sms", jo.toString(), null);
+    OpLog.info("sms", "send", jo.toString(), null);
 
     for (ISender s : senders) {
       if (s.send(mobile, jo)) {
