@@ -57,7 +57,7 @@ public class Sms {
    *         false: failed
    */
   public static boolean send(String mobile, String template, JSON jo) {
-    jo.put("template", "user.forget.password");
+    jo.put("template", template);
 
     OpLog.info("sms", jo.toString(), null);
 
