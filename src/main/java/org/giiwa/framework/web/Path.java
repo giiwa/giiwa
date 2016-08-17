@@ -72,7 +72,7 @@ public @interface Path {
   String access() default X.NONE;
 
   /**
-   * Log the data of request and response in oplog, default is 0 -> none.
+   * Log the data of request and response in oplog, default is 0 -$gt; none.
    *
    * @return int
    */

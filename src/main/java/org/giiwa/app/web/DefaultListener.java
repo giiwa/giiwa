@@ -200,7 +200,9 @@ public class DefaultListener implements IListener {
    * Run db script.
    *
    * @param f
-   *          the f
+   *          the file
+   * @param m
+   *          the module
    * @throws IOException
    *           Signals that an I/O exception has occurred.
    * @throws SQLException

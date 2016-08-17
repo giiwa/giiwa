@@ -8,8 +8,8 @@ package org.giiwa.app.web.admin;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
@@ -62,7 +62,7 @@ public class user extends Model {
              * set the role
              */
             String[] roles = this.getStrings("role");
-            log.debug("roles=" + Bean.toString(roles));
+            log.debug("roles=" + Helper.toString(roles));
 
             if (roles != null) {
               User u = User.loadById(id);

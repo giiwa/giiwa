@@ -33,20 +33,28 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 
 /**
- * The {@code Helper} Class is base class for all class that database access, it
- * almost includes all methods that need for database <br>
- * all data access MUST be inherited from it
+ * The {@code Helper} Class is utility class for all database operation.
  * 
  */
 public class Helper {
 
-  /** The log. */
+  /** The log utility. */
   protected static Log log    = LogFactory.getLog(Helper.class);
+
+  /**
+   * the sqllog separate from the log utility, which used to record sql info
+   * only
+   */
   protected static Log sqllog = LogFactory.getLog("sql");
 
   public static enum DBType {
     MONGO, RDS, NONE;
   };
+
+  /**
+   * the primary database when there are multiple databases
+   */
+  public static DBType           primary = DBType.MONGO;
 
   /** The conf. */
   protected static Configuration conf;
@@ -54,7 +62,7 @@ public class Helper {
   /**
    * indicated whether is debug model
    */
-  public static boolean          DEBUG = true;
+  public static boolean          DEBUG   = true;
 
   /**
    * initialize the Bean with the configuration.
@@ -87,8 +95,15 @@ public class Helper {
 
   }
 
-  public static DBType primary = DBType.MONGO;
-
+  /**
+   * delete a data from database
+   * 
+   * @param id
+   *          the value of "id"
+   * @param t
+   *          the subclass of Bean
+   * @return the number was deleted
+   */
   public static int delete(Object id, Class<? extends Bean> t) {
     return delete(W.create(X.ID, id), t);
   }
@@ -97,10 +112,10 @@ public class Helper {
    * delete the data , return the number that was deleted
    * 
    * @param q
-   *          the query and order
+   *          the query
    * @param t
-   *          the Class of the Bean
-   * @return int
+   *          the subclass of the Bean
+   * @return the number was deleted
    */
   public static int delete(W q, Class<? extends Bean> t) {
     String table = getTable(t);
@@ -120,6 +135,17 @@ public class Helper {
     return 0;
   }
 
+  /**
+   * test if exists for the object
+   * 
+   * @param id
+   *          the value of "id"
+   * @param t
+   *          the subclass of Bean
+   * @return true: exist
+   * @throws Exception
+   *           throw exception if occur database error
+   */
   public static boolean exists(Object id, Class<? extends Bean> t) throws Exception {
     return exists(W.create(X.ID, id), t);
   }
@@ -167,7 +193,7 @@ public class Helper {
   }
 
   /**
-   * Values in SQL, used to insert or update data both RDBS and Mongo<br>
+   * Values in SQL, used to insert or update data both RDS and Mongo<br>
    * 
    */
   public static final class V {
@@ -993,6 +1019,8 @@ public class Helper {
   /**
    * load the data by id of X.ID
    * 
+   * @param <T>
+   *          the subclass of Bean
    * @param id
    *          the id
    * @param t
@@ -1006,6 +1034,8 @@ public class Helper {
   /**
    * load the data by the query
    * 
+   * @param <T>
+   *          the subclass of Bean
    * @param q
    *          the query
    * @param t
@@ -1177,7 +1207,8 @@ public class Helper {
   /**
    * test is configured RDS or Mongo
    * 
-   * @return
+   * @return the boolean, <br>
+   *         true: configured RDS or Mongo; false: no DB configured
    */
   public static boolean isConfigured() {
     return RDSHelper.isConfigured() || MongoHelper.isConfigured();
@@ -1187,6 +1218,8 @@ public class Helper {
    * load the data from the table by query, ignore the table definition for the
    * Class
    * 
+   * @param <T>
+   *          the subclass of Bean
    * @param table
    *          the table name
    * @param q
@@ -1214,6 +1247,8 @@ public class Helper {
   /**
    * load the data by query
    * 
+   * @param <T>
+   *          the subclass of Bean
    * @param q
    *          the query
    * @param s
@@ -1312,7 +1347,7 @@ public class Helper {
     w.and(w1);
 
     System.out.println(w.where());
-    System.out.println(Bean.toString(w.args()));
+    System.out.println(Helper.toString(w.args()));
     System.out.println(w.orderby());
 
     System.out.println("-----------");

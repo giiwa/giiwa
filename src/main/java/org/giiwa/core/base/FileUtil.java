@@ -18,7 +18,7 @@ import java.io.File;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
@@ -123,7 +123,7 @@ public class FileUtil {
         @Override
         public String toString() {
             if (_string == null) {
-                _string = new StringBuilder("(ver=").append(ver).append(Bean.toString(ss)).append(")").toString();
+                _string = new StringBuilder("(ver=").append(ver).append(Helper.toString(ss)).append(")").toString();
             }
 
             return _string;

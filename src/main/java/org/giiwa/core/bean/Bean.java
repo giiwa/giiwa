@@ -19,10 +19,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,9 +31,9 @@ import org.giiwa.core.json.JSON;
 import com.mongodb.DBObject;
 
 /**
- * The {@code Bean} Class is base class for all class that database access, it
+ * The {@code Bean} Class is entity class that mapping to a table,<br>
+ * work with {@code Helper}, you can load/update/delete data from DB(RDS/Mongo),
  * almost includes all methods that need for database <br>
- * all data access MUST be inherited from it
  * 
  */
 public abstract class Bean extends DefaultCachable implements Map<String, Object> {
@@ -44,9 +41,8 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 3L;
 
-  /** The log. */
+  /** The log utility */
   protected static Log      log              = LogFactory.getLog(Bean.class);
-  protected static Log      sqllog           = LogFactory.getLog("sql");
 
   /**
    * get the created timestamp of the data
@@ -70,43 +66,28 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * refill the bean from json.
    *
    * @param jo
-   *          the map
-   * @return boolean
+   *          the JSON object
+   * @return true if all successful
    */
-  public boolean fromJSON(Map<Object, Object> jo) {
-    return false;
+  public boolean fromJSON(JSON jo) {
+    for (String name : jo.keySet()) {
+      set(name, jo.get(name));
+    }
+    return true;
   }
 
   /**
    * get the key-value in the bean to json.<br>
    *
    * @param jo
-   *          the map
+   *          the JSON object
    */
   public void toJSON(JSON jo) {
     /**
      * get the extra data, and putall in json
      */
-    if (data != null && data.size() > 0) {
-      jo.putAll(data);
-    }
+    jo.putAll(getAll());
 
-    /**
-     * get all Column field and put them in json too
-     */
-    Map<String, Field> m1 = _getFields();
-    if (m1 != null) {
-      for (String name : m1.keySet()) {
-        Field f1 = m1.get(name);
-        f1.setAccessible(true);
-        try {
-          Object v1 = f1.get(this);
-          jo.put(name, v1);
-        } catch (Exception e) {
-          log.error(f1, e);
-        }
-      }
-    }
   }
 
   /*
@@ -119,85 +100,22 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * convert the array bytes to string.
-   * 
-   * @param arr
-   *          the array bytes
-   * @return the string
-   */
-  public static String toString(byte[] arr) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("[");
-    if (arr != null) {
-      int len = arr.length;
-      for (int i = 0; i < len; i++) {
-        if (i > 0) {
-          sb.append(" ");
-        }
-
-        sb.append(Integer.toHexString((int) arr[i] & 0xff));
-      }
-    }
-
-    return sb.append("]").toString();
-  }
-
-  /**
-   * convert the array objects to string.
-   * 
-   * @param arr
-   *          the array objects
-   * @return the string
-   */
-  public static String toString(Object[] arr) {
-    StringBuilder sb = new StringBuilder();
-    sb.append("[");
-    if (arr != null) {
-      int len = arr.length;
-      for (int i = 0; i < len; i++) {
-        if (i > 0) {
-          sb.append(",");
-        }
-
-        Object o = arr[i];
-        if (o == null) {
-          sb.append("null");
-        } else if (o instanceof Integer) {
-          sb.append(o);
-        } else if (o instanceof Date) {
-          sb.append("Date(").append(o).append(")");
-        } else if (o instanceof Long) {
-          sb.append(o);
-        } else if (o instanceof Float) {
-          sb.append(o);
-        } else if (o instanceof Double) {
-          sb.append(o);
-        } else if (o instanceof Boolean) {
-          sb.append("Bool(").append(o).append(")");
-        } else {
-          sb.append("\"").append(o).append("\"");
-        }
-      }
-    }
-
-    return sb.append("]").toString();
-  }
-
-  /**
-   * set the extra value.
+   * set the value to extra data, or the field annotation by @Column.
    *
    * @param name
-   *          the name
+   *          the name of the data or the column
    * @param value
-   *          the value
+   *          the value, if the value=null, then remove the name from the data
+   * @return Object of the old value
    */
-  public final void set(String name, Object value) {
+  public final Object set(String name, Object value) {
     if (data == null) {
       data = new HashMap<String, Object>();
     }
 
+    Object old = null;
+
     name = name.toLowerCase();
-    // data.put(name, value);
 
     // looking for all the fields
     Field f1 = _getField(name);
@@ -205,6 +123,8 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       try {
         // log.debug("f1=" + f1 + ", value=" + value);
         f1.setAccessible(true);
+        old = f1.get(this);
+
         Class<?> t1 = f1.getType();
         // log.debug("t1=" + t1 + ", f1.name=" + f1.getName());
         if (t1 == long.class) {
@@ -224,8 +144,14 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       // } else {
       // log.debug("not found the column=" + name);
     } else {
-      data.put(name, value);
+      old = data.get(name);
+      if (value == null) {
+        data.remove(name);
+      } else {
+        data.put(name, value);
+      }
     }
+    return old;
   }
 
   private Field _getField(String columnname) {
@@ -258,16 +184,12 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   private static Map<Class<? extends Bean>, Map<String, Field>> _fields = new HashMap<Class<? extends Bean>, Map<String, Field>>();
 
   /**
-   * get the extra value by name from map <br>
-   * the name can be : "name" <br>
-   * "name.subname" to get the value in sub-map <br>
-   * "name.subname[i]" to get the value in sub-map array <br>
+   * get the value by name from bean <br>
    *
    * @param name
-   *          the name
-   * @return Object
+   *          the name of the data or the column
+   * @return Object the value of the name, return null if the name not exists
    */
-  @SuppressWarnings("unchecked")
   public final Object get(Object name) {
 
     String s = name.toString().toLowerCase();
@@ -289,65 +211,6 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
       return data.get(s);
     }
 
-    String[] ss = s.split("\\.");
-    Map<String, Object> m = data;
-    Object o = null;
-    for (String s1 : ss) {
-      if (m == null) {
-        return null;
-      }
-
-      o = m.get(s1);
-      if (o == null)
-        return null;
-      if (o instanceof Map) {
-        m = (Map<String, Object>) o;
-      } else {
-        m = null;
-      }
-    }
-
-    return o;
-  }
-
-  /**
-   * get the value at index("i").
-   *
-   * @param name
-   *          the name
-   * @param i
-   *          the i
-   * @return Object
-   */
-  @SuppressWarnings("rawtypes")
-  public final Object get(Object name, int i) {
-    if (data == null) {
-      return null;
-    }
-
-    String n1 = name.toString();
-    try {
-      Class<?> c1 = this.getClass();
-      java.lang.reflect.Field f1 = c1.getField(n1);
-      if (f1 != null) {
-        return f1.get(this);
-      }
-    } catch (Exception e) {
-
-    }
-
-    if (data.containsKey(name.toString())) {
-      Object o = data.get(name.toString());
-      if (o instanceof List) {
-        List l1 = (List) o;
-        if (i >= 0 && i < l1.size()) {
-          return l1.get(i);
-        }
-      } else if (i == 0) {
-        return o;
-      }
-    }
-
     return null;
   }
 
@@ -358,7 +221,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @Override
   public final int size() {
-    return data == null ? 0 : data.size();
+    return getAll().size();
   }
 
   /**
@@ -366,7 +229,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @Override
   public final boolean isEmpty() {
-    return data == null ? true : data.isEmpty();
+    return getAll().isEmpty();
   }
 
   /*
@@ -376,7 +239,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @Override
   public final boolean containsKey(Object key) {
-    return data == null ? false : data.containsKey(key);
+    return getAll().containsKey(key);
   }
 
   /*
@@ -386,7 +249,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   @Override
   public final boolean containsValue(Object value) {
-    return data == null ? false : data.containsValue(value);
+    return getAll().containsValue(value);
   }
 
   /**
@@ -396,31 +259,30 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *          the key
    * @param value
    *          the value
-   * @return the object
+   * @return the object of old data
    */
   @Override
   public final Object put(String key, Object value) {
-    set(key, value);
-    return value;
+    return set(key, value);
   }
 
   /**
    * remove the key from the bean.
    *
    * @param key
-   *          the key
-   * @return the object
+   *          the name
+   * @return the object of old value
    */
   @Override
   public final Object remove(Object key) {
-    return data == null ? null : data.remove(key);
+    return this.set(key.toString(), null);
   }
 
   /**
    * put all the data in the map to Bean.
    *
    * @param m
-   *          the m
+   *          the data map
    */
   @Override
   public final void putAll(Map<? extends String, ? extends Object> m) {
@@ -430,55 +292,64 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   }
 
   /**
-   * remove all data from the bean.
+   * remove all data from the bean, <br>
+   * set the fields to null that annotation by @Column.
    */
   @Override
   public final void clear() {
+    /**
+     * clear data in data
+     */
     if (data != null) {
       data.clear();
     }
 
+    /**
+     * clear data Annotation by @Column
+     */
+    Map<String, Field> m1 = this._getFields();
+    if (m1 != null && m1.size() > 0) {
+      for (Field f : m1.values()) {
+        try {
+          f.setAccessible(true);
+          f.set(this, null);
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+        }
+      }
+    }
+
   }
 
   /**
-   * get the names from the bean.
+   * get the names from the bean, <br>
+   * the names in the "data" map, and the field annotation by @column
    *
-   * @return the sets the
+   * @return the sets of the names
    */
   @Override
   public final Set<String> keySet() {
-    if (data != null) {
-      return data.keySet();
-    }
-    return new HashSet<String>();
+    return getAll().keySet();
   }
 
   /**
-   * get all the values.
+   * get all the values, include the field annotation by @Column
    *
    * @return the collection
    */
   @Override
   public final Collection<Object> values() {
-    return data == null ? null : data.values();
+    return getAll().values();
   }
 
   /**
-   * get all the Entries.
+   * get all the Entries, include the field annotation by @Column
    *
    * @return the sets the
    */
   @Override
   public final Set<Entry<String, Object>> entrySet() {
-    Set<Entry<String, Object>> ss = new HashSet<Entry<String, Object>>();
-    if (data != null) {
-      for (Entry<String, Object> e : data.entrySet()) {
-        if (e.getValue() != null) {
-          ss.add(e);
-        }
-      }
-    }
-    return ss;
+    return getAll().entrySet();
   }
 
   /**
@@ -486,7 +357,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *
    * @param name
    *          the name
-   * @return int
+   * @return the int of value, default 0
    */
   public final int getInt(String name) {
     return X.toInt(get(name), 0);
@@ -497,7 +368,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *
    * @param name
    *          the name
-   * @return long
+   * @return long of the value, default 0
    */
   public long getLong(String name) {
     return X.toLong(get(name), 0);
@@ -508,7 +379,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *
    * @param name
    *          the name
-   * @return String
+   * @return String of the value, null if the name not exists
    */
   public final String getString(String name) {
     Object o = get(name);
@@ -526,7 +397,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *
    * @param name
    *          the name
-   * @return float
+   * @return float of the value, default 0
    */
   public final float getFloat(String name) {
     return X.toFloat(get(name), 0);
@@ -537,28 +408,44 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *
    * @param name
    *          the name
-   * @return double
+   * @return double of the value, default 0
    */
   public final double getDouble(String name) {
     return X.toDouble(get(name), 0);
   }
 
   /**
-   * get all extra value
+   * get all data, include the field annotation by @Column
    * 
-   * @return Map
+   * @return Map of data
    */
   public Map<String, Object> getAll() {
-    return data;
+    Map<String, Object> m1 = new HashMap<String, Object>();
+    if (data != null && data.size() > 0) {
+      m1.putAll(data);
+    }
+
+    Map<String, Field> m2 = _getFields();
+    if (m2 != null && m2.size() > 0) {
+      for (String name : m2.keySet()) {
+        Field f = m2.get(name);
+        try {
+          f.setAccessible(true);
+          m1.put(name, f.get(this));
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+        }
+      }
+    }
+
+    return m1;
   }
 
   /**
-   * remove all extra value.
+   * remove all value, same as clear.
    */
   public final void removeAll() {
-    if (data != null) {
-      data.clear();
-    }
+    clear();
   }
 
   /**
@@ -570,7 +457,7 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
   public final void remove(String... names) {
     if (data != null && names != null) {
       for (String name : names) {
-        data.remove(name);
+        remove(name);
       }
     }
   }

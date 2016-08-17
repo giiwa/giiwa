@@ -500,7 +500,7 @@ public class RDSHelper extends Helper {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "], args=" + Bean.toString(args));
+        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "], args=" + Helper.toString(args));
       }
     }
   }
@@ -808,7 +808,7 @@ public class RDSHelper extends Helper {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost: " + t.past() + "ms, sql=[" + sql + "], args=" + Bean.toString(args) + ", result=" + b);
+        sqllog.debug("cost: " + t.past() + "ms, sql=[" + sql + "], args=" + Helper.toString(args) + ", result=" + b);
       }
     }
 

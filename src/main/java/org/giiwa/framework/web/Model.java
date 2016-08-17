@@ -1958,6 +1958,8 @@ public class Model {
   /**
    * show deny page with error info to end-user
    * 
+   * @param url
+   *          the url will be responsed
    * @param error
    *          the error that will be displaied
    */
@@ -2479,7 +2481,7 @@ public class Model {
       List<NameValue> list = new ArrayList<NameValue>();
       while (e.hasMoreElements()) {
         String n = e.nextElement();
-        list.add(NameValue.create(n, Bean.toString(req.getParameterValues(n))));
+        list.add(NameValue.create(n, Helper.toString(req.getParameterValues(n))));
       }
 
       return list.toArray(new NameValue[list.size()]);

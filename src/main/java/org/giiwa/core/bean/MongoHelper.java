@@ -333,6 +333,8 @@ public class MongoHelper extends Helper {
   /**
    * load the data by the query
    * 
+   * @param <T>
+   *          the subclass of Bean
    * @param collection
    *          the collection name
    * @param query
@@ -362,6 +364,8 @@ public class MongoHelper extends Helper {
   /**
    * load the data by the query
    * 
+   * @param <T>
+   *          the subclass of Bean
    * @param collection
    *          the collection name
    * @param query

@@ -21,10 +21,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class Host.
  */
@@ -496,7 +495,7 @@ public class Host {
 
 					for (String s : ss) {
 						String[] ss1 = s.split(",");
-						log.debug(Bean.toString(ss1));
+						log.debug(Helper.toString(ss1));
 
 						for (String s1 : ss1) {
 							if (s1.trim().startsWith("NAME=")) {
