@@ -4,10 +4,6 @@
 	text-align: left;
 }
 
-#logo {
-	margin: 10px 0 0 0;
-}
-
 .center {
 	width: 500px;
 }
@@ -32,12 +28,4 @@ label h3 {
 .panel form>div {
 	margin: 10px 0;
 	line-height: 36px;
-}
-#head .left {
-    float: left;
-    position: relative;
-    margin-left: 20px;
-}
-.logo img {
-    height: 50px;
 }
