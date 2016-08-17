@@ -700,14 +700,14 @@ public class user extends Model {
           Code c = Code.load(code, phone);
           if (c == null) {
             jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
-            jo.put(X.MESSAGE, lang.get("email.code.bad"));
+            jo.put(X.MESSAGE, lang.get("phone.code.bad"));
           } else if (c.getExpired() < System.currentTimeMillis()) {
             jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
-            jo.put(X.MESSAGE, lang.get("email.code.expired"));
+            jo.put(X.MESSAGE, lang.get("phone.code.expired"));
           } else {
             Code.delete(code, phone);
             jo.put(X.STATE, HttpServletResponse.SC_OK);
-            jo.put(X.MESSAGE, lang.get("email.code.ok"));
+            jo.put(X.MESSAGE, lang.get("phone.code.ok"));
           }
         } else if (phase == 2) {
           // change the password

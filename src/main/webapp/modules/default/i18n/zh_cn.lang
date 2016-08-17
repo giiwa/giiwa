@@ -381,3 +381,6 @@ user.forget.phone.sent=短信验证已发送
 user.forget.phone.sent.failed=发送短信失败
 user.code=验证码
 user.register.success=新用户注册成功
+phone.code.bad=验证码错误
+phone.code.expired=验证码过期
+phone.code.ok=手机通过验证

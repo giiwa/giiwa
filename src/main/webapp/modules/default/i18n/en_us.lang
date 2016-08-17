@@ -389,3 +389,6 @@ user.forget.phone.sent=Sent validation code success
 user.forget.phone.sent.failed=Sent code failed
 user.code=Validation code
 user.register.success=Register success
+phone.code.bad=Code error
+phone.code.expired=Code expired
+phone.code.ok=Pass verify
