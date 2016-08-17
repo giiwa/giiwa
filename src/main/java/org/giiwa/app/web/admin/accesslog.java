@@ -35,7 +35,7 @@ public class accesslog extends Model {
    * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
-  @Path(login = true, access = "acess.config.admin")
+  @Path(login = true, access = "acess.logs.admin")
   public void onGet() {
     String uri = this.getString("guri");
     String ip = this.getString("ip");
@@ -77,7 +77,7 @@ public class accesslog extends Model {
   /**
    * Deleteall.
    */
-  @Path(path = "deleteall", login = true, access = "acess.config.admin")
+  @Path(path = "deleteall", login = true, access = "acess.logs.admin")
   public void deleteall() {
     AccessLog.deleteAll();
   }

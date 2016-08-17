@@ -4,37 +4,43 @@
 			"childs" : [{
 						"name" : "menu.system",
 						"classes" : "icon-cog",
-						"access" : "access.config.admin",
+						"access" : "access.config.admin|access.logs.admin",
 						"seq" : 10,
 						"childs" : [{
 									"name" : "menu.setting",
 									"load" : "/admin/setting",
 									"classes" : "icon-cogs",
+									"access" : "access.config.admin",
 									"seq" : 10
 								}, {
 									"name" : "menu.module",
 									"load" : "/admin/module",
 									"seq" : 20,
+									"access" : "access.config.admin",
 									"classes" : "icon-google-drive"
 								}, {
 									"name" : "menu.log",
 									"seq" : 30,
 									"classes" : "icon-list",
+									"access" : "access.logs.admin",
 									"childs" : [{
 												"name" : "menu.oplog",
 												"load" : "/admin/oplog",
 												"seq" : 10,
+												"access" : "access.logs.admin",
 												"classes" : "icon-file-text"
 											}, {
 												"name" : "menu.accesslog",
 												"load" : "/admin/accesslog",
 												"seq" : 20,
+												"access" : "access.logs.admin",
 												"classes" : "icon-list"
 											}]
 								}, {
 									"name" : "menu.repo",
 									"load" : "/admin/repo",
 									"seq" : 40,
+									"access" : "access.config.admin",
 									"classes" : "icon-cloud"
 								}, {
 									"name" : "menu.backup",
