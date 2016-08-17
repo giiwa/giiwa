@@ -241,7 +241,7 @@ public class Language {
    * @return the string
    */
   public String get(String name) {
-    if (name == null) {
+    if (X.isEmpty(name)) {
       return X.EMPTY;
     }
 
