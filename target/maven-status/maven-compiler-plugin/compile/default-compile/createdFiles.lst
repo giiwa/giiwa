@@ -147,6 +147,7 @@ org/giiwa/app/web/admin/backup$BackupTask.class
 org/giiwa/app/web/admin/index.class
 org/giiwa/framework/bean/Response.class
 org/giiwa/core/task/Task$1.class
+org/giiwa/app/web/admin/user$1.class
 org/giiwa/app/web/version.class
 org/giiwa/core/cache/Cachable.class
 org/giiwa/app/web/admin/setting$counter.class

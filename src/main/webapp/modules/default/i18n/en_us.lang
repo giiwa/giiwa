@@ -392,3 +392,6 @@ user.register.success=Register success
 phone.code.bad=Code error
 phone.code.expired=Code expired
 phone.code.ok=Pass verify
+site.url=Site URL
+site.url.hint=Site url will be used in notification
+mail.creation.noti=Account creation notification

@@ -384,3 +384,6 @@ user.register.success=新用户注册成功
 phone.code.bad=验证码错误
 phone.code.expired=验证码过期
 phone.code.ok=手机通过验证
+site.url=网络链接
+site.url.hint=网站链接，会被用在通知中
+mail.creation.noti=账号创建通知

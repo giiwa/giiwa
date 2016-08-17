@@ -36,6 +36,7 @@
 		</select>
 		<g>$lang.get('user.system.hint')</g>
 	</label></div>
+		
 	<div><label><h3>$lang.get('user.role'):</h3>
 		<select name='user_role'>
 			#foreach($r in $roles)
@@ -44,6 +45,12 @@
 		</select>
 		<g>$lang.get('user.role.hint')</g>
 	</label></div>
+
+	<div><label><h3>$lang.get('site.url'):</h3>
+		<input type='text' name='site_url' value="$!global.getString('site.url','')" />
+		<g>$lang.get('site.url.hint')</g>
+	</label></div>
+
 	<div><label><h3>$lang.get('system.code'):</h3>
 		<input type='number' name='system_code' value="$!system_code"/>
 		<g>$lang.get('system.code.hint')</g></label></div>
@@ -54,6 +61,7 @@
 	<div><label><h3>$lang.get('cross.header'):</h3>
 		<input type='text' name='cross_header' value="$!cross_header"/>
 		<g>$lang.get('cross.header.hint')</g></label></div>
+		
 		
 	<div><label><g>$lang.get('base.setting.notes')</g></label></div>
 	<hr/>

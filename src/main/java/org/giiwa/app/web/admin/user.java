@@ -5,6 +5,7 @@
  */
 package org.giiwa.app.web.admin;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +16,12 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
+import org.giiwa.framework.noti.Email;
+import org.giiwa.framework.noti.Sms;
 import org.giiwa.framework.web.*;
+import org.giiwa.framework.web.view.VelocityView;
 
 /**
  * web api: /admin/user <br>
@@ -36,7 +41,7 @@ public class user extends Model {
     if (method.isPost()) {
 
       JSON jo = this.getJSON();
-      String name = this.getString("name").trim().toLowerCase();
+      final String name = this.getString("name").trim().toLowerCase();
       String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
       if (!X.isEmpty(rule) && !name.matches(rule)) {
         this.set(jo);
@@ -80,6 +85,44 @@ public class user extends Model {
                 this.getRemoteHost());
 
             this.set(X.MESSAGE, lang.get("save.success"));
+
+            if (Global.getInt("user.updated.noti", 1) == 1) {
+              final String email = this.getString("email");
+              final String phone = this.getString("phone");
+
+              if (!X.isEmpty(email) || !X.isEmpty(phone)) {
+                new Task() {
+
+                  @Override
+                  public void onExecute() {
+                    if (!X.isEmpty(phone)) {
+                      JSON jo = JSON.create();
+                      jo.put("account", name);
+                      Sms.send(phone, "add.account", jo);
+                    }
+
+                    if (!X.isEmpty(email)) {
+
+                      File f = module.getFile("/admin/email.creation." + lang.getLocale() + ".template");
+                      if (f != null) {
+                        JSON j1 = JSON.create();
+                        j1.put("email", email);
+                        j1.put("account", name);
+                        j1.put("lang", lang);
+                        j1.put("global", Global.getInstance());
+
+                        VelocityView v1 = new VelocityView();
+                        String body = v1.parse(f, j1);
+                        if (body != null) {
+                          Email.send(lang.get("mail.creation.noti"), body, email);
+                        }
+                      }
+
+                    }
+                  }
+                }.schedule(10);
+              }
+            }
 
             onGet();
             return;
