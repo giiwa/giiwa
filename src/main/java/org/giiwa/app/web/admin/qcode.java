@@ -24,8 +24,8 @@ public class qcode extends Model {
       GImage.QRCode(t.getFile(), url, 120, 120);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-      OpLog.error(qcode.class, "/", e.getMessage(), e);
-      
+      OpLog.error(qcode.class, "", e.getMessage(), e, login, this.getRemoteHost());
+
     }
     this.redirect(t.getUri());
   }

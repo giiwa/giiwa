@@ -20,9 +20,9 @@
 	#if($global.getInt('user.captcha', 1) == 1)
 	<div class="validateCode">
 		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
-		<input type="text" id="validateCode" name="code" maxlength="5" required class="form-control">
+		<input type="text" id="validateCode" name="code" maxlength="4" required class="form-control">
 		<img id="validateImg" src="" onclick="_oncaptcha();" class="mid validateCode" style="">
-		<a href="javascript:" onclick="_oncaptcha();" class="icon-opera validateCodeRefresh " style=""></a>
+		<a href="javascript:" onclick="_oncaptcha();" class="validateCodeRefresh ">$lang.get('a.refresh')</a>
 		<script>
 			function _oncaptcha() {
 				$.get('/captcha', {}, function(d) {

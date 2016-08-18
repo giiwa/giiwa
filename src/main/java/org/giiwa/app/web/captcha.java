@@ -34,7 +34,7 @@ public class captcha extends Model {
       jo.put("uri", t.getUri() + "?" + System.currentTimeMillis());
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
-      OpLog.error(captcha.class, "/", e1.getMessage(), e1);
+      OpLog.error(captcha.class, "", e1.getMessage(), e1, login, this.getRemoteHost());
 
       jo.put(X.STATE, 201);
       jo.put(X.MESSAGE, e1.getMessage());

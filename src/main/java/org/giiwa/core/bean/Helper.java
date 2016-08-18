@@ -1044,6 +1044,23 @@ public class Helper {
    */
   public static <T extends Bean> T load(W q, Class<T> t) {
     String table = getTable(t);
+    return load(table, q, t);
+  }
+
+  /**
+   * load data from the table
+   * 
+   * @param <T>
+   *          the subclass of Bean
+   * @param table
+   *          the table name
+   * @param q
+   *          the query and order
+   * @param t
+   *          the subclass of Bean
+   * @return the bean
+   */
+  public static <T extends Bean> T load(String table, W q, Class<T> t) {
 
     if (table != null) {
       if (primary == DBType.MONGO) {

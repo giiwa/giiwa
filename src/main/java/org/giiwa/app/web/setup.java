@@ -176,7 +176,7 @@ public class setup extends Model {
         jo.put(X.STATE, 200);
       } catch (Exception e1) {
         log.error(e1.getMessage(), e1);
-        OpLog.error(setup.class, "check", e1.getMessage(), e1);
+        OpLog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
 
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, e1.getMessage());
@@ -215,7 +215,7 @@ public class setup extends Model {
             list.add(new ServerAddress(host, port));
           } catch (Exception e1) {
             log.error(e1.getMessage(), e1);
-            OpLog.error(setup.class, "check", e1.getMessage(), e1);
+            OpLog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
           }
         }
 
@@ -233,7 +233,7 @@ public class setup extends Model {
 
         } catch (Exception e1) {
           log.error(e1.getMessage(), e1);
-          OpLog.error(setup.class, "check", e1.getMessage(), e1);
+          OpLog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
 
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, e1.getMessage());

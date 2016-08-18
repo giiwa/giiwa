@@ -157,7 +157,7 @@ public class role extends Model {
         int i = Role.delete(id);
         if (i > 0) {
           updated += i;
-          OpLog.info(Role.class, "delete", r.getName(), null, login.getId(), this.getRemoteHost());
+          OpLog.info(role.class, "delete", r.getName(), null, login, this.getRemoteHost());
         }
       }
     }

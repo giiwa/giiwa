@@ -29,7 +29,6 @@ org/giiwa/app/web/repo.class
 org/giiwa/framework/web/GiiwaFilter.class
 org/giiwa/core/base/Host$Proc.class
 org/giiwa/core/base/Http$Response.class
-org/giiwa/app/web/admin/oplog$1.class
 org/giiwa/app/web/setup$1.class
 org/giiwa/core/base/Base32.class
 org/giiwa/framework/bean/Temp.class
@@ -98,6 +97,7 @@ org/giiwa/app/web/admin/setting$system.class
 org/giiwa/framework/web/IListener.class
 org/giiwa/framework/web/QueryString.class
 org/giiwa/core/task/Task.class
+org/giiwa/framework/bean/OpLog$ILogger.class
 org/giiwa/framework/web/view/VelocityView.class
 org/giiwa/core/base/GString.class
 org/giiwa/core/base/Host$Entity.class

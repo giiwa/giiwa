@@ -18,18 +18,13 @@ import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.bean.Table;
-import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
- * Freedom data storage, not specify. <br>
- * collection=""
+ * Load "freedom" data storage, not specify. <br>
  * 
  * @author wujun
  *
  */
-@Table(name = "gi_data")
 public class Data extends Bean {
 
   /**
@@ -37,15 +32,11 @@ public class Data extends Bean {
    */
   private static final long serialVersionUID = 1L;
 
-  public String getId() {
-    return this.getString(X.ID);
-  }
-
   /**
-   * Load.
+   * Load data from any table
    *
-   * @param collection
-   *          the collection
+   * @param table
+   *          the table
    * @param q
    *          the query and order
    * @param s
@@ -54,8 +45,21 @@ public class Data extends Bean {
    *          the number of items
    * @return the beans
    */
-  public static Beans<Data> load(String collection, W q, int s, int n) {
-    return Helper.load(collection, q, s, n, Data.class);
+  public static Beans<Data> load(String table, W q, int s, int n) {
+    return Helper.load(table, q, s, n, Data.class);
+  }
+
+  /**
+   * load the data from the table
+   * 
+   * @param table
+   *          the table name
+   * @param q
+   *          the query and order
+   * @return the Data object
+   */
+  public static Data load(String table, W q) {
+    return Helper.load(table, q, Data.class);
   }
 
 }

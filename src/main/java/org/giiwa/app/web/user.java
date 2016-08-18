@@ -118,7 +118,8 @@ public class user extends Model {
               u.setRole(r.getId());
             }
             this.setUser(u);
-            OpLog.log(User.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id);
+            OpLog.info(user.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id, login,
+                this.getRemoteHost());
 
             Session s = this.getSession();
             if (s.has("uri")) {
@@ -131,10 +132,10 @@ public class user extends Model {
 
           } catch (Exception e) {
             log.error(e.getMessage(), e);
-            OpLog.error(user.class, "register", e.getMessage(), e);
+            OpLog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
 
             this.put(X.MESSAGE, lang.get("create_user_error_1"));
-            OpLog.log(User.class, "register", lang.get("create.failed") + ":" + name);
+            OpLog.info(user.class, "register", lang.get("create.failed") + ":" + name, login, this.getRemoteHost());
           }
         }
       }
@@ -308,8 +309,7 @@ public class user extends Model {
 
           } else {
 
-            OpLog.warn(User.class, "user.login", lang.get("login.failed") + ":" + name + ", ip:" + this.getRemoteHost(),
-                null);
+            OpLog.warn(user.class, "login", lang.get("login.failed") + ":" + name, login, this.getRemoteHost());
 
             User u = User.load(name);
             if (u == null) {
@@ -357,7 +357,7 @@ public class user extends Model {
         this.getSession().set("uri", URLDecoder.decode(refer, "UTF-8")).store();
       } catch (Exception e) {
         log.error(refer, e);
-        OpLog.error(user.class, "login", e.getMessage(), e);
+        OpLog.error(user.class, "login", e.getMessage(), e, login, this.getRemoteHost());
       }
     }
 
@@ -391,7 +391,7 @@ public class user extends Model {
   /**
    * Verify.
    */
-  @Path(path = "verify", login = true, access = "access.user.query")
+  @Path(path = "verify", access = "access.user.query")
   public void verify() {
     String name = this.getString("name").trim().toLowerCase();
     String value = this.getString("value").trim().toLowerCase();
@@ -403,7 +403,7 @@ public class user extends Model {
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, lang.get("user.name.exists"));
 
-        OpLog.log(user.class, "verify", "name=" + name + ",value=" + value + ",exists");
+        OpLog.info(user.class, "verify", "name=" + name + ",value=" + value + ",exists", login, this.getRemoteHost());
 
       } else {
         String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
@@ -412,7 +412,8 @@ public class user extends Model {
           jo.put(X.STATE, 201);
           jo.put(X.MESSAGE, lang.get("user.name.format.error"));
 
-          OpLog.log(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule);
+          OpLog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
+              this.getRemoteHost());
         } else {
           jo.put(X.STATE, 200);
         }
@@ -423,7 +424,8 @@ public class user extends Model {
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
 
-        OpLog.log(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule);
+        OpLog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
+            this.getRemoteHost());
       } else {
         jo.put(X.STATE, 200);
       }

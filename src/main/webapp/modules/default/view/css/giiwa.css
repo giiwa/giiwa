@@ -854,9 +854,6 @@ div.error {
 span.user, i.user {
 	margin-left: 0;
 	margin-right: 5px;
-	background: url(/images/user.png) no-repeat;
-	padding-left: 16px;
-	background-size: 16px;
 	cursor: pointer;
 }
 table.tablesorter tbody tr.done td {

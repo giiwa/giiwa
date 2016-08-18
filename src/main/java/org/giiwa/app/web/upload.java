@@ -142,7 +142,7 @@ public class upload extends Model {
       return true;
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-      OpLog.error(upload.class, "/", e.getMessage(), e);
+      OpLog.error(upload.class, "", e.getMessage(), e, login, this.getRemoteHost());
 
       if (jo == null) {
         this.set(X.ERROR, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

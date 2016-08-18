@@ -68,7 +68,7 @@ public class setting extends Model {
 
       } catch (Exception e) {
         log.error(name, e);
-        OpLog.error(setting.class, "reset", e.getMessage(), e);
+        OpLog.error(setting.class, "reset", e.getMessage(), e, login, this.getRemoteHost());
 
         this.show("/admin/setting.html");
       }
@@ -102,7 +102,7 @@ public class setting extends Model {
 
       } catch (Exception e) {
         log.error(name, e);
-        OpLog.error(setting.class, "get", e.getMessage(), e);
+        OpLog.error(setting.class, "get", e.getMessage(), e, login, this.getRemoteHost());
 
         this.show("/admin/setting.html");
       }
@@ -134,7 +134,7 @@ public class setting extends Model {
         s.show("/admin/setting.html");
       } catch (Exception e) {
         log.error(name, e);
-        OpLog.error(setting.class, "set", e.getMessage(), e);
+        OpLog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
 
         this.show("/admin/setting.html");
       }

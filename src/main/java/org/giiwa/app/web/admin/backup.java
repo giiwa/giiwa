@@ -82,7 +82,7 @@ public class backup extends Model {
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-      OpLog.error(backup.class, "delete", e.getMessage(), e);
+      OpLog.error(backup.class, "delete", e.getMessage(), e, login, this.getRemoteHost());
     }
 
   }
@@ -195,7 +195,7 @@ public class backup extends Model {
 
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        OpLog.error(backup.class, "backup", e.getMessage(), e);
+        OpLog.error(backup.class, "backup", e.getMessage(), e, null, null);
 
       }
     }
@@ -259,7 +259,7 @@ public class backup extends Model {
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         message = e.getMessage();
-        OpLog.error(backup.class, "recover", e.getMessage(), e);
+        OpLog.error(backup.class, "recover", e.getMessage(), e, null, null);
 
       }
 

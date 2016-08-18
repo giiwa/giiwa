@@ -16,18 +16,21 @@ package org.giiwa.framework.bean;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
-import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Module;
 
 /**
  * Operation Log. <br>
- * collection="gi_oplog"
+ * Used to record info/warn/error log in database <br>
+ * Beside this, the module also can add personal ILogger for other use by
+ * OpLog.addLogger() <br>
+ * table="gi_oplog"
  * 
  * @author yjiang
  * 
@@ -37,31 +40,21 @@ public class OpLog extends Bean {
 
   private static final long serialVersionUID = 1L;
 
-  public static final int   TYPE_INFO        = 0;
-  public static final int   TYPE_WARN        = 1;
-  public static final int   TYPE_ERROR       = 2;
+  private static final int  TYPE_INFO        = 0;
+  private static final int  TYPE_WARN        = 1;
+  private static final int  TYPE_ERROR       = 2;
 
   /**
-   * Removes the.
+   * Removes all the oplog.
    * 
-   * @return the int
+   * @return the number was deleted
    */
-  public static int remove() {
+  public static int cleanup() {
     return Helper.delete(W.create(), OpLog.class);
   }
 
   /**
-   * Cleanup.
-   * 
-   */
-  public static void cleanup() {
-    // TODO
-    Helper.delete(W.create().and("created", System.currentTimeMillis() - X.AMONTH, W.OP_LT), OpLog.class);
-
-  }
-
-  /**
-   * Load.
+   * Load the oplo
    *
    * @param query
    *          the query and order
@@ -75,740 +68,477 @@ public class OpLog extends Bean {
     return Helper.load(query, offset, limit, OpLog.class);
   }
 
+  // --------------API
   /**
-   * Log.
+   * record info log
    * 
+   * @param model
+   *          the model name
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @return the int
-   */
-  public static int log(String op, String brief, String message) {
-    return log(op, brief, message, -1, null);
-  }
-
-  /**
-   * Log.
-   * 
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int log(String op, String brief, String message, long uid, String ip) {
-    return log(X.EMPTY, op, brief, message, uid, ip);
+  public static void info(String model, String op, String message, User u, String ip) {
+    info(model, op, message, null, u, ip);
   }
 
   /**
-   * Log.
+   * record info log
    * 
-   * @param module
-   *          the module
+   * @param model
+   *          the model name
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @return the int
-   */
-  public static int log(String module, String op, String brief, String message) {
-    return log(module, op, brief, message, -1, null);
-  }
-
-  /**
-   * Log.
-   *
-   * @param op
-   *          the op
-   * @param message
-   *          the message
-   * @return int
-   * @deprecated
-   */
-  public static int log(String op, String message) {
-    return info("default", op, message, -1, null);
-  }
-
-  /**
-   * Log.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param message
-   *          the message
-   * @return the int
-   */
-  public static int log(Class<?> module, String op, String message) {
-    return info(module.getName(), op, message, -1, null);
-  }
-
-  /**
-   * Log.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int log(String module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.getString("node", X.EMPTY), module, op, brief, message, uid, ip);
+  public static void info(String model, String op, String message, String trace, User u, String ip) {
+    info(Model.node(), model, op, message, trace, u, ip);
   }
 
   /**
-   * Log.
+   * record info log
    * 
-   * @param module
-   *          the module
+   * @param model
+   *          the subclass of Model
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int log(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
+  public static void info(Class<? extends Model> model, String op, String message, User u, String ip) {
+    info(model, op, message, null, u, ip);
   }
 
   /**
-   * Log.
+   * record info log
    * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
+   * @param model
+   *          the subclass of Model
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int log(String system, Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return info(system, module.getName(), op, brief, message, uid, ip);
+  public static void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+    info(Module.home.shortName(model), op, message, trace, u, ip);
   }
 
   /**
-   * Log.
+   * record info log
    * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
+   * @param node
+   *          the node or subsystem node
+   * @param model
+   *          the model name
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int log(String system, String module, String op, String brief, String message, long uid, String ip) {
-    return info(system, module, op, brief, message, uid, ip);
+  public static void info(String node, String model, String op, String message, String trace, User u, String ip) {
+    _log(OpLog.TYPE_INFO, node, model, op, message, trace, u, ip);
   }
 
-  public String getId() {
-    return this.getString(X.ID);
-  }
-
-  private User user_obj;
-
-  public User getUser() {
-    if (user_obj == null && this.getLong("uid") >= 0) {
-      user_obj = User.loadById(this.getLong("uid"));
-    }
-    return user_obj;
-  }
-
-  public String getExportableId() {
-    return getId();
-  }
-
-  public String getExportableName() {
-    return this.getString("message");
-  }
-
-  public long getExportableUpdated() {
-    return this.getLong("created");
-  }
-
-  /**
-   * Info.
-   * 
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @return the int
-   */
-  public static int info(String op, String brief, String message) {
-    return info(op, brief, message, -1, null);
-  }
-
-  /**
-   * Info.
-   * 
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
-   * @param ip
-   *          the ip
-   * @return the int
-   */
-  public static int info(String op, String brief, String message, long uid, String ip) {
-    return info(X.EMPTY, op, brief, message, uid, ip);
-  }
-
-  /**
-   * Info.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @return the int
-   */
-  public static int info(String module, String op, String brief, String message) {
-    return info(module, op, brief, message, -1, null);
-  }
-
-  /**
-   * Info.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @return the int
-   */
-  public static int info(Class<?> module, String op, String brief, String message) {
-    return info(module.getName(), op, brief, message, -1, null);
-  }
-
-  /**
-   * Info.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
-   * @param ip
-   *          the ip
-   * @return the int
-   */
-  public static int info(String module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.getString("node", X.EMPTY), module, op, brief, message, uid, ip);
-  }
-
-  /**
-   * Info.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
-   * @param ip
-   *          the ip
-   * @return the int
-   */
-  public static int info(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return info(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
-  }
-
-  /**
-   * Info.
-   * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
-   * @param ip
-   *          the ip
-   * @return the int
-   */
-  public static int info(String system, Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return info(system, module.getName(), op, brief, message, uid, ip);
-  }
-
-  /**
-   * Info.
-   * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
-   * @param ip
-   *          the ip
-   * @return the int
-   */
-  public static int info(String system, String module, String op, String brief, String message, long uid, String ip) {
-    return _log(OpLog.TYPE_INFO, system, module, op, brief, message, uid, ip);
-  }
-
-  private static int _log(int type, String system, String module, String op, String brief, String message, long uid,
+  private static void _log(int type, String node, String model, String op, String message, String trace, User u,
       String ip) {
 
-    // brief = Language.getLanguage().truncate(brief, 1024);
-    // message = Language.getLanguage().truncate(message, 8192);
+    if (message != null && message.length() > 1024) {
+      message = message.substring(0, 1024);
+    }
+    if (trace != null && trace.length() > 8192) {
+      trace = trace.substring(0, 8192);
+    }
 
     long t = System.currentTimeMillis();
     String id = UID.id(t, op, message);
-    V v = V.create("id", id).set("created", t).set("system", system).set("module", module).set("op", op).set("uid", uid)
-        .set("ip", ip).set("type", type);
-    if (X.isEmpty(brief)) {
-      v.set("brief", message);
-    } else {
-      v.set("brief", brief).set("message", message);
-    }
-    int i = Helper.insert(v, OpLog.class);
-
-    if (i > 0) {
-      // Category.update(system, module, op);
-
-      /**
-       * 记录系统日志
-       */
-      if (Global.getInt("logger.rsyslog", 0) == 1) {
-        Language lang = Language.getLanguage();
-        // 192.168.1.1#系统名称#2014-10-31#ERROR#日志消息#程序名称
-        if (type == OpLog.TYPE_INFO) {
-          Shell.log(ip, Shell.Logger.info, lang.get("log.module_" + module),
-              lang.get("log.opt_" + op) + "//" + brief + ", uid=" + uid);
-        } else if (type == OpLog.TYPE_ERROR) {
-          Shell.log(ip, Shell.Logger.error, lang.get("log.module_" + module),
-              lang.get("log.opt_" + op) + "//" + brief + ", uid=" + uid);
-        } else {
-          Shell.log(ip, Shell.Logger.warn, lang.get("log.module_" + module),
-              lang.get("log.opt_" + op) + "//" + brief + ", uid=" + uid);
-        }
+    V v = V.create("id", id).set("created", t).set("node", node).set("model", model).set("op", op)
+        .set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type);
+    v.set("message", message);
+    v.set("trace", trace);
+    Helper.insert(v, OpLog.class);
+    if (loggers.size() > 0) {
+      for (ILogger l : loggers) {
+        l.log(v);
       }
-
-      // onChanged("tbloplog", IData.OP_CREATE, "created=? and id=?", new
-      // Object[] { t, id });
     }
-
-    return i;
   }
 
   /**
-   * Warn operation log.
+   * record warn log
    * 
+   * @param model
+   *          the model name
    * @param op
    *          the operation
-   * @param brief
-   *          the brief info
    * @param message
    *          the message
-   * @return int
-   */
-  public static int warn(String op, String brief, String message) {
-    return warn(op, brief, message, -1, null);
-  }
-
-  /**
-   * Warn operation log.
-   * 
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int warn(String op, String brief, String message, long uid, String ip) {
-    return warn(X.EMPTY, op, brief, message, uid, ip);
+  public static void warn(String model, String op, String message, User u, String ip) {
+    warn(model, op, message, null, u, ip);
   }
 
   /**
-   * Warn.
+   * record warn log
    * 
-   * @param module
-   *          the module
+   * @param model
+   *          the model name
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @return the int
-   */
-  public static int warn(String module, String op, String brief, String message) {
-    return warn(module, op, brief, message, -1, null);
-  }
-
-  /**
-   * Warn.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @return the int
-   */
-  public static int warn(Class<?> module, String op, String brief, String message) {
-    return warn(module.getName(), op, brief, message, -1, null);
-  }
-
-  /**
-   * Warn.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int warn(String module, String op, String brief, String message, long uid, String ip) {
-    return warn(Global.getString("node", X.EMPTY), module, op, brief, message, uid, ip);
+  public static void warn(String model, String op, String message, String trace, User u, String ip) {
+    warn(Model.node(), model, op, message, trace, u, ip);
   }
 
   /**
-   * Warn.
+   * record warn log
    * 
-   * @param module
-   *          the module
+   * @param model
+   *          the subclass of Model
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int warn(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return warn(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
+  public static void warn(Class<? extends Model> model, String op, String message, User u, String ip) {
+    warn(model, op, message, null, u, ip);
   }
 
   /**
-   * Warn.
+   * record warn log
    * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
+   * @param model
+   *          the subclass of Model
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int warn(String system, Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return warn(system, module.getName(), op, brief, message, uid, ip);
+  public static void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+    warn(Module.home.shortName(model), op, message, trace, u, ip);
   }
 
   /**
-   * Warn.
+   * record warn log
    * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
+   * @param node
+   *          the node or subsystem name
+   * @param model
+   *          the model name
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int warn(String system, String module, String op, String brief, String message, long uid, String ip) {
-    return _log(OpLog.TYPE_WARN, system, module, op, brief, message, uid, ip);
+  public static void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+    _log(OpLog.TYPE_WARN, node, model, op, message, trace, u, ip);
   }
 
   /**
-   * Error.
+   * record error log
    * 
+   * @param model
+   *          the subclass
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @return the int
-   */
-  public static int error(String op, String brief, String message) {
-    return error(op, brief, message, -1, null);
-  }
-
-  /**
-   * Error.
-   * 
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int error(String op, String brief, String message, long uid, String ip) {
-    return error(X.EMPTY, op, brief, message, uid, ip);
+  public static void error(Class<? extends Model> model, String op, String message, User u, String ip) {
+    error(model, op, message, (String) null, u, ip);
   }
 
   /**
-   * Error.
+   * record error log
    * 
-   * @param module
-   *          the module
+   * @param model
+   *          the subclass of Model
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @return the int
-   */
-  public static int error(String module, String op, String brief, String message) {
-    return error(module, op, brief, message, -1, null);
-  }
-
-  public static int error(Class<?> module, String op, String brief, Exception e) {
-    StringWriter sw = new StringWriter();
-    PrintWriter out = new PrintWriter(sw);
-    e.printStackTrace(out);
-    String s = sw.toString();
-    String lineSeparator = System.lineSeparator();
-    s = s.replaceAll(lineSeparator, "<br/>");
-    s = s.replaceAll(" ", "&nbsp;");
-    s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
-    return error(module, op, brief, s);
-
-  }
-
-  /**
-   * Error.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @return the int
-   */
-  public static int error(Class<?> module, String op, String brief, String message) {
-    return error(module == null ? X.EMPTY : module.getName(), op, brief, message, -1, null);
-  }
-
-  /**
-   * Error.
-   * 
-   * @param module
-   *          the module
-   * @param op
-   *          the op
-   * @param brief
-   *          the brief
-   * @param message
-   *          the message
-   * @param uid
-   *          the uid
+   * @param e
+   *          the Exception
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int error(String module, String op, String brief, String message, long uid, String ip) {
-    return error(Model.node(), module, op, brief, message, uid, ip);
+  public static void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
+    error(Module.home.shortName(model), op, message, e, u, ip);
   }
 
   /**
-   * Error.
+   * record error log
    * 
-   * @param module
-   *          the module
+   * @param model
+   *          the model name
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param e
+   *          the Exception
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int error(Class<?> module, String op, String brief, String message, long uid, String ip) {
-    return error(Global.getString("node", X.EMPTY), module.getName(), op, brief, message, uid, ip);
+  public static void error(String model, String op, String message, Exception e, User u, String ip) {
+    String s = X.EMPTY;
+    if (e != null) {
+      StringWriter sw = new StringWriter();
+      PrintWriter out = new PrintWriter(sw);
+      e.printStackTrace(out);
+      s = sw.toString();
+      String lineSeparator = System.lineSeparator();
+      s = s.replaceAll(lineSeparator, "<br/>");
+      s = s.replaceAll(" ", "&nbsp;");
+      s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
+    }
+
+    error(model, op, message, s, u, ip);
   }
 
   /**
-   * Error.
+   * record error log
    * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
+   * @param model
+   *          the subclass of Model
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int error(String system, Class<?> module, String op, String brief, String message, long uid,
-      String ip) {
-    return error(system, module.getName(), op, brief, message, uid, ip);
+  public static void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+    error(Module.home.shortName(model), op, message, trace, u, ip);
   }
 
   /**
-   * Error.
+   * record error log
    * 
-   * @param system
-   *          the system
-   * @param module
-   *          the module
+   * @param model
+   *          the model name
    * @param op
-   *          the op
-   * @param brief
-   *          the brief
+   *          the operation
    * @param message
    *          the message
-   * @param uid
-   *          the uid
+   * @param u
+   *          the user object
    * @param ip
-   *          the ip
-   * @return the int
+   *          the ip address
    */
-  public static int error(String system, String module, String op, String brief, String message, long uid, String ip) {
-    return _log(OpLog.TYPE_ERROR, system, module, op, brief, message, uid, ip);
+  public static void error(String model, String op, String message, User u, String ip) {
+    error(model, op, message, (String) null, u, ip);
   }
 
-  public String getSystem() {
-    return this.getString("system");
+  /**
+   * record error log
+   * 
+   * @param model
+   *          the model name
+   * @param op
+   *          the operation
+   * @param message
+   *          the message
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
+   * @param ip
+   *          the ip address
+   */
+  public static void error(String model, String op, String message, String trace, User u, String ip) {
+    error(Model.node(), model, op, message, trace, u, ip);
   }
 
-  public String getModule() {
-    return this.getString("module");
+  /**
+   * record error log
+   * 
+   * @param node
+   *          the node or subsystem name
+   * @param model
+   *          the model name
+   * @param op
+   *          the operation
+   * @param message
+   *          the message
+   * @param trace
+   *          the trace info
+   * @param u
+   *          the user object
+   * @param ip
+   *          the ip address
+   */
+  public static void error(String node, String model, String op, String message, String trace, User u, String ip) {
+    _log(OpLog.TYPE_ERROR, node, model, op, message, trace, u, ip);
   }
 
+  /**
+   * get the node or subsystem name
+   * 
+   * @return string of node
+   */
+  public String getNode() {
+    return this.getString("node");
+  }
+
+  /**
+   * get the model name
+   * 
+   * @return string of the model
+   */
+  public String getModel() {
+    return this.getString("model");
+  }
+
+  /**
+   * get the operation
+   * 
+   * @return string of operation
+   */
   public String getOp() {
     return this.getString("op");
   }
 
+  /**
+   * get the message
+   * 
+   * @return string of the message
+   */
   public String getMessage() {
     return this.getString("message");
+  }
+
+  /**
+   * get the trace
+   * 
+   * @return string of trace
+   */
+  public String getTrace() {
+    return this.getString("trace");
+  }
+
+  /**
+   * get the user id
+   * 
+   * @return long of user id
+   */
+  public long getUid() {
+    return this.getLong("uid");
+  }
+
+  /**
+   * get the ip address
+   * 
+   * @return string og ip
+   */
+  public String getIp() {
+    return this.getString("ip");
+  }
+
+  private User user_obj;
+
+  /**
+   * get the user object
+   * 
+   * @return User
+   */
+  public User getUser_obj() {
+    long uid = this.getUid();
+    if (user_obj == null && uid > -1) {
+      user_obj = User.loadById(uid);
+    }
+    return user_obj;
+  }
+
+  private static List<ILogger> loggers = new ArrayList<ILogger>();
+
+  /**
+   * Add personal logger
+   * 
+   * @param logger
+   *          the logger
+   */
+  public static void addLogger(ILogger logger) {
+    if (!loggers.contains(logger)) {
+      loggers.add(logger);
+    }
+  }
+
+  /**
+   * personal Logger interface
+   * 
+   * @author wujun
+   *
+   */
+  public static interface ILogger {
+    void log(V v);
   }
 
 }

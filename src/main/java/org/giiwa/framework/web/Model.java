@@ -349,7 +349,8 @@ public class Model {
                       this.put("lang", lang);
                       this.deny();
 
-                      OpLog.warn("deny", uri, "requred: " + lang.get(pp.access()), login.getId(), this.getRemoteHost());
+                      OpLog.warn(this.getClass(), pp.path(), "deny the access, requred: " + lang.get(pp.access()),
+                          login, this.getRemoteHost());
                       return pp;
                     }
                   }
@@ -389,8 +390,6 @@ public class Model {
 
                     if ((pp.log() & method.method) > 0) {
 
-                      boolean error = false;
-
                       StringBuilder sb = new StringBuilder();
                       /**
                        * clone a new one
@@ -407,37 +406,16 @@ public class Model {
                       }
 
                       sb.append("<b>IN</b>=").append(jo.toString());
-                      String message = null;
-                      sb.append("; <b>OUT</b>=");
-                      if (context != null) {
-                        if (context.containsKey("jsonstr")) {
-                          sb.append(context.get("jsonstr"));
-                        } else {
-                          jo = JSON.create();
-                          if (context.containsKey(X.MESSAGE)) {
-                            jo.put(X.MESSAGE, context.get(X.MESSAGE));
-                            message = jo.getString(X.MESSAGE);
-                          }
-                          if (context.containsKey(X.ERROR)) {
-                            jo.put(X.ERROR, context.get(X.ERROR));
-                            message = jo.getString(X.ERROR);
-                            error = true;
-                          }
-                          sb.append(jo.toString());
-                        }
-                      }
+                      sb.append("; <b>OUT</b>=").append(this.context);
 
-                      if (error) {
-                        OpLog.warn(this.getClass().getName(), path == null ? uri : uri + "/" + path, message,
-                            sb.toString(), getUser() == null ? -1 : getUser().getId(), this.getRemoteHost());
-                      } else {
-                        OpLog.info(this.getClass().getName(), path == null ? uri : uri + "/" + path, message,
-                            sb.toString(), getUser() == null ? -1 : getUser().getId(), this.getRemoteHost());
-                      }
+                      OpLog.info(this.getClass(), pp.path(), sb.toString(), login, this.getRemoteHost());
+
                     }
                   } catch (Exception e) {
                     if (log.isErrorEnabled())
                       log.error(e.getMessage(), e);
+
+                    OpLog.error(this.getClass(), pp.path(), e.getMessage(), e, login, this.getRemoteHost());
 
                     error(e);
                   }
@@ -448,6 +426,8 @@ public class Model {
             } catch (Exception e) {
               if (log.isErrorEnabled())
                 log.error(s, e);
+
+              OpLog.error(this.getClass(), path, e.getMessage(), e, login, this.getRemoteHost());
 
               error(e);
             }
@@ -669,17 +649,6 @@ public class Model {
     Controller.dispatch(model, req, resp, method);
   }
 
-  public JSON mockMdc = null;
-
-  /**
-   * Mock mdc.
-   * 
-   * @deprecated
-   */
-  final public void mockMdc() {
-    mockMdc = JSON.create();
-  }
-
   /**
    * Put the name=object to the model.
    *
@@ -690,14 +659,6 @@ public class Model {
    */
   final public void put(String name, Object o) {
     // System.out.println("put:" + name + "=>" + o);
-
-    if (mockMdc != null) {
-      if (o != null) {
-        mockMdc.put(name, o);
-      } else {
-        mockMdc.remove(name);
-      }
-    }
 
     if (context == null) {
       context = new HashMap<String, Object>();

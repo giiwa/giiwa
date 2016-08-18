@@ -81,8 +81,7 @@ public class user extends Model {
             /**
              * log
              */
-            OpLog.info(user.class, "user.create", this.getJSONNonPassword().toString(), null, login.getId(),
-                this.getRemoteHost());
+            OpLog.info(user.class, "create", this.getJSONNonPassword().toString(), login, this.getRemoteHost());
 
             this.set(X.MESSAGE, lang.get("save.success"));
 
@@ -132,7 +131,7 @@ public class user extends Model {
           }
         } catch (Exception e) {
           log.error(e.getMessage(), e);
-          OpLog.error(user.class, "create", e.getMessage(), e);
+          OpLog.error(user.class, "create", e.getMessage(), e, login, this.getRemoteHost());
 
           this.set(X.ERROR, lang.get("save.failed"));
 
@@ -162,11 +161,10 @@ public class user extends Model {
     long id = this.getLong("id");
     if (id > 0) {
       User.delete(id);
-      OpLog.warn(user.class, "user.delete", this.getJSONNonPassword().toString(), null, login.getId(),
-          this.getRemoteHost());
+      OpLog.warn(user.class, "delete", this.getJSONNonPassword().toString(), login, this.getRemoteHost());
       jo.put(X.STATE, 200);
     } else {
-      jo.put(X.MESSAGE, "删除错误，请稍后重试！");
+      jo.put(X.MESSAGE, lang.get("delete.failed"));
     }
 
     this.response(jo);
@@ -227,8 +225,7 @@ public class user extends Model {
         }
       }
 
-      OpLog.info(user.class, "user.edit", this.getJSONNonPassword().toString(), null, login.getId(),
-          this.getRemoteHost());
+      OpLog.info(user.class, "edit", this.getJSONNonPassword().toString(), login, this.getRemoteHost());
 
       this.set(X.MESSAGE, lang.get("save.success"));
 

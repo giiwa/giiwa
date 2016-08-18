@@ -1838,4 +1838,27 @@ public class Module {
   public String getStatus() {
     return status;
   }
+
+  /**
+   * return the shortname of the class, cut the prefix by module package
+   * 
+   * @param model
+   *          the subclass of model
+   * @return the shortname of the subclass
+   */
+  public String shortName(Class<? extends Model> model) {
+    if (model == null) {
+      return X.EMPTY;
+    }
+    String name = model.getName();
+    if (name.startsWith(this.pack)) {
+      return name.substring(this.pack.length() + 1);
+    }
+
+    Module m1 = floor();
+    if (m1 != null) {
+      return m1.shortName(model);
+    }
+    return name;
+  }
 }

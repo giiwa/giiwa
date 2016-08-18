@@ -201,7 +201,7 @@ public class Menu extends Bean {
             }
           } else {
             log.error("can not create or load the role: " + role);
-            OpLog.warn("initial", "can not create or load the role:" + role, null);
+            OpLog.warn("default", "init", "can not create or load the role:" + role, null, null);
           }
         }
       }

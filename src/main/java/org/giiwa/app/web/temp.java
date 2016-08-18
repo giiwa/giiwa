@@ -96,7 +96,7 @@ public class temp extends Model {
 
     } catch (Exception e) {
       log.error(f.getAbsolutePath(), e);
-      OpLog.error(temp.class, "/", e.getMessage(), e);
+      OpLog.error(temp.class, "", e.getMessage(), e, login, this.getRemoteHost());
     }
 
     this.notfound();

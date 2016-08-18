@@ -52,7 +52,7 @@ public class module extends Model {
         jo.put("file", file);
       } catch (Exception e) {
         log.error(e.getMessage(), e);
-        OpLog.error(module.class, "create", e.getMessage(), e);
+        OpLog.error(module.class, "create", e.getMessage(), e, login, this.getRemoteHost());
 
         jo.put(X.MESSAGE, e.getMessage());
         jo.put(X.STATE, 201);
@@ -618,7 +618,7 @@ public class module extends Model {
         }
       } catch (Exception e1) {
         log.error(e.toString(), e1);
-        OpLog.error(module.class, "add", e1.getMessage(), e1);
+        OpLog.error(module.class, "add", e1.getMessage(), e1, login, this.getRemoteHost());
 
         /**
          * the file is bad, delete it from the repo.
