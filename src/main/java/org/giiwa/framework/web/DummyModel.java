@@ -17,7 +17,6 @@ package org.giiwa.framework.web;
 import java.io.*;
 import org.giiwa.core.conf.Global;
 
-// TODO: Auto-generated Javadoc
 /**
  * default model for which model has not found
  * 
@@ -81,7 +80,7 @@ public class DummyModel extends Model {
       this.put("this", this);
       this.put("response", resp);
       this.set("session", this.getSession());
-      this.set("system", Global.getInstance());
+      this.set("global", Global.getInstance());
 
       show(uri);
       return true;

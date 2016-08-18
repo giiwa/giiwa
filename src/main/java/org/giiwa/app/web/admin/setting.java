@@ -201,7 +201,11 @@ public class setting extends Model {
       Global.setConfig("user.role", this.getString("user_role"));
       Global.setConfig("cross.domain", this.getString("cross_domain"));
       Global.setConfig("cross.header", this.getString("cross_header"));
-      Global.setConfig("site.url", this.getString("site_url"));
+      String url = this.getString("site_url").trim();
+      while (url.endsWith("/")) {
+        url = url.substring(0, url.length() - 1);
+      }
+      Global.setConfig("site.url", url);
 
       this.set(X.MESSAGE, lang.get("save.success"));
 

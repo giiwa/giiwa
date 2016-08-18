@@ -17,7 +17,7 @@ public class FileView extends View {
   @SuppressWarnings("deprecation")
   @Override
   public boolean parse(File file, Model m) throws IOException {
-    // TODO Auto-generated method stub
+
     InputStream in = null;
     OutputStream out = null;
     try {
