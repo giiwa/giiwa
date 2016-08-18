@@ -152,7 +152,7 @@ public class Controller {
               method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost() + " " + mo);
 
         V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-        User u1 = mo.login;// getUser();
+        User u1 = mo.getUser();
         if (u1 != null) {
           v.set("uid", u1.getId()).set("username", u1.get("name"));
         }
@@ -192,15 +192,10 @@ public class Controller {
                   + " " + mo);
 
             V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-            User u1 = mo.login;// getUser();
+            User u1 = mo.getUser();
             if (u1 != null) {
               v.set("uid", u1.getId()).set("username", u1.get("name"));
             }
-            // if (method.isMdc()) {
-            // v.set("request",
-            // mo.getJSONNonPassword().toString()).set("response",
-            // mo.getOutput());
-            // }
             if (AccessLog.isOn())
               AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
           }
@@ -229,7 +224,7 @@ public class Controller {
         log.info(
             method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost() + " " + mo);
       V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-      User u1 = mo.login;// getUser();
+      User u1 = mo.getUser();
       if (u1 != null) {
         v.set("uid", u1.getId()).set("username", u1.get("name"));
       }
@@ -260,15 +255,10 @@ public class Controller {
               method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost() + " " + mo);
 
         V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-        User u1 = mo.login;// getUser();
+        User u1 = mo.getUser();
         if (u1 != null) {
           v.set("uid", u1.getId()).set("username", u1.get("name"));
         }
-        // if (method.isMdc()) {
-        // v.set("request",
-        // mo.getJSONNonPassword().toString()).set("response",
-        // mo.getOutput());
-        // }
         if (AccessLog.isOn())
           AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
       }

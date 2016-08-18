@@ -369,11 +369,18 @@ public class user extends Model {
    */
   @Path(path = "logout", method = Model.METHOD_GET | Model.METHOD_POST)
   public void logout() {
-    if (this.getUser() != null) {
-      this.getUser().logout();
-    }
 
-    if (this.getUser() != null) {
+    User u = this.getUser();
+
+    if (u != null) {
+
+      /**
+       * clear auth-token
+       */
+      AuthToken.delete(u.getId(), sid());
+
+      login.logout();
+
       /**
        * clear the user in session, but still keep the session
        */
@@ -384,7 +391,14 @@ public class user extends Model {
     /**
      * redirect to home
      */
-    this.redirect("/");
+    if (isAjax()) {
+      JSON jo = JSON.create();
+      jo.put(X.STATE, HttpServletResponse.SC_OK);
+      jo.put(X.MESSAGE, "ok");
+      this.response(jo);
+    } else {
+      this.redirect("/");
+    }
 
   }
 
@@ -504,7 +518,7 @@ public class user extends Model {
           this.set(X.MESSAGE, lang.get("save.success"));
 
           u = User.loadById(id);
-          AuthToken.remove(id);
+          AuthToken.delete(id);
           this.setUser(u);
         }
         this.set(u.getJSON());

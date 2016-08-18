@@ -141,7 +141,7 @@ public class Model {
   /**
    * associated login user
    */
-  public User                              login          = null;
+  protected User                           login          = null;
 
   private static final ThreadLocal<Module> _currentmodule = new ThreadLocal<Module>();
 
@@ -350,7 +350,7 @@ public class Model {
                       this.deny();
 
                       OpLog.warn(this.getClass(), pp.path(), "deny the access, requred: " + lang.get(pp.access()),
-                          login, this.getRemoteHost());
+                          getUser(), this.getRemoteHost());
                       return pp;
                     }
                   }
@@ -405,14 +405,14 @@ public class Model {
                         jo.put("passwd", "******");
                       }
 
-                      OpLog.info(this.getClass(), pp.path(), jo.toString(), login, this.getRemoteHost());
+                      OpLog.info(this.getClass(), pp.path(), jo.toString(), getUser(), this.getRemoteHost());
 
                     }
                   } catch (Exception e) {
                     if (log.isErrorEnabled())
                       log.error(e.getMessage(), e);
 
-                    OpLog.error(this.getClass(), pp.path(), e.getMessage(), e, login, this.getRemoteHost());
+                    OpLog.error(this.getClass(), pp.path(), e.getMessage(), e, getUser(), this.getRemoteHost());
 
                     error(e);
                   }
@@ -424,7 +424,7 @@ public class Model {
               if (log.isErrorEnabled())
                 log.error(s, e);
 
-              OpLog.error(this.getClass(), path, e.getMessage(), e, login, this.getRemoteHost());
+              OpLog.error(this.getClass(), path, e.getMessage(), e, getUser(), this.getRemoteHost());
 
               error(e);
             }

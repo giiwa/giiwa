@@ -183,7 +183,7 @@ public class AuthToken extends Bean {
    *          the uid
    * @return List of session
    */
-  public static List<String> remove(long uid) {
+  public static List<String> delete(long uid) {
     List<String> list = new ArrayList<String>();
     W q = W.create("uid", uid);
     int s = 0;
@@ -225,5 +225,10 @@ public class AuthToken extends Bean {
   public static Beans<AuthToken> load(long uid) {
     return Helper.load(W.create("uid", uid).and("expired", System.currentTimeMillis(), W.OP_GT), 0, 100,
         AuthToken.class);
+  }
+
+  public static void delete(long id2, String sid2) {
+    // TODO Auto-generated method stub
+    
   }
 }
