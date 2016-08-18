@@ -60,11 +60,6 @@ public class Helper {
   protected static Configuration conf;
 
   /**
-   * indicated whether is debug model
-   */
-  public static boolean          DEBUG   = true;
-
-  /**
    * initialize the Bean with the configuration.
    * 
    * @param conf

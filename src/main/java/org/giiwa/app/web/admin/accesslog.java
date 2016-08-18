@@ -14,9 +14,13 @@
 */
 package org.giiwa.app.web.admin;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
@@ -29,6 +33,17 @@ import org.giiwa.framework.web.Path;
  *
  */
 public class accesslog extends Model {
+
+  @Path(path = "open", login = true, access = "acess.logs.admin")
+  public void open() {
+    JSON jo = JSON.create();
+    int on = this.getInt("on");
+    AccessLog.ON = on;
+    Global.setConfig("accesslog.on", on);
+    jo.put(X.STATE, HttpServletResponse.SC_OK);
+    jo.put("on", on);
+    this.response(jo);
+  }
 
   /*
    * (non-Javadoc)

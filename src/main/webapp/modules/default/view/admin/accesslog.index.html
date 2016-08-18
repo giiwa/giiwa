@@ -72,13 +72,38 @@
 #if($me.hasAccess('access.config.admin'))
 <div class='btns'>
 	<a href='javascript:;' onclick='_deleteall();'>$lang.get('a.clean')</a>
+	&nbsp;&nbsp;
+	<a href='javascript:;' class='close' style="display:none" onclick='_open(0);'>$lang.get('a.accesslog.disable')</a>
+	<a href='javascript:;' class='open' style="display:none" onclick='_open(1);'>$lang.get('a.accesslog.enable')</a>
 </div>
 #end
 
 <script>
 $(function(){
-	$('#accesslog-table').tablesorter();
+	#if($global.getInt('accesslog.on', 1) == 1)
+		$('.btns .close').show();
+		$('.btns .open').hide();
+	#else
+		$('.btns .close').hide();
+		$('.btns .open').show();
+	#end	
 })
+
+function _open(on) {
+	$.post('/admin/accesslog/open', {on:on}, function(d){
+		if(d.state == 200) {
+			if(d.on == 1) {
+				$('.btns .close').show();
+				$('.btns .open').hide();
+				$.warn("$lang.get('accesslog.on')");
+			} else {
+				$('.btns .close').hide();
+				$('.btns .open').show();
+				$.warn("$lang.get('accesslog.off')");
+			}
+		}
+	})
+}
 
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {

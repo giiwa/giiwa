@@ -25,9 +25,6 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.core.bean.TimeStamp;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.bean.User;
@@ -75,7 +72,6 @@ public class Controller {
         + System.getProperty("os.arch");
 
     Model.HOME = conf.getString("home") + "/giiwa";
-    Helper.DEBUG = X.isSame(Global.getString("run.level", "debug"), "debug");
 
     /**
      * initialize the module
@@ -160,7 +156,7 @@ public class Controller {
         if (u1 != null) {
           v.set("uid", u1.getId()).set("username", u1.get("name"));
         }
-        if (Helper.DEBUG)
+        if (AccessLog.isOn())
           AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
       }
 
@@ -205,7 +201,7 @@ public class Controller {
             // mo.getJSONNonPassword().toString()).set("response",
             // mo.getOutput());
             // }
-            if (Helper.DEBUG)
+            if (AccessLog.isOn())
               AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
           }
 
@@ -237,7 +233,7 @@ public class Controller {
       if (u1 != null) {
         v.set("uid", u1.getId()).set("username", u1.get("name"));
       }
-      if (Helper.DEBUG)
+      if (AccessLog.isOn())
         AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
 
       // Counter.max("web.request.max", t.past(), uri);
@@ -273,7 +269,7 @@ public class Controller {
         // mo.getJSONNonPassword().toString()).set("response",
         // mo.getOutput());
         // }
-        if (Helper.DEBUG)
+        if (AccessLog.isOn())
           AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
       }
 

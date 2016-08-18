@@ -7,13 +7,6 @@
 		</select>
 		<g>$lang.get('language.hint')</g>
 	</label></div>
-	<div><label><h3>Run level:</h3>
-		<select name='level'>
-			<option value='debug' #if($level == 'debug') selected #end>debug</option>
-			<option value='production' #if($level == 'production') selected #end>production</option>
-		</select>
-		<g>$lang.get('type.hint')</g>
-	</label></div>
 	<div><label><h3>$lang.get('user.name.rule'):</h3>
 		<input type='text' name='user_name' value="$!global.getString('user.name.rule','^[a-zA-Z0-9]{4,16}$')"/>
 		<g>$lang.get('user.name.rule.hint')</g></label></div>

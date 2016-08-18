@@ -28,6 +28,7 @@ import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
 
 import com.mongodb.BasicDBObject;
@@ -50,6 +51,17 @@ public class AccessLog extends Bean {
 
   static AtomicLong         seq              = new AtomicLong(0);
   static String             node             = Config.getConfig().getString("node");
+
+  public static int         ON               = Global.getInt("accesslog.on", 1);
+
+  private static long       onlasttime       = 0;
+
+  public static boolean isOn() {
+    if (System.currentTimeMillis() - onlasttime > X.AMINUTE) {
+      ON = Global.getInt("accesslog.on", 1);
+    }
+    return ON == 1;
+  }
 
   /**
    * Count.

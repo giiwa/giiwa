@@ -193,10 +193,6 @@ public class setting extends Model {
       String lang1 = this.getString("language");
       Global.setConfig("language", lang1);
 
-      String level = this.getString("level");
-      Global.setConfig("run.level", level);
-      Helper.DEBUG = X.isSame(level, "debug");
-
       Global.setConfig("user.name.rule", this.getHtml("user_name"));
       Global.setConfig("user.passwd.rule", this.getHtml("user_passwd"));
       Global.setConfig("user.captcha", X.isSame(this.getString("user_captcha"), "on") ? 1 : 0);
