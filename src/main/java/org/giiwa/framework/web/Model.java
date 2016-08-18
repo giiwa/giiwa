@@ -405,10 +405,7 @@ public class Model {
                         jo.put("passwd", "******");
                       }
 
-                      sb.append("<b>IN</b>=").append(jo.toString());
-                      sb.append("; <b>OUT</b>=").append(this.context);
-
-                      OpLog.info(this.getClass(), pp.path(), sb.toString(), login, this.getRemoteHost());
+                      OpLog.info(this.getClass(), pp.path(), jo.toString(), login, this.getRemoteHost());
 
                     }
                   } catch (Exception e) {
