@@ -212,18 +212,23 @@ create index gi_authtoken_index_token on gi_authtoken(token);
 create table gi_oplog
 (
 	id varchar(20),
-	created bigint,
-	system varchar(20),
-	module varchar(50),
+	node varchar(50),
+	model varchar(50),
 	op varchar(50),
 	uid bigint,
 	ip varchar(20),
 	type int,
-	brief varchar(255),
+	message varchar(1024),
+	trace varchar(8192),
 	updated bigint,
-	message varchar(1024)
+	created bigint
 );
-create index gi_oplog_index_id on gi_oplog(id);
+create index gi_oplog_index_created on gi_oplog(created);
+create index gi_oplog_index_type on gi_oplog(type);
+create index gi_oplog_index_uid on gi_oplog(uid);
+create index gi_oplog_index_node on gi_oplog(node);
+create index gi_oplog_index_model on gi_oplog(model);
+create index gi_oplog_index_op on gi_oplog(op);
 
 #drop table if exists gi_userlock;
 create table gi_userlock
