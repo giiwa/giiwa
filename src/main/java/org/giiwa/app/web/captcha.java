@@ -9,8 +9,9 @@ import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
 /**
- * web api: /captcha<br>
- * provides web api to get the captcha image and verify
+ * web api: <a href='/captcha' target='_blank'>/captcha</a><br>
+ * provides web api to get the captcha image and verify which linked with sid
+ * (session key)
  * 
  * @author wujun
  *

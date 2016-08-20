@@ -8,7 +8,6 @@ package org.giiwa.app.web.admin;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
@@ -18,7 +17,8 @@ import org.giiwa.framework.web.*;
 /**
  * web api: /admin/setting <br>
  * use to custom setting, all module configuration MUST inherit from this class,
- * and override the "set" and "get" method
+ * and override the "set" and "get" method,<br>
+ * required "access.config.admin"
  * 
  * @author joe
  *

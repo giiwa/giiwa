@@ -20,7 +20,7 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
 
 /**
- * web api: /alive, just simple response with the uptime, thread info
+ * web api: <a href='/alive' target='_blnk'>/alive</a>, just simple response with the uptime, thread info
  * 
  * @author wujun
  *

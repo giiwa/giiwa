@@ -15,7 +15,8 @@ import org.giiwa.framework.web.*;
 
 /**
  * web api: /admin/log <br>
- * used to manage oplog
+ * used to manage oplog,<br>
+ * required "access.logs.admin"
  * 
  * @author joe
  *

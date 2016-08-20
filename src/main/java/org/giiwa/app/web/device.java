@@ -18,7 +18,7 @@ import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
 /**
- * web api: /device <br>
+ * web api: <a href='/device' target='_blank'>/device</a> <br>
  * used to test the device user agent
  * 
  * @author joe

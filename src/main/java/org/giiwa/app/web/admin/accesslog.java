@@ -27,7 +27,8 @@ import org.giiwa.framework.web.Path;
 
 /**
  * web api: /admin/accesslog <br>
- * used to access the "accesslog"
+ * used to access the "accesslog", <br>
+ * required "access.logs.admin"
  * 
  * @author joe
  *

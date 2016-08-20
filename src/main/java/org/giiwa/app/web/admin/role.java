@@ -19,7 +19,8 @@ import org.giiwa.framework.web.*;
 
 /**
  * web api: /admin/role <br>
- * used toe manage role
+ * used toe manage role,<br>
+ * required "access.role.admin"
  * 
  * @author joe
  *

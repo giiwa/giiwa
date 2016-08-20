@@ -32,7 +32,8 @@ import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
 
 /**
- * backup management
+ * backup management,<br>
+ * required "access.config.admin"
  * 
  * @author joe
  *

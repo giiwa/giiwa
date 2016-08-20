@@ -21,7 +21,7 @@ import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
 
 /**
- * web api: /version<br>
+ * web api: <a href='/version' target='_blank'>/version</a><br>
  * used to check the version
  * 
  * @author wujun

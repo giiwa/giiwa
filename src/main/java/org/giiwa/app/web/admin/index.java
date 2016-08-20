@@ -9,7 +9,7 @@ import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
 /**
- * web api: /admin <br>
+ * web api: <a href='/admin' target='_blank'>/admin</a> <br>
  * used to show home of admin
  * 
  * @author joe

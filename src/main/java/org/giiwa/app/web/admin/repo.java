@@ -24,7 +24,8 @@ import org.giiwa.framework.web.Path;
 
 /**
  * web api: /admin/repo <br>
- * used to manage repo file by web
+ * used to manage repo file by web, <br>
+ * required "access.config.admin"
  * 
  * @author wujun
  *

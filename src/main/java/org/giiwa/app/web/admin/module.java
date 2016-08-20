@@ -26,7 +26,8 @@ import org.giiwa.framework.web.*;
 
 /**
  * web api: /admin/module <br>
- * used to manage modules
+ * used to manage modules, <br>
+ * required "access.config.admin" except "create a module"
  * 
  * @author joe
  *

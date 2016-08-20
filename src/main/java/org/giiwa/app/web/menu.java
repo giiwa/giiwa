@@ -26,7 +26,7 @@ import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
 /**
- * web api： /menu <br>
+ * web api： <a href='/menu' target='_blank'>/menu</a> <br>
  * used to get menu
  * 
  * @author joe

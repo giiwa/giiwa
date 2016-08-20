@@ -25,7 +25,8 @@ import org.giiwa.framework.web.view.VelocityView;
 
 /**
  * web api: /admin/user <br>
- * used to manage user
+ * used to manage user<br>
+ * required "access.user.admin"
  * 
  * @author joe
  *

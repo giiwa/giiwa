@@ -12,7 +12,8 @@ import org.giiwa.framework.web.*;
 
 /**
  * web api: /admin/system <br>
- * used to control the "system"
+ * used to control the "system"<br>
+ * required "access.config.admin"
  * 
  * @author joe
  *
