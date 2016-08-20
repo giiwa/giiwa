@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.core.cache.impl;
+package org.giiwa.core.cache;
 
 import java.io.*;
 import java.util.*;
@@ -20,16 +20,13 @@ import java.util.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.UID;
-import org.giiwa.core.cache.Cachable;
-import org.giiwa.core.cache.ICacheSystem;
 import org.giiwa.framework.web.Model;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class FileCache is used to simple cache when no cache configured in
  * system
  */
-public class FileCache implements ICacheSystem {
+class FileCache implements ICacheSystem {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(FileCache.class);

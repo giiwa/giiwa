@@ -12,23 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.core.cache.impl;
+package org.giiwa.core.cache;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
-import org.giiwa.core.cache.Cachable;
-import org.giiwa.core.cache.Cache;
-import org.giiwa.core.cache.ICacheSystem;
 
 import com.danga.MemCached.MemCachedClient;
 import com.danga.MemCached.SockIOPool;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class MemCache is used to memcached cache <br>
  * url: memcached://host:port
  */
-public class MemCache implements ICacheSystem {
+class MemCache implements ICacheSystem {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(MemCache.class);

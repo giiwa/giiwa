@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.core.cache.impl;
+package org.giiwa.core.cache;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -24,21 +24,17 @@ import java.util.List;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.cache.Cachable;
-import org.giiwa.core.cache.Cache;
-import org.giiwa.core.cache.ICacheSystem;
 
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class RedisCache is used to redis cache <br>
  * url: redis://host:port
  */
-public class RedisCache implements ICacheSystem {
+class RedisCache implements ICacheSystem {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(RedisCache.class);
