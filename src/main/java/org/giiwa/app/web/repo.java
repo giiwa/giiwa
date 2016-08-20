@@ -18,12 +18,12 @@ import java.io.*;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.giiwa.core.base.GImage;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.web.*;
-import org.giiwa.utils.image.GImage;
 
 /**
  * web api： /repo <br>

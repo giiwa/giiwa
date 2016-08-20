@@ -1,12 +1,12 @@
 package org.giiwa.app.web;
 
+import org.giiwa.core.base.Captcha;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
-import org.giiwa.utils.image.Captcha;
 
 /**
  * web api: /captcha<br>

@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.giiwa.core.base.Captcha;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -39,7 +40,6 @@ import org.giiwa.framework.noti.Sms;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.framework.web.view.VelocityView;
-import org.giiwa.utils.image.Captcha;
 
 /**
  * web api： /user <br>

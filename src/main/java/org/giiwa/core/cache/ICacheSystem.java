@@ -14,7 +14,6 @@
 */
 package org.giiwa.core.cache;
 
-// TODO: Auto-generated Javadoc
 public interface ICacheSystem {
 
 	/**

@@ -1,10 +1,10 @@
 package org.giiwa.app.web.admin;
 
+import org.giiwa.core.base.GImage;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
-import org.giiwa.utils.image.GImage;
 
 /**
  * web api: /admin/qcode <br>

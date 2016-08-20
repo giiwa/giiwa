@@ -41,7 +41,7 @@ public class JSON extends HashMap<String, Object> {
   private static Log        log              = LogFactory.getLog(JSON.class);
 
   /**
-   * From object.
+   * parse the object to JSON object
    *
    * @param json
    *          the json
@@ -117,6 +117,17 @@ public class JSON extends HashMap<String, Object> {
     return list;
   }
 
+  /**
+   * parse the json object to Class object
+   * 
+   * @param <T>
+   *          the Class
+   * @param json
+   *          the json object or string
+   * @param t
+   *          the Class
+   * @return the object of Class
+   */
   @SuppressWarnings("rawtypes")
   public static <T> T fromObject(Object json, Class<T> t) {
     if (json instanceof String) {
@@ -242,7 +253,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the long.
+   * Gets the long，return 0 if the name not presented
    *
    * @param name
    *          the name
@@ -253,7 +264,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the long.
+   * Gets the long,return defaultValue if the name not presented
    *
    * @param name
    *          the name
@@ -266,7 +277,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the float.
+   * Gets the float，return 0 if the name not presented
    *
    * @param name
    *          the name
@@ -277,7 +288,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the float.
+   * Gets the float，return defaultValue if the name not presented
    *
    * @param name
    *          the name
@@ -290,7 +301,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the double.
+   * Gets the double，return 0 if the name not presented
    *
    * @param name
    *          the name
@@ -301,7 +312,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the double.
+   * Gets the double，return defaultValue if the name not presented
    *
    * @param name
    *          the name
@@ -314,7 +325,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the list.
+   * Gets the list，return null if the name not presented
    *
    * @param name
    *          the name
@@ -330,7 +341,7 @@ public class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Gets the objects.
+   * Gets the objects，return null if the name not presented
    *
    * @param name
    *          the name

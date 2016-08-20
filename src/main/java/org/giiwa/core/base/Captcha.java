@@ -1,4 +1,4 @@
-package org.giiwa.utils.image;
+package org.giiwa.core.base;
 
 import java.awt.Color;
 import java.awt.Font;

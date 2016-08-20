@@ -16,7 +16,6 @@ package org.giiwa.framework.bean;
 
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * utility for request from the mdc client.
  *

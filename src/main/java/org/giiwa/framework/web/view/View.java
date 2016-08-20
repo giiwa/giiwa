@@ -12,8 +12,25 @@ public abstract class View {
 
   static Log log = LogFactory.getLog(View.class);
 
+  /**
+   * parse the file with the model
+   * 
+   * @param file
+   *          the file
+   * @param m
+   *          the model
+   * @return true: successful,
+   * @throws Exception
+   *           if occur error
+   */
   protected abstract boolean parse(File file, Model m) throws Exception;
 
+  /**
+   * init the views by config
+   * 
+   * @param config
+   *          the config
+   */
   public static void init(Map<String, String> config) {
 
     for (String name : config.keySet()) {
@@ -32,6 +49,16 @@ public abstract class View {
 
   }
 
+  /**
+   * parse the file with the model
+   * 
+   * @param file
+   *          the file
+   * @param m
+   *          the model
+   * @throws Exception
+   *           if occur error
+   */
   public static void merge(File file, Model m) throws Exception {
 
     String name = file.getName();

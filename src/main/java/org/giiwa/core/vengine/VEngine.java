@@ -22,9 +22,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * @author wujun
  *
@@ -33,19 +33,24 @@ public class VEngine {
 
   static Log log = LogFactory.getLog(VEngine.class);
 
-  // public static void main(String[] args) {
-  //
-  // String s = "{age}>10";
-  //
-  // TimeStamp t = TimeStamp.create();
-  // for (int i = 0; i < 100000; i++) {
-  // Map<String, Object> m = new HashMap<String, Object>();
-  // m.put("age", i);
-  // // VEngine.test(s, m);
-  // // System.out.println(i);
-  // }
-  // System.out.println(t.past() + "ms");
-  // }
+  public static void main(String[] args) {
+
+    String s = "{age}>10";
+
+    TimeStamp t = TimeStamp.create();
+    for (int i = 0; i < 100000; i++) {
+      Map<String, Object> m = new HashMap<String, Object>();
+      m.put("age", i);
+      try {
+        VEngine.test(s, m);
+      } catch (Exception e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+      }
+      // System.out.println(i);
+    }
+    System.out.println(t.past() + "ms");
+  }
 
   /**
    * test the velocity sentence is true or false by the data model.

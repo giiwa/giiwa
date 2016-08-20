@@ -14,7 +14,6 @@
 */
 package org.giiwa.framework.bean;
 
-// TODO: Auto-generated Javadoc
 /**
  * utility for generate a reponse packet
  * 

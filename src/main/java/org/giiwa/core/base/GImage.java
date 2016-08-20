@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.utils.image;
+package org.giiwa.core.base;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

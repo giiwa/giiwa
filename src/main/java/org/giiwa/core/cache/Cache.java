@@ -17,9 +17,6 @@ package org.giiwa.core.cache;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.cache.impl.FileCache;
-import org.giiwa.core.cache.impl.MemCache;
-import org.giiwa.core.cache.impl.RedisCache;
 
 /**
  * The {@code Cache} Class Cache used for cache object, the cache was grouped by
