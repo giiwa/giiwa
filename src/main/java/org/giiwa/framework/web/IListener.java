@@ -21,9 +21,14 @@ import org.apache.commons.configuration.Configuration;
  * the life listener is configured in module.xml
  * 
  * <pre>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;module version="1.0"&gt;
+  ...
   &lt;listener&gt;
     &lt;class&gt;org.giiwa.app.web.DefaultListener&lt;/class&gt;
   &lt;/listener&gt;
+ ...
+&lt;/module&gt;
  * </pre>
  * 
  * @author yjiang

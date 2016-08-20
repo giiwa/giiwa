@@ -19,10 +19,15 @@ package org.giiwa.framework.web;
  * the filter is configured in module.xml
  * 
  * <pre>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;module version="1.0"&gt;
+  ...
  &lt;filter&gt;
    &lt;pattern&gt;/user/login&lt;/pattern&gt;
    &lt;class&gt;org.giiwa.forum.web.UserFilter&lt;/class&gt;
  &lt;/filter&gt;
+ ...
+&lt;/module&gt;
  * </pre>
  * 
  * @author wujun
