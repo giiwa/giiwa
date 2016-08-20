@@ -494,6 +494,47 @@ public class user extends Model {
 
   }
 
+  @Path(path = "profile", login = true, log = Model.METHOD_POST)
+  public void profile() {
+    if (method.isPost()) {
+      long id = login.getId();
+      JSON j = this.getJSON();
+      User u = User.loadById(id);
+      if (u != null) {
+        String password = this.getString("password");
+        if (!X.isEmpty(password)) {
+          u.update(V.create("password", password));
+          JSON jo = new JSON();
+          jo.put(X.STATE, 200);
+
+          this.response(jo);
+          return;
+        } else {
+          u.update(V.create().copy(j, "nickname", "title", "email", "phone"));
+
+          this.set(X.MESSAGE, lang.get("save.success"));
+
+          u = User.loadById(id);
+          AuthToken.delete(id);
+          this.setUser(u);
+        }
+        this.set(u.getJSON());
+      } else {
+        this.set(X.ERROR, lang.get("save.failed"));
+      }
+      this.set(j);
+    } else {
+      User u = User.loadById(login.getId());
+      this.set("u", u);
+      JSON jo = new JSON();
+      u.toJSON(jo);
+      this.set(jo);
+    }
+
+    this.show("/user/user.profile.html");
+  }
+
+  
   /**
    * Edits the.
    */
