@@ -15,7 +15,15 @@
 package org.giiwa.framework.web;
 
 /**
- * the Module Filter for the url
+ * the Module Filter for the url <br>
+ * the filter is configured in module.xml
+ * 
+ * <pre>
+ &lt;filter&gt;
+   &lt;pattern&gt;/user/login&lt;/pattern&gt;
+   &lt;class&gt;org.giiwa.forum.web.UserFilter&lt;/class&gt;
+ &lt;/filter&gt;
+ * </pre>
  * 
  * @author wujun
  *

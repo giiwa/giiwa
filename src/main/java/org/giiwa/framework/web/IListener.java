@@ -16,48 +16,54 @@ package org.giiwa.framework.web;
 
 import org.apache.commons.configuration.Configuration;
 
-// TODO: Auto-generated Javadoc
 /**
- * the life listener which will be invoked when the system "start", "stop"
+ * the life listener which will be invoked when the system "start", "stop" <br>
+ * the life listener is configured in module.xml
+ * 
+ * <pre>
+  &lt;listener&gt;
+    &lt;class&gt;org.giiwa.app.web.DefaultListener&lt;/class&gt;
+  &lt;/listener&gt;
+ * </pre>
  * 
  * @author yjiang
  * 
  */
 public interface IListener {
 
-    /**
-     * Upgrade.
-     * 
-     * @param conf
-     *            the conf
-     * @param module
-     *            the module
-     */
-    void upgrade(Configuration conf, Module module);
+  /**
+   * Upgrade.
+   * 
+   * @param conf
+   *          the conf
+   * @param module
+   *          the module
+   */
+  void upgrade(Configuration conf, Module module);
 
-    /**
-     * Uninstall.
-     * 
-     * @param conf
-     *            the conf
-     * @param module
-     *            the module
-     */
-    void uninstall(Configuration conf, Module module);
+  /**
+   * Uninstall.
+   * 
+   * @param conf
+   *          the conf
+   * @param module
+   *          the module
+   */
+  void uninstall(Configuration conf, Module module);
 
-    /**
-     * On start.
-     * 
-     * @param conf
-     *            the conf
-     * @param module
-     *            the module
-     */
-    void onStart(Configuration conf, Module module);
+  /**
+   * On start.
+   * 
+   * @param conf
+   *          the conf
+   * @param module
+   *          the module
+   */
+  void onStart(Configuration conf, Module module);
 
-    /**
-     * On stop.
-     */
-    void onStop();
+  /**
+   * On stop.
+   */
+  void onStop();
 
 }
