@@ -399,3 +399,7 @@ a.accesslog.disable=Already enabled, click to Disable
 a.accesslog.enable=Already disabled, click to Enable
 accesslog.on=Accesslog enabled, all access will be record
 accesslog.off=Accesslog disabled, no access will record
+a.token=Token
+menu.token=Token
+token.index.title=Token management
+user.uid=UID

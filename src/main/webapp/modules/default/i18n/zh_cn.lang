@@ -391,3 +391,7 @@ a.accesslog.disable=访问日志已经开启，点击关闭
 a.accesslog.enable=访问日志已经关闭，点击开启
 accesslog.on=访问日志已经开启
 accesslog.off=访问日志已经关闭
+a.token=Token
+menu.token=Token管理
+token.index.title=Token管理
+user.uid=UID

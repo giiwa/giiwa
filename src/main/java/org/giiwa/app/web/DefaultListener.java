@@ -44,6 +44,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Repo;
@@ -680,6 +681,11 @@ public class DefaultListener implements IListener {
          * cleanup repo
          */
         Repo.cleanup();
+
+        /**
+         * cleanup authtoken
+         */
+        AuthToken.cleanup();
 
       } catch (Exception e) {
         // eat the exception

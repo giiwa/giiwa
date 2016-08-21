@@ -1543,7 +1543,7 @@ public class Model {
           if (!X.isEmpty(sid) && !X.isEmpty(token)) {
             AuthToken t = AuthToken.load(sid, token);
             if (t != null) {
-              login = t.getUser();
+              login = t.getUser_obj();
               this.setUser(login);
             }
           }

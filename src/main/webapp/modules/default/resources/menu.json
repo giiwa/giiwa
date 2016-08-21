@@ -66,6 +66,12 @@
 									"access" : "access.role.admin",
 									"seq" : 20,
 									"classes" : "icon-shield"
+								}, {
+									"name" : "menu.token",
+									"load" : "/admin/token",
+									"access" : "access.user.admin",
+									"seq" : 30,
+									"classes" : "icon-link"
 								}]
 					}]
 		}, {

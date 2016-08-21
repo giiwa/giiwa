@@ -284,19 +284,23 @@ public class user extends Model {
                  */
                 me.logined(sid(), this.getRemoteHost());
 
-                if ("json".equals(this.getString("type"))) {
+                if ("json".equals(this.getString("type")) || isAjax()) {
                   jo.put("sid", sid());
                   jo.put("uid", me.getId());
 
+                  /**
+                   * test the configuration is enabled user token and this
+                   * request is ajax
+                   */
                   if (Global.getInt("user.token", 1) == 1) {
                     AuthToken t = AuthToken.update(me.getId(), sid(), this.getRemoteHost());
                     if (t != null) {
                       jo.put("token", t.getToken());
                       jo.put("expired", t.getExpired());
-                      jo.put(X.STATE, 200);
+                      jo.put(X.STATE, HttpServletResponse.SC_OK);
                     } else {
                       jo.put(X.MESSAGE, "create authtoken error");
-                      jo.put(X.STATE, 205);
+                      jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     }
                   }
                   this.response(jo);
@@ -534,7 +538,6 @@ public class user extends Model {
     this.show("/user/user.profile.html");
   }
 
-  
   /**
    * Edits the.
    */

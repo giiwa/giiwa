@@ -1,14 +1,14 @@
-<div class='head'>$lang.get('user.index.title')</div>
+<div class='head'>$lang.get('token.index.title')</div>
 
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/user' class='selected'>$lang.get('a.user')</a>
+	<a href='/admin/token' class='selected'>$lang.get('a.token')</a>
 </div>
 
 <div class='search'>
-	<form action='/admin/user' method='get' #if($currentpage>0) style='display:none' #end >
-		<span><label><h3>$lang.get('label.name'):</h3><input type='text' name='name' value="$!name" placeholder="name/nickname"/></label></span>
+	<form action='/admin/token' method='get' #if($currentpage>0) style='display:none' #end >
+		<span><label><h3>$lang.get('label.name'):</h3><input type='text' name='name' value="$!name" placeholder="uid/sid/token"/></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
 	
@@ -22,13 +22,13 @@
 <table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
+			<th>$lang.get('user.uid')</th>
 			<th>$lang.get('user.name')</th>
 			<th>$lang.get('user.nickname')</th>
-			<th>$lang.get('user.title')</th>
-			<th>$lang.get('user.email')</th>
-			<th>$lang.get('user.phone')</th>
-			<th>$lang.get('user.tokens')</th>
-			<th>$lang.get('user.roles')</th>
+			<th>$lang.get('user.sid')</th>
+			<th>$lang.get('user.token')</th>
+			<th>$lang.get('user.expired')</th>
+			<th>$lang.get('user.created')</th>
 #if($edit)
 			<th></th>
 #end
@@ -36,17 +36,16 @@
 	</thead>
 	<tbody>
 #foreach($f in $list)
-	<tr #if($f.isLocked()) class='deleted' #end>
-		<td class='name'><a href='/admin/user/detail?id=$f.id'>#if($f.name)$f.name#end</a></td>
-		<td>$!f.nickname</td>
-		<td>$!f.title</td>
-		<td>$!f.email</td>
-		<td>$!f.phone</td>
-		<td>$!f.tokens.size()</td>
-		<td>#foreach($r in $f.role.list)<i class='icon-shield'>$r.name</i>#end</td>
+	<tr>
+		<td>$f.uid</td>
+		<td>$!f.user_obj.name</td>
+		<td>$!f.user_obj.nickname</td>
+		<td>$!f.sid</td>
+		<td>$!f.token</td>
+		<td>$lang.format($f.expired, 'yy-MM-dd HH:mm:ss')</td>
+		<td>$lang.format($f.created, 'yy-MM-dd HH:mm:ss')</td>
 		#if($edit)
 		<td>
-			<a href='/admin/user/edit?id=$f.id'>$lang.get('a.edit')</a>
 			<a href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
 		</td>
 		#end
@@ -59,16 +58,24 @@
 
 <div class='btns'>
 #if($edit)
-	<a href='/admin/user/create'>$lang.get('a.create')</a>
+	<a href='javascript:;' onclick='_clean()'>$lang.get('a.clean')</a>
 #end
 </div>
 
 <script>
-$('#user-table').tablesorter({headers:{0:{sorter:false}}});
+function _clean() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post('/admin/token/clean', {}, function(d){
+			processing && processing.hide();
+			reload();
+		});
+	}
+}
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		processing && processing.show();
-		$.post('/admin/user/delete', {id:id}, function(d){
+		$.post('/admin/token/delete', {id:id}, function(d){
 			processing && processing.hide();
 			if(d.state == 200) {
 				$(o).parent().parent().remove();

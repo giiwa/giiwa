@@ -28,7 +28,6 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 
-// TODO: Auto-generated Javadoc
 /**
  * The AuthToken. <br>
  * collection="gi_authtoken"
@@ -102,7 +101,7 @@ public class AuthToken extends Bean {
    * 
    * @return User
    */
-  public User getUser() {
+  public User getUser_obj() {
     if (user_obj == null && this.getUid() >= 0) {
       user_obj = User.loadById(this.getUid());
     }
@@ -130,9 +129,10 @@ public class AuthToken extends Bean {
    * @return the auth token
    */
   public static AuthToken update(long uid, String sid, String ip) {
-    String id = UID.id(uid, sid);
     String token = UID.random(20);
     long expired = System.currentTimeMillis() + Global.getLong("token.expired", X.AWEEK);
+    String id = UID.id(uid, sid, ip, token);
+
     V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
 
     try {
@@ -180,7 +180,7 @@ public class AuthToken extends Bean {
    * for the user.
    *
    * @param uid
-   *          the uid
+   *          the user id
    * @return List of session
    */
   public static List<String> delete(long uid) {
@@ -201,7 +201,7 @@ public class AuthToken extends Bean {
   }
 
   /**
-   * Load.
+   * Load the Token by the query
    *
    * @param q
    *          the query and order
@@ -209,7 +209,7 @@ public class AuthToken extends Bean {
    *          the start number
    * @param n
    *          the number of items
-   * @return Beans
+   * @return Beans of the Token
    */
   public static Beans<AuthToken> load(W q, int s, int n) {
     return Helper.load(q, s, n, AuthToken.class);
@@ -219,16 +219,41 @@ public class AuthToken extends Bean {
    * load Beans by uid, a uid may has more AuthToken.
    *
    * @param uid
-   *          the uid
-   * @return Beans
+   *          the user id
+   * @return Beans of the Token
    */
   public static Beans<AuthToken> load(long uid) {
     return Helper.load(W.create("uid", uid).and("expired", System.currentTimeMillis(), W.OP_GT), 0, 100,
         AuthToken.class);
   }
 
-  public static void delete(long id2, String sid2) {
-    // TODO Auto-generated method stub
-    
+  /**
+   * delete all the token by the uid and sid
+   * 
+   * @param uid
+   *          the user id
+   * @param sid
+   *          the session id
+   */
+  public static void delete(long uid, String sid) {
+    delete(W.create("uid", uid).and("sid", sid));
   }
+
+  /**
+   * delete the auth-token by the query
+   * 
+   * @param q
+   *          the query
+   */
+  public static void delete(W q) {
+    Helper.delete(q, AuthToken.class);
+  }
+
+  /**
+   * cleanup the expired token
+   */
+  public static void cleanup() {
+    Helper.delete(W.create().and("expired", System.currentTimeMillis(), W.OP_LT), AuthToken.class);
+  }
+
 }
