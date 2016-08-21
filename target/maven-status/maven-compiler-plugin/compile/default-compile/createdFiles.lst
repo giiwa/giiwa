@@ -86,6 +86,7 @@ org/giiwa/core/bean/Bean.class
 org/giiwa/core/bean/Helper$DBType.class
 org/giiwa/framework/bean/AccessLog.class
 org/giiwa/framework/web/Path.class
+org/giiwa/app/web/admin/token.class
 org/giiwa/framework/web/Controller.class
 org/giiwa/app/web/device.class
 org/giiwa/core/base/Hex.class
@@ -123,7 +124,6 @@ org/giiwa/framework/bean/Access.class
 org/giiwa/framework/bean/Repo.class
 org/giiwa/framework/web/Module$CachedModel.class
 org/giiwa/core/bean/TimeStamp.class
-org/giiwa/app/web/admin/qcode.class
 org/giiwa/framework/bean/AccessLog$1.class
 org/giiwa/app/web/DefaultListener$NtpTask.class
 org/giiwa/app/web/admin/backup.class
