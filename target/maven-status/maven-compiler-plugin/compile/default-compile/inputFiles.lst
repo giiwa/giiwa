@@ -67,7 +67,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/MongoHelper.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/index.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Controller.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/noti/Sms.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Roles.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/menu.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/repo.java
@@ -87,6 +86,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/view/View.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Base64.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Model.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/noti/Sms.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/GString.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/DefaultListener.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/db/DB.java
@@ -99,8 +99,8 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/GClassLoader.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Tps.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/Bean.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/noti/Email.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/Helper.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Host.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/noti/Email.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/view/FileView.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/FileUtil.java

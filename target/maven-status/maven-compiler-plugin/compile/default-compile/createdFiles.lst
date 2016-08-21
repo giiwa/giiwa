@@ -11,13 +11,11 @@ org/giiwa/app/web/DefaultListener$RecycleTask$1.class
 org/giiwa/framework/web/GiiwaContextListener.class
 org/giiwa/core/bean/Helper.class
 org/giiwa/core/base/H32.class
-org/giiwa/framework/noti/Sms$ISender.class
 org/giiwa/app/web/DefaultListener$1.class
 org/giiwa/framework/bean/Roles.class
 org/giiwa/core/base/Zip.class
 org/giiwa/core/base/Host$Memory.class
 org/giiwa/framework/bean/Request.class
-org/giiwa/framework/noti/Email$auth.class
 org/giiwa/framework/web/Language.class
 org/giiwa/core/base/Http.class
 org/giiwa/core/base/Captcha$Code.class
@@ -51,6 +49,7 @@ org/giiwa/app/web/menu.class
 org/giiwa/framework/web/PageLink.class
 org/giiwa/framework/web/view/JspView.class
 org/giiwa/app/web/admin/dashboard.class
+org/giiwa/core/noti/Sms$ISender.class
 org/giiwa/framework/web/GClassLoader.class
 org/giiwa/app/web/admin/role.class
 org/giiwa/core/base/Shell$IPrint.class
@@ -63,6 +62,7 @@ org/giiwa/app/web/admin/user.class
 org/giiwa/app/web/admin/gauge.class
 org/giiwa/core/bean/Helper$1.class
 org/giiwa/core/conf/Config.class
+org/giiwa/core/noti/Email$1.class
 org/giiwa/core/cache/DefaultCachable.class
 org/giiwa/core/cache/RedisCache.class
 org/giiwa/core/base/Http$2.class
@@ -106,6 +106,7 @@ org/giiwa/app/web/admin/setting.class
 org/giiwa/core/base/Host.class
 org/giiwa/app/web/admin/repo.class
 org/giiwa/core/bean/MongoHelper.class
+org/giiwa/core/noti/Email$auth.class
 org/giiwa/framework/web/view/View.class
 org/giiwa/framework/web/DummyModel.class
 org/giiwa/app/web/admin/system$1.class
@@ -126,6 +127,7 @@ org/giiwa/framework/web/Module$CachedModel.class
 org/giiwa/core/bean/TimeStamp.class
 org/giiwa/framework/bean/AccessLog$1.class
 org/giiwa/app/web/DefaultListener$NtpTask.class
+org/giiwa/core/noti/Sms.class
 org/giiwa/app/web/admin/backup.class
 org/giiwa/framework/web/view/FileView.class
 org/giiwa/app/web/DefaultListener.class
@@ -135,7 +137,6 @@ org/giiwa/app/web/DefaultListener$AppdogTask.class
 org/giiwa/framework/bean/Role$RoleAccess.class
 org/giiwa/framework/web/Model$HTTPMethod.class
 org/giiwa/app/web/DefaultListener$CleanupTask.class
-org/giiwa/framework/noti/Email.class
 org/giiwa/core/bean/Beans.class
 org/giiwa/framework/bean/Code.class
 org/giiwa/framework/web/IFilter.class
@@ -151,10 +152,9 @@ org/giiwa/core/cache/Cachable.class
 org/giiwa/app/web/admin/setting$counter.class
 org/giiwa/core/cache/Cache.class
 org/giiwa/app/web/alive.class
-org/giiwa/framework/noti/Sms.class
 org/giiwa/core/base/Shell.class
 org/giiwa/core/cache/FileCache.class
-org/giiwa/framework/noti/Email$1.class
+org/giiwa/core/noti/Email.class
 org/giiwa/core/bean/RDSHelper.class
 org/giiwa/core/bean/Helper$W$Entity.class
 org/giiwa/app/web/temp.class
