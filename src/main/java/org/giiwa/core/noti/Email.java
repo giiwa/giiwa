@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.framework.noti;
+package org.giiwa.core.noti;
 
 import java.io.*;
 import java.util.Properties;
@@ -27,7 +27,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 
-// TODO: Auto-generated Javadoc
 /**
  * send the email
  * 

@@ -16,10 +16,10 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.noti.Email;
+import org.giiwa.core.noti.Sms;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
-import org.giiwa.framework.noti.Email;
-import org.giiwa.framework.noti.Sms;
 import org.giiwa.framework.web.*;
 import org.giiwa.framework.web.view.VelocityView;
 
