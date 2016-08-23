@@ -39,6 +39,9 @@
 	#end
 	
 	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
+	#if($module.getFile('/user/thirdlogin.html'))
+	#parse('/user/thirdlogin.html')
+	#end
 	<div id="themeSwitch">
 		<a class="icon-wondering" href="/user/forget">$lang.get('a.forget.user')</a>
 		#if($global.getString('user.system', 'close')=='open')
