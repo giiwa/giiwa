@@ -351,12 +351,13 @@ public class user extends Model {
         this.response(jo);
         return;
       } else {
+        this.set(this.getJSON());
         this.set(jo);
       }
     }
 
     String refer = this.getString("refer");
-    if (!X.isEmpty(refer)) {
+    if (!X.isEmpty(refer) && !isAjax()) {
       try {
         this.getSession().set("uri", URLDecoder.decode(refer, "UTF-8")).store();
       } catch (Exception e) {
