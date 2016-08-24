@@ -57,6 +57,7 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 
 /**
  * http utils
@@ -112,7 +113,7 @@ public class Http {
    *          the params
    * @return Response
    */
-  public static Response post(String url, String[][] params) {
+  public static Response post(String url, JSON params) {
     return post(url, "application/x-javascript; charset=UTF8", null, params);
   }
 
@@ -125,7 +126,7 @@ public class Http {
    *          the headers
    * @return Response
    */
-  public static Response get(String url, String[][] headers) {
+  public static Response get(String url, JSON headers) {
 
     log.debug("url=\"" + url + "\"");
 
@@ -141,11 +142,9 @@ public class Http {
       try {
         get = new HttpGet(url);
 
-        if (headers != null && headers.length > 0) {
-          for (String[] s : headers) {
-            if (s != null && s.length > 1) {
-              get.addHeader(s[0], s[1]);
-            }
+        if (headers != null && headers.size() > 0) {
+          for (String s : headers.keySet()) {
+            get.addHeader(s, headers.getString(s));
           }
         }
         if (!get.containsHeader("User-Agent")) {
@@ -183,7 +182,7 @@ public class Http {
    *          the params
    * @return Response
    */
-  public static Response post(String url, String contenttype, String[][] headers, String[][] params) {
+  public static Response post(String url, String contenttype, JSON headers, JSON params) {
     return post(url, contenttype, headers, params, null);
   }
 
@@ -202,8 +201,7 @@ public class Http {
    *          the attachments
    * @return Response
    */
-  public static Response post(String url, String contenttype, String[][] headers, String[][] body,
-      Object[][] attachments) {
+  public static Response post(String url, String contenttype, JSON headers, JSON body, JSON attachments) {
 
     Response r = new Response();
 
@@ -214,12 +212,10 @@ public class Http {
       HttpPost post = new HttpPost(url);
       try {
 
-        if (headers != null && headers.length > 0) {
-          for (String[] s : headers) {
-            if (s != null && s.length > 1) {
-              post.addHeader(s[0], s[1]);
-              log.debug("header: " + s[0] + "=" + s[1]);
-            }
+        if (headers != null && headers.size() > 0) {
+          log.debug("header: " + headers);
+          for (String s : headers.keySet()) {
+            post.addHeader(s, headers.getString(s));
           }
         }
 
@@ -229,36 +225,31 @@ public class Http {
 
         log.debug("post url=" + url);
 
-        if (attachments == null || attachments.length == 0) {
-          if (body != null && body.length > 0) {
+        if (attachments == null || attachments.size() == 0) {
+          if (body != null && body.size() > 0) {
+            log.debug("body: " + body);
             List<NameValuePair> paramList = new ArrayList<NameValuePair>();
 
-            for (String[] s : body) {
-              if (s != null && s.length > 1) {
-                BasicNameValuePair param = new BasicNameValuePair(s[0], s[1]);
-                paramList.add(param);
-                log.debug("body: " + s[0] + "=" + s[1]);
-              }
+            for (String s : body.keySet()) {
+              BasicNameValuePair param = new BasicNameValuePair(s, body.getString(s));
+              paramList.add(param);
             }
             post.setEntity(new UrlEncodedFormEntity(paramList, HTTP.UTF_8));
           }
         } else {
           MultipartEntity entity = new MultipartEntity();
-          for (Object[] f : attachments) {
-            if (f != null && f.length > 1 && f[1] instanceof File) {
-              FileBody fileBody = new FileBody((File) f[1]);
-              entity.addPart((String) f[0], fileBody);
-
-              log.debug("file: " + f[0]);
+          for (String f : attachments.keySet()) {
+            Object o = attachments.get(f);
+            if (o instanceof File) {
+              FileBody fileBody = new FileBody((File) o);
+              entity.addPart(f, fileBody);
             }
           }
 
-          if (body != null && body.length > 0) {
-            for (String[] s : body) {
-              if (s != null && s.length > 1) {
-                StringBody stringBody = new StringBody(s[1]);
-                entity.addPart(s[0], stringBody);
-              }
+          if (body != null && body.size() > 0) {
+            for (String s : body.keySet()) {
+              StringBody stringBody = new StringBody(body.getString(s));
+              entity.addPart(s, stringBody);
             }
           }
           post.setEntity(entity);
