@@ -20,7 +20,8 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
 
 /**
- * web api: <a href='/alive' target='_blnk'>/alive</a>, just simple response with the uptime, thread info
+ * web api: <a href='/alive' target='_blnk'>/alive</a>, just simple response
+ * with the uptime, thread info
  * 
  * @author wujun
  *
@@ -34,8 +35,8 @@ public class alive extends Model {
    */
   public void onGet() {
     JSON jo = new JSON();
-    jo. put(X.STATE, 200);
-    jo.put("uptime", Model.UPTIME);
+    jo.put(X.STATE, 200);
+    jo.put("uptime", System.currentTimeMillis() - Model.UPTIME);
     jo.put("idle", Task.idleThread());
     jo.put("tasks", Task.tasksInQueue());
     this.response(jo);

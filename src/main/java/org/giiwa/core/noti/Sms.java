@@ -79,7 +79,7 @@ public class Sms {
      * @param jo
      *          key value data <br>
      *          sign: the sign of the sms <br>
-     *          templatecode: the templatecode of the sms, e.g. registeruser,
+     *          template: the template code of the sms, e.g. registeruser,
      *          forgetpassword <br>
      * @return true: success <br>
      *         false: failed
