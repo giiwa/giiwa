@@ -83,7 +83,7 @@ public class Temp {
    * @return String of uri
    */
   public String getUri() {
-    return "/temp/" + id + "/" + name;
+    return "/temp/" + id + "/" + name + "?" + ((file == null || !file.exists()) ? 0 : file.lastModified());
   }
 
   /**
