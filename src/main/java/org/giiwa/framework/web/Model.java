@@ -1828,7 +1828,8 @@ public class Model {
   }
 
   /**
-   * Show error page to end user.
+   * Show error page to end user.<br>
+   * if the request is AJAX, then response a json with error back to front
    * 
    * @param e
    *          the throwable
@@ -1837,13 +1838,19 @@ public class Model {
     if (log.isErrorEnabled())
       log.error(e.getMessage(), e);
 
-    if (resp != null) {
+    StringWriter sw = new StringWriter();
+    PrintWriter out = new PrintWriter(sw);
+    e.printStackTrace(out);
+    String s = sw.toString();
+
+    if (isAjax()) {
+      JSON jo = JSON.create();
+      jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      jo.put(X.MESSAGE, s);
+      this.response(jo);
+    } else {
       this.set("me", this.getUser());
 
-      StringWriter sw = new StringWriter();
-      PrintWriter out = new PrintWriter(sw);
-      e.printStackTrace(out);
-      String s = sw.toString();
       String lineSeparator = System.lineSeparator();
       s = s.replaceAll(lineSeparator, "<br/>");
       s = s.replaceAll(" ", "&nbsp;");
@@ -1851,13 +1858,14 @@ public class Model {
       this.set("error", s);
 
       this.show("/error.html");
+      setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
-    setStatus(HttpServletResponse.SC_EXPECTATION_FAILED);
 
   }
 
   /**
-   * show notfound page to end-user
+   * show notfound page to end-user <br>
+   * if the request is AJAX, then response json back to front
    */
   final public void notfound() {
     if (log.isDebugEnabled())
@@ -1906,11 +1914,11 @@ public class Model {
   }
 
   /**
-   * show deny page to end-user
+   * show deny page to end-user <br>
+   * if the request is AJAX, then response json back to front
    */
   final public void deny() {
     deny(null, null);
-    setStatus(HttpServletResponse.SC_FORBIDDEN);
   }
 
   /**
@@ -1933,6 +1941,7 @@ public class Model {
       jo.put(X.URL, url);
       this.response(jo);
     } else {
+      setStatus(HttpServletResponse.SC_FORBIDDEN);
       this.set("me", this.getUser());
       this.set(X.ERROR, error);
       this.set(X.URL, url);
