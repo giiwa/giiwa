@@ -37,7 +37,7 @@ public abstract class View {
    * @throws Exception
    *           if occur error
    */
-  protected abstract boolean parse(File file, Model m) throws Exception;
+  protected abstract boolean parse(File file, Model m, String viewname) throws Exception;
 
   /**
    * init the views by config
@@ -73,18 +73,18 @@ public abstract class View {
    * @throws Exception
    *           if occur error
    */
-  public static void merge(File file, Model m) throws Exception {
+  public static void merge(File file, Model m, String viewname) throws Exception {
 
     String name = file.getName();
     for (String suffix : views.keySet()) {
       if (name.endsWith(suffix)) {
         View v = views.get(suffix);
-        v.parse(file, m);
+        v.parse(file, m, viewname);
         return;
       }
     }
 
-    fileview.parse(file, m);
+    fileview.parse(file, m, viewname);
   }
 
   private static Map<String, View> views    = new HashMap<String, View>();

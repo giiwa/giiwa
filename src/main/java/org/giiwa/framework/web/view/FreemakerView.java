@@ -28,7 +28,7 @@ import freemarker.template.Template;
 public class FreemakerView extends View {
 
   @Override
-  public boolean parse(File file, Model m) {
+  public boolean parse(File file, Model m, String viewname) {
     // TODO Auto-generated method stub
     // load
     try {

@@ -16,6 +16,7 @@ package org.giiwa.framework.web.view;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,13 +29,27 @@ import org.giiwa.framework.web.Model;
 
 public class FileView extends View {
 
+  /**
+   * copy the file to front-end, and {giiwa}/html/ too
+   */
   @SuppressWarnings("deprecation")
   @Override
-  public boolean parse(File file, Model m) throws IOException {
+  public boolean parse(File file, Model m, String viewname) throws IOException {
 
     InputStream in = null;
     OutputStream out = null;
     try {
+      in = new FileInputStream(file);
+      /**
+       * copy the local html first
+       */
+      File f1 = new File(Model.GIIWA_HOME + "/html/" + viewname);
+      if (!f1.exists()) {
+        f1.getParentFile().mkdirs();
+        FileOutputStream out1 = new FileOutputStream(f1);
+        Model.copy(in, out1);
+      }
+
       in = new FileInputStream(file);
       out = m.getOutputStream();
       m.setContentType(Model.getMimeType(file.getName()));

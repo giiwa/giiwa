@@ -1762,7 +1762,7 @@ public class Model {
       // TimeStamp t1 = TimeStamp.create();
       File file = Module.home.getFile(viewname);
       if (file != null && file.exists()) {
-        View.merge(file, this);
+        View.merge(file, this, viewname);
 
         // if (log.isDebugEnabled())
         // log.debug("showing viewname = " + viewname + ", cost: " + t1.past() +
@@ -1951,32 +1951,6 @@ public class Model {
   }
 
   /**
-   * Delete the file and files under the path
-   * 
-   * @deprecated
-   * @param f
-   *          the file which deleted
-   */
-  final public void delete(File f) {
-    if (!f.exists()) {
-      return;
-    }
-    if (f.isFile()) {
-      f.delete();
-    }
-
-    if (f.isDirectory()) {
-      File[] list = f.listFiles();
-      if (list != null && list.length > 0) {
-        for (File f1 : list) {
-          delete(f1);
-        }
-      }
-      f.delete();
-    }
-  }
-
-  /**
    * get the request method, GET/POST
    * 
    * @return int
@@ -2007,6 +1981,7 @@ public class Model {
 
   /**
    * the utility api of copying all data in "inputstream" to "outputstream".
+   * please refers copy(in, out, boolean)
    *
    * @param in
    *          the inputstream

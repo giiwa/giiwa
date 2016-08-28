@@ -655,6 +655,27 @@ public class module extends Model {
     this.response(jo);
 
   }
+  
+  
+  private void delete(File f) {
+    if (!f.exists()) {
+      return;
+    }
+    if (f.isFile()) {
+      f.delete();
+    }
+
+    if (f.isDirectory()) {
+      File[] list = f.listFiles();
+      if (list != null && list.length > 0) {
+        for (File f1 : list) {
+          delete(f1);
+        }
+      }
+      f.delete();
+    }
+  }
+
 
   /**
    * Index.

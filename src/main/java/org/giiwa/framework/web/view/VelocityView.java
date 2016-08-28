@@ -31,7 +31,7 @@ import org.giiwa.framework.web.Model;
 public class VelocityView extends View {
 
   @Override
-  public boolean parse(File file, Model m) throws IOException {
+  public boolean parse(File file, Model m, String viewname) throws IOException {
     Template template = getTemplate(file);
 
     // System.out.println(viewname + "=>" + template);

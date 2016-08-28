@@ -165,13 +165,13 @@ public class DefaultListener implements IListener {
       log.debug("upgrade.enabled=" + Global.getString(conf.getString("node") + ".upgrade.framework.enabled", "false"));
     }
 
-    // cleanup
-    // File f = new File(Model.HOME +
-    // "/WEB-INF/lib/mina-core-2.0.0-M4.jar");
-    // if (f.exists()) {
-    // f.delete();
-    // System.exit(0);
-    // }
+    /**
+     * cleanup html
+     */
+    File f = new File(Model.GIIWA_HOME + "/html/");
+    if (f.exists()) {
+      delete(f);
+    }
 
     setting.register("system", setting.system.class);
     setting.register("smtp", setting.mail.class);
@@ -187,6 +187,25 @@ public class DefaultListener implements IListener {
      */
     User.checkAndInit();
 
+  }
+
+  private void delete(File f) {
+    if (!f.exists()) {
+      return;
+    }
+    if (f.isFile()) {
+      f.delete();
+    }
+
+    if (f.isDirectory()) {
+      File[] list = f.listFiles();
+      if (list != null && list.length > 0) {
+        for (File f1 : list) {
+          delete(f1);
+        }
+      }
+      f.delete();
+    }
   }
 
   /*

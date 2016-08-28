@@ -23,7 +23,7 @@ import org.giiwa.framework.web.Model;
 public class JspView extends View {
 
   @Override
-  protected boolean parse(File file, Model m) throws Exception {
+  protected boolean parse(File file, Model m, String viewname) throws Exception {
     String name = file.getCanonicalPath().substring(Model.HOME.length());
     log.debug("viewname=" + name);
 
