@@ -191,6 +191,9 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * @return Object the value of the name, return null if the name not exists
    */
   public final Object get(Object name) {
+    if (name == null) {
+      return null;
+    }
 
     String s = name.toString().toLowerCase();
     Field f = _getField(s);
