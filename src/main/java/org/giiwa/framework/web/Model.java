@@ -1222,7 +1222,7 @@ public class Model {
 
         Object v1 = uploads.get(name);
         if (v1 != null) {
-          return v1.toString();
+          return v1.toString().trim();
         }
         return null;
       } else if (this._multipart) {
@@ -1235,14 +1235,14 @@ public class Model {
           byte[] bb = new byte[in.available()];
           in.read(bb);
           in.close();
-          return new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+          return new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
         }
 
       } else {
         String[] ss = req.getParameterValues(name);
         if (ss != null && ss.length > 0) {
           String s = ss[ss.length - 1];
-          return s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+          return s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
         }
       }
 

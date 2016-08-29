@@ -229,7 +229,10 @@ public class user extends Model {
         jo.put("uid", a.getUid());
         jo.put("expired", a.getExpired());
       } else {
-        String name = this.getString("name").trim().toLowerCase();
+        String name = this.getString("name");
+        if (name != null) {
+          name = name.toLowerCase();
+        }
         String pwd = this.getString("pwd");
 
         Captcha.Result r = Captcha.Result.ok;
