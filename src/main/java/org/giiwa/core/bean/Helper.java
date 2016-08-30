@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -193,8 +194,10 @@ public class Helper {
    */
   public static final class V {
 
+    public final static Object    ignore = new Object();
+
     /** The list. */
-    protected Map<String, Object> m = new HashMap<String, Object>();
+    protected Map<String, Object> m      = new HashMap<String, Object>();
 
     /**
      * get the names.
@@ -202,7 +205,13 @@ public class Helper {
      * @return Collection
      */
     public Set<String> names() {
-      return m.keySet();
+      Set<String> s1 = new HashSet<String>(m.keySet());
+      for (String s : s1) {
+        if (m.get(s) == ignore) {
+          s1.remove(s);
+        }
+      }
+      return s1;
     }
 
     /**
