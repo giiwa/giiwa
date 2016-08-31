@@ -94,7 +94,7 @@ public class Language {
     }
 
     if (s instanceof String) {
-      String s1 = (String) s;
+      String s1 = Html.create((String) s).text();
       if (s1.length() > length) {
         return s1.substring(0, length - 3) + "<span class='truncated' title='" + s1 + "'>...</span>";
       }
