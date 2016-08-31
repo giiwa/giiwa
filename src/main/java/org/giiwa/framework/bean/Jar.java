@@ -25,7 +25,6 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Model;
 
-// TODO: Auto-generated Javadoc
 /**
  * internal class, using for module management. <br>
  * collection="gi_jar"
@@ -126,10 +125,14 @@ public class Jar extends Bean {
     Helper.update(W.create("module", module).and("node", node), V.create("reset", 0), Jar.class);
   }
 
-  // public static List<Object> loadNames(String module, BasicDBObject q) {
-  // String node = Model.node();
-  // return Bean.distinct("name", q.append("module", module).append("node",
-  // node), Jar.class);
-  // }
+  public static boolean exists(W q) {
+    try {
+      return Helper.exists(q, Jar.class);
+    } catch (Exception e) {
+      log.error(q.toString(), e);
+      OpLog.error("db", "exists", q.toString(), null, null);
+    }
+    return true;
+  }
 
 }

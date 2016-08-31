@@ -26,6 +26,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
@@ -121,10 +122,12 @@ public class module extends Model {
       File[] ff1 = f1.listFiles();
       if (ff1 != null) {
         for (File f2 : ff1) {
-          list.add(f2.getName());
-          create(out, name + "/depends/" + f2.getName());
-          copy(out, f2);
-          out.closeEntry();
+          if (Jar.exists(W.create("module", "default").and("name", f2.getName()))) {
+            list.add(f2.getName());
+            create(out, name + "/depends/" + f2.getName());
+            copy(out, f2);
+            out.closeEntry();
+          }
         }
       }
 
@@ -655,8 +658,7 @@ public class module extends Model {
     this.response(jo);
 
   }
-  
-  
+
   private void delete(File f) {
     if (!f.exists()) {
       return;
@@ -675,7 +677,6 @@ public class module extends Model {
       f.delete();
     }
   }
-
 
   /**
    * Index.
