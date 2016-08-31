@@ -68,7 +68,6 @@ public class backup extends Model {
   /**
    * Delete.
    */
-  @SuppressWarnings("deprecation")
   @Path(path = "delete", login = true, access = "access.config.admin")
   public void delete() {
 

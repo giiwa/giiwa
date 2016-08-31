@@ -19,6 +19,7 @@ import java.io.*;
 import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.core.base.GImage;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
@@ -98,7 +99,7 @@ public class repo extends Model {
                       src.getParentFile().mkdirs();
                     }
                     OutputStream out = new FileOutputStream(src);
-                    Model.copy(e.getInputStream(), out, false);
+                    IOUtil.copy(e.getInputStream(), out, false);
                     out.close();
 
                     if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]), X.toInt(ss[1])) < 0) {
@@ -111,7 +112,7 @@ public class repo extends Model {
                     InputStream in = new FileInputStream(f);
                     OutputStream out = this.getOutputStream();
 
-                    Model.copy(in, out, false);
+                    IOUtil.copy(in, out, false);
                     in.close();
                     return;
                   }
@@ -142,7 +143,7 @@ public class repo extends Model {
               this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
 
               log.info(start + "-" + end + "/" + total);
-              Model.copy(in, out, start, end, true);
+              IOUtil.copy(in, out, start, end, true);
 
               return;
             } catch (IOException e1) {
@@ -260,7 +261,7 @@ public class repo extends Model {
                     src.delete();
                   }
                   OutputStream out = new FileOutputStream(src);
-                  Model.copy(e.getInputStream(), out, false);
+                  IOUtil.copy(e.getInputStream(), out, false);
                   out.close();
 
                   /**
@@ -281,7 +282,7 @@ public class repo extends Model {
                   InputStream in = new FileInputStream(f);
                   OutputStream out = this.getOutputStream();
 
-                  Model.copy(in, out, false);
+                  IOUtil.copy(in, out, false);
                   in.close();
                   return;
                 }
@@ -310,7 +311,7 @@ public class repo extends Model {
                     src.delete();
                   }
                   OutputStream out = new FileOutputStream(src);
-                  Model.copy(e.getInputStream(), out, false);
+                  IOUtil.copy(e.getInputStream(), out, false);
                   out.close();
 
                   /**
@@ -331,7 +332,7 @@ public class repo extends Model {
                   InputStream in = new FileInputStream(f);
                   OutputStream out = this.getOutputStream();
 
-                  Model.copy(in, out, false);
+                  IOUtil.copy(in, out, false);
                   in.close();
                   return;
                 }
@@ -377,7 +378,7 @@ public class repo extends Model {
             this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
 
             log.info(start + "-" + end + "/" + total);
-            Model.copy(in, out, start, end, true);
+            IOUtil.copy(in, out, start, end, true);
 
             return;
           } catch (IOException e1) {

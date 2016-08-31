@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.Temp;
@@ -90,7 +91,7 @@ public class temp extends Model {
 
       InputStream in = new FileInputStream(f);
       OutputStream out = this.getOutputStream();
-      Model.copy(in, out, start, end, true);
+      IOUtil.copy(in, out, start, end, true);
 
       return;
 

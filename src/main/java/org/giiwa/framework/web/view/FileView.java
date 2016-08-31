@@ -23,6 +23,7 @@ import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
@@ -32,7 +33,6 @@ public class FileView extends View {
   /**
    * copy the file to front-end, and {giiwa}/html/ too
    */
-  @SuppressWarnings("deprecation")
   @Override
   public boolean parse(File file, Model m, String viewname) throws IOException {
 
@@ -47,7 +47,7 @@ public class FileView extends View {
       if (!f1.exists()) {
         f1.getParentFile().mkdirs();
         FileOutputStream out1 = new FileOutputStream(f1);
-        Model.copy(in, out1);
+        IOUtil.copy(in, out1);
       }
 
       in = new FileInputStream(file);
@@ -82,7 +82,7 @@ public class FileView extends View {
 
       }
 
-      Model.copy(in, out, start, end, false);
+      IOUtil.copy(in, out, start, end, false);
       out.flush();
 
       return true;

@@ -77,6 +77,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Captcha.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/user.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/GiiwaContextListener.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/IOUtil.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/view/VelocityTemplateLoader.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/OpLog.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/version.java

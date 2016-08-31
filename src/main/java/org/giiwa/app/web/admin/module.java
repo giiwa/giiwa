@@ -26,6 +26,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
@@ -436,12 +437,11 @@ public class module extends Model {
     return "/temp/" + fid + "/" + name + ".zip";
   }
 
-  @SuppressWarnings("deprecation")
   private ZipOutputStream copy(ZipOutputStream out, File f) throws Exception {
     InputStream in = null;
     try {
       in = new FileInputStream(f);
-      Model.copy(in, out, false);
+      IOUtil.copy(in, out, false);
     } finally {
       if (in != null) {
         in.close();
