@@ -372,7 +372,7 @@ public class DefaultListener implements IListener {
           log.error("DB is miss configured, please congiure it in [" + Model.GIIWA_HOME + "/giiwa/giiwa.properties]");
         }
 
-        module.setStatus("not RDS configured, ignore the db script");
+        module.setStatus("no RDS configured, ignore the db script");
       }
     } catch (Exception e) {
       if (log.isErrorEnabled()) {
