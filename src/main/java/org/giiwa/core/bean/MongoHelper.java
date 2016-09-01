@@ -1047,7 +1047,7 @@ public class MongoHelper extends Helper {
       DBCollection c = MongoHelper.getCollection(collection);
       if (c != null) {
         c1 = c.find(q);
-        return _count(c1, 0, (int) c.count());
+        return c1.count();
 
       }
 
@@ -1059,34 +1059,6 @@ public class MongoHelper extends Helper {
         log.debug("count, cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
     }
     return 0;
-  }
-
-  private static int _count(DBCursor c, int start, int end) {
-    if (start == end) {
-      return (int) start;
-    }
-
-    TimeStamp t = TimeStamp.create();
-    int count = (start + end) / 2;
-    DBCursor c1 = c.getCollection().find(c.getQuery());
-    try {
-      // log.debug("find=" + t.past() + "ms,count=" + count);
-      c1.skip(count);
-      // log.debug("skip=" + t.past() + "ms,count=" + count);
-      if (c1.hasNext()) {
-        // log.debug("cost=" + t.past() + "ms,count=" + count);
-        if (end - count == 1)
-          return end;
-        return _count(c, count, end);
-      } else {
-        log.debug("cost=" + t.past() + "ms,count=" + count);
-        if (count - start <= 1)
-          return count;
-        return _count(c, start, count);
-      }
-    } finally {
-      c1.close();
-    }
   }
 
   /**
