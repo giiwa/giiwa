@@ -1882,7 +1882,10 @@ public class Model {
   }
 
   /**
-   * test the request is Ajax ?
+   * test the request is Ajax ? <br>
+   * X-Request-With:XMLHttpRequest<br>
+   * Content-Type: application/json <br>
+   * output: json <br>
    * 
    * @return true: yes
    */
@@ -1894,6 +1897,16 @@ public class Model {
 
     String type = this.getHeader("Content-Type");
     if (type != null && type.contains("application/json")) {
+      return true;
+    }
+
+    String output = this.getString("output");
+    if (X.isSame("json", output)) {
+      return true;
+    }
+
+    output = this.getHeader("output");
+    if (X.isSame("json", output)) {
       return true;
     }
 
@@ -1976,7 +1989,6 @@ public class Model {
    * MIME TYPE of HTML
    */
   final public static String MIME_HTML   = "text/html;charset=" + ENCODING;
-
 
   /**
    * Copy all request params from the model.
