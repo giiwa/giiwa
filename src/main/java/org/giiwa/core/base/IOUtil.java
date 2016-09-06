@@ -1,5 +1,8 @@
 package org.giiwa.core.base;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,6 +23,74 @@ public class IOUtil {
    */
   public static int copy(InputStream in, OutputStream out) throws IOException {
     return copy(in, out, true);
+  }
+
+  /**
+   * delete the file or the path
+   * 
+   * @param f
+   *          the file or the path
+   * @return the number deleted
+   * @throws IOException
+   */
+  public static int delete(File f) throws IOException {
+    int count = 0;
+    if (f.isFile()) {
+      f.delete();
+      count++;
+    } else if (f.isDirectory()) {
+      File[] ff = f.listFiles();
+      if (ff != null && ff.length > 0) {
+        for (File f1 : ff) {
+          count += delete(f1);
+        }
+      }
+      f.delete();
+      count++;
+    }
+    return count;
+  }
+
+  /**
+   * copy files
+   * 
+   * @param src
+   * @param dest
+   * @return the number copied
+   * @throws IOException
+   */
+  public static int copyDir(File src, File dest) throws IOException {
+    dest.mkdirs();
+    int count = 0;
+    if (src.isFile()) {
+      // copy file
+      count++;
+      copy(src, new File(dest.getCanonicalPath() + "/" + src.getName()));
+
+    } else if (src.isDirectory()) {
+      // copy dir
+      File[] ff = src.listFiles();
+      if (ff != null && ff.length > 0) {
+        for (File f : ff) {
+          count += copyDir(f, new File(dest.getCanonicalPath() + "/" + src.getName()));
+        }
+      } else {
+        new File(dest.getCanonicalPath() + "/" + src.getName()).mkdirs();
+      }
+    }
+    return count;
+  }
+
+  /**
+   * copy file src to file destination
+   * 
+   * @param src
+   * @param dest
+   * @return int of copied
+   * @throws IOException
+   */
+  public static int copy(File src, File dest) throws IOException {
+    return copy(new FileInputStream(src), new FileOutputStream(dest), true);
   }
 
   /**
