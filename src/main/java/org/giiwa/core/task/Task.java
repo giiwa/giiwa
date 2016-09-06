@@ -23,7 +23,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.*;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code WorkerTask} Class use for create a runnable Task, and includes
  * schedule method. <br>
@@ -500,4 +499,24 @@ public abstract class Task implements Runnable {
   public static int tasksInQueue() {
     return executor.getQueue().size();
   }
+
+  /**
+   * create a Task from Runnable
+   * 
+   * @param r
+   *          the runnable object
+   * @return Task
+   */
+  public static Task create(final Runnable r) {
+    Task t = new Task() {
+
+      @Override
+      public void onExecute() {
+        r.run();
+      }
+
+    };
+    return t;
+  }
+
 }
