@@ -395,3 +395,4 @@ a.token=Token
 menu.token=Token管理
 token.index.title=Token管理
 user.uid=UID
+module.includes.hint=包含所有模块包文件

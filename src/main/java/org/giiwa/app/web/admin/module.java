@@ -91,6 +91,7 @@ public class module extends Model {
     String package1 = this.getString("package");
     String lifelistener = package1 + "." + name.substring(0, 1).toUpperCase() + name.substring(1) + "Listener";
     String readme = this.getString("readme");
+    boolean includes = X.isSame(this.getString("includes"), "on");
 
     String fid = UID.id(login == null ? UID.random() : login.getId(), System.currentTimeMillis());
 
@@ -123,7 +124,7 @@ public class module extends Model {
       File[] ff1 = f1.listFiles();
       if (ff1 != null) {
         for (File f2 : ff1) {
-          if (Jar.exists(W.create("module", "default").and("name", f2.getName()))) {
+          if (includes || Jar.exists(W.create("module", "default").and("name", f2.getName()))) {
             list.add(f2.getName());
             create(out, name + "/depends/" + f2.getName());
             copy(out, f2);

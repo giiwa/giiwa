@@ -403,3 +403,4 @@ a.token=Token
 menu.token=Token
 token.index.title=Token management
 user.uid=UID
+module.includes.hint=Includes all modules jar files
