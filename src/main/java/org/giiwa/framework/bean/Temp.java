@@ -69,6 +69,15 @@ public class Temp {
   }
 
   /**
+   * get the Id
+   * 
+   * @return String of id
+   */
+  public String getId() {
+    return id;
+  }
+
+  /**
    * get the File
    * 
    * @return File the file
