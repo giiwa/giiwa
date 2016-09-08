@@ -145,12 +145,12 @@ public class DB {
         ds.setPassword(PASSWD);
 
       ds.setMaxActive(MAX_ACTIVE_NUMBER);
-      ds.setDefaultAutoCommit(true);
+
+      // ds.setDefaultAutoCommit(true);
       ds.setMaxIdle(MAX_ACTIVE_NUMBER);
       ds.setMaxWait(MAX_WAIT_TIME);
-      ds.setDefaultAutoCommit(true);
-      ds.setDefaultReadOnly(false);
-      ds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+       ds.setDefaultReadOnly(false);
+      // ds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
       ds.setValidationQuery(null);// VALIDATION_SQL);
       ds.setPoolPreparedStatements(true);
 
@@ -244,9 +244,8 @@ public class DB {
     ds.setMaxIdle(MAX_ACTIVE_NUMBER);
     ds.setMaxWait(MAX_WAIT_TIME);
     ds.setDefaultAutoCommit(true);
-    ds.setDefaultAutoCommit(true);
     ds.setDefaultReadOnly(false);
-    ds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+    // ds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
     ds.setValidationQuery(null);// VALIDATION_SQL);
     ds.setPoolPreparedStatements(true);
     // }
@@ -265,8 +264,8 @@ public class DB {
       Connection c = ds.getConnection();
       if (c != null) {
         c.setAutoCommit(true);
-        return c;
       }
+      return c;
     }
 
     return null;
@@ -304,7 +303,9 @@ public class DB {
       String D = null;
       String[] ss = url.split(":");
       if (ss.length > 2) {
-        if (ss[1].equalsIgnoreCase("mysql")) {
+        if (ss[1].equalsIgnoreCase("sqlite")) {
+          D = "org.sqlite.JDBC";
+        } else if (ss[1].equalsIgnoreCase("mysql")) {
           D = "com.mysql.jdbc.Driver";
         } else if (ss[1].equalsIgnoreCase("postgresql")) {
           D = "org.postgresql.Driver";

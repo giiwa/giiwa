@@ -49,7 +49,6 @@
 				<div><label><h3>Driver：</h3>
 					<select name='driver' onchange='_ondriver();'>
 						<option value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
-						<option value='org.sqlite.JDBCr' #if($global.getString('db.driver', '') == 'org.sqlite.JDBC') selected #end>SQLite</option>
 						<option value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
 						<option value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
 						<option value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
@@ -57,7 +56,6 @@
 				</label></div>
 				<div class='url'><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
-					<g class='sqlite' style='display:none'>jdbc:sqlite:demo.db</g>
 					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=giiwa&password=g123123</g>
 					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=giiwa&password=g123123&useUnicode=true&characterEncoding=UTF-8</g>
 					<g class='oracle' style='display:none'>...</g>
