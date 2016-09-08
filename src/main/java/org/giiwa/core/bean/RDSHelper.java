@@ -29,7 +29,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -133,26 +132,29 @@ public class RDSHelper extends Helper {
    *           the SQL exception
    */
   private static void setParameter(PreparedStatement p, int i, Object o) throws SQLException {
-    if (o == null) {
-      p.setObject(i, null);
-    } else if (o instanceof Integer) {
-      p.setInt(i, (Integer) o);
-    } else if (o instanceof Date) {
-      p.setTimestamp(i, new java.sql.Timestamp(((Date) o).getTime()));
-    } else if (o instanceof Long) {
-      p.setLong(i, (Long) o);
-    } else if (o instanceof Float) {
-      p.setFloat(i, (Float) o);
-    } else if (o instanceof Double) {
-      p.setDouble(i, (Double) o);
-    } else if (o instanceof Boolean) {
-      p.setBoolean(i, (Boolean) o);
-    } else if (o instanceof Timestamp) {
-      p.setTimestamp(i, (Timestamp) o);
-    } else {
-      p.setString(i, o.toString());
+    try {
+      if (o == null) {
+        p.setObject(i, null);
+      } else if (o instanceof Integer) {
+        p.setInt(i, (Integer) o);
+      } else if (o instanceof Date) {
+        p.setTimestamp(i, new java.sql.Timestamp(((Date) o).getTime()));
+      } else if (o instanceof Long) {
+        p.setLong(i, (Long) o);
+      } else if (o instanceof Float) {
+        p.setFloat(i, (Float) o);
+      } else if (o instanceof Double) {
+        p.setDouble(i, (Double) o);
+      } else if (o instanceof Boolean) {
+        p.setBoolean(i, (Boolean) o);
+      } else if (o instanceof Timestamp) {
+        p.setTimestamp(i, (Timestamp) o);
+      } else {
+        p.setString(i, o.toString());
+      }
+    } catch (SQLException e) {
+      throw new SQLException("i=" + i + ", o=" + o, e);
     }
-
   }
 
   public static int delete(String where, Object[] args, Class<? extends Bean> t) {
@@ -1360,7 +1362,8 @@ public class RDSHelper extends Helper {
       p = c.prepareStatement(sql.toString());
 
       int order = 1;
-      for (Object v : sets.values()) {
+      for (String name : sets.names()) {
+        Object v = sets.value(name);
         setParameter(p, order++, v);
       }
 
@@ -2113,79 +2116,6 @@ public class RDSHelper extends Helper {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
-  }
-
-  /**
-   * batch insert
-   * 
-   * @param table
-   *          the table name
-   * @param values
-   *          the collection of values
-   * @return the number of inserted
-   */
-  public static int insertTable(String table, Collection<V> values) {
-
-    if (values == null || values.size() == 0)
-      return 0;
-
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("insert into ").append(table).append(" (");
-    StringBuilder s = new StringBuilder();
-    int total = 0;
-    V ss = values.iterator().next();
-    for (String name : ss.names()) {
-      if (s.length() > 0)
-        s.append(",");
-      s.append(name);
-      total++;
-    }
-    sql.append(s).append(") values( ");
-
-    for (int i = 0; i < total - 1; i++) {
-      sql.append("?, ");
-    }
-    sql.append("?)");
-
-    /**
-     * insert it in database
-     */
-    Connection c = null;
-    PreparedStatement p = null;
-
-    try {
-      c = getConnection();
-
-      if (c == null)
-        return -1;
-
-      p = c.prepareStatement(sql.toString());
-
-      for (V sets : values) {
-        int order = 1;
-        for (Object v : sets.m.values()) {
-          setParameter(p, order++, v);
-        }
-
-        p.addBatch();
-      }
-
-      int[] ii = p.executeBatch();
-      int r = 0;
-      for (int i : ii) {
-        r += i;
-      }
-      return r;
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(sql.toString() + values.toString(), e);
-    } finally {
-      close(p, c);
-    }
-    return 0;
   }
 
 }

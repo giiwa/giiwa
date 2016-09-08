@@ -340,9 +340,7 @@ public class Helper {
       for (String s : names) {
         if (jo.containsKey(s)) {
           Object o = jo.get(s);
-          if (X.isEmpty(o)) {
-            set(s, X.EMPTY);
-          } else {
+          if (o != null) {
             set(s, o);
           }
         }
@@ -1081,50 +1079,6 @@ public class Helper {
     }
     return null;
 
-  }
-
-  /**
-   * batch insert
-   * 
-   * @param values
-   *          the collection of values
-   * @param t
-   *          the Class of Bean
-   * @return the number of inserted
-   */
-  public static int insert(Collection<V> values, Class<? extends Bean> t) {
-    String table = getTable(t);
-    return insert(table, values);
-  }
-
-  /**
-   * batch insert
-   * 
-   * @param table
-   *          the table name
-   * @param values
-   *          the collection of values
-   * @return the number of inserted
-   */
-  public static int insert(String table, Collection<V> values) {
-
-    if (table != null) {
-      for (V v : values) {
-        v.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
-      }
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.insertCollection(table, values);
-      } else if (primary == DBType.RDS) {
-
-        // insert into RDS
-        return RDSHelper.insertTable(table, values);
-      } else {
-        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-      }
-    }
-
-    return 0;
   }
 
   /**
