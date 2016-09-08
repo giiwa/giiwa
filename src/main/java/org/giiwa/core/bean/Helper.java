@@ -17,8 +17,8 @@ package org.giiwa.core.bean;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -197,7 +197,7 @@ public class Helper {
     public final static Object    ignore = new Object();
 
     /** The list. */
-    protected Map<String, Object> m      = new HashMap<String, Object>();
+    protected Map<String, Object> m      = new LinkedHashMap<String, Object>();
 
     /**
      * get the names.
