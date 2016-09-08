@@ -64,6 +64,8 @@ public class JSON extends HashMap<String, Object> {
       j = g.fromJson(new String(b1), JSON.class);
     }
 
+    _refine(j);
+
     if (j != null) {
       for (String name : j.keySet().toArray(new String[j.size()])) {
         Object o = j.get(name);
@@ -174,6 +176,26 @@ public class JSON extends HashMap<String, Object> {
   public String toString() {
     Gson g = new Gson();
     return g.toJson(this);
+  }
+
+  private static JSON _refine(JSON jo) {
+    if (jo == null) {
+      return null;
+    }
+    if (jo.size() > 0) {
+      for (String name : jo.keySet()) {
+        Object v = jo.get(name);
+        if (v instanceof Double) {
+          Double d = (Double) v;
+          if (d == d.intValue()) {
+            jo.put(name, d.intValue());
+          } else if (d == d.longValue()) {
+            jo.put(name, d.longValue());
+          }
+        }
+      }
+    }
+    return jo;
   }
 
   /**
@@ -371,9 +393,12 @@ public class JSON extends HashMap<String, Object> {
     j = JSON.fromObject(ss);
     System.out.println(j);
 
+    System.out.println(j.get("b").getClass());
     ss = "[{a:'a',b:1}]";
+
     List<JSON> l1 = JSON.fromObjects(ss);
     System.out.println(l1);
+    System.out.println(l1.get(0).get("b").getClass());
 
   }
 
