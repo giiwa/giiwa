@@ -12,6 +12,7 @@ org/giiwa/framework/web/GiiwaContextListener.class
 org/giiwa/core/bean/Helper.class
 org/giiwa/core/base/H32.class
 org/giiwa/app/web/DefaultListener$1.class
+org/giiwa/core/task/Task$3.class
 org/giiwa/framework/bean/Roles.class
 org/giiwa/core/base/Zip.class
 org/giiwa/core/base/Host$Memory.class

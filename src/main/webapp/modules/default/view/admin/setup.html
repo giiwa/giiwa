@@ -212,8 +212,6 @@ $(function(){
 		p["mongo.pwd"] = $('#mongo input[name=pwd]').val();
 		p["node"] = $('#system input[name=node]').val();
 		p["code"] = $('#system input[name=code]').val();
-		p["mq.enabled"] = $('#mq input[name=enabled]').prop('checked');
-		p["mq.url"] = $('#mq input[name=url]').val();
 		p["cache.url"] = $('#cache input[name=url]').val();
 		p["admin"] = $('#admin input[name=admin]').val();
 		p["password"] = $('#admin input[name=password]').val();
@@ -265,14 +263,6 @@ function check_mongo(f){
 		} else {
 			$.error(d.message);
 		}
-	})
-}
-function check_mq(f){
-	processing && processing.show();
-	var  p = {op:'mq'};
-	$.post('/setup/check', {}, function(d){
-		processing && processing.hide();
-		f();
 	})
 }
 function check_cache(f){
