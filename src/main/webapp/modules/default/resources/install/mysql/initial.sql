@@ -55,7 +55,8 @@ create table gi_userrole
 (
 	uid bigint,
 	rid bigint,
-	created bigint
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_userrole_index_uid on gi_userrole(uid);
 create unique index gi_userrole_index_uid_rid on gi_userrole(uid, rid);
@@ -66,6 +67,7 @@ create table gi_role
 	id bigint not null,
 	name varchar(100),
 	memo varchar(255),
+	created bigint default 0,
 	updated bigint default 0
 );
 create unique index gi_role_indexid on gi_role(id);
@@ -77,14 +79,17 @@ create table gi_code
 	s1 varchar(50),
 	s2 varchar(50),
 	expired bigint,
-	created bigint
+	created bigint default 0,
+	updated bigint default 0
 );
 create unique index gi_code_index_s1_s2 on gi_code(s1, s2);
 
 #drop table if exists gi_access;
 create table gi_access
 (
-	id varchar(255)
+	id varchar(255),
+	created bigint default 0,
+	updated bigint default 0
 );
 create unique index gi_access_indexid on gi_access(id);
 
@@ -93,7 +98,9 @@ create table gi_roleaccess
 (
 	id varchar(20),
 	rid bigint,
-	name varchar(255)
+	name varchar(255),
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_roleaccess_indexid on gi_roleaccess(id);
 create index gi_roleaccess_index_rid on gi_roleaccess(rid);
@@ -107,11 +114,12 @@ create table gi_repo
 	name varchar(255),
 	total bigint,
 	pos bigint,
-	created bigint,
 	flag int,
 	tag varchar(20),
 	expired bigint,
-	memo varchar(1024)
+	memo varchar(1024),
+	created bigint default 0,
+	updated bigint default 0
 );
 create unique index gi_repo_indexid on gi_repo(id);
 create index gi_repo_index_uid on gi_repo(uid);
@@ -119,18 +127,6 @@ create index gi_repo_index_name on gi_repo(name);
 create index gi_repo_index_folder on gi_repo(folder);
 create index gi_repo_index_tag on gi_repo(tag);
 create index gi_repo_index_expired on gi_repo(expired);
-
-#drop table if exists gi_keypair;
-create table gi_keypair
-(
-	id bigint not null,
-	created bigint,
-	memo varchar(255),
-	length int,
-	pubkey varchar(2048),
-	prikey varchar(2048)
-);
-create unique index gi_keypair_index_created on gi_keypair(created);
 
 #drop table if exists gi_menu;
 create table gi_menu
@@ -149,7 +145,9 @@ create table gi_menu
 	seq int default 1000,
 	tip varchar(255),
 	style varchar(255),
-	load varchar(255)
+	load varchar(255),
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_menu_indexid on gi_menu(id);
 create index gi_menu_index_parent on gi_menu(parent);
@@ -164,14 +162,15 @@ create table gi_accesslog
 	uid bigint,
 	cost bigint,
 	method varchar(20),
-	created bigint,
 	ip varchar(20),
 	client varchar(128),
 	id varchar(20),
 	url varchar(128),
 	sid varchar(50),
 	username varchar(50),
-	status int
+	status int,
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_accesslog_index_uid on gi_accesslog(uid);
 create index gi_accesslog_index_method on gi_accesslog(method);
@@ -182,10 +181,10 @@ create table gi_jar
 	id varchar(20),
 	module varchar(50),
 	name varchar(50),
-	created bigint,
-	updated bigint,
 	reset int,
-	node varchar(50)
+	node varchar(50),
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_jar_index_module on gi_jar(module);
 create index gi_jar_index_name on gi_jar(name);
@@ -197,11 +196,11 @@ create table gi_authtoken
 	id varchar(20),
 	uid bigint,
 	expired bigint,
-	created bigint,
 	ip varchar(20),
-	updated bigint,
 	sid varchar(50),
-	token varchar(50)
+	token varchar(50),
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_authtoken_index_id on gi_authtoken(id);
 create index gi_authtoken_index_uid on gi_authtoken(uid);
@@ -220,8 +219,8 @@ create table gi_oplog
 	type int,
 	message varchar(1024),
 	trace varchar(8192),
-	updated bigint,
-	created bigint
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_oplog_index_created on gi_oplog(created);
 create index gi_oplog_index_type on gi_oplog(type);
@@ -234,10 +233,10 @@ create index gi_oplog_index_op on gi_oplog(op);
 create table gi_userlock
 (
 	uid bigint,
-	created bigint,
 	host varchar(20),
 	useragent varchar(255),
-	updated bigint,
-	sid varchar(50)
+	sid varchar(50),
+	created bigint default 0,
+	updated bigint default 0
 );
 create index gi_userlock_index_uid on gi_userlock(uid);
