@@ -334,6 +334,12 @@ public class DefaultListener implements IListener {
          */
         String filename = "../resources/install/" + dbname + "/initial.sql";
         File f = module.getFile(filename, false, false);
+        if (f == null || !f.exists()) {
+          f = module.getFile("../res/install/" + dbname + "/initial.sql", false, false);
+        }
+        if (f == null || !f.exists()) {
+          f = module.getFile("../init/install/" + dbname + "/initial.sql", false, false);
+        }
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
           int b = Global.getInt(key, 0);
@@ -390,6 +396,13 @@ public class DefaultListener implements IListener {
        * 
        */
       File f = module.getFile("../resources/menu.json", false, false);
+      if (f == null || !f.exists()) {
+        f = module.getFile("../res/menu.json", false, false);
+      }
+      if (f == null || !f.exists()) {
+        f = module.getFile("../init/menu.json", false, false);
+      }
+
       if (f != null && f.exists()) {
         BufferedReader reader = null;
         try {

@@ -15,7 +15,7 @@ case "$1" in
         		cd -
         		echo "appdog has been installed in /etc/init.d/"
 		fi
-		;;
+		;; 
 	postgresql)
 		#initial postgresql
 		echo "initdb using dbinit.sql"
