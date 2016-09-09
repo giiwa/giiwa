@@ -232,37 +232,36 @@ public class module extends Model {
       /**
        * create resources info
        */
-      create(out, name + "/src/resources/").closeEntry();
-      f1 = module.getFile("/admin/demo/src/resources/");
+      create(out, name + "/src/init/").closeEntry();
+      f1 = module.getFile("/admin/demo/src/init/");
       if (f1.exists()) {
         ff1 = f1.listFiles();
         if (ff1 != null) {
           for (File f2 : ff1) {
             if (f2.isFile()) {
-              create(out, name + "/src/resources/" + f2.getName());
+              create(out, name + "/src/init/" + f2.getName());
               copy(out, f2);
               out.closeEntry();
             } else if (f2.isDirectory()) {
-              create(out, name + "/src/resources/" + f2.getName() + "/").closeEntry();
+              create(out, name + "/src/init/" + f2.getName() + "/").closeEntry();
               // copy all files
               File[] ff2 = f2.listFiles();
               if (ff2 != null) {
                 for (File f3 : ff2) {
                   if (f3.isDirectory()) {
-                    create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/").closeEntry();
+                    create(out, name + "/src/init/" + f2.getName() + "/" + f3.getName() + "/").closeEntry();
                     File[] ff3 = f3.listFiles();
                     if (ff3 != null) {
                       for (File f4 : ff3) {
                         if (f4.isFile()) {
-                          create(out,
-                              name + "/src/resources/" + f2.getName() + "/" + f3.getName() + "/" + f4.getName());
+                          create(out, name + "/src/init/" + f2.getName() + "/" + f3.getName() + "/" + f4.getName());
                           copy(out, f4);
                           out.closeEntry();
                         }
                       }
                     }
                   } else {
-                    create(out, name + "/src/resources/" + f2.getName() + "/" + f3.getName());
+                    create(out, name + "/src/init/" + f2.getName() + "/" + f3.getName());
                     copy(out, f3);
                     out.closeEntry();
                   }
