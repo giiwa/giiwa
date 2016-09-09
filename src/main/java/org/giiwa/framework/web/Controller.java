@@ -132,13 +132,6 @@ public class Controller {
     Tps.add(1);
 
     /**
-     * cut-off all the "//"
-     */
-    while (uri.indexOf("//") > -1) {
-      uri = uri.replaceAll("//", "/");
-    }
-
-    /**
      * test and load from cache first
      */
     Model mo = Module.home.loadModelFromCache(method.method, uri);
@@ -241,7 +234,6 @@ public class Controller {
     /**
      * load model from the modules
      */
-    uri = uri.replaceAll("//", "/");
 
     // log.debug("dispatch, uri=" + uri);
     Model mo = getModel(method.method, uri);

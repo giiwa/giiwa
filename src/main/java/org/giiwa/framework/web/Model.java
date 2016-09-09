@@ -1800,7 +1800,14 @@ public class Model {
       }
     }
 
-    notfound();
+    String uri = req.getRequestURI();
+    while (uri.indexOf("//") > -1) {
+      uri = uri.replaceAll("//", "/");
+    }
+    Model mo = new DummyModel();
+    mo.module = Module.home;
+    mo.dispatch(uri, req, resp, method);
+
   }
 
   /**

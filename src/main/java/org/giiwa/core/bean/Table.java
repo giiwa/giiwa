@@ -19,14 +19,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-// TODO: Auto-generated Javadoc
 /**
  * the {@code Mapping} Class used to annotate the Bean, define the
  * collection/table mapping with the Bean
  * 
  * <pre>
- * table, the table of mapped
- * collection, the collection of mapped, when collection defined, will ignore the table
+ * name, the table name
  * </pre>
  * 
  * @author joe

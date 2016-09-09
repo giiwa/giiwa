@@ -46,7 +46,7 @@ public class DummyModel extends Model {
      * if the file exists, and the extension is not .html and htm then get back
      * directly, and set contenttype
      */
-    // log.debug("uri=" + uri);
+    log.debug("uri=" + uri);
 
     if (!_onPost(uri)) {
       for (String suffix : Controller.welcomes) {

@@ -52,6 +52,9 @@ public class GiiwaFilter implements Filter {
     HttpServletResponse r2 = (HttpServletResponse) resp;
 
     String uri = r1.getRequestURI();
+    while (uri.indexOf("//") > -1) {
+      uri = uri.replaceAll("//", "/");
+    }
 
     String method = r1.getMethod();
 
