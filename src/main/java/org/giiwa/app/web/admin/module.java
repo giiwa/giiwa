@@ -764,6 +764,25 @@ public class module extends Model {
     this.response(jo);
   }
 
+  @Path(path = "query")
+  public void query() {
+    String name = this.getString("name");
+
+    JSON jo = new JSON();
+    Module m = Module.load(name);
+    if (m != null) {
+      jo.put(X.STATE, 200);
+      jo.put("uri", m.getRepo());
+      jo.put("name", name);
+      jo.put("version", m.getVersion());
+      jo.put("build", m.getBuild());
+    } else {
+      jo.put(X.STATE, 201);
+      jo.put(X.MESSAGE, "not found, name=" + name);
+    }
+    this.response(jo);
+  }
+
   /**
    * Enable.
    */
