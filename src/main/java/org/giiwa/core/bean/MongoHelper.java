@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -922,7 +923,7 @@ public class MongoHelper extends Helper {
    * @throws Exception
    *           throw Exception if occur error
    */
-  public static boolean exists(String collection, DBObject query) throws Exception {
+  public static boolean exists(String collection, DBObject query) throws SQLException {
     TimeStamp t1 = TimeStamp.create();
     boolean b = false;
     try {

@@ -29,10 +29,11 @@
 function oncreate() {
 	processing && processing.show();
 	var p = {};
-	$('div.form input').each(function(i, e){
+	$('div.form input[type=text]').each(function(i, e){
 		e = $(e);
 		p[e.attr('name')] = e.val();
 	})
+	p.includes = $('input[type=checkbox]').prop('checked')?'on':'';
 	$.post('/admin/module/create', p, function(d){
 		processing && processing.hide();
 		

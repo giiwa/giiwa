@@ -449,10 +449,10 @@ public class RDSHelper extends Helper {
    * @param args
    *          the where args
    * @return boolean
-   * @throws Exception
+   * @throws SQLException
    *           throw Exception if occur DB error
    */
-  public static boolean exists(String table, String where, Object[] args) throws Exception {
+  public static boolean exists(String table, String where, Object[] args) throws SQLException {
     /**
      * create the sql statement
      */
@@ -493,7 +493,7 @@ public class RDSHelper extends Helper {
       r = p.executeQuery();
       return r.next();
 
-    } catch (Exception e) {
+    } catch (SQLException e) {
       if (log.isErrorEnabled())
         log.error(sql.toString() + toString(args), e);
 

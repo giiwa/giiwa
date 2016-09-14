@@ -14,6 +14,7 @@
 */
 package org.giiwa.core.bean;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -142,7 +143,7 @@ public class Helper {
    * @throws Exception
    *           throw exception if occur database error
    */
-  public static boolean exists(Object id, Class<? extends Bean> t) throws Exception {
+  public static boolean exists(Object id, Class<? extends Bean> t) throws SQLException {
     return exists(W.create(X.ID, id), t);
   }
 
@@ -157,7 +158,7 @@ public class Helper {
    * @throws Exception
    *           throw Exception if occur error
    */
-  public static boolean exists(String table, W q) throws Exception {
+  public static boolean exists(String table, W q) throws SQLException {
     if (table != null) {
       if (primary == DBType.MONGO) {
         // insert into mongo
@@ -167,7 +168,7 @@ public class Helper {
         return RDSHelper.exists(table, q.where(), q.args());
       }
     }
-    throw new Exception("no db configured, please configure the {giiwa}/giiwa.properites");
+    throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
   }
 
   /**
@@ -182,7 +183,7 @@ public class Helper {
    *           throw Exception if the class declaration error or not db
    *           configured
    */
-  public static boolean exists(W q, Class<? extends Bean> t) throws Exception {
+  public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
     String table = getTable(t);
 
     return exists(table, q);
