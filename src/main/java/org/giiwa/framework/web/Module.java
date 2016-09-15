@@ -38,6 +38,8 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Access;
 import org.giiwa.framework.bean.Jar;
 import org.giiwa.framework.bean.Menu;
+import org.giiwa.framework.bean.Repo;
+import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.PathMapping;
 
@@ -138,6 +140,103 @@ public class Module {
       return m1.before(m);
     }
     return true;
+  }
+
+  /**
+   * install a module by Entity
+   * 
+   * @param e
+   *          the entity of module file
+   * @return true required restart, false not need
+   * @throws Exception
+   *           throw Exception if failed
+   */
+  public static boolean install(Entity e) throws Exception {
+    if (e == null) {
+      throw new Exception("invalid repo entity");
+    }
+    String url = e.getUrl();
+
+    String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
+    String root = Model.HOME + "/modules/" + temp + "/";
+
+    try {
+      ZipInputStream in = new ZipInputStream(e.getInputStream());
+
+      /**
+       * store all entry in temp file
+       */
+
+      ZipEntry z = in.getNextEntry();
+      byte[] bb = new byte[4 * 1024];
+      while (z != null) {
+        File f = new File(root + z.getName());
+
+        // log.info("name:" + z.getName() + ", " +
+        // f.getAbsolutePath());
+        if (z.isDirectory()) {
+          f.mkdirs();
+        } else {
+          if (!f.exists()) {
+            f.getParentFile().mkdirs();
+          }
+
+          FileOutputStream out = new FileOutputStream(f);
+          int len = in.read(bb);
+          while (len > 0) {
+            out.write(bb, 0, len);
+            len = in.read(bb);
+          }
+
+          out.close();
+        }
+
+        z = in.getNextEntry();
+      }
+
+      Module m = Module.load(temp);
+      File f = new File(root);
+      File dest = new File(Model.HOME + File.separator + "modules" + File.separator + m.getName());
+      if (dest.exists()) {
+        delete(dest);
+      }
+
+      Module m1 = Module.load(m.getName());
+      if (m1 != null) {
+        String repo = m1.getRepo();
+        if (!X.isEmpty(repo)) {
+          log.debug("old.repo=" + repo + ", new.repo=" + url);
+          Entity e1 = Repo.load(repo);
+          if (e1 != null && !X.isSame(e1.getId(), e.getId())) {
+            // not the same file
+            e1.delete();
+          }
+        }
+      }
+
+      /**
+       * merge WEB-INF and depends lib
+       * 
+       */
+      boolean restart = m.merge();
+
+      /**
+       * move the temp to target dest
+       */
+      f.renameTo(dest);
+
+      Module.init(m);
+      m.set(m.getName() + "_repo", url);
+      m.store();
+      return restart;
+
+    } finally {
+
+      // remove root
+      delete(new File(root));
+
+    }
+
   }
 
   /**
@@ -1559,7 +1658,7 @@ public class Module {
     modules.remove(id);
   }
 
-  private void delete(File f) {
+  private static void delete(File f) {
 
     if (f.isFile()) {
       /**

@@ -518,165 +518,51 @@ public class module extends Model {
   /**
    * Adds the.
    */
-  @SuppressWarnings("deprecation")
   @Path(path = "add", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
   public void add() {
 
     String url = this.getString("url");
-    Entity e = Repo.loadByUri(url);
+    Entity e = Repo.load(url);
 
     JSON jo = new JSON();
-    if (e != null) {
-      String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
-      String root = Model.HOME + "/modules/" + temp + "/";
 
-      try {
-        ZipInputStream in = new ZipInputStream(e.getInputStream());
+    try {
+      boolean restart = Module.install(e);
 
-        /**
-         * store all entry in temp file
-         */
+      jo.put("result", "ok");
 
-        ZipEntry z = in.getNextEntry();
-        byte[] bb = new byte[4 * 1024];
-        while (z != null) {
-          File f = new File(root + z.getName());
-
-          // log.info("name:" + z.getName() + ", " +
-          // f.getAbsolutePath());
-          if (z.isDirectory()) {
-            f.mkdirs();
-          } else {
-            if (!f.exists()) {
-              f.getParentFile().mkdirs();
-            }
-
-            FileOutputStream out = new FileOutputStream(f);
-            int len = in.read(bb);
-            while (len > 0) {
-              out.write(bb, 0, len);
-              len = in.read(bb);
-            }
-
-            out.close();
-          }
-
-          z = in.getNextEntry();
-        }
-
-        Module m = Module.load(temp);
-        File f = new File(root);
-        File dest = new File(Model.HOME + File.separator + "modules" + File.separator + m.getName());
-        if (dest.exists()) {
-          delete(dest);
-        }
-
-        Module m1 = Module.load(m.getName());
-        if (m1 != null) {
-          String repo = m1.getRepo();
-          if (!X.isEmpty(repo)) {
-            log.debug("old.repo=" + repo + ", new.repo=" + url);
-            Entity e1 = Repo.loadByUri(repo);
-            if (e1 != null && !X.isSame(e1.getId(), e.getId())) {
-              // not the same file
-              e1.delete();
-            }
-          }
-        }
-
-        /**
-         * merge WEB-INF and depends lib
-         * 
-         */
-        boolean restart = m.merge();
-
-        /**
-         * move the temp to target dest
-         */
-        f.renameTo(dest);
-
-        Module.init(m);
-        m.set(m.getName() + "_repo", url);
-        m.store();
-
-        jo.put("result", "ok");
-
-        if (restart) {
-          jo.put(X.STATE, 201);
-          jo.put("message", lang.get("restarting.giiwa"));
-        } else {
-          jo.put(X.STATE, 200);
-          jo.put("message", lang.get("restart.required"));
-        }
-
-        /**
-         * delete the old file in repo
-         */
-        // e.delete();
-
-        /**
-         * TODO, gzip the css nad js
-         */
-
-        if (restart) {
-          new Task() {
-
-            @Override
-            public void onExecute() {
-
-              log.info("WEB-INF has been merged, need to restart");
-              System.exit(0);
-            }
-
-          }.schedule(2000);
-        }
-      } catch (Exception e1) {
-        log.error(e.toString(), e1);
-        OpLog.error(module.class, "add", e1.getMessage(), e1, login, this.getRemoteHost());
-
-        /**
-         * the file is bad, delete it from the repo.
-         */
-        e.delete();
-
-        jo.put(X.STATE, 415); // not support
-        jo.put("result", "fail");
-        jo.put("message", lang.get("invalid.module.package"));
-      } finally {
-        e.close();
-
-        this.delete(new File(root));
-
+      if (restart) {
+        jo.put(X.STATE, 201);
+        jo.put("message", lang.get("restarting.giiwa"));
+      } else {
+        jo.put(X.STATE, 200);
+        jo.put("message", lang.get("restart.required"));
       }
-    } else {
+
+      if (restart) {
+        new Task() {
+
+          @Override
+          public void onExecute() {
+
+            log.info("WEB-INF has been merged, need to restart");
+            System.exit(0);
+          }
+
+        }.schedule(2000);
+      }
+
+    } catch (Exception e1) {
       jo.put(X.STATE, 404);
       jo.put("result", "fail");
       jo.put("message", "entity not found in repo for [" + url + "]");
+
     }
 
     Module.reset();
 
     this.response(jo);
 
-  }
-
-  private void delete(File f) {
-    if (!f.exists()) {
-      return;
-    }
-    if (f.isFile()) {
-      f.delete();
-    }
-
-    if (f.isDirectory()) {
-      File[] list = f.listFiles();
-      if (list != null && list.length > 0) {
-        for (File f1 : list) {
-          delete(f1);
-        }
-      }
-      f.delete();
-    }
   }
 
   /**

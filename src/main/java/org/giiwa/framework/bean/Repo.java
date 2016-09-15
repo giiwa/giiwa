@@ -52,6 +52,23 @@ public class Repo extends Bean {
   }
 
   /**
+   * get the unique id of repo
+   * 
+   * @return the id
+   */
+  public static String id() {
+    String id = UID.id(System.currentTimeMillis(), UID.random());
+    try {
+      while (Helper.exists(id, Repo.class)) {
+        id = UID.id(System.currentTimeMillis(), UID.random());
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return id;
+  }
+
+  /**
    * List.
    * 
    * @param uid
@@ -96,6 +113,48 @@ public class Repo extends Bean {
    */
   public static long store(String id, String name, InputStream in) throws IOException {
     return store(X.EMPTY, id, name, X.EMPTY, 0, in.available(), in, -1, true, -1);
+  }
+
+  /**
+   * store the input stream to the repo, and return id
+   * 
+   * @param name
+   *          the name
+   * @param in
+   *          the inputstream
+   * @return the ID
+   * @throws IOException
+   */
+  public static String store(String name, InputStream in) throws IOException {
+    String id = id();
+    store(X.EMPTY, id, name, X.EMPTY, 0, in.available(), in, -1, true, -1);
+    return id;
+  }
+
+  /**
+   * store the file in repo
+   * 
+   * @param name
+   *          the name
+   * @param file
+   *          the file
+   * @return the id
+   * @throws IOException
+   *           throw exception if failed
+   */
+  public static String store(String name, File file) throws IOException {
+    FileInputStream in = null;
+
+    try {
+      in = new FileInputStream(file);
+      String id = id();
+      store(X.EMPTY, id, name, X.EMPTY, 0, in.available(), in, -1, true, -1);
+      return id;
+    } finally {
+      if (in != null) {
+        in.close();
+      }
+    }
   }
 
   /**
