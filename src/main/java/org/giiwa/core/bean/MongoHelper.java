@@ -920,7 +920,7 @@ public class MongoHelper extends Helper {
    * @param query
    *          the query
    * @return true: if exists, false: not exists
-   * @throws Exception
+   * @throws SQLException
    *           throw Exception if occur error
    */
   public static boolean exists(String collection, DBObject query) throws SQLException {

@@ -32,6 +32,7 @@ public class IOUtil {
    *          the file or the path
    * @return the number deleted
    * @throws IOException
+   *           throw exception when delete the file or directory error
    */
   public static int delete(File f) throws IOException {
     int count = 0;
@@ -55,9 +56,12 @@ public class IOUtil {
    * copy files
    * 
    * @param src
+   *          the source file
    * @param dest
+   *          the destination file
    * @return the number copied
    * @throws IOException
+   *           throw exception when copy failed
    */
   public static int copyDir(File src, File dest) throws IOException {
     dest.mkdirs();
@@ -85,9 +89,12 @@ public class IOUtil {
    * copy file src to file destination
    * 
    * @param src
+   *          the source file
    * @param dest
+   *          the destination file
    * @return int of copied
    * @throws IOException
+   *           throw exception when copy file failed
    */
   public static int copy(File src, File dest) throws IOException {
     return copy(new FileInputStream(src), new FileOutputStream(dest), true);

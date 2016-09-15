@@ -33,6 +33,8 @@ public abstract class View {
    *          the file
    * @param m
    *          the model
+   * @param viewname
+   *          the template name
    * @return true: successful,
    * @throws Exception
    *           if occur error
@@ -70,6 +72,8 @@ public abstract class View {
    *          the file
    * @param m
    *          the model
+   * @param viewname
+   *          the template name
    * @throws Exception
    *           if occur error
    */

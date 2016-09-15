@@ -140,7 +140,7 @@ public class Helper {
    * @param t
    *          the subclass of Bean
    * @return true: exist
-   * @throws Exception
+   * @throws SQLException
    *           throw exception if occur database error
    */
   public static boolean exists(Object id, Class<? extends Bean> t) throws SQLException {
@@ -155,7 +155,7 @@ public class Helper {
    * @param q
    *          the query
    * @return true: exists, false: not exists
-   * @throws Exception
+   * @throws SQLException
    *           throw Exception if occur error
    */
   public static boolean exists(String table, W q) throws SQLException {
@@ -179,7 +179,7 @@ public class Helper {
    * @param t
    *          the class of Bean
    * @return true: exists, false: not exists
-   * @throws Exception
+   * @throws SQLException
    *           throw Exception if the class declaration error or not db
    *           configured
    */
