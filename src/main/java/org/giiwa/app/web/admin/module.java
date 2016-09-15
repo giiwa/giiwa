@@ -27,6 +27,7 @@ import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
@@ -771,11 +772,32 @@ public class module extends Model {
     JSON jo = new JSON();
     Module m = Module.load(name);
     if (m != null) {
-      jo.put(X.STATE, 200);
-      jo.put("uri", m.getRepo());
-      jo.put("name", name);
-      jo.put("version", m.getVersion());
-      jo.put("build", m.getBuild());
+
+      Entity e = Repo.load(m.getRepo());
+      if (e != null) {
+        try {
+          InputStream in = e.getInputStream();
+          String md5 = MD5.md5(in);
+          if (md5 != null) {
+            jo.put("md5", md5);
+            jo.put(X.STATE, 200);
+            jo.put("uri", m.getRepo());
+            jo.put("name", name);
+            jo.put("version", m.getVersion());
+            jo.put("build", m.getBuild());
+          } else {
+            jo.put(X.STATE, 201);
+            jo.put(X.MESSAGE, "get md5 failed for the repo=" + m.getRepo());
+          }
+        } catch (Exception e1) {
+          jo.put(X.STATE, 201);
+          jo.put(X.MESSAGE, e1.getMessage());
+
+        }
+      } else {
+        jo.put(X.STATE, 201);
+        jo.put(X.MESSAGE, "repo file was missed, id=" + m.getRepo());
+      }
     } else {
       jo.put(X.STATE, 201);
       jo.put(X.MESSAGE, "not found, name=" + name);

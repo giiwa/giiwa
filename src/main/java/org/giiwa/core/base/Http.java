@@ -15,7 +15,9 @@
 package org.giiwa.core.base;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
@@ -154,6 +156,7 @@ public class Http {
         log.debug("get url=" + url);
 
         HttpResponse resp = client.execute(get);
+
         r.status = resp.getStatusLine().getStatusCode();
         r.body = getContext(resp);
         r.headers = resp.getAllHeaders();
@@ -167,6 +170,59 @@ public class Http {
     }
 
     return r;
+  }
+
+  /**
+   * download the file in the url to f
+   * 
+   * @param url
+   *          the file url
+   * @param f
+   *          the destination file
+   * @return the length
+   */
+  public static int download(String url, File f) {
+
+    log.debug("url=\"" + url + "\"");
+
+    String[] ss = url.split(" ");
+    url = ss[ss.length - 1];
+
+    DefaultHttpClient client = getClient(url);
+
+    if (client != null) {
+      HttpGet get = null;
+
+      try {
+        get = new HttpGet(url);
+
+        if (!get.containsHeader("User-Agent")) {
+          get.addHeader("User-Agent", UA);
+        }
+
+        log.debug("get url=" + url);
+
+        HttpResponse resp = client.execute(get);
+
+        if (resp.getStatusLine().getStatusCode() == 200) {
+          HttpEntity e = resp.getEntity();
+          InputStream in = e.getContent();
+          
+          f.getParentFile().mkdirs();
+          
+          FileOutputStream out = new FileOutputStream(f);
+          return IOUtil.copy(in, out);
+        }
+        return 0;
+      } catch (Exception e) {
+        log.error("\"" + url + "\"", e);
+      } finally {
+        if (get != null)
+          get.abort();
+      }
+    }
+
+    return 0;
   }
 
   /**
