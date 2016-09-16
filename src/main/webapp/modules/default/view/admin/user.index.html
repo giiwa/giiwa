@@ -46,8 +46,8 @@
 		<td>#foreach($r in $f.role.list)<i class='icon-shield'>$r.name</i>#end</td>
 		#if($edit)
 		<td>
-			<a href='/admin/user/edit?id=$f.id'>$lang.get('a.edit')</a>
-			<a href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
+			<a class='btn btn-success btn-xs' href='/admin/user/edit?id=$f.id'>$lang.get('a.edit')</a>
+			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
 		</td>
 		#end
 	</tr>

@@ -46,7 +46,7 @@
 		<td>$lang.format($f.created, 'yy-MM-dd HH:mm:ss')</td>
 		#if($edit)
 		<td>
-			<a href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
+			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
 		</td>
 		#end
 	</tr>

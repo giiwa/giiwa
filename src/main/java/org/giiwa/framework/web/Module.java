@@ -1069,7 +1069,7 @@ public class Module {
     }
 
     Module e = floor();
-    if (e != null) {
+    if (e != null && e.getId() != this.id) {
       return e.loadModelFromCache(method, uri);
     }
 
@@ -1149,7 +1149,7 @@ public class Module {
     }
 
     Module e = floor();
-    if (e != null) {
+    if (e != null && e.getId() != this.id) {
       return e.getModel(method, uri);
     }
 

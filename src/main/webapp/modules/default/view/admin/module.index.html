@@ -15,97 +15,88 @@
 
 #parse('/widget/widget.message.html')
 
-<div class='modules'>
-	#foreach ($m in $actives)
-	<div class='module'>
-		<div class='left'>
-			<div class='name'>
-				$m.name
-			</div>
-			<div class='screen'><img src='$m.screenshot'/>
-			</div>
-		</div>
-		<div class='right'>
-			<div class='name'>
-				#if($m.repo)<a href='javascript:;' onclick='_download("$m.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'> $m.name</a>#else $m.name #end
-			</div>
-			<div class='id' data-name='$m.name'>
-				$lang.get('label.id'): <span>$m.id</span> #if($m.id > 0) <a href='javascript:;' onclick="_id('$m.name','$m.id')" class='icon icon-pencil'></a> #end
-			</div>
-			<div class='version'>
-				$lang.get('label.version'): $!m.version
-			</div>
-			<div class='build'>
-				$lang.get('label.build'): $!m.build
-			</div>
-			<div class='pack'>
-				$lang.get('label.pack'): $!m.pack
-			</div>
-			<div class='readme icon icon-quotes-left'>
-				<span>$!m.readme<span>
-			</div>
-			#if($m.status)
-			<div class='status'>
-				$m.status
-			</div>
-			#end
-			#if($m.error)
-			<div class='status error1 inline'>
-				<i class='icon-arrow-right'></i>
-				$m.error
-			</div>
-			#end
-			
-			<div class='btns'>
-				#if($m.id!=0)
-				<a class='disable' href='/admin/module/disable?name=$m.name'><i></i>$lang.get('a.disable')</a>
+<table id='module-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('module.name')</th>
+			<th>$lang.get('module.id')</th>
+			<th>$lang.get('module.version')</th>
+			<th>$lang.get('module.build')</th>
+			<th>$lang.get('module.package')</th>
+			<th>$lang.get('module.readme')</th>
+			<th>$lang.get('module.log')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach($f in $actives)
+		<tr>
+			<td>
+				$!f.name
+				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'></a>#end
+			</td>
+			<td>
+				<span class='id' data-name='$m.name'>$!f.id</span>
+				#if($f.id > 0) <a href='javascript:;' onclick="_id('$f.name','$f.id')" class='icon icon-pencil'></a> #end
+			</td>
+			<td>$!f.version</td>
+			<td>$!f.build</td>
+			<td>$!f.pack</td>
+			<td>$!f.readme</td>
+			<td class='status'>
+				$!f.status
+			</td>
+			<td>
+				#if($f.id > 0)
+				<a class='btn btn-danger btn-xs' href='/admin/module/disable?name=$f.name'><i></i>$lang.get('a.disable')</a>
 				#end
-			</div>
-		</div>
-	</div>
-	#end
-</div>
+			</td>
+		</tr>
+		#end
+	</tbody>
+</table>
 
 <div class='modules disabled'>
 	<div class='title'>
 		$lang.get('title.disabled.module')
 	</div>
-	#foreach ($m in $list)
-	<div class='module'>
-		<div class='left'>
-			<div class='name'>
-				$m.name
-			</div>
-			<div class='screen'><img src='$m.screenshot'/>
-			</div>
-		</div>
-		<div class='right'>
-			<div class='name'>
-				#if($m.repo)<a href='javascript:;' onclick='_download("$m.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'> $m.name</a>#else $m.name #end
-			</div>
-			<div class='id'>
-				$lang.get('label.id'): $!m.id
-			</div>
-			<div class='version'>
-				$lang.get('label.version'): $!m.version
-			</div>
-			<div class='build'>
-				$lang.get('label.build'): $!m.build
-			</div>
-			<div class='pack'>
-				$lang.get('label.pack'): $!m.pack
-			</div>
-			<div class='readme icon icon-quotes-left'>
-				<span>$!m.readme</span>
-			</div>
-			<div class='btns'>
-				<a class='enable' href='/admin/module/enable?name=$m.name'>$lang.get('a.enable')</a>
-				<a class='delete' href='/admin/module/delete?name=$m.name'>$lang.get('a.delete')</a>
-			</div>
-		</div>
-	</div>
-	#end
 </div>
+<table id='module-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('module.name')</th>
+			<th>$lang.get('module.id')</th>
+			<th>$lang.get('module.version')</th>
+			<th>$lang.get('module.build')</th>
+			<th>$lang.get('module.package')</th>
+			<th>$lang.get('module.readme')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach($f in $list)
+		<tr>
+			<td>
+				$!f.name
+				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'></a>#end
+			</td>
+			<td>
+				<span class='id' data-name='$m.name'>$!f.id</span>
+			</td>
+			<td>$!f.version</td>
+			<td>$!f.build</td>
+			<td>$!f.pack</td>
+			<td>$!f.readme</td>
+			<td>
+				<a class='btn btn-info btn-xs' href='/admin/module/enable?name=$f.name'>$lang.get('a.enable')</a>
+				<a class='btn btn-danger btn-xs' href='/admin/module/delete?name=$f.name'>$lang.get('a.delete')</a>
+			</td>
+		</tr>
+		#end
+	</tbody>
+</table>
 
 <div id='ideditor' title="$lang.get('module.id.title')" style='display:none'>
 	<input type='hidden' name='name' value=''/>
@@ -134,8 +125,8 @@
 		}, function(d) {
 			processing && processing.hide();
 			if (d.state == 200) {
-				$('div.id[data-name="' + name + '"] span').text(id);
-				$.info("$lang.get('restart.required')");
+				$('span.id[data-name="' + name + '"]').text(id);
+				$.hint("$lang.get('restart.required')");
 			} else {
 				$.error(d.message);
 			}

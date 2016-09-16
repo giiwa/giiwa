@@ -1,8 +1,8 @@
 <div class='head'>
 	$lang.get('title.welcome') <b>$!me.nickname</b>
-	<span class='btns right'>
+	<span class='right'>
 		#if($me.hasAccess('access.config.admin'))
-		<a href='javascript:;' class='recycle' onclick="_showrestart()">$lang.get('a.restart')</a>
+		<a href='javascript:;' class='btn btn-danger' onclick="_showrestart()">$lang.get('a.restart')</a>
 		#end
 	</span></div>
 

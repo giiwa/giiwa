@@ -659,27 +659,6 @@ div.tabs a.selected {
 	-webkit-transition: width .6s ease;
 	transition: width .6s ease;
 }
-a.btn {
-	display: inline-block;
-	margin-bottom: 0;
-	text-align: center;
-	vertical-align: middle;
-	cursor: pointer;
-	background-image: none;
-	border: 1px solid transparent;
-	white-space: nowrap;
-	font-size: 14px;
-	border-radius: 4px;
-	-webkit-user-select: none;
-	overflow: hidden;
-	position: relative;
-	color: #fff;
-	background-color: #5cb85c;
-	text-decoration: none;
-	border-color: #4cae4c;
-	padding: 0 12px;
-	line-height: 32px;
-}
 .btn-upload input {
 	position: absolute;
 	left: -20px;
@@ -1152,9 +1131,6 @@ tr.hover td {
 	background-color: #CEE5E5 !important;
 	color: #000;
 }
-tr.hover td a {
-	color: #0D5004;
-}
 div.fulline {
 	width: 100%;
 	display: inline-block;
@@ -1203,15 +1179,6 @@ form div.extra .extra-title {
 	background-color: #2a78b8;
 	box-shadow: 0 0 6px #4d90fe;
 	border-color: #1f5dc4;
-}
-.btns a.recycle {
-	background: #228A08;
-}
-.btns a.recycle:hover {
-	background: #127A08;
-}
-.btns a.recycle:active {
-	background: #026A08;
 }
 td .buttons:before {
 	display: inline-block;
@@ -1692,7 +1659,7 @@ button:active, .fileupload .fileupload-cancel:active {
 h3, i, .leanmodal-content {
 	word-break: break-all;
 }
-.upload-btn, .modules {
+.upload-btn {
 	margin: 20px;
 }
 label.nospace, label.nospace input, form div.accesses div.group .title, .pages label.nospace {
@@ -1723,13 +1690,8 @@ table.nospace, .pages label.nospace input {
 	margin: 0;
 	padding: 0;
 }
-.btns a:active, .jspHover, .jspActive, .search form a:active {
+.jspHover, .jspActive {
 	background-color: #215c8d;
-}
-a.btn:hover, a.btn:hover {
-	background-color: #4d90fe;
-	box-shadow: 0 0 6px #4d90fe;
-	border-color: #1F5DC4;
 }
 table .state, table td.speed {
 	width: 200px;
@@ -1754,46 +1716,86 @@ button.icon[type=submit] {
 	margin: 3px 0;
 	padding: 6px 10px;
 }
-.module .right .id a {
-	margin-left: 10px;
-	text-decoration: none;
-	color: #1369C0;
-	font-size: 8px;
-}
-.module .right .readme {
-	color: #666;
-	font-style: italic;
-	line-height: 32px;
-}
-.module .right .readme:before {
-	float: left;
-}
-.module .right .readme span {
-	margin-top: 12px;
-	margin-left: 10px;
-	display: inline-block;
-}
-.quotebox h5 {
-	color: #666;
-}
-.module .right .status {
+#module-table .status {
 	color: #056b10;
-}
-.module .right .error1 {
-	color: #f33;
-	line-height: 22px;	
-}
-
-.module .right .error1.inline {
-	height: 22px;
-	overflow: hidden;
-}
-.module .right .error1 i{
-	cursor: pointer;
 }
 input.bad {
 	border-color: #f33;
 }
 input.good {
 	border-color: #0a8209;
+}
+.btn {
+	display: inline-block;
+	padding: 6px 12px;
+	margin-bottom: 0;
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 1.42857143;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: middle;
+	-ms-touch-action: manipulation;
+	touch-action: manipulation;
+	transition: .5s ease;
+	text-decoration: none;
+	cursor: pointer;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	background-image: none;
+	border: 1px solid transparent;
+	border-radius: 4px;
+}
+.btn-xs {
+	padding: 1px 5px;
+	font-size: 12px;
+	line-height: 1.5;
+	border-radius: 3px;
+}
+.btn-info {
+	color: #fff;
+	background-color: #5bc0de;
+	border-color: #46b8da;
+}
+.btn-info:focus {
+	color: #fff;
+	background-color: #31b0d5;
+	border-color: #1b6d85
+}
+.btn-info:hover, .btn-info:active {
+	color: #fff;
+	background-color: #31b0d5;
+	border-color: #269abc
+}
+.btn-success {
+	color: #fff;
+	background-color: #5cb85c;
+	border-color: #4cae4c;
+}
+.btn-success:focus {
+	color: #fff;
+	background-color: #449d44;
+	border-color: #255625
+}
+.btn-success:hover, .btn-success:active {
+	color: #fff;
+	background-color: #449d44;
+	border-color: #398439
+}
+.btn-danger {
+	color: #fff;
+	background-color: #d9534f;
+	border-color: #d43f3a;
+}
+.btn-danger:focus {
+	color: #fff;
+	background-color: #c9302c;
+	border-color: #761c19
+}
+.btn-danger:hover, .btn-danger:active {
+	color: #fff;
+	background-color: #c9302c;
+	border-color: #ac2925
 }
