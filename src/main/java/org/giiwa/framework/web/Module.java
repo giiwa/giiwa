@@ -290,13 +290,18 @@ public class Module {
         .append("]").toString();
   }
 
+  private String locale = null;
+
   /**
    * parent module defined in module.xml.
    * 
    * @return String of the language
    */
   public String getLanguage() {
-    return Global.getString("language", "en_us");
+    if (locale == null) {
+      locale = Global.getString("language", "en_us");
+    }
+    return locale;
   }
 
   /**
