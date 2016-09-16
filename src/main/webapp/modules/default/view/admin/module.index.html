@@ -1,3 +1,10 @@
+<style>
+	#module-table .id a{
+    float: right;
+    text-decoration: none;
+    padding: 5px;
+    }
+</style>
 <div class='head'>
 	$lang.get('module.title')
 </div>
@@ -20,12 +27,12 @@
 	<thead>
 		<tr>
 			<th>$lang.get('module.name')</th>
-			<th>$lang.get('module.id')</th>
+			<th style="min-width:60px;">$lang.get('module.id')</th>
 			<th>$lang.get('module.version')</th>
 			<th>$lang.get('module.build')</th>
 			<th>$lang.get('module.package')</th>
-			<th>$lang.get('module.readme')</th>
-			<th>$lang.get('module.log')</th>
+			<th style="width:20%">$lang.get('module.readme')</th>
+			<th style="width:20%">$lang.get('module.log')</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -36,7 +43,7 @@
 				$!f.name
 				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'></a>#end
 			</td>
-			<td>
+			<td class="id">
 				<span class='id' data-name='$m.name'>$!f.id</span>
 				#if($f.id > 0) <a href='javascript:;' onclick="_id('$f.name','$f.id')" class='icon icon-pencil'></a> #end
 			</td>
@@ -71,7 +78,7 @@
 			<th>$lang.get('module.version')</th>
 			<th>$lang.get('module.build')</th>
 			<th>$lang.get('module.package')</th>
-			<th>$lang.get('module.readme')</th>
+			<th style="width:20%">$lang.get('module.readme')</th>
 			<th></th>
 		</tr>
 	</thead>
