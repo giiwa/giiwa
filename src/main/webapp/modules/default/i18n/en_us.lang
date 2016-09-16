@@ -232,7 +232,7 @@ mq.url.hint=the Active MQ server
 new_password_error=new password error
 node.hint=node name, MUST unique in a distributed system
 node.type_default=
-notes.upload.module=Upload new or replace module package(*.zip) which packaged by "ant " script, the module management use "name" to identify it's new or exists.
+notes.upload.module=Upload new or replace module package(*.zip) which packaged by "ant " script, the module management use "name" to identify it's new or exists, Please browser <a href='http://giiwa.org' target='_blank'>giiwa.org</a> to get more modules.
 notification.newbuild=has new release
 oplog.index.title=Oplog management
 oplog.notes=The log which was record by OpLog.{info|warn|error} APIs, please refer the Javadoc
