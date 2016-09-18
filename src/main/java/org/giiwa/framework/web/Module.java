@@ -1644,7 +1644,7 @@ public class Module {
         }
 
         return true;
-      } catch (Exception e) {
+      } catch (Throwable e) {
         log.error(m.name, e);
       }
     }
