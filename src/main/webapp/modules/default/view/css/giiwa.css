@@ -1449,32 +1449,9 @@ td.more {
 	margin: 20px;
 }
 .fileupload .btn {
-	display: inline-block;
-	margin-bottom: 0;
-	font-weight: 400;
-	text-align: center;
-	vertical-align: middle;
-	cursor: pointer;
-	background-image: none;
-	border: 1px solid transparent;
-	white-space: nowrap;
-	font-size: 14px;
-	line-height: 1.42857143;
-	border-radius: 4px;
-	-webkit-user-select: none;
-	overflow: hidden;
 	position: relative;
-	color: #fff;
-	background-color: #009df5;
-	-webkit-transition: .5s ease;
-	-moz-transition: .5s ease;
-	-o-transition: .5s ease;
-	-ms-transition: .5s ease;
-	transition: .5s ease;
-	text-decoration: none;
-	padding: 6px 12px;
 }
-.fileupload .btn:hover {
+.fileupload1 .btn:hover {
 	background-color: #1f5dc4;
 	box-shadow: 0 0 6px #4d90fe;
 	border-color: #1F5DC4;
@@ -1591,70 +1568,24 @@ td.more {
 	color: #777;
 	font-size: 90%;
 }
+
+.fileupload .fileupload-cancel, .fileupload .fileupload-resume {
+	margin: 2px 2px;
+}
+
 .notes a:hover {
 	color: #39198E;
 }
 ::-webkit-scrollbar-button, .toolbar.full .left, form div.confirm, #menu .loading i.icon, .fileuploader-file {
 	display: none;
 }
-.fileupload .fileupload-cancel, .fileupload .fileupload-resume {
-	float: left;
-	line-height: 22px;
-	display: inline-block;
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	-webkit-transition: .5s ease;
-	-moz-transition: .5s ease;
-	-o-transition: .5s ease;
-	-ms-transition: .5s ease;
-	transition: .5s ease;
-	font-family: inherit;
-	box-sizing: border-box;
-	font-size: 1rem;
-	text-align: center;
-	border: none;
-	text-shadow: none;
-	-webkit-border-radius: .4rem;
-	-moz-border-radius: .4rem;
-	border-radius: .4rem;
-	vertical-align: middle;
-	cursor: pointer;
-	background-color: #009df5;
-	color: #fff;
-	text-decoration: none;
-	margin: 2px 2px;
-	padding: 0 10px;
-}
-.fileupload .fileupload-cancel {
-	background-color: #F59F00;
-}
-.fileupload .fileupload-resume {
-	background-color: #00B1F5;
-}
 button:hover {
 	background-color: #1B65A2;
 	box-shadow: 0 0 4px #009DF5;
 }
-.fileupload .fileupload-cancel:hover {
-	background-color: #F57100;
-	box-shadow: 0 0 4px #009DF5;
-}
-.fileupload .fileupload-resume:hover {
-	background-color: #008FF5;
-	box-shadow: 0 0 4px #009DF5;
-}
-button:active, .fileupload .fileupload-cancel:active {
-	background-color: #15446B;
-}
 #content .center, #head .center {
 	height: 100%;
 	width: auto;
-}
-.slide_image img, .toolbar .right .t_left, .toolbar .cart, form div.accesses div.access_title h3 {
-	float: left;
-}
-#column-context .last, .search select[name=sortby] {
-	margin-right: 0;
 }
 h3, i, .leanmodal-content {
 	word-break: break-all;

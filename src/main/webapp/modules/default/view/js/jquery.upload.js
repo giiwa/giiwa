@@ -27,9 +27,9 @@
 		}
 
 		options.uploader = false;
-		var pp = $("<div class='fileupload'><div class='fileupload-btns btns hint hint--bottom' data-hint='"
+		var pp = $("<div class='fileupload'><div class='fileupload-btns hint hint--bottom' data-hint='"
 				+ options.hint
-				+ "'><span class='fileupload-file'></span><a href='javascript:;' class='fileupload-btn'>"
+				+ "'><span class='fileupload-file'></span><a href='javascript:;' class='fileupload-btn btn btn-success'>"
 				+ options.caption
 				+ "</a><input type='hidden' name='"
 				+ that.attr('name')
@@ -72,9 +72,9 @@
 						var s = '';
 						s += "<div class='file-item'><span class='fileupload-filename'>"
 								+ data.files[0].name
-								+ "</span><span class='fileupload-progress'><span class='fileupload-bar-outter'><span class='fileupload-bar'></span></span><span class='fileupload-message'></span></span><a href='javascript:;' class='fileupload-cancel'>"
+								+ "</span><span class='fileupload-progress'><span class='fileupload-bar-outter'><span class='fileupload-bar'></span></span><span class='fileupload-message'></span></span><a href='javascript:;' class='fileupload-cancel btn btn-warning btn-xs'>"
 								+ options.btn_cancel
-								+ "</a><a href='javascript:;' class='fileupload-resume'>"
+								+ "</a><a href='javascript:;' class='fileupload-resume btn btn-success btn-xs'>"
 								+ options.btn_resume + "</a></div>";
 						pp.find('.fileupload-state').html(s);
 						pp.find('.fileupload-cancel').click(function() {
