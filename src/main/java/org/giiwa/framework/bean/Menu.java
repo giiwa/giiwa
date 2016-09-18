@@ -168,10 +168,12 @@ public class Menu extends Bean {
           int len = arr.size();
           for (int i = 0; i < len; i++) {
             JSON j = arr.get(i);
-            if (jo.containsKey("tag")) {
-              j.put("tag", jo.get("tag"));
+            if (j != null) {
+              if (jo.containsKey("tag")) {
+                j.put("tag", jo.get("tag"));
+              }
+              insertOrUpdate(j, m.getId());
             }
-            insertOrUpdate(j, m.getId());
           }
         }
       } else {
