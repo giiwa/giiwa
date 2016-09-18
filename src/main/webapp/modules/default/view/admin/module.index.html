@@ -171,9 +171,12 @@
 			msg_stop : "$lang.get('msg.stop')",
 			msg_done : "$lang.get('msg.done')",
 			done : function(url) {
+				processing && processing.show();
 				$.post('/admin/module/add', {
 					url : url
 				}, function(d) {
+					processing && processing.hide();
+					
 					if (d.state == 200) {
 						$.message(d.message);
 					} else if (d.state == 201) {
