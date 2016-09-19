@@ -185,7 +185,7 @@ public class Shell {
     if (_linux == -1) {
       try {
         String uname = Shell.run("uname -a");
-        _linux = uname.indexOf("Linux") > -1 ? 1 : 0;
+        _linux = uname.indexOf("Linux") > -1 || uname.indexOf("Darwin") > -1 ? 1 : 0;
       } catch (Exception e) {
         _linux = 0;
       }

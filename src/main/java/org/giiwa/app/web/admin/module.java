@@ -709,14 +709,13 @@ public class module extends Model {
   /**
    * Delete.
    */
-  @SuppressWarnings("deprecation")
   @Path(path = "delete", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
   public void delete() {
     String name = this.getString("name");
     Module m = Module.load(name);
     String url = m.get("repo");
     if (!X.isEmpty(url)) {
-      Entity e = Repo.loadByUri(url);
+      Entity e = Repo.load(url);
       if (e != null) {
         e.delete();
       }
