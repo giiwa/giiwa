@@ -1870,8 +1870,10 @@ public class Model {
   }
 
   /**
-   * show notfound page to end-user <br>
-   * if the request is AJAX, then response json back to front
+   * default notfound handler <br>
+   * 1) look for "/notfound" model, if found, dispatch to it. <br>
+   * 2) else response notfound page or json to front-end according the request
+   * type <br>
    */
   final public void notfound() {
     if (log.isWarnEnabled())
