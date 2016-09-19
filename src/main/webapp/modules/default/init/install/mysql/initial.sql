@@ -161,6 +161,8 @@ create table gi_accesslog
 (
 	uid bigint,
 	cost bigint,
+	module varchar(128),
+	model varchar(128),
 	method varchar(20),
 	ip varchar(20),
 	client varchar(128),
@@ -174,6 +176,11 @@ create table gi_accesslog
 );
 create index gi_accesslog_index_uid on gi_accesslog(uid);
 create index gi_accesslog_index_method on gi_accesslog(method);
+
+##upgrade
+alter table gi_accesslog add module varchar(128);
+alter table gi_accesslog add model varchar(128);
+
 
 #drop table if exists gi_jar;
 create table gi_jar

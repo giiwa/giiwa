@@ -25,6 +25,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.core.bean.TimeStamp;
+import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.bean.User;
@@ -150,7 +151,8 @@ public class Controller {
           v.set("uid", u1.getId()).set("username", u1.get("name"));
         }
         if (AccessLog.isOn())
-          AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
+          AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser())
+              .set("module", mo.module == null ? X.EMPTY : mo.module.getName()).set("model", mo.getClass().getName()));
       }
 
       // Counter.max("web.request.max", t.past(), uri);
@@ -190,7 +192,10 @@ public class Controller {
               v.set("uid", u1.getId()).set("username", u1.get("name"));
             }
             if (AccessLog.isOn())
-              AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
+              AccessLog.create(mo.getRemoteHost(), uri,
+                  v.set("status", mo.getStatus()).set("client", mo.browser())
+                      .set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+                      .set("model", mo.getClass().getName()));
           }
 
           // Counter.max("web.request.max", t.past(), uri);
@@ -222,7 +227,8 @@ public class Controller {
         v.set("uid", u1.getId()).set("username", u1.get("name"));
       }
       if (AccessLog.isOn())
-        AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
+        AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser())
+            .set("module", mo.module == null ? X.EMPTY : mo.module.getName()).set("model", mo.getClass().getName()));
 
       // Counter.max("web.request.max", t.past(), uri);
     }
@@ -252,7 +258,8 @@ public class Controller {
           v.set("uid", u1.getId()).set("username", u1.get("name"));
         }
         if (AccessLog.isOn())
-          AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser()));
+          AccessLog.create(mo.getRemoteHost(), uri, v.set("status", mo.getStatus()).set("client", mo.browser())
+              .set("module", mo.module == null ? X.EMPTY : mo.module.getName()).set("model", mo.getClass().getName()));
       }
 
       // Counter.max("web.request.max", t.past(), uri);

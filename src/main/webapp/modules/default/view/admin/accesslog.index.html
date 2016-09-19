@@ -37,9 +37,11 @@
 <table id='accesslog-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th class='statable' data-name='url'>URL</th>
-			<th class='statable' data-name='method'>Method</th>
-			<th class='statable' data-name='status'>Status</th>
+			<th>URL</th>
+			<th>Module</th>
+			<th>Model</th>
+			<th>Method</th>
+			<th>Status</th>
 			<th>Cost(ms)</th>
 			<th>SID</th>
 			<th>UID</th>
@@ -53,6 +55,8 @@
 #foreach($f in $list)
 	<tr>
 		<td>$!f.url</td>
+		<td>$!f.module</td>
+		<td>$!f.model</td>
 		<td>$!f.method</td>
 		<td>$!f.status</td>
 		<td>$!f.cost</td>
@@ -70,22 +74,22 @@
  #parse('/widget/goto.page.html')
 
 #if($me.hasAccess('access.config.admin'))
-<div class='btns'>
-	<a href='javascript:;' onclick='_deleteall();'>$lang.get('a.clean')</a>
+<div>
+	<a href='javascript:;' class='btn btn-danger' onclick='_deleteall();'>$lang.get('a.clean')</a>
 	&nbsp;&nbsp;
-	<a href='javascript:;' class='close' style="display:none" onclick='_open(0);'>$lang.get('a.accesslog.disable')</a>
-	<a href='javascript:;' class='open' style="display:none" onclick='_open(1);'>$lang.get('a.accesslog.enable')</a>
+	<a href='javascript:;' class='closebtn btn btn-warning' style="display:none" onclick='_open(0);'>$lang.get('a.accesslog.disable')</a>
+	<a href='javascript:;' class='openbtn btn btn-success' style="display:none" onclick='_open(1);'>$lang.get('a.accesslog.enable')</a>
 </div>
 #end
 
 <script>
 $(function(){
 	#if($global.getInt('accesslog.on', 1) == 1)
-		$('.btns .close').show();
-		$('.btns .open').hide();
+		$('a.closebtn').show();
+		$('a.openbtn').hide();
 	#else
-		$('.btns .close').hide();
-		$('.btns .open').show();
+		$('a.closebtn').hide();
+		$('a.openbtn').show();
 	#end	
 })
 
@@ -93,12 +97,12 @@ function _open(on) {
 	$.post('/admin/accesslog/open', {on:on}, function(d){
 		if(d.state == 200) {
 			if(d.on == 1) {
-				$('.btns .close').show();
-				$('.btns .open').hide();
+				$('a.closebtn').show();
+				$('a.openbtn').hide();
 				$.warn("$lang.get('accesslog.on')");
 			} else {
-				$('.btns .close').hide();
-				$('.btns .open').show();
+				$('a.closebtn').hide();
+				$('a.openbtn').show();
 				$.warn("$lang.get('accesslog.off')");
 			}
 		}

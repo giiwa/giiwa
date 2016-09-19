@@ -1874,8 +1874,8 @@ public class Model {
    * if the request is AJAX, then response json back to front
    */
   final public void notfound() {
-    if (log.isDebugEnabled())
-      log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("page notfound"));
+    if (log.isWarnEnabled())
+      log.warn(this.getClass().getName() + "[" + this.getURI() + "]");
 
     Model m = module.getModel(method.method, "/notfound");
     if (m != null && !m.getClass().equals(this.getClass())) {
