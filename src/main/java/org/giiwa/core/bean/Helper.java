@@ -216,15 +216,6 @@ public class Helper {
     }
 
     /**
-     * get the values.
-     *
-     * @return Collection
-     */
-    public Collection<Object> values() {
-      return m.values();
-    }
-
-    /**
      * get the size of the values.
      *
      * @return the int

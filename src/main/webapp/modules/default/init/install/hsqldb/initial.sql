@@ -89,9 +89,12 @@ create table gi_access
 (
 	id varchar(255),
 	created bigint default 0,
-	updated bigint default 0
+	updated bigint default 0,
+	created bigint default 0
 );
 create unique index gi_access_indexid on gi_access(id);
+alter table gi_access add updated bigint default 0;
+alter table gi_access add created bigint default 0;
 
 #drop table if exists gi_roleaccess;
 create table gi_roleaccess

@@ -132,28 +132,24 @@ public class RDSHelper extends Helper {
    *           the SQL exception
    */
   private static void setParameter(PreparedStatement p, int i, Object o) throws SQLException {
-    try {
-      if (o == null) {
-        p.setObject(i, null);
-      } else if (o instanceof Integer) {
-        p.setInt(i, (Integer) o);
-      } else if (o instanceof Date) {
-        p.setTimestamp(i, new java.sql.Timestamp(((Date) o).getTime()));
-      } else if (o instanceof Long) {
-        p.setLong(i, (Long) o);
-      } else if (o instanceof Float) {
-        p.setFloat(i, (Float) o);
-      } else if (o instanceof Double) {
-        p.setDouble(i, (Double) o);
-      } else if (o instanceof Boolean) {
-        p.setBoolean(i, (Boolean) o);
-      } else if (o instanceof Timestamp) {
-        p.setTimestamp(i, (Timestamp) o);
-      } else {
-        p.setString(i, o.toString());
-      }
-    } catch (SQLException e) {
-      throw new SQLException("i=" + i + ", o=" + o, e);
+    if (o == null) {
+      p.setObject(i, null);
+    } else if (o instanceof Integer) {
+      p.setInt(i, (Integer) o);
+    } else if (o instanceof Date) {
+      p.setTimestamp(i, new java.sql.Timestamp(((Date) o).getTime()));
+    } else if (o instanceof Long) {
+      p.setLong(i, (Long) o);
+    } else if (o instanceof Float) {
+      p.setFloat(i, (Float) o);
+    } else if (o instanceof Double) {
+      p.setDouble(i, (Double) o);
+    } else if (o instanceof Boolean) {
+      p.setBoolean(i, (Boolean) o);
+    } else if (o instanceof Timestamp) {
+      p.setTimestamp(i, (Timestamp) o);
+    } else {
+      p.setString(i, o.toString());
     }
   }
 
@@ -485,8 +481,11 @@ public class RDSHelper extends Helper {
       if (args != null) {
         for (int i = 0; i < args.length; i++) {
           Object o = args[i];
-
-          setParameter(p, order++, o);
+          try {
+            setParameter(p, order++, o);
+          } catch (Exception e) {
+            log.error("i=" + i + ", o=" + o, e);
+          }
         }
       }
 
@@ -584,8 +583,13 @@ public class RDSHelper extends Helper {
       p = c.prepareStatement(sql.toString());
 
       int order = 1;
-      for (Object v : sets.values()) {
-        setParameter(p, order++, v);
+      for (String name : sets.names()) {
+        Object v = sets.value(name);
+        try {
+          setParameter(p, order++, v);
+        } catch (Exception e) {
+          log.error(name + "=" + v, e);
+        }
       }
 
       if (whereArgs != null) {
