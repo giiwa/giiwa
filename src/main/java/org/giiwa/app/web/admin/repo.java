@@ -45,6 +45,14 @@ public class repo extends Model {
     int n = this.getInt("n", 10, "number.per.page");
 
     W q = W.create();
+    String name = this.getString("name");
+    if (!X.isEmpty(name) && X.isEmpty(this.path)) {
+      q.and("name", name, W.OP_LIKE);
+      this.set("name", name);
+      q.sort("name", 1);
+    } else {
+      q.sort("updated", -1);
+    }
     Beans<Repo.Entity> bs = Repo.load(q, s, n);
     this.set(bs, s, n);
     this.show("/admin/repo.index.html");

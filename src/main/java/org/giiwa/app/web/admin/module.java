@@ -713,12 +713,10 @@ public class module extends Model {
   public void delete() {
     String name = this.getString("name");
     Module m = Module.load(name);
-    String url = m.get("repo");
-    if (!X.isEmpty(url)) {
-      Entity e = Repo.load(url);
-      if (e != null) {
-        e.delete();
-      }
+    String url = m.getRepo();
+    Entity e = Repo.load(url);
+    if (e != null) {
+      e.delete();
     }
     m.delete();
 
