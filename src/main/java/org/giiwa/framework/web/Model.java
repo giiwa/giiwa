@@ -1806,6 +1806,7 @@ public class Model {
     }
     Model mo = new DummyModel();
     mo.module = Module.home;
+    mo.copy(this);
     mo.dispatch(uri, req, resp, method);
 
   }
@@ -1879,14 +1880,14 @@ public class Model {
     Model m = module.getModel(method.method, "/notfound");
     if (m != null && !m.getClass().equals(this.getClass())) {
       try {
-        copy(m);
+        m.copy(this);
 
         if (method.isGet()) {
           m.onGet();
         } else {
           m.onPost();
         }
-        
+
         return;
       } catch (Exception e) {
         log.error(e.getMessage(), e);
@@ -1969,22 +1970,22 @@ public class Model {
       log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("deny " + error));
 
     if (isAjax()) {
-      
+
       JSON jo = new JSON();
       jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
       jo.put(X.MESSAGE, lang.get("access.deny"));
       jo.put(X.ERROR, error);
       jo.put(X.URL, url);
       this.response(jo);
-      
+
     } else {
-      
+
       setStatus(HttpServletResponse.SC_FORBIDDEN);
       this.set("me", this.getUser());
       this.set(X.ERROR, error);
       this.set(X.URL, url);
       this.show("/deny.html");
-      
+
     }
 
   }
@@ -2025,7 +2026,7 @@ public class Model {
    *          the model of source
    */
   final public void copy(Model m) {
-    
+
     this.req = m.req;
     this.resp = m.resp;
     this.contentType = m.contentType;
@@ -2038,7 +2039,7 @@ public class Model {
     this.sid = m.sid;
     this.uri = m.uri;
     this._multipart = ServletFileUpload.isMultipartContent(req);
-    
+
     if (this._multipart) {
       this.uploads = m.getFiles();
     }
