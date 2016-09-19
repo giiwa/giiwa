@@ -2225,34 +2225,6 @@ public class Model {
     return tostring;
   }
 
-  // /**
-  // * Random the list
-  // *
-  // * @deprecated
-  // * @param <T>
-  // * the generic type
-  // * @param list
-  // * the source list
-  // * @return list of random
-  // */
-  // public static <T> List<T> random(List<T> list) {
-  // if (list == null || list.size() == 0)
-  // return list;
-  //
-  // int len = list.size();
-  // for (int i = 0; i < len; i++) {
-  // int j = (int) Math.random() * len;
-  // if (j == i)
-  // continue;
-  //
-  // T o = list.get(i);
-  // list.set(i, list.get(j));
-  // list.set(j, o);
-  // }
-  //
-  // return list;
-  // }
-
   /**
    * get the name pair from the request query
    * 
