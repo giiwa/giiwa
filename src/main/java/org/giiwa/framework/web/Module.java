@@ -861,6 +861,16 @@ public class Module {
   }
 
   /**
+   * load the module by id
+   * 
+   * @param id
+   * @return the Module
+   */
+  public static Module load(int id) {
+    return modules.get(id);
+  }
+
+  /**
    * Load.
    * 
    * @param name

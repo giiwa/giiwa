@@ -24,7 +24,7 @@ import org.giiwa.core.conf.Global;
  * @author yjiang
  * 
  */
-public class DummyModel extends Model {
+public class DefaultModel extends Model {
 
   /*
    * (non-Javadoc)

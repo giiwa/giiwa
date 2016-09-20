@@ -207,8 +207,8 @@ public class Controller {
       /**
        * not found, then using dummymodel instead, and cache it
        */
-      mo = new DummyModel();
-      mo.module = Module.home;
+      mo = new DefaultModel();
+      mo.module = Module.load(0);
 
       /**
        * do not put in model cache, <br>

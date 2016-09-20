@@ -50,6 +50,7 @@ org/giiwa/app/web/menu.class
 org/giiwa/framework/web/PageLink.class
 org/giiwa/framework/web/view/JspView.class
 org/giiwa/app/web/admin/dashboard.class
+org/giiwa/framework/web/DefaultModel.class
 org/giiwa/core/noti/Sms$ISender.class
 org/giiwa/framework/web/GClassLoader.class
 org/giiwa/app/web/admin/role.class
@@ -111,7 +112,6 @@ org/giiwa/app/web/admin/repo.class
 org/giiwa/core/bean/MongoHelper.class
 org/giiwa/core/noti/Email$auth.class
 org/giiwa/framework/web/view/View.class
-org/giiwa/framework/web/DummyModel.class
 org/giiwa/app/web/admin/system$1.class
 org/giiwa/framework/bean/Role.class
 org/giiwa/core/task/Task$2.class

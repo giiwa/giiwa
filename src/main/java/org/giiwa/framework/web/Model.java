@@ -1804,8 +1804,8 @@ public class Model {
     while (uri.indexOf("//") > -1) {
       uri = uri.replaceAll("//", "/");
     }
-    Model mo = new DummyModel();
-    mo.module = Module.home;
+    Model mo = new DefaultModel();
+    mo.module = Module.load(0);
     mo.copy(this);
     mo.dispatch(uri, req, resp, method);
 
