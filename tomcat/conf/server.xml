@@ -1,24 +1,23 @@
 <?xml version='1.0' encoding='utf-8'?>
-<Server port="8005" shutdown="SHUTDOWN">
+<Server port="－1" shutdown="SHUTDOWN">
 
 	<Listener className="org.apache.catalina.startup.VersionLoggerListener" />
 	<Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
 	<Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
 	<Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
 	<Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
-
 	<Service name="Catalina">
-		
+
 		<Connector host="localhost"
-			port="8080" protocol="HTTP/1.1"
-			connectionTimeout="20000"
-			URIEncoding="UTF-8"
-			redirectPort="8443" />
-		
+		port="8080" protocol="org.apache.coyote.http11.Http11Nio2Protocol"
+		connectionTimeout="20000"
+		acceptorThreadCount="2"
+		URIEncoding="UTF-8"
+		redirectPort="8443" />
 		<Engine name="Catalina" defaultHost="localhost">
 
 			<Host name="localhost"  appBase="webapps"
-				unpackWARs="true" autoDeploy="true">
+			unpackWARs="true" autoDeploy="true">
 
 				<Context path="" docBase="${catalina.home}/giiwa" reloadable="false" useHttpOnly="true"/>
 
