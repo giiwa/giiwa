@@ -1727,3 +1727,7 @@ input.good {
 	background-color: #c9302c;
 	border-color: #ac2925
 }
+.fa-spin {
+    -webkit-animation: fa-spin 2s infinite linear;
+    animation: fa-spin 2s infinite linear;
+}
