@@ -32,7 +32,7 @@ import org.giiwa.core.conf.Global;
  */
 public class UID {
 
-  static Log log = LogFactory.getLog(UID.class);
+  private static Log log = LogFactory.getLog(UID.class);
 
   /**
    * increase and get the unique sequence number by key, <br>
@@ -98,12 +98,7 @@ public class UID {
    * @return the string
    */
   public static String id(long hash) {
-    // System.out.println(hash);
-    // System.out.println(Long.toHexString(hash));
-    // System.out.println(H64.toString(hash));
-    // System.out.println(H32.toString(hash));
     return H32.toString(hash);
-    // return Long.toHexString(hash);
   }
 
   /**
@@ -204,7 +199,7 @@ public class UID {
     return sb.toString();
   }
 
-  static final char[] digitals = "0123456789".toCharArray();
-  static final char[] chars    = "0123456789abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+  private static final char[] digitals = "0123456789".toCharArray();
+  private static final char[] chars    = "0123456789abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
 }

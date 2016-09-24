@@ -2248,13 +2248,18 @@ public class Model {
     return null;
   }
 
+  private static String node = null;
+
   /**
    * get the name of this node in cluster.
    *
    * @return string of name
    */
   public static String node() {
-    return Module._conf.getString("node", null);
+    if (node == null) {
+      node = Module._conf.getString("node", null);
+    }
+    return node;
   }
 
   /**
