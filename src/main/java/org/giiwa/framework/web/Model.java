@@ -1879,7 +1879,8 @@ public class Model {
     if (log.isWarnEnabled())
       log.warn(this.getClass().getName() + "[" + this.getURI() + "]");
 
-    Model m = module.getModel(method.method, "/notfound");
+    Model m = Module.home.getModel(method.method, "/notfound");
+    // log.debug("m=" + m);
     if (m != null && !m.getClass().equals(this.getClass())) {
       try {
         m.copy(this);
