@@ -69,6 +69,7 @@ org/giiwa/core/cache/DefaultCachable.class
 org/giiwa/core/cache/RedisCache.class
 org/giiwa/core/base/Http$2.class
 org/giiwa/core/base/FileUtil$Version.class
+org/giiwa/core/conf/Global$1.class
 org/giiwa/core/base/MD5.class
 org/giiwa/framework/web/Model.class
 org/giiwa/core/vengine/VEngine.class
@@ -118,6 +119,7 @@ org/giiwa/core/task/Task$2.class
 org/giiwa/core/json/JSON.class
 org/giiwa/framework/web/view/FreemakerView.class
 org/giiwa/core/base/Captcha.class
+org/giiwa/core/conf/Global$LockHeartbeat.class
 org/giiwa/framework/bean/User.class
 org/giiwa/core/bean/Column.class
 org/giiwa/core/bean/Helper$V.class

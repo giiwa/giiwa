@@ -1,8 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<meta name="viewport"  content="width=device-width, height=device-height,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no">
+<meta name="viewport"  content="width=device-width, height=device-height,initial-scale=1.0">
 <link rel="shortcut icon" href="/favicon.ico"
 	type="image/vnd.microsoft.icon" />
 <title>$!lang.get('browser.title')</title>
@@ -38,7 +38,7 @@
 				<div><label><h3>User：</h3><input type='text' name='user' value="$!global.getString('mongo[prod].user','')"/></label></div>
 				<div><label><h3>Password：</h3><input type='password' name='pwd' value="$!global.getString('mongo[prod].password','')"/></label></div>
 				<div class='btns'>
-					<a class='next'>$lang.get('a.next')</a>
+					<a class='next btn btn-success'>$lang.get('a.next')</a>
 				</div>
 			</form>
 		</div>
@@ -62,8 +62,8 @@
 				</label></div>
 				
 				<div class='btns'>
-						<a class='prev'>$lang.get('a.prev')</a>
-						<a class='next'>$lang.get('a.next')</a>
+						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
+						<a class='next btn btn-success'>$lang.get('a.next')</a>
 				</div>
 			</form>
 		</div>
@@ -75,8 +75,8 @@
 				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!global.getLong('system.code',0)"/><g>同一个分布式节点编号相同</g></label></div>
 				
 				<div class='btns'>
-						<a class='prev'>$lang.get('a.prev')</a>
-						<a class='next'>$lang.get('a.next')</a>
+						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
+						<a class='next btn btn-success'>$lang.get('a.next')</a>
 				</div>
 			</form>
 		</div>		
@@ -87,8 +87,8 @@
 				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
 				
 				<div class='btns'>
-						<a class='prev'>$lang.get('a.prev')</a>
-						<a class='next'>$lang.get('a.next')</a>
+						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
+						<a class='next btn btn-success'>$lang.get('a.next')</a>
 				</div>
 			</form>
 		</div>		
@@ -102,8 +102,8 @@
 				<div><label><h3>Phone：</h3><input type='tel' name='phone' value=''/></label></div>
 				
 				<div class='btns'>
-						<a class='prev'>$lang.get('a.prev')</a>
-						<a class='done'>$lang.get('a.done')</a>
+						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
+						<a class='done btn btn-success'>$lang.get('a.done')</a>
 				</div>
 			</form>
 		</div>		
