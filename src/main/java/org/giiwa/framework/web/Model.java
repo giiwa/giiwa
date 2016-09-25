@@ -2258,7 +2258,7 @@ public class Model {
    */
   public static String node() {
     if (node == null) {
-      node = Module._conf.getString("node", null);
+      node = Module._conf == null ? X.EMPTY : Module._conf.getString("node", null);
     }
     return node;
   }

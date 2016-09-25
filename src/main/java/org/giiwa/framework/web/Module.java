@@ -1960,7 +1960,14 @@ public class Module {
    *          the subclass of model
    * @return the shortname of the subclass
    */
-  public String shortName(Class<? extends Model> model) {
+  public static String shortName(Class<? extends Model> model) {
+    if (model == null || home == null) {
+      return X.EMPTY;
+    }
+    return home._shortName(model);
+  }
+
+  private String _shortName(Class<? extends Model> model) {
     if (model == null) {
       return X.EMPTY;
     }
@@ -1971,8 +1978,9 @@ public class Module {
 
     Module m1 = floor();
     if (m1 != null) {
-      return m1.shortName(model);
+      return m1._shortName(model);
     }
     return name;
   }
+
 }

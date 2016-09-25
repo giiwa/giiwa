@@ -198,7 +198,7 @@ public class MongoHelper extends Helper {
 
     synchronized (mongo) {
       g = mongo.get(database);
-      if (g == null) {
+      if (g == null && conf != null) {
         String url = conf.getString("mongo[" + database + "].url", X.EMPTY);
         if (!X.EMPTY.equals(url)) {
           String hosts[] = url.split(";");

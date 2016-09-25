@@ -142,7 +142,7 @@ public class OpLog extends Bean {
    *          the ip address
    */
   public static void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
-    info(Module.home.shortName(model), op, message, trace, u, ip);
+    info(Module.shortName(model), op, message, trace, u, ip);
   }
 
   /**
@@ -170,23 +170,26 @@ public class OpLog extends Bean {
   private static void _log(int type, String node, String model, String op, String message, String trace, User u,
       String ip) {
 
-    if (message != null && message.length() > 1024) {
-      message = message.substring(0, 1024);
-    }
-    if (trace != null && trace.length() > 8192) {
-      trace = trace.substring(0, 8192);
-    }
+    if (Helper.isConfigured()) {
+      if (message != null && message.length() > 1024) {
+        message = message.substring(0, 1024);
+      }
+      if (trace != null && trace.length() > 8192) {
+        trace = trace.substring(0, 8192);
+      }
 
-    long t = System.currentTimeMillis();
-    String id = UID.id(t, op, message);
-    V v = V.create("id", id).set("created", t).set("node", node).set("model", model).set("op", op)
-        .set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type);
-    v.set("message", message);
-    v.set("trace", trace);
-    Helper.insert(v, OpLog.class);
-    if (loggers.size() > 0) {
-      for (ILogger l : loggers) {
-        l.log(v);
+      long t = System.currentTimeMillis();
+      String id = UID.id(t, op, message);
+      V v = V.create("id", id).set("created", t).set("node", node).set("model", model).set("op", op)
+          .set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type);
+      v.set("message", message);
+      v.set("trace", trace);
+
+      Helper.insert(v, OpLog.class);
+      if (loggers.size() > 0) {
+        for (ILogger l : loggers) {
+          l.log(v);
+        }
       }
     }
   }
@@ -264,7 +267,7 @@ public class OpLog extends Bean {
    *          the ip address
    */
   public static void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
-    warn(Module.home.shortName(model), op, message, trace, u, ip);
+    warn(Module.shortName(model), op, message, trace, u, ip);
   }
 
   /**
@@ -324,7 +327,7 @@ public class OpLog extends Bean {
    *          the ip address
    */
   public static void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
-    error(Module.home.shortName(model), op, message, e, u, ip);
+    error(Module.shortName(model), op, message, e, u, ip);
   }
 
   /**
@@ -376,7 +379,7 @@ public class OpLog extends Bean {
    *          the ip address
    */
   public static void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
-    error(Module.home.shortName(model), op, message, trace, u, ip);
+    error(Module.shortName(model), op, message, trace, u, ip);
   }
 
   /**
