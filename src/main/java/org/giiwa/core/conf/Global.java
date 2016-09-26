@@ -63,6 +63,10 @@ public class Global extends Bean {
    * @return the int
    */
   public static int getInt(String name, int defaultValue) {
+    if (!Helper.isConfigured()) {
+      return X.toInt(cache.get(name), defaultValue);
+    }
+
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       return X.toInt(c.i, defaultValue);
@@ -81,6 +85,10 @@ public class Global extends Bean {
    * @return the string
    */
   public static String getString(String name, String defaultValue) {
+    if (!Helper.isConfigured()) {
+      return cache.get(name) == null ? defaultValue : cache.get(name).toString();
+    }
+
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       return c.s != null ? c.s : defaultValue;
@@ -88,6 +96,8 @@ public class Global extends Bean {
       return Config.getConfig().getString(name, defaultValue);
     }
   }
+
+  private static Map<String, Object> cache = new HashMap<String, Object>();
 
   /**
    * get the long value.
@@ -99,6 +109,10 @@ public class Global extends Bean {
    * @return the long
    */
   public static long getLong(String name, long defaultValue) {
+    if (!Helper.isConfigured()) {
+      return X.toLong(cache.get(name), defaultValue);
+    }
+
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       return c.l;
@@ -133,6 +147,11 @@ public class Global extends Bean {
 
     if (o == null) {
       Helper.delete(W.create(X.ID, name), Global.class);
+      return;
+    }
+
+    if (!Helper.isConfigured()) {
+      cache.put(name, o);
       return;
     }
 
