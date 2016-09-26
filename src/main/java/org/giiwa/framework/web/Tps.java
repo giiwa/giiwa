@@ -14,35 +14,37 @@
 */
 package org.giiwa.framework.web;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class Tps {
 
-  static Tps owner = new Tps();
+  static Tps    owner = new Tps();
 
-  long       time  = System.currentTimeMillis();
-  int        last;
-  int        current;
-  int        max;
+  long          time  = System.currentTimeMillis();
+  int           last;
+  AtomicInteger current;
+  int           max;
 
   public static void add(int delta) {
     if (System.currentTimeMillis() - owner.time > 1000) {
       owner.time = System.currentTimeMillis();
-      owner.last = owner.current;
+      owner.last = owner.current.get();
       if (owner.last > owner.max) {
         owner.max = owner.last;
       }
-      owner.current = 0;
+      owner.current.set(0);
     }
-    owner.current += delta;
+    owner.current.addAndGet(delta);
   }
 
   public static int get() {
     if (System.currentTimeMillis() - owner.time > 1000) {
       owner.time = System.currentTimeMillis();
-      owner.last = owner.current;
+      owner.last = owner.current.get();
       if (owner.last > owner.max) {
         owner.max = owner.last;
       }
-      owner.current = 0;
+      owner.current.set(0);
     }
     return owner.last;
   }
