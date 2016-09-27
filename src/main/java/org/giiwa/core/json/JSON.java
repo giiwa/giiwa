@@ -50,7 +50,9 @@ public class JSON extends HashMap<String, Object> {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static JSON fromObject(Object json) {
     JSON j = null;
-    if (json instanceof Map) {
+    if (json instanceof JSON) {
+      j = (JSON) json;
+    } else if (json instanceof Map) {
       j = JSON.create((Map) json);
     } else if (json instanceof String) {
       Gson g = new Gson();
