@@ -36,6 +36,7 @@
 </table>
 
 <script>
+$('#logs-table').tablesorter({headers:{3:{sorter:false}}});
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		$.post("/admin/logs/delete", {f:id}, function(d){

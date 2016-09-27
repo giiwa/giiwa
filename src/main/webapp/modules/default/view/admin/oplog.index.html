@@ -116,6 +116,7 @@
 </div>
 
 <script>
+$('#log-table').tablesorter({headers:{7:{sorter:false}}});
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		processing && processing.show();

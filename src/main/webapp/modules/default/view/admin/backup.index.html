@@ -33,6 +33,7 @@
 </div>
 
 <script>
+$('#user-table').tablesorter({headers:{2:{sorter:false}}});
 function _delete(name) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		processing && processing.show();

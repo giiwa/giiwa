@@ -120,6 +120,7 @@
 <iframe id='download' style='display:none'></iframe>
 
 <script>
+	$('#module-table').tablesorter({headers:{6:{sorter:false}}});
 	function _ok() {
 		$('#ideditor').dialog('close');
 		processing && processing.show();

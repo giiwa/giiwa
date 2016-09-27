@@ -51,6 +51,7 @@
  #parse('/widget/goto.page.html')
 
 <script>
+$('#user-table').tablesorter({headers:{5:{sorter:false}}});
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		processing && processing.show();

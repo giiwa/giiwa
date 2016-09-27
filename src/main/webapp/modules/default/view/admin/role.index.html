@@ -44,6 +44,7 @@
 
 #if($edit)
 <script>
+$('#role-table').tablesorter({headers:{2:{sorter:false}}});
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		$.post('/admin/role/delete', {id: id}, function(d){
