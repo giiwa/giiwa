@@ -40,6 +40,7 @@ public class dashboard extends Model {
 
     this.set("me", this.getUser());
     this.set("uptime", lang.format(Model.UPTIME, "yy-MM-dd"));
+    this.set("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
     this.set("past", lang.past(Model.UPTIME));
     this.set("node", conf.getString("node", ""));
     this.set("release", Module.load("default").getVersion());

@@ -2018,6 +2018,11 @@ public class Model {
   final public static String MIME_JSON   = "application/json;charset=" + ENCODING;
 
   /**
+   * MIME TYPE of stream
+   */
+  final public static String MIME_STREAM = "application/octet-stream";
+
+  /**
    * MIME TYPE of HTML
    */
   final public static String MIME_HTML   = "text/html;charset=" + ENCODING;

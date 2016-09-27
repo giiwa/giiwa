@@ -42,6 +42,7 @@ org/giiwa/app/web/DefaultListener$RecycleTask.class
 org/giiwa/app/web/admin/accesslog.class
 org/giiwa/core/base/Digest.class
 org/giiwa/core/base/FileUtil$R.class
+org/giiwa/app/web/admin/logs.class
 org/giiwa/framework/bean/Session.class
 org/giiwa/core/base/RSA$Key.class
 org/giiwa/core/base/DES.class

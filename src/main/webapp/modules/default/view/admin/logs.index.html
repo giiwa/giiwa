@@ -1,0 +1,47 @@
+<div class='head'>$lang.get('logs.index.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/logs' class='selected'>$lang.get('a.logs')</a>
+</div>
+
+<table id='logs-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('file.name')</th>
+			<th>$lang.get('file.size')</th>
+			<th>$lang.get('file.updated')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f1 in $list)
+	<tr>
+		<td>
+			<a href="/admin/logs/download/${f1.name}.zip" target="_blank">$f1.name</a>
+		</td>
+		<td>
+			#if($f1.isFile())
+			$lang.size($!f1.length())
+			#end
+		</td>
+		<td>$!lang.format($f1.lastModified(), 'yyyy-MM-dd HH:mm:ss')</td>
+		<td>
+			<a href='javascript:;' onclick="_delete('$f1.name', this)">$lang.get('a.delete')</a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post("/admin/logs/delete", {f:id}, function(d){
+			$(o).parent().parent().remove();
+		})
+	}
+}
+
+</script>

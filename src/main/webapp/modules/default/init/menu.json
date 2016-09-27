@@ -35,6 +35,12 @@
 												"seq" : 20,
 												"access" : "access.logs.admin",
 												"classes" : "icon-list"
+											}, {
+												"name" : "menu.logs",
+												"load" : "/admin/logs",
+												"seq" : 30,
+												"access" : "access.logs.admin",
+												"classes" : "icon-paragraph-justify"
 											}]
 								}, {
 									"name" : "menu.repo",
