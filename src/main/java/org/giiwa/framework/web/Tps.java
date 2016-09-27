@@ -18,11 +18,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Tps {
 
-  static Tps    owner = new Tps();
+  static Tps    owner   = new Tps();
 
-  long          time  = System.currentTimeMillis();
+  long          time    = System.currentTimeMillis();
   int           last;
-  AtomicInteger current;
+  AtomicInteger current = new AtomicInteger();
   int           max;
 
   public static void add(int delta) {
