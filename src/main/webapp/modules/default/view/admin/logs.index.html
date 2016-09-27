@@ -19,7 +19,7 @@
 #foreach($f1 in $list)
 	<tr>
 		<td>
-			<a href="/admin/logs/download/${f1.name}.zip" target="_blank">$f1.name</a>
+			<a href="/admin/logs/download?f=$f1.name" target="_blank">$f1.name</a>
 		</td>
 		<td>
 			#if($f1.isFile())

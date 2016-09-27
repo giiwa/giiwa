@@ -16,6 +16,7 @@ package org.giiwa.app.web.admin;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.giiwa.core.base.IOUtil;
@@ -36,16 +37,22 @@ public class logs extends Model {
 
   @Path(path = "download", login = true, access = "access.logs.admin")
   public void download() {
-    String f = this.path;
+    String f = this.getString("f");
     this.setContentType(MIME_STREAM);
+    this.addHeader("Content-Disposition", "attachment; filename=\"" + f + ".zip\"");
 
     File f0 = new File(Model.GIIWA_HOME + "/logs/");
     File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
     try {
       if (f1.getCanonicalPath().startsWith(f0.getCanonicalPath())) {
         ZipOutputStream out = new ZipOutputStream(this.getOutputStream());
+        ZipEntry e = new ZipEntry(f);
+        out.putNextEntry(e);
         FileInputStream in = new FileInputStream(f1);
-        IOUtil.copy(in, out);
+        IOUtil.copy(in, out, false);
+        out.closeEntry();
+        in.close();
+        out.close();
       } else {
         this.print("not found, name=" + f);
       }

@@ -28,19 +28,19 @@
 												"load" : "/admin/oplog",
 												"seq" : 10,
 												"access" : "access.logs.admin",
-												"classes" : "icon-file-text"
+												"classes" : "icon-hammer"
 											}, {
 												"name" : "menu.accesslog",
 												"load" : "/admin/accesslog",
 												"seq" : 20,
 												"access" : "access.logs.admin",
-												"classes" : "icon-list"
+												"classes" : "icon-user"
 											}, {
 												"name" : "menu.logs",
 												"load" : "/admin/logs",
 												"seq" : 30,
 												"access" : "access.logs.admin",
-												"classes" : "icon-paragraph-justify"
+												"classes" : "icon-drawer"
 											}]
 								}, {
 									"name" : "menu.repo",
