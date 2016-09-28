@@ -18,8 +18,7 @@
 	<tbody>
 #foreach($f1 in $list)
 	<tr>
-		<td>
-			$f1.name
+		<td>$!f1.name
 			<a href='javascript:;' onclick='_download("$f1.name")' target='_blank' class='icon icon-folder-download' title='/logs/download/$f1.name'></a>
 		</td>
 		<td>

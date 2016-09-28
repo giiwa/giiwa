@@ -85,8 +85,7 @@
 	<tbody>
 		#foreach($f in $list)
 		<tr>
-			<td>
-				$!f.name
+			<td>$!f.name
 				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'></a>#end
 			</td>
 			<td>
