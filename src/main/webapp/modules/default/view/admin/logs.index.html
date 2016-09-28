@@ -19,7 +19,7 @@
 #foreach($f1 in $list)
 	<tr>
 		<td>
-			<a href="/admin/logs/download?f=$f1.name" target="_blank">$f1.name</a>
+			$f1.name
 			<a href='javascript:;' onclick='_download("$f1.name")' target='_blank' class='icon icon-folder-download' title='/logs/download/$f1.name'></a>
 		</td>
 		<td>
@@ -29,7 +29,7 @@
 		</td>
 		<td>$!lang.format($f1.lastModified(), 'yyyy-MM-dd HH:mm:ss')</td>
 		<td>
-			<a class='btn tbn-danger btn-xs' href='javascript:;' onclick="_delete('$f1.name', this)">$lang.get('a.delete')</a>
+			<a class='btn btn-danger btn-xs' href='javascript:;' onclick="_delete('$f1.name', this)">$lang.get('a.delete')</a>
 		</td>
 	</tr>
 #end
@@ -52,7 +52,7 @@ function _download(name) {
 	$.post('/admin/logs/download', {f:name}, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
-			$('#download').attr('src', d.url);
+			$('#download').attr('src', d.src);
 		} else {
 			$.error(d.message);
 		}
