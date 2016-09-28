@@ -36,8 +36,8 @@
 		<td>$!lang.format($f.updated, 'yyyy-MM-dd HH:mm:ss')</td>
 		<td>$!lang.format($f.created, 'yyyy-MM-dd HH:mm:ss')</td>
 		<td>
-			<a href='/admin/demo/edit?id=$f.id'>$lang.get('a.edit')</a>
-			<a href='javascript:;' onclick='_delete("$f.id", this)'>$lang.get('a.delete')</a>
+			<a class='btn btn-info btn-xs' href='/admin/demo/edit?id=$f.id'>$lang.get('a.edit')</a>
+			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this)'>$lang.get('a.delete')</a>
 		</td>
 	</tr>
 #end

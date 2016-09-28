@@ -19,7 +19,7 @@ public class demo extends Model {
 		W q = W.create();
 		String name = this.getString("name");
 
-		if (!X.isEmpty(name) && path == null) {
+		if (!X.isEmpty(name) && X.isEmpty(path)) {
 			q.and("name", name, W.OP_LIKE);
 			this.set("name", name);
 		}
