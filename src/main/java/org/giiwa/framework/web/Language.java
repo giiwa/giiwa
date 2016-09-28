@@ -238,15 +238,21 @@ public class Language {
    * 
    * @param name
    *          the name
+   * @param args
+   *          the args which used to format the string
    * @return the string
    */
-  public String get(String name) {
+  public String get(String name, Object... args) {
     if (X.isEmpty(name)) {
       return X.EMPTY;
     }
 
     if (data.containsKey(name)) {
-      return data.get(name);
+      if (args != null && args.length > 0) {
+        return String.format(data.get(name), args);
+      } else {
+        return data.get(name);
+      }
     } else if (missed.containsKey(name)) {
       return missed.get(name);
     } else {
