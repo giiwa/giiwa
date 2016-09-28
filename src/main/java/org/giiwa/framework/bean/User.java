@@ -235,6 +235,17 @@ public class User extends Bean {
   }
 
   /**
+   * Load the user object by id
+   *
+   * @param id
+   *          the id
+   * @return the user
+   */
+  public static User load(long id) {
+    return Helper.load(id, User.class);
+  }
+
+  /**
    * Load users by access token name.
    *
    * @param access
