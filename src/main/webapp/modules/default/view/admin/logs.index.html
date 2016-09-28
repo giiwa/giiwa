@@ -20,6 +20,7 @@
 	<tr>
 		<td>
 			<a href="/admin/logs/download?f=$f1.name" target="_blank">$f1.name</a>
+			<a href='javascript:;' onclick='_download("$f1.name")' target='_blank' class='icon icon-folder-download' title='/logs/download/$f1.name'></a>
 		</td>
 		<td>
 			#if($f1.isFile())
@@ -28,12 +29,14 @@
 		</td>
 		<td>$!lang.format($f1.lastModified(), 'yyyy-MM-dd HH:mm:ss')</td>
 		<td>
-			<a href='javascript:;' onclick="_delete('$f1.name', this)">$lang.get('a.delete')</a>
+			<a class='btn tbn-danger btn-xs' href='javascript:;' onclick="_delete('$f1.name', this)">$lang.get('a.delete')</a>
 		</td>
 	</tr>
 #end
 	</tbody>
 </table>
+
+<iframe id='download' style='display:none'></iframe>
 
 <script>
 $('#logs-table').tablesorter({headers:{3:{sorter:false}}});
@@ -43,6 +46,17 @@ function _delete(id, o) {
 			$(o).parent().parent().remove();
 		})
 	}
+}
+function _download(name) {
+	processing && processing.show();
+	$.post('/admin/logs/download', {f:name}, function(d){
+		processing && processing.hide();
+		if(d.state == 200) {
+			$('#download').attr('src', d.url);
+		} else {
+			$.error(d.message);
+		}
+	})
 }
 
 </script>

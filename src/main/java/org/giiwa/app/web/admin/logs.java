@@ -16,6 +16,7 @@ package org.giiwa.app.web.admin;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -23,6 +24,7 @@ import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.*;
 
 /**
@@ -37,29 +39,31 @@ public class logs extends Model {
 
   @Path(path = "download", login = true, access = "access.logs.admin")
   public void download() {
+
+    JSON jo = JSON.create();
     String f = this.getString("f");
-    this.setContentType(MIME_STREAM);
-    this.addHeader("Content-Disposition", "attachment; filename=\"" + f + ".zip\"");
 
     File f0 = new File(Model.GIIWA_HOME + "/logs/");
     File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
     try {
       if (f1.getCanonicalPath().startsWith(f0.getCanonicalPath())) {
-        ZipOutputStream out = new ZipOutputStream(this.getOutputStream());
-        ZipEntry e = new ZipEntry(f);
-        out.putNextEntry(e);
-        FileInputStream in = new FileInputStream(f1);
-        IOUtil.copy(in, out, false);
-        out.closeEntry();
-        in.close();
-        out.close();
+
+        Temp t = Temp.create(f + ".zip");
+        t.zipcopy(f1.getName(), f1);
+
+        jo.put(X.STATE, 200);
+        jo.put("src", t.getUri());
       } else {
-        this.print("not found, name=" + f);
+        jo.put(X.MESSAGE, "not found, name=" + f);
+        jo.put(X.STATE, 201);
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
-      this.print(e.getMessage());
+      jo.put(X.MESSAGE, e.getMessage());
+      jo.put(X.STATE, 201);
     }
+
+    this.response(jo);
   }
 
   /**

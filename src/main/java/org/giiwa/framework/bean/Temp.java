@@ -15,8 +15,15 @@
 package org.giiwa.framework.bean;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.configuration.Configuration;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.UID;
 
 /**
@@ -31,8 +38,8 @@ public class Temp {
   public static String ROOT;
 
   /**
-   * Initialize the Temp object, this will be invoke in giiwa startup
-   * 
+   * Initialize the Temp object, this will be invoke in giiwa startup.
+   *
    * @param conf
    *          the conf
    */
@@ -49,8 +56,8 @@ public class Temp {
   }
 
   /**
-   * get the Temp file for name
-   * 
+   * get the Temp file for name.
+   *
    * @param name
    *          the file name
    * @return the Temp
@@ -124,6 +131,70 @@ public class Temp {
       sb.append("_").append(name);
 
     return sb.toString();
+  }
+
+  /**
+   * Copy.
+   *
+   * @param f
+   *          the f
+   * @return the int
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
+  public int copy(File f) throws IOException {
+    return copy(new FileInputStream(f));
+  }
+
+  /**
+   * Copy.
+   *
+   * @param in
+   *          the in
+   * @return the int
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
+  public int copy(InputStream in) throws IOException {
+    FileOutputStream out = new FileOutputStream(this.getFile());
+    return IOUtil.copy(in, out);
+  }
+
+  /**
+   * Zipcopy.
+   *
+   * @param name
+   *          the name
+   * @param f
+   *          the f
+   * @return the int
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
+  public int zipcopy(String name, File f) throws IOException {
+    return zipcopy(name, new FileInputStream(f));
+  }
+
+  /**
+   * Zipcopy.
+   *
+   * @param name
+   *          the name
+   * @param in
+   *          the in
+   * @return the int
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
+  public int zipcopy(String name, InputStream in) throws IOException {
+    ZipOutputStream out = new ZipOutputStream(new FileOutputStream(this.getFile()));
+    ZipEntry e = new ZipEntry(name);
+    out.putNextEntry(e);
+    int i = IOUtil.copy(in, out, false);
+    out.closeEntry();
+    out.close();
+    in.close();
+    return i;
   }
 
 }

@@ -218,7 +218,6 @@ menu.usermgr=User
 message.deny=Access deny, 5 seconds auto redirect
 module.create.notes=Create a module, generate a Eclipse project with build.xml, using ant to package the module as "??.zip" which can be upload in module management directly
 module.create.title=Create a module
-module.download.hint=download the module package
 module.id.gt0=ID MUST bigger than 0
 module.id.hint=the id of the module, bigger first
 module.id.title=Change the module ID

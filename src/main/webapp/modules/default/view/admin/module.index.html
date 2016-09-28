@@ -41,7 +41,7 @@
 		<tr>
 			<td>
 				$!f.name
-				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'></a>#end
+				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$f.repo'></a>#end
 			</td>
 			<td class="id">
 				<span class='id' data-name='$m.name'>$!f.id</span>
@@ -120,7 +120,7 @@
 <iframe id='download' style='display:none'></iframe>
 
 <script>
-	$('#module-table').tablesorter({headers:{6:{sorter:false}}});
+	$('#module-table').tablesorter({headers:{7:{sorter:false}}});
 	function _ok() {
 		$('#ideditor').dialog('close');
 		processing && processing.show();
