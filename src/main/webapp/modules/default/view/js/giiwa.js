@@ -3,6 +3,7 @@
  */
 var menuapi = menuapi | false;
 var panelapi = panelapi | false;
+var editor = editor | false;
 var uploaddone = uploaddone | false;
 var __history = [];
 
@@ -215,6 +216,10 @@ function hook() {
 
 			if (form.method == 'get') {
 				var data = $(form).serialize();
+				if (editor && editor.srcElement && editor.srcElement.length > 0) {
+					var src = editor.srcElement[0];
+					data += "&" + src.name + "=" + editor.html();
+				}
 
 				var __url = '';
 				if (url.indexOf('?') > 0) {
@@ -241,6 +246,10 @@ function hook() {
 
 			} else {
 				var data = new FormData(form);
+				if (editor && editor.srcElement && editor.srcElement.length > 0) {
+					var src = editor.srcElement[0];
+					data.append(src.name, editor.html());
+				}
 
 				var xhr = new XMLHttpRequest();
 				xhr.open("POST", url);
@@ -377,6 +386,21 @@ function hook() {
 							+ that.attr('max'));
 				}
 			});
+			
+	editor = false;
+	editor = KindEditor.create('textarea[richedit=true]', {
+				basePath : '/ke/',
+				resizeType : 1,
+				allowPreviewEmoticons : false,
+				allowImageUpload : true,
+				items : ['fontname', 'fontsize', '|', 'forecolor',
+						'hilitecolor', 'bold', 'italic', 'underline',
+						'removeformat', '|', 'justifyleft', 'justifycenter',
+						'justifyright', 'insertorderedlist',
+						'insertunorderedlist', '|', 'emoticons', 'image',
+						'link']
+			});
+			
 
 }
 

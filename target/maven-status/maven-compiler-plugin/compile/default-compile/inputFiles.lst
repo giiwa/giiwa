@@ -28,7 +28,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Module.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/user.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/PageLabel.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/Pool.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/token.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/vengine/VEngine.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/role.java
@@ -81,7 +80,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/IOUtil.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/view/VelocityTemplateLoader.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/OpLog.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/version.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Repo.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/FileCache.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/GiiwaFilter.java

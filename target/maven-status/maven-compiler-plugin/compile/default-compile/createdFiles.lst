@@ -35,7 +35,6 @@ org/giiwa/core/base/Shell$Logger.class
 org/giiwa/framework/web/Tps.class
 org/giiwa/core/base/Host$CPU.class
 org/giiwa/core/base/Http$1.class
-org/giiwa/core/bean/Pool.class
 org/giiwa/app/web/setup.class
 org/giiwa/core/base/H64.class
 org/giiwa/app/web/DefaultListener$RecycleTask.class
@@ -81,7 +80,6 @@ org/giiwa/framework/web/view/FreemakerView$T.class
 org/giiwa/core/base/RSA.class
 org/giiwa/core/bean/X.class
 org/giiwa/framework/bean/User$UserRole.class
-org/giiwa/core/bean/Pool$ICreator.class
 org/giiwa/app/web/admin/system.class
 org/giiwa/framework/bean/Repo$Entity.class
 org/giiwa/framework/web/Paging.class
@@ -153,7 +151,6 @@ org/giiwa/framework/bean/Response.class
 org/giiwa/core/task/Task$1.class
 org/giiwa/app/web/admin/user$1.class
 org/giiwa/core/cache/MemCache.class
-org/giiwa/app/web/version.class
 org/giiwa/core/cache/Cachable.class
 org/giiwa/app/web/admin/setting$counter.class
 org/giiwa/core/cache/Cache.class
