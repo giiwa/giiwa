@@ -14,7 +14,6 @@
 */
 package org.giiwa.core.bean;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code TimeStamp} Class used to create a time stamp
  * 

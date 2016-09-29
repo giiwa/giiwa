@@ -30,7 +30,7 @@ import org.giiwa.core.conf.Global;
  * @author joe
  *
  */
-public class UID {
+public final class UID {
 
   private static Log log = LogFactory.getLog(UID.class);
 

@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class IOUtil {
+public final class IOUtil {
 
   /**
    * the utility api of copying all data in "inputstream" to "outputstream".

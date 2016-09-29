@@ -31,7 +31,7 @@ import com.google.gson.Gson;
  *
  * @author wujun
  */
-public class JSON extends HashMap<String, Object> {
+public final class JSON extends HashMap<String, Object> {
 
   /**
    * 

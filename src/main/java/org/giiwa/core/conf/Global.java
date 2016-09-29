@@ -30,7 +30,7 @@ import org.giiwa.framework.web.Model;
  * @author yjiang
  */
 @Table(name = "gi_config")
-public class Global extends Bean {
+public final class Global extends Bean {
 
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 1L;

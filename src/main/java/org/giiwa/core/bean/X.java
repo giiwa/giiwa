@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
  * @author joe
  *
  */
-public class X {
+public final class X {
 
   private static Log         log         = LogFactory.getLog(X.class);
 

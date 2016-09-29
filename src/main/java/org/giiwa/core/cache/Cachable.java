@@ -16,7 +16,6 @@ package org.giiwa.core.cache;
 
 import java.io.Serializable;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Interface Cachable.
  */

@@ -68,7 +68,7 @@ import org.giiwa.core.json.JSON;
  * 
  */
 @SuppressWarnings("deprecation")
-public class Http {
+public final class Http {
 
   static Log                 log     = LogFactory.getLog(Http.class);
   static int                 TIMEOUT = 10 * 1000;

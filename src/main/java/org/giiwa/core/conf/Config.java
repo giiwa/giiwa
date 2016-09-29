@@ -24,7 +24,7 @@ import org.apache.log4j.PropertyConfigurator;
  * The Class Config is whole configuration of system, usually is a copy of
  * "giiwa.properties"
  */
-public class Config {
+public final class Config {
 
   /** The conf. */
   private static PropertiesConfiguration conf;

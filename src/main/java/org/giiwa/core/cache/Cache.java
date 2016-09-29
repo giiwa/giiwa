@@ -32,7 +32,7 @@ import org.giiwa.core.bean.X;
  * @author joe
  *
  */
-public class Cache {
+public final class Cache {
 
 	/** The log. */
 	private static Log log = LogFactory.getLog(Cache.class);
