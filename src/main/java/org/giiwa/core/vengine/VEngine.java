@@ -25,6 +25,7 @@ import org.apache.velocity.app.Velocity;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 
+// TODO: Auto-generated Javadoc
 /**
  * @author wujun
  *
@@ -33,6 +34,12 @@ public class VEngine {
 
   static Log log = LogFactory.getLog(VEngine.class);
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   */
   public static void main(String[] args) {
 
     String s = "{age}>10";
@@ -119,4 +126,32 @@ public class VEngine {
   }
 
   private final static String M = "#set($result.bool=(sss))";
+
+  /**
+   * Parses the string with the model
+   *
+   * @param s
+   *          the string
+   * @param m
+   *          the model
+   * @return the string
+   * @throws Exception
+   *           the exception
+   */
+  public static String parse(String s, Map<String, Object> m) throws Exception {
+
+    log.debug("vengine.parse ...");
+
+    try {
+      VelocityContext context = new VelocityContext(m);
+      StringWriter out = new StringWriter();
+      Velocity.evaluate(context, out, "ve", s);
+      log.debug("s=" + s + ", out=" + out);
+      return out.toString();
+    } catch (Exception e) {
+      log.error(s, e);
+      throw e;
+    }
+  }
+
 }

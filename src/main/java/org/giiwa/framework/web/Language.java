@@ -14,13 +14,20 @@
 */
 package org.giiwa.framework.web;
 
+import java.io.BufferedWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.commons.logging.*;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.vengine.VEngine;
+import org.giiwa.framework.web.view.VelocityView;
 
+// TODO: Auto-generated Javadoc
 /**
  * language data which located at /modules/[module]/i18n/
  * 
@@ -231,6 +238,26 @@ public class Language {
    */
   public Map<String, String> getMissed() {
     return missed;
+  }
+
+  /**
+   * Parses the string[name] with the model
+   *
+   * @param name
+   *          the name of string in i18n
+   * @param m
+   *          the model
+   * @return the string
+   */
+  public String parse(String name, Model m) {
+    String s = get(name);
+
+    try {
+      s = VEngine.parse(s, m.context);
+    } catch (Exception e) {
+      log.error(s, e);
+    }
+    return s;
   }
 
   /**
