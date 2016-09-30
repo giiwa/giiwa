@@ -13,6 +13,7 @@ public class index extends Model {
     if (!X.isEmpty(h1)) {
       this.redirect(h1);
     } else {
+      this.set("me", this.getUser());
       this.show("/index.html");
     }
   }
