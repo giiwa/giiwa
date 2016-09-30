@@ -139,8 +139,11 @@ public class VEngine {
    *           the exception
    */
   public static String parse(String s, Map<String, Object> m) throws Exception {
-
     log.debug("vengine.parse ...");
+
+    if(X.isEmpty(s)) {
+      return s;
+    }
 
     try {
       VelocityContext context = new VelocityContext(m);
