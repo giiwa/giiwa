@@ -241,23 +241,22 @@ public class Language {
   }
 
   /**
-   * Parses the string[name] with the model
+   * Parses the string with the model using velocity engine
    *
-   * @param name
-   *          the name of string in i18n
+   * @param str
+   *          the string
    * @param m
    *          the model
    * @return the string
    */
-  public String parse(String name, Model m) {
-    String s = get(name);
+  public String parse(String str, Model m) {
 
     try {
-      s = VEngine.parse(s, m.context);
+      str = VEngine.parse(str, m.context);
     } catch (Exception e) {
-      log.error(s, e);
+      log.error(str, e);
     }
-    return s;
+    return str;
   }
 
   /**
