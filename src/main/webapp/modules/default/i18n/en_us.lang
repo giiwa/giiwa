@@ -418,3 +418,5 @@ file.updated=Updated
 label.now=Now
 logs.index.title=Logs management
 menu.logs=Logs
+home.uri=Home URI
+home.uri.hint=The home uri, etc. '/forum'

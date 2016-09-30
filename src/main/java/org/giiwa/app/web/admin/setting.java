@@ -202,6 +202,7 @@ public class setting extends Model {
       String lang1 = this.getString("language");
       Global.setConfig("language", lang1);
 
+      Global.setConfig("home.uri", this.getHtml("home_uri"));
       Global.setConfig("user.name.rule", this.getHtml("user_name"));
       Global.setConfig("user.passwd.rule", this.getHtml("user_passwd"));
       Global.setConfig("user.captcha", X.isSame(this.getString("user_captcha"), "on") ? 1 : 0);

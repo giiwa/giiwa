@@ -159,7 +159,7 @@ public class Controller {
       return;
     }
 
-    if (!_dispatch(uri, req, resp, method, t)) {
+    if (X.isSame("/", uri) || !_dispatch(uri, req, resp, method, t)) {
 
       for (String suffix : welcomes) {
         if (_dispatch(uri + "/" + suffix, req, resp, method, t)) {
@@ -241,7 +241,12 @@ public class Controller {
      * load model from the modules
      */
 
-    // log.debug("dispatch, uri=" + uri);
+    while (uri.indexOf("//") > -1) {
+      uri = uri.replaceAll("//", "/");
+    }
+
+    log.debug("dispatch, uri=" + uri);
+
     Model mo = getModel(method.method, uri);
     if (mo != null) {
 

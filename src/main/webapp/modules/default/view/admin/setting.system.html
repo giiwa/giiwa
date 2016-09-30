@@ -1,5 +1,9 @@
 	<div><label><h3>$lang.get('base.setting.title'):</h3><g>$lang.get('global.setting.notes')</g></label></div>
 	<hr/>
+	<div><label><h3>$lang.get('home.uri'):</h3>
+		<input type='text' name='home_uri' value="$!global.getString('home.uri','')"/>
+		<g>$lang.get('home.uri.hint')</g></label></div>
+		
 	<div><label><h3>language:</h3>
 		<select name='language'>
 			<option value='en_us' #if($language == 'en_us') selected #end>en_us</option>
