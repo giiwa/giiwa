@@ -245,7 +245,7 @@ public class Controller {
       uri = uri.replaceAll("//", "/");
     }
 
-    log.debug("dispatch, uri=" + uri);
+    // log.debug("dispatch, uri=" + uri);
 
     Model mo = getModel(method.method, uri);
     if (mo != null) {

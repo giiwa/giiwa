@@ -109,6 +109,7 @@ org/giiwa/core/cache/ICacheSystem.class
 org/giiwa/app/web/admin/setting.class
 org/giiwa/core/base/Host.class
 org/giiwa/app/web/admin/repo.class
+org/giiwa/app/web/index.class
 org/giiwa/core/bean/MongoHelper.class
 org/giiwa/core/noti/Email$auth.class
 org/giiwa/framework/web/view/View.class
