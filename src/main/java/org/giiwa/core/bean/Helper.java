@@ -92,8 +92,8 @@ public class Helper {
   }
 
   /**
-   * delete a data from database
-   * 
+   * delete a data from database.
+   *
    * @param id
    *          the value of "id"
    * @param t
@@ -105,8 +105,8 @@ public class Helper {
   }
 
   /**
-   * delete the data , return the number that was deleted
-   * 
+   * delete the data , return the number that was deleted.
+   *
    * @param q
    *          the query
    * @param t
@@ -132,8 +132,8 @@ public class Helper {
   }
 
   /**
-   * test if exists for the object
-   * 
+   * test if exists for the object.
+   *
    * @param id
    *          the value of "id"
    * @param t
@@ -147,8 +147,8 @@ public class Helper {
   }
 
   /**
-   * test the data is exists by the query
-   * 
+   * test the data is exists by the query.
+   *
    * @param table
    *          the table name
    * @param q
@@ -171,8 +171,8 @@ public class Helper {
   }
 
   /**
-   * test exists
-   * 
+   * test exists.
+   *
    * @param q
    *          the query and order
    * @param t
@@ -268,6 +268,20 @@ public class Helper {
           return this;
         }
         m.put(name, v);
+      }
+      return this;
+    }
+
+    /**
+     * Ignore the fields
+     *
+     * @param name
+     *          the name
+     * @return the v
+     */
+    public V ignore(String... name) {
+      for (String s : name) {
+        set(s, V.ignore);
       }
       return this;
     }
@@ -942,6 +956,15 @@ public class Helper {
       }
     }
 
+    /**
+     * _parse.
+     *
+     * @param e
+     *          the e
+     * @param q
+     *          the q
+     * @return the basic db object
+     */
     BasicDBObject _parse(Entity e, BasicDBObject q) {
       switch (e.op) {
         case W.OP_EQ:
@@ -970,6 +993,11 @@ public class Helper {
       return q;
     }
 
+    /**
+     * Query.
+     *
+     * @return the basic db object
+     */
     public BasicDBObject query() {
       BasicDBObject q = new BasicDBObject();
       if (elist.size() > 0) {
@@ -991,6 +1019,11 @@ public class Helper {
       return q;
     }
 
+    /**
+     * Order.
+     *
+     * @return the basic db object
+     */
     public BasicDBObject order() {
       BasicDBObject q = new BasicDBObject();
       if (order != null && order.size() > 0) {
@@ -1002,6 +1035,15 @@ public class Helper {
       return q;
     }
 
+    /**
+     * Sort.
+     *
+     * @param name
+     *          the name
+     * @param i
+     *          the i
+     * @return the w
+     */
     public W sort(String name, int i) {
       order.add(new Entity(name, i, 0, 0));
       return this;
@@ -1025,8 +1067,8 @@ public class Helper {
   }
 
   /**
-   * load the data by the query
-   * 
+   * load the data by the query.
+   *
    * @param <T>
    *          the subclass of Bean
    * @param q
@@ -1041,8 +1083,8 @@ public class Helper {
   }
 
   /**
-   * load data from the table
-   * 
+   * load data from the table.
+   *
    * @param <T>
    *          the subclass of Bean
    * @param table
@@ -1073,8 +1115,8 @@ public class Helper {
   }
 
   /**
-   * insert into the values by the Class of T
-   * 
+   * insert into the values by the Class of T.
+   *
    * @param values
    *          the values
    * @param t
@@ -1087,8 +1129,8 @@ public class Helper {
   }
 
   /**
-   * insert the values into the "table"
-   * 
+   * insert the values into the "table".
+   *
    * @param table
    *          the table name
    * @param values
@@ -1115,8 +1157,8 @@ public class Helper {
   }
 
   /**
-   * update the values by the id, for the Class of Bean
-   * 
+   * update the values by the id, for the Class of Bean.
+   *
    * @param id
    *          the id of the X.ID
    * @param values
@@ -1130,8 +1172,8 @@ public class Helper {
   }
 
   /**
-   * update the values by the W for the Class of Bean
-   * 
+   * update the values by the W for the Class of Bean.
+   *
    * @param q
    *          the query
    * @param values
@@ -1146,8 +1188,8 @@ public class Helper {
   }
 
   /**
-   * update the table by the query with the values
-   * 
+   * update the table by the query with the values.
+   *
    * @param table
    *          the table
    * @param q
@@ -1188,8 +1230,8 @@ public class Helper {
 
   /**
    * load the data from the table by query, ignore the table definition for the
-   * Class
-   * 
+   * Class.
+   *
    * @param <T>
    *          the subclass of Bean
    * @param table
@@ -1217,8 +1259,8 @@ public class Helper {
   }
 
   /**
-   * load the data by query
-   * 
+   * load the data by query.
+   *
    * @param <T>
    *          the subclass of Bean
    * @param q
@@ -1237,8 +1279,8 @@ public class Helper {
   }
 
   /**
-   * get the table name from the Class of Bean
-   * 
+   * get the table name from the Class of Bean.
+   *
    * @param t
    *          the Class of Bean
    * @return the String of the table name
@@ -1254,8 +1296,8 @@ public class Helper {
   }
 
   /**
-   * count the data by the query
-   * 
+   * count the data by the query.
+   *
    * @param q
    *          the query
    * @param t
@@ -1282,8 +1324,8 @@ public class Helper {
   }
 
   /**
-   * get the distinct list for the name, by the query
-   * 
+   * get the distinct list for the name, by the query.
+   *
    * @param name
    *          the column name
    * @param q
@@ -1311,6 +1353,12 @@ public class Helper {
     return null;
   }
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   */
   public static void main(String[] args) {
 
     W w = W.create("name", 1).sort("name", 1).sort("nickname", -1).sort("ddd", 1);
