@@ -194,7 +194,7 @@ public class Helper {
    */
   public static final class V {
 
-    public final static Object    ignore = new Object();
+    private final static Object   ignore = new Object();
 
     /** The list. */
     protected Map<String, Object> m      = new LinkedHashMap<String, Object>();
