@@ -1374,5 +1374,11 @@ public class Helper {
     System.out.println(w.query());
     System.out.println(w.order());
 
+    w = W.create("a", 1);
+    w.and("b", new BasicDBObject("$exists", true));
+    System.out.println("-----------");
+    System.out.println(w.query());
+    System.out.println(w.order());
+    
   }
 }
