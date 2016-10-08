@@ -171,6 +171,13 @@ public class user extends Model {
     long id = this.getLong("id");
     if (id > 0) {
       User.delete(id);
+      List<String> list = AuthToken.delete(id);
+      if (list != null) {
+        for (String sid : list) {
+          Session.delete(sid);
+        }
+      }
+      
       OpLog.warn(user.class, "delete", this.getJSONNonPassword().toString(), login, this.getRemoteHost());
       jo.put(X.STATE, 200);
     } else {

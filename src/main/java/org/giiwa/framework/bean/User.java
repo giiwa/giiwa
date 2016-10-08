@@ -707,6 +707,9 @@ public class User extends Bean {
    * @return int how many was deleted
    */
   public static int delete(long id) {
+
+    Lock.cleanup(id);
+
     return Helper.delete(id, User.class);
   }
 
