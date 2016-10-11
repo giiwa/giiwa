@@ -7,7 +7,7 @@
 	<a href='/admin/setting/get/$p' #if($name==$p) class='selected' #end>$lang.get("a.setting.$p")</a>
 	#end
 </div>
-<div id=''>
+<div class="">
 	<form action='/admin/setting/set/$name' method='post' class='form' enctype="multipart/form-data">
 		#if($page)
 			#parse($page)
