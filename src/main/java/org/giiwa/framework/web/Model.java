@@ -360,6 +360,7 @@ public class Model {
                   switch (this.method.method) {
                     case METHOD_POST:
                     case METHOD_GET:
+                    case METHOD_PUT:
                       this.put("lang", lang);
                       this.put(X.URI, uri);
                       this.put("module", Module.home);
@@ -502,6 +503,34 @@ public class Model {
 
           break;
         }
+        case METHOD_PUT: {
+
+          Method m = this.getClass().getMethod("onPut");
+          if (m != null) {
+            Path p = m.getAnnotation(Path.class);
+            if (p != null) {
+              // check ogin
+              if (p.login()) {
+                if (this.getUser() == null) {
+                  gotoLogin();
+                  return null;
+                }
+
+                // check access
+                if (!X.isEmpty(p.access())) {
+                  if (!login.hasAccess(p.access())) {
+                    deny();
+                    return null;
+                  }
+                }
+              }
+            }
+          }
+          onPut();
+
+          break;
+        }
+
       } // end default handler
 
     } catch (Exception e) {
@@ -1812,6 +1841,19 @@ public class Model {
   }
 
   /**
+   * On put requested from HTTP PUT method.
+   */
+  public void onPut() {
+    if (this.isAjax()) {
+      JSON jo = new JSON();
+      jo.put(X.STATE, HttpServletResponse.SC_FORBIDDEN);
+      response(jo);
+    } else {
+      this.print("not support");
+    }
+  }
+
+  /**
    * set current path.
    * 
    * @deprecated
@@ -2013,6 +2055,11 @@ public class Model {
   final public static int    METHOD_POST = 2;
 
   /**
+   * HTTP PUT
+   */
+  final public static int    METHOD_PUT  = 4;
+
+  /**
    * MIME TYPE of JSON
    */
   final public static String MIME_JSON   = "application/json;charset=" + ENCODING;
@@ -2066,7 +2113,7 @@ public class Model {
    *          the object of printing
    */
   final public void println(Object o) {
-    print(o);
+    print(o + "<br>");
   }
 
   /**
@@ -2165,6 +2212,9 @@ public class Model {
         case Model.METHOD_POST: {
           return "POST";
         }
+        case Model.METHOD_PUT: {
+          return "PUT";
+        }
       }
       return "Unknown";
     }
@@ -2185,6 +2235,10 @@ public class Model {
 
     public boolean isPost() {
       return method == Model.METHOD_POST;
+    }
+
+    public boolean isPut() {
+      return method == Model.METHOD_PUT;
     }
 
     /*
