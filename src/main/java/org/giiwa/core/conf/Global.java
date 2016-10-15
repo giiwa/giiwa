@@ -20,6 +20,7 @@ import java.util.Map;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.cache.Cache;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
 
@@ -67,8 +68,18 @@ public final class Global extends Bean {
       return X.toInt(cache.get(name), defaultValue);
     }
 
+    Object o = Cache.get("global://" + name);
+    if (o instanceof Global) {
+      Global c = (Global) o;
+      if (!c.expired()) {
+        return X.toInt(c.i, defaultValue);
+      }
+    }
+
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
+      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      Cache.set("global://" + name, c);
       return X.toInt(c.i, defaultValue);
     } else {
       return Config.getConfig().getInt(name, defaultValue);
@@ -89,8 +100,19 @@ public final class Global extends Bean {
       return cache.get(name) == null ? defaultValue : cache.get(name).toString();
     }
 
+    Object o = Cache.get("global://" + name);
+    if (o instanceof Global) {
+      Global c = (Global) o;
+      if (!c.expired()) {
+        return c.s != null ? c.s : defaultValue;
+      }
+    }
+
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
+      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      Cache.set("global://" + name, c);
+
       return c.s != null ? c.s : defaultValue;
     } else {
       return Config.getConfig().getString(name, defaultValue);
@@ -113,9 +135,20 @@ public final class Global extends Bean {
       return X.toLong(cache.get(name), defaultValue);
     }
 
+    Object o = Cache.get("global://" + name);
+    if (o instanceof Global) {
+      Global c = (Global) o;
+      if (!c.expired()) {
+        return X.toLong(c.i, defaultValue);
+      }
+    }
+
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      return c.l;
+      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      Cache.set("global://" + name, c);
+
+      return X.toLong(c.i, defaultValue);
     } else {
       return Config.getConfig().getLong(name, defaultValue);
     }

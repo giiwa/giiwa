@@ -22,40 +22,40 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultCachable implements Cachable {
 
-	static Log log = LogFactory.getLog(DefaultCachable.class);
+  static Log                log              = LogFactory.getLog(DefaultCachable.class);
 
-	/** The Constant serialVersionUID. */
-	private static final long serialVersionUID = 1L;
+  /** The Constant serialVersionUID. */
+  private static final long serialVersionUID = 1L;
 
-	/** The _age. */
-	private long _age = System.currentTimeMillis();
+  /** The _age. */
+  private long              _age             = System.currentTimeMillis();
 
-	private long expired = -1;
+  private long              expired          = -1;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.giiwa.cache.Cachable#age()
-	 */
-	@Override
-	public long age() {
-		return System.currentTimeMillis() - _age;
-	}
+  /*
+   * (non-Javadoc)
+   * 
+   * @see com.giiwa.cache.Cachable#age()
+   */
+  @Override
+  public long age() {
+    return System.currentTimeMillis() - _age;
+  }
 
-	@Override
-	public void setExpired(int t) {
-		expired = t * 1000L + System.currentTimeMillis();
-		// log.debug("setExpired, expired=" + expired + ", now=" +
-		// System.currentTimeMillis() + ", t=" + t);
-	}
+  @Override
+  public void setExpired(long expired) {
+    this.expired = expired;
+  }
 
-	/* (non-Javadoc)
-	 * @see org.giiwa.core.cache.Cachable#expired()
-	 */
-	public boolean expired() {
-		// log.debug("check expired, expired=" + expired + ", now=" +
-		// System.currentTimeMillis());
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.giiwa.core.cache.Cachable#expired()
+   */
+  public boolean expired() {
+    // log.debug("check expired, expired=" + expired + ", now=" +
+    // System.currentTimeMillis());
 
-		return expired > 0 && expired < System.currentTimeMillis();
-	}
+    return expired > 0 && expired < System.currentTimeMillis();
+  }
 }

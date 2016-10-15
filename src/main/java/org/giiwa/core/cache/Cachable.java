@@ -35,7 +35,7 @@ public interface Cachable extends Serializable {
    * @param t
    *          the time of seconds
    */
-  public void setExpired(int t);
+  public void setExpired(long t);
 
   /**
    * check whether expired.
