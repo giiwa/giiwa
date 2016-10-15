@@ -629,7 +629,12 @@ public class Model {
         /**
          * get session.expired in seconds
          */
-        addCookie("sid", sid, Global.getInt("session.expired", -1));
+        long expired = Global.getLong("session.alive", X.AHOUR);
+        if (expired <= 0) {
+          addCookie("sid", sid, -1);
+        } else {
+          addCookie("sid", sid, (int) (expired / 1000));
+        }
       }
     }
 

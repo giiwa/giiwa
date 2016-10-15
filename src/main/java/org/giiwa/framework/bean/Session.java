@@ -19,9 +19,9 @@ import java.util.*;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.*;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Module;
 
-// TODO: Auto-generated Javadoc
 /**
  * Session of http request
  * 
@@ -60,7 +60,7 @@ public class Session extends DefaultCachable {
   public static boolean exists(String sid) {
     Session o = null;
     try {
-      o = (Session) Cache.get("session-" + sid);
+      o = (Session) Cache.get("session/" + sid);
     } catch (Exception e) {
     }
     return o != null;
@@ -73,7 +73,7 @@ public class Session extends DefaultCachable {
    *          the sid
    */
   public static void delete(String sid) {
-    Cache.remove("session-" + sid);
+    Cache.remove("session/" + sid);
   }
 
   /**
@@ -86,7 +86,7 @@ public class Session extends DefaultCachable {
   public static Session load(String sid) {
     Session o = null;
     try {
-      o = (Session) Cache.get("session-" + sid);
+      o = (Session) Cache.get("session/" + sid);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
@@ -133,14 +133,14 @@ public class Session extends DefaultCachable {
    * @return the session
    */
   public Session store() {
-    int expired = Module._conf.getInt("session.expired", (int) (X.AYEAR / 1000));
-    if (expired < 600) {
-      log.warn("the session.expired is too short, expired=" + expired + "sec, must exceed 600sec");
-      expired = 600;
+    long expired = Global.getLong("session.alive", X.AHOUR);
+    if (expired > 0) {
+      this.setExpired(System.currentTimeMillis() + expired);
+    } else {
+      this.setExpired(-1);
     }
-    this.setExpired(System.currentTimeMillis() + expired * 1000);
 
-    if (!Cache.set("session-" + sid, this)) {
+    if (!Cache.set("session/" + sid, this)) {
       log.error("set session failed !", new Exception("store session failed"));
     }
 

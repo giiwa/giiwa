@@ -20,8 +20,7 @@ import org.giiwa.core.bean.X;
 
 /**
  * The {@code Cache} Class Cache used for cache object, the cache was grouped by
- * cluster
- * <br>
+ * cluster <br>
  * configuration in giiwa.properties
  * 
  * <pre>
@@ -34,98 +33,98 @@ import org.giiwa.core.bean.X;
  */
 public final class Cache {
 
-	/** The log. */
-	private static Log log = LogFactory.getLog(Cache.class);
+  /** The log. */
+  private static Log           log       = LogFactory.getLog(Cache.class);
 
-	public final static String MEMCACHED = "memcached://";
-	public final static String REDIS = "redis://";
-	private static String GROUP = "g://";
+  public final static String   MEMCACHED = "memcached://";
+  public final static String   REDIS     = "redis://";
+  private static String        GROUP     = "g://";
 
-	private static ICacheSystem cacheSystem;
+  private static ICacheSystem  cacheSystem;
 
-	private static Configuration _conf;
+  private static Configuration _conf;
 
-	/**
+  /**
    * initialize the cache with configuration.
    *
    * @param conf
    *          the configuration that includes cache configure ("cache.url")
    */
-	public static synchronized void init(Configuration conf) {
-		if (_conf != null)
-			return;
+  public static synchronized void init(Configuration conf) {
+    if (_conf != null)
+      return;
 
-		_conf = conf;
+    _conf = conf;
 
-		String server = conf.getString("cache.url", X.EMPTY);
-		if (server.startsWith(MEMCACHED)) {
-			cacheSystem = MemCache.create(conf);
-		} else if (server.startsWith(REDIS)) {
-			cacheSystem = RedisCache.create(conf);
-		} else {
-			log.debug("not configured cache system, using file cache!");
-			cacheSystem = FileCache.create(conf);
-		}
+    String server = conf.getString("cache.url", X.EMPTY);
+    if (server.startsWith(MEMCACHED)) {
+      cacheSystem = MemCache.create(conf);
+    } else if (server.startsWith(REDIS)) {
+      cacheSystem = RedisCache.create(conf);
+    } else {
+      log.debug("not configured cache system, using file cache!");
+      cacheSystem = FileCache.create(conf);
+    }
 
-		GROUP = conf.getString("cache.group", "demo") + "://";
-	}
+    GROUP = conf.getString("cache.group", "demo") + "://";
+  }
 
-	/**
+  /**
    * Gets the object by id, if the object was expired, null return.
    *
    * @param id
    *          the id of object in cache system
    * @return cachable if the object not presented or expired, will return null
    */
-	@SuppressWarnings("deprecation")
+  @SuppressWarnings("deprecation")
   public static Cachable get(String id) {
 
-		try {
+    try {
 
-			id = GROUP + id;
+      id = GROUP + id;
 
-			Cachable r = null;
-			if (cacheSystem != null) {
-				r = (Cachable) cacheSystem.get(id);
-			}
-			if (r != null) {
-				if (r.expired()) {
-					if (cacheSystem != null) {
-						cacheSystem.delete(id);
-					}
+      Cachable r = null;
+      if (cacheSystem != null) {
+        r = (Cachable) cacheSystem.get(id);
+      }
+      if (r != null) {
+        if (r.expired()) {
+          if (cacheSystem != null) {
+            cacheSystem.delete(id);
+          }
 
-					log.debug("the object was expired, id=" + id + ", age=" + r.age() + "ms");
+          log.debug("the object was expired, id=" + id + ", age=" + r.age() + "ms");
 
-					return null;
-				}
-			}
+          return null;
+        }
+      }
 
-			return r;
-		} catch (Throwable e) {
-			if (cacheSystem != null) {
-				cacheSystem.delete(id);
-			}
-			log.warn("nothing get from memcache by " + id + ", remove it!");
-		}
-		return null;
-	}
+      return r;
+    } catch (Throwable e) {
+      if (cacheSystem != null) {
+        cacheSystem.delete(id);
+      }
+      log.warn("nothing get from memcache by " + id + ", remove it!");
+    }
+    return null;
+  }
 
-	/**
+  /**
    * Removes the cached object by id.
    *
    * @param id
    *          the object id in cache
    * @return true, if successful
    */
-	public static boolean remove(String id) {
-		id = GROUP + id;
-		if (cacheSystem != null) {
-			return cacheSystem.delete(id);
-		}
-		return false;
-	}
+  public static boolean remove(String id) {
+    id = GROUP + id;
+    if (cacheSystem != null) {
+      return cacheSystem.delete(id);
+    }
+    return false;
+  }
 
-	/**
+  /**
    * cache the object with the id, if exists, then update it, otherwise create
    * new in cache.
    *
@@ -135,18 +134,18 @@ public final class Cache {
    *          the object
    * @return true, if successful
    */
-	public static boolean set(String id, Cachable data) {
+  public static boolean set(String id, Cachable data) {
 
-		id = GROUP + id;
+    id = GROUP + id;
 
-		if (cacheSystem != null) {
-			if (data == null) {
-				return cacheSystem.delete(id);
-			} else {
-				return cacheSystem.set(id, data);
-			}
-		}
-		return false;
-	}
+    if (cacheSystem != null) {
+      if (data == null) {
+        return cacheSystem.delete(id);
+      } else {
+        return cacheSystem.set(id, data);
+      }
+    }
+    return false;
+  }
 
 }

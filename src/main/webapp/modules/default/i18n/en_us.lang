@@ -417,3 +417,5 @@ logs.index.title=Logs management
 menu.logs=Logs
 home.uri=Home URI
 home.uri.hint=The home uri, etc. '/forum'
+session.alive=Session alive
+session.alive.hint=Session expired time, (*)ms, -1=forever

@@ -68,7 +68,7 @@ public final class Global extends Bean {
       return X.toInt(cache.get(name), defaultValue);
     }
 
-    Object o = Cache.get("global://" + name);
+    Object o = Cache.get("global/" + name);
     if (o instanceof Global) {
       Global c = (Global) o;
       if (!c.expired()) {
@@ -79,7 +79,7 @@ public final class Global extends Bean {
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-      Cache.set("global://" + name, c);
+      Cache.set("global/" + name, c);
       return X.toInt(c.i, defaultValue);
     } else {
       return Config.getConfig().getInt(name, defaultValue);
@@ -100,7 +100,7 @@ public final class Global extends Bean {
       return cache.get(name) == null ? defaultValue : cache.get(name).toString();
     }
 
-    Object o = Cache.get("global://" + name);
+    Object o = Cache.get("global/" + name);
     if (o instanceof Global) {
       Global c = (Global) o;
       if (!c.expired()) {
@@ -111,7 +111,7 @@ public final class Global extends Bean {
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-      Cache.set("global://" + name, c);
+      Cache.set("global/" + name, c);
 
       return c.s != null ? c.s : defaultValue;
     } else {
@@ -135,7 +135,7 @@ public final class Global extends Bean {
       return X.toLong(cache.get(name), defaultValue);
     }
 
-    Object o = Cache.get("global://" + name);
+    Object o = Cache.get("global/" + name);
     if (o instanceof Global) {
       Global c = (Global) o;
       if (!c.expired()) {
@@ -146,7 +146,7 @@ public final class Global extends Bean {
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
       // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-      Cache.set("global://" + name, c);
+      Cache.set("global/" + name, c);
 
       return X.toLong(c.i, defaultValue);
     } else {
@@ -178,7 +178,7 @@ public final class Global extends Bean {
       return;
     }
 
-    Cache.remove("global://" + name);
+    Cache.remove("global/" + name);
 
     if (o == null) {
       Helper.delete(W.create(X.ID, name), Global.class);
