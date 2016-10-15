@@ -1071,12 +1071,9 @@ public class RDSHelper extends Helper {
     TimeStamp t = TimeStamp.create();
 
     StringBuilder sql = new StringBuilder();
-    StringBuilder sum = new StringBuilder();
     sql.append("select * from ").append(table);
-    sum.append("select count(*) t from ").append(table);
     if (where != null) {
       sql.append(" where ").append(where);
-      sum.append(" where ").append(where);
     }
 
     if (orderby != null) {
@@ -1107,31 +1104,12 @@ public class RDSHelper extends Helper {
       if (c == null)
         return null;
 
-      p = c.prepareStatement(sum.toString());
-
-      int order = 1;
-      if (args != null) {
-        for (int i = 0; i < args.length; i++) {
-          Object o = args[i];
-
-          setParameter(p, order++, o);
-        }
-      }
-
-      r = p.executeQuery();
       Beans<T> rs = new Beans<T>();
-      if (r.next()) {
-        rs.total = r.getInt("t");
-      }
-      r.close();
-      r = null;
-      p.close();
-      p = null;
 
       if (rs.total > 0) {
         p = c.prepareStatement(sql.toString());
 
-        order = 1;
+        int order = 1;
         if (args != null) {
           for (int i = 0; i < args.length; i++) {
             Object o = args[i];
@@ -1163,10 +1141,6 @@ public class RDSHelper extends Helper {
 
     } finally {
       close(r, p, c);
-
-      if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "]; [" + sum + "]");
-      }
     }
     return null;
   }
@@ -1202,12 +1176,9 @@ public class RDSHelper extends Helper {
     TimeStamp t = TimeStamp.create();
 
     StringBuilder sql = new StringBuilder();
-    StringBuilder sum = new StringBuilder();
     sql.append("select * from ").append(table);
-    sum.append("select count(*) t from ").append(table);
     if (where != null) {
       sql.append(" where ").append(where);
-      sum.append(" where ").append(where);
     }
 
     if (orderby != null) {
@@ -1234,31 +1205,12 @@ public class RDSHelper extends Helper {
       if (c == null)
         return null;
 
-      p = c.prepareStatement(sum.toString());
-
-      int order = 1;
-      if (args != null) {
-        for (int i = 0; i < args.length; i++) {
-          Object o = args[i];
-
-          setParameter(p, order++, o);
-        }
-      }
-
-      r = p.executeQuery();
       Beans<T> rs = new Beans<T>();
-      if (r.next()) {
-        rs.total = r.getInt("t");
-      }
-      r.close();
-      r = null;
-      p.close();
-      p = null;
 
       if (rs.total > 0) {
         p = c.prepareStatement(sql.toString());
 
-        order = 1;
+        int order = 1;
         if (args != null) {
           for (int i = 0; i < args.length; i++) {
             Object o = args[i];
@@ -1290,10 +1242,6 @@ public class RDSHelper extends Helper {
 
     } finally {
       close(r, p);
-
-      if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "]; [" + sum + "]");
-      }
     }
     return null;
   }
