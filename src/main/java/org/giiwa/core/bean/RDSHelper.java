@@ -1106,25 +1106,23 @@ public class RDSHelper extends Helper {
 
       Beans<T> rs = new Beans<T>();
 
-      if (rs.total > 0) {
-        p = c.prepareStatement(sql.toString());
+      p = c.prepareStatement(sql.toString());
 
-        int order = 1;
-        if (args != null) {
-          for (int i = 0; i < args.length; i++) {
-            Object o = args[i];
+      int order = 1;
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
 
-            setParameter(p, order++, o);
-          }
+          setParameter(p, order++, o);
         }
+      }
 
-        r = p.executeQuery();
-        rs.list = new ArrayList<T>();
-        while (r.next()) {
-          T b = clazz.newInstance();
-          b.load(r);
-          rs.list.add(b);
-        }
+      r = p.executeQuery();
+      rs.list = new ArrayList<T>();
+      while (r.next()) {
+        T b = clazz.newInstance();
+        b.load(r);
+        rs.list.add(b);
       }
 
       if (log.isDebugEnabled())
@@ -1207,25 +1205,23 @@ public class RDSHelper extends Helper {
 
       Beans<T> rs = new Beans<T>();
 
-      if (rs.total > 0) {
-        p = c.prepareStatement(sql.toString());
+      p = c.prepareStatement(sql.toString());
 
-        int order = 1;
-        if (args != null) {
-          for (int i = 0; i < args.length; i++) {
-            Object o = args[i];
+      int order = 1;
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
 
-            setParameter(p, order++, o);
-          }
+          setParameter(p, order++, o);
         }
+      }
 
-        r = p.executeQuery();
-        rs.list = new ArrayList<T>();
-        while (r.next()) {
-          T b = clazz.newInstance();
-          b.load(r);
-          rs.list.add(b);
-        }
+      r = p.executeQuery();
+      rs.list = new ArrayList<T>();
+      while (r.next()) {
+        T b = clazz.newInstance();
+        b.load(r);
+        rs.list.add(b);
       }
 
       if (log.isDebugEnabled())
