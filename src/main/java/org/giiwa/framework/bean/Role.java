@@ -199,7 +199,7 @@ public class Role extends Bean {
     }
 
     if (r != null) {
-      r.setExpired(60);
+      r.setExpired(60 * 1000 + System.currentTimeMillis());
       Cache.set("role://" + rid, r);
     }
 
