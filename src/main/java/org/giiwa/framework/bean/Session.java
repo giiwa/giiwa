@@ -133,7 +133,7 @@ public class Session extends DefaultCachable {
    * @return the session
    */
   public Session store() {
-    long expired = Global.getLong("session.alive", X.AHOUR);
+    long expired = Global.getLong("session.alive", X.AWEEK);
     if (expired > 0) {
       this.setExpired(System.currentTimeMillis() + expired);
     } else {
