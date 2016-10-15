@@ -11,7 +11,7 @@ create table gi_config
 );
 create unique index gi_config_index_id on gi_config(id);
 
-#drop table if exists dual;
+drop table if exists dual;
 create table dual
 (
 	x varchar(1)
