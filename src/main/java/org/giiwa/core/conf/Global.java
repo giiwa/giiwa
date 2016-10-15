@@ -78,7 +78,7 @@ public final class Global extends Bean {
 
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
       Cache.set("global://" + name, c);
       return X.toInt(c.i, defaultValue);
     } else {
@@ -110,7 +110,7 @@ public final class Global extends Bean {
 
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
       Cache.set("global://" + name, c);
 
       return c.s != null ? c.s : defaultValue;
@@ -145,7 +145,7 @@ public final class Global extends Bean {
 
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
       Cache.set("global://" + name, c);
 
       return X.toLong(c.i, defaultValue);
@@ -177,6 +177,8 @@ public final class Global extends Bean {
     if (X.isEmpty(name)) {
       return;
     }
+
+    Cache.remove("global://" + name);
 
     if (o == null) {
       Helper.delete(W.create(X.ID, name), Global.class);
