@@ -201,7 +201,7 @@ public class Model {
           // * get from the default, then set back to the cookie
           // */
           // this.addCookie("lang", locale, (int) (X.AYEAR / 1000));
-          locale = Module.home.getLanguage();
+          locale = Global.getString("language", "en_us");
         }
       } else {
         /**

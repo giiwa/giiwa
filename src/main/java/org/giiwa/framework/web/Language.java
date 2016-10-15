@@ -14,20 +14,15 @@
 */
 package org.giiwa.framework.web;
 
-import java.io.BufferedWriter;
-import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.commons.logging.*;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.vengine.VEngine;
-import org.giiwa.framework.web.view.VelocityView;
 
-// TODO: Auto-generated Javadoc
 /**
  * language data which located at /modules/[module]/i18n/
  * 
@@ -59,7 +54,7 @@ public class Language {
   private static Map<String, Language> locales = new HashMap<String, Language>();
 
   public static Language getLanguage() {
-    return getLanguage(Module.home == null ? X.EMPTY : Module.home.getLanguage());
+    return getLanguage(Module.home == null ? X.EMPTY : Global.getString("language", "en_us"));
   }
 
   public String getLocale() {
@@ -203,7 +198,7 @@ public class Language {
   private Language(String locale) {
     this.locale = locale;
     if (Module.home != null && !Module.home.supportLocale(locale)) {
-      this.locale = Module.home.getLanguage();
+      this.locale = Global.getString("language", "en_us");
     }
 
     load();
