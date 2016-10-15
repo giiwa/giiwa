@@ -139,7 +139,7 @@ public final class Global extends Bean {
     if (o instanceof Global) {
       Global c = (Global) o;
       if (!c.expired()) {
-        return X.toLong(c.i, defaultValue);
+        return X.toLong(c.l, defaultValue);
       }
     }
 
