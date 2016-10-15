@@ -16,6 +16,7 @@ create table dual
 (
 	x varchar(1)
 );
+create unique index dual_inedx_x on dual(x);
 insert into dual values('x');
 
 #drop table if exists gi_user;

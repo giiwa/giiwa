@@ -16,6 +16,7 @@ create table dual
 (
 	x varchar(1)
 );
+create unique index dual_inedx_x on dual(x);
 insert into dual values('x');
 
 #drop table if exists gi_user;
@@ -93,6 +94,7 @@ create table gi_access
 	created bigint default 0
 );
 create unique index gi_access_indexid on gi_access(id);
+alter table gi_access add updated bigint default 0;
 alter table gi_access add created bigint default 0;
 
 #drop table if exists gi_roleaccess;
