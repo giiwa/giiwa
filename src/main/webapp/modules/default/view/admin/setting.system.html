@@ -4,7 +4,7 @@
 		<input type='text' name='home_uri' value="$!global.getString('home.uri','')"/>
 		<g>$lang.get('home.uri.hint')</g></label></div>
 		
-	<div><label><h3>language:</h3>
+	<div><label><h3>$lang.get('language'):</h3>
 		<select name='language'>
 			<option value='en_us' #if($language == 'en_us') selected #end>en_us</option>
 			<option value='zh_cn' #if($language == 'zh_cn') selected #end>zh_cn</option>

@@ -163,6 +163,7 @@ label.user=用户
 label.ver=Version
 label.version=Version
 label.welcome=欢迎您
+language=语言
 language.hint=语言设置
 log.created=创建时间
 log.endtime=结束时间
