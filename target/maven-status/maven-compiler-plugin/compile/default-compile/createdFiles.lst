@@ -61,6 +61,7 @@ org/giiwa/framework/bean/Jar.class
 org/giiwa/core/bean/Helper$W.class
 org/giiwa/app/web/admin/module$1.class
 org/giiwa/app/web/admin/user.class
+org/giiwa/core/bean/Helper$Monitor.class
 org/giiwa/app/web/admin/gauge.class
 org/giiwa/core/bean/Helper$1.class
 org/giiwa/core/conf/Config.class

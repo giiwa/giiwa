@@ -481,10 +481,9 @@ public class Helper {
 
   /**
    * the {@code W} Class used to create SQL "where" conditions<br>
-   * this is for RDBS Query anly
-   * 
+   * this is for RDBS Query anly.
+   *
    * @author joe
-   * 
    */
   public final static class W {
 
@@ -618,10 +617,6 @@ public class Helper {
       return elist == null ? X.EMPTY : (elist.toString() + "=>{" + where() + ", " + Helper.toString(args()) + "}");
     }
 
-    public List<Entity> getAll() {
-      return elist;
-    }
-
     /**
      * create the SQL "where".
      *
@@ -730,6 +725,27 @@ public class Helper {
       w.cond = OR;
       wlist.add(w);
       return this;
+    }
+
+    /**
+     * get all keys
+     * 
+     * @return List keys
+     */
+    public List<String> keys() {
+      List<String> list = new ArrayList<String>();
+
+      if (elist.size() > 0 || wlist.size() > 0) {
+        for (Entity e : elist) {
+          list.add(e.name);
+        }
+
+        for (W w : wlist) {
+          list.addAll(w.keys());
+        }
+      }
+
+      return list;
     }
 
     /**
