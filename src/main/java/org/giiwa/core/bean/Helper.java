@@ -40,13 +40,15 @@ import com.mongodb.BasicDBObject;
 public class Helper {
 
   /** The log utility. */
-  protected static Log log    = LogFactory.getLog(Helper.class);
+  protected static Log   log     = LogFactory.getLog(Helper.class);
 
   /**
    * the sqllog separate from the log utility, which used to record sql info
    * only
    */
-  protected static Log sqllog = LogFactory.getLog("sql");
+  protected static Log   sqllog  = LogFactory.getLog("sql");
+
+  private static Monitor monitor = null;
 
   public static enum DBType {
     MONGO, RDS, NONE;
@@ -117,6 +119,10 @@ public class Helper {
     String table = getTable(t);
 
     if (table != null) {
+      if (monitor != null) {
+        monitor.query(table, q);
+      }
+
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.delete(table, q.query());
@@ -159,6 +165,10 @@ public class Helper {
    */
   public static boolean exists(String table, W q) throws SQLException {
     if (table != null) {
+      if (monitor != null) {
+        monitor.query(table, q);
+      }
+
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.exists(table, q.query());
@@ -273,7 +283,7 @@ public class Helper {
     }
 
     /**
-     * Ignore the fields
+     * Ignore the fields.
      *
      * @param name
      *          the name
@@ -1051,6 +1061,19 @@ public class Helper {
 
   }
 
+  public static interface Monitor {
+
+    /**
+     * Query.
+     *
+     * @param table
+     *          the table
+     * @param w
+     *          the w
+     */
+    public void query(String table, W w);
+  }
+
   /**
    * load the data by id of X.ID
    * 
@@ -1098,6 +1121,10 @@ public class Helper {
   public static <T extends Bean> T load(String table, W q, Class<T> t) {
 
     if (table != null) {
+      if (monitor != null) {
+        monitor.query(table, q);
+      }
+
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.load(table, q.query(), q.order(), t);
@@ -1201,6 +1228,11 @@ public class Helper {
   public static int update(String table, W q, V values) {
 
     if (table != null) {
+
+      if (monitor != null) {
+        monitor.query(table, q);
+      }
+
       values.set("updated", System.currentTimeMillis());
 
       if (primary == DBType.MONGO) {
@@ -1247,6 +1279,10 @@ public class Helper {
    * @return Beans of the T, the "total=-1" always
    */
   public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) {
+    if (monitor != null) {
+      monitor.query(table, q);
+    }
+
     if (primary == DBType.MONGO) {
       // insert into mongo
       return MongoHelper.load(table, q.query(), q.order(), s, n, t);
@@ -1308,6 +1344,10 @@ public class Helper {
     String table = getTable(t);
 
     if (table != null) {
+      if (monitor != null) {
+        monitor.query(table, q);
+      }
+
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.count(table, q.query());
@@ -1338,6 +1378,10 @@ public class Helper {
     String table = getTable(t);
 
     if (table != null) {
+      if (monitor != null) {
+        monitor.query(table, q);
+      }
+
       if (primary == DBType.MONGO) {
         // insert into mongo
         return MongoHelper.distinct(table, name, q.query());
@@ -1379,6 +1423,16 @@ public class Helper {
     System.out.println("-----------");
     System.out.println(w.query());
     System.out.println(w.order());
-    
+
   }
+
+  /**
+   * 
+   * @param m
+   *          the monitor
+   */
+  public static void setMonitor(Monitor m) {
+    monitor = m;
+  }
+
 }
