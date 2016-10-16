@@ -149,7 +149,7 @@ public class DB {
       // ds.setDefaultAutoCommit(true);
       ds.setMaxIdle(MAX_ACTIVE_NUMBER);
       ds.setMaxWait(MAX_WAIT_TIME);
-       ds.setDefaultReadOnly(false);
+      ds.setDefaultReadOnly(false);
       // ds.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
       ds.setValidationQuery(null);// VALIDATION_SQL);
       ds.setPoolPreparedStatements(true);
@@ -384,6 +384,8 @@ public class DB {
         external.setPoolPreparedStatements(true);
 
         dss.put(url, external);
+      } else {
+        throw new SQLException("unknown JDBC driver");
       }
     }
 
