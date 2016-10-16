@@ -16,6 +16,7 @@ package org.giiwa.core.bean;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -743,6 +744,8 @@ public class Helper {
         for (W w : wlist) {
           list.addAll(w.keys());
         }
+
+        Collections.sort(list);
       }
 
       return list;

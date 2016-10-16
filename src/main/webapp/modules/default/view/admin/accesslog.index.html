@@ -74,7 +74,7 @@
  #parse('/widget/goto.page.html')
 
 #if($me.hasAccess('access.config.admin'))
-<div>
+<div class='btns'>
 	<a href='javascript:;' class='btn btn-danger' onclick='_deleteall();'>$lang.get('a.clean')</a>
 	&nbsp;&nbsp;
 	<a href='javascript:;' class='closebtn btn btn-warning' style="display:none" onclick='_open(0);'>$lang.get('a.accesslog.disable')</a>
