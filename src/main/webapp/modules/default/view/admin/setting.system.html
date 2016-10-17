@@ -26,7 +26,7 @@
 		<input type='checkbox' name='user_token' #if($global.getInt('user.token',1) == 1) checked #end/>
 		<g>$lang.get('user.token.hint')</g></label></div>
 	<div><label><h3>$lang.get('session.alive'):</h3>
-		<input type='text' name='session_alive' value="$global.getLong('session.alive',60480000)"/>
+		<input type='number' name='session_alive' value="$global.getLong('session.alive',60480000)"/>
 		<g>$lang.get('session.alive.hint')</g></label></div>
 
 	<div><label><h3>$lang.get('user.system'):</h3>

@@ -148,7 +148,7 @@ public final class Global extends Bean {
       // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
       Cache.set("global/" + name, c);
 
-      return X.toLong(c.i, defaultValue);
+      return X.toLong(c.l, defaultValue);
     } else {
       return Config.getConfig().getLong(name, defaultValue);
     }
