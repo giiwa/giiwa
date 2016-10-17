@@ -1015,25 +1015,29 @@ public class Module {
    * 
    * @return List
    */
-  public static List<Module> getAll() {
-    String home = Model.HOME;
-    File troot = new File(home + "/modules/");
-    File[] files = troot.listFiles();
+  public static List<Module> getAll(boolean enabled) {
+    if (enabled) {
+      return new ArrayList<Module>(modules.values());
+    } else {
+      String home = Model.HOME;
+      File troot = new File(home + "/modules/");
+      File[] files = troot.listFiles();
 
-    List<Module> list = new ArrayList<Module>();
+      List<Module> list = new ArrayList<Module>();
 
-    if (files != null) {
-      for (File f : files) {
-        if (f.isDirectory()) {
-          Module m = load(f.getName());
-          if (m != null && !m.enabled) {
-            list.add(m);
+      if (files != null) {
+        for (File f : files) {
+          if (f.isDirectory()) {
+            Module m = load(f.getName());
+            if (m != null && !m.enabled) {
+              list.add(m);
+            }
           }
         }
       }
-    }
 
-    return list;
+      return list;
+    }
   }
 
   /**

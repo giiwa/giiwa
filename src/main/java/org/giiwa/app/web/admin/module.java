@@ -580,7 +580,7 @@ public class module extends Model {
 
     this.set("actives", actives);
 
-    this.set("list", Module.getAll());
+    this.set("list", Module.getAll(false));
 
     this.query.path("/admin/module");
 
@@ -683,6 +683,35 @@ public class module extends Model {
       } else {
         jo.put(X.STATE, 201);
         jo.put(X.MESSAGE, "repo file was missed, id=" + m.getRepo());
+      }
+    } else if (X.isSame(name, "*")) {
+      jo.put(X.STATE, 200);
+      List<Module> list = Module.getAll(true);
+      List<JSON> l1 = new ArrayList<JSON>();
+      if (list != null) {
+        for (Module m1 : list) {
+          Entity e = Repo.load(m1.getRepo());
+          if (e != null) {
+            try {
+              InputStream in = e.getInputStream();
+              String md5 = MD5.md5(in);
+              if (md5 != null) {
+                JSON j1 = JSON.create();
+                j1.put("md5", md5);
+                j1.put(X.STATE, 200);
+                j1.put("uri", m1.getRepo());
+                j1.put("name", m1.getName());
+                j1.put("version", m1.getVersion());
+                j1.put("build", m1.getBuild());
+                l1.add(j1);
+              }
+            } catch (Exception e1) {
+              log.error(e1.getMessage(), e1);
+            }
+          }
+        }
+        jo.put("list", l1);
+        jo.put("name", name);
       }
     } else {
       jo.put(X.STATE, 201);
