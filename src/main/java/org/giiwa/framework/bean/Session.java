@@ -20,7 +20,6 @@ import org.apache.commons.logging.*;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.*;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.web.Module;
 
 /**
  * Session of http request
@@ -128,17 +127,29 @@ public class Session extends DefaultCachable {
   }
 
   /**
-   * Store.
+   * Store the session with configured expired
    * 
    * @return the session
    */
   public Session store() {
     long expired = Global.getLong("session.alive", X.AWEEK);
     if (expired > 0) {
-      this.setExpired(System.currentTimeMillis() + expired);
+      expired = System.currentTimeMillis() + expired;
     } else {
-      this.setExpired(-1);
+      expired = -1;
     }
+    return store(expired);
+  }
+
+  /**
+   * store the session with the expired
+   * 
+   * @param expired
+   * @return Session
+   */
+  public Session store(long expired) {
+
+    this.setExpired(expired);
 
     if (!Cache.set("session/" + sid, this)) {
       log.error("set session failed !", new Exception("store session failed"));
