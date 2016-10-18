@@ -54,6 +54,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/gauge.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/QueryString.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/MemCache.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/task/Monitor.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/logs.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Response.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/IFilter.java

@@ -177,7 +177,7 @@ public class user extends Model {
           Session.delete(sid);
         }
       }
-      
+
       OpLog.warn(user.class, "delete", this.getJSONNonPassword().toString(), login, this.getRemoteHost());
       jo.put(X.STATE, 200);
     } else {
@@ -293,6 +293,19 @@ public class user extends Model {
     }
   }
 
+  @Path(path = "logs", login = true, access = "access.user.admin")
+  public void history() {
+
+    int s = this.getInt("s");
+    int n = this.getInt("n", 20, "number.per.page");
+
+    W q = getW(this.getJSON());
+    Beans<OpLog> bs = OpLog.load(q, s, n);
+    this.set(bs, s, n);
+
+    this.show("/admin/user.logs.html");
+  }
+
   /*
    * (non-Javadoc)
    * 
@@ -323,6 +336,54 @@ public class user extends Model {
     this.query.path("/admin/user");
 
     this.show("/admin/user.index.html");
+  }
+
+  private W getW(JSON jo) {
+
+    W q = W.create();
+
+    if (!X.isEmpty(jo.get("op"))) {
+      q.and("op", jo.get("op"));
+    }
+    if (!X.isEmpty(jo.get("ip"))) {
+      q.and("ip", jo.getString("ip"), W.OP_LIKE);
+    }
+    q.and("uid", jo.getLong("uid"));
+    if (!X.isEmpty(jo.get("type"))) {
+      q.and("type", X.toInt(jo.get("type")));
+    }
+
+    if (!X.isEmpty(jo.getString("model"))) {
+      q.and("model", jo.getString("model"));
+    }
+
+    if (!X.isEmpty(jo.getString("node"))) {
+      q.and("node", jo.getString("node"));
+    }
+
+    if (!X.isEmpty(jo.getString("starttime"))) {
+      q.and("created", lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP_GTE);
+
+    } else {
+      long today_2 = System.currentTimeMillis() - X.AYEAR * 1;
+      jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
+      q.and("created", today_2, W.OP_GTE);
+    }
+
+    if (!X.isEmpty(jo.getString("endtime"))) {
+      q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP_LTE);
+    }
+
+    String sortby = this.getString("sortby");
+    if (!X.isEmpty(sortby)) {
+      int sortby_type = this.getInt("sortby_type");
+      q.sort(sortby, sortby_type);
+    } else {
+      q.sort("created", -1);
+    }
+    this.set(jo);
+
+    return q;
   }
 
 }

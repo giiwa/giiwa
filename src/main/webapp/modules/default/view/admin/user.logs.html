@@ -1,0 +1,141 @@
+<div class='head'>$lang.get('oplog.index.title')</div>
+
+<div class='notes'>
+	$!lang.get('oplog.notes')
+</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/user'>$lang.get('a.user')</a>
+	<a href='/admin/user/logs?uid=$!uid' class='selected'>$lang.get('a.oplog')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/user/logs' method='get' #if($currentpage>0) style='display:none' #end > 
+		<span>
+			<label><h3>$lang.get('log.starttime'):</h3>
+				<input type='text' name='starttime' value='$!starttime' />
+			</label>
+		</span> 
+		<span>
+			<label><h3>$lang.get('log.endtime'):</h3>
+				<input type='text' name='endtime' value='$!endtime' />
+			</label>
+		</span> 
+		<span>
+			<label><h3>$lang.get('log.user'):</h3>
+				<input type='text' name='uid' value='$!uid' readonly="readonly"/>
+			</label>
+		</span> 
+		<span>
+			<label><h3>$lang.get('log.ip'):</h3>
+				<input type='text' name='ip' value='$!ip' />
+			</label>
+		</span> 
+		<span>
+			<label><h3>$lang.get('log.node'):</h3>
+				<input type='text' name='node' value='$!node' />
+			</label>
+		</span>
+		<span>
+			<label><h3>$lang.get('log.model'):</h3>
+			<input type='text' name='model' value='$!model' /></label>
+		</span> 
+		<span>
+			<label><h3>$lang.get('log.op'):</h3>
+			<input type='text' name='op' value='$!op' /></label>
+		</span> 
+		<span>
+			<label><h3>$lang.get('log.type'):</h3>
+				<select name='type'>
+					<option value=''>$lang.get('log.type_all')</option>
+					<option value='0' #if($type == 0) selected #end>$lang.get('log.type_0')</option>
+					<option value='1' #if($type == 1) selected #end>$lang.get('log.type_1')</option>
+					<option value='2' #if($type == 2) selected #end>$lang.get('log.type_2')</option>
+				</select>
+			</label>
+		</span>
+
+		<span class='line'></span>
+		<span><label><h3>$lang.get('sort.by'):</h3>
+			<select name='sortby'>
+				<option value='created' #if($sortby == 'created') selected #end>$lang.get('log.created')</option>
+				<option value='node' #if($sortby == 'node') selected #end>$lang.get('log.node')</option>
+				<option value='model' #if($sortby == 'model') selected #end>$lang.get('log.model')</option>
+			</select>
+			<select name='sortby_type'>
+				<option value='1' #if($sortby_type == '1') selected #end>$lang.get('sortby.type_')</option>
+				<option value='-1' #if($sortby_type == '-1') selected #end>$lang.get('sortby.type_desc')</option>
+			</select></label></span>
+
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+
+	<div class='s1tab #if($currentpage>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table id='log-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th class='date'>$lang.get('log.created')</th>
+			<th class='type'>$lang.get('log.type')</th>
+			<th class='user'>$lang.get('user.name')</th>
+			<th class='ip'>$lang.get('log.ip')</th>
+			<th class='system'>$lang.get('log.node')</th>
+			<th class='module'>$lang.get('log.model')</th>
+			<th class='op'>$lang.get('log.op')</th>
+			<th class='breif' style='width: 30%'>$lang.get('log.message')</th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach($f in $list)
+		<tr class='log_type_$f.type'>
+			<td>$lang.format($f.created, 'yy-MM-dd HH:mm:ss')</td>
+			<td class='type'>#if($f.type)$lang.get("log.type_$f.type")#end</td>
+			<td>#if($f.user_obj)<i class='user'>$!f.user_obj.nickname</i>#end</td>
+			<td>$!f.ip</td>
+			<td>$!f.node</td>
+			<td>$!f.model</td>
+			<td>$f.op</td>
+			<td #if($f.trace) onclick='_showmore(this);' class='more' #end> 
+				$!f.message
+				<div class='more'>$!f.trace</div>
+			</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+
+#parse('/widget/goto.page.html')
+
+<div>
+	<a class='btn btn-danger' href='javascript:;' onclick='_deleteall();'>$lang.get('a.clean')</a>
+</div>
+
+<script>
+$('#log-table').tablesorter({headers:{7:{sorter:false}}});
+function _deleteall() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post('/admin/oplog/deleteall', {}, function(d) {
+			processing && processing.hide();
+			reload();
+		});
+	}
+}
+
+function _showmore(obj){
+	var e = $(obj);
+	e = e.parent().find('div.more');
+	if(e.css('display') == 'block') {
+		e.hide();
+	} else {
+		e.show();
+	}
+}
+
+</script>

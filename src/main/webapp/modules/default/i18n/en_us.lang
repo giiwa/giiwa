@@ -419,3 +419,4 @@ home.uri=Home URI
 home.uri.hint=The home uri, etc. '/forum'
 session.alive=Session alive
 session.alive.hint=Session expired time, (*)ms, default 1 week, -1=forever
+title.data_will_be_replaced=Data will be replaced?

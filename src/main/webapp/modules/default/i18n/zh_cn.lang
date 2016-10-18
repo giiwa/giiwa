@@ -415,3 +415,4 @@ home.uri=首页URI
 home.uri.hint=缺省首页重定向到, 比如：'/forum'
 session.alive=会话过期时间
 session.alive.hint=毫秒,缺省1周,-1=永不过期
+title.data_will_be_replaced=恢复数据，现在的数据将被覆盖?

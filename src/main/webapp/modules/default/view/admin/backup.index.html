@@ -43,11 +43,13 @@ function _delete(name) {
 		});
 	}
 }
+var tid = 0;
 function _recover(name){
 	if(confirm("$lang.get('title.data_will_be_replaced')")) {
 		processing && processing.show();
 		$.post('/admin/backup/restore', {name: name}, function(d){
 			processing && processing.hide();
+			tid = d.id;
 			_recovering();
 		});
 	}
@@ -55,7 +57,7 @@ function _recover(name){
 
 function _recovering(){
 	processing && processing.show();
-	$.post('/admin/backup/restoring', {}, function(d){
+	$.post('/admin/backup/restoring', {id:tid}, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
 			$.message(d.message);

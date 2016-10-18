@@ -29,6 +29,8 @@
 			<th>$lang.get('user.phone')</th>
 			<th>$lang.get('user.tokens')</th>
 			<th>$lang.get('user.roles')</th>
+			<th>$lang.get('user.updated')</th>
+			<th>$lang.get('user.created')</th>
 #if($edit)
 			<th></th>
 #end
@@ -44,8 +46,11 @@
 		<td>$!f.phone</td>
 		<td>$!f.tokens.size()</td>
 		<td>#foreach($r in $f.role.list)<i class='icon-shield'>$r.name</i>#end</td>
+		<td>$!lang.format($f.updated, 'yy-MM-dd HH:mm')</td>
+		<td>$!lang.format($f.created, 'yy-MM-dd HH:mm')</td>
 		#if($edit)
 		<td>
+			<a class='btn btn-info btn-xs' href='/admin/user/logs?uid=$f.id'>$lang.get('a.oplog')</a>
 			<a class='btn btn-success btn-xs' href='/admin/user/edit?id=$f.id'>$lang.get('a.edit')</a>
 			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
 		</td>

@@ -24,6 +24,7 @@ import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Monitor;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.web.Language;
@@ -128,10 +129,8 @@ public class backup extends Model {
     JSON jo = new JSON();
 
     String name = this.getString("name");
-    task = new RecoverTask();
-    task.name = name;
-    task.schedule(10);
-
+    long id = Monitor.start(new RecoverTask(name), 10);
+    jo.put("id", id);
     this.response(jo);
   }
 
@@ -140,18 +139,14 @@ public class backup extends Model {
    */
   @Path(path = "restoring", login = true, access = "access.config.admin")
   public void restoring() {
+    long id = this.getLong("id");
 
-    JSON jo = new JSON();
+    JSON jo = Monitor.get(id);
 
-    if (task == null) {
+    if (jo == null) {
+      jo = JSON.create();
       jo.put(X.STATE, 202);
       jo.put(X.MESSAGE, "没有启动!");
-    } else if (task.done) {
-      jo.put(X.STATE, 200);
-      jo.put(X.MESSAGE, "已经恢复：" + task.name);
-    } else {
-      jo.put(X.STATE, 201);
-      jo.put(X.MESSAGE, "正在恢复：" + task.name);
     }
 
     this.response(jo);
@@ -221,13 +216,18 @@ public class backup extends Model {
 
   };
 
-  private static RecoverTask task = null;
-
   static class RecoverTask extends Task {
 
+    long    tid;
     String  name;
     boolean done;
     String  message;
+    int     state = 201;
+
+    public RecoverTask(String name) {
+      this.name = name;
+      message = "正在恢复：" + name;
+    }
 
     @Override
     public String getName() {
@@ -292,6 +292,9 @@ public class backup extends Model {
     @Override
     public void onFinish() {
       done = true;
+      state = 200;
+      message = "已经恢复：" + name;
+      Monitor.finished(this);
     }
 
   }
