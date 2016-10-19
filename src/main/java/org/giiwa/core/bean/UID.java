@@ -22,6 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Global;
 
 /**
@@ -47,6 +48,11 @@ public final class UID {
     long prefix = Global.getLong("system.code", 0) * 10000000000000L;
 
     try {
+
+      /**
+       * remove cache
+       */
+      Cache.remove("global/" + key);
 
       Global f = Helper.load(key, Global.class);
 
