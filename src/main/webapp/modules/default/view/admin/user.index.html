@@ -24,12 +24,10 @@
 		<tr>
 			<th>$lang.get('user.name')</th>
 			<th>$lang.get('user.nickname')</th>
-			<th>$lang.get('user.title')</th>
 			<th>$lang.get('user.email')</th>
 			<th>$lang.get('user.phone')</th>
 			<th>$lang.get('user.tokens')</th>
 			<th>$lang.get('user.roles')</th>
-			<th>$lang.get('user.updated')</th>
 			<th>$lang.get('user.created')</th>
 #if($edit)
 			<th></th>
@@ -41,12 +39,10 @@
 	<tr #if($f.isLocked()) class='deleted' #end>
 		<td class='name'><a href='/admin/user/detail?id=$f.id'>#if($f.name)$f.name#end</a></td>
 		<td>$!f.nickname</td>
-		<td>$!f.title</td>
 		<td>$!f.email</td>
 		<td>$!f.phone</td>
 		<td>$!f.tokens.size()</td>
-		<td>#foreach($r in $f.role.list)<i class='icon-shield'>$r.name</i>#end</td>
-		<td>$!lang.format($f.updated, 'yy-MM-dd HH:mm')</td>
+		<td>#foreach($r in $f.role.list)<div class='icon-shield'>$r.name</div>#end</td>
 		<td>$!lang.format($f.created, 'yy-MM-dd HH:mm')</td>
 		#if($edit)
 		<td>
