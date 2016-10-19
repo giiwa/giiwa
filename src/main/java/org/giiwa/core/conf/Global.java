@@ -78,7 +78,10 @@ public final class Global extends Bean {
 
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      /**
+       * avoid restarted, can not load new config
+       */
+      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
       Cache.set("global/" + name, c);
       return X.toInt(c.i, defaultValue);
     } else {
@@ -110,7 +113,10 @@ public final class Global extends Bean {
 
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      /**
+       * avoid restarted, can not load new config
+       */
+      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
       Cache.set("global/" + name, c);
 
       return c.s != null ? c.s : defaultValue;
@@ -145,7 +151,10 @@ public final class Global extends Bean {
 
     Global c = Helper.load(W.create(X.ID, name), Global.class);
     if (c != null) {
-      // c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+      /**
+       * avoid restarted, can not load new config
+       */
+      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
       Cache.set("global/" + name, c);
 
       return X.toLong(c.l, defaultValue);
