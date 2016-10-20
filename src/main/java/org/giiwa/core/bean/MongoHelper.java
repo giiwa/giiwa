@@ -453,7 +453,7 @@ public class MongoHelper extends Helper {
         }
         cur = cur.limit(limit);
 
-        bs.list = new ArrayList<T>(limit);
+        bs.list = new ArrayList<T>();
 
         MongoCursor<Document> it = cur.iterator();
         while (it.hasNext() && limit > 0) {
