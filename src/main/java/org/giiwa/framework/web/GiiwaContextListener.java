@@ -14,6 +14,8 @@
 */
 package org.giiwa.framework.web;
 
+import java.io.File;
+
 import javax.servlet.*;
 
 import org.apache.commons.configuration.Configuration;
@@ -56,7 +58,7 @@ public class GiiwaContextListener implements ServletContextListener {
    * .ServletContextEvent)
    */
   public void contextInitialized(ServletContextEvent event) {
-    
+
     String home = event.getServletContext().getRealPath("/");
 
     init(home, event.getServletContext().getContextPath());
@@ -85,6 +87,15 @@ public class GiiwaContextListener implements ServletContextListener {
       System.out.println("giiwa.home=" + Model.GIIWA_HOME);
 
       System.setProperty("home", Model.GIIWA_HOME);
+
+      // TODO, remove it later, the old driver will cause can not startup
+      File f = new File(Model.GIIWA_HOME + "/giiwa/WEB-INF/lib/mongo-java-driver-2.10.0.jar");
+      if (f.exists()) {
+        f.delete();
+        System.out.println("Deleteing mongo-java-driver-2.10.0.jar, it will cause startup failed.");
+        System.out.println("Restart the giiwa.");
+        System.exit(0);
+      }
 
       /**
        * initialize the configuration
