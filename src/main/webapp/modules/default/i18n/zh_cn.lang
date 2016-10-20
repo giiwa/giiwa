@@ -417,3 +417,16 @@ home.uri.hint=缺省首页重定向到, 比如：'/forum'
 session.alive=会话过期时间
 session.alive.hint=毫秒,缺省1周,-1=永不过期
 title.data_will_be_replaced=恢复数据，现在的数据将被覆盖?
+backup.status_0=未知
+backup.status_1=开始备份
+backup.status_2=备份 Mongo
+backup.status_3=备份 RDS 
+backup.status_4=备份 Repo
+backup.status_100=完成
+backup.status_-1=错误
+backup.status_11=开始恢复
+backup.status_12=恢复 Mongo
+backup.status_13=恢复 RDS 
+backup.status_14=恢复 Repo
+backup.status_200=恢复 done
+backup.status_-2=恢复 error

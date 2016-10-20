@@ -182,18 +182,24 @@ public class backup extends Model {
     @Override
     public void onExecute() {
       Module m = Module.home;
+      String name = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm");
+
       try {
 
-        String out = path() + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm");
+        Global.setConfig("backup/" + name, 1); // starting backup
+
+        String out = path() + "/" + name;
         new File(out).mkdirs();
 
         /**
          * 1, backup db
          */
         if (MongoHelper.isConfigured()) {
+          Global.setConfig("backup/" + name, 2); // backup mongo
           MongoHelper.backup(out + "/mongo" + ".dmp");
         }
         if (RDSHelper.isConfigured()) {
+          Global.setConfig("backup/" + name, 3); // backup RDS
           RDSHelper.backup(out + "/rds" + ".dmp");
         }
 
@@ -203,13 +209,19 @@ public class backup extends Model {
         File f = m.getFile("/admin/clone/backup_tar.sh");
         String url = conf.getString("repo.path", null);
         if (!X.isEmpty(url)) {
+          Global.setConfig("backup/" + name, 3); // backup repo
+
           Shell.run("chmod ugo+x " + f.getCanonicalPath());
           Shell.run(f.getCanonicalPath() + " " + out + "/repo.tar.gz " + url);
         }
 
+        Global.setConfig("backup/" + name, 100); // done
+
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         OpLog.error(backup.class, "backup", e.getMessage(), e, null, null);
+
+        Global.setConfig("backup/" + name, -1); // error
 
       }
     }
@@ -242,9 +254,10 @@ public class backup extends Model {
     @Override
     public void onExecute() {
       String root = BackupTask.path();
-
       Module m = Module.home;
+
       try {
+        Global.setConfig("backup/" + name, 11); // recovering
 
         String source = root + "/" + name;
 
@@ -255,11 +268,17 @@ public class backup extends Model {
         if (fs != null) {
           for (File f1 : fs) {
             if (f1.isFile()) {
-              if (RDSHelper.isConfigured() && X.isSame("rds.dmp", f1.getName())) {
-                RDSHelper.recover(f1.getCanonicalFile());
-              }
               if (MongoHelper.isConfigured() && X.isSame("mongo.dmp", f1.getName())) {
+
+                Global.setConfig("backup/" + name, 12); // recovering mongo
+
                 MongoHelper.recover(f1.getCanonicalFile());
+              }
+
+              if (RDSHelper.isConfigured() && X.isSame("rds.dmp", f1.getName())) {
+                Global.setConfig("backup/" + name, 13); // recovering RDS
+
+                RDSHelper.recover(f1.getCanonicalFile());
               }
             }
           }
@@ -271,14 +290,20 @@ public class backup extends Model {
         File f = m.getFile("/admin/clone/recover_tar.sh");
         String url = conf.getString("repo.path", null);
         if (!X.isEmpty(url)) {
+          Global.setConfig("backup/" + name, 14); // recovering Repo
+
           Shell.run("chmod ugo+x " + f.getCanonicalPath());
           Shell.run(f.getCanonicalPath() + " " + source + "/repo.tar.gz " + url);
         }
+
+        Global.setConfig("backup/" + name, 200); // recovering done
 
       } catch (Exception e) {
         log.error(e.getMessage(), e);
         message = e.getMessage();
         OpLog.error(backup.class, "recover", e.getMessage(), e, null, null);
+
+        Global.setConfig("backup/" + name, -2); // recovering Error
 
       }
 

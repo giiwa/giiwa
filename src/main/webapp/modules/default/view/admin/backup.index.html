@@ -11,6 +11,7 @@
 		<tr>
 			<th>Name</th>
 			<th>$lang.get('head.created')</th>
+			<th>Satus</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -19,6 +20,8 @@
 	<tr>
 		<td>$!f.name</td>
 		<td>$lang.format($f.lastModified(), 'yyyy-MM-dd HH:m')</td>
+		#set($s=$global.getInt("backup/$f.name", 0))
+		<td>$!lang.get("backup.status_$s")</td>
 		<td>
 			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_recover("$f.name")'>$lang.get('a.recover')</a>
 			<a class='btn btn-warning btn-xs' href='javascript:;' onclick='_delete("$f.name")'>$lang.get('a.delete')</a>

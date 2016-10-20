@@ -421,3 +421,16 @@ home.uri.hint=The home uri, etc. '/forum'
 session.alive=Session alive
 session.alive.hint=Session expired time, (*)ms, default 1 week, -1=forever
 title.data_will_be_replaced=Data will be replaced?
+backup.status_0=Unknown
+backup.status_1=Start backup
+backup.status_2=Backup Mongo
+backup.status_3=Backup RDS 
+backup.status_4=Backup Repo
+backup.status_100=Backup done
+backup.status_-1=Backup error
+backup.status_11=Start recover
+backup.status_12=Recover Mongo
+backup.status_13=Recover RDS 
+backup.status_14=Recover Repo
+backup.status_200=Recover done
+backup.status_-2=Recover error
