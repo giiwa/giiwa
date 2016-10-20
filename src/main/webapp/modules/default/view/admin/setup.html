@@ -32,11 +32,9 @@
 		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
 			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
 			<form method="post">
-				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>127.0.0.1:27018 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
+				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>mongodb://host1:27017,host2:27017 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
 				<div><label><h3>DB：</h3><input type='text' name='db' value="$!global.getString('mongo[prod].db','demo')"/></label></div>
 				<input type='text' style="display:none"/>
-				<div><label><h3>User：</h3><input type='text' name='user' value="$!global.getString('mongo[prod].user','')"/></label></div>
-				<div><label><h3>Password：</h3><input type='password' name='pwd' value="$!global.getString('mongo[prod].password','')"/></label></div>
 				<div class='btns'>
 					<a class='next btn btn-success'>$lang.get('a.next')</a>
 				</div>
@@ -207,8 +205,6 @@ $(function(){
 		p["db.url"] = $('#db input[name=url]').val();
 		p["mongo.url"] = $('#mongo input[name=url]').val();
 		p["mongo.db"] = $('#mongo input[name=db]').val();
-		p["mongo.user"] = $('#mongo input[name=user]').val();
-		p["mongo.pwd"] = $('#mongo input[name=pwd]').val();
 		p["node"] = $('#system input[name=node]').val();
 		p["code"] = $('#system input[name=code]').val();
 		p["cache.url"] = $('#cache input[name=url]').val();
@@ -254,8 +250,6 @@ function check_mongo(f){
 	var  p = {op:'mongo'};
 	p.db = $('#mongo input[name=db]').val();
 	p.url = $('#mongo input[name=url]').val();
-	p.user = $('#mongo input[name=user]').val();
-	p.pwd = $('#mongo input[name=pwd]').val();
 	$.post('/setup/check', p, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {

@@ -26,6 +26,8 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.app.web.DefaultListener;
+import org.giiwa.core.base.FileUtil;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.Helper.W;
@@ -544,6 +546,9 @@ public class module extends Model {
 
           @Override
           public void onExecute() {
+
+            // cleanup first, otherwise may cause can not be startup
+            DefaultListener.cleanup(new File(Model.HOME), new HashMap<String, FileUtil>());
 
             log.info("WEB-INF has been merged, need to restart");
             System.exit(0);

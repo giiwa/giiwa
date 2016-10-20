@@ -25,10 +25,9 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bson.Document;
 import org.giiwa.core.cache.DefaultCachable;
 import org.giiwa.core.json.JSON;
-
-import com.mongodb.DBObject;
 
 /**
  * The {@code Bean} Class is entity class that mapping to a table,<br>
@@ -487,14 +486,14 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    * by default, will load all data in Bean Map.
    * 
    * @param d
-   *          the DBObject
+   *          the Document
    */
-  protected void load(DBObject d) {
-
-    for (String name : d.keySet()) {
-      this.set(name, d.get(name));
+  protected void load(Document d) {
+    if (d != null) {
+      for (String name : d.keySet()) {
+        this.set(name, d.get(name));
+      }
     }
-
   }
 
   /**

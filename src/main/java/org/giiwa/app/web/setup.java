@@ -94,8 +94,6 @@ public class setup extends Model {
 
     String mongourl = this.getHtml("mongo.url");
     String mongodb = this.getString("mongo.db");
-    String user = this.getString("mongo.user");
-    String pwd = this.getString("mongo.pwd");
 
     if (!X.isEmpty(mongourl)) {
       conf.setProperty("mongo[prod].url", mongourl);
@@ -103,12 +101,6 @@ public class setup extends Model {
 
     if (!X.isEmpty(mongodb)) {
       conf.setProperty("mongo[prod].db", mongodb);
-    }
-    if (!X.isEmpty(user)) {
-      conf.setProperty("mongo[prod].user", user);
-    }
-    if (!X.isEmpty(pwd)) {
-      conf.setProperty("mongo[prod].password", pwd);
     }
 
     String node = this.getString("node");
@@ -119,7 +111,6 @@ public class setup extends Model {
 
     conf.setProperty("node", node);
     conf.setProperty("system.code", systemcode);
-    conf.setProperty("home", null);
 
     Config.save();
     DB.init();
@@ -188,8 +179,6 @@ public class setup extends Model {
     } else if ("mongo".equals(op)) {
       String url = this.getHtml("url").trim();
       String dbname = this.getString("db").trim();
-      String user = this.getString("user").trim();
-      String pwd = this.getString("pwd").trim();
 
       if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
         // jo.put(X.STATE, 201);
@@ -227,12 +216,7 @@ public class setup extends Model {
           mo.connectionsPerHost = 10;
           Mongo mongodb = new Mongo(list, mo);
           com.mongodb.DB d1 = mongodb.getDB(dbname);
-          if (X.isEmpty(user) || d1.authenticate(user, pwd.toCharArray())) {
-            jo.put(X.STATE, 200);
-          } else {
-            jo.put(X.STATE, 201);
-            jo.put(X.MESSAGE, "authentication fail");
-          }
+          jo.put(X.STATE, 200);
 
         } catch (Exception e1) {
           log.error(e1.getMessage(), e1);

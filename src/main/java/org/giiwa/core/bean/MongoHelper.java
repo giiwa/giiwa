@@ -24,26 +24,30 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.CommandResult;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoOptions;
-import com.mongodb.ServerAddress;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 
 /**
  * The {@code Bean} Class is base class for all class that database access, it
@@ -54,7 +58,7 @@ import com.mongodb.WriteResult;
 public class MongoHelper extends Helper {
 
   /** The mongo. */
-  private static Map<String, DB> mongo = new HashMap<String, DB>();
+  private static Map<String, MongoDatabase> mongo = new HashMap<String, MongoDatabase>();
 
   public static boolean isConfigured() {
     getDB();
@@ -68,14 +72,15 @@ public class MongoHelper extends Helper {
    *          the collection
    * @param query
    *          the query
-   * @return the int
+   * @return the long
    */
-  public static int delete(String collection, DBObject query) {
+  public static long delete(String collection, Bson query) {
     try {
-      DBCollection db = MongoHelper.getCollection(collection);
+      MongoCollection<Document> db = MongoHelper.getCollection(collection);
       if (db != null) {
-        db.remove(query);
-        return 1;
+        DeleteResult r = db.deleteMany(query);
+        // db.remove(query);
+        return r.getDeletedCount();
       }
       return -1;
     } catch (Exception e) {
@@ -85,7 +90,7 @@ public class MongoHelper extends Helper {
     return -1;
   }
 
-  public static int delete(DBObject query, Class<? extends Bean> t) {
+  public static int delete(Bson query, Class<? extends Bean> t) {
 
     String collection = getCollection(t);
     if (collection != null) {
@@ -102,46 +107,19 @@ public class MongoHelper extends Helper {
    *          the database
    * @return the db
    */
-  private static synchronized DB initDB(String database) {
-    DB g = mongo.get(database);
+  @SuppressWarnings("resource")
+  private static synchronized MongoDatabase initDB(String database) {
+    MongoDatabase g = mongo.get(database);
     if (g == null) {
       String url = conf.getString("mongo[" + database + "].url", X.EMPTY);
-      if (!X.EMPTY.equals(url)) {
-        String hosts[] = url.split(";");
+      String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
+      if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
 
-        ArrayList<ServerAddress> list = new ArrayList<ServerAddress>();
-        for (String s : hosts) {
-          try {
-            String s2[] = s.split(":");
-            String host;
-            int port = 27017;
-            if (s2.length > 1) {
-              host = s2[0];
-              port = Integer.parseInt(s2[1]);
-            } else {
-              host = s2[0];
-            }
+        MongoClient client = new MongoClient(new MongoClientURI(url));
+        g = client.getDatabase(dbname);
 
-            list.add(new ServerAddress(host, port));
-          } catch (Exception e) {
-            if (log.isErrorEnabled())
-              log.error(e.getMessage(), e);
-          }
-        }
+        mongo.put(database, g);
 
-        String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
-        if (!X.EMPTY.equals(dbname)) {
-          MongoOptions mo = new MongoOptions();
-          mo.connectionsPerHost = conf.getInt("mongo[" + database + "].conns", 50);
-          mo.autoConnectRetry = true;
-          // mo.socketTimeout = 2000;
-          mo.connectTimeout = 2000;
-          // mo.autoConnectRetry = true;
-          Mongo mongodb = new Mongo(list, mo);
-          g = mongodb.getDB(dbname);
-
-          mongo.put(database, g);
-        }
       }
     }
 
@@ -157,7 +135,7 @@ public class MongoHelper extends Helper {
    * @return true, if successful
    */
   public static boolean hasDB(String database) {
-    DB g = mongo.get(database);
+    MongoDatabase g = mongo.get(database);
     if (g == null) {
       g = initDB(database);
     }
@@ -170,7 +148,7 @@ public class MongoHelper extends Helper {
    * 
    * @return DB
    */
-  public static DB getDB() {
+  public static MongoDatabase getDB() {
     return getDB("prod");
   }
 
@@ -190,8 +168,9 @@ public class MongoHelper extends Helper {
    *          the name of database, if "" or null, then "prod"
    * @return DB
    */
-  public static DB getDB(String database) {
-    DB g = null;
+  @SuppressWarnings("resource")
+  public static MongoDatabase getDB(String database) {
+    MongoDatabase g = null;
     if (X.isEmpty(database)) {
       database = "prod";
     }
@@ -200,49 +179,20 @@ public class MongoHelper extends Helper {
       g = mongo.get(database);
       if (g == null && conf != null) {
         String url = conf.getString("mongo[" + database + "].url", X.EMPTY);
-        if (!X.EMPTY.equals(url)) {
-          String hosts[] = url.split(";");
+        String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
 
-          ArrayList<ServerAddress> list = new ArrayList<ServerAddress>();
-          for (String s : hosts) {
-            try {
-              String s2[] = s.split(":");
-              String host;
-              int port = 27017;
-              if (s2.length > 1) {
-                host = s2[0];
-                port = Integer.parseInt(s2[1]);
-              } else {
-                host = s2[0];
-              }
-
-              list.add(new ServerAddress(host, port));
-            } catch (Exception e) {
-              if (log.isErrorEnabled())
-                log.error(e.getMessage(), e);
-            }
+        if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
+          if (!url.startsWith("mongodb://")) {
+            url = "mongodb://" + url;
+            conf.setProperty("mongo[" + database + "].url", url);
+            Config.save();
           }
 
-          String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
-          if (!X.EMPTY.equals(dbname)) {
-            MongoOptions mo = new MongoOptions();
-            mo.connectionsPerHost = conf.getInt("mongo[" + database + "].conns", 50);
-            // mo.autoConnectRetry = true;
-            Mongo mongodb = new Mongo(list, mo);
-            g = mongodb.getDB(dbname);
+          // int conns = conf.getInt("mongo[" + database + "].conns", 50);
+          MongoClient client = new MongoClient(new MongoClientURI(url));
+          g = client.getDatabase(dbname);
 
-            String user = conf.getString("mongo[" + database + "].user", X.EMPTY);
-            String pwd = conf.getString("mongo[" + database + "].password", X.EMPTY);
-            if (!X.isEmpty(user)) {
-              boolean b = g.authenticate(user, pwd.toCharArray());
-              if (!b) {
-                if (log.isErrorEnabled())
-                  log.error("authentication error for [" + database + "]");
-              }
-            }
-
-            mongo.put(database, g);
-          }
+          mongo.put(database, g);
         }
       }
     }
@@ -270,10 +220,10 @@ public class MongoHelper extends Helper {
    *          the collection
    * @return DBCollection
    */
-  public static DBCollection getCollection(String database, String collection) {
-    DB g = getDB(database);
+  public static MongoCollection<Document> getCollection(String database, String collection) {
+    MongoDatabase g = getDB(database);
 
-    DBCollection d = null;
+    MongoCollection<Document> d = null;
 
     if (g != null) {
       d = g.getCollection(collection);
@@ -303,7 +253,7 @@ public class MongoHelper extends Helper {
    *          the name of the collection
    * @return DBCollection
    */
-  public static DBCollection getCollection(String name) {
+  public static MongoCollection<Document> getCollection(String name) {
     return getCollection("prod", name);
   }
 
@@ -320,7 +270,7 @@ public class MongoHelper extends Helper {
    *          the clazz
    * @return the Bean
    */
-  public static <T extends Bean> T load(String collection, DBObject query, Class<T> clazz) {
+  public static <T extends Bean> T load(String collection, Bson query, Class<T> clazz) {
     try {
       return load(collection, query, clazz.newInstance());
     } catch (Exception e) {
@@ -344,13 +294,13 @@ public class MongoHelper extends Helper {
    *          the Bean
    * @return the Bean
    */
-  public static <T extends Bean> T load(String collection, DBObject query, T b) {
+  public static <T extends Bean> T load(String collection, Bson query, T b) {
     try {
-      DBCollection db = MongoHelper.getCollection(collection);
+      MongoCollection<Document> db = MongoHelper.getCollection(collection);
       if (db != null) {
-        DBObject d = db.findOne(query);
+        FindIterable<Document> d = db.find(query);
         if (d != null) {
-          b.load(d);
+          b.load(d.first());
           return b;
         }
       }
@@ -377,26 +327,23 @@ public class MongoHelper extends Helper {
    *          the Bean
    * @return the Bean
    */
-  public static <T extends Bean> T load(String collection, DBObject query, DBObject order, T b) {
-    DBCursor cur = null;
+  public static <T extends Bean> T load(String collection, Bson query, Bson order, T b) {
     TimeStamp t = TimeStamp.create();
     try {
-      DBCollection db = MongoHelper.getCollection(collection);
+      MongoCollection<Document> db = MongoHelper.getCollection(collection);
       if (db != null) {
 
-        DBObject d = null;
+        FindIterable<Document> d = db.find(query);
         if (order == null) {
-          d = db.findOne(query);
-        } else {
-          d = db.findOne(query, null, order);
+          d.sort(order);
         }
 
         if (d != null) {
           if (log.isDebugEnabled())
-            log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
-                + order + ", result=" + d.get(X.ID));
+            log.debug(
+                "load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order=" + order);
 
-          b.load(d);
+          b.load(d.first());
           return b;
         } else {
           if (log.isDebugEnabled())
@@ -407,10 +354,6 @@ public class MongoHelper extends Helper {
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error("query=" + query + ", order=" + order, e);
-    } finally {
-      if (cur != null) {
-        cur.close();
-      }
     }
 
     return null;
@@ -433,8 +376,7 @@ public class MongoHelper extends Helper {
    *          the Bean class
    * @return Beans
    */
-  public static <T extends Bean> Beans<T> load(DBObject query, DBObject orderby, int offset, int limit,
-      Class<T> clazz) {
+  public static <T extends Bean> Beans<T> load(Bson query, Bson orderby, int offset, int limit, Class<T> clazz) {
     String collection = getCollection(clazz);
     if (collection != null) {
       return load(collection, query, orderby, offset, limit, clazz);
@@ -456,7 +398,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return T
    */
-  public static <T extends Bean> T load(DBObject query, DBObject order, T obj) {
+  public static <T extends Bean> T load(Bson query, Bson order, T obj) {
     String collection = getCollection(obj.getClass());
     if (collection != null) {
       return load(collection, query, order, obj);
@@ -484,11 +426,11 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return Beans
    */
-  public static <T extends Bean> Beans<T> load(String collection, DBObject query, DBObject orderBy, int offset,
-      int limit, Class<T> clazz) {
+  public static <T extends Bean> Beans<T> load(String collection, Bson query, Bson orderBy, int offset, int limit,
+      final Class<T> clazz) {
     TimeStamp t = TimeStamp.create();
-    DBCollection db = null;
-    DBCursor cur = null;
+    MongoCollection<Document> db = null;
+    FindIterable<Document> cur = null;
     try {
       db = MongoHelper.getCollection(collection);
       if (db != null) {
@@ -498,31 +440,38 @@ public class MongoHelper extends Helper {
           cur.sort(orderBy);
         }
 
-        Beans<T> bs = new Beans<T>();
+        final Beans<T> bs = new Beans<T>();
         // TODO, ignore this as big performance
         // bs.total = _count(cur, 0, (int) db.count());
         // log.debug("cost=" + t.past() +"ms, count=" + bs.total);
 
-        cur.skip(offset);
+        cur = cur.skip(offset);
         // log.debug("skip=" + t.past() +"ms, count=" + bs.total);
-        bs.list = new ArrayList<T>();
 
-        if (limit < 0)
-          limit = Integer.MAX_VALUE;
+        if (limit < 0) {
+          limit = 1000;
+        }
+        cur = cur.limit(limit);
 
-        while (cur.hasNext() && limit > 0) {
-          // log.debug("hasnext=" + t.past() +"ms, count=" + bs.total);
-          DBObject d = cur.next();
+        bs.list = new ArrayList<T>(limit);
+
+        MongoCursor<Document> it = cur.iterator();
+        while (it.hasNext() && limit > 0) {
+          // log.debug("hasnext=" + t.past() + "ms, count=" + bs.total);
+          Document d = it.next();
           // log.debug("next=" + t.past() +"ms, count=" + bs.total);
-          T b = clazz.newInstance();
-          b.load(d);
-          bs.list.add(b);
-          limit--;
+          if (d != null) {
+            T b = clazz.newInstance();
+            b.load(d);
+            bs.list.add(b);
+            limit--;
+          }
         }
 
         if (log.isDebugEnabled())
           log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
-              + orderBy + ", result=" + (bs == null || bs.getList() == null ? "null" : bs.getList().size()));
+              + orderBy + ", offset=" + offset + ", limit=" + limit + ", result="
+              + (bs == null || bs.getList() == null ? "null" : bs.getList().size()));
 
         if (t.past() > 10000) {
           log.warn("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
@@ -531,27 +480,17 @@ public class MongoHelper extends Helper {
         return bs;
       }
     } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error("query=" + query + ", order=" + orderBy, e);
+      log.error("query=" + query + ", order=" + orderBy, e);
 
       // sort
       if (query != null && db != null) {
-        Set<String> set = query.keySet();
-        for (String name : set) {
-          if (!name.startsWith("$")) {
-            // db.createIndex(name);
-            db.ensureIndex(name);
-          }
-        }
+        db.createIndex(query);
       }
 
-      if (orderBy != null && orderBy.keySet().size() > 0 && db != null) {
+      if (orderBy != null && db != null) {
         db.createIndex(orderBy);
       }
 
-    } finally {
-      if (cur != null)
-        cur.close();
     }
 
     return null;
@@ -568,7 +507,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return Bean if failed, return null
    */
-  public static <T extends Bean> T load(DBObject query, T t) {
+  public static <T extends Bean> T load(Bson query, T t) {
     String collection = getCollection(t.getClass());
     if (collection != null) {
       try {
@@ -592,7 +531,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return Bean the instance of the Class
    */
-  public static <T extends Bean> T load(DBObject query, Class<T> t) {
+  public static <T extends Bean> T load(Bson query, Class<T> t) {
 
     String collection = getCollection(t);
     if (collection != null) {
@@ -620,7 +559,7 @@ public class MongoHelper extends Helper {
    *          the Class Bean
    * @return Bean
    */
-  public static <T extends Bean> T load(DBObject query, DBObject order, Class<T> t) {
+  public static <T extends Bean> T load(Bson query, Bson order, Class<T> t) {
     String collection = getCollection(t);
     if (collection != null) {
       try {
@@ -634,7 +573,7 @@ public class MongoHelper extends Helper {
     return null;
   }
 
-  public static <T extends Bean> T load(String collection, DBObject query, DBObject order, Class<T> t) {
+  public static <T extends Bean> T load(String collection, Bson query, Bson order, Class<T> t) {
     try {
       T obj = t.newInstance();
       return load(collection, query, order, obj);
@@ -654,16 +593,15 @@ public class MongoHelper extends Helper {
    *          the query
    * @return the DB object
    */
-  public static DBObject load(String collection, DBObject query) {
+  public static Document load(String collection, Bson query) {
     /**
      * create the sql statement
      */
     try {
-      DBCollection c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
 
-        DBObject d = c.findOne(query);
-        return d;
+        return c.find(query).first();
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
@@ -727,7 +665,7 @@ public class MongoHelper extends Helper {
    *          the Class of Bean
    * @return int how many data impacted
    */
-  final public static int updateCollection(Object id, V v, Class<? extends Bean> t) {
+  final public static long updateCollection(Object id, V v, Class<? extends Bean> t) {
     return updateCollection(id, v, t, false);
   }
 
@@ -744,7 +682,7 @@ public class MongoHelper extends Helper {
    *          if true and not exists, then insert one by values
    * @return int how many data impacted
    */
-  final public static int updateCollection(Object id, V v, Class<? extends Bean> t, boolean adding) {
+  final public static long updateCollection(Object id, V v, Class<? extends Bean> t, boolean adding) {
     String collection = getCollection(t);
     if (collection != null && !"none".equals(collection)) {
       return updateCollection(collection, id, v, adding);
@@ -763,7 +701,7 @@ public class MongoHelper extends Helper {
    *          the Bean Class
    * @return int of updated
    */
-  final public static int updateCollection(DBObject query, V v, Class<? extends Bean> t) {
+  final public static long updateCollection(Bson query, V v, Class<? extends Bean> t) {
     String collection = getCollection(t);
     if (collection != null && !"none".equals(collection)) {
       return updateCollection(collection, query, v);
@@ -782,20 +720,21 @@ public class MongoHelper extends Helper {
    */
   final public static int insertCollection(String collection, V v) {
 
-    DBCollection c = getCollection(collection);
+    MongoCollection<Document> c = getCollection(collection);
     if (c != null) {
-      BasicDBObject d = new BasicDBObject();
+      Document d = new Document();
 
       for (String name : v.names()) {
-        d.append(name, v.value(name));
+        Object v1 = v.value(name);
+        d.append(name, v1);
       }
 
       try {
 
-        WriteResult r = c.insert(d);
+        c.insertOne(d);
 
         if (log.isDebugEnabled())
-          log.debug("inserted collection=" + collection + ", d=" + d + ", r=" + r);
+          log.debug("inserted collection=" + collection + ", d=" + d);
         return 1;
       } catch (Exception e) {
         if (log.isErrorEnabled())
@@ -816,7 +755,7 @@ public class MongoHelper extends Helper {
    *          the values
    * @return int
    */
-  final public static int updateCollection(String collection, Object id, V v) {
+  final public static long updateCollection(String collection, Object id, V v) {
     return updateCollection(collection, id, v, false);
   }
 
@@ -833,25 +772,10 @@ public class MongoHelper extends Helper {
    *          if true and not exists, then insert a new data
    * @return int
    */
-  final public static int updateCollection(String collection, Object id, V v, boolean adding) {
+  final public static long updateCollection(String collection, Object id, V v, boolean adding) {
 
     BasicDBObject q = new BasicDBObject().append(X.ID, id);
     return updateCollection(collection, q, v, adding);
-  }
-
-  /**
-   * update the data by query.
-   * 
-   * @param collection
-   *          the collection name
-   * @param q
-   *          the query
-   * @param v
-   *          the values
-   * @return int of updated
-   */
-  final public static int updateCollection(String collection, DBObject q, V v) {
-    return updateCollection(collection, q, v, false);
   }
 
   /**
@@ -863,29 +787,30 @@ public class MongoHelper extends Helper {
    *          the update query
    * @param v
    *          the value
-   * @param adding
-   *          add if not exists
    * @return int of updated
    */
-  final public static int updateCollection(String collection, DBObject q, V v, boolean adding) {
+  final public static long updateCollection(String collection, Bson query, V v) {
 
-    BasicDBObject d = new BasicDBObject();
+    Document d = new Document();
 
     // int len = v.size();
     for (String name : v.names()) {
-      d.append(name, v.value(name));
+      Object v1 = v.value(name);
+      d.append(name, v1);
     }
 
     try {
-      DBCollection c = MongoHelper.getCollection(collection);
-      WriteResult r = c.update(q, new BasicDBObject().append("$set", d), adding, true, WriteConcern.SAFE);
+      log.debug("data=" + d);
+      MongoCollection<Document> c = MongoHelper.getCollection(collection);
+      UpdateResult r = c.updateMany(query, new Document("$set", d));
 
       if (log.isDebugEnabled())
-        log.debug("updated collection=" + collection + ", q=" + q + ", d=" + d + ", n=" + r.getN() + ",result=" + r);
+        log.debug("updated collection=" + collection + ", query=" + query + ", d=" + d + ", n=" + r.getModifiedCount()
+            + ",result=" + r);
 
       // r.getN();
       // r.getField("nModified");
-      return r.getN();
+      return r.getModifiedCount();
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error(e.getMessage(), e);
@@ -904,7 +829,7 @@ public class MongoHelper extends Helper {
    * @throws Exception
    *           throw exception when occur database error
    */
-  public static boolean exists(DBObject query, Class<? extends Bean> t) throws Exception {
+  public static boolean exists(Bson query, Class<? extends Bean> t) throws Exception {
     String collection = getCollection(t);
     if (collection != null) {
       return exists(collection, query);
@@ -923,7 +848,7 @@ public class MongoHelper extends Helper {
    * @throws SQLException
    *           throw Exception if occur error
    */
-  public static boolean exists(String collection, DBObject query) throws SQLException {
+  public static boolean exists(String collection, Bson query) throws SQLException {
     TimeStamp t1 = TimeStamp.create();
     boolean b = false;
     try {
@@ -942,13 +867,12 @@ public class MongoHelper extends Helper {
    *          the command
    * @return boolean, return true if "ok"
    */
-  public static boolean run(String cmd) {
-    DB d = MongoHelper.getDB();
+  public static Document run(Bson cmd) {
+    MongoDatabase d = MongoHelper.getDB();
     if (d != null) {
-      CommandResult r = d.command(cmd);
-      return r.ok();
+      return d.runCommand(cmd);
     }
-    return false;
+    return null;
   }
 
   /**
@@ -957,9 +881,16 @@ public class MongoHelper extends Helper {
    * @return Set
    */
   public static Set<String> getCollections() {
-    DB d = MongoHelper.getDB();
+    MongoDatabase d = MongoHelper.getDB();
     if (d != null) {
-      return d.getCollectionNames();
+
+      MongoIterable<String> it = d.listCollectionNames();
+      MongoCursor<String> ii = it.iterator();
+      Set<String> r = new TreeSet<String>();
+      while (ii.hasNext()) {
+        r.add(ii.next());
+      }
+      return r;
     }
     return null;
   }
@@ -972,9 +903,9 @@ public class MongoHelper extends Helper {
    */
   public static void clear(String collection) {
     try {
-      DBCollection c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
-        c.remove(new BasicDBObject());
+        c.deleteMany(new BasicDBObject());
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
@@ -993,15 +924,18 @@ public class MongoHelper extends Helper {
    *          the query
    * @return List of the value
    */
-  @SuppressWarnings("unchecked")
-  public static List<Object> distinct(String collection, String key, BasicDBObject q) {
+  public static <T extends Object> List<T> distinct(String collection, String key, Bson q, Class<T> type) {
 
     TimeStamp t1 = TimeStamp.create();
     try {
 
-      DBCollection c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
-        return c.distinct(key, q);
+        Iterator<T> it = c.distinct(key, q, type).iterator();
+        List<T> list = new ArrayList<T>();
+        while (it.hasNext()) {
+          list.add(it.next());
+        }
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
@@ -1040,22 +974,16 @@ public class MongoHelper extends Helper {
    *          the query and order
    * @return long
    */
-  public static long count(String collection, BasicDBObject q) {
+  public static long count(String collection, Bson q) {
     TimeStamp t1 = TimeStamp.create();
-    DBCursor c1 = null;
     try {
 
-      DBCollection c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
-        c1 = c.find(q);
-        return c1.count();
-
+        return c.count(q);
       }
 
     } finally {
-      if (c1 != null)
-        c1.close();
-
       if (log.isDebugEnabled())
         log.debug("count, cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q);
     }
@@ -1077,11 +1005,10 @@ public class MongoHelper extends Helper {
       zip.putNextEntry(new ZipEntry("db"));
       PrintStream out = new PrintStream(zip);
 
-      DB d = getDB();
-      Set<String> c1 = d.getCollectionNames();
+      Set<String> c1 = getCollections();
       log.debug("collections=" + c1);
       for (String table : c1) {
-        _backup(out, d, table);
+        _backup(out, table);
       }
 
       zip.closeEntry();
@@ -1092,22 +1019,23 @@ public class MongoHelper extends Helper {
     }
   }
 
-  private static void _backup(PrintStream out, DB d, String tablename) {
+  private static void _backup(PrintStream out, String tablename) {
     log.debug("backuping " + tablename);
-    DBCollection d1 = d.getCollection(tablename);
-    DBCursor c1 = d1.find();
+    MongoCollection<Document> d1 = getCollection(tablename);
+    MongoCursor<Document> c1 = d1.find().iterator();
     int rows = 0;
     while (c1.hasNext()) {
       rows++;
 
-      DBObject d2 = c1.next();
+      Document d2 = c1.next();
       JSON jo = new JSON();
       jo.put("_table", tablename);
       for (String name : d2.keySet()) {
         jo.put(name, d2.get(name));
       }
       out.println(jo.toString());
-      log.debug("backup " + tablename + ", rows=" + rows);
+      if (rows % 1000 == 0)
+        log.debug("backup " + tablename + ", rows=" + rows);
     }
   }
 
@@ -1125,12 +1053,11 @@ public class MongoHelper extends Helper {
       zip.getNextEntry();
       BufferedReader in = new BufferedReader(new InputStreamReader(zip));
 
-      DB d = getDB();
-      Set<String> c1 = d.getCollectionNames();
+      Set<String> c1 = getCollections();
       log.debug("collections=" + c1);
       for (String table : c1) {
-        DBCollection c2 = d.getCollection(table);
-        c2.remove(new BasicDBObject());
+        MongoCollection<Document> c2 = getCollection(table);
+        c2.drop();
       }
 
       String line = in.readLine();
@@ -1168,23 +1095,19 @@ public class MongoHelper extends Helper {
    * @return the number of inserted, base on the version of mongo
    */
   public static int insertCollection(String table, Collection<V> values) {
-    DBCollection c = getCollection(table);
+    MongoCollection<Document> c = getCollection(table);
     if (c != null) {
-      List<DBObject> list = new ArrayList<DBObject>(values.size());
+      List<Document> list = new ArrayList<Document>(values.size());
       for (V v : values) {
-        BasicDBObject d = new BasicDBObject();
-        for (String name : v.names()) {
-          d.append(name, v.value(name));
-        }
-        list.add(d);
+        list.add(new Document(v.m));
       }
 
       try {
 
-        WriteResult r = c.insert(list);
+        c.insertMany(list);
 
         if (log.isDebugEnabled())
-          log.debug("inserted collection=" + table + ", list=" + list + ", r=" + r);
+          log.debug("inserted collection=" + table + ", list=" + list);
         return 1;
       } catch (Exception e) {
         if (log.isErrorEnabled())

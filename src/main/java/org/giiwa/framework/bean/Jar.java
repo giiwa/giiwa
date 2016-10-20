@@ -96,9 +96,9 @@ public class Jar extends Bean {
    *          the q
    * @return the list
    */
-  public static List<Object> loadAll(W q) {
+  public static List<String> loadAll(W q) {
     String node = Model.node();
-    return Helper.distinct("name", q.and("node", node), Jar.class);
+    return Helper.distinct("name", q.and("node", node), String.class, Jar.class);
   }
 
   /**
@@ -108,10 +108,10 @@ public class Jar extends Bean {
    *          the name
    * @return the list
    */
-  public static List<Object> load(String name) {
+  public static List<String> load(String name) {
     String node = Model.node();
 
-    return Helper.distinct("module", W.create("name", name).and("node", node), Jar.class);
+    return Helper.distinct("module", W.create("name", name).and("node", node), String.class, Jar.class);
   }
 
   /**
@@ -122,7 +122,7 @@ public class Jar extends Bean {
    */
   public static void reset(String module) {
     String node = Model.node();
-    Helper.update(W.create("module", module).and("node", node), V.create("reset", 0), Jar.class);
+    Helper.delete(W.create("module", module).and("node", node), Jar.class);
   }
 
   public static boolean exists(W q) {

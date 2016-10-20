@@ -473,7 +473,7 @@ public class DefaultListener implements IListener {
    * @param map
    * @return
    */
-  private boolean cleanup(File f, Map<String, FileUtil> map) {
+  public static boolean cleanup(File f, Map<String, FileUtil> map) {
     /**
      * list and compare all jar files
      */

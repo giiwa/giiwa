@@ -126,7 +126,7 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.delete(table, q.query());
+        return (int) MongoHelper.delete(table, q.query());
       } else if (primary == DBType.RDS) {
         // insert into RDS
         return RDSHelper.delete(table, q.where(), q.args());
@@ -1256,7 +1256,7 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.updateCollection(table, q.query(), values);
+        return (int) MongoHelper.updateCollection(table, q.query(), values);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
@@ -1393,7 +1393,7 @@ public class Helper {
    *          the Class of Bean
    * @return the List of objects
    */
-  public static List<Object> distinct(String name, W q, Class<? extends Bean> t) {
+  public static <T extends Object> List<T> distinct(String name, W q, Class<T> type, Class<? extends Bean> t) {
     String table = getTable(t);
 
     if (table != null) {
@@ -1403,11 +1403,11 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.distinct(table, name, q.query());
+        return MongoHelper.distinct(table, name, q.query(), type);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.distinct(table, name, q.where(), q.args());
+        return (List<T>) RDSHelper.distinct(table, name, q.where(), q.args());
       } else {
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
       }

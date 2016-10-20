@@ -51,13 +51,15 @@ public class Roles extends Bean {
    *          the roles
    */
   public Roles(List<Long> roles) {
-    if (access == null) {
+    if (access == null && roles != null && roles.size() > 0) {
       access = new HashSet<String>();
       list = Role.loadAll(roles);
 
       for (Role r : list) {
         List<String> names = r.getAccesses();
-        access.addAll(names);
+        if (names != null && names.size() > 0) {
+          access.addAll(names);
+        }
       }
     }
   }

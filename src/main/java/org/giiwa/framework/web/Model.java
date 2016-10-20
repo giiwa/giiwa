@@ -906,7 +906,7 @@ public class Model {
       Session s = this.getSession();
       r = s.getInt(tagInSession);
       if (r < minValue) {
-        r = Global.getInt(tagInSession, minValue);
+        r = minValue;
       }
     } else {
       Session s = this.getSession();

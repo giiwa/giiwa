@@ -176,6 +176,7 @@ public final class Config {
 
     if (conf != null) {
       String file = home + File.separator + confName + ".properties";
+      conf.setProperty("home", null);
 
       try {
         conf.save(file);

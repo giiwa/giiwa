@@ -215,6 +215,11 @@ public class Module {
       }
 
       /**
+       * remove all jar reference before merge
+       */
+      Jar.reset(m.getName());
+
+      /**
        * merge WEB-INF and depends lib
        * 
        */
@@ -808,10 +813,10 @@ public class Module {
        */
       boolean changed = false;
 
-      List<Object> names = Jar.loadAll(W.create());
+      List<String> names = Jar.loadAll(W.create());
       if (names != null && names.size() > 0) {
         for (Object name : names) {
-          List<Object> modules = Jar.load(name.toString());
+          List<String> modules = Jar.load(name.toString());
           boolean used = false;
           if (modules != null && modules.size() > 0) {
             for (Object m1 : modules) {
@@ -1734,69 +1739,69 @@ public class Module {
        * looking for all the "f.getName()" in "classpath", and remove the same
        * package but different "version"<br>
        */
-      {
-        FileUtil f1 = new FileUtil(f);
+      FileUtil f1 = new FileUtil(f);
 
-        if (f.getName().endsWith(".jar")) {
-          log.debug("checking [" + f1.getName() + "]");
+      if (f.getName().endsWith(".jar")) {
+        log.debug("checking [" + f1.getName() + "]");
 
-          // check the version
-          File m = new File(Model.HOME + File.separator + "WEB-INF" + File.separator + "lib");
-          File[] list = m.listFiles();
-          if (list != null) {
-            for (File f2 : list) {
-              if (f2.getName().endsWith(".jar")) {
-                FileUtil.R r = f1.compareTo(f2);
-                if (r != FileUtil.R.DIFF) {
-                  /**
-                   * load all the related modules for f2
-                   */
-                  List<Object> modules = Jar.load(f2.getName());
-                  if (modules == null || modules.size() == 0) {
-                    Jar.update("default", f1.getName());
-                  } else {
-                    for (Object m1 : modules) {
-                      Jar.update(m1.toString(), f1.getName());
-                      Jar.remove(m1.toString(), f2.getName());
-                    }
+        Jar.update(this.getName(), f1.getName());
+
+        // check the version
+        File m = new File(Model.HOME + File.separator + "WEB-INF" + File.separator + "lib");
+        File[] list = m.listFiles();
+        if (list != null) {
+          for (File f2 : list) {
+            if (f2.getName().endsWith(".jar")) {
+
+              FileUtil.R r = f1.compareTo(f2);
+
+              if (r != FileUtil.R.DIFF) {
+                /**
+                 * same file, may diff version
+                 */
+                List<String> modules = Jar.load(f2.getName());
+                if (modules != null && modules.size() > 0) {
+                  for (Object m1 : modules) {
+                    Jar.remove(m1.toString(), f2.getName());
+                    Jar.update(m1.toString(), f1.getName());
                   }
-
-                  log.warn("same jar file, but different varsion, remove [" + f2.getAbsolutePath() + "]");
-                  f2.delete();
-                  r1 = true;
-
                 }
+
+                log.warn("same jar file, but different varsion, remove [" + f2.getAbsolutePath() + "]");
+                f2.delete();
+                r1 = true;
+
               }
             }
-          } else {
-            log.debug("no file in [" + m.getAbsolutePath() + "]");
           }
-
-          // ------
-
-          File d = new File(dest + File.separator + f.getName());
-          if (d.exists()) {
-            d.delete();
-
-          } else {
-            d.getParentFile().mkdirs();
-          }
-
-          Jar.update(this.getName(), d.getName());
-
-          f.renameTo(d);
         } else {
-          // files
-          File d = new File(dest + File.separator + f.getName());
-          if (d.exists()) {
-            d.delete();
-
-          } else {
-            d.getParentFile().mkdirs();
-          }
-
-          f.renameTo(d);
+          log.debug("no file in [" + m.getAbsolutePath() + "]");
         }
+
+        // ------
+
+        File d = new File(dest + File.separator + f.getName());
+        if (d.exists()) {
+          d.delete();
+
+        } else {
+          d.getParentFile().mkdirs();
+        }
+
+        Jar.update(this.getName(), d.getName());
+
+        f.renameTo(d);
+      } else {
+        // files
+        File d = new File(dest + File.separator + f.getName());
+        if (d.exists()) {
+          d.delete();
+
+        } else {
+          d.getParentFile().mkdirs();
+        }
+
+        f.renameTo(d);
       }
     }
 
