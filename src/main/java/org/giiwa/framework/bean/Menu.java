@@ -285,7 +285,8 @@ public class Menu extends Bean {
    * @return the menu
    */
   public static Menu load(long parent, String name) {
-    Menu m = Helper.load(W.create("parent", parent).and("name", name), Menu.class);
+    String node = Model.node();
+    Menu m = Helper.load(W.create("parent", parent).and("name", name).and("node", node), Menu.class);
     return m;
   }
 
