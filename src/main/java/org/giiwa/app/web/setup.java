@@ -114,6 +114,9 @@ public class setup extends Model {
     String node = this.getString("node");
     String systemcode = this.getString("systemcode");
 
+    conf.setProperty("cache.url", this.getString("cache.url"));
+    conf.setProperty("cache.group", this.getString("cache.group"));
+
     conf.setProperty("node", node);
     conf.setProperty("system.code", systemcode);
     conf.setProperty("home", null);

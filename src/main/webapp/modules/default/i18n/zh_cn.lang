@@ -273,6 +273,7 @@ title.restart.service=重启服务
 title.setting.index=设置
 title.welcome=欢迎您
 upload.file=上传文件
+user.created=创建时间
 user.create.title=创建帐号
 user.detail.title=详情
 user.edit.me.title=我的配置信息

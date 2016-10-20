@@ -282,6 +282,7 @@ title.restart.service=Restarting service
 title.setting.index=Setting
 title.welcome=Welcome
 upload.file=Upload file
+user.created=Created
 user.create.title=Create account
 user.detail.title=Account detail
 user.edit.me.title=My profile

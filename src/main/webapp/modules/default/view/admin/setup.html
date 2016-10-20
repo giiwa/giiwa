@@ -85,6 +85,7 @@
 			<div class='head'>Cache</div>	
 			<form method="post">
 				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
+				<div><label><h3>Group：</h3><input type='text' name='group' value="$!global.getString('cache.group', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
@@ -211,6 +212,7 @@ $(function(){
 		p["node"] = $('#system input[name=node]').val();
 		p["code"] = $('#system input[name=code]').val();
 		p["cache.url"] = $('#cache input[name=url]').val();
+		p["cache.group"] = $('#cache input[name=group]').val();
 		p["admin"] = $('#admin input[name=admin]').val();
 		p["password"] = $('#admin input[name=password]').val();
 		p["email"] = $('#admin input[name=email]').val();
