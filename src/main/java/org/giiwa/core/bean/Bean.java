@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.giiwa.core.cache.DefaultCachable;
 import org.giiwa.core.json.JSON;
 
@@ -490,7 +491,11 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    */
   protected void load(Document d) {
     for (String name : d.keySet()) {
-      this.set(name, d.get(name));
+      Object o = d.get(name);
+      if (o instanceof ObjectId) {
+        o = ((ObjectId) o).toString();
+      }
+      this.set(name, o);
     }
   }
 
