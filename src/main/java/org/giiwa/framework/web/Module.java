@@ -223,7 +223,7 @@ public class Module {
        * merge WEB-INF and depends lib
        * 
        */
-      boolean restart = m.merge();
+      m.merge();
 
       /**
        * move the temp to target dest
@@ -233,7 +233,7 @@ public class Module {
       Module.init(m);
       m.set(m.getName() + "_repo", url);
       m.store();
-      return restart;
+      return true;
 
     } finally {
 
