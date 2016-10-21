@@ -303,7 +303,7 @@ public class user extends Model {
     Beans<OpLog> bs = OpLog.load(q, s, n);
     this.set(bs, s, n);
 
-    this.show("/admin/user.logs.html");
+    this.show("/admin/user.oplog.html");
   }
 
   @Path(path = "accesslog", login = true, access = "acess.logs.admin")
