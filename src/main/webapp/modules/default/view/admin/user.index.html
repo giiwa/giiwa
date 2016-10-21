@@ -46,9 +46,10 @@
 		<td>$!lang.format($f.created, 'yy-MM-dd HH:mm')</td>
 		#if($edit)
 		<td>
-			<a class='btn btn-info btn-xs' href='/admin/user/logs?uid=$f.id'>$lang.get('a.oplog')</a>
 			<a class='btn btn-success btn-xs' href='/admin/user/edit?id=$f.id'>$lang.get('a.edit')</a>
 			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
+			<a class='btn btn-info btn-xs' href='/admin/user/oplog?uid=$f.id'>$lang.get('a.oplog')</a>
+			<a class='btn btn-info btn-xs' href='/admin/user/accesslog?uid=$f.id'>$lang.get('a.accesslog')</a>
 		</td>
 		#end
 	</tr>

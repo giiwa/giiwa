@@ -1,0 +1,71 @@
+<div class='head'>$lang.get('accesslog.title')</div>
+
+<div class='notes'>
+	$!lang.get('accesslog.notes')
+</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/user'>$lang.get('a.user')</a>
+	<a href='/admin/user/accesslog?uid=$!uid' class='selected'>$lang.get('a.accesslog')</a>
+</div>
+
+<table id='accesslog-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>URL</th>
+			<th>Module</th>
+			<th>Model</th>
+			<th>Method</th>
+			<th>Status</th>
+			<th>Cost(ms)</th>
+			<th>SID</th>
+			<th>UID</th>
+			<th>USERNAME</th>
+			<th>IP</th>
+			<th>Created</th>
+			<th style='width:15%;'>Client</th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$!f.url</td>
+		<td>$!f.module</td>
+		<td>$!f.model</td>
+		<td>$!f.method</td>
+		<td>$!f.status</td>
+		<td>$!f.cost</td>
+		<td>$!f.sid</td>
+		<td>$!f.uid</td>
+		<td>$!f.username</td>
+		<td>$!f.ip</td>
+		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
+		<td>$!f.client</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+#if($me.hasAccess('access.config.admin'))
+<div class='btns'>
+	<a href='javascript:;' class='btn btn-danger' onclick='_deleteall();'>$lang.get('a.clean')</a>
+</div>
+#end
+
+<script>
+$('#accesslog-table').tablesorter();
+
+function _deleteall() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post('/admin/accesslog/deleteall', {}, function(d) {
+			processing && processing.hide();
+			reload();
+		});
+	}
+}
+</script>

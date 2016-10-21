@@ -293,8 +293,8 @@ public class user extends Model {
     }
   }
 
-  @Path(path = "logs", login = true, access = "access.user.admin")
-  public void history() {
+  @Path(path = "oplog", login = true, access = "access.user.admin")
+  public void oplog() {
 
     int s = this.getInt("s");
     int n = this.getInt("n", 20, "number.per.page");
@@ -304,6 +304,22 @@ public class user extends Model {
     this.set(bs, s, n);
 
     this.show("/admin/user.logs.html");
+  }
+
+  @Path(path = "accesslog", login = true, access = "acess.logs.admin")
+  public void accesslog() {
+    long uid = this.getLong("uid");
+    this.set("uid", uid);
+
+    W q = W.create("uid", uid);
+    int s = this.getInt("s");
+    int n = this.getInt("n", 10, "number.per.page");
+
+    Beans<AccessLog> bs = AccessLog.load(q, s, n);
+
+    this.set(bs, s, n);
+
+    this.show("/admin/user.accesslog.html");
   }
 
   /*
