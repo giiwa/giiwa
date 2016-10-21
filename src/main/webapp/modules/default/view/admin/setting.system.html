@@ -23,7 +23,7 @@
 		<input type='checkbox' name='user_captcha' #if($global.getInt('user.captcha',1) == 1) checked #end/>
 		<g>$lang.get('user.captcha.hint')</g></label></div>
 	<div><label><h3>$lang.get('user.token'):</h3>
-		<input type='checkbox' name='user_token' #if($global.getInt('user.token',1) == 1) checked #end/>
+		<input type='checkbox' name='user_token' #if($global.getInt('user.token',0) == 1) checked #end/>
 		<g>$lang.get('user.token.hint')</g></label></div>
 	<div><label><h3>$lang.get('session.alive'):</h3>
 		<input type='number' name='session_alive' value="$global.getLong('session.alive',60480000)"/>
@@ -70,5 +70,4 @@
 	<div><label><h3>cache.group:</h3><i>$!cache_group</i><g>$lang.get('cache.group.hint')</g></label></div>
 	<div><label><h3>mongo[prod].url:</h3><i>$!mongo_url</i><g>$lang.get('mongo[prod].url.hint')</g></label></div>
 	<div><label><h3>mongo[prod].db:</h3><i>$!mongo_db</i><g>$lang.get('mongo[prod].db.hint')</g></label></div>
-	<div><label><h3>mongo[prod].user:</h3><i>$!mongo_user</i><g>$lang.get('mongo[prod].user.hint')</g></label></div>
 	<div><label><h3>db.url:</h3><i>$!db_url</i><g>$lang.get('db.url.hint')</g></label></div>

@@ -216,7 +216,7 @@ public class user extends Model {
 
       JSON jo = new JSON();
       AuthToken a = null;
-      if (Global.getInt("user.token", 1) == 1) {
+      if (Global.getInt("user.token", 0) == 1) {
         String token = this.getString("token");
         String sid = this.getString("sid");
         a = AuthToken.load(sid, token);

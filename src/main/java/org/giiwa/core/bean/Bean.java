@@ -489,10 +489,8 @@ public abstract class Bean extends DefaultCachable implements Map<String, Object
    *          the Document
    */
   protected void load(Document d) {
-    if (d != null) {
-      for (String name : d.keySet()) {
-        this.set(name, d.get(name));
-      }
+    for (String name : d.keySet()) {
+      this.set(name, d.get(name));
     }
   }
 

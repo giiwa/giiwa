@@ -300,8 +300,11 @@ public class MongoHelper extends Helper {
       if (db != null) {
         FindIterable<Document> d = db.find(query);
         if (d != null) {
-          b.load(d.first());
-          return b;
+          Document d1 = d.first();
+          if (d1 != null) {
+            b.load(d1);
+            return b;
+          }
         }
       }
     } catch (Exception e) {
@@ -342,9 +345,11 @@ public class MongoHelper extends Helper {
           if (log.isDebugEnabled())
             log.debug(
                 "load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order=" + order);
-
-          b.load(d.first());
-          return b;
+          Document d1 = d.first();
+          if (d1 != null) {
+            b.load(d1);
+            return b;
+          }
         } else {
           if (log.isDebugEnabled())
             log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="

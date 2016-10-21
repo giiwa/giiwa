@@ -33,8 +33,11 @@ import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
 
 import com.mongodb.Mongo;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * web api: /setup <br>
@@ -181,43 +184,15 @@ public class setup extends Model {
       String dbname = this.getString("db").trim();
 
       if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
-        // jo.put(X.STATE, 201);
-        // if (X.isEmpty(url)) {
-        // jo.put(X.MESSAGE, "没有设置URL");
-        // } else {
-        // jo.put(X.MESSAGE, "没有设置DB");
-        // }
-        // } else {
         log.debug("url=" + url + ", db=" + dbname);
-        String[] hosts = url.split(";");
-
-        ArrayList<ServerAddress> list = new ArrayList<ServerAddress>();
-        for (String s : hosts) {
-          try {
-            String[] s2 = s.split(":");
-            String host;
-            int port = 27017;
-            if (s2.length > 1) {
-              host = s2[0];
-              port = Integer.parseInt(s2[1]);
-            } else {
-              host = s2[0];
-            }
-
-            list.add(new ServerAddress(host, port));
-          } catch (Exception e1) {
-            log.error(e1.getMessage(), e1);
-            OpLog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
-          }
-        }
 
         try {
-          MongoOptions mo = new MongoOptions();
-          mo.connectionsPerHost = 10;
-          Mongo mongodb = new Mongo(list, mo);
-          com.mongodb.DB d1 = mongodb.getDB(dbname);
+          MongoClient client = new MongoClient(new MongoClientURI(url));
+          MongoDatabase g = client.getDatabase(dbname);
+
           jo.put(X.STATE, 200);
 
+          client.close();
         } catch (Exception e1) {
           log.error(e1.getMessage(), e1);
           OpLog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
