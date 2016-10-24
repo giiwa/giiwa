@@ -1023,7 +1023,11 @@ public class MongoHelper extends Helper {
       log.debug("collections=" + c1);
       for (String table : c1) {
         MongoCollection<Document> c2 = getCollection(table);
-        c2.drop();
+        try {
+          c2.drop();
+        } catch (Exception e) {
+          log.error("table=" + table, e);
+        }
       }
 
       String line = in.readLine();
