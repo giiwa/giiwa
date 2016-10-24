@@ -404,6 +404,7 @@ public class DB {
    *           the SQL exception
    */
   public static Connection getConnection(String name) throws SQLException {
+    name = name.trim();
     BasicDataSource external = dss.get(name);
     if (external == null) {
 
@@ -467,21 +468,21 @@ public class DB {
       int N = conf.getInt("db[" + name + "].conns", MAX_ACTIVE_NUMBER);
 
       external = new BasicDataSource();
-      external.setDriverClassName(D);
+      external.setDriverClassName(D.trim());
 
       if (!X.isEmpty(username)) {
-        external.setUsername(username);
+        external.setUsername(username.trim());
       }
       if (!X.isEmpty(password)) {
-        external.setPassword(password);
+        external.setPassword(password.trim());
       }
 
-      external.setUrl(EXTERNAL_URL);
+      external.setUrl(EXTERNAL_URL.trim());
       if (conf.containsKey("db[" + name + "].user")) {
-        external.setUsername(conf.getString("db[" + name + "].user"));
+        external.setUsername(conf.getString("db[" + name + "].user").trim());
       }
       if (conf.containsKey("db[" + name + "].passwd")) {
-        external.setUsername(conf.getString("db[" + name + "].passwd"));
+        external.setUsername(conf.getString("db[" + name + "].passwd").trim());
       }
 
       external.setMaxActive(N);

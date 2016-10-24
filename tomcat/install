@@ -19,7 +19,7 @@ case "$1" in
 	postgresql)
 		#initial postgresql
 		echo "initdb using dbinit.sql"
-		sudo -u postgres psql < giiwa/modules/default/view/admin/clone/dbinit.sql
+		sudo -u postgres psql < giiwa/modules/default/view/admin/clone/postgresql.sql
 		echo "initdb has been done"
 		;;
 	mongo)

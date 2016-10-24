@@ -51,8 +51,11 @@ public final class Cache {
    *          the configuration that includes cache configure ("cache.url")
    */
   public static synchronized void init(Configuration conf) {
-    if (_conf != null)
-      return;
+    /**
+     * comment it, let's re-conf in running-time
+     */
+    // if (_conf != null)
+    // return;
 
     _conf = conf;
 

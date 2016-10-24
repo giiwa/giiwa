@@ -69,7 +69,7 @@
 		<div id="system" class='panel' data-next="cache" data-prev="db">
 			<div class='head'>$lang.get('configure.title.system')</div>	
 			<form method="post">
-				<div><label><h3>$lang.get('label.node'):</h3><input type='text' name='node' value="$!global.getString('node','')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
+				<div><label><h3>$lang.get('label.node')<r>*</r>:</h3><input type='text' name='node' value="$global.getString('node','g01')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
 				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!global.getLong('system.code',0)"/><g>同一个分布式节点编号相同</g></label></div>
 				
 				<div class='btns'>
@@ -262,9 +262,15 @@ function check_mongo(f){
 function check_cache(f){
 	processing && processing.show();
 	var  p = {op:'cache'};
+	p.url = $('#cache input[name=url]').val();
+	p.group = $('#cache input[name=group]').val();
 	$.post('/setup/check', p, function(d){
 		processing && processing.hide();
-		f();
+		if(d.state == 200) {
+			f();
+		} else {
+			$.error(d.message);
+		}
 	})
 }
 function check_admin(f){

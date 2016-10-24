@@ -16,12 +16,15 @@ package org.giiwa.app.web;
 
 import java.sql.Connection;
 import java.sql.Statement;
-import java.util.ArrayList;
 
 import org.apache.commons.configuration.Configuration;
+import org.bson.Document;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.cache.Cache;
+import org.giiwa.core.cache.DefaultCachable;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.db.DB;
 import org.giiwa.core.json.JSON;
@@ -32,11 +35,10 @@ import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
-import com.mongodb.MongoOptions;
-import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -187,11 +189,21 @@ public class setup extends Model {
         log.debug("url=" + url + ", db=" + dbname);
 
         try {
-          MongoClient client = new MongoClient(new MongoClientURI(url));
+          MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(5000)
+              .serverSelectionTimeout(1000);
+          MongoClient client = new MongoClient(new MongoClientURI(url, opts));
+
           MongoDatabase g = client.getDatabase(dbname);
-
-          jo.put(X.STATE, 200);
-
+          String name = "test_" + UID.digital(5);
+          g.createCollection(name);
+          MongoCollection<Document> c1 = g.getCollection(name);
+          if (c1 != null) {
+            c1.drop();
+            jo.put(X.STATE, 200);
+          } else {
+            jo.put(X.STATE, 201);
+            jo.put(X.MESSAGE, "can not access");
+          }
           client.close();
         } catch (Exception e1) {
           log.error(e1.getMessage(), e1);
@@ -203,13 +215,35 @@ public class setup extends Model {
       } else {
         jo.put(X.STATE, 200);
       }
-    } else if ("mq".equals(op)) {
-
-      jo.put(X.STATE, 200);
 
     } else if ("cache".equals(op)) {
+      String url = this.getHtml("url").trim();
+      String group = this.getString("group").trim();
 
-      jo.put(X.STATE, 200);
+      try {
+        if (!X.isEmpty(url)) {
+          Configuration conf = Config.getConfig();
+          conf.setProperty("cache.url", url);
+          conf.setProperty("cache.group", group);
+
+          Cache.init(conf);
+          DefaultCachable v1 = new DefaultCachable();
+          Cache.set("test", v1);
+          DefaultCachable v2 = (DefaultCachable) Cache.get("test");
+          if (v2 != null && v1.age() == v2.age()) {
+            jo.put(X.STATE, 200);
+          } else {
+            jo.put(X.STATE, 201);
+            jo.put(X.MESSAGE, "cache system failed");
+          }
+        } else {
+          jo.put(X.STATE, 200);
+        }
+      } catch (Exception e) {
+        log.error("url=" + url, e);
+        jo.put(X.STATE, 201);
+        jo.put(X.MESSAGE, e.getMessage());
+      }
 
     } else {
 

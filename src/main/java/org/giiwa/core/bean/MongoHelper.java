@@ -40,6 +40,7 @@ import org.giiwa.core.json.JSON;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
@@ -100,50 +101,6 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * Inits the db.
-   * 
-   * @deprecated
-   * @param database
-   *          the database
-   * @return the db
-   */
-  @SuppressWarnings("resource")
-  private static synchronized MongoDatabase initDB(String database) {
-    MongoDatabase g = mongo.get(database);
-    if (g == null) {
-      String url = conf.getString("mongo[" + database + "].url", X.EMPTY);
-      String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
-      if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
-
-        MongoClient client = new MongoClient(new MongoClientURI(url));
-        g = client.getDatabase(dbname);
-
-        mongo.put(database, g);
-
-      }
-    }
-
-    return g;
-  }
-
-  /**
-   * Checks for db.
-   * 
-   * @deprecated
-   * @param database
-   *          the database
-   * @return true, if successful
-   */
-  public static boolean hasDB(String database) {
-    MongoDatabase g = mongo.get(database);
-    if (g == null) {
-      g = initDB(database);
-    }
-
-    return g != null;
-  }
-
-  /**
    * get Mongo DB connection
    * 
    * @return DB
@@ -174,6 +131,7 @@ public class MongoHelper extends Helper {
     if (X.isEmpty(database)) {
       database = "prod";
     }
+    database = database.trim();
 
     synchronized (mongo) {
       g = mongo.get(database);
@@ -182,14 +140,17 @@ public class MongoHelper extends Helper {
         String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
 
         if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
+          url = url.trim();
+          dbname = dbname.trim();
+
           if (!url.startsWith("mongodb://")) {
             url = "mongodb://" + url;
-            conf.setProperty("mongo[" + database + "].url", url);
-            Config.save();
           }
 
-          // int conns = conf.getInt("mongo[" + database + "].conns", 50);
-          MongoClient client = new MongoClient(new MongoClientURI(url));
+          int conns = conf.getInt("mongo[" + database + "].conns", 50);
+          MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(5000)
+              .serverSelectionTimeout(1000).connectionsPerHost(conns);
+          MongoClient client = new MongoClient(new MongoClientURI(url, opts));
           g = client.getDatabase(dbname);
 
           mongo.put(database, g);
