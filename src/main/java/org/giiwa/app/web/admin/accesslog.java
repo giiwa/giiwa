@@ -39,7 +39,6 @@ public class accesslog extends Model {
   public void open() {
     JSON jo = JSON.create();
     int on = this.getInt("on");
-    AccessLog.ON = on;
     Global.setConfig("accesslog.on", on);
     jo.put(X.STATE, HttpServletResponse.SC_OK);
     jo.put("on", on);

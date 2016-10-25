@@ -406,9 +406,10 @@ public class MongoHelper extends Helper {
         }
 
         final Beans<T> bs = new Beans<T>();
+
         // TODO, ignore this as big performance
-        // bs.total = _count(cur, 0, (int) db.count());
-        // log.debug("cost=" + t.past() +"ms, count=" + bs.total);
+        // bs.total = (int) db.count(query);
+        // log.debug("cost=" + t.past() + "ms, count=" + bs.total);
 
         cur = cur.skip(offset);
         // log.debug("skip=" + t.past() +"ms, count=" + bs.total);
@@ -921,7 +922,7 @@ public class MongoHelper extends Helper {
    *          the Class of Bean
    * @return the number of data
    */
-  public static long count(BasicDBObject q, Class<? extends Bean> t) {
+  public static long count(Bson q, Class<? extends Bean> t) {
     String collection = MongoHelper.getCollection(t);
     if (!X.isEmpty(collection)) {
       return count(collection, q);
