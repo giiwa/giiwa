@@ -171,11 +171,14 @@ public class OpLog extends Bean {
       String ip) {
 
     if (Helper.isConfigured()) {
-      if (message != null && message.length() > 1024) {
+      if (message != null && message.length() > 1020) {
         message = message.substring(0, 1024);
       }
       if (trace != null && trace.length() > 8192) {
         trace = trace.substring(0, 8192);
+      }
+      if (!X.isEmpty(trace)) {
+        message = message + "...";
       }
 
       long t = System.currentTimeMillis();
