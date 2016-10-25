@@ -35,7 +35,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 
 import com.mongodb.BasicDBObject;
