@@ -1,11 +1,11 @@
 org/giiwa/framework/web/view/VelocityTemplateLoader.class
 org/giiwa/app/web/admin/backup$RecoverTask.class
 org/giiwa/app/web/admin/setting$mail.class
+org/giiwa/core/base/FileVersion.class
 org/giiwa/framework/bean/User$Lock.class
 org/giiwa/framework/web/Model$PathMapping.class
 org/giiwa/core/conf/Global.class
 org/giiwa/framework/web/PageLabel.class
-org/giiwa/core/base/FileUtil.class
 org/giiwa/core/db/DB.class
 org/giiwa/app/web/DefaultListener$RecycleTask$1.class
 org/giiwa/framework/web/GiiwaContextListener.class
@@ -41,7 +41,6 @@ org/giiwa/core/base/H64.class
 org/giiwa/app/web/DefaultListener$RecycleTask.class
 org/giiwa/app/web/admin/accesslog.class
 org/giiwa/core/base/Digest.class
-org/giiwa/core/base/FileUtil$R.class
 org/giiwa/app/web/admin/logs.class
 org/giiwa/framework/bean/Session.class
 org/giiwa/core/base/RSA$Key.class
@@ -54,6 +53,7 @@ org/giiwa/app/web/admin/dashboard.class
 org/giiwa/framework/web/DefaultModel.class
 org/giiwa/core/noti/Sms$ISender.class
 org/giiwa/framework/web/GClassLoader.class
+org/giiwa/core/base/FileVersion$R.class
 org/giiwa/app/web/admin/role.class
 org/giiwa/core/base/Shell$IPrint.class
 org/giiwa/app/web/admin/module.class
@@ -70,7 +70,6 @@ org/giiwa/core/noti/Email$1.class
 org/giiwa/core/cache/DefaultCachable.class
 org/giiwa/core/cache/RedisCache.class
 org/giiwa/core/base/Http$2.class
-org/giiwa/core/base/FileUtil$Version.class
 org/giiwa/core/conf/Global$1.class
 org/giiwa/core/base/MD5.class
 org/giiwa/framework/web/Model.class
@@ -105,7 +104,6 @@ org/giiwa/core/base/Captcha$Result.class
 org/giiwa/core/task/Task.class
 org/giiwa/framework/bean/OpLog$ILogger.class
 org/giiwa/framework/web/view/VelocityView.class
-org/giiwa/core/base/GString.class
 org/giiwa/core/base/Host$Entity.class
 org/giiwa/core/cache/ICacheSystem.class
 org/giiwa/app/web/admin/setting.class
@@ -115,6 +113,7 @@ org/giiwa/app/web/index.class
 org/giiwa/core/bean/MongoHelper.class
 org/giiwa/core/noti/Email$auth.class
 org/giiwa/framework/web/view/View.class
+org/giiwa/core/base/FileVersion$Version.class
 org/giiwa/app/web/admin/system$1.class
 org/giiwa/framework/bean/Role.class
 org/giiwa/core/task/Task$2.class
@@ -125,6 +124,7 @@ org/giiwa/core/conf/Global$LockHeartbeat.class
 org/giiwa/framework/bean/User.class
 org/giiwa/core/bean/Column.class
 org/giiwa/core/bean/Helper$V.class
+org/giiwa/core/base/StringFinder.class
 org/giiwa/core/base/Host$Disk.class
 org/giiwa/framework/bean/OpLog.class
 org/giiwa/framework/web/Model$NameValue.class
