@@ -34,15 +34,13 @@ import org.giiwa.core.bean.X;
 public final class Cache {
 
   /** The log. */
-  private static Log           log       = LogFactory.getLog(Cache.class);
+  private static Log          log       = LogFactory.getLog(Cache.class);
 
-  public final static String   MEMCACHED = "memcached://";
-  public final static String   REDIS     = "redis://";
-  private static String        GROUP     = "g://";
+  public final static String  MEMCACHED = "memcached://";
+  public final static String  REDIS     = "redis://";
+  private static String       GROUP     = "g://";
 
-  private static ICacheSystem  cacheSystem;
-
-  private static Configuration _conf;
+  private static ICacheSystem cacheSystem;
 
   /**
    * initialize the cache with configuration.
@@ -56,8 +54,6 @@ public final class Cache {
      */
     // if (_conf != null)
     // return;
-
-    _conf = conf;
 
     String server = conf.getString("cache.url", X.EMPTY);
     if (server.startsWith(MEMCACHED)) {

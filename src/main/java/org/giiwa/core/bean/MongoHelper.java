@@ -722,7 +722,7 @@ public class MongoHelper extends Helper {
    * @return int
    */
   final public static long updateCollection(String collection, Object id, V v) {
-    return updateCollection(collection, id, v, false);
+    return updateCollection(collection, new BasicDBObject(X.ID, id), v);
   }
 
   /**
@@ -741,7 +741,7 @@ public class MongoHelper extends Helper {
   final public static long updateCollection(String collection, Object id, V v, boolean adding) {
 
     BasicDBObject q = new BasicDBObject().append(X.ID, id);
-    return updateCollection(collection, q, v, adding);
+    return updateCollection(collection, q, v);
   }
 
   /**
