@@ -76,31 +76,34 @@ public class Roles extends Bean {
       return true;
     }
 
-    for (String s : name) {
-      if (access.contains(s)) {
-        return true;
-      }
-
-      /**
-       * test the name exists in while access? if not then add it in DB
-       */
-      if (!X.isEmpty(s)) {
-        Access.set(s);
-      }
-
-      /**
-       * check if has admin ?
-       */
-      int i = s.lastIndexOf(".");
-      if (i > 0) {
-        String s1 = s.substring(0, i) + ".admin";
-        if (access.contains(s1)) {
+    if (access != null && access.size() > 0) {
+      for (String s : name) {
+        if (access.contains(s)) {
           return true;
         }
-      }
-    }
 
-    return access.contains("access.config.admin");
+        /**
+         * test the name exists in while access? if not then add it in DB
+         */
+        if (!X.isEmpty(s)) {
+          Access.set(s);
+        }
+
+        /**
+         * check if has admin ?
+         */
+        int i = s.lastIndexOf(".");
+        if (i > 0) {
+          String s1 = s.substring(0, i) + ".admin";
+          if (access.contains(s1)) {
+            return true;
+          }
+        }
+      }
+
+      return access.contains("access.config.admin");
+    }
+    return false;
   }
 
 }
