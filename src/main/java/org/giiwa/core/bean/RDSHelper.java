@@ -1009,6 +1009,96 @@ public class RDSHelper extends Helper {
   }
 
   /**
+   * advance load API
+   * 
+   * @param select
+   *          the select section, etc:
+   *          "select a.* from tbluser a, tblrole b where a.uid=b.uid"
+   * @param q
+   *          the additional query condition;
+   * @param offset
+   * @param limit
+   * @param clazz
+   * @return List
+   */
+  public static <T extends Bean> List<T> loadBy(String select, W q, int offset, int limit, Class<T> clazz) {
+    /**
+     * create the sql statement
+     */
+    TimeStamp t = TimeStamp.create();
+
+    StringBuilder sql = new StringBuilder();
+    sql.append(select);
+    String where = q.where();
+    if (where != null) {
+      if (select.indexOf(" where ") < 0) {
+        sql.append(" where ").append(where);
+      } else {
+        sql.append(" and (").append(where).append(")");
+      }
+    }
+    String orderby = q.orderby();
+    if (orderby != null) {
+      sql.append(" ").append(orderby);
+    }
+
+    // TODO, oracle not support limit, using rownum
+    if (limit > 0) {
+      sql.append(" limit ").append(limit);
+    }
+
+    if (offset > 0) {
+      sql.append(" offset ").append(offset);
+    }
+
+    /**
+     * search it in database
+     */
+    Connection c = null;
+    PreparedStatement p = null;
+    ResultSet r = null;
+
+    try {
+      c = getConnection();
+
+      if (c == null)
+        return null;
+
+      p = c.prepareStatement(sql.toString());
+
+      int order = 1;
+      Object[] args = q.args();
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
+
+          setParameter(p, order++, o);
+        }
+      }
+
+      r = p.executeQuery();
+      List<T> list = new ArrayList<T>();
+      while (r.next()) {
+        T b = clazz.newInstance();
+        b.load(r);
+        list.add(b);
+      }
+
+      return list;
+    } catch (Exception e) {
+      if (log.isErrorEnabled())
+        log.error(q.toString(), e);
+    } finally {
+      close(r, p, c);
+
+      if (t.past() > 2 && sqllog.isDebugEnabled()) {
+        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "]");
+      }
+    }
+    return null;
+  }
+
+  /**
    * load the list data from the RDBMS table that associated with the Bean.
    * 
    * @param <T>
