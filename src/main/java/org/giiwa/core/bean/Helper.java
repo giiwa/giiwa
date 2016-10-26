@@ -1393,6 +1393,7 @@ public class Helper {
    *          the Class of Bean
    * @return the List of objects
    */
+  @SuppressWarnings("unchecked")
   public static <T extends Object> List<T> distinct(String name, W q, Class<T> type, Class<? extends Bean> t) {
     String table = getTable(t);
 
