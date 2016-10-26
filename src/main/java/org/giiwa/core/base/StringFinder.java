@@ -17,7 +17,7 @@ package org.giiwa.core.base;
 import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
-public class GString {
+public class StringFinder {
 
   /**
    * Creates the.
@@ -26,14 +26,14 @@ public class GString {
    *          the s
    * @return the g string
    */
-  public static GString create(String s) {
-    return new GString(s);
+  public static StringFinder create(String s) {
+    return new StringFinder(s);
   }
 
   int    pos = 0;
   String s;
 
-  private GString(String s) {
+  private StringFinder(String s) {
     this.s = s;
   }
 

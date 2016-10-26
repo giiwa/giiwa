@@ -30,7 +30,7 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
-import org.giiwa.core.base.FileUtil;
+import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
@@ -1739,7 +1739,7 @@ public class Module {
        * looking for all the "f.getName()" in "classpath", and remove the same
        * package but different "version"<br>
        */
-      FileUtil f1 = new FileUtil(f);
+      FileVersion f1 = new FileVersion(f);
 
       if (f.getName().endsWith(".jar")) {
         log.debug("checking [" + f1.getName() + "]");
@@ -1753,9 +1753,9 @@ public class Module {
           for (File f2 : list) {
             if (f2.getName().endsWith(".jar")) {
 
-              FileUtil.R r = f1.compareTo(f2);
+              FileVersion.R r = f1.compareTo(f2);
 
-              if (r != FileUtil.R.DIFF) {
+              if (r != FileVersion.R.DIFF) {
                 /**
                  * same file, may diff version
                  */

@@ -34,7 +34,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.setting;
-import org.giiwa.core.base.FileUtil;
+import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.RDSHelper;
@@ -156,7 +156,7 @@ public class DefaultListener implements IListener {
     /**
      * clean up the old version's jar
      */
-    if (cleanup(new File(Model.HOME), new HashMap<String, FileUtil>())) {
+    if (cleanup(new File(Model.HOME), new HashMap<String, FileVersion>())) {
       System.exit(0);
       return;
     }
@@ -473,7 +473,7 @@ public class DefaultListener implements IListener {
    * @param map
    * @return
    */
-  public static boolean cleanup(File f, Map<String, FileUtil> map) {
+  public static boolean cleanup(File f, Map<String, FileVersion> map) {
     /**
      * list and compare all jar files
      */
@@ -489,15 +489,15 @@ public class DefaultListener implements IListener {
         }
       }
     } else if (f.isFile() && f.getName().endsWith(".jar")) {
-      FileUtil f1 = new FileUtil(f);
+      FileVersion f1 = new FileVersion(f);
       String name = f1.getName();
 
-      FileUtil f2 = map.get(name);
+      FileVersion f2 = map.get(name);
       if (f2 == null) {
         map.put(f1.getName(), f1);
       } else {
-        FileUtil.R r = f1.compareTo(f2);
-        if (r == FileUtil.R.HIGH || r == FileUtil.R.SAME) {
+        FileVersion.R r = f1.compareTo(f2);
+        if (r == FileVersion.R.HIGH || r == FileVersion.R.SAME) {
           // remove f2
           if (log.isWarnEnabled()) {
             log.warn("delete duplicated jar file, but low version:" + f2.getFile().getAbsolutePath() + ", keep: "
@@ -505,7 +505,7 @@ public class DefaultListener implements IListener {
           }
           f2.getFile().delete();
           map.put(name, f1);
-        } else if (r == FileUtil.R.LOW) {
+        } else if (r == FileVersion.R.LOW) {
           // remove f1;
           if (log.isWarnEnabled()) {
             log.warn("delete duplicated jar file, but low version:" + f1.getFile().getAbsolutePath() + ", keep: "
@@ -529,7 +529,7 @@ public class DefaultListener implements IListener {
   public static void main(String[] args) {
     DefaultListener d = new DefaultListener();
     File f = new File("/home/joe/d/workspace/");
-    Map<String, FileUtil> map = new HashMap<String, FileUtil>();
+    Map<String, FileVersion> map = new HashMap<String, FileVersion>();
     d.cleanup(f, map);
     System.out.println(map);
 

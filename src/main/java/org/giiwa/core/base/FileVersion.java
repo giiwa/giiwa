@@ -22,9 +22,9 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
-public class FileUtil {
+public class FileVersion {
 
-    static Log log = LogFactory.getLog(FileUtil.class);
+    static Log log = LogFactory.getLog(FileVersion.class);
 
     public static enum R {
         SAME, DIFF, HIGH, LOW
@@ -44,7 +44,7 @@ public class FileUtil {
      * @param f
      *          the f
      */
-    public FileUtil(File f) {
+    public FileVersion(File f) {
         this.f = f;
         name = f.getName();
         String[] ss = name.split("[-_]");
@@ -68,7 +68,7 @@ public class FileUtil {
      * @return the r
      */
     public R compareTo(File f1) {
-        return compareTo(new FileUtil(f1));
+        return compareTo(new FileVersion(f1));
     }
 
     public static class Version {
@@ -138,7 +138,7 @@ public class FileUtil {
      *          the f1
      * @return the r
      */
-    public R compareTo(FileUtil f1) {
+    public R compareTo(FileVersion f1) {
         if (!this.name.equalsIgnoreCase(f1.name)) {
             return R.DIFF;
         }
