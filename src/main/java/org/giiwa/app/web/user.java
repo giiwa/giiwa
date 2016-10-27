@@ -189,11 +189,20 @@ public class user extends Model {
     if (uid <= 0) {
       uid = login.getId();
     }
-
+    String cols = this.getString("cols");
     User u = User.loadById(uid);
     JSON jo = new JSON();
     if (u != null) {
-      jo.put("data", u.getJSON());
+      JSON j1 = JSON.create();
+      String[] ss = cols.split("[, ]");
+      j1.put("name", u.getName());
+      j1.put("id", u.getId());
+      if (ss != null && ss.length > 0) {
+        for (String s : ss) {
+          j1.put(s, u.get(s));
+        }
+      }
+      jo.put("data", j1);
       jo.put(X.STATE, 200);
       jo.put(X.MESSAGE, "ok");
     } else {
