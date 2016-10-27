@@ -1599,14 +1599,14 @@ public class Model {
     Session s = getSession();
     User u1 = (User) s.get("user");
     if (u != null && u1 != null && u1.getId() != u.getId()) {
-      log.debug("clear the data in session");
+      log.warn("clear the data in session");
       s.clear();
     }
 
     if (u != null) {
       s.set("user", u);
     } else {
-      log.debug("clear the data in session");
+      log.warn("clear the data in session");
       s.clear();
     }
     s.store();

@@ -83,7 +83,9 @@ public class Session extends DefaultCachable {
    * @return the session
    */
   public static Session load(String sid) {
+
     Session o = null;
+
     try {
       o = (Session) Cache.get("session/" + sid);
     } catch (Exception e) {
