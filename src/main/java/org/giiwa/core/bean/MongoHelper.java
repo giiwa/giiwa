@@ -305,11 +305,18 @@ public class MongoHelper extends Helper {
           if (log.isDebugEnabled())
             log.debug(
                 "load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order=" + order);
+
           Document d1 = d.first();
           if (d1 != null) {
             b.load(d1);
             return b;
           }
+
+          // MongoCursor<Document> it = d.iterator();
+          // if (it.hasNext()) {
+          // b.load(it.next());
+          // return b;
+          // }
         } else {
           if (log.isDebugEnabled())
             log.debug("load - cost=" + t.past() + "ms, collection=" + collection + ", query=" + query + ", order="
