@@ -441,12 +441,12 @@ public final class JSON extends HashMap<String, Object> {
    * find the object by the xpath in json
    * 
    * @param json
-   *          the json string
+   *          the json object
    * @param xpath
    *          the xpath string
    * @return the object
    */
-  public static <T> T find(String json, String xpath) {
+  public static <T> T find(Object json, String xpath) {
     return JsonPath.parse(json).read(xpath);
   }
 
