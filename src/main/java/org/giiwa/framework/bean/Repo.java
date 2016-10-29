@@ -23,8 +23,8 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 
 /**
- * repository of file system. <br>
- * collection="gi_repo"
+ * repository of file system bean. <br>
+ * table="gi_repo"
  * 
  * @author yjiang
  * 

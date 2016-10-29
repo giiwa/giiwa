@@ -29,8 +29,8 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 
 /**
- * The AuthToken. <br>
- * collection="gi_authtoken"
+ * The AuthToken bean. <br>
+ * table="gi_authtoken"
  * 
  * @author wujun
  *

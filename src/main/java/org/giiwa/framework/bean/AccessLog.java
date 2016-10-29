@@ -33,10 +33,9 @@ import org.giiwa.core.task.Task;
 
 import com.mongodb.BasicDBObject;
 
-// TODO: Auto-generated Javadoc
 /**
- * record the web access log. <br>
- * collection="gi_accesslog"
+ * The web access log bean. <br>
+ * table="gi_accesslog"
  * 
  * @author joe
  * 

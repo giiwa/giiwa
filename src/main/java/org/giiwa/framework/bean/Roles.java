@@ -18,7 +18,6 @@ import java.util.*;
 
 import org.giiwa.core.bean.*;
 
-// TODO: Auto-generated Javadoc
 /**
  * group roles.
  * 

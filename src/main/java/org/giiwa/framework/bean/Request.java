@@ -17,7 +17,7 @@ package org.giiwa.framework.bean;
 import org.giiwa.core.bean.X;
 
 /**
- * utility for request from the mdc client.
+ * utility for request.
  *
  * @author yjiang
  * 

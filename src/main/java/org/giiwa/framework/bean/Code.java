@@ -22,8 +22,8 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 
 /**
- * The code bean, used to store/load code, which has s1/s2 keys
- * tablename="gi_code"
+ * The code bean, used to store special code linked with s1 and s2 fields
+ * table="gi_code"
  * 
  * @author wujun
  *

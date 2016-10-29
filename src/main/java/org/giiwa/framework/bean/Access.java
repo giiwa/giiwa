@@ -25,11 +25,10 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 
-// TODO: Auto-generated Javadoc
 /**
- * access token class, it's Bean and mapping "gi_access" collection, it mapping
+ * access token class, it's Bean and mapping to "gi_access" table, it mapping
  * the "access" method in @Path interface. <br>
- * collection="gi_access"
+ * table="gi_access"
  * 
  * @author yjiang
  * 

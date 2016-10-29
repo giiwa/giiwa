@@ -26,8 +26,8 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 /**
- * Menu. <br>
- * collection="gi_menu"
+ * Menu bean. <br>
+ * table="gi_menu"
  * 
  * @author yjiang
  * 

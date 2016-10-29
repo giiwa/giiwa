@@ -26,7 +26,7 @@ import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 
 /**
- * Operation Log. <br>
+ * Operation Log bean. <br>
  * Used to record info/warn/error log in database <br>
  * Beside this, the module also can add personal ILogger for other use by
  * OpLog.addLogger() <br>

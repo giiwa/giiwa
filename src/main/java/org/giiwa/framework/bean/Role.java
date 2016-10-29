@@ -22,8 +22,8 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
 
 /**
- * Role. <br>
- * collection="gi_role"
+ * Role bean. <br>
+ * table="gi_role"
  * 
  * @author yjiang
  * 

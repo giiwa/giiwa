@@ -26,8 +26,8 @@ import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Model;
 
 /**
- * internal class, using for module management. <br>
- * collection="gi_jar"
+ * Internal used bean, used for module management. <br>
+ * table="gi_jar"
  * 
  * @author wujun
  *

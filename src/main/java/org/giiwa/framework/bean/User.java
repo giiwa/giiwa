@@ -25,7 +25,8 @@ import org.giiwa.core.bean.Helper.W;
  * The {@code User} Class is base user class, all the login/access controlled in
  * webgiiwa was depended on the user, it contains all the user-info, and is
  * expandable. <br>
- * collection="gi_user" <br>
+ * table="gi_user" <br>
+ * 
  * MOST important field
  * 
  * <pre>
