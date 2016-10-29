@@ -16,6 +16,7 @@ package org.giiwa.core.json;
 
 import java.io.Reader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,23 @@ public final class JSON extends HashMap<String, Object> {
       Gson g = new Gson();
       byte[] b1 = (byte[]) json;
       j = g.fromJson(new String(b1), JSON.class);
+    } else {
+      // from a object
+      Field[] ff = json.getClass().getDeclaredFields();
+      if (ff != null && ff.length > 0) {
+        j = JSON.create();
+        for (Field f : ff) {
+          int m = f.getModifiers();
+          if ((m & (Modifier.TRANSIENT | Modifier.STATIC | Modifier.FINAL)) == 0) {
+            try {
+              f.setAccessible(true);
+              j.put(f.getName(), f.get(json));
+            } catch (Exception e) {
+              log.error(e.getMessage(), e);
+            }
+          }
+        }
+      }
     }
 
     _refine(j);
