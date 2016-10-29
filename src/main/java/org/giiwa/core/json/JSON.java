@@ -104,7 +104,7 @@ public final class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * From objects.
+   * parse the jsons to array of JSON.
    *
    * @param jsons
    *          the jsons
@@ -185,7 +185,7 @@ public final class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Creates the.
+   * Creates a empty JSON object
    *
    * @return the json
    */
@@ -193,7 +193,9 @@ public final class JSON extends HashMap<String, Object> {
     return new JSON();
   }
 
-  @Override
+  /**
+   * create a json string
+   */
   public String toString() {
     Gson g = new Gson();
     return g.toJson(this);
@@ -220,10 +222,10 @@ public final class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Creates the.
+   * Creates a JSON from the map
    *
    * @param m
-   *          the m
+   *          the map
    * @return the json
    */
   public static JSON create(Map<String, Object> m) {
@@ -233,11 +235,11 @@ public final class JSON extends HashMap<String, Object> {
   }
 
   /**
-   * Checks for.
+   * Checks for exists of name
    *
    * @param name
    *          the name
-   * @return true, if successful
+   * @return true, if exists
    */
   public boolean has(String name) {
     return this.containsKey(name);

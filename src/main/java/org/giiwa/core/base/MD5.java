@@ -24,15 +24,20 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-// TODO: Auto-generated Javadoc
+/**
+ * MD5 utility
+ * 
+ * @author wujun
+ *
+ */
 public class MD5 {
   private static Log log = LogFactory.getLog(MD5.class);
 
   /**
-   * Md5.
+   * Generate Md5 string for the file
    *
    * @param f
-   *          the f
+   *          the file
    * @return the string
    */
   public static String md5(File f) {
@@ -54,10 +59,10 @@ public class MD5 {
   }
 
   /**
-   * Md5.
+   * Generate Md5 string for the inputstream.
    *
    * @param fis
-   *          the fis
+   *          the inputstream
    * @return the string
    * @throws Exception
    *           the exception
@@ -75,7 +80,7 @@ public class MD5 {
   }
 
   /**
-   * Md5.
+   * Generate Md5 string for the string
    *
    * @param target
    *          the target
