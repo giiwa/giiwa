@@ -468,10 +468,13 @@ public class DefaultListener implements IListener {
   }
 
   /**
+   * clean up jar files in WEB-INF/lib
    * 
    * @param f
+   *          the file
    * @param map
-   * @return
+   *          the map
+   * @return the boolean of success or not
    */
   public static boolean cleanup(File f, Map<String, FileVersion> map) {
     /**

@@ -855,6 +855,7 @@ public class Module {
    * load the module by id
    * 
    * @param id
+   *          the module id
    * @return the Module
    */
   public static Module load(int id) {
@@ -1018,7 +1019,9 @@ public class Module {
   /**
    * get all modules
    * 
-   * @return List
+   * @param enabled
+   *          the enabled or not
+   * @return List the list of module
    */
   public static List<Module> getAll(boolean enabled) {
     if (enabled) {

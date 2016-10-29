@@ -1384,17 +1384,19 @@ public class Helper {
 
   /**
    * get the distinct list for the name, by the query.
-   *
+   * 
+   * @param <T>
+   *          the base object
    * @param name
    *          the column name
    * @param q
    *          the query
    * @param t
-   *          the Class of Bean
+   *          the Bean class
    * @return the List of objects
    */
   @SuppressWarnings("unchecked")
-  public static <T extends Object> List<T> distinct(String name, W q, Class<T> type, Class<? extends Bean> t) {
+  public static <T> List<T> distinct(String name, W q, Class<? extends Bean> t) {
     String table = getTable(t);
 
     if (table != null) {
@@ -1404,7 +1406,7 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.distinct(table, name, q.query(), type);
+        return MongoHelper.distinct(table, name, q.query());
 
       } else if (primary == DBType.RDS) {
         // insert into RDS

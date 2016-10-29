@@ -307,7 +307,7 @@ public final class X {
    * 
    * @param v
    *          the object
-   * @return
+   * @return the double result
    */
   public static double toDouble(Object v) {
     return toDouble(v, 0);

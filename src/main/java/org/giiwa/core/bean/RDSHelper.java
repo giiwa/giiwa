@@ -1011,15 +1011,20 @@ public class RDSHelper extends Helper {
   /**
    * advance load API
    * 
+   * @param <T>
+   *          the base object
    * @param select
    *          the select section, etc:
    *          "select a.* from tbluser a, tblrole b where a.uid=b.uid"
    * @param q
    *          the additional query condition;
    * @param offset
+   *          the offset
    * @param limit
+   *          the limit
    * @param clazz
-   * @return List
+   *          the Class Bean
+   * @return List the list of Bean
    */
   public static <T extends Bean> List<T> loadBy(String select, W q, int offset, int limit, Class<T> clazz) {
     /**

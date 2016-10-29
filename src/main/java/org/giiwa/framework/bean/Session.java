@@ -147,6 +147,7 @@ public class Session extends DefaultCachable {
    * store the session with the expired
    * 
    * @param expired
+   *          the expired timestamp, ms in future
    * @return Session
    */
   public Session store(long expired) {

@@ -124,6 +124,7 @@ public class Repo extends Bean {
    *          the inputstream
    * @return the ID
    * @throws IOException
+   *           throw IOException if failed
    */
   public static String store(String name, InputStream in) throws IOException {
     String id = id();

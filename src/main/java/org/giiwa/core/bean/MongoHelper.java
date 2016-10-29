@@ -762,7 +762,7 @@ public class MongoHelper extends Helper {
    *          the value
    * @return int of updated
    */
-  final public static long updateCollection(String collection, Bson query, V v) {
+  final public static long updateCollection(String collection, Bson q, V v) {
 
     Document d = new Document();
 
@@ -775,10 +775,10 @@ public class MongoHelper extends Helper {
     try {
       log.debug("data=" + d);
       MongoCollection<Document> c = MongoHelper.getCollection(collection);
-      UpdateResult r = c.updateMany(query, new Document("$set", d));
+      UpdateResult r = c.updateMany(q, new Document("$set", d));
 
       if (log.isDebugEnabled())
-        log.debug("updated collection=" + collection + ", query=" + query + ", d=" + d + ", n=" + r.getModifiedCount()
+        log.debug("updated collection=" + collection + ", query=" + q + ", d=" + d + ", n=" + r.getModifiedCount()
             + ",result=" + r);
 
       // r.getN();
@@ -889,6 +889,8 @@ public class MongoHelper extends Helper {
   /**
    * get distinct value for key by the query.
    *
+   * @param <T>
+   *          the base object
    * @param collection
    *          the collection name
    * @param key
@@ -897,18 +899,21 @@ public class MongoHelper extends Helper {
    *          the query
    * @return List of the value
    */
-  public static <T extends Object> List<T> distinct(String collection, String key, Bson q, Class<T> type) {
+  @SuppressWarnings("unchecked")
+  public static <T> List<T> distinct(String collection, String key, Bson q) {
 
     TimeStamp t1 = TimeStamp.create();
     try {
 
       MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
-        Iterator<T> it = c.distinct(key, q, type).iterator();
-        List<T> list = new ArrayList<T>();
+        Iterator<Object> it = c.distinct(key, q, Object.class).iterator();
+        List<Object> list = new ArrayList<Object>();
         while (it.hasNext()) {
           list.add(it.next());
         }
+
+        return (List<T>) list;
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
