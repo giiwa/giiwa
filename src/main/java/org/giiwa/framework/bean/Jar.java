@@ -98,7 +98,7 @@ public class Jar extends Bean {
    */
   public static List<String> loadAll(W q) {
     String node = Model.node();
-    return Helper.distinct("name", q.and("node", node), String.class, Jar.class);
+    return Helper.distinct("name", q.and("node", node), Jar.class);
   }
 
   /**
@@ -111,7 +111,7 @@ public class Jar extends Bean {
   public static List<String> load(String name) {
     String node = Model.node();
 
-    return Helper.distinct("module", W.create("name", name).and("node", node), String.class, Jar.class);
+    return Helper.distinct("module", W.create("name", name).and("node", node), Jar.class);
   }
 
   /**

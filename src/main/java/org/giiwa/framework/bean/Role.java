@@ -105,7 +105,7 @@ public class Role extends Bean {
   public List<String> getAccesses() {
 
     if (!this.containsKey("accesses")) {
-      List<String> list = Helper.distinct("name", W.create("rid", this.getId()), String.class, RoleAccess.class);
+      List<String> list = Helper.distinct("name", W.create("rid", this.getId()), RoleAccess.class);
 
       this.set("accesses", list);
 

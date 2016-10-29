@@ -133,7 +133,7 @@ public class AccessLog extends Bean {
    * @return Map
    */
   public static Map<Object, Long> distinct(String name) {
-    List<String> list = Helper.distinct(name, W.create("status", 200), String.class, AccessLog.class);
+    List<String> list = Helper.distinct(name, W.create("status", 200), AccessLog.class);
     Map<Object, Long> m = new TreeMap<Object, Long>();
     for (String v : list) {
       long d = Helper.count(W.create(name, v).and("status", 200), AccessLog.class);
