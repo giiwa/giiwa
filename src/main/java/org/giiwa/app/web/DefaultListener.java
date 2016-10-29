@@ -526,6 +526,7 @@ public class DefaultListener implements IListener {
    *          the arguments
    * @deprecated
    */
+  @SuppressWarnings("static-access")
   public static void main(String[] args) {
     DefaultListener d = new DefaultListener();
     File f = new File("/home/joe/d/workspace/");
