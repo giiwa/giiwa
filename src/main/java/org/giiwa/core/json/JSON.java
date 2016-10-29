@@ -430,11 +430,24 @@ public final class JSON extends HashMap<String, Object> {
    * @param <T>
    *          the object
    * @param xpath
-   *          the xpath of json
+   *          the xpath string of json
    * @return the object
    */
   public <T> T find(String xpath) {
     return JsonPath.parse(toString()).read(xpath);
+  }
+
+  /**
+   * find the object by the xpath in json
+   * 
+   * @param json
+   *          the json string
+   * @param xpath
+   *          the xpath string
+   * @return the object
+   */
+  public static <T> T find(String json, String xpath) {
+    return JsonPath.parse(json).read(xpath);
   }
 
 }
