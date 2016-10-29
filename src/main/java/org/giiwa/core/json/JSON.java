@@ -388,11 +388,11 @@ public final class JSON extends HashMap<String, Object> {
    *          the name
    * @return the list
    */
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({ "unchecked" })
   public List<JSON> getList(String name) {
     Object o = this.get(name);
     if (o != null && o instanceof List) {
-      return (List) o;
+      return (List<JSON>) o;
     }
     return null;
   }
@@ -449,7 +449,7 @@ public final class JSON extends HashMap<String, Object> {
    * @return the object
    */
   public <T> T find(String xpath) {
-    return JsonPath.parse(this).read(xpath);
+    return find(this, xpath);
   }
 
   /**
@@ -477,8 +477,22 @@ public final class JSON extends HashMap<String, Object> {
    * @return JSON the new JSON object
    */
   public JSON set(String xpath, Object value) {
-    JsonPath.parse(this).set(xpath, value);
+    set(this, xpath, value);
     return this;
+  }
+
+  /**
+   * set the value by xpath
+   * 
+   * @param json
+   *          the source json object
+   * @param xpath
+   *          the xpath string
+   * @param value
+   *          the object
+   */
+  public static void set(Object json, String xpath, Object value) {
+    JsonPath.parse(json).set(xpath, value);
   }
 
 }
