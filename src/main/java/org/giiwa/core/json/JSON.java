@@ -413,7 +413,7 @@ public final class JSON extends HashMap<String, Object> {
     ss = "{a:'a',b:1, c:{a:1, b:'a'}}";
     j = JSON.fromObject(ss);
     System.out.println(j);
-    System.out.println("$.c=" + j.find("$.c", JSON.class));
+    System.out.println("$.c=" + j.find("$.c"));
 
     System.out.println(j.get("b").getClass());
     ss = "[{a:'a',b:1}]";
@@ -429,12 +429,10 @@ public final class JSON extends HashMap<String, Object> {
    * 
    * @param xpath
    *          the xpath of json
-   * @param t
-   *          the Class
    * @return the object
    */
-  public <T> T find(String xpath, Class<T> t) {
-    return JsonPath.parse(toString()).read(xpath, t);
+  public <T> T find(String xpath) {
+    return JsonPath.parse(toString()).read(xpath);
   }
 
 }
