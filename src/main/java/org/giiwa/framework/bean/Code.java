@@ -21,6 +21,13 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 
+/**
+ * The code bean, used to store/load code, which has s1/s2 keys
+ * tablename="gi_code"
+ * 
+ * @author wujun
+ *
+ */
 @Table(name = "gi_code")
 public class Code extends Bean {
 
