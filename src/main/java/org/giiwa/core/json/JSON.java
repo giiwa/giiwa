@@ -29,8 +29,20 @@ import com.google.gson.Gson;
 import com.jayway.jsonpath.JsonPath;
 
 /**
- * The Class JSON, simple JSON object, using Gson to parse and format
- *
+ * The Class JSON, simple JSON object, using Gson to parse and format, <br>
+ * and find api by xpath <br>
+ * 
+ * <pre>
+JsonPath expressions can use the dot–notation
+
+$.store.book[0].title
+
+or the bracket–notation
+
+$['store']['book'][0]['title']
+ * 
+ * </pre>
+ * 
  * @author wujun
  */
 public final class JSON extends HashMap<String, Object> {
@@ -416,6 +428,7 @@ public final class JSON extends HashMap<String, Object> {
     j = JSON.fromObject(ss);
     System.out.println(j);
     System.out.println("$.c=" + j.find("$.c"));
+    System.out.println(j.set("$.c", 2));
 
     System.out.println(j.get("b").getClass());
     ss = "[{a:'a',b:1}]";
@@ -436,12 +449,14 @@ public final class JSON extends HashMap<String, Object> {
    * @return the object
    */
   public <T> T find(String xpath) {
-    return JsonPath.parse(toString()).read(xpath);
+    return JsonPath.parse(this).read(xpath);
   }
 
   /**
    * find the object by the xpath in json
    * 
+   * @param <T>
+   *          the object returned
    * @param json
    *          the json object
    * @param xpath
@@ -450,6 +465,20 @@ public final class JSON extends HashMap<String, Object> {
    */
   public static <T> T find(Object json, String xpath) {
     return JsonPath.parse(json).read(xpath);
+  }
+
+  /**
+   * set the value by xpath
+   * 
+   * @param xpath
+   *          the xpath
+   * @param value
+   *          the object
+   * @return JSON the new JSON object
+   */
+  public JSON set(String xpath, Object value) {
+    JsonPath.parse(this).set(xpath, value);
+    return this;
   }
 
 }
