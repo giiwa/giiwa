@@ -94,7 +94,7 @@ public class Menu extends Bean {
   }
 
   public String getUrl() {
-    return this.getString("url");
+    return this.getString(X.URL);
   }
 
   public String getTag() {
@@ -138,7 +138,7 @@ public class Menu extends Bean {
         /**
          * create menu if not exists
          */
-        V v = V.create().copy(jo, "url", "click", "classes", "content", "tag", "access", "seq", "tip", "style", "load");
+        V v = V.create().copy(jo, X.URL, "click", "classes", "content", "tag", "access", "seq", "tip", "style", "load");
 
         /**
          * create the access if not exists

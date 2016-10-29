@@ -197,7 +197,7 @@ public class module extends Model {
       e1.addAttribute("name", "default");
       e1.addAttribute("version", Module.load("default").getVersion());
       e1 = e.addElement("jar");
-      e1.addAttribute("url", "http://giiwa.org/aaa_1.1.jar");
+      e1.addAttribute(X.URL, "http://giiwa.org/aaa_1.1.jar");
 
       OutputFormat format = OutputFormat.createPrettyPrint();
       format.setEncoding("UTF-8");
@@ -523,7 +523,7 @@ public class module extends Model {
   @Path(path = "add", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
   public void add() {
 
-    String url = this.getString("url");
+    String url = this.getString(X.URL);
     Entity e = Repo.load(url);
 
     JSON jo = new JSON();
@@ -672,7 +672,7 @@ public class module extends Model {
           if (md5 != null) {
             jo.put("md5", md5);
             jo.put(X.STATE, 200);
-            jo.put("uri", m.getRepo());
+            jo.put(X.URI, m.getRepo());
             jo.put("name", name);
             jo.put("version", m.getVersion());
             jo.put("build", m.getBuild());
@@ -704,7 +704,7 @@ public class module extends Model {
                 JSON j1 = JSON.create();
                 j1.put("md5", md5);
                 j1.put(X.STATE, 200);
-                j1.put("uri", m1.getRepo());
+                j1.put(X.URI, m1.getRepo());
                 j1.put("name", m1.getName());
                 j1.put("version", m1.getVersion());
                 j1.put("build", m1.getBuild());

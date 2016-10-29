@@ -16,6 +16,7 @@ package org.giiwa.framework.web;
 
 import java.io.*;
 
+import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 
 /**
@@ -74,7 +75,7 @@ public class DefaultModel extends Model {
 
       this.set("me", this.getUser());
       this.put("lang", lang);
-      this.put("uri", uri);
+      this.put(X.URI, uri);
       this.put("module", Module.home);
       this.put("path", path);
       this.put("request", req);

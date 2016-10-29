@@ -116,7 +116,7 @@ public class menu extends Model {
          * set the url
          */
         if (!X.isEmpty(m.getUrl())) {
-          jo.put("url", m.getUrl());
+          jo.put(X.URL, m.getUrl());
         }
 
         /**

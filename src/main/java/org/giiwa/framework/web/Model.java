@@ -435,7 +435,7 @@ public class Model {
        * default handler
        */
       this.put("lang", lang);
-      this.put("uri", uri);
+      this.put(X.URI, uri);
       this.put("module", Module.home);
       this.put("path", path);
       this.put("request", req);
@@ -566,7 +566,7 @@ public class Model {
         createQuery();
       }
       if (!isAjax()) {
-        Session.load(sid()).set("uri", this.query == null ? this.uri : this.query.path(this.uri).toString()).store();
+        Session.load(sid()).set(X.URI, this.query == null ? this.uri : this.query.path(this.uri).toString()).store();
       }
     }
 
@@ -574,7 +574,7 @@ public class Model {
       JSON jo = JSON.create();
 
       jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
-      this.setHeader("status", Integer.toString(HttpServletResponse.SC_UNAUTHORIZED));
+      this.setHeader(X.STATUS, Integer.toString(HttpServletResponse.SC_UNAUTHORIZED));
 
       jo.put(X.MESSAGE, lang.get("login.required"));
       jo.put(X.ERROR, lang.get("not.login"));

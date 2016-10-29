@@ -68,7 +68,7 @@ public class AccessLog extends Bean {
   }
 
   public String getUrl() {
-    return this.getString("url");
+    return this.getString(X.URL);
   }
 
   /**
@@ -88,7 +88,7 @@ public class AccessLog extends Bean {
       public void onExecute() {
         long created = System.currentTimeMillis();
         String id = UID.id(ip, url, created, node, seq.incrementAndGet());
-        Helper.insert(v.set(X.ID, id).set("ip", ip).set("url", url).set("created", created), AccessLog.class);
+        Helper.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set("created", created), AccessLog.class);
       }
 
     }.schedule(0);

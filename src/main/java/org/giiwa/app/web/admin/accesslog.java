@@ -60,7 +60,7 @@ public class accesslog extends Model {
 
     W q = W.create();
     if (!X.isEmpty(uri)) {
-      q.and("url", uri);
+      q.and(X.URL, uri);
       this.set("guri", uri);
     }
     if (!X.isEmpty(ip)) {

@@ -160,7 +160,7 @@ public class setup extends Model {
     String op = this.getString("op");
     if ("db".equals(op)) {
 
-      String url = this.getHtml("url").trim();
+      String url = this.getHtml(X.URL).trim();
       // String driver = this.getHtml("driver");
       // conf.setProperty("db.url", url);
       // conf.setProperty("db.driver", driver);
@@ -182,7 +182,7 @@ public class setup extends Model {
       }
 
     } else if ("mongo".equals(op)) {
-      String url = this.getHtml("url").trim();
+      String url = this.getHtml(X.URL).trim();
       String dbname = this.getString("db").trim();
 
       if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
@@ -217,7 +217,7 @@ public class setup extends Model {
       }
 
     } else if ("cache".equals(op)) {
-      String url = this.getHtml("url").trim();
+      String url = this.getHtml(X.URL).trim();
       String group = this.getString("group").trim();
 
       try {

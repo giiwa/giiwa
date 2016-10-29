@@ -14,6 +14,9 @@
 */
 package org.giiwa.core.bean;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -25,134 +28,55 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class X {
 
-  private static Log         log         = LogFactory.getLog(X.class);
+  private static Log         log     = LogFactory.getLog(X.class);
 
   /** The Constant 60*1000. */
-  public static final long   AMINUTE     = 1000 * 60;
+  public static final long   AMINUTE = 1000 * 60;
 
   /** The Constant 60*AMINUTE. */
-  public static final long   AHOUR       = AMINUTE * 60;
+  public static final long   AHOUR   = AMINUTE * 60;
 
   /** The Constant 24*AHOUR. */
-  public static final long   ADAY        = 24 * AHOUR;
+  public static final long   ADAY    = 24 * AHOUR;
 
   /** The Constant 7*ADAY. */
-  final static public long   AWEEK       = 7 * ADAY;
+  final static public long   AWEEK   = 7 * ADAY;
 
   /** The Constant 30*ADAY. */
-  final static public long   AMONTH      = 30 * ADAY;
+  final static public long   AMONTH  = 30 * ADAY;
 
   /** The Constant 365*ADAY. */
-  final static public long   AYEAR       = 365 * ADAY;
-
-  /** The Constant "title". */
-  public static final String TITLE       = "title";
-
-  /** The Constant "type". */
-  public static final String TYPE        = "type";
+  final static public long   AYEAR   = 365 * ADAY;
 
   /** The Constant "id". */
-  public static final String ID          = "id";
-
-  /** The Constant "keyword". */
-  public static final String KEYWORD     = "keyword";
+  public static final String ID      = "id";
 
   /** The Constant "state". */
-  public static final String STATE       = "state";
-
-  /** The Constant "name". */
-  public static final String NAME        = "name";
-
-  /** The Constant "audit". */
-  public static final String AUDIT       = "audit";
+  public static final String STATE   = "state";
 
   /** The Constant "". */
-  public static final String EMPTY       = "";
-
-  /** The Constant "all". */
-  public static final String ALL         = "all";
+  public static final String EMPTY   = "";
 
   /** The Constant "url". */
-  public static final String URL         = "url";
+  public static final String URL     = "url";
 
   /** The Constant "uri". */
-  public static final String URI         = "uri";
-
-  /** The Constant "tags". */
-  public static final String TAGS        = "tags";
-
-  /** The Constant "query". */
-  public static final String QUERY       = "query";
-
-  /** The Constant "output". */
-  public static final String OUTPUT      = "output";
-
-  /** The Constant "results". */
-  public static final String RESULTS     = "results";
-
-  /** The Constant "result". */
-  public static final String RESULT      = "result";
+  public static final String URI     = "uri";
 
   /** The Constant "status". */
-  public static final String STATUS      = "status";
-
-  /** The Constant "ok". */
-  public static final int    OK          = 200;
+  public static final String STATUS  = "status";
 
   /** The Constant "UTF-8". */
-  public static final String UTF8        = "UTF-8";
+  public static final String UTF8    = "UTF-8";
 
-  /** The Constant "uid". */
-  public static final String UID         = "uid";
-  /** The Constant "key". */
-  public static final String KEY         = "key";
   /** The Constant "none". */
-  public static final String NONE        = "none";
-
-  /** The Constant "code". */
-  public static final String CODE        = "code";
+  public static final String NONE    = "none";
 
   /** The Constant "message". */
-  public static final String MESSAGE     = "message";
+  public static final String MESSAGE = "message";
 
-  /** The Constant "warn". */
-  public static final String WARN        = "warn";
-
-  /** The Constant "param". */
-  public static final String PARAM       = "param";
-
-  /** The Constant "callback". */
-  public static final String CALLBACK    = "callback";
-
-  /** The Constant "contenttype". */
-  public static final String CONTENTTYPE = "contenttype";
-
-  /** The Constant "error". */
-  public static final String ERROR       = "error";
-  /** The Constant "data". */
-  public static final String DATA        = "data";
-
-  /** The Constant "file". */
-  public static final String FILE        = "file";
-  /** The Constant "length". */
-  public static final String LENGTH      = "length";
-  /** The Constant "total". */
-  public static final String TOTAL       = "total";
-  /** The Constant "position". */
-  public static final String POSITION    = "position";
-  /** The Constant "done". */
-  public static final String DONE        = "done";
-
-  /** The Constant "list". */
-  public static final String LIST        = "list";
-  /** The Constant "s". */
-  public static final String S           = "s";
-  /** The Constant "n". */
-  public static final String E           = "e";
-  /** The Constant "version". */
-  public static final String VERSION     = "version";
-  /** The Constant "seq". */
-  public static final String SEQ         = "seq";
+  /** the Constant "error" . */
+  public static final String ERROR   = "error";
 
   private X() {
   }
@@ -161,7 +85,7 @@ public final class X {
    * test whether equals the two objects.
    *
    * @param s1
-   *          the objectßßß s1
+   *          the object s1
    * @param s2
    *          the object s2
    * @return boolean
@@ -180,28 +104,18 @@ public final class X {
   }
 
   /**
-   * convert the v to long, if failed using defaultValue.
+   * safely parse the object to long, if failed return default value.
    *
    * @param v
-   *          the v
+   *          the object
    * @param defaultValue
    *          the default value
    * @return long
    */
   public static long toLong(Object v, long defaultValue) {
     if (v != null) {
-      if (v instanceof Long) {
-        return (Long) v;
-      }
-      if (v instanceof Integer) {
-        return (Integer) v;
-      }
-
-      if (v instanceof Float) {
-        return (long) ((Float) v).floatValue();
-      }
-      if (v instanceof Double) {
-        return (long) ((Double) v).doubleValue();
+      if (v instanceof Number) {
+        return ((Number) v).longValue();
       }
 
       StringBuilder sb = new StringBuilder();
@@ -231,36 +145,31 @@ public final class X {
   }
 
   /**
-   * To int.
+   * safely parse the object to integer, if failed return 0.
    *
    * @param v
-   *          the v
-   * @return the int
+   *          the object
+   * @return int
    */
   public static int toInt(Object v) {
     return X.toInt(v, 0);
   }
 
   /**
-   * parse a object to a integer.
+   * safely parse the object to integer. if failed return the default value
    * 
    * @param v
-   *          the v
+   *          the object
    * @param defaultValue
    *          the default value
    * @return int
    */
   public static int toInt(Object v, int defaultValue) {
     if (v != null) {
-      if (v instanceof Integer) {
-        return (Integer) v;
+      if (v instanceof Number) {
+        return ((Number) v).intValue();
       }
-      if (v instanceof Float) {
-        return (int) ((Float) v).floatValue();
-      }
-      if (v instanceof Double) {
-        return (int) ((Double) v).doubleValue();
-      }
+
       String s = v.toString();
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < s.length(); i++) {
@@ -288,18 +197,40 @@ public final class X {
   }
 
   /**
-   * same, which test null.
+   * test the object is empty? null , empty string, empty collection, empty map
    *
    * @param s
-   *          the s
-   * @return boolean
+   *          the object, may string, list, map
+   * @return boolean, return true if null, or empty
    */
+  @SuppressWarnings("rawtypes")
   public static boolean isEmpty(Object s) {
-    return s == null || X.EMPTY.equals(s) || X.EMPTY.equals(s.toString().trim());
+    if (s == null) {
+      return true;
+    }
+    if (s instanceof String) {
+      return X.EMPTY.equals(s);
+    } else if (s instanceof Collection) {
+      return ((Collection) s).isEmpty();
+    } else if (s instanceof Map) {
+      return ((Map) s).isEmpty();
+    }
+    return false;
   }
 
   /**
-   * parse a object to a float with defaultvalue.
+   * safely parse the object to float, if failed return 0.
+   * 
+   * @param v
+   *          the object
+   * @return float
+   */
+  public static float toFloat(Object v) {
+    return toFloat(v, 0);
+  }
+
+  /**
+   * safely parse a object to a float, if failed return default value.
    * 
    * @param v
    *          the v
@@ -309,15 +240,10 @@ public final class X {
    */
   public static float toFloat(Object v, float defaultValue) {
     if (v != null) {
-      if (v instanceof Integer) {
-        return (Integer) v;
+      if (v instanceof Number) {
+        return ((Number) v).floatValue();
       }
-      if (v instanceof Float) {
-        return (Float) v;
-      }
-      if (v instanceof Double) {
-        return (float) ((Double) v).doubleValue();
-      }
+
       String s = v.toString();
 
       StringBuilder sb = new StringBuilder();
@@ -350,10 +276,6 @@ public final class X {
     return defaultValue;
   }
 
-  // public static boolean isEmpty(String s) {
-  // return s == null || X.EMPTY.equals(s) || X.EMPTY.equals(s.trim());
-  // }
-
   private static final char[][] DIGS = { "０１２３４５６７８９".toCharArray(), "零一二三四五六七八九".toCharArray(),
       "零壹贰叁肆伍陆柒捌玖".toCharArray() };
 
@@ -381,25 +303,31 @@ public final class X {
   }
 
   /**
-   * To double.
+   * safely parse the object to double, if failed return 0.
    * 
    * @param v
-   *          the value object
+   *          the object
+   * @return
+   */
+  public static double toDouble(Object v) {
+    return toDouble(v, 0);
+  }
+
+  /**
+   * safely parse the object to double, if failed return default value.
+   * 
+   * @param v
+   *          the object
    * @param defaultValue
    *          the default value when the v is null or parse error
    * @return the double
    */
   public static double toDouble(Object v, double defaultValue) {
     if (v != null) {
-      if (v instanceof Integer) {
-        return (Integer) v;
+      if (v instanceof Number) {
+        return ((Number) v).doubleValue();
       }
-      if (v instanceof Float) {
-        return (Float) v;
-      }
-      if (v instanceof Double) {
-        return ((Double) v).doubleValue();
-      }
+
       String s = v.toString().trim();
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < s.length(); i++) {
@@ -469,14 +397,18 @@ public final class X {
   }
 
   /**
-   * To long.
+   * safely parse the object to long, if failed return 0.
    *
    * @param v
-   *          the v
+   *          the object
    * @return the long
    */
   public static long toLong(Object v) {
     return toLong(v, 0);
   }
 
+  public static void main(String[] args) {
+    int s = 10;
+    System.out.println(X.toDouble(s));
+  }
 }
