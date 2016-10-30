@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.core.db;
+package org.giiwa.core.bean;
 
 import java.sql.*;
 import java.util.*;
@@ -23,18 +23,17 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 
 /**
- * The {@code DB} Class used to for RDBMS database layer operation.
+ * The {@code RDB} Class used to for RDS database layer operation.
  * 
  * @author joe
  *
  */
-public class DB {
+public class RDB {
 
-  final private static Log log = LogFactory.getLog(DB.class);
+  final private static Log log = LogFactory.getLog(RDB.class);
 
   /**
    * test is configured

@@ -36,12 +36,12 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.setting;
 import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.Shell;
+import org.giiwa.core.bean.RDB;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.db.DB;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.AuthToken;
@@ -326,7 +326,7 @@ public class DefaultListener implements IListener {
       /**
        * test the database has been installed?
        */
-      String dbname = DB.getDriver();
+      String dbname = RDB.getDriver();
 
       if (!X.isEmpty(dbname) && RDSHelper.isConfigured()) {
         /**

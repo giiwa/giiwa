@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.db.DB;
 import org.giiwa.core.json.JSON;
 
 import com.mongodb.BasicDBList;
@@ -71,7 +70,7 @@ public class Helper {
    */
   public static void init(Configuration conf) {
 
-    DB.init();
+    RDB.init();
 
     Helper.conf = conf;
 

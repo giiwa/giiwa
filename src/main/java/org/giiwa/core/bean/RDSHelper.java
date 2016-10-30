@@ -38,7 +38,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import org.giiwa.core.db.DB;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -252,7 +251,7 @@ public class RDSHelper extends Helper {
           }
         }
       }
-      Connection c = org.giiwa.core.db.DB.getConnection();
+      Connection c = org.giiwa.core.bean.RDB.getConnection();
       synchronized (outdoor) {
         outdoor.put(c, new Long[] { tid, System.currentTimeMillis(), 0L });
       }
@@ -312,7 +311,7 @@ public class RDSHelper extends Helper {
    *           the SQL exception
    */
   public static Connection getConnection(String name) throws SQLException {
-    return org.giiwa.core.db.DB.getConnection(name);
+    return org.giiwa.core.bean.RDB.getConnection(name);
   }
 
   /**
@@ -1885,7 +1884,7 @@ public class RDSHelper extends Helper {
    * @return true: configured, false: no
    */
   public static boolean isConfigured() {
-    return DB.isConfigured();
+    return RDB.isConfigured();
   }
 
   /**

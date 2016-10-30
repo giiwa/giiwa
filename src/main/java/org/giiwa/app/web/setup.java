@@ -19,6 +19,7 @@ import java.sql.Statement;
 
 import org.apache.commons.configuration.Configuration;
 import org.bson.Document;
+import org.giiwa.core.bean.RDB;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.UID;
@@ -26,7 +27,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.cache.DefaultCachable;
 import org.giiwa.core.conf.Config;
-import org.giiwa.core.db.DB;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
@@ -118,7 +118,7 @@ public class setup extends Model {
     conf.setProperty("system.code", systemcode);
 
     Config.save();
-    DB.init();
+    RDB.init();
     Helper.init(conf);
 
     DefaultListener.owner.upgrade(conf, Module.load("default"));
@@ -167,7 +167,7 @@ public class setup extends Model {
       //
       try {
         if (!X.isEmpty(url)) {
-          Connection c1 = DB.getConnectionByUrl(url);
+          Connection c1 = RDB.getConnectionByUrl(url);
           Statement stat = c1.createStatement();
           stat.execute("create table test_ppp(X char(1))");
           stat.execute("drop table test_ppp");
