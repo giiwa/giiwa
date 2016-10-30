@@ -32,17 +32,6 @@ import com.jayway.jsonpath.JsonPath;
  * The Class JSON, simple JSON object, using Gson to parse and format, <br>
  * and find api by xpath <br>
  * 
- * <pre>
-JsonPath expressions can use the dot–notation
-
-$.store.book[0].title
-
-or the bracket–notation
-
-$['store']['book'][0]['title']
- * 
- * </pre>
- * 
  * @author wujun
  */
 public final class JSON extends HashMap<String, Object> {
@@ -386,7 +375,7 @@ public final class JSON extends HashMap<String, Object> {
    *
    * @param name
    *          the name
-   * @return the list
+   * @return the list, or null if not exists
    */
   @SuppressWarnings({ "unchecked" })
   public List<JSON> getList(String name) {
@@ -402,7 +391,7 @@ public final class JSON extends HashMap<String, Object> {
    *
    * @param name
    *          the name
-   * @return the objects
+   * @return the objects, or null if not exists
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public List<Object> getObjects(String name) {
@@ -445,8 +434,15 @@ public final class JSON extends HashMap<String, Object> {
    * @param <T>
    *          the object
    * @param xpath
-   *          the xpath string of json
-   * @return the object
+   *          the xpath expressions can use the dot–notation
+   * 
+   *          <pre>
+  $.store.book[0].title
+  or the bracket–notation
+  $['store']['book'][0]['title']
+   *          </pre>
+   * 
+   * @return the object, or null if not exists
    */
   public <T> T find(String xpath) {
     return find(this, xpath);
@@ -460,8 +456,15 @@ public final class JSON extends HashMap<String, Object> {
    * @param json
    *          the json object
    * @param xpath
-   *          the xpath string
-   * @return the object
+   *          the xpath expressions can use the dot–notation
+   * 
+   *          <pre>
+  $.store.book[0].title
+  or the bracket–notation
+  $['store']['book'][0]['title']
+   *          </pre>
+   * 
+   * @return the object, or null if not exists
    */
   public static <T> T find(Object json, String xpath) {
     return JsonPath.parse(json).read(xpath);
@@ -471,7 +474,14 @@ public final class JSON extends HashMap<String, Object> {
    * set the value by xpath
    * 
    * @param xpath
-   *          the xpath
+   *          the xpath expressions can use the dot–notation
+   * 
+   *          <pre>
+  $.store.book[0].title
+  or the bracket–notation
+  $['store']['book'][0]['title']
+   *          </pre>
+   * 
    * @param value
    *          the object
    * @return JSON the new JSON object
@@ -487,7 +497,15 @@ public final class JSON extends HashMap<String, Object> {
    * @param json
    *          the source json object
    * @param xpath
-   *          the xpath string
+   *          the xpath string <br>
+   *          xpath expressions can use the dot–notation
+   * 
+   *          <pre>
+  $.store.book[0].title
+  or the bracket–notation
+  $['store']['book'][0]['title']
+   *          </pre>
+   * 
    * @param value
    *          the object
    */
