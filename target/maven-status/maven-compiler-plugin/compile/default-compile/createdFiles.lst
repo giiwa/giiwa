@@ -6,7 +6,6 @@ org/giiwa/framework/bean/User$Lock.class
 org/giiwa/framework/web/Model$PathMapping.class
 org/giiwa/core/conf/Global.class
 org/giiwa/framework/web/PageLabel.class
-org/giiwa/core/db/DB.class
 org/giiwa/app/web/DefaultListener$RecycleTask$1.class
 org/giiwa/framework/web/GiiwaContextListener.class
 org/giiwa/core/bean/Helper.class
@@ -79,6 +78,7 @@ org/giiwa/app/web/upload.class
 org/giiwa/app/web/user.class
 org/giiwa/framework/web/view/FreemakerView$T.class
 org/giiwa/core/base/RSA.class
+org/giiwa/core/bean/RDB.class
 org/giiwa/core/bean/X.class
 org/giiwa/framework/bean/User$UserRole.class
 org/giiwa/app/web/admin/system.class

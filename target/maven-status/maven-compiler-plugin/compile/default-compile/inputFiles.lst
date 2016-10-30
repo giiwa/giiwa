@@ -70,6 +70,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/MongoHelper.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/index.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Controller.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/bean/RDB.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Roles.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/menu.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/repo.java
@@ -91,7 +92,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Model.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/noti/Sms.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/DefaultListener.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/db/DB.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Sitemap.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/bean/Menu.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/module.java
