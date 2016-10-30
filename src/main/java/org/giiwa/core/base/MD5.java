@@ -101,4 +101,14 @@ public class MD5 {
     System.out.println(md5(f));
   }
 
+  /**
+   * Generate SHA1 string for the string
+   * 
+   * @param data
+   *          the string
+   * @return the sha1 string
+   */
+  public static String sha1(String data) {
+    return DigestUtils.sha1Hex(data);
+  }
 }
