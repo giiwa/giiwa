@@ -39,6 +39,7 @@ public class alive extends Model {
     jo.put("uptime", System.currentTimeMillis() - Model.UPTIME);
     jo.put("idle", Task.idleThread());
     jo.put("tasks", Task.tasksInQueue());
+    
     this.response(jo);
   }
 

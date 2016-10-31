@@ -54,7 +54,6 @@ org/giiwa/core/noti/Sms$ISender.class
 org/giiwa/framework/web/GClassLoader.class
 org/giiwa/core/base/FileVersion$R.class
 org/giiwa/app/web/admin/role.class
-org/giiwa/core/base/Shell$IPrint.class
 org/giiwa/app/web/admin/module.class
 org/giiwa/app/web/captcha.class
 org/giiwa/framework/bean/Jar.class
