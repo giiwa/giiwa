@@ -170,6 +170,31 @@ public class Shell {
     return out.toString();
   }
 
+  /**
+   * get the status of the processname
+   * 
+   * @param processname
+   *          the process name
+   * @return the status of the process
+   * @throws IOException
+   */
+  public static String getStatus(String processname) throws IOException {
+    if (isLinux() || OS.isFamilyMac()) {
+
+      String line = "ps -ef | grep " + processname;
+      return run(line);
+
+    } else if (OS.isFamilyWindows()) {
+
+      String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
+      return run(cmd);
+
+    } else {
+      throw new IOException("not support");
+    }
+
+  }
+
   public static void kill(String processname) throws IOException {
     if (isLinux() || OS.isFamilyMac()) {
       String line = "kill -9 `ps -ef | grep " + processname + " | awk '{print $2}'`;";
