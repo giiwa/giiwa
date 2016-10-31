@@ -105,8 +105,11 @@ public class DefaultListener implements IListener {
 
     @Override
     public void onExecute() {
-      String s = Global.getString("recycle.task", null);
-      if (s != null && System.currentTimeMillis() - Model.UPTIME > X.AHOUR) {
+      String s = Global.getString("recycle.task", "-1");
+      if ((X.isSame(s, "-1") || X.isEmpty(s)) && System.currentTimeMillis() - Model.UPTIME > X.AHOUR) {
+        /**
+         * recycle.task="-1" or " ", and the server started after 1 hour
+         */
         String[] ss = s.split("\\|");
 
         Calendar c = Calendar.getInstance();
