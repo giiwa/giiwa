@@ -167,7 +167,7 @@ public class module extends Model {
       e = root.addElement("screenshot");
       e.setText("/images/demo_screenshot.png");
       e = root.addElement("version");
-      e.setText("1.0.1");
+      e.setText("1.0");
       e = root.addElement("build");
       e.setText("0");
       e = root.addElement("enabled");
@@ -199,6 +199,9 @@ public class module extends Model {
       e1 = e.addElement("jar");
       e1.addAttribute(X.URL, "http://giiwa.org/aaa_1.1.jar");
 
+      e = root.addElement("license");
+      e.setText("Commercial License");
+      
       OutputFormat format = OutputFormat.createPrettyPrint();
       format.setEncoding("UTF-8");
       XMLWriter writer = new XMLWriter(out, format);

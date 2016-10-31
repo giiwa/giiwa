@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.cache.DefaultCachable;
 
+// TODO: Auto-generated Javadoc
 /**
  * The {@code Beans} Class used to contains the Bean in query. <br>
  * it's includes the total count for the query
@@ -88,4 +89,33 @@ public final class Beans<T extends Bean> extends DefaultCachable {
     return "Beans[total=" + total + ", list.size=" + (list == null ? null : list.size()) + "]";
   }
 
+  private Iterator<T> it;
+
+  /**
+   * Reset the iterator
+   */
+  public void reset() {
+    it = null;
+  }
+
+  /**
+   * Checks for next.
+   *
+   * @return true, if successful
+   */
+  public boolean hasNext() {
+    if (it == null && list != null) {
+      it = list.iterator();
+    }
+    return it != null && it.hasNext();
+  }
+
+  /**
+   * Next object
+   *
+   * @return the t
+   */
+  public T next() {
+    return it == null ? null : it.next();
+  }
 }
