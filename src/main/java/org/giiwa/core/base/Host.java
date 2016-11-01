@@ -781,7 +781,9 @@ public class Host {
       if (Shell.isLinux()) {
 
         String r = Shell.run("df -m");
-        String[] ss = r.split("\r\n");
+        // log.debug("df -m=" + r);
+
+        String[] ss = r.split("\n");
         List<String> l1 = new ArrayList<String>();
         for (int i = 1; i < ss.length; i++) {
           String[] s1 = ss[i].split(" ");
@@ -791,6 +793,8 @@ public class Host {
             l1.add(s);
           }
         }
+
+        // log.debug("l1=" + l1);
 
         for (int i = 0; i < l1.size(); i += 6) {
           if (l1.get(i).startsWith("/dev")) {

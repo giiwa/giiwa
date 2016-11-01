@@ -90,9 +90,19 @@ public class Shell {
   }
 
   public static boolean isLinux() {
-    return OS.isFamilyUnix();
+    if (_linux == -1) {
+      try {
+        String uname = Shell.run("uname -a");
+        log.debug("uname -a=" + uname);
+        _linux = uname.indexOf("Linux") > -1 ? 1 : 0;
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      }
+    }
+    return _linux == 1;
   }
 
+  private static int _linux  = -1;
   private static int _ubuntu = -1;
 
   public static boolean isUbuntu() {
