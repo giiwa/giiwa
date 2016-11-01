@@ -135,21 +135,26 @@ public class Shell {
   public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir)
       throws IOException {
 
-    CommandLine cmdLine = CommandLine.parse(cmd);
-    DefaultExecutor executor = new DefaultExecutor();
-    ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
-    executor.setExitValues(new int[] { 0, 1, -1 });
+    try {
 
-    executor.setStreamHandler(stream);
-    if (!X.isEmpty(workdir)) {
-      executor.setWorkingDirectory(new File(workdir));
+      CommandLine cmdLine = CommandLine.parse(cmd);
+      DefaultExecutor executor = new DefaultExecutor();
+      ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
+      executor.setExitValues(new int[] { 0, 1, -1 });
+
+      executor.setStreamHandler(stream);
+      if (!X.isEmpty(workdir)) {
+        executor.setWorkingDirectory(new File(workdir));
+      }
+
+      // ExecuteWatchdog watchdog = new ExecuteWatchdog(60000);
+      // executor.setWatchdog(watchdog);
+      // watchdog.destroyProcess();
+      return executor.execute(cmdLine);
+    } catch (IOException e) {
+      log.error("cmd=" + cmd, e);
+      throw e;
     }
-
-    // ExecuteWatchdog watchdog = new ExecuteWatchdog(60000);
-    // executor.setWatchdog(watchdog);
-    // watchdog.destroyProcess();
-    return executor.execute(cmdLine);
-
   }
 
   /**
@@ -189,12 +194,22 @@ public class Shell {
    * @return the status of the process
    * @throws IOException
    */
-  public static String getStatus(String processname) throws IOException {
+  public static String getProcessStatus(String processname) throws IOException {
     if (isLinux() || OS.isFamilyMac()) {
 
-      String line = "ps -ef | grep " + processname;
-      return run(line);
+      String line = "ps -ef";
+      String r = run(line);
+      StringBuilder sb = new StringBuilder();
+      String[] ss = r.split("\n");
+      if (ss != null && ss.length > 0) {
+        for (String s : ss) {
+          if (s.contains(processname)) {
+            sb.append(s).append("\n");
+          }
+        }
+      }
 
+      return sb.toString();
     } else if (OS.isFamilyWindows()) {
 
       String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
