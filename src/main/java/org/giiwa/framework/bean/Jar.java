@@ -115,7 +115,7 @@ public class Jar extends Bean {
   }
 
   /**
-   * Reset.
+   * remove all jars.
    *
    * @param module
    *          the module

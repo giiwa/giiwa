@@ -88,7 +88,7 @@ public class Module {
 
   String              version;
   String              build;
-
+  String              license;
   String              screenshot;
 
   /**
@@ -213,11 +213,6 @@ public class Module {
           }
         }
       }
-
-      /**
-       * remove all jar reference before merge
-       */
-      Jar.reset(m.getName());
 
       /**
        * merge WEB-INF and depends lib
@@ -381,8 +376,15 @@ public class Module {
       }
       e = root.addElement("version");
       e.setText(this.version);
+
       e = root.addElement("build");
       e.setText(this.build);
+
+      if (!X.isEmpty(license)) {
+        e = root.addElement("license");
+        e.setText(this.license);
+      }
+
       e = root.addElement("enabled");
       e.setText(Boolean.toString(this.enabled).toLowerCase());
 
@@ -423,6 +425,7 @@ public class Module {
       XMLWriter writer = new XMLWriter(new FileOutputStream(f), format);
       writer.write(doc);
       writer.close();
+
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
@@ -686,6 +689,10 @@ public class Module {
     return enabled;
   }
 
+  public String getLicense() {
+    return license;
+  }
+
   public String getScreenshot() {
     return screenshot;
   }
@@ -926,6 +933,8 @@ public class Module {
           enabled = X.isSame("true", e1.getText().toLowerCase());
         } else if (X.isSame(tag, "readme")) {
           readme = e1.getText();
+        } else if (X.isSame(tag, "license")) {
+          license = e1.getText();
         } else if (X.isSame(tag, "listener")) {
           List<Element> l2 = e1.elements();
           for (Element e2 : l2) {
@@ -1703,6 +1712,9 @@ public class Module {
    */
   public boolean merge() {
 
+    /**
+     * remove all first
+     */
     Jar.reset(this.getName());
 
     boolean changed = false;
@@ -1747,7 +1759,7 @@ public class Module {
       if (f.getName().endsWith(".jar")) {
         log.debug("checking [" + f1.getName() + "]");
 
-        Jar.update(this.getName(), f1.getName());
+        Jar.update(this.getName(), f.getName());
 
         // check the version
         File m = new File(Model.HOME + File.separator + "WEB-INF" + File.separator + "lib");
@@ -1766,7 +1778,7 @@ public class Module {
                 if (modules != null && modules.size() > 0) {
                   for (Object m1 : modules) {
                     Jar.remove(m1.toString(), f2.getName());
-                    Jar.update(m1.toString(), f1.getName());
+                    Jar.update(m1.toString(), f.getName());
                   }
                 }
 

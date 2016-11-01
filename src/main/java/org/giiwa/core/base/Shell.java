@@ -128,7 +128,8 @@ public class Shell {
     CommandLine cmdLine = CommandLine.parse(cmd);
     DefaultExecutor executor = new DefaultExecutor();
     ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
-    // executor.setExitValue(0);
+    executor.setExitValues(new int[] { 0, 1, -1 });
+
     executor.setStreamHandler(stream);
     if (!X.isEmpty(workdir)) {
       executor.setWorkingDirectory(new File(workdir));

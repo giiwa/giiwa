@@ -4,18 +4,14 @@
 	<name>default</name>
 	<package>org.giiwa.app.web</package>
 	<screenshot>/images/gii_128.png</screenshot>
-	<version>1.1</version>
+	<version>1.2</version>
 	<build>0</build>
 	<enabled>true</enabled>
 	<readme>Giiwa default module which managed the giiwa framework</readme>
 	<listener>
 		<class>org.giiwa.app.web.DefaultListener</class>
 	</listener>
-	<setting>
-		<param name="fff" value="aaa"/>
-	</setting>
-	<!--filter>
-	<pattern>/.*</pattern>
-	<class>org.giiwa.web.filter</class>
-	</filter-->
+	<License>
+		Apache License V2
+	</License>
 </module>

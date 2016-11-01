@@ -67,7 +67,7 @@ public final class JSON extends HashMap<String, Object> {
       Gson g = new Gson();
       byte[] b1 = (byte[]) json;
       j = g.fromJson(new String(b1), JSON.class);
-    } else {
+    } else if (json != null) {
       // from a object
       Field[] ff = json.getClass().getDeclaredFields();
       if (ff != null && ff.length > 0) {
