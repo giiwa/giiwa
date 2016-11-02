@@ -76,7 +76,7 @@ public final class Cache {
    * @return cachable if the object not presented or expired, will return null
    */
   @SuppressWarnings("deprecation")
-  public static Cachable get(String id) {
+  public static <T> T get(String id) {
 
     try {
 
@@ -84,7 +84,7 @@ public final class Cache {
 
       Cachable r = null;
       if (cacheSystem != null) {
-        r = (Cachable) cacheSystem.get(id);
+        r = cacheSystem.get(id);
       }
       if (r != null) {
         if (r.expired()) {
@@ -98,7 +98,7 @@ public final class Cache {
         }
       }
 
-      return r;
+      return (T) r;
     } catch (Throwable e) {
       if (cacheSystem != null) {
         cacheSystem.delete(id);

@@ -229,7 +229,7 @@ public class setup extends Model {
           Cache.init(conf);
           DefaultCachable v1 = new DefaultCachable();
           Cache.set("test", v1);
-          DefaultCachable v2 = (DefaultCachable) Cache.get("test");
+          DefaultCachable v2 = Cache.get("test");
           if (v2 != null && v1.age() == v2.age()) {
             jo.put(X.STATE, 200);
           } else {

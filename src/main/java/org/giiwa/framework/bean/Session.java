@@ -57,11 +57,7 @@ public class Session extends DefaultCachable {
    * @return true, if successful
    */
   public static boolean exists(String sid) {
-    Session o = null;
-    try {
-      o = (Session) Cache.get("session/" + sid);
-    } catch (Exception e) {
-    }
+    Session o = Cache.get("session/" + sid);
     return o != null;
   }
 
@@ -84,13 +80,7 @@ public class Session extends DefaultCachable {
    */
   public static Session load(String sid) {
 
-    Session o = null;
-
-    try {
-      o = (Session) Cache.get("session/" + sid);
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
+    Session o = (Session) Cache.get("session/" + sid);
 
     if (o == null) {
       o = new Session();

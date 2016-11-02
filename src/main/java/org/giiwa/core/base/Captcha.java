@@ -100,7 +100,7 @@ public class Captcha {
    */
   public static Result verify(String sid, String code) {
     String id = "//captcha/" + sid;
-    Code c = (Code) Cache.get(id);
+    Code c = Cache.get(id);
     if (c == null) {
       log.warn("no code in cache, sid=" + sid);
       return Result.badcode;

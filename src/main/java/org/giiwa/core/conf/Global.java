@@ -68,25 +68,23 @@ public final class Global extends Bean {
       return X.toInt(cache.get(name), defaultValue);
     }
 
-    Object o = Cache.get("global/" + name);
-    if (o instanceof Global) {
-      Global c = (Global) o;
-      if (!c.expired()) {
+    Global c = Cache.get("global/" + name);
+    if (c == null) {
+      c = Helper.load(W.create(X.ID, name), Global.class);
+      if (c != null) {
+        /**
+         * avoid restarted, can not load new config
+         */
+        c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+        Cache.set("global/" + name, c);
         return X.toInt(c.i, defaultValue);
+      } else {
+        return Config.getConfig().getInt(name, defaultValue);
       }
     }
 
-    Global c = Helper.load(W.create(X.ID, name), Global.class);
-    if (c != null) {
-      /**
-       * avoid restarted, can not load new config
-       */
-      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-      Cache.set("global/" + name, c);
-      return X.toInt(c.i, defaultValue);
-    } else {
-      return Config.getConfig().getInt(name, defaultValue);
-    }
+    return c != null ? X.toInt(c.i, defaultValue) : defaultValue;
+
   }
 
   /**
@@ -103,26 +101,24 @@ public final class Global extends Bean {
       return cache.get(name) == null ? defaultValue : cache.get(name).toString();
     }
 
-    Object o = Cache.get("global/" + name);
-    if (o instanceof Global) {
-      Global c = (Global) o;
-      if (!c.expired()) {
+    Global c = Cache.get("global/" + name);
+    if (c == null) {
+      c = Helper.load(W.create(X.ID, name), Global.class);
+      if (c != null) {
+        /**
+         * avoid restarted, can not load new config
+         */
+        c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+        Cache.set("global/" + name, c);
+
         return c.s != null ? c.s : defaultValue;
+      } else {
+        return Config.getConfig().getString(name, defaultValue);
       }
     }
 
-    Global c = Helper.load(W.create(X.ID, name), Global.class);
-    if (c != null) {
-      /**
-       * avoid restarted, can not load new config
-       */
-      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-      Cache.set("global/" + name, c);
+    return c != null && c.s != null ? c.s : defaultValue;
 
-      return c.s != null ? c.s : defaultValue;
-    } else {
-      return Config.getConfig().getString(name, defaultValue);
-    }
   }
 
   private static Map<String, Object> cache = new HashMap<String, Object>();
@@ -141,26 +137,23 @@ public final class Global extends Bean {
       return X.toLong(cache.get(name), defaultValue);
     }
 
-    Object o = Cache.get("global/" + name);
-    if (o instanceof Global) {
-      Global c = (Global) o;
-      if (!c.expired()) {
+    Global c = Cache.get("global/" + name);
+    if (c == null) {
+      c = Helper.load(W.create(X.ID, name), Global.class);
+      if (c != null) {
+        /**
+         * avoid restarted, can not load new config
+         */
+        c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+        Cache.set("global/" + name, c);
+
         return X.toLong(c.l, defaultValue);
+      } else {
+        return Config.getConfig().getLong(name, defaultValue);
       }
     }
+    return c != null ? X.toLong(c.l, defaultValue) : defaultValue;
 
-    Global c = Helper.load(W.create(X.ID, name), Global.class);
-    if (c != null) {
-      /**
-       * avoid restarted, can not load new config
-       */
-      c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-      Cache.set("global/" + name, c);
-
-      return X.toLong(c.l, defaultValue);
-    } else {
-      return Config.getConfig().getLong(name, defaultValue);
-    }
   }
 
   /**
