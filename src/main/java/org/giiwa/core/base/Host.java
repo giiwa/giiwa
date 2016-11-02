@@ -659,8 +659,19 @@ public class Host {
 
       if (Shell.isLinux()) {
 
-        String r = Shell.run("cat /proc/meminfo |grep MemTotal");
-        String[] ss = r.split(" ");
+        String r = Shell.run("cat /proc/meminfo");
+        String[] ss1 = r.split("\r");
+        String r1 = X.EMPTY;
+        if (ss1 != null && ss1.length > 0) {
+          for (String s1 : ss1) {
+            if (s1.contains("MemTotal")) {
+              r1 = s1;
+              break;
+            }
+          }
+        }
+
+        String[] ss = r1.split(" ");
         List<String> l1 = new ArrayList<String>();
         for (String s : ss) {
           if (X.isEmpty(s))
@@ -694,8 +705,24 @@ public class Host {
           synchronized (cache) {
             if (e == null || System.currentTimeMillis() - e.time > 1000) {
 
-              String r = Shell.run("cat /proc/meminfo |grep MemTotal");
-              String[] ss = r.split(" ");
+              String r = Shell.run("cat /proc/meminfo");
+              String[] ss1 = r.split("\n");
+              String r1 = X.EMPTY, r2 = X.EMPTY;
+              if (ss1 != null && ss1.length > 0) {
+                for (String s1 : ss1) {
+                  if (s1.contains("MemTotal")) {
+                    r1 = s1;
+                  } else if (s1.contains("MemFree")) {
+                    r2 = s1;
+                  }
+                }
+              }
+
+              // log.debug("r=" + r);
+              // log.debug("r1=" + r1);
+              // log.debug("r2=" + r2);
+
+              String[] ss = r1.split(" ");
               List<String> l1 = new ArrayList<String>();
               for (String s : ss) {
                 if (X.isEmpty(s))
@@ -704,8 +731,7 @@ public class Host {
               }
               int total = X.toInt(l1.get(1), 0);
 
-              r = Shell.run("cat /proc/meminfo |grep MemFree");
-              ss = r.split(" ");
+              ss = r2.split(" ");
               l1 = new ArrayList<String>();
               for (String s : ss) {
                 if (X.isEmpty(s))
@@ -741,8 +767,21 @@ public class Host {
     try {
       if (Shell.isLinux()) {
 
-        String r = Shell.run("cat /proc/meminfo |grep MemTotal");
-        String[] ss = r.split(" ");
+        String r = Shell.run("cat /proc/meminfo");
+        String[] ss1 = r.split("\r");
+        String r1 = X.EMPTY, r2 = X.EMPTY;
+        if (ss1 != null && ss1.length > 0) {
+          for (String s1 : ss1) {
+            if (s1.contains("MemTotal")) {
+              r1 = s1;
+            } else if (s1.contains("MemFree")) {
+              r2 = s1;
+            }
+
+          }
+        }
+
+        String[] ss = r1.split(" ");
         List<String> l1 = new ArrayList<String>();
         for (String s : ss) {
           if (X.isEmpty(s))
@@ -751,8 +790,7 @@ public class Host {
         }
         list.add(new Memory("memtotal", X.toInt(l1.get(1))));
 
-        r = Shell.run("cat /proc/meminfo |grep MemFree");
-        ss = r.split(" ");
+        ss = r2.split(" ");
         l1 = new ArrayList<String>();
         for (String s : ss) {
           if (X.isEmpty(s))
@@ -808,48 +846,6 @@ public class Host {
 
     Collections.sort(list);
     return list;
-  }
-
-  /**
-   * Gets the proc.
-   * 
-   * @return the proc
-   */
-  public static Proc getProc() {
-
-    try {
-      if (Shell.isLinux()) {
-
-        String pid = Proc.getPid();
-        String r = Shell.run("top -b -n 1 -p " + pid + " |grep " + pid);
-        String[] ss = r.split(" ");
-        List<String> l1 = new ArrayList<String>();
-        for (String s : ss) {
-          if (X.isEmpty(s))
-            continue;
-          l1.add(s);
-        }
-
-        // log.debug(l1);
-        String name = l1.get(11);
-        String cpu = l1.get(8);
-
-        r = Shell.run("cat /proc/" + pid + "/status |grep VmRSS");
-        ss = r.split(" ");
-        l1 = new ArrayList<String>();
-        for (String s : ss) {
-          if (X.isEmpty(s))
-            continue;
-          l1.add(s);
-        }
-        int mem = X.toInt(l1.get(1));
-        return new Proc(name, cpu, mem);
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-
-    return null;
   }
 
   /*
