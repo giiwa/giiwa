@@ -680,21 +680,34 @@ public class Host {
           l1.add(s);
         }
 
-        return ((int) (10 * X.toInt(l1.get(1), 0) / 1024 / 1024)) / 10f;
+        return (10 * X.toLong(l1.get(1), 0) / 1024 / 1024) / 10f;
       } else if (OS.isFamilyMac()) {
-        String cmd = "ps -caxm -orss,comm";
+        String cmd = "vm_stat";
         String r = Shell.run(cmd);
+
+        String[] ss = r.split("\n");
+        long free = 0;
+        for (String s : ss) {
+          String[] s1 = s.trim().split(":");
+          if (X.isSame(s1[0], "Pages free")) {
+            free = X.toLong(s1[1].trim()) * 4096;
+            break;
+          }
+        }
+
+        cmd = "ps -caxm -orss,comm";
+        r = Shell.run(cmd);
 
         // log.debug("r=" + r);
 
-        String[] ss = r.split("\n");
+        ss = r.split("\n");
         long total = 0;
         for (String s : ss) {
           String[] s1 = s.trim().split(" ");
           total += X.toLong(s1[0].trim()) * 1024;
         }
 
-        return ((int) (total / 1024 / 1024)) / 10f;
+        return ((total + free) * 10 / 1024 / 1024 / 1024) / 10f;
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -765,32 +778,19 @@ public class Host {
         return e == null ? 0 : X.toFloat(e.value, 0);
       } else if (OS.isFamilyMac()) {
 
-        String cmd = "vm_stat";
+        String cmd = "ps -caxm -orss,comm";
         String r = Shell.run(cmd);
-
-        String[] ss = r.split("\n");
-        long free = 0;
-        for (String s : ss) {
-          String[] s1 = s.trim().split(":");
-          if (X.isSame(s1[0], "Pages free")) {
-            free = X.toLong(s1[1].trim()) * 4096;
-            break;
-          }
-        }
-
-        cmd = "ps -caxm -orss,comm";
-        r = Shell.run(cmd);
 
         // log.debug("r=" + r);
 
-        ss = r.split("\n");
+        String[] ss = r.split("\n");
         long total = 0;
         for (String s : ss) {
           String[] s1 = s.trim().split(" ");
           total += X.toLong(s1[0].trim()) * 1024;
         }
 
-        return ((int) ((total - free) / 1024 / 1024)) / 10f;
+        return (total * 10 / 1024 / 1024 / 1024) / 10f;
 
       }
     } catch (Exception e) {
