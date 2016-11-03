@@ -138,6 +138,7 @@ public class Shell {
     try {
 
       CommandLine cmdLine = CommandLine.parse(cmd);
+
       DefaultExecutor executor = new DefaultExecutor();
       ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
       executor.setExitValues(new int[] { 0, 1, -1 });
@@ -158,6 +159,48 @@ public class Shell {
   }
 
   /**
+   * using bash to execute the lines
+   * 
+   * @param lines
+   * @param out
+   * @param err
+   * @param in
+   * @param workdir
+   * @return
+   * @throws IOException
+   */
+  public static int bash(String lines, OutputStream out, OutputStream err, InputStream in, String workdir)
+      throws IOException {
+
+    File f = new File(UID.random(10) + ".bash");
+    try {
+      FileUtils.writeStringToFile(f, lines);
+
+      // Execute the file we just creted. No flags are due if it is
+      // executed with bash directly
+      CommandLine commandLine = CommandLine.parse("bash " + f.getName());
+
+      ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
+
+      DefaultExecutor executor = new DefaultExecutor();
+      executor.setExitValues(new int[] { 0, 1, -1 });
+
+      executor.setStreamHandler(stream);
+      if (!X.isEmpty(workdir)) {
+        executor.setWorkingDirectory(new File(workdir));
+      }
+
+      return executor.execute(commandLine);
+
+    } catch (IOException e) {
+      log.error("lines=" + lines, e);
+      throw e;
+    } finally {
+      f.delete();
+    }
+  }
+
+  /**
    * run command, and return the console output
    * 
    * @param cmd
@@ -167,6 +210,10 @@ public class Shell {
    */
   public static String run(String cmd) throws IOException {
     return run(cmd, null);
+  }
+
+  public static String bash(String cmd) throws IOException {
+    return bash(cmd, null);
   }
 
   /**
@@ -182,6 +229,21 @@ public class Shell {
   public static String run(String cmd, String workdir) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     run(cmd, out, out, null, workdir);
+    out.close();
+    return out.toString();
+  }
+
+  /**
+   * using bash to execute the cmd
+   * 
+   * @param cmd
+   * @param workdir
+   * @return
+   * @throws IOException
+   */
+  public static String bash(String cmd, String workdir) throws IOException {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    bash(cmd, out, out, null, workdir);
     out.close();
     return out.toString();
   }

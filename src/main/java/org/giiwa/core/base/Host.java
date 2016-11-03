@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.exec.OS;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper;
@@ -680,6 +681,20 @@ public class Host {
         }
 
         return ((int) (10 * X.toInt(l1.get(1), 0) / 1024 / 1024)) / 10f;
+      } else if (OS.isFamilyMac()) {
+        String cmd = "ps -caxm -orss,comm";
+        String r = Shell.run(cmd);
+
+        // log.debug("r=" + r);
+
+        String[] ss = r.split("\n");
+        long total = 0;
+        for (String s : ss) {
+          String[] s1 = s.trim().split(" ");
+          total += X.toLong(s1[0].trim()) * 1024;
+        }
+
+        return ((int) (total / 1024 / 1024)) / 10f;
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -748,6 +763,35 @@ public class Host {
         }
 
         return e == null ? 0 : X.toFloat(e.value, 0);
+      } else if (OS.isFamilyMac()) {
+
+        String cmd = "vm_stat";
+        String r = Shell.run(cmd);
+
+        String[] ss = r.split("\n");
+        long free = 0;
+        for (String s : ss) {
+          String[] s1 = s.trim().split(":");
+          if (X.isSame(s1[0], "Pages free")) {
+            free = X.toLong(s1[1].trim()) * 4096;
+            break;
+          }
+        }
+
+        cmd = "ps -caxm -orss,comm";
+        r = Shell.run(cmd);
+
+        // log.debug("r=" + r);
+
+        ss = r.split("\n");
+        long total = 0;
+        for (String s : ss) {
+          String[] s1 = s.trim().split(" ");
+          total += X.toLong(s1[0].trim()) * 1024;
+        }
+
+        return ((int) ((total - free) / 1024 / 1024)) / 10f;
+
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -822,23 +866,43 @@ public class Host {
         // log.debug("df -m=" + r);
 
         String[] ss = r.split("\n");
-        List<String> l1 = new ArrayList<String>();
-        for (int i = 1; i < ss.length; i++) {
-          String[] s1 = ss[i].split(" ");
-          for (String s : s1) {
-            if (X.isEmpty(s))
-              continue;
-            l1.add(s);
+        for (String s : ss) {
+          s = s.trim();
+          if (s.startsWith("/dev")) {
+            String[] s1 = s.split(" ");
+            List<String> l1 = new ArrayList<String>();
+            for (String s2 : s1) {
+              if (!X.isEmpty(s2)) {
+                l1.add(s2);
+              }
+            }
+            if (l1.size() > 5) {
+              list.add(new Disk(l1.get(5), X.toInt(l1.get(2)), X.toInt(l1.get(3))));
+            }
           }
         }
 
-        // log.debug("l1=" + l1);
+      } else if (OS.isFamilyMac()) {
+        String r = Shell.run("df -m");
+        // log.debug("df -m=" + r);
 
-        for (int i = 0; i < l1.size(); i += 6) {
-          if (l1.get(i).startsWith("/dev")) {
-            list.add(new Disk(l1.get(i + 5), X.toInt(l1.get(i + 2)), X.toInt(l1.get(i + 3))));
+        String[] ss = r.split("\n");
+        for (String s : ss) {
+          s = s.trim();
+          if (s.startsWith("/dev")) {
+            String[] s1 = s.split(" ");
+            List<String> l1 = new ArrayList<String>();
+            for (String s2 : s1) {
+              if (!X.isEmpty(s2)) {
+                l1.add(s2);
+              }
+            }
+            if (l1.size() > 8) {
+              list.add(new Disk(l1.get(8), X.toInt(l1.get(2)), X.toInt(l1.get(3))));
+            }
           }
         }
+
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
