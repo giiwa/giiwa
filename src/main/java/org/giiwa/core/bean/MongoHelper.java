@@ -897,18 +897,19 @@ public class MongoHelper extends Helper {
    *          the key that contain the value
    * @param q
    *          the query
+   * @param t
+   *          the class
    * @return List of the value
    */
-  @SuppressWarnings("unchecked")
-  public static <T> List<T> distinct(String collection, String key, Bson q) {
+  public static <T> List<T> distinct(String collection, String key, Bson q, Class<T> t) {
 
     TimeStamp t1 = TimeStamp.create();
     try {
 
       MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
-        Iterator<Object> it = c.distinct(key, q, Object.class).iterator();
-        List<Object> list = new ArrayList<Object>();
+        Iterator<T> it = c.distinct(key, q, t).iterator();
+        List<T> list = new ArrayList<T>();
         while (it.hasNext()) {
           list.add(it.next());
         }

@@ -1390,13 +1390,13 @@ public class Helper {
    *          the column name
    * @param q
    *          the query
-   * @param t
+   * @param b
    *          the Bean class
    * @return the List of objects
    */
   @SuppressWarnings("unchecked")
-  public static <T> List<T> distinct(String name, W q, Class<? extends Bean> t) {
-    String table = getTable(t);
+  public static <T> List<T> distinct(String name, W q, Class<? extends Bean> b, Class<T> t) {
+    String table = getTable(b);
 
     if (table != null) {
       if (monitor != null) {
@@ -1405,7 +1405,7 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.distinct(table, name, q.query());
+        return MongoHelper.distinct(table, name, q.query(), t);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS

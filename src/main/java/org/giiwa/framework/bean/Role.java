@@ -96,27 +96,19 @@ public class Role extends Bean {
     return -1;
   }
 
+  private transient List<String> accesses;
+
   /**
    * Gets the access.
    * 
    * @return the access
    */
-  @SuppressWarnings("unchecked")
   public List<String> getAccesses() {
-
-    if (!this.containsKey("accesses")) {
-      List<String> list = Helper.distinct("name", W.create("rid", this.getId()), RoleAccess.class);
-
-      this.set("accesses", list);
-
-      recache();
+    if (accesses == null) {
+      accesses = Helper.distinct("name", W.create("rid", this.getId()), RoleAccess.class, String.class);
     }
 
-    return (List<String>) this.get("accesses");
-  }
-
-  private void recache() {
-    Cache.set("role://" + this.getId(), this);
+    return accesses;
   }
 
   /**

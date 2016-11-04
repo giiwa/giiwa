@@ -125,29 +125,18 @@ public class role extends Model {
 
     } else {
 
-      String ids = this.getString("id");
-      if (ids != null) {
-        String[] ss = ids.split(",");
-        for (String s : ss) {
-          long id = X.toLong(s);
-          Role r = Role.loadById(id);
-          this.set("r", r);
+      long id = this.getLong("id");
+      Role r = Role.loadById(id);
+      this.set("r", r);
 
-          JSON jo = new JSON();
-          r.toJSON(jo);
-          this.set(jo);
+      JSON jo = new JSON();
+      r.toJSON(jo);
+      this.set(jo);
 
-          Map<String, List<Access>> bs = Access.load();
-          this.set("accesses", bs);
+      Map<String, List<Access>> bs = Access.load();
+      this.set("accesses", bs);
 
-          this.show("/admin/role.edit.html");
-          return;
-        }
-      }
-
-      this.set(X.ERROR, lang.get("select.required"));
-
-      onGet();
+      this.show("/admin/role.edit.html");
     }
 
   }
