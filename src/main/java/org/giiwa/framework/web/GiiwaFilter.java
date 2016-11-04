@@ -37,10 +37,7 @@ import org.giiwa.framework.web.view.View;
 
 public class GiiwaFilter implements Filter {
 
-  static Log log          = LogFactory.getLog(GiiwaFilter.class);
-
-  String     cross_domain = null;
-  String     cross_header = null;
+  static Log log = LogFactory.getLog(GiiwaFilter.class);
 
   @Override
   public void destroy() {
@@ -61,26 +58,27 @@ public class GiiwaFilter implements Filter {
       }
 
       String method = r1.getMethod();
+      String domain = Global.getString("cross.domain", "");
 
       if ("GET".equalsIgnoreCase(method)) {
-        if (!X.isEmpty(cross_domain)) {
-          r2.addHeader("Access-Control-Allow-Origin", cross_domain);
+        if (!X.isEmpty(domain)) {
+          r2.addHeader("Access-Control-Allow-Origin", domain);
         }
 
         Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
 
       } else if ("POST".equalsIgnoreCase(method)) {
-        if (!X.isEmpty(cross_domain)) {
-          r2.addHeader("Access-Control-Allow-Origin", cross_domain);
+        if (!X.isEmpty(domain)) {
+          r2.addHeader("Access-Control-Allow-Origin", domain);
         }
 
         Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
 
       } else if ("OPTIONS".equals(method)) {
         r2.setStatus(200);
-        r2.addHeader("Access-Control-Allow-Origin", cross_domain);
-        r2.addHeader("Access-Control-Allow-Headers", cross_header);
-        r2.getOutputStream().write(cross_domain.getBytes());
+        r2.addHeader("Access-Control-Allow-Origin", domain);
+        r2.addHeader("Access-Control-Allow-Headers", Global.getString("cross.header", "forbidden"));
+        r2.getOutputStream().write(domain.getBytes());
       } else if ("HEAD".equals(method)) {
 
       }
@@ -96,9 +94,6 @@ public class GiiwaFilter implements Filter {
   public void init(FilterConfig c1) throws ServletException {
     try {
       Model.s️ervletContext = c1.getServletContext();
-
-      cross_domain = Global.getString("cross.domain", "no");
-      cross_header = Global.getString("cross.header", "forbidden");
 
       Enumeration e = c1.getInitParameterNames();
       while (e.hasMoreElements()) {

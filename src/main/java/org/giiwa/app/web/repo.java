@@ -338,23 +338,22 @@ public class repo extends Model {
               }
             }
 
-            /**
-             * if not point-transfer, then check the if-modified-since
-             */
             String range = this.getHeader("range");
             log.debug("range=" + range);
 
             if (X.isEmpty(range)) {
               String date = this.getHeader("if-modified-since");
+              /**
+               * if not point-transfer, then check the if-modified-since
+               */
               if (date != null && date.equals(date2)) {
                 this.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
               }
             }
 
-            // TODO
-            this.setHeader("Accept-Ranges", "bytes");
-            this.setHeader("ETag", "repo-" + e.getId());
+            this.setHeader("Last-Modified", date2);
+            this.setHeader("ETag", "W/repo-" + e.getId());
 
             /**
              * else get all repo output to response
@@ -380,10 +379,16 @@ public class repo extends Model {
               end = start + 16 * 1024;
             }
 
+            this.setHeader("Content-Length", Long.toString(end - start));
             this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
+            if (start == 0) {
+              this.setHeader("Accept-Ranges", "bytes");
+            }
 
             log.info(start + "-" + end + "/" + total);
-            IOUtil.copy(in, out, start, end, true);
+            IOUtil.copy(in, out, start, end, false);
+            out.flush();
+            in.close();
 
             return;
           } catch (IOException e1) {
