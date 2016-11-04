@@ -199,7 +199,6 @@ public class repo extends Model {
    * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
-  @SuppressWarnings("deprecation")
   @Override
   @Path(login = false)
   public void onGet() {
@@ -223,7 +222,7 @@ public class repo extends Model {
 
       try {
 
-        e = Repo.loadByUri(id);
+        e = Repo.load(id);
 
         /**
          * check the privilege via session, the app will put the access in
@@ -342,14 +341,20 @@ public class repo extends Model {
             /**
              * if not point-transfer, then check the if-modified-since
              */
-            String range = this.getString("RANGE");
+            String range = this.getHeader("range");
+            log.debug("range=" + range);
+
             if (X.isEmpty(range)) {
-              String date = this.getHeader("If-Modified-Since");
+              String date = this.getHeader("if-modified-since");
               if (date != null && date.equals(date2)) {
                 this.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
                 return;
               }
             }
+
+            // TODO
+            this.setHeader("Accept-Ranges", "bytes");
+            this.setHeader("ETag", "repo-" + e.getId());
 
             /**
              * else get all repo output to response
@@ -360,7 +365,7 @@ public class repo extends Model {
             long total = e.getTotal() <= 0 ? in.available() : e.getTotal();
             long start = 0;
             long end = total;
-            if (range != null) {
+            if (!X.isEmpty(range)) {
               String[] ss = range.split("(=|-)");
               if (ss.length > 1) {
                 start = X.toLong(ss[1]);
@@ -382,8 +387,10 @@ public class repo extends Model {
 
             return;
           } catch (IOException e1) {
-            log.error(e1);
+            log.error(e1.getMessage(), e1);
             OpLog.error(repo.class, "", e1.getMessage(), e1, login, this.getRemoteHost());
+
+            return;
           }
         }
       } finally {
