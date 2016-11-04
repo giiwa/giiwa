@@ -14,7 +14,9 @@
 */
 package org.giiwa.core.bean;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -410,5 +412,26 @@ public final class X {
   public static void main(String[] args) {
     int s = 10;
     System.out.println(X.toDouble(s));
+  }
+
+  /**
+   * split the src string by the regex, and filter the empty
+   * 
+   * @param src
+   * @param regex
+   * @return the String
+   */
+  public static String[] split(String src, String regex) {
+    List<String> l1 = new ArrayList<String>();
+    if (src != null) {
+      String[] ss = src.split(regex);
+      for (String s : ss) {
+        if (!X.isEmpty(s)) {
+          l1.add(s);
+        }
+      }
+    }
+
+    return l1.toArray(new String[l1.size()]);
   }
 }

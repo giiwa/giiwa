@@ -682,32 +682,35 @@ public class Host {
 
         return (10 * X.toLong(l1.get(1), 0) / 1024 / 1024) / 10f;
       } else if (OS.isFamilyMac()) {
-        String cmd = "vm_stat";
-        String r = Shell.run(cmd);
-
-        String[] ss = r.split("\n");
-        long free = 0;
-        for (String s : ss) {
-          String[] s1 = s.trim().split(":");
-          if (X.isSame(s1[0], "Pages free")) {
-            free = X.toLong(s1[1].trim()) * 4096;
-            break;
+        String cmd = "top -l 1 | awk '/PhysMem/'";
+        String r = Shell.bash(cmd);
+        // PhysMem: 8584M used (2821M wired), 7797M unused.
+        String[] ss = X.split(r, "[: (),]");
+        long used = 0;
+        long unused = 0;
+        if (ss.length > 1) {
+          used = X.toLong(ss[1]);
+          char c = ss[1].toUpperCase().charAt(ss[1].length() - 1);
+          if (c == 'K') {
+            used *= 1024;
+          } else if (c == 'M') {
+            used *= 1024 * 1024;
+          } else if (c == 'G') {
+            used *= 1024 * 1024 * 1024;
           }
         }
-
-        cmd = "ps -caxm -orss,comm";
-        r = Shell.run(cmd);
-
-        // log.debug("r=" + r);
-
-        ss = r.split("\n");
-        long total = 0;
-        for (String s : ss) {
-          String[] s1 = s.trim().split(" ");
-          total += X.toLong(s1[0].trim()) * 1024;
+        if (ss.length > 5) {
+          unused = X.toLong(ss[5]);
+          char c = ss[5].toUpperCase().charAt(ss[5].length() - 1);
+          if (c == 'K') {
+            unused *= 1024;
+          } else if (c == 'M') {
+            unused *= 1024 * 1024;
+          } else if (c == 'G') {
+            unused *= 1024 * 1024 * 1024;
+          }
         }
-
-        return ((total + free) * 10 / 1024 / 1024 / 1024) / 10f;
+        return (used + unused) * 10 / 1024 / 1024 / 1024 / 10f;
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -777,20 +780,23 @@ public class Host {
 
         return e == null ? 0 : X.toFloat(e.value, 0);
       } else if (OS.isFamilyMac()) {
-
-        String cmd = "ps -caxm -orss,comm";
-        String r = Shell.run(cmd);
-
-        // log.debug("r=" + r);
-
-        String[] ss = r.split("\n");
-        long total = 0;
-        for (String s : ss) {
-          String[] s1 = s.trim().split(" ");
-          total += X.toLong(s1[0].trim()) * 1024;
+        String cmd = "top -l 1 | awk '/PhysMem/'";
+        String r = Shell.bash(cmd);
+        // PhysMem: 8584M used (2821M wired), 7797M unused.
+        String[] ss = X.split(r, "[: (),]");
+        long used = 0;
+        if (ss.length > 1) {
+          used = X.toLong(ss[1]);
+          char c = ss[1].toUpperCase().charAt(ss[1].length() - 1);
+          if (c == 'K') {
+            used *= 1024;
+          } else if (c == 'M') {
+            used *= 1024 * 1024;
+          } else if (c == 'G') {
+            used *= 1024 * 1024 * 1024;
+          }
         }
-
-        return (total * 10 / 1024 / 1024 / 1024) / 10f;
+        return (used * 10) / 1024 / 1024 / 1024 / 10f;
 
       }
     } catch (Exception e) {
