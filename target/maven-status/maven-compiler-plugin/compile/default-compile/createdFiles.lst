@@ -139,6 +139,7 @@ org/giiwa/framework/web/view/FileView.class
 org/giiwa/app/web/DefaultListener.class
 org/giiwa/framework/bean/AuthToken.class
 org/giiwa/framework/web/Module.class
+org/giiwa/framework/web/Module$1.class
 org/giiwa/app/web/DefaultListener$AppdogTask.class
 org/giiwa/framework/bean/Role$RoleAccess.class
 org/giiwa/framework/web/Model$HTTPMethod.class
@@ -148,6 +149,7 @@ org/giiwa/framework/bean/Code.class
 org/giiwa/framework/web/IFilter.class
 org/giiwa/framework/bean/Data.class
 org/giiwa/app/web/admin/backup$BackupTask.class
+org/giiwa/framework/web/Module$Required.class
 org/giiwa/app/web/admin/index.class
 org/giiwa/framework/bean/Response.class
 org/giiwa/core/task/Task$1.class

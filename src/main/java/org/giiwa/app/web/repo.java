@@ -67,7 +67,7 @@ public class repo extends Model {
             /**
              * if not point-transfer, then check the if-modified-since
              */
-            String range = this.getString("RANGE");
+            String range = this.getHeader("range");
             if (X.isEmpty(range)) {
               String date = this.getHeader("If-Modified-Since");
               if (date != null && date.equals(date2)) {

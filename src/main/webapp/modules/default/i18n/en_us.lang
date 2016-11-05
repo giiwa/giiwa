@@ -434,3 +434,5 @@ backup.status_13=Recover RDS
 backup.status_14=Recover Repo
 backup.status_200=Recover done
 backup.status_-2=Recover error
+module.download.hint=Download the module zip file
+module.license=License

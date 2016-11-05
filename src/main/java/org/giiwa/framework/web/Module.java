@@ -90,6 +90,7 @@ public class Module {
   String              build;
   String              license;
   String              screenshot;
+  List<Required>      required;
 
   /**
    * the root package name of the module, which will use to mapping the handler
@@ -399,12 +400,19 @@ public class Module {
         e.setText(this.listener);
       }
 
+      /**
+       * setting
+       */
       e = root.addElement("setting");
       for (String name : settings.keySet()) {
         Element e1 = e.addElement("param");
         e1.addAttribute("name", name);
         e1.addAttribute("value", settings.get(name));
       }
+
+      /**
+       * filters
+       */
       for (String name : filters.keySet()) {
         e = root.addElement("filter");
         Element e1 = e.addElement("pattern");
@@ -417,6 +425,19 @@ public class Module {
           e1.setText(f1.getClass().getName());
         } else {
           e1.setText((String) o);
+        }
+      }
+
+      /**
+       * required
+       */
+      if (required != null) {
+        e = root.addElement("required");
+        for (Required m : required) {
+          Element e1 = e.addElement("module");
+          e1.addAttribute("name", m.module);
+          e1.addAttribute("minversion", m.minversion);
+          e1.addAttribute("maxversion", m.maxversion);
         }
       }
 
@@ -542,9 +563,6 @@ public class Module {
       }
     }
 
-    // if (parent != null) {
-    // parent.initModels();
-    // }
   }
 
   /**
@@ -910,6 +928,25 @@ public class Module {
     return null;
   }
 
+  private static boolean _checkRequired(Module m0) {
+    if (m0.getId() == 0 || m0.required == null || m0.required.size() == 0)
+      return true;
+
+    for (Required e : m0.required) {
+
+      Module m = Module.load(e.module);
+      if (m == null || !m.isEnabled())
+        return false;
+
+      if (FileVersion.Version.compare(m.version + "." + m.build, e.minversion) < 0
+          || FileVersion.Version.compare(m.version + "." + m.build, e.maxversion) > 0) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   @SuppressWarnings("unchecked")
   private boolean _load(Element root) {
     try {
@@ -933,8 +970,10 @@ public class Module {
           enabled = X.isSame("true", e1.getText().toLowerCase());
         } else if (X.isSame(tag, "readme")) {
           readme = e1.getText();
+          
         } else if (X.isSame(tag, "license")) {
           license = e1.getText();
+
         } else if (X.isSame(tag, "listener")) {
           List<Element> l2 = e1.elements();
           for (Element e2 : l2) {
@@ -954,6 +993,7 @@ public class Module {
             }
           }
         } else if (X.isSame(tag, "filter")) {
+
           List<Element> l2 = e1.elements();
           String pattern = null;
           String clazz = null;
@@ -968,6 +1008,21 @@ public class Module {
           if (!X.isEmpty(pattern) && !X.isEmpty(clazz)) {
             filters.put(pattern, clazz);
           }
+
+        } else if (X.isSame(tag, "required")) {
+
+          required = new ArrayList<Required>();
+          List<Element> l2 = e1.elements();
+          for (Element e2 : l2) {
+            if (X.isSame(e2.getName(), "module")) {
+              Required m = new Required();
+              m.module = e2.attributeValue("name");
+              m.minversion = e2.attributeValue("minversion");
+              m.maxversion = e2.attributeValue("maxversion");
+              required.add(m);
+            }
+          }
+
         }
       }
 
@@ -1632,6 +1687,12 @@ public class Module {
       log.info("[" + m.getName() + "] is disabled");
     } else if (modules.containsKey(m.id)) {
       log.error("the [id] duplicated, [" + m.name + ", " + modules.get(m.id).name + "], ignore the [" + m.name + "]");
+    } else if (_checkRequired(m)) {
+
+      String error = "the module [" + m.name + "] can not started, required: " + m.required;
+      log.error(error);
+      m.setError(error);
+      m.setStatus(error);
     } else {
       try {
         /**
@@ -1993,4 +2054,15 @@ public class Module {
     return name;
   }
 
+  private static class Required {
+    String module;
+    String minversion;
+    String maxversion;
+
+    @Override
+    public String toString() {
+      return module + "[" + minversion + "-" + maxversion + "]";
+    }
+
+  }
 }

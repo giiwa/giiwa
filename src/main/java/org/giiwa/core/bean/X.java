@@ -98,6 +98,10 @@ public final class X {
     if (X.isEmpty(s1) && X.isEmpty(s2))
       return true;
 
+    if (s1 instanceof String && s2 instanceof String) {
+      return ((String) s1).equalsIgnoreCase((String) s2);
+    }
+
     if (s1 != null) {
       return s1.equals(s2);
     }

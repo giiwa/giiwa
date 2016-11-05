@@ -11,7 +11,10 @@
 	<listener>
 		<class>org.giiwa.app.web.DefaultListener</class>
 	</listener>
-	<License>
-		Apache License V2
-	</License>
+	<license>Apache License V2</license>
+	<!-- 
+	<required>
+		<module name="default" minversion="0.0" maxversion="1.1"/>
+	</required>
+	-->
 </module>
