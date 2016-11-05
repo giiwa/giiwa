@@ -338,7 +338,7 @@ public class repo extends Model {
               }
             }
 
-            String range = this.getHeader("range");
+            String range = this.getHeader("Range");
             log.debug("range=" + range);
 
             if (X.isEmpty(range)) {
@@ -365,21 +365,24 @@ public class repo extends Model {
             long start = 0;
             long end = total;
             if (!X.isEmpty(range)) {
-              String[] ss = range.split("(=|-)");
+              String[] ss = X.split(range, "[=-]");
               if (ss.length > 1) {
                 start = X.toLong(ss[1]);
               }
 
               if (ss.length > 2) {
                 end = Math.min(total, X.toLong(ss[2]));
+
+                if (end <= start) {
+                  end = start + 16 * 1024;
+                }
               }
             }
 
-            if (end <= start) {
-              end = start + 16 * 1024;
-            }
-
-            this.setHeader("Content-Length", Long.toString(end - start));
+            long length = end - start;
+            this.setHeader("Content-Length", Long.toString(length));
+            // this.setHeader("Content-Range", "bytes " + start + "-" + length +
+            // "/" + length);
             this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
             if (start == 0) {
               this.setHeader("Accept-Ranges", "bytes");
@@ -387,7 +390,7 @@ public class repo extends Model {
 
             log.info(start + "-" + end + "/" + total);
             IOUtil.copy(in, out, start, end, false);
-            out.flush();
+            // out.flush();
             in.close();
 
             return;
