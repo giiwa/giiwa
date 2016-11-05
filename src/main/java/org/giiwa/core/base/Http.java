@@ -177,11 +177,26 @@ public final class Http {
    * 
    * @param url
    *          the file url
-   * @param f
+   * @param localfile
    *          the destination file
    * @return the length
    */
-  public static int download(String url, File f) {
+  public static int download(String url, File localfile) {
+    return download(url, null, localfile);
+  }
+
+  /**
+   * download the remote url to local file with the header
+   * 
+   * @param url
+   *          the remote resource url
+   * @param header
+   *          the header
+   * @param localfile
+   *          the localfile
+   * @return the length of bytes
+   */
+  public static int download(String url, JSON header, File localfile) {
 
     log.debug("url=\"" + url + "\"");
 
@@ -196,8 +211,11 @@ public final class Http {
       try {
         get = new HttpGet(url);
 
-        if (!get.containsHeader("User-Agent")) {
-          get.addHeader("User-Agent", UA);
+        get.addHeader("User-Agent", UA);
+        if (header != null && header.size() > 0) {
+          for (String name : header.keySet()) {
+            get.addHeader(name, header.getString(name));
+          }
         }
 
         log.debug("get url=" + url);
@@ -207,10 +225,10 @@ public final class Http {
         if (resp.getStatusLine().getStatusCode() == 200) {
           HttpEntity e = resp.getEntity();
           InputStream in = e.getContent();
-          
-          f.getParentFile().mkdirs();
-          
-          FileOutputStream out = new FileOutputStream(f);
+
+          localfile.getParentFile().mkdirs();
+
+          FileOutputStream out = new FileOutputStream(localfile);
           return IOUtil.copy(in, out);
         }
         return 0;
