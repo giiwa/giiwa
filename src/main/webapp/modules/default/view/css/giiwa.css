@@ -187,7 +187,7 @@ input[type=text], input[type=password] {
 	height: 23px;
 	display: inline-block;
 }
-input[type=checkbox] {
+input[type=checkbox],input[type=radio] {
 	margin-top: 16px;
 }
 input:focus, select:focus, textarea:focus {
@@ -1000,6 +1000,11 @@ label {
 form label {
 	width: 100%;
 }
+form label.inline{
+	width:initial;
+	float: left;
+	margin-right: 20px;
+}
 .leanmodal {
 	position: fixed;
 	z-index: 11000;
@@ -1576,6 +1581,8 @@ label.nospace, label.nospace input, form div.accesses div.group .title, .pages l
 }
 .content .item, .content .form div {
 	position: relative;
+    display: inline-block;
+    width: 100%;	
 }
 table, form div.textarea, .content .chart .group iframe.full {
 	width: 100%;
