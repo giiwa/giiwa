@@ -11,14 +11,6 @@ create table gi_config
 );
 create unique index gi_config_index_id on gi_config(id);
 
-drop table if exists dual;
-create table dual
-(
-	x varchar(1)
-);
-create unique index dual_inedx_x on dual(x);
-insert into dual values('x');
-
 #drop table if exists gi_user;
 create table gi_user
 (
@@ -89,7 +81,6 @@ create unique index gi_code_index_s1_s2 on gi_code(s1, s2);
 create table gi_access
 (
 	id varchar(255),
-	created bigint default 0,
 	updated bigint default 0,
 	created bigint default 0
 );
@@ -149,7 +140,7 @@ create table gi_menu
 	seq int default 1000,
 	tip varchar(255),
 	style varchar(255),
-	load varchar(255),
+	load1 varchar(255),
 	created bigint default 0,
 	updated bigint default 0
 );

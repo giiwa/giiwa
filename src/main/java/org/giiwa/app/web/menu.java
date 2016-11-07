@@ -128,8 +128,8 @@ public class menu extends Model {
 
         jo.put("seq", m.getSeq());
         jo.put("tag", m.getTag());
-        if (!X.isEmpty(m.getLoad())) {
-          jo.put("load", m.getLoad());
+        if (!X.isEmpty(m.getLoad1())) {
+          jo.put("load", m.getLoad1());
         }
 
         if (!X.isEmpty(m.getClick())) {

@@ -43,15 +43,6 @@ public class Menu extends Bean {
   // int id;
 
   /**
-   * the name of the node, is the key of the display in language.
-   *
-   * @param arr
-   *          the arr
-   * @param tag
-   *          the tag
-   */
-
-  /**
    * Insert or update.
    * 
    * @param arr
@@ -85,8 +76,8 @@ public class Menu extends Bean {
     return this.getString("name");
   }
 
-  public String getLoad() {
-    return this.getString("load");
+  public String getLoad1() {
+    return this.getString("load1");
   }
 
   public int getChilds() {
@@ -140,6 +131,12 @@ public class Menu extends Bean {
          */
         V v = V.create().copy(jo, X.URL, "click", "classes", "content", "tag", "access", "seq", "tip", "style", "load");
 
+        Object o = v.value("load");
+        if (!X.isEmpty(o)) {
+          v.remove("load");
+          v.set("load1", o);
+        }
+
         /**
          * create the access if not exists
          */
@@ -157,7 +154,7 @@ public class Menu extends Bean {
          * create the menu item is not exists <br>
          * cleanup the click and load if not presented
          */
-        v.set("click", X.EMPTY).set("load", X.EMPTY);
+        v.set("click", X.EMPTY).set("load1", X.EMPTY);
         Menu m = insertOrUpdate(parent, name, v);
 
         /**
