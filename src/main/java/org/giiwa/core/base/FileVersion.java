@@ -147,10 +147,10 @@ public class FileVersion {
       if (X.isSame(v1, v2)) {
         return 0;
       }
-      if (X.isEmpty(v1)) {
+      if (X.isEmpty(v1) || X.isSame(v2, "*")) {
         return -1;
       }
-      if (X.isEmpty(v2)) {
+      if (X.isEmpty(v2) || X.isSame(v1, "*")) {
         return 1;
       }
 
@@ -159,6 +159,12 @@ public class FileVersion {
       int len = Math.min(s1.length, s2.length);
 
       for (int i = 0; i < len; i++) {
+        if (X.isSame(s1[i], "*")) {
+          return 1;
+        } else if (X.isSame(s2[i], "*")) {
+          return -1;
+        }
+
         int i1 = X.toInt(s1[i]);
         int i2 = X.toInt(s2[i]);
         if (i1 > i2) {

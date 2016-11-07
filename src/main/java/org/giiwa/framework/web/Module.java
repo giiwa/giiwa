@@ -938,8 +938,11 @@ public class Module {
       if (m == null || !m.isEnabled())
         return false;
 
-      if (FileVersion.Version.compare(m.version + "." + m.build, e.minversion) < 0
-          || FileVersion.Version.compare(m.version + "." + m.build, e.maxversion) > 0) {
+      if (FileVersion.Version.compare(m.version + "." + m.build, e.minversion) < 0) {
+        return false;
+      }
+
+      if (!X.isEmpty(e.maxversion) && FileVersion.Version.compare(m.version + "." + m.build, e.maxversion) > 0) {
         return false;
       }
     }
@@ -970,7 +973,7 @@ public class Module {
           enabled = X.isSame("true", e1.getText().toLowerCase());
         } else if (X.isSame(tag, "readme")) {
           readme = e1.getText();
-          
+
         } else if (X.isSame(tag, "license")) {
           license = e1.getText();
 

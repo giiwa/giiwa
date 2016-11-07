@@ -191,17 +191,16 @@ public class module extends Model {
       e1 = e.addElement("class");
       e1.setText("org.giiwa.demo.web.UserFilter");
 
-      e = root.addElement("depends");
-      e.addComment("TODO, remove it");
+      e = root.addElement("required");
       e1 = e.addElement("module");
       e1.addAttribute("name", "default");
-      e1.addAttribute("version", Module.load("default").getVersion());
-      e1 = e.addElement("jar");
-      e1.addAttribute(X.URL, "http://giiwa.org/aaa_1.1.jar");
+      Module m0 = Module.load("default");
+      e1.addAttribute("minversion", m0.getVersion() + "." + m0.getBuild());
+      e1.addAttribute("maxversion", m0.getVersion() + ".*");
 
       e = root.addElement("license");
       e.setText("Commercial License");
-      
+
       OutputFormat format = OutputFormat.createPrettyPrint();
       format.setEncoding("UTF-8");
       XMLWriter writer = new XMLWriter(out, format);
