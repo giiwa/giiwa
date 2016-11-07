@@ -175,14 +175,15 @@ public class module extends Model {
       e = root.addElement("readme");
       e.setText(readme);
       e = root.addElement("listener");
+      e.addComment("add module listener here, please refer IListener interface");
       e = e.addElement("class");
       e.setText(lifelistener);
 
       e = root.addElement("setting");
       e.addComment("TODO, remove it, please refer module.get(d1)");
       Element e1 = e.addElement("param");
-      e1.setAttributeValue("name", "d1");
-      e1.setAttributeValue("value", "1");
+      e1.addAttribute("name", "d1");
+      e1.addAttribute("value", "1");
 
       e = root.addElement("filter");
       e.addComment("TODO, remove it, please refer web.IFilter");
@@ -192,6 +193,7 @@ public class module extends Model {
       e1.setText("org.giiwa.demo.web.UserFilter");
 
       e = root.addElement("required");
+      e.addComment("add all required modules here");
       e1 = e.addElement("module");
       e1.addAttribute("name", "default");
       Module m0 = Module.load("default");
