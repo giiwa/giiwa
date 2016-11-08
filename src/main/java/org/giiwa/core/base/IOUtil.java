@@ -20,6 +20,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * IO utility
@@ -97,6 +100,44 @@ public final class IOUtil {
       if (ff != null && ff.length > 0) {
         for (File f : ff) {
           count += copyDir(f, new File(dest.getCanonicalPath() + "/" + src.getName()));
+        }
+      } else {
+        new File(dest.getCanonicalPath() + "/" + src.getName()).mkdirs();
+      }
+    }
+    return count;
+  }
+
+  /**
+   * copy all the files except
+   * 
+   * @param src
+   * @param dest
+   * @param except
+   * @return
+   * @throws IOException
+   */
+  public static int copyDir(File src, File dest, String[] except) throws IOException {
+
+    Set<String> ex = new HashSet<String>();
+    for (String s : except) {
+      ex.add(s);
+    }
+
+    dest.mkdirs();
+    int count = 0;
+    if (src.isFile()) {
+      // copy file
+      count++;
+      copy(src, new File(dest.getCanonicalPath() + "/" + src.getName()));
+    } else if (src.isDirectory()) {
+      // copy dir
+      File[] ff = src.listFiles();
+      if (ff != null && ff.length > 0) {
+        for (File f : ff) {
+          if (!ex.contains(f.getName())) {
+            count += copyDir(f, new File(dest.getCanonicalPath() + "/" + src.getName()));
+          }
         }
       } else {
         new File(dest.getCanonicalPath() + "/" + src.getName()).mkdirs();
