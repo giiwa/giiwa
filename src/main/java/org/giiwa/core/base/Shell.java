@@ -141,7 +141,11 @@ public class Shell {
 
       DefaultExecutor executor = new DefaultExecutor();
       ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
-      executor.setExitValues(new int[] { 0, 1, -1 });
+      int[] exit = new int[512];
+      for (int i = 0; i < exit.length; i++) {
+        exit[i] = i - 256;
+      }
+      executor.setExitValues(exit);
 
       executor.setStreamHandler(stream);
       if (!X.isEmpty(workdir)) {
@@ -172,18 +176,26 @@ public class Shell {
   public static int bash(String lines, OutputStream out, OutputStream err, InputStream in, String workdir)
       throws IOException {
 
-    File f = new File(UID.random(10) + ".bash");
+    File f = new File(UID.id(lines).toLowerCase() + ".bash");
+
     try {
+      if (!X.isEmpty(workdir)) {
+        lines = "cd " + workdir + ";" + lines;
+      }
       FileUtils.writeStringToFile(f, lines);
 
       // Execute the file we just creted. No flags are due if it is
       // executed with bash directly
-      CommandLine commandLine = CommandLine.parse("bash " + f.getName());
+      CommandLine commandLine = CommandLine.parse("bash " + f.getCanonicalPath());
 
       ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
 
       DefaultExecutor executor = new DefaultExecutor();
-      executor.setExitValues(new int[] { 0, 1, -1 });
+      int[] exit = new int[3];
+      for (int i = 0; i < exit.length; i++) {
+        exit[i] = i - 1;
+      }
+      executor.setExitValues(exit);
 
       executor.setStreamHandler(stream);
       if (!X.isEmpty(workdir)) {
