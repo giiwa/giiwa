@@ -218,8 +218,7 @@ public class User extends Bean {
    * @return User
    */
   public static User load(String name) {
-
-    return Helper.load(W.create("name", name).and("deleted", 1, W.OP_NEQ).sort("name", 1), User.class);
+    return Helper.load(W.create("name", name).and("deleted", 1, W.OP_NEQ).sort(X.ID, -1), User.class);
 
   }
 
