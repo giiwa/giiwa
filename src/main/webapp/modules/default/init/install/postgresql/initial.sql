@@ -163,7 +163,7 @@ create table gi_accesslog
 	model varchar(128),
 	method varchar(20),
 	ip varchar(20),
-	client varchar(128),
+	client varchar(1024),
 	id varchar(20),
 	url varchar(128),
 	sid varchar(50),
