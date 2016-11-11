@@ -4,7 +4,7 @@ echo "Starting giiwa ..."
 set startup=%~dp0
 
 :checking
-wmic process get commandline /value | findstr "%startup%" > NUL  
+wmic process where caption="java.exe" get commandline /value | findstr "%startup%" > NUL  
 if ERRORLEVEL 1 goto starting
 if ERRORLEVEL 0 goto sleep
 
