@@ -39,7 +39,7 @@ create table gi_user
 	created bigint default 0
 );
 create unique index gi_user_indexid on gi_user(id);
-create index gi_user_index_name on gi_user(name);
+create unique index gi_user_index_name on gi_user(name);
 create index gi_user_index_deleted on gi_user(deleted);
 create index gi_user_index_locked on gi_user(locked);
 

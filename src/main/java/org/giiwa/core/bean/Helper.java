@@ -547,6 +547,26 @@ public class Helper {
     }
 
     /**
+     * remove the conditions from the query
+     * 
+     * @param names
+     * @return the W
+     */
+    public W remove(String... names) {
+      if (names != null) {
+        for (String name : names) {
+          for (int i = elist.size() - 1; i >= 0; i--) {
+            Entity e = elist.get(i);
+            if (X.isSame(name, e.name)) {
+              elist.remove(i);
+            }
+          }
+        }
+      }
+      return this;
+    }
+
+    /**
      * clone a new W <br>
      * return a new W.
      *
@@ -872,11 +892,20 @@ public class Helper {
       return w;
     }
 
-    private static class Entity {
-      String name;
-      Object value;
-      int    op;   // operation EQ, GT, ...
-      int    cond; // condition AND, OR
+    /**
+     * get all the condition elements
+     * 
+     * @return
+     */
+    public List<Entity> getAll() {
+      return elist;
+    }
+
+    public static class Entity {
+      public String name;
+      public Object value;
+      public int    op;   // operation EQ, GT, ...
+      public int    cond; // condition AND, OR
 
       private List<Object> args(List<Object> list) {
         if (value != null) {
