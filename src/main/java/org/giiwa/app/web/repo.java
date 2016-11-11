@@ -379,13 +379,16 @@ public class repo extends Model {
               }
             }
 
-            long length = end - start;
+            long length = end - start + 1;
             this.setHeader("Content-Length", Long.toString(length));
             // this.setHeader("Content-Range", "bytes " + start + "-" + length +
             // "/" + length);
             this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
             if (start == 0) {
               this.setHeader("Accept-Ranges", "bytes");
+            }
+            if (start > 0 || end < total) {
+              this.setStatus(206);
             }
 
             log.info(start + "-" + end + "/" + total);

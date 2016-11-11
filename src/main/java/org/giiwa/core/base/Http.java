@@ -15,6 +15,7 @@
 package org.giiwa.core.base;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -221,8 +222,16 @@ public final class Http {
         log.debug("get url=" + url);
 
         HttpResponse resp = client.execute(get);
+        Header[] hh = resp.getAllHeaders();
+        if (hh != null) {
+          for (Header h : hh) {
+            System.out.println(h.getName() + ":" + h.getValue());
+          }
+        }
+        int status = resp.getStatusLine().getStatusCode();
+        System.out.println("status:" + status);
 
-        if (resp.getStatusLine().getStatusCode() == 200) {
+        if (status == 200 || status == 206) {
           HttpEntity e = resp.getEntity();
           InputStream in = e.getContent();
 
@@ -564,4 +573,44 @@ public final class Http {
       return o;
     }
   }
+
+  public static void main(String[] args) {
+    String url = "http://www.giiwa.org/repo/ct13zbxq3wgnl/giiwa-1.2-1611111820.zip";
+    File f = new File("/Users/wujun/d/temp/repo.zip");
+    JSON head = JSON.create();
+    head.put("Range", "bytes=0-1032");
+    int len = Http.download(url, head, f);
+    System.out.println("repo, done, len=" + len);
+
+    url = "http://www.giiwa.org/giiwa-1.2-1611111820.zip";
+    File f1 = new File("/Users/wujun/d/temp/stat.zip");
+    head = JSON.create();
+    head.put("Range", "bytes=0-1032");
+    len = Http.download(url, head, f1);
+
+    System.out.println("static done, len=" + len);
+
+    try {
+      FileInputStream i1 = new FileInputStream(f);
+      byte[] b1 = new byte[10];
+      i1.read(b1);
+      System.out.print("repo=");
+      for (int i = 0; i < b1.length; i++) {
+        System.out.print(b1[i] + " ");
+      }
+      i1.close();
+
+      FileInputStream i2 = new FileInputStream(f1);
+      byte[] b2 = new byte[10];
+      i2.read(b2);
+      System.out.print("\r\nstat=");
+      for (int i = 0; i < b2.length; i++) {
+        System.out.print(b2[i] + " ");
+      }
+      i2.close();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
 }
