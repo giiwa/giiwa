@@ -1,15 +1,17 @@
 @echo off
 echo "Starting giiwa ..."
 
+set startup=%~dp0
+
 :checking
-tasklist -v | findstr "java.exe" > NUL  
+wmic process get commandline /value | findstr "%startup%" > NUL  
 if ERRORLEVEL 1 goto starting
 if ERRORLEVEL 0 goto sleep
 
 goto sleep
 
 :starting
-call bin/startup.bat
+call %~dp0\bin\startup.bat
 ping 0.0.0.0 -n 3 >NUL
 
 :sleep
