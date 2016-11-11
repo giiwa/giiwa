@@ -1,7 +1,7 @@
 <project name="giiwa" default="package" basedir=".">
 
-	<xmlproperty file="src/main/webapp/modules/default/module.xml"/>
-	
+	<xmlproperty file="src/main/webapp/modules/default/module.xml" />
+
 	<tstamp>
 		<format property="TODAY" pattern="yyMMdd" locale="zh,CN" />
 		<format property="BUILDNO" pattern="yyMMddHHmm" locale="zh,CN" />
@@ -61,7 +61,6 @@
 
 			<tarfileset dir="target/giiwa" prefix="giiwa" filemode="755">
 				<include name="**/*.sh" />
-				<include name="install" />
 			</tarfileset>
 		</tar>
 
@@ -69,8 +68,11 @@
 
 		<delete file="target/giiwa-${module.version}.tar" />
 
+		<zip destfile="target/giiwa-${module.version}-${BUILDNO}.zip" basedir="target/giiwa" excludes="**/WEB-INF/classes/**, **/model/com/**" />
+
 		<copy todir="../archives">
 			<fileset file="target/giiwa-${module.version}-${BUILDNO}.tgz" />
+			<fileset file="target/giiwa-${module.version}-${BUILDNO}.zip" />
 		</copy>
 
 	</target>

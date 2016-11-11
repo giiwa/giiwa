@@ -10,9 +10,9 @@ goto sleep
 
 :starting
 call bin/startup.bat
-ping 0.0.0.0 -n 3 >null
+ping 0.0.0.0 -n 3 >NUL
 
 :sleep
-ping 0.0.0.0 -n 1 >null
+ping 0.0.0.0 -n 1 >NUL
 
 goto checking
