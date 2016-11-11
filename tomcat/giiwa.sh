@@ -14,7 +14,7 @@ while [ -h "$PRG" ] ; do
 done
 
 os=`uname -s`
-startup=`pwd`/bin
+startup=$(cd `dirname $0`; pwd)/bin
 
 getpid() {
 	case $os in
