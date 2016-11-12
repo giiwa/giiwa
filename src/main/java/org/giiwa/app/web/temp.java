@@ -16,8 +16,6 @@ package org.giiwa.app.web;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
@@ -54,48 +52,57 @@ public class temp extends Model {
     }
 
     String name = ss[1];
-    File f = Temp.get(ss[0], name);
-    if (!f.exists()) {
+    File f1 = Temp.get(ss[0], name);
+    if (!f1.exists()) {
       this.notfound();
       return;
     }
 
     try {
-      String range = this.getString("RANGE");
-      long total = f.length();
+
+      String range = this.getHeader("Range");
+      long total = f1.length();
       long start = 0;
       long end = total;
-      if (range != null) {
-        ss = range.split("(=|-)");
-        if (ss.length > 1) {
-          start = X.toLong(ss[1]);
+      if (!X.isEmpty(range)) {
+        String[] s1 = X.split(range, "[=-]");
+        if (s1.length > 1) {
+          start = X.toLong(s1[1]);
         }
 
-        if (ss.length > 2) {
-          end = Math.min(total, X.toLong(ss[2]));
+        if (s1.length > 2) {
+          end = Math.min(total, X.toLong(s1[2]));
+
+          if (end < start) {
+            end = start + 16 * 1024;
+          }
         }
       }
 
-      if (end <= start) {
-        end = start + 16 * 1024;
+      if (end > total) {
+        end = total;
       }
 
-      this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
-
-      log.info(start + "-" + end + "/" + total);
+      long length = end - start;
 
       this.setContentType("application/octet");
+      this.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
+      this.setHeader("Content-Length", Long.toString(length));
+      this.setHeader("Last-Modified", lang.format(f1.lastModified(), "yyyy-MM-dd HH:mm:ss z"));
+      this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
+      if (start == 0) {
+        this.setHeader("Accept-Ranges", "bytes");
+      }
+      if (end < total) {
+        this.setStatus(206);
+      }
 
-      this.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
-
-      InputStream in = new FileInputStream(f);
-      OutputStream out = this.getOutputStream();
-      IOUtil.copy(in, out, start, end, true);
+      IOUtil.copy(new FileInputStream(f1), this.getOutputStream(), start, end, true);
 
       return;
 
     } catch (Exception e) {
-      log.error(f.getAbsolutePath(), e);
+      log.error(f1.getAbsolutePath(), e);
       OpLog.error(temp.class, "", e.getMessage(), e, login, this.getRemoteHost());
     }
 

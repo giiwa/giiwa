@@ -76,6 +76,8 @@ public final class Http {
 
   public static final String UA      = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
 
+  private static boolean     DEBUG   = false;
+
   /**
    * GET response from a url.
    *
@@ -222,14 +224,17 @@ public final class Http {
         log.debug("get url=" + url);
 
         HttpResponse resp = client.execute(get);
-        Header[] hh = resp.getAllHeaders();
-        if (hh != null) {
-          for (Header h : hh) {
-            System.out.println(h.getName() + ":" + h.getValue());
-          }
-        }
         int status = resp.getStatusLine().getStatusCode();
-        System.out.println("status:" + status);
+
+        if (DEBUG) {
+          Header[] hh = resp.getAllHeaders();
+          if (hh != null) {
+            for (Header h : hh) {
+              System.out.println(h.getName() + ":" + h.getValue());
+            }
+          }
+          System.out.println("status:" + status);
+        }
 
         if (status == 200 || status == 206) {
           HttpEntity e = resp.getEntity();
@@ -575,17 +580,24 @@ public final class Http {
   }
 
   public static void main(String[] args) {
-    String url = "http://www.giiwa.org/repo/ct13zbxq3wgnl/giiwa-1.2-1611111820.zip";
+    Http.DEBUG = true;
+
+    String url = "http://www.giiwa.org/repo/3vfusptnmaoeu";
     File f = new File("/Users/wujun/d/temp/repo.zip");
     JSON head = JSON.create();
-    head.put("Range", "bytes=0-1032");
+    head.put("Range", "bytes=0-1");
     int len = Http.download(url, head, f);
+    System.out.println("repo, done, len=" + len);
+
+    head = JSON.create();
+    head.put("Range", "bytes=1-10");
+    len = Http.download(url, head, f);
     System.out.println("repo, done, len=" + len);
 
     url = "http://www.giiwa.org/giiwa-1.2-1611111820.zip";
     File f1 = new File("/Users/wujun/d/temp/stat.zip");
     head = JSON.create();
-    head.put("Range", "bytes=0-1032");
+    head.put("Range", "bytes=0-1");
     len = Http.download(url, head, f1);
 
     System.out.println("static done, len=" + len);

@@ -202,7 +202,7 @@ public class repo extends Model {
   @Override
   @Path(login = false)
   public void onGet() {
-    if ("download".equals(this.getString("op"))) {
+    if (X.isSame("download", this.getString("op"))) {
       download();
       return;
     }
@@ -352,8 +352,7 @@ public class repo extends Model {
               }
             }
 
-            this.setHeader("Last-Modified", date2);
-            this.setHeader("ETag", "W/repo-" + e.getId());
+            log.debug("remote=" + this.getRequest().getRemoteAddr() + "," + this.getRequest().getRemotePort());
 
             /**
              * else get all repo output to response
@@ -373,21 +372,25 @@ public class repo extends Model {
               if (ss.length > 2) {
                 end = Math.min(total, X.toLong(ss[2]));
 
-                if (end <= start) {
+                if (end < start) {
                   end = start + 16 * 1024;
                 }
               }
             }
 
-            long length = end - start + 1;
+            if (end > total) {
+              end = total;
+            }
+
+            long length = end - start;
             this.setHeader("Content-Length", Long.toString(length));
-            // this.setHeader("Content-Range", "bytes " + start + "-" + length +
-            // "/" + length);
-            this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
+            this.setHeader("Last-Modified", date2);
+            this.setHeader("ETag", "W/repo-" + e.getId());
+            this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
             if (start == 0) {
               this.setHeader("Accept-Ranges", "bytes");
             }
-            if (start > 0 || end < total) {
+            if (end < total) {
               this.setStatus(206);
             }
 

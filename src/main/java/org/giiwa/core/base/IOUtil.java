@@ -187,7 +187,7 @@ public final class IOUtil {
       byte[] bb = new byte[1024 * 4];
       int total = 0;
       in.skip(start);
-      int ii = (int) Math.min((end - start + 1), bb.length);
+      int ii = (int) Math.min((end - start), bb.length);
       int len = in.read(bb, 0, ii);
       while (len > 0) {
         out.write(bb, 0, len);

@@ -37,7 +37,6 @@ public class FileView extends View {
   public boolean parse(File file, Model m, String viewname) throws IOException {
 
     InputStream in = null;
-    OutputStream out = null;
     try {
       in = new FileInputStream(file);
       /**
@@ -51,39 +50,52 @@ public class FileView extends View {
       }
 
       in = new FileInputStream(file);
-      out = m.getOutputStream();
       m.setContentType(Model.getMimeType(file.getName()));
 
       String date = m.getHeader("If-Modified-Since");
+
+      String range = m.getHeader("Range");
       String date2 = Language.getLanguage().format(file.lastModified(), "yyyy-MM-dd HH:mm:ss z");
-      if (date != null && date.equals(date2)) {
+      if (X.isEmpty(range) && date != null && date.equals(date2)) {
         m.resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         return true;
       }
 
-      m.setHeader("Last-Modified", date2);
-      m.setHeader("Content-Length", Long.toString(file.length()));
-      m.setHeader("Accept-Ranges", "bytes");
-
-      // RANGE: bytes=2000070-
-      String range = m.getHeader("RANGE");
+      long total = f1.length();
       long start = 0;
-      long end = file.length();
-      if (range != null) {
-        String[] ss = range.split("=| |-");
+      long end = total;
+      if (!X.isEmpty(range)) {
+        String[] ss = X.split(range, "[=-]");
         if (ss.length > 1) {
-          start = X.toLong(ss[1], 0);
+          start = X.toLong(ss[1]);
         }
-        if (ss.length > 2) {
-          end = X.toLong(ss[2], 0);
-        }
-        // Content-Range=bytes 2000070-106786027/106786028
-        m.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + file.length());
 
+        if (ss.length > 2) {
+          end = Math.min(total, X.toLong(ss[2]));
+
+          if (end < start) {
+            end = start + 16 * 1024;
+          }
+        }
       }
 
-      IOUtil.copy(in, out, start, end, false);
-      out.flush();
+      if (end > total) {
+        end = total;
+      }
+
+      long length = end - start;
+
+      m.setHeader("Content-Length", Long.toString(length));
+      m.setHeader("Last-Modified", date2);
+      m.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
+      if (start == 0) {
+        m.setHeader("Accept-Ranges", "bytes");
+      }
+      if (end < total) {
+        m.setStatus(206);
+      }
+
+      IOUtil.copy(new FileInputStream(f1), m.getOutputStream(), start, end, true);
 
       return true;
     } finally {
