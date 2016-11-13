@@ -112,21 +112,8 @@
 
 #parse('/widget/goto.page.html')
 
-<div>
-	<a class='btn btn-danger' href='javascript:;' onclick='_deleteall();'>$lang.get('a.clean')</a>
-</div>
-
 <script>
 $('#log-table').tablesorter({headers:{7:{sorter:false}}});
-function _deleteall() {
-	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
-		$.post('/admin/oplog/deleteall', {}, function(d) {
-			processing && processing.hide();
-			reload();
-		});
-	}
-}
 
 function _showmore(obj){
 	var e = $(obj);
