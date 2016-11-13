@@ -80,4 +80,5 @@ public class Code extends Bean {
   public static int update(W q, V v) {
     return Helper.update(q, v, Code.class);
   }
+
 }

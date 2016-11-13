@@ -71,6 +71,7 @@ create table gi_code
 (
 	s1 varchar(50),
 	s2 varchar(50),
+	val varchar(4096),
 	expired bigint,
 	created bigint default 0,
 	updated bigint default 0

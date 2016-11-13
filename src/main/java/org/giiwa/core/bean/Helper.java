@@ -436,6 +436,18 @@ public class Helper {
       return this;
     }
 
+    /**
+     * create and copy a new Value
+     * 
+     * @param v
+     * @return V
+     */
+    public static V create(V v) {
+      V v1 = V.create();
+      v1.copy(v);
+      return v1;
+    }
+
   }
 
   /**
