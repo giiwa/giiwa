@@ -69,8 +69,9 @@ create index gi_role_index_name on gi_role(name);
 #drop table if exists gi_code;
 create table gi_code
 (
-	s1 varchar(50),
-	s2 varchar(50),
+	s1 varchar(1024),
+	s2 varchar(1024),
+	val varchar(4096),
 	expired bigint,
 	created bigint default 0,
 	updated bigint default 0
