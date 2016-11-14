@@ -3,7 +3,7 @@ package org.giiwa.framework.web;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Rewrite {
+public class URL {
 
   private static final Map<String, String> rewrites = new HashMap<String, String>();
 

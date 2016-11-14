@@ -60,7 +60,7 @@ public class GiiwaFilter implements Filter {
       /**
        * rewrite uri
        */
-      uri = Rewrite.rewrite(uri);
+      uri = URL.rewrite(uri);
 
       String method = r1.getMethod();
       String domain = Global.getString("cross.domain", "");
