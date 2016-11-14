@@ -32,8 +32,8 @@
 		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
 			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
 			<form method="post">
-				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>mongodb://host1:27017,host2:27017 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
-				<div><label><h3>DB：</h3><input type='text' name='db' value="$!global.getString('mongo[prod].db','demo')"/></label></div>
+				<div><label><h3>$lang.get('setup.label.url')：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>mongodb://host1:27017,host2:27017 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
+				<div><label><h3>$lang.get('setup.label.db')：</h3><input type='text' name='db' value="$!global.getString('mongo[prod].db','demo')"/></label></div>
 				<input type='text' style="display:none"/>
 				<div class='btns'>
 					<a class='next btn btn-success'>$lang.get('a.next')</a>
@@ -52,7 +52,7 @@
 						<option value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
 					</select>
 				</label></div>
-				<div class='url'><label><h3>URL：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
+				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
 					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=giiwa&password=g123123</g>
 					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=giiwa&password=g123123&useUnicode=true&characterEncoding=UTF-8</g>
@@ -80,10 +80,10 @@
 		</div>		
 
 		<div id="cache" class='panel' data-next="admin" data-prev="system" data-check='check_cache'>
-			<div class='head'>Cache</div>	
+			<div class='head'>$lang.get('setup.title.cache')</div>	
 			<form method="post">
-				<div><label><h3>URL：</h3><input type='text' name='url' value="$!global.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
-				<div><label><h3>Group：</h3><input type='text' name='group' value="$!global.getString('cache.group', '')"/></label></div>
+				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!global.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
+				<div><label><h3>$lang.get('setup.label.group')：</h3><input type='text' name='group' value="$!global.getString('cache.group', '')"/></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
@@ -95,10 +95,10 @@
 		<div id="admin" class='panel' data-prev="cache">
 			<div class='head'>$lang.get('configure.title.admin')</div>	
 			<form method="post">
-				<div><label><h3>Admin<r>*</r>：</h3><input type='text' name='admin' value='admin'/></label></div>
-				<div><label><h3>Password<r>*</r>：</h3><input type='password' name='password' value=''/></label></div>
-				<div><label><h3>Email：</h3><input type='email' name='email' value=''/></label></div>
-				<div><label><h3>Phone：</h3><input type='tel' name='phone' value=''/></label></div>
+				<div><label><h3>$lang.get('setup.label.admin')<r>*</r>：</h3><input type='text' name='admin' value='admin'/></label></div>
+				<div><label><h3>$lang.get('setup.label.passwd')<r>*</r>：</h3><input type='password' name='password' value=''/></label></div>
+				<div><label><h3>$lang.get('setup.label.email')：</h3><input type='email' name='email' value=''/></label></div>
+				<div><label><h3>$lang.get('setup.label.phone')：</h3><input type='tel' name='phone' value=''/></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
