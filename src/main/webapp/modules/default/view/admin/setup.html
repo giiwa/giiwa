@@ -46,17 +46,23 @@
 			<form method="post">
 				<div><label><h3>Driver：</h3>
 					<select name='driver' onchange='_ondriver();'>
-						<option value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
-						<option value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
-						<option value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
-						<option value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+						<option tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
+						<option tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
+						<option tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
+						<option tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+						<option tips='db2' value='com.ibm.db2.jcc.DB2Driver' #if($global.getString('db.driver', '') == 'com.ibm.db2.jcc.DB2Driver') selected #end>DB2</option>
+						<option tips='sqlserver2000' value='com.microsoft.jdbc.sqlserver.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.jdbc.sqlserver.SQLServerDriver') selected #end>SQL Server 2000</option>
+						<option tips='sqlserver2005' value='com.microsoft.sqlserver.jdbc.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.sqlserver.jdbc.SQLServerDriver') selected #end>SQL Server 2005</option>
 					</select>
 				</label></div>
 				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
 					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=giiwa&password=g123123</g>
 					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=giiwa&password=g123123&useUnicode=true&characterEncoding=UTF-8</g>
-					<g class='oracle' style='display:none'>...</g>
+					<g class='oracle' style='display:none'>jdbc:oracle:thin:@//x.x.x.x:1522/servername</g>
+					<g class='db2' style='display:none'>jdbc:db2://x.x.x.x:50000/dbname</g>
+					<g class='sqlserver2000' style='display:none'>jdbc:microsoft:sqlserver://x.x.x.x:1433</g>
+					<g class='sqlserver2005' style='display:none'>jdbc:sqlserver://x.x.x.x:1433</g>
 				</label></div>
 				
 				<div class='btns'>
@@ -130,23 +136,10 @@
 
 <script>
 function _ondriver(){
-	var driver = $('select[name=driver]').val();
-	if(driver.indexOf('postgresql') > -1) {
-		$('#db .url g').hide();
-		$('#db .url g.postgresql').show();
-	} else if(driver.indexOf('mysql')> -1) {
-		$('#db .url g').hide();
-		$('#db .url g.mysql').show();
-	} else if(driver.indexOf('hsqldb') > -1){
-		$('#db .url g').hide();
-		$('#db .url g.hsqldb').show();
-	} else if(driver.indexOf('sqlite') > -1){
-		$('#db .url g').hide();
-		$('#db .url g.sqlite').show();
-	} else{
-		$('#db .url g').hide();
-		$('#db .url g.oracle').show();
-	}
+	$('#db .url g').hide();
+	var driver = $('#db select[name=driver]').val();
+	var tips = $('#db select option[value="' + driver + '"]').attr('tips');
+	$('#db .url g.' + tips).show();
 }
 $(function(){
 	$('.panel .btns a.prev').click(function(e){
