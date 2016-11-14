@@ -161,6 +161,7 @@ org/giiwa/core/cache/Cache.class
 org/giiwa/app/web/alive.class
 org/giiwa/core/base/Shell.class
 org/giiwa/core/cache/FileCache.class
+org/giiwa/framework/web/Rewrite.class
 org/giiwa/core/noti/Email.class
 org/giiwa/core/bean/RDSHelper.class
 org/giiwa/core/bean/Helper$W$Entity.class
