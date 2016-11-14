@@ -57,6 +57,11 @@ public class GiiwaFilter implements Filter {
         uri = uri.replaceAll("//", "/");
       }
 
+      /**
+       * rewrite uri
+       */
+      uri = Rewrite.rewrite(uri);
+
       String method = r1.getMethod();
       String domain = Global.getString("cross.domain", "");
 
