@@ -33,6 +33,7 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/token.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/vengine/VEngine.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/app/web/admin/role.java
+/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/URL.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/json/JSON.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Http.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/ICacheSystem.java
@@ -88,7 +89,6 @@
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/cache/FileCache.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/GiiwaFilter.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/view/View.java
-/Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Rewrite.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/base/Base64.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/framework/web/Model.java
 /Users/wujun/d/workspace/giiwa/src/main/java/org/giiwa/core/noti/Sms.java
