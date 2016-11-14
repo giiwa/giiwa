@@ -134,7 +134,13 @@ public final class JSON extends HashMap<String, Object> {
         if (o instanceof List) {
           list.set(i, fromObjects(o));
         } else {
-          list.set(i, fromObject(o));
+          try {
+            if (o.toString().startsWith("{")) {
+              list.set(i, fromObject(o));
+            }
+          } catch (Throwable e) {
+            // ignore
+          }
         }
       }
     }
