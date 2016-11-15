@@ -88,6 +88,7 @@ configure.title.mq=Active MQ
 configure.title.rdbs=RDS
 configure.title.system=System
 setup.label.url=URL
+setup.label.username=Username
 setup.label.db=DB name
 setup.title.cache=Mem Cache
 setup.label.cache.url=URL

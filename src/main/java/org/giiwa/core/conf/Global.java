@@ -97,8 +97,9 @@ public final class Global extends Bean {
    * @return the string
    */
   public static String getString(String name, String defaultValue) {
+
     if (!Helper.isConfigured()) {
-      return cache.get(name) == null ? defaultValue : cache.get(name).toString();
+      return cache.get(name) == null ? Config.getConfig().getString(name, defaultValue) : cache.get(name).toString();
     }
 
     Global c = Cache.get("global/" + name);
@@ -112,12 +113,10 @@ public final class Global extends Bean {
         Cache.set("global/" + name, c);
 
         return c.s != null ? c.s : defaultValue;
-      } else {
-        return Config.getConfig().getString(name, defaultValue);
       }
     }
 
-    return c != null && c.s != null ? c.s : defaultValue;
+    return c != null && c.s != null ? c.s : Config.getConfig().getString(name, defaultValue);
 
   }
 

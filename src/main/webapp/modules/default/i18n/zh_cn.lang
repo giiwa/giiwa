@@ -89,6 +89,7 @@ setup.label.driver=类型
 setup.title.cache=内存缓存
 setup.label.cache.url=缓存URL
 setup.label.group=组名
+setup.label.username=用户名
 setup.label.admin=管理员
 setup.label.passwd=密码
 setup.label.email=电子邮箱

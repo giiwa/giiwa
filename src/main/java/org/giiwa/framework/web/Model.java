@@ -187,28 +187,7 @@ public class Model {
    */
   final public String getLocale() {
     if (locale == null) {
-      locale = this.getString("lang");
-      if (locale == null) {
-        /**
-         * get the language from the cookie or default setting;
-         */
-        locale = getCookie("lang");
-        if (locale == null) {
-          // locale = Module._conf.getString("default.locale",
-          // "en_us");
-          //
-          // /**
-          // * get from the default, then set back to the cookie
-          // */
-          // this.addCookie("lang", locale, (int) (X.AYEAR / 1000));
-          locale = Global.getString("language", "en_us");
-        }
-      } else {
-        /**
-         * get the language from the query, then set back in the cookie;
-         */
-        this.addCookie("lang", locale, (int) (X.AYEAR / 1000));
-      }
+      locale = Global.getString("language", "en_us");
     }
 
     // System.out.println("lang:" + locale);
