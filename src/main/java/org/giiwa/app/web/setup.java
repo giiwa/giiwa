@@ -163,7 +163,7 @@ public class setup extends Model {
     if ("db".equals(op)) {
 
       String url = this.getHtml(X.URL).trim();
-      String username = this.getString("user").trim();
+      String username = this.getString("username").trim();
       String passwd = this.getString("passwd").trim();
 
       // String driver = this.getHtml("driver");

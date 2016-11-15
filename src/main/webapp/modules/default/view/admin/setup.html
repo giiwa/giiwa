@@ -46,13 +46,13 @@
 			<form method="post">
 				<div><label><h3>$lang.get('setup.label.driver')：</h3>
 					<select name='driver' onchange='_ondriver();'>
-						<option tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
-						<option tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
-						<option tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
-						<option tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
-						<option tips='db2' value='com.ibm.db2.jcc.DB2Driver' #if($global.getString('db.driver', '') == 'com.ibm.db2.jcc.DB2Driver') selected #end>DB2</option>
-						<option tips='sqlserver2000' value='com.microsoft.jdbc.sqlserver.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.jdbc.sqlserver.SQLServerDriver') selected #end>SQL Server 2000</option>
-						<option tips='sqlserver2005' value='com.microsoft.sqlserver.jdbc.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.sqlserver.jdbc.SQLServerDriver') selected #end>SQL Server 2005</option>
+						<option user='0' tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
+						<option user='1' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
+						<option user='1' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
+						<option user='1' tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+						<option user='1' tips='db2' value='com.ibm.db2.jcc.DB2Driver' #if($global.getString('db.driver', '') == 'com.ibm.db2.jcc.DB2Driver') selected #end>DB2</option>
+						<option user='1' tips='sqlserver2000' value='com.microsoft.jdbc.sqlserver.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.jdbc.sqlserver.SQLServerDriver') selected #end>SQL Server 2000</option>
+						<option user='1' tips='sqlserver2005' value='com.microsoft.sqlserver.jdbc.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.sqlserver.jdbc.SQLServerDriver') selected #end>SQL Server 2005</option>
 					</select>
 				</label></div>
 				
@@ -65,8 +65,8 @@
 					<g class='sqlserver2000' style='display:none'>jdbc:microsoft:sqlserver://x.x.x.x:1433</g>
 					<g class='sqlserver2005' style='display:none'>jdbc:sqlserver://x.x.x.x:1433</g>
 				</label></div>
-				<div><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
-				<div><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
+				<div class='username'><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
+				<div class='passwd'><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
@@ -143,8 +143,19 @@ function _ondriver(){
 	var driver = $('#db select[name=driver]').val();
 	var tips = $('#db select option[value="' + driver + '"]').attr('tips');
 	$('#db .url g.' + tips).show();
+	
+	var user = $('#db select option[value="' + driver + '"]').attr('user');
+	if(user == '1') {
+		$('#db .username').show();
+		$('#db .passwd').show();
+	} else {
+		$('#db .username').hide();
+		$('#db .passwd').hide();
+	}
 }
 $(function(){
+	_ondriver();
+	
 	$('.panel .btns a.prev').click(function(e){
 		var a = $(this);
 		var p = a.parent();
