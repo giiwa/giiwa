@@ -96,6 +96,8 @@ public class setup extends Model {
     if (!X.isEmpty(dburl)) {
       conf.setProperty("db.url", dburl);
     }
+    conf.setProperty("db.user", this.getString("db.user"));
+    conf.setProperty("db.passwd", this.getString("db.passwd"));
 
     String mongourl = this.getHtml("mongo.url");
     String mongodb = this.getString("mongo.db");
@@ -161,13 +163,16 @@ public class setup extends Model {
     if ("db".equals(op)) {
 
       String url = this.getHtml(X.URL).trim();
+      String username = this.getString("user").trim();
+      String passwd = this.getString("passwd").trim();
+
       // String driver = this.getHtml("driver");
       // conf.setProperty("db.url", url);
       // conf.setProperty("db.driver", driver);
       //
       try {
         if (!X.isEmpty(url)) {
-          Connection c1 = RDB.getConnectionByUrl(url);
+          Connection c1 = RDB.getConnectionByUrl(url, username, passwd);
           Statement stat = c1.createStatement();
           stat.execute("create table test_ppp(X char(1))");
           stat.execute("drop table test_ppp");

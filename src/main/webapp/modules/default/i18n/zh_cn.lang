@@ -85,6 +85,7 @@ configure.title.admin=管理员帐号
 configure.title.mongo=Mongo数据库
 setup.label.url=数据库链接URL
 setup.label.db=数据库
+setup.label.driver=类型
 setup.title.cache=内存缓存
 setup.label.cache.url=缓存URL
 setup.label.group=组名

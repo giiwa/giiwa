@@ -92,6 +92,7 @@ setup.label.db=DB name
 setup.title.cache=Mem Cache
 setup.label.cache.url=URL
 setup.label.group=Group
+setup.label.driver=Driver
 setup.label.admin=Administrator
 setup.label.passwd=Password
 setup.label.email=Email

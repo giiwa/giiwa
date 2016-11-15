@@ -44,7 +44,7 @@
 		<div id="db" class='panel' data-next="system" data-prev='mongo' data-check='check_db'>
 			<div class='head'>$!lang.get('configure.title.rdbs')</div>	
 			<form method="post">
-				<div><label><h3>Driver：</h3>
+				<div><label><h3>$lang.get('setup.label.driver')：</h3>
 					<select name='driver' onchange='_ondriver();'>
 						<option tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
 						<option tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
@@ -55,15 +55,18 @@
 						<option tips='sqlserver2005' value='com.microsoft.sqlserver.jdbc.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.sqlserver.jdbc.SQLServerDriver') selected #end>SQL Server 2005</option>
 					</select>
 				</label></div>
+				
 				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
-					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=giiwa&password=g123123</g>
-					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=giiwa&password=g123123&useUnicode=true&characterEncoding=UTF-8</g>
-					<g class='oracle' style='display:none'>jdbc:oracle:thin:@//x.x.x.x:1522/servername</g>
+					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
+					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
+					<g class='oracle' style='display:none'>jdbc:oracle:thin:username/password@//x.x.x.x:1522/servername</g>
 					<g class='db2' style='display:none'>jdbc:db2://x.x.x.x:50000/dbname</g>
 					<g class='sqlserver2000' style='display:none'>jdbc:microsoft:sqlserver://x.x.x.x:1433</g>
 					<g class='sqlserver2005' style='display:none'>jdbc:sqlserver://x.x.x.x:1433</g>
 				</label></div>
+				<div><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
+				<div><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
@@ -196,6 +199,8 @@ $(function(){
 		var p = {};
 		p["db.driver"] = $('#db select[name=driver]').val();
 		p["db.url"] = $('#db input[name=url]').val();
+		p["db.user"] = $('#db input[name=username]').val();
+		p["db.passwd"] = $('#db input[name=passwd]').val();
 		p["mongo.url"] = $('#mongo input[name=url]').val();
 		p["mongo.db"] = $('#mongo input[name=db]').val();
 		p["node"] = $('#system input[name=node]').val();
@@ -229,6 +234,8 @@ function check_db(f){
 	var  p = {op:'db'};
 	p.driver = $('#db select[name=driver]').val();
 	p.url = $('#db input[name=url]').val();
+	p.username = $('#db input[name=username]').val();
+	p.passwd = $('#db input[name=passwd]').val();
 	$.post('/setup/check', p, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {

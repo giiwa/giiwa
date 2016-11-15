@@ -288,7 +288,7 @@ public class RDB {
    * @throws SQLException
    *           the SQL exception
    */
-  public static Connection getConnectionByUrl(String url) throws SQLException {
+  public static Connection getConnectionByUrl(String url, String username, String passwd) throws SQLException {
     BasicDataSource external = dss.get(url);
     if (external == null) {
 
@@ -297,66 +297,30 @@ public class RDB {
       // URL);
       // int N = conf.getInt("db[" + name + "].conns", MAX_ACTIVE_NUMBER);
 
-      String username = null;
-      String password = null;
       String D = null;
       String[] ss = url.split(":");
       if (ss.length > 2) {
-        if (ss[1].equalsIgnoreCase("sqlite")) {
-          D = "org.sqlite.JDBC";
-        } else if (ss[1].equalsIgnoreCase("mysql")) {
+        String type = ss[1];
+        if (X.isSame(type, "mysql")) {
           D = "com.mysql.jdbc.Driver";
-        } else if (ss[1].equalsIgnoreCase("postgresql")) {
+        } else if (X.isSame(type, "postgresql")) {
           D = "org.postgresql.Driver";
-        } else if (ss[1].equalsIgnoreCase("hsqldb")) {
+        } else if (X.isSame(type, "hsqldb")) {
           D = "org.hsqldb.jdbc.JDBCDriver";
-        } else if (ss[1].equalsIgnoreCase("oracle")) {
+        } else if (X.isSame(type, "oracle")) {
           D = "oracle.jdbc.driver.OracleDriver";
-        } else if (ss[1].equalsIgnoreCase("sqlserver") || ss[1].equalsIgnoreCase("microsoft")) {
+        } else if (X.isSame(type, "db2")) {
+          D = "com.ibm.db2.jcc.DB2Driver";
+        } else if (X.isSame(type, "sqlserver")) {
+          // 2005
           D = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-
-          // TODO, user, password
-          int i = url.indexOf("user=");
-          if (i > 0) {
-            int j = url.indexOf("&", i + 1);
-            if (j < 0) {
-              j = url.length();
-            }
-            String[] ss1 = url.substring(i, j).split("=");
-            if (ss1.length == 2) {
-              username = ss1[1];
-            }
-
-            String url1 = url.substring(0, i - 1);
-            if (j < url.length()) {
-              url = url1 + url.substring(j);
-            } else {
-              url = url1;
-            }
-          }
-
-          i = url.indexOf("password=");
-          if (i > 0) {
-            int j = url.indexOf("&", i + 1);
-            if (j < 0) {
-              j = url.length();
-            }
-            String[] ss1 = url.substring(i, j).split("=");
-            if (ss1.length == 2) {
-              password = ss1[1];
-            }
-            String url1 = url.substring(0, i - 1);
-            if (j < url.length()) {
-              url = url1 + url.substring(j + 1);
-            } else {
-              url = url1;
-            }
-          }
-
+        } else if (X.isSame(type, "microsoft")) {
+          // 2000
+          D = "com.microsoft.jdbc.sqlserver.SQLServerDriver";
         }
       }
 
-      log.debug("driver=" + D + ", url=" + url + ", user=" + username + ", password=" + password);
+      log.debug("driver=" + D + ", url=" + url + ", user=" + username + ", password=" + passwd);
 
       if (!X.isEmpty(D)) {
         external = new BasicDataSource();
@@ -367,8 +331,8 @@ public class RDB {
         if (!X.isEmpty(username)) {
           external.setUsername(username);
         }
-        if (!X.isEmpty(password)) {
-          external.setPassword(password);
+        if (!X.isEmpty(passwd)) {
+          external.setPassword(passwd);
         }
 
         external.setMaxActive(10);
