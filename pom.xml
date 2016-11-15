@@ -20,6 +20,24 @@
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
+	<developers>
+		<developer>
+			<name>Joe</name>
+			<email>joe-j@giiwa.org</email>
+			<organization>giiwa.org</organization>
+			<organizationUrl>http://www.giiwa.org</organizationUrl>
+		</developer>
+	</developers>
+	<scm>
+		<connection>
+         scm:git:https://github.com/giiwa/giiwa.git
+      </connection>
+		<developerConnection>
+         scm:git:https://github.com/giiwa/giiwa.git
+      </developerConnection>
+		<url>https://github.com/giiwa/giiwa</url>
+		<tag>1.1</tag>
+	</scm>
 	<dependencies>
 		<dependency>
 			<groupId>redis.clients</groupId>
@@ -185,6 +203,17 @@
 		</dependency>
 
 	</dependencies>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>oss</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+		</snapshotRepository>
+		<repository>
+			<id>oss</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 
 	<build>
 		<plugins>
