@@ -15,15 +15,21 @@
 package org.giiwa.core.base;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.giiwa.core.json.JSON;
 
+// TODO: Auto-generated Javadoc
 /**
  * The {@code Zip} Class used to Zip File operations,
  * 
@@ -149,4 +155,105 @@ public class Zip {
 
     return null;
   }
+
+  /**
+   * Unzip the src file to output place.
+   *
+   * @param zipfile
+   *          the src zip file
+   * @param out
+   *          the out
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
+  public static void unzip(File zipfile, File out) throws IOException {
+    out.mkdirs();
+    ZipInputStream zip = new ZipInputStream(new FileInputStream(zipfile));
+    try {
+
+      ZipEntry e = zip.getNextEntry();
+      while (e != null) {
+
+        String name = e.getName();
+        if (e.isDirectory()) {
+          new File(out.getCanonicalPath() + "/" + name).mkdirs();
+        } else {
+          File f = new File(out.getCanonicalPath() + "/" + name);
+          f.getParentFile().mkdirs();
+          FileOutputStream o = new FileOutputStream(f);
+          try {
+            IOUtil.copy(zip, o, false);
+          } finally {
+            o.close();
+          }
+        }
+        e = zip.getNextEntry();
+      }
+    } finally {
+      zip.close();
+    }
+  }
+
+  /**
+   * Zip the src to out file
+   *
+   * @param zipfile
+   *          the out zip file
+   * @param src
+   *          the src file or directory
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
+  public static void zip(File zipfile, File src) throws IOException {
+    zipfile.getParentFile().mkdirs();
+    ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(zipfile));
+    try {
+      if (src.exists()) {
+        _zip(zip, src, src.getCanonicalPath());
+      }
+    } finally {
+      zip.close();
+    }
+  }
+
+  private static void _zip(ZipOutputStream out, File f, String working) throws IOException {
+    if (f.isFile()) {
+      String name = f.getCanonicalPath().replace(working, "");
+      ZipEntry e = new ZipEntry(name);
+      out.putNextEntry(e);
+
+      InputStream in = new FileInputStream(f);
+      try {
+        IOUtil.copy(in, out, false);
+      } finally {
+        out.closeEntry();
+        in.close();
+      }
+    } else if (f.isDirectory()) {
+      String name = f.getCanonicalPath().replace(working, "") + "/";
+      ZipEntry e = new ZipEntry(name);
+      out.putNextEntry(e);
+      out.closeEntry();
+
+      File[] ff = f.listFiles();
+      for (File f1 : ff) {
+        _zip(out, f1, working);
+      }
+    }
+  }
+
+  public static void main(String[] args) {
+    try {
+      zip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/logs"));
+
+      unzip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/aa"));
+
+      System.out.println("done");
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+
+  }
+
 }

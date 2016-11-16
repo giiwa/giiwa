@@ -18,7 +18,7 @@
 	<tbody>
 #foreach($f in $list)
 	<tr>
-		<td>$!f.name</td>
+		<td>$!f.name <a class="icon-folder-download" href='javascript:;' onclick="_download('$!f.name')"></a></td>
 		<td>$lang.format($f.lastModified(), 'yyyy-MM-dd HH:m')</td>
 		#set($s=$global.getInt("backup/$f.name", 0))
 		<td>$!lang.get("backup.status_$s")</td>
@@ -35,7 +35,18 @@
 	<a class='btn btn-success' href='/admin/backup/now'>$lang.get('a.backup')</a>
 </div>
 
+<iframe id="download" style="display:none"></iframe>
+
 <script>
+function _download(name) {
+	$.post("/admin/backup/download", {name:name}, function(d){
+		if(d.state == 200) {
+			$("#download").attr('src', d.url);
+		} else {
+			$.error(d.message);
+		}
+	});
+}
 $('#user-table').tablesorter({headers:{2:{sorter:false}}});
 function _delete(name) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {

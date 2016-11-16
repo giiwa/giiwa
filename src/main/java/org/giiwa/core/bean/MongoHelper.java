@@ -994,7 +994,7 @@ public class MongoHelper extends Helper {
       zip.close();
 
     } catch (Exception e) {
-
+      log.debug(e.getMessage(), e);
     }
   }
 

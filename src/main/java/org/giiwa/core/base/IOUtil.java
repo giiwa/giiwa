@@ -158,6 +158,7 @@ public final class IOUtil {
    *           throw exception when copy file failed
    */
   public static int copy(File src, File dest) throws IOException {
+    dest.getParentFile().mkdirs();
     return copy(new FileInputStream(src), new FileOutputStream(dest), true);
   }
 
