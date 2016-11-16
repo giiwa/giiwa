@@ -11,6 +11,7 @@
 		<tr>
 			<th>Name</th>
 			<th>$lang.get('head.created')</th>
+			<th>Size</th>
 			<th>Satus</th>
 			<th></th>
 		</tr>
@@ -21,6 +22,7 @@
 		<td>$!f.name <a class="icon-folder-download" href='javascript:;' onclick="_download('$!f.name')"></a></td>
 		<td>$lang.format($f.lastModified(), 'yyyy-MM-dd HH:m')</td>
 		#set($s=$global.getInt("backup/$f.name", 0))
+		<td>$!lang.size($f.length())</td>
 		<td>$!lang.get("backup.status_$s")</td>
 		<td>
 			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_recover("$f.name")'>$lang.get('a.recover')</a>

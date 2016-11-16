@@ -452,3 +452,5 @@ index.starting=Start enjoying your journey from here.
 index.document=Documentation
 index.admin=Admin Control Panel
 index.example=Example
+backup.starting=Start backup
+backup.started=Starting backup

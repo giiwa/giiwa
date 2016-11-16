@@ -112,18 +112,25 @@ public class backup extends Model {
 
   }
 
+  private static BackupTask btask = null;
+
   /**
    * Now.
    */
   @Path(path = "now", login = true, access = "access.config.admin")
   public void now() {
-
-    new BackupTask().schedule(10);
-
-    this.set(X.MESSAGE, "开始备份，请稍后查询");
+    if (btask == null || btask.finished) {
+      btask = new BackupTask();
+      btask.schedule(10);
+      this.set(X.MESSAGE, lang.get("backup.starting"));
+    } else {
+      this.set(X.MESSAGE, lang.get("backup.started"));
+    }
     onGet();
 
   }
+
+  private static RecoverTask rtask = null;
 
   /**
    * Restore.
@@ -134,8 +141,12 @@ public class backup extends Model {
     JSON jo = new JSON();
 
     String name = this.getString("name");
-    long id = Monitor.start(new RecoverTask(name), 10);
-    jo.put("id", id);
+    if (rtask == null || rtask.finished) {
+      rtask = new RecoverTask(name);
+      long id = Monitor.start(rtask, 10);
+      jo.put("id", id);
+    }
+
     this.response(jo);
   }
 
@@ -164,6 +175,8 @@ public class backup extends Model {
    *
    */
   public static class BackupTask extends Task {
+
+    private boolean finished = false;
 
     /**
      * Path.
@@ -245,6 +258,11 @@ public class backup extends Model {
       }
     }
 
+    @Override
+    public void onFinish() {
+      finished = true;
+    }
+
   };
 
   static class RecoverTask extends Task {
@@ -253,7 +271,8 @@ public class backup extends Model {
     String  name;
     boolean done;
     String  message;
-    int     state = 201;
+    int     state    = 201;
+    boolean finished = false;
 
     public RecoverTask(String name) {
       this.name = name;
@@ -321,6 +340,8 @@ public class backup extends Model {
           // url);
         }
 
+        IOUtil.delete(f);
+
         Global.setConfig("backup/" + name, 200); // recovering done
 
       } catch (Exception e) {
@@ -345,6 +366,7 @@ public class backup extends Model {
       state = 200;
       message = "已经恢复：" + name;
       Monitor.finished(this);
+      finished = true;
     }
 
   }
