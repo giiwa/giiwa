@@ -17,8 +17,8 @@ package org.giiwa.core.cache;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 
-import com.danga.MemCached.MemCachedClient;
-import com.danga.MemCached.SockIOPool;
+import com.whalin.MemCached.MemCachedClient;
+import com.whalin.MemCached.SockIOPool;
 
 /**
  * The Class MemCache is used to memcached cache <br>
