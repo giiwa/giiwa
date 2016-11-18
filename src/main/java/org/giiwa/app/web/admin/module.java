@@ -87,7 +87,6 @@ public class module extends Model {
    * @throws Exception
    *           the exception
    */
-  @SuppressWarnings("deprecation")
   public String createmodule() throws Exception {
     int id = this.getInt("id");
     String name = this.getString("name");
@@ -143,6 +142,13 @@ public class module extends Model {
 
       create(out, name + "/build.xml");
       f1 = module.getFile("/admin/demo/build.xml");
+      if (f1 != null) {
+        copy(out, f1);
+      }
+      out.closeEntry();
+
+      create(out, name + "/README.md");
+      f1 = module.getFile("/admin/demo/README.md");
       if (f1 != null) {
         copy(out, f1);
       }
