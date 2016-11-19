@@ -307,6 +307,9 @@ public class RDB {
           D = "org.postgresql.Driver";
         } else if (X.isSame(type, "hsqldb")) {
           D = "org.hsqldb.jdbc.JDBCDriver";
+        }else if(X.isSame(type, "derby")) {
+          D = "org.apache.derby.jdbc.EmbeddedDriver";
+          //jdbc:derby:sampledb;create=true
         } else if (X.isSame(type, "oracle")) {
           D = "oracle.jdbc.driver.OracleDriver";
         } else if (X.isSame(type, "db2")) {

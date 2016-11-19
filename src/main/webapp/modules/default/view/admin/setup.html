@@ -46,6 +46,8 @@
 			<form method="post">
 				<div><label><h3>$lang.get('setup.label.driver')：</h3>
 					<select name='driver' onchange='_ondriver();'>
+						jdbc:derby:sampledb;create=true
+						<option user='0' tips='derby' value='org.apache.derby.jdbc.EmbeddedDriver' #if($global.getString('db.driver', '') == 'org.apache.derby.jdbc.EmbeddedDriver') selected #end>Derby</option>
 						<option user='0' tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
 						<option user='1' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
 						<option user='1' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
@@ -57,6 +59,7 @@
 				</label></div>
 				
 				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
+					<g class='derby' style='display:none'>jdbc:derby:sampledb;create=true</g>
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
 					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
 					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
