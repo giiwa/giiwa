@@ -49,9 +49,9 @@
 						jdbc:derby:sampledb;create=true
 						<option user='0' tips='derby' value='org.apache.derby.jdbc.EmbeddedDriver' #if($global.getString('db.driver', '') == 'org.apache.derby.jdbc.EmbeddedDriver') selected #end>Derby</option>
 						<option user='0' tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
-						<option user='1' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
-						<option user='1' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
-						<option user='1' tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+						<option user='0' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
+						<option user='0' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
+						<option user='0' tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
 						<option user='1' tips='db2' value='com.ibm.db2.jcc.DB2Driver' #if($global.getString('db.driver', '') == 'com.ibm.db2.jcc.DB2Driver') selected #end>DB2</option>
 						<option user='1' tips='sqlserver2000' value='com.microsoft.jdbc.sqlserver.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.jdbc.sqlserver.SQLServerDriver') selected #end>SQL Server 2000</option>
 						<option user='1' tips='sqlserver2005' value='com.microsoft.sqlserver.jdbc.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.sqlserver.jdbc.SQLServerDriver') selected #end>SQL Server 2005</option>
