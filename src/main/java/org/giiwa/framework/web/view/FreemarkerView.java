@@ -25,7 +25,7 @@ import org.giiwa.framework.web.Model;
 
 import freemarker.template.Template;
 
-public class FreemakerView extends View {
+public class FreemarkerView extends View {
 
   @Override
   public boolean parse(File file, Model m, String viewname) {

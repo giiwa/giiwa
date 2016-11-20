@@ -1,7 +1,7 @@
 <h1><img height='46' src="http://giiwa.org/images/giiwa.png" alt="giiwa"/></h1>
 <p>Giiwa, Java Web 高性能服务器软件快速开发框架, 我们的目标是<strong>简单</strong>，<strong>快速开发</strong>, 项目之间可以 <strong>重用</strong>， <strong>“重载”</strong>。</p>
 <p>为了实现这个目标, 我们使用模块化机制, 使得项目开发不用从头开始，通过模块管理允许模块之间的复用和重载；简化的MV（Model－View）开发模型使得功能设计更加简单高效稳定，并提供统一的web请求参数获取API， 避免花时间去研究不同请求对数据格式的封装不一样。 请参考 <a href="http://giiwa.org">giiwa.org</a> 以了解更多关于Giiwa。</p>
-<p>View 支持 Velocity template, JSP page 和 FreeMaker template.</p>
+<p>View 支持 Velocity template, JSP page 和 FreeMarker template.</p>
 <p><img src="http://giiwa.org/docs/images/mv.png" alt="MV developing"/></p>
 
 <h2>缓存系统，临时文件系统，文件仓库</h2>
