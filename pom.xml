@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.giiwa</groupId>
 	<artifactId>giiwa</artifactId>
-	<packaging>jar</packaging>
+	<packaging>war</packaging>
 	<version>1.2</version>
 	<name>giiwa</name>
 	<url>http://giiwa.org</url>
