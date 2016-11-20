@@ -422,7 +422,9 @@ public final class X {
    * split the src string by the regex, and filter the empty
    * 
    * @param src
+   *          the source string
    * @param regex
+   *          the split regex
    * @return the String
    */
   public static String[] split(String src, String regex) {

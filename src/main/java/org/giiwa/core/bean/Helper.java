@@ -440,7 +440,8 @@ public class Helper {
      * create and copy a new Value
      * 
      * @param v
-     * @return V
+     *          the Value object
+     * @return V the new Value object
      */
     public static V create(V v) {
       V v1 = V.create();
@@ -562,6 +563,7 @@ public class Helper {
      * remove the conditions from the query
      * 
      * @param names
+     *          the names
      * @return the W
      */
     public W remove(String... names) {
@@ -907,7 +909,7 @@ public class Helper {
     /**
      * get all the condition elements
      * 
-     * @return
+     * @return the all entity
      */
     public List<Entity> getAll() {
       return elist;
@@ -1433,6 +1435,8 @@ public class Helper {
    *          the query
    * @param b
    *          the Bean class
+   * @param t
+   *          the Class of T
    * @return the List of objects
    */
   @SuppressWarnings("unchecked")

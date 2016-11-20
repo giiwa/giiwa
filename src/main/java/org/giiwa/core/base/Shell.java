@@ -89,6 +89,11 @@ public class Shell {
     }
   }
 
+  /**
+   * test is Linux
+   * 
+   * @return true if linux
+   */
   public static boolean isLinux() {
     if (_linux == -1) {
       try {
@@ -105,6 +110,11 @@ public class Shell {
   private static int _linux  = -1;
   private static int _ubuntu = -1;
 
+  /**
+   * test is ubuntu
+   * 
+   * @return true if is ubuntu
+   */
   public static boolean isUbuntu() {
     if (_ubuntu == -1) {
       try {
@@ -128,9 +138,11 @@ public class Shell {
    *          the error outputstream
    * @param in
    *          the inputstream
+   * @param workdir
+   *          the working dir
    * @return the result
-   * @throws ExecuteException
    * @throws IOException
+   *           throw IOException if error
    */
   public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir)
       throws IOException {
@@ -166,12 +178,18 @@ public class Shell {
    * using bash to execute the lines
    * 
    * @param lines
+   *          the command lines
    * @param out
+   *          the output stream
    * @param err
+   *          the error stream
    * @param in
+   *          the input stream
    * @param workdir
-   * @return
+   *          the workdir
+   * @return the int
    * @throws IOException
+   *           throw IOException if error
    */
   public static int bash(String lines, OutputStream out, OutputStream err, InputStream in, String workdir)
       throws IOException {
@@ -219,11 +237,21 @@ public class Shell {
    *          the command line
    * @return the output of console and error
    * @throws IOException
+   *           throw IOException if error
    */
   public static String run(String cmd) throws IOException {
     return run(cmd, null);
   }
 
+  /**
+   * using bash to execute the command
+   * 
+   * @param cmd
+   *          the command
+   * @return the console output
+   * @throws IOException
+   *           throw IOException if error
+   */
   public static String bash(String cmd) throws IOException {
     return bash(cmd, null);
   }
@@ -237,6 +265,7 @@ public class Shell {
    *          the path
    * @return the output of console and error
    * @throws IOException
+   *           throw IOException if error
    */
   public static String run(String cmd, String workdir) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -249,9 +278,12 @@ public class Shell {
    * using bash to execute the cmd
    * 
    * @param cmd
+   *          the command
    * @param workdir
-   * @return
+   *          the workdir
+   * @return the output string
    * @throws IOException
+   *           throw IOException if error
    */
   public static String bash(String cmd, String workdir) throws IOException {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -267,6 +299,7 @@ public class Shell {
    *          the process name
    * @return the status of the process
    * @throws IOException
+   *           throw IOException if occur error
    */
   public static String getProcessStatus(String processname) throws IOException {
     if (isLinux() || OS.isFamilyMac()) {

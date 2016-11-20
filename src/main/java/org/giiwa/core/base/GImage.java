@@ -28,7 +28,7 @@ import org.apache.commons.logging.*;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.ContentEncodingHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.drew.imaging.jpeg.JpegMetadataReader;
 import com.drew.metadata.Directory;
@@ -49,7 +49,7 @@ public class GImage {
     static Log log = LogFactory.getLog(GImage.class);
 
     /** The client. */
-    static HttpClient client = new ContentEncodingHttpClient();
+    static HttpClient client = new DefaultHttpClient();
 
     /**
      * create QRCode image, and ouput to the file.

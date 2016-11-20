@@ -139,9 +139,9 @@ public class FileVersion {
      *          the version string
      * @param v2
      *          the version string
-     * @return 1: v1>v2 <br>
-     *         -1: v1<v2 <br>
-     *         0: v1=v2
+     * @return 1: v1 &gt; v2 <br>
+     *         -1: v1 &lt; v2 <br>
+     *         0: v1 = v2
      */
     public static int compare(String v1, String v2) {
       if (X.isSame(v1, v2)) {

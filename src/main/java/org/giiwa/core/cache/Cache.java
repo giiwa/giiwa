@@ -70,12 +70,14 @@ public final class Cache {
 
   /**
    * Gets the object by id, if the object was expired, null return.
-   *
+   * 
+   * @param <T>
+   *          the class
    * @param id
    *          the id of object in cache system
    * @return cachable if the object not presented or expired, will return null
    */
-  @SuppressWarnings("deprecation")
+  @SuppressWarnings({ "deprecation", "unchecked" })
   public static <T> T get(String id) {
 
     try {
