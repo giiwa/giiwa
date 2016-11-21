@@ -22,6 +22,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp.SQLNestedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Http;
@@ -365,26 +366,36 @@ public class RDB {
         dss.put(url, external);
 
       } else {
-        throw new SQLException("unknown JDBC driver");
+        throw new SQLException("unknown URL");
       }
     }
 
     try {
+
       Connection c = (external == null ? ds.getConnection() : external.getConnection());
       // c.setAutoCommit(true);
       return c;
-    } catch (Exception e) {
+
+    } catch (SQLException e) {
+
       log.error(url, e);
-      if (!X.isEmpty(jar)) {
-        // download the driver from giiwa
-        int len = Http.download("http://www.giiwa.org/archive/" + jar,
-            new File(Model.GIIWA_HOME + "/giiwa/WEB-INF/lib/" + jar));
-        if (len > 0) {
-          // restart the giiwa
-          System.exit(0);
+      String error = e.getMessage();
+      log.error("error=" + error + ", jar=" + jar);
+
+      if (!X.isEmpty(error) && error.indexOf("Cannot load JDBC driver") >= 0) {
+        if (!X.isEmpty(jar)) {
+          // download the driver from giiwa
+          int len = Http.download("http://www.giiwa.org/archive/" + jar,
+              new File(Model.GIIWA_HOME + "/giiwa/WEB-INF/lib/" + jar));
+          if (len > 0) {
+            // restart the giiwa
+            System.exit(0);
+          }
+        } else {
+          throw new SQLException(e.getMessage() + ", please download the jdbc driver, copy to {giiwa}/WEB-INF/lib");
         }
       } else {
-        throw new SQLException(e.getMessage() + ", please download the jdbc driver, copy to {giiwa}/WEB-INF/lib");
+        throw e;
       }
     }
 
