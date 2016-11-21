@@ -250,14 +250,17 @@ function check_db(f){
 	p.url = $('#db input[name=url]').val();
 	p.username = $('#db input[name=username]').val();
 	p.passwd = $('#db input[name=passwd]').val();
-	$.post('/setup/check', p, function(d){
+	$.post('/setup/check', p).done(function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
 			f();
 		} else {
 			$.error(d.message);
 		}
-	})
+	}).fail(function(){
+		processing && processing.hide();
+		$.error("$lang.get('try.later')");
+	});
 }
 function check_mongo(f){
 	processing && processing.show();

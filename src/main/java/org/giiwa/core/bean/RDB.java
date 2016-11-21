@@ -14,6 +14,7 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.File;
 import java.sql.*;
 import java.util.*;
 
@@ -23,7 +24,9 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.base.Http;
 import org.giiwa.core.conf.Config;
+import org.giiwa.framework.web.Model;
 
 /**
  * The {@code RDB} Class used to for RDS database layer operation.
@@ -294,6 +297,7 @@ public class RDB {
    */
   public static Connection getConnectionByUrl(String url, String username, String passwd) throws SQLException {
     BasicDataSource external = dss.get(url);
+    String jar = null;
     if (external == null) {
 
       // String D = conf.getString("db[" + name + "].driver", DRIVER);
@@ -311,16 +315,21 @@ public class RDB {
           D = "org.postgresql.Driver";
         } else if (X.isSame(type, "hsqldb")) {
           D = "org.hsqldb.jdbc.JDBCDriver";
+          jar = "hsqldb-2.3.4.jar";
         } else if (X.isSame(type, "derby")) {
           D = "org.apache.derby.jdbc.EmbeddedDriver";
+          jar = "derby-10.13.1.1.jar";
           // jdbc:derby:sampledb;create=true
         } else if (X.isSame(type, "oracle")) {
           D = "oracle.jdbc.driver.OracleDriver";
+          jar = "ojdbc-14.jar";
         } else if (X.isSame(type, "db2")) {
           D = "com.ibm.db2.jcc.DB2Driver";
+          jar = "db2jcc4-10.1.jar";
         } else if (X.isSame(type, "sqlserver")) {
           // 2005
           D = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+          jar = "mssql-jdbc-6.1.0.jre8.jar";
         } else if (X.isSame(type, "microsoft")) {
           // 2000
           D = "com.microsoft.jdbc.sqlserver.SQLServerDriver";
@@ -354,14 +363,32 @@ public class RDB {
         external.setPoolPreparedStatements(true);
 
         dss.put(url, external);
+
       } else {
         throw new SQLException("unknown JDBC driver");
       }
     }
 
-    Connection c = (external == null ? ds.getConnection() : external.getConnection());
-    // c.setAutoCommit(true);
-    return c;
+    try {
+      Connection c = (external == null ? ds.getConnection() : external.getConnection());
+      // c.setAutoCommit(true);
+      return c;
+    } catch (Exception e) {
+      log.error(url, e);
+      if (!X.isEmpty(jar)) {
+        // download the driver from giiwa
+        int len = Http.download("http://www.giiwa.org/archive/" + jar,
+            new File(Model.GIIWA_HOME + "/giiwa/WEB-INF/lib/" + jar));
+        if (len > 0) {
+          // restart the giiwa
+          System.exit(0);
+        }
+      } else {
+        throw new SQLException(e.getMessage() + ", please download the jdbc driver, copy to {giiwa}/WEB-INF/lib");
+      }
+    }
+
+    throw new SQLException("unknown driver, please download the jdbc driver, copy to {giiwa}/WEB-INF/lib");
   }
 
   /**

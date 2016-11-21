@@ -21,6 +21,9 @@ getpid() {
 	Linux)
 		pid=`ps fux |grep java | grep $1 |grep -v grep | awk '{print $2}'` 
 		;;
+	Darwin)
+		pid=`ps -ef |grep java | grep $1 |grep -v grep | awk '{print $2}'`
+		;;
 	SunOs)
 		pid=`ps -gxww |grep java |grep $1 |grep -v grep | awk '{print $1}'`
 		;;
