@@ -24,7 +24,7 @@ version="2.4">
 		</init-param>
 		<init-param>
 			<param-name>.ftl</param-name>
-			<param-value>org.giiwa.framework.web.view.FreemakerView</param-value>
+			<param-value>org.giiwa.framework.web.view.FreemarkerView</param-value>
 		</init-param>
 	</filter>
 	<filter-mapping>
