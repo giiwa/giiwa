@@ -22,7 +22,6 @@ import javax.sql.DataSource;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.dbcp.SQLNestedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Http;
@@ -167,7 +166,18 @@ public class RDB {
    * @return the driver
    */
   public static String getDriver() {
-    return shortName(DRIVER);
+    Connection c = null;
+    try {
+      c = getConnection();
+      if (c != null) {
+        return c.getMetaData().getDatabaseProductName().toLowerCase();
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      RDSHelper.close(c);
+    }
+    return null;
   }
 
   /**
@@ -178,8 +188,18 @@ public class RDB {
    * @return the driver
    */
   public static String getDriver(String name) {
-    BasicDataSource external = dss.get(name);
-    return shortName(external.getDriverClassName());
+    Connection c = null;
+    try {
+      c = getConnection(name);
+      if (c != null) {
+        return c.getMetaData().getDatabaseProductName().toLowerCase();
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      RDSHelper.close(c);
+    }
+    return null;
   }
 
   /**

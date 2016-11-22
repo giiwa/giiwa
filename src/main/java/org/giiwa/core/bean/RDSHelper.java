@@ -51,7 +51,37 @@ public class RDSHelper extends Helper {
   /**
    * indicated whether is debug model
    */
-  public static boolean DEBUG = true;
+  public static boolean              DEBUG  = true;
+
+  private static Map<String, String> oracle = new HashMap<String, String>();
+  static {
+    oracle.put("uid", "\"uid\"");
+    oracle.put("access", "\"access\"");
+  }
+
+  private static String _where(W q, Connection c) throws SQLException {
+    if (q == null || c == null) {
+      return null;
+    }
+
+    if (isOracle(c)) {
+      return q.where(oracle);
+    }
+
+    return q.where();
+  }
+
+  private static String _orderby(W q, Connection c) throws SQLException {
+    if (q == null || c == null) {
+      return null;
+    }
+
+    if (isOracle(c)) {
+      return q.orderby(oracle);
+    }
+
+    return q.orderby();
+  }
 
   /**
    * update the data in db.
@@ -68,16 +98,7 @@ public class RDSHelper extends Helper {
    *          the db name
    * @return int
    */
-  public static int update(String table, String sets, String where, Object[] whereArgs, String db) {
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("update ").append(table).append(" set ").append(sets);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
+  public static int update(String table, String sets, W q, String db) {
 
     /**
      * update it in database
@@ -95,12 +116,25 @@ public class RDSHelper extends Helper {
       if (c == null)
         return -1;
 
+      /**
+       * create the sql statement
+       */
+      StringBuilder sql = new StringBuilder();
+      sql.append("update ").append(table).append(" set ").append(sets);
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
       p = c.prepareStatement(sql.toString());
 
       int order = 1;
-      if (whereArgs != null) {
-        for (int i = 0; i < whereArgs.length; i++) {
-          Object o = whereArgs[i];
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
 
           setParameter(p, order++, o);
         }
@@ -110,7 +144,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(whereArgs), e);
+        log.error(q, e);
     } finally {
       close(c, p, r);
     }
@@ -152,7 +186,7 @@ public class RDSHelper extends Helper {
     }
   }
 
-  public static int delete(String where, Object[] args, Class<? extends Bean> t) {
+  public static int delete(W q, Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
      */
@@ -163,7 +197,7 @@ public class RDSHelper extends Helper {
       return -1;
     }
 
-    return delete(mapping.name(), where, args);
+    return delete(mapping.name(), q);
   }
 
   /**
@@ -177,15 +211,7 @@ public class RDSHelper extends Helper {
    *          the where args.
    * @return int
    */
-  public static int delete(String table, String where, Object[] whereArgs) {
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("delete from ").append(table);
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
+  public static int delete(String table, W q) {
 
     /**
      * update it in database
@@ -199,13 +225,25 @@ public class RDSHelper extends Helper {
       if (c == null)
         return -1;
 
+      /**
+       * create the sql statement
+       */
+      StringBuilder sql = new StringBuilder();
+      sql.append("delete from ").append(table);
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
       p = c.prepareStatement(sql.toString());
 
-      if (whereArgs != null) {
+      if (args != null) {
         int order = 1;
 
-        for (int i = 0; i < whereArgs.length; i++) {
-          Object o = whereArgs[i];
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
 
           setParameter(p, order++, o);
 
@@ -216,7 +254,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(whereArgs), e);
+        log.error(q, e);
     } finally {
       close(p, c);
     }
@@ -365,7 +403,7 @@ public class RDSHelper extends Helper {
     }
   }
 
-  final public int insertOrUpdate(String where, Object[] args, V sets) {
+  final public int insertOrUpdate(W q, V sets) {
     /**
      * get the require annotation onGet
      */
@@ -376,7 +414,7 @@ public class RDSHelper extends Helper {
       return -1;
     }
 
-    return insertOrUpdate(mapping.name(), where, args, sets);
+    return insertOrUpdate(mapping.name(), q, sets);
   }
 
   /**
@@ -392,11 +430,11 @@ public class RDSHelper extends Helper {
    *          the values
    * @return int
    */
-  public final static int insertOrUpdate(String table, String where, Object[] args, V sets) {
+  public final static int insertOrUpdate(String table, W q, V sets) {
     int i = 0;
     try {
-      if (exists(table, where, args)) {
-        i = updateTable(table, where, args, sets);
+      if (exists(table, q)) {
+        i = updateTable(table, q, sets);
       } else {
         i = insertTable(table, sets);
       }
@@ -419,7 +457,7 @@ public class RDSHelper extends Helper {
    * @throws Exception
    *           throw Exception
    */
-  public static boolean exists(String where, Object[] args, Class<? extends Bean> t) throws Exception {
+  public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
     /**
      * get the require annotation onGet
      */
@@ -430,7 +468,7 @@ public class RDSHelper extends Helper {
       return false;
     }
 
-    return exists(mapping.name(), where, args);
+    return exists(mapping.name(), q);
 
   }
 
@@ -447,19 +485,11 @@ public class RDSHelper extends Helper {
    * @throws SQLException
    *           throw Exception if occur DB error
    */
-  public static boolean exists(String table, String where, Object[] args) throws SQLException {
+  public static boolean exists(String table, W q) throws SQLException {
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
-
-    StringBuilder sql = new StringBuilder();
-    sql.append("select 1 from ").append(table);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-    sql.append(" limit 1");
 
     /**
      * search it in database
@@ -473,6 +503,27 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return false;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("select 1 from ").append(table);
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum=1");
+      } else {
+        sql.append(" limit 1");
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -493,14 +544,14 @@ public class RDSHelper extends Helper {
 
     } catch (SQLException e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
 
       throw e;
     } finally {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "], args=" + Helper.toString(args));
+        sqllog.debug("cost:" + t.past() + "ms, sql=[" + q);
       }
     }
   }
@@ -518,7 +569,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return int
    */
-  public static int update(String where, Object[] args, V sets, Class<? extends Bean> t) {
+  public static int update(W q, V sets, Class<? extends Bean> t) {
     Table mapping = (Table) t.getAnnotation(Table.class);
     if (mapping == null) {
       if (log.isErrorEnabled())
@@ -527,7 +578,7 @@ public class RDSHelper extends Helper {
     }
 
     if (!X.isEmpty(mapping.name())) {
-      return updateTable(mapping.name(), where, args, sets);
+      return updateTable(mapping.name(), q, sets);
     }
 
     return -1;
@@ -546,24 +597,7 @@ public class RDSHelper extends Helper {
    *          the values
    * @return int
    */
-  public static int updateTable(String table, String where, Object[] whereArgs, V sets) {
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("update ").append(table).append(" set ");
-
-    StringBuilder s = new StringBuilder();
-    for (String name : sets.names()) {
-      if (s.length() > 0)
-        s.append(",");
-      s.append(name).append("=?");
-    }
-    sql.append(s);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
+  public static int updateTable(String table, W q, V sets) {
 
     /**
      * update it in database
@@ -579,6 +613,34 @@ public class RDSHelper extends Helper {
       if (c == null)
         return -1;
 
+      /**
+       * create the sql statement
+       */
+      StringBuilder sql = new StringBuilder();
+      sql.append("update ").append(table).append(" set ");
+
+      boolean isoracle = isOracle(c);
+
+      StringBuilder s = new StringBuilder();
+      for (String name : sets.names()) {
+        if (s.length() > 0)
+          s.append(",");
+        if (isoracle && oracle.containsKey(name)) {
+          s.append(oracle.get(name));
+        } else {
+          s.append(name);
+        }
+        s.append("=?");
+      }
+      sql.append(s);
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
       p = c.prepareStatement(sql.toString());
 
       int order = 1;
@@ -591,9 +653,9 @@ public class RDSHelper extends Helper {
         }
       }
 
-      if (whereArgs != null) {
-        for (int i = 0; i < whereArgs.length; i++) {
-          Object o = whereArgs[i];
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
 
           setParameter(p, order++, o);
         }
@@ -603,7 +665,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(whereArgs) + sets.toString(), e);
+        log.error(q + ",values=" + sets.toString(), e);
     } finally {
       close(p, c);
     }
@@ -612,74 +674,7 @@ public class RDSHelper extends Helper {
 
   }
 
-  /**
-   * Update the data using the sql sentence.
-   * 
-   * @deprecated
-   * @param sql
-   *          the sql sentence
-   * @param args
-   *          the args
-   * @return int
-   */
-  public static int update(String sql, Object[] args) {
-    /**
-     * /** update it in database
-     */
-    Connection c = null;
-    PreparedStatement p = null;
-
-    try {
-      c = getConnection();
-
-      if (c == null)
-        return -1;
-
-      p = c.prepareStatement(sql);
-
-      int order = 1;
-      if (args != null) {
-        for (int i = 0; i < args.length; i++) {
-          Object o = args[i];
-
-          setParameter(p, order++, o);
-        }
-      }
-
-      return p.executeUpdate();
-
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(sql + toString(args), e);
-    } finally {
-      close(p, c);
-    }
-
-    return 0;
-
-  }
-
-  /**
-   * Load.
-   * 
-   * @param <T>
-   *          the generic type
-   * @param table
-   *          the table
-   * @param where
-   *          the where
-   * @param args
-   *          the args
-   * @param clazz
-   *          the clazz
-   * @return the t
-   */
-  public static <T extends Bean> T load(String table, String where, Object[] args, Class<T> clazz) {
-    return load(table, where, args, null, clazz);
-
-  }
-
-  public static <T extends Bean> T load(String where, Object[] args, Class<T> t) {
+  public static <T extends Bean> T load(W q, Class<T> t) {
     /**
      * get the require annotation onGet
      */
@@ -690,30 +685,8 @@ public class RDSHelper extends Helper {
       return null;
     }
 
-    return load(mapping.name(), where, args, null, t);
+    return load(mapping.name(), q, t);
 
-  }
-
-  public static boolean load(String where, Object[] args, Bean b) {
-    return load(where, args, null, b);
-  }
-
-  public static boolean load(String table, String where, Object[] args, Bean b) {
-    return load(table, where, args, null, b);
-  }
-
-  public static <T extends Bean> T load(String where, Object[] args, String orderby, Class<T> t) {
-    /**
-     * get the require annotation onGet
-     */
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return null;
-    }
-
-    return load(mapping.name(), where, args, orderby, t);
   }
 
   /**
@@ -729,7 +702,7 @@ public class RDSHelper extends Helper {
    *          the Bean
    * @return boolean
    */
-  public static boolean load(String where, Object[] args, String orderby, Bean b) {
+  public static boolean load(W q, Bean b) {
     /**
      * get the require annotation onGet
      */
@@ -740,7 +713,7 @@ public class RDSHelper extends Helper {
       return false;
     }
 
-    return load(mapping.name(), where, args, orderby, b);
+    return load(mapping.name(), q, b);
   }
 
   /**
@@ -758,22 +731,11 @@ public class RDSHelper extends Helper {
    *          the Bean
    * @return boolean
    */
-  public static boolean load(String table, String where, Object[] args, String orderby, Bean b) {
+  public static boolean load(String table, W q, Bean b) {
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
-
-    StringBuilder sql = new StringBuilder();
-    sql.append("select * from ").append(table);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-    if (orderby != null) {
-      sql.append(" ").append(orderby).append(" ");
-    }
-    sql.append(" limit 1");
 
     /**
      * search it in database
@@ -787,6 +749,31 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return false;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("select * from ").append(table);
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum=1");
+      } else {
+        sql.append(" limit 1");
+      }
+      if (orderby != null) {
+        sql.append(" ").append(orderby).append(" ");
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -808,12 +795,12 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql + toString(args), e);
+        log.error(q, e);
     } finally {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost: " + t.past() + "ms, sql=[" + sql + "], args=" + Helper.toString(args) + ", result=" + b);
+        sqllog.debug("cost: " + t.past() + "ms, sql=" + q + ", result=" + b);
       }
     }
 
@@ -837,9 +824,8 @@ public class RDSHelper extends Helper {
    *          the Class Bean
    * @return the list
    */
-  public final static <T extends Bean> List<T> load(String table, String[] cols, String where, Object[] args,
-      Class<T> clazz) {
-    return load(table, cols, where, args, null, -1, -1, clazz);
+  public final static <T extends Bean> List<T> load(String table, String[] cols, W q, Class<T> clazz) {
+    return load(table, cols, q, -1, -1, clazz);
   }
 
   /**
@@ -857,8 +843,8 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return List
    */
-  public final static <T extends Bean> List<T> load(String[] cols, String where, Object[] args, Class<T> clazz) {
-    return load(cols, where, args, null, -1, -1, clazz);
+  public final static <T extends Bean> List<T> load(String[] cols, W q, Class<T> clazz) {
+    return load(cols, q, -1, -1, clazz);
   }
 
   /**
@@ -882,8 +868,7 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return List
    */
-  public final static <T extends Bean> List<T> load(String[] cols, String where, Object[] args, String orderby,
-      int offset, int limit, Class<T> t) {
+  public final static <T extends Bean> List<T> load(String[] cols, W q, int offset, int limit, Class<T> t) {
     /**
      * get the require annotation onGet
      */
@@ -894,7 +879,7 @@ public class RDSHelper extends Helper {
       return null;
     }
 
-    return load(mapping.name(), cols, where, args, orderby, offset, limit, t);
+    return load(mapping.name(), cols, q, offset, limit, t);
   }
 
   /**
@@ -920,44 +905,11 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return List
    */
-  public static <T extends Bean> List<T> load(String table, String[] cols, String where, Object[] args, String orderby,
-      int offset, int limit, Class<T> clazz) {
+  public static <T extends Bean> List<T> load(String table, String[] cols, W q, int offset, int limit, Class<T> clazz) {
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
-
-    StringBuilder sql = new StringBuilder();
-    sql.append("select ");
-    if (cols != null) {
-      for (int i = 0; i < cols.length - 1; i++) {
-        sql.append(cols[i]).append(", ");
-      }
-
-      sql.append(cols[cols.length - 1]);
-
-    } else {
-      sql.append("*");
-    }
-
-    sql.append(" from ").append(table);
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-
-    if (orderby != null) {
-      sql.append(" ").append(orderby);
-    }
-
-    // TODO, oracle not support limit, using rownum
-    if (limit > 0) {
-      sql.append(" limit ").append(limit);
-    }
-
-    if (offset > 0) {
-      sql.append(" offset ").append(offset);
-    }
-    // }
 
     // log.debug("sql:" + sql.toString());
 
@@ -973,6 +925,49 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return null;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("select ");
+      if (cols != null) {
+        for (int i = 0; i < cols.length - 1; i++) {
+          sql.append(cols[i]).append(", ");
+        }
+
+        sql.append(cols[cols.length - 1]);
+
+      } else {
+        sql.append("*");
+      }
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      sql.append(" from ").append(table);
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (limit > 0) {
+          if (where == null) {
+            sql.append(" where ");
+          } else {
+            sql.append(" and ");
+          }
+          sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+        }
+      } else {
+        if (limit > 0) {
+          sql.append(" limit ").append(limit);
+        }
+        if (offset > 0) {
+          sql.append(" offset ").append(offset);
+        }
+      }
+      if (orderby != null) {
+        sql.append(" ").append(orderby);
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -996,12 +991,12 @@ public class RDSHelper extends Helper {
       return list;
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
     } finally {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "]");
+        sqllog.debug("cost:" + t.past() + "ms, sql=" + q);
       }
     }
     return null;
@@ -1031,30 +1026,6 @@ public class RDSHelper extends Helper {
      */
     TimeStamp t = TimeStamp.create();
 
-    StringBuilder sql = new StringBuilder();
-    sql.append(select);
-    String where = q.where();
-    if (where != null) {
-      if (select.indexOf(" where ") < 0) {
-        sql.append(" where ").append(where);
-      } else {
-        sql.append(" and (").append(where).append(")");
-      }
-    }
-    String orderby = q.orderby();
-    if (orderby != null) {
-      sql.append(" ").append(orderby);
-    }
-
-    // TODO, oracle not support limit, using rownum
-    if (limit > 0) {
-      sql.append(" limit ").append(limit);
-    }
-
-    if (offset > 0) {
-      sql.append(" offset ").append(offset);
-    }
-
     /**
      * search it in database
      */
@@ -1068,10 +1039,42 @@ public class RDSHelper extends Helper {
       if (c == null)
         return null;
 
+      StringBuilder sql = new StringBuilder();
+      sql.append(select);
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      if (where != null) {
+        if (select.indexOf(" where ") < 0) {
+          sql.append(" where ").append(where);
+        } else {
+          sql.append(" and (").append(where).append(")");
+        }
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+      } else {
+        if (limit > 0) {
+          sql.append(" limit ").append(limit);
+        }
+        if (offset > 0) {
+          sql.append(" offset ").append(offset);
+        }
+      }
+      if (orderby != null) {
+        sql.append(" ").append(orderby);
+      }
+
       p = c.prepareStatement(sql.toString());
 
       int order = 1;
-      Object[] args = q.args();
       if (args != null) {
         for (int i = 0; i < args.length; i++) {
           Object o = args[i];
@@ -1096,7 +1099,7 @@ public class RDSHelper extends Helper {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "]");
+        sqllog.debug("cost:" + t.past() + "ms, sql=" + q);
       }
     }
     return null;
@@ -1121,8 +1124,7 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return Beans
    */
-  public static <T extends Bean> Beans<T> load(String where, Object[] args, String orderby, int offset, int limit,
-      Class<T> t) {
+  public static <T extends Bean> Beans<T> load(W q, int offset, int limit, Class<T> t) {
     /**
      * get the require annotation onGet
      */
@@ -1133,7 +1135,7 @@ public class RDSHelper extends Helper {
       return null;
     }
 
-    return load(mapping.name(), where, args, orderby, offset, limit, t);
+    return load(mapping.name(), q, offset, limit, t);
   }
 
   /**
@@ -1157,33 +1159,13 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return Beans
    */
-  public static <T extends Bean> Beans<T> load(String table, String where, Object[] args, String orderby, int offset,
-      int limit, Class<T> clazz) {
+  public static <T extends Bean> Beans<T> load(String table, W q, int offset, int limit, Class<T> clazz) {
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
 
-    StringBuilder sql = new StringBuilder();
-    sql.append("select * from ").append(table);
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-
-    if (orderby != null) {
-      sql.append(" ").append(orderby);
-    }
-
-    if (limit > 0) {
-      sql.append(" limit ").append(limit);
-    }
-
-    if (offset > 0) {
-      sql.append(" offset ").append(offset);
-    }
-
     // log.debug("sql:" + sql.toString());
-
     /**
      * search it in database
      */
@@ -1197,6 +1179,36 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return null;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("select * from ").append(table);
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+      } else {
+        if (limit > 0) {
+          sql.append(" limit ").append(limit);
+        }
+        if (offset > 0) {
+          sql.append(" offset ").append(offset);
+        }
+      }
+      if (orderby != null) {
+        sql.append(" ").append(orderby);
+      }
 
       Beans<T> rs = new Beans<T>();
 
@@ -1229,7 +1241,7 @@ public class RDSHelper extends Helper {
       return rs;
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
 
     } finally {
       close(r, p, c);
@@ -1260,30 +1272,11 @@ public class RDSHelper extends Helper {
    *          the connection
    * @return Beans
    */
-  public static <T extends Bean> Beans<T> load(String table, String where, Object[] args, String orderby, int offset,
-      int limit, Class<T> clazz, Connection c) {
+  public static <T extends Bean> Beans<T> load(String table, W q, int offset, int limit, Class<T> clazz, Connection c) {
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
-
-    StringBuilder sql = new StringBuilder();
-    sql.append("select * from ").append(table);
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-
-    if (orderby != null) {
-      sql.append(" ").append(orderby);
-    }
-
-    if (limit > 0) {
-      sql.append(" limit ").append(limit);
-    }
-
-    if (offset > 0) {
-      sql.append(" offset ").append(offset);
-    }
 
     // log.debug("sql:" + sql.toString());
 
@@ -1296,6 +1289,35 @@ public class RDSHelper extends Helper {
     try {
       if (c == null)
         return null;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("select * from ").append(table);
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+      } else {
+        if (limit > 0) {
+          sql.append(" limit ").append(limit);
+        }
+        if (offset > 0) {
+          sql.append(" offset ").append(offset);
+        }
+      }
+      if (orderby != null) {
+        sql.append(" ").append(orderby);
+      }
 
       Beans<T> rs = new Beans<T>();
 
@@ -1328,7 +1350,7 @@ public class RDSHelper extends Helper {
       return rs;
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
 
     } finally {
       close(r, p);
@@ -1369,25 +1391,6 @@ public class RDSHelper extends Helper {
    * @return int
    */
   public static int insertTable(String table, V sets) {
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("insert into ").append(table).append(" (");
-    StringBuilder s = new StringBuilder();
-    int total = 0;
-    for (String name : sets.names()) {
-      if (s.length() > 0)
-        s.append(",");
-      s.append(name);
-      total++;
-    }
-    sql.append(s).append(") values( ");
-
-    for (int i = 0; i < total - 1; i++) {
-      sql.append("?, ");
-    }
-    sql.append("?)");
 
     /**
      * insert it in database
@@ -1401,6 +1404,31 @@ public class RDSHelper extends Helper {
       if (c == null)
         return -1;
 
+      /**
+       * create the sql statement
+       */
+      StringBuilder sql = new StringBuilder();
+      sql.append("insert into ").append(table).append(" (");
+      StringBuilder s = new StringBuilder();
+      int total = 0;
+      boolean isoracle = isOracle(c);
+      for (String name : sets.names()) {
+        if (s.length() > 0)
+          s.append(",");
+        if (isoracle && oracle.containsKey(name)) {
+          s.append(oracle.get(name));
+        } else {
+          s.append(name);
+        }
+        total++;
+      }
+      sql.append(s).append(") values( ");
+
+      for (int i = 0; i < total - 1; i++) {
+        sql.append("?, ");
+      }
+      sql.append("?)");
+
       p = c.prepareStatement(sql.toString());
 
       int order = 1;
@@ -1413,7 +1441,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + sets.toString(), e);
+        log.error(sets.toString(), e);
     } finally {
       close(p, c);
     }
@@ -1441,18 +1469,11 @@ public class RDSHelper extends Helper {
    * @return List
    */
   @SuppressWarnings("unchecked")
-  public static <T> List<T> loadList(String table, String col, String where, Object[] args, Class<T> clazz, String db) {
+  public static <T> List<T> loadList(String table, String col, W q, Class<T> clazz, String db) {
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
-
-    StringBuilder sql = new StringBuilder();
-    sql.append("select ").append(col).append(" from ").append(table);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
 
     /**
      * search it in database
@@ -1469,6 +1490,16 @@ public class RDSHelper extends Helper {
       }
       if (c == null)
         return null;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("select ").append(col).append(" from ").append(table);
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -1490,12 +1521,12 @@ public class RDSHelper extends Helper {
       return list;
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
     } finally {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sql + "]");
+        sqllog.debug("cost:" + t.past() + "ms, sql=" + q);
       }
     }
     return null;
@@ -1516,17 +1547,7 @@ public class RDSHelper extends Helper {
    *          the db name
    * @return String
    */
-  public static String getString(String table, String col, String where, Object[] args, String db) {
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("select ").append(col).append(" from ").append(table);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-    sql.append(" limit 1");
+  public static String getString(String table, String col, W q, String db) {
 
     /**
      * search it in database
@@ -1543,6 +1564,30 @@ public class RDSHelper extends Helper {
       }
       if (c == null)
         return null;
+
+      /**
+       * create the sql statement
+       */
+      StringBuilder sql = new StringBuilder();
+      // TODO, the col need to be transfer ? in oracle
+      sql.append("select ").append(col).append(" from ").append(table);
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum=1");
+      } else {
+        sql.append(" limit 1");
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -1562,7 +1607,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
 
     } finally {
       close(r, p, c);
@@ -1593,8 +1638,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return List
    */
-  public final static <T> List<T> getList(String col, String where, Object[] args, String orderby, int s, int n,
-      Class<? extends Bean> t) {
+  public final static <T> List<T> getList(String col, W q, int s, int n, Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
      */
@@ -1605,7 +1649,7 @@ public class RDSHelper extends Helper {
       return null;
     }
 
-    return getList(mapping.name(), col, where, args, orderby, s, n);
+    return getList(mapping.name(), col, q, s, n);
   }
 
   /**
@@ -1627,8 +1671,7 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return T
    */
-  public final static <T> T getOne(String col, String where, Object[] args, String orderby, int position,
-      Class<? extends Bean> t) {
+  public final static <T> T getOne(String col, W q, int position, Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
      */
@@ -1639,7 +1682,7 @@ public class RDSHelper extends Helper {
       return null;
     }
 
-    return getOne(mapping.name(), col, where, args, orderby, position);
+    return getOne(mapping.name(), col, q, position);
   }
 
   /**
@@ -1662,24 +1705,7 @@ public class RDSHelper extends Helper {
    * @return T
    */
   @SuppressWarnings("unchecked")
-  public static <T> T getOne(String table, String col, String where, Object[] args, String orderby, int position) {
-
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("select ").append(col).append(" from ").append(table);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-    if (orderby != null) {
-      sql.append(" ").append(orderby);
-    }
-    sql.append(" limit 1");
-    if (position > 0) {
-      sql.append(" offset ").append(position);
-    }
+  public static <T> T getOne(String table, String col, W q, int position) {
 
     /**
      * search it in database
@@ -1693,6 +1719,36 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return null;
+
+      /**
+       * create the sql statement
+       */
+      StringBuilder sql = new StringBuilder();
+      sql.append("select ").append(col).append(" from ").append(table);
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum=").append(position);
+      } else {
+        sql.append(" limit 1");
+        if (position > 0) {
+          sql.append(" offset ").append(position);
+        }
+      }
+      if (orderby != null) {
+        sql.append(" ").append(orderby);
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -1712,7 +1768,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
 
     } finally {
       close(r, p, c);
@@ -1744,25 +1800,7 @@ public class RDSHelper extends Helper {
    * @return List
    */
   @SuppressWarnings("unchecked")
-  public final static <T> List<T> getList(String table, String col, String where, Object[] args, String orderby, int s,
-      int n) {
-
-    /**
-     * create the sql statement
-     */
-    StringBuilder sql = new StringBuilder();
-    sql.append("select ").append(col).append(" from ").append(table);
-
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
-    if (orderby != null) {
-      sql.append(" ").append(orderby);
-    }
-    sql.append(" limit ").append(n);
-    if (s > 0) {
-      sql.append(" offset ").append(s);
-    }
+  public final static <T> List<T> getList(String table, String col, W q, int s, int n) {
 
     /**
      * search it in database
@@ -1776,6 +1814,36 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return null;
+
+      /**
+       * create the sql statement
+       */
+      StringBuilder sql = new StringBuilder();
+      sql.append("select ").append(col).append(" from ").append(table);
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
+
+      if (isOracle(c)) {
+        if (where == null) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        sql.append(" rownum>").append(s).append(" and rownum<=").append(s + n);
+      } else {
+        sql.append(" limit ").append(n);
+        if (s > 0) {
+          sql.append(" offset ").append(s);
+        }
+      }
+      if (orderby != null) {
+        sql.append(" ").append(orderby);
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -1797,7 +1865,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
 
     } finally {
       close(r, p, c);
@@ -1864,11 +1932,11 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return Bean
    */
-  public static <T extends Bean> T load(String table, String where, Object[] args, String orderby, Class<T> clazz) {
+  public static <T extends Bean> T load(String table, W q, Class<T> clazz) {
     try {
       T b = (T) clazz.newInstance();
 
-      if (load(table, where, args, orderby, b)) {
+      if (load(table, q, b)) {
         return b;
       }
     } catch (Exception e) {
@@ -1898,18 +1966,12 @@ public class RDSHelper extends Helper {
    *          the args
    * @return the number of data
    */
-  public static long count(String table, String where, Object[] args) {
+  public static long count(String table, W q) {
 
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
-
-    StringBuilder sum = new StringBuilder();
-    sum.append("select count(*) t from ").append(table);
-    if (where != null) {
-      sum.append(" where ").append(where);
-    }
 
     // log.debug("sql:" + sql.toString());
 
@@ -1926,6 +1988,15 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return 0;
+
+      StringBuilder sum = new StringBuilder();
+      sum.append("select count(*) t from ").append(table);
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sum.append(" where ").append(where);
+      }
 
       p = c.prepareStatement(sum.toString());
 
@@ -1944,13 +2015,13 @@ public class RDSHelper extends Helper {
       }
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sum.toString() + toString(args), e);
+        log.error(q, e);
 
     } finally {
       close(r, p, c);
 
       if (t.past() > 2 && sqllog.isDebugEnabled()) {
-        sqllog.debug("cost:" + t.past() + "ms, sql=[" + sum + "]; [" + sum + "]");
+        sqllog.debug("cost:" + t.past() + "ms, sql=" + q);
       }
     }
 
@@ -1970,17 +2041,11 @@ public class RDSHelper extends Helper {
    *          the args
    * @return the list of Object
    */
-  public static List<Object> distinct(String table, String name, String where, Object[] args) {
+  public static List<Object> distinct(String table, String name, W q) {
     /**
      * create the sql statement
      */
     TimeStamp t = TimeStamp.create();
-
-    StringBuilder sql = new StringBuilder();
-    sql.append("select distinct(").append(name).append(") from ").append(table);
-    if (where != null) {
-      sql.append(" where ").append(where);
-    }
 
     // log.debug("sql:" + sql.toString());
 
@@ -1997,6 +2062,16 @@ public class RDSHelper extends Helper {
 
       if (c == null)
         return null;
+
+      StringBuilder sql = new StringBuilder();
+      // TODO, the name need to be transfer? in oracle
+      sql.append("select distinct(").append(name).append(") from ").append(table);
+      String where = _where(q, c);
+      Object[] args = q.args();
+
+      if (where != null) {
+        sql.append(" where ").append(where);
+      }
 
       p = c.prepareStatement(sql.toString());
 
@@ -2025,7 +2100,7 @@ public class RDSHelper extends Helper {
       return list;
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(sql.toString() + toString(args), e);
+        log.error(q, e);
 
     } finally {
       close(r, p, c);
@@ -2158,6 +2233,10 @@ public class RDSHelper extends Helper {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
+  }
+
+  private static boolean isOracle(Connection c) throws SQLException {
+    return X.isSame(c.getMetaData().getDatabaseProductName(), "Oracle");
   }
 
 }

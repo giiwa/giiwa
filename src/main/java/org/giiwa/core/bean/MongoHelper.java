@@ -74,11 +74,11 @@ public class MongoHelper extends Helper {
    *          the query
    * @return the long
    */
-  public static long delete(String collection, Bson query) {
+  public static long delete(String collection, W q) {
     try {
       MongoCollection<Document> db = MongoHelper.getCollection(collection);
       if (db != null) {
-        DeleteResult r = db.deleteMany(query);
+        DeleteResult r = db.deleteMany(q.query());
         // db.remove(query);
         return r.getDeletedCount();
       }
@@ -90,11 +90,11 @@ public class MongoHelper extends Helper {
     return -1;
   }
 
-  public static int delete(Bson query, Class<? extends Bean> t) {
+  public static int delete(W q, Class<? extends Bean> t) {
 
     String collection = getCollection(t);
     if (collection != null) {
-      delete(collection, query);
+      delete(collection, q);
     }
     return -1;
   }
@@ -546,10 +546,10 @@ public class MongoHelper extends Helper {
     return null;
   }
 
-  public static <T extends Bean> T load(String collection, Bson query, Bson order, Class<T> t) {
+  public static <T extends Bean> T load(String collection, W q, Class<T> t) {
     try {
       T obj = t.newInstance();
-      return load(collection, query, order, obj);
+      return load(collection, q.query(), q.order(), obj);
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error(e.getMessage(), e);
@@ -762,7 +762,7 @@ public class MongoHelper extends Helper {
    *          the value
    * @return int of updated
    */
-  final public static long updateCollection(String collection, Bson q, V v) {
+  final public static long updateCollection(String collection, W q, V v) {
 
     Document d = new Document();
 
@@ -775,7 +775,7 @@ public class MongoHelper extends Helper {
     try {
       log.debug("data=" + d);
       MongoCollection<Document> c = MongoHelper.getCollection(collection);
-      UpdateResult r = c.updateMany(q, new Document("$set", d));
+      UpdateResult r = c.updateMany(q.query(), new Document("$set", d));
 
       if (log.isDebugEnabled())
         log.debug("updated collection=" + collection + ", query=" + q + ", d=" + d + ", n=" + r.getModifiedCount()
@@ -802,12 +802,12 @@ public class MongoHelper extends Helper {
    * @throws Exception
    *           throw exception when occur database error
    */
-  public static boolean exists(Bson query, Class<? extends Bean> t) throws Exception {
+  public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
     String collection = getCollection(t);
     if (collection != null) {
-      return exists(collection, query);
+      return exists(collection, q);
     }
-    throw new Exception("the Class<" + t.getName() + "> doest annotated by @DBMapping()!");
+    throw new SQLException("the Class<" + t.getName() + "> doest annotated by @DBMapping()!");
   }
 
   /**
@@ -821,14 +821,14 @@ public class MongoHelper extends Helper {
    * @throws SQLException
    *           throw Exception if occur error
    */
-  public static boolean exists(String collection, Bson query) throws SQLException {
+  public static boolean exists(String collection, W q) throws SQLException {
     TimeStamp t1 = TimeStamp.create();
     boolean b = false;
     try {
-      b = MongoHelper.load(collection, query) != null;
+      b = MongoHelper.load(collection, q.query()) != null;
     } finally {
       if (log.isDebugEnabled())
-        log.debug("exists cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + query + ", result=" + b);
+        log.debug("exists cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q + ", result=" + b);
     }
     return b;
   }
@@ -901,14 +901,14 @@ public class MongoHelper extends Helper {
    *          the class
    * @return List of the value
    */
-  public static <T> List<T> distinct(String collection, String key, Bson q, Class<T> t) {
+  public static <T> List<T> distinct(String collection, String key, W q, Class<T> t) {
 
     TimeStamp t1 = TimeStamp.create();
     try {
 
       MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
-        Iterator<T> it = c.distinct(key, q, t).iterator();
+        Iterator<T> it = c.distinct(key, q.query(), t).iterator();
         List<T> list = new ArrayList<T>();
         while (it.hasNext()) {
           list.add(it.next());
@@ -935,7 +935,7 @@ public class MongoHelper extends Helper {
    *          the Class of Bean
    * @return the number of data
    */
-  public static long count(Bson q, Class<? extends Bean> t) {
+  public static long count(W q, Class<? extends Bean> t) {
     String collection = MongoHelper.getCollection(t);
     if (!X.isEmpty(collection)) {
       return count(collection, q);
@@ -953,13 +953,13 @@ public class MongoHelper extends Helper {
    *          the query and order
    * @return long
    */
-  public static long count(String collection, Bson q) {
+  public static long count(String collection, W q) {
     TimeStamp t1 = TimeStamp.create();
     try {
 
       MongoCollection<Document> c = MongoHelper.getCollection(collection);
       if (c != null) {
-        return c.count(q);
+        return c.count(q.query());
       }
 
     } finally {

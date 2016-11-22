@@ -253,6 +253,7 @@ public class DefaultListener implements IListener {
 
               if (line.endsWith(";")) {
                 String sql = sb.toString().trim();
+                sql = sql.substring(0, sql.length() - 1);
 
                 try {
                   if (!X.isEmpty(sql)) {

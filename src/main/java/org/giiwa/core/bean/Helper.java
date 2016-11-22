@@ -125,10 +125,10 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return (int) MongoHelper.delete(table, q.query());
+        return (int) MongoHelper.delete(table, q);
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.delete(table, q.where(), q.args());
+        return RDSHelper.delete(table, q);
       } else {
 
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -171,10 +171,10 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.exists(table, q.query());
+        return MongoHelper.exists(table, q);
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.exists(table, q.where(), q.args());
+        return RDSHelper.exists(table, q);
       }
     }
     throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -657,6 +657,17 @@ public class Helper {
      * @return String
      */
     public String where() {
+      return where(null);
+    }
+
+    /**
+     * create the SQL "where" with the tansfers
+     * 
+     * @param tansfers
+     *          the words pair should be transfered
+     * @return the SQL string
+     */
+    public String where(Map<String, String> tansfers) {
       if (elist.size() > 0 || wlist.size() > 0) {
         StringBuilder sb = new StringBuilder();
         for (Entity e : elist) {
@@ -668,7 +679,7 @@ public class Helper {
             }
           }
 
-          sb.append(e.where());
+          sb.append(e.where(tansfers));
         }
 
         for (W w : wlist) {
@@ -680,7 +691,7 @@ public class Helper {
             }
           }
 
-          sb.append(" (").append(w.where()).append(") ");
+          sb.append(" (").append(w.where(tansfers)).append(") ");
         }
 
         return sb.toString();
@@ -704,6 +715,17 @@ public class Helper {
      * @return String
      */
     public String orderby() {
+      return orderby(null);
+    }
+
+    /**
+     * create order string with the transfers
+     * 
+     * @param transfers
+     *          the words pair that need transfer according database
+     * @return the SQL order string
+     */
+    public String orderby(Map<String, String> transfers) {
 
       if (order != null && order.size() > 0) {
         StringBuilder sb = new StringBuilder("order by ");
@@ -712,7 +734,11 @@ public class Helper {
           if (i > 0) {
             sb.append(",");
           }
-          sb.append(e.name);
+          if (transfers != null && transfers.containsKey(e.name)) {
+            sb.append(transfers.get(e.name));
+          } else {
+            sb.append(e.name);
+          }
           if (X.toInt(e.value) < 0) {
             sb.append(" desc");
           }
@@ -941,9 +967,15 @@ public class Helper {
         return new Entity(name, value, op, cond);
       }
 
-      private String where() {
+      private String where(Map<String, String> tansfers) {
         StringBuilder sb = new StringBuilder();
-        sb.append(name);
+
+        if (tansfers != null && tansfers.containsKey(name)) {
+          sb.append(tansfers.get(name));
+        } else {
+          sb.append(name);
+        }
+
         switch (op) {
           case OP_EQ: {
             sb.append("=?");
@@ -1188,11 +1220,11 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.load(table, q.query(), q.order(), t);
+        return MongoHelper.load(table, q, t);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.load(table, q.where(), q.args(), q.orderby(), t);
+        return RDSHelper.load(table, q, t);
       } else {
 
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -1298,11 +1330,11 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return (int) MongoHelper.updateCollection(table, q.query(), values);
+        return (int) MongoHelper.updateCollection(table, q, values);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.updateTable(table, q.where(), q.args(), values);
+        return RDSHelper.updateTable(table, q, values);
       } else {
 
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -1349,7 +1381,7 @@ public class Helper {
       return MongoHelper.load(table, q.query(), q.order(), s, n, t);
     } else if (primary == DBType.RDS) {
       // insert into RDS
-      return RDSHelper.load(table, q.where(), q.args(), q.orderby(), s, n, t);
+      return RDSHelper.load(table, q, s, n, t);
     }
 
     return null;
@@ -1411,11 +1443,11 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.count(table, q.query());
+        return MongoHelper.count(table, q);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.count(table, q.where(), q.args());
+        return RDSHelper.count(table, q);
       } else {
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
       }
@@ -1450,11 +1482,11 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.distinct(table, name, q.query(), t);
+        return MongoHelper.distinct(table, name, q, t);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return (List<T>) RDSHelper.distinct(table, name, q.where(), q.args());
+        return (List<T>) RDSHelper.distinct(table, name, q);
       } else {
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
       }
