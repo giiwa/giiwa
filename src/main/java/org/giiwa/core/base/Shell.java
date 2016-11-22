@@ -97,9 +97,13 @@ public class Shell {
   public static boolean isLinux() {
     if (_linux == -1) {
       try {
-        String uname = Shell.run("uname -a");
-        log.debug("uname -a=" + uname);
-        _linux = uname.indexOf("Linux") > -1 ? 1 : 0;
+        if (OS.isFamilyUnix()) {
+          String uname = Shell.run("uname -a");
+          log.debug("uname -a=" + uname);
+          _linux = uname.indexOf("Linux") > -1 ? 1 : 0;
+        } else {
+          _linux = 0;
+        }
       } catch (Exception e) {
         log.error(e.getMessage(), e);
       }

@@ -63,11 +63,12 @@
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
 					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
 					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
-					<g class='oracle' style='display:none'>jdbc:oracle:thin:username/password@//x.x.x.x:1522/servername</g>
+					<g class='oracle' style='display:none'>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
 					<g class='db2' style='display:none'>jdbc:db2://x.x.x.x:50000/dbname</g>
 					<g class='sqlserver2000' style='display:none'>jdbc:microsoft:sqlserver://x.x.x.x:1433</g>
 					<g class='sqlserver2005' style='display:none'>jdbc:sqlserver://x.x.x.x:1433</g>
 				</label></div>
+				<input type="hidden" />
 				<div class='username'><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
 				<div class='passwd'><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
 				

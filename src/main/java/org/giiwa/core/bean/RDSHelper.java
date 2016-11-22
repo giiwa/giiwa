@@ -51,9 +51,10 @@ public class RDSHelper extends Helper {
   /**
    * indicated whether is debug model
    */
-  public static boolean              DEBUG  = true;
+  public static boolean              DEBUG   = true;
+  public static final int            MAXROWS = 10000;
 
-  private static Map<String, String> oracle = new HashMap<String, String>();
+  private static Map<String, String> oracle  = new HashMap<String, String>();
   static {
     oracle.put("uid", "\"uid\"");
     oracle.put("access", "\"access\"");
@@ -930,6 +931,9 @@ public class RDSHelper extends Helper {
           } else {
             sql.append(" and ");
           }
+          if (offset < 0) {
+            offset = MAXROWS;
+          }
           sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
         }
       } else {
@@ -1033,6 +1037,9 @@ public class RDSHelper extends Helper {
           sql.append(" where ");
         } else {
           sql.append(" and ");
+        }
+        if (offset < 0) {
+          offset = MAXROWS;
         }
         sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
       } else {
@@ -1164,6 +1171,9 @@ public class RDSHelper extends Helper {
         } else {
           sql.append(" and ");
         }
+        if (offset < 0) {
+          offset = MAXROWS;
+        }
         sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
       } else {
         if (limit > 0) {
@@ -1268,6 +1278,9 @@ public class RDSHelper extends Helper {
           sql.append(" where ");
         } else {
           sql.append(" and ");
+        }
+        if (offset < 0) {
+          offset = MAXROWS;
         }
         sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
       } else {
@@ -1776,6 +1789,9 @@ public class RDSHelper extends Helper {
           sql.append(" where ");
         } else {
           sql.append(" and ");
+        }
+        if (s < 0) {
+          s = MAXROWS;
         }
         sql.append(" rownum>").append(s).append(" and rownum<=").append(s + n);
       } else {
