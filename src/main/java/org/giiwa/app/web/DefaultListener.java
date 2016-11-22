@@ -344,6 +344,10 @@ public class DefaultListener implements IListener {
         if (f == null || !f.exists()) {
           f = module.getFile("../init/install/" + dbname + "/initial.sql", false, false);
         }
+        if (f == null || !f.exists()) {
+          f = module.getFile("../init/install/default/initial.sql", false, false);
+        }
+
         if (f != null && f.exists()) {
           String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
           int b = Global.getInt(key, 0);

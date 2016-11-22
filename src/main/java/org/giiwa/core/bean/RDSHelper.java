@@ -90,10 +90,8 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param sets
    *          the sets SQL sentence
-   * @param where
-   *          where conditions
-   * @param whereArgs
-   *          the where args.
+   * @param q
+   *          the query object
    * @param db
    *          the db name
    * @return int
@@ -205,10 +203,8 @@ public class RDSHelper extends Helper {
    * 
    * @param table
    *          the table name
-   * @param where
-   *          the where conditions
-   * @param whereArgs
-   *          the where args.
+   * @param q
+   *          the query object
    * @return int
    */
   public static int delete(String table, W q) {
@@ -422,10 +418,8 @@ public class RDSHelper extends Helper {
    * 
    * @param table
    *          the table name
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
+   * @param q
+   *          the query object
    * @param sets
    *          the values
    * @return int
@@ -447,10 +441,8 @@ public class RDSHelper extends Helper {
   /**
    * test the data exists.
    * 
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
+   * @param q
+   *          the query object
    * @param t
    *          the Bean class
    * @return boolean
@@ -477,10 +469,8 @@ public class RDSHelper extends Helper {
    * 
    * @param table
    *          the table name
-   * @param where
-   *          the where conditions.
-   * @param args
-   *          the where args
+   * @param q
+   *          the query object
    * @return boolean
    * @throws SQLException
    *           throw Exception if occur DB error
@@ -559,10 +549,8 @@ public class RDSHelper extends Helper {
   /**
    * update the data using values
    * 
-   * @param where
-   *          the where conditions.
-   * @param args
-   *          the where args
+   * @param q
+   *          the query object
    * @param sets
    *          the values
    * @param t
@@ -589,10 +577,8 @@ public class RDSHelper extends Helper {
    * 
    * @param table
    *          the table name
-   * @param where
-   *          the where condition
-   * @param whereArgs
-   *          the where args
+   * @param q
+   *          the query object
    * @param sets
    *          the values
    * @return int
@@ -674,6 +660,15 @@ public class RDSHelper extends Helper {
 
   }
 
+  /**
+   * load the Bean
+   * 
+   * @param q
+   *          the query object
+   * @param t
+   *          the Class of Bean
+   * @return the Bean
+   */
   public static <T extends Bean> T load(W q, Class<T> t) {
     /**
      * get the require annotation onGet
@@ -692,12 +687,8 @@ public class RDSHelper extends Helper {
   /**
    * load the data in this Bean
    * 
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args.
-   * @param orderby
-   *          the order sentence.
+   * @param q
+   *          the query object
    * @param b
    *          the Bean
    * @return boolean
@@ -721,12 +712,8 @@ public class RDSHelper extends Helper {
    * 
    * @param table
    *          the table name
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order sentence
+   * @param q
+   *          the query object
    * @param b
    *          the Bean
    * @return boolean
@@ -816,10 +803,8 @@ public class RDSHelper extends Helper {
    *          the table
    * @param cols
    *          the cols
-   * @param where
-   *          the where
-   * @param args
-   *          the args
+   * @param q
+   *          the query object
    * @param clazz
    *          the Class Bean
    * @return the list
@@ -835,10 +820,8 @@ public class RDSHelper extends Helper {
    *          the generic Bean Class
    * @param cols
    *          the column name array
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
+   * @param q
+   *          the query object
    * @param clazz
    *          the Bean Class
    * @return List
@@ -854,12 +837,8 @@ public class RDSHelper extends Helper {
    *          the generic Bean Class
    * @param cols
    *          the column name array
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param offset
    *          the offset
    * @param limit
@@ -891,12 +870,8 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param cols
    *          the column name array
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param offset
    *          the offset
    * @param limit
@@ -1110,12 +1085,8 @@ public class RDSHelper extends Helper {
    * 
    * @param <T>
    *          the generic Bean Class
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param offset
    *          the offset
    * @param limit
@@ -1145,12 +1116,8 @@ public class RDSHelper extends Helper {
    *          the generic Bean Class
    * @param table
    *          the table name
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param offset
    *          the offset
    * @param limit
@@ -1256,12 +1223,8 @@ public class RDSHelper extends Helper {
    *          the generic Bean Class
    * @param table
    *          the table name
-   * @param where
-   *          the where conditions.
-   * @param args
-   *          the where args.
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param offset
    *          the offset
    * @param limit
@@ -1458,10 +1421,8 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param col
    *          the column name
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
+   * @param q
+   *          the query object
    * @param clazz
    *          the Bean Class
    * @param db
@@ -1539,10 +1500,8 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param col
    *          the column name
-   * @param where
-   *          the where condition
-   * @param args
-   *          the where args
+   * @param q
+   *          the query object
    * @param db
    *          the db name
    * @return String
@@ -1624,12 +1583,8 @@ public class RDSHelper extends Helper {
    *          the generic Bean Class
    * @param col
    *          the column name
-   * @param where
-   *          the where condition
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param s
    *          the offset
    * @param n
@@ -1659,12 +1614,8 @@ public class RDSHelper extends Helper {
    *          the generic Bean Class
    * @param col
    *          the column name
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param position
    *          the offset
    * @param t
@@ -1694,12 +1645,8 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param col
    *          the column anme
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order sentence
+   * @param q
+   *          the query object
    * @param position
    *          the offset
    * @return T
@@ -1787,12 +1734,8 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param col
    *          the column name
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order sentence
+   * @param q
+   *          the query object
    * @param s
    *          the offset
    * @param n
@@ -1922,12 +1865,8 @@ public class RDSHelper extends Helper {
    *          the generic Bean Class
    * @param table
    *          the table name
-   * @param where
-   *          the where conditions
-   * @param args
-   *          the where args
-   * @param orderby
-   *          the order by sentence
+   * @param q
+   *          the query object
    * @param clazz
    *          the Bean class
    * @return Bean
@@ -1960,10 +1899,8 @@ public class RDSHelper extends Helper {
    * 
    * @param table
    *          the table name
-   * @param where
-   *          the where sql
-   * @param args
-   *          the args
+   * @param q
+   *          the query object
    * @return the number of data
    */
   public static long count(String table, W q) {
@@ -2035,10 +1972,8 @@ public class RDSHelper extends Helper {
    *          the table name
    * @param name
    *          the column name
-   * @param where
-   *          the where sub sentence
-   * @param args
-   *          the args
+   * @param q
+   *          the query object
    * @return the list of Object
    */
   public static List<Object> distinct(String table, String name, W q) {
@@ -2236,7 +2171,9 @@ public class RDSHelper extends Helper {
   }
 
   private static boolean isOracle(Connection c) throws SQLException {
-    return X.isSame(c.getMetaData().getDatabaseProductName(), "Oracle");
+    String s = c.getMetaData().getDatabaseProductName();
+    String[] ss = X.split(s, "[ /]");
+    return X.isSame(ss[0], "oracle");
   }
 
 }

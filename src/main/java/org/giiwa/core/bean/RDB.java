@@ -163,6 +163,15 @@ public class RDB {
   /**
    * Gets the driver.
    * 
+   * Derby gives "Apache Derby" <br>
+   * Microsoft SQL Server gives "Microsoft SQL Server" <br>
+   * Oracle gives "Oracle" <br>
+   * PostgreSQL gives "PostgreSQL"<br>
+   * MySQL gives "MySQL"<br>
+   * HSQLDB gives "HSQL Database Engine" <br>
+   * DB2 gives "DB2/....". In my situation it gives "DB2/LINUXX8664" <br>
+   * H2 gives "H2" <br>
+   * 
    * @return the driver
    */
   public static String getDriver() {
@@ -170,7 +179,10 @@ public class RDB {
     try {
       c = getConnection();
       if (c != null) {
-        return c.getMetaData().getDatabaseProductName().toLowerCase();
+        String s = c.getMetaData().getDatabaseProductName().toLowerCase();
+        String[] ss = X.split(s, "[ /]");
+
+        return ss[0];
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -192,7 +204,9 @@ public class RDB {
     try {
       c = getConnection(name);
       if (c != null) {
-        return c.getMetaData().getDatabaseProductName().toLowerCase();
+        String s = c.getMetaData().getDatabaseProductName().toLowerCase();
+        String[] ss = X.split(s, "[ /]");
+        return ss[0];
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -200,33 +214,6 @@ public class RDB {
       RDSHelper.close(c);
     }
     return null;
-  }
-
-  /**
-   * Short name.
-   * 
-   * @param name
-   *          the name
-   * @return the string
-   */
-  private static String shortName(String name) {
-    if (name == null) {
-      return X.EMPTY;
-    }
-
-    /**
-     * get the second string
-     */
-    int i = name.indexOf(".");
-    if (i > 0) {
-      name = name.substring(i + 1);
-      i = name.indexOf(".");
-      if (i > 0) {
-        return name.substring(0, i);
-      }
-    }
-
-    return X.EMPTY;
   }
 
   /**
@@ -452,7 +439,6 @@ public class RDB {
         } else if (ss[1].equalsIgnoreCase("sqlserver") || ss[1].equalsIgnoreCase("microsoft")) {
           D = X.isEmpty(D) ? "com.microsoft.sqlserver.jdbc.SQLServerDriver" : D;
 
-          // TODO, user, password
           int i = EXTERNAL_URL.indexOf("user=");
           if (i > 0) {
             int j = EXTERNAL_URL.indexOf("&", i + 1);
