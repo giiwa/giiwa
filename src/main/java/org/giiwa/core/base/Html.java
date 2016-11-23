@@ -222,101 +222,51 @@ public final class Html {
    *          e.g: find(".aaa") <br>
    *          3, tagname for tag directly <br>
    *          e.g: find("div") <br>
-   *          4, (content) for the tag which contains the content <br>
-   *          e.g: find("div.aaa(bbb)") <br>
-   * @return Element
+   * @return the list of Elements
    */
   public List<Element> find(String selector) {
-    String[] ss = selector.split(" ");
-    List<Element> list = new ArrayList<Element>();
-    list.add(d);
-    for (String s : ss) {
-      if (X.isEmpty(s)) {
-        continue;
-      }
-      list = _find(list, s);
-    }
-    return list;
+    return d.select(selector);
   }
 
-  private List<Element> _find(List<Element> list, String s) {
+  /**
+   * find the elements in the node
+   * 
+   * @param e
+   *          the element node
+   * @param selector
+   *          the selector string
+   * @return the list of element or null if nothing found
+   */
+  public static List<Element> find(Element e, String selector) {
+    return e.select(selector);
+  }
+
+  /**
+   * find the elements in the elements by the selector
+   * 
+   * @param list
+   *          the original elements
+   * @param selector
+   *          the string of selector, #id, .class, tag
+   * @return the list of element or null nothing found
+   */
+  public static List<Element> find(List<Element> list, String selector) {
     if (list == null || list.size() == 0) {
       return null;
     }
 
-    List<Element> l1 = new ArrayList<Element>();
-    String[] s1 = s.split("[()]");
-    s = s1[0];
-    String s2 = s1.length > 1 ? s1[1] : null;
-
+    List<Element> l1 = null;
     for (Element e : list) {
-      Element e2 = null;
-      if (s.startsWith("#")) {
-        s = s.substring(1);
-        e2 = e.getElementById(s);
-      } else if (s.startsWith(".")) {
-        s = s.substring(1);
-        Elements es = e.getElementsByAttributeValue("class", s);
-        if (es != null && es.size() > 0) {
-          if (s2 == null) {
-            for (int i = 0; i < es.size(); i++) {
-              Element e1 = es.get(i);
-              l1.add(e1);
-            }
-          } else {
-            for (int i = 0; i < es.size(); i++) {
-              Element e1 = es.get(i);
-              if (e1.text().indexOf(s2) > -1) {
-                // found
-                e2 = e1;
-                break;
-              }
-            }
-          }
+      List<Element> l2 = find(e, selector);
+      if (l2 != null && l2.size() > 0) {
+        if (l1 == null) {
+          l1 = l2;
         } else {
-          e2 = null;
+          l1.addAll(l2);
         }
-      } else {
-        String[] ss = s.split("\\.");
-        if (ss.length == 1) {
-          Elements es = e.getElementsByTag(ss[0]);
-          if (es != null && es.size() > 0) {
-            if (s2 == null) {
-              for (int i = 0; i < es.size(); i++) {
-                l1.add(es.get(i));
-              }
-            } else {
-              for (int i = 0; i < es.size(); i++) {
-                Element e1 = es.get(i);
-                if (e1.text().indexOf(s2) > -1) {
-                  // found
-                  e = e1;
-                  break;
-                }
-              }
-            }
-          }
-        } else if (ss.length == 2) {
-          Elements es = e.getElementsByTag(ss[0]);
-          if (es != null && es.size() > 0) {
-            for (int i = 0; i < es.size(); i++) {
-              List<Element> l2 = new ArrayList<Element>();
-              l2.add(es.get(i));
-              l2 = _find(l2, "." + ss[1]);
-              if (l2 != null && l2.size() > 0) {
-                // found
-                l1.addAll(l2);
-              }
-            }
-          }
-        } else {
-          e = null;
-        }
-      }
-      if (e2 != null) {
-        l1.add(e2);
       }
     }
+
     return l1;
   }
 
@@ -344,13 +294,14 @@ public final class Html {
     String s = "<div id='aaa' class='b'>aaaaa<span class='a'>dddd</span><span class='a'>aaaaaa</span></div>";
     Html h = Html.create(s);
     List<Element> e = h.find("div");
+
     System.out.println("1:" + e);
     e = h.find("div span");
     System.out.println("2:" + e);
     System.out.println("3:" + h.find("div.b"));
     System.out.println("4:" + h.find("div.b span.a"));
     System.out.println("5:" + h.find("#aaa .a"));
-    System.out.println("5:" + h.find("#aaa .a(aaaa)"));
+    // System.out.println("5:" + h.find("#aaa .a(aaaa)"));
 
   }
 }
