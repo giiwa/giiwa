@@ -51,6 +51,10 @@
 		<g>$lang.get('site.url.hint')</g>
 	</label></div>
 
+	<div><label><h3>$lang.get('module.center'):</h3>
+		<input type='checkbox' name='module_center' #if($global.getInt('module.center',0)==1) checked="checked" #end/>
+		<g>$lang.get('module.center.hint')</g></label></div>
+		
 	<div><label><h3>$lang.get('system.code'):</h3>
 		<input type='number' name='system_code' value="$!system_code"/>
 		<g>$lang.get('system.code.hint')</g></label></div>

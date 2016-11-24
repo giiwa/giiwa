@@ -217,6 +217,7 @@ public class setting extends Model {
         url = url.substring(0, url.length() - 1);
       }
       Global.setConfig("site.url", url);
+      Global.setConfig("module.center", X.isSame(this.getString("module_center"), "on") ? 1 : 0);
 
       this.set(X.MESSAGE, lang.get("save.success"));
 

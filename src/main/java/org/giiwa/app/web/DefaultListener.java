@@ -500,29 +500,32 @@ public class DefaultListener implements IListener {
         }
       }
     } else if (f.isFile() && f.getName().endsWith(".jar")) {
-      FileVersion f1 = new FileVersion(f);
-      String name = f1.getName();
+      String p1 = f.getParentFile().getName();
+      if (X.isSame(p1, "model") || X.isSame(p1, "lib")) {
+        FileVersion f1 = new FileVersion(f);
+        String name = f1.getName();
 
-      FileVersion f2 = map.get(name);
-      if (f2 == null) {
-        map.put(f1.getName(), f1);
-      } else {
-        FileVersion.R r = f1.compareTo(f2);
-        if (r == FileVersion.R.HIGH || r == FileVersion.R.SAME) {
-          // remove f2
-          if (log.isWarnEnabled()) {
-            log.warn("delete duplicated jar file, but low version:" + f2.getFile().getAbsolutePath() + ", keep: "
-                + f2.getFile().getAbsolutePath());
+        FileVersion f2 = map.get(name);
+        if (f2 == null) {
+          map.put(f1.getName(), f1);
+        } else {
+          FileVersion.R r = f1.compareTo(f2);
+          if (r == FileVersion.R.HIGH || r == FileVersion.R.SAME) {
+            // remove f2
+            if (log.isWarnEnabled()) {
+              log.warn("delete duplicated jar file, but low version:" + f2.getFile().getAbsolutePath() + ", keep: "
+                  + f2.getFile().getAbsolutePath());
+            }
+            f2.getFile().delete();
+            map.put(name, f1);
+          } else if (r == FileVersion.R.LOW) {
+            // remove f1;
+            if (log.isWarnEnabled()) {
+              log.warn("delete duplicated jar file, but low version:" + f1.getFile().getAbsolutePath() + ", keep: "
+                  + f1.getFile().getAbsolutePath());
+            }
+            f1.getFile().delete();
           }
-          f2.getFile().delete();
-          map.put(name, f1);
-        } else if (r == FileVersion.R.LOW) {
-          // remove f1;
-          if (log.isWarnEnabled()) {
-            log.warn("delete duplicated jar file, but low version:" + f1.getFile().getAbsolutePath() + ", keep: "
-                + f1.getFile().getAbsolutePath());
-          }
-          f1.getFile().delete();
         }
       }
     }

@@ -450,3 +450,5 @@ index.example=示例
 backup.starting=开始备份，请稍后查询
 backup.started=正在备份，请稍后查询
 try.later=请稍后重试
+module.center=模块代码中心
+module.center.hint=向其他节点提供模块自动升级服务

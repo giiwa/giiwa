@@ -671,66 +671,71 @@ public class module extends Model {
     String name = this.getString("name");
 
     JSON jo = new JSON();
-    Module m = Module.load(name);
-    if (m != null) {
+    if (Global.getInt("module.center", 0) == 1) {
+      Module m = Module.load(name);
+      if (m != null) {
 
-      Entity e = Repo.load(m.getRepo());
-      if (e != null) {
-        try {
-          InputStream in = e.getInputStream();
-          String md5 = MD5.md5(in);
-          if (md5 != null) {
-            jo.put("md5", md5);
-            jo.put(X.STATE, 200);
-            jo.put(X.URI, m.getRepo());
-            jo.put("name", name);
-            jo.put("version", m.getVersion());
-            jo.put("build", m.getBuild());
-          } else {
+        Entity e = Repo.load(m.getRepo());
+        if (e != null) {
+          try {
+            InputStream in = e.getInputStream();
+            String md5 = MD5.md5(in);
+            if (md5 != null) {
+              jo.put("md5", md5);
+              jo.put(X.STATE, 200);
+              jo.put(X.URI, m.getRepo());
+              jo.put("name", name);
+              jo.put("version", m.getVersion());
+              jo.put("build", m.getBuild());
+            } else {
+              jo.put(X.STATE, 201);
+              jo.put(X.MESSAGE, "get md5 failed for the repo=" + m.getRepo());
+            }
+          } catch (Exception e1) {
             jo.put(X.STATE, 201);
-            jo.put(X.MESSAGE, "get md5 failed for the repo=" + m.getRepo());
-          }
-        } catch (Exception e1) {
-          jo.put(X.STATE, 201);
-          jo.put(X.MESSAGE, e1.getMessage());
+            jo.put(X.MESSAGE, e1.getMessage());
 
+          }
+        } else {
+          jo.put(X.STATE, 201);
+          jo.put(X.MESSAGE, "repo file was missed, id=" + m.getRepo());
+        }
+      } else if (X.isSame(name, "*")) {
+        jo.put(X.STATE, 200);
+        List<Module> list = Module.getAll(true);
+        List<JSON> l1 = new ArrayList<JSON>();
+        if (list != null) {
+          for (Module m1 : list) {
+            Entity e = Repo.load(m1.getRepo());
+            if (e != null) {
+              try {
+                InputStream in = e.getInputStream();
+                String md5 = MD5.md5(in);
+                if (md5 != null) {
+                  JSON j1 = JSON.create();
+                  j1.put("md5", md5);
+                  j1.put(X.STATE, 200);
+                  j1.put(X.URI, m1.getRepo());
+                  j1.put("name", m1.getName());
+                  j1.put("version", m1.getVersion());
+                  j1.put("build", m1.getBuild());
+                  l1.add(j1);
+                }
+              } catch (Exception e1) {
+                log.error(e1.getMessage(), e1);
+              }
+            }
+          }
+          jo.put("list", l1);
+          jo.put("name", name);
         }
       } else {
         jo.put(X.STATE, 201);
-        jo.put(X.MESSAGE, "repo file was missed, id=" + m.getRepo());
-      }
-    } else if (X.isSame(name, "*")) {
-      jo.put(X.STATE, 200);
-      List<Module> list = Module.getAll(true);
-      List<JSON> l1 = new ArrayList<JSON>();
-      if (list != null) {
-        for (Module m1 : list) {
-          Entity e = Repo.load(m1.getRepo());
-          if (e != null) {
-            try {
-              InputStream in = e.getInputStream();
-              String md5 = MD5.md5(in);
-              if (md5 != null) {
-                JSON j1 = JSON.create();
-                j1.put("md5", md5);
-                j1.put(X.STATE, 200);
-                j1.put(X.URI, m1.getRepo());
-                j1.put("name", m1.getName());
-                j1.put("version", m1.getVersion());
-                j1.put("build", m1.getBuild());
-                l1.add(j1);
-              }
-            } catch (Exception e1) {
-              log.error(e1.getMessage(), e1);
-            }
-          }
-        }
-        jo.put("list", l1);
-        jo.put("name", name);
+        jo.put(X.MESSAGE, "not found, name=" + name);
       }
     } else {
-      jo.put(X.STATE, 201);
-      jo.put(X.MESSAGE, "not found, name=" + name);
+      jo.put(X.STATE, 202);
+      jo.put(X.MESSAGE, "not support");
     }
     this.response(jo);
   }
