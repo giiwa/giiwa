@@ -100,7 +100,7 @@ img {
 	position: fixed;
 	top: 0;
 	left: 0;
-	background: #112A44;
+	background: #204a84;
 }
 #content {
 	text-align: center;
@@ -812,8 +812,8 @@ table th.checkbox {
 }
 #toolbar {
 	height: 39px;
-	background: #1369c0;
-	border-top: 1px solid #135dbc;
+	background: #3b81de;
+	border-top: 1px solid #204a84;
 	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
 	z-index: 10;
 	position: fixed;
