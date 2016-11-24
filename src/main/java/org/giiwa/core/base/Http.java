@@ -78,6 +78,10 @@ public final class Http {
 
   private static boolean     DEBUG   = false;
 
+  public static Response get(String url) {
+    return get(url, null, null);
+  }
+
   /**
    * GET response from a url.
    *
@@ -85,8 +89,8 @@ public final class Http {
    *          the url
    * @return Response
    */
-  public static Response get(String url) {
-    return get(url, null);
+  public static Response get(String url, String charset) {
+    return get(url, charset, null);
   }
 
   /**
@@ -122,6 +126,10 @@ public final class Http {
     return post(url, "application/x-javascript; charset=UTF8", null, params);
   }
 
+  public static Response get(String url, JSON headers) {
+    return get(url, headers);
+  }
+
   /**
    * GET method.
    *
@@ -131,7 +139,7 @@ public final class Http {
    *          the headers
    * @return Response
    */
-  public static Response get(String url, JSON headers) {
+  public static Response get(String url, String charset, JSON headers) {
 
     log.debug("url=\"" + url + "\"");
 
@@ -161,7 +169,7 @@ public final class Http {
         HttpResponse resp = client.execute(get);
 
         r.status = resp.getStatusLine().getStatusCode();
-        r.body = getContext(resp);
+        r.body = getContext(resp, charset);
         r.headers = resp.getAllHeaders();
 
       } catch (Exception e) {
@@ -345,7 +353,7 @@ public final class Http {
 
         HttpResponse resp = client.execute(post);
         r.status = resp.getStatusLine().getStatusCode();
-        r.body = getContext(resp);
+        r.body = getContext(resp, null);
 
         log.debug("got: status=" + r.status + ", body=" + r.body);
 
@@ -418,7 +426,7 @@ public final class Http {
     }
   };
 
-  private static String getContext(HttpResponse response) {
+  private static String getContext(HttpResponse response, String charset) {
     String context = null;
 
     if (response.getEntity() != null) {
@@ -435,9 +443,11 @@ public final class Http {
         }
 
         if (ccs == null) {
+          ccs = charset;
+        }
+        if (ccs == null) {
           ccs = "UTF-8";
         }
-
         if (encoding != null && encoding.indexOf("gzip") > -1) {
 
           BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
