@@ -457,3 +457,4 @@ backup.started=Starting backup
 try.later=Please try later
 module.center=Module Center
 module.center.hint=Provides the service of module auto-upgrade
+partial.lang.notes=Partial languages, {module}/i18n/...
