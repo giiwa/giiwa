@@ -14,6 +14,8 @@
 */
 package org.giiwa.core.base;
 
+import java.util.Stack;
+
 import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
@@ -31,10 +33,12 @@ public class StringFinder {
   }
 
   int    pos = 0;
+  int    len = 0;
   String s;
 
   private StringFinder(String s) {
     this.s = s;
+    len = s.length();
   }
 
   /**
@@ -86,6 +90,87 @@ public class StringFinder {
    */
   public int skip(int len) {
     pos += len;
+    return pos;
+  }
+
+  public String bracket(char begin, char end) {
+    if (s == null)
+      return null;
+
+    int s0 = -1;
+    int mark = pos;
+
+    // find the begin
+    while (pos < len) {
+      char c = s.charAt(pos);
+      if (c == begin) {
+        pos++;
+        s0 = pos;
+        break;
+      } else if (c == '\\') {
+        pos++;
+      } else if (c == '"') {
+        // skip to next "
+        pos++;
+        skip('"');
+      } else if (c == '\'') {
+        // skip to next '
+        pos++;
+        skip('\'');
+      }
+      pos++;
+    }
+
+    if (s0 > 0) {
+      // find the end
+      int e0 = -1;
+      Stack<Character> ss = new Stack<Character>();
+
+      while (pos < len) {
+        char c = s.charAt(pos);
+        if (c == end && ss.isEmpty()) {
+          e0 = pos;
+          pos ++;
+          break;
+        } else if (c == '(' || c == '{' || c == '[') {
+          ss.push(c);
+        } else if (c == ')' || c == '}' || c == ']') {
+          ss.pop();
+        } else if (c == '\\') {
+          pos++;
+        } else if (c == '"') {
+          // skip to next "
+          pos++;
+          skip('"');
+        } else if (c == '\'') {
+          // skip to next '
+          pos++;
+          skip('\'');
+        }
+        pos++;
+      }
+      if (e0 > 0) {
+        return s.substring(s0, e0);
+      }
+    }
+
+    pos = mark;
+    return null;
+  }
+
+  public int skip(char c0) {
+    char c = s.charAt(pos);
+    while (pos < len) {
+      if (c == c0) {
+        // found
+        break;
+      } else if (c == '\\') {
+        pos++;
+      }
+      pos++;
+      c = s.charAt(pos);
+    }
+
     return pos;
   }
 
@@ -232,10 +317,13 @@ public class StringFinder {
     // System.out.println(merge("aaaaaa", "aabbaabaab"));
     // System.out.println(merge("aaaaaa", "bbaabbbb"));
     // System.out.println(merge("aaaaaa", ".*aa.*"));
-    System.out.println(merge("http://www.haodf.com/wenda/adele_g_4491037166.htm",
-        "http://www.haodf.com/wenda/aiai6905_g_4377802805.htm"));
-    System.out.println(merge("http://www.haodf.com/wenda/y.*_g_44959.*9.*9.*.htm",
-        "http://www.haodf.com/wenda/doc.*_g_4.*4.*5.*7.*.htm"));
+    // System.out.println(merge("http://www.haodf.com/wenda/adele_g_4491037166.htm",
+    // "http://www.haodf.com/wenda/aiai6905_g_4377802805.htm"));
+    // System.out.println(merge("http://www.haodf.com/wenda/y.*_g_44959.*9.*9.*.htm",
+    // "http://www.haodf.com/wenda/doc.*_g_4.*4.*5.*7.*.htm"));
+
+    StringFinder s = StringFinder.create("{asd\\{a\"s}d\"asd}");
+    System.out.println(s.bracket('{', '}'));
 
   }
 }
