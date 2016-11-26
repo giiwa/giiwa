@@ -15,6 +15,7 @@
 package org.giiwa.core.json;
 
 import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 
 import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import com.jayway.jsonpath.JsonPath;
 
 /**
@@ -52,6 +54,7 @@ public final class JSON extends HashMap<String, Object> {
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public static JSON fromObject(Object json) {
+
     JSON j = null;
     if (json instanceof JSON) {
       j = (JSON) json;
@@ -59,7 +62,9 @@ public final class JSON extends HashMap<String, Object> {
       j = JSON.create((Map) json);
     } else if (json instanceof String) {
       Gson g = new Gson();
-      j = g.fromJson((String) json, JSON.class);
+      JsonReader reader = new JsonReader(new StringReader((String) json));
+      reader.setLenient(true);
+      j = g.fromJson(reader, JSON.class);
     } else if (json instanceof Reader) {
       Gson g = new Gson();
       j = g.fromJson((Reader) json, JSON.class);
