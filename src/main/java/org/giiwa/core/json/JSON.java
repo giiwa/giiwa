@@ -46,14 +46,26 @@ public final class JSON extends HashMap<String, Object> {
   private static Log        log              = LogFactory.getLog(JSON.class);
 
   /**
+   * parse the json object to JSON
+   * 
+   * @param json
+   * @return JSON, null if failed
+   */
+  public static JSON fromObject(Object json) {
+    return fromObject(json, false);
+  }
+
+  /**
    * parse the object to JSON object
    *
    * @param json
    *          the json
+   * @param lenient
+   *          the boolean of JsonReader.setLenient(lenient)
    * @return the json
    */
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public static JSON fromObject(Object json) {
+  public static JSON fromObject(Object json, boolean lenient) {
 
     JSON j = null;
     if (json instanceof JSON) {
@@ -63,7 +75,7 @@ public final class JSON extends HashMap<String, Object> {
     } else if (json instanceof String) {
       Gson g = new Gson();
       JsonReader reader = new JsonReader(new StringReader((String) json));
-      reader.setLenient(true);
+      reader.setLenient(lenient);
       j = g.fromJson(reader, JSON.class);
     } else if (json instanceof Reader) {
       Gson g = new Gson();
