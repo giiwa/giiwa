@@ -731,6 +731,7 @@ public class RDSHelper extends Helper {
     Connection c = null;
     PreparedStatement p = null;
     ResultSet r = null;
+    StringBuilder sql = new StringBuilder();
 
     try {
       c = getConnection();
@@ -738,7 +739,6 @@ public class RDSHelper extends Helper {
       if (c == null)
         return false;
 
-      StringBuilder sql = new StringBuilder();
       sql.append("select * from ").append(table);
 
       String where = _where(q, c);
@@ -756,11 +756,16 @@ public class RDSHelper extends Helper {
           sql.append(" and ");
         }
         sql.append(" rownum=1");
+
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
+
       } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
         sql.append(" limit 1");
-      }
-      if (orderby != null) {
-        sql.append(" ").append(orderby).append(" ");
       }
 
       p = c.prepareStatement(sql.toString());
@@ -783,7 +788,7 @@ public class RDSHelper extends Helper {
 
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(q, e);
+        log.error(sql, e);
     } finally {
       close(r, p, c);
 
@@ -936,16 +941,19 @@ public class RDSHelper extends Helper {
           }
           sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
         }
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
       } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
         if (limit > 0) {
           sql.append(" limit ").append(limit);
         }
         if (offset > 0) {
           sql.append(" offset ").append(offset);
         }
-      }
-      if (orderby != null) {
-        sql.append(" ").append(orderby);
       }
 
       p = c.prepareStatement(sql.toString());
@@ -1042,16 +1050,19 @@ public class RDSHelper extends Helper {
           offset = MAXROWS;
         }
         sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
       } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
         if (limit > 0) {
           sql.append(" limit ").append(limit);
         }
         if (offset > 0) {
           sql.append(" offset ").append(offset);
         }
-      }
-      if (orderby != null) {
-        sql.append(" ").append(orderby);
       }
 
       p = c.prepareStatement(sql.toString());
@@ -1146,6 +1157,7 @@ public class RDSHelper extends Helper {
     Connection c = null;
     PreparedStatement p = null;
     ResultSet r = null;
+    StringBuilder sql = new StringBuilder();
 
     try {
 
@@ -1154,7 +1166,6 @@ public class RDSHelper extends Helper {
       if (c == null)
         return null;
 
-      StringBuilder sql = new StringBuilder();
       sql.append("select * from ").append(table);
 
       String where = _where(q, c);
@@ -1175,16 +1186,21 @@ public class RDSHelper extends Helper {
           offset = MAXROWS;
         }
         sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
       } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
+
         if (limit > 0) {
           sql.append(" limit ").append(limit);
         }
         if (offset > 0) {
           sql.append(" offset ").append(offset);
         }
-      }
-      if (orderby != null) {
-        sql.append(" ").append(orderby);
       }
 
       Beans<T> rs = new Beans<T>();
@@ -1218,7 +1234,7 @@ public class RDSHelper extends Helper {
       return rs;
     } catch (Exception e) {
       if (log.isErrorEnabled())
-        log.error(q, e);
+        log.error(sql, e);
 
     } finally {
       close(r, p, c);
@@ -1283,16 +1299,19 @@ public class RDSHelper extends Helper {
           offset = MAXROWS;
         }
         sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
       } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
         if (limit > 0) {
           sql.append(" limit ").append(limit);
         }
         if (offset > 0) {
           sql.append(" offset ").append(offset);
         }
-      }
-      if (orderby != null) {
-        sql.append(" ").append(orderby);
       }
 
       Beans<T> rs = new Beans<T>();
@@ -1700,14 +1719,19 @@ public class RDSHelper extends Helper {
           sql.append(" and ");
         }
         sql.append(" rownum=").append(position);
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
+        
       } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
+
         sql.append(" limit 1");
         if (position > 0) {
           sql.append(" offset ").append(position);
         }
-      }
-      if (orderby != null) {
-        sql.append(" ").append(orderby);
       }
 
       p = c.prepareStatement(sql.toString());
@@ -1794,14 +1818,17 @@ public class RDSHelper extends Helper {
           s = MAXROWS;
         }
         sql.append(" rownum>").append(s).append(" and rownum<=").append(s + n);
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
       } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
         sql.append(" limit ").append(n);
         if (s > 0) {
           sql.append(" offset ").append(s);
         }
-      }
-      if (orderby != null) {
-        sql.append(" ").append(orderby);
       }
 
       p = c.prepareStatement(sql.toString());

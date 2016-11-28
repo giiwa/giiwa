@@ -61,7 +61,7 @@
 				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
 					<g class='derby' style='display:none'>jdbc:derby:sampledb;create=true</g>
 					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
-					<g class='postgresql' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
+					<g class='postgres' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
 					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
 					<g class='oracle' style='display:none'>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
 					<g class='db2' style='display:none'>jdbc:db2://x.x.x.x:50000/dbname</g>
@@ -73,8 +73,8 @@
 				<div class='passwd'><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
 				
 				<div class='btns'>
-						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
-						<a class='next btn btn-success'>$lang.get('a.next')</a>
+					<a class='prev btn btn-info'>$lang.get('a.prev')</a>
+					<a class='next btn btn-success'>$lang.get('a.next')</a>
 				</div>
 			</form>
 		</div>
