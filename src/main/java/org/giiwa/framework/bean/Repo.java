@@ -763,7 +763,10 @@ public class Repo extends Bean {
       } else {
         f2.getParentFile().mkdirs();
       }
-      f1.renameTo(f2);
+      if(!f1.renameTo(f2)) {
+        //TODO
+        log.error("rename file failed!!! dest=" + f2.getName() + ", src=" + f1.getName());
+      }
 
       Helper.update(getId(), V.create("folder", folder), Entity.class);
 

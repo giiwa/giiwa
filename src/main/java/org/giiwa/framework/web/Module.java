@@ -31,6 +31,7 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.base.FileVersion;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
@@ -224,7 +225,20 @@ public class Module {
       /**
        * move the temp to target dest
        */
-      f.renameTo(dest);
+      if (!f.renameTo(dest)) {
+        log.error("rename the module path failed, then using copy!!! dest=" + dest + ", original=" + f.getName());
+        if (dest.exists()) {
+          IOUtil.delete(dest);
+          log.info("trying to delete the dest path, path=" + dest.getName());
+        }
+
+        log.info("copying to the path=" + dest.getName());
+        IOUtil.copy(f, dest);
+
+        log.info("deleteing to the path=" + dest.getName());
+        IOUtil.delete(f);
+
+      }
 
       Module.init(m);
       m.set(m.getName() + "_repo", url);
@@ -1869,7 +1883,10 @@ public class Module {
 
         Jar.update(this.getName(), d.getName());
 
-        f.renameTo(d);
+        if(!f.renameTo(d)) {
+          //TODO
+          log.error("rename file failed!!! dest=" + d.getName() + ", src=" + f.getName());
+        }
       } else {
         // files
         File d = new File(dest + File.separator + f.getName());
@@ -1880,7 +1897,10 @@ public class Module {
           d.getParentFile().mkdirs();
         }
 
-        f.renameTo(d);
+        if(!f.renameTo(d)) {
+          //TODO
+          log.error("rename file failed!!! dest=" + d.getName() + ", src=" + f.getName());
+        }
       }
     }
 
