@@ -773,7 +773,6 @@ public class Module {
             if (f1.isDirectory()) {
               Module m = load(f1.getName());
 
-              // TODO
               if (m == null) {
                 /**
                  * the module is invalid
@@ -967,7 +966,6 @@ public class Module {
   @SuppressWarnings("unchecked")
   private boolean _load(Element root) {
     try {
-      // TODO Auto-generated method stub
       List<Element> list = root.elements();
       for (Element e1 : list) {
         String tag = e1.getName();
@@ -1883,9 +1881,13 @@ public class Module {
 
         Jar.update(this.getName(), d.getName());
 
-        if(!f.renameTo(d)) {
-          //TODO
+        if (!f.renameTo(d)) {
           log.error("rename file failed!!! dest=" + d.getName() + ", src=" + f.getName());
+          try {
+            IOUtil.copy(f, d);
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+          }
         }
       } else {
         // files
@@ -1897,9 +1899,13 @@ public class Module {
           d.getParentFile().mkdirs();
         }
 
-        if(!f.renameTo(d)) {
-          //TODO
+        if (!f.renameTo(d)) {
           log.error("rename file failed!!! dest=" + d.getName() + ", src=" + f.getName());
+          try {
+            IOUtil.copy(f, d);
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+          }
         }
       }
     }
