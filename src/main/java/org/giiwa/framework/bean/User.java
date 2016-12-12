@@ -412,7 +412,7 @@ public class User extends Bean {
    * @return Beans
    */
   public static Beans<User> load(W q, int offset, int limit) {
-    return Helper.load(q.sort("name", 1), offset, limit, User.class);
+    return Helper.load(q.and(X.ID, 0, W.OP_GT).sort("name", 1), offset, limit, User.class);
   }
 
   /**
