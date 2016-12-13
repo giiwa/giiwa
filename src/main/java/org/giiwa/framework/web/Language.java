@@ -555,6 +555,10 @@ public class Language {
    * @return the string
    */
   public String past(long base) {
+    if (base <= 0) {
+      return X.EMPTY;
+    }
+
     int t = (int) ((System.currentTimeMillis() - base) / 1000);
     if (t < 60) {
       return t + get("past.s");
