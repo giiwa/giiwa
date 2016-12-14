@@ -449,6 +449,15 @@ public class Helper {
       return v1;
     }
 
+    /**
+     * get all key,value
+     * 
+     * @return Map
+     */
+    public Map<String, Object> getAll() {
+      return m;
+    }
+
   }
 
   /**
