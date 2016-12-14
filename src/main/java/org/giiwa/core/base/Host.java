@@ -872,18 +872,21 @@ public class Host {
         // log.debug("df -m=" + r);
 
         String[] ss = r.split("\n");
-        for (String s : ss) {
-          s = s.trim();
+        for (int i = 0; i < ss.length; i++) {
+          String s = ss[i].trim();
+
+          // log.debug("s=" + s);
+
           if (s.startsWith("/dev")) {
-            String[] s1 = s.split(" ");
-            List<String> l1 = new ArrayList<String>();
-            for (String s2 : s1) {
-              if (!X.isEmpty(s2)) {
-                l1.add(s2);
-              }
+            String[] s1 = X.split(s, " ");
+            if (s1.length == 1 && i < ss.length - 1) {
+              // get next line
+              s1 = X.split(s + ss[i + 1], " ");
+              i++;
             }
-            if (l1.size() > 5) {
-              list.add(new Disk(l1.get(5), X.toInt(l1.get(2)), X.toInt(l1.get(3))));
+
+            if (s1.length > 5) {
+              list.add(new Disk(s1[5], X.toInt(s1[2]), X.toInt(s1[3])));
             }
           }
         }
@@ -893,18 +896,22 @@ public class Host {
         // log.debug("df -m=" + r);
 
         String[] ss = r.split("\n");
-        for (String s : ss) {
-          s = s.trim();
+        for (int i = 0; i < ss.length; i++) {
+          String s = ss[i].trim();
+
+          log.debug("s=" + s);
+
           if (s.startsWith("/dev")) {
-            String[] s1 = s.split(" ");
-            List<String> l1 = new ArrayList<String>();
-            for (String s2 : s1) {
-              if (!X.isEmpty(s2)) {
-                l1.add(s2);
-              }
+            String[] s1 = X.split(s, " ");
+            if (s1.length == 1 && i < ss.length - 1) {
+              // get next line
+              s1 = X.split(s + ss[i + 1], " ");
+              i++;
             }
-            if (l1.size() > 8) {
-              list.add(new Disk(l1.get(8), X.toInt(l1.get(2)), X.toInt(l1.get(3))));
+
+            if (s1.length > 8) {
+              // list.add(new Disk(s1[5], X.toInt(s1[2]), X.toInt(s1[3])));
+              list.add(new Disk(s1[8], X.toInt(s1[2]), X.toInt(s1[3])));
             }
           }
         }
