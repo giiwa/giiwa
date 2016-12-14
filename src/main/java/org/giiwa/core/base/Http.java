@@ -72,15 +72,25 @@ import org.giiwa.core.json.JSON;
 @SuppressWarnings("deprecation")
 public final class Http {
 
-  static Log                 log     = LogFactory.getLog(Http.class);
-  static int                 TIMEOUT = 60 * 1000;
+  static Log                 log   = LogFactory.getLog(Http.class);
 
-  public static final String UA      = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
+  public static final String UA    = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
 
-  private static boolean     DEBUG   = false;
+  private static boolean     DEBUG = false;
 
   public static Response get(String url) {
-    return get(url, null, null);
+    return get(url, X.AMINUTE);
+  }
+
+  /**
+   * 
+   * @param url
+   * @param timeout
+   *          the milliseconds of timeout
+   * @return
+   */
+  public static Response get(String url, long timeout) {
+    return get(url, null, null, timeout);
   }
 
   /**
@@ -90,8 +100,8 @@ public final class Http {
    *          the url
    * @return Response
    */
-  public static Response get(String url, String charset) {
-    return get(url, charset, null);
+  public static Response get(String url, String charset, long timeout) {
+    return get(url, charset, null, timeout);
   }
 
   /**
@@ -114,6 +124,10 @@ public final class Http {
     return code;
   }
 
+  public static Response post(String url, JSON params) {
+    return post(url, params, X.AMINUTE);
+  }
+
   /**
    * POST response from a url.
    *
@@ -123,8 +137,8 @@ public final class Http {
    *          the params
    * @return Response
    */
-  public static Response post(String url, JSON params) {
-    return post(url, "application/x-javascript; charset=UTF8", null, params);
+  public static Response post(String url, JSON params, long timeout) {
+    return post(url, "application/x-javascript; charset=UTF8", null, params, timeout);
   }
 
   public static Response get(String url, JSON headers) {
@@ -140,7 +154,7 @@ public final class Http {
    *          the headers
    * @return Response
    */
-  public static Response get(String url, String charset, JSON headers) {
+  public static Response get(String url, String charset, JSON headers, long timeout) {
 
     log.debug("url=\"" + url + "\"");
 
@@ -148,7 +162,7 @@ public final class Http {
     url = ss[ss.length - 1];
 
     Response r = new Response();
-    DefaultHttpClient client = getClient(url);
+    DefaultHttpClient client = getClient(url, timeout);
 
     if (client != null) {
       HttpGet get = null;
@@ -215,7 +229,7 @@ public final class Http {
     String[] ss = url.split(" ");
     url = ss[ss.length - 1];
 
-    DefaultHttpClient client = getClient(url);
+    DefaultHttpClient client = getClient(url, X.AMINUTE);
 
     if (client != null) {
       HttpGet get = null;
@@ -279,8 +293,8 @@ public final class Http {
    *          the params
    * @return Response
    */
-  public static Response post(String url, String contenttype, JSON headers, JSON params) {
-    return post(url, contenttype, headers, params, null);
+  public static Response post(String url, String contenttype, JSON headers, JSON params, long timeout) {
+    return post(url, contenttype, headers, params, null, timeout);
   }
 
   /**
@@ -298,11 +312,11 @@ public final class Http {
    *          the attachments
    * @return Response
    */
-  public static Response post(String url, String contenttype, JSON headers, JSON body, JSON attachments) {
+  public static Response post(String url, String contenttype, JSON headers, JSON body, JSON attachments, long timeout) {
 
     Response r = new Response();
 
-    DefaultHttpClient client = getClient(url);
+    DefaultHttpClient client = getClient(url, timeout);
     log.debug("url=" + url);
 
     if (client != null) {
@@ -371,7 +385,7 @@ public final class Http {
     return r;
   }
 
-  private static DefaultHttpClient getClient(String url) {
+  private static DefaultHttpClient getClient(String url, long timeout) {
 
     DefaultHttpClient client = new DefaultHttpClient();
 
@@ -403,8 +417,8 @@ public final class Http {
         SchemeRegistry sr = ccm.getSchemeRegistry();
         sr.register(new Scheme("https", ssf, 443));
         HttpParams params = client.getParams();
-        HttpConnectionParams.setConnectionTimeout(params, TIMEOUT);
-        HttpConnectionParams.setSoTimeout(params, TIMEOUT);
+        HttpConnectionParams.setConnectionTimeout(params, (int) timeout);
+        HttpConnectionParams.setSoTimeout(params, (int) timeout);
 
         client = new DefaultHttpClient(ccm, params);
 
