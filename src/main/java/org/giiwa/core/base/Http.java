@@ -59,6 +59,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 
@@ -72,7 +73,7 @@ import org.giiwa.core.json.JSON;
 public final class Http {
 
   static Log                 log     = LogFactory.getLog(Http.class);
-  static int                 TIMEOUT = 10 * 1000;
+  static int                 TIMEOUT = 60 * 1000;
 
   public static final String UA      = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36";
 
@@ -305,6 +306,8 @@ public final class Http {
     log.debug("url=" + url);
 
     if (client != null) {
+      TimeStamp t = TimeStamp.create();
+
       HttpPost post = new HttpPost(url);
       try {
 
@@ -355,10 +358,10 @@ public final class Http {
         r.status = resp.getStatusLine().getStatusCode();
         r.body = getContext(resp, null);
 
-        log.debug("got: status=" + r.status + ", body=" + r.body);
+        log.debug("got: cost=" + t.past() + "ms, status=" + r.status + ", body=" + r.body);
 
       } catch (Exception e) {
-        log.error(url, e);
+        log.error("cost=" + t.past() + "ms, " + url, e);
       } finally {
         post.abort();
       }
