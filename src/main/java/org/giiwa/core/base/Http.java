@@ -376,10 +376,15 @@ public final class Http {
 
       } catch (Exception e) {
         log.error("cost=" + t.past() + "ms, " + url, e);
+        r.status = 600;
+        r.body = "error: " + e.getMessage();
       } finally {
         post.abort();
       }
 
+    } else {
+      r.status = 600;
+      r.body = "error: can not init a client";
     }
 
     return r;
