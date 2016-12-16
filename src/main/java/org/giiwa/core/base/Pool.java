@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.TimeStamp;
+import org.giiwa.core.task.Task;
 
 /**
  * A general pool class, that can be for database , or something else
@@ -56,19 +58,35 @@ public class Pool<E> {
   @SuppressWarnings("unchecked")
   public synchronized E get(long timeout) {
     try {
-      if (list.size() == 0) {
-        if (created < max) {
-          E t = (E) creator.create();
-          if (t != null) {
-            created++;
-            return t;
+      TimeStamp t = TimeStamp.create();
+
+      long t1 = timeout;
+
+      while (timeout > 0) {
+        if (list.size() > 0) {
+          return list.remove(0);
+        } else {
+          t1 = timeout - t.past();
+          if (t1 > 0) {
+            this.wait(t1);
+          }
+
+          if (created < max) {
+            new Task() {
+
+              @Override
+              public void onExecute() {
+                E e = (E) creator.create();
+                if (e != null) {
+                  created++;
+                  release(e);
+                }
+
+              }
+            }.schedule(0);
           }
         }
-        this.wait(timeout);
-      }
 
-      if (list.size() > 0) {
-        return list.remove(0);
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
