@@ -677,36 +677,33 @@ public class Helper {
      * @return the SQL string
      */
     public String where(Map<String, String> tansfers) {
-      if (elist.size() > 0 || wlist.size() > 0) {
-        StringBuilder sb = new StringBuilder();
-        for (Entity e : elist) {
-          if (sb.length() > 0) {
-            if (e.cond == AND) {
-              sb.append(" and ");
-            } else if (e.cond == OR) {
-              sb.append(" or ");
-            }
+      StringBuilder sb = new StringBuilder();
+      for (Entity e : elist) {
+        if (sb.length() > 0) {
+          if (e.cond == AND) {
+            sb.append(" and ");
+          } else if (e.cond == OR) {
+            sb.append(" or ");
           }
-
-          sb.append(e.where(tansfers));
         }
 
-        for (W w : wlist) {
-          if (sb.length() > 0) {
-            if (w.cond == AND) {
-              sb.append(" and ");
-            } else if (w.cond == OR) {
-              sb.append(" or ");
-            }
-          }
-
-          sb.append(" (").append(w.where(tansfers)).append(") ");
-        }
-
-        return sb.toString();
+        sb.append(e.where(tansfers));
       }
 
-      return null;
+      for (W w : wlist) {
+        if (sb.length() > 0) {
+          if (w.cond == AND) {
+            sb.append(" and ");
+          } else if (w.cond == OR) {
+            sb.append(" or ");
+          }
+        }
+
+        sb.append(" (").append(w.where(tansfers)).append(") ");
+      }
+
+      return sb.toString();
+
     }
 
     /**
@@ -736,7 +733,7 @@ public class Helper {
      */
     public String orderby(Map<String, String> transfers) {
 
-      if (order != null && order.size() > 0) {
+      if (order.size() > 0) {
         StringBuilder sb = new StringBuilder("order by ");
         for (int i = 0; i < order.size(); i++) {
           Entity e = order.get(i);
@@ -1112,20 +1109,18 @@ public class Helper {
      */
     public BasicDBObject query() {
       BasicDBObject q = new BasicDBObject();
-      if (elist.size() > 0) {
-        for (Entity e : elist) {
-          _parse(e, q);
+      for (Entity e : elist) {
+        _parse(e, q);
+      }
+
+      for (W e : wlist) {
+        // or the condition in here, is $or
+        BasicDBList list = new BasicDBList();
+        for (Entity e1 : e.elist) {
+          list.add(_parse(e1, new BasicDBObject()));
         }
 
-        for (W e : wlist) {
-          // or the condition in here, is $or
-          BasicDBList list = new BasicDBList();
-          for (Entity e1 : e.elist) {
-            list.add(_parse(e1, new BasicDBObject()));
-          }
-
-          q.append("$or", list);
-        }
+        q.append("$or", list);
       }
 
       return q;
