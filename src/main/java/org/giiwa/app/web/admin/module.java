@@ -18,6 +18,7 @@ import java.io.*;
 import java.util.*;
 import java.util.zip.*;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.fileupload.FileItem;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -31,6 +32,7 @@ import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
@@ -592,6 +594,9 @@ public class module extends Model {
       actives.add(m);
       m = m.floor();
     }
+
+    Configuration conf = Config.getConfig();
+    this.set("node", conf.getString("node", ""));
 
     this.set("actives", actives);
 
