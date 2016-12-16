@@ -16,28 +16,40 @@ import org.giiwa.core.task.Task;
  * @param <E>
  */
 public class Pool<E> {
-  static Log           log     = LogFactory.getLog(Pool.class);
+  static Log              log     = LogFactory.getLog(Pool.class);
 
-  private List<E>      list    = new ArrayList<E>();
-  private int          initial = 10;
-  private int          max     = 10;
-  private int          created = 0;
-  @SuppressWarnings("rawtypes")
-  private IPoolFactory creator;
+  private List<E>         list    = new ArrayList<E>();
+  private int             initial = 10;
+  private int             max     = 10;
+  private int             created = 0;
 
-  public static <T> Pool<T> create(int initial, int max, IPoolFactory<T> creator) {
+  private IPoolFactory<E> factory = null;
+
+  /**
+   * create a pool by initial, max and factory
+   * 
+   * @param initial
+   * @param max
+   * @param factory
+   * @return
+   */
+  public static <T> Pool<T> create(int initial, int max, IPoolFactory<T> factory) {
     Pool<T> p = new Pool<T>();
     p.initial = initial;
     p.max = max;
-    p.creator = creator;
-    p.init();
+    p.factory = factory;
+    new Task() {
+      @Override
+      public void onExecute() {
+        p.init();
+      }
+    }.schedule(0);
     return p;
   }
 
-  @SuppressWarnings("unchecked")
   private synchronized void init() {
     for (int i = 0; i < initial; i++) {
-      E t = (E) creator.create();
+      E t = factory.create();
       if (t != null) {
         list.add(t);
       }
@@ -45,17 +57,37 @@ public class Pool<E> {
     created = list.size();
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * release a object to the pool
+   * 
+   * @param t
+   */
   public synchronized void release(E t) {
     if (t == null) {
       created--;
     } else {
-      creator.cleanup(t);
+      factory.cleanup(t);
       list.add(t);
     }
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * destroy the pool, and destroy all the object in the pool
+   */
+  public synchronized void destroy() {
+    for (E e : list) {
+      factory.destroy(e);
+    }
+    list.clear();
+
+  }
+
+  /**
+   * get a object from the pool, if meet the max, then wait till timeout
+   * 
+   * @param timeout
+   * @return
+   */
   public synchronized E get(long timeout) {
     try {
       TimeStamp t = TimeStamp.create();
@@ -68,22 +100,26 @@ public class Pool<E> {
         } else {
           t1 = timeout - t.past();
           if (t1 > 0) {
-            this.wait(t1);
-          }
 
-          if (created < max) {
-            new Task() {
+            log.debug("t1=" + t1);
 
-              @Override
-              public void onExecute() {
-                E e = (E) creator.create();
-                if (e != null) {
-                  created++;
-                  release(e);
+            if (created < max) {
+              new Task() {
+
+                @Override
+                public void onExecute() {
+                  E e = factory.create();
+                  if (e != null) {
+                    created++;
+                    release(e);
+                  }
+
                 }
+              }.schedule(0);
+            }
 
-              }
-            }.schedule(0);
+            this.wait(t1);
+
           }
         }
 
@@ -95,10 +131,34 @@ public class Pool<E> {
     return null;
   }
 
+  /**
+   * the pool factory interface using to create E object in pool
+   * 
+   * @author wujun
+   *
+   * @param <T>
+   */
   public interface IPoolFactory<T> {
+
+    /**
+     * create a object
+     * 
+     * @return
+     */
     public T create();
 
+    /**
+     * clean up a object after used
+     * 
+     * @param t
+     */
     public void cleanup(T t);
 
+    /**
+     * destroy a object
+     * 
+     * @param t
+     */
+    public void destroy(T t);
   }
 }
