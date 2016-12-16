@@ -47,11 +47,13 @@ public class Pool<E> {
     return p;
   }
 
-  private synchronized void init() {
+  private void init() {
     for (int i = 0; i < initial; i++) {
       E t = factory.create();
       if (t != null) {
-        list.add(t);
+        synchronized (list) {
+          list.add(t);
+        }
       }
     }
     created = list.size();
@@ -62,24 +64,27 @@ public class Pool<E> {
    * 
    * @param t
    */
-  public synchronized void release(E t) {
+  public void release(E t) {
     if (t == null) {
       created--;
     } else {
       factory.cleanup(t);
-      list.add(t);
+      synchronized (list) {
+        list.add(t);
+      }
     }
   }
 
   /**
    * destroy the pool, and destroy all the object in the pool
    */
-  public synchronized void destroy() {
-    for (E e : list) {
-      factory.destroy(e);
+  public void destroy() {
+    synchronized (list) {
+      for (E e : list) {
+        factory.destroy(e);
+      }
+      list.clear();
     }
-    list.clear();
-
   }
 
   /**
@@ -88,41 +93,42 @@ public class Pool<E> {
    * @param timeout
    * @return
    */
-  public synchronized E get(long timeout) {
+  public E get(long timeout) {
     try {
       TimeStamp t = TimeStamp.create();
 
       long t1 = timeout;
 
-      while (t1 > 0) {
-        if (list.size() > 0) {
-          return list.remove(0);
-        } else {
-          t1 = timeout - t.past();
-          if (t1 > 0) {
+      synchronized (list) {
+        while (t1 > 0) {
+          if (list.size() > 0) {
+            return list.remove(0);
+          } else {
+            t1 = timeout - t.past();
+            if (t1 > 0) {
 
-            log.debug("t1=" + t1);
+              log.debug("t1=" + t1);
 
-            if (created < max) {
-              new Task() {
+              if (created < max) {
+                new Task() {
 
-                @Override
-                public void onExecute() {
-                  E e = factory.create();
-                  if (e != null) {
-                    created++;
-                    release(e);
+                  @Override
+                  public void onExecute() {
+                    E e = factory.create();
+                    if (e != null) {
+                      created++;
+                      release(e);
+                    }
+
                   }
+                }.schedule(0);
+              }
 
-                }
-              }.schedule(0);
+              this.wait(t1);
+
             }
-
-            this.wait(t1);
-
           }
         }
-
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
