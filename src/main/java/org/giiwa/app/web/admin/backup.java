@@ -23,6 +23,7 @@ import org.giiwa.core.base.Zip;
 import org.giiwa.core.bean.MongoHelper;
 import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Monitor;
@@ -230,7 +231,7 @@ public class backup extends Model {
          * 2, backup repo
          */
         // File f = m.getFile("/admin/clone/backup_tar.sh");
-        String url = conf.getString("repo.path", null);
+        String url = Config.getConfig().getString("repo.path", null);
         if (!X.isEmpty(url)) {
           Global.setConfig("backup/" + name, 3); // backup repo
 
@@ -330,7 +331,7 @@ public class backup extends Model {
         /**
          * 2, recover repo
          */
-        String url = conf.getString("repo.path", null);
+        String url = Config.getConfig().getString("repo.path", null);
         if (!X.isEmpty(url)) {
           Global.setConfig("backup/" + name, 14); // recovering Repo
 

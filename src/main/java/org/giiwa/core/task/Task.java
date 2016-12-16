@@ -19,7 +19,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.*;
 
@@ -53,9 +52,6 @@ public abstract class Task implements Runnable {
 
   /** The executor. */
   private static ScheduledThreadPoolExecutor executor;
-
-  /** The Configuration of the node */
-  protected static Configuration             conf;
 
   private static Object                      lock          = new Object();
 
@@ -278,10 +274,8 @@ public abstract class Task implements Runnable {
    *
    * @param threadNum
    *          the thread num
-   * @param _conf
-   *          the _conf
    */
-  public static void init(int threadNum, Configuration _conf) {
+  public static void init(int threadNum) {
     executor = new ScheduledThreadPoolExecutor(threadNum, new ThreadFactory() {
 
       AtomicInteger i = new AtomicInteger(1);
@@ -295,7 +289,6 @@ public abstract class Task implements Runnable {
       }
 
     });
-    conf = _conf;
   }
 
   /**

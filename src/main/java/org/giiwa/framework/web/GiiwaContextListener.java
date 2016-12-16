@@ -119,7 +119,7 @@ public class GiiwaContextListener implements ServletContextListener {
 
       Helper.init(conf);
 
-      Task.init(conf.getInt("thread.number", 20), conf);
+      Task.init(conf.getInt("thread.number", 20));
 
       /**
        * initialize the controller, this MUST place in the end !:-)
