@@ -107,8 +107,8 @@ public class Pool<E> {
             t1 = timeout - t.past();
             if (t1 > 0) {
 
-              log.debug("t1=" + t1);
-
+              // log.debug("t1=" + t1);
+              //
               if (created < max) {
                 new Task() {
 
@@ -124,8 +124,7 @@ public class Pool<E> {
                 }.schedule(0);
               }
 
-              this.wait(t1);
-
+              list.wait(t1);
             }
           }
         }
