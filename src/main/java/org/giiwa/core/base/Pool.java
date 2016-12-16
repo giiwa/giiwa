@@ -33,8 +33,8 @@ public class Pool<E> {
    * @param factory
    * @return
    */
-  public static <T> Pool<T> create(int initial, int max, IPoolFactory<T> factory) {
-    Pool<T> p = new Pool<T>();
+  public static  <E> Pool<E> create(int initial, int max, IPoolFactory<E> factory) {
+    Pool<E> p = new Pool<E>();
     p.initial = initial;
     p.max = max;
     p.factory = factory;
@@ -141,29 +141,29 @@ public class Pool<E> {
    * 
    * @author wujun
    *
-   * @param <T>
+   * @param <E>
    */
-  public interface IPoolFactory<T> {
+  public interface IPoolFactory<E> {
 
     /**
      * create a object
      * 
      * @return
      */
-    public T create();
+    public E create();
 
     /**
      * clean up a object after used
      * 
      * @param t
      */
-    public void cleanup(T t);
+    public void cleanup(E t);
 
     /**
      * destroy a object
      * 
      * @param t
      */
-    public void destroy(T t);
+    public void destroy(E t);
   }
 }
