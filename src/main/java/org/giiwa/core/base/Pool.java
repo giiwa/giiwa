@@ -62,7 +62,7 @@ public class Pool<E> {
 
       long t1 = timeout;
 
-      while (timeout > 0) {
+      while (t1 > 0) {
         if (list.size() > 0) {
           return list.remove(0);
         } else {
