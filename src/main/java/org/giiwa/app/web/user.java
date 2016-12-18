@@ -221,8 +221,6 @@ public class user extends Model {
 
     if (method.isPost()) {
 
-      String type = this.getString("type");
-
       JSON jo = new JSON();
       AuthToken a = null;
       if (Global.getInt("user.token", 0) == 1) {

@@ -298,18 +298,6 @@ public class Model {
                   case METHOD_POST:
                   case METHOD_GET:
                   case METHOD_PUT:
-                    this.put("lang", lang);
-                    this.put(X.URI, uri);
-                    this.put("module", Module.home);
-                    this.put("path", this.path); // set
-                    // original
-                    // path
-                    this.put("request", req);
-                    this.put("response", resp);
-                    this.put("this", this);
-                    this.set("me", login);
-                    this.set("session", this.getSession());
-                    this.set("global", Global.getInstance());
 
                     createQuery();
 
@@ -512,6 +500,19 @@ public class Model {
 
       // if path exists, then using pathmapping instead
       // log.debug("pathmapping=" + pathmapping);
+
+      this.put("lang", lang);
+      this.put(X.URI, uri);
+      this.put("module", Module.home);
+      this.put("path", this.path); // set
+      // original
+      // path
+      this.put("request", req);
+      this.put("response", resp);
+      this.put("this", this);
+      this.set("me", login);
+      this.set("session", this.getSession());
+      this.set("global", Global.getInstance());
 
       if (!Module.home.before(this)) {
         log.debug("handled by filter, and stop to dispatch");
