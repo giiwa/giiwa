@@ -393,7 +393,13 @@ public class User extends Bean {
 
   }
 
-  private static String encrypt(String passwd) {
+  /**
+   * encrypt the password
+   * 
+   * @param passwd
+   * @return
+   */
+  public static String encrypt(String passwd) {
     if (X.isEmpty(passwd)) {
       return X.EMPTY;
     }
