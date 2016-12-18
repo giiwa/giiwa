@@ -1248,6 +1248,30 @@ public class Module {
     return null;
   }
 
+  public Model getModel(int method, Class<? extends Model> clazz) {
+
+    try {
+
+      /**
+       * cache it and cache all the path
+       */
+      Map<Integer, Map<String, Model.PathMapping>> path = _loadPath(clazz);
+      CachedModel c = CachedModel.create(clazz, path, this);
+
+      return c.create(null);
+
+      // System.out.println("loading [" + name + "], c=" + c);
+
+    } catch (Throwable e) {
+      /**
+       * not found, or is not a model, ignore the exception
+       */
+
+    }
+
+    return null;
+  }
+
   private void _cache(String uri, CachedModel c) {
     CachedModel c1 = modelMap.get(uri);
     if (c1 != null) {
@@ -1260,7 +1284,7 @@ public class Module {
     modelMap.put(uri, c);
   }
 
-  private Map<Integer, Map<String, Model.PathMapping>> _loadPath(Class<Model> c) {
+  private Map<Integer, Map<String, Model.PathMapping>> _loadPath(Class<? extends Model> c) {
     Method[] list = c.getMethods();
     if (list != null && list.length > 0) {
 
@@ -1973,7 +1997,7 @@ public class Module {
   }
 
   static class CachedModel {
-    Class<Model>                                 model;
+    Class<? extends Model>                       model;
     Map<Integer, Map<String, Model.PathMapping>> pathmapping;
     Module                                       module;
 
@@ -1997,7 +2021,8 @@ public class Module {
      *          the module
      * @return the cached model
      */
-    static CachedModel create(Class<Model> model, Map<Integer, Map<String, PathMapping>> pathmapping, Module module) {
+    static CachedModel create(Class<? extends Model> model, Map<Integer, Map<String, PathMapping>> pathmapping,
+        Module module) {
       CachedModel m = new CachedModel();
       m.model = model;
       m.pathmapping = pathmapping;
@@ -2018,7 +2043,9 @@ public class Module {
       Model m = model.newInstance();
       m.module = module;
       m.pathmapping = pathmapping;
-      m.path = getPath(uri);
+      if (!X.isEmpty(uri)) {
+        m.path = getPath(uri);
+      }
       return m;
     }
 

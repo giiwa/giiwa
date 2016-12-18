@@ -296,7 +296,7 @@ public class user extends Model {
                  */
                 me.logined(sid(), this.getRemoteHost());
 
-                if ("json".equals(this.getString("type")) || isAjax()) {
+                if (X.isSame("json", this.getString("type")) || this.isAjax()) {
                   jo.put("sid", sid());
                   jo.put("uid", me.getId());
 
@@ -359,7 +359,7 @@ public class user extends Model {
         }
       }
 
-      if (X.isSame(type, "json")) {
+      if (X.isSame("json", this.getString("type")) || this.isAjax()) {
         this.response(jo);
         return;
       } else {

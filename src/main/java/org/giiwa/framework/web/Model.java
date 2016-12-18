@@ -36,6 +36,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
+import org.giiwa.framework.web.Module.CachedModel;
 import org.giiwa.framework.web.view.View;
 
 /**
@@ -203,6 +204,275 @@ public class Model {
     return _currentmodule.get();
   }
 
+  private Path process() throws Exception {
+
+    if (pathmapping != null) {
+
+      String path = this.path;
+      if (X.isEmpty(this.path)) {
+        path = X.NONE;
+      }
+
+      Map<String, PathMapping> methods = pathmapping.get(this.method.method);
+
+      // log.debug(this.method + "=>" + methods);
+
+      if (methods != null) {
+        for (String s : methods.keySet()) {
+          if (X.isEmpty(s)) {
+            continue;
+          }
+
+          /**
+           * catch the exception avoid break the whole block
+           */
+          try {
+            /**
+             * match test in outside first
+             */
+            // log.debug(s + "=>" + this.path);
+
+            if (path != null && path.matches(s)) {
+
+              /**
+               * create the pattern
+               */
+              PathMapping oo = methods.get(s);
+              if (oo != null) {
+                Pattern p = oo.pattern;
+                Matcher m1 = p.matcher(path);
+
+                /**
+                 * find
+                 */
+                Object[] params = null;
+                if (m1.find()) {
+                  /**
+                   * get all the params
+                   */
+                  params = new Object[m1.groupCount()];
+                  for (int i = 0; i < params.length; i++) {
+                    params[i] = m1.group(i + 1);
+                  }
+                }
+
+                Path pp = oo.path;
+                /**
+                 * check the access and login status
+                 */
+                if (pp.login()) {
+
+                  // check the system has been initialized
+                  // ?
+                  if (!Helper.isConfigured()) {
+                    this.redirect("/setup");
+                    return null;
+                  }
+
+                  login = this.getUser();
+                  if (login == null) {
+                    /**
+                     * login require
+                     */
+                    gotoLogin();
+                    return pp;
+                  }
+
+                  if (!X.NONE.equals(pp.access()) && !login.hasAccess(pp.access().split("\\|"))) {
+                    /**
+                     * no access
+                     */
+                    this.put("lang", lang);
+                    this.deny();
+
+                    OpLog.warn(this.getClass(), pp.path(), "deny the access, requred: " + lang.get(pp.access()),
+                        getUser(), this.getRemoteHost());
+                    return pp;
+                  }
+                }
+
+                /**
+                 * set the "global" attribute for the model
+                 */
+                switch (this.method.method) {
+                  case METHOD_POST:
+                  case METHOD_GET:
+                  case METHOD_PUT:
+                    this.put("lang", lang);
+                    this.put(X.URI, uri);
+                    this.put("module", Module.home);
+                    this.put("path", this.path); // set
+                    // original
+                    // path
+                    this.put("request", req);
+                    this.put("response", resp);
+                    this.put("this", this);
+                    this.set("me", login);
+                    this.set("session", this.getSession());
+                    this.set("global", Global.getInstance());
+
+                    createQuery();
+
+                    break;
+                }
+
+                /**
+                 * invoke the method
+                 */
+                Method m = oo.method;
+                // log.debug("invoking: " + m.getName());
+
+                try {
+                  m.invoke(this, params);
+
+                  if ((pp.log() & method.method) > 0) {
+
+                    /**
+                     * clone a new one
+                     */
+                    JSON jo = JSON.fromObject(this.getJSON());
+                    if (jo.has("password")) {
+                      jo.put("password", "******");
+                    }
+                    if (jo.has("pwd")) {
+                      jo.put("pwd", "******");
+                    }
+                    if (jo.has("passwd")) {
+                      jo.put("passwd", "******");
+                    }
+
+                    OpLog.info(this.getClass(), pp.path(), jo.toString(), getUser(), this.getRemoteHost());
+
+                  }
+                } catch (Exception e) {
+                  if (log.isErrorEnabled())
+                    log.error(e.getMessage(), e);
+
+                  OpLog.error(this.getClass(), pp.path(), e.getMessage(), e, getUser(), this.getRemoteHost());
+
+                  error(e);
+                }
+
+                return pp;
+              }
+            }
+          } catch (Exception e) {
+            if (log.isErrorEnabled())
+              log.error(s, e);
+
+            OpLog.error(this.getClass(), path, e.getMessage(), e, getUser(), this.getRemoteHost());
+
+            error(e);
+          }
+        }
+      }
+    } // end of "pathmapping is not null
+
+    /**
+     * default handler
+     */
+    this.put("lang", lang);
+    this.put(X.URI, uri);
+    this.put("module", Module.home);
+    this.put("path", path);
+    this.put("request", req);
+    this.put("this", this);
+    this.put("response", resp);
+    this.set("session", this.getSession());
+    this.set("global", Global.getInstance());
+
+    this.createQuery();
+
+    switch (method.method) {
+      case METHOD_GET: {
+
+        Method m = this.getClass().getMethod("onGet");
+        log.debug("m=" + m);
+        if (m != null) {
+          Path p = m.getAnnotation(Path.class);
+          if (p != null) {
+            // check ogin
+            if (p.login()) {
+              if (this.getUser() == null) {
+                gotoLogin();
+                return null;
+              }
+
+              // check access
+              if (!X.isEmpty(p.access())) {
+                if (!login.hasAccess(p.access())) {
+                  deny();
+                  return null;
+                }
+              }
+            }
+          }
+        }
+
+        onGet();
+
+        break;
+      }
+      case METHOD_POST: {
+
+        Method m = this.getClass().getMethod("onPost");
+        if (m != null) {
+          Path p = m.getAnnotation(Path.class);
+          if (p != null) {
+            // check ogin
+            if (p.login()) {
+              if (this.getUser() == null) {
+                gotoLogin();
+                return null;
+              }
+
+              // check access
+              if (!X.isEmpty(p.access())) {
+                if (!login.hasAccess(p.access())) {
+                  deny();
+                  return null;
+                }
+              }
+            }
+          }
+        }
+        onPost();
+
+        break;
+      }
+      case METHOD_PUT: {
+
+        Method m = this.getClass().getMethod("onPut");
+        if (m != null) {
+          Path p = m.getAnnotation(Path.class);
+          if (p != null) {
+            // check ogin
+            if (p.login()) {
+              if (this.getUser() == null) {
+                gotoLogin();
+                return null;
+              }
+
+              // check access
+              if (!X.isEmpty(p.access())) {
+                if (!login.hasAccess(p.access())) {
+                  deny();
+                  return null;
+                }
+              }
+            }
+          }
+        }
+        onPut();
+
+        break;
+      }
+
+    } // end default handler
+    return null;
+
+  }
+
   /**
    * Dispatch.
    * 
@@ -248,269 +518,7 @@ public class Model {
         return null;
       }
 
-      if (pathmapping != null) {
-
-        String path = this.path;
-        if (X.isEmpty(this.path)) {
-          path = X.NONE;
-        }
-
-        Map<String, PathMapping> methods = pathmapping.get(this.method.method);
-
-        // log.debug(this.method + "=>" + methods);
-
-        if (methods != null) {
-          for (String s : methods.keySet()) {
-            if (X.isEmpty(s)) {
-              continue;
-            }
-
-            /**
-             * catch the exception avoid break the whole block
-             */
-            try {
-              /**
-               * match test in outside first
-               */
-              // log.debug(s + "=>" + this.path);
-
-              if (path != null && path.matches(s)) {
-
-                /**
-                 * create the pattern
-                 */
-                PathMapping oo = methods.get(s);
-                if (oo != null) {
-                  Pattern p = oo.pattern;
-                  Matcher m1 = p.matcher(path);
-
-                  /**
-                   * find
-                   */
-                  Object[] params = null;
-                  if (m1.find()) {
-                    /**
-                     * get all the params
-                     */
-                    params = new Object[m1.groupCount()];
-                    for (int i = 0; i < params.length; i++) {
-                      params[i] = m1.group(i + 1);
-                    }
-                  }
-
-                  Path pp = oo.path;
-                  /**
-                   * check the access and login status
-                   */
-                  if (pp.login()) {
-
-                    // check the system has been initialized
-                    // ?
-                    if (!Helper.isConfigured()) {
-                      this.redirect("/setup");
-                      return null;
-                    }
-
-                    login = this.getUser();
-                    if (login == null) {
-                      /**
-                       * login require
-                       */
-                      gotoLogin();
-                      return pp;
-                    }
-
-                    if (!X.NONE.equals(pp.access()) && !login.hasAccess(pp.access().split("\\|"))) {
-                      /**
-                       * no access
-                       */
-                      this.put("lang", lang);
-                      this.deny();
-
-                      OpLog.warn(this.getClass(), pp.path(), "deny the access, requred: " + lang.get(pp.access()),
-                          getUser(), this.getRemoteHost());
-                      return pp;
-                    }
-                  }
-
-                  /**
-                   * set the "global" attribute for the model
-                   */
-                  switch (this.method.method) {
-                    case METHOD_POST:
-                    case METHOD_GET:
-                    case METHOD_PUT:
-                      this.put("lang", lang);
-                      this.put(X.URI, uri);
-                      this.put("module", Module.home);
-                      this.put("path", this.path); // set
-                      // original
-                      // path
-                      this.put("request", req);
-                      this.put("response", resp);
-                      this.put("this", this);
-                      this.set("me", login);
-                      this.set("session", this.getSession());
-                      this.set("global", Global.getInstance());
-
-                      createQuery();
-
-                      break;
-                  }
-
-                  /**
-                   * invoke the method
-                   */
-                  Method m = oo.method;
-                  // log.debug("invoking: " + m.getName());
-
-                  try {
-                    m.invoke(this, params);
-
-                    if ((pp.log() & method.method) > 0) {
-
-                      /**
-                       * clone a new one
-                       */
-                      JSON jo = JSON.fromObject(this.getJSON());
-                      if (jo.has("password")) {
-                        jo.put("password", "******");
-                      }
-                      if (jo.has("pwd")) {
-                        jo.put("pwd", "******");
-                      }
-                      if (jo.has("passwd")) {
-                        jo.put("passwd", "******");
-                      }
-
-                      OpLog.info(this.getClass(), pp.path(), jo.toString(), getUser(), this.getRemoteHost());
-
-                    }
-                  } catch (Exception e) {
-                    if (log.isErrorEnabled())
-                      log.error(e.getMessage(), e);
-
-                    OpLog.error(this.getClass(), pp.path(), e.getMessage(), e, getUser(), this.getRemoteHost());
-
-                    error(e);
-                  }
-
-                  return pp;
-                }
-              }
-            } catch (Exception e) {
-              if (log.isErrorEnabled())
-                log.error(s, e);
-
-              OpLog.error(this.getClass(), path, e.getMessage(), e, getUser(), this.getRemoteHost());
-
-              error(e);
-            }
-          }
-        }
-      } // end of "pathmapping is not null
-
-      /**
-       * default handler
-       */
-      this.put("lang", lang);
-      this.put(X.URI, uri);
-      this.put("module", Module.home);
-      this.put("path", path);
-      this.put("request", req);
-      this.put("this", this);
-      this.put("response", resp);
-      this.set("session", this.getSession());
-      this.set("global", Global.getInstance());
-
-      this.createQuery();
-
-      switch (method.method) {
-        case METHOD_GET: {
-
-          Method m = this.getClass().getMethod("onGet");
-          log.debug("m=" + m);
-          if (m != null) {
-            Path p = m.getAnnotation(Path.class);
-            if (p != null) {
-              // check ogin
-              if (p.login()) {
-                if (this.getUser() == null) {
-                  gotoLogin();
-                  return null;
-                }
-
-                // check access
-                if (!X.isEmpty(p.access())) {
-                  if (!login.hasAccess(p.access())) {
-                    deny();
-                    return null;
-                  }
-                }
-              }
-            }
-          }
-
-          onGet();
-
-          break;
-        }
-        case METHOD_POST: {
-
-          Method m = this.getClass().getMethod("onPost");
-          if (m != null) {
-            Path p = m.getAnnotation(Path.class);
-            if (p != null) {
-              // check ogin
-              if (p.login()) {
-                if (this.getUser() == null) {
-                  gotoLogin();
-                  return null;
-                }
-
-                // check access
-                if (!X.isEmpty(p.access())) {
-                  if (!login.hasAccess(p.access())) {
-                    deny();
-                    return null;
-                  }
-                }
-              }
-            }
-          }
-          onPost();
-
-          break;
-        }
-        case METHOD_PUT: {
-
-          Method m = this.getClass().getMethod("onPut");
-          if (m != null) {
-            Path p = m.getAnnotation(Path.class);
-            if (p != null) {
-              // check ogin
-              if (p.login()) {
-                if (this.getUser() == null) {
-                  gotoLogin();
-                  return null;
-                }
-
-                // check access
-                if (!X.isEmpty(p.access())) {
-                  if (!login.hasAccess(p.access())) {
-                    deny();
-                    return null;
-                  }
-                }
-              }
-            }
-          }
-          onPut();
-
-          break;
-        }
-
-      } // end default handler
+      process();
 
     } catch (Exception e) {
       error(e);
@@ -645,6 +653,25 @@ public class Model {
   final public void redirect(String url) {
     resp.setHeader("Location", url);
     setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+  }
+
+  /**
+   * forward or lets the clazz to handle the request
+   * 
+   * @param clazz
+   * @return
+   */
+  final public Path forward(Class<? extends Model> clazz) {
+    try {
+      Model m = module.getModel(method.method, clazz);
+
+      m.copy(this);
+
+      return m.process();
+    } catch (Exception e) {
+      error(e);
+    }
+    return null;
   }
 
   /**
@@ -1943,7 +1970,7 @@ public class Model {
    * 
    * @return true: yes
    */
-  protected boolean isAjax() {
+  public boolean isAjax() {
     String request = this.getHeader("X-Requested-With");
     if (request != null && request.equals("XMLHttpRequest")) {
       return true;
