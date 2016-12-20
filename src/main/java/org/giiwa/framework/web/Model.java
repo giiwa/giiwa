@@ -36,7 +36,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
-import org.giiwa.framework.web.Module.CachedModel;
 import org.giiwa.framework.web.view.View;
 
 /**
@@ -356,6 +355,10 @@ public class Model {
       }
     } // end of "pathmapping is not null
 
+    // forward the request the file
+    if (staticfile()) {
+      return null;
+    }
     /**
      * default handler
      */
@@ -459,6 +462,36 @@ public class Model {
     } // end default handler
     return null;
 
+  }
+
+  private boolean staticfile() {
+    String uri = this.uri;
+    if (!X.isEmpty(path) && !X.isSame(path, X.NONE)) {
+      uri += "/" + path;
+    }
+    uri = uri.replaceAll("//", "/");
+    // log.debug("staticfile=" + uri);
+
+    File f = Module.home.getFile(uri);
+    if (f != null && f.exists() && f.isFile()) {
+      this.set(this.getJSON());
+
+      this.set("me", this.getUser());
+      this.put("lang", lang);
+      this.put(X.URI, uri);
+      this.put("module", Module.home);
+      this.put("path", path);
+      this.put("request", req);
+      this.put("this", this);
+      this.put("response", resp);
+      this.set("session", this.getSession());
+      this.set("global", Global.getInstance());
+
+      show(uri);
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -2144,29 +2177,6 @@ public class Model {
       if (log.isErrorEnabled())
         log.error(o, e);
     }
-  }
-
-  /**
-   * Rebound the request parameters to response
-   * 
-   * @param names
-   *          the names that request parameters will copied
-   * @return int of copied
-   */
-  final public int rebound(String... names) {
-    int count = 0;
-    if (names != null && names.length > 0) {
-      for (String name : names) {
-        set(name, this.getString(name));
-        count++;
-      }
-    } else {
-      for (String name : this.getNames()) {
-        set(name, this.getString(name));
-        count++;
-      }
-    }
-    return count;
   }
 
   /**
