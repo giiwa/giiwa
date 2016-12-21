@@ -20,7 +20,7 @@
 <p>使得编写应用更简单。</p>
 
 <h2>下载</h2>
-<p>最新Giiwa运行包 <a href="http://giiwa.org/archive/giiwa-1.2.tgz">giiwa-1.2.tgz</a>，或者<a href="http://giiwa.org/archive/giiwa-1.2.zip">giiwa-1.2.zip</a>。</p>
+<p>最新Giiwa运行包 <a href="http://giiwa.org/archive/giiwa-1.3.tgz">giiwa-1.3.tgz</a>，或者<a href="http://giiwa.org/archive/giiwa-1.3.zip">giiwa-1.3.zip</a>。</p>
 
 <h2>获取代码</h2>
 <p>所有最新源码已经托管在Github:</p>

@@ -47,7 +47,7 @@ public class repo extends Model {
     W q = W.create();
     String name = this.getString("name");
     if (!X.isEmpty(name) && X.isEmpty(this.path)) {
-      q.and("name", name, W.OP_LIKE);
+      q.and("name", name, W.OP.like);
       this.set("name", name);
       q.sort("name", 1);
     } else {

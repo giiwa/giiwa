@@ -473,7 +473,7 @@ public class user extends Model {
     if (!X.isEmpty(access)) {
       list = User.loadByAccess(access);
     } else {
-      Beans<User> bs = User.load(W.create().and(X.ID, 0, W.OP_GT), 0, 1000);
+      Beans<User> bs = User.load(W.create().and(X.ID, 0, W.OP.gt), 0, 1000);
       if (bs != null) {
         list = bs.getList();
       }

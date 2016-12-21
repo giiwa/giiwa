@@ -52,12 +52,12 @@ public class oplog extends Model {
       q.and("op", jo.get("op"));
     }
     if (!X.isEmpty(jo.get("ip"))) {
-      q.and("ip", jo.getString("ip"), W.OP_LIKE);
+      q.and("ip", jo.getString("ip"), W.OP.like);
     }
     if (!X.isEmpty(jo.get("user"))) {
 
       String name = this.getString("user");
-      W q1 = W.create().and(W.create().and("nickname", name, W.OP_LIKE).or("name", name, W.OP_LIKE)).sort("name", 1);
+      W q1 = W.create().and(W.create().and("nickname", name, W.OP.like).or("name", name, W.OP.like)).sort("name", 1);
       Beans<User> bs = User.load(q1, 0, 100);
       if (bs != null && bs.getList() != null && bs.getList().size() > 0) {
         W q2 = W.create();
@@ -83,16 +83,16 @@ public class oplog extends Model {
     }
 
     if (!X.isEmpty(jo.getString("starttime"))) {
-      q.and("created", lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP_GTE);
+      q.and("created", lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
 
     } else {
       long today_2 = System.currentTimeMillis() - X.ADAY * 2;
       jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
-      q.and("created", today_2, W.OP_GTE);
+      q.and("created", today_2, W.OP.gte);
     }
 
     if (!X.isEmpty(jo.getString("endtime"))) {
-      q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP_LTE);
+      q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.lte);
     }
 
     String sortby = this.getString("sortby");

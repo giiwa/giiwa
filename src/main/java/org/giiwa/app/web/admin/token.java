@@ -74,8 +74,8 @@ public class token extends Model {
     if (X.isEmpty(this.path) && !X.isEmpty(name)) {
       W list = W.create();
 
-      list.or("sid", name, W.OP_LIKE);
-      list.or("token", name, W.OP_LIKE);
+      list.or("sid", name, W.OP.like);
+      list.or("token", name, W.OP.like);
       list.or("uid", X.toLong(name));
       q.and(list);
 

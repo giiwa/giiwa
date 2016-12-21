@@ -171,7 +171,7 @@ public class AuthToken extends Bean {
    * @return AuthToken
    */
   public static AuthToken load(String sid, String token) {
-    return Helper.load(W.create("sid", sid).and("token", token).and("expired", System.currentTimeMillis(), W.OP_GT),
+    return Helper.load(W.create("sid", sid).and("token", token).and("expired", System.currentTimeMillis(), W.OP.gt),
         AuthToken.class);
   }
 
@@ -223,7 +223,7 @@ public class AuthToken extends Bean {
    * @return Beans of the Token
    */
   public static Beans<AuthToken> load(long uid) {
-    return Helper.load(W.create("uid", uid).and("expired", System.currentTimeMillis(), W.OP_GT), 0, 100,
+    return Helper.load(W.create("uid", uid).and("expired", System.currentTimeMillis(), W.OP.gt), 0, 100,
         AuthToken.class);
   }
 
@@ -253,7 +253,7 @@ public class AuthToken extends Bean {
    * cleanup the expired token
    */
   public static void cleanup() {
-    Helper.delete(W.create().and("expired", System.currentTimeMillis(), W.OP_LT), AuthToken.class);
+    Helper.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lt), AuthToken.class);
   }
 
 }

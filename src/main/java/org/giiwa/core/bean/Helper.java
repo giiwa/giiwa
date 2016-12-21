@@ -283,6 +283,34 @@ public class Helper {
     }
 
     /**
+     * same as set(String name, Object v) <br>
+     * Sets the value if not exists, ignored if name exists.
+     * 
+     * @param name
+     *          the name
+     * @param v
+     *          the value object
+     * @return the V
+     */
+    public V put(String name, Object v) {
+      return set(name, v);
+    }
+
+    /**
+     * same as set(String name, Object v) <br>
+     * Sets the value if not exists, ignored if name exists.
+     * 
+     * @param name
+     *          the name
+     * @param v
+     *          the value object
+     * @return the V
+     */
+    public V append(String name, Object v) {
+      return set(name, v);
+    }
+
+    /**
      * Ignore the fields.
      *
      * @param name
@@ -297,17 +325,15 @@ public class Helper {
     }
 
     /**
-     * set the value, if exists and force, then replace it.
-     *
+     * force set the name=value whatever the name exists or not
+     * 
      * @param name
      *          the name
      * @param v
-     *          the value
-     * @param force
-     *          if true, then replace the old one
-     * @return V
+     *          the value object
+     * @return the V
      */
-    public V set(String name, Object v, boolean force) {
+    public V force(String name, Object v) {
       if (name != null && v != null) {
         m.put(name, v);
       }
@@ -503,67 +529,31 @@ public class Helper {
 
   /**
    * the {@code W} Class used to create SQL "where" conditions<br>
-   * this is for RDBS Query anly.
+   * this is for RDS and Mongo Query.
    *
    * @author joe
    */
   public final static class W {
 
-    /***
-     * "="
-     */
-    public static final int  OP_EQ   = 0;
-
-    /**
-     * "&gt;"
-     */
-    public static final int  OP_GT   = 1;
-
-    /**
-     * "&gt;="
-     */
-    public static final int  OP_GTE  = 2;
-
-    /**
-     * "&lt;"
-     */
-    public static final int  OP_LT   = 3;
-
-    /**
-     * "&lt;="
-     */
-    public static final int  OP_LTE  = 4;
-
-    /**
-     * "like"
-     */
-    public static final int  OP_LIKE = 5;
-
-    /**
-     * "!="
-     */
-    public static final int  OP_NEQ  = 7;
-
-    /**
-     * ""
-     */
-    public static final int  OP_NONE = 8;
+    public enum OP {
+      eq, gt, gte, lt, lte, like, neq, none
+    };
 
     /**
      * "and"
      */
-    private static final int AND     = 9;
+    private static final int AND   = 9;
 
     /**
      * "or"
      */
-    private static final int OR      = 10;
+    private static final int OR    = 10;
 
-    private List<W>          wlist   = new ArrayList<W>();
-    private List<Entity>     elist   = new ArrayList<Entity>();
-    private List<Entity>     order   = new ArrayList<Entity>();
+    private List<W>          wlist = new ArrayList<W>();
+    private List<Entity>     elist = new ArrayList<Entity>();
+    private List<Entity>     order = new ArrayList<Entity>();
 
-    private int              cond    = AND;
+    private int              cond  = AND;
 
     private W() {
     }
@@ -764,7 +754,7 @@ public class Helper {
      * @return W
      */
     public W and(String name, Object v) {
-      return and(name, v, W.OP_EQ);
+      return and(name, v, OP.eq);
     }
 
     /**
@@ -822,14 +812,29 @@ public class Helper {
      * @param name
      *          the name
      * @param v
-     *          the v
+     *          the value object
      * @param op
-     *          the op
-     * @return W
+     *          the operation
+     * @return the W
      */
-    public W and(String name, Object v, int op) {
+    public W and(String name, Object v, OP op) {
       elist.add(new Entity(name, v, op, AND));
       return this;
+    }
+
+    /**
+     * same as and(String name, Object v, OP op)
+     * 
+     * @param name
+     *          the name
+     * @param v
+     *          the value object
+     * @param op
+     *          the operation
+     * @return the W
+     */
+    public W append(String name, Object v, OP op) {
+      return and(name, v, op);
     }
 
     /**
@@ -842,7 +847,7 @@ public class Helper {
      * @return W
      */
     public W or(String name, Object v) {
-      return or(name, v, W.OP_EQ);
+      return or(name, v, OP.eq);
     }
 
     /**
@@ -856,7 +861,7 @@ public class Helper {
      *          the op
      * @return W
      */
-    public W or(String name, Object v, int op) {
+    public W or(String name, Object v, OP op) {
 
       elist.add(new Entity(name, v, op, OR));
 
@@ -874,7 +879,7 @@ public class Helper {
      *          the names
      * @return W
      */
-    public W copy(JSON jo, int op, String... names) {
+    public W copy(JSON jo, OP op, String... names) {
       if (jo != null && names != null && names.length > 0) {
         for (String name : names) {
           if (jo.has(name)) {
@@ -901,7 +906,7 @@ public class Helper {
      *          the names
      * @return W
      */
-    public W copy(JSON jo, int op, String[]... names) {
+    public W copy(JSON jo, OP op, String[]... names) {
       if (jo != null && names != null && names.length > 0) {
         for (String name[] : names) {
           if (name.length > 1) {
@@ -933,8 +938,23 @@ public class Helper {
      * @return W
      */
     public static W create(String name, Object v) {
+      return create(name, v, OP.eq);
+    }
+
+    /**
+     * create the W object with the parameters
+     * 
+     * @param name
+     *          the field name
+     * @param v
+     *          the value object
+     * @param op
+     *          the operation
+     * @return the W
+     */
+    public static W create(String name, Object v, OP op) {
       W w = new W();
-      w.elist.add(new Entity(name, v, OP_EQ, AND));
+      w.elist.add(new Entity(name, v, op, AND));
       return w;
     }
 
@@ -950,8 +970,8 @@ public class Helper {
     public static class Entity {
       public String name;
       public Object value;
-      public int    op;   // operation EQ, GT, ...
-      public int    cond; // condition AND, OR
+      public OP     op;   // operation EQ, GT, ...
+      private int   cond; // condition AND, OR
 
       private List<Object> args(List<Object> list) {
         if (value != null) {
@@ -959,7 +979,7 @@ public class Helper {
             for (Object o : (Object[]) value) {
               list.add(o);
             }
-          } else if (op == OP_LIKE) {
+          } else if (op == OP.like) {
             list.add("%" + value + "%");
           } else {
             list.add(value);
@@ -982,35 +1002,20 @@ public class Helper {
           sb.append(name);
         }
 
-        switch (op) {
-          case OP_EQ: {
-            sb.append("=?");
-            break;
-          }
-          case OP_GT: {
-            sb.append(">?");
-            break;
-          }
-          case OP_GTE: {
-            sb.append(">=?");
-            break;
-          }
-          case OP_LT: {
-            sb.append("<?");
-            break;
-          }
-          case OP_LTE: {
-            sb.append("<=?");
-            break;
-          }
-          case OP_LIKE: {
-            sb.append(" like ?");
-            break;
-          }
-          case OP_NEQ: {
-            sb.append(" <> ?");
-            break;
-          }
+        if (op == OP.eq) {
+          sb.append("=?");
+        } else if (op == OP.gt) {
+          sb.append(">?");
+        } else if (op == OP.gte) {
+          sb.append(">=?");
+        } else if (op == OP.lt) {
+          sb.append("<?");
+        } else if (op == OP.lte) {
+          sb.append("<=?");
+        } else if (op == OP.like) {
+          sb.append(" like ?");
+        } else if (op == OP.neq) {
+          sb.append(" <> ?");
         }
 
         return sb.toString();
@@ -1020,44 +1025,32 @@ public class Helper {
 
       public String toString() {
         if (tostring == null) {
-          StringBuilder s = new StringBuilder(name);
-          switch (op) {
-            case OP_EQ: {
-              s.append("=");
-              break;
-            }
-            case OP_GT: {
-              s.append(">");
-              break;
-            }
-            case OP_GTE: {
-              s.append(">=");
-              break;
-            }
-            case OP_LT: {
-              s.append("<");
-              break;
-            }
-            case OP_LTE: {
-              s.append("<=");
-              break;
-            }
-            case OP_NEQ: {
-              s.append("<>");
-              break;
-            }
-            case OP_LIKE: {
-              s.append(" like ");
-            }
-          }
-          s.append(value);
+          StringBuilder sb = new StringBuilder(name);
 
-          tostring = s.toString();
+          if (op == OP.eq) {
+            sb.append("=?");
+          } else if (op == OP.gt) {
+            sb.append(">?");
+          } else if (op == OP.gte) {
+            sb.append(">=?");
+          } else if (op == OP.lt) {
+            sb.append("<?");
+          } else if (op == OP.lte) {
+            sb.append("<=?");
+          } else if (op == OP.like) {
+            sb.append(" like ?");
+          } else if (op == OP.neq) {
+            sb.append(" <> ?");
+          }
+
+          sb.append(value);
+
+          tostring = sb.toString();
         }
         return tostring;
       }
 
-      private Entity(String name, Object v, int op, int cond) {
+      private Entity(String name, Object v, OP op, int cond) {
         this.name = name;
         this.op = op;
         this.cond = cond;
@@ -1075,30 +1068,24 @@ public class Helper {
      * @return the basic db object
      */
     BasicDBObject _parse(Entity e, BasicDBObject q) {
-      switch (e.op) {
-        case W.OP_EQ:
-          q.append(e.name, e.value);
-          break;
-        case W.OP_GT:
-          q.append(e.name, new BasicDBObject("$gt", e.value));
-          break;
-        case W.OP_GTE:
-          q.append(e.name, new BasicDBObject("$gte", e.value));
-          break;
-        case W.OP_LIKE:
-          Pattern p1 = Pattern.compile(e.value.toString(), Pattern.CASE_INSENSITIVE);
-          q.append(e.name, p1);
-          break;
-        case W.OP_LT:
-          q.append(e.name, new BasicDBObject("$lt", e.value));
-          break;
-        case W.OP_LTE:
-          q.append(e.name, new BasicDBObject("$lte", e.value));
-          break;
-        case W.OP_NEQ:
-          q.append(e.name, new BasicDBObject("$ne", e.value));
-          break;
+      OP op = e.op;
+      if (op == OP.eq) {
+        q.append(e.name, e.value);
+      } else if (op == OP.gt) {
+        q.append(e.name, new BasicDBObject("$gt", e.value));
+      } else if (op == OP.gte) {
+        q.append(e.name, new BasicDBObject("$gte", e.value));
+      } else if (op == OP.lt) {
+        q.append(e.name, new BasicDBObject("$lt", e.value));
+      } else if (op == OP.lte) {
+        q.append(e.name, new BasicDBObject("$lte", e.value));
+      } else if (op == OP.like) {
+        Pattern p1 = Pattern.compile(e.value.toString(), Pattern.CASE_INSENSITIVE);
+        q.append(e.name, p1);
+      } else if (op == OP.neq) {
+        q.append(e.name, new BasicDBObject("$ne", e.value));
       }
+
       return q;
     }
 
@@ -1152,7 +1139,7 @@ public class Helper {
      * @return the w
      */
     public W sort(String name, int i) {
-      order.add(new Entity(name, i, 0, 0));
+      order.add(new Entity(name, i, OP.none, AND));
       return this;
     }
 

@@ -398,7 +398,7 @@ public class Menu extends Bean {
    */
   public static void cleanup() {
     String node = Model.node();
-    Helper.delete(W.create("node", node).and("seq", 0, W.OP_LT), Menu.class);
+    Helper.delete(W.create("node", node).and("seq", 0, W.OP.lt), Menu.class);
   }
 
   public String getStyle() {

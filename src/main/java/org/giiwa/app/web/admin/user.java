@@ -210,15 +210,15 @@ public class user extends Model {
       V v = V.create().copy(j);
       v.remove("role", X.ID);
 
-      v.set("failtimes", this.getInt("failtimes"), true);
+      v.force("failtimes", this.getInt("failtimes"));
       if (!"on".equals(this.getString("locked"))) {
         /**
          * clean all the locked info
          */
         User.Lock.removed(id);
-        v.set("locked", 0, true);
+        v.force("locked", 0);
       } else {
-        v.set("locked", 1, true);
+        v.force("locked", 1);
       }
 
       User.update(id, v);
@@ -336,8 +336,8 @@ public class user extends Model {
     if (X.isEmpty(this.path) && !X.isEmpty(name)) {
       W list = W.create();
 
-      list.or("name", name, W.OP_LIKE);
-      list.or("nickname", name, W.OP_LIKE);
+      list.or("name", name, W.OP.like);
+      list.or("nickname", name, W.OP.like);
       q.and(list);
 
       this.set("name", name);
@@ -346,7 +346,7 @@ public class user extends Model {
     int s = this.getInt("s");
     int n = this.getInt("n", 10, "number.per.page");
 
-    Beans<User> bs = User.load(q.and(X.ID, 0, W.OP_GT), s, n);
+    Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt), s, n);
     this.set(bs, s, n);
 
     this.query.path("/admin/user");
@@ -362,7 +362,7 @@ public class user extends Model {
       q.and("op", jo.get("op"));
     }
     if (!X.isEmpty(jo.get("ip"))) {
-      q.and("ip", jo.getString("ip"), W.OP_LIKE);
+      q.and("ip", jo.getString("ip"), W.OP.like);
     }
     q.and("uid", jo.getLong("uid"));
     if (!X.isEmpty(jo.get("type"))) {
@@ -378,16 +378,16 @@ public class user extends Model {
     }
 
     if (!X.isEmpty(jo.getString("starttime"))) {
-      q.and("created", lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP_GTE);
+      q.and("created", lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
 
     } else {
       long today_2 = System.currentTimeMillis() - X.AYEAR * 1;
       jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
-      q.and("created", today_2, W.OP_GTE);
+      q.and("created", today_2, W.OP.gte);
     }
 
     if (!X.isEmpty(jo.getString("endtime"))) {
-      q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP_LTE);
+      q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.like);
     }
 
     String sortby = this.getString("sortby");

@@ -163,7 +163,7 @@ public class User extends Bean {
 
     String s = (String) v.value("password");
     if (s != null) {
-      v.set("password", encrypt(s), true);
+      v.force("password", encrypt(s));
     }
 
     Long id = (Long) v.value("id");
@@ -202,7 +202,7 @@ public class User extends Bean {
     log.debug("name=" + name + ", passwd=" + password);
     // System.out.println("name=" + name + ", passwd=" + password);
 
-    return Helper.load(W.create("name", name).and("password", password).and("deleted", 1, W.OP_NEQ), User.class);
+    return Helper.load(W.create("name", name).and("password", password).and("deleted", 1, W.OP.neq), User.class);
 
   }
 
@@ -218,7 +218,7 @@ public class User extends Bean {
    * @return User
    */
   public static User load(String name) {
-    return Helper.load(W.create("name", name).and("deleted", 1, W.OP_NEQ).sort(X.ID, -1), User.class);
+    return Helper.load(W.create("name", name).and("deleted", 1, W.OP.neq).sort(X.ID, -1), User.class);
 
   }
 
@@ -284,7 +284,7 @@ public class User extends Bean {
       }
     }
 
-    q.and("deleted", 1, W.OP_NEQ);
+    q.and("deleted", 1, W.OP.neq);
 
     Beans<User> us = Helper.load(q.sort("name", 1), 0, Integer.MAX_VALUE, User.class);
     return us == null ? null : us.getList();
@@ -418,7 +418,7 @@ public class User extends Bean {
    * @return Beans
    */
   public static Beans<User> load(W q, int offset, int limit) {
-    return Helper.load(q.and(X.ID, 0, W.OP_GT).sort("name", 1), offset, limit, User.class);
+    return Helper.load(q.and(X.ID, 0, W.OP.gt).sort("name", 1), offset, limit, User.class);
   }
 
   /**
@@ -451,7 +451,7 @@ public class User extends Bean {
     String passwd = (String) v.value("password");
     if (!X.isEmpty(passwd)) {
       passwd = encrypt(passwd);
-      v.set("password", passwd, true);
+      v.force("password", passwd);
     } else {
       v.remove("password");
     }
@@ -472,7 +472,7 @@ public class User extends Bean {
     String passwd = (String) v.value("password");
     if (!X.isEmpty(passwd)) {
       passwd = encrypt(passwd);
-      v.set("password", passwd, true);
+      v.force("password", passwd);
     } else {
       v.remove("password");
     }
@@ -631,7 +631,7 @@ public class User extends Bean {
      * @return the list
      */
     public static List<Lock> load(long uid, long time) {
-      Beans<Lock> bs = Helper.load(W.create("uid", uid).and("created", time, W.OP_GT).sort("created", 1), 0,
+      Beans<Lock> bs = Helper.load(W.create("uid", uid).and("created", time, W.OP.gt).sort("created", 1), 0,
           Integer.MAX_VALUE, Lock.class);
       return bs == null ? null : bs.getList();
     }
@@ -649,7 +649,7 @@ public class User extends Bean {
      */
     public static List<Lock> loadBySid(long uid, long time, String sid) {
       Beans<Lock> bs = Helper.load(
-          W.create("uid", uid).and("created", time, W.OP_GT).and("sid", sid).sort("created", 1), 0, Integer.MAX_VALUE,
+          W.create("uid", uid).and("created", time, W.OP.gt).and("sid", sid).sort("created", 1), 0, Integer.MAX_VALUE,
           Lock.class);
       return bs == null ? null : bs.getList();
     }
@@ -667,7 +667,7 @@ public class User extends Bean {
      */
     public static List<Lock> loadByHost(long uid, long time, String host) {
       Beans<Lock> bs = Helper.load(
-          W.create("uid", uid).and("created", time, W.OP_GT).and("host", host).sort("created", 1), 0, Integer.MAX_VALUE,
+          W.create("uid", uid).and("created", time, W.OP.gt).and("host", host).sort("created", 1), 0, Integer.MAX_VALUE,
           Lock.class);
       return bs == null ? null : bs.getList();
     }

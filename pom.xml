@@ -4,7 +4,7 @@
 	<groupId>org.giiwa</groupId>
 	<artifactId>giiwa</artifactId>
 	<packaging>war</packaging>
-	<version>1.2</version>
+	<version>1.3</version>
 	<name>giiwa</name>
 	<url>http://giiwa.org</url>
 	<description>Java web framework</description>
