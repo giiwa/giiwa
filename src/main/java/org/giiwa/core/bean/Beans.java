@@ -14,11 +14,11 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.Serializable;
 import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.cache.DefaultCachable;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -28,7 +28,7 @@ import org.giiwa.core.cache.DefaultCachable;
  * @param <T>
  *          the generic type
  */
-public final class Beans<T extends Bean> extends DefaultCachable {
+public final class Beans<T extends Bean> implements Serializable {
 
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 2L;

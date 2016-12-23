@@ -36,117 +36,117 @@ import redis.clients.jedis.ShardedJedisPool;
  */
 class RedisCache implements ICacheSystem {
 
-	/** The log. */
-	static Log log = LogFactory.getLog(RedisCache.class);
+  /** The log. */
+  static Log               log = LogFactory.getLog(RedisCache.class);
 
-	private ShardedJedis jedis;
-	private ShardedJedisPool shardedJedisPool;
+  private ShardedJedis     jedis;
+  private ShardedJedisPool shardedJedisPool;
 
-	/**
+  /**
    * Inits the.
    *
    * @param conf
    *          the conf
    * @return the i cache system
    */
-	public static ICacheSystem create(Configuration conf) {
+  public static ICacheSystem create(Configuration conf) {
 
-		String server = conf.getString("cache.url").substring(Cache.REDIS.length());
-		String[] ss = server.split(":");
-		String host = ss[0];
-		int port = 6379;
-		if (ss.length > 1) {
-			port = X.toInt(ss[1], 0);
-		}
-		RedisCache r = new RedisCache();
+    String server = conf.getString("cache.url").substring(Cache.REDIS.length());
+    String[] ss = server.split(":");
+    String host = ss[0];
+    int port = 6379;
+    if (ss.length > 1) {
+      port = X.toInt(ss[1], 0);
+    }
+    RedisCache r = new RedisCache();
 
-		JedisPoolConfig config = new JedisPoolConfig();
-		config.setMaxTotal(20);
-		config.setMaxIdle(5);
-		config.setMaxWaitMillis(1000l);
-		config.setTestOnBorrow(false);
+    JedisPoolConfig config = new JedisPoolConfig();
+    config.setMaxTotal(20);
+    config.setMaxIdle(5);
+    config.setMaxWaitMillis(1000l);
+    config.setTestOnBorrow(false);
 
-		List<JedisShardInfo> shards = new ArrayList<JedisShardInfo>();
-		shards.add(new JedisShardInfo(host, port, "master"));
+    List<JedisShardInfo> shards = new ArrayList<JedisShardInfo>();
+    shards.add(new JedisShardInfo(host, port, "master"));
 
-		r.shardedJedisPool = new ShardedJedisPool(config, shards);
-		r.jedis = r.shardedJedisPool.getResource();
+    r.shardedJedisPool = new ShardedJedisPool(config, shards);
+    r.jedis = r.shardedJedisPool.getResource();
 
-		return r;
-	}
+    return r;
+  }
 
-	/**
-	 * get object.
-	 *
-	 * @param id
-	 *            the id
-	 * @return the object
-	 */
-	public synchronized Cachable get(String id) {
-		byte[] bb = jedis.get(id.getBytes());
-		if (bb != null) {
-			return unserialize(bb);
-		}
-		return null;
-	}
+  /**
+   * get object.
+   *
+   * @param id
+   *          the id
+   * @return the object
+   */
+  public synchronized Object get(String id) {
+    byte[] bb = jedis.get(id.getBytes());
+    if (bb != null) {
+      return unserialize(bb);
+    }
+    return null;
+  }
 
-	/**
-	 * Sets the.
-	 *
-	 * @param id
-	 *            the id
-	 * @param o
-	 *            the o
-	 * @return true, if successful
-	 */
-	public synchronized boolean set(String id, Cachable o) {
-		try {
-			if (o == null) {
-				return delete(id);
-			} else {
-				return jedis.set(id.getBytes(), serialize(o)) != null;
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-		return false;
-	}
+  /**
+   * Sets the.
+   *
+   * @param id
+   *          the id
+   * @param o
+   *          the o
+   * @return true, if successful
+   */
+  public synchronized boolean set(String id, Object o) {
+    try {
+      if (o == null) {
+        return delete(id);
+      } else {
+        return jedis.set(id.getBytes(), serialize(o)) != null;
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return false;
+  }
 
-	/**
-	 * Delete.
-	 *
-	 * @param id
-	 *            the id
-	 * @return true, if successful
-	 */
-	public synchronized boolean delete(String id) {
-		return jedis.del(id.getBytes()) > 0;
-	}
+  /**
+   * Delete.
+   *
+   * @param id
+   *          the id
+   * @return true, if successful
+   */
+  public synchronized boolean delete(String id) {
+    return jedis.del(id.getBytes()) > 0;
+  }
 
-	private static byte[] serialize(Cachable object) {
-		ObjectOutputStream oos = null;
-		ByteArrayOutputStream baos = null;
-		try {
-			baos = new ByteArrayOutputStream();
-			oos = new ObjectOutputStream(baos);
-			oos.writeObject(object);
-			byte[] bytes = baos.toByteArray();
-			return bytes;
-		} catch (Exception e) {
+  private static byte[] serialize(Object object) {
+    ObjectOutputStream oos = null;
+    ByteArrayOutputStream baos = null;
+    try {
+      baos = new ByteArrayOutputStream();
+      oos = new ObjectOutputStream(baos);
+      oos.writeObject(object);
+      byte[] bytes = baos.toByteArray();
+      return bytes;
+    } catch (Exception e) {
 
-		}
-		return null;
-	}
+    }
+    return null;
+  }
 
-	private static Cachable unserialize(byte[] bytes) {
-		ByteArrayInputStream bais = null;
-		try {
-			bais = new ByteArrayInputStream(bytes);
-			ObjectInputStream ois = new ObjectInputStream(bais);
-			return (Cachable) ois.readObject();
-		} catch (Exception e) {
+  private static Object unserialize(byte[] bytes) {
+    ByteArrayInputStream bais = null;
+    try {
+      bais = new ByteArrayInputStream(bytes);
+      ObjectInputStream ois = new ObjectInputStream(bais);
+      return ois.readObject();
+    } catch (Exception e) {
 
-		}
-		return null;
-	}
+    }
+    return null;
+  }
 }

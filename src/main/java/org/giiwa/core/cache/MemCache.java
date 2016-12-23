@@ -26,82 +26,82 @@ import com.whalin.MemCached.SockIOPool;
  */
 class MemCache implements ICacheSystem {
 
-	/** The log. */
-	static Log log = LogFactory.getLog(MemCache.class);
+  /** The log. */
+  static Log              log = LogFactory.getLog(MemCache.class);
 
-	private MemCachedClient memCachedClient;
+  private MemCachedClient memCachedClient;
 
-	/**
+  /**
    * Inits the.
    *
    * @param conf
    *          the conf
    * @return the i cache system
    */
-	public static ICacheSystem create(Configuration conf) {
-		String server = conf.getString("cache.url");
+  public static ICacheSystem create(Configuration conf) {
+    String server = conf.getString("cache.url");
 
-		MemCache f = new MemCache();
+    MemCache f = new MemCache();
 
-		SockIOPool pool = SockIOPool.getInstance();
-		pool.setServers(new String[] { server.substring(Cache.MEMCACHED.length()) });
-		pool.setFailover(true);
-		pool.setInitConn(10);
-		pool.setMinConn(5);
-		pool.setMaxConn(1000);
-		pool.setMaintSleep(30);
-		pool.setNagle(false);
-		pool.setSocketTO(3000);
-		pool.setAliveCheck(true);
-		pool.initialize();
+    SockIOPool pool = SockIOPool.getInstance();
+    pool.setServers(new String[] { server.substring(Cache.MEMCACHED.length()) });
+    pool.setFailover(true);
+    pool.setInitConn(10);
+    pool.setMinConn(5);
+    pool.setMaxConn(1000);
+    pool.setMaintSleep(30);
+    pool.setNagle(false);
+    pool.setSocketTO(3000);
+    pool.setAliveCheck(true);
+    pool.initialize();
 
-		f.memCachedClient = new MemCachedClient();
+    f.memCachedClient = new MemCachedClient();
 
-		return f;
-	}
+    return f;
+  }
 
-	/**
-	 * get object.
-	 *
-	 * @param id
-	 *            the id
-	 * @return the object
-	 */
-	public synchronized Cachable get(String id) {
-		return (Cachable) memCachedClient.get(id);
-	}
+  /**
+   * get object.
+   *
+   * @param id
+   *          the id
+   * @return the object
+   */
+  public synchronized Object get(String id) {
+    return memCachedClient.get(id);
+  }
 
-	/**
-	 * Sets the.
-	 *
-	 * @param id
-	 *            the id
-	 * @param o
-	 *            the o
-	 * @return true, if successful
-	 */
-	public synchronized boolean set(String id, Cachable o) {
-		try {
-			if (o == null) {
-				return delete(id);
-			} else {
-				return memCachedClient.set(id, o);
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-		return false;
-	}
+  /**
+   * Sets the.
+   *
+   * @param id
+   *          the id
+   * @param o
+   *          the o
+   * @return true, if successful
+   */
+  public synchronized boolean set(String id, Object o) {
+    try {
+      if (o == null) {
+        return delete(id);
+      } else {
+        return memCachedClient.set(id, o);
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return false;
+  }
 
-	/**
-	 * Delete.
-	 *
-	 * @param id
-	 *            the id
-	 * @return true, if successful
-	 */
-	public synchronized boolean delete(String id) {
-		return memCachedClient.delete(id);
-	}
+  /**
+   * Delete.
+   *
+   * @param id
+   *          the id
+   * @return true, if successful
+   */
+  public synchronized boolean delete(String id) {
+    return memCachedClient.delete(id);
+  }
 
 }

@@ -69,7 +69,7 @@ public final class Global extends Bean {
     }
 
     Global c = Cache.get("global/" + name);
-    if (c == null) {
+    if (c == null || c.expired()) {
       c = Helper.load(W.create(X.ID, name), Global.class);
       if (c != null) {
         /**
@@ -103,7 +103,7 @@ public final class Global extends Bean {
     }
 
     Global c = Cache.get("global/" + name);
-    if (c == null) {
+    if (c == null || c.expired()) {
       c = Helper.load(W.create(X.ID, name), Global.class);
       if (c != null) {
         /**
@@ -137,7 +137,7 @@ public final class Global extends Bean {
     }
 
     Global c = Cache.get("global/" + name);
-    if (c == null) {
+    if (c == null || c.expired()) {
       c = Helper.load(W.create(X.ID, name), Global.class);
       if (c != null) {
         /**

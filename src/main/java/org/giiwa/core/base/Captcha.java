@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -35,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
-import org.giiwa.core.cache.DefaultCachable;
 
 public class Captcha {
 
@@ -101,7 +101,7 @@ public class Captcha {
   public static Result verify(String sid, String code) {
     String id = "//captcha/" + sid;
     Code c = Cache.get(id);
-    if (c == null) {
+    if (c == null || c.expired()) {
       log.warn("no code in cache, sid=" + sid);
       return Result.badcode;
     } else if (!X.isSame(code, c.code)) {
@@ -279,7 +279,7 @@ public class Captcha {
     }
   }
 
-  public static class Code extends DefaultCachable {
+  public static class Code implements Serializable {
 
     /**
      * 
@@ -294,6 +294,10 @@ public class Captcha {
       c.code = code;
       c.expired = expired;
       return c;
+    }
+
+    public boolean expired() {
+      return expired > 0 && System.currentTimeMillis() > expired;
     }
   }
 }

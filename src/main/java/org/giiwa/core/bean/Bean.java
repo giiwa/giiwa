@@ -14,6 +14,7 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -27,7 +28,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.giiwa.core.cache.DefaultCachable;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -36,13 +36,23 @@ import org.giiwa.core.json.JSON;
  * almost includes all methods that need for database <br>
  * 
  */
-public abstract class Bean extends DefaultCachable implements Map<String, Object> {
+public abstract class Bean implements Serializable, Map<String, Object> {
 
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 3L;
 
   /** The log utility */
   protected static Log      log              = LogFactory.getLog(Bean.class);
+
+  private long              expired          = -1;
+
+  public void setExpired(long expired) {
+    this.expired = expired;
+  }
+
+  public boolean expired() {
+    return expired > 0 && System.currentTimeMillis() > expired;
+  }
 
   /**
    * get the created timestamp of the data

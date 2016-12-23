@@ -16,25 +16,25 @@ package org.giiwa.core.cache;
 
 public interface ICacheSystem {
 
-	/**
+  /**
    * Gets the.
    *
    * @param id
    *          the id
-   * @return the cachable
+   * @return the object
    */
-	Cachable get(String id);
+  Object get(String id);
 
-	/**
+  /**
    * Delete.
    *
    * @param id
    *          the id
    * @return true, if successful
    */
-	boolean delete(String id);
+  boolean delete(String id);
 
-	/**
+  /**
    * Sets the.
    *
    * @param id
@@ -43,6 +43,6 @@ public interface ICacheSystem {
    *          the data
    * @return true, if successful
    */
-	boolean set(String id, Cachable data);
+  boolean set(String id, Object data);
 
 }

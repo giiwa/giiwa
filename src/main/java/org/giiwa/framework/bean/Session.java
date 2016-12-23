@@ -14,6 +14,7 @@
 */
 package org.giiwa.framework.bean;
 
+import java.io.Serializable;
 import java.util.*;
 
 import org.apache.commons.logging.*;
@@ -27,7 +28,7 @@ import org.giiwa.core.conf.Global;
  * @author yjiang
  * 
  */
-public class Session extends DefaultCachable {
+public class Session implements Serializable {
 
   /**
    * 
@@ -39,6 +40,8 @@ public class Session extends DefaultCachable {
   String                    sid;
 
   Map<String, Object>       a                = new TreeMap<String, Object>();
+
+  long                      expired          = -1;
 
   /*
    * (non-Javadoc)
@@ -58,7 +61,7 @@ public class Session extends DefaultCachable {
    */
   public static boolean exists(String sid) {
     Session o = Cache.get("session/" + sid);
-    return o != null;
+    return o != null && !o.expired();
   }
 
   /**
@@ -82,7 +85,7 @@ public class Session extends DefaultCachable {
 
     Session o = (Session) Cache.get("session/" + sid);
 
-    if (o == null) {
+    if (o == null || o.expired()) {
       o = new Session();
 
       /**
@@ -93,6 +96,14 @@ public class Session extends DefaultCachable {
     }
 
     return o;
+  }
+
+  /**
+   * 
+   * @return boolean
+   */
+  public boolean expired() {
+    return expired > 0 && System.currentTimeMillis() > expired;
   }
 
   /**
@@ -142,7 +153,7 @@ public class Session extends DefaultCachable {
    */
   public Session store(long expired) {
 
-    this.setExpired(expired);
+    this.expired = expired;
 
     if (!Cache.set("session/" + sid, this)) {
       log.error("set session failed !", new Exception("store session failed"));

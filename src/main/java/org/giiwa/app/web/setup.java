@@ -25,7 +25,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
-import org.giiwa.core.cache.DefaultCachable;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
@@ -232,10 +231,11 @@ public class setup extends Model {
           conf.setProperty("cache.group", group);
 
           Cache.init(conf);
-          DefaultCachable v1 = new DefaultCachable();
-          Cache.set("test", v1);
-          DefaultCachable v2 = Cache.get("test");
-          if (v2 != null && v1.age() == v2.age()) {
+
+          String s1 = "1";
+          Cache.set("test", s1);
+          String s2 = Cache.get("test");
+          if (X.isSame(s1, s2)) {
             jo.put(X.STATE, 200);
           } else {
             jo.put(X.STATE, 201);

@@ -75,29 +75,18 @@ public final class Cache {
    *          the class
    * @param id
    *          the id of object in cache system
-   * @return cachable if the object not presented or expired, will return null
+   * @return Object if the object not presented or expired, will return null
    */
-  @SuppressWarnings({ "deprecation", "unchecked" })
+  @SuppressWarnings({ "unchecked" })
   public static <T> T get(String id) {
 
     try {
 
       id = GROUP + id;
 
-      Cachable r = null;
+      Object r = null;
       if (cacheSystem != null) {
         r = cacheSystem.get(id);
-      }
-      if (r != null) {
-        if (r.expired()) {
-          if (cacheSystem != null) {
-            cacheSystem.delete(id);
-          }
-
-          log.debug("the object was expired, id=" + id + ", age=" + r.age() + "ms");
-
-          return null;
-        }
       }
 
       return (T) r;
@@ -135,7 +124,7 @@ public final class Cache {
    *          the object
    * @return true, if successful
    */
-  public static boolean set(String id, Cachable data) {
+  public static boolean set(String id, Object data) {
 
     id = GROUP + id;
 

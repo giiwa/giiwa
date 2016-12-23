@@ -186,7 +186,7 @@ public class Role extends Bean {
   private static Role load(long rid) {
     Role r = Cache.get("role://" + rid);
 
-    if (r == null) {
+    if (r == null || r.expired()) {
       r = Helper.load(rid, Role.class);
 
       if (r != null) {
