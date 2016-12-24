@@ -50,7 +50,7 @@ public class Helper {
 
   private static Monitor monitor = null;
 
-  public static enum DBType {
+  protected static enum DBType {
     MONGO, RDS, NONE;
   };
 
@@ -58,6 +58,8 @@ public class Helper {
    * the primary database when there are multiple databases
    */
   public static DBType           primary = DBType.MONGO;
+
+  protected static final String  DEFAULT = "default";
 
   /** The conf. */
   protected static Configuration conf;
@@ -116,6 +118,10 @@ public class Helper {
    * @return the number was deleted
    */
   public static int delete(W q, Class<? extends Bean> t) {
+    return delete(q, t, DEFAULT);
+  }
+
+  public static int delete(W q, Class<? extends Bean> t, String db) {
     String table = getTable(t);
 
     if (table != null) {
@@ -125,10 +131,10 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return (int) MongoHelper.delete(table, q);
+        return (int) MongoHelper.delete(table, q, db);
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.delete(table, q);
+        return RDSHelper.delete(table, q, db);
       } else {
 
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -153,34 +159,6 @@ public class Helper {
   }
 
   /**
-   * test the data is exists by the query.
-   *
-   * @param table
-   *          the table name
-   * @param q
-   *          the query
-   * @return true: exists, false: not exists
-   * @throws SQLException
-   *           throw Exception if occur error
-   */
-  public static boolean exists(String table, W q) throws SQLException {
-    if (table != null) {
-      if (monitor != null) {
-        monitor.query(table, q);
-      }
-
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.exists(table, q);
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return RDSHelper.exists(table, q);
-      }
-    }
-    throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
-  }
-
-  /**
    * test exists.
    *
    * @param q
@@ -193,9 +171,26 @@ public class Helper {
    *           configured
    */
   public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
+    return exists(q, t, DEFAULT);
+  }
+
+  public static boolean exists(W q, Class<? extends Bean> t, String db) throws SQLException {
     String table = getTable(t);
 
-    return exists(table, q);
+    if (table != null) {
+      if (monitor != null) {
+        monitor.query(table, q);
+      }
+
+      if (primary == DBType.MONGO) {
+        // insert into mongo
+        return MongoHelper.exists(table, q, db);
+      } else if (primary == DBType.RDS) {
+        // insert into RDS
+        return RDSHelper.exists(table, q);
+      }
+    }
+    throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
   }
 
   /**
@@ -1185,8 +1180,12 @@ public class Helper {
    * @return the Bean
    */
   public static <T extends Bean> T load(W q, Class<T> t) {
+    return load(q, t, DEFAULT);
+  }
+
+  public static <T extends Bean> T load(W q, Class<T> t, String db) {
     String table = getTable(t);
-    return load(table, q, t);
+    return load(table, q, t, db);
   }
 
   /**
@@ -1203,6 +1202,10 @@ public class Helper {
    * @return the bean
    */
   public static <T extends Bean> T load(String table, W q, Class<T> t) {
+    return load(table, q, t, DEFAULT);
+  }
+
+  public static <T extends Bean> T load(String table, W q, Class<T> t, String db) {
 
     if (table != null) {
       if (monitor != null) {
@@ -1211,7 +1214,7 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.load(table, q, t);
+        return MongoHelper.load(table, q, t, db);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
@@ -1235,26 +1238,17 @@ public class Helper {
    * @return the number of inserted, 0: failed
    */
   public static int insert(V values, Class<? extends Bean> t) {
-    String table = getTable(t);
-    return insert(table, values);
+    return insert(values, t, DEFAULT);
   }
 
-  /**
-   * insert the values into the "table".
-   *
-   * @param table
-   *          the table name
-   * @param values
-   *          the values to insert
-   * @return the number of inserted, 0: failed
-   */
-  public static int insert(String table, V values) {
+  public static int insert(V values, Class<? extends Bean> t, String db) {
+    String table = getTable(t);
 
     if (table != null) {
       values.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.insertCollection(table, values);
+        return MongoHelper.insertCollection(table, values, db);
       } else if (primary == DBType.RDS) {
 
         // insert into RDS
@@ -1265,6 +1259,7 @@ public class Helper {
     }
 
     return 0;
+
   }
 
   /**
@@ -1294,8 +1289,25 @@ public class Helper {
    * @return the number of updated
    */
   public static int update(W q, V values, Class<? extends Bean> t) {
+    return update(q, values, t, DEFAULT);
+  }
+
+  /**
+   * update the values by the Q for the Class of Bean in the "db"
+   * 
+   * @param q
+   *          the query
+   * @param values
+   *          the values
+   * @param t
+   *          the Class of Bean
+   * @param db
+   *          the database pool name
+   * @return the number of updated
+   */
+  public static int update(W q, V values, Class<? extends Bean> t, String db) {
     String table = getTable(t);
-    return update(table, q, values);
+    return update(table, q, values, db);
   }
 
   /**
@@ -1310,6 +1322,23 @@ public class Helper {
    * @return the number of updated
    */
   public static int update(String table, W q, V values) {
+    return update(table, q, values, DEFAULT);
+  }
+
+  /**
+   * update the table by the query with the values
+   * 
+   * @param table
+   *          the table
+   * @param q
+   *          the query
+   * @param values
+   *          the values
+   * @param db
+   *          the database pool
+   * @return the number of updated
+   */
+  public static int update(String table, W q, V values, String db) {
 
     if (table != null) {
 
@@ -1321,7 +1350,7 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return (int) MongoHelper.updateCollection(table, q, values);
+        return (int) MongoHelper.updateCollection(table, q, values, db);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
@@ -1363,19 +1392,25 @@ public class Helper {
    * @return Beans of the T, the "total=-1" always
    */
   public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) {
+    return load(table, q, s, n, t, DEFAULT);
+  }
+
+  public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db) {
+
     if (monitor != null) {
       monitor.query(table, q);
     }
 
     if (primary == DBType.MONGO) {
       // insert into mongo
-      return MongoHelper.load(table, q.query(), q.order(), s, n, t);
+      return MongoHelper.load(table, q.query(), q.order(), s, n, t, db);
     } else if (primary == DBType.RDS) {
       // insert into RDS
       return RDSHelper.load(table, q, s, n, t);
     }
 
     return null;
+
   }
 
   /**
@@ -1425,6 +1460,21 @@ public class Helper {
    * @return the long of data number
    */
   public static long count(W q, Class<? extends Bean> t) {
+    return count(q, t, DEFAULT);
+  }
+
+  /**
+   * count the items in the db
+   * 
+   * @param q
+   *          the query
+   * @param t
+   *          the Class of Bean
+   * @param db
+   *          the name of db pool
+   * @return the number
+   */
+  public static long count(W q, Class<? extends Bean> t, String db) {
     String table = getTable(t);
 
     if (table != null) {
@@ -1462,8 +1512,12 @@ public class Helper {
    *          the Class of T
    * @return the List of objects
    */
-  @SuppressWarnings("unchecked")
   public static <T> List<T> distinct(String name, W q, Class<? extends Bean> b, Class<T> t) {
+    return distinct(name, q, b, t, DEFAULT);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> List<T> distinct(String name, W q, Class<? extends Bean> b, Class<T> t, String db) {
     String table = getTable(b);
 
     if (table != null) {
@@ -1473,7 +1527,7 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.distinct(table, name, q, t);
+        return MongoHelper.distinct(table, name, q, t, db);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS

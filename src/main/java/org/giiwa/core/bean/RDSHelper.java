@@ -185,20 +185,6 @@ public class RDSHelper extends Helper {
     }
   }
 
-  public static int delete(W q, Class<? extends Bean> t) {
-    /**
-     * get the require annotation onGet
-     */
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
-    }
-
-    return delete(mapping.name(), q);
-  }
-
   /**
    * Delete the data in table.
    * 
@@ -208,7 +194,7 @@ public class RDSHelper extends Helper {
    *          the query object
    * @return int
    */
-  public static int delete(String table, W q) {
+  public static int delete(String table, W q, String db) {
 
     /**
      * update it in database

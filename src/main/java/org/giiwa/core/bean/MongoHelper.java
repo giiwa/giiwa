@@ -22,7 +22,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -74,11 +73,11 @@ public class MongoHelper extends Helper {
    *          the query
    * @return the long
    */
-  public static long delete(String collection, W q) {
+  public static long delete(String collection, W q, String db) {
     try {
-      MongoCollection<Document> db = MongoHelper.getCollection(collection);
+      MongoCollection<Document> db1 = MongoHelper.getCollection(collection);
       if (db != null) {
-        DeleteResult r = db.deleteMany(q.query());
+        DeleteResult r = db1.deleteMany(q.query());
         // db.remove(query);
         return r.getDeletedCount();
       }
@@ -90,22 +89,13 @@ public class MongoHelper extends Helper {
     return -1;
   }
 
-  public static int delete(W q, Class<? extends Bean> t) {
-
-    String collection = getCollection(t);
-    if (collection != null) {
-      delete(collection, q);
-    }
-    return -1;
-  }
-
   /**
    * get Mongo DB connection
    * 
    * @return DB
    */
   public static MongoDatabase getDB() {
-    return getDB("prod");
+    return getDB(DEFAULT);
   }
 
   /**
@@ -290,13 +280,13 @@ public class MongoHelper extends Helper {
    *          the Bean
    * @return the Bean
    */
-  public static <T extends Bean> T load(String collection, Bson query, Bson order, T b) {
+  public static <T extends Bean> T load(String collection, Bson query, Bson order, T b, String db) {
     TimeStamp t = TimeStamp.create();
     try {
-      MongoCollection<Document> db = MongoHelper.getCollection(collection);
-      if (db != null) {
+      MongoCollection<Document> db1 = MongoHelper.getCollection(collection);
+      if (db1 != null) {
 
-        FindIterable<Document> d = db.find(query);
+        FindIterable<Document> d = db1.find(query);
         if (order == null) {
           d.sort(order);
         }
@@ -332,32 +322,6 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * load the data list.
-   * 
-   * @param <T>
-   *          the generic Bean Class
-   * @param query
-   *          the query
-   * @param orderby
-   *          the order
-   * @param offset
-   *          the offset
-   * @param limit
-   *          the limit
-   * @param clazz
-   *          the Bean class
-   * @return Beans
-   */
-  public static <T extends Bean> Beans<T> load(Bson query, Bson orderby, int offset, int limit, Class<T> clazz) {
-    String collection = getCollection(clazz);
-    if (collection != null) {
-      return load(collection, query, orderby, offset, limit, clazz);
-    }
-    return null;
-
-  }
-
-  /**
    * get the data from the collection.
    * 
    * @param <T>
@@ -373,7 +337,7 @@ public class MongoHelper extends Helper {
   public static <T extends Bean> T load(Bson query, Bson order, T obj) {
     String collection = getCollection(obj.getClass());
     if (collection != null) {
-      return load(collection, query, order, obj);
+      return load(collection, query, order, obj, DEFAULT);
     }
     return null;
 
@@ -399,14 +363,15 @@ public class MongoHelper extends Helper {
    * @return Beans
    */
   public static <T extends Bean> Beans<T> load(String collection, Bson query, Bson orderBy, int offset, int limit,
-      final Class<T> clazz) {
+      final Class<T> clazz, String db) {
+
     TimeStamp t = TimeStamp.create();
-    MongoCollection<Document> db = null;
+    MongoCollection<Document> db1 = null;
     FindIterable<Document> cur = null;
     try {
-      db = MongoHelper.getCollection(collection);
-      if (db != null) {
-        cur = db.find(query);
+      db1 = MongoHelper.getCollection(collection);
+      if (db1 != null) {
+        cur = db1.find(query);
 
         if (orderBy != null) {
           cur.sort(orderBy);
@@ -457,11 +422,11 @@ public class MongoHelper extends Helper {
 
       // sort
       if (query != null && db != null) {
-        db.createIndex(query);
+        db1.createIndex(query);
       }
 
       if (orderBy != null && db != null) {
-        db.createIndex(orderBy);
+        db1.createIndex(orderBy);
       }
 
     }
@@ -546,10 +511,10 @@ public class MongoHelper extends Helper {
     return null;
   }
 
-  public static <T extends Bean> T load(String collection, W q, Class<T> t) {
+  public static <T extends Bean> T load(String collection, W q, Class<T> t, String db) {
     try {
       T obj = t.newInstance();
-      return load(collection, q.query(), q.order(), obj);
+      return load(collection, q.query(), q.order(), obj, db);
     } catch (Exception e) {
       if (log.isErrorEnabled())
         log.error(e.getMessage(), e);
@@ -605,84 +570,6 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * insert into the collection according to the Mapping(collection) declaration
-   * 
-   * @param v
-   *          the values
-   * @param t
-   *          the Class of Bean
-   * @return int how many data impacted
-   */
-  final public static int insertCollection(V v, Class<? extends Bean> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
-    }
-
-    if (!X.isEmpty(mapping.name())) {
-      return insertCollection(mapping.name(), v);
-    }
-    return -1;
-  }
-
-  /**
-   * update the collection according the Mapping(collection) declaration
-   * 
-   * @param id
-   *          the "id" of the data
-   * @param v
-   *          the values
-   * @param t
-   *          the Class of Bean
-   * @return int how many data impacted
-   */
-  final public static long updateCollection(Object id, V v, Class<? extends Bean> t) {
-    return updateCollection(id, v, t, false);
-  }
-
-  /**
-   * update the mongo data
-   * 
-   * @param id
-   *          the "id"
-   * @param v
-   *          the values
-   * @param t
-   *          the Class of Bean
-   * @param adding
-   *          if true and not exists, then insert one by values
-   * @return int how many data impacted
-   */
-  final public static long updateCollection(Object id, V v, Class<? extends Bean> t, boolean adding) {
-    String collection = getCollection(t);
-    if (collection != null && !"none".equals(collection)) {
-      return updateCollection(collection, id, v, adding);
-    }
-    return -1;
-  }
-
-  /**
-   * update the collection by query.
-   * 
-   * @param query
-   *          the query
-   * @param v
-   *          the values
-   * @param t
-   *          the Bean Class
-   * @return int of updated
-   */
-  final public static long updateCollection(Bson query, V v, Class<? extends Bean> t) {
-    String collection = getCollection(t);
-    if (collection != null && !"none".equals(collection)) {
-      return updateCollection(collection, query, v);
-    }
-    return -1;
-  }
-
-  /**
    * insert into the collection
    * 
    * @param collection
@@ -691,7 +578,7 @@ public class MongoHelper extends Helper {
    *          the values
    * @return int
    */
-  final public static int insertCollection(String collection, V v) {
+  final public static int insertCollection(String collection, V v, String db) {
 
     MongoCollection<Document> c = getCollection(collection);
     if (c != null) {
@@ -718,40 +605,6 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * update the data in collection
-   * 
-   * @param collection
-   *          the collection name
-   * @param id
-   *          the object id
-   * @param v
-   *          the values
-   * @return int
-   */
-  final public static long updateCollection(String collection, Object id, V v) {
-    return updateCollection(collection, new BasicDBObject(X.ID, id), v);
-  }
-
-  /**
-   * update the mongo data
-   * 
-   * @param collection
-   *          the name of collection
-   * @param id
-   *          the "id"
-   * @param v
-   *          the values
-   * @param adding
-   *          if true and not exists, then insert a new data
-   * @return int
-   */
-  final public static long updateCollection(String collection, Object id, V v, boolean adding) {
-
-    BasicDBObject q = new BasicDBObject().append(X.ID, id);
-    return updateCollection(collection, q, v);
-  }
-
-  /**
    * update mongo collection.
    * 
    * @param collection
@@ -762,7 +615,7 @@ public class MongoHelper extends Helper {
    *          the value
    * @return int of updated
    */
-  final public static long updateCollection(String collection, W q, V v) {
+  final public static long updateCollection(String collection, W q, V v, String db) {
 
     Document d = new Document();
 
@@ -792,25 +645,6 @@ public class MongoHelper extends Helper {
   }
 
   /**
-   * test whether the query is exists in
-   * 
-   * @param query
-   *          the query
-   * @param t
-   *          the Class of Bean
-   * @return boolean, return true if exists, otherwise return false
-   * @throws Exception
-   *           throw exception when occur database error
-   */
-  public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
-    String collection = getCollection(t);
-    if (collection != null) {
-      return exists(collection, q);
-    }
-    throw new SQLException("the Class<" + t.getName() + "> doest annotated by @DBMapping()!");
-  }
-
-  /**
    * test the data exists ?
    * 
    * @param collection
@@ -821,7 +655,7 @@ public class MongoHelper extends Helper {
    * @throws SQLException
    *           throw Exception if occur error
    */
-  public static boolean exists(String collection, W q) throws SQLException {
+  public static boolean exists(String collection, W q, String db) throws SQLException {
     TimeStamp t1 = TimeStamp.create();
     boolean b = false;
     try {
@@ -901,7 +735,7 @@ public class MongoHelper extends Helper {
    *          the class
    * @return List of the value
    */
-  public static <T> List<T> distinct(String collection, String key, W q, Class<T> t) {
+  public static <T> List<T> distinct(String collection, String key, W q, Class<T> t, String db) {
 
     TimeStamp t1 = TimeStamp.create();
     try {
@@ -1062,42 +896,10 @@ public class MongoHelper extends Helper {
       V v = V.create().copy(jo);
       String tablename = jo.getString("_table");
       v.remove("_table");
-      insertCollection(tablename, v);
+      insertCollection(tablename, v, DEFAULT);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
   }
 
-  /**
-   * batch insert data
-   * 
-   * @param table
-   *          the collection name
-   * @param values
-   *          the collection of values
-   * @return the number of inserted, base on the version of mongo
-   */
-  public static int insertCollection(String table, Collection<V> values) {
-    MongoCollection<Document> c = getCollection(table);
-    if (c != null) {
-      List<Document> list = new ArrayList<Document>(values.size());
-      for (V v : values) {
-        list.add(new Document(v.m));
-      }
-
-      try {
-
-        c.insertMany(list);
-
-        if (log.isDebugEnabled())
-          log.debug("inserted collection=" + table + ", list=" + list);
-        return 1;
-      } catch (Exception e) {
-        if (log.isErrorEnabled())
-          log.error(e.getMessage(), e);
-      }
-    }
-    return 0;
-
-  }
 }
