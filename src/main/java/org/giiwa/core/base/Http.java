@@ -152,41 +152,16 @@ public final class Http {
    *          the url
    * @param timeout
    *          the timeout milliseconds
-   * @return the HttpResponse
+   * @return the HttpURLConnection
    */
-  public static HttpResponse connect(String url, long timeout) {
+  public static HttpURLConnection connect(String url, long timeout) throws Exception {
 
-    log.debug("url=\"" + url + "\"");
-
-    String[] ss = url.split(" ");
-    url = ss[ss.length - 1];
-
-    DefaultHttpClient client = getClient(url, timeout);
-
-    if (client != null) {
-      HttpGet get = null;
-
-      try {
-        get = new HttpGet(url);
-
-        if (!get.containsHeader("User-Agent")) {
-          get.addHeader("User-Agent", UA);
-        }
-
-        log.debug("connect url=" + url);
-
-        HttpResponse resp = client.execute(get);
-        return resp;
-
-      } catch (Exception e) {
-        log.error("\"" + url + "\"", e);
-      } finally {
-        if (get != null)
-          get.abort();
-      }
-    }
-
-    return null;
+    URL u = new URL(url);
+    HttpURLConnection c = (HttpURLConnection) u.openConnection();
+    c.setConnectTimeout((int) timeout);
+    c.setReadTimeout((int) timeout);
+    c.connect();
+    return c;
   }
 
   /**
