@@ -56,7 +56,7 @@ public class Demo extends Bean {
       while (exists(id)) {
         id = "d" + UID.next("demo.id");
       }
-      Helper.insert(v.set(X.ID, id), Demo.class);
+      Helper.insert(v.force(X.ID, id), Demo.class);
       return id;
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);

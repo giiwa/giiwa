@@ -20,7 +20,7 @@ public class demo extends Model {
 		String name = this.getString("name");
 
 		if (!X.isEmpty(name) && X.isEmpty(path)) {
-			q.and("name", name, W.OP_LIKE);
+			q.and("name", name, W.OP.like);
 			this.set("name", name);
 		}
 		Beans<Demo> bs = Demo.load(q, s, n);
