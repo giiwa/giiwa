@@ -19,6 +19,7 @@ import java.util.*;
 
 import org.apache.commons.configuration.*;
 import org.apache.log4j.PropertyConfigurator;
+import org.giiwa.core.bean.X;
 
 /**
  * The Class Config is whole configuration of system, usually is a copy of
@@ -158,6 +159,51 @@ public final class Config {
       }
     }
 
+    // check and upgrade
+    checkAndUpgrade();
+
+  }
+
+  private static void checkAndUpgrade() {
+    boolean c = false;
+    String s = conf.getString("db[default].url", X.EMPTY);
+    if (X.isEmpty(s)) {
+      conf.setProperty("db[default].url", conf.getString("db.url", X.EMPTY));
+      conf.setProperty("db.url", null);
+      c = true;
+    }
+
+    s = conf.getString("db[default].user", X.EMPTY);
+    if (X.isEmpty(s)) {
+      conf.setProperty("db[default].user", conf.getString("db.user", X.EMPTY));
+      conf.setProperty("db.user", null);
+      c = true;
+    }
+
+    s = conf.getString("db[default].passwd", X.EMPTY);
+    if (X.isEmpty(s)) {
+      conf.setProperty("db[default].passwd", conf.getString("db.passwd", X.EMPTY));
+      conf.setProperty("db.passwd", null);
+      c = true;
+    }
+
+    s = conf.getString("mongo[default].url", X.EMPTY);
+    if (X.isEmpty(s)) {
+      conf.setProperty("mongo[default].url", conf.getString("mongo[prod].url", X.EMPTY));
+      conf.setProperty("mongo[prod].url", null);
+      c = true;
+    }
+
+    s = conf.getString("mongo[default].db", X.EMPTY);
+    if (X.isEmpty(s)) {
+      conf.setProperty("mongo[default].db", conf.getString("mongo[prod].db", X.EMPTY));
+      conf.setProperty("mongo[prod].db", null);
+      c = true;
+    }
+
+    if (c) {
+      save();
+    }
   }
 
   /**

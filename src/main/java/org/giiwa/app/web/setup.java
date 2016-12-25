@@ -90,23 +90,23 @@ public class setup extends Model {
     String dbdriver = this.getHtml("db.driver");
     String dburl = this.getHtml("db.url");
     if (!X.isEmpty(dbdriver)) {
-      conf.setProperty("db.driver", dbdriver);
+      conf.setProperty("db[default].driver", dbdriver);
     }
     if (!X.isEmpty(dburl)) {
-      conf.setProperty("db.url", dburl);
+      conf.setProperty("db[default].url", dburl);
     }
-    conf.setProperty("db.user", this.getString("db.user"));
-    conf.setProperty("db.passwd", this.getString("db.passwd"));
+    conf.setProperty("db[default].user", this.getString("db.user"));
+    conf.setProperty("db[default].passwd", this.getString("db.passwd"));
 
     String mongourl = this.getHtml("mongo.url");
     String mongodb = this.getString("mongo.db");
 
     if (!X.isEmpty(mongourl)) {
-      conf.setProperty("mongo[prod].url", mongourl);
+      conf.setProperty("mongo[default].url", mongourl);
     }
 
     if (!X.isEmpty(mongodb)) {
-      conf.setProperty("mongo[prod].db", mongodb);
+      conf.setProperty("mongo[default].db", mongodb);
     }
 
     String node = this.getString("node");

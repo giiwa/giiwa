@@ -187,7 +187,7 @@ public class Helper {
         return MongoHelper.exists(table, q, db);
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.exists(table, q);
+        return RDSHelper.exists(table, q, db);
       }
     }
     throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -1218,7 +1218,7 @@ public class Helper {
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.load(table, q, t);
+        return RDSHelper.load(table, q, t, db);
       } else {
 
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -1252,7 +1252,7 @@ public class Helper {
       } else if (primary == DBType.RDS) {
 
         // insert into RDS
-        return RDSHelper.insertTable(table, values);
+        return RDSHelper.insertTable(table, values, db);
       } else {
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
       }
@@ -1354,7 +1354,7 @@ public class Helper {
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.updateTable(table, q, values);
+        return RDSHelper.updateTable(table, q, values, db);
       } else {
 
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -1406,7 +1406,7 @@ public class Helper {
       return MongoHelper.load(table, q.query(), q.order(), s, n, t, db);
     } else if (primary == DBType.RDS) {
       // insert into RDS
-      return RDSHelper.load(table, q, s, n, t);
+      return RDSHelper.load(table, q, s, n, t, db);
     }
 
     return null;
@@ -1484,11 +1484,11 @@ public class Helper {
 
       if (primary == DBType.MONGO) {
         // insert into mongo
-        return MongoHelper.count(table, q);
+        return MongoHelper.count(table, q, db);
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return RDSHelper.count(table, q);
+        return RDSHelper.count(table, q, db);
       } else {
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
       }
@@ -1531,7 +1531,7 @@ public class Helper {
 
       } else if (primary == DBType.RDS) {
         // insert into RDS
-        return (List<T>) RDSHelper.distinct(table, name, q);
+        return (List<T>) RDSHelper.distinct(table, name, q, db);
       } else {
         log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
       }

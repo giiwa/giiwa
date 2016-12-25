@@ -203,7 +203,7 @@ public class RDSHelper extends Helper {
     PreparedStatement p = null;
 
     try {
-      c = getConnection();
+      c = getConnection(db);
 
       if (c == null)
         return -1;
@@ -386,71 +386,6 @@ public class RDSHelper extends Helper {
     }
   }
 
-  final public int insertOrUpdate(W q, V sets) {
-    /**
-     * get the require annotation onGet
-     */
-    Table mapping = (Table) this.getClass().getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + this.getClass() + "] declaretion");
-      return -1;
-    }
-
-    return insertOrUpdate(mapping.name(), q, sets);
-  }
-
-  /**
-   * Insert or update.
-   * 
-   * @param table
-   *          the table name
-   * @param q
-   *          the query object
-   * @param sets
-   *          the values
-   * @return int
-   */
-  public final static int insertOrUpdate(String table, W q, V sets) {
-    int i = 0;
-    try {
-      if (exists(table, q)) {
-        i = updateTable(table, q, sets);
-      } else {
-        i = insertTable(table, sets);
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-    return i;
-  }
-
-  /**
-   * test the data exists.
-   * 
-   * @param q
-   *          the query object
-   * @param t
-   *          the Bean class
-   * @return boolean
-   * @throws Exception
-   *           throw Exception
-   */
-  public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
-    /**
-     * get the require annotation onGet
-     */
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return false;
-    }
-
-    return exists(mapping.name(), q);
-
-  }
-
   /**
    * test exists.
    * 
@@ -462,7 +397,7 @@ public class RDSHelper extends Helper {
    * @throws SQLException
    *           throw Exception if occur DB error
    */
-  public static boolean exists(String table, W q) throws SQLException {
+  public static boolean exists(String table, W q, String db) throws SQLException {
     /**
      * create the sql statement
      */
@@ -476,7 +411,7 @@ public class RDSHelper extends Helper {
     ResultSet r = null;
 
     try {
-      c = getConnection();
+      c = getConnection(db);
 
       if (c == null)
         return false;
@@ -534,32 +469,6 @@ public class RDSHelper extends Helper {
   }
 
   /**
-   * update the data using values
-   * 
-   * @param q
-   *          the query object
-   * @param sets
-   *          the values
-   * @param t
-   *          the Bean class
-   * @return int
-   */
-  public static int update(W q, V sets, Class<? extends Bean> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
-    }
-
-    if (!X.isEmpty(mapping.name())) {
-      return updateTable(mapping.name(), q, sets);
-    }
-
-    return -1;
-  }
-
-  /**
    * Update the data.
    * 
    * @param table
@@ -570,7 +479,7 @@ public class RDSHelper extends Helper {
    *          the values
    * @return int
    */
-  public static int updateTable(String table, W q, V sets) {
+  public static int updateTable(String table, W q, V sets, String db) {
 
     /**
      * update it in database
@@ -581,7 +490,7 @@ public class RDSHelper extends Helper {
     int updated = 0;
     try {
 
-      c = getConnection();
+      c = getConnection(db);
 
       if (c == null)
         return -1;
@@ -672,29 +581,6 @@ public class RDSHelper extends Helper {
   }
 
   /**
-   * load the data in this Bean
-   * 
-   * @param q
-   *          the query object
-   * @param b
-   *          the Bean
-   * @return boolean
-   */
-  public static boolean load(W q, Bean b) {
-    /**
-     * get the require annotation onGet
-     */
-    Table mapping = (Table) b.getClass().getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + b.getClass() + "] declaretion");
-      return false;
-    }
-
-    return load(mapping.name(), q, b);
-  }
-
-  /**
    * Load the data, the data will be load(ResultSet r) method.
    * 
    * @param table
@@ -705,7 +591,7 @@ public class RDSHelper extends Helper {
    *          the Bean
    * @return boolean
    */
-  public static boolean load(String table, W q, Bean b) {
+  public static boolean load(String table, W q, Bean b, String db) {
     /**
      * create the sql statement
      */
@@ -720,7 +606,7 @@ public class RDSHelper extends Helper {
     StringBuilder sql = new StringBuilder();
 
     try {
-      c = getConnection();
+      c = getConnection(db);
 
       if (c == null)
         return false;
@@ -1130,7 +1016,7 @@ public class RDSHelper extends Helper {
    *          the Bean Class
    * @return Beans
    */
-  public static <T extends Bean> Beans<T> load(String table, W q, int offset, int limit, Class<T> clazz) {
+  public static <T extends Bean> Beans<T> load(String table, W q, int offset, int limit, Class<T> clazz, String db) {
     /**
      * create the sql statement
      */
@@ -1147,7 +1033,7 @@ public class RDSHelper extends Helper {
 
     try {
 
-      c = getConnection();
+      c = getConnection(db);
 
       if (c == null)
         return null;
@@ -1340,29 +1226,6 @@ public class RDSHelper extends Helper {
   }
 
   /**
-   * insert to the table according the Map(table) declaration
-   * 
-   * @param sets
-   *          the values
-   * @param t
-   *          the Bean class
-   * @return int
-   */
-  final public static int insertTable(V sets, Class<? extends Bean> t) {
-    Table mapping = (Table) t.getAnnotation(Table.class);
-    if (mapping == null) {
-      if (log.isErrorEnabled())
-        log.error("mapping missed in [" + t + "] declaretion");
-      return -1;
-    }
-
-    if (!X.isEmpty(mapping.name())) {
-      return insertTable(mapping.name(), sets);
-    }
-    return -1;
-  }
-
-  /**
    * Insert values into the table.
    * 
    * @param table
@@ -1371,16 +1234,39 @@ public class RDSHelper extends Helper {
    *          the values
    * @return int
    */
-  public static int insertTable(String table, V sets) {
+  public static int insertTable(String table, V sets, String db) {
 
     /**
      * insert it in database
      */
     Connection c = null;
+
+    try {
+      c = getConnection(db);
+
+      if (c == null)
+        return -1;
+
+      return insertTable(table, sets, c);
+
+    } catch (Exception e) {
+      if (log.isErrorEnabled())
+        log.error(sets.toString(), e);
+    } finally {
+      close(c);
+    }
+    return 0;
+
+  }
+
+  private static int insertTable(String table, V sets, Connection c) {
+
+    /**
+     * insert it in database
+     */
     PreparedStatement p = null;
 
     try {
-      c = getConnection();
 
       if (c == null)
         return -1;
@@ -1424,7 +1310,7 @@ public class RDSHelper extends Helper {
       if (log.isErrorEnabled())
         log.error(sets.toString(), e);
     } finally {
-      close(p, c);
+      close(p);
     }
     return 0;
   }
@@ -1708,7 +1594,7 @@ public class RDSHelper extends Helper {
         if (!X.isEmpty(orderby)) {
           sql.append(" ").append(orderby);
         }
-        
+
       } else {
         if (!X.isEmpty(orderby)) {
           sql.append(" ").append(orderby);
@@ -1900,11 +1786,11 @@ public class RDSHelper extends Helper {
    *          the Bean class
    * @return Bean
    */
-  public static <T extends Bean> T load(String table, W q, Class<T> clazz) {
+  public static <T extends Bean> T load(String table, W q, Class<T> clazz, String db) {
     try {
       T b = (T) clazz.newInstance();
 
-      if (load(table, q, b)) {
+      if (load(table, q, b, db)) {
         return b;
       }
     } catch (Exception e) {
@@ -1932,7 +1818,7 @@ public class RDSHelper extends Helper {
    *          the query object
    * @return the number of data
    */
-  public static long count(String table, W q) {
+  public static long count(String table, W q, String db) {
 
     /**
      * create the sql statement
@@ -1950,7 +1836,7 @@ public class RDSHelper extends Helper {
 
     try {
 
-      c = getConnection();
+      c = getConnection(db);
 
       if (c == null)
         return 0;
@@ -2005,7 +1891,7 @@ public class RDSHelper extends Helper {
    *          the query object
    * @return the list of Object
    */
-  public static List<Object> distinct(String table, String name, W q) {
+  public static List<Object> distinct(String table, String name, W q, String db) {
     /**
      * create the sql statement
      */
@@ -2022,7 +1908,7 @@ public class RDSHelper extends Helper {
 
     try {
 
-      c = getConnection();
+      c = getConnection(db);
 
       if (c == null)
         return null;
@@ -2193,7 +2079,7 @@ public class RDSHelper extends Helper {
       V v = V.create().copy(jo);
       String tablename = jo.getString("_table");
       v.remove("_table");
-      insertTable(tablename, v);
+      insertTable(tablename, v, c);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }

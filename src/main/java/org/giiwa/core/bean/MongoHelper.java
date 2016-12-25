@@ -75,7 +75,7 @@ public class MongoHelper extends Helper {
    */
   public static long delete(String collection, W q, String db) {
     try {
-      MongoCollection<Document> db1 = MongoHelper.getCollection(collection);
+      MongoCollection<Document> db1 = MongoHelper.getCollection(db, collection);
       if (db != null) {
         DeleteResult r = db1.deleteMany(q.query());
         // db.remove(query);
@@ -199,6 +199,7 @@ public class MongoHelper extends Helper {
    * mongo[prod].password=(null)
    * </pre>
    * 
+   * @deprecated
    * @param name
    *          the name of the collection
    * @return DBCollection
@@ -283,7 +284,7 @@ public class MongoHelper extends Helper {
   public static <T extends Bean> T load(String collection, Bson query, Bson order, T b, String db) {
     TimeStamp t = TimeStamp.create();
     try {
-      MongoCollection<Document> db1 = MongoHelper.getCollection(collection);
+      MongoCollection<Document> db1 = MongoHelper.getCollection(db, collection);
       if (db1 != null) {
 
         FindIterable<Document> d = db1.find(query);
@@ -369,7 +370,7 @@ public class MongoHelper extends Helper {
     MongoCollection<Document> db1 = null;
     FindIterable<Document> cur = null;
     try {
-      db1 = MongoHelper.getCollection(collection);
+      db1 = MongoHelper.getCollection(db, collection);
       if (db1 != null) {
         cur = db1.find(query);
 
@@ -531,12 +532,12 @@ public class MongoHelper extends Helper {
    *          the query
    * @return the DB object
    */
-  public static Document load(String collection, Bson query) {
+  public static Document load(String db, String collection, Bson query) {
     /**
      * create the sql statement
      */
     try {
-      MongoCollection<Document> c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(db, collection);
       if (c != null) {
 
         return c.find(query).first();
@@ -580,7 +581,7 @@ public class MongoHelper extends Helper {
    */
   final public static int insertCollection(String collection, V v, String db) {
 
-    MongoCollection<Document> c = getCollection(collection);
+    MongoCollection<Document> c = getCollection(db, collection);
     if (c != null) {
       Document d = new Document();
 
@@ -627,7 +628,7 @@ public class MongoHelper extends Helper {
 
     try {
       log.debug("data=" + d);
-      MongoCollection<Document> c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(db, collection);
       UpdateResult r = c.updateMany(q.query(), new Document("$set", d));
 
       if (log.isDebugEnabled())
@@ -659,7 +660,7 @@ public class MongoHelper extends Helper {
     TimeStamp t1 = TimeStamp.create();
     boolean b = false;
     try {
-      b = MongoHelper.load(collection, q.query()) != null;
+      b = MongoHelper.load(db, collection, q.query()) != null;
     } finally {
       if (log.isDebugEnabled())
         log.debug("exists cost=" + t1.past() + "ms,  collection=" + collection + ", query=" + q + ", result=" + b);
@@ -740,7 +741,7 @@ public class MongoHelper extends Helper {
     TimeStamp t1 = TimeStamp.create();
     try {
 
-      MongoCollection<Document> c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(db, collection);
       if (c != null) {
         Iterator<T> it = c.distinct(key, q.query(), t).iterator();
         List<T> list = new ArrayList<T>();
@@ -772,7 +773,7 @@ public class MongoHelper extends Helper {
   public static long count(W q, Class<? extends Bean> t) {
     String collection = MongoHelper.getCollection(t);
     if (!X.isEmpty(collection)) {
-      return count(collection, q);
+      return count(collection, q, DEFAULT);
     }
     return 0;
 
@@ -787,11 +788,11 @@ public class MongoHelper extends Helper {
    *          the query and order
    * @return long
    */
-  public static long count(String collection, W q) {
+  public static long count(String collection, W q, String db) {
     TimeStamp t1 = TimeStamp.create();
     try {
 
-      MongoCollection<Document> c = MongoHelper.getCollection(collection);
+      MongoCollection<Document> c = MongoHelper.getCollection(db, collection);
       if (c != null) {
         return c.count(q.query());
       }
