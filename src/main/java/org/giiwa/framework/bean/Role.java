@@ -275,7 +275,7 @@ public class Role extends Bean {
   }
 
   @Table(name = "gi_roleaccess")
-  private static class RoleAccess extends Bean {
+  public static class RoleAccess extends Bean {
 
     /**
      * 
@@ -296,7 +296,7 @@ public class Role extends Bean {
    * @return the beans
    */
   public static Beans<Role> loadByAccess(String access, int s, int n) {
-    Beans<RoleAccess> bs = Helper.load(W.create("name", access).sort("rid", 1), 0, Integer.MAX_VALUE, RoleAccess.class);
+    Beans<RoleAccess> bs = Helper.load(W.create("name", access).sort("rid", 1), 0, 1000, RoleAccess.class);
 
     W q = W.create();
     if (bs != null && bs.getList() != null) {
