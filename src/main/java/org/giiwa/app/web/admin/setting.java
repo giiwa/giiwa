@@ -243,10 +243,10 @@ public class setting extends Model {
 
       this.set("cache_url", Global.getString("cache.url", null));
       this.set("cache_group", Global.getString("cache.group", "demo"));
-      this.set("mongo_url", Global.getString("mongo[prod].url", null));
-      this.set("mongo_db", Global.getString("mongo[prod].db", null));
-      this.set("mongo_user", Global.getString("mongo[prod].user", null));
-      this.set("db_url", Global.getString("db.url", null));
+      this.set("mongo_url", Global.getString("mongo[default].url", null));
+      this.set("mongo_db", Global.getString("mongo[default].db", null));
+      this.set("mongo_user", Global.getString("mongo[default].user", null));
+      this.set("db_url", Global.getString("db[default].url", null));
 
       this.set("roles", Role.load(0, 100).getList());
 
