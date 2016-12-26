@@ -1,8 +1,8 @@
-<h1><img height='46' src="http://giiwa.org/images/giiwa.png" alt="giiwa"/></h1>
+<h1><img height='46' src="https://www.giiwa.org/images/giiwa.png" alt="giiwa"/></h1>
 <p>Giiwa, Java Web 高性能服务器软件快速开发框架, 我们的目标是<strong>简单</strong>，<strong>快速开发</strong>, 项目之间可以 <strong>重用</strong>， <strong>“重载”</strong>。</p>
 <p>为了实现这个目标, 我们使用模块化机制, 使得项目开发不用从头开始，通过模块管理允许模块之间的复用和重载；简化的MV（Model－View）开发模型使得功能设计更加简单高效稳定，并提供统一的web请求参数获取API， 避免花时间去研究不同请求对数据格式的封装不一样。 请参考 <a href="http://giiwa.org">giiwa.org</a> 以了解更多关于Giiwa。</p>
 <p>View 支持 Velocity template, JSP page 和 FreeMarker template.</p>
-<p><img src="http://giiwa.org/docs/images/mv.png" alt="MV developing"/></p>
+<p><img src="https://www.giiwa.org/docs/images/mv.png" alt="MV developing"/></p>
 
 <h2>缓存系统，临时文件系统，文件仓库</h2>
 <p>框架本身支持 Memcached，Redis 或直接文件系统缓存。</p>
@@ -20,7 +20,7 @@
 <p>使得编写应用更简单。</p>
 
 <h2>下载</h2>
-<p>最新Giiwa运行包 <a href="http://giiwa.org/archive/giiwa-1.3.tgz">giiwa-1.3.tgz</a>，或者<a href="http://giiwa.org/archive/giiwa-1.3.zip">giiwa-1.3.zip</a>。</p>
+<p>最新Giiwa运行包 <a href="https://www.giiwa.org/archive/giiwa-1.3.tgz">giiwa-1.3.tgz</a>，或者<a href="https://www.giiwa.org/archive/giiwa-1.3.zip">giiwa-1.3.zip</a>。</p>
 
 <h2>获取代码</h2>
 <p>所有最新源码已经托管在Github:</p>
