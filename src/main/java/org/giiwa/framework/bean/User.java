@@ -331,6 +331,7 @@ public class User extends Bean {
       return true;
     }
 
+    // log.debug("uid=" + this.getId() + ", access=" + Helper.toString(name));
     if (role == null) {
       getRole();
     }
