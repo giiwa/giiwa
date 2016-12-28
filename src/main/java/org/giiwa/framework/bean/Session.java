@@ -192,8 +192,9 @@ public class Session implements Serializable {
    *          the key
    * @return the object
    */
-  public Object get(String key) {
-    return (Object) a.get(key);
+  @SuppressWarnings("unchecked")
+  public <T> T get(String key) {
+    return (T) a.get(key);
   }
 
   /**
