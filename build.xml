@@ -60,6 +60,7 @@
 			</tarfileset>
 
 			<tarfileset dir="target/giiwa" prefix="giiwa" filemode="755">
+				<include name="giiwa" />
 				<include name="**/*.sh" />
 			</tarfileset>
 		</tar>
