@@ -1,0 +1,388 @@
+@charset "utf-8";
+body, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, button, textarea, p, blockquote, th, td {
+	margin: 0;
+	padding: 0;
+}
+h1, h2, h3, h4, h5, h6 {
+	font-size: 100%;
+}
+body {
+	background: #f9f9f9;
+	font: 12px/1.5 "\5FAE\8F6F\96C5\9ED1", Arial, HELVETICA;
+	min-width: 1200px;
+	_background-image: url(about:blank);
+	_background-attachment: fixed;
+}
+img {
+	border: 0;
+}
+ol, ul {
+	list-style: none;
+}
+:link, :visited, ins {
+	text-decoration: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+sub, sup {
+	font-size: 100%;
+	vertical-align: baseline;
+}
+blockquote, q {
+	quotes: "\201C" "\201D" "\2018" "\2019";
+}
+blockquote:before, blockquote:after, q:before, q:after {
+	content: "";
+	content: none;
+}
+input, button, textarea, select, optgroup, option {
+	font-family: inherit;
+	font-size: inherit;
+	font-style: inherit;
+	font-weight: inherit;
+}
+button, input, select, textarea {
+	font-family: inherit;
+	font-size: 100%;
+	margin: 0;
+	outline: none;
+}
+button::-moz-focus-inner, input::-moz-focus-inner {
+	border: 0;
+	padding: 0;
+}
+textarea {
+	overflow: auto;
+	resize: vertical;
+	vertical-align: top;
+}
+i, cite, em, address {
+	font-style: normal;
+}
+a {
+	color: #333;
+	text-decoration: none;
+}
+a:hover {
+	color: #09F;
+	text-decoration: none;
+}
+a.disabled, a.disabled:hover {
+	cursor: default;
+	pointer-events: none;
+}
+.clearfix:before, .clearfix:after {
+	display: block;
+	content: "\200b";
+	height: 0;
+}
+.clearfix:after {
+	clear: both;
+}
+.clearfix {
+	*zoom: 1;
+}
+.hide, .tmpl {
+	display: none;
+}
+.wrap {
+	margin: 0 auto;
+	width: 1186px;
+}
+/* old compatible, deprecated! */
+.fl {
+	float: left;
+}
+.fr {
+	float: right;
+}
+.clear {
+	clear: both;
+}
+.bold {
+	font-weight: bold;
+}
+.f11 {
+	font-size: 11px;
+}
+.f14 {
+	font-size: 14px;
+}
+.tl {
+	text-align: left;
+}
+.tc {
+	text-align: center;
+}
+.tr, .a-right {
+	text-align: right;
+}
+.nowrap, .nobr {
+	white-space: nowrap;
+	word-wrap: normal;
+}
+/* loading */
+.loading {
+	padding: 60px 20px;
+	text-align: center;
+}
+.loading i {
+	display: inline-block;
+	background: url(../images/loading.gif) no-repeat;
+	height: 28px;
+	width: 28px;
+	vertical-align: middle;
+}
+.loading span {
+	color: #999;
+	margin-left: .8em;
+}
+/* ds_tips */
+.ds_tips {
+	background: #fafafa;
+	border: 1px solid #d5d5d5;
+	border-bottom: 3px solid #4367af;
+	border-radius: 10px;
+	box-shadow: 0 1px 4px rgba(0,0,0,.24);
+}
+.ds_tips .ds_tips_content {
+	border: 1px solid #fff;
+	border-radius: 9px;
+	padding: 5px 10px;
+}
+.ds_tips .ds_tips_arrow, .ds_tips .ds_tips_arrow b {
+	background: none;
+	border-color: #d5d5d5 transparent;
+	border-style: solid dashed;
+	border-width: 0 8px 8px;
+	font-size: 0;
+	margin: -8px 0 0 -8px;
+	height: 0;
+	width: 0;
+	position: absolute;
+	left: 50%;
+	top: 0;
+}
+.ds_tips .ds_tips_arrow b {
+	border-bottom-color: #fafafa;
+	margin: 1px 0 0 -8px;
+	left: 0;
+	_margin-top: -2px;
+}
+/* fallback placeholder */
+.placeholder, ::-webkit-input-placeholder, :-moz-placeholder, :-ms-placeholder, ::placeholder {
+	color: #bbb;
+}
+/* ds.dialog */
+.ds_dialog {
+	color: #333;
+	font: 12px/1.5 "Microsoft Yahei", Arial;
+	position: absolute;
+	left: 44%;
+	top: 44%;
+	z-index: 1999;
+	outline: 0;
+}
+.ds_dialog, .ds_dialog_border, .ds_dialog_panel .ds_dialog_title, .ds_dialog_title h3 {
+	margin: 0;
+	padding: 0;
+}
+.ds_dialog_border, .ds_dialog_panel {
+	border-collapse: collapse;
+	margin: 0;
+	padding: 0;
+}
+.ds_dialog_tl, .ds_dialog_tc, .ds_dialog_tr, .ds_dialog_ml, .ds_dialog_mr, .ds_dialog_bl, .ds_dialog_bc, .ds_dialog_br {
+	background: #000;
+	background: rgba(0,0,0,.5);
+	margin: 0;
+	padding: 0;
+	filter: Alpha(opacity=50);
+}
+.ds_dialog_tl, .ds_dialog_tr, .ds_dialog_bl, .ds_dialog_br {
+	height: 8px;
+	width: 8px;
+}
+.ds_dialog_inner {
+	background: #fff;
+	border-top: 1px solid #7697d0;
+	position: relative;
+}
+.ds_dialog_header {
+	vertical-align: top;
+}
+.ds_dialog_title {
+	background: #476db9;
+	border-bottom: 1px solid #476db9;
+	height: 34px;
+}
+.ds_dialog_title h3 {
+	cursor: default;
+	color: #999;
+	font-size: 12px;
+	font-weight: normal;
+	line-height: 34px;
+	padding: 0 30px 0 16px;
+	height: 29px;
+	white-space: nowrap;
+}
+.ds_dialog_active .ds_dialog_title h3 {
+	color: #FFF;
+}
+.ds_dialog_active .ds_dialog_title h3 span.sadIcon {
+	display: inline-block;
+	background: url(../images/sadIcon_23.png) no-repeat 0 3px;
+	padding-left: 30px;
+	height: 29px;
+	width: 23px;
+}
+.ds_dialog_close {
+	height: 24px;
+	width: 24px;
+	position: absolute;
+	right: 10px;
+	top: 6px;
+}
+.ds_dialog_close a {
+	display: block;
+	color: #FFF;
+	font: 26px/24px Arial, Helvetica;
+	height: 24px;
+	overflow: hidden;
+	text-align: center;
+	text-decoration: none;
+	text-shadow: 0 -1px 0 #395ba1;
+}
+.ds_dialog_close a:hover {
+	color: #C72015;
+	text-decoration: none;
+}
+.ds_dialog_icon {
+	padding: 10px 0 10px 10px;
+	vertical-align: middle;
+}
+.ds_dialog_icon .ds_dialog_icon_bg {
+	display: block;
+	background: none no-repeat 50% 50%;
+	height: 40px;
+	width: 40px;
+}
+.ds_dialog_main {
+	vertical-align: middle;
+}
+.ds_dialog_footer {
+	vertical-align: bottom;
+}
+.ds_dialog .ds_dialog_buttons {
+	background: #FAFAFA;
+	border-top: 1px solid #F0F0F0;
+	font-size: 0;
+	padding: 8px;
+	white-space: nowrap;
+	text-align: right;
+}
+.ds_dialog_buttons button {
+	display: inline-block;
+	background: #D6D6D6;
+	border: 1px solid #b4b4b4;
+	border-radius: 3px;
+	color: #333;
+	cursor: pointer;
+	font-size: 13px;
+	letter-spacing: 1px;
+	line-height: 26px;
+	margin: 0 5px 0 10px;
+	padding: 0 15px;
+	height: 30px;
+	background: -moz-linear-gradient(top, #E8E8E8 0%, #D6D6D6 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#E8E8E8), color-stop(100%,#D6D6D6));
+	background: -webkit-linear-gradient(top, #E8E8E8 0%,#D6D6D6 100%);
+	background: -o-linear-gradient(top, #E8E8E8 0%,#D6D6D6 100%);
+	background: -ms-linear-gradient(top, #E8E8E8 0%,#D6D6D6 100%);
+	background: linear-gradient(to bottom, #E8E8E8 0%,#D6D6D6 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#E8E8E8', endColorstr='#D6D6D6',GradientType=0);
+	box-shadow: inset 0 1px 0 #FFF;
+	text-shadow: 0 1px 0 #FFF;
+	vertical-align: top;
+	border-radius: 0\9;
+	*line-height: 24px;
+	*padding: 0 11px;
+}
+.ds_dialog_buttons button::-moz-focus-inner {
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+.ds_dialog_buttons button:hover {
+	background: #F3F3F3;
+	background: -moz-linear-gradient(top, #EEE 0%, #F3F3F3 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#EEE), color-stop(100%,#F3F3F3));
+	background: -webkit-linear-gradient(top, #EEE 0%,#F3F3F3 100%);
+	background: -o-linear-gradient(top, #EEE 0%,#F3F3F3 100%);
+	background: -ms-linear-gradient(top, #EEE 0%,#F3F3F3 100%);
+	background: linear-gradient(to bottom, #EEE 0%,#F3F3F3 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#EEEEEE', endColorstr='#F3F3F3',GradientType=0);
+}
+.ds_dialog_buttons button:focus {
+	border-color: #426DC9;
+	box-shadow: 0 0 5px #FFBA08;
+}
+.ds_dialog_buttons button:active {
+	border-color: #b4b4b4;
+	background: -moz-linear-gradient(top, #DDD 0%, #FFF 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#DDD), color-stop(100%,#FFF));
+	background: -webkit-linear-gradient(top, #DDD 0%,#FFF 100%);
+	background: -o-linear-gradient(top, #DDD 0%,#FFF 100%);
+	background: -ms-linear-gradient(top, #DDD 0%,#FFF 100%);
+	background: linear-gradient(to bottom, #DDD 0%,#FFF 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#DDDDDD', endColorstr='#FFFFFF',GradientType=0);
+	box-shadow: inset 0 1px 5px #FFF;
+}
+.ds_dialog_buttons .ds_dialog_yes {
+	background: #6089dc;
+	background: -moz-linear-gradient(top, #6089dc 0%, #496eba 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#6089dc), color-stop(100%,#496eba));
+	background: -webkit-linear-gradient(top, #6089dc 0%,#496eba 100%);
+	background: -o-linear-gradient(top, #6089dc 0%,#496eba 100%);
+	background: -ms-linear-gradient(top, #6089dc 0%,#496eba 100%);
+	background: linear-gradient(to bottom, #6089dc 0%,#496eba 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#6089dc', endColorstr='#496eba',GradientType=0);
+	border-color: #5378c3;
+	box-shadow: inset 0 1px 0 #90b3fb;
+	color: #fff;
+	text-shadow: 0 -1px 0 #5378c3;
+}
+.ds_dialog_buttons .ds_dialog_yes:hover {
+	background: #6f9cf5;
+	background: -moz-linear-gradient(top, #6f9cf5 0%, #5880d0 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#6f9cf5), color-stop(100%,#5880d0));
+	background: -webkit-linear-gradient(top, #6f9cf5 0%,#5880d0 100%);
+	background: -o-linear-gradient(top, #6f9cf5 0%,#5880d0 100%);
+	background: -ms-linear-gradient(top, #6f9cf5 0%,#5880d0 100%);
+	background: linear-gradient(to bottom, #6f9cf5 0%,#5880d0 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#6f9cf5', endColorstr='#5880d0',GradientType=0);
+}
+.ds_dialog_buttons .ds_dialog_yes:active {
+	border-color: #1C6A9E;
+	background: -moz-linear-gradient(top, #2288CC 0%, #33BBEE 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#2288CC), color-stop(100%,#33BBEE));
+	background: -webkit-linear-gradient(top, #2288CC 0%,#33BBEE 100%);
+	background: -o-linear-gradient(top, #2288CC 0%,#33BBEE 100%);
+	background: -ms-linear-gradient(top, #2288CC 0%,#33BBEE 100%);
+	background: linear-gradient(to bottom, #2288CC 0%,#33BBEE 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#2288CC', endColorstr='#33BBEE',GradientType=0);
+}
+.ds_dialog_buttons button:disabled, .ds_dialog_buttons .disabled, .ds_dialog_buttons .disabled:hover, .ds_dialog_buttons .disabled:focus, .ds_dialog_buttons .disabled:active {
+	background: #E9E9E9;
+	border-color: #C6C6C6;
+	color: #AAA;
+	cursor: default;
+	box-shadow: inset 0 0 1px #FCFCFC;
+	text-shadow: 0 1px 0 #fff;
+	pointer-events: none;
+	outline: 0;
+	filter: none;
+}
+/*www.sucaijiayuan.com*/

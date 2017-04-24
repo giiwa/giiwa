@@ -1,0 +1,34 @@
+<div class='head'>$lang.get('i18n.index.title')</div>
+
+<div class='tabs'>
+	<a href='/admin/i18n' class='selected'>$lang.get('a.i18n')</a>
+</div>
+
+<div class="form">
+	<label><g>$lang.get("lang.missed.hint")</g></label>
+	<p style="color:red">$!missed</p>
+</div>
+
+<table id='url-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get("i18n.key")</th>
+			<th>$lang.get("i18n.module")</th>
+			<th>$lang.get("i18n.value")</th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $d.keySet())
+	<tr>
+		<td>$f</td>
+		<td>$!d.get($f)[1]</td>
+		<td>$!d.get($f)[0]</td>
+	</tr>
+#end
+	</tbody>
+</table>
+<script>
+$(function(){
+	$('#url-table').tablesorter();
+})
+</script>

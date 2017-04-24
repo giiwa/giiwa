@@ -1,0 +1,40 @@
+<div class='head'>$lang.get('dbmon.table.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/dbmon'>$lang.get('a.keys')</a>
+	<a href='/admin/dbmon/table?db=$!db&name=$!name' class='selected'>$!name</a>
+</div>
+<table id='db-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get("dbmon.name")</th>
+			<th>$lang.get("dbmon.key")</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$!f.name</td>
+		<td>$!f.key</td>
+		<td>
+			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.name", this)'>$lang.get('a.delete')</a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		processing && processing.show();
+		$.post('/admin/dbmon/dropkey', {table:'$!name', name:id}, function(d) {
+			processing && processing.hide();
+			giiwa.reload();
+		});
+	}
+}
+</script>
+
