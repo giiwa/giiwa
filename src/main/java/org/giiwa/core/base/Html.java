@@ -24,6 +24,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 
+// TODO: Auto-generated Javadoc
 /**
  * The {@code Html} Class used to string to html, html to plain, or get images
  * from the html string.
@@ -49,8 +50,8 @@ public final class Html {
   }
 
   /**
-   * create a Html object by html string
-   * 
+   * create a Html object by html string.
+   *
    * @param html
    *          the html string
    * @return Html object
@@ -178,12 +179,12 @@ public final class Html {
   }
 
   /**
-   * please refers getTags()
-   * 
-   * @deprecated
+   * please refers getTags().
+   *
    * @param tag
    *          the html tag
    * @return List of element
+   * @deprecated
    */
   public List<Element> get(String tag) {
     return getTags(tag);
@@ -228,8 +229,8 @@ public final class Html {
   }
 
   /**
-   * find the elements in the node
-   * 
+   * find the elements in the node.
+   *
    * @param e
    *          the element node
    * @param selector
@@ -241,8 +242,8 @@ public final class Html {
   }
 
   /**
-   * find the elements in the elements by the selector
-   * 
+   * find the elements in the elements by the selector.
+   *
    * @param list
    *          the original elements
    * @param selector

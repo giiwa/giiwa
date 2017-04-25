@@ -43,16 +43,16 @@ public class AuthToken extends Bean {
    */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = X.ID)
+  @Column(name = X.ID, index = true, unique = true)
   private String            id;
 
   @Column(name = "uid")
   private long              uid;
 
-  @Column(name = "token")
+  @Column(name = "token", index = true)
   private String            token;
 
-  @Column(name = "expired")
+  @Column(name = "expired", index = true)
   private long              expired;
 
   @Column(name = "sid")

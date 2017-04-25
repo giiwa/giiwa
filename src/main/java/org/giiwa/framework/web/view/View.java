@@ -61,8 +61,10 @@ public abstract class View {
       }
     }
 
-    log.debug("config=" + views);
-
+    log.debug("View Parser: ");
+    for (String name : views.keySet()) {
+      log.debug("\t" + name + "=" + views.get(name).getClass().getName());
+    }
   }
 
   /**

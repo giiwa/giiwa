@@ -41,7 +41,7 @@ public class Language {
   /**
    * the language mapping data
    */
-  private Map<String, String>          data    = new HashMap<String, String>();
+  private Map<String, String[]>        data    = new HashMap<String, String[]>();
 
   /**
    * missed key-value
@@ -54,7 +54,7 @@ public class Language {
   private static Map<String, Language> locales = new HashMap<String, Language>();
 
   public static Language getLanguage() {
-    return getLanguage(Module.home == null ? X.EMPTY : Global.getString("language", "en_us"));
+    return getLanguage(Module.home == null ? X.EMPTY : Global.getString("language", "zh_cn"));
   }
 
   public String getLocale() {
@@ -222,7 +222,7 @@ public class Language {
    * 
    * @return Map
    */
-  public Map<String, String> getData() {
+  public Map<String, String[]> getData() {
     return data;
   }
 
@@ -270,9 +270,9 @@ public class Language {
 
     if (data.containsKey(name)) {
       if (args != null && args.length > 0) {
-        return String.format(data.get(name), args);
+        return String.format(data.get(name)[0], args);
       } else {
-        return data.get(name);
+        return data.get(name)[0];
       }
     } else if (missed.containsKey(name)) {
       return missed.get(name);
@@ -294,7 +294,7 @@ public class Language {
    * Load.
    */
   public void load() {
-    data = new HashMap<String, String>();
+    data = new HashMap<String, String[]>();
     if (Module.home != null) {
       Module.home.loadLang(data, locale);
     }

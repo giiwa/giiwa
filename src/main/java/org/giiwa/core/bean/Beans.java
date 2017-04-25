@@ -19,8 +19,8 @@ import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.json.JSON;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code Beans} Class used to contains the Bean in query. <br>
  * it's includes the total count for the query
@@ -37,10 +37,14 @@ public final class Beans<T extends Bean> implements Serializable {
   protected static Log      log              = LogFactory.getLog(Beans.class);
 
   /** The total. */
-  int                       total            = -1;                            // unknown
+  public int                total            = -1;                            // unknown
+
+  public JSON               stats;
+
+  private float             cost             = -1;
 
   /** The list. */
-  List<T>                   list;
+  public List<T>            list;
 
   /**
    * Gets the total. please set the total first, than...
@@ -49,6 +53,20 @@ public final class Beans<T extends Bean> implements Serializable {
    */
   public int getTotal() {
     return total;
+  }
+
+  public float getCost() {
+    return cost;
+  }
+
+  public void setCost(TimeStamp t) {
+    if (t.pastms() > 0) {
+      cost = t.pastms() / 1000f;
+    } else if (t.pastus() > 0) {
+      cost = t.pastus() / 1000000f;
+    } else {
+      cost = t.pastns() / 1000000000f;
+    }
   }
 
   /**
@@ -92,7 +110,7 @@ public final class Beans<T extends Bean> implements Serializable {
   private Iterator<T> it;
 
   /**
-   * Reset the iterator
+   * Reset the iterator.
    */
   public void reset() {
     it = null;
@@ -111,7 +129,7 @@ public final class Beans<T extends Bean> implements Serializable {
   }
 
   /**
-   * Next object
+   * Next object.
    *
    * @return the t
    */

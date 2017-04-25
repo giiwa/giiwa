@@ -13,7 +13,7 @@
 						sbar.removeClass('up');
 						sbar.addClass('down');
 
-						resize();
+						giiwa.resize();
 					});
 				} else {
 					// down
@@ -21,7 +21,7 @@
 						sbar.removeClass('down');
 						sbar.addClass('up');
 
-						resize();
+						giiwa.resize();
 					});
 				}
 			});

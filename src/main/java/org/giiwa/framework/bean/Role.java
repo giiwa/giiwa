@@ -52,10 +52,10 @@ public class Role extends Bean {
    *          the a
    * @return true, if successful
    */
-  public boolean has(Access a) {
+  public boolean has(String a) {
     List<String> list = getAccesses();
-
-    return list == null ? false : list.contains(a.getName());
+    log.debug("list=" + list + ", a=" + a);
+    return list == null ? false : list.contains(a);
   }
 
   public String getMemo() {
@@ -85,7 +85,7 @@ public class Role extends Bean {
       while (Helper.exists(W.create(X.ID, id), Role.class)) {
         id = UID.next("role.id");
       }
-      if (Helper.insert(V.create(X.ID, id).set("id", id).set("name", name).set("memo", memo).set("updated",
+      if (Helper.insert(V.create(X.ID, id).set("id", id).set("name", name).set("memo", memo).set(X.UPDATED,
           System.currentTimeMillis()), Role.class) > 0) {
         return id;
       }
@@ -124,7 +124,7 @@ public class Role extends Bean {
     try {
       if (!Helper.exists(W.create("rid", rid).and("name", name), RoleAccess.class)) {
         Helper.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)), RoleAccess.class);
-        Helper.update(W.create(X.ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
+        Helper.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()), Role.class);
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);
@@ -143,7 +143,7 @@ public class Role extends Bean {
   public static void removeAccess(long rid, String name) {
     Helper.delete(W.create("rid", rid).and("name", name), RoleAccess.class);
 
-    Helper.update(W.create(X.ID, rid), V.create("updated", System.currentTimeMillis()), Role.class);
+    Helper.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()), Role.class);
 
   }
 
@@ -249,7 +249,7 @@ public class Role extends Bean {
    * @return the int
    */
   public int update(V v) {
-    return Helper.update(this.getId(), v.set("updated", System.currentTimeMillis()), Role.class);
+    return Helper.update(this.getId(), v.set(X.UPDATED, System.currentTimeMillis()), Role.class);
   }
 
   public void setAccess(String[] accesses) {

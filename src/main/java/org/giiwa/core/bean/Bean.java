@@ -50,6 +50,11 @@ public abstract class Bean implements Serializable, Map<String, Object> {
     this.expired = expired;
   }
 
+  /**
+   * Expired.
+   *
+   * @return true, if successful
+   */
   public boolean expired() {
     return expired > 0 && System.currentTimeMillis() > expired;
   }
@@ -60,7 +65,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
    * @return long of the created
    */
   public long getCreated() {
-    return X.toLong(get("created"));
+    return X.toLong(get(X.CREATED));
   }
 
   /**
@@ -69,7 +74,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
    * @return long the of the updated
    */
   public long getUpdated() {
-    return X.toLong(get("updated"));
+    return X.toLong(get(X.UPDATED));
   }
 
   /**
@@ -106,7 +111,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
    * @see java.lang.Object#toString()
    */
   public String toString() {
-    return "Bean@" + data;
+    return this.getClass().getSimpleName() + "@" + this.getJSON();
   }
 
   /**
@@ -128,7 +133,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
     name = name.toLowerCase();
 
     // looking for all the fields
-    Field f1 = _getField(name);
+    Field f1 = getField(name);
     if (f1 != null) {
       try {
         // log.debug("f1=" + f1 + ", value=" + value);
@@ -151,8 +156,6 @@ public abstract class Bean implements Serializable, Map<String, Object> {
       } catch (Exception e) {
         log.error(name + "=" + value, e);
       }
-      // } else {
-      // log.debug("not found the column=" + name);
     } else {
       old = data.get(name);
       if (value == null) {
@@ -164,7 +167,14 @@ public abstract class Bean implements Serializable, Map<String, Object> {
     return old;
   }
 
-  private Field _getField(String columnname) {
+  /**
+   * get the Field by the colname
+   * 
+   * @param columnname
+   *          the colname
+   * @return the Field
+   */
+  public Field getField(String columnname) {
 
     Map<String, Field> m = _getFields();
     return m == null ? null : m.get(columnname);
@@ -195,6 +205,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
 
   /**
    * get the value by name from bean <br>
+   * .
    *
    * @param name
    *          the name of the data or the column
@@ -206,7 +217,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
     }
 
     String s = name.toString().toLowerCase();
-    Field f = _getField(s);
+    Field f = getField(s);
     if (f != null) {
       try {
         f.setAccessible(true);
@@ -336,7 +347,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
 
   /**
    * get the names from the bean, <br>
-   * the names in the "data" map, and the field annotation by @column
+   * the names in the "data" map, and the field annotation by @column.
    *
    * @return the sets of the names
    */
@@ -346,7 +357,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
   }
 
   /**
-   * get all the values, include the field annotation by @Column
+   * get all the values, include the field annotation by @Column.
    *
    * @return the collection
    */
@@ -356,7 +367,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
   }
 
   /**
-   * get all the Entries, include the field annotation by @Column
+   * get all the Entries, include the field annotation by @Column.
    *
    * @return the sets the
    */
@@ -499,7 +510,7 @@ public abstract class Bean implements Serializable, Map<String, Object> {
    * @param d
    *          the Document
    */
-  protected void load(Document d) {
+  public void load(Document d) {
     for (String name : d.keySet()) {
       Object o = d.get(name);
       if (o instanceof ObjectId) {
@@ -519,26 +530,27 @@ public abstract class Bean implements Serializable, Map<String, Object> {
    * @throws SQLException
    *           the SQL exception
    */
-  protected void load(ResultSet r) throws SQLException {
+  public void load(ResultSet r) throws SQLException {
     ResultSetMetaData m = r.getMetaData();
     int cols = m.getColumnCount();
     for (int i = 1; i <= cols; i++) {
-      Object o = r.getObject(i);
-      if (o instanceof java.sql.Date) {
+      try {
+        Object o = r.getObject(i);
+        if (o instanceof java.sql.Date) {
+          o = ((java.sql.Date) o).getTime();// .toString();
+        } else if (o instanceof java.sql.Time) {
+          o = ((java.sql.Time) o).getTime();// .toString();
+        } else if (o instanceof java.sql.Timestamp) {
+          o = ((java.sql.Timestamp) o).getTime();// .toString();
+          // } else if (o instanceof java.math.BigDecimal) {
+          // o = o.toString();
+        }
 
-        o = ((java.sql.Date) o).toString();
-
-      } else if (o instanceof java.sql.Time) {
-        o = ((java.sql.Time) o).toString();
-      } else if (o instanceof java.sql.Timestamp) {
-        o = ((java.sql.Timestamp) o).toString();
-      } else if (o instanceof java.math.BigDecimal) {
-        o = o.toString();
+        String name = m.getColumnName(i);
+        this.set(name, o);
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
       }
-
-      String name = m.getColumnName(i);
-      this.set(name, o);
-
     }
   }
 

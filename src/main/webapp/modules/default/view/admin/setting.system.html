@@ -1,8 +1,12 @@
-	<div><label><h3>$lang.get('base.setting.title'):</h3><g>$lang.get('global.setting.notes')</g></label></div>
+	<div><label><g>$lang.get('global.setting.notes')</g></label></div>
 	<hr/>
 	<div><label><h3>$lang.get('home.uri'):</h3>
 		<input type='text' name='home_uri' value="$!global.getString('home.uri','')"/>
 		<g>$lang.get('home.uri.hint')</g></label></div>
+		
+	<div><label><h3>$lang.get('ntp.server'):</h3>
+		<input type='text' name='ntpserver' value="$!global.getString('ntp.server','')"/>
+		<g>$lang.get('ntp.server.hint')</g></label></div>
 		
 	<div><label><h3>$lang.get('language'):</h3>
 		<select name='language'>
@@ -11,6 +15,33 @@
 		</select>
 		<g>$lang.get('language.hint')</g>
 	</label></div>
+			
+	<div><label><h3>$lang.get('cluster.code'):</h3>
+		<input type='number' name='cluster.code' value="$!global.getLong('cluster.code')"/>
+		<g>$lang.get('cluster.code.hint')</g></label></div>
+		
+	<div><label><h3>$lang.get('cross.domain'):</h3>
+		<input type='text' name='cross_domain' value="$!cross_domain"/>
+		<g>$lang.get('cross.domain.hint')</g></label></div>
+	<div><label><h3>$lang.get('cross.header'):</h3>
+		<input type='text' name='cross_header' value="$!cross_header" style="width:40%"/>
+		<g>$lang.get('cross.header.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('site.url'):</h3>
+		<input type='text' name='site_url' value="$!global.getString('site.url','')" />
+		<g>$lang.get('site.url.hint')</g>
+	</label></div>
+
+	<div><label><h3>$lang.get('module.center'):</h3>
+		<input type='checkbox' name='module_center' #if($global.getInt('module.center',0)==1) checked="checked" #end/>
+		<g>$lang.get('module.center.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('db.optimizer'):</h3>
+		<input type='checkbox' name='db.optimizer' #if($global.getInt("db.optimizer", 1)==1) checked="checked" #end />
+		<g>$lang.get('db.optimizer.hint')</g></label></div>
+	
+	<div><label><g>$lang.get('base.setting.user')</g></label></div>
+	<hr/>
 	<div><label><h3>$lang.get('user.name.rule'):</h3>
 		<input type='text' name='user_name' value="$!global.getString('user.name.rule','^[a-zA-Z0-9]{4,16}$')"/>
 		<g>$lang.get('user.name.rule.hint')</g></label></div>
@@ -44,40 +75,21 @@
 			#end
 		</select>
 		<g>$lang.get('user.role.hint')</g>
-	</label></div>
-
-	<div><label><h3>$lang.get('site.url'):</h3>
-		<input type='text' name='site_url' value="$!global.getString('site.url','')" />
-		<g>$lang.get('site.url.hint')</g>
-	</label></div>
-
-	<div><label><h3>$lang.get('module.center'):</h3>
-		<input type='checkbox' name='module_center' #if($global.getInt('module.center',0)==1) checked="checked" #end/>
-		<g>$lang.get('module.center.hint')</g></label></div>
-		
-	<div><label><h3>$lang.get('system.code'):</h3>
-		<input type='number' name='system_code' value="$!system_code"/>
-		<g>$lang.get('system.code.hint')</g></label></div>
-		
-	<div><label><h3>$lang.get('cross.domain'):</h3>
-		<input type='text' name='cross_domain' value="$!cross_domain"/>
-		<g>$lang.get('cross.domain.hint')</g></label></div>
-	<div><label><h3>$lang.get('cross.header'):</h3>
-		<input type='text' name='cross_header' value="$!cross_header" style="width:40%"/>
-		<g>$lang.get('cross.header.hint')</g></label></div>
-		
+	</label></div>		
 		
 	<div><label><g>$lang.get('base.setting.notes')</g></label></div>
 	<hr/>
-	<div><label><h3>node:</h3><i>$!node</i><g>$lang.get('node.hint')</g></label></div>
+	<div><label><h3>node:</h3><i>$!global.getString('node.name')</i><g>$lang.get('node.hint')</g></label></div>
 	<div><label><h3>cache.url:</h3><i>$!cache_url</i><g>$lang.get('cache.url.hint')</g></label></div>
 	<div><label><h3>cache.group:</h3><i>$!cache_group</i><g>$lang.get('cache.group.hint')</g></label></div>
 	<div><label><h3>mongo[default].url:</h3><i>$!mongo_url</i><g>$lang.get('mongo[default].url.hint')</g></label></div>
 	<div><label><h3>mongo[default].db:</h3><i>$!mongo_db</i><g>$lang.get('mongo[default].db.hint')</g></label></div>
 	<div><label><h3>db[default].url:</h3><i>$!db_url</i><g>$lang.get('db[default].url.hint')</g></label></div>
+	<div><label><h3>db.primary:</h3><i>$!db_primary</i></label></div>
 
 	<div><label><g>$lang.get('partial.lang.notes')</g></label></div>
 	<hr/>
 	<div><label><h3>browser.title:</h3><i>$lang.get('browser.title')</i></label></div>
 	<div><label><h3>site.title:</h3><i>$lang.get('site.title')</i></label></div>
+	<div><label><h3>site.logo:</h3><i>$lang.get('site.logo')</i></label></div>
 	

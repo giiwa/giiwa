@@ -39,6 +39,7 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class GImage is image utility, convert image, create QRCode image
  */

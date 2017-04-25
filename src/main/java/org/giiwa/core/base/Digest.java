@@ -18,6 +18,7 @@ import java.security.*;
 
 import javax.crypto.*;
 import javax.crypto.spec.DESKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -50,7 +51,8 @@ public class Digest {
   /**
    * Md5.
    *
-   * @param str the str
+   * @param str
+   *          the str
    * @return the string
    */
   public static String md5(String str) {
@@ -79,40 +81,83 @@ public class Digest {
   /**
    * Decrypt.
    *
-   * @param key the key
-   * @param str the str
+   * @param str
+   *          the str
+   * @param code
+   *          the code
    * @return the byte[]
-   * @throws Exception the exception
+   * @throws Exception
+   *           the exception
    */
-  public static byte[] decrypt(String key, String str) throws Exception {
-    DESKeySpec desKeySpec = new DESKeySpec(key.getBytes());
+  public static byte[] des_decrypt(byte[] str, String code) throws Exception {
+    DESKeySpec desKeySpec = new DESKeySpec(code.getBytes());
     SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");
     Key k = keyFactory.generateSecret(desKeySpec);
 
     Cipher cipher = Cipher.getInstance("DES");
     cipher.init(Cipher.DECRYPT_MODE, k);
-    byte b[] = Hex.decode(str);
 
-    return cipher.doFinal(b);
+    return cipher.doFinal(str);
 
   }
 
   /**
    * Encrypt.
    *
-   * @param key the key
-   * @param str the str
+   * @param str
+   *          the str
+   * @param code
+   *          the code
    * @return the string
-   * @throws Exception the exception
+   * @throws Exception
+   *           the exception
    */
-  public static String encrypt(String key, byte[] str) throws Exception {
-    DESKeySpec desKeySpec = new DESKeySpec(key.getBytes());
+  public static byte[] des_encrypt(byte[] str, String code) throws Exception {
+    DESKeySpec desKeySpec = new DESKeySpec(code.getBytes());
     SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");
     Key k = keyFactory.generateSecret(desKeySpec);
 
     Cipher cipher = Cipher.getInstance("DES");
     cipher.init(Cipher.ENCRYPT_MODE, k);
 
-    return new String(Hex.encode(cipher.doFinal(str)));
+    return cipher.doFinal(str);
   }
+
+  public static byte[] aes_decrypt(byte[] content, String code) throws Exception {
+    KeyGenerator kgen = KeyGenerator.getInstance("AES");
+    SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+    random.setSeed(code.getBytes());
+    kgen.init(128, random);
+    SecretKey secretKey = kgen.generateKey();
+    byte[] enCodeFormat = secretKey.getEncoded();
+    SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
+    Cipher cipher = Cipher.getInstance("AES");
+    cipher.init(Cipher.DECRYPT_MODE, key);
+    byte[] result = cipher.doFinal(content);
+    return result;
+  }
+
+  public static byte[] aes_encrypt(byte[] content, String code) throws Exception {
+    KeyGenerator kgen = KeyGenerator.getInstance("AES");
+    SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+    random.setSeed(code.getBytes());
+    kgen.init(128, random);
+    SecretKey secretKey = kgen.generateKey();
+    byte[] enCodeFormat = secretKey.getEncoded();
+    SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
+    Cipher cipher = Cipher.getInstance("AES");
+    cipher.init(Cipher.ENCRYPT_MODE, key);
+    byte[] result = cipher.doFinal(content);
+    return result;
+  }
+
+  public static void main(String[] args) throws Exception {
+    String s = "123";
+    String code = "12312312";
+    byte[] bb = Digest.aes_encrypt(s.getBytes(), code);
+    s = new String(Digest.aes_decrypt(bb, code));
+
+    System.out.println(s);
+  }
+
 }

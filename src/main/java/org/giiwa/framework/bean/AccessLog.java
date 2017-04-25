@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -49,7 +50,19 @@ public class AccessLog extends Bean {
   private static final long serialVersionUID = 1L;
 
   static AtomicLong         seq              = new AtomicLong(0);
-  static String             node             = Config.getConfig().getString("node");
+  static String             node             = Config.getConf().getString("node.name");
+
+  @Column(name = X.ID, index = true, unique = true)
+  private String            id;
+
+  @Column(name = "url", index = true)
+  private String            url;
+
+  @Column(name = "cost", index = true)
+  private long              cost;
+
+  @Column(name = X.CREATED, index = true)
+  private long              created;
 
   public static boolean isOn() {
     return Global.getInt("accesslog.on", 1) == 1;
@@ -87,7 +100,7 @@ public class AccessLog extends Bean {
       public void onExecute() {
         long created = System.currentTimeMillis();
         String id = UID.id(ip, url, created, node, seq.incrementAndGet());
-        Helper.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set("created", created), AccessLog.class);
+        Helper.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created), AccessLog.class);
       }
 
     }.schedule(0);
@@ -108,12 +121,16 @@ public class AccessLog extends Bean {
     return Helper.load(q, s, n, AccessLog.class);
   }
 
+  public static AccessLog load(String id) {
+    return Helper.load(id, AccessLog.class);
+  }
+
   /**
    * Cleanup.
    */
   public static void cleanup() {
     Helper.delete(
-        new BasicDBObject().append("created", new BasicDBObject().append("$lt", System.currentTimeMillis() - X.AMONTH)),
+        new BasicDBObject().append(X.CREATED, new BasicDBObject().append("$lt", System.currentTimeMillis() - X.AMONTH)),
         AccessLog.class);
   }
 

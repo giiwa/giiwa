@@ -47,26 +47,21 @@
 				<div><label><h3>$lang.get('setup.label.driver')：</h3>
 					<select name='driver' onchange='_ondriver();'>
 						jdbc:derby:sampledb;create=true
-						<option user='0' tips='derby' value='org.apache.derby.jdbc.EmbeddedDriver' #if($global.getString('db.driver', '') == 'org.apache.derby.jdbc.EmbeddedDriver') selected #end>Derby</option>
 						<option user='0' tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
 						<option user='0' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
 						<option user='0' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
 						<option user='0' tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
 						<option user='1' tips='db2' value='com.ibm.db2.jcc.DB2Driver' #if($global.getString('db.driver', '') == 'com.ibm.db2.jcc.DB2Driver') selected #end>DB2</option>
-						<option user='1' tips='sqlserver2000' value='com.microsoft.jdbc.sqlserver.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.jdbc.sqlserver.SQLServerDriver') selected #end>SQL Server 2000</option>
-						<option user='1' tips='sqlserver2005' value='com.microsoft.sqlserver.jdbc.SQLServerDriver' #if($global.getString('db.driver', '') == 'com.microsoft.sqlserver.jdbc.SQLServerDriver') selected #end>SQL Server 2005</option>
 					</select>
 				</label></div>
 				
-				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3><input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
-					<g class='derby' style='display:none'>jdbc:derby:sampledb;create=true</g>
-					<g class='hsqldb' style='display:none'>jdbc:hsqldb:file:/opt/db/testdb;ifexists=false</g>
-					<g class='postgres' style='display:none'>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
-					<g class='mysql' style='display:none'>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
-					<g class='oracle' style='display:none'>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
-					<g class='db2' style='display:none'>jdbc:db2://x.x.x.x:50000/dbname</g>
-					<g class='sqlserver2000' style='display:none'>jdbc:microsoft:sqlserver://x.x.x.x:1433</g>
-					<g class='sqlserver2005' style='display:none'>jdbc:sqlserver://x.x.x.x:1433</g>
+				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3>
+					<input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
+					<g class='hsqldb' style='display:none' dd='jdbc:hsqldb:file:${home}/db/demo;ifexists=false'>jdbc:hsqldb:file:db/demo;ifexists=false</g>
+					<g class='postgres' style='display:none' dd=''>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
+					<g class='mysql' style='display:none' dd=''>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
+					<g class='oracle' style='display:none' dd=''>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
+					<g class='db2' style='display:none' dd=''>jdbc:db2://x.x.x.x:50000/dbname</g>
 				</label></div>
 				<input type="password" style="display:none">
 				<div class='username'><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
@@ -82,8 +77,8 @@
 		<div id="system" class='panel' data-next="cache" data-prev="db">
 			<div class='head'>$lang.get('configure.title.system')</div>	
 			<form method="post">
-				<div><label><h3>$lang.get('label.node')<r>*</r>:</h3><input type='text' name='node' value="$global.getString('node','g01')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
-				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='systemcode' value="$!global.getLong('system.code',0)"/><g>同一个分布式节点编号相同</g></label></div>
+				<div><label><h3>$lang.get('label.node')<r>*</r>:</h3><input type='text' name='node.name' value="$local.getString('node.name','g01')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
+				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='cluster.code' value="$!global.getLong('cluster.code',0)"/><g>同一个分布式节点编号相同</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
@@ -92,26 +87,11 @@
 			</form>
 		</div>		
 
-		<div id="cache" class='panel' data-next="admin" data-prev="system" data-check='check_cache'>
+		<div id="cache" class='panel' data-prev="system">
 			<div class='head'>$lang.get('setup.title.cache')</div>	
 			<form method="post">
 				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!global.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
 				<div><label><h3>$lang.get('setup.label.group')：</h3><input type='text' name='group' value="$!global.getString('cache.group', '')"/></label></div>
-				
-				<div class='btns'>
-						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
-						<a class='next btn btn-success'>$lang.get('a.next')</a>
-				</div>
-			</form>
-		</div>		
-
-		<div id="admin" class='panel' data-prev="cache">
-			<div class='head'>$lang.get('configure.title.admin')</div>	
-			<form method="post">
-				<div><label><h3>$lang.get('setup.label.admin')<r>*</r>：</h3><input type='text' name='admin' value='admin'/></label></div>
-				<div><label><h3>$lang.get('setup.label.passwd')<r>*</r>：</h3><input type='password' name='password' value=''/></label></div>
-				<div><label><h3>$lang.get('setup.label.email')：</h3><input type='email' name='email' value=''/></label></div>
-				<div><label><h3>$lang.get('setup.label.phone')：</h3><input type='tel' name='phone' value=''/></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
@@ -156,6 +136,12 @@ function _ondriver(){
 		$('#db .username').hide();
 		$('#db .passwd').hide();
 	}
+	if(tips == 'hsqldb') {
+		$('#db input[name=url]').hide();
+	} else {
+		$('#db input[name=url]').show();
+	}
+	$('#db input[name=url]').val($('#db .url g.' + tips).attr('dd'));
 }
 $(function(){
 	_ondriver();
@@ -228,7 +214,7 @@ $(function(){
 		p["phone"] = $('#admin input[name=phone]').val();
 		
 		processing && processing.show();
-		$.post('/setup/save', p, function(d){
+		$.post('/admin/setup/save', p, function(d){
 			
 			if(d.state == 200) {
 				setTimeout(function(){
@@ -244,6 +230,7 @@ $(function(){
 	$('#db select[name=driver]').trigger('change');
 	
 })
+var dbadmin = 0;
 function check_db(f){
 	processing && processing.show();
 	var  p = {op:'db'};
@@ -251,9 +238,10 @@ function check_db(f){
 	p.url = $('#db input[name=url]').val();
 	p.username = $('#db input[name=username]').val();
 	p.passwd = $('#db input[name=passwd]').val();
-	$.post('/setup/check', p).done(function(d){
+	$.post('/admin/setup/check', p).done(function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
+			dbadmin = d.admin;
 			f();
 		} else {
 			$.error(d.message);
@@ -263,14 +251,16 @@ function check_db(f){
 		$.error("$lang.get('try.later')");
 	});
 }
+var mongoadmin = 0
 function check_mongo(f){
 	processing && processing.show();
 	var  p = {op:'mongo'};
 	p.db = $('#mongo input[name=db]').val();
 	p.url = $('#mongo input[name=url]').val();
-	$.post('/setup/check', p, function(d){
+	$.post('/admin/setup/check', p, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
+			mongoadmin = d.admin;
 			f();
 		} else {
 			$.error(d.message);
@@ -282,7 +272,7 @@ function check_cache(f){
 	var  p = {op:'cache'};
 	p.url = $('#cache input[name=url]').val();
 	p.group = $('#cache input[name=group]').val();
-	$.post('/setup/check', p, function(d){
+	$.post('/admin/setup/check', p, function(d){
 		processing && processing.hide();
 		if(d.state == 200) {
 			f();
@@ -294,7 +284,7 @@ function check_cache(f){
 function check_admin(f){
 	processing && processing.show();
 	var  p = {op:'admin'};
-	$.post('/setup/check', p, function(d){
+	$.post('/admin/setup/check', p, function(d){
 		processing && processing.hide();
 		f();
 	})

@@ -40,7 +40,7 @@ public class Access extends Bean {
   */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = X.ID)
+  @Column(name = X.ID, index = true, unique = true)
   private String            name;
 
   /**
@@ -79,10 +79,12 @@ public class Access extends Bean {
   public static void set(String name) {
     if (X.isEmpty(name) || !name.startsWith("access.")) {
       log.error("error access.name: " + name, new Exception("error access name:" + name));
-    } else if (!exists(name)) {
+    } else {
       String[] ss = name.split("[\\|｜]");
       for (String s : ss) {
-        Helper.insert(V.create(X.ID, s), Access.class);
+        if (!exists(s)) {
+          Helper.insert(V.create(X.ID, s), Access.class);
+        }
       }
     }
   }

@@ -24,7 +24,7 @@
 
 						_hook(that);
 
-						resize();
+						giiwa.resize();
 					});
 
 			function tohtml(e) {
@@ -91,7 +91,7 @@
 								$("#menu .menu .selected")
 										.removeClass("selected");
 								that.addClass("selected");
-								load(that.attr('data-load'));
+								giiwa.load(that.attr('data-load'));
 							}
 
 							// if hasclick, open this
@@ -115,7 +115,7 @@
 				if (o.hasClass('open')) {
 					o.removeClass('open');
 					$(parent.find('.children')[0]).slideUp(500, function() {
-								resize();
+								giiwa.resize();
 							});
 				} else {
 					o.addClass('open');
@@ -138,13 +138,13 @@
 											500, 'easeOutQuad', function() {
 												parent.removeClass('loading');
 
-												resize();
+												giiwa.resize();
 											});
 								})
 					} else {
 						$(parent.find('.children')[0]).slideDown(500,
 								'easeOutQuad', function() {
-									resize();
+									giiwa.resize();
 								});
 					}
 				}

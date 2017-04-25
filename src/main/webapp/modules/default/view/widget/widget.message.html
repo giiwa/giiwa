@@ -1,13 +1,16 @@
-#if($error)
 <script>
+#if($error)
 	$(function() {
 		$.error("$error")
 	})
-</script>
+#elseif($warn)
+	$(function() {
+		$.warn("$warn")
+	})
 #elseif($message)
-<script>
 	$(function() {
 		$.hint("$message")
 	})
-</script>
 #end
+	giiwa.history('$query');
+</script>

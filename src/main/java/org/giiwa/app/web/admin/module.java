@@ -27,8 +27,6 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.app.web.DefaultListener;
-import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.Helper.W;
@@ -541,38 +539,38 @@ public class module extends Model {
     JSON jo = new JSON();
 
     try {
-      boolean restart = Module.install(e);
+      boolean restart = Module.prepare(e);
 
       jo.put("result", "ok");
 
       if (restart) {
         jo.put(X.STATE, 201);
-        jo.put("message", lang.get("restarting.giiwa"));
+        jo.put(X.WARN, lang.get("restarting.giiwa"));
       } else {
         jo.put(X.STATE, 200);
-        jo.put("message", lang.get("restart.required"));
+        jo.put(X.WARN, lang.get("restart.required"));
       }
 
       if (restart) {
-        new Task() {
+        Task.create(new Runnable() {
 
           @Override
-          public void onExecute() {
-
+          public void run() {
             // cleanup first, otherwise may cause can not be startup
-            DefaultListener.cleanup(new File(Model.HOME), new HashMap<String, FileVersion>());
+            // DefaultListener.cleanup(new File(Model.HOME), new HashMap<String,
+            // FileVersion>());
 
             log.info("WEB-INF has been merged, need to restart");
             System.exit(0);
+
           }
 
-        }.schedule(2000);
+        }).schedule(2000);
       }
 
     } catch (Exception e1) {
       jo.put(X.STATE, 404);
-      jo.put("result", "fail");
-      jo.put("message", "entity not found in repo for [" + url + "]");
+      jo.put(X.ERROR, "entity not found in repo for [" + url + "]");
 
     }
 
@@ -595,8 +593,8 @@ public class module extends Model {
       m = m.floor();
     }
 
-    Configuration conf = Config.getConfig();
-    this.set("node", conf.getString("node", ""));
+    Configuration conf = Config.getConf();
+    this.set("node", conf.getString("node.name", ""));
 
     this.set("actives", actives);
 

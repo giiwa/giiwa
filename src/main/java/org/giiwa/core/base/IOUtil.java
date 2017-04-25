@@ -23,6 +23,9 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.giiwa.core.bean.X;
+
+// TODO: Auto-generated Javadoc
 /**
  * IO utility
  * 
@@ -58,7 +61,7 @@ public final class IOUtil {
    */
   public static int delete(File f) throws IOException {
     int count = 0;
-    if (f.isFile()) {
+    if (f.isFile() || isLink(f)) {
       f.delete();
       count++;
     } else if (f.isDirectory()) {
@@ -72,6 +75,10 @@ public final class IOUtil {
       count++;
     }
     return count;
+  }
+
+  private static boolean isLink(File f) throws IOException {
+    return !X.isSame(f.getAbsolutePath(), f.getCanonicalPath());
   }
 
   /**
@@ -108,8 +115,8 @@ public final class IOUtil {
   }
 
   /**
-   * copy all the files except
-   * 
+   * copy all the files except.
+   *
    * @param src
    *          the source dir
    * @param dest

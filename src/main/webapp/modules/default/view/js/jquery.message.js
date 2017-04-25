@@ -22,16 +22,16 @@ jQuery.extend({
 		overlay.click(function() {
 					overlay.hide();
 					$('.leanmodal').hide();
-					
+
 					onclick && onclick();
 				});
 		m.click(function() {
 					overlay.click();
 				});
 	},
-	
+
 	hint : function(message, delay) {
-		if(!delay) {
+		if (!delay) {
 			delay = 2000;
 		}
 		$('#error.leanmodal').hide();
@@ -45,28 +45,40 @@ jQuery.extend({
 		m.css({
 					'display' : 'block'
 				});
-		setTimeout(function(){
-			m.fadeOut();
-		}, delay);
+		setTimeout(function() {
+					m.fadeOut();
+				}, delay);
 	},
-	
-	warn : function(message, delay) {
-		if(!delay) {
-			delay = 2000;
-		}
-		var m = $('#warn.leanmodal');
+	warn : function(message, onclick) {
+		$('#message.leanmodal').hide();
+		var m = $('#error.leanmodal');
 		if (m.length == 0) {
-			m = $("<div id='warn' class='leanmodal'><div class='leanmodal-content'></div></div>");
+			m = $("<div id='warn' class='leanmodal'><div class='leanmodal-header'></div><div class='leanmodal-content'></div></div>");
 			$('body').append(m);
 		}
 		m.find('.leanmodal-content').html(message);
+		var overlay = $('#lean_overlay');
+		if (overlay.length == 0) {
+			overlay = $("<div id='lean_overlay'></div>");
+			$("body").append(overlay);
+		}
+		overlay.css({
+					'display' : 'block',
+					opacity : 0.5
+				});
 		m.css({
 					'display' : 'block'
 				});
-		setTimeout(function(){
-			m.fadeOut();
-		}, delay);
-	},	
+		overlay.click(function() {
+					overlay.hide();
+					$('.leanmodal').hide();
+
+					onclick && onclick();
+				});
+		m.click(function() {
+					overlay.click();
+				});
+	},
 	error : function(message, onclick) {
 		$('#message.leanmodal').hide();
 		var m = $('#error.leanmodal');

@@ -179,15 +179,14 @@
 					processing && processing.hide();
 					
 					if (d.state == 200) {
-						$.message(d.message);
+						$.message(d.warn);
 					} else if (d.state == 201) {
-						$.warn(d.message, 3000);
+						$.warn(d.warn, 3000);
 						setTimeout(function() {
-							processing && processing.show();
 							setInterval(_load, 5000);
 						}, 3000);
 					} else {
-						$.error(d.message);
+						$.error(d.error);
 					}
 
 				});

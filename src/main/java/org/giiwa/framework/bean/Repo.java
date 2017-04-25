@@ -80,7 +80,7 @@ public class Repo extends Bean {
    * @return the beans
    */
   public static Beans<Entity> list(long uid, int offset, int limit) {
-    return Helper.load(W.create("uid", uid).sort("created", -1), offset, limit, Entity.class);
+    return Helper.load(W.create("uid", uid).sort(X.CREATED, -1), offset, limit, Entity.class);
   }
 
   /**
@@ -95,7 +95,7 @@ public class Repo extends Bean {
    * @return the beans
    */
   public static Beans<Entity> list(String tag, int offset, int limit) {
-    return Helper.load(W.create("tag", tag).sort("created", -1), offset, limit, Entity.class);
+    return Helper.load(W.create("tag", tag).sort(X.CREATED, -1), offset, limit, Entity.class);
   }
 
   /**
@@ -435,7 +435,7 @@ public class Repo extends Bean {
     }
 
     public long getCreated() {
-      return getLong("created");
+      return getLong(X.CREATED);
     }
 
     transient User user;
@@ -545,7 +545,7 @@ public class Repo extends Bean {
             } else {
               Helper.insert(
                   V.create(X.ID, getId()).set("uid", 0).set("total", pp).set("tag", tag).set("expired", getExpired())
-                      .set("created", System.currentTimeMillis()).set("flag", flag).set("name", name),
+                      .set(X.CREATED, System.currentTimeMillis()).set("flag", flag).set("name", name),
                   Entity.class);
             }
           } catch (Exception e1) {

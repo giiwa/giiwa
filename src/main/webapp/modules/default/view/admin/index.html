@@ -8,8 +8,8 @@
 	</div>
 	<div class='right'>
 		<div class='t_left'>
-			<a class='icon icon-arrow-left' href='javascript:;' onclick='back();' title="$lang.get('a.back')"></a>
-			<a class='icon icon-laptop' href='javascript:;' onclick='load("/admin/dashboard")' title="$lang.get('a.dashboard')"></a>
+			<a class='icon icon-arrow-left' href='javascript:;' onclick='giiwa.back();' title="$lang.get('a.back')"></a>
+			<a class='icon icon-laptop' href='javascript:;' onclick='giiwa.load("/admin/dashboard")' title="$lang.get('a.dashboard')"></a>
 		</div>
 	</div>
 </div>
@@ -47,7 +47,7 @@
 			name : 'admin'
 		});
 
-		load('/admin/dashboard');
+		giiwa.load('/admin/dashboard');
 
 		$('body').bind('keydown', function(e) {
 			var target = e.target.nodeName;
@@ -55,15 +55,13 @@
 			
 			if(e.which == 116) {
 				//F5
-				if(typeof(reload) == 'function') {
-					if(reload()) {
-						e.preventDefault();
-					}
+				if(giiwa.reload()) {
+					e.preventDefault();
 				}
 			} else if(!edit && e.which == 8){
 				//backspace
 				if(typeof(back) == 'function') {
-					back();
+					giiwa.back();
 					e.preventDefault();
 				}
 			} else if(!edit && e.which == 36) {

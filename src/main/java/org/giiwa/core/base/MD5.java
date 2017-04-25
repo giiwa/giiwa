@@ -24,6 +24,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+// TODO: Auto-generated Javadoc
 /**
  * MD5 utility
  * 
@@ -34,7 +35,7 @@ public class MD5 {
   private static Log log = LogFactory.getLog(MD5.class);
 
   /**
-   * Generate Md5 string for the file
+   * Generate Md5 string for the file.
    *
    * @param f
    *          the file
@@ -80,7 +81,7 @@ public class MD5 {
   }
 
   /**
-   * Generate Md5 string for the string
+   * Generate Md5 string for the string.
    *
    * @param target
    *          the target
@@ -102,8 +103,8 @@ public class MD5 {
   }
 
   /**
-   * Generate SHA1 string for the string
-   * 
+   * Generate SHA1 string for the string.
+   *
    * @param data
    *          the string
    * @return the sha1 string

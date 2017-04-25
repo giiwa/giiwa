@@ -135,7 +135,7 @@ public class Session implements Serializable {
    * @return the session
    */
   public Session store() {
-    long expired = Global.getLong("session.alive", X.AWEEK);
+    long expired = Global.getLong("session.alive", X.AWEEK/X.AHOUR) *X.AHOUR;
     if (expired > 0) {
       expired = System.currentTimeMillis() + expired;
     } else {
@@ -188,6 +188,8 @@ public class Session implements Serializable {
   /**
    * Gets the.
    * 
+   * @param <T>
+   *          the object
    * @param key
    *          the key
    * @return the object

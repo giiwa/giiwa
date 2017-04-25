@@ -12,8 +12,9 @@
 		#if($page)
 			#parse($page)
 		#end
-		<button type='submit'>$lang.get('btn.save')</button>
-		<a class='btn btn-danger' href='/admin/setting/reset/$name'>$lang.get('a.reset')</a>
-		
+		<div class="btns">
+			<button type='submit'>$lang.get('btn.save')</button>
+			<a class='btn btn-danger' href='/admin/setting/reset/$name'>$lang.get('a.reset')</a>
+		</div>
 	</form>
 </div>

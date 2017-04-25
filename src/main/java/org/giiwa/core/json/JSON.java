@@ -14,6 +14,8 @@
 */
 package org.giiwa.core.json;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
@@ -49,6 +51,7 @@ public final class JSON extends HashMap<String, Object> {
    * parse the json object to JSON
    * 
    * @param json
+   *          the json object
    * @return JSON, null if failed
    */
   public static JSON fromObject(Object json) {
@@ -68,56 +71,61 @@ public final class JSON extends HashMap<String, Object> {
   public static JSON fromObject(Object json, boolean lenient) {
 
     JSON j = null;
-    if (json instanceof JSON) {
-      j = (JSON) json;
-    } else if (json instanceof Map) {
-      j = JSON.create((Map) json);
-    } else if (json instanceof String) {
-      Gson g = new Gson();
-      JsonReader reader = new JsonReader(new StringReader((String) json));
-      reader.setLenient(lenient);
-      j = g.fromJson(reader, JSON.class);
-    } else if (json instanceof Reader) {
-      Gson g = new Gson();
-      j = g.fromJson((Reader) json, JSON.class);
-    } else if (json instanceof byte[]) {
-      Gson g = new Gson();
-      byte[] b1 = (byte[]) json;
-      j = g.fromJson(new String(b1), JSON.class);
-    } else if (json != null) {
-      // from a object
-      Field[] ff = json.getClass().getDeclaredFields();
-      if (ff != null && ff.length > 0) {
-        j = JSON.create();
-        for (Field f : ff) {
-          int m = f.getModifiers();
-          if ((m & (Modifier.TRANSIENT | Modifier.STATIC | Modifier.FINAL)) == 0) {
-            try {
-              f.setAccessible(true);
-              j.put(f.getName(), f.get(json));
-            } catch (Exception e) {
-              log.error(e.getMessage(), e);
+    try {
+      if (json instanceof JSON) {
+        j = (JSON) json;
+      } else if (json instanceof Map) {
+        j = JSON.create((Map) json);
+      } else if (json instanceof String) {
+        Gson g = new Gson();
+        JsonReader reader = new JsonReader(new StringReader((String) json));
+        reader.setLenient(lenient);
+        j = g.fromJson(reader, JSON.class);
+      } else if (json instanceof Reader) {
+        Gson g = new Gson();
+        j = g.fromJson((Reader) json, JSON.class);
+      } else if (json instanceof byte[]) {
+        Gson g = new Gson();
+        byte[] b1 = (byte[]) json;
+        JsonReader reader = new JsonReader(new InputStreamReader(new ByteArrayInputStream(b1)));
+        reader.setLenient(lenient);
+        j = g.fromJson(reader, JSON.class);
+      } else if (json != null) {
+        // from a object
+        Field[] ff = json.getClass().getDeclaredFields();
+        if (ff != null && ff.length > 0) {
+          j = JSON.create();
+          for (Field f : ff) {
+            int m = f.getModifiers();
+            if ((m & (Modifier.TRANSIENT | Modifier.STATIC | Modifier.FINAL)) == 0) {
+              try {
+                f.setAccessible(true);
+                j.put(f.getName(), f.get(json));
+              } catch (Exception e) {
+                log.error(e.getMessage(), e);
+              }
             }
           }
         }
       }
-    }
 
-    _refine(j);
+      _refine(j);
 
-    if (j != null) {
-      for (String name : j.keySet().toArray(new String[j.size()])) {
-        Object o = j.get(name);
-        if (o == null) {
-          j.remove(name);
-        } else if (o instanceof List) {
-          j.put(name, fromObjects(o));
-        } else if (o instanceof Map) {
-          j.put(name, fromObject(o));
+      if (j != null) {
+        for (String name : j.keySet().toArray(new String[j.size()])) {
+          Object o = j.get(name);
+          if (o == null) {
+            j.remove(name);
+          } else if (o instanceof List) {
+            j.put(name, fromObjects(o));
+          } else if (o instanceof Map) {
+            j.put(name, fromObject(o));
+          }
         }
       }
+    } catch (Exception e) {
+      log.error(json, e);
     }
-
     return j;
   }
 
@@ -215,6 +223,25 @@ public final class JSON extends HashMap<String, Object> {
    */
   public static JSON create() {
     return new JSON();
+  }
+
+  /**
+   * create the JSON from the args
+   * 
+   * @param args
+   *          the object pair, eg,: new Object[]{"aa", 1}
+   * @return the JSON
+   */
+  public static JSON create(Object[]... args) {
+    JSON j = new JSON();
+    if (args != null && args.length > 0) {
+      for (Object[] ss : args) {
+        if (ss.length == 2) {
+          j.put(ss[0].toString(), ss[1]);
+        }
+      }
+    }
+    return j;
   }
 
   /**
@@ -541,6 +568,20 @@ public final class JSON extends HashMap<String, Object> {
    */
   public JSON set(String xpath, Object value) {
     set(this, xpath, value);
+    return this;
+  }
+
+  /**
+   * put the value
+   * 
+   * @param name
+   *          the name
+   * @param value
+   *          the value
+   * @return the JSON
+   */
+  public JSON append(String name, Object value) {
+    put(name, value);
     return this;
   }
 

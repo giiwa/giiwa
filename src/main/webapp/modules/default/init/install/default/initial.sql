@@ -19,6 +19,7 @@ create table gi_user
 	nickname varchar(255),
 	title varchar(255),
 	password varchar(255),
+	md4passwd varchar(128),
 	locked int default 0,
 	lockexpired bigint default 0,
 	logintimes int default 0,
@@ -42,6 +43,7 @@ create unique index gi_user_indexid on gi_user(id);
 create unique index gi_user_index_name on gi_user(name);
 create index gi_user_index_deleted on gi_user(deleted);
 create index gi_user_index_locked on gi_user(locked);
+alter table gi_user add md4passwd varchar(128);
 
 #drop table if exists gi_userrole;
 create table gi_userrole
@@ -142,6 +144,7 @@ create table gi_menu
 	tip varchar(255),
 	style varchar(255),
 	load1 varchar(255),
+	show1 varchar(255),
 	created bigint default 0,
 	updated bigint default 0
 );
@@ -152,6 +155,7 @@ create index gi_menu_index_tag on gi_menu(tag);
 create index gi_menu_index_seq on gi_menu(seq);
 create index gi_menu_index_node on gi_menu(node);
 
+alter table gi_menu add show1 varchar(255);
 alter table gi_menu add updated bigint default 0;
 alter table gi_menu add created bigint default 0;
 
@@ -248,3 +252,30 @@ create table gi_userlock
 	updated bigint default 0
 );
 create index gi_userlock_index_uid on gi_userlock(uid);
+
+create table gi_httpcookie
+(
+	id varchar(50),
+	name varchar(50),
+	value varchar(255),
+	domain varchar(255),
+	path varchar(255),
+	expired bigint default 0,
+	created bigint default 0,
+	updated bigint default 0
+);
+
+create table gi_app
+(
+	id bigint,
+	appid varchar(50),
+	memo varchar(255),
+	secret varchar(128),
+	ip varchar(25),
+	lastime bigint,
+	expired bigint,
+	role bigint,
+	updated bigint,
+	created bigint
+);
+create index gi_app_index_appid on gi_app(appid);

@@ -38,7 +38,20 @@ public class StringFinder {
 
   private StringFinder(String s) {
     this.s = s;
-    len = s.length();
+    len = s == null ? 0 : s.length();
+  }
+
+  /**
+   * skip the " " in current position
+   */
+  public void trim() {
+    while (hasMore()) {
+      char c = next();
+      if (c != ' ') {
+        skip(-1);
+        return;
+      }
+    }
   }
 
   /**
@@ -57,8 +70,116 @@ public class StringFinder {
   }
 
   /**
-   * get the char by offset refer the current position
+   * Next to the deli, and return the substring.
+   *
+   * @param deli
+   *          the deli
+   * @return the string
+   */
+  public String nextTo(String deli) {
+    if (s == null || pos >= s.length()) {
+      return null;
+    }
+
+    String s1 = null;
+
+    int min = Integer.MAX_VALUE;
+    String[] ss = X.split(deli, "[\\(\\|\\)]");
+    for (String s2 : ss) {
+      int i = s.indexOf(s2, pos);
+      if (i > -1 && i < min) {
+        min = i;
+      }
+    }
+    if (min >= pos && min < len) {
+      s1 = s.substring(pos, min);
+      pos = min;
+    } else {
+      s1 = s.substring(pos);
+      pos = s.length();
+    }
+
+    return s1.trim();
+  }
+
+  /**
+   * Get all the remain substring
+   *
+   * @return the string
+   */
+  public String remain() {
+    if (s == null || pos >= s.length()) {
+      return null;
+    }
+    String s1 = s.substring(pos);
+    pos = s.length();
+    return s1.trim();
+  }
+
+  public boolean hasMore() {
+    return (s != null && pos < s.length());
+  }
+
+  /**
+   * next word includes the special chars
    * 
+   * @param schars
+   *          the special chars
+   * @return the String
+   */
+  public String next(String schars) {
+    StringBuilder sb = new StringBuilder();
+    while (hasMore()) {
+      char c = next();
+      if (wordchars.indexOf(c) >= 0) {
+        sb.append(c);
+      } else if (schars != null && schars.indexOf(c) >= 0) {
+        sb.append(c);
+      } else {
+        skip(-1);
+        break;
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * get the next string between the pair char
+   * 
+   * @param c
+   * @return
+   */
+  public String pair(char c) {
+    StringBuilder sb = new StringBuilder();
+
+    while (hasMore()) {
+      char c1 = next();
+      if (c == c1) {
+        break;
+      }
+      sb.append(c1);
+
+      if (c1 == '\\') {
+        sb.append(next());
+      }
+    }
+    return sb.toString();
+  }
+
+  private static String wordchars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  /**
+   * the next char
+   * 
+   * @return the char
+   */
+  public char next() {
+    return s.charAt(pos++);
+  }
+
+  /**
+   * get the char by offset refer the current position.
+   *
    * @param offset
    *          the offset
    * @return the char
@@ -68,8 +189,8 @@ public class StringFinder {
   }
 
   /**
-   * get the char by the absolute position
-   * 
+   * get the char by the absolute position.
+   *
    * @param position
    *          the position
    * @return the char
@@ -93,6 +214,15 @@ public class StringFinder {
     return pos;
   }
 
+  /**
+   * Bracket.
+   *
+   * @param begin
+   *          the begin
+   * @param end
+   *          the end
+   * @return the string
+   */
   public String bracket(char begin, char end) {
     if (s == null)
       return null;
@@ -130,7 +260,7 @@ public class StringFinder {
         char c = s.charAt(pos);
         if (c == end && ss.isEmpty()) {
           e0 = pos;
-          pos ++;
+          pos++;
           break;
         } else if (c == '(' || c == '{' || c == '[') {
           ss.push(c);
@@ -158,6 +288,13 @@ public class StringFinder {
     return null;
   }
 
+  /**
+   * Skip.
+   *
+   * @param c0
+   *          the c0
+   * @return the int
+   */
   public int skip(char c0) {
     char c = s.charAt(pos);
     while (pos < len) {

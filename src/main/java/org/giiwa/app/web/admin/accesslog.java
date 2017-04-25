@@ -22,6 +22,7 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.AccessLog;
+import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
@@ -35,7 +36,7 @@ import org.giiwa.framework.web.Path;
  */
 public class accesslog extends Model {
 
-  @Path(path = "open", login = true, access = "acess.logs.admin")
+  @Path(path = "open", login = true, access = "access.config.admin|access.logs.admin")
   public void open() {
     JSON jo = JSON.create();
     int on = this.getInt("on");
@@ -50,7 +51,7 @@ public class accesslog extends Model {
    * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
-  @Path(login = true, access = "acess.logs.admin")
+  @Path(login = true, access = "access.config.admin|access.logs.admin")
   public void onGet() {
     String uri = this.getString("guri");
     String ip = this.getString("ip");
@@ -72,10 +73,10 @@ public class accesslog extends Model {
       this.set("gsid", gsid);
     }
     int s = this.getInt("s");
-    int n = this.getInt("n", 10, "number.per.page");
+    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
     if (X.isEmpty(sortby)) {
-      sortby = "created";
+      sortby = X.CREATED;
     }
     this.set("sortby", sortby);
     this.set("sortby_type", sortby_type);
@@ -92,9 +93,18 @@ public class accesslog extends Model {
   /**
    * Deleteall.
    */
-  @Path(path = "deleteall", login = true, access = "acess.logs.admin")
+  @Path(path = "deleteall", login = true, access = "access.config.admin|access.logs.admin")
   public void deleteall() {
     AccessLog.deleteAll();
+  }
+
+  @Path(path = "detail", login = true, access = "access.config.admin")
+  public void detail() {
+    String id = this.getString("id");
+    AccessLog d = AccessLog.load(id);
+    this.set("b", d);
+    this.set("id", id);
+    this.show("/admin/accesslog.detail.html");
   }
 
 }

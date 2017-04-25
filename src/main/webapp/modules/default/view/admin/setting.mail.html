@@ -3,25 +3,29 @@
 </div>
 
 <div>
-	<label><h3>Protocol:</h3>
+	<label><h3>$lang.get('mail.protocol'):</h3>
 		<select name='protocol'>
 			<option class='smtp' #if($protocol=='smtp') selected #end>SMTP</option>
 			<option class='smtps' #if($protocol=='smtps') selected #end>SMTPS</option>
 		</select>
 		<g>$lang.get('mail.protocol')</g></label>
 </div>
+
+		<input type='password' name="passwd" style="display:none"/>
+
 <div>
-	<label><h3>HOST:</h3><input type='text' name='host' value='$!host' /><g>$lang.get('mail.host')</g></label>
+	<label><h3>$lang.get('mail.host'):</h3><input type='text' name='host' value='$!host' /><g>$lang.get('mail.host')</g></label>
 </div>
 <div>
-	<label><h3>Email:</h3><input type='text' name='email' value='$!email' /><g>$lang.get('mail.sender.address')</g></label>
+	<label><h3>$lang.get('mail.email'):</h3><input type='text' name='email' value='$!email' /><g>$lang.get('mail.sender.address')</g></label>
 </div>
 <div>
-	<label><h3>Title:</h3><input type='text' name='title' value='$!title' /><g>$lang.get('mail.sender.title')</g></label>
+	<label><h3>$lang.get('mail.title'):</h3><input type='text' name='title' value='$!title' /><g>$lang.get('mail.sender.title')</g></label>
 </div>
 <div>
-	<label><h3>User:</h3><input type='text' name='user' value='$!user' /><g>$lang.get('mail.sender.name')</g></label>
+	<label><h3>$lang.get('mail.user'):</h3><input type='text' name='user' value='$!user' /><g>$lang.get('mail.sender.name')</g></label>
 </div>
 <div>
-	<label><h3>Password:</h3><input type='password' name='passwd' value='$!passwd' /><g>$lang.get('mail.sender.password')</g></label>
+	<label><h3>$lang.get('mail.password'):</h3>
+		<input type='password' name='passwd' value='$!passwd' /><g>$lang.get('mail.sender.password')</g></label>
 </div>

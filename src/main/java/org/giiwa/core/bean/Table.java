@@ -34,11 +34,18 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Table {
 
-    /**
-     * the table name.
-     *
-     * @return String
-     */
-    String name() default X.EMPTY;
+  /**
+   * the table name.
+   *
+   * @return the table name
+   */
+  String name() default X.EMPTY;
+
+  /**
+   * specify the dbname
+   * 
+   * @return the db name
+   */
+  String db() default Helper.DEFAULT;
 
 }

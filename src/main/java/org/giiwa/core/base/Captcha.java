@@ -37,6 +37,7 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
 
+// TODO: Auto-generated Javadoc
 public class Captcha {
 
   static Log log = LogFactory.getLog(Captcha.class);
@@ -49,8 +50,8 @@ public class Captcha {
   private static Random       random       = new Random();
 
   /**
-   * output the "code image" to the file
-   * 
+   * output the "code image" to the file.
+   *
    * @param sid
    *          the session id
    * @param expired
@@ -85,13 +86,14 @@ public class Captcha {
       Cache.set("//captcha/" + sid, Code.create(code, expired));
       return true;
     } catch (IOException e) {
+      log.debug("file=" + outputFile, e);
       throw e;
     }
   }
 
   /**
-   * verify the code associated
-   * 
+   * verify the code associated.
+   *
    * @param sid
    *          the session id
    * @param code
@@ -115,8 +117,8 @@ public class Captcha {
   }
 
   /**
-   * remove the captcha code for sid
-   * 
+   * remove the captcha code for sid.
+   *
    * @param sid
    *          the session id
    */
@@ -270,6 +272,14 @@ public class Captcha {
 
   }
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   public static void main(String[] args) throws IOException {
     File dir = new File("/tmp/verifies");
     int w = 200, h = 80;
@@ -289,6 +299,15 @@ public class Captcha {
     String                    code;
     long                      expired;
 
+    /**
+     * Creates the.
+     *
+     * @param code
+     *          the code
+     * @param expired
+     *          the expired
+     * @return the code
+     */
     static Code create(String code, long expired) {
       Code c = new Code();
       c.code = code;
@@ -296,6 +315,11 @@ public class Captcha {
       return c;
     }
 
+    /**
+     * Expired.
+     *
+     * @return true, if successful
+     */
     public boolean expired() {
       return expired > 0 && System.currentTimeMillis() > expired;
     }

@@ -21,6 +21,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
@@ -39,7 +40,7 @@ public class role extends Model {
   /**
    * Adds the.
    */
-  @Path(path = "create", login = true, access = "access.role.admin")
+  @Path(path = "create", login = true, access = "access.config.admin|access.role.admin")
   public void create() {
     if (method.isPost()) {
 
@@ -48,8 +49,10 @@ public class role extends Model {
       long id = Role.create(name, memo);
       if (id > 0) {
         String[] access = this.getStrings("access");
-        for (String s : access) {
-          Role.setAccess(id, s);
+        if (access != null) {
+          for (String s : access) {
+            Role.setAccess(id, s);
+          }
         }
 
         this.set(X.MESSAGE, lang.get("save.success"));
@@ -71,7 +74,7 @@ public class role extends Model {
   /**
    * Verify.
    */
-  @Path(path = "verify", login = true, access = "access.role.admin")
+  @Path(path = "verify", login = true, access = "access.config.admin|access.role.admin")
   public void verify() {
     String value = this.getString("value");
 
@@ -94,7 +97,7 @@ public class role extends Model {
   /**
    * Edits the.
    */
-  @Path(path = "edit", login = true, access = "access.role.admin")
+  @Path(path = "edit", login = true, access = "access.config.admin|access.role.admin")
   public void edit() {
     if (method.isPost()) {
 
@@ -144,7 +147,7 @@ public class role extends Model {
   /**
    * Delete.
    */
-  @Path(path = "delete", login = true, access = "access.role.admin")
+  @Path(path = "delete", login = true, access = "access.config.admin|access.role.admin")
   public void delete() {
     String ids = this.getString("id");
     int updated = 0;
@@ -176,11 +179,11 @@ public class role extends Model {
    * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
-  @Path(login = true, access = "access.role.admin｜access.user.admin")
+  @Path(login = true, access = "access.config.admin|access.role.admin｜access.user.admin")
   public void onGet() {
 
     int s = this.getInt("s");
-    int n = this.getInt("n", 10, "number.per.page");
+    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
     Beans<Role> bs = Role.load(s, n);
     bs.setTotal((int) Helper.count(W.create(), Role.class));

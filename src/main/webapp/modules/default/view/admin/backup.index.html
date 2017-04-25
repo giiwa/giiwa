@@ -55,7 +55,7 @@ function _delete(name) {
 		processing && processing.show();
 		$.post('/admin/backup/delete', {name: name}, function(d){
 			processing && processing.hide();
-			reload();
+			giiwa.reload();
 		});
 	}
 }

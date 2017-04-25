@@ -1,7 +1,24 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.core.base;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,10 +30,12 @@ import org.giiwa.core.task.Task;
  * 
  * @author joe
  *
- * @param <E>
  */
 public class Pool<E> {
   static Log              log     = LogFactory.getLog(Pool.class);
+
+  private ReentrantLock   lock    = new ReentrantLock();
+  private Condition       door    = lock.newCondition();
 
   private List<E>         list    = new ArrayList<E>();
   private int             initial = 10;
@@ -26,14 +45,19 @@ public class Pool<E> {
   private IPoolFactory<E> factory = null;
 
   /**
-   * create a pool by initial, max and factory
-   * 
+   * create a pool by initial, max and factory.
+   *
+   * @param <E>
+   *          the element type
    * @param initial
+   *          the initial
    * @param max
+   *          the max
    * @param factory
-   * @return
+   *          the factory
+   * @return the pool
    */
-  public static  <E> Pool<E> create(int initial, int max, IPoolFactory<E> factory) {
+  public static <E> Pool<E> create(int initial, int max, IPoolFactory<E> factory) {
     Pool<E> p = new Pool<E>();
     p.initial = initial;
     p.max = max;
@@ -51,8 +75,12 @@ public class Pool<E> {
     for (int i = 0; i < initial; i++) {
       E t = factory.create();
       if (t != null) {
-        synchronized (list) {
+        try {
+          lock.lock();
           list.add(t);
+          door.signal();
+        } finally {
+          lock.unlock();
         }
       }
     }
@@ -60,23 +88,28 @@ public class Pool<E> {
   }
 
   /**
-   * release a object to the pool
-   * 
+   * release a object to the pool.
+   *
    * @param t
+   *          the t
    */
   public void release(E t) {
     if (t == null) {
       created--;
     } else {
       factory.cleanup(t);
-      synchronized (list) {
+      try {
+        lock.lock();
         list.add(t);
+        door.signal();
+      } finally {
+        lock.unlock();
       }
     }
   }
 
   /**
-   * destroy the pool, and destroy all the object in the pool
+   * destroy the pool, and destroy all the object in the pool.
    */
   public void destroy() {
     synchronized (list) {
@@ -88,10 +121,11 @@ public class Pool<E> {
   }
 
   /**
-   * get a object from the pool, if meet the max, then wait till timeout
-   * 
+   * get a object from the pool, if meet the max, then wait till timeout.
+   *
    * @param timeout
-   * @return
+   *          the timeout
+   * @return the e
    */
   public E get(long timeout) {
     try {
@@ -99,7 +133,9 @@ public class Pool<E> {
 
       long t1 = timeout;
 
-      synchronized (list) {
+      try {
+        lock.lock();
+
         while (t1 > 0) {
           if (list.size() > 0) {
             return list.remove(0);
@@ -124,10 +160,12 @@ public class Pool<E> {
                 }.schedule(0);
               }
 
-              list.wait(t1);
+              door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(t1));
             }
           }
         }
+      } finally {
+        lock.unlock();
       }
     } catch (Exception e) {
       log.error(e.getMessage(), e);
@@ -142,27 +180,30 @@ public class Pool<E> {
    * @author wujun
    *
    * @param <E>
+   *          the Object
    */
   public interface IPoolFactory<E> {
 
     /**
-     * create a object
-     * 
-     * @return
+     * create a object.
+     *
+     * @return the e
      */
     public E create();
 
     /**
-     * clean up a object after used
-     * 
+     * clean up a object after used.
+     *
      * @param t
+     *          the t
      */
     public void cleanup(E t);
 
     /**
-     * destroy a object
-     * 
+     * destroy a object.
+     *
      * @param t
+     *          the t
      */
     public void destroy(E t);
   }

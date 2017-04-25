@@ -30,36 +30,6 @@ html, body {
 ::-webkit-scrollbar-thumb:active {
 	background-color: rgba(161, 208, 253, 0.9);
 }
-button {
-	display: inline-block;
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	-webkit-transition: .5s ease;
-	-moz-transition: .5s ease;
-	-o-transition: .5s ease;
-	-ms-transition: .5s ease;
-	transition: .5s ease;
-	font-family: inherit;
-	box-sizing: border-box;
-	font-size: 16px;
-	text-align: center;
-	text-shadow: none;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-	vertical-align: middle;
-	cursor: pointer;
-	background-color: #009df5;
-	color: #fff;
-	line-height: 20px;
-	padding: 6px 20px;
-	border: 1px solid transparent;
-	box-shadow: 0 0 1px #009DF5;
-}
-.btns button {
-	float: left;
-	margin: 0 10px;
-}
 i {
 	font-style: normal;
 }
@@ -1061,42 +1031,6 @@ table.tablesorter tbody tr.state_0 td {
 	background-color: #EED4D4;
 	color: #333;
 }
-table td .buttons {
-	float: right;
-	display: inline-block;
-	position: absolute;
-	top: 100%;
-	left: 2px;
-	margin-top: -3px;
-	background: #054A81;
-	z-index: 999;
-	visibility: hidden;
-	opacity: 0;
-	-webkit-transition: .3s ease;
-	-moz-transition: .3s ease;
-	-o-transition: .3s ease;
-	-ms-transition: .3s ease;
-	transition: .3s ease;
-	box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.3);
-	padding: 6px;
-}
-td.hover .buttons {
-	display: inline-block;
-	visibility: visible;
-	opacity: 1;
-	margin-top: 0;
-}
-table td .buttons a {
-	background: #5cb85c;
-	text-decoration: none;
-	float: left;
-	color: #fff !important;
-	border-radius: 4px;
-	padding: 0 5px;
-}
-table td .buttons a:hover {
-	background-color: #AD2F26;
-}
 tr.hover td {
 	background-color: #CEE5E5 !important;
 	color: #000;
@@ -1150,22 +1084,6 @@ form div.extra .extra-title {
 	box-shadow: 0 0 6px #4d90fe;
 	border-color: #1f5dc4;
 }
-td .buttons:before {
-	display: inline-block;
-	position: absolute;
-	content: '';
-	left: 5px;
-	top: -12px;
-	background: transparent;
-	border: 6px solid transparent;
-	-webkit-transition: .5s ease;
-	-moz-transition: .5s ease;
-	-o-transition: .5s ease;
-	-ms-transition: .5s ease;
-	transition: .5s ease;
-	z-index: 1000;
-	border-bottom-color: #054A81;
-}
 .state .stat {
 	margin-top: 20px;
 	display: inline-block;
@@ -1212,27 +1130,6 @@ div.submit {
 	background: #9C1B1B;
 	color: #fff;
 	padding: 5px 10px;
-}
-table .network-state_1 {
-	color: #098106;
-}
-#log-table th.system {
-	width: 20px;
-}
-div.more {
-	display: none;
-	background: #121F79;
-	color: #fff;
-	border-radius: 4px;
-	padding: 4px;
-}
-td.more {
-	cursor: pointer;
-	background-image: url(/images/file.png);
-	background-repeat: no-repeat;
-	background-position: center right;
-	background-size: 16px;
-	padding-right: 16px;
 }
 .chart .group .title {
 	background: #AA3333;
@@ -1549,10 +1446,6 @@ td.more {
 ::-webkit-scrollbar-button, .toolbar.full .left, form div.confirm, #menu .loading i.icon, .fileuploader-file {
 	display: none;
 }
-button:hover {
-	background-color: #1B65A2;
-	box-shadow: 0 0 4px #009DF5;
-}
 #content .center, #head .center {
 	height: 100%;
 	width: auto;
@@ -1600,24 +1493,14 @@ table .state, table td.speed {
 	width: 200px;
 	position: relative;
 }
-#log-table th.date, #log-table th.type {
-	width: 50px;
-}
 .content .form .fulline label, #menu .open .children {
 	display: block;
-}
-#log-table th.user, #log-table th.ip, #log-table th.module, #log-table th.op {
-	width: 10%;
 }
 .content .chart iframe.cpu_gauge, .content .chart iframe.disk_usage {
 	height: 300px;
 	float: left;
 	width: 30%;
 	border: 0;
-}
-button.icon[type=submit] {
-	margin: 3px 0;
-	padding: 6px 10px;
 }
 #module-table .status {
 	color: #056b10;
@@ -1628,10 +1511,9 @@ input.bad {
 input.good {
 	border-color: #0a8209;
 }
-.btn {
+.btn, button {
 	display: inline-block;
 	padding: 6px 12px;
-	margin-bottom: 0;
 	font-size: 14px;
 	font-weight: 400;
 	line-height: 1.42857143;
@@ -1650,6 +1532,22 @@ input.good {
 	background-image: none;
 	border: 1px solid transparent;
 	border-radius: 4px;
+    margin: 1px 0;	
+}
+button {
+	color: #fff;
+	background-color: #5cb85c;
+	border-color: #4cae4c;
+}
+button:focus {
+	color: #fff;
+	background-color: #449d44;
+	border-color: #255625
+}
+button:hover, button:active {
+	color: #fff;
+	background-color: #449d44;
+	border-color: #398439
 }
 .btn-xs {
 	padding: 1px 5px;
@@ -1687,7 +1585,7 @@ input.good {
 	background-color: #31b0d5;
 	border-color: #269abc
 }
-.btn-success {
+.btn-success{
 	color: #fff;
 	background-color: #5cb85c;
 	border-color: #4cae4c;

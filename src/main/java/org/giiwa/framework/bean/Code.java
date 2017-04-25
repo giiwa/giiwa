@@ -20,6 +20,7 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
+import org.giiwa.core.bean.X;
 
 /**
  * The code bean, used to store special code linked with s1 and s2 fields
@@ -36,16 +37,16 @@ public class Code extends Bean {
    */
   private static final long serialVersionUID = 1L;
 
-  @Column(name = "s1")
+  @Column(name = "s1", index = true)
   private String            s1;
 
-  @Column(name = "s2")
+  @Column(name = "s2", index = true)
   private String            s2;
 
   @Column(name = "expired")
   private long              expired;
 
-  @Column(name = "created")
+  @Column(name = X.CREATED)
   private long              created;
 
   public long getExpired() {

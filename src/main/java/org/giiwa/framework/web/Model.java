@@ -27,13 +27,15 @@ import org.apache.commons.fileupload.*;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.*;
-import org.giiwa.core.base.H64;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
@@ -264,7 +266,7 @@ public class Model {
                   // check the system has been initialized
                   // ?
                   if (!Helper.isConfigured()) {
-                    this.redirect("/setup");
+                    this.redirect("/admin/setup");
                     return null;
                   }
 
@@ -371,6 +373,7 @@ public class Model {
     this.put("response", resp);
     this.set("session", this.getSession());
     this.set("global", Global.getInstance());
+    this.set("local", Local.getInstance());
 
     this.createQuery();
 
@@ -486,6 +489,7 @@ public class Model {
       this.put("response", resp);
       this.set("session", this.getSession());
       this.set("global", Global.getInstance());
+      this.set("local", Local.getInstance());
 
       show(uri);
       return true;
@@ -543,6 +547,7 @@ public class Model {
       this.put("this", this);
       this.put("session", this.getSession());
       this.put("global", Global.getInstance());
+      this.set("local", Local.getInstance());
 
       if (!Module.home.before(this)) {
         log.debug("handled by filter, and stop to dispatch");
@@ -638,7 +643,7 @@ public class Model {
           sid = this.getString("sid");
           if (X.isEmpty(sid) && newSession) {
             do {
-              sid = H64.toString((int) (Math.random() * Integer.MAX_VALUE)) + H64.toString(System.currentTimeMillis());
+              sid = UID.random();
             } while (Session.exists(sid));
 
           }
@@ -647,7 +652,7 @@ public class Model {
         /**
          * get session.expired in seconds
          */
-        long expired = Global.getLong("session.alive", X.AHOUR);
+        long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
         if (expired <= 0) {
           addCookie("sid", sid, -1);
         } else {
@@ -690,7 +695,8 @@ public class Model {
    * forward or lets the clazz to handle the request
    * 
    * @param clazz
-   * @return
+   *          the class name
+   * @return the Path
    */
   final public Path forward(Class<? extends Model> clazz) {
     try {
@@ -831,6 +837,9 @@ public class Model {
       if (total > 0) {
         this.set("total", total);
       }
+      if(bs.getCost()>0) {
+        this.set("cost", bs.getCost());
+      }
       if (n > 0) {
         if (total > 0) {
           int t = total / n;
@@ -931,19 +940,19 @@ public class Model {
    * 
    * @param tag
    *          the tag
-   * @param minValue
-   *          the min value
+   * @param defaultValue
+   *          the default value
    * @param tagInSession
    *          the tag in session
    * @return the int
    */
-  final public int getInt(String tag, int minValue, String tagInSession) {
+  final public int getInt(String tag, int defaultValue, String tagInSession) {
     int r = getInt(tag);
-    if (r < minValue) {
+    if (r < 1) {
       Session s = this.getSession();
       r = s.getInt(tagInSession);
-      if (r < minValue) {
-        r = minValue;
+      if (r < 1) {
+        r = defaultValue;
       }
     } else {
       Session s = this.getSession();
@@ -1989,7 +1998,7 @@ public class Model {
       this.response(jo);
     } else {
       this.set("me", this.getUser());
-      this.show("/notfound.html");
+      this.print("not found.");
       this.setStatus(HttpServletResponse.SC_NOT_FOUND);
     }
   }
@@ -2337,7 +2346,7 @@ public class Model {
    */
   public static String node() {
     if (node == null) {
-      node = Module._conf == null ? X.EMPTY : Module._conf.getString("node", null);
+      node = Config.getConf().getString("node.name", X.EMPTY);
     }
     return node;
   }

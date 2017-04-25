@@ -14,6 +14,11 @@
 */
 package org.giiwa.core.bean;
 
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -24,7 +29,9 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Global;
+import org.giiwa.framework.web.Model;
 
+// TODO: Auto-generated Javadoc
 /**
  * The {@code UID} Class used to create unique id, or sequence, random string
  * 
@@ -37,7 +44,7 @@ public final class UID {
 
   /**
    * increase and get the unique sequence number by key, <br>
-   * the number=[system.code] + seq
+   * the number=[cluster.code] + seq
    *
    * @param key
    *          the key
@@ -45,7 +52,7 @@ public final class UID {
    */
   public synchronized static long next(String key) {
 
-    long prefix = Global.getLong("system.code", 0) * 10000000000000L;
+    long prefix = Global.getLong("cluster.code", 0) * 10000000000000L;
 
     try {
 
@@ -85,6 +92,25 @@ public final class UID {
     }
 
     return -1;
+  }
+
+  /**
+   * return string with the length
+   * 
+   * @param key
+   *          the key
+   * @param len
+   *          the length
+   * @return the string
+   */
+  public synchronized static String next(String key, int len) {
+    StringBuilder p = new StringBuilder("00000000000");
+    while (p.length() < len) {
+      p.append("0000000000");
+    }
+    String s = p.toString() + next(key);
+    int i = s.length();
+    return s.substring(i - len, i);
   }
 
   /**
@@ -167,7 +193,7 @@ public final class UID {
    */
   public static String random(int length) {
 
-    Random rand = new Random(System.currentTimeMillis());
+    Random rand = new Random(System.nanoTime());
     StringBuilder sb = new StringBuilder();
     while (length > 0) {
       sb.append(chars[rand.nextInt(chars.length - 1)]);
@@ -176,17 +202,74 @@ public final class UID {
     return sb.toString();
   }
 
+  /**
+   * Random.
+   *
+   * @param length
+   *          the length
+   * @param sources
+   *          the sources
+   * @return the string
+   */
   public static String random(int length, String sources) {
     if (sources == null || sources.length() == 0) {
       sources = new String(digitals);
     }
     int codesLen = sources.length();
-    Random rand = new Random(System.currentTimeMillis());
+    Random rand = new Random(System.nanoTime());
     StringBuilder sb = new StringBuilder(length);
     for (int i = 0; i < length; i++) {
       sb.append(sources.charAt(rand.nextInt(codesLen - 1)));
     }
     return sb.toString();
+  }
+
+  /**
+   * generate a firm random by the code.
+   *
+   * @param code
+   *          the code
+   * @param len
+   *          the len
+   * @return the int[]
+   * @throws Exception
+   *           the exception
+   */
+  public static int[] random1(String code, int len) throws Exception {
+    SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+    random.setSeed(code.getBytes());
+    int[] ii = new int[len];
+    HashSet<Integer> ss = new HashSet<Integer>();
+    int i = 0;
+    while (ss.size() < len) {
+      int a = random.nextInt(len);
+      if (!ss.contains(a)) {
+        ii[ss.size()] = a;
+        ss.add(a);
+      }
+      i++;
+    }
+    System.out.println(i);
+    return ii;
+  }
+
+  public static int[] random(String code, int len) throws Exception {
+    SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+    random.setSeed(code.getBytes());
+    int[] ii = new int[len];
+    List<Integer> ss = new ArrayList<Integer>(len);
+    for (int i = 0; i < len; i++) {
+      ss.add(i);
+    }
+    int i = 0;
+    while (len > 0) {
+      int a = random.nextInt(len);
+      ii[i] = ss.remove(a);
+      i++;
+      len--;
+    }
+    System.out.println(i);
+    return ii;
   }
 
   /**
@@ -197,7 +280,7 @@ public final class UID {
    * @return the string
    */
   public static String digital(int length) {
-    Random rand = new Random(System.currentTimeMillis());
+    Random rand = new Random(System.nanoTime());
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < length; i++) {
       sb.append(digitals[rand.nextInt(digitals.length - 1)]);
@@ -208,4 +291,19 @@ public final class UID {
   private static final char[] digitals = "0123456789".toCharArray();
   private static final char[] chars    = "0123456789abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   * @throws Exception
+   *           the exception
+   */
+  public static void main(String[] args) throws Exception {
+    int[] ii = UID.random("12131", 10000);
+    System.out.println(Arrays.toString(ii));
+
+    ii = UID.random1("12131", 10);
+    System.out.println(Arrays.toString(ii));
+  }
 }

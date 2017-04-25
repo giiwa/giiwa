@@ -20,7 +20,6 @@ import java.util.Map;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.cache.Cache;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
 
@@ -64,11 +63,8 @@ public final class Global extends Bean {
    * @return the int
    */
   public static int getInt(String name, int defaultValue) {
-    if (!Helper.isConfigured()) {
-      return X.toInt(cache.get(name), defaultValue);
-    }
 
-    Global c = Cache.get("global/" + name);
+    Global c = cached.get("global/" + name);
     if (c == null || c.expired()) {
       c = Helper.load(W.create(X.ID, name), Global.class);
       if (c != null) {
@@ -76,16 +72,16 @@ public final class Global extends Bean {
          * avoid restarted, can not load new config
          */
         c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-        Cache.set("global/" + name, c);
+        cached.put("global/" + name, c);
         return X.toInt(c.i, defaultValue);
-      } else {
-        return Config.getConfig().getInt(name, defaultValue);
       }
     }
 
-    return c != null ? X.toInt(c.i, defaultValue) : defaultValue;
+    return c != null ? X.toInt(c.i, defaultValue) : Config.getConf().getInt(name, defaultValue);
 
   }
+
+  private static Map<String, Global> cached = new HashMap<String, Global>();
 
   /**
    * get the string value.
@@ -98,11 +94,7 @@ public final class Global extends Bean {
    */
   public static String getString(String name, String defaultValue) {
 
-    if (!Helper.isConfigured()) {
-      return cache.get(name) == null ? Config.getConfig().getString(name, defaultValue) : cache.get(name).toString();
-    }
-
-    Global c = Cache.get("global/" + name);
+    Global c = cached.get("global/" + name);
     if (c == null || c.expired()) {
       c = Helper.load(W.create(X.ID, name), Global.class);
       if (c != null) {
@@ -110,17 +102,17 @@ public final class Global extends Bean {
          * avoid restarted, can not load new config
          */
         c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-        Cache.set("global/" + name, c);
+        cached.put("global/" + name, c);
 
         return c.s != null ? c.s : defaultValue;
       }
     }
 
-    return c != null && c.s != null ? c.s : Config.getConfig().getString(name, defaultValue);
+    return c != null && c.s != null ? c.s : Config.getConf().getString(name, defaultValue);
 
   }
 
-  private static Map<String, Object> cache = new HashMap<String, Object>();
+  // private static Map<String, Object> cache = new HashMap<String, Object>();
 
   /**
    * get the long value.
@@ -132,27 +124,26 @@ public final class Global extends Bean {
    * @return the long
    */
   public static long getLong(String name, long defaultValue) {
-    if (!Helper.isConfigured()) {
-      return X.toLong(cache.get(name), defaultValue);
-    }
 
-    Global c = Cache.get("global/" + name);
-    if (c == null || c.expired()) {
-      c = Helper.load(W.create(X.ID, name), Global.class);
-      if (c != null) {
-        /**
-         * avoid restarted, can not load new config
-         */
-        c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-        Cache.set("global/" + name, c);
+    try {
+      Global c = cached.get("global/" + name);
+      if (c == null || c.expired()) {
+        c = Helper.load(W.create(X.ID, name), Global.class);
+        if (c != null) {
+          /**
+           * avoid restarted, can not load new config
+           */
+          c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+          cached.put("global/" + name, c);
 
-        return X.toLong(c.l, defaultValue);
-      } else {
-        return Config.getConfig().getLong(name, defaultValue);
+          return X.toLong(c.l, defaultValue);
+        }
       }
+      return c != null ? X.toLong(c.l, defaultValue) : Config.getConf().getLong(name, defaultValue);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
     }
-    return c != null ? X.toLong(c.l, defaultValue) : defaultValue;
-
+    return defaultValue;
   }
 
   /**
@@ -179,27 +170,26 @@ public final class Global extends Bean {
       return;
     }
 
-    Cache.remove("global/" + name);
-
     if (o == null) {
       Helper.delete(W.create(X.ID, name), Global.class);
       return;
     }
 
-    if (!Helper.isConfigured()) {
-      cache.put(name, o);
-      return;
-    }
-
     try {
+      Global g = new Global();
       V v = V.create();
       if (o instanceof Integer) {
         v.set("i", o);
+        g.i = X.toInt(o);
       } else if (o instanceof Long) {
         v.set("l", o);
+        g.l = X.toLong(o);
       } else {
         v.set("s", o.toString());
+        g.s = o.toString();
       }
+
+      cached.put("global/" + name, g);
 
       if (Helper.exists(W.create(X.ID, name), Global.class)) {
         Helper.update(W.create(X.ID, name), v, Global.class);
@@ -322,7 +312,7 @@ public final class Global extends Bean {
         String node = Model.node();
 
         for (String name : names) {
-          if (Helper.update(W.create(X.ID, name).and("s", node), V.create("updated", System.currentTimeMillis()),
+          if (Helper.update(W.create(X.ID, name).and("s", node), V.create(X.UPDATED, System.currentTimeMillis()),
               Global.class) <= 0) {
             // the lock has been acquired by other
             Thread t = locked.get(name);

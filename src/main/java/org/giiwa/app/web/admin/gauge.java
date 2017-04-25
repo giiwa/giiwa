@@ -41,7 +41,7 @@ public class gauge extends Model {
   /**
    * Cpu.
    */
-  @Path(path = "tps", login = true, access = "access.config.admin", accesslog = false)
+  @Path(path = "tps", login = true, accesslog = false)
   public void tps() {
     this.set("max", Tps.max());
     this.show("/admin/gauge.tps.html");
@@ -50,7 +50,7 @@ public class gauge extends Model {
   /**
    * Cpu_status.
    */
-  @Path(path = "tps/status", login = true, access = "access.config.admin", accesslog = false)
+  @Path(path = "tps/status", login = true, accesslog = false)
   public void tps_status() {
     // todo
     JSON jo = new JSON();
@@ -63,7 +63,7 @@ public class gauge extends Model {
   /**
    * Mem_status.
    */
-  @Path(path = "mem/status", login = true, access = "access.config.admin", accesslog = false)
+  @Path(path = "mem/status", login = true, accesslog = false)
   public void mem_status() {
     // todo
     JSON jo = new JSON();
@@ -76,7 +76,7 @@ public class gauge extends Model {
   /**
    * Mem.
    */
-  @Path(path = "mem", login = true, access = "access.config.admin", accesslog = false)
+  @Path(path = "mem", login = true, accesslog = false)
   public void mem() {
     this.set("total", Host.getMemTotal());
     this.show("/admin/gauge.mem.html");
@@ -85,7 +85,7 @@ public class gauge extends Model {
   /**
    * Disk.
    */
-  @Path(path = "disk", login = true, access = "access.config.admin", accesslog = false)
+  @Path(path = "disk", login = true, accesslog = false)
   public void disk() {
     this.set("list", Host.getDisks());
     this.show("/admin/gauge.disk.html");

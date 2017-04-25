@@ -19,6 +19,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+// TODO: Auto-generated Javadoc
 /**
  * the {@code Field} Class used to annotate the Bean, define the
  * collection/table mapping with the Bean
@@ -37,5 +38,19 @@ public @interface Column {
    * @return String
    */
   String name() default X.EMPTY;
+
+  /**
+   * is Index field.
+   *
+   * @return true, if successful
+   */
+  boolean index() default false;
+
+  /**
+   * is Unique column.
+   *
+   * @return true, if successful
+   */
+  boolean unique() default false;
 
 }

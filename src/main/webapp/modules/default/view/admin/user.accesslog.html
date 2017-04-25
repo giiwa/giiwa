@@ -60,7 +60,7 @@ function _deleteall() {
 		processing && processing.show();
 		$.post('/admin/accesslog/deleteall', {}, function(d) {
 			processing && processing.hide();
-			reload();
+			giiwa.reload();
 		});
 	}
 }

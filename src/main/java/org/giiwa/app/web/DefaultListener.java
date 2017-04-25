@@ -33,15 +33,18 @@ import java.util.Map;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.setting;
 import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.Shell;
-import org.giiwa.core.bean.RDB;
 import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.RDSHelper;
+import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.helper.RDB;
+import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.AuthToken;
@@ -53,6 +56,9 @@ import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
+import org.giiwa.mq.MQ;
+import org.giiwa.mq.RPC;
+import org.giiwa.mq.demo.Echo;
 
 /**
  * default startup life listener.
@@ -64,9 +70,9 @@ public class DefaultListener implements IListener {
 
   public static final DefaultListener owner = new DefaultListener();
 
-  private static class NtpTask extends Task {
+  public static class NtpTask extends Task {
 
-    static NtpTask owner = new NtpTask();
+    public static NtpTask owner = new NtpTask();
 
     private NtpTask() {
     }
@@ -74,7 +80,7 @@ public class DefaultListener implements IListener {
     @Override
     public void onExecute() {
       String ntp = Global.getString("ntp.server", null);
-      if (!X.isEmpty((Object) ntp)) {
+      if (!X.isEmpty(ntp)) {
         try {
           String r = Shell.run("ntpdate -u " + ntp);
           OpLog.info("ntp", "sync", "NTP syncing: " + r, null, ntp);
@@ -105,7 +111,7 @@ public class DefaultListener implements IListener {
 
     @Override
     public void onExecute() {
-      String s = Global.getString("recycle.task", "-1");
+      String s = Local.getString("recycle.task", "-1");
       if ((X.isSame(s, "-1") || X.isEmpty(s)) && System.currentTimeMillis() - Model.UPTIME > X.AHOUR) {
         /**
          * recycle.task="-1" or " ", and the server started after 1 hour
@@ -133,7 +139,6 @@ public class DefaultListener implements IListener {
 
         @Override
         public void onExecute() {
-          // TODO Auto-generated method stub
           System.exit(0);
         }
 
@@ -155,18 +160,28 @@ public class DefaultListener implements IListener {
    * configuration.Configuration, org.giiwa.framework.web.Module)
    */
   public void onStart(Configuration conf, Module module) {
+    log.info("giiwa is starting...");
 
-    /**
-     * clean up the old version's jar
-     */
-    if (cleanup(new File(Model.HOME), new HashMap<String, FileVersion>())) {
-      System.exit(0);
-      return;
-    }
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      public void run() {
+        // stop all task
+        Task.stopAll(true);
 
-    if (log.isDebugEnabled()) {
-      log.debug("upgrade.enabled=" + Global.getString(conf.getString("node") + ".upgrade.framework.enabled", "false"));
-    }
+        // stop all modules
+        List<Module> l1 = Module.getAll(true);
+        if (!X.isEmpty(l1)) {
+          for (Module m : l1) {
+            m.stop();
+          }
+        }
+        log.warn("giiwa is stopped");
+      }
+    });
+
+    // if (log.isDebugEnabled()) {
+    // log.debug("upgrade.enabled=" +
+    // Local.getString("upgrade.framework.enabled", "false"));
+    // }
 
     /**
      * cleanup html
@@ -176,19 +191,54 @@ public class DefaultListener implements IListener {
       delete(f);
     }
 
-    setting.register("system", setting.system.class);
-    setting.register("smtp", setting.mail.class);
-    setting.register("counter", setting.counter.class);
+    setting.register(0, "system", setting.system.class);
+    setting.register(10, "smtp", setting.mail.class);
+    setting.register(11, "counter", setting.counter.class);
 
-    NtpTask.owner.schedule(X.AMINUTE);
+    if (Shell.isLinux()) {
+      NtpTask.owner.schedule(X.AMINUTE);
+    }
     new CleanupTask(conf).schedule(X.AMINUTE);
-    new AppdogTask().schedule(X.AMINUTE);
+    // new AppdogTask().schedule(X.AMINUTE);
     RecycleTask.owner.schedule(X.AMINUTE);
 
     /**
      * check and initialize
      */
     User.checkAndInit();
+
+    /**
+     * start the optimizer
+     */
+    if (Global.getInt("db.optimizer", 1) == 1) {
+      Helper.setOptmizer(new Optimizer());
+    }
+
+    if (!X.isEmpty(Global.getString("mq.type", X.EMPTY))) {
+      new Task() {
+
+        @Override
+        public void onExecute() {
+          MQ.init();
+
+          if (Global.getInt("mq.logger", 0) == 1) {
+            MQ.logger(true);
+          }
+
+          // this is for "echo" service
+          Echo e = new Echo("echo");
+          try {
+            e.bind();
+          } catch (Exception e1) {
+            log.error(e1.getMessage(), e1);
+          }
+
+        }
+
+      }.schedule(10);
+    } else {
+      OpLog.info(mq.class, "startup", "disabled", null, null);
+    }
 
   }
 
@@ -217,6 +267,8 @@ public class DefaultListener implements IListener {
    * @see org.giiwa.framework.web.IListener#onStop()
    */
   public void onStop() {
+    // log.info("giiwa is stopping...");
+
   }
 
   /**
@@ -332,7 +384,7 @@ public class DefaultListener implements IListener {
        */
       String dbname = RDB.getDriver();
 
-      if (!X.isEmpty(dbname) && RDSHelper.isConfigured()) {
+      if (!X.isEmpty(dbname) && RDSHelper.inst.isConfigured()) {
         /**
          * initial the database
          */
@@ -476,64 +528,6 @@ public class DefaultListener implements IListener {
   }
 
   /**
-   * clean up jar files in WEB-INF/lib
-   * 
-   * @param f
-   *          the file
-   * @param map
-   *          the map
-   * @return the boolean of success or not
-   */
-  public static boolean cleanup(File f, Map<String, FileVersion> map) {
-    /**
-     * list and compare all jar files
-     */
-    boolean changed = false;
-
-    if (f.isDirectory()) {
-      File[] ff = f.listFiles();
-      if (ff != null) {
-        for (File f1 : ff) {
-          if (cleanup(f1, map)) {
-            changed = true;
-          }
-        }
-      }
-    } else if (f.isFile() && f.getName().endsWith(".jar")) {
-      String p1 = f.getParentFile().getName();
-      if (X.isSame(p1, "model") || X.isSame(p1, "lib")) {
-        FileVersion f1 = new FileVersion(f);
-        String name = f1.getName();
-
-        FileVersion f2 = map.get(name);
-        if (f2 == null) {
-          map.put(f1.getName(), f1);
-        } else {
-          FileVersion.R r = f1.compareTo(f2);
-          if (r == FileVersion.R.HIGH || r == FileVersion.R.SAME) {
-            // remove f2
-            if (log.isWarnEnabled()) {
-              log.warn("delete duplicated jar file, but low version:" + f2.getFile().getAbsolutePath() + ", keep: "
-                  + f2.getFile().getAbsolutePath());
-            }
-            f2.getFile().delete();
-            map.put(name, f1);
-          } else if (r == FileVersion.R.LOW) {
-            // remove f1;
-            if (log.isWarnEnabled()) {
-              log.warn("delete duplicated jar file, but low version:" + f1.getFile().getAbsolutePath() + ", keep: "
-                  + f1.getFile().getAbsolutePath());
-            }
-            f1.getFile().delete();
-          }
-        }
-      }
-    }
-
-    return changed;
-  }
-
-  /**
    * The main method.
    *
    * @param args
@@ -545,7 +539,7 @@ public class DefaultListener implements IListener {
     DefaultListener d = new DefaultListener();
     File f = new File("/home/joe/d/workspace/");
     Map<String, FileVersion> map = new HashMap<String, FileVersion>();
-    d.cleanup(f, map);
+    // d.cleanup(f, map);
     System.out.println(map);
 
   }

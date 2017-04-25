@@ -1,6 +1,5 @@
 /* tables */
 table.tablesorter {
-	font-family: arial;
 	background-color: #CDCDCD;
 	margin: 10px 0pt 15px;
 	font-size: 8pt;
@@ -27,7 +26,7 @@ table.tablesorter tbody td {
 	color: #111;
 	padding: 4px;
 	background-color: #FFF;
-	vertical-align: top;
+	vertical-align: middle;
 	word-break: break-all;
 }
 

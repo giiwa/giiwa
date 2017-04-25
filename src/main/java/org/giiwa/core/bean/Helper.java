@@ -14,10 +14,11 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,7 +29,11 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.helper.MongoHelper;
+import org.giiwa.core.bean.helper.RDB;
+import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Task;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -37,32 +42,33 @@ import com.mongodb.BasicDBObject;
  * The {@code Helper} Class is utility class for all database operation.
  * 
  */
-public class Helper {
-
-  /** The log utility. */
-  protected static Log   log     = LogFactory.getLog(Helper.class);
+public class Helper implements Serializable {
 
   /**
-   * the sqllog separate from the log utility, which used to record sql info
-   * only
+   * 
    */
-  protected static Log   sqllog  = LogFactory.getLog("sql");
+  private static final long                  serialVersionUID = 1L;
 
-  private static Monitor monitor = null;
+  /** The log utility. */
+  protected static Log                       log              = LogFactory.getLog(Helper.class);
 
-  protected static enum DBType {
-    MONGO, RDS, NONE;
-  };
+  private static IOptimizer                  monitor          = null;
+
+  /**
+   * map<db_table, list>
+   */
+  private static Map<String, List<ITrigger>> triggers         = new HashMap<String, List<ITrigger>>();
 
   /**
    * the primary database when there are multiple databases
    */
-  public static DBType           primary = DBType.MONGO;
+  public static DBHelper                     primary          = null;
+  private static List<DBHelper>              customs          = null;
 
-  protected static final String  DEFAULT = "default";
+  public static final String                 DEFAULT          = "default";
 
   /** The conf. */
-  protected static Configuration conf;
+  protected static Configuration             conf;
 
   /**
    * initialize the Bean with the configuration.
@@ -72,27 +78,133 @@ public class Helper {
    */
   public static void init(Configuration conf) {
 
-    RDB.init();
+    /**
+     * initialize the DB connections pool
+     */
+    if (conf == null)
+      return;
 
     Helper.conf = conf;
 
-    if (RDSHelper.isConfigured() && MongoHelper.isConfigured()) {
-      // need choose
-      if ("mongo".equals(conf.getString("primary.db", "mongo"))) {
-        primary = DBType.MONGO;
-      } else {
-        primary = DBType.RDS;
-      }
-    } else if (RDSHelper.isConfigured()) {
-      primary = DBType.RDS;
-    } else if (MongoHelper.isConfigured()) {
-      primary = DBType.MONGO;
-    } else {
-      primary = DBType.NONE;
+    RDB.init();
+
+    String p = conf.getString("primary.db", X.EMPTY);
+
+    if (X.isSame("mongo", p)) {
+      primary = MongoHelper.inst;
+    } else if (X.isSame("rds", p)) {
+      primary = RDSHelper.inst;
     }
 
-    log.info("db.primary=" + primary + ", RDS=" + RDSHelper.isConfigured() + ", Mongo=" + MongoHelper.isConfigured());
+    if (primary == null) {
 
+      if (MongoHelper.inst.isConfigured()) {
+        primary = MongoHelper.inst;
+      } else if (RDSHelper.inst.isConfigured()) {
+        primary = RDSHelper.inst;
+      }
+
+      log.warn("db.primary missed, auto choose one, helper=" + primary);
+
+    } else {
+      log.info("db.primary=" + primary);
+    }
+
+  }
+
+  /**
+   * add a trigger on a db and table
+   * 
+   * @param db
+   *          the db
+   * @param table
+   *          the table
+   * @param t
+   *          the trigger
+   */
+  public static void addTrigger(String db, String table, ITrigger t) {
+    String name = db + "_" + table;
+    List<ITrigger> l1 = triggers.get(name);
+    if (l1 == null) {
+      l1 = new ArrayList<ITrigger>();
+      triggers.put(name, l1);
+    }
+
+    if (!l1.contains(t)) {
+      l1.add(t);
+    }
+  }
+
+  /**
+   * add trigger on "default" and the Bean
+   * 
+   * @param bean
+   *          the bean
+   * @param t
+   *          the trigger
+   */
+  public static void addTrigger(Class<? extends Bean> bean, ITrigger t) {
+    addTrigger(getDB(bean), bean, t);
+  }
+
+  /**
+   * add trigger on db and the Bean
+   * 
+   * @param db
+   *          the db name
+   * @param bean
+   *          the Bean
+   * @param t
+   *          the Trigger
+   */
+  public static void addTrigger(String db, Class<? extends Bean> bean, ITrigger t) {
+    String table = getTable(bean);
+    addTrigger(db, table, t);
+  }
+
+  /**
+   * remove a trigger from all db and table
+   * 
+   * @param t
+   *          the trigger
+   */
+  public static void removeTrigger(ITrigger t) {
+    for (List<ITrigger> l1 : triggers.values()) {
+      l1.remove(t);
+    }
+  }
+
+  private static void beforeInsert(String db, String table, V v) {
+    String name = db + "_" + table;
+    List<ITrigger> l1 = triggers.get(name);
+    if (!X.isEmpty(l1)) {
+      ITrigger[] tt = l1.toArray(new ITrigger[l1.size()]);
+      for (ITrigger t : tt) {
+        t.beforeInsert(db, table, v);
+      }
+    }
+  }
+
+  private static void beforeUpdate(String db, String table, W q, V v) {
+    String name = db + "_" + table;
+    List<ITrigger> l1 = triggers.get(name);
+    if (!X.isEmpty(l1)) {
+      ITrigger[] tt = l1.toArray(new ITrigger[l1.size()]);
+      for (ITrigger t : tt) {
+        t.beforeUpdate(db, table, q, v);
+      }
+    }
+  }
+
+  private static void beforeDelete(String db, String table, W q) {
+    String name = db + "_" + table;
+    List<ITrigger> l1 = triggers.get(name);
+    if (!X.isEmpty(l1)) {
+      ITrigger[] tt = l1.toArray(new ITrigger[l1.size()]);
+      for (ITrigger t : tt) {
+        t.beforeDelete(db, table, q);
+      }
+    }
   }
 
   /**
@@ -118,27 +230,55 @@ public class Helper {
    * @return the number was deleted
    */
   public static int delete(W q, Class<? extends Bean> t) {
-    return delete(q, t, DEFAULT);
+    return delete(q, t, getDB(t));
   }
 
+  /**
+   * Delete.
+   *
+   * @param q
+   *          the q
+   * @param t
+   *          the t
+   * @param db
+   *          the db
+   * @return the int
+   */
   public static int delete(W q, Class<? extends Bean> t, String db) {
     String table = getTable(t);
+    return delete(q, table, db);
+  }
 
+  /**
+   * delete the data in table
+   * 
+   * @param q
+   *          the query
+   * @param table
+   *          the table name
+   * @param db
+   *          the db name
+   * @return the items was deleted
+   */
+  public static int delete(W q, String table, String db) {
     if (table != null) {
       if (monitor != null) {
-        monitor.query(table, q);
+        monitor.query(db, table, q);
       }
 
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return (int) MongoHelper.delete(table, q, db);
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return RDSHelper.delete(table, q, db);
-      } else {
+      /**
+       * trigger the listener
+       */
+      beforeDelete(db, table, q);
 
-        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.delete(table, q, db);
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          return h.delete(table, q, db);
+        }
       }
+
     }
     return 0;
   }
@@ -171,38 +311,95 @@ public class Helper {
    *           configured
    */
   public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
-    return exists(q, t, DEFAULT);
+    return exists(q, t, getDB(t));
   }
 
+  /**
+   * Exists.
+   *
+   * @param q
+   *          the q
+   * @param t
+   *          the t
+   * @param db
+   *          the db
+   * @return true, if successful
+   * @throws SQLException
+   *           the SQL exception
+   */
   public static boolean exists(W q, Class<? extends Bean> t, String db) throws SQLException {
     String table = getTable(t);
+    return exists(q, table, db);
+  }
+
+  /**
+   * exists testing
+   * 
+   * @param q
+   *          the query
+   * @param table
+   *          the table name
+   * @param db
+   *          the db name
+   * @return the boolean
+   * @throws SQLException
+   */
+  public static boolean exists(W q, String table, String db) throws SQLException {
 
     if (table != null) {
       if (monitor != null) {
-        monitor.query(table, q);
+        monitor.query(db, table, q);
       }
 
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.exists(table, q, db);
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return RDSHelper.exists(table, q, db);
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.exists(table, q, db);
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.exists(table, q, db);
+          }
+        }
       }
     }
+
     throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
   }
 
   /**
    * Values in SQL, used to insert or update data both RDS and Mongo<br>
-   * 
+   * .
    */
-  public static final class V {
+  public static final class V implements Serializable {
 
-    private final static Object   ignore = new Object();
+    /**
+     * 
+     */
+    private static final long     serialVersionUID = 1L;
+
+    private final static Object   ignore           = new Object();
 
     /** The list. */
-    protected Map<String, Object> m      = new LinkedHashMap<String, Object>();
+    protected Map<String, Object> m                = new LinkedHashMap<String, Object>();
+
+    /**
+     * To json.
+     *
+     * @return the json
+     */
+    public JSON toJSON() {
+      return JSON.fromObject(m);
+    }
+
+    /**
+     * From json.
+     *
+     * @param j
+     *          the j
+     * @return the v
+     */
+    public static V fromJSON(JSON j) {
+      return V.create().copy(j);
+    }
 
     /**
      * get the names.
@@ -228,6 +425,11 @@ public class Helper {
       return m.size();
     }
 
+    /**
+     * To string.
+     *
+     * @return the string
+     */
     /*
      * (non-Javadoc)
      * 
@@ -320,8 +522,8 @@ public class Helper {
     }
 
     /**
-     * force set the name=value whatever the name exists or not
-     * 
+     * force set the name=value whatever the name exists or not.
+     *
      * @param name
      *          the name
      * @param v
@@ -458,8 +660,8 @@ public class Helper {
     }
 
     /**
-     * create and copy a new Value
-     * 
+     * create and copy a new Value.
+     *
      * @param v
      *          the Value object
      * @return V the new Value object
@@ -528,7 +730,12 @@ public class Helper {
    *
    * @author joe
    */
-  public final static class W {
+  public final static class W implements Serializable {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
 
     public enum OP {
       eq, gt, gte, lt, lte, like, neq, none
@@ -537,25 +744,117 @@ public class Helper {
     /**
      * "and"
      */
-    private static final int AND   = 9;
+    public static final int AND   = 9;
 
     /**
      * "or"
      */
-    private static final int OR    = 10;
+    public static final int OR    = 10;
 
-    private List<W>          wlist = new ArrayList<W>();
-    private List<Entity>     elist = new ArrayList<Entity>();
-    private List<Entity>     order = new ArrayList<Entity>();
+    private String          connectsql;
+    private List<W>         wlist = new ArrayList<W>();
+    private List<Entity>    elist = new ArrayList<Entity>();
+    private List<Entity>    order = new ArrayList<Entity>();
+    private String          groupby;
 
-    private int              cond  = AND;
+    private int             cond  = AND;
+
+    public W groupby(String groupby) {
+      this.groupby = groupby;
+      return this;
+    }
+
+    public String groupby() {
+      return this.groupby;
+    }
+
+    public int getCondition() {
+      return cond;
+    }
+
+    public List<Entity> getList() {
+      return elist;
+    }
+
+    public List<W> getW() {
+      return wlist;
+    }
+
+    public List<Entity> getOrder() {
+      return order;
+    }
+
+    /**
+     * To json.
+     *
+     * @return the json
+     */
+    public JSON toJSON() {
+      JSON jo = JSON.create();
+
+      List<JSON> l1 = new ArrayList<JSON>();
+      for (W w : wlist) {
+        JSON j1 = w.toJSON();
+        l1.add(j1);
+      }
+      jo.put("w", l1);
+      l1 = new ArrayList<JSON>();
+      for (Entity e : elist) {
+        JSON j1 = e.toJSON();
+        l1.add(j1);
+      }
+      jo.put("e", l1);
+      l1 = new ArrayList<JSON>();
+      for (Entity e : order) {
+        JSON j1 = e.toJSON();
+        l1.add(j1);
+      }
+      jo.put("o", l1);
+      return jo;
+    }
+
+    /**
+     * From json.
+     *
+     * @param jo
+     *          the jo
+     * @return the w
+     */
+    public static W fromJSON(JSON jo) {
+      W q = W.create();
+      List<JSON> l1 = jo.getList("w");
+      if (l1 != null && l1.size() > 0) {
+        for (JSON j1 : l1) {
+          W q1 = W.fromJSON(j1);
+          q.wlist.add(q1);
+        }
+      }
+
+      l1 = jo.getList("e");
+      if (l1 != null && l1.size() > 0) {
+        for (JSON j1 : l1) {
+          Entity e = Entity.fromJSON(j1);
+          q.elist.add(e);
+        }
+      }
+
+      l1 = jo.getList("o");
+      if (l1 != null && l1.size() > 0) {
+        for (JSON j1 : l1) {
+          Entity e = Entity.fromJSON(j1);
+          q.order.add(e);
+        }
+      }
+
+      return q;
+    }
 
     private W() {
     }
 
     /**
-     * remove the conditions from the query
-     * 
+     * remove the conditions from the query.
+     *
      * @param names
      *          the names
      * @return the W
@@ -609,6 +908,15 @@ public class Helper {
     }
 
     /**
+     * is empty
+     * 
+     * @return true if empty
+     */
+    public boolean isEmpty() {
+      return X.isEmpty(elist) && X.isEmpty(wlist) && X.isEmpty(order);
+    }
+
+    /**
      * create args for the SQL "where" <br>
      * return the Object[].
      *
@@ -642,7 +950,7 @@ public class Helper {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-      return elist == null ? X.EMPTY : (elist.toString() + "=>{" + where() + ", " + Helper.toString(args()) + "}");
+      return elist == null ? X.EMPTY : "{" + where() + "}=>" + Helper.toString(args()) + ", sort=" + order;
     }
 
     /**
@@ -655,14 +963,18 @@ public class Helper {
     }
 
     /**
-     * create the SQL "where" with the tansfers
-     * 
+     * create the SQL "where" with the tansfers.
+     *
      * @param tansfers
      *          the words pair should be transfered
      * @return the SQL string
      */
     public String where(Map<String, String> tansfers) {
       StringBuilder sb = new StringBuilder();
+      if (!X.isEmpty(connectsql)) {
+        sb.append(connectsql);
+      }
+
       for (Entity e : elist) {
         if (sb.length() > 0) {
           if (e.cond == AND) {
@@ -710,8 +1022,8 @@ public class Helper {
     }
 
     /**
-     * create order string with the transfers
-     * 
+     * create order string with the transfers.
+     *
      * @param transfers
      *          the words pair that need transfer according database
      * @return the SQL order string
@@ -779,26 +1091,52 @@ public class Helper {
     }
 
     /**
-     * get all keys
-     * 
+     * get all keys.
+     *
      * @return List keys
      */
-    public List<String> keys() {
-      List<String> list = new ArrayList<String>();
+    public LinkedHashMap<String, Integer> keys() {
+      LinkedHashMap<String, Integer> r = new LinkedHashMap<String, Integer>();
 
-      if (elist.size() > 0 || wlist.size() > 0) {
+      // add -1 in head
+      if (!X.isEmpty(order))
+        for (Entity e : order) {
+          if (!r.containsKey(e.name)) {
+            int i = X.toInt(e.value);
+            if (i < 0) {
+              r.put(e.name, -1);
+            }
+          }
+        }
+
+      if (!X.isEmpty(elist))
         for (Entity e : elist) {
-          list.add(e.name);
+          if (!r.containsKey(e.name))
+            r.put(e.name, 1);
         }
 
+      if (!X.isEmpty(wlist))
         for (W w : wlist) {
-          list.addAll(w.keys());
+          LinkedHashMap<String, Integer> m = w.keys();
+          for (String s : m.keySet()) {
+            if (!r.containsKey(s))
+              r.put(s, m.get(s));
+          }
         }
 
-        Collections.sort(list);
-      }
+      // add 1 in end
+      if (!X.isEmpty(order))
+        for (Entity e : order) {
+          if (!r.containsKey(e.name)) {
+            int i = X.toInt(e.value);
+            if (i >= 0) {
+              r.put(e.name, 1);
+            }
+          }
+        }
 
-      return list;
+      // log.debug("keys=" + r + ", W=" + this.toString());
+      return r;
     }
 
     /**
@@ -818,8 +1156,8 @@ public class Helper {
     }
 
     /**
-     * same as and(String name, Object v, OP op)
-     * 
+     * same as and(String name, Object v, OP op).
+     *
      * @param name
      *          the name
      * @param v
@@ -937,8 +1275,8 @@ public class Helper {
     }
 
     /**
-     * create the W object with the parameters
-     * 
+     * create the W object with the parameters.
+     *
      * @param name
      *          the field name
      * @param v
@@ -950,6 +1288,19 @@ public class Helper {
     public static W create(String name, Object v, OP op) {
       W w = new W();
       w.elist.add(new Entity(name, v, op, AND));
+      return w;
+    }
+
+    /**
+     * create the W by single sql, this sql is only for RDS
+     * 
+     * @param connectsql
+     *          the sql without parameter
+     * @return the W
+     */
+    public static W create(String connectsql) {
+      W w = new W();
+      w.connectsql = connectsql;
       return w;
     }
 
@@ -966,7 +1317,7 @@ public class Helper {
       public String name;
       public Object value;
       public OP     op;   // operation EQ, GT, ...
-      private int   cond; // condition AND, OR
+      public int    cond; // condition AND, OR
 
       private List<Object> args(List<Object> list) {
         if (value != null) {
@@ -984,6 +1335,36 @@ public class Helper {
         return list;
       }
 
+      /**
+       * From json.
+       *
+       * @param j1
+       *          the j1
+       * @return the entity
+       */
+      public static Entity fromJSON(JSON j1) {
+        return new Entity(j1.getString("name"), j1.get("value"), OP.valueOf(j1.getString("op")), j1.getInt("cond"));
+      }
+
+      /**
+       * To json.
+       *
+       * @return the json
+       */
+      public JSON toJSON() {
+        JSON jo = JSON.create();
+        jo.put("name", name);
+        jo.put("value", value);
+        jo.put("op", op.toString());
+        jo.put("cond", cond);
+        return jo;
+      }
+
+      /**
+       * Copy.
+       *
+       * @return the entity
+       */
       public Entity copy() {
         return new Entity(name, value, op, cond);
       }
@@ -1018,6 +1399,11 @@ public class Helper {
 
       transient String tostring;
 
+      /*
+       * (non-Javadoc)
+       * 
+       * @see java.lang.Object#toString()
+       */
       public String toString() {
         if (tostring == null) {
           StringBuilder sb = new StringBuilder(name);
@@ -1101,6 +1487,9 @@ public class Helper {
         for (Entity e1 : e.elist) {
           list.add(_parse(e1, new BasicDBObject()));
         }
+        for (W w1 : e.wlist) {
+          list.add(w1.query());
+        }
 
         q.append("$or", list);
       }
@@ -1134,23 +1523,25 @@ public class Helper {
      * @return the w
      */
     public W sort(String name, int i) {
-      order.add(new Entity(name, i, OP.none, AND));
+      order.add(new Entity(name, i, OP.eq, AND));
       return this;
     }
 
   }
 
-  public static interface Monitor {
+  public static interface IOptimizer {
 
     /**
      * Query.
-     *
+     * 
+     * @param db
+     *          the db name
      * @param table
      *          the table
      * @param w
      *          the w
      */
-    public void query(String table, W w);
+    public void query(String db, String table, W w);
   }
 
   /**
@@ -1180,9 +1571,22 @@ public class Helper {
    * @return the Bean
    */
   public static <T extends Bean> T load(W q, Class<T> t) {
-    return load(q, t, DEFAULT);
+    return load(q, t, getDB(t));
   }
 
+  /**
+   * Load.
+   *
+   * @param <T>
+   *          the generic type
+   * @param q
+   *          the q
+   * @param t
+   *          the t
+   * @param db
+   *          the db
+   * @return the t
+   */
   public static <T extends Bean> T load(W q, Class<T> t, String db) {
     String table = getTable(t);
     return load(table, q, t, db);
@@ -1202,27 +1606,42 @@ public class Helper {
    * @return the bean
    */
   public static <T extends Bean> T load(String table, W q, Class<T> t) {
-    return load(table, q, t, DEFAULT);
+    return load(table, q, t, getDB(t));
   }
 
+  /**
+   * Load.
+   *
+   * @param <T>
+   *          the generic type
+   * @param table
+   *          the table
+   * @param q
+   *          the q
+   * @param t
+   *          the t
+   * @param db
+   *          the db
+   * @return the t
+   */
   public static <T extends Bean> T load(String table, W q, Class<T> t, String db) {
 
     if (table != null) {
       if (monitor != null) {
-        monitor.query(table, q);
+        monitor.query(db, table, q);
       }
 
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.load(table, q, t, db);
-
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return RDSHelper.load(table, q, t, db);
-      } else {
-
-        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.load(table, q, t, db);
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.load(table, q, t, db);
+          }
+        }
       }
+
+      log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
     }
     return null;
 
@@ -1231,31 +1650,135 @@ public class Helper {
   /**
    * insert into the values by the Class of T.
    *
-   * @param values
-   *          the values
+   * @param value
+   *          the value
    * @param t
    *          the Class of Bean
    * @return the number of inserted, 0: failed
    */
-  public static int insert(V values, Class<? extends Bean> t) {
-    return insert(values, t, DEFAULT);
+  public static int insert(V value, Class<? extends Bean> t) {
+    return insert(value, t, getDB(t));
   }
 
-  public static int insert(V values, Class<? extends Bean> t, String db) {
+  /**
+   * batch insert
+   * 
+   * @param values
+   *          the values
+   * @param t
+   *          the Class of Bean
+   * @return the number of inserted
+   */
+  public static int insert(List<V> values, Class<? extends Bean> t) {
+    return insert(values, t, getDB(t));
+  }
+
+  /**
+   * batch insert
+   * 
+   * @param values
+   *          the values
+   * @param t
+   *          the Class of Bean
+   * @param db
+   *          the DB name
+   * @return the number is inserted
+   */
+  public static int insert(List<V> values, Class<? extends Bean> t, String db) {
+
     String table = getTable(t);
+    return insert(values, table, db);
+  }
+
+  /**
+   * batch insert
+   * 
+   * @param values
+   *          the values
+   * @param table
+   *          the table name
+   * @param db
+   *          the db name
+   * @return the number inserted
+   */
+  public static int insert(List<V> values, String table, String db) {
 
     if (table != null) {
-      values.set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis());
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.insertCollection(table, values, db);
-      } else if (primary == DBType.RDS) {
 
-        // insert into RDS
-        return RDSHelper.insertTable(table, values, db);
-      } else {
-        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      for (V value : values) {
+        value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
+
+        /**
+         * trigger the insert
+         */
+        beforeInsert(db, table, value);
       }
+
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.insertTable(table, values, db);
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.insertTable(table, values, db);
+          }
+        }
+      }
+
+      log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+    }
+
+    return 0;
+
+  }
+
+  /**
+   * Insert.
+   *
+   * @param values
+   *          the values
+   * @param t
+   *          the t
+   * @param db
+   *          the db
+   * @return the int
+   */
+  public static int insert(V value, Class<? extends Bean> t, String db) {
+    String table = getTable(t);
+    return insert(value, table, db);
+  }
+
+  /**
+   * insert
+   * 
+   * @param value
+   *          the value
+   * @param table
+   *          the table
+   * @param db
+   *          the db name
+   * @return the number inserted
+   */
+  public static int insert(V value, String table, String db) {
+
+    if (table != null) {
+      value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
+
+      /**
+       * trigger the insert
+       */
+      beforeInsert(db, table, value);
+
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.insertTable(table, value, db);
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.insertTable(table, value, db);
+          }
+        }
+      }
+
+      log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
     }
 
     return 0;
@@ -1289,12 +1812,12 @@ public class Helper {
    * @return the number of updated
    */
   public static int update(W q, V values, Class<? extends Bean> t) {
-    return update(q, values, t, DEFAULT);
+    return update(q, values, t, getDB(t));
   }
 
   /**
-   * update the values by the Q for the Class of Bean in the "db"
-   * 
+   * update the values by the Q for the Class of Bean in the "db".
+   *
    * @param q
    *          the query
    * @param values
@@ -1326,8 +1849,8 @@ public class Helper {
   }
 
   /**
-   * update the table by the query with the values
-   * 
+   * update the table by the query with the values.
+   *
    * @param table
    *          the table
    * @param q
@@ -1343,22 +1866,106 @@ public class Helper {
     if (table != null) {
 
       if (monitor != null) {
-        monitor.query(table, q);
+        monitor.query(db, table, q);
       }
 
-      values.set("updated", System.currentTimeMillis());
+      values.set(X.UPDATED, System.currentTimeMillis());
 
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return (int) MongoHelper.updateCollection(table, q, values, db);
+      // log.debug("update 1 ...");
 
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return RDSHelper.updateTable(table, q, values, db);
-      } else {
+      /**
+       * trigger the update
+       */
+      beforeUpdate(db, table, q, values);
 
-        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      // log.debug("update 2 ...");
+
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.updateTable(table, q, values, db);
+
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.updateTable(table, q, values, db);
+          }
+        }
       }
+
+      log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+    }
+    return 0;
+  }
+
+  /**
+   * Inc.
+   *
+   * @param q
+   *          the q
+   * @param name
+   *          the name
+   * @param n
+   *          the n
+   * @param t
+   *          the t
+   * @return the int
+   */
+  public static int inc(W q, String name, int n, Class<? extends Bean> t) {
+    String table = getTable(t);
+    return inc(table, q, name, n, getDB(t));
+  }
+
+  /**
+   * Inc.
+   *
+   * @param table
+   *          the table
+   * @param q
+   *          the q
+   * @param name
+   *          the name
+   * @param n
+   *          the n
+   * @return the int
+   */
+  public static int inc(String table, W q, String name, int n) {
+    return inc(table, q, name, n, DEFAULT);
+  }
+
+  /**
+   * increase the value
+   * 
+   * @param table
+   *          the table
+   * @param q
+   *          the query
+   * @param name
+   *          the name
+   * @param n
+   *          the number
+   * @param db
+   *          the db name
+   * @return the new value
+   */
+  public static int inc(String table, W q, String name, int n, String db) {
+
+    if (table != null) {
+
+      if (monitor != null) {
+        monitor.query(db, table, q);
+      }
+
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.inc(table, q, name, n, db);
+
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.inc(table, q, name, n, db);
+          }
+        }
+      }
+
+      log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
     }
     return 0;
   }
@@ -1370,7 +1977,7 @@ public class Helper {
    *         true: configured RDS or Mongo; false: no DB configured
    */
   public static boolean isConfigured() {
-    return RDSHelper.isConfigured() || MongoHelper.isConfigured();
+    return primary != null && primary.getDB(DEFAULT) != null;
   }
 
   /**
@@ -1392,24 +1999,66 @@ public class Helper {
    * @return Beans of the T, the "total=-1" always
    */
   public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) {
-    return load(table, q, s, n, t, DEFAULT);
+    return load(table, q, s, n, t, getDB(t));
   }
 
+  /**
+   * Load.
+   *
+   * @param <T>
+   *          the generic type
+   * @param table
+   *          the table
+   * @param q
+   *          the q
+   * @param s
+   *          the s
+   * @param n
+   *          the n
+   * @param t
+   *          the t
+   * @param db
+   *          the db
+   * @return the beans
+   */
   public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db) {
+    return _load(table, q, s, n, t, db, 1);
+  }
+
+  private static <T extends Bean> Beans<T> _load(final String table, final W q, final int s, final int n,
+      final Class<T> t, final String db, int refer) {
 
     if (monitor != null) {
-      monitor.query(table, q);
+      monitor.query(db, table, q);
     }
 
-    if (primary == DBType.MONGO) {
-      // insert into mongo
-      return MongoHelper.load(table, q.query(), q.order(), s, n, t, db);
-    } else if (primary == DBType.RDS) {
-      // insert into RDS
-      return RDSHelper.load(table, q, s, n, t, db);
+    Beans<T> bs = null;
+    if (primary != null && primary.getDB(db) != null) {
+      bs = primary.load(table, q, s, n, t, db);
+    } else if (!X.isEmpty(customs)) {
+      for (DBHelper h : customs) {
+        if (h.getDB(db) != null) {
+          bs = h.load(table, q, s, n, t, db);
+          break;
+        }
+      }
     }
 
-    return null;
+    if (n > 0) {
+      if (refer > 0 && bs != null && !X.isEmpty(bs.getList()) && bs.getList().size() >= n && (s % n % 10 == 0)) {
+        // not loop; has data; s % n % 10 == 0
+        Task.create(new Runnable() {
+
+          @Override
+          public void run() {
+            // Cause the DB to load the more data in memory
+            _load(table, q, s + n * 10, n, t, db, 0);
+          }
+
+        }).schedule(1000);
+      }
+    }
+    return bs;
 
   }
 
@@ -1451,6 +2100,22 @@ public class Helper {
   }
 
   /**
+   * get the db name
+   * 
+   * @param t
+   *          the Bean class
+   * @return the db name
+   */
+  public static String getDB(Class<? extends Bean> t) {
+    Table table = (Table) t.getAnnotation(Table.class);
+    if (table == null || X.isEmpty(table.name())) {
+      return DEFAULT;
+    }
+
+    return table.db();
+  }
+
+  /**
    * count the data by the query.
    *
    * @param q
@@ -1460,12 +2125,12 @@ public class Helper {
    * @return the long of data number
    */
   public static long count(W q, Class<? extends Bean> t) {
-    return count(q, t, DEFAULT);
+    return count(q, t, getDB(t));
   }
 
   /**
-   * count the items in the db
-   * 
+   * count the items in the db.
+   *
    * @param q
    *          the query
    * @param t
@@ -1476,22 +2141,37 @@ public class Helper {
    */
   public static long count(W q, Class<? extends Bean> t, String db) {
     String table = getTable(t);
+    return count(q, table, db);
+  }
 
+  /**
+   * count the items in table, db
+   * 
+   * @param q
+   *          the query
+   * @param table
+   *          the table name
+   * @param db
+   *          the db name
+   * @return long
+   */
+  public static long count(W q, String table, String db) {
     if (table != null) {
       if (monitor != null) {
-        monitor.query(table, q);
+        monitor.query(db, table, q);
       }
 
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.count(table, q, db);
-
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return RDSHelper.count(table, q, db);
-      } else {
-        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.count(table, q, db);
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.count(table, q, db);
+          }
+        }
       }
+
+      log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
     }
 
     return 0;
@@ -1513,28 +2193,65 @@ public class Helper {
    * @return the List of objects
    */
   public static <T> List<T> distinct(String name, W q, Class<? extends Bean> b, Class<T> t) {
-    return distinct(name, q, b, t, DEFAULT);
+    return distinct(name, q, b, t, getDB(b));
   }
 
-  @SuppressWarnings("unchecked")
+  /**
+   * Distinct.
+   *
+   * @param <T>
+   *          the generic type
+   * @param name
+   *          the name
+   * @param q
+   *          the q
+   * @param b
+   *          the b
+   * @param t
+   *          the t
+   * @param db
+   *          the db
+   * @return the list
+   */
   public static <T> List<T> distinct(String name, W q, Class<? extends Bean> b, Class<T> t, String db) {
     String table = getTable(b);
+    return distinct(name, q, table, t, db);
+  }
+
+  /**
+   * get the distinct data
+   * 
+   * @param name
+   *          the column name
+   * @param q
+   *          the query
+   * @param table
+   *          the table name
+   * @param t
+   *          the result type
+   * @param db
+   *          the db name
+   * @return the list
+   */
+  public static <T> List<T> distinct(String name, W q, String table, Class<T> t, String db) {
 
     if (table != null) {
       if (monitor != null) {
-        monitor.query(table, q);
+        monitor.query(db, table, q);
       }
 
-      if (primary == DBType.MONGO) {
-        // insert into mongo
-        return MongoHelper.distinct(table, name, q, t, db);
+      if (primary != null && primary.getDB(db) != null) {
+        return primary.distinct(table, name, q, t, db);
 
-      } else if (primary == DBType.RDS) {
-        // insert into RDS
-        return (List<T>) RDSHelper.distinct(table, name, q, db);
-      } else {
-        log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+      } else if (!X.isEmpty(customs)) {
+        for (DBHelper h : customs) {
+          if (h.getDB(db) != null) {
+            return h.distinct(table, name, q, t, db);
+          }
+        }
       }
+
+      log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
     }
 
     return null;
@@ -1572,10 +2289,151 @@ public class Helper {
   /**
    * 
    * @param m
-   *          the monitor
+   *          the optimizer
    */
-  public static void setMonitor(Monitor m) {
+  public static void setOptmizer(IOptimizer m) {
     monitor = m;
+    log.info("optimizer=" + m);
+  }
+
+  /**
+   * create index on table
+   * 
+   * @param db
+   *          the db
+   * @param table
+   *          the table
+   * @param ss
+   *          the index info
+   */
+  public static void createIndex(String db, String table, LinkedHashMap<String, Integer> ss) {
+
+    if (primary != null && primary.getDB(db) != null) {
+      primary.createIndex(table, ss, db);
+    } else if (!X.isEmpty(customs)) {
+      for (DBHelper h : customs) {
+        if (h.getDB(db) != null) {
+          h.createIndex(table, ss, db);
+          break;
+        }
+      }
+    }
+
+  }
+
+  /**
+   * get indexes on table
+   * 
+   * @param table
+   *          the table
+   * @param db
+   *          the db
+   * @return the list of indexes
+   */
+  public static List<Map<String, Object>> getIndexes(String table, String db) {
+
+    if (primary != null && primary.getDB(db) != null) {
+      return primary.getIndexes(table, db);
+    } else if (!X.isEmpty(customs)) {
+      for (DBHelper h : customs) {
+        if (h.getDB(db) != null) {
+          return h.getIndexes(table, db);
+        }
+      }
+    }
+
+    return null;
+
+  }
+
+  /**
+   * drop indexes
+   * 
+   * @param table
+   *          the table
+   * @param name
+   *          the index name
+   * @param db
+   *          the db
+   */
+  public static void dropIndex(String table, String name, String db) {
+
+    if (primary != null && primary.getDB(db) != null) {
+      primary.dropIndex(table, name, db);
+    } else if (customs != null) {
+      for (DBHelper h : customs) {
+        h.dropIndex(table, name, db);
+        break;
+      }
+    }
+
+  }
+
+  /**
+   * set primary db helper
+   * 
+   * @param helper
+   *          the db helper
+   */
+  public static void setPrimary(DBHelper helper) {
+    primary = helper;
+
+    log.info("primary=" + primary);
+  }
+
+  /**
+   * add a custom db helper which works if primary has not that db
+   * 
+   * @param helper
+   *          the db helper
+   */
+  public static void addCustomHelper(DBHelper helper) {
+    if (customs == null) {
+      customs = new ArrayList<DBHelper>();
+    }
+    if (!customs.contains(helper)) {
+      customs.add(helper);
+    }
+  }
+
+  /**
+   * the DBHelper interface
+   * 
+   * @author wujun
+   *
+   */
+  public interface DBHelper {
+
+    boolean isConfigured();
+
+    List<Map<String, Object>> getIndexes(String table, String db);
+
+    void dropIndex(String table, String name, String db);
+
+    void createIndex(String table, LinkedHashMap<String, Integer> ss, String db);
+
+    <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db);
+
+    <T extends Bean> T load(String table, W q, Class<T> clazz, String db);
+
+    int delete(String table, W q, String db);
+
+    Object getDB(String db);
+
+    boolean exists(String table, W q, String db);
+
+    int insertTable(String table, V value, String db);
+
+    int insertTable(String table, List<V> values, String db);
+
+    int updateTable(String table, W q, V values, String db);
+
+    int inc(String table, W q, String name, int n, String db);
+
+    long count(String table, W q, String db);
+
+    <T> List<T> distinct(String table, String name, W q, Class<T> t, String db);
+
   }
 
 }

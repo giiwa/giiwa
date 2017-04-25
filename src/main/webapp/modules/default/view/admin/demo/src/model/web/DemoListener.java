@@ -8,31 +8,32 @@ import org.giiwa.framework.web.Module;
 
 public class DemoListener implements IListener {
 
-	static Log log = LogFactory.getLog(DemoListener.class);
+  static Log log = LogFactory.getLog(DemoListener.class);
 
-	@Override
-	public void onStart(Configuration conf, Module m) {
-		// TODO Auto-generated method stub
-		log.info("webdemo is starting ...");
+  @Override
+  public void onStart(Configuration conf, Module m) {
+    // TODO Auto-generated method stub
+    log.info("webdemo is starting ...");
 
-	}
+  }
 
-	@Override
-	public void onStop() {
-		// TODO Auto-generated method stub
+  @Override
+  public void onStop() {
+    // TODO Auto-generated method stub
+    log.info("webdemo is stopping ...");
 
-	}
+  }
 
-	@Override
-	public void uninstall(Configuration conf, Module m) {
-		// TODO Auto-generated method stub
+  @Override
+  public void uninstall(Configuration conf, Module m) {
+    // TODO Auto-generated method stub
 
-	}
+  }
 
-	@Override
-	public void upgrade(Configuration conf, Module m) {
-		// TODO Auto-generated method stub
+  @Override
+  public void upgrade(Configuration conf, Module m) {
+    // TODO Auto-generated method stub
 
-	}
+  }
 
 }

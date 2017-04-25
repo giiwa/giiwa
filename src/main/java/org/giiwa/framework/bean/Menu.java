@@ -15,6 +15,7 @@
 package org.giiwa.framework.bean;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,7 +23,10 @@ import java.util.TreeMap;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.vengine.VEngine;
 import org.giiwa.framework.web.Model;
 
 /**
@@ -96,6 +100,10 @@ public class Menu extends Bean {
     return this.getString("classes");
   }
 
+  public String getShow1() {
+    return this.getString("show1");
+  }
+
   public String getClick() {
     return this.getString("click");
   }
@@ -129,12 +137,19 @@ public class Menu extends Bean {
         /**
          * create menu if not exists
          */
-        V v = V.create().copy(jo, X.URL, "click", "classes", "content", "tag", "access", "seq", "tip", "style", "load");
+        V v = V.create().copy(jo, X.URL, "click", "classes", "content", "tag", "access", "seq", "tip", "style", "load",
+            "show");
 
-        Object o = v.value("load");
-        if (!X.isEmpty(o)) {
+        if (!X.isEmpty(v.value("load"))) {
+          v.set("load1", v.value("load"));
           v.remove("load");
-          v.set("load1", o);
+        }
+
+        if (!X.isEmpty(v.value("show"))) {
+          v.set("show1", v.value("show"));
+          v.remove("show");
+        } else {
+          v.set("show1", X.EMPTY);
         }
 
         /**
@@ -363,6 +378,19 @@ public class Menu extends Bean {
         }
       }
 
+      String s = m.getShow1();
+      if (has && !X.isEmpty(s)) {
+        Map<String, Object> m1 = new HashMap<String, Object>();
+        m1.put("me", me);
+        m1.put("global", Global.getInstance());
+        m1.put("local", Local.getInstance());
+        try {
+          has = VEngine.test(s, m1);
+        } catch (Exception e) {
+          log.error(s, e);
+        }
+      }
+
       if (has) {
         int seq = m.getSeq();
         while (map.containsKey(seq))
@@ -390,6 +418,7 @@ public class Menu extends Bean {
    */
   public static void reset() {
     String node = Model.node();
+    // log.debug("node=" + node);
     Helper.update(W.create("node", node), V.create("seq", -1), Menu.class);
   }
 

@@ -13,6 +13,7 @@
  <label class='nospace'>$lang.get('default.list.number')<input type='text' name='_goto_page_count' value= #if($currp) "$currp.n" #else "20" #end/>$lang.get('label.items.and')</label>
  <label class='nospace'><input type='text' name='_goto_page_num' value= #if($currp)'$currp.label' #else '1' #end/>$lang.get('label.page')<a class='page_1' href='javascript:;' onclick='_goto_page()'>$lang.get('a.ok')</a></label>
  #if($total),<label>$lang.get('label.total.item')<i>$total</i>$lang.get('label.items')#if($totalpage)/<i>$totalpage</i>$lang.get('label.pages') #end</label>#end
+ #if($cost>0),<label>$lang.get('label.cost')<i>$cost</i>$lang.get('label.cost.unit')</label>#end
 </div>
 
 <script>
@@ -60,8 +61,8 @@
 	function _goto_page() {
 		var s = parseInt($('.pages input[name=_goto_page_num]').val());
 		var n = parseInt($('.pages input[name=_goto_page_count]').val());
-		if (typeof (load) == 'function') {
-			load('$query.copy().remove("s", "n").toString()&s=' + ((s - 1) * n)
+		if (typeof (giiwa.load) == 'function') {
+			giiwa.load('$query.copy().remove("s", "n").toString()&s=' + ((s - 1) * n)
 					+ '&n=' + n);
 		} else {
 			window.location.href = '$query.copy().remove("s", "n").toString()&s='

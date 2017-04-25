@@ -134,7 +134,8 @@ public class FileVersion {
     }
 
     /**
-     * 
+     * Compare.
+     *
      * @param v1
      *          the version string
      * @param v2

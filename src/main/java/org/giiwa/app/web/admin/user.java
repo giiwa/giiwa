@@ -23,6 +23,7 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.noti.Email;
@@ -46,7 +47,7 @@ public class user extends Model {
    * Adds the.
    */
   @SuppressWarnings("deprecation")
-  @Path(path = "create", login = true, access = "access.user.admin")
+  @Path(path = "create", login = true, access = "access.config.admin|access.user.admin")
   public void create() {
     if (method.isPost()) {
 
@@ -122,6 +123,7 @@ public class user extends Model {
                         j1.put("passwd", passwd);
                         j1.put("lang", lang);
                         j1.put("global", Global.getInstance());
+                        j1.put("local", Local.getInstance());
 
                         VelocityView v1 = new VelocityView();
                         String body = v1.parse(f, j1);
@@ -163,7 +165,7 @@ public class user extends Model {
    * Delete.
    */
   @SuppressWarnings("deprecation")
-  @Path(path = "delete", login = true, access = "access.user.admin")
+  @Path(path = "delete", login = true, access = "access.config.admin|access.user.admin")
   public void delete() {
 
     JSON jo = new JSON();
@@ -192,7 +194,7 @@ public class user extends Model {
    * Edits the user.
    */
   @SuppressWarnings("deprecation")
-  @Path(path = "edit", login = true, access = "access.user.admin")
+  @Path(path = "edit", login = true, access = "access.config.admin|access.user.admin")
   public void edit() {
     long id = this.getLong("id");
 
@@ -274,7 +276,7 @@ public class user extends Model {
   /**
    * Detail.
    */
-  @Path(path = "detail", login = true, access = "access.user.query")
+  @Path(path = "detail", login = true, access = "access.config.admin|access.user.query")
   public void detail() {
     String id = this.getString("id");
     if (id != null) {
@@ -293,11 +295,11 @@ public class user extends Model {
     }
   }
 
-  @Path(path = "oplog", login = true, access = "access.user.admin")
+  @Path(path = "oplog", login = true, access = "access.config.admin|access.user.admin")
   public void oplog() {
 
     int s = this.getInt("s");
-    int n = this.getInt("n", 20, "number.per.page");
+    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
     W q = getW(this.getJSON());
     Beans<OpLog> bs = OpLog.load(q, s, n);
@@ -306,14 +308,14 @@ public class user extends Model {
     this.show("/admin/user.oplog.html");
   }
 
-  @Path(path = "accesslog", login = true, access = "acess.logs.admin")
+  @Path(path = "accesslog", login = true, access = "access.config.admin|access.logs.admin")
   public void accesslog() {
     long uid = this.getLong("uid");
     this.set("uid", uid);
 
     W q = W.create("uid", uid);
     int s = this.getInt("s");
-    int n = this.getInt("n", 10, "number.per.page");
+    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
     Beans<AccessLog> bs = AccessLog.load(q, s, n);
 
@@ -328,7 +330,7 @@ public class user extends Model {
    * @see org.giiwa.framework.web.Model#onGet()
    */
   @Override
-  @Path(login = true, access = "access.user.admin")
+  @Path(login = true, access = "access.config.admin|access.user.admin")
   public void onGet() {
 
     String name = this.getString("name");
@@ -344,7 +346,7 @@ public class user extends Model {
     }
 
     int s = this.getInt("s");
-    int n = this.getInt("n", 10, "number.per.page");
+    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
     Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt), s, n);
     this.set(bs, s, n);
@@ -378,16 +380,16 @@ public class user extends Model {
     }
 
     if (!X.isEmpty(jo.getString("starttime"))) {
-      q.and("created", lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
+      q.and(X.CREATED, lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
 
     } else {
       long today_2 = System.currentTimeMillis() - X.AYEAR * 1;
       jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
-      q.and("created", today_2, W.OP.gte);
+      q.and(X.CREATED, today_2, W.OP.gte);
     }
 
     if (!X.isEmpty(jo.getString("endtime"))) {
-      q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.like);
+      q.and(X.CREATED, lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.like);
     }
 
     String sortby = this.getString("sortby");
@@ -395,7 +397,7 @@ public class user extends Model {
       int sortby_type = this.getInt("sortby_type");
       q.sort(sortby, sortby_type);
     } else {
-      q.sort("created", -1);
+      q.sort(X.CREATED, -1);
     }
     this.set(jo);
 

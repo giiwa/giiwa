@@ -195,7 +195,7 @@ public class Zip {
   }
 
   /**
-   * Zip the src to out file
+   * Zip the src to out file.
    *
    * @param zipfile
    *          the out zip file
@@ -242,6 +242,12 @@ public class Zip {
     }
   }
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   */
   public static void main(String[] args) {
     try {
       zip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/logs"));

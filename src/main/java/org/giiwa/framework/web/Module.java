@@ -39,7 +39,6 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Access;
 import org.giiwa.framework.bean.Jar;
 import org.giiwa.framework.bean.Menu;
-import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.PathMapping;
@@ -60,51 +59,53 @@ import org.giiwa.framework.web.Model.PathMapping;
  */
 public class Module {
 
-  static Log          log      = LogFactory.getLog(Module.class);
+  static Log                  log      = LogFactory.getLog(Module.class);
 
   /**
    * the absolute path of the module
    */
-  String              path;
+  String                      path;
 
-  String              viewroot;
+  String                      viewroot;
   /**
    * the id of the module, MUST unique, and also is a sequence of the loading:
    * biggest first
    */
-  public int          id;
+  public int                  id;
 
   /**
    * the name of the module, the name of module should be unique in whole
    * context
    */
-  String              name;
+  String                      name;
 
   /**
    * IListener which will be invoke in each life cycle of the module
    */
-  String              listener;
+  String                      listener;
 
-  boolean             enabled  = false;
+  private transient IListener _listener;
 
-  String              version;
-  String              build;
-  String              license;
-  String              screenshot;
-  List<Required>      required;
+  boolean                     enabled  = false;
+
+  String                      version;
+  String                      build;
+  String                      license;
+  String                      screenshot;
+  List<Required>              required;
 
   /**
    * the root package name of the module, which will use to mapping the handler
    */
-  String              pack;
+  String                      pack;
 
-  Map<String, String> settings = new TreeMap<String, String>();
-  Map<String, Object> filters  = new TreeMap<String, Object>();
+  Map<String, String>         settings = new TreeMap<String, String>();
+  Map<String, Object>         filters  = new TreeMap<String, Object>();
 
   /**
    * readme file maybe html
    */
-  String              readme;
+  String                      readme;
 
   /**
    * handle by filter ad invoke the before
@@ -144,8 +145,51 @@ public class Module {
     return true;
   }
 
+  public static boolean checkAndUpgrade() {
+
+    boolean merged = false;
+
+    File u1 = new File(Model.HOME + "/upgrade/");
+    File[] ff = u1.listFiles();
+    if (ff != null) {
+      for (File f1 : ff) {
+        try {
+          String name = f1.getName();
+          if (new File(f1.getCanonicalPath() + "/ok").exists()) {
+            File f2 = new File(Model.HOME + "/modules/" + name);
+            if (f2.exists()) {
+              IOUtil.delete(f2);
+            }
+
+            IOUtil.copyDir(f1, new File(Model.HOME + "/modules/"));
+            // f1.renameTo(f2);
+            new File(f2.getCanonicalPath() + "/ok").delete();
+            IOUtil.delete(f1);
+
+            // merge WEB-INF/lib
+            File f3 = new File(f2.getCanonicalPath() + "/WEB-INF");
+            if (f3.exists()) {
+              // merge all
+              if (move(name, f3, Model.HOME)) {
+                merged = true;
+              }
+
+            }
+
+          } else {
+            IOUtil.delete(f1);
+          }
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+        }
+      }
+    }
+
+    return merged;
+  }
+
   /**
-   * install a module by Entity
+   * prepare a module by Entity for upgrading
    * 
    * @param e
    *          the entity of module file
@@ -153,22 +197,26 @@ public class Module {
    * @throws Exception
    *           throw Exception if failed
    */
-  public static boolean install(Entity e) throws Exception {
+  public static boolean prepare(Entity e) throws Exception {
     if (e == null) {
       throw new Exception("invalid repo entity");
     }
-    String url = e.getUrl();
+    // String url = e.getUrl();
 
     String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
-    String root = Model.HOME + "/modules/" + temp + "/";
+    String root = Model.HOME + "/upgrade/" + temp + "/";
 
     try {
+      File f0 = new File(root);
+      if (f0.exists()) {
+        IOUtil.delete(f0);
+      }
+
       ZipInputStream in = new ZipInputStream(e.getInputStream());
 
       /**
-       * store all entry in temp file
+       * unzip the module.zip
        */
-
       ZipEntry z = in.getNextEntry();
       byte[] bb = new byte[4 * 1024];
       while (z != null) {
@@ -196,59 +244,28 @@ public class Module {
         z = in.getNextEntry();
       }
 
-      Module m = Module.load(temp);
-      File f = new File(root);
-      File dest = new File(Model.HOME + File.separator + "modules" + File.separator + m.getName());
-      if (dest.exists()) {
-        delete(dest);
-      }
-
-      Module m1 = Module.load(m.getName());
-      if (m1 != null) {
-        String repo = m1.getRepo();
-        if (!X.isEmpty(repo)) {
-          log.debug("old.repo=" + repo + ", new.repo=" + url);
-          Entity e1 = Repo.load(repo);
-          if (e1 != null && !X.isSame(e1.getId(), e.getId())) {
-            // not the same file
-            e1.delete();
-          }
-        }
-      }
-
       /**
-       * merge WEB-INF and depends lib
-       * 
+       * prepare the module
        */
-      m.merge();
-
-      /**
-       * move the temp to target dest
-       */
-      if (!f.renameTo(dest)) {
-        log.error("rename the module path failed, then using copy!!! dest=" + dest + ", original=" + f.getName());
-        if (dest.exists()) {
-          IOUtil.delete(dest);
-          log.info("trying to delete the dest path, path=" + dest.getName());
-        }
-
-        log.info("copying to the path=" + dest.getName());
-        IOUtil.copy(f, dest);
-
-        log.info("deleteing to the path=" + dest.getName());
-        IOUtil.delete(f);
-
+      String f = root + "/module.xml";
+      SAXReader reader = new SAXReader();
+      Document document = reader.read(f);
+      Element r1 = document.getRootElement();
+      Module t = new Module();
+      t._load(r1);
+      String dest = Model.HOME + "/upgrade/" + t.getName();
+      File d1 = new File(dest);
+      if (d1.exists()) {
+        IOUtil.delete(d1);
       }
+      new File(root).renameTo(new File(dest));
+      new File(dest + "/ok").createNewFile();
 
-      Module.init(m);
-      m.set(m.getName() + "_repo", url);
-      m.store();
       return true;
 
     } finally {
 
-      // remove root
-      delete(new File(root));
+      e.delete();
 
     }
 
@@ -758,6 +775,12 @@ public class Module {
   public static void init(Configuration conf) {
     try {
       _conf = conf;
+
+      if (checkAndUpgrade()) {
+        log.info("has been merged, restart it now");
+        System.exit(0);
+      }
+
       classLoader = new GClassLoader(Module.class.getClassLoader());
 
       Thread thread = Thread.currentThread();
@@ -819,7 +842,9 @@ public class Module {
 
       log.debug("modules=" + modules);
 
+      log.debug("init menu ...");
       Menu.reset();
+      // log.debug("1 ...");
 
       for (Module m : modules.values()) {
         /**
@@ -827,14 +852,20 @@ public class Module {
          */
         m.initModels();
 
+        // log.debug("2 ...");
         /**
          * initialize the life listener
          */
-        m._init(_conf);
+        if (!m._init(_conf)) {
+          log.error("module init failed. disabled it, name=" + m.getName());
+          modules.remove(m.getId());
+        }
 
       }
+      // log.debug("3 ...");
       Menu.cleanup();
 
+      // log.debug("4 ...");
       // the the default locale
       String locale = null;
       Module f1 = home;
@@ -846,6 +877,7 @@ public class Module {
         Locale.setDefault(new Locale(locale));
       }
 
+      log.debug("menu inited.\r\nchecking unused jar ...");
       /**
        * check is there any jar file not used by any module
        */
@@ -881,6 +913,8 @@ public class Module {
       if (changed) {
         log.warn("jar files changed, restarting again...");
         System.exit(0);
+      } else {
+        log.debug("jar is ok.");
       }
 
     } catch (Exception e) {
@@ -1037,7 +1071,6 @@ public class Module {
               required.add(m);
             }
           }
-
         }
       }
 
@@ -1054,7 +1087,7 @@ public class Module {
    * 
    * @param conf
    */
-  private void _init(Configuration conf) {
+  private boolean _init(Configuration conf) {
     // find the lifelistener, and init
     try {
       if (this.id > 0) {
@@ -1073,26 +1106,32 @@ public class Module {
         if (name != null) {
 
           try {
-            Class<?> c = Class.forName(name, true, classLoader);
-            Object o = c.newInstance();
+            if (_listener == null) {
+              Class<?> c = Class.forName(name, true, classLoader);
+              Object o = c.newInstance();
 
-            if (o instanceof IListener) {
+              if (o instanceof IListener) {
 
+                _listener = (IListener) o;
+              }
+            }
+
+            if (_listener != null) {
               log.info("initializing: " + name);
-              IListener l = (IListener) o;
-
-              l.upgrade(conf, this);
-
-              l.onStart(conf, this);
+              _listener.upgrade(conf, this);
+              _listener.onStart(conf, this);
             }
           } catch (Throwable e) {
             log.error(this.name + ", listener=" + name, e);
+            return false;
           }
         }
       }
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
+      return false;
     }
+    return true;
   }
 
   /**
@@ -1351,7 +1390,7 @@ public class Module {
    * @param locale
    *          the locale
    */
-  public void loadLang(Map<String, String> data, String locale) {
+  public void loadLang(Map<String, String[]> data, String locale) {
 
     Module e = floor();
     if (e != null) {
@@ -1386,7 +1425,7 @@ public class Module {
                    */
                   loadLang(data, name);
                 } else {
-                  data.put(name, value);
+                  data.put(name, new String[] { value, this.name });
                 }
               }
             }
@@ -1518,16 +1557,20 @@ public class Module {
         if (this.listener != null) {
           String name = listener;
           if (name != null) {
-            Class<?> c = Class.forName(name, true, classLoader);
-            Object o = c.newInstance();
+            try {
+              Class<?> c = Class.forName(name, true, classLoader);
+              Object o = c.newInstance();
 
-            if (o instanceof IListener) {
+              if (o instanceof IListener) {
 
-              log.info("uninstall: " + name);
-              IListener l = (IListener) o;
+                log.info("uninstall: " + name);
+                IListener l = (IListener) o;
 
-              l.onStop();
-              l.uninstall(_conf, this);
+                l.onStop();
+                l.uninstall(_conf, this);
+              }
+            } catch (Throwable e) {
+              log.error(e.getMessage(), e);
             }
           }
         }
@@ -1805,35 +1848,7 @@ public class Module {
     }
   }
 
-  /**
-   * Merge.
-   *
-   * @return true, if successful
-   */
-  public boolean merge() {
-
-    /**
-     * remove all first
-     */
-    Jar.reset(this.getName());
-
-    boolean changed = false;
-    String webinf = this.path + File.separator + "WEB-INF";
-    File f = new File(webinf);
-
-    if (f.exists() && f.isDirectory()) {
-      /**
-       * copy all files to application, and remove original one
-       */
-      changed = move(f, Model.HOME);
-    } else {
-      log.debug("no files need merge!");
-    }
-
-    return changed;
-  }
-
-  private boolean move(File f, String dest) {
+  private static boolean move(String module, File f, String dest) {
 
     // log.debug("moving ..." + f.getAbsolutePath());
 
@@ -1842,7 +1857,7 @@ public class Module {
       File[] list = f.listFiles();
       if (list != null && list.length > 0) {
         for (File f1 : list) {
-          if (move(f1, dest + File.separator + f.getName())) {
+          if (move(module, f1, dest + File.separator + f.getName())) {
             r1 = true;
           }
         }
@@ -1854,87 +1869,25 @@ public class Module {
        * looking for all the "f.getName()" in "classpath", and remove the same
        * package but different "version"<br>
        */
-      FileVersion f1 = new FileVersion(f);
-
+      r1 = true;
       if (f.getName().endsWith(".jar")) {
-        log.debug("checking [" + f1.getName() + "]");
+        Jar.update(module, f.getName());
+      }
 
-        Jar.update(this.getName(), f.getName());
-
-        // check the version
-        File m = new File(Model.HOME + File.separator + "WEB-INF" + File.separator + "lib");
-        File[] list = m.listFiles();
-        if (list != null) {
-          for (File f2 : list) {
-            if (f2.getName().endsWith(".jar")) {
-
-              FileVersion.R r = f1.compareTo(f2);
-
-              if (r != FileVersion.R.DIFF) {
-                /**
-                 * same file, may diff version
-                 */
-                List<String> modules = Jar.load(f2.getName());
-                if (modules != null && modules.size() > 0) {
-                  for (Object m1 : modules) {
-                    Jar.remove(m1.toString(), f2.getName());
-                    Jar.update(m1.toString(), f.getName());
-                  }
-                }
-
-                log.warn("same jar file, but different varsion, remove [" + f2.getAbsolutePath() + "]");
-                f2.delete();
-                r1 = true;
-
-              }
-            }
-          }
-        } else {
-          log.debug("no file in [" + m.getAbsolutePath() + "]");
-        }
-
-        // ------
-
-        File d = new File(dest + File.separator + f.getName());
-        if (d.exists()) {
-          d.delete();
-
-        } else {
-          d.getParentFile().mkdirs();
-        }
-
-        Jar.update(this.getName(), d.getName());
-
-        if (!f.renameTo(d)) {
-          log.error("rename file failed!!! dest=" + d.getName() + ", src=" + f.getName());
-          try {
-            IOUtil.copy(f, d);
-          } catch (Exception e) {
-            log.error(e.getMessage(), e);
-          }
-        }
-      } else {
-        // files
-        File d = new File(dest + File.separator + f.getName());
-        if (d.exists()) {
-          d.delete();
-
-        } else {
-          d.getParentFile().mkdirs();
-        }
-
-        if (!f.renameTo(d)) {
-          log.error("rename file failed!!! dest=" + d.getName() + ", src=" + f.getName());
-          try {
-            IOUtil.copy(f, d);
-          } catch (Exception e) {
-            log.error(e.getMessage(), e);
-          }
-        }
+      File d = new File(dest + File.separator + f.getName());
+      try {
+        // trying
+        IOUtil.copy(f, d);
+      } catch (IOException e) {
+        log.error(e.getMessage(), e);
       }
     }
 
-    f.delete();
+    try {
+      IOUtil.delete(f);
+    } catch (IOException e) {
+      log.error(e.getMessage(), e);
+    }
 
     return r1;
   }
@@ -2120,5 +2073,32 @@ public class Module {
       return module + "[" + minversion + "-" + maxversion + "]";
     }
 
+  }
+
+  public void stop() {
+    if (!X.isEmpty(listener)) {
+      String name = listener;
+      if (name != null) {
+
+        try {
+          if (_listener == null) {
+            Class<?> c = Class.forName(name, true, classLoader);
+            Object o = c.newInstance();
+
+            if (o instanceof IListener) {
+
+              _listener = (IListener) o;
+            }
+          }
+
+          if (_listener != null) {
+            // log.info("stopping: " + name);
+            _listener.onStop();
+          }
+        } catch (Throwable e) {
+          log.error(this.name + ", listener=" + name, e);
+        }
+      }
+    }
   }
 }

@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.core.base.Captcha;
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
@@ -55,7 +56,9 @@ public class user extends Model {
    */
   @Path()
   public void onGet() {
-    if (login == null) {
+    if (!Helper.isConfigured()) {
+      this.redirect("/admin/setup");
+    } else if (login == null) {
       this.redirect("/user/login");
     } else if (login.hasAccess("access.config.admin")) {
       this.redirect("/admin");
@@ -218,6 +221,10 @@ public class user extends Model {
    */
   @Path(path = "login", log = Model.METHOD_POST)
   public void login() {
+
+    if (new File(Model.GIIWA_HOME + "/admin.pwd").exists()) {
+      this.set(X.MESSAGE, lang.get("admin.pwd"));
+    }
 
     if (method.isPost()) {
 
@@ -608,7 +615,7 @@ public class user extends Model {
       if (!X.isEmpty(email)) {
         if (phase == 0) {
           // verify email and send a code
-          Code c = Code.load(W.create("s2", email).sort("created", -1));
+          Code c = Code.load(W.create("s2", email).sort(X.CREATED, -1));
           if (c != null && c.getUpdated() < X.AMINUTE) {
 
             jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
@@ -657,7 +664,7 @@ public class user extends Model {
                   if (Email.send(lang.get("mail.validation.code"), body, email)) {
                     jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
                     jo.put(X.STATE, HttpServletResponse.SC_OK);
-                    Code.update(W.create("s1", code).and("s2", email), V.create("updated", System.currentTimeMillis()));
+                    Code.update(W.create("s1", code).and("s2", email), V.create(X.UPDATED, System.currentTimeMillis()));
 
                   } else {
                     jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
@@ -708,7 +715,7 @@ public class user extends Model {
 
         if (phase == 0) {
           // verify email and send a code
-          Code c = Code.load(W.create("s2", phone).sort("created", -1));
+          Code c = Code.load(W.create("s2", phone).sort(X.CREATED, -1));
           if (c != null && c.getUpdated() < X.AMINUTE) {
 
             jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
@@ -752,7 +759,7 @@ public class user extends Model {
               if (Sms.send(phone, "user.forget.password", j1)) {
                 jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
                 jo.put(X.STATE, HttpServletResponse.SC_OK);
-                Code.update(W.create("s1", code).and("s2", phone), V.create("updated", System.currentTimeMillis()));
+                Code.update(W.create("s1", code).and("s2", phone), V.create(X.UPDATED, System.currentTimeMillis()));
 
               } else {
                 jo.put(X.MESSAGE, lang.get("user.forget.phone.sent.failed"));

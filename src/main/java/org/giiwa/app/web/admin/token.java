@@ -18,6 +18,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
@@ -36,7 +37,7 @@ public class token extends Model {
   /**
    * Delete.
    */
-  @Path(path = "delete", login = true, access = "access.user.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+  @Path(path = "delete", login = true, access = "access.config.admin|access.user.admin", log = Model.METHOD_POST | Model.METHOD_GET)
   public void delete() {
 
     JSON jo = new JSON();
@@ -49,7 +50,7 @@ public class token extends Model {
 
   }
 
-  @Path(path = "clean", login = true, access = "access.user.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+  @Path(path = "clean", login = true, access = "access.config.admin|access.user.admin", log = Model.METHOD_POST | Model.METHOD_GET)
   public void clean() {
     JSON jo = JSON.create();
 
@@ -66,7 +67,7 @@ public class token extends Model {
    * @see org.giiwa.framework.web.Model#onGet()
    */
   @Override
-  @Path(login = true, access = "access.user.admin")
+  @Path(login = true, access = "access.config.admin|access.user.admin")
   public void onGet() {
 
     String name = this.getString("name");
@@ -83,7 +84,7 @@ public class token extends Model {
     }
 
     int s = this.getInt("s");
-    int n = this.getInt("n", 10, "number.per.page");
+    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
     Beans<AuthToken> bs = AuthToken.load(q, s, n);
     this.set(bs, s, n);

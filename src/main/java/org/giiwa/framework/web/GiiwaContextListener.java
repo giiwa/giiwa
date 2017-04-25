@@ -21,9 +21,9 @@ import javax.servlet.*;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.RDB;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.task.Task;
@@ -100,23 +100,21 @@ public class GiiwaContextListener implements ServletContextListener {
       /**
        * initialize the configuration
        */
-      Config.init("home", "giiwa");
+      Config.init(new File(Model.GIIWA_HOME + "/giiwa.properties"));
 
-      Configuration conf = Config.getConfig();
+      Configuration conf = Config.getConf();
 
       // TO fix a bug, giiwa.properties may store the "home"
       conf.setProperty("home", Model.GIIWA_HOME);
-
-      /**
-       * initialize the DB connections pool
-       */
-      RDB.init();
 
       /**
        * initialize the cache
        */
       Cache.init(conf);
 
+      /**
+       * initialize the helper, including RDB and Mongo
+       */
       Helper.init(conf);
 
       Task.init(conf.getInt("thread.number", 20));

@@ -22,8 +22,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 
+// TODO: Auto-generated Javadoc
 /**
  * The Class Host.
  */
@@ -223,6 +228,9 @@ public class Host {
   public static void main(String[] args) {
     Host h = Host.local();
     System.out.println(h);
+
+    System.out.println(Host.getLocalip());
+
   }
 
   /*
@@ -719,6 +727,34 @@ public class Host {
     return 0;
   }
 
+  public static String getLocalip() {
+    try {
+      Enumeration<NetworkInterface> l1 = NetworkInterface.getNetworkInterfaces();
+      if (l1 != null) {
+        StringBuilder sb = new StringBuilder();
+        while (l1.hasMoreElements()) {
+          NetworkInterface e = l1.nextElement();
+          if (!e.isLoopback()) {
+            Enumeration<InetAddress> e2 = e.getInetAddresses();
+            while (e2.hasMoreElements()) {
+              InetAddress ia = e2.nextElement();
+              if (ia instanceof Inet6Address)
+                continue;
+              if (sb.length() > 0) {
+                sb.append(";");
+              }
+              sb.append(ia.getHostAddress());
+            }
+          }
+        }
+        return sb.toString();
+      }
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return X.EMPTY;
+  }
+
   /**
    * Gets the mem used.
    * 
@@ -899,7 +935,7 @@ public class Host {
         for (int i = 0; i < ss.length; i++) {
           String s = ss[i].trim();
 
-          log.debug("s=" + s);
+          // log.debug("s=" + s);
 
           if (s.startsWith("/dev")) {
             String[] s1 = X.split(s, " ");
@@ -1284,6 +1320,10 @@ public class Host {
       return used * 10 / 1024 / 10f;
     }
 
+    public float getTotal() {
+      return (used + free) * 10 / 1024 / 10f;
+    }
+
     /**
      * Gets the level.
      * 
@@ -1319,6 +1359,12 @@ public class Host {
       return name.compareTo(o.name);
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    public String toString() {
+      return name + "=" + getUsed() + "/" + getTotal() + "G";
+    }
   }
 
   /**
@@ -1415,4 +1461,5 @@ public class Host {
       this.value = value;
     }
   }
+
 }

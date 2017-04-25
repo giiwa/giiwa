@@ -33,6 +33,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Module;
 
+// TODO: Auto-generated Javadoc
 /**
  * The {@code Shell} Class lets run shell command.
  *
@@ -131,8 +132,8 @@ public class Shell {
   }
 
   /**
-   * run a command with the out, err and in
-   * 
+   * run a command with the out, err and in.
+   *
    * @param cmd
    *          the command line
    * @param out
@@ -178,8 +179,8 @@ public class Shell {
   }
 
   /**
-   * using bash to execute the lines
-   * 
+   * using bash to execute the lines.
+   *
    * @param lines
    *          the command lines
    * @param out
@@ -234,8 +235,8 @@ public class Shell {
   }
 
   /**
-   * run command, and return the console output
-   * 
+   * run command, and return the console output.
+   *
    * @param cmd
    *          the command line
    * @return the output of console and error
@@ -247,8 +248,8 @@ public class Shell {
   }
 
   /**
-   * using bash to execute the command
-   * 
+   * using bash to execute the command.
+   *
    * @param cmd
    *          the command
    * @return the console output
@@ -260,8 +261,8 @@ public class Shell {
   }
 
   /**
-   * run the command in workdir
-   * 
+   * run the command in workdir.
+   *
    * @param cmd
    *          the command
    * @param workdir
@@ -278,8 +279,8 @@ public class Shell {
   }
 
   /**
-   * using bash to execute the cmd
-   * 
+   * using bash to execute the cmd.
+   *
    * @param cmd
    *          the command
    * @param workdir
@@ -296,8 +297,8 @@ public class Shell {
   }
 
   /**
-   * get the status of the processname
-   * 
+   * get the status of the processname.
+   *
    * @param processname
    *          the process name
    * @return the status of the process
@@ -331,6 +332,14 @@ public class Shell {
 
   }
 
+  /**
+   * Kill.
+   *
+   * @param processname
+   *          the processname
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   public static void kill(String processname) throws IOException {
     if (isLinux() || OS.isFamilyMac()) {
       String line = "kill -9 `ps -ef | grep " + processname + " | awk '{print $2}'`;";
@@ -360,6 +369,12 @@ public class Shell {
     }
   }
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   */
   public static void main(String[] args) {
     try {
       System.out.println(run("uname -a"));

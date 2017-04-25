@@ -100,6 +100,7 @@ public class GiiwaFilter implements Filter {
     try {
       Model.s️ervletContext = c1.getServletContext();
 
+      log.debug("init view ...");
       Enumeration e = c1.getInitParameterNames();
       while (e.hasMoreElements()) {
         String name = e.nextElement().toString();
@@ -111,6 +112,8 @@ public class GiiwaFilter implements Filter {
     } catch (Throwable e) {
       log.error(e.getMessage(), e);
     }
+
+    log.info("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
   }
 
   private Map<String, String> config = new HashMap<String, String>();

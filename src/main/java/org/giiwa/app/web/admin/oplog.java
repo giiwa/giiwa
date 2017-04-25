@@ -18,6 +18,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.*;
@@ -35,7 +36,7 @@ public class oplog extends Model {
   /**
    * Deleteall.
    */
-  @Path(path = "deleteall", login = true, access = "access.logs.admin")
+  @Path(path = "deleteall", login = true, access = "access.config.admin|access.logs.admin")
   public void deleteall() {
     JSON jo = new JSON();
     int i = OpLog.cleanup();
@@ -83,16 +84,16 @@ public class oplog extends Model {
     }
 
     if (!X.isEmpty(jo.getString("starttime"))) {
-      q.and("created", lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
+      q.and(X.CREATED, lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
 
     } else {
       long today_2 = System.currentTimeMillis() - X.ADAY * 2;
       jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
-      q.and("created", today_2, W.OP.gte);
+      q.and(X.CREATED, today_2, W.OP.gte);
     }
 
     if (!X.isEmpty(jo.getString("endtime"))) {
-      q.and("created", lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.lte);
+      q.and(X.CREATED, lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.lte);
     }
 
     String sortby = this.getString("sortby");
@@ -100,7 +101,7 @@ public class oplog extends Model {
       int sortby_type = this.getInt("sortby_type");
       q.sort(sortby, sortby_type);
     } else {
-      q.sort("created", -1);
+      q.sort(X.CREATED, -1);
     }
     this.set(jo);
 
@@ -112,11 +113,11 @@ public class oplog extends Model {
    * 
    * @see org.giiwa.framework.web.Model#onGet()
    */
-  @Path(login = true, access = "access.logs.admin")
+  @Path(login = true, access = "access.config.admin|access.logs.admin")
   public void onGet() {
 
     int s = this.getInt("s");
-    int n = this.getInt("n", 20, "number.per.page");
+    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
     this.set("currentpage", s);
 
@@ -128,6 +129,15 @@ public class oplog extends Model {
 
     this.query.path("/admin/oplog");
     this.show("/admin/oplog.index.html");
+  }
+
+  @Path(path = "detail", login = true, access = "access.config.admin")
+  public void detail() {
+    String id = this.getString("id");
+    OpLog d = OpLog.load(id);
+    this.set("b", d);
+    this.set("id", id);
+    this.show("/admin/oplog.detail.html");
   }
 
 }

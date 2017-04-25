@@ -18,6 +18,7 @@ import java.io.*;
 
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 
 /**
  * default model for which model has not found
@@ -83,6 +84,7 @@ public class DefaultModel extends Model {
       this.put("response", resp);
       this.set("session", this.getSession());
       this.set("global", Global.getInstance());
+      this.set("local", Local.getInstance());
 
       show(uri);
       return true;

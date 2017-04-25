@@ -20,9 +20,9 @@ import java.util.List;
 
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Zip;
-import org.giiwa.core.bean.MongoHelper;
-import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.helper.MongoHelper;
+import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
@@ -212,17 +212,16 @@ public class backup extends Model {
         f.mkdirs();
         String out = f.getCanonicalPath();
 
-        // String out = path() + "/" + name;
-        // new File(out).mkdirs();
+        // new File(path() + "/" + name).mkdirs();
 
         /**
          * 1, backup db
          */
-        if (MongoHelper.isConfigured()) {
+        if (MongoHelper.inst.isConfigured()) {
           Global.setConfig("backup/" + name, 2); // backup mongo
-          MongoHelper.backup(out + "/mongo.dmp");
+          MongoHelper.inst.backup(out + "/mongo.dmp");
         }
-        if (RDSHelper.isConfigured()) {
+        if (RDSHelper.inst.isConfigured()) {
           Global.setConfig("backup/" + name, 3); // backup RDS
           RDSHelper.backup(out + "/rds.dmp");
         }
@@ -231,7 +230,7 @@ public class backup extends Model {
          * 2, backup repo
          */
         // File f = m.getFile("/admin/clone/backup_tar.sh");
-        String url = Config.getConfig().getString("repo.path", null);
+        String url = Config.getConf().getString("repo.path", null);
         if (!X.isEmpty(url)) {
           Global.setConfig("backup/" + name, 3); // backup repo
 
@@ -312,14 +311,14 @@ public class backup extends Model {
         if (fs != null) {
           for (File f1 : fs) {
             if (f1.isFile()) {
-              if (MongoHelper.isConfigured() && X.isSame("mongo.dmp", f1.getName())) {
+              if (MongoHelper.inst.isConfigured() && X.isSame("mongo.dmp", f1.getName())) {
 
                 Global.setConfig("backup/" + name, 12); // recovering mongo
 
-                MongoHelper.recover(f1.getCanonicalFile());
+                MongoHelper.inst.recover(f1.getCanonicalFile());
               }
 
-              if (RDSHelper.isConfigured() && X.isSame("rds.dmp", f1.getName())) {
+              if (RDSHelper.inst.isConfigured() && X.isSame("rds.dmp", f1.getName())) {
                 Global.setConfig("backup/" + name, 13); // recovering RDS
 
                 RDSHelper.recover(f1.getCanonicalFile());
@@ -331,7 +330,7 @@ public class backup extends Model {
         /**
          * 2, recover repo
          */
-        String url = Config.getConfig().getString("repo.path", null);
+        String url = Config.getConf().getString("repo.path", null);
         if (!X.isEmpty(url)) {
           Global.setConfig("backup/" + name, 14); // recovering Repo
 

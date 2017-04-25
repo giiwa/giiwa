@@ -14,6 +14,10 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,55 +34,66 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class X {
 
-  private static Log         log     = LogFactory.getLog(X.class);
+  private static Log         log            = LogFactory.getLog(X.class);
 
   /** The Constant 60*1000. */
-  public static final long   AMINUTE = 1000 * 60;
+  public static final long   AMINUTE        = 1000 * 60;
 
   /** The Constant 60*AMINUTE. */
-  public static final long   AHOUR   = AMINUTE * 60;
+  public static final long   AHOUR          = AMINUTE * 60;
 
   /** The Constant 24*AHOUR. */
-  public static final long   ADAY    = 24 * AHOUR;
+  public static final long   ADAY           = 24 * AHOUR;
 
   /** The Constant 7*ADAY. */
-  final static public long   AWEEK   = 7 * ADAY;
+  final static public long   AWEEK          = 7 * ADAY;
 
   /** The Constant 30*ADAY. */
-  final static public long   AMONTH  = 30 * ADAY;
+  final static public long   AMONTH         = 30 * ADAY;
 
   /** The Constant 365*ADAY. */
-  final static public long   AYEAR   = 365 * ADAY;
+  final static public long   AYEAR          = 365 * ADAY;
 
   /** The Constant "id". */
-  public static final String ID      = "id";
+  public static final String ID             = "id";
 
   /** The Constant "state". */
-  public static final String STATE   = "state";
+  public static final String STATE          = "state";
 
   /** The Constant "". */
-  public static final String EMPTY   = "";
+  public static final String EMPTY          = "";
 
   /** The Constant "url". */
-  public static final String URL     = "url";
+  public static final String URL            = "url";
 
   /** The Constant "uri". */
-  public static final String URI     = "uri";
+  public static final String URI            = "uri";
 
   /** The Constant "status". */
-  public static final String STATUS  = "status";
+  public static final String STATUS         = "status";
 
   /** The Constant "UTF-8". */
-  public static final String UTF8    = "UTF-8";
+  public static final String UTF8           = "UTF-8";
 
   /** The Constant "none". */
-  public static final String NONE    = "none";
+  public static final String NONE           = "none";
 
   /** The Constant "message". */
-  public static final String MESSAGE = "message";
+  public static final String MESSAGE        = "message";
+
+  /** The Constant "warn". */
+  public static final String WARN           = "warn";
 
   /** the Constant "error" . */
-  public static final String ERROR   = "error";
+  public static final String ERROR          = "error";
+
+  /** the Constant "created" */
+  public static final String CREATED        = "created";
+
+  /** the Constant "updated" */
+  public static final String UPDATED        = "updated";
+
+  public static final int    ITEMS_PER_PAGE = 10;
 
   private X() {
   }
@@ -124,8 +139,8 @@ public final class X {
         return ((Number) v).longValue();
       }
 
+      String s = v.toString().replaceAll(",", "").trim();
       StringBuilder sb = new StringBuilder();
-      String s = v.toString();
       for (int i = 0; i < s.length(); i++) {
         char c = s.charAt(i);
 
@@ -176,7 +191,7 @@ public final class X {
         return ((Number) v).intValue();
       }
 
-      String s = v.toString();
+      String s = v.toString().replaceAll(",", "").trim();
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < s.length(); i++) {
         char c = X.getNumber(s.charAt(i));
@@ -203,7 +218,7 @@ public final class X {
   }
 
   /**
-   * test the object is empty? null , empty string, empty collection, empty map
+   * test the object is empty? null , empty string, empty collection, empty map.
    *
    * @param s
    *          the object, may string, list, map
@@ -250,7 +265,7 @@ public final class X {
         return ((Number) v).floatValue();
       }
 
-      String s = v.toString();
+      String s = v.toString().replaceAll(",", "").trim();
 
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < s.length(); i++) {
@@ -334,7 +349,7 @@ public final class X {
         return ((Number) v).doubleValue();
       }
 
-      String s = v.toString().trim();
+      String s = v.toString().replaceAll(",", "").trim();
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < s.length(); i++) {
         char c = s.charAt(i);
@@ -413,14 +428,22 @@ public final class X {
     return toLong(v, 0);
   }
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   */
   public static void main(String[] args) {
     int s = 10;
     System.out.println(X.toDouble(s));
+
+    System.out.println(X.getCanonicalPath("\\aaa"));
   }
 
   /**
-   * split the src string by the regex, and filter the empty
-   * 
+   * split the src string by the regex, and filter the empty.
+   *
    * @param src
    *          the source string
    * @param regex
@@ -440,4 +463,105 @@ public final class X {
 
     return l1.toArray(new String[l1.size()]);
   }
+
+  /**
+   * printstacktrace
+   * 
+   * @param e
+   *          the throwable
+   * @return the string
+   */
+  public static String toString(Throwable e) {
+    StringWriter sw = new StringWriter();
+    PrintWriter out = new PrintWriter(sw);
+    e.printStackTrace(out);
+    return sw.toString();
+  }
+
+  /**
+   * close all
+   * 
+   * @param ss
+   *          the cloeable object
+   */
+  public static void close(Closeable... ss) {
+    if (ss == null || ss.length == 0)
+      return;
+
+    for (Closeable s : ss) {
+      if (s == null)
+        continue;
+      try {
+        s.close();
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      }
+    }
+
+  }
+
+  public static int sum(int[] ii) {
+    int sum = 0;
+    if (ii != null) {
+      for (int i : ii) {
+        sum += i;
+      }
+    }
+    return sum;
+  }
+
+  public static String getCanonicalPath(String path) {
+    boolean begin = path.startsWith("\\") || path.startsWith("/");
+    boolean end = path.endsWith("\\") || path.endsWith("/");
+
+    List<String> l1 = new ArrayList<String>();
+    String[] ss = X.split(path, "[\\\\/]");
+    for (String s : ss) {
+      if (X.isSame(s, ".") || X.isEmpty(s))
+        continue;
+      if (X.isSame(s, "..")) {
+        if (!l1.isEmpty()) {
+          l1.remove(l1.size() - 1);
+        }
+      } else {
+        l1.add(s);
+      }
+    }
+
+    StringBuilder sb = new StringBuilder();
+    if (begin)
+      sb.append(File.separator);
+
+    int i = 0;
+    for (String s : l1) {
+      if (i > 0)
+        sb.append(File.separator);
+      sb.append(s);
+      i++;
+    }
+    if (end && sb.charAt(sb.length() - 1) != File.separatorChar)
+      sb.append(File.separator);
+
+    return sb.toString();
+  }
+
+  public static int hexToInt(char b) {
+    b = Character.toLowerCase(b);
+    if (b >= '0' && b <= '9') {
+      return b - '0';
+    } else if (b >= 'a' && b <= 'f') {
+      return b - 'a' + 10;
+    } else if (b >= 'A' && b <= 'F') {
+      return b - 'A' + 10;
+    }
+    return 0;
+  }
+
+  public static String toHex(byte b) {
+    String s = Integer.toHexString(b & 0xFF);
+    if (s.length() > 1)
+      return s;
+    return "0" + s;
+  }
+
 }

@@ -8,7 +8,7 @@
 </div>
 
 <form action='/admin/role/create'  method='post' class='form'>
-	<div><label><h3>$lang.get('role.name')(<r>*</r>)</h3>:<input type='text' bad="1" onblur="verify(this, '/admin/role/verify')" name='name' value=#if($name) '$name' #else '' #end/></label></div>
+	<div><label><h3>$lang.get('role.name')(<r>*</r>)</h3>:<input type='text' name='name' value=#if($name) '$name' #else '' #end/></label></div>
 	<div><label><h3>$lang.get('role.memo')</h3>:<input type='text' name='memo' value=#if($memo) '$memo' #else '' #end/></label></div>	
 	
 	<div class='accesses'>

@@ -8,23 +8,65 @@
 </div>
 
 <div class='form'>
-	<div><label><h3>$lang.get('user.name')</h3>:<i>$u.name</i></label></div>
-	<div><label><h3>$lang.get('user.nickname')</h3>:<i>#if($u.nickname) $u.nickname #end</i></label></div>
-	<div><label><h3>$lang.get('user.title')</h3>:<i>#if($u.title) $u.title #end </i></label></div>
-	<div><label><h3>$lang.get('user.email')</h3>:<i>$!u.email</i></label></div>
-	<div><label><h3>$lang.get('user.phone')</h3>:<i>$!u.phone</i></label></div>
-	
-	<div><label><h3>$lang.get('user.roles')</h3>:[
-			#foreach($r in $u.role.list) 
+	<table id='user-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+		<thead>
+			<tr>
+				<th>&nbsp;</th>
+				<th>&nbsp;</th>
+			</tr>
+		</thead>
+		<tbody>
+		<tr>
+			<td>$lang.get('user.name')</td>
+			<td>$u.name</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.nickname')</td>
+			<td>#if($u.nickname) $u.nickname #end</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.title')</td>
+			<td>#if($u.title) $u.title #end</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.email')</td>
+			<td>$!u.email</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.phone')</td>
+			<td>$!u.phone</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.roles')</td>
+			<td>
+				#foreach($r in $u.role.list) 
 				<span class='icon-shield'>$r.name</span>
-			#end
-		]</label></div>
-	<div><label><h3>$lang.get('user.lastlogintime')</h3>:<i>#if($u.lastlogintime > 0) $lang.format($!u.lastlogintime, 'yy-MM-dd hh:mm:ss') #end</i></label></div>
-	<div><label><h3>$lang.get('user.lastloginip')</h3>:<i>$!u.ip</i></label></div>
-	<div><label><h3>$lang.get('user.lastfailtime')</h3>:<i>#if($u.lastfailtime > 0)$lang.format($!u.lastfailtime, 'yy-MM-dd hh:mm:ss')($lang.past($u.lastfailtime))#end</i></label></div>
-	<div><label><h3>$lang.get('user.lastfailip')</h3>:<i>$!u.lastfailip</i></label></div>
-	<div><label><h3>$lang.get('user.failtimes')</h3>:<i>$!u.failtimes</i></label></div>
-
+				#end
+			</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.lastlogintime')</td>
+			<td>$!lang.format($!u.lastlogintime, 'yy-MM-dd hh:mm:ss')</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.lastloginip')</td>
+			<td>$!u.ip</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.lastfailtime')</td>
+			<td>$!lang.format($!u.lastfailtime, 'yy-MM-dd hh:mm:ss')($!lang.past($u.lastfailtime))</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.lastfailip')</td>
+			<td>$!u.lastfailip</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.failtimes')</td>
+			<td>$!u.failtimes</td>
+		</tr>
+		</tbody>
+	</table>
+	
 	<table id='token-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
 		<thead>
 			<tr>

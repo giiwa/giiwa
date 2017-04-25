@@ -18,13 +18,16 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.*;
 
 /**
- * The {@code WorkerTask} Class use for create a runnable Task, and includes
- * schedule method. <br>
+ * The {@code Task} Class use for create a runnable Task, and includes schedule
+ * method. <br>
  * the sub task class can override getName, onExecute, onFinish;
  * 
  * <pre>
@@ -50,16 +53,22 @@ public abstract class Task implements Runnable {
   /** The is shutingdown. */
   public static boolean                      isShutingdown = false;
 
+  /**
+   * the max pending task size, default is 1w
+   */
+  public static int                          MAX_TASK_SIZE = 10000;
+
   /** The executor. */
   private static ScheduledThreadPoolExecutor executor;
 
-  private static Object                      lock          = new Object();
+  private static Lock                        lock          = new ReentrantLock();
+  // private static Condition door = lock.newCondition();
 
   /** The pending queue. */
-  private static ArrayList<Task>             pendingQueue  = new ArrayList<Task>();
+  private static HashSet<Task>               pendingQueue  = new HashSet<Task>();
 
   /** The running queue. */
-  private static ArrayList<Task>             runningQueue  = new ArrayList<Task>();
+  private static HashSet<Task>               runningQueue  = new HashSet<Task>();
 
   /** The stop. */
   private boolean                            stop          = false;
@@ -77,6 +86,38 @@ public abstract class Task implements Runnable {
   private TimeStamp                          t             = new TimeStamp();
 
   private static AtomicLong                  seq           = new AtomicLong(0);
+
+  private long                               delay         = -1;
+  private long                               cost          = -1;
+  private int                                runtimes      = 0;
+
+  public enum State {
+    running, pending
+  };
+
+  public State getState() {
+    if (runningQueue.contains(this)) {
+      return State.running;
+    } else {
+      return State.pending;
+    }
+  }
+
+  public long getDelay() {
+    return delay;
+  }
+
+  public int getRuntimes() {
+    return runtimes;
+  }
+
+  public long getRemain() {
+    return sf == null ? -1 : sf.getDelay(TimeUnit.MILLISECONDS);
+  }
+
+  public long getCost() {
+    return cost;
+  }
 
   /*
    * (non-Javadoc)
@@ -145,18 +186,31 @@ public abstract class Task implements Runnable {
   }
 
   /**
+   * called when the worker stopped.
+   */
+  public void onStop() {
+    // do nothing, it will be die
+  }
+
+  /**
    * On stop.
    * 
    * @param fast
    *          the fast
    */
-  public void onStop(boolean fast) {
+  final public void onStop(boolean fast) {
+
+    onStop();
+
     if (log.isInfoEnabled())
       log.info(getName() + " is stoped");
 
-    synchronized (lock) {
+    try {
+      lock.lock();
       pendingQueue.remove(this);
       runningQueue.remove(this);
+    } finally {
+      lock.unlock();
     }
 
   };
@@ -193,23 +247,27 @@ public abstract class Task implements Runnable {
    */
   final public void run() {
     int old = Thread.NORM_PRIORITY;
+    try {
 
-    synchronized (lock) {
-      pendingQueue.remove(this);
+      try {
+        lock.lock();
 
-      if (runningQueue.contains(this)) {
-        // there is a copy is running
-        log.warn("run duplicated task:" + getName());
-        return;
+        pendingQueue.remove(this);
+
+        if (runningQueue.contains(this)) {
+          // there is a copy is running
+          log.warn("run duplicated task:" + getName());
+          return;
+        }
+
+        sf = null;
+
+        runningQueue.add(this);
+        // log.debug(getName() + " is running");
+      } finally {
+        lock.unlock();
       }
 
-      sf = null;
-
-      runningQueue.add(this);
-      // log.debug(getName() + " is running");
-    }
-
-    try {
       try {
         if (stop) {
           onStop(fast);
@@ -222,9 +280,12 @@ public abstract class Task implements Runnable {
           if (who != null) {
             who.setName(name);
 
-            if (log.isDebugEnabled())
-              log.debug(this.getClass() + " is running ..., delayed: " + t.past() + "ms, tasks:" + tasksInQueue()
-                  + ", active:" + Task.activeThread() + ", idle:" + Task.idleThread());
+            // if (log.isDebugEnabled()) {
+            // log.debug(this.getClass() + " is running ..., delayed: " +
+            // t.past() + "ms, tasks:" + tasksInQueue()
+            // + ", active:" + Task.activeThread() + ", idle:" +
+            // Task.idleThread());
+            // }
 
             old = who.getPriority();
             who.setPriority(priority());
@@ -238,12 +299,19 @@ public abstract class Task implements Runnable {
        * ensure onExecute be executed
        */
       try {
+        delay = t.past();
+        runtimes++;
         onExecute();
+        cost = t.past() - delay;
       } finally {
-        synchronized (lock) {
+
+        try {
+          lock.lock();
           runningQueue.remove(this);
 
           onFinish();
+        } finally {
+          lock.unlock();
         }
       }
 
@@ -252,15 +320,9 @@ public abstract class Task implements Runnable {
           who.setPriority(old);
         }
       }
-    } catch (Throwable e) {
-      log.error(e.getMessage(), e);
 
-      // while (e != null) {
-      // if (e instanceof OutOfMemoryError) {
-      // WorkerTask.stopAll(true);
-      // }
-      // e = e.getCause();
-      // }
+    } catch (Throwable e) {
+      log.error(this, e);
     } finally {
       synchronized (t) {
         who = null;
@@ -316,17 +378,6 @@ public abstract class Task implements Runnable {
   }
 
   /**
-   * reschedule the workertask, same as schedule.
-   *
-   * @param msec
-   *          the msec
-   * @return WrokerTask
-   */
-  final public Task reschedule(long msec) {
-    return schedule(msec);
-  }
-
-  /**
    * schedule the task by absolute time <br>
    * the time can be:
    * 
@@ -342,32 +393,36 @@ public abstract class Task implements Runnable {
    * @return WorkerTask
    */
   final public Task schedule(String time) {
-    if (time.startsWith("*")) {
-      String[] ss = time.split(":");
-      Calendar c = Calendar.getInstance();
-      c.setTimeInMillis(System.currentTimeMillis());
+    try {
+      if (time.startsWith("*")) {
+        String[] ss = time.split(":");
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
 
-      c.set(Calendar.MINUTE, X.toInt(ss[1], 0));
-      if (c.getTimeInMillis() <= System.currentTimeMillis()) {
-        // next hour
-        c.add(Calendar.HOUR_OF_DAY, 1);
+        c.set(Calendar.MINUTE, X.toInt(ss[1], 0));
+        if (c.getTimeInMillis() <= System.currentTimeMillis()) {
+          // next hour
+          c.add(Calendar.HOUR_OF_DAY, 1);
+        }
+        return this.schedule(c.getTimeInMillis() - System.currentTimeMillis());
+      } else {
+        String[] ss = time.split(":");
+
+        Calendar c = Calendar.getInstance();
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.set(Calendar.HOUR_OF_DAY, X.toInt(ss[0], 0));
+        c.set(Calendar.MINUTE, X.toInt(ss[1], 0));
+
+        if (c.getTimeInMillis() <= System.currentTimeMillis()) {
+          // next hour
+          c.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        return this.schedule(c.getTimeInMillis() - System.currentTimeMillis());
       }
-      return this.schedule(c.getTimeInMillis() - System.currentTimeMillis());
-    } else {
-      String[] ss = time.split(":");
-
-      Calendar c = Calendar.getInstance();
-      c.setTimeInMillis(System.currentTimeMillis());
-      c.set(Calendar.HOUR_OF_DAY, X.toInt(ss[0], 0));
-      c.set(Calendar.MINUTE, X.toInt(ss[1], 0));
-
-      if (c.getTimeInMillis() <= System.currentTimeMillis()) {
-        // next hour
-        c.add(Calendar.DAY_OF_MONTH, 1);
-      }
-      return this.schedule(c.getTimeInMillis() - System.currentTimeMillis());
+    } catch (Throwable e) {
+      log.error(this, e);
     }
-
+    return this;
   }
 
   /**
@@ -378,38 +433,54 @@ public abstract class Task implements Runnable {
    * @return the worker task
    */
   final public Task schedule(long msec) {
-    if (stop) {
-      onStop(fast);
-    } else {
-      if (executor == null)
-        return this;
-
-      synchronized (lock) {
-        // scheduled
-        if (runningQueue.contains(this)) {
-          if (log.isDebugEnabled())
-            log.warn("the task is running, ignored: " + getName());
-
+    try {
+      if (stop) {
+        onStop(fast);
+      } else {
+        if (executor == null)
           return this;
-        }
 
-        if (pendingQueue.contains(this)) {
-          // schedule this task, possible this task is in running
-          // queue, if so, while drop one when start this one in
-          // thread
-          if (sf != null) {
-            sf.cancel(false);
+        try {
+          lock.lock();
+          // scheduled
+          if (runningQueue.contains(this)) {
+            if (log.isDebugEnabled())
+              log.warn("the task is running, ignored: " + getName());
+
+            return this;
           }
-          // Exception e = new Exception("e");
-          log.warn("reschedule the task:" + getName());
+
+          if (pendingQueue.contains(this)) {
+            // schedule this task, possible this task is in running
+            // queue, if so, while drop one when start this one in
+            // thread
+            if (sf != null) {
+              sf.cancel(false);
+            }
+            // Exception e = new Exception("e");
+            log.warn("reschedule the task:" + getName());
+          }
+
+          // if (pendingQueue.size() > MAX_TASK_SIZE) {
+          // log.error("too many tasks, pending=" + pendingQueue.size() + ",
+          // ignore the task=" + this.getName());
+          // }
+          if (msec <= 0) {
+            t.set(System.currentTimeMillis());
+            executor.execute(this);
+          } else {
+            t.set(System.currentTimeMillis() + msec);
+            sf = executor.schedule(this, msec, TimeUnit.MILLISECONDS);
+          }
+          pendingQueue.add(this);
+
+        } finally {
+          lock.unlock();
         }
-
-        t.set(System.currentTimeMillis() + msec);
-        sf = executor.schedule(this, msec, TimeUnit.MILLISECONDS);
-        pendingQueue.add(this);
       }
+    } catch (Throwable e) {
+      log.error(this, e);
     }
-
     return this;
   }
 
@@ -419,51 +490,48 @@ public abstract class Task implements Runnable {
    * @param fast
    *          the fast
    */
-  public static void stopAll(final boolean fast) {
+  public final static void stopAll(final boolean fast) {
 
     isShutingdown = true;
     /**
      * start another thread to terminate all the thread
      */
-    new Thread() {
-      public void run() {
+    try {
+
+      try {
+        lock.lock();
+        for (Task t : pendingQueue.toArray(new Task[pendingQueue.size()])) {
+          t.stop(fast);
+        }
+
+        for (Task t : runningQueue.toArray(new Task[runningQueue.size()])) {
+          t.stop(fast);
+        }
+      } finally {
+        lock.unlock();
+      }
+
+      Condition waiter = lock.newCondition();
+      while (runningQueue.size() > 0) {
         try {
-          synchronized (lock) {
-            for (int i = pendingQueue.size() - 1; i > -1; i--) {
-              Task t = pendingQueue.get(i);
-              t.stop(fast);
-            }
+          lock.lock();
+          log.info("stoping, size=" + runningQueue.size() + ", running task=" + runningQueue);
 
-            for (int i = runningQueue.size() - 1; i > -1; i--) {
-              Task t = runningQueue.get(i);
-              t.stop(fast);
-            }
+          for (Task t : runningQueue.toArray(new Task[runningQueue.size()])) {
+            t.stop(fast);
           }
 
-          while (runningQueue.size() > 0) {
-            synchronized (lock) {
-              try {
-                log.info("stoping, size=" + runningQueue.size() + ", running task=" + runningQueue);
-
-                for (int i = runningQueue.size() - 1; i > -1; i--) {
-                  Task t = runningQueue.get(i);
-                  t.stop(fast);
-                }
-
-                lock.wait(1000);
-              } catch (InterruptedException e) {
-              }
-            }
-          }
-
-        } catch (Exception e) {
-          log.debug("running list=" + runningQueue);
-          log.error(e.getMessage(), e);
+          waiter.wait(1000);
+        } catch (InterruptedException e) {
         } finally {
-          System.exit(0);
+          lock.unlock();
         }
       }
-    }.start();
+
+    } catch (Exception e) {
+      log.debug("running list=" + runningQueue);
+      log.error(e.getMessage(), e);
+    }
   }
 
   /**
@@ -490,14 +558,25 @@ public abstract class Task implements Runnable {
    * @return the int
    */
   public static int tasksInQueue() {
-    return executor.getQueue().size();
+    return pendingQueue.size();
   }
 
   /**
-   * create a Task from Runnable
+   * Tasks in running.
+   *
+   * @return the int
+   */
+  public static int tasksInRunning() {
+    return runningQueue.size();
+  }
+
+  /**
+   * create a Task from Runnable.
    * 
+   * the runnable object
+   *
    * @param r
-   *          the runnable object
+   *          the runnable
    * @return Task
    */
   public static Task create(final Runnable r) {
@@ -510,6 +589,99 @@ public abstract class Task implements Runnable {
 
     };
     return t;
+  }
+
+  /**
+   * Creates a Task with the name prefix and runnable.
+   *
+   * @param nameprefix
+   *          the name prefix
+   * @param r
+   *          the runnable
+   * @return the task
+   */
+  public static Task create(final String nameprefix, final Runnable r) {
+    Task t = new Task() {
+
+      String s = nameprefix + "." + seq.incrementAndGet();
+
+      @Override
+      public String getName() {
+        return s;
+      }
+
+      @Override
+      public void onExecute() {
+        r.run();
+      }
+
+    };
+    return t;
+  }
+
+  /**
+   * get All the task including pending and running
+   * 
+   * @return List of Tasks
+   */
+  public static List<Task> getAll() {
+    HashSet<Task> l1 = new HashSet<Task>();
+
+    try {
+      lock.lock();
+      l1.addAll(pendingQueue);
+      l1.addAll(runningQueue);
+    } finally {
+      lock.unlock();
+    }
+
+    List<Task> l2 = new ArrayList<Task>(l1);
+    Collections.sort(l2, new Comparator<Task>() {
+
+      @Override
+      public int compare(Task o1, Task o2) {
+        return o1.getName().compareToIgnoreCase(o2.getName());
+      }
+    });
+    return l2;
+  }
+
+  /**
+   * get the Task by name
+   * 
+   * @param name
+   *          the name, return null if not find
+   * @return Task
+   */
+  public static Task get(String name) {
+    Task[] tt = runningQueue.toArray(new Task[runningQueue.size()]);
+    if (tt != null) {
+      for (Task t : tt) {
+        if (X.isSame(name, t.getName())) {
+          return t;
+        }
+      }
+    }
+
+    tt = pendingQueue.toArray(new Task[runningQueue.size()]);
+    if (tt != null) {
+      for (Task t : tt) {
+        if (X.isSame(name, t.getName())) {
+          return t;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * get the Thread who running the task
+   * 
+   * @return Thread
+   */
+  public Thread getThread() {
+    return who;
   }
 
 }

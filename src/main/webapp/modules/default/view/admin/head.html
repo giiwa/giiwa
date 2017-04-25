@@ -15,7 +15,6 @@
 <link href='/css/icons.css' rel='stylesheet' />
 <link href='/css/giiwa.css?${module.module("default").build}' rel='stylesheet' />
 <script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
-<script type="text/javascript" src="/ke/kindeditor-min.js"></script>
 
 </head>
 <body class="w1200">
@@ -23,13 +22,16 @@
 	<div id='head'>
 		<div class='center'>
 			<div class='left animated fadeInRight'>
-				<div class='logo'><a href="/"><img src="/images/giiwa.png"></a></div>
+				<div class='logo'><a href="/"><img src="$lang.get('site.logo')"></a></div>
 				<div class='title'>$lang.get('site.title')</div>
 			</div>
 			<div class='right'>
 				<div class='top'>
-					<div class='item'><a class="icon icon-user" href='javascript:;' onclick='load("/user/edit")'>#if($me.nickname) $me.nickname #else $!me.name #end</a></div>
+					<div class='item'><a class="icon icon-user" href='javascript:;' onclick='giiwa.load("/user/edit")'>#if($me.nickname) $me.nickname #else $!me.name #end</a></div>
+					
+					#if($me.hasAccess('access.config.admin'))
 					<div class='item'><a class='icon icon-image' href="/docs/icomoon/demo.html" target='_blank'>Icomoon</a></div>
+					#end
 					<div class='item'><a class='icon icon-exit' href="/user/logout" >Exit</a></div>
 				</div>
 			</div>

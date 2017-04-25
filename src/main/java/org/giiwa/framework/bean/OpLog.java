@@ -68,6 +68,10 @@ public class OpLog extends Bean {
     return Helper.load(query, offset, limit, OpLog.class);
   }
 
+  public static OpLog load(String id) {
+    return Helper.load(id, OpLog.class);
+  }
+
   // --------------API
   /**
    * record info log
@@ -183,7 +187,7 @@ public class OpLog extends Bean {
 
       long t = System.currentTimeMillis();
       String id = UID.id(t, op, message);
-      V v = V.create("id", id).set("created", t).set("node", node).set("model", model).set("op", op)
+      V v = V.create("id", id).set(X.CREATED, t).set("node", node).set("model", model).set("op", op)
           .set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type);
       v.set("message", message);
       v.set("trace", trace);

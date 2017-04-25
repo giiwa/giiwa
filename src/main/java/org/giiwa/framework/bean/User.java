@@ -14,16 +14,23 @@
 */
 package org.giiwa.framework.bean;
 
-import java.util.*;
+import java.io.PrintStream;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.framework.web.Model;
+
+import sun.security.provider.MD4;
 
 /**
  * 
  * The {@code User} Class is base user class, all the login/access controlled in
- * webgiiwa was depended on the user, it contains all the user-info, and is
+ * giiwa was depended on the user, it contains all the user-info, and is
  * expandable. <br>
  * table="gi_user" <br>
  * 
@@ -63,6 +70,23 @@ public class User extends Bean {
 
   @Column(name = "password")
   private String            password;
+
+  @Column(name = "md4passwd")
+  private String            md4passwd;
+
+  /**
+   * get the MD4 passwd
+   * 
+   * @return byte[]
+   */
+  public byte[] getMD4passwd() {
+    try {
+      return md4decrypt(md4passwd);
+    } catch (Exception e) {
+
+    }
+    return null;
+  }
 
   /**
    * get the unique ID of the user
@@ -163,6 +187,7 @@ public class User extends Bean {
 
     String s = (String) v.value("password");
     if (s != null) {
+      v.force("md4passwd", s);
       v.force("password", encrypt(s));
     }
 
@@ -180,7 +205,7 @@ public class User extends Bean {
     if (log.isDebugEnabled())
       log.debug("v=" + v);
 
-    Helper.insert(v.set(X.ID, id).set("created", System.currentTimeMillis()).set("updated", System.currentTimeMillis()),
+    Helper.insert(v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()),
         User.class);
 
     return id;
@@ -328,7 +353,11 @@ public class User extends Bean {
    */
   public boolean hasAccess(String... name) {
     if (this.getId() == 0L) {
-      return true;
+      for (String s : name) {
+        if (X.isSame(s, "access.config.admin"))
+          return true;
+      }
+      return false;
     }
 
     // log.debug("uid=" + this.getId() + ", access=" + Helper.toString(name));
@@ -398,13 +427,79 @@ public class User extends Bean {
    * encrypt the password
    * 
    * @param passwd
-   * @return
+   *          the password
+   * @return the string
    */
   public static String encrypt(String passwd) {
     if (X.isEmpty(passwd)) {
       return X.EMPTY;
     }
     return UID.id(passwd);
+  }
+
+  public static byte[] md4decrypt(String passwd) {
+    String[] ss = X.split(passwd, ":");
+    if (ss == null || ss.length == 0)
+      return null;
+
+    byte[] bb = new byte[ss.length];
+
+    for (int i = 0; i < ss.length; i++) {
+      char[] b1 = ss[i].toCharArray();
+      if (b1.length > 1) {
+        bb[i] = (byte) (X.hexToInt(b1[0]) * 16 + X.hexToInt(b1[1]));
+      } else {
+        bb[i] = (byte) (X.hexToInt(b1[0]));
+      }
+    }
+    return bb;
+  }
+
+  public static String md4encrypt(String passwd) {
+    if (X.isEmpty(passwd)) {
+      return X.EMPTY;
+    }
+    try {
+      MessageDigest md4 = MD4.getInstance();
+      byte[] bb = md4.digest(passwd.getBytes("UnicodeLittleUnmarked"));
+      StringBuilder sb = new StringBuilder();
+      for (byte b : bb) {
+        if (sb.length() > 0)
+          sb.append(":");
+        sb.append(X.toHex(b));
+      }
+      return sb.toString();
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    }
+    return X.EMPTY;
+  }
+
+  public static void main(String[] args) {
+    String s = "123123";
+    String s1 = md4encrypt(s);
+    System.out.println(s1);
+    System.out.println(Arrays.toString(md4decrypt(s1)));
+
+    byte[] bb = null;
+    try {
+      MessageDigest md4 = MD4.getInstance();
+      bb = md4.digest(s.getBytes("UnicodeLittleUnmarked"));
+      System.out.println(Arrays.toString(bb));
+
+      md4 = MD4.getInstance();
+      bb = s.getBytes("UnicodeLittleUnmarked");
+      md4.update(bb);
+      byte[] p21 = new byte[21];
+      bb = md4.digest();
+      System.arraycopy(bb, 0, p21, 0, 16);
+
+      System.out.println(Arrays.toString(bb));
+      System.out.println(Arrays.toString(p21));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
   }
 
   /**
@@ -451,12 +546,14 @@ public class User extends Bean {
 
     String passwd = (String) v.value("password");
     if (!X.isEmpty(passwd)) {
+
+      v.force("md4passwd", md4encrypt(passwd));
       passwd = encrypt(passwd);
       v.force("password", passwd);
     } else {
       v.remove("password");
     }
-    return Helper.update(id, v.set("updated", System.currentTimeMillis()), User.class);
+    return Helper.update(id, v.set(X.UPDATED, System.currentTimeMillis()), User.class);
   }
 
   /**
@@ -472,12 +569,14 @@ public class User extends Bean {
 
     String passwd = (String) v.value("password");
     if (!X.isEmpty(passwd)) {
+
+      v.force("md4passwd", md4encrypt(passwd));
       passwd = encrypt(passwd);
       v.force("password", passwd);
     } else {
       v.remove("password");
     }
-    return Helper.update(q, v.set("updated", System.currentTimeMillis()), User.class);
+    return Helper.update(q, v.set(X.UPDATED, System.currentTimeMillis()), User.class);
   }
 
   /***
@@ -516,7 +615,7 @@ public class User extends Bean {
    * @return the int
    */
   public int logout() {
-    return Helper.update(getId(), V.create("sid", X.EMPTY).set("updated", System.currentTimeMillis()), User.class);
+    return Helper.update(getId(), V.create("sid", X.EMPTY).set(X.UPDATED, System.currentTimeMillis()), User.class);
   }
 
   /**
@@ -543,7 +642,7 @@ public class User extends Bean {
     return Helper.update(getId(),
         V.create("lastlogintime", System.currentTimeMillis()).set("logintimes", getInt("logintimes")).set("ip", ip)
             .set("failtimes", 0).set("locked", 0).set("lockexpired", 0).set("sid", sid)
-            .set("updated", System.currentTimeMillis()),
+            .set(X.UPDATED, System.currentTimeMillis()),
         User.class);
 
   }
@@ -595,7 +694,7 @@ public class User extends Bean {
      */
     public static int locked(long uid, String sid, String host, String useragent) {
       return Helper.insert(V.create("uid", uid).set("sid", sid).set("host", host).set("useragent", useragent)
-          .set("created", System.currentTimeMillis()), Lock.class);
+          .set(X.CREATED, System.currentTimeMillis()), Lock.class);
     }
 
     /**
@@ -632,7 +731,7 @@ public class User extends Bean {
      * @return the list
      */
     public static List<Lock> load(long uid, long time) {
-      Beans<Lock> bs = Helper.load(W.create("uid", uid).and("created", time, W.OP.gt).sort("created", 1), 0,
+      Beans<Lock> bs = Helper.load(W.create("uid", uid).and(X.CREATED, time, W.OP.gt).sort(X.CREATED, 1), 0,
           Integer.MAX_VALUE, Lock.class);
       return bs == null ? null : bs.getList();
     }
@@ -650,7 +749,7 @@ public class User extends Bean {
      */
     public static List<Lock> loadBySid(long uid, long time, String sid) {
       Beans<Lock> bs = Helper.load(
-          W.create("uid", uid).and("created", time, W.OP.gt).and("sid", sid).sort("created", 1), 0, Integer.MAX_VALUE,
+          W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("sid", sid).sort(X.CREATED, 1), 0, Integer.MAX_VALUE,
           Lock.class);
       return bs == null ? null : bs.getList();
     }
@@ -668,7 +767,7 @@ public class User extends Bean {
      */
     public static List<Lock> loadByHost(long uid, long time, String host) {
       Beans<Lock> bs = Helper.load(
-          W.create("uid", uid).and("created", time, W.OP.gt).and("host", host).sort("created", 1), 0, Integer.MAX_VALUE,
+          W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("host", host).sort(X.CREATED, 1), 0, Integer.MAX_VALUE,
           Lock.class);
       return bs == null ? null : bs.getList();
     }
@@ -689,7 +788,7 @@ public class User extends Bean {
     }
 
     public long getCreated() {
-      return getLong("created");
+      return getLong(X.CREATED);
     }
 
     public String getSid() {
@@ -742,7 +841,15 @@ public class User extends Bean {
       if (!User.exists(0)) {
         List<User> list = User.loadByAccess("access.config.admin");
         if (list == null || list.size() == 0) {
-          User.create(V.create("id", 0L).set("name", "admin").set("password", "admin").set("title", "Admin"));
+          String passwd = UID.random(20);
+          try {
+            PrintStream out = new PrintStream(Model.GIIWA_HOME + "/admin.pwd");
+            out.print(passwd);
+            out.close();
+          } catch (Exception e) {
+            log.error(e.getMessage(), e);
+          }
+          User.create(V.create("id", 0L).set("name", "admin").set("password", passwd).set("title", "Admin"));
         }
       }
     }
@@ -780,4 +887,41 @@ public class User extends Bean {
     return false;
   }
 
+  public static class Param {
+    V v = V.create();
+
+    public static Param create() {
+      return new Param();
+    }
+
+    public V build() {
+      return v;
+    }
+
+    public Param name(String name) {
+      v.force("name", name);
+      return this;
+    }
+
+    public Param nickname(String nickname) {
+      v.force("nickname", nickname);
+      return this;
+    }
+
+    public Param title(String title) {
+      v.force("title", title);
+      return this;
+    }
+
+    public Param password(String password) {
+      v.force("password", password);
+      return this;
+    }
+
+    public Param photo(String photo) {
+      v.force("photo", photo);
+      return this;
+    }
+
+  }
 }

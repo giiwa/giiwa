@@ -14,9 +14,14 @@
 */
 package org.giiwa.app.web.admin;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.giiwa.app.web.DefaultListener.NtpTask;
+import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
@@ -34,7 +39,8 @@ import org.giiwa.framework.web.*;
  */
 public class setting extends Model {
 
-  private static Map<String, Class<? extends setting>> settings = new LinkedHashMap<String, Class<? extends setting>>();
+  private static List<String>                          names    = new ArrayList<String>();
+  private static Map<String, Class<? extends setting>> settings = new HashMap<String, Class<? extends setting>>();
 
   /**
    * Register.
@@ -44,8 +50,17 @@ public class setting extends Model {
    * @param m
    *          the m
    */
-  final public static void register(String name, Class<? extends setting> m) {
+  final public static void register(int seq, String name, Class<? extends setting> m) {
+    if (seq < 0 || seq >= names.size()) {
+      names.add(name);
+    } else {
+      names.add(seq, name);
+    }
     settings.put(name, m);
+  }
+
+  final public static void register(String name, Class<? extends setting> m) {
+    register(-1, name, m);
   }
 
   /**
@@ -72,7 +87,7 @@ public class setting extends Model {
         s.set("lang", lang);
         s.set("module", module);
         s.set("name", name);
-        s.set("settings", settings.keySet());
+        s.set("settings", names);
         s.show("/admin/setting.html");
 
       } catch (Exception e) {
@@ -106,7 +121,7 @@ public class setting extends Model {
         s.set("lang", lang);
         s.set("module", module);
         s.set("name", name);
-        s.set("settings", settings.keySet());
+        s.set("settings", names);
         s.show("/admin/setting.html");
 
       } catch (Exception e) {
@@ -139,7 +154,7 @@ public class setting extends Model {
         s.set("lang", lang);
         s.set("module", module);
         s.set("name", name);
-        s.set("settings", settings.keySet());
+        s.set("settings", names);
         s.show("/admin/setting.html");
       } catch (Exception e) {
         log.error(name, e);
@@ -162,6 +177,10 @@ public class setting extends Model {
    */
   public void reset() {
     get();
+  }
+
+  public void settingPage(String view) {
+    this.set("page", view);
   }
 
   /**
@@ -212,6 +231,12 @@ public class setting extends Model {
       Global.setConfig("cross.domain", this.getString("cross_domain"));
       Global.setConfig("cross.header", this.getString("cross_header"));
       Global.setConfig("session.alive", this.getLong("session_alive"));
+      Global.setConfig("ntp.server", this.getString("ntpserver"));
+      // Global.setConfig("items.per.page", this.getInt("items.per.page"));
+      Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
+
+      NtpTask.owner.schedule(0);
+
       String url = this.getString("site_url").trim();
       while (url.endsWith("/")) {
         url = url.substring(0, url.length() - 1);
@@ -220,6 +245,12 @@ public class setting extends Model {
       Global.setConfig("module.center", X.isSame(this.getString("module_center"), "on") ? 1 : 0);
 
       this.set(X.MESSAGE, lang.get("save.success"));
+
+      if (Global.getInt("db.optimizer", 1) == 1) {
+        Helper.setOptmizer(new Optimizer());
+      } else {
+        Helper.setOptmizer(null);
+      }
 
       get();
     }
@@ -232,8 +263,6 @@ public class setting extends Model {
     @Override
     public void get() {
 
-      this.set("node", Global.getString("node", null));
-      this.set("system_code", Global.getLong("system.code", 0));
       this.set("language", Global.getString("language", "zh_cn"));
       this.set("level", Global.getString("run.level", "debug"));
       this.set("user_system", Global.getString("user.system", "close"));
@@ -247,10 +276,10 @@ public class setting extends Model {
       this.set("mongo_db", Global.getString("mongo[default].db", null));
       this.set("mongo_user", Global.getString("mongo[default].user", null));
       this.set("db_url", Global.getString("db[default].url", null));
-
+      this.set("db_primary", Helper.primary == null ? X.EMPTY : Helper.primary.getClass().getName());
       this.set("roles", Role.load(0, 100).getList());
 
-      this.set("page", "/admin/setting.system.html");
+      this.settingPage("/admin/setting.system.html");
     }
 
   }

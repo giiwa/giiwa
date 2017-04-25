@@ -6,14 +6,17 @@
 		#end
 	</span></div>
 
+#if($me.hasAccess('access.config.admin'))
 <div class='chart'>
 	<iframe class='cpu_gauge' src="/admin/gauge/tps"></iframe>
 	<iframe class='mem_gauge' src="/admin/gauge/mem"></iframe>
 	<iframe class='disk_usage' src="/admin/gauge/disk"></iframe>
 </div>
+#end
 
 <div class='state' style='display:block;'>
 	<div class='login'>$lang.get('label.node'):$!node</div>
+	<div class='login'>$lang.get('memory.total'):$!total, $lang.get('memory.free'):$!free</div>
 	<div class='uptime'>$lang.get('label.uptime'):<span class='uptime'>$uptime</span>, $lang.get('label.past'):<span class='past'>$past</span></div>
 	<div class='release'>$lang.get('label.release'):$!release</div>
 	<div class='build'>$lang.get('label.build'):$!build</div>

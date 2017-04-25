@@ -66,7 +66,8 @@
 			<select name='sortby_type'>
 				<option value='1' #if($sortby_type == '1') selected #end>$lang.get('sortby.type_')</option>
 				<option value='-1' #if($sortby_type == '-1') selected #end>$lang.get('sortby.type_desc')</option>
-			</select></label></span>
+			</select></label>
+		</span>
 
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
@@ -80,14 +81,15 @@
 	cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th class='date'>$lang.get('log.created')</th>
-			<th class='type'>$lang.get('log.type')</th>
-			<th class='user'>$lang.get('user.name')</th>
-			<th class='ip'>$lang.get('log.ip')</th>
-			<th class='system'>$lang.get('log.node')</th>
-			<th class='module'>$lang.get('log.model')</th>
-			<th class='op'>$lang.get('log.op')</th>
-			<th class='breif' style='width: 30%'>$lang.get('log.message')</th>
+			<th>$lang.get('log.created')</th>
+			<th>$lang.get('log.type')</th>
+			<th>$lang.get('user.name')</th>
+			<th>$lang.get('log.ip')</th>
+			<th>$lang.get('log.node')</th>
+			<th>$lang.get('log.model')</th>
+			<th>$lang.get('log.op')</th>
+			<th style='width: 30%'>$lang.get('log.message')</th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -100,9 +102,9 @@
 			<td>$!f.node</td>
 			<td>$!f.model</td>
 			<td>$f.op</td>
-			<td #if($f.trace) onclick='_showmore(this);' class='more' #end> 
-				$!f.message
-				<div class='more'>$!f.trace</div>
+			<td>$!f.message</td>
+			<td>
+				<a class="btn btn-xs btn-info" href="/admin/oplog/detail?id=$f.id">$lang.get("a.detail")</a>
 			</td>
 		</tr>
 		#end
@@ -116,25 +118,13 @@
 </div>
 
 <script>
-$('#log-table').tablesorter({headers:{7:{sorter:false}}});
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		processing && processing.show();
 		$.post('/admin/oplog/deleteall', {}, function(d) {
 			processing && processing.hide();
-			reload();
+			giiwa.reload();
 		});
 	}
 }
-
-function _showmore(obj){
-	var e = $(obj);
-	e = e.parent().find('div.more');
-	if(e.css('display') == 'block') {
-		e.hide();
-	} else {
-		e.show();
-	}
-}
-
 </script>
