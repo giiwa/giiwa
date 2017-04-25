@@ -20,12 +20,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bouncycastle.jce.provider.JDKMessageDigest.MD4;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.framework.web.Model;
-
-import sun.security.provider.MD4;
 
 /**
  * 
@@ -460,7 +459,7 @@ public class User extends Bean {
       return X.EMPTY;
     }
     try {
-      MessageDigest md4 = MD4.getInstance();
+      MessageDigest md4 = MD4.getInstance("MD4");
       byte[] bb = md4.digest(passwd.getBytes("UnicodeLittleUnmarked"));
       StringBuilder sb = new StringBuilder();
       for (byte b : bb) {
@@ -483,11 +482,11 @@ public class User extends Bean {
 
     byte[] bb = null;
     try {
-      MessageDigest md4 = MD4.getInstance();
+      MessageDigest md4 = MD4.getInstance("MD4");
       bb = md4.digest(s.getBytes("UnicodeLittleUnmarked"));
       System.out.println(Arrays.toString(bb));
 
-      md4 = MD4.getInstance();
+      md4 = MD4.getInstance("MD4");
       bb = s.getBytes("UnicodeLittleUnmarked");
       md4.update(bb);
       byte[] p21 = new byte[21];
