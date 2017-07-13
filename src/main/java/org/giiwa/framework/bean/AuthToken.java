@@ -188,12 +188,12 @@ public class AuthToken extends Bean {
     W q = W.create("uid", uid);
     int s = 0;
     Beans<AuthToken> bs = load(q, s, 10);
-    while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-      for (AuthToken t : bs.getList()) {
+    while (bs != null && !bs.isEmpty()) {
+      for (AuthToken t : bs) {
         String sid = t.getSid();
         list.add(sid);
       }
-      s += bs.getList().size();
+      s += bs.size();
       bs = load(q, s, 10);
     }
     Helper.delete(W.create("uid", uid), AuthToken.class);

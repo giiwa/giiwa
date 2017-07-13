@@ -21,7 +21,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.X;
 
@@ -41,6 +40,7 @@ class RedisCache implements ICacheSystem {
 
   private ShardedJedis     jedis;
   private ShardedJedisPool shardedJedisPool;
+  private String           url;
 
   /**
    * Inits the.
@@ -49,16 +49,17 @@ class RedisCache implements ICacheSystem {
    *          the conf
    * @return the i cache system
    */
-  public static ICacheSystem create(Configuration conf) {
+  public static ICacheSystem create(String server) {
 
-    String server = conf.getString("cache.url").substring(Cache.REDIS.length());
-    String[] ss = server.split(":");
+    RedisCache r = new RedisCache();
+    r.url = server.substring(Cache.REDIS.length());
+
+    String[] ss = r.url.split(":");
     String host = ss[0];
     int port = 6379;
     if (ss.length > 1) {
       port = X.toInt(ss[1], 0);
     }
-    RedisCache r = new RedisCache();
 
     JedisPoolConfig config = new JedisPoolConfig();
     config.setMaxTotal(20);
@@ -149,4 +150,10 @@ class RedisCache implements ICacheSystem {
     }
     return null;
   }
+
+  @Override
+  public String toString() {
+    return "RedisCache [url=" + url + "]";
+  }
+
 }

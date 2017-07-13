@@ -44,7 +44,8 @@ public interface IListener {
    * @param module
    *          the module
    */
-  void upgrade(Configuration conf, Module module);
+  default void upgrade(Configuration conf, Module module) {
+  };
 
   /**
    * Uninstall.
@@ -54,7 +55,8 @@ public interface IListener {
    * @param module
    *          the module
    */
-  void uninstall(Configuration conf, Module module);
+  default void uninstall(Configuration conf, Module module) {
+  };
 
   /**
    * On start.
@@ -64,11 +66,13 @@ public interface IListener {
    * @param module
    *          the module
    */
-  void onStart(Configuration conf, Module module);
+  default void onStart(Configuration conf, Module module) {
+  };
 
   /**
    * On stop.
    */
-  void onStop();
+  default void onStop() {
+  };
 
 }

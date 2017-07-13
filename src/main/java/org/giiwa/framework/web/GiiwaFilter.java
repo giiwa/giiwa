@@ -96,7 +96,7 @@ public class GiiwaFilter implements Filter {
 
   @SuppressWarnings("rawtypes")
   @Override
-  public void init(FilterConfig c1) throws ServletException {
+  public synchronized void init(FilterConfig c1) throws ServletException {
     try {
       Model.s️ervletContext = c1.getServletContext();
 

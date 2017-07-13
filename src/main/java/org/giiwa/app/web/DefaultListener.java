@@ -17,29 +17,22 @@ package org.giiwa.app.web;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.setting;
-import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Optimizer;
-import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
@@ -57,7 +50,6 @@ import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.mq.MQ;
-import org.giiwa.mq.RPC;
 import org.giiwa.mq.demo.Echo;
 
 /**
@@ -192,6 +184,7 @@ public class DefaultListener implements IListener {
     }
 
     setting.register(0, "system", setting.system.class);
+    setting.register(1, "mq", mq.class);
     setting.register(10, "smtp", setting.mail.class);
     setting.register(11, "counter", setting.counter.class);
 
@@ -221,9 +214,9 @@ public class DefaultListener implements IListener {
         public void onExecute() {
           MQ.init();
 
-          if (Global.getInt("mq.logger", 0) == 1) {
-            MQ.logger(true);
-          }
+          // if (Global.getInt("mq.logger", 0) == 1) {
+          // MQ.logger(true);
+          // }
 
           // this is for "echo" service
           Echo e = new Echo("echo");
@@ -261,16 +254,6 @@ public class DefaultListener implements IListener {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.IListener#onStop()
-   */
-  public void onStop() {
-    // log.info("giiwa is stopping...");
-
-  }
-
   /**
    * Run db script.
    *
@@ -291,7 +274,7 @@ public class DefaultListener implements IListener {
     Connection c = null;
     Statement s = null;
     try {
-      c = RDSHelper.getConnection();
+      c = RDSHelper.inst.getConnection();
       if (c != null) {
         in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "utf-8"));
         StringBuilder sb = new StringBuilder();
@@ -356,11 +339,11 @@ public class DefaultListener implements IListener {
       if (in != null) {
         in.close();
       }
-      RDSHelper.close(s, c);
+      RDSHelper.inst.close(s, c);
     }
 
     if (count > 0) {
-
+      // TODO
     }
   }
 
@@ -434,9 +417,6 @@ public class DefaultListener implements IListener {
         }
 
       } else {
-        if (log.isErrorEnabled()) {
-          log.error("no DB configured, please congiure it in [" + Model.GIIWA_HOME + "/giiwa/giiwa.properties]");
-        }
 
         module.setStatus("no RDS configured, ignore the db script");
       }
@@ -525,130 +505,6 @@ public class DefaultListener implements IListener {
    */
   public void uninstall(Configuration conf, Module module) {
     Menu.remove(module.getName());
-  }
-
-  /**
-   * The main method.
-   *
-   * @param args
-   *          the arguments
-   * @deprecated
-   */
-  @SuppressWarnings("static-access")
-  public static void main(String[] args) {
-    DefaultListener d = new DefaultListener();
-    File f = new File("/home/joe/d/workspace/");
-    Map<String, FileVersion> map = new HashMap<String, FileVersion>();
-    // d.cleanup(f, map);
-    System.out.println(map);
-
-  }
-
-  /**
-   * check the appdog has been setup proper
-   * 
-   * @author joe
-   *
-   */
-  private static class AppdogTask extends Task {
-
-    @Override
-    public String getName() {
-      return "appdog.task";
-    }
-
-    @Override
-    public void onExecute() {
-      File f = new File("/etc/init.d/appdog");
-      if (!f.exists()) {
-        // copy one to there
-        f = Module.home.getFile("/admin/clone/etc/init.d/appdog");
-        if (f.exists()) {
-          // copying
-
-          if (Shell.isLinux()) {
-            BufferedReader in = null;
-            PrintStream out = null;
-            try {
-              Shell.run("cp " + f.getCanonicalPath() + " /etc/init.d/");
-              Shell.run("chmod ugo+x /etc/init.d/appdog");
-
-              if (Shell.isUbuntu()) {
-                Shell.run("sysv-rc-conf --add appdog");
-                Shell.run("sysv-rc-conf appdog on");
-              } else {
-                Shell.run("chkconfig --add appdog");
-                Shell.run("chkconfig appdog on");
-              }
-
-              // check the apps.conf
-              f = Module.home.getFile("/admin/clone/etc/appdog/apps.conf");
-              Shell.run("mkdir /etc/appdog");
-              Shell.run("cp " + f.getCanonicalPath() + " /etc/appdog/");
-
-              // check the application is in appdog ?
-              f = new File("/etc/appdog/apps.conf");
-              String bin = Model.GIIWA_HOME + "/bin";
-
-              in = new BufferedReader(new FileReader(f));
-              String line = in.readLine();
-              boolean found = false;
-              while (line != null) {
-                if (line.indexOf(bin) > 0) {
-                  found = true;
-                  break;
-                }
-              }
-              in.close();
-              in = null;
-              if (!found) {
-                out = new PrintStream(new FileOutputStream(f, true));
-                /**
-                 * [app:giiwa_xxxxx]<br>
-                 * start=/opt/giiwa/bin/startup.sh<br>
-                 * pattern=/opt/giiwa/bin<br>
-                 * path=/opt/giiwa/bin<br>
-                 * user=<br>
-                 * check=0.5<br>
-                 * enabled=1<br>
-                 */
-                out.println();
-                out.println("[app:giiwa_" + UID.random(5) + "]");
-                out.println("start=" + bin + "/startup.sh");
-                out.println("pattern=" + bin);
-                out.println("path=" + bin);
-                out.println("user=");
-                out.println("check=0.5");
-                out.println("enabled=1");
-                out.close();
-                out = null;
-              }
-
-              Shell.run("/etc/init.d/appdog start");
-
-            } catch (Exception e) {
-              log.error(e.getMessage(), e);
-              OpLog.error(this.getName(), "init", e.getMessage(), e, null, null);
-
-            } finally {
-              if (in != null) {
-                try {
-                  in.close();
-                } catch (IOException e) {
-                }
-              }
-              if (out != null) {
-                out.close();
-              }
-            }
-          } else {
-            log.warn("[giiwa] can be more effective in [Linux]");
-            OpLog.warn(this.getName(), "init", "[giiwa] can be more effective in [Linux]", null, null);
-          }
-        }
-      }
-
-    }
   }
 
   /**

@@ -28,7 +28,7 @@ import org.giiwa.core.json.JSON;
  * @param <T>
  *          the generic type
  */
-public final class Beans<T extends Bean> implements Serializable {
+public final class Beans<E extends Bean> extends ArrayList<E> implements Serializable {
 
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 2L;
@@ -41,61 +41,40 @@ public final class Beans<T extends Bean> implements Serializable {
 
   public JSON               stats;
 
-  private float             cost             = -1;
+  public long               cost             = -1;
 
-  /** The list. */
-  public List<T>            list;
+  public List<String>       columns          = null;
 
-  /**
-   * Gets the total. please set the total first, than...
-   *
-   * @return the total
-   */
   public int getTotal() {
     return total;
   }
 
-  public float getCost() {
-    return cost;
-  }
-
-  public void setCost(TimeStamp t) {
-    if (t.pastms() > 0) {
-      cost = t.pastms() / 1000f;
-    } else if (t.pastus() > 0) {
-      cost = t.pastus() / 1000000f;
-    } else {
-      cost = t.pastns() / 1000000000f;
-    }
-  }
-
-  /**
-   * Sets the total.
-   *
-   * @param total
-   *          the new total
-   */
   public void setTotal(int total) {
     this.total = total;
   }
 
-  /**
-   * Gets the list.
-   *
-   * @return the list
-   */
-  public List<T> getList() {
-    return list;
+  public JSON getStats() {
+    return stats;
   }
 
-  /**
-   * Sets the list.
-   *
-   * @param list
-   *          the new list
-   */
-  public void setList(List<T> list) {
-    this.list = list;
+  public void setStats(JSON stats) {
+    this.stats = stats;
+  }
+
+  public long getCost() {
+    return cost;
+  }
+
+  public void setCost(long cost) {
+    this.cost = cost;
+  }
+
+  public List<String> getColumns() {
+    return columns;
+  }
+
+  public void setColumns(List<String> columns) {
+    this.columns = columns;
   }
 
   /*
@@ -104,36 +83,7 @@ public final class Beans<T extends Bean> implements Serializable {
    * @see java.lang.Object#toString()
    */
   public String toString() {
-    return "Beans[total=" + total + ", list.size=" + (list == null ? null : list.size()) + "]";
+    return "Beans[total=" + total + ", size=" + size() + "]";
   }
 
-  private Iterator<T> it;
-
-  /**
-   * Reset the iterator.
-   */
-  public void reset() {
-    it = null;
-  }
-
-  /**
-   * Checks for next.
-   *
-   * @return true, if successful
-   */
-  public boolean hasNext() {
-    if (it == null && list != null) {
-      it = list.iterator();
-    }
-    return it != null && it.hasNext();
-  }
-
-  /**
-   * Next object.
-   *
-   * @return the t
-   */
-  public T next() {
-    return it == null ? null : it.next();
-  }
 }

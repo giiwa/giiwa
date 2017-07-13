@@ -1,10 +1,10 @@
 package org.giiwa.mq.demo;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.conf.Config;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.mq.IStub;
@@ -21,12 +21,19 @@ public class test {
 
     Task.init(200);
 
-    if (MQ.init("test", "demo", url)) {
-      MQ.logger(true);
+    Global.setConfig("mq.type", "activemq");
+    // Global.setConfig("mq.type", "kafkamq");
+    Global.setConfig("activemq.url", url);
+    Global.setConfig("mq.group", "demo");
+    Config.getConf().setProperty("node.name", "test");
+
+    if (MQ.init()) {
+//      MQ.logger(false);
 
       TimeStamp t2 = TimeStamp.create();
-      int n = 0;
-      int c = 0;
+      int n = 100000;
+      int c = 1;
+
       Tester[] t = new Tester[c];
       for (int i = 0; i < t.length; i++) {
         t[i] = new Tester("t" + i, n);
@@ -39,8 +46,26 @@ public class test {
         // "t" + i
         t[i].send("echo", JSON.create());
       }
-      if (t2.past() > 0)
-        System.out.println("sent: " + c * n + ", cost: " + t2.past() + "ms, send TPS: " + (c * n * 1000 / t2.past()));
+      if (t2.pastms() > 0)
+        System.out
+            .println("sent: " + c * n + ", cost: " + t2.pastms() + "ms, send TPS: " + (c * n * 1000L / t2.pastms()));
+
+      t2.reset();
+      n = 1000000;
+      Request r = new Request();
+      r.setBody(JSON.create().toString().getBytes());
+      try {
+        for (int i = 0; i < n; i++) {
+          r.seq = 0;
+          MQ.send("ehco", r);
+          if (i % 10000 == 0) {
+            System.out.println("sending: " + i + ",  cost: " + t2.pastms() + "ms");
+            t2.reset();
+          }
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
 
       synchronized (t) {
         int i = 0;
@@ -60,19 +85,20 @@ public class test {
         t1.println();
       }
 
-      if (t2.past() > 0)
-        System.out.println("transation TPS: " + (n * c) * 1000 / t2.past());
+      if (t2.pastms() > 0)
+        System.out.println("transation TPS: " + (n * c) * 1000 / t2.pastms());
     }
 
     System.out.println("done");
 
-    byte[] bb = new byte[] { 17, 123, 10, 32, 32, 32, 34, 97, 34, 32, 58, 32, 34, 97, 34, 10, 125, 10 };
-    String s = new String(bb).trim();
-    // JSON j1 = JSON.fromObject(bb);
-    JSON j2 = JSON.fromObject(s);
-
-    System.out.println(s);
-    System.out.println(Arrays.toString(s.trim().getBytes()));
+    // byte[] bb = new byte[] { 17, 123, 10, 32, 32, 32, 34, 97, 34, 32, 58, 32,
+    // 34, 97, 34, 10, 125, 10 };
+    // String s = new String(bb).trim();
+    // // JSON j1 = JSON.fromObject(bb);
+    // JSON j2 = JSON.fromObject(s);
+    //
+    // System.out.println(s);
+    // System.out.println(Arrays.toString(s.trim().getBytes()));
 
     System.exit(0);
 
@@ -103,7 +129,7 @@ public class test {
       this.msg = msg;
       this.to = to;
 
-      long s = seq.incrementAndGet();
+      // long s = seq.incrementAndGet();
       msg.put("sendtime", System.currentTimeMillis());
 
       try {

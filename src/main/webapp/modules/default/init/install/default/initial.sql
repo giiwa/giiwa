@@ -173,6 +173,7 @@ create table gi_accesslog
 	url varchar(128),
 	sid varchar(50),
 	username varchar(50),
+	header varchar(1024),
 	status int,
 	created bigint default 0,
 	updated bigint default 0
@@ -181,6 +182,7 @@ create index gi_accesslog_index_uid on gi_accesslog(uid);
 create index gi_accesslog_index_method on gi_accesslog(method);
 
 alter table gi_accesslog add updated bigint default 0;
+alter table gi_accesslog add header varchar(1024);
 
 ##upgrade
 alter table gi_accesslog add module varchar(128);
@@ -208,7 +210,7 @@ create table gi_authtoken
 	id varchar(20),
 	uid bigint,
 	expired bigint,
-	ip varchar(20),
+	ip varchar(128),
 	sid varchar(50),
 	token varchar(50),
 	created bigint default 0,
@@ -227,7 +229,7 @@ create table gi_oplog
 	model varchar(50),
 	op varchar(50),
 	uid bigint,
-	ip varchar(20),
+	ip varchar(128),
 	type int,
 	message varchar(1024),
 	trace varchar(8192),

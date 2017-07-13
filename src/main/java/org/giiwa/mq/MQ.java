@@ -1,6 +1,9 @@
 package org.giiwa.mq;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.JMSException;
@@ -50,16 +53,27 @@ public abstract class MQ {
    * 
    * @return true if success or false if failed.
    */
-  public static boolean init() {
+  public synchronized static boolean init() {
     if (mq == null) {
       _node = Model.node();
       String type = Global.getString("mq.type", X.EMPTY);
       if (X.isSame(type, "activemq")) {
         mq = ActiveMQ.create();
-      } else if (X.isSame(type, "rabbitmq")) {
-        mq = RabbitMQ.create();
+        // } else if (X.isSame(type, "rabbitmq")) {
+        // mq = RabbitMQ.create();
+      } else if (X.isSame(type, "kafkamq")) {
+        mq = KafkaMQ.create();
       }
     }
+    return mq != null;
+  }
+
+  /**
+   * test configured MQ
+   * 
+   * @return
+   */
+  public static boolean isConfigured() {
     return mq != null;
   }
 
@@ -73,10 +87,15 @@ public abstract class MQ {
    * @return true if success or false if failed.
    */
   public static boolean init(String node, String group, String url) {
-    Global.setConfig("mq.type", "activemq");
-    Global.setConfig("activemq.url", url);
+    if (url.startsWith("failover:")) {
+      Global.setConfig("mq.type", "activemq");
+      Global.setConfig("activemq.url", url);
+    } else {
+      Global.setConfig("mq.type", "kafkamq");
+      Global.setConfig("kafkamq.url", url);
+    }
     Config.getConf().setProperty("node.name", node);
-    Global.setConfig("mq.group", group);
+    Global.setConfig("site.group", group);
     MQ._node = node;
     return init();
   }
@@ -110,61 +129,72 @@ public abstract class MQ {
 
   protected abstract void _bind(String name, IStub stub, Mode mode) throws Exception;
 
-  static AtomicInteger caller    = new AtomicInteger(0);
-  static AtomicLong    totalSent = new AtomicLong(0);
-  static AtomicLong    totalGot  = new AtomicLong(0);
+  static class Caller extends Task {
 
-  protected static void process(final String stub, final org.giiwa.framework.bean.Request req, final IStub cb) {
+    private static Map<String, Caller> caller = new HashMap<String, Caller>();
 
-    totalGot.incrementAndGet();
+    IStub                              cb;
+    Stack<Request>                     queue  = new Stack<Request>();
 
-    caller.incrementAndGet();
-    Task.create(new Runnable() {
-
-      @Override
-      public void run() {
-
-        caller.decrementAndGet();
-        try {
-
-          Request r1 = new Request();
-          r1.seq = req.readLong();
-          int len = req.readInt();
-          r1.from = null;
-          if (len > 0) {
-            byte[] ff = req.readBytes(len);
-            r1.from = new String(ff);
-          }
-          r1.type = req.readInt();
-          len = req.readInt();
-          r1.data = null;
-          if (len > 0) {
-            r1.data = req.readBytes(len);
-          }
-          if (log.isDebugEnabled())
-            log.debug("got a message: from=" + r1.from + ", len=" + len);
-
-          if (r1.type > 0) {
-            if (Logger.isEnabled())
-              Logger.log(r1.seq, "got", stub, r1);
-          }
-
-          try {
-            cb.onRequest(r1.seq, r1);
-          } catch (Throwable e1) {
-            if (Logger.isEnabled())
-              Logger.log(r1.seq, "error", stub, r1);
-          }
-        } catch (Exception e) {
-          log.error(e.getMessage(), e);
-        }
-
+    public static Caller get(String name, IStub cb) {
+      Caller c = caller.get(name);
+      if (c == null) {
+        c = new Caller();
+        c.cb = cb;
+        caller.put(name, c);
+        c.schedule(0);
       }
-    }).schedule(0);
+      return c;
+    }
+
+    void call(List<Request> l1) {
+      for (Request r : l1) {
+        queue.push(r);
+      }
+
+      synchronized (queue) {
+        queue.notify();
+      }
+    }
+
+    @Override
+    public void onExecute() {
+      synchronized (queue) {
+        if (queue.isEmpty()) {
+          try {
+            queue.wait(10000);
+          } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+          }
+        }
+      }
+      while (!queue.isEmpty()) {
+        Request r = queue.pop();
+        cb.onRequest(r.seq, r);
+      }
+    }
+
+    @Override
+    public void onFinish() {
+      this.schedule(0);
+    }
 
   }
 
-  protected abstract long _topic(long seq, String to, Request req) throws Exception;
+  // static AtomicInteger caller = new AtomicInteger(0);
+  static AtomicLong totalSent = new AtomicLong(0);
+  static AtomicLong totalGot  = new AtomicLong(0);
+
+  protected static void process(final String name, final List<Request> rs, final IStub cb) {
+
+    totalGot.incrementAndGet();
+
+    Caller c = Caller.get(name, cb);
+    c.call(rs);
+
+  }
+
+  protected abstract long _topic(String to, Request req) throws Exception;
 
   /**
    * broadcast the message as "topic" to all "dest:to", and return immediately
@@ -188,13 +218,15 @@ public abstract class MQ {
     }
 
     long s1 = seq.incrementAndGet();
-    if (Logger.isEnabled())
-      Logger.log(s1, "send", to, req);
-    mq._topic(s1, to, req);
+    // if (Logger.isEnabled())
+    // Logger.log(s1, "send", to, req);
+
+    req.seq = s1;
+    mq._topic(to, req);
     return s1;
   }
 
-  protected abstract long _send(long seq, String to, Request req) throws Exception;
+  protected abstract long _send(String to, Request req) throws Exception;
 
   /**
    * send the message and return immediately
@@ -212,46 +244,45 @@ public abstract class MQ {
    *           the Exception
    */
   public static long send(String to, Request req) throws Exception {
-    long s1 = req.seq;
-    if (s1 < 0) {
-      s1 = seq.incrementAndGet();
-      req.seq = s1;
+    if (req.seq <= 0) {
+      req.seq = seq.incrementAndGet();
     }
-    return send(s1, to, req);
+    // if (Logger.isEnabled())
+    // Logger.log(req.seq, "send", to, req);
+
+    return mq._send(to, req);
   }
 
   /**
-   * send the message with the seq
+   * send the request and wait the response until timeout
    * 
-   * @param seq
-   * @param to
+   * @param rpcname
+   *          the rpc name
    * @param req
-   * @return
+   *          the request
+   * @param timeout
+   * @return the response
    * @throws Exception
    */
-  public static long send(long seq, String to, Request req) throws Exception {
-    totalSent.incrementAndGet();
-    if (Logger.isEnabled())
-      Logger.log(seq, "send", to, req);
-
-    mq._send(seq, to, req);
-    return seq;
+  public static Response call(String rpcname, Request req, int timeout) throws Exception {
+    return RPC.call(rpcname, req, timeout);
   }
 
   public static void log(JSON p) {
     try {
       Request r = new Request();
+      r.seq = 0;
       r.from = _node;
       r.type = 0;
       r.setBody(p.toString().getBytes());
-      mq._send(0, "logger", r);
+      mq._send("logger", r);
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     }
   }
 
-  public static void logger(boolean log) {
-    Logger.logger(log);
-  }
+  // public static void logger(boolean log) {
+  // Logger.logger(log);
+  // }
 
 }

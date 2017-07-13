@@ -18,7 +18,6 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.*;
@@ -60,9 +59,9 @@ public class oplog extends Model {
       String name = this.getString("user");
       W q1 = W.create().and(W.create().and("nickname", name, W.OP.like).or("name", name, W.OP.like)).sort("name", 1);
       Beans<User> bs = User.load(q1, 0, 100);
-      if (bs != null && bs.getList() != null && bs.getList().size() > 0) {
+      if (bs != null && !bs.isEmpty()) {
         W q2 = W.create();
-        for (User u : bs.getList()) {
+        for (User u : bs) {
           q2.or("uid", u.getId());
         }
         q.and(q2);

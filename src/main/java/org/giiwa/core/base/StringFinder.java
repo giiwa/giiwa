@@ -463,4 +463,10 @@ public class StringFinder {
     System.out.println(s.bracket('{', '}'));
 
   }
+
+  @Override
+  public String toString() {
+    return s;
+  }
+
 }

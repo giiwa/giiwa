@@ -25,8 +25,8 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.dle.Velocity;
 import org.giiwa.core.json.JSON;
-import org.giiwa.core.vengine.VEngine;
 import org.giiwa.framework.web.Model;
 
 /**
@@ -324,7 +324,7 @@ public class Menu extends Bean {
      * remove all the sub
      */
     Beans<Menu> bs = submenu(id);
-    List<Menu> list = bs.getList();
+    List<Menu> list = bs;
 
     if (list != null) {
       for (Menu m : list) {
@@ -385,7 +385,7 @@ public class Menu extends Bean {
         m1.put("global", Global.getInstance());
         m1.put("local", Local.getInstance());
         try {
-          has = VEngine.test(s, m1);
+          has = Velocity.test(s, m1);
         } catch (Exception e) {
           log.error(s, e);
         }

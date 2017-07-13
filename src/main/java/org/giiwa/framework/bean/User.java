@@ -281,37 +281,37 @@ public class User extends Bean {
     Beans<Role> bs = Role.loadByAccess(access, 0, 1000);
     W q = W.create();
 
-    if (bs != null && bs.getList() != null) {
-      if (bs.getList().size() > 1) {
+    if (bs != null) {
+      if (bs.size() > 1) {
         W list = W.create();
-        for (Role a : bs.getList()) {
+        for (Role a : bs) {
           list.or("rid", a.getId());
         }
         q.and(list);
-      } else if (bs.getList().size() == 1) {
-        q.and("rid", bs.getList().get(0).getId());
+      } else if (bs.size() == 1) {
+        q.and("rid", bs.get(0).getId());
       }
 
     }
 
     Beans<UserRole> b2 = Helper.load(q, 0, 1000, UserRole.class);
     q = W.create();
-    if (b2 != null && b2.getList() != null) {
-      if (b2.getList().size() > 1) {
+    if (b2 != null) {
+      if (b2.size() > 1) {
         W list = W.create();
-        for (UserRole a : b2.getList()) {
+        for (UserRole a : b2) {
           list.or("id", a.getLong("uid"));
         }
         q.and(list);
-      } else if (b2.getList().size() == 1) {
-        q.and("id", b2.getList().get(0).getLong("uid"));
+      } else if (b2.size() == 1) {
+        q.and("id", b2.get(0).getLong("uid"));
       }
     }
 
     q.and("deleted", 1, W.OP.neq);
 
     Beans<User> us = Helper.load(q.sort("name", 1), 0, Integer.MAX_VALUE, User.class);
-    return us == null ? null : us.getList();
+    return us;
 
   }
 
@@ -377,9 +377,9 @@ public class User extends Bean {
   public Roles getRole() {
     if (role == null) {
       Beans<UserRole> bs = Helper.load(W.create("uid", this.getId()), 0, 100, UserRole.class);
-      if (bs != null && bs.getList() != null) {
+      if (bs != null) {
         List<Long> roles = new ArrayList<Long>();
-        for (UserRole r : bs.getList()) {
+        for (UserRole r : bs) {
           roles.add(r.getLong("rid"));
         }
         role = new Roles(roles);
@@ -732,7 +732,7 @@ public class User extends Bean {
     public static List<Lock> load(long uid, long time) {
       Beans<Lock> bs = Helper.load(W.create("uid", uid).and(X.CREATED, time, W.OP.gt).sort(X.CREATED, 1), 0,
           Integer.MAX_VALUE, Lock.class);
-      return bs == null ? null : bs.getList();
+      return bs;
     }
 
     /**
@@ -750,7 +750,7 @@ public class User extends Bean {
       Beans<Lock> bs = Helper.load(
           W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("sid", sid).sort(X.CREATED, 1), 0, Integer.MAX_VALUE,
           Lock.class);
-      return bs == null ? null : bs.getList();
+      return bs;
     }
 
     /**
@@ -768,7 +768,7 @@ public class User extends Bean {
       Beans<Lock> bs = Helper.load(
           W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("host", host).sort(X.CREATED, 1), 0, Integer.MAX_VALUE,
           Lock.class);
-      return bs == null ? null : bs.getList();
+      return bs;
     }
 
     /**
@@ -823,8 +823,8 @@ public class User extends Bean {
   public List<AuthToken> getTokens() {
     if (token_obj == null) {
       Beans<AuthToken> bs = AuthToken.load(this.getId());
-      if (bs != null && bs.getList() != null) {
-        token_obj = bs.getList();
+      if (bs != null) {
+        token_obj = bs;
       }
     }
     return token_obj;

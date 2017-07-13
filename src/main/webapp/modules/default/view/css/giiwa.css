@@ -255,14 +255,18 @@ textarea {
 	box-shadow: 0 1px 4px #bbb;
 }
 #processing .bg {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	background: #112a44;
-	opacity: 0.6;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    box-shadow: 0 0 2px #666;
+    z-index: 0;
+    border-radius: 6px;
 }
+
 #processing .img {
 	margin: 25px 45px;
+	position: absolute;	
 }
 a.disabled {
 	background-color: #eee !important;
@@ -619,7 +623,7 @@ div.state {
 	margin: 20px;
 	padding: 20px;
 }
-div.notes {
+.content div.notes {
 	background: #FDFAD5;
 	border: 1px solid transparent;
 	border-radius: 4px;
@@ -629,6 +633,12 @@ div.notes {
 	margin: 20px;
 	padding: 20px;
 	line-height: 32px;
+}
+.content div.title {
+	padding: 10px;
+    font-size: large;
+    font-weight: bold;
+    margin-top: 10px;    
 }
 .btn.start {
 	background-color: #428bca;
@@ -988,22 +998,22 @@ form label.inline{
 	padding: 20px 40px;
 }
 #error.leanmodal {
-	background: #6B1F1F;
-	color: #FCF5F5;
-	box-shadow: 0 0 6px #EEE;
+    background: rgba(220, 10,10, 0.8);
+    color: #FCF5F5;
+    box-shadow: 0 0 6px #903434;
 }
 #message.leanmodal {
-	background: #145711;
-	color: #FCF5F5;
-	box-shadow: 0 0 6px #EEE;
+    background: rgba(9, 86, 6, 0.8);
+    color: #ffffff;
+    box-shadow: 0 0 10px #bfc7c3;
 }
 #hint.leanmodal {
-	background: #0AAF64;
-	color: #FCF5F5;
-	box-shadow: 0 0 6px #0AAF64;
+    background: rgba(90, 95, 94, 0.8);
+    color: #ffffff;
+    box-shadow: 0 0 10px #bfc7c3;
 }
 #warn.leanmodal {
-	background: #C35A22;
+	background: rgba(117, 46, 7, 0.8);
 	color: #FCF5F5;
 	box-shadow: 0 0 6px #C35A22;
 }

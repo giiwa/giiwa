@@ -607,4 +607,37 @@ public final class JSON extends HashMap<String, Object> {
     JsonPath.parse(json).set(xpath, value);
   }
 
+  /**
+   * merge to JSON, if both has number for A key, the add them as one
+   * 
+   * @param jo
+   * @return
+   */
+  public JSON merge(JSON jo) {
+    if (jo != null && !jo.isEmpty()) {
+      for (String k : jo.keySet()) {
+        Object v = jo.get(k);
+        if (!this.containsKey(k)) {
+          this.put(k, v);
+        } else {
+          Object v2 = this.get(k);
+          if (v instanceof Number && v2 instanceof Number) {
+            if (v instanceof Double || v2 instanceof Double) {
+              this.put(k, X.toDouble(v) + X.toDouble(v2));
+            } else if (v instanceof Float || v2 instanceof Float) {
+              this.put(k, X.toFloat(v) + X.toFloat(v2));
+            } else if (v instanceof Long || v2 instanceof Long) {
+              this.put(k, X.toLong(v) + X.toLong(v2));
+            } else if (v instanceof Integer || v2 instanceof Integer) {
+              this.put(k, X.toInt(v) + X.toInt(v2));
+            }
+          } else {
+            this.put(k, v.toString() + v2.toString());
+          }
+        }
+      }
+    }
+    return this;
+  }
+
 }

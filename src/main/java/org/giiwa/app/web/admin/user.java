@@ -155,7 +155,7 @@ public class user extends Model {
 
     Beans<Role> bs = Role.load(0, 1000);
     if (bs != null) {
-      this.set("roles", bs.getList());
+      this.set("roles", bs);
     }
 
     this.show("/admin/user.create.html");
@@ -259,7 +259,7 @@ public class user extends Model {
 
         Beans<Role> bs = Role.load(0, 1000);
         if (bs != null) {
-          this.set("roles", bs.getList());
+          this.set("roles", bs);
         }
 
         this.set("id", id);
@@ -286,7 +286,7 @@ public class user extends Model {
 
       Beans<Role> bs = Role.load(0, 100);
       if (bs != null) {
-        this.set("roles", bs.getList());
+        this.set("roles", bs);
       }
 
       this.show("/admin/user.detail.html");

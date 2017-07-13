@@ -166,6 +166,8 @@ public class Module {
             new File(f2.getCanonicalPath() + "/ok").delete();
             IOUtil.delete(f1);
 
+            Jar.reset(name);
+
             // merge WEB-INF/lib
             File f3 = new File(f2.getCanonicalPath() + "/WEB-INF");
             if (f3.exists()) {
@@ -1939,7 +1941,7 @@ public class Module {
       bs = Menu.submenu(id);
 
     }
-    List<Menu> list = bs == null ? null : bs.getList();
+    List<Menu> list = bs;
 
     /**
      * filter out the item which no access

@@ -299,10 +299,10 @@ public abstract class Task implements Runnable {
        * ensure onExecute be executed
        */
       try {
-        delay = t.past();
+        delay = t.pastms();
         runtimes++;
         onExecute();
-        cost = t.past() - delay;
+        cost = t.pastms() - delay;
       } finally {
 
         try {
@@ -521,7 +521,7 @@ public abstract class Task implements Runnable {
             t.stop(fast);
           }
 
-          waiter.wait(1000);
+          waiter.awaitNanos(TimeUnit.MILLISECONDS.toNanos(1000));
         } catch (InterruptedException e) {
         } finally {
           lock.unlock();

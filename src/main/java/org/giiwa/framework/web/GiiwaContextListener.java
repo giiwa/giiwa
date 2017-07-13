@@ -110,7 +110,7 @@ public class GiiwaContextListener implements ServletContextListener {
       /**
        * initialize the cache
        */
-      Cache.init(conf);
+      Cache.init(conf.getString("cache.url", X.EMPTY), conf.getString("site.group", "demo"));
 
       /**
        * initialize the helper, including RDB and Mongo

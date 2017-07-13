@@ -14,7 +14,13 @@
 */
 package org.giiwa.core.cache;
 
-import org.apache.commons.configuration.Configuration;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.X;
 
@@ -48,24 +54,23 @@ public final class Cache {
    * @param conf
    *          the configuration that includes cache configure ("cache.url")
    */
-  public static synchronized void init(Configuration conf) {
+  public static synchronized void init(String url, String group) {
     /**
      * comment it, let's re-conf in running-time
      */
     // if (_conf != null)
     // return;
 
-    String server = conf.getString("cache.url", X.EMPTY);
-    if (server.startsWith(MEMCACHED)) {
-      cacheSystem = MemCache.create(conf);
-    } else if (server.startsWith(REDIS)) {
-      cacheSystem = RedisCache.create(conf);
+    if (url.startsWith(MEMCACHED)) {
+      cacheSystem = MemCache.create(url);
+    } else if (url.startsWith(REDIS)) {
+      cacheSystem = RedisCache.create(url);
     } else {
       log.debug("not configured cache system, using file cache!");
-      cacheSystem = FileCache.create(conf);
+      cacheSystem = FileCache.create();
     }
 
-    GROUP = conf.getString("cache.group", "demo") + "://";
+    GROUP = group + "://";
   }
 
   /**
@@ -83,6 +88,8 @@ public final class Cache {
     try {
 
       id = GROUP + id;
+
+      // log.debug("Cache.get, id=" + id + ", cache=" + cacheSystem);
 
       Object r = null;
       if (cacheSystem != null) {
@@ -136,6 +143,87 @@ public final class Cache {
       }
     }
     return false;
+  }
+
+  /**
+   * set the data which exceed 1M
+   * 
+   * @param id
+   * @param data
+   * @return
+   */
+  public static boolean setBigdata(String id, Object data) {
+
+    ObjectOutputStream out = null;
+    ByteArrayInputStream in = null;
+
+    try {
+      ByteArrayOutputStream bo = new ByteArrayOutputStream();
+      out = new ObjectOutputStream(bo);
+      out.writeObject(data);
+      out.flush();
+
+      in = new ByteArrayInputStream(bo.toByteArray());
+
+      List<String> keys = new ArrayList<String>();
+      byte[] bb = new byte[1000 * 1024];
+      int len = in.read(bb);
+      int i = 1;
+      while (len > 0) {
+        String k = id + ":" + (i++);
+        if (!set(k, new Object[] { bb, len })) {
+          return false;
+        }
+        keys.add(k);
+
+        len = in.read(bb);
+      }
+      return set(id, keys);
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      X.close(in, out);
+    }
+    return false;
+  }
+
+  /**
+   * get the data which exceed 1M
+   * 
+   * @param id
+   * @return the object
+   */
+  public static <T> T getBigdata(String id) {
+    List<String> keys = get(id);
+    if (keys != null && keys.size() > 0) {
+
+      ByteArrayOutputStream bo = null;
+      ObjectInputStream in = null;
+
+      try {
+        bo = new ByteArrayOutputStream();
+        for (String k : keys) {
+          Object[] oo = get(k);
+          if (oo == null) {
+            return null;
+          }
+
+          byte[] bb = (byte[]) oo[0];
+          int len = (int) oo[1];
+          bo.write(bb, 0, len);
+        }
+        bo.flush();
+
+        in = new ObjectInputStream(new ByteArrayInputStream(bo.toByteArray()));
+        Object o = in.readObject();
+        return (T) o;
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      } finally {
+        X.close(in, bo);
+      }
+    }
+    return null;
   }
 
 }

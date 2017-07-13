@@ -22,7 +22,6 @@ import org.apache.commons.configuration.Configuration;
 import org.bson.Document;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.bean.UID;
@@ -32,7 +31,6 @@ import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
-import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
@@ -117,7 +115,7 @@ public class setup extends Model {
     }
 
     conf.setProperty("cache.url", this.getString("cache.url"));
-    conf.setProperty("cache.group", this.getString("cache.group"));
+    conf.setProperty("site.group", this.getString("cache.group"));
 
     conf.setProperty("node.name", this.getString("node.name"));
     conf.setProperty("cluster.code", this.getLong("cluster.code"));
@@ -178,7 +176,7 @@ public class setup extends Model {
           } catch (Exception e) {
             jo.put("admin", 0);
           } finally {
-            RDSHelper.close(r, stat, c1);
+            RDSHelper.inst.close(r, stat, c1);
           }
         }
         jo.put(X.STATE, 200);
@@ -242,9 +240,9 @@ public class setup extends Model {
         if (!X.isEmpty(url)) {
           Configuration conf = Config.getConf();
           conf.setProperty("cache.url", url);
-          conf.setProperty("cache.group", group);
+          conf.setProperty("site.group", group);
 
-          Cache.init(conf);
+          Cache.init(url, group);
 
           String s1 = "1";
           Cache.set("test", s1);

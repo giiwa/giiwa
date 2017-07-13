@@ -198,8 +198,8 @@ public class setting extends Model {
   @Path(login = true, access = "access.config.admin")
   public final void onGet() {
 
-    if (settings.size() > 0) {
-      String name = settings.keySet().iterator().next();
+    if (!names.isEmpty()) {
+      String name = names.get(0);
       this.set("name", name);
       get(name);
       return;
@@ -271,13 +271,13 @@ public class setting extends Model {
       this.set("cross_header", Global.getString("cross.header", "Content-Type, accept, Origin"));
 
       this.set("cache_url", Global.getString("cache.url", null));
-      this.set("cache_group", Global.getString("cache.group", "demo"));
+      this.set("cache_group", Global.getString("site.group", "demo"));
       this.set("mongo_url", Global.getString("mongo[default].url", null));
       this.set("mongo_db", Global.getString("mongo[default].db", null));
       this.set("mongo_user", Global.getString("mongo[default].user", null));
       this.set("db_url", Global.getString("db[default].url", null));
       this.set("db_primary", Helper.primary == null ? X.EMPTY : Helper.primary.getClass().getName());
-      this.set("roles", Role.load(0, 100).getList());
+      this.set("roles", Role.load(0, 100));
 
       this.settingPage("/admin/setting.system.html");
     }

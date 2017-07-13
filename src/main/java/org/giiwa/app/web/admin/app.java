@@ -16,7 +16,6 @@ package org.giiwa.app.web.admin;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
@@ -56,7 +55,7 @@ public class app extends Model {
     }
 
     Beans<Role> rs = Role.load(0, 1000);
-    this.set("roles", rs == null ? null : rs.getList());
+    this.set("roles", rs);
 
     this.show("/admin/app.create.html");
   }

@@ -299,18 +299,18 @@ public class Role extends Bean {
     Beans<RoleAccess> bs = Helper.load(W.create("name", access).sort("rid", 1), 0, 1000, RoleAccess.class);
 
     W q = W.create();
-    if (bs == null || bs.getList() == null || bs.getList().size() == 0) {
+    if (bs == null || bs.isEmpty()) {
       return null;
     }
 
-    if (bs.getList().size() > 1) {
+    if (bs.size() > 1) {
       W w1 = W.create();
-      for (RoleAccess a : bs.getList()) {
+      for (RoleAccess a : bs) {
         w1.or(X.ID, a.getLong("rid"));
       }
       q.and(w1);
-    } else if (bs.getList().size() == 1) {
-      q.and(X.ID, bs.getList().get(0).getLong("rid"));
+    } else if (bs.size() == 1) {
+      q.and(X.ID, bs.get(0).getLong("rid"));
     }
 
     return Helper.load(q.sort("name", 1), s, n, Role.class);

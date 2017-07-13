@@ -3,9 +3,8 @@
   DB: any one of HSQLDB, PostgreSQL 9.3+, MYSQL 5.4+, Oracle 10i+ or Mongo 3.2+
 
 2. Running giiwa directly
-  giiwa.sh
-  or 
-  giiwa.bat
+  giiwa.sh start
+  the giiwa.sh is python script.
 
 3. If using appdog, then start the giiwa using below command
   bin/startup.sh

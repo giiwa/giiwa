@@ -78,12 +78,6 @@
 					"seq" : 60,
 					"access" : "access.config.admin",
 					"classes" : "icon-link"
-				}, {
-					name : 'menu.mq',
-					load : '/admin/mq/setting',
-					access : 'access.config.admin',
-					seq : 70,
-					classes : 'icon-loop'
 				}]
 	}, {
 		"name" : "menu.usermgr",

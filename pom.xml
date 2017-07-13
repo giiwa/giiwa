@@ -4,7 +4,7 @@
 	<groupId>org.giiwa</groupId>
 	<artifactId>giiwa</artifactId>
 	<packaging>war</packaging>
-	<version>1.4</version>
+	<version>1.5</version>
 	<name>giiwa</name>
 	<url>http://giiwa.org</url>
 	<description>Java web framework</description>
@@ -75,11 +75,13 @@
 			<artifactId>activemq-client</artifactId>
 			<version>5.14.3</version>
 		</dependency>
+
 		<dependency>
-			<groupId>com.rabbitmq</groupId>
-			<artifactId>amqp-client</artifactId>
-			<version>4.0.2</version>
+			<groupId>org.apache.kafka</groupId>
+			<artifactId>kafka-clients</artifactId>
+			<version>0.10.2.1</version>
 		</dependency>
+
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -160,8 +162,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver</artifactId>
-			<version>3.3.0</version>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>3.4.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
@@ -242,6 +244,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.1</version>
 				<configuration>
+					<compilerArgument>-parameters</compilerArgument>
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>

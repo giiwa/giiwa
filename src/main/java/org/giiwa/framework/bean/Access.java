@@ -121,7 +121,7 @@ public class Access extends Bean {
    */
   public static Map<String, List<Access>> load() {
     Beans<Access> bs = Helper.load(W.create(), 0, Integer.MAX_VALUE, Access.class);
-    List<Access> list = bs.getList();
+    List<Access> list = bs;
     Map<String, List<Access>> r = new TreeMap<String, List<Access>>();
     String group = null;
     List<Access> last = null;

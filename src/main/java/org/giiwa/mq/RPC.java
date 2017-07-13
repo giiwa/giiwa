@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 /**
@@ -31,7 +30,7 @@ import org.giiwa.framework.web.Model;
  * @author wujun
  *
  */
-public class RPC {
+class RPC {
 
   private static Log               log     = LogFactory.getLog(RPC.class);
 
@@ -54,19 +53,17 @@ public class RPC {
    * @throws Exception
    *           the exception
    */
-  public static Response call(String rpcname, Request req) throws Exception {
+  public synchronized static Response call(String rpcname, Request req, int timeout) throws Exception {
     if (REPLY == null) {
-      REPLY = new IStub(Model.node() + ".rpc") {
+      REPLY = new IStub("client-" + Model.node()) {
 
         @Override
         public void onRequest(long seq, Request req) {
           Object o = waits.get(seq);
           if (o != null) {
             try {
-              JSON j = JSON.fromObject(req.data);
-              long s1 = j.getLong("seq");
               synchronized (o) {
-                waits.put(s1, j.get("result"));
+                waits.put(seq, req);
                 o.notifyAll();
               }
             } catch (Exception e) {
@@ -80,40 +77,40 @@ public class RPC {
 
     long s = seq.incrementAndGet();
     Object lock = new Object();
+
     try {
+      req.seq = s;
       waits.put(s, lock);
 
-      Request r = new Request();
-      r.from = REPLY.name;
-      r.type = 0;
-      s = MQ.send("rpc." + rpcname, r);
+      req.from = REPLY.name;
+      req.type = 0;
+      s = MQ.send(rpcname, req);
 
       synchronized (lock) {
         if (waits.get(s) == lock)
-          lock.wait(TIMEOUT);
+          lock.wait(timeout);
       }
-    } finally {
       Response resp = new Response();
       Object o = waits.remove(s);
       if (o != lock) {
-        if (o instanceof Exception) {
-          resp.state = 500;
-          resp.error = ((Exception) o).getMessage();
-        } else if (o instanceof Request) {
+        if (o instanceof Request) {
           Request r = (Request) o;
           resp.copy(r);
           resp.state = 200;
           return resp;
         } else {
           resp.state = 500;
-          resp.error = "unknow object, o=" + o.getClass().getName();
+          resp.error = "unknow object, o=" + o;
         }
       } else {
         resp.state = 500;
         resp.error = "timeout";
       }
+      return resp;
+      // throw new Exception("timeout");
+    } finally {
+      waits.remove(s);
     }
-    throw new Exception("timeout");
   }
 
 }

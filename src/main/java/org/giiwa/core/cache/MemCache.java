@@ -14,7 +14,6 @@
 */
 package org.giiwa.core.cache;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 
 import com.whalin.MemCached.MemCachedClient;
@@ -31,6 +30,8 @@ class MemCache implements ICacheSystem {
 
   private MemCachedClient memCachedClient;
 
+  private String          url;
+
   /**
    * Inits the.
    *
@@ -38,13 +39,14 @@ class MemCache implements ICacheSystem {
    *          the conf
    * @return the i cache system
    */
-  public static ICacheSystem create(Configuration conf) {
-    String server = conf.getString("cache.url");
+  public static ICacheSystem create(String server) {
 
     MemCache f = new MemCache();
 
+    f.url = server.substring(Cache.MEMCACHED.length());
+
     SockIOPool pool = SockIOPool.getInstance();
-    pool.setServers(new String[] { server.substring(Cache.MEMCACHED.length()) });
+    pool.setServers(new String[] { f.url });
     pool.setFailover(true);
     pool.setInitConn(10);
     pool.setMinConn(5);
@@ -72,7 +74,7 @@ class MemCache implements ICacheSystem {
   }
 
   /**
-   * Sets the.
+   * Sets the data linked the id, the maximum size of data 1M
    *
    * @param id
    *          the id
@@ -102,6 +104,11 @@ class MemCache implements ICacheSystem {
    */
   public synchronized boolean delete(String id) {
     return memCachedClient.delete(id);
+  }
+
+  @Override
+  public String toString() {
+    return "MemCache [url=" + url + "]";
   }
 
 }

@@ -1,23 +1,11 @@
 
-<div class='head'>$lang.get('mq.setting.title')</div>
-
-#parse('/widget/widget.message.html')
-
-<div class='tabs'>
-	<a href='/admin/mq/setting' class='selected'>$lang.get('a.setting')</a>
-	<a href='/admin/mq/log' >$lang.get('a.mq.log')</a>
-</div>
-
-<form action='/admin/mq/setting'  method='post' class='form' enctype="multipart/form-data">
-
-	<div><label><h3>$lang.get('mq.logger'):</h3><input type='checkbox' name='mq.logger' #if($global.getInt('mq.logger',0)== 1) checked="checked" #end/><g>$lang.get('mq.logger.hint')</g></label></div>
-	<div><label><h3>$lang.get('mq.group'):</h3><input type='text' name='group' value="$!global.getString('mq.group', 'demo')"/><g>$lang.get('mq.group.hint')</g></label></div>
+	<div><label><h3>$lang.get('mq.group'):</h3><input type='text' name='group' value="$!global.getString('site.group', 'demo')"/><g>$lang.get('mq.group.hint')</g></label></div>
 
 	<div><label><h3>$lang.get('mq.type'):</h3>
 		<select name="mq.type" onchange="_ontype();">
 			<option value=''></option>
 			<option value='activemq' #if($global.getString('mq.type', '')=='activemq') selected="selected" #end>$lang.get('mq.type_activemq')</option>
-			<option value='rabbitmq' #if($global.getString('mq.type', '')=='rabbitmq') selected="selected" #end>$lang.get('mq.type_rabbitmq')</option>
+			<option value='kafkamq' #if($global.getString('mq.type', '')=='kafkamq') selected="selected" #end>$lang.get('mq.type_kafkamq')</option>
 		</select>
 	<g>$lang.get('mq.type_activemq.hint')</g></label></div>
 	
@@ -28,10 +16,9 @@
 
 	<div class="rabbitmq mq_more" style="padding-left:20px;"><label><h3>$lang.get('rabbitmq.url'):</h3><input type='text' style='width:40%' name='rabbitmq.url' value="$!global.getString('rabbitmq.url', 'amqp://[host]:5672')"/><g>$lang.get('rabbitmq.url.hint')</g></label></div>
 
-	<div class="btns">
-		<button type='submit'>$lang.get('btn.save')</button>
-	</div>	
-</form>
+	<div class="kafkamq mq_more" style="padding-left:20px;"><label><h3>$lang.get('kafkamq.url'):</h3><input type='text' style='width:40%' name='kafkamq.url' value="$!global.getString('kafkamq.url', 'master:9092')"/><g>$lang.get('kafkamq.url.hint')</g></label></div>
+	<div class="kafkamq mq_more" style="padding-left:20px;"><label><h3>$lang.get('zoo.url'):</h3><input type='text' style='width:40%' name='zoo.url' value="$!global.getString('zoo.url', 's1:2181')"/><g>$lang.get('zoo.url.hint')</g></label></div>
+
 <script>
 function _ontype(){
 	var c = $('select[name="mq.type"]').val();

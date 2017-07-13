@@ -5,10 +5,16 @@ import org.giiwa.core.bean.Helper.W;
 
 public interface ITrigger {
 
-  public void beforeInsert(String db, String table, V v);
+  default void beforeInsert(String db, String table, V v) {
+    // do nothing
+  };
 
-  public void beforeUpdate(String db, String table, W q, V v);
+  default void beforeUpdate(String db, String table, W q, V v) {
+    // do nothing
+  };
 
-  public void beforeDelete(String db, String table, W q);
+  default void beforeDelete(String db, String table, W q) {
+    // do nothing
+  };
 
 }

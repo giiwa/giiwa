@@ -96,6 +96,8 @@ public class logs extends Model {
     File[] ff = f.listFiles();
     this.set("list", ff);
 
+    this.query.path("/admin/logs");
+
     this.show("/admin/logs.index.html");
   }
 

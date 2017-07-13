@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -38,7 +39,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class Host.
  */
@@ -149,6 +149,24 @@ public class Host {
   }
 
   /**
+   * get pid
+   * 
+   * @return
+   */
+  public static String getPid() {
+    RuntimeMXBean runtime = ManagementFactory.getRuntimeMXBean();
+    String info = runtime.getName();
+    // System.out.println("info=" + info);
+    int index = info.indexOf("@");
+    if (index != -1) {
+      return info.substring(0, index);
+      // System.out.println(info);
+      // System.out.println(pid);
+    }
+    return null;
+  }
+
+  /**
    * Sets the.
    * 
    * @param h
@@ -230,6 +248,8 @@ public class Host {
     System.out.println(h);
 
     System.out.println(Host.getLocalip());
+
+    System.out.println(getPid());
 
   }
 
@@ -1359,7 +1379,9 @@ public class Host {
       return name.compareTo(o.name);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     public String toString() {
@@ -1415,11 +1437,11 @@ public class Host {
       this.mem = mem;
     }
 
-    private static String getPid() {
-      String name = ManagementFactory.getRuntimeMXBean().getName();
-      String pid = name.split("@")[0];
-      return pid;
-    }
+    // private static String getPid() {
+    // String name = ManagementFactory.getRuntimeMXBean().getName();
+    // String pid = name.split("@")[0];
+    // return pid;
+    // }
 
     /**
      * Gets the name.

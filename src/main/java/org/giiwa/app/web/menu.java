@@ -77,7 +77,7 @@ public class menu extends Model {
       bs = Menu.submenu(id);
 
     }
-    List<Menu> list = bs == null ? null : bs.getList();
+    List<Menu> list = bs;
 
     /**
      * filter out the item which no access

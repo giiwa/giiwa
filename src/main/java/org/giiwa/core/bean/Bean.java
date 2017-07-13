@@ -36,7 +36,7 @@ import org.giiwa.core.json.JSON;
  * almost includes all methods that need for database <br>
  * 
  */
-public abstract class Bean implements Serializable, Map<String, Object> {
+public class Bean implements Serializable, Map<String, Object> {
 
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 3L;

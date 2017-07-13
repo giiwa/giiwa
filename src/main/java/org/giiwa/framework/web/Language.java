@@ -21,7 +21,7 @@ import org.apache.commons.logging.*;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.vengine.VEngine;
+import org.giiwa.core.dle.Velocity;
 
 /**
  * language data which located at /modules/[module]/i18n/
@@ -247,7 +247,7 @@ public class Language {
   public String parse(String str, Model m) {
 
     try {
-      str = VEngine.parse(str, m.context);
+      str = Velocity.parse(str, m.context);
     } catch (Exception e) {
       log.error(str, e);
     }
@@ -404,8 +404,8 @@ public class Language {
    * @return the string
    */
   public String format(long t, String format) {
-    if (t <= 0)
-      return Long.toString(t);
+    // if (t <= X.ADAY)
+    // return X.EMPTY;
 
     try {
       SimpleDateFormat sdf = formats.get(format);
@@ -506,16 +506,15 @@ public class Language {
    * @return the string
    */
   public String format(long t) {
-    try {
-      if (sdf == null) {
-        sdf = new SimpleDateFormat(get("date.format"));
-        // sdf.setTimeZone(TimeZone.getTimeZone(get("date.timezone")));
-      }
-      return sdf.format(new Date(t));
-    } catch (Exception e) {
-      log.error("t=" + t + ", format:" + get("date.format"), e);
+    return format(t, get("date.format"));
+  }
+
+  public String full(int n, int len) {
+    String s = Integer.toString(n);
+    while (s.length() < len) {
+      s = "0" + s;
     }
-    return Long.toString(t);
+    return s;
   }
 
   /**
@@ -598,4 +597,37 @@ public class Language {
   public Html parse(String body) {
     return Html.create(body);
   }
+
+  public Object html(Object str) {
+    if (str == null)
+      return null;
+    if (str instanceof String) {
+      return ((String) str).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+    return str;
+  }
+
+  public String cost(float cost) {
+    if (cost < 0.1) {
+      return ((int) (cost * 100000)) / 100f + get("label.ms");
+    } else {
+      return cost + get("label.ms");
+    }
+  }
+
+  public static void main(String[] args) {
+    long t = System.currentTimeMillis();
+    Language lang = Language.getLanguage();
+    System.out.println(lang.format(t, "yyyy-MM-dd HH:mm"));
+    t = lang.parse("1900-11-11", "yyyy-MM-dd");
+    System.out.println("t=" + t);
+    System.out.println(lang.format(t, "yyyy-MM-dd HH:mm"));
+
+    System.out.println(X.ADAY);
+    
+    lang.data.put("test", new String[]{"您已经被添加到项目[%s]，角色[%s]。"});
+    System.out.println(lang.get("test", "yyyy-MM-dd HH:mm", "asdasd"));
+    
+  }
+
 }

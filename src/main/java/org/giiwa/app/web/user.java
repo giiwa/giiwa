@@ -482,7 +482,7 @@ public class user extends Model {
     } else {
       Beans<User> bs = User.load(W.create().and(X.ID, 0, W.OP.gt), 0, 1000);
       if (bs != null) {
-        list = bs.getList();
+        list = bs;
       }
     }
 
@@ -627,8 +627,8 @@ public class user extends Model {
             StringBuilder sb = new StringBuilder();
             W q = W.create("email", email);
             Beans<User> bs = User.load(q, s, 10);
-            while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-              for (User u : bs.getList()) {
+            while (bs != null && !bs.isEmpty()) {
+              for (User u : bs) {
                 if (!u.isDeleted()) {
                   if (sb.length() > 0) {
                     sb.append(",");
@@ -636,7 +636,7 @@ public class user extends Model {
                   sb.append(u.getName());
                 }
               }
-              s += bs.getList().size();
+              s += bs.size();
               bs = User.load(q, s, 10);
             }
 
@@ -727,8 +727,8 @@ public class user extends Model {
             StringBuilder sb = new StringBuilder();
             W q = W.create("phone", phone);
             Beans<User> bs = User.load(q, s, 10);
-            while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-              for (User u : bs.getList()) {
+            while (bs != null && !bs.isEmpty()) {
+              for (User u : bs) {
                 if (!u.isDeleted()) {
                   if (sb.length() > 0) {
                     sb.append(",");
@@ -736,7 +736,7 @@ public class user extends Model {
                   sb.append(u.getName());
                 }
               }
-              s += bs.getList().size();
+              s += bs.size();
               bs = User.load(q, s, 10);
             }
 

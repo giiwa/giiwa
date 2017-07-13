@@ -31,7 +31,7 @@ public class ThymeleafView extends View {
   private static TemplateEngine _engine;
 
   @Override
-  public boolean parse(File file, Model m, String viewname) {
+  public synchronized boolean parse(File file, Model m, String viewname) {
     // load
     try {
 

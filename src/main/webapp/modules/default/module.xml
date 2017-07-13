@@ -4,7 +4,7 @@
 	<name>default</name>
 	<package>org.giiwa.app.web</package>
 	<screenshot>/images/gii_128.png</screenshot>
-	<version>1.4</version>
+	<version>1.5</version>
 	<build>0</build>
 	<enabled>true</enabled>
 	<readme>Giiwa default module which managed the giiwa framework</readme>

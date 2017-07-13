@@ -832,7 +832,7 @@ public class Model {
    */
   final public void set(Beans<? extends Bean> bs, int s, int n) {
     if (bs != null) {
-      this.set("list", bs.getList());
+      this.set("list", bs);
       int total = bs.getTotal();
       if (total > 0) {
         this.set("total", total);

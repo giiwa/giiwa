@@ -139,7 +139,7 @@ public class RDB {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     } finally {
-      RDSHelper.close(c);
+      RDSHelper.inst.close(c);
     }
     return null;
   }
@@ -163,7 +163,7 @@ public class RDB {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     } finally {
-      RDSHelper.close(c);
+      RDSHelper.inst.close(c);
     }
     return null;
   }
@@ -234,41 +234,7 @@ public class RDB {
     String jar = null;
     if (external == null) {
 
-      // String D = conf.getString("db[" + name + "].driver", DRIVER);
-      // String EXTERNAL_URL = conf.getString("db[" + name + "].url",
-      // URL);
-      // int N = conf.getInt("db[" + name + "].conns", MAX_ACTIVE_NUMBER);
-
-      String D = null;
-      String[] ss = url.split(":");
-      if (ss.length > 2) {
-        String type = ss[1];
-        if (X.isSame(type, "mysql")) {
-          D = "com.mysql.jdbc.Driver";
-        } else if (X.isSame(type, "postgresql")) {
-          D = "org.postgresql.Driver";
-        } else if (X.isSame(type, "hsqldb")) {
-          D = "org.hsqldb.jdbc.JDBCDriver";
-          jar = "hsqldb-2.3.4.jar";
-        } else if (X.isSame(type, "derby")) {
-          D = "org.apache.derby.jdbc.EmbeddedDriver";
-          jar = "derby-10.13.1.1.jar";
-          // jdbc:derby:sampledb;create=true
-        } else if (X.isSame(type, "oracle")) {
-          D = "oracle.jdbc.driver.OracleDriver";
-          jar = "ojdbc-14.jar";
-        } else if (X.isSame(type, "db2")) {
-          D = "com.ibm.db2.jcc.DB2Driver";
-          jar = "db2jcc4-10.1.jar";
-        } else if (X.isSame(type, "sqlserver")) {
-          // 2005
-          D = "com.microsoft.sqlserver.jdbc.SQLServerDriver";
-          jar = "mssql-jdbc-6.1.0.jre8.jar";
-        } else if (X.isSame(type, "microsoft")) {
-          // 2000
-          D = "com.microsoft.jdbc.sqlserver.SQLServerDriver";
-        }
-      }
+      String D = _getDiver(url);
 
       log.debug("driver=" + D + ", url=" + url + ", user=" + username + ", password=" + passwd);
 
@@ -332,7 +298,13 @@ public class RDB {
     }
 
     Connection c = (external == null ? null : external.getConnection());
-    c.setAutoCommit(true);
+    if (c != null) {
+      try {
+        c.setAutoCommit(true);
+      } catch (Exception e) {
+        // possible not support
+      }
+    }
     return c;
   }
 
@@ -340,62 +312,13 @@ public class RDB {
 
     BasicDataSource external = dss.get(name);
     if (external == null && conf != null) {
-      String D = conf.getString("db[" + name + "].driver", null);
       String url = conf.getString("db[" + name + "].url", null);
+      String username = conf.getString("db[" + name + "].user", null);
+      String passwd = conf.getString("db[" + name + "].passwd", null);
 
       if (!X.isEmpty(url)) {
-        String username = null;
-        String passwd = null;
-        String[] ss = url.split(":");
-        if (ss.length > 2) {
-          if (ss[1].equalsIgnoreCase("mysql")) {
-            D = X.isEmpty(D) ? "com.mysql.jdbc.Driver" : D;
-          } else if (ss[1].equalsIgnoreCase("postgresql")) {
-            D = X.isEmpty(D) ? "org.postgresql.Driver" : D;
-          } else if (ss[1].equalsIgnoreCase("oracle")) {
-            D = X.isEmpty(D) ? "oracle.jdbc.driver.OracleDriver" : D;
-          } else if (ss[1].equalsIgnoreCase("sqlserver") || ss[1].equalsIgnoreCase("microsoft")) {
-            D = X.isEmpty(D) ? "com.microsoft.sqlserver.jdbc.SQLServerDriver" : D;
 
-            int i = url.indexOf("user=");
-            if (i > 0) {
-              int j = url.indexOf("&", i + 1);
-              if (j < 0) {
-                j = url.length();
-              }
-              String[] ss1 = url.substring(i, j).split("=");
-              if (ss1.length == 2) {
-                username = ss1[1];
-              }
-
-              String url1 = url.substring(0, i - 1);
-              if (j < url.length()) {
-                url = url1 + url.substring(j);
-              } else {
-                url = url1;
-              }
-            }
-
-            i = url.indexOf("password=");
-            if (i > 0) {
-              int j = url.indexOf("&", i + 1);
-              if (j < 0) {
-                j = url.length();
-              }
-              String[] ss1 = url.substring(i, j).split("=");
-              if (ss1.length == 2) {
-                passwd = ss1[1];
-              }
-              String url1 = url.substring(0, i - 1);
-              if (j < url.length()) {
-                url = url1 + url.substring(j + 1);
-              } else {
-                url = url1;
-              }
-            }
-
-          }
-        }
+        String D = _getDiver(url);
 
         int N = conf.getInt("db[" + name + "].conns", MAX_ACTIVE_NUMBER);
 
@@ -432,6 +355,47 @@ public class RDB {
     external.setPoolPreparedStatements(true);
 
     return external;
+  }
+
+  private static String _getDiver(String url) {
+    if (url.startsWith("jdbc:hsqldb:")) {
+      return "org.hsqldb.jdbc.JDBCDriver";
+    } else if (url.startsWith("jdbc:derby:")) {
+      return "org.apache.derby.jdbc.ClientDriver";
+    } else if (url.startsWith("jdbc:firebirdsql:")) {
+      return "org.firebirdsql.jdbc.FBDriver";
+    } else if (url.startsWith("jdbc:sqlite:")) {
+      return "org.sqlite.JDBC";
+    } else if (url.startsWith("jdbc:h2:")) {
+      return "org.giiwa.h2.jdbc.H2Driver";
+
+    } else if (url.startsWith("jdbc:mongodb:")) {
+      return "com.dbschema.MongoJdbcDriver";
+
+    } else if (url.startsWith("jdbc:hive2:")) {
+      return "org.apache.hive.jdbc.HiveDriver";
+
+    } else if (url.startsWith("jdbc:postgresql:")) {
+      return "org.postgresql.Driver";
+
+    } else if (url.startsWith("jdbc:mysql:")) {
+      return "com.mysql.jdbc.Driver";
+    } else if (url.startsWith("jdbc:oracle:")) {
+      return "oracle.jdbc.OracleDriver";
+    } else if (url.startsWith("jdbc:db2:")) {
+      return "com.ibm.db2.jcc.DB2Driver";
+    } else if (url.startsWith("jdbc:informix-sqli:")) {
+      return "com.informix.jdbc.IfxDriver";
+    } else if (url.startsWith("jdbc:microsoft:sqlserver:")) {
+      return "com.microsoft.jdbc.sqlserver.SQLServerDriver";
+    } else if (url.startsWith("jdbc:sqlserver:")) {
+      return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
+    } else if (url.startsWith("jdbc:sybase:")) {
+      return "net.sourceforge.jtds.jdbc.Driver";
+    } else if (url.startsWith("jdbc:odbc:")) {
+      return "sun.jdbc.odbc.JdbcOdbcDriver";
+    }
+    return null;
   }
 
 }

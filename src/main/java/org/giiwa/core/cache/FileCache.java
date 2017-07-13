@@ -17,7 +17,6 @@ package org.giiwa.core.cache;
 import java.io.*;
 import java.util.*;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.UID;
 import org.giiwa.framework.web.Model;
@@ -41,10 +40,10 @@ class FileCache implements ICacheSystem {
    *          the conf
    * @return the i cache system
    */
-  public static ICacheSystem create(Configuration conf) {
+  public static ICacheSystem create() {
     FileCache f = new FileCache();
     f.root = Model.GIIWA_HOME + "/temp/_cache/";
-    f.cache_size = conf.getInt("file.cache.size", 10000);
+    f.cache_size = 10000;
     return f;
   }
 
@@ -259,6 +258,11 @@ class FileCache implements ICacheSystem {
       id = queue.remove(0);
       cache.remove(id);
     }
+  }
+
+  @Override
+  public String toString() {
+    return "FileCache [root=" + root + "]";
   }
 
   /** The cache_size. */

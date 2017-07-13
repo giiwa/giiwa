@@ -64,6 +64,8 @@ public class backup extends Model {
     }
 
     this.set("list", list);
+    this.query.path("/admin/backup");
+
     this.show("/admin/backup.index.html");
 
   }
@@ -119,7 +121,7 @@ public class backup extends Model {
    * Now.
    */
   @Path(path = "now", login = true, access = "access.config.admin")
-  public void now() {
+  public synchronized void now() {
     if (btask == null || btask.finished) {
       btask = new BackupTask();
       btask.schedule(10);
@@ -137,7 +139,7 @@ public class backup extends Model {
    * Restore.
    */
   @Path(path = "restore", login = true, access = "access.config.admin")
-  public void restore() {
+  public synchronized void restore() {
 
     JSON jo = new JSON();
 
@@ -223,7 +225,7 @@ public class backup extends Model {
         }
         if (RDSHelper.inst.isConfigured()) {
           Global.setConfig("backup/" + name, 3); // backup RDS
-          RDSHelper.backup(out + "/rds.dmp");
+          RDSHelper.inst.backup(out + "/rds.dmp");
         }
 
         /**
@@ -321,7 +323,7 @@ public class backup extends Model {
               if (RDSHelper.inst.isConfigured() && X.isSame("rds.dmp", f1.getName())) {
                 Global.setConfig("backup/" + name, 13); // recovering RDS
 
-                RDSHelper.recover(f1.getCanonicalFile());
+                RDSHelper.inst.recover(f1.getCanonicalFile());
               }
             }
           }

@@ -14,7 +14,9 @@
 */
 package org.giiwa.mq.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.BytesMessage;
@@ -37,10 +39,11 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
-import org.giiwa.framework.bean.Request;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
+import org.giiwa.mq.Request;
 
 // TODO: Auto-generated Javadoc
 public final class ActiveMQ extends MQ {
@@ -62,7 +65,7 @@ public final class ActiveMQ extends MQ {
     String user = Global.getString("activemq.user", ActiveMQConnection.DEFAULT_USER);
     String password = Global.getString("activemq.passwd", ActiveMQConnection.DEFAULT_PASSWORD);
 
-    m.group = Global.getString("mq.group", X.EMPTY);
+    m.group = Global.getString("site.group", "demo");
     if (!m.group.endsWith(".")) {
       m.group += ".";
     }
@@ -144,20 +147,53 @@ public final class ActiveMQ extends MQ {
         // System.out.println("got a message.., " + t.reset() +
         // "ms");
 
-        count++;
         if (m instanceof BytesMessage) {
+
           BytesMessage m1 = (BytesMessage) m;
-          int len = (int) m1.getBodyLength();
-          byte[] bb = new byte[len];
-          m1.readBytes(bb);
-          Request r = new Request(bb, 0);
-          process(name, r, cb);
+
+          long length = m1.getBodyLength();
+          int pos = 0;
+
+          List<Request> l1 = new ArrayList<Request>();
+          while (pos < length) {
+
+            count++;
+
+            Request r = new Request();
+            r.seq = m1.readLong();
+            pos += Long.SIZE / Byte.SIZE;
+            int len = m1.readInt();
+            if (len > 0) {
+              byte[] bb = new byte[len];
+              m1.readBytes(bb);
+              r.from = new String(bb);
+            }
+            pos += Integer.SIZE / Byte.SIZE;
+            pos += len;
+
+            r.type = m1.readInt();
+            pos += Integer.SIZE / Byte.SIZE;
+            len = m1.readInt();
+            if (len > 0) {
+              r.data = new byte[len];
+              m1.readBytes(r.data);
+            }
+            pos += Integer.SIZE / Byte.SIZE;
+            pos += len;
+
+            l1.add(r);
+
+            if (count % 10000 == 0) {
+              System.out.println("process the 10000 messages, cost " + t.reset() + "ms");
+            }
+          }
+
+          process(name, l1, cb);
+
+          log.debug("got: " + l1.size() + " in one packet.");
+
         } else {
           System.out.println(m);
-        }
-
-        if (count % 10000 == 0) {
-          System.out.println("process the 10000 messages, cost " + t.reset() + "ms");
         }
 
       } catch (Exception e) {
@@ -178,7 +214,7 @@ public final class ActiveMQ extends MQ {
   }
 
   @Override
-  protected long _topic(long seq, String to, org.giiwa.mq.Request r) throws Exception {
+  protected long _topic(String to, org.giiwa.mq.Request r) throws Exception {
 
     if (X.isEmpty(r.data))
       throw new Exception("message can not be empty");
@@ -190,39 +226,18 @@ public final class ActiveMQ extends MQ {
     /**
      * get the message producer by destination name
      */
-    MessageProducer p = getTopic(to);
+    Sender p = getSender(to, 1);
     if (p == null) {
       throw new Exception("MQ not ready yet");
     }
 
-    BytesMessage req = session.createBytesMessage();
+    p.send(r);
 
-    req.writeLong(seq);
-    byte[] ff = r.from == null ? null : r.from.getBytes();
-    if (ff == null) {
-      req.writeInt(0);
-    } else {
-      req.writeInt(ff.length);
-      req.writeBytes(ff);
-    }
-    req.writeInt(r.type);
-    if (r.data == null) {
-      req.writeInt(0);
-    } else {
-      req.writeInt(r.data.length);
-      req.writeBytes(r.data);
-    }
-
-    p.send(req, r.persistent, r.priotiry, r.ttl);
-
-    if (log.isDebugEnabled())
-      log.debug("Broadcasting: " + to + ", len=" + r.data.length);
-
-    return seq;
+    return r.seq;
   }
 
   @Override
-  protected long _send(long seq, String to, org.giiwa.mq.Request r) throws Exception {
+  protected long _send(String to, org.giiwa.mq.Request r) throws Exception {
 
     if (X.isEmpty(r.data))
       throw new Exception("message can not be empty");
@@ -234,91 +249,162 @@ public final class ActiveMQ extends MQ {
     /**
      * get the message producer by destination name
      */
-    MessageProducer p = getQueue(to);
+    Sender p = getSender(to, 0);
     if (p == null) {
       throw new Exception("MQ not ready yet");
     }
+    p.send(r);
 
-    BytesMessage req = session.createBytesMessage();
-
-    req.writeLong(seq);
-    byte[] ff = r.from == null ? null : r.from.getBytes();
-    if (ff == null) {
-      req.writeInt(0);
-    } else {
-      req.writeInt(ff.length);
-      req.writeBytes(ff);
-    }
-    req.writeInt(r.type);
-    if (r.data == null) {
-      req.writeInt(0);
-    } else {
-      req.writeInt(r.data.length);
-      req.writeBytes(r.data);
-    }
-
-    p.send(req, r.persistent, r.priotiry, r.ttl);
-
-    if (log.isDebugEnabled())
-      log.debug("Sending:" + to + ", len=" + (r.data == null ? 0 : r.data.length));
-
-    return seq;
+    return r.seq;
 
   }
 
-  private MessageProducer getQueue(String name) {
-    synchronized (queues) {
+  private Sender getSender(String name, int type) {
+    String name1 = name + ":" + type;
+    synchronized (senders) {
       if (session != null) {
-        if (queues.containsKey(name)) {
-          return queues.get(name);
+        if (senders.containsKey(name1)) {
+          return senders.get(name1);
         }
 
         try {
-          Destination dest = new ActiveMQQueue(group + name);
-          MessageProducer producer = session.createProducer(dest);
-          producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-          queues.put(name, producer);
+          Destination dest = null;
+          if (type == 0) {
+            dest = new ActiveMQQueue(group + name);
+          } else {
+            dest = new ActiveMQTopic(group + name);
+          }
 
-          return producer;
+          MessageProducer p = session.createProducer(dest);
+
+          p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+          // p.setTimeToLive(0);
+
+          Sender s = new Sender(name1, name, p);
+          s.schedule(0);
+          senders.put(name1, s);
+
+          return s;
         } catch (Exception e) {
           log.error(name, e);
         }
       }
     }
 
-    return null;
-  }
-
-  private MessageProducer getTopic(String name) {
-    synchronized (topics) {
-      if (session != null) {
-        if (topics.containsKey(name)) {
-          return topics.get(name);
-        }
-
-        try {
-          Destination dest = new ActiveMQTopic(group + name);
-          MessageProducer producer = session.createProducer(dest);
-          producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-          topics.put(name, producer);
-
-          return producer;
-        } catch (Exception e) {
-          log.error(name, e);
-        }
-      }
-    }
     return null;
   }
 
   /**
    * queue producer cache
    */
-  private Map<String, MessageProducer> queues = new HashMap<String, MessageProducer>();
+  private Map<String, Sender> senders = new HashMap<String, Sender>();
 
-  /**
-   * topic producer cache
-   */
-  private Map<String, MessageProducer> topics = new HashMap<String, MessageProducer>();
+  class Sender extends Task {
+
+    long            last = System.currentTimeMillis();
+    String          name;
+    String          to;
+    MessageProducer p;
+    BytesMessage    m    = null;
+    int             len  = 0;
+
+    public void send(Request r) throws JMSException {
+      last = System.currentTimeMillis();
+      synchronized (p) {
+        try {
+          if (len > 2 * 1024 * 1024) {
+            // slow down
+            p.wait(1000);
+          }
+        } catch (Exception e) {
+          // forget this exception
+        }
+        if (m == null) {
+          m = session.createBytesMessage();
+          len = 0;
+        }
+
+        m.writeLong(r.seq);
+        len += Long.SIZE / Byte.SIZE;
+
+        len += Integer.SIZE / Byte.SIZE;
+        byte[] ff = r.from == null ? null : r.from.getBytes();
+        if (ff == null) {
+          m.writeInt(0);
+        } else {
+          m.writeInt(ff.length);
+          m.writeBytes(ff);
+          len += ff.length;
+        }
+
+        m.writeInt(r.type);
+        len += Integer.SIZE / Byte.SIZE;
+
+        len += Integer.SIZE / Byte.SIZE;
+        if (r.data == null) {
+          m.writeInt(0);
+        } else {
+          m.writeInt(r.data.length);
+          m.writeBytes(r.data);
+          len += r.data.length;
+        }
+
+        p.notify();
+      }
+    }
+
+    public Sender(String name, String to, MessageProducer p) {
+      this.name = name;
+      this.to = to;
+      this.p = p;
+    }
+
+    public String getName() {
+      return "sender." + name;
+    }
+
+    @Override
+    public void onExecute() {
+      try {
+        BytesMessage m = null;
+        synchronized (p) {
+          while (this.m == null) {
+            if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+              break;
+            }
+
+            p.wait(10000);
+          }
+          m = this.m;
+          this.m = null;
+          this.len = 0;
+
+          p.notify();
+        }
+
+        if (m != null) {
+          p.send(m);
+
+          if (log.isDebugEnabled())
+            log.debug("Sending:" + group + "." + to);
+        } else if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+          senders.remove(name);
+          p.close();
+        }
+      } catch (Exception e) {
+        log.error(e.getMessage(), e);
+      }
+    }
+
+    @Override
+    public void onFinish() {
+      if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+        log.debug("sender." + name + " is stopped.");
+      } else {
+        this.schedule(0);
+      }
+    }
+
+  }
 
 }

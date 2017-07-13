@@ -18,7 +18,6 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;

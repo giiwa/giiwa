@@ -19,11 +19,9 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
-import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
-import org.giiwa.mq.MQ;
 
-public class mq extends Model {
+public class mq extends setting {
 
   /*
    * (non-Javadoc)
@@ -43,33 +41,33 @@ public class mq extends Model {
     this.show("/admin/mq.logs.html");
   }
 
-  /**
-   * Setting.
-   */
-  @Path(path = "setting", login = true, access = "access.config.admin")
-  public void setting() {
-    if (method.isPost()) {
-      Global.setConfig("mq.type", this.getString("mq.type"));
-      Global.setConfig("mq.group", this.getString("group"));
-      Global.setConfig("activemq.url", this.getString("activemq.url"));
-      Global.setConfig("activemq.user", this.getString("activemq.user"));
-      Global.setConfig("activemq.passwd", this.getString("activemq.passwd"));
+  public void set() {
+    Global.setConfig("mq.type", this.getString("mq.type"));
+    Global.setConfig("site.group", this.getString("group"));
 
-      Global.setConfig("rabbitmq.url", this.getString("rabbitmq.url"));
-      Global.setConfig("rabbitmq.user", this.getString("rabbitmq.user"));
-      Global.setConfig("rabbitmq.passwd", this.getString("rabbitmq.passwd"));
+    Global.setConfig("activemq.url", this.getString("activemq.url"));
+    Global.setConfig("activemq.user", this.getString("activemq.user"));
+    Global.setConfig("activemq.passwd", this.getString("activemq.passwd"));
 
-      // Global.setConfig("kafka.broker", this.getString("kafka.broker"));
-      // Global.setConfig("zookeeper.url", this.getString("zookeeper.url"));
+    Global.setConfig("rabbitmq.url", this.getString("rabbitmq.url"));
+    // Global.setConfig("rabbitmq.user", this.getString("rabbitmq.user"));
+    // Global.setConfig("rabbitmq.passwd", this.getString("rabbitmq.passwd"));
 
-      int logger = X.isSame("on", this.getString("mq.logger")) ? 1 : 0;
-      Global.setConfig("mq.logger", logger);
+    Global.setConfig("kafkamq.url", this.getString("kafkamq.url"));
+    Global.setConfig("zoo.url", this.getString("zoo.url"));
+    // Global.setConfig("zookeeper.url", this.getString("zookeeper.url"));
 
-      MQ.logger(logger == 1 ? true : false);
+    // int logger = X.isSame("on", this.getString("mq.logger")) ? 1 : 0;
+    // Global.setConfig("mq.logger", logger);
+    //
+    // MQ.logger(logger == 1 ? true : false);
 
-      this.set(X.WARN, lang.get("restart.required"));
-    }
-    this.show("/admin/mq.setting.html");
+    this.set(X.WARN, lang.get("restart.required"));
+    get();
+  }
+
+  public void get() {
+    this.settingPage("/admin/mq.setting.html");
   }
 
 }

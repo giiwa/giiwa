@@ -28,7 +28,6 @@ giiwa.extend({
 
 					var h = giiwa.__history.pop();
 					h = giiwa.__history.pop();
-					h = giiwa.__history.pop();
 
 					giiwa.load(h);
 				}

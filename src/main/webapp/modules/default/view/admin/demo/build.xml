@@ -52,7 +52,7 @@
 
 		<replaceregexp file="target/${module.name}/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
 
-		<javac srcdir="src/model/java" destdir="target/classes" debug="true" encoding="utf-8" target='1.6' source="1.6" includeantruntime="false">
+		<javac srcdir="src/model/java" destdir="target/classes" debug="true" encoding="utf-8" target='1.8' source="1.8" includeantruntime="false">
 			<classpath refid="classpath" />
 		</javac>
 		<jar destfile="target/${module.name}/WEB-INF/lib/${module.name}-${module.version}.jar" basedir="target/classes" excludes="**/*Test.class" />

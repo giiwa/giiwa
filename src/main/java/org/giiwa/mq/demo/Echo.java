@@ -12,7 +12,6 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Tps;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
-import org.giiwa.mq.RPC;
 import org.giiwa.mq.Request;
 
 public class Echo extends IStub {
@@ -30,21 +29,22 @@ public class Echo extends IStub {
   @Override
   public void onRequest(long seq, Request req) {
     try {
-      JSON msg = JSON.fromObject(req.data);
-      msg.put("gottime", System.currentTimeMillis());
-      Request r1 = new Request();
-      r1.from = name;
-      r1.type = req.type;
-      r1.data = msg.toString().getBytes();
-      MQ.send(seq, req.from, r1);
+     // JSON msg = JSON.fromObject(req.data);
+    //  msg.put("gottime", System.currentTimeMillis());
+    //  Request r1 = new Request();
+   //   r1.from = name;
+  //    r1.type = req.type;
+ //     r1.data = msg.toString().getBytes();
+//      log.debug("seq=" + seq);
+      String to = req.from;
+      MQ.send(to, req);
+//      r1.seq = 0;
+//      MQ.send(req.from, r1);
+      
       Tps.add(1);
     } catch (Exception e) {
       log.error(Arrays.toString(req.data), e);
     }
-  }
-
-  public String call(String m, int i) {
-    return m + ", i=" + i;// new String[]{m, m};
   }
 
   public static void main(String[] args) {

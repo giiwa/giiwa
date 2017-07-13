@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -551,10 +552,11 @@ public class Helper implements Serializable {
       for (String s : jo.keySet()) {
         if (jo.containsKey(s)) {
           Object o = jo.get(s);
+          String s1 = s.replaceAll("\\.", "_");
           if (X.isEmpty(o)) {
-            set(s, X.EMPTY);
+            set(s1, X.EMPTY);
           } else {
-            set(s, o);
+            set(s1, o);
           }
         }
       }
@@ -1313,11 +1315,17 @@ public class Helper implements Serializable {
       return elist;
     }
 
-    public static class Entity {
-      public String name;
-      public Object value;
-      public OP     op;   // operation EQ, GT, ...
-      public int    cond; // condition AND, OR
+    public static class Entity implements Serializable {
+
+      /**
+       * 
+       */
+      private static final long serialVersionUID = 1L;
+
+      public String             name;
+      public Object             value;
+      public OP                 op;                   // operation EQ, GT, ...
+      public int                cond;                 // condition AND, OR
 
       private List<Object> args(List<Object> list) {
         if (value != null) {
@@ -2045,7 +2053,7 @@ public class Helper implements Serializable {
     }
 
     if (n > 0) {
-      if (refer > 0 && bs != null && !X.isEmpty(bs.getList()) && bs.getList().size() >= n && (s % n % 10 == 0)) {
+      if (refer > 0 && bs != null && !X.isEmpty(bs) && bs.size() >= n && (s % n % 10 == 0)) {
         // not loop; has data; s % n % 10 == 0
         Task.create(new Runnable() {
 
@@ -2414,6 +2422,8 @@ public class Helper implements Serializable {
 
     <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db);
 
+    <T extends Bean> Cursor<T> query(String table, W q, int s, int n, Class<T> t, String db);
+
     <T extends Bean> T load(String table, W q, Class<T> clazz, String db);
 
     int delete(String table, W q, String db);
@@ -2434,6 +2444,20 @@ public class Helper implements Serializable {
 
     <T> List<T> distinct(String table, String name, W q, Class<T> t, String db);
 
+    List<JSON> listTables(String db);
+
+    void close();
+
+    List<JSON> getMetaData(String tablename);
+  }
+
+  public static DBHelper getPrimary() {
+    return primary;
+  }
+
+  public interface Cursor<E> extends Iterator<E> {
+
+    void close();
   }
 
 }

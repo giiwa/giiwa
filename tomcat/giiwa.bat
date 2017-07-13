@@ -1,6 +1,8 @@
 @echo off
+echo off
 echo "Starting giiwa ..."
 
+title Giiwa Daemon
 set startup=%~dp0
 set startup=%startup:.=\.%
 

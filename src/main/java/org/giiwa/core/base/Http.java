@@ -613,7 +613,7 @@ public final class Http {
         log.debug("put url=" + url);
 
         if (body != null && body.size() > 0) {
-          StringEntity e = new StringEntity(body.toString());
+          StringEntity e = new StringEntity(body.toString(), "UTF-8");
           put.setEntity(e);
         }
 
@@ -1213,11 +1213,11 @@ public final class Http {
     W q = W.create();
     Beans<_C> bs = Helper.load(q, s, 10, _C.class);
 
-    while (bs != null && bs.getList() != null && bs.getList().size() > 0) {
-      for (_C c : bs.getList()) {
+    while (bs != null && !bs.isEmpty()) {
+      for (_C c : bs) {
         addCookie(c.name, c.value, c.domain, c.path, new Date(c.expired));
       }
-      s += bs.getList().size();
+      s += bs.size();
       bs = Helper.load(q, s, 10, _C.class);
     }
   }

@@ -29,6 +29,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -48,6 +50,8 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.Cursor;
+import org.giiwa.core.bean.Helper.DBHelper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
@@ -74,6 +78,16 @@ public class RDSHelper implements Helper.DBHelper {
   static {
     oracle.put("uid", "\"uid\"");
     oracle.put("access", "\"access\"");
+  }
+
+  public void close() {
+    if (conn != null && this != Helper.primary) {
+      try {
+        conn.close();
+      } catch (SQLException e) {
+        log.error(e.getMessage(), e);
+      }
+    }
   }
 
   private static String _where(W q, Connection c) throws SQLException {
@@ -277,30 +291,12 @@ public class RDSHelper implements Helper.DBHelper {
    * @throws SQLException
    *           the SQL exception
    */
-  public static Connection getConnection() throws SQLException {
+  public Connection getConnection() throws SQLException {
     try {
-      // long tid = Thread.currentThread().getId();
-      // if (outdoor.size() > 0) {
-      // Connection[] cs = null;
-      // synchronized (outdoor) {
-      // cs = outdoor.keySet().toArray(new Connection[outdoor.size()]);
-      // }
-      //
-      // for (Connection c : cs) {
-      // Long[] dd = outdoor.get(c);
-      // if (dd != null && dd[0] == tid) {
-      // dd[2]++;
-      // synchronized (outdoor) {
-      // outdoor.put(c, dd);
-      // }
-      // return c;
-      // }
-      // }
-      // }
+      if (conn != null)
+        return conn;
+
       Connection c = RDB.getConnection();
-      // synchronized (outdoor) {
-      // outdoor.put(c, new Long[] { tid, System.currentTimeMillis(), 0L });
-      // }
       return c;
     } catch (SQLException e1) {
       log.error(e1.getMessage(), e1);
@@ -320,7 +316,10 @@ public class RDSHelper implements Helper.DBHelper {
    * @throws SQLException
    *           the SQL exception
    */
-  public static Connection getConnection(String name) throws SQLException {
+  public Connection getConnection(String name) throws SQLException {
+    if (conn != null)
+      return conn;
+
     return RDB.getConnection(name);
   }
 
@@ -333,7 +332,7 @@ public class RDSHelper implements Helper.DBHelper {
    * @param objs
    *          the objects of "ResultSet, Statement, Connection"
    */
-  final public static void close(Object... objs) {
+  public void close(Object... objs) {
     for (Object o : objs) {
       try {
         if (o == null)
@@ -346,10 +345,17 @@ public class RDSHelper implements Helper.DBHelper {
         } else if (o instanceof PreparedStatement) {
           ((PreparedStatement) o).close();
         } else if (o instanceof Connection) {
+
           // local.remove();
           Connection c = (Connection) o;
+          if (c == conn) {
+            // forget this
+            continue;
+          }
+
           // Long[] dd = outdoor.get(c);
           // if (dd == null || dd[2] <= 0) {
+
           try {
             if (!c.getAutoCommit()) {
               c.commit();
@@ -451,7 +457,7 @@ public class RDSHelper implements Helper.DBHelper {
       close(r, p, c);
 
       if (log.isDebugEnabled())
-        log.debug("cost:" + t.past() + "ms, sql=[" + q);
+        log.debug("cost:" + t.pastms() + "ms, sql=[" + q);
     }
 
     return false;
@@ -662,7 +668,7 @@ public class RDSHelper implements Helper.DBHelper {
       close(r, p, c);
 
       if (log.isDebugEnabled())
-        log.debug("cost: " + t.past() + "ms, sql=" + q + ", result=" + b);
+        log.debug("cost: " + t.pastms() + "ms, sql=" + q + ", result=" + b);
     }
 
     return false;
@@ -683,7 +689,7 @@ public class RDSHelper implements Helper.DBHelper {
    *          the Class Bean
    * @return the list
    */
-  public final static <T extends Bean> List<T> load(String table, String[] cols, W q, Class<T> clazz) {
+  public final <T extends Bean> List<T> load(String table, String[] cols, W q, Class<T> clazz) {
     return load(table, cols, q, -1, -1, clazz);
   }
 
@@ -700,7 +706,7 @@ public class RDSHelper implements Helper.DBHelper {
    *          the Bean Class
    * @return List
    */
-  public final static <T extends Bean> List<T> load(String[] cols, W q, Class<T> clazz) {
+  public final <T extends Bean> List<T> load(String[] cols, W q, Class<T> clazz) {
     return load(cols, q, -1, -1, clazz);
   }
 
@@ -721,7 +727,7 @@ public class RDSHelper implements Helper.DBHelper {
    *          the Bean Class
    * @return List
    */
-  public final static <T extends Bean> List<T> load(String[] cols, W q, int offset, int limit, Class<T> t) {
+  public final <T extends Bean> List<T> load(String[] cols, W q, int offset, int limit, Class<T> t) {
     /**
      * get the require annotation onGet
      */
@@ -754,7 +760,7 @@ public class RDSHelper implements Helper.DBHelper {
    *          the Bean Class
    * @return List
    */
-  public static <T extends Bean> List<T> load(String table, String[] cols, W q, int offset, int limit, Class<T> clazz) {
+  public <T extends Bean> List<T> load(String table, String[] cols, W q, int offset, int limit, Class<T> clazz) {
     /**
      * create the sql statement
      */
@@ -851,7 +857,7 @@ public class RDSHelper implements Helper.DBHelper {
       close(r, p, c);
 
       if (log.isDebugEnabled())
-        log.debug("cost:" + t.past() + "ms, sql=" + q);
+        log.debug("cost:" + t.pastms() + "ms, sql=" + q);
     }
     return null;
   }
@@ -874,7 +880,7 @@ public class RDSHelper implements Helper.DBHelper {
    *          the Class Bean
    * @return List the list of Bean
    */
-  public static <T extends Bean> List<T> loadBy(String select, W q, int offset, int limit, Class<T> clazz) {
+  public <T extends Bean> List<T> loadBy(String select, W q, int offset, int limit, Class<T> clazz) {
     /**
      * create the sql statement
      */
@@ -959,7 +965,7 @@ public class RDSHelper implements Helper.DBHelper {
       close(r, p, c);
 
       if (log.isDebugEnabled())
-        log.debug("cost:" + t.past() + "ms, sql=" + q);
+        log.debug("cost:" + t.pastms() + "ms, sql=" + q);
     }
     return null;
   }
@@ -1089,18 +1095,17 @@ public class RDSHelper implements Helper.DBHelper {
       }
 
       r = p.executeQuery();
-      rs.list = new ArrayList<T>();
       while (r.next()) {
         T b = clazz.newInstance();
         b.load(r);
-        rs.list.add(b);
+        rs.add(b);
       }
 
       if (log.isDebugEnabled())
         log.debug(
-            "load - cost=" + t.past() + "ms, collection=" + table + ", sql=" + sql + ", q=" + q + ", result=" + rs);
+            "load - cost=" + t.pastms() + "ms, collection=" + table + ", sql=" + sql + ", q=" + q + ", result=" + rs);
 
-      rs.setCost(t);
+      rs.setCost(t.pastms());
       return rs;
     } catch (Exception e) {
       if (log.isErrorEnabled())
@@ -1108,117 +1113,6 @@ public class RDSHelper implements Helper.DBHelper {
 
     } finally {
       close(r, p, c);
-    }
-    return null;
-  }
-
-  /**
-   * get the data.
-   * 
-   * @param <T>
-   *          the generic Bean Class
-   * @param table
-   *          the table name
-   * @param q
-   *          the query object
-   * @param offset
-   *          the offset
-   * @param limit
-   *          the limit
-   * @param clazz
-   *          the Bean Class
-   * @param c
-   *          the connection
-   * @return Beans
-   */
-  public static <T extends Bean> Beans<T> load(String table, W q, int offset, int limit, Class<T> clazz, Connection c) {
-    /**
-     * create the sql statement
-     */
-    TimeStamp t = TimeStamp.create();
-
-    // log.debug("sql:" + sql.toString());
-
-    /**
-     * search it in database
-     */
-    PreparedStatement p = null;
-    ResultSet r = null;
-
-    try {
-      if (c == null)
-        return null;
-
-      StringBuilder sql = new StringBuilder();
-      sql.append("select * from ").append(table);
-      String where = _where(q, c);
-      Object[] args = q.args();
-      String orderby = _orderby(q, c);
-
-      if (!X.isEmpty(where)) {
-        sql.append(" where ").append(where);
-      }
-
-      if (isOracle(c)) {
-        if (X.isEmpty(where)) {
-          sql.append(" where ");
-        } else {
-          sql.append(" and ");
-        }
-        if (offset < 0) {
-          offset = MAXROWS;
-        }
-        sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
-        if (!X.isEmpty(orderby)) {
-          sql.append(" ").append(orderby);
-        }
-      } else {
-        if (!X.isEmpty(orderby)) {
-          sql.append(" ").append(orderby);
-        }
-        if (limit > 0) {
-          sql.append(" limit ").append(limit);
-        }
-        if (offset > 0) {
-          sql.append(" offset ").append(offset);
-        }
-      }
-
-      Beans<T> rs = new Beans<T>();
-
-      p = c.prepareStatement(sql.toString());
-
-      int order = 1;
-      if (args != null) {
-        for (int i = 0; i < args.length; i++) {
-          Object o = args[i];
-
-          setParameter(p, order++, o);
-        }
-      }
-
-      r = p.executeQuery();
-      rs.list = new ArrayList<T>();
-      while (r.next()) {
-        T b = clazz.newInstance();
-        b.load(r);
-        rs.list.add(b);
-      }
-
-      if (log.isDebugEnabled())
-        log.debug("load - cost=" + t.past() + "ms, collection=" + table + ", sql=" + sql + ", result=" + rs);
-
-      if (t.past() > 10000) {
-        log.warn("load - cost=" + t.past() + "ms, collection=" + table + ", sql=" + sql + ", result=" + rs);
-      }
-
-      return rs;
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(q, e);
-
-    } finally {
-      close(r, p);
     }
     return null;
   }
@@ -1259,7 +1153,7 @@ public class RDSHelper implements Helper.DBHelper {
 
   }
 
-  private static int insertTable(String table, V sets, Connection c) {
+  private int insertTable(String table, V sets, Connection c) {
 
     /**
      * insert it in database
@@ -1316,87 +1210,6 @@ public class RDSHelper implements Helper.DBHelper {
   }
 
   /**
-   * Load list result, string, integer, or base data type.
-   *
-   * @param <T>
-   *          the generic Bean Class
-   * @param table
-   *          the table name
-   * @param col
-   *          the column name
-   * @param q
-   *          the query object
-   * @param clazz
-   *          the Bean Class
-   * @param db
-   *          the db name
-   * @return List
-   * @deprecated
-   */
-  @SuppressWarnings("unchecked")
-  public static <T> List<T> loadList(String table, String col, W q, Class<T> clazz, String db) {
-    /**
-     * create the sql statement
-     */
-    TimeStamp t = TimeStamp.create();
-
-    /**
-     * search it in database
-     */
-    Connection c = null;
-    PreparedStatement p = null;
-    ResultSet r = null;
-
-    try {
-      if (X.isEmpty(db)) {
-        c = getConnection();
-      } else {
-        c = getConnection(db);
-      }
-      if (c == null)
-        return null;
-
-      StringBuilder sql = new StringBuilder();
-      sql.append("select ").append(col).append(" from ").append(table);
-
-      String where = _where(q, c);
-      Object[] args = q.args();
-
-      if (where != null) {
-        sql.append(" where ").append(where);
-      }
-
-      p = c.prepareStatement(sql.toString());
-
-      int order = 1;
-      if (args != null) {
-        for (int i = 0; i < args.length; i++) {
-          Object o = args[i];
-
-          setParameter(p, order++, o);
-        }
-      }
-
-      List<T> list = new ArrayList<T>();
-      r = p.executeQuery();
-      while (r.next()) {
-        T b = (T) (r.getObject(1));
-        list.add(b);
-      }
-      return list;
-    } catch (Exception e) {
-      if (log.isErrorEnabled())
-        log.error(q, e);
-    } finally {
-      close(r, p, c);
-
-      if (log.isDebugEnabled())
-        log.debug("cost:" + t.past() + "ms, sql=" + q);
-    }
-    return null;
-  }
-
-  /**
    * get a string value from a col from the table.
    * 
    * @param table
@@ -1409,7 +1222,7 @@ public class RDSHelper implements Helper.DBHelper {
    *          the db name
    * @return String
    */
-  public static String getString(String table, String col, W q, String db) {
+  public String getString(String table, String col, W q, String db) {
 
     /**
      * search it in database
@@ -1496,7 +1309,7 @@ public class RDSHelper implements Helper.DBHelper {
    * @return List
    * @deprecated
    */
-  public final static <T> List<T> getList(String col, W q, int s, int n, Class<? extends Bean> t) {
+  public final <T> List<T> getList(String col, W q, int s, int n, Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
      */
@@ -1525,7 +1338,7 @@ public class RDSHelper implements Helper.DBHelper {
    *          the Bean class
    * @return T
    */
-  public final static <T> T getOne(String col, W q, int position, Class<? extends Bean> t) {
+  public final <T> T getOne(String col, W q, int position, Class<? extends Bean> t) {
     /**
      * get the require annotation onGet
      */
@@ -1555,7 +1368,7 @@ public class RDSHelper implements Helper.DBHelper {
    * @return T
    */
   @SuppressWarnings("unchecked")
-  public static <T> T getOne(String table, String col, W q, int position) {
+  public <T> T getOne(String table, String col, W q, int position) {
 
     /**
      * search it in database
@@ -1651,7 +1464,7 @@ public class RDSHelper implements Helper.DBHelper {
    * @deprecated
    */
   @SuppressWarnings("unchecked")
-  public final static <T> List<T> getList(String table, String col, W q, int s, int n) {
+  public final <T> List<T> getList(String table, String col, W q, int s, int n) {
 
     /**
      * search it in database
@@ -1898,7 +1711,7 @@ public class RDSHelper implements Helper.DBHelper {
       close(r, p, c);
 
       if (log.isDebugEnabled())
-        log.debug("cost:" + t.past() + "ms, sql=" + q + ", n=" + n);
+        log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
     }
 
     return n;
@@ -1968,10 +1781,10 @@ public class RDSHelper implements Helper.DBHelper {
       }
 
       if (log.isDebugEnabled())
-        log.debug("load - cost=" + t.past() + "ms, collection=" + table + ", sql=" + sql + ", result=" + list);
+        log.debug("load - cost=" + t.pastms() + "ms, collection=" + table + ", sql=" + sql + ", result=" + list);
 
-      if (t.past() > 10000) {
-        log.warn("load - cost=" + t.past() + "ms, collection=" + table + ", sql=" + sql + ", result=" + list);
+      if (t.pastms() > 10000) {
+        log.warn("load - cost=" + t.pastms() + "ms, collection=" + table + ", sql=" + sql + ", result=" + list);
       }
 
       return list;
@@ -1991,7 +1804,7 @@ public class RDSHelper implements Helper.DBHelper {
    * @param filename
    *          the filename
    */
-  public static void backup(String filename) {
+  public void backup(String filename) {
 
     File f = new File(filename);
     f.getParentFile().mkdirs();
@@ -2019,7 +1832,7 @@ public class RDSHelper implements Helper.DBHelper {
 
   }
 
-  private static void _backup(PrintStream out, Connection c, String tablename) {
+  private void _backup(PrintStream out, Connection c, String tablename) {
 
     log.debug("backuping " + tablename);
 
@@ -2061,7 +1874,7 @@ public class RDSHelper implements Helper.DBHelper {
    * @param file
    *          the file
    */
-  public static void recover(File file) {
+  public void recover(File file) {
 
     Connection c = null;
     ResultSet r1 = null;
@@ -2100,7 +1913,7 @@ public class RDSHelper implements Helper.DBHelper {
     }
   }
 
-  private static void _recover(String json, Connection c) {
+  private void _recover(String json, Connection c) {
     try {
       JSON jo = JSON.fromObject(json);
       V v = V.create().copy(jo);
@@ -2198,7 +2011,7 @@ public class RDSHelper implements Helper.DBHelper {
     Statement stat = null;
     StringBuilder sb = new StringBuilder();
     try {
-      c = RDSHelper.getConnection(db);
+      c = getConnection(db);
       stat = c.createStatement();
       sb.append("create index ").append(table).append("_index");
       for (String s : ss.keySet()) {
@@ -2224,7 +2037,7 @@ public class RDSHelper implements Helper.DBHelper {
       log.warn("indexes=" + getIndexes(table, db));
 
     } finally {
-      RDSHelper.close(stat, c);
+      close(stat, c);
     }
 
   }
@@ -2268,7 +2081,7 @@ public class RDSHelper implements Helper.DBHelper {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     } finally {
-      RDSHelper.close(r, c);
+      close(r, c);
     }
 
     return l1;
@@ -2285,7 +2098,7 @@ public class RDSHelper implements Helper.DBHelper {
     } catch (Exception e) {
       log.error(e.getMessage(), e);
     } finally {
-      RDSHelper.close(stat, c);
+      close(stat, c);
     }
   }
 
@@ -2350,6 +2163,195 @@ public class RDSHelper implements Helper.DBHelper {
       close(p);
     }
     return 0;
+  }
+
+  private Connection conn = null;
+
+  public static DBHelper create(Connection c) {
+    RDSHelper d = new RDSHelper();
+    d.conn = c;
+    return d;
+  }
+
+  @Override
+  public List<JSON> listTables(String db) {
+
+    List<JSON> list = new ArrayList<JSON>();
+
+    Connection c = null;
+    ResultSet r = null;
+    try {
+      c = getConnection(db);
+
+      DatabaseMetaData md = c.getMetaData();
+      r = md.getTables(null, null, null, null);
+
+      while (r.next()) {
+        Bean b = new Bean() {
+        };
+        b.load(r);
+        list.add(b.getJSON());
+      }
+
+      Collections.sort(list, new Comparator<JSON>() {
+
+        @Override
+        public int compare(JSON o1, JSON o2) {
+          return o1.getString("table_name").compareToIgnoreCase(o2.getString("table_name"));
+        }
+
+      });
+
+    } catch (Exception e) {
+      log.error(e.getMessage(), e);
+    } finally {
+      close(r, c);
+    }
+    return list;
+  }
+
+  @Override
+  public <T extends Bean> Cursor<T> query(String table, W q, int s, int n, Class<T> t, String db) {
+    /**
+     * search it in database
+     */
+    Connection c = null;
+    PreparedStatement p = null;
+    ResultSet r = null;
+
+    try {
+      c = getConnection();
+
+      if (c == null)
+        return null;
+
+      StringBuilder sql = new StringBuilder();
+      sql.append("select * ");
+
+      String where = _where(q, c);
+      Object[] args = q.args();
+      String orderby = _orderby(q, c);
+
+      sql.append(" from ").append(table);
+      if (!X.isEmpty(where)) {
+        sql.append(" where ").append(where);
+      }
+
+      if (!X.isEmpty(orderby)) {
+        sql.append(" ").append(orderby);
+      }
+
+      if (isOracle(c)) {
+        if (X.isEmpty(where)) {
+          sql.append(" where ");
+        } else {
+          sql.append(" and ");
+        }
+        if (s < 0) {
+          s = MAXROWS;
+        }
+        sql.append(" rownum>").append(s).append(" and rownum<=").append(s + n);
+
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
+      } else {
+        if (!X.isEmpty(orderby)) {
+          sql.append(" ").append(orderby);
+        }
+
+        if (n > 0) {
+          sql.append(" limit ").append(n);
+        }
+        if (s > 0) {
+          sql.append(" offset ").append(s);
+        }
+      }
+
+      p = c.prepareStatement(sql.toString());
+
+      int order = 1;
+      if (args != null) {
+        for (int i = 0; i < args.length; i++) {
+          Object o = args[i];
+
+          setParameter(p, order++, o);
+        }
+      }
+
+      r = p.executeQuery();
+
+      return _cursor(t, r, p, c);
+    } catch (Exception e) {
+      close(r, p, c);
+
+      if (log.isErrorEnabled())
+        log.error(q, e);
+
+    }
+    return null;
+  }
+
+  private <T extends Bean> Cursor<T> _cursor(final Class<T> t, final ResultSet r, final PreparedStatement p,
+      final Connection c) {
+    return new Cursor<T>() {
+
+      @Override
+      public boolean hasNext() {
+        try {
+          r.next();
+        } catch (SQLException e) {
+          log.error(e.getMessage(), e);
+        }
+        return false;
+      }
+
+      @Override
+      public T next() {
+        try {
+          T t1 = t.newInstance();
+          t1.load(r);
+          return t1;
+        } catch (Exception e) {
+          log.error(e.getMessage(), e);
+        }
+        return null;
+      }
+
+      @Override
+      public void close() {
+        RDSHelper.this.close(r, p, c);
+      }
+
+    };
+  }
+
+  @Override
+  public List<JSON> getMetaData(String tablename) {
+    Connection c = null;
+    Statement stat = null;
+    ResultSet r = null;
+    try {
+      c = getConnection();
+
+      stat = c.createStatement();
+      r = stat.executeQuery("select * from " + tablename + " where 2=1");
+      ResultSetMetaData r1 = r.getMetaData();
+      List<JSON> list = new ArrayList<JSON>();
+      for (int i = 1; i <= r1.getColumnCount(); i++) {
+        JSON jo = JSON.create();
+        jo.put("name", r1.getColumnName(i));
+        jo.put("type", r1.getColumnTypeName(i));
+        jo.put("size", r1.getColumnDisplaySize(i));
+        list.add(jo);
+      }
+      return list;
+    } catch (Exception e) {
+      log.error(tablename, e);
+    } finally {
+      close(r, stat, c);
+    }
+    return null;
   }
 
 }

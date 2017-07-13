@@ -150,7 +150,6 @@ public final class Global extends Bean {
    * get the current time.
    *
    * @return long of current time
-   * @deprecated
    */
   public static long now() {
     return System.currentTimeMillis();
@@ -191,10 +190,12 @@ public final class Global extends Bean {
 
       cached.put("global/" + name, g);
 
-      if (Helper.exists(W.create(X.ID, name), Global.class)) {
-        Helper.update(W.create(X.ID, name), v, Global.class);
-      } else {
-        Helper.insert(v.set(X.ID, name), Global.class);
+      if (Helper.isConfigured()) {
+        if (Helper.exists(W.create(X.ID, name), Global.class)) {
+          Helper.update(W.create(X.ID, name), v, Global.class);
+        } else {
+          Helper.insert(v.set(X.ID, name), Global.class);
+        }
       }
     } catch (Exception e1) {
       log.error(e1.getMessage(), e1);

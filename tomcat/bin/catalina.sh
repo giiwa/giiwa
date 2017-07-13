@@ -103,8 +103,9 @@
 #                   signals. Default is "false" unless running on HP-UX in which
 #                   case the default is "true"
 # -----------------------------------------------------------------------------
-ulimit -HSn 65535 > /dev/null 2>&1
+ulimit -HSn 65536 > /dev/null 2>&1
 source /etc/profile
+CATALINA_PID=/tmp/catalina.pid
 
 # OS specific support.  $var _must_ be set to either true or false.
 cygwin=false
@@ -381,7 +382,6 @@ elif [ "$1" = "start" ] ; then
   if [ ! -z "$CATALINA_PID" ]; then
     if [ -f "$CATALINA_PID" ]; then
       if [ -s "$CATALINA_PID" ]; then
-        echo "Existing PID file found during start."
         if [ -r "$CATALINA_PID" ]; then
           PID=`cat "$CATALINA_PID"`
           ps -p $PID >/dev/null 2>&1
@@ -391,7 +391,6 @@ elif [ "$1" = "start" ] ; then
             ps -f -p $PID
             exit 1
           else
-            echo "Removing/clearing stale PID file."
             rm -f "$CATALINA_PID" >/dev/null 2>&1
             if [ $? != 0 ]; then
               if [ -w "$CATALINA_PID" ]; then

@@ -15,8 +15,8 @@
 package org.giiwa.framework.bean;
 
 import java.sql.SQLException;
+import java.util.Base64;
 
-import org.giiwa.core.base.Base64;
 import org.giiwa.core.base.Digest;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
@@ -135,7 +135,7 @@ public class App extends Bean {
    */
   public JSON parseParameters(String data) {
     try {
-      byte[] bb = Base64.decode(data);
+      byte[] bb = Base64.getDecoder().decode(data);
 
       data = new String(Digest.aes_decrypt(bb, secret));
       String[] ss = X.split(data, "&");
@@ -174,7 +174,7 @@ public class App extends Bean {
       }
 
       byte[] bb = Digest.aes_encrypt(sb.toString().getBytes(), secret);
-      String data = Base64.encode(bb);
+      String data = Base64.getEncoder().encodeToString(bb);
       return data;
     } catch (Exception e) {
       log.error(e.getMessage(), e);

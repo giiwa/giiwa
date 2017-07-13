@@ -97,6 +97,8 @@ rem ---------------------------------------------------------------------------
 
 setlocal
 
+set "JAVA_OPTS=%JAVA_OPTS% -Xms256m -Xmx512m -XX:-UseParallelGC"
+
 rem Suppress Terminate batch job on CTRL+C
 if not ""%1"" == ""run"" goto mainEntry
 if "%TEMP%" == "" goto mainEntry
@@ -289,7 +291,7 @@ goto execCmd
 
 :doStart
 shift
-if "%TITLE%" == "" set TITLE=Tomcat
+if "%TITLE%" == "" set TITLE=Giiwa
 set _EXECJAVA=start "%TITLE%" %_RUNJAVA%
 if not ""%1"" == ""-security"" goto execCmd
 shift

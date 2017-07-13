@@ -46,7 +46,6 @@
 			<form method="post">
 				<div><label><h3>$lang.get('setup.label.driver')：</h3>
 					<select name='driver' onchange='_ondriver();'>
-						jdbc:derby:sampledb;create=true
 						<option user='0' tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
 						<option user='0' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
 						<option user='0' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
@@ -63,7 +62,7 @@
 					<g class='oracle' style='display:none' dd=''>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
 					<g class='db2' style='display:none' dd=''>jdbc:db2://x.x.x.x:50000/dbname</g>
 				</label></div>
-				<input type="password" style="display:none">
+				<input type="password" name="passwd" style="display:none">
 				<div class='username'><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
 				<div class='passwd'><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
 				

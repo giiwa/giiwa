@@ -95,6 +95,8 @@ public final class X {
 
   public static final int    ITEMS_PER_PAGE = 10;
 
+  public static X            inst           = new X();
+
   private X() {
   }
 

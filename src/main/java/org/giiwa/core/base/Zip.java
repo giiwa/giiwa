@@ -236,8 +236,10 @@ public class Zip {
       out.closeEntry();
 
       File[] ff = f.listFiles();
-      for (File f1 : ff) {
-        _zip(out, f1, working);
+      if (ff != null) {
+        for (File f1 : ff) {
+          _zip(out, f1, working);
+        }
       }
     }
   }
