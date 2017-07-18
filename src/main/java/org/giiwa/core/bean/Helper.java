@@ -740,7 +740,7 @@ public class Helper implements Serializable {
     private static final long serialVersionUID = 1L;
 
     public enum OP {
-      eq, gt, gte, lt, lte, like, neq, none
+      eq, gt, gte, lt, lte, like, neq, none,in,exists
     };
 
     /**
@@ -1473,6 +1473,10 @@ public class Helper implements Serializable {
         q.append(e.name, p1);
       } else if (op == OP.neq) {
         q.append(e.name, new BasicDBObject("$ne", e.value));
+      } else if (op == OP.in){
+    	  	q.append(e.name, new BasicDBObject("$in",e.value));
+      } else if (op == OP.exists){
+    	  	q.append(e.name, new BasicDBObject("$exists",e.value));
       }
 
       return q;
