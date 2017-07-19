@@ -56,11 +56,15 @@ public class FileView extends View {
 
       String range = m.getHeader("Range");
       String date2 = Language.getLanguage().format(file.lastModified(), "yyyy-MM-dd HH:mm:ss z");
+      
       if (X.isEmpty(range) && date != null && date.equals(date2)) {
         m.resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
         return true;
       }
-
+      
+      FileOutputStream out1 = new FileOutputStream(f1);
+      IOUtil.copy(in, out1);
+      
       long total = f1.length();
       long start = 0;
       long end = total;
