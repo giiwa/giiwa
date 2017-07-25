@@ -131,7 +131,7 @@ public class Bean implements Serializable, Map<String, Object> {
 
 		Object old = null;
 
-		name = name.toLowerCase();
+//		name = name.toLowerCase();
 
 		// looking for all the fields
 		Field f1 = getField(name);
