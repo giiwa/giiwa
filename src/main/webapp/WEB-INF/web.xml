@@ -7,9 +7,9 @@ version="2.4">
 	<listener>
 		<listener-class>org.giiwa.framework.web.GiiwaContextListener</listener-class>
 	</listener>
-	<filter>
-		<filter-name>giiwafilter</filter-name>
-		<filter-class>org.giiwa.framework.web.GiiwaFilter</filter-class>
+	<servlet>
+		<servlet-name>giiwaServlet</servlet-name>
+		<servlet-class>org.giiwa.framework.web.GiiwaServlet</servlet-class>
 		<init-param>
 			<param-name>.html</param-name>
 			<param-value>org.giiwa.framework.web.view.VelocityView</param-value>
@@ -30,11 +30,12 @@ version="2.4">
 			<param-name>.th</param-name>
 			<param-value>org.giiwa.framework.web.view.ThymeleafView</param-value>
 		</init-param>
-	</filter>
-	<filter-mapping>
-		<filter-name>giiwafilter</filter-name>
+		<load-on-startup>0</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>giiwaServlet</servlet-name>
 		<url-pattern>/*</url-pattern>
-	</filter-mapping>
+	</servlet-mapping>
 	<welcome-file-list>
 		<welcome-file>index</welcome-file>
 		<welcome-file>index.html</welcome-file>
