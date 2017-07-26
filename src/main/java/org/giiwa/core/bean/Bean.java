@@ -194,7 +194,7 @@ public class Bean implements Serializable, Map<String, Object> {
 				for (Field f : ff) {
 					Column f1 = f.getAnnotation(Column.class);
 					if (f1 != null && !m.containsKey(f1.name())) {
-						m.put(f1.name().toLowerCase(), f);
+						m.put(f1.name(), f);
 					}
 				}
 				if(Bean.class.isAssignableFrom(c1.getSuperclass())){
@@ -229,7 +229,7 @@ public class Bean implements Serializable, Map<String, Object> {
 			return null;
 		}
 
-		String s = name.toString().toLowerCase();
+		String s = name.toString();
 		Field f = getField(s);
 		if (f != null) {
 			try {
