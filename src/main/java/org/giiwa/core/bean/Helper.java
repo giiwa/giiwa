@@ -1494,29 +1494,24 @@ public class Helper implements Serializable {
 			for (Entity e : elist) {
 				_parse(e, q);
 			}
-
+			BasicDBList andList = new BasicDBList();
+			BasicDBList orList = new BasicDBList();
 			for (W e : wlist) {
 				// or the condition in here, is $or
-				BasicDBList andList = new BasicDBList();
-				BasicDBList orList = new BasicDBList();
+				
 				if (e.cond == W.AND) {
 					andList.add(e.query());
 				} else if (e.cond == W.OR) {
 					orList.add(e.query());
 				}
-				// for (Entity e1 : e.elist) {
-				// list.add(_parse(e1, new BasicDBObject()));
-				// }
-				// for (W w1 : e.wlist) {
-				// list.add(w1.query());
-				// }
-				if (andList.size() > 0) {
-					q.append("$and", andList);
-				}
-				if (orList.size() > 0) {
-					q.append("$or", orList);
-				}
+				
 
+			}
+			if (andList.size() > 0) {
+				q.append("$and", andList);
+			}
+			if (orList.size() > 0) {
+				q.append("$or", orList);
 			}
 
 			return q;
