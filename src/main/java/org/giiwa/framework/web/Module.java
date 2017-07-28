@@ -2005,8 +2005,8 @@ public class Module {
     }
 
     private String getPath(String uri) {
-      String name = model.getName().substring(module.pack.length() + 1).replaceAll("\\.", "/");
-      String path = uri.length() > name.length() ? uri.replaceAll(name, "") : X.EMPTY;
+      String name = model.getName().substring(module.pack.length()).replaceAll("\\.", "/");
+      String path = uri.length() > name.length() ? uri.substring(name.length()) : X.EMPTY;
       while (path.startsWith("/")) {
         path = path.substring(1);
       }
@@ -2015,6 +2015,8 @@ public class Module {
 
   }
 
+  
+  
   public void setError(String error) {
     if (this.error == null) {
       this.error = error;
