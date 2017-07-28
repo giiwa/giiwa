@@ -1612,7 +1612,7 @@ public class Model {
     if (login == null) {
       Session s = getSession();
       login = (User) s.get("user");
-
+      log.debug("sid = "+sid());
       if (login == null) {
 
         if (Global.getInt("user.token", 1) == 1) {
