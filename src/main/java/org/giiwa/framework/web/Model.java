@@ -1870,16 +1870,16 @@ public class Model {
    * On post requested from HTTP POST method.
    */
   public void onPost() {
-    if (module != null) {
-      Module t = module.floor();
-      if (t != null) {
-        Model m = t.getModel(Model.METHOD_POST, uri);
-        if (m != null) {
-          m.dispatch(uri, req, resp, method);
-          return;
-        }
-      }
-    }
+//    if (module != null) {
+//      Module t = module.floor();
+//      if (t != null) {
+//        Model m = t.getModel(Model.METHOD_POST, uri);
+//        if (m != null) {
+//          m.dispatch(uri, req, resp, method);
+//          return;
+//        }
+//      }
+//    }
 
     String uri = req.getRequestURI();
     while (uri.indexOf("//") > -1) {
