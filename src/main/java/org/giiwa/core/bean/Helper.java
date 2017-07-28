@@ -1197,9 +1197,10 @@ public class Helper implements Serializable {
 		 * @return W
 		 */
 		public W or(String name, Object v, OP op) {
-
-			elist.add(new Entity(name, v, op, OR));
-
+			W w = W.create();
+			w.and(name, v, op);
+			w.cond = OR;
+			wlist.add(w);
 			return this;
 		}
 
