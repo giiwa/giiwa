@@ -38,6 +38,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
+import org.giiwa.framework.web.view.FileView;
 import org.giiwa.framework.web.view.View;
 
 /**
@@ -491,7 +492,13 @@ public class Model {
       this.set("global", Global.getInstance());
       this.set("local", Local.getInstance());
 
-      show(uri);
+      //show(uri);
+      try {
+		new FileView().parse(f, this, uri);
+      } catch (Exception e) {
+		// TODO Auto-generated catch block
+		log.error(e.getMessage(), e);
+      }
       return true;
     }
 
