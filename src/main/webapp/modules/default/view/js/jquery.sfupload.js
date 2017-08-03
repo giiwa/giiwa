@@ -26,7 +26,7 @@ jQuery.extend({
 					var xhr = new XMLHttpRequest();
 					xhr.open("POST", options.url);
 					xhr.overrideMimeType("application/octet-stream");
-					xhr.setRequestHeader('lastModified', file.lastModifiedDate);
+					xhr.setRequestHeader('lastModified', file.lastModified);
 					xhr.setRequestHeader('Content-Range', 'bytes 0-'
 									+ file.size + '/' + file.size);
 
