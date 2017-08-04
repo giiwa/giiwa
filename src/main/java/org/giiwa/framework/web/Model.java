@@ -492,13 +492,7 @@ public class Model {
       this.set("global", Global.getInstance());
       this.set("local", Local.getInstance());
 
-      //show(uri);
-      try {
-		new FileView().parse(f, this, uri);
-      } catch (Exception e) {
-		// TODO Auto-generated catch block
-		log.error(e.getMessage(), e);
-      }
+      show(uri);
       return true;
     }
 
