@@ -1666,6 +1666,5 @@ button:hover, button:active {
 .ui-widget-header {
     border: 1px solid #33a1df;
     background: #33a1df;
-    color: #333;
-    font-weight: bold;
+    color: #fff;
 }
