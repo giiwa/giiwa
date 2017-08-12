@@ -315,7 +315,7 @@ giiwa
 					$('.blink').each(function(i, e) {
 						$(e).removeClass('blink');
 					});
-				}, 1000);
+				}, 100);
 			},
 
 			reload : function() {
