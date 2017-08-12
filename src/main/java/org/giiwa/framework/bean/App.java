@@ -40,377 +40,366 @@ import org.giiwa.core.json.JSON;
 @Table(name = "gi_app")
 public class App extends Bean {
 
-  /**
-   * 
-   */
-  private static final long serialVersionUID = 1L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-  @Column(name = X.ID, index = true, unique = true)
-  private long              id;
+	@Column(name = X.ID, index = true, unique = true)
+	private long id;
 
-  @Column(name = "appid", index = true, unique = true)
-  private String            appid;
+	@Column(name = "appid", index = true, unique = true)
+	private String appid;
 
-  @Column(name = "memo")
-  private String            memo;
+	@Column(name = "memo")
+	private String memo;
 
-  @Column(name = "secret")
-  private String            secret;
+	@Column(name = "secret")
+	private String secret;
 
-  @Column(name = "ip")
-  private String            ip;
+	@Column(name = "ip")
+	private String ip;
 
-  @Column(name = "lastime")
-  private long              lastime;
+	@Column(name = "lastime")
+	private long lastime;
 
-  @Column(name = "expired")
-  private long              expired;
+	@Column(name = "expired")
+	private long expired;
 
-  @Column(name = "role")
-  private long              role;
+	@Column(name = "role")
+	private long role;
 
-  public void touch(String ip) {
-    update(appid, V.create("lastime", System.currentTimeMillis()).set("ip", ip));
-  }
+	public void touch(String ip) {
+		update(appid, V.create("lastime", System.currentTimeMillis()).set("ip", ip));
+	}
 
-  public long getId() {
-    return id;
-  }
+	public long getId() {
+		return id;
+	}
 
-  public String getMemo() {
-    return memo;
-  }
+	public String getMemo() {
+		return memo;
+	}
 
-  public boolean hasAccess(String... name) {
-    Role r = getRole_obj();
-    if (r != null) {
-      for (String s : name) {
-        if (r.has(s))
-          return true;
-      }
-    }
-    return false;
-  }
+	public boolean hasAccess(String... name) {
+		Role r = getRole_obj();
+		if (r != null) {
+			for (String s : name) {
+				if (r.has(s))
+					return true;
+			}
+		}
+		return false;
+	}
 
-  transient Role role_obj;
+	transient Role role_obj;
 
-  public Role getRole_obj() {
-    if (role_obj == null) {
-      role_obj = Role.loadById(role);
-    }
-    return role_obj;
-  }
+	public Role getRole_obj() {
+		if (role_obj == null) {
+			role_obj = Role.loadById(role);
+		}
+		return role_obj;
+	}
 
-  public long getRole() {
-    return role;
-  }
+	public long getRole() {
+		return role;
+	}
 
-  public String getAppid() {
-    return appid;
-  }
+	public String getAppid() {
+		return appid;
+	}
 
-  public String getSecret() {
-    return secret;
-  }
+	public String getSecret() {
+		return secret;
+	}
 
-  public String getIp() {
-    return ip;
-  }
+	public String getIp() {
+		return ip;
+	}
 
-  public long getLastime() {
-    return lastime;
-  }
+	public long getLastime() {
+		return lastime;
+	}
 
-  public long getExpired() {
-    return expired;
-  }
+	public long getExpired() {
+		return expired;
+	}
 
-  /**
-   * data = Base64(AES(params)) <br>
-   * decode, params=AES(Base64(data));
-   * 
-   * @param data
-   *          the data
-   * @return JSON
-   */
-  public JSON parseParameters(String data) {
-    try {
-      byte[] bb = Base64.getDecoder().decode(data);
+	/**
+	 * data = Base64(AES(params)) <br>
+	 * decode, params=AES(Base64(data));
+	 * 
+	 * @param data
+	 *            the data
+	 * @return JSON
+	 */
+	public static JSON parseParameters(String data, String secret) {
+		try {
+			byte[] bb = Base64.getDecoder().decode(data);
 
-      data = new String(Digest.aes_decrypt(bb, secret));
-      String[] ss = X.split(data, "&");
-      JSON jo = JSON.create();
-      for (String s : ss) {
-        String[] s1 = X.split(s, "=");
-        if (s1.length == 2) {
-          jo.put(s1[0], s1[1]);
-        }
-      }
-      return jo;
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-    return null;
-  }
+			data = new String(Digest.aes_decrypt(bb, secret));
+			JSON jo = JSON.fromObject(data);
+			return jo;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
 
-  /**
-   * data = Base64(AES(params)) <br>
-   * decode, params=AES(Base64(data));
-   * 
-   * @param jo
-   *          the json data
-   * @param secret
-   *          the secret
-   * @return the string
-   */
-  public static String generateParameter(JSON jo, String secret) {
-    try {
-      StringBuilder sb = new StringBuilder();
-      for (String name : jo.keySet()) {
-        if (sb.length() > 0) {
-          sb.append("&");
-        }
-        sb.append(name).append("=").append(jo.getString(name));
-      }
+	/**
+	 * data = Base64(AES(params)) <br>
+	 * decode, params=AES(Base64(data));
+	 * 
+	 * @param jo
+	 *            the json data
+	 * @param secret
+	 *            the secret
+	 * @return the string
+	 */
+	public static String generateParameter(JSON jo, String secret) {
+		try {
+			byte[] bb = Digest.aes_encrypt(jo.toString().getBytes(), secret);
+			String data = Base64.getEncoder().encodeToString(bb);
+			return data;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
 
-      byte[] bb = Digest.aes_encrypt(sb.toString().getBytes(), secret);
-      String data = Base64.getEncoder().encodeToString(bb);
-      return data;
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-    return null;
-  }
+	/**
+	 * Exists.
+	 *
+	 * @param appid
+	 *            the appid
+	 * @return true, if successful
+	 * @throws SQLException
+	 *             the SQL exception
+	 */
+	public static boolean exists(String appid) throws SQLException {
+		return Helper.exists(W.create("appid", appid), App.class);
+	}
 
-  /**
-   * Exists.
-   *
-   * @param appid
-   *          the appid
-   * @return true, if successful
-   * @throws SQLException
-   *           the SQL exception
-   */
-  public static boolean exists(String appid) throws SQLException {
-    return Helper.exists(W.create("appid", appid), App.class);
-  }
+	/**
+	 * Creates the.
+	 *
+	 * @param v
+	 *            the v
+	 * @return the int
+	 */
+	public static int create(V v) {
+		try {
+			long id = UID.next("app.id");
+			if (Helper.exists(id, App.class)) {
+				id = UID.next("app.id");
+			}
+			return Helper.insert(v.set(X.ID, id), App.class);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return -1;
+	}
 
-  /**
-   * Creates the.
-   *
-   * @param v
-   *          the v
-   * @return the int
-   */
-  public static int create(V v) {
-    try {
-      long id = UID.next("app.id");
-      if (Helper.exists(id, App.class)) {
-        id = UID.next("app.id");
-      }
-      return Helper.insert(v.set(X.ID, id), App.class);
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-    return -1;
-  }
+	/**
+	 * Load.
+	 *
+	 * @param id
+	 *            the id
+	 * @return the app
+	 */
+	public static App load(long id) {
+		return Helper.load(id, App.class);
+	}
 
-  /**
-   * Load.
-   *
-   * @param id
-   *          the id
-   * @return the app
-   */
-  public static App load(long id) {
-    return Helper.load(id, App.class);
-  }
+	/**
+	 * Delete.
+	 *
+	 * @param appid
+	 *            the appid
+	 */
+	public static void delete(String appid) {
+		Cache.remove("app/" + appid);
+		Helper.delete(W.create("appid", appid), App.class);
+	}
 
-  /**
-   * Delete.
-   *
-   * @param appid
-   *          the appid
-   */
-  public static void delete(String appid) {
-    Cache.remove("app/" + appid);
-    Helper.delete(W.create("appid", appid), App.class);
-  }
+	/**
+	 * Load.
+	 *
+	 * @param appid
+	 *            the appid
+	 * @return the app
+	 */
+	public static App load(String appid) {
+		App a = Cache.get("app/" + appid);
+		if (a == null || a.expired()) {
+			a = load(W.create("appid", appid));
+			a.setExpired(System.currentTimeMillis() + X.AMINUTE);
+			Cache.set("app/" + appid, a);
+		}
+		return a;
+	}
 
-  /**
-   * Load.
-   *
-   * @param appid
-   *          the appid
-   * @return the app
-   */
-  public static App load(String appid) {
-    App a = Cache.get("app/" + appid);
-    if (a == null || a.expired()) {
-      a = load(W.create("appid", appid));
-      a.setExpired(System.currentTimeMillis() + X.AMINUTE);
-      Cache.set("app/" + appid, a);
-    }
-    return a;
-  }
+	/**
+	 * Load.
+	 *
+	 * @param q
+	 *            the q
+	 * @return the app
+	 */
+	public static App load(W q) {
+		return Helper.load(q, App.class);
+	}
 
-  /**
-   * Load.
-   *
-   * @param q
-   *          the q
-   * @return the app
-   */
-  public static App load(W q) {
-    return Helper.load(q, App.class);
-  }
+	/**
+	 * Load.
+	 *
+	 * @param q
+	 *            the q
+	 * @param s
+	 *            the s
+	 * @param n
+	 *            the n
+	 * @return the beans
+	 */
+	public static Beans<App> load(W q, int s, int n) {
+		return Helper.load(q, s, n, App.class);
+	}
 
-  /**
-   * Load.
-   *
-   * @param q
-   *          the q
-   * @param s
-   *          the s
-   * @param n
-   *          the n
-   * @return the beans
-   */
-  public static Beans<App> load(W q, int s, int n) {
-    return Helper.load(q, s, n, App.class);
-  }
+	/**
+	 * Update.
+	 *
+	 * @param appid
+	 *            the appid
+	 * @param v
+	 *            the values
+	 * @return the int
+	 */
+	public static int update(String appid, V v) {
+		Cache.remove("node/" + appid);
+		return Helper.update(W.create("appid", appid), v, App.class);
+	}
 
-  /**
-   * Update.
-   *
-   * @param appid
-   *          the appid
-   * @param v
-   *          the values
-   * @return the int
-   */
-  public static int update(String appid, V v) {
-    Cache.remove("node/" + appid);
-    return Helper.update(W.create("appid", appid), v, App.class);
-  }
+	public static class Param {
+		V v = V.create();
 
-  public static class Param {
-    V v = V.create();
+		/**
+		 * Creates the.
+		 *
+		 * @return the param
+		 */
+		public static Param create() {
+			return new Param();
+		}
 
-    /**
-     * Creates the.
-     *
-     * @return the param
-     */
-    public static Param create() {
-      return new Param();
-    }
+		/**
+		 * Builds the.
+		 *
+		 * @return the v
+		 */
+		public V build() {
+			return v;
+		}
 
-    /**
-     * Builds the.
-     *
-     * @return the v
-     */
-    public V build() {
-      return v;
-    }
+		/**
+		 * Appid.
+		 *
+		 * @param appid
+		 *            the appid
+		 * @return the param
+		 */
+		public Param appid(String appid) {
+			v.set("appid", appid);
+			return this;
+		}
 
-    /**
-     * Appid.
-     *
-     * @param appid
-     *          the appid
-     * @return the param
-     */
-    public Param appid(String appid) {
-      v.set("appid", appid);
-      return this;
-    }
+		/**
+		 * Secret.
+		 *
+		 * @param secret
+		 *            the secret
+		 * @return the param
+		 */
+		public Param secret(String secret) {
+			v.set("secret", secret);
+			return this;
+		}
 
-    /**
-     * Secret.
-     *
-     * @param secret
-     *          the secret
-     * @return the param
-     */
-    public Param secret(String secret) {
-      v.set("secret", secret);
-      return this;
-    }
+		/**
+		 * Expired.
+		 *
+		 * @param expired
+		 *            the expired
+		 * @return the param
+		 */
+		public Param expired(long expired) {
+			v.set("expired", expired);
+			return this;
+		}
 
-    /**
-     * Expired.
-     *
-     * @param expired
-     *          the expired
-     * @return the param
-     */
-    public Param expired(long expired) {
-      v.set("expired", expired);
-      return this;
-    }
+		/**
+		 * Lastime.
+		 *
+		 * @param lastime
+		 *            the lastime
+		 * @return the param
+		 */
+		public Param lastime(long lastime) {
+			v.set("lastime", lastime);
+			return this;
+		}
 
-    /**
-     * Lastime.
-     *
-     * @param lastime
-     *          the lastime
-     * @return the param
-     */
-    public Param lastime(long lastime) {
-      v.set("lastime", lastime);
-      return this;
-    }
+		/**
+		 * Ip.
+		 *
+		 * @param ip
+		 *            the ip
+		 * @return the param
+		 */
+		public Param ip(String ip) {
+			v.set("ip", ip);
+			return this;
+		}
 
-    /**
-     * Ip.
-     *
-     * @param ip
-     *          the ip
-     * @return the param
-     */
-    public Param ip(String ip) {
-      v.set("ip", ip);
-      return this;
-    }
+		/**
+		 * Memo.
+		 *
+		 * @param memo
+		 *            the memo
+		 * @return the param
+		 */
+		public Param memo(String memo) {
+			v.set("memo", memo);
+			return this;
+		}
 
-    /**
-     * Memo.
-     *
-     * @param memo
-     *          the memo
-     * @return the param
-     */
-    public Param memo(String memo) {
-      v.set("memo", memo);
-      return this;
-    }
+		public Param role(long role) {
+			v.set("role", role);
+			return this;
+		}
 
-    public Param role(long role) {
-      v.set("role", role);
-      return this;
-    }
+	}
 
-  }
+	public static void main(String[] args) {
+		App a = new App();
+		a.appid = "1";
+		a.secret = "123123";
 
-  public static void main(String[] args) {
-    App a = new App();
-    a.appid = "1";
-    a.secret = "123123";
+		JSON j1 = JSON.create();
+		j1.put("name", "1");
+		j1.put("key", "122");
 
-    JSON j1 = JSON.create();
-    j1.put("name", "1");
-    j1.put("key", "122");
+		try {
+			String data = App.generateParameter(j1, a.secret);
+			System.out.println("data=" + data);
+			JSON jo = App.parseParameters(data, a.secret);
+			System.out.println("jo=" + jo);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-    try {
-      String data = a.generateParameter(j1, a.secret);
-      System.out.println("data=" + data);
-      JSON jo = a.parseParameters(data);
-      System.out.println("jo=" + jo);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
+	public int inc(String name, int n) {
+		return Helper.inc(W.create(X.ID, id), name, n, null, App.class);
+	}
 
 }

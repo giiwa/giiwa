@@ -333,7 +333,7 @@ public class MongoHelper implements Helper.DBHelper {
 			if (db1 != null) {
 
 				FindIterable<Document> d = db1.find(query);
-				if (order == null) {
+				if (order != null) {
 					d.sort(order);
 				}
 
@@ -753,7 +753,11 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @return Set
 	 */
 	public static Set<String> getCollections() {
-		MongoDatabase d = mongo.get(Helper.DEFAULT);
+		return getCollections(Helper.DEFAULT);
+	}
+
+	public static Set<String> getCollections(String dbname) {
+		MongoDatabase d = mongo.get(dbname);
 		if (d != null) {
 
 			MongoIterable<String> it = d.listCollectionNames();
@@ -970,13 +974,25 @@ public class MongoHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return the int
 	 */
-	public int inc(String table, W q, String name, int n, String db) {
+	public int inc(String table, W q, String name, int n, V v, String db) {
 		Document d = new Document();
 
 		try {
 			d.put(name, n);
 			MongoCollection<Document> c = getCollection(db, table);
-			UpdateResult r = c.updateMany(q.query(), new Document("$inc", d));
+			Document d2 = new Document("$inc", d);
+
+			Document d1 = null;
+			if (v != null) {
+				d1 = new Document();
+				for (String s : v.names()) {
+					Object v1 = v.value(s);
+					d1.append(s, v1);
+				}
+				d2.append("$set", d1);
+			}
+
+			UpdateResult r = c.updateMany(q.query(), d2);
 
 			if (log.isDebugEnabled())
 				log.debug("updated collection=" + table + ", query=" + q + ", d=" + d + ", n=" + r.getModifiedCount()

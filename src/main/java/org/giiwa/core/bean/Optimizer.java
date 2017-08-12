@@ -12,68 +12,74 @@ import org.giiwa.core.task.Task;
 
 public class Optimizer implements Helper.IOptimizer {
 
-  private static Log             log    = LogFactory.getLog(Optimizer.class);
+	private static Log log = LogFactory.getLog(Optimizer.class);
 
-  private static HashSet<String> exists = new HashSet<String>();
+	private static HashSet<String> exists = new HashSet<String>();
 
-  @Override
-  public void query(final String db, final String table, final W w) {
-    if (w != null && !w.isEmpty()) {
-      new Task() {
+	@Override
+	public void query(final String db, final String table, final W w) {
+		if (w != null && !w.isEmpty()) {
+			new Task() {
 
-        @Override
-        public void onExecute() {
-          LinkedHashMap<String, Integer> keys = w.keys();
+				@Override
+				public void onExecute() {
+					// all keys
+					List<LinkedHashMap<String, Integer>> l1 = w.sortkeys();
 
-          StringBuilder sb = new StringBuilder();
-          for (String s : keys.keySet()) {
-            if (sb.length() > 0)
-              sb.append(",");
-            sb.append(s).append(":").append(keys.get(s));
-          }
+					if (l1 != null) {
+						for (LinkedHashMap<String, Integer> keys : l1) {
+							StringBuilder sb = new StringBuilder();
+							for (String s : keys.keySet()) {
+								if (sb.length() > 0)
+									sb.append(",");
+								sb.append(s).append(":").append(keys.get(s));
+							}
 
-          String id = UID.id(db, table, sb.toString());
-          try {
-            if (!exists.contains(id)) {
-              _init(db, table);
-            }
+							String id = UID.id(db, table, sb.toString());
+							try {
+								if (!exists.contains(id)) {
+									_init(db, table);
+								}
 
-            if (!exists.contains(id)) {
-              exists.add(id);
-              if (!keys.isEmpty()) {
-                Helper.createIndex(db, table, keys);
-              }
-            }
+								if (!exists.contains(id)) {
+									exists.add(id);
+									if (!keys.isEmpty()) {
+										Helper.createIndex(db, table, keys);
+									}
+								}
 
-          } catch (Exception e) {
-            log.error("table=" + table + ", keys=" + keys, e);
-          }
-        }
+							} catch (Exception e) {
+								log.error("table=" + table + ", keys=" + keys, e);
+							}
+						}
+					}
 
-      }.schedule(0);
-    }
-  }
+				}
 
-  private static void _init(String db, String table) {
+			}.schedule(0);
+		}
+	}
 
-    List<Map<String, Object>> l1 = Helper.getIndexes(table, db);
+	private static void _init(String db, String table) {
 
-    if (l1 != null && !l1.isEmpty()) {
-      for (Map<String, Object> d : l1) {
-        Map<String, Object> keys = (Map<String, Object>) d.get("key");
-        if (keys != null && !keys.isEmpty()) {
-          StringBuilder sb = new StringBuilder();
-          for (String s : keys.keySet()) {
-            if (sb.length() > 0)
-              sb.append(",");
-            sb.append(s).append(":").append(keys.get(s));
-          }
+		List<Map<String, Object>> l1 = Helper.getIndexes(table, db);
 
-          String id = UID.id(db, table, sb.toString());
-          exists.add(id);
-        }
-      }
-    }
-  }
+		if (l1 != null && !l1.isEmpty()) {
+			for (Map<String, Object> d : l1) {
+				Map<String, Object> keys = (Map<String, Object>) d.get("key");
+				if (keys != null && !keys.isEmpty()) {
+					StringBuilder sb = new StringBuilder();
+					for (String s : keys.keySet()) {
+						if (sb.length() > 0)
+							sb.append(",");
+						sb.append(s).append(":").append(keys.get(s));
+					}
+
+					String id = UID.id(db, table, sb.toString());
+					exists.add(id);
+				}
+			}
+		}
+	}
 
 }

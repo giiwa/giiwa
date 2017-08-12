@@ -41,14 +41,14 @@ public class Velocity {
    */
   public static void main(String[] args) {
 
-    String s = "{age}>10";
+    String s = "${age}>10";
 
     TimeStamp t = TimeStamp.create();
-    for (int i = 0; i < 100000; i++) {
+    for (int i = 0; i < 1; i++) {
       Map<String, Object> m = new HashMap<String, Object>();
       m.put("age", i);
       try {
-        Velocity.test(s, m);
+        System.out.println(Velocity.test(s, m));
       } catch (Exception e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
@@ -74,15 +74,17 @@ public class Velocity {
     if (X.isEmpty(s)) {
       return true;
     }
-
-    s = M.replaceAll("sss", s).replaceAll("\\{", "\\$\\{");
+//    System.out.println(s);
+    s = s.replaceAll("\\$", "\\\\\\$");
+//    System.out.println(s);
+    s = M.replaceAll("sss", s);
 
     Map<String, Object> b = new HashMap<String, Object>();
     m.put("result", b);
     try {
       execute(s, m);
     } catch (Exception e) {
-      throw new Exception("expression error, e.g {age}>10", e);
+      throw new Exception("expression error, e.g ${age}>10", e);
     }
     m.remove("result");
 

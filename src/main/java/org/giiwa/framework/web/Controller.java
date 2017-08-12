@@ -82,6 +82,8 @@ public class Controller {
 
     // get welcome list
     init_welcome();
+    
+    log.info("controller has been initialized.");
   }
 
   @SuppressWarnings("unchecked")

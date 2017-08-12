@@ -1,0 +1,24 @@
+
+<div class='head'>$lang.get('app.detail.title')</div>
+
+<div class='tabs'>
+	<a href='/admin/app' >$lang.get('a.app')</a>
+	<a href='/admin/app/detail?id=$id' class='selected'>$lang.get('a.detail')</a>
+</div>
+
+<table id='url-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 100px;">Name</th>
+			<th>Value</th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $b.keySet())
+	<tr>
+		<td>$!f</td>
+		<td>$!b.get($f)</td>
+	</tr>
+#end
+	</tbody>
+</table>

@@ -46,6 +46,7 @@
 		<td>$!lang.format($f.expired, 'yy-MM-dd HH:mm')</td>
 		<td>$!lang.format($f.created, 'yy-MM-dd HH:mm')</td>
 		<td>
+			<a class='btn btn-info btn-xs' href='/admin/app/detail?id=$!f.id'>$lang.get('a.detail')</a>
 			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.appid", this);'>$lang.get('a.delete')</a>
 		</td>
 	</tr>

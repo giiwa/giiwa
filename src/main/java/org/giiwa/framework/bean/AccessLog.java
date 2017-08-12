@@ -44,119 +44,118 @@ import com.mongodb.BasicDBObject;
 @Table(name = "gi_accesslog")
 public class AccessLog extends Bean {
 
-  /**
-   * 
-   */
-  private static final long serialVersionUID = 1L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-  static AtomicLong         seq              = new AtomicLong(0);
-  static String             node             = Config.getConf().getString("node.name");
+	static AtomicLong seq = new AtomicLong(0);
+	static String node = Config.getConf().getString("node.name");
 
-  @Column(name = X.ID, index = true, unique = true)
-  private String            id;
+	@Column(name = X.ID, index = true, unique = true)
+	private String id;
 
-  @Column(name = "url", index = true)
-  private String            url;
+	@Column(name = "url", index = true)
+	private String url;
 
-  @Column(name = "cost", index = true)
-  private long              cost;
+	@Column(name = "cost", index = true)
+	private long cost;
 
-  @Column(name = X.CREATED, index = true)
-  private long              created;
+	@Column(name = X.CREATED, index = true)
+	private long created;
 
-  public static boolean isOn() {
-    return Global.getInt("accesslog.on", 1) == 1;
-  }
+	public static boolean isOn() {
+		return Global.getInt("accesslog.on", 1) == 1;
+	}
 
-  /**
-   * Count.
-   *
-   * @param q
-   *          the q
-   * @return the long
-   */
-  public static long count(W q) {
-    return Helper.count(q, AccessLog.class);
-  }
+	/**
+	 * Count.
+	 *
+	 * @param q
+	 *            the q
+	 * @return the long
+	 */
+	public static long count(W q) {
+		return Helper.count(q, AccessLog.class);
+	}
 
-  public String getUrl() {
-    return this.getString(X.URL);
-  }
+	public String getUrl() {
+		return this.getString(X.URL);
+	}
 
-  /**
-   * Creates the AccessLog.
-   * 
-   * @param ip
-   *          the ip address
-   * @param url
-   *          the url
-   * @param v
-   *          the values
-   */
-  public static void create(final String ip, final String url, final V v) {
-    new Task() {
+	/**
+	 * Creates the AccessLog.
+	 * 
+	 * @param ip
+	 *            the ip address
+	 * @param url
+	 *            the url
+	 * @param v
+	 *            the values
+	 */
+	public static void create(final String ip, final String url, final V v) {
+		new Task() {
 
-      @Override
-      public void onExecute() {
-        long created = System.currentTimeMillis();
-        String id = UID.id(ip, url, created, node, seq.incrementAndGet());
-        Helper.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created), AccessLog.class);
-      }
+			@Override
+			public void onExecute() {
+				long created = System.currentTimeMillis();
+				String id = UID.id(ip, url, created, node, seq.incrementAndGet());
+				Helper.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created), AccessLog.class);
+			}
 
-    }.schedule(0);
-  }
+		}.schedule(0);
+	}
 
-  /**
-   * Load.
-   *
-   * @param q
-   *          the query and order
-   * @param s
-   *          the start number
-   * @param n
-   *          the number of items
-   * @return the beans
-   */
-  public static Beans<AccessLog> load(W q, int s, int n) {
-    return Helper.load(q, s, n, AccessLog.class);
-  }
+	/**
+	 * Load.
+	 *
+	 * @param q
+	 *            the query and order
+	 * @param s
+	 *            the start number
+	 * @param n
+	 *            the number of items
+	 * @return the beans
+	 */
+	public static Beans<AccessLog> load(W q, int s, int n) {
+		return Helper.load(q, s, n, AccessLog.class);
+	}
 
-  public static AccessLog load(String id) {
-    return Helper.load(id, AccessLog.class);
-  }
+	public static AccessLog load(String id) {
+		return Helper.load(id, AccessLog.class);
+	}
 
-  /**
-   * Cleanup.
-   */
-  public static void cleanup() {
-    Helper.delete(
-        new BasicDBObject().append(X.CREATED, new BasicDBObject().append("$lt", System.currentTimeMillis() - X.AMONTH)),
-        AccessLog.class);
-  }
+	/**
+	 * Cleanup.
+	 */
+	public static void cleanup() {
+		Helper.delete(new BasicDBObject().append(X.CREATED,
+				new BasicDBObject().append("$lt", System.currentTimeMillis() - X.AMONTH)), AccessLog.class);
+	}
 
-  /**
-   * Delete all.
-   */
-  public static void deleteAll() {
-    Helper.delete(new BasicDBObject(), AccessLog.class);
-  }
+	/**
+	 * Delete all.
+	 */
+	public static void deleteAll() {
+		Helper.delete(W.create(), AccessLog.class);
+	}
 
-  /**
-   * Distinct.
-   *
-   * @param name
-   *          the name
-   * @return Map
-   */
-  public static Map<Object, Long> distinct(String name) {
-    List<String> list = Helper.distinct(name, W.create("status", 200), AccessLog.class, String.class);
-    Map<Object, Long> m = new TreeMap<Object, Long>();
-    for (String v : list) {
-      long d = Helper.count(W.create(name, v).and("status", 200), AccessLog.class);
-      m.put(v, d);
-    }
+	/**
+	 * Distinct.
+	 *
+	 * @param name
+	 *            the name
+	 * @return Map
+	 */
+	public static Map<Object, Long> distinct(String name) {
+		List<String> list = Helper.distinct(name, W.create("status", 200), AccessLog.class, String.class);
+		Map<Object, Long> m = new TreeMap<Object, Long>();
+		for (String v : list) {
+			long d = Helper.count(W.create(name, v).and("status", 200), AccessLog.class);
+			m.put(v, d);
+		}
 
-    return m;
-  }
+		return m;
+	}
 
 }

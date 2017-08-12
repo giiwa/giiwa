@@ -31,98 +31,107 @@ import org.giiwa.framework.web.*;
  */
 public class app extends Model {
 
-  /**
-   * Adds the.
-   */
-  @Path(path = "create", login = true, access = "access.config.admin")
-  public void create() {
-    if (method.isPost()) {
-      String appid = this.getString("appid");
-      try {
-        if (!App.exists(appid)) {
-          String secret = UID.random(32);
-          App.create(App.Param.create().appid(appid).role(this.getLong("role")).secret(secret)
-              .memo(this.getString("memo")).build());
-          onGet();
-          return;
-        }
-        this.set(X.ERROR, lang.get("appid.already.exists"));
-      } catch (Exception e) {
-        this.set(X.ERROR, e.getMessage());
-      }
+	/**
+	 * Adds the.
+	 */
+	@Path(path = "create", login = true, access = "access.config.admin")
+	public void create() {
+		if (method.isPost()) {
+			String appid = this.getString("appid");
+			try {
+				if (!App.exists(appid)) {
+					String secret = UID.random(32);
+					App.create(App.Param.create().appid(appid).role(this.getLong("role")).secret(secret)
+							.memo(this.getString("memo")).build());
+					onGet();
+					return;
+				}
+				this.set(X.ERROR, lang.get("appid.already.exists"));
+			} catch (Exception e) {
+				this.set(X.ERROR, e.getMessage());
+			}
 
-      this.set(this.getJSON());
-    }
+			this.set(this.getJSON());
+		}
 
-    Beans<Role> rs = Role.load(0, 1000);
-    this.set("roles", rs);
+		Beans<Role> rs = Role.load(0, 1000);
+		this.set("roles", rs);
 
-    this.show("/admin/app.create.html");
-  }
+		this.show("/admin/app.create.html");
+	}
 
-  /**
-   * Delete.
-   */
-  @Path(path = "delete", login = true, access = "access.config.admin")
-  public void delete() {
+	/**
+	 * Delete.
+	 */
+	@Path(path = "delete", login = true, access = "access.config.admin")
+	public void delete() {
 
-    JSON jo = new JSON();
+		JSON jo = new JSON();
 
-    String appid = this.getString("id");
-    if (!X.isEmpty(appid)) {
-      App.delete(appid);
-      jo.put(X.STATE, 200);
-    } else {
-      jo.put(X.MESSAGE, lang.get("delete.failed"));
-    }
+		String appid = this.getString("id");
+		if (!X.isEmpty(appid)) {
+			App.delete(appid);
+			jo.put(X.STATE, 200);
+		} else {
+			jo.put(X.MESSAGE, lang.get("delete.failed"));
+		}
 
-    this.response(jo);
+		this.response(jo);
 
-  }
+	}
 
-  @Path(path = "reset", login = true, access = "access.config.admin")
-  public void reset() {
+	@Path(path = "reset", login = true, access = "access.config.admin")
+	public void reset() {
 
-    JSON jo = new JSON();
+		JSON jo = new JSON();
 
-    String id = this.getString("id");
-    App.update(id, App.Param.create().secret(UID.random(32)).build());
-    jo.put(X.STATE, 200);
+		String id = this.getString("id");
+		App.update(id, App.Param.create().secret(UID.random(32)).build());
+		jo.put(X.STATE, 200);
 
-    this.response(jo);
+		this.response(jo);
 
-  }
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model#onGet()
-   */
-  @Override
-  @Path(login = true, access = "access.config.admin")
-  public void onGet() {
+	@Path(path = "detail", login = true, access = "access.config.admin")
+	public void detail() {
+		long id = this.getLong("id");
+		App d = App.load(id);
+		this.set("b", d);
+		this.set("id", id);
+		this.show("/admin/app.detail.html");
+	}
 
-    String name = this.getString("name");
-    W q = W.create();
-    if (X.isEmpty(this.path) && !X.isEmpty(name)) {
-      q.and("appid", name, W.OP.like);
-      this.set("name", name);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model#onGet()
+	 */
+	@Override
+	@Path(login = true, access = "access.config.admin")
+	public void onGet() {
 
-    int s = this.getInt("s");
-    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		String name = this.getString("name");
+		W q = W.create();
+		if (X.isEmpty(this.path) && !X.isEmpty(name)) {
+			q.and("appid", name, W.OP.like);
+			this.set("name", name);
+		}
 
-    Beans<App> bs = App.load(q, s, n);
-    this.set(bs, s, n);
+		int s = this.getInt("s");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
-    this.query.path("/admin/app");
+		Beans<App> bs = App.load(q, s, n);
+		this.set(bs, s, n);
 
-    this.show("/admin/app.index.html");
-  }
+		this.query.path("/admin/app");
 
-  @Path(path = "help")
-  public void help() {
-    this.show("/admin/app.help.html");
-  }
+		this.show("/admin/app.index.html");
+	}
+
+	@Path(path = "help")
+	public void help() {
+		this.show("/admin/app.help.html");
+	}
 
 }

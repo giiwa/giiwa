@@ -63,6 +63,8 @@ public class GiiwaContextListener implements ServletContextListener {
 
     init(home, event.getServletContext().getContextPath());
 
+    log.info("GiiwaContextListener inited.");
+    
   }
 
   /**

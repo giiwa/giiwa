@@ -21,6 +21,7 @@ import org.apache.commons.logging.*;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.json.JSON;
 
 /**
  * repository of file system bean. <br>
@@ -49,6 +50,9 @@ public class Repo extends Bean {
    */
   public static void init(Configuration conf) {
     ROOT = conf.getString("repo.path", "/opt/repo");
+    
+    log.info("repo has been initialized.");
+
   }
 
   /**

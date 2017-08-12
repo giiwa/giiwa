@@ -1645,3 +1645,19 @@ button:hover, button:active {
     -webkit-animation: fa-spin 2s infinite linear;
     animation: fa-spin 2s infinite linear;
 }
+.width-20{
+	width:20%!important;
+}
+.width-40{
+	width:40%!important;
+}
+.width-60{
+	width:60%!important;
+}
+.width-80{
+	width:80%!important;
+}
+.width-100{
+	width:100%!important;
+}
+

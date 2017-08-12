@@ -37,85 +37,86 @@ import org.giiwa.framework.web.view.View;
 
 public class GiiwaFilter implements Filter {
 
-  static Log log = LogFactory.getLog(GiiwaFilter.class);
+	static Log log = LogFactory.getLog(GiiwaFilter.class);
 
-  @Override
-  public void destroy() {
+	@Override
+	public void destroy() {
 
-  }
+	}
 
-  @Override
-  public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
-      throws IOException, ServletException {
+	@Override
+	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
+			throws IOException, ServletException {
 
-    try {
-      HttpServletRequest r1 = (HttpServletRequest) req;
-      HttpServletResponse r2 = (HttpServletResponse) resp;
+		try {
+			HttpServletRequest r1 = (HttpServletRequest) req;
+			HttpServletResponse r2 = (HttpServletResponse) resp;
 
-      String uri = r1.getRequestURI();
-      while (uri.indexOf("//") > -1) {
-        uri = uri.replaceAll("//", "/");
-      }
+			String uri = r1.getRequestURI();
+			while (uri.indexOf("//") > -1) {
+				uri = uri.replaceAll("//", "/");
+			}
 
-      /**
-       * rewrite uri
-       */
-      uri = URL.rewrite(uri);
+			/**
+			 * rewrite uri
+			 */
+			uri = URL.rewrite(uri);
 
-      String method = r1.getMethod();
-      String domain = Global.getString("cross.domain", "");
+			String method = r1.getMethod();
+			String domain = Global.getString("cross.domain", "");
 
-      if ("GET".equalsIgnoreCase(method)) {
-        if (!X.isEmpty(domain)) {
-          r2.addHeader("Access-Control-Allow-Origin", domain);
-        }
+			if ("GET".equalsIgnoreCase(method)) {
+				if (!X.isEmpty(domain)) {
+					r2.addHeader("Access-Control-Allow-Origin", domain);
+				}
 
-        Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
+				Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
 
-      } else if ("POST".equalsIgnoreCase(method)) {
-        if (!X.isEmpty(domain)) {
-          r2.addHeader("Access-Control-Allow-Origin", domain);
-        }
+			} else if ("POST".equalsIgnoreCase(method)) {
+				if (!X.isEmpty(domain)) {
+					r2.addHeader("Access-Control-Allow-Origin", domain);
+				}
 
-        Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
+				Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
 
-      } else if ("OPTIONS".equals(method)) {
-        r2.setStatus(200);
-        r2.addHeader("Access-Control-Allow-Origin", domain);
-        r2.addHeader("Access-Control-Allow-Headers", Global.getString("cross.header", "forbidden"));
-        r2.getOutputStream().write(domain.getBytes());
-      } else if ("HEAD".equals(method)) {
+			} else if ("OPTIONS".equals(method)) {
+				r2.setStatus(200);
+				r2.addHeader("Access-Control-Allow-Origin", domain);
+				r2.addHeader("Access-Control-Allow-Headers", Global.getString("cross.header", "forbidden"));
+				r2.getOutputStream().write(domain.getBytes());
+			} else if ("HEAD".equals(method)) {
 
-      }
+			}
 
-      // chain.doFilter(req, resp);
-    } catch (Throwable e) {
-      log.error(e.getMessage(), e);
-    }
-  }
+			// chain.doFilter(req, resp);
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		}
+	}
 
-  @SuppressWarnings("rawtypes")
-  @Override
-  public synchronized void init(FilterConfig c1) throws ServletException {
-    try {
-      Model.s️ervletContext = c1.getServletContext();
+	@SuppressWarnings("rawtypes")
+	@Override
+	public synchronized void init(FilterConfig c1) throws ServletException {
+		try {
+			log.debug("initing model ...");
+			Model.s️ervletContext = c1.getServletContext();
 
-      log.debug("init view ...");
-      Enumeration e = c1.getInitParameterNames();
-      while (e.hasMoreElements()) {
-        String name = e.nextElement().toString();
-        String value = c1.getInitParameter(name);
-        config.put(name, value);
-      }
+			log.debug("initing view ...");
+			Enumeration e = c1.getInitParameterNames();
+			while (e.hasMoreElements()) {
+				String name = e.nextElement().toString();
+				String value = c1.getInitParameter(name);
+				config.put(name, value);
+			}
 
-      View.init(config);
-    } catch (Throwable e) {
-      log.error(e.getMessage(), e);
-    }
+			View.init(config);
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		}
 
-    log.info("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
-  }
+		log.info("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
+	}
 
-  private Map<String, String> config = new HashMap<String, String>();
+	private Map<String, String> config = new HashMap<String, String>();
 
 }

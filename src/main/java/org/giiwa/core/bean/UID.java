@@ -29,7 +29,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.web.Model;
 
 // TODO: Auto-generated Javadoc
 /**
