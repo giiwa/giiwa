@@ -587,6 +587,10 @@ public class Language {
 		return t1 + get("past.y");
 	}
 
+	public long pastms(long t) {
+		return System.currentTimeMillis() - t;
+	}
+
 	/**
 	 * Parses the.
 	 * 
