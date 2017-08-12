@@ -336,11 +336,11 @@ public class user extends Model {
     String name = this.getString("name");
     W q = W.create();
     if (X.isEmpty(this.path) && !X.isEmpty(name)) {
-      //W list = W.create();
+      W list = W.create();
 
-      q.or(W.create("name", name, W.OP.like));
-      q.or(W.create("nickname", name, W.OP.like));
-      //q.and(list);
+      list.or("name", name, W.OP.like);
+      list.or("nickname", name, W.OP.like);
+      q.and(list);
 
       this.set("name", name);
     }

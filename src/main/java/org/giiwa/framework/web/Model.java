@@ -38,7 +38,6 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
-import org.giiwa.framework.web.view.FileView;
 import org.giiwa.framework.web.view.View;
 
 /**
@@ -88,8 +87,7 @@ public class Model {
 	public HTTPMethod method;
 
 	/**
-	 * the response context, includes all the response key-value, used by
-	 * view(html)
+	 * the response context, includes all the response key-value, used by view(html)
 	 */
 	public Map<String, Object> context;
 
@@ -614,8 +612,8 @@ public class Model {
 	}
 
 	/**
-	 * get the current session sid, if not present, create a new one, please
-	 * refer {@code sid(boolean)}.
+	 * get the current session sid, if not present, create a new one, please refer
+	 * {@code sid(boolean)}.
 	 *
 	 * @return the string
 	 */
@@ -636,8 +634,7 @@ public class Model {
 	 * .
 	 *
 	 * @param newSession
-	 *            if true and not presented, create a new one, otherwise return
-	 *            null
+	 *            if true and not presented, create a new one, otherwise return null
 	 * @return the string
 	 */
 	final public String sid(boolean newSession) {
@@ -648,12 +645,11 @@ public class Model {
 				if (X.isEmpty(sid)) {
 					sid = this.getString("sid");
 					if (X.isEmpty(sid)) {
-						sid = (String)req.getAttribute("sid");
+						sid = (String) req.getAttribute("sid");
 						if (X.isEmpty(sid) && newSession) {
 							do {
 								sid = UID.random();
 							} while (Session.exists(sid));
-
 						}
 					}
 				}
@@ -723,12 +719,12 @@ public class Model {
 	/**
 	 * Forward to the model(url), do not response yet
 	 * 
-	 * @param model
-	 *            the model
+	 * @param url
+	 *            the url
 	 */
-	final public void forward(String uri) {
+	final public void forward(String url) {
 		req.setAttribute("sid", sid());
-		Controller.dispatch(uri, req, resp, method);
+		Controller.dispatch(url, req, resp, method);
 	}
 
 	/**
@@ -869,8 +865,7 @@ public class Model {
 	 * @param jo
 	 *            the map of data
 	 * @param names
-	 *            the names that will be set back to model, if null, will set
-	 *            all
+	 *            the names that will be set back to model, if null, will set all
 	 */
 	final public void set(JSON jo, String... names) {
 		if (jo == null) {
@@ -945,9 +940,9 @@ public class Model {
 	}
 
 	/**
-	 * Gets the int from the request parameter, if the tag is not presented,
-	 * then get the value from the session, if the value less than minvalue,
-	 * then get the minvalue, and store the value in session
+	 * Gets the int from the request parameter, if the tag is not presented, then
+	 * get the value from the session, if the value less than minvalue, then get the
+	 * minvalue, and store the value in session
 	 * 
 	 * @param tag
 	 *            the tag
@@ -978,8 +973,7 @@ public class Model {
 	}
 
 	/**
-	 * get the parameter from the request, if not presented, then get from
-	 * session
+	 * get the parameter from the request, if not presented, then get from session
 	 * 
 	 * @param tag
 	 *            the name of the parameter in request.
@@ -1007,8 +1001,7 @@ public class Model {
 	}
 
 	/**
-	 * Gets the int in request parameter, if not presented, return the
-	 * defaultvalue
+	 * Gets the int in request parameter, if not presented, return the defaultvalue
 	 * 
 	 * @param tag
 	 *            the tag
@@ -1022,8 +1015,7 @@ public class Model {
 	}
 
 	/**
-	 * Gets the long request parameter, if not presented, return the
-	 * defaultvalue
+	 * Gets the long request parameter, if not presented, return the defaultvalue
 	 * 
 	 * @param tag
 	 *            the name of parameter
@@ -1283,8 +1275,8 @@ public class Model {
 	}
 
 	/**
-	 * Gets the value of request string parameter. it auto handle multiple-part,
-	 * and convert "&lt;" or "&gt;" to html char and normal request
+	 * Gets the value of request string parameter. it auto handle multiple-part, and
+	 * convert "&lt;" or "&gt;" to html char and normal request
 	 * 
 	 * @param name
 	 *            the name of parameter
@@ -1366,8 +1358,8 @@ public class Model {
 	}
 
 	/**
-	 * Gets the request value by name, and limited length, if not presented,
-	 * using the default value.
+	 * Gets the request value by name, and limited length, if not presented, using
+	 * the default value.
 	 * 
 	 * @param name
 	 *            the parameter name
@@ -1579,8 +1571,8 @@ public class Model {
 	}
 
 	/**
-	 * get the session, if not presented, then create a new, "user" should store
-	 * the session invoking session.store()
+	 * get the session, if not presented, then create a new, "user" should store the
+	 * session invoking session.store()
 	 * 
 	 * @return Session
 	 */
@@ -1614,6 +1606,28 @@ public class Model {
 		return _multipart;
 	}
 
+	final public Roles getRoles() {
+		User u = this.getUser();
+		if (u != null) {
+			return u.getRole();
+		}
+
+		Session s = this.getSession();
+		if (s.has("roles")) {
+			return s.get("roles");
+		}
+
+		String appid = this.getString("appid");
+		String secret = this.getString("secret");
+		App a = App.load(appid);
+		if (a != null && X.isSame(secret, a.getSecret())) {
+			Roles r = new Roles(Arrays.asList(a.getRole()));
+			s.set("roles", r).store();
+			return r;
+		}
+		return null;
+	}
+
 	/**
 	 * get the user associated with the session, <br>
 	 * this method will cause set user in session if not setting, <br>
@@ -1625,7 +1639,7 @@ public class Model {
 		if (login == null) {
 			Session s = getSession();
 			login = (User) s.get("user");
-			log.debug("sid = " + sid());
+
 			if (login == null) {
 
 				if (Global.getInt("user.token", 1) == 1) {
@@ -1838,8 +1852,8 @@ public class Model {
 	}
 
 	/**
-	 * using current model to render the template, and show the result html page
-	 * to end-user.
+	 * using current model to render the template, and show the result html page to
+	 * end-user.
 	 * 
 	 * @param viewname
 	 *            the viewname template
@@ -1857,8 +1871,7 @@ public class Model {
 				View.merge(file, this, viewname);
 
 				// if (log.isDebugEnabled())
-				// log.debug("showing viewname = " + viewname + ", cost: " +
-				// t1.past() +
+				// log.debug("showing viewname = " + viewname + ", cost: " + t1.past() +
 				// "ms");
 			} else {
 				notfound();
@@ -1884,16 +1897,18 @@ public class Model {
 	 * On post requested from HTTP POST method.
 	 */
 	public void onPost() {
-		// if (module != null) {
-		// Module t = module.floor();
-		// if (t != null) {
-		// Model m = t.getModel(Model.METHOD_POST, uri);
-		// if (m != null) {
-		// m.dispatch(uri, req, resp, method);
-		// return;
-		// }
-		// }
-		// }
+		//TODO, may cause dead loop ?
+		/*
+		if (module != null) {
+			Module t = module.floor();
+			if (t != null) {
+				Model m = t.getModel(Model.METHOD_POST, uri);
+				if (m != null) {
+					m.dispatch(uri, req, resp, method);
+					return;
+				}
+			}
+		}*/
 
 		String uri = req.getRequestURI();
 		while (uri.indexOf("//") > -1) {

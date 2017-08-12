@@ -28,6 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -120,8 +121,7 @@ public class Bean implements Serializable, Map<String, Object> {
 	 * @param name
 	 *            the name of the data or the column
 	 * @param value
-	 *            the value, if the value=null, then remove the name from the
-	 *            data
+	 *            the value, if the value=null, then remove the name from the data
 	 * @return Object of the old value
 	 */
 	public final Object set(String name, Object value) {
@@ -131,7 +131,7 @@ public class Bean implements Serializable, Map<String, Object> {
 
 		Object old = null;
 
-//		name = name.toLowerCase();
+		name = name.toLowerCase();
 
 		// looking for all the fields
 		Field f1 = getField(name);
@@ -189,31 +189,19 @@ public class Bean implements Serializable, Map<String, Object> {
 		if (m == null) {
 			m = new HashMap<String, java.lang.reflect.Field>();
 
-			for (; c1 != null;) {
-				Field[] ff = c1.getDeclaredFields();
-				for (Field f : ff) {
-					Column f1 = f.getAnnotation(Column.class);
-					if (f1 != null && !m.containsKey(f1.name())) {
-						m.put(f1.name(), f);
-					}
+			Field[] ff = c1.getDeclaredFields();
+			for (Field f : ff) {
+				Column f1 = f.getAnnotation(Column.class);
+				if (f1 != null) {
+					m.put(f1.name().toLowerCase(), f);
 				}
-				if(Bean.class.isAssignableFrom(c1.getSuperclass())){
-					if(c1.getSuperclass().isAssignableFrom(Bean.class)){
-						c1 = null;
-					}else{
-						c1 = (Class<? extends Bean>) c1.getSuperclass();
-					}
-				}else{
-					c1 = null;
-				}
-				
 			}
 
 			_fields.put(c1, m);
 		}
 		return m;
 	}
-	
+
 	private static Map<Class<? extends Bean>, Map<String, Field>> _fields = new HashMap<Class<? extends Bean>, Map<String, Field>>();
 
 	/**
@@ -229,7 +217,7 @@ public class Bean implements Serializable, Map<String, Object> {
 			return null;
 		}
 
-		String s = name.toString();
+		String s = name.toString().toLowerCase();
 		Field f = getField(s);
 		if (f != null) {
 			try {
@@ -565,6 +553,20 @@ public class Bean implements Serializable, Map<String, Object> {
 				log.error(e.getMessage(), e);
 			}
 		}
+	}
+
+	public boolean contains(V v) {
+		for (String name : v.names()) {
+			if (X.isSame("updated", name) || X.isSame("created", name))
+				continue;
+			Object v0 = get(name);
+			Object v1 = v.value(name);
+			if (!X.isSame(v0, v1)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 }

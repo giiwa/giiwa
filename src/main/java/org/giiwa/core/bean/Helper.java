@@ -35,8 +35,8 @@ import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.web.Model;
 
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 
 /**
@@ -392,6 +392,41 @@ public class Helper implements Serializable {
 		}
 
 		/**
+		 * copy the request parameters to V
+		 * 
+		 * @param m
+		 * @param names
+		 */
+		public V copy(Model m, String... names) {
+			if (X.isEmpty(names)) {
+				// copy all
+				for (String name : m.getNames()) {
+					this.set(name, m.getString(name));
+				}
+			} else {
+				for (String name : names) {
+					this.set(name, m.getString(name));
+				}
+			}
+			return this;
+		}
+
+		/**
+		 * copy the request parameters to V
+		 * 
+		 * @param m
+		 * @param names
+		 */
+		public V copyInt(Model m, String... names) {
+			if (!X.isEmpty(names)) {
+				for (String name : names) {
+					this.set(name, m.getInt(name));
+				}
+			}
+			return this;
+		}
+
+		/**
 		 * From json.
 		 *
 		 * @param j
@@ -740,7 +775,7 @@ public class Helper implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		public enum OP {
-			eq, gt, gte, lt, lte, like, neq, none, in, exists
+			eq, gt, gte, lt, lte, like, neq, none
 		};
 
 		/**
@@ -1092,53 +1127,88 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		private void _and(List<LinkedHashMap<String, Integer>> l1, Entity e) {
+			if (l1.isEmpty()) {
+				l1.add(new LinkedHashMap<String, Integer>());
+			}
+
+			for (LinkedHashMap<String, Integer> r : l1) {
+				if (!r.containsKey(e.name)) {
+					r.put(e.name, 1);
+				}
+			}
+		}
+
+		private void _and(List<LinkedHashMap<String, Integer>> l1, W e) {
+			if (l1.isEmpty()) {
+				l1.add(new LinkedHashMap<String, Integer>());
+			}
+
+			List<LinkedHashMap<String, Integer>> l2 = e.sortkeys();
+			for (LinkedHashMap<String, Integer> r : l1) {
+				for (LinkedHashMap<String, Integer> r2 : l2) {
+					for (String name : r2.keySet()) {
+						if (!r.containsKey(name)) {
+							r.put(name, 1);
+						}
+					}
+				}
+			}
+
+		}
+
+		private void _or(List<LinkedHashMap<String, Integer>> l1, Entity e) {
+			LinkedHashMap<String, Integer> r = new LinkedHashMap<String, Integer>();
+			r.put(e.name, 1);
+			l1.add(r);
+		}
+
+		private void _or(List<LinkedHashMap<String, Integer>> l1, W e) {
+			l1.addAll(e.sortkeys());
+		}
+
 		/**
 		 * get all keys.
 		 *
 		 * @return List keys
 		 */
-		public LinkedHashMap<String, Integer> keys() {
-			LinkedHashMap<String, Integer> r = new LinkedHashMap<String, Integer>();
-
-			// add -1 in head
-			if (!X.isEmpty(order))
-				for (Entity e : order) {
-					if (!r.containsKey(e.name)) {
-						int i = X.toInt(e.value);
-						if (i < 0) {
-							r.put(e.name, -1);
-						}
-					}
-				}
+		public List<LinkedHashMap<String, Integer>> sortkeys() {
+			List<LinkedHashMap<String, Integer>> l1 = new ArrayList<LinkedHashMap<String, Integer>>();
 
 			if (!X.isEmpty(elist))
 				for (Entity e : elist) {
-					if (!r.containsKey(e.name))
-						r.put(e.name, 1);
+					if (e.cond == AND) {
+						_and(l1, e);
+					} else {
+						_or(l1, e);
+					}
 				}
 
 			if (!X.isEmpty(wlist))
 				for (W w : wlist) {
-					LinkedHashMap<String, Integer> m = w.keys();
-					for (String s : m.keySet()) {
-						if (!r.containsKey(s))
-							r.put(s, m.get(s));
+					if (w.cond == AND) {
+						_and(l1, w);
+					} else {
+						_or(l1, w);
 					}
 				}
 
-			// add 1 in end
-			if (!X.isEmpty(order))
-				for (Entity e : order) {
+			if (!X.isEmpty(order)) {
+				LinkedHashMap<String, Integer> r = new LinkedHashMap<String, Integer>();
+				for (Entity e : order.toArray(new Entity[order.size()])) {
 					if (!r.containsKey(e.name)) {
 						int i = X.toInt(e.value);
-						if (i >= 0) {
+						if (i < 0) {
+							r.put(e.name, -1);
+						} else {
 							r.put(e.name, 1);
 						}
 					}
 				}
+				l1.add(r);
+			}
 
-			// log.debug("keys=" + r + ", W=" + this.toString());
-			return r;
+			return l1;
 		}
 
 		/**
@@ -1197,16 +1267,14 @@ public class Helper implements Serializable {
 		 * @return W
 		 */
 		public W or(String name, Object v, OP op) {
-			W w = W.create();
-			w.and(name, v, op);
-			w.cond = OR;
-			wlist.add(w);
+
+			elist.add(new Entity(name, v, op, OR));
+
 			return this;
 		}
 
 		/**
-		 * copy the name and parameter from a JSON, with "and" and "op"
-		 * conditions.
+		 * copy the name and parameter from a JSON, with "and" and "op" conditions.
 		 *
 		 * @param jo
 		 *            the json
@@ -1232,8 +1300,7 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * copy the value in jo, the format of name is: ["name",
-		 * "table field name" ].
+		 * copy the value in jo, the format of name is: ["name", "table field name" ].
 		 *
 		 * @param jo
 		 *            the json
@@ -1357,6 +1424,26 @@ public class Helper implements Serializable {
 						j1.getInt("cond"));
 			}
 
+			public Object getMongoQuery() {
+				if (op == OP.eq) {
+					return value;
+				} else if (op == OP.gt) {
+					return new BasicDBObject("$gt", value);
+				} else if (op == OP.gte) {
+					return new BasicDBObject("$gte", value);
+				} else if (op == OP.lt) {
+					return new BasicDBObject("$lt", value);
+				} else if (op == OP.lte) {
+					return new BasicDBObject("$lte", value);
+				} else if (op == OP.like) {
+					Pattern p1 = Pattern.compile(value.toString(), Pattern.CASE_INSENSITIVE);
+					return p1;
+				} else if (op == OP.neq) {
+					return new BasicDBObject("$ne", value);
+				}
+				return value;
+			}
+
 			/**
 			 * To json.
 			 *
@@ -1460,28 +1547,7 @@ public class Helper implements Serializable {
 		 * @return the basic db object
 		 */
 		BasicDBObject _parse(Entity e, BasicDBObject q) {
-			OP op = e.op;
-			if (op == OP.eq) {
-				q.append(e.name, e.value);
-			} else if (op == OP.gt) {
-				q.append(e.name, new BasicDBObject("$gt", e.value));
-			} else if (op == OP.gte) {
-				q.append(e.name, new BasicDBObject("$gte", e.value));
-			} else if (op == OP.lt) {
-				q.append(e.name, new BasicDBObject("$lt", e.value));
-			} else if (op == OP.lte) {
-				q.append(e.name, new BasicDBObject("$lte", e.value));
-			} else if (op == OP.like) {
-				Pattern p1 = Pattern.compile(e.value.toString(), Pattern.CASE_INSENSITIVE);
-				q.append(e.name, p1);
-			} else if (op == OP.neq) {
-				q.append(e.name, new BasicDBObject("$ne", e.value));
-			} else if (op == OP.in) {
-				q.append(e.name, new BasicDBObject("$in", e.value));
-			} else if (op == OP.exists) {
-				q.append(e.name, new BasicDBObject("$exists", e.value));
-			}
-
+			q.append(e.name, e.getMongoQuery());
 			return q;
 		}
 
@@ -1490,29 +1556,57 @@ public class Helper implements Serializable {
 		 *
 		 * @return the basic db object
 		 */
+		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public BasicDBObject query() {
 			BasicDBObject q = new BasicDBObject();
-			for (Entity e : elist) {
-				_parse(e, q);
-			}
-			BasicDBList andList = new BasicDBList();
-			BasicDBList orList = new BasicDBList();
-			for (W e : wlist) {
-				// or the condition in here, is $or
-				
-				if (e.cond == W.AND) {
-					andList.add(e.query());
-				} else if (e.cond == W.OR) {
-					orList.add(e.query());
-				}
-				
 
+			List<List> l1 = new ArrayList<List>();
+			{
+				List l2 = new ArrayList();
+				for (Entity e : elist) {
+					if (e.cond == OR && l2.size() > 0) {
+						l1.add(l2);
+						l2 = new ArrayList<Entity>();
+					}
+					l2.add(e);
+				}
+				for (W e : wlist) {
+					if (e.cond == OR && l2.size() > 0) {
+						l1.add(l2);
+						l2 = new ArrayList<Entity>();
+					}
+					l2.add(e);
+				}
+
+				if (l2.size() > 0) {
+					l1.add(l2);
+				}
 			}
-			if (andList.size() > 0) {
-				q.append("$and", andList);
-			}
-			if (orList.size() > 0) {
-				q.append("$or", orList);
+
+			if (l1.size() > 1) {
+				List<BasicDBObject> l3 = new ArrayList<BasicDBObject>();
+				for (List l2 : l1) {
+					BasicDBObject q1 = new BasicDBObject();
+					for (Object e : l2) {
+						if (e instanceof Entity) {
+							_parse((Entity) e, q1);
+						} else if (e instanceof W) {
+							BasicDBObject q2 = ((W) e).query();
+							q1.putAll(q2.toMap());
+						}
+					}
+					l3.add(q1);
+				}
+				q.append("$or", l3);
+			} else if (l1.size() > 0) {
+				for (Object e : l1.get(0)) {
+					if (e instanceof Entity) {
+						_parse((Entity) e, q);
+					} else if (e instanceof W) {
+						BasicDBObject q2 = ((W) e).query();
+						q.putAll(q2.toMap());
+					}
+				}
 			}
 
 			return q;
@@ -1930,9 +2024,9 @@ public class Helper implements Serializable {
 	 *            the t
 	 * @return the int
 	 */
-	public static int inc(W q, String name, int n, Class<? extends Bean> t) {
+	public static int inc(W q, String name, int n, V v, Class<? extends Bean> t) {
 		String table = getTable(t);
-		return inc(table, q, name, n, getDB(t));
+		return inc(table, q, name, n, v, getDB(t));
 	}
 
 	/**
@@ -1948,8 +2042,8 @@ public class Helper implements Serializable {
 	 *            the n
 	 * @return the int
 	 */
-	public static int inc(String table, W q, String name, int n) {
-		return inc(table, q, name, n, DEFAULT);
+	public static int inc(String table, W q, String name, int n, V v) {
+		return inc(table, q, name, n, v, DEFAULT);
 	}
 
 	/**
@@ -1967,7 +2061,7 @@ public class Helper implements Serializable {
 	 *            the db name
 	 * @return the new value
 	 */
-	public static int inc(String table, W q, String name, int n, String db) {
+	public static int inc(String table, W q, String name, int n, V v, String db) {
 
 		if (table != null) {
 
@@ -1976,12 +2070,12 @@ public class Helper implements Serializable {
 			}
 
 			if (primary != null && primary.getDB(db) != null) {
-				return primary.inc(table, q, name, n, db);
+				return primary.inc(table, q, name, n, v, db);
 
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(db) != null) {
-						return h.inc(table, q, name, n, db);
+						return h.inc(table, q, name, n, v, db);
 					}
 				}
 			}
@@ -2002,8 +2096,8 @@ public class Helper implements Serializable {
 	}
 
 	/**
-	 * load the data from the table by query, ignore the table definition for
-	 * the Class.
+	 * load the data from the table by query, ignore the table definition for the
+	 * Class.
 	 *
 	 * @param <T>
 	 *            the subclass of Bean
@@ -2305,6 +2399,18 @@ public class Helper implements Serializable {
 		System.out.println(w.query());
 		System.out.println(w.order());
 
+		W q = W.create("a", 1).or("a", 2).or(W.create("c", 1, W.OP.gt).and("c", 3, W.OP.lt));
+		System.out.println(q);
+		System.out.println(q.query());
+
+		W q1 = W.create("pid", 1).and("state", 1, W.OP.neq).and("cno", 1).and(W.create("role", 1).or("role", 2));
+		System.out.println(q1);
+		System.out.println(q1.query());
+
+		W q2 = W.create("state", 1)
+				.or(W.create("state", 2).and("enddate", System.currentTimeMillis() - X.AHOUR, W.OP.lt));
+		System.out.println(q2);
+		System.out.println(q2.query());
 	}
 
 	/**
@@ -2451,7 +2557,7 @@ public class Helper implements Serializable {
 
 		int updateTable(String table, W q, V values, String db);
 
-		int inc(String table, W q, String name, int n, String db);
+		int inc(String table, W q, String name, int n, V v, String db);
 
 		long count(String table, W q, String db);
 

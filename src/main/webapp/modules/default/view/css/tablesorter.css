@@ -28,6 +28,7 @@ table.tablesorter tbody td {
 	background-color: #FFF;
 	vertical-align: middle;
 	word-break: break-all;
+	transition-duration: 0.5s;	
 }
 
 table.tablesorter tbody tr:nth-child(even) td {

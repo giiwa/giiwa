@@ -1045,6 +1045,9 @@ tr.hover td {
 	background-color: #CEE5E5 !important;
 	color: #000;
 }
+tr.blink td{
+	background-color: #f5d3d3 !important;
+}
 div.fulline {
 	width: 100%;
 	display: inline-block;
