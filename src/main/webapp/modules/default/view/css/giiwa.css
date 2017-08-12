@@ -1663,4 +1663,9 @@ button:hover, button:active {
 .width-100{
 	width:100%!important;
 }
-
+.ui-widget-header {
+    border: 1px solid #33a1df;
+    background: #33a1df;
+    color: #333;
+    font-weight: bold;
+}
