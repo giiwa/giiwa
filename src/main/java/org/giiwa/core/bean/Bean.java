@@ -131,7 +131,7 @@ public class Bean implements Serializable, Map<String, Object> {
 
 		Object old = null;
 
-		name = name.toLowerCase();
+		//name = name.toLowerCase();
 
 		// looking for all the fields
 		Field f1 = getField(name);
@@ -189,12 +189,24 @@ public class Bean implements Serializable, Map<String, Object> {
 		if (m == null) {
 			m = new HashMap<String, java.lang.reflect.Field>();
 
-			Field[] ff = c1.getDeclaredFields();
-			for (Field f : ff) {
-				Column f1 = f.getAnnotation(Column.class);
-				if (f1 != null) {
-					m.put(f1.name().toLowerCase(), f);
+			for (; c1 != null;) {
+				Field[] ff = c1.getDeclaredFields();
+				for (Field f : ff) {
+					Column f1 = f.getAnnotation(Column.class);
+					if (f1 != null && !m.containsKey(f1.name())) {
+						m.put(f1.name(), f);
+					}
 				}
+				if(Bean.class.isAssignableFrom(c1.getSuperclass())){
+					if(c1.getSuperclass().isAssignableFrom(Bean.class)){
+						c1 = null;
+					}else{
+						c1 = (Class<? extends Bean>) c1.getSuperclass();
+					}
+				}else{
+					c1 = null;
+				}
+				
 			}
 
 			_fields.put(c1, m);
@@ -217,7 +229,7 @@ public class Bean implements Serializable, Map<String, Object> {
 			return null;
 		}
 
-		String s = name.toString().toLowerCase();
+		String s = name.toString();
 		Field f = getField(s);
 		if (f != null) {
 			try {
