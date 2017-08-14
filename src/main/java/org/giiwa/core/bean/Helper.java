@@ -1440,6 +1440,10 @@ public class Helper implements Serializable {
 					return p1;
 				} else if (op == OP.neq) {
 					return new BasicDBObject("$ne", value);
+				} else if (op == OP.exists) {
+					return new BasicDBObject("$exists", value);
+				} else if (op == OP.in) {
+					return new BasicDBObject("$in", value);
 				}
 				return value;
 			}
