@@ -2457,6 +2457,15 @@ public class Helper implements Serializable {
 				.or(W.create("state", 2).and("enddate", System.currentTimeMillis() - X.AHOUR, W.OP.lt));
 		System.out.println(q2);
 		System.out.println(q2.query());
+
+		q1 = W.create("a", 1).and("b", 2).or("c", 1).and("d", 1);
+		System.out.println(q1);
+		System.out.println(q1.query());
+
+		q1 = W.create("a", 1).and("b", 2).or(W.create("c", 1).and("d", 1));
+		System.out.println(q1);
+		System.out.println(q1.query());
+
 	}
 
 	/**
