@@ -775,7 +775,7 @@ public class Helper implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		public enum OP {
-			eq, gt, gte, lt, lte, like, neq, none,in,exists
+			eq, gt, gte, lt, lte, like, neq, none, in, exists
 		};
 
 		/**
@@ -1551,7 +1551,22 @@ public class Helper implements Serializable {
 		 * @return the basic db object
 		 */
 		BasicDBObject _parse(Entity e, BasicDBObject q) {
-			q.append(e.name, e.getMongoQuery());
+			if (q.containsField(e.name)) {
+				// get out of it and "$and" them
+				Object v = q.removeField(e.name);
+				List<BasicDBObject> l1 = new ArrayList<BasicDBObject>();
+				l1.add(new BasicDBObject().append(e.name, v));
+				l1.add(new BasicDBObject().append(e.name, e.getMongoQuery()));
+
+				if (q.containsField("$and")) {
+					List<BasicDBObject> l2 = (List<BasicDBObject>) q.get("$and");
+					l2.addAll(l1);
+				} else {
+					q.append("$and", l1);
+				}
+			} else {
+				q.append(e.name, e.getMongoQuery());
+			}
 			return q;
 		}
 
@@ -1596,24 +1611,51 @@ public class Helper implements Serializable {
 							_parse((Entity) e, q1);
 						} else if (e instanceof W) {
 							BasicDBObject q2 = ((W) e).query();
-							q1.putAll(q2.toMap());
+							q1 = _merge(q1, q2);
 						}
 					}
 					l3.add(q1);
 				}
 				q.append("$or", l3);
-			} else if (l1.size() > 0) {
+			} else if (!l1.isEmpty()) {
 				for (Object e : l1.get(0)) {
 					if (e instanceof Entity) {
 						_parse((Entity) e, q);
 					} else if (e instanceof W) {
 						BasicDBObject q2 = ((W) e).query();
-						q.putAll(q2.toMap());
+						q = _merge(q, q2);
 					}
 				}
 			}
 
 			return q;
+		}
+
+		private BasicDBObject _merge(BasicDBObject q1, BasicDBObject q2) {
+			for (String name : q2.keySet()) {
+				if (q1.containsField(name)) {
+					if (X.isSame(name, "$or") || X.isSame(name, "$and")) {
+						List<BasicDBObject> l1 = (List<BasicDBObject>) q1.get(name);
+						List<BasicDBObject> l2 = (List<BasicDBObject>) q2.get(name);
+						l1.addAll(l2);
+					} else {
+						List<BasicDBObject> l1 = new ArrayList<BasicDBObject>();
+						l1.add(new BasicDBObject().append(name, q1.remove(name)));
+						l1.add(new BasicDBObject().append(name, q2.get(name)));
+
+						if (q1.containsField("$and")) {
+							List<BasicDBObject> l2 = (List<BasicDBObject>) q1.get("$and");
+							l2.addAll(l1);
+						} else {
+							q1.append("$and", l1);
+						}
+					}
+				} else {
+					q1.append(name, q2.get(name));
+				}
+			}
+
+			return q1;
 		}
 
 		/**
