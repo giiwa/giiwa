@@ -74,7 +74,8 @@ public class Module {
 	public int id;
 
 	/**
-	 * the name of the module, the name of module should be unique in whole context
+	 * the name of the module, the name of module should be unique in whole
+	 * context
 	 */
 	String name;
 
@@ -94,7 +95,8 @@ public class Module {
 	List<Required> required;
 
 	/**
-	 * the root package name of the module, which will use to mapping the handler
+	 * the root package name of the module, which will use to mapping the
+	 * handler
 	 */
 	String pack;
 
@@ -638,8 +640,8 @@ public class Module {
 			File f = new File(viewroot + File.separator + resource);
 			if (f.exists()) {
 				/**
-				 * test the file is still in the path? if not, then do not allow to access,
-				 * avoid user using "../../" to access system file
+				 * test the file is still in the path? if not, then do not allow
+				 * to access, avoid user using "../../" to access system file
 				 */
 				if (inbox && f.getCanonicalPath().startsWith(viewroot)) {
 					return f;
@@ -1094,14 +1096,16 @@ public class Module {
 		try {
 			if (this.id > 0) {
 				/**
-				 * force: using default lifelistener to initialize the install script
+				 * force: using default lifelistener to initialize the install
+				 * script
 				 */
 				DefaultListener d = new DefaultListener();
 				d.upgrade(conf, this);
 			}
 
 			/**
-			 * loading the module's lifelistener, to initialize the install script
+			 * loading the module's lifelistener, to initialize the install
+			 * script
 			 */
 			if (!X.isEmpty(listener)) {
 				String name = listener;
@@ -1781,8 +1785,8 @@ public class Module {
 		} else {
 			try {
 				/**
-				 * possible the original has been moved to ..., always using the package to
-				 * initialize
+				 * possible the original has been moved to ..., always using the
+				 * package to initialize
 				 */
 				m.path = new File(Model.HOME + "/modules/" + m.name).getCanonicalPath();
 				m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
@@ -1867,10 +1871,10 @@ public class Module {
 			}
 		} else {
 			/**
-			 * check the file version, and remove all the related version (may newer or
-			 * elder); <br>
-			 * looking for all the "f.getName()" in "classpath", and remove the same package
-			 * but different "version"<br>
+			 * check the file version, and remove all the related version (may
+			 * newer or elder); <br>
+			 * looking for all the "f.getName()" in "classpath", and remove the
+			 * same package but different "version"<br>
 			 */
 			r1 = true;
 			if (f.getName().endsWith(".jar")) {
@@ -2006,10 +2010,8 @@ public class Module {
 		}
 
 		private String getPath(String uri) {
-			String name = model.getName().substring(module.pack.length() + 1).replaceAll("\\.", "/");
-			String path = uri.length() > name.length() ? uri.replace(name, "") : X.EMPTY;
-
-			// log.debug("uri=" + uri +", name="+ name +", path=" + path);
+			String name = model.getName().substring(module.pack.length()).replaceAll("\\.", "/");
+			String path = uri.length() > name.length() ? uri.substring(name.length()) : X.EMPTY;
 			while (path.startsWith("/")) {
 				path = path.substring(1);
 			}
