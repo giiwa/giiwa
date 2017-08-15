@@ -1669,6 +1669,9 @@ public class Helper implements Serializable {
 				
 				}
 			}
+			if(stack.empty()){
+				return new BasicDBObject();
+			}
 			Object query = stack.pop();
 			if(query instanceof BasicDBObject){
 				return (BasicDBObject)query;
