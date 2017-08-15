@@ -566,4 +566,12 @@ public final class X {
 		return "0" + s;
 	}
 
+	public static boolean isIn(String s1, String... s2) {
+		for (String s : s2) {
+			if (X.isSame(s1, s)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
