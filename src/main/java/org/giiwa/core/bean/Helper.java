@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
@@ -37,6 +38,7 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 
 /**
@@ -761,13 +763,24 @@ public class Helper implements Serializable {
 		return sb.append("]").toString();
 	}
 
+	private interface IClause {
+		int getCondition();
+
+		String where();
+
+		String where(Map<String, String> tansfers);
+
+		BasicDBObject query();
+		IClause copy();
+	}
+
 	/**
 	 * the {@code W} Class used to create SQL "where" conditions<br>
 	 * this is for RDS and Mongo Query.
 	 *
 	 * @author joe
 	 */
-	public final static class W implements Serializable {
+	public final static class W implements Serializable, IClause {
 
 		/**
 		 * 
@@ -791,6 +804,7 @@ public class Helper implements Serializable {
 		private String connectsql;
 		private List<W> wlist = new ArrayList<W>();
 		private List<Entity> elist = new ArrayList<Entity>();
+		private List<IClause> queryList = new ArrayList<IClause>();
 		private List<Entity> order = new ArrayList<Entity>();
 		private String groupby;
 
@@ -864,6 +878,7 @@ public class Helper implements Serializable {
 				for (JSON j1 : l1) {
 					W q1 = W.fromJSON(j1);
 					q.wlist.add(q1);
+					q.queryList.add(q1);
 				}
 			}
 
@@ -872,6 +887,7 @@ public class Helper implements Serializable {
 				for (JSON j1 : l1) {
 					Entity e = Entity.fromJSON(j1);
 					q.elist.add(e);
+					q.queryList.add(e);
 				}
 			}
 
@@ -907,6 +923,19 @@ public class Helper implements Serializable {
 					}
 				}
 			}
+			if (names != null) {
+				for (String name : names) {
+					for (int i = queryList.size() - 1; i >= 0; i--) {
+						IClause c = queryList.get(i);
+						if (c instanceof Entity) {
+							Entity e = (Entity)c;
+							if (X.isSame(name, e.name)) {
+								queryList.remove(i);
+							}
+						}
+					}
+				}
+			}
 			return this;
 		}
 
@@ -928,6 +957,9 @@ public class Helper implements Serializable {
 				w.elist.add(e.copy());
 			}
 
+			for (IClause e : queryList) {
+				w.queryList.add(e.copy());
+			}
 			return w;
 		}
 
@@ -1011,32 +1043,41 @@ public class Helper implements Serializable {
 			if (!X.isEmpty(connectsql)) {
 				sb.append(connectsql);
 			}
-
-			for (Entity e : elist) {
-				if (sb.length() > 0) {
-					if (e.cond == AND) {
+			for(IClause clause:queryList){
+				if(sb.length() >0 ){
+					if (clause.getCondition()== AND) {
 						sb.append(" and ");
-					} else if (e.cond == OR) {
+					} else if (clause.getCondition() == OR) {
 						sb.append(" or ");
 					}
 				}
-
-				sb.append(e.where(tansfers));
+				sb.append(clause.where(tansfers));
 			}
+			
+//			for (Entity e : elist) {
+//				if (sb.length() > 0) {
+//					if (e.cond == AND) {
+//						sb.append(" and ");
+//					} else if (e.cond == OR) {
+//						sb.append(" or ");
+//					}
+//				}
+//				sb.append(e.where(tansfers));
+//			}
+//
+//			for (W w : wlist) {
+//				if (sb.length() > 0) {
+//					if (w.cond == AND) {
+//						sb.append(" and ");
+//					} else if (w.cond == OR) {
+//						sb.append(" or ");
+//					}
+//				}
+//
+//				sb.append(" (").append(w.where(tansfers)).append(") ");
+//			}
 
-			for (W w : wlist) {
-				if (sb.length() > 0) {
-					if (w.cond == AND) {
-						sb.append(" and ");
-					} else if (w.cond == OR) {
-						sb.append(" or ");
-					}
-				}
-
-				sb.append(" (").append(w.where(tansfers)).append(") ");
-			}
-
-			return sb.toString();
+			return "("+sb+")";
 
 		}
 
@@ -1111,6 +1152,7 @@ public class Helper implements Serializable {
 		public W and(W w) {
 			w.cond = AND;
 			wlist.add(w);
+			queryList.add(w);
 			return this;
 		}
 
@@ -1124,6 +1166,7 @@ public class Helper implements Serializable {
 		public W or(W w) {
 			w.cond = OR;
 			wlist.add(w);
+			queryList.add(w);
 			return this;
 		}
 
@@ -1224,6 +1267,7 @@ public class Helper implements Serializable {
 		 */
 		public W and(String name, Object v, OP op) {
 			elist.add(new Entity(name, v, op, AND));
+			queryList.add(new Entity(name, v, op, AND));
 			return this;
 		}
 
@@ -1269,12 +1313,13 @@ public class Helper implements Serializable {
 		public W or(String name, Object v, OP op) {
 
 			elist.add(new Entity(name, v, op, OR));
-
+			queryList.add(new Entity(name, v, op, OR));
 			return this;
 		}
 
 		/**
-		 * copy the name and parameter from a JSON, with "and" and "op" conditions.
+		 * copy the name and parameter from a JSON, with "and" and "op"
+		 * conditions.
 		 *
 		 * @param jo
 		 *            the json
@@ -1300,7 +1345,8 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * copy the value in jo, the format of name is: ["name", "table field name" ].
+		 * copy the value in jo, the format of name is: ["name",
+		 * "table field name" ].
 		 *
 		 * @param jo
 		 *            the json
@@ -1359,6 +1405,7 @@ public class Helper implements Serializable {
 		public static W create(String name, Object v, OP op) {
 			W w = new W();
 			w.elist.add(new Entity(name, v, op, AND));
+			w.queryList.add(new Entity(name, v, op, AND));
 			return w;
 		}
 
@@ -1384,7 +1431,7 @@ public class Helper implements Serializable {
 			return elist;
 		}
 
-		public static class Entity implements Serializable {
+		public static class Entity implements Serializable, IClause {
 
 			/**
 			 * 
@@ -1395,6 +1442,10 @@ public class Helper implements Serializable {
 			public Object value;
 			public OP op; // operation EQ, GT, ...
 			public int cond; // condition AND, OR
+
+			public int getCondition() {
+				return cond;
+			}
 
 			private List<Object> args(List<Object> list) {
 				if (value != null) {
@@ -1424,28 +1475,28 @@ public class Helper implements Serializable {
 						j1.getInt("cond"));
 			}
 
-			public Object getMongoQuery() {
+			public BasicDBObject query() {
 				if (op == OP.eq) {
-					return value;
+					return new BasicDBObject(name, value);
 				} else if (op == OP.gt) {
-					return new BasicDBObject("$gt", value);
+					return new BasicDBObject(name, new BasicDBObject("$gt", value));
 				} else if (op == OP.gte) {
-					return new BasicDBObject("$gte", value);
+					return new BasicDBObject(name, new BasicDBObject("$gte", value));
 				} else if (op == OP.lt) {
-					return new BasicDBObject("$lt", value);
+					return new BasicDBObject(name, new BasicDBObject("$lt", value));
 				} else if (op == OP.lte) {
-					return new BasicDBObject("$lte", value);
+					return new BasicDBObject(name, new BasicDBObject("$lte", value));
 				} else if (op == OP.like) {
 					Pattern p1 = Pattern.compile(value.toString(), Pattern.CASE_INSENSITIVE);
-					return p1;
+					return new BasicDBObject(name, p1);
 				} else if (op == OP.neq) {
-					return new BasicDBObject("$ne", value);
+					return new BasicDBObject(name, new BasicDBObject("$ne", value));
 				} else if (op == OP.exists) {
-					return new BasicDBObject("$exists", value);
+					return new BasicDBObject(name, new BasicDBObject("$exists", value));
 				} else if (op == OP.in) {
-					return new BasicDBObject("$in", value);
+					return new BasicDBObject(name, new BasicDBObject("$in", value));
 				}
-				return value;
+				return new BasicDBObject();
 			}
 
 			/**
@@ -1471,7 +1522,7 @@ public class Helper implements Serializable {
 				return new Entity(name, value, op, cond);
 			}
 
-			private String where(Map<String, String> tansfers) {
+			public String where(Map<String, String> tansfers) {
 				StringBuilder sb = new StringBuilder();
 
 				if (tansfers != null && tansfers.containsKey(name)) {
@@ -1539,36 +1590,42 @@ public class Helper implements Serializable {
 				this.cond = cond;
 				this.value = v;
 			}
-		}
 
-		/**
-		 * _parse.
-		 *
-		 * @param e
-		 *            the e
-		 * @param q
-		 *            the q
-		 * @return the basic db object
-		 */
-		BasicDBObject _parse(Entity e, BasicDBObject q) {
-			if (q.containsField(e.name)) {
-				// get out of it and "$and" them
-				Object v = q.removeField(e.name);
-				List<BasicDBObject> l1 = new ArrayList<BasicDBObject>();
-				l1.add(new BasicDBObject().append(e.name, v));
-				l1.add(new BasicDBObject().append(e.name, e.getMongoQuery()));
-
-				if (q.containsField("$and")) {
-					List<BasicDBObject> l2 = (List<BasicDBObject>) q.get("$and");
-					l2.addAll(l1);
-				} else {
-					q.append("$and", l1);
-				}
-			} else {
-				q.append(e.name, e.getMongoQuery());
+			@Override
+			public String where() {
+				// TODO Auto-generated method stub
+				return where(null);
 			}
-			return q;
 		}
+
+		// /**
+		// * _parse.
+		// *
+		// * @param e
+		// * the e
+		// * @param q
+		// * the q
+		// * @return the basic db object
+		// */
+		// BasicDBObject _parse(Entity e, BasicDBObject q) {
+		// if (q.containsField(e.name)) {
+		// // get out of it and "$and" them
+		// Object v = q.removeField(e.name);
+		// List<BasicDBObject> l1 = new ArrayList<BasicDBObject>();
+		// l1.add(new BasicDBObject().append(e.name, v));
+		// l1.add(new BasicDBObject().append(e.name, e.getMongoQuery()));
+		//
+		// if (q.containsField("$and")) {
+		// List<BasicDBObject> l2 = (List<BasicDBObject>) q.get("$and");
+		// l2.addAll(l1);
+		// } else {
+		// q.append("$and", l1);
+		// }
+		// } else {
+		// q.append(e.name, e.getMongoQuery());
+		// }
+		// return q;
+		// }
 
 		/**
 		 * Query.
@@ -1578,57 +1635,96 @@ public class Helper implements Serializable {
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public BasicDBObject query() {
 			BasicDBObject q = new BasicDBObject();
-
+			BasicDBList list = new BasicDBList();
 			List<List> l1 = new ArrayList<List>();
-			{
-				List l2 = new ArrayList();
-				for (Entity e : elist) {
-					if (e.cond == OR && l2.size() > 0) {
-						l1.add(l2);
-						l2 = new ArrayList<Entity>();
-					}
-					l2.add(e);
+			Stack<Object> stack = new Stack<Object>();
+			for(IClause clause : queryList){
+				if(stack.isEmpty() || stack.size() < 2){
+					stack.push(clause);
 				}
-				for (W e : wlist) {
-					if (e.cond == OR && l2.size() > 0) {
-						l1.add(l2);
-						l2 = new ArrayList<Entity>();
+				if(stack.size() == 2){
+					int cond = -1;
+					list = new BasicDBList();
+					Object right = stack.pop();
+					Object left = stack.pop();
+					if(left instanceof BasicDBObject){
+						list.add(left);
+					}else if(left instanceof IClause){
+						list.add(((IClause)left).query());
 					}
-					l2.add(e);
-				}
-
-				if (l2.size() > 0) {
-					l1.add(l2);
+					
+					if(right instanceof IClause){
+						cond = ((IClause)right).getCondition();
+						list.add(((IClause)right).query());
+					}
+					if(cond == AND){
+						q.append("$and", list);
+						stack.push(q);
+						q = new BasicDBObject();
+					}else if(cond == OR){
+						q.append("$or", list);
+						stack.push(q);
+						q = new BasicDBObject();
+					}
+				
 				}
 			}
-
-			if (l1.size() > 1) {
-				List<BasicDBObject> l3 = new ArrayList<BasicDBObject>();
-				for (List l2 : l1) {
-					BasicDBObject q1 = new BasicDBObject();
-					for (Object e : l2) {
-						if (e instanceof Entity) {
-							_parse((Entity) e, q1);
-						} else if (e instanceof W) {
-							BasicDBObject q2 = ((W) e).query();
-							q1 = _merge(q1, q2);
-						}
-					}
-					l3.add(q1);
-				}
-				q.append("$or", l3);
-			} else if (!l1.isEmpty()) {
-				for (Object e : l1.get(0)) {
-					if (e instanceof Entity) {
-						_parse((Entity) e, q);
-					} else if (e instanceof W) {
-						BasicDBObject q2 = ((W) e).query();
-						q = _merge(q, q2);
-					}
-				}
+			Object query = stack.pop();
+			if(query instanceof BasicDBObject){
+				return (BasicDBObject)query;
+			}else if(query instanceof IClause){
+				return ((IClause)query).query();
 			}
-
-			return q;
+			return new BasicDBObject();
+//			{
+//				List l2 = new ArrayList();
+//				for (Entity e : elist) {
+//					if (e.cond == OR && l2.size() > 0) {
+//						l1.add(l2);
+//						l2 = new ArrayList<Entity>();
+//					}
+//					l2.add(e);
+//				}
+//				for (W e : wlist) {
+//					if (e.cond == OR && l2.size() > 0) {
+//						l1.add(l2);
+//						l2 = new ArrayList<Entity>();
+//					}
+//					l2.add(e);
+//				}
+//
+//				if (l2.size() > 0) {
+//					l1.add(l2);
+//				}
+//			}
+//
+//			if (l1.size() > 1) {
+//				List<BasicDBObject> l3 = new ArrayList<BasicDBObject>();
+//				for (List l2 : l1) {
+//					BasicDBObject q1 = new BasicDBObject();
+//					for (Object e : l2) {
+//						if (e instanceof Entity) {
+//							_parse((Entity) e, q1);
+//						} else if (e instanceof W) {
+//							BasicDBObject q2 = ((W) e).query();
+//							q1 = _merge(q1, q2);
+//						}
+//					}
+//					l3.add(q1);
+//				}
+//				q.append("$or", l3);
+//			} else if (!l1.isEmpty()) {
+//				for (Object e : l1.get(0)) {
+//					if (e instanceof Entity) {
+//						_parse((Entity) e, q);
+//					} else if (e instanceof W) {
+//						BasicDBObject q2 = ((W) e).query();
+//						q = _merge(q, q2);
+//					}
+//				}
+//			}
+//
+//			return q;
 		}
 
 		private BasicDBObject _merge(BasicDBObject q1, BasicDBObject q2) {
@@ -2142,8 +2238,8 @@ public class Helper implements Serializable {
 	}
 
 	/**
-	 * load the data from the table by query, ignore the table definition for the
-	 * Class.
+	 * load the data from the table by query, ignore the table definition for
+	 * the Class.
 	 *
 	 * @param <T>
 	 *            the subclass of Bean
@@ -2466,6 +2562,51 @@ public class Helper implements Serializable {
 		System.out.println(q1);
 		System.out.println(q1.query());
 
+		System.out.println("#################");
+		W sql = W.create();
+		sql.and("a","B").and("c", "d").or("e", "f").and("f", "g");
+		System.out.println(sql.query());
+		System.out.println(sql.where());
+		sql = W.create();
+		sql.and("a", "c",W.OP.gt);
+		sql.and(W.create().and("a", "b",W.OP.lt).and("d","4"));
+		sql.or("c","d");
+		System.out.println(sql.query());
+		System.out.println(sql.where());
+
+		
+		sql = W.create();
+		sql.and("eventType", "1");
+		sql.and("msgType", "NOTIFICATION", W.OP.neq);
+		if (true) {
+			sql.and("convType", "PERSON");
+			sql.and(W.create().or(W.create().and("fromAccount", "to").and("to", "from")).or(W.create().and("fromAccount", "from").and("to", "to")));
+		}
+		long time = System.currentTimeMillis();
+		if (time > 0) {
+			sql.and("msgTimestamp", time, W.OP.lt);
+		}
+		System.out.println(sql.query());
+		System.out.println(sql.where());
+		sql = W.create();
+		sql.and("eventType", "1");
+		sql.and("msgType", "NOTIFICATION", W.OP.neq);
+		if (true) {
+			sql.and("convType", "PERSON");
+			sql.or(W.create().and("fromAccount", "from").and("to", "to"));
+			sql.or(W.create().and("fromAccount", "to").and("to", "from"));
+		} 
+		if (time > 0) {
+			sql.append("msgTimestamp", time, W.OP.lt);
+		}
+		System.out.println(sql.query());
+		System.out.println(sql.where());
+		sql = W.create();
+		sql.and("a", "b");
+		sql.and("a","c");
+		sql.and(W.create("a", "x"));
+		System.out.println(sql.query());
+		System.out.println(sql.where());
 	}
 
 	/**
