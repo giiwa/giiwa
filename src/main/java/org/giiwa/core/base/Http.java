@@ -1402,8 +1402,13 @@ public final class Http {
 	}
 
 	public static String host(String url) {
-		String[] ss = X.split(url, "[/:]");
-		return ss != null && ss.length > 1 ? ss[1] : null;
+		if (url.startsWith("http")) {
+			String[] ss = X.split(url, "[/:]");
+			return ss != null && ss.length > 1 ? ss[1] : null;
+		} else {
+			String[] ss = X.split(url, "[/:]");
+			return ss != null && ss.length > 0 ? ss[0] : null;
+		}
 	}
 
 	public static String path(String url) {
