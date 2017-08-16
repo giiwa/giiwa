@@ -2368,7 +2368,7 @@ public class Helper implements Serializable {
 	 */
 	public static String getDB(Class<? extends Bean> t) {
 		Table table = (Table) t.getAnnotation(Table.class);
-		if (table == null || X.isEmpty(table.name())) {
+		if (table == null || X.isEmpty(table.db())) {
 			return DEFAULT;
 		}
 

@@ -426,7 +426,7 @@
                 paramName = $.type(options.paramName) === 'array' ?
                     options.paramName[0] : options.paramName;
             options.headers = $.extend({}, options.headers);
-            options.headers['lastModified'] = file.lastModifiedDate;
+            options.headers['lastModified'] = file.lastModified;
             options._progress['file'] = file.name;
             	
             if (options.contentRange) {
