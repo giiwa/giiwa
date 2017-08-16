@@ -75,7 +75,7 @@ public class MongoHelper implements Helper.DBHelper {
 	static Log log = LogFactory.getLog(MongoHelper.class);
 
 	/** The mongo. */
-	private static Map<String, MongoDatabase> mongo = new HashMap<String, MongoDatabase>();
+	private static volatile Map<String, MongoDatabase> mongo = new HashMap<String, MongoDatabase>();
 
 	public static MongoHelper inst = new MongoHelper();
 
