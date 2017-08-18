@@ -159,7 +159,7 @@ public abstract class Task implements Runnable {
 	 */
 	public String getName() {
 		if (_name == null) {
-			_name = "tast." + seq.incrementAndGet();
+			_name = "task." + seq.incrementAndGet();
 		}
 		return _name;
 	}

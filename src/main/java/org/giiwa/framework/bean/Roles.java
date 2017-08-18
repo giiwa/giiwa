@@ -99,10 +99,11 @@ public class Roles extends Bean {
 					return true;
 				}
 			}
-
-			return access != null && access.contains("access.config.admin");
 		}
-		return false;
+
+		return access != null && access.contains("access.config.admin");
+		//}
+		//return false;
 	}
 
 }

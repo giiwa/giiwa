@@ -128,12 +128,15 @@ public class Access extends Bean {
     for (Access a : list) {
       if (!X.isEmpty(a.name)) {
         String name = a.groupName();
-        if (group == null || !name.equals(group)) {
+        if (!r.containsKey(name)) {
           group = name;
           last = new ArrayList<Access>();
+          last.add(a);
           r.put(group, last);
+        }else{
+        	  r.get(name).add(a);
         }
-        last.add(a);
+        //last.add(a);
       }
     }
 
