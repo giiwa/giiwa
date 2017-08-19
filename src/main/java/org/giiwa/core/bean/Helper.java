@@ -788,7 +788,7 @@ public class Helper implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		public enum OP {
-			eq, gt, gte, lt, lte, like, neq, none, in, exists,nin,type
+			eq, gt, gte, lt, lte, like, neq, none, in, exists,nin,type,mod,all,size
 		};
 
 		/**
@@ -1499,6 +1499,12 @@ public class Helper implements Serializable {
 					return new BasicDBObject(name, new BasicDBObject("$nin",value));
 				} else if (op == OP.type){
 					return new BasicDBObject(name, new BasicDBObject("$type",value));
+				} else if (op == OP.mod){
+					return new BasicDBObject(name, new BasicDBObject("$mod",value));
+				} else if (op == OP.all){
+					return new BasicDBObject(name, new BasicDBObject("$all",value));
+				} else if (op == OP.size){
+					return new BasicDBObject(name, new BasicDBObject("$size",value));
 				}
 				return new BasicDBObject();
 			}
