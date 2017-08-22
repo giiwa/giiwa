@@ -1005,13 +1005,8 @@ public class Model {
 		String r = null;
 		if (queryfirst) {
 			r = getString(tag);
-			if (X.isEmpty(r)) {
-				Session s = this.getSession();
-				r = (String) s.get(tagInSession);
-			} else {
-				Session s = this.getSession();
-				s.set(tagInSession, r).store();
-			}
+			Session s = this.getSession();
+			s.set(tagInSession, r).store();
 		} else {
 			Session s = this.getSession();
 			r = (String) s.get(tagInSession);
