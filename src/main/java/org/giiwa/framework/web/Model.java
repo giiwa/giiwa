@@ -1010,6 +1010,7 @@ public class Model {
 		} else {
 			Session s = this.getSession();
 			r = (String) s.get(tagInSession);
+			query.append(tag, r);
 		}
 		return r;
 	}
