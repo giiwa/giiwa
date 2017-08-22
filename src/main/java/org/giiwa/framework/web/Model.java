@@ -973,7 +973,8 @@ public class Model {
 	}
 
 	/**
-	 * get the parameter from the request, if not presented, then get from session
+	 * @deprecated get the parameter from the request, if not presented, then get
+	 *             from session
 	 * 
 	 * @param tag
 	 *            the name of the parameter in request.
@@ -997,6 +998,24 @@ public class Model {
 			s.set(tagInSession, r).store();
 		}
 
+		return r;
+	}
+
+	final public String getString(String tag, String tagInSession, boolean queryfirst) {
+		String r = null;
+		if (queryfirst) {
+			r = getString(tag);
+			if (X.isEmpty(r)) {
+				Session s = this.getSession();
+				r = (String) s.get(tagInSession);
+			} else {
+				Session s = this.getSession();
+				s.set(tagInSession, r).store();
+			}
+		} else {
+			Session s = this.getSession();
+			r = (String) s.get(tagInSession);
+		}
 		return r;
 	}
 
@@ -1897,18 +1916,12 @@ public class Model {
 	 * On post requested from HTTP POST method.
 	 */
 	public void onPost() {
-		//TODO, may cause dead loop ?
+		// TODO, may cause dead loop ?
 		/*
-		if (module != null) {
-			Module t = module.floor();
-			if (t != null) {
-				Model m = t.getModel(Model.METHOD_POST, uri);
-				if (m != null) {
-					m.dispatch(uri, req, resp, method);
-					return;
-				}
-			}
-		}*/
+		 * if (module != null) { Module t = module.floor(); if (t != null) { Model m =
+		 * t.getModel(Model.METHOD_POST, uri); if (m != null) { m.dispatch(uri, req,
+		 * resp, method); return; } } }
+		 */
 
 		String uri = req.getRequestURI();
 		while (uri.indexOf("//") > -1) {
