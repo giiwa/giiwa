@@ -1411,6 +1411,33 @@ public final class Http {
 		}
 	}
 
+	public static String domain(String url, int subnum) {
+		String host = host(url);
+		String[] ss = X.split(host, "\\.");
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < ss.length; i++) {
+			if (sb.length() > 0) {
+				sb.append(".").append(ss[i]);
+			} else {
+				if (X.isIn(ss[i], "com", "net", "cn", "cc", "org", "xin", "so", "top", "site", "shop", "club")) {
+					for (int ii = subnum; ii >= 0; ii--) {
+						if (i - ii - 1 >= 0) {
+							sb.append(ss[i - ii - 1]).append(".");
+						}
+					}
+					for (int ii = i; ii < ss.length; ii++) {
+						sb.append(ss[ii]);
+						if (ii != ss.length - 1) {
+							sb.append(".");
+						}
+					}
+					break;
+				}
+			}
+		}
+		return sb.toString();
+	}
+
 	public static String path(String url) {
 		int i = url.lastIndexOf("/");
 		if (i > 8) {
