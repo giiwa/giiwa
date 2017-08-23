@@ -458,7 +458,7 @@ public abstract class Task implements Runnable {
 							sf.cancel(false);
 						}
 						// Exception e = new Exception("e");
-						log.warn("reschedule the task:" + getName());
+						log.warn("reschedule the task:" + getName() + ", class=" + this.getClass().getName());
 					}
 
 					// if (pendingQueue.size() > MAX_TASK_SIZE) {
