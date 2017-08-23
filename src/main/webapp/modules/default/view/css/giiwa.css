@@ -685,11 +685,10 @@ td a.delete {
 label h3 {
 	display: inline-block;
 	overflow: hidden;
-	text-align: right;
 	float: left;
 	font-weight: normal;
 	color: #000;
-	min-width: 80px;	
+	min-width: 60px;	
 }
 .ui-dialog .ui-dialog-content label h3 {
 	line-height: 36px;
