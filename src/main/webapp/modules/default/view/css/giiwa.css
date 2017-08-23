@@ -689,6 +689,7 @@ label h3 {
 	float: left;
 	font-weight: normal;
 	color: #000;
+	min-width: 80px;	
 }
 .ui-dialog .ui-dialog-content label h3 {
 	line-height: 36px;
