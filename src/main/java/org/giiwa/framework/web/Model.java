@@ -1865,7 +1865,9 @@ public class Model {
 		this.setContentType(Model.MIME_JSON);
 		this.print(jsonstr);
 
-		OpLog.info(this.getClass(), this.path, jsonstr, login, this.getRemoteHost());
+		OpLog.info(this.getClass(), this.path,
+				"header=" + Arrays.toString(this.getHeaders()) + ",request=" + this.getJSON() + ", response=" + jsonstr,
+				login, this.getRemoteHost());
 	}
 
 	/**
