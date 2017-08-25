@@ -40,6 +40,15 @@
 		<input type='checkbox' name='db.optimizer' #if($global.getInt("db.optimizer", 1)==1) checked="checked" #end />
 		<g>$lang.get('db.optimizer.hint')</g></label></div>
 	
+	<div><label><h3>$lang.get('oplog.level'):</h3>
+		<select name='oplog.level'>
+			<option value='0' #if($global.getInt('oplog.level', 1) == 0) selected #end>$lang.get('oplog.level_0')</option>
+			<option value='1' #if($global.getInt('oplog.level', 1) == 1) selected #end>$lang.get('oplog.level_1')</option>
+			<option value='2' #if($global.getInt('oplog.level', 1) == 2) selected #end>$lang.get('oplog.level_2')</option>
+		</select>
+		<g>$lang.get('oplog.level.hint')</g>
+	</label></div>
+	
 	<div><label><g>$lang.get('base.setting.user')</g></label></div>
 	<hr/>
 	<div><label><h3>$lang.get('user.name.rule'):</h3>

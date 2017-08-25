@@ -1864,6 +1864,8 @@ public class Model {
 	private void responseJson(String jsonstr) {
 		this.setContentType(Model.MIME_JSON);
 		this.print(jsonstr);
+
+		OpLog.info(this.getClass(), this.path, jsonstr, login, this.getRemoteHost());
 	}
 
 	/**
