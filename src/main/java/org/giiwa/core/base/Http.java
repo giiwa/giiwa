@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.CookiePolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.cert.CertificateException;
@@ -40,8 +39,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -1359,7 +1356,7 @@ public final class Http {
 
 		String[] ss = X.split(href, "[#?&]");
 		if (ss.length < 2) {
-			return ss[0].replaceAll("/./", "/");
+			return ss[0].replaceAll("/\\./", "/");
 		}
 		TreeMap<String, String> p = new TreeMap<String, String>();
 		for (int i = 1; i < ss.length; i++) {
@@ -1388,9 +1385,9 @@ public final class Http {
 			}
 		}
 		if (sb.length() > 0) {
-			return ss[0].replaceAll("/./", "/") + "?" + sb.toString();
+			return ss[0].replaceAll("/\\./", "/") + "?" + sb.toString();
 		}
-		return ss[0].replaceAll("/./", "/");
+		return ss[0].replaceAll("/\\./", "/");
 	}
 
 	public static String server(String url) {
