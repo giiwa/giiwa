@@ -2383,4 +2383,67 @@ public class RDSHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@Override
+	public <T> T sum(String table, W q, String name, String db) {
+
+		/**
+		 * create the sql statement
+		 */
+		TimeStamp t = TimeStamp.create();
+
+		// log.debug("sql:" + sql.toString());
+
+		/**
+		 * search it in database
+		 */
+		Connection c = null;
+		PreparedStatement p = null;
+		ResultSet r = null;
+		Object n = 0;
+		try {
+
+			c = getConnection(db);
+
+			if (c == null) {
+				n = 0;
+			} else {
+				StringBuilder sum = new StringBuilder();
+				sum.append("select sum(" + name + ") t from ").append(table);
+				String where = _where(q, c);
+				Object[] args = q.args();
+
+				if (!X.isEmpty(where)) {
+					sum.append(" where ").append(where);
+				}
+
+				p = c.prepareStatement(sum.toString());
+
+				int order = 1;
+				if (args != null) {
+					for (int i = 0; i < args.length; i++) {
+						Object o = args[i];
+
+						setParameter(p, order++, o);
+					}
+				}
+
+				r = p.executeQuery();
+				if (r.next()) {
+					n = r.getObject("t");
+				}
+			}
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(q, e);
+
+		} finally {
+			close(r, p, c);
+
+			if (log.isDebugEnabled())
+				log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+		}
+
+		return (T) n;
+	}
+
 }

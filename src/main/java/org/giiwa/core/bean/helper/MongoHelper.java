@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -55,6 +56,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListCollectionsIterable;
 import com.mongodb.client.MongoCollection;
@@ -1209,9 +1211,43 @@ public class MongoHelper implements Helper.DBHelper {
 	}
 
 	public static void main(String[] args) {
-		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/giiwa");
-		System.out.println(h.listTables(""));
-		System.out.println(h.getMetaData("gi_user"));
+		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/demo");
+		int t = h.sum("gi_user", W.create(), "logintimes", "default");
+		System.out.println("t=" + t);
+	}
+
+	@Override
+	public <T> T sum(String collection, W q, String name, String db) {
+
+		TimeStamp t1 = TimeStamp.create();
+		Object n = 0;
+		try {
+
+			MongoCollection<Document> c = getCollection(db, collection);
+			if (c != null) {
+				BasicDBObject group = new BasicDBObject();
+				group.append("$group", new BasicDBObject().append("_id", name).append(name,
+						new BasicDBObject().append("$sum", "$" + name)));
+
+				List<BasicDBObject> l1 = Arrays.asList(group,
+						new BasicDBObject("$match", q == null ? new BasicDBObject() : q.query()));
+
+				System.out.println(l1);
+
+				MongoCursor<Document> it = c.aggregate(l1).iterator();
+				if (it != null && it.hasNext()) {
+					Document d = it.next();
+					if (d != null) {
+						n = d.get(name);
+					}
+				}
+			}
+
+		} finally {
+			if (log.isDebugEnabled())
+				log.debug("count, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q + ", n=" + n);
+		}
+		return (T) n;
 	}
 
 }

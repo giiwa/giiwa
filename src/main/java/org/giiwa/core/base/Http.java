@@ -1076,6 +1076,11 @@ public final class Http {
 	public static void main(String[] args) {
 		Http.DEBUG = true;
 
+		String s = "//aaa.com/";
+		s = "http://aaa.com?aaa";
+		s = "http://aaa.com&aaa";
+		s = "http://aaa.com#aaa";
+		System.out.println(host(s));
 		// Http h = Http.create();
 		// System.out.println("response=" + h.get("http://giiwa.org").body);
 		//
@@ -1400,10 +1405,10 @@ public final class Http {
 
 	public static String host(String url) {
 		if (url.startsWith("http")) {
-			String[] ss = X.split(url, "[/:]");
+			String[] ss = X.split(url, "[/:?&#]");
 			return ss != null && ss.length > 1 ? ss[1] : null;
 		} else {
-			String[] ss = X.split(url, "[/:]");
+			String[] ss = X.split(url, "[/:?&#]");
 			return ss != null && ss.length > 0 ? ss[0] : null;
 		}
 	}
