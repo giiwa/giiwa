@@ -29,6 +29,16 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 public class VelocityView extends View {
+  public VelocityView() {
+	// TODO Auto-generated constructor stub
+	Properties p = new Properties();
+    p.setProperty("input.encoding", "utf-8");
+    p.setProperty("output.encoding", "utf-8");
+    p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
+    p.setProperty("directive.set.null.allowed", "true");
+    p.setProperty("file.resource.loader.class", "org.giiwa.framework.web.view.VelocityTemplateLoader");
+    Velocity.init(p);
+  }
 
   @Override
   public boolean parse(File file, Model m, String viewname) throws IOException {
@@ -94,19 +104,6 @@ public class VelocityView extends View {
     T t = cache.get(fullname);
 
     if (t == null || t.last != f.lastModified()) {
-
-      if (cache.size() == 0) {
-        /**
-         * initialize template loader for velocity
-         */
-        Properties p = new Properties();
-        p.setProperty("input.encoding", "utf-8");
-        p.setProperty("output.encoding", "utf-8");
-        p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
-        p.setProperty("directive.set.null.allowed", "true");
-        p.setProperty("file.resource.loader.class", "org.giiwa.framework.web.view.VelocityTemplateLoader");
-        Velocity.init(p);
-      }
 
       /**
        * get the template from the top

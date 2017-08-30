@@ -124,6 +124,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
    */
   @Override
   public void init(ExtendedProperties configuration) {
+	log.debug("VelocityTemplateLoader init..."+this.getClassName());
     super.init(configuration);
   }
 
