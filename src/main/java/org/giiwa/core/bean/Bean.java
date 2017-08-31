@@ -19,8 +19,11 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -124,6 +127,7 @@ public class Bean implements Serializable, Map<String, Object> {
 	 *            the value, if the value=null, then remove the name from the data
 	 * @return Object of the old value
 	 */
+	@SuppressWarnings("unchecked")
 	public final Object set(String name, Object value) {
 		if (data == null) {
 			data = new HashMap<String, Object>();
@@ -131,7 +135,7 @@ public class Bean implements Serializable, Map<String, Object> {
 
 		Object old = null;
 
-		//name = name.toLowerCase();
+		// name = name.toLowerCase();
 
 		// looking for all the fields
 		Field f1 = getField(name);
@@ -151,6 +155,28 @@ public class Bean implements Serializable, Map<String, Object> {
 					f1.set(this, X.toDouble(value, 0));
 				} else if (t1 == float.class) {
 					f1.set(this, X.toFloat(value, 0));
+				} else if (t1.isAssignableFrom(List.class) || t1.isArray()) {
+					// change the value to list
+					List<Object> l1 = new ArrayList<Object>();
+					if (value instanceof List) {
+						l1.addAll((List<Object>) value);
+					} else if (value.getClass().isArray()) {
+						l1.add(Arrays.asList(value));
+					} else {
+						l1.add(value);
+					}
+					if (t1.isArray()) {
+						f1.set(this, l1.toArray());
+					} else {
+						f1.set(this, l1);
+					}
+				} else if (t1.isAssignableFrom(Map.class)) {
+					// change the value to map
+					Map<?, ?> l1 = new HashMap<>();
+					if (value instanceof Map) {
+						l1.putAll((Map) value);
+					}
+					f1.set(this, l1);
 				} else {
 					f1.set(this, value);
 				}
@@ -197,16 +223,16 @@ public class Bean implements Serializable, Map<String, Object> {
 						m.put(f1.name(), f);
 					}
 				}
-				if(Bean.class.isAssignableFrom(c1.getSuperclass())){
-					if(c1.getSuperclass().isAssignableFrom(Bean.class)){
+				if (Bean.class.isAssignableFrom(c1.getSuperclass())) {
+					if (c1.getSuperclass().isAssignableFrom(Bean.class)) {
 						c1 = null;
-					}else{
+					} else {
 						c1 = (Class<? extends Bean>) c1.getSuperclass();
 					}
-				}else{
+				} else {
 					c1 = null;
 				}
-				
+
 			}
 
 			_fields.put(c1, m);
@@ -579,6 +605,21 @@ public class Bean implements Serializable, Map<String, Object> {
 		}
 
 		return true;
+	}
+
+	public static void main(String[] args) {
+		Demo d = new Demo();
+		d.set("l1", Arrays.asList("aaaa", "bbbb"));
+		d.print();
+	}
+
+	private static class Demo extends Bean {
+		@Column(name = "l1")
+		List<String> l1;
+
+		public void print() {
+			System.out.println(l1);
+		}
 	}
 
 }
