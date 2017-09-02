@@ -14,6 +14,7 @@
 */
 package org.giiwa.core.task;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -109,6 +110,21 @@ public abstract class Task implements Runnable {
 
 	public int getRuntimes() {
 		return runtimes;
+	}
+
+	public StringBuilder onDump(StringBuilder sb) {
+		try {
+			Field[] ff = this.getClass().getDeclaredFields();
+			if (ff != null) {
+				for (Field f : ff) {
+					f.setAccessible(true);
+					sb.append(f.getName()).append("=").append(f.get(this)).append("\r\n");
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return sb;
 	}
 
 	public long getRemain() {

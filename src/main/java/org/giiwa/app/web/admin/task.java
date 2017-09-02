@@ -31,98 +31,105 @@ import org.giiwa.framework.web.*;
  */
 public class task extends Model {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model#onGet()
-   */
-  @Path(login = true, access = "access.config.admin")
-  public void onGet() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model#onGet()
+	 */
+	@Path(login = true, access = "access.config.admin")
+	public void onGet() {
 
-    this.set("pending", Task.tasksInQueue());
-    this.set("running", Task.tasksInRunning());
-    this.set("idle", Task.idleThread());
-    this.set("active", Task.activeThread());
+		this.set("pending", Task.tasksInQueue());
+		this.set("running", Task.tasksInRunning());
+		this.set("idle", Task.idleThread());
+		this.set("active", Task.activeThread());
 
-    this.set("list", Task.getAll());
+		this.set("list", Task.getAll());
 
-    this.query.path("/admin/task");
-    this.show("/admin/task.index.html");
-  }
+		this.query.path("/admin/task");
+		this.show("/admin/task.index.html");
+	}
 
-  @Path(path = "dump", login = true, access = "access.config.admin")
-  public void dump() {
-    String name = this.getString("name");
-    Task t = Task.get(name);
-    JSON j = JSON.create();
-    StringBuilder sb = new StringBuilder();
-    try {
-      if (t != null) {
-        Thread t1 = t.getThread();
-        if (t1 != null) {
-          StackTraceElement[] ss = t1.getStackTrace();
-          if (ss != null) {
-            sb.append("ID: ").append(t1.getId()).append("(0x").append(Long.toHexString(t1.getId())).append("), Thread: ")
-                .append(t1.getName()).append(", State: <i style='color:green'>").append(t1.getState())
-                .append("</i>, Task:").append(t.getClass().getName()).append("<br/>");
-            for (StackTraceElement e : ss) {
-              sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".").append(e.getMethodName())
-                  .append("(").append(e.getLineNumber()).append(")").append("<br/>");
-            }
-          }
-        }
-      }
-      if (sb.length() > 0) {
-        j.put(X.STATE, 200);
-        j.put(X.MESSAGE, sb.toString());
-      } else {
-        j.put(X.STATE, 201);
-        j.put(X.ERROR, lang.get("task.notfound"));
-      }
-    } catch (Throwable e) {
-      log.error(e.getMessage(), e);
-      j.put(X.STATE, 201);
-      j.put(X.ERROR, lang.get("task.notfound"));
-    }
+	@Path(path = "dump", login = true, access = "access.config.admin")
+	public void dump() {
+		String name = this.getString("name");
+		Task t = Task.get(name);
+		JSON j = JSON.create();
+		StringBuilder sb = new StringBuilder();
+		try {
+			if (t != null) {
+				Thread t1 = t.getThread();
+				if (t1 != null) {
+					StackTraceElement[] ss = t1.getStackTrace();
+					if (ss != null) {
+						sb.append("ID: ").append(t1.getId()).append("(0x").append(Long.toHexString(t1.getId()))
+								.append("), Thread: ").append(t1.getName()).append(", State: <i style='color:green'>")
+								.append(t1.getState()).append("</i>, Task:").append(t.getClass().getName())
+								.append("<br/>");
+						sb.append("<div style='color: #888;'>")
+								.append(t.onDump(new StringBuilder()).toString().replaceAll("\r\n", "<br/>"))
+								.append("</div>");
 
-    this.response(j);
+						for (StackTraceElement e : ss) {
+							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".")
+									.append(e.getMethodName()).append("(").append(e.getLineNumber()).append(")")
+									.append("<br/>");
+						}
+					}
+				}
+			}
+			if (sb.length() > 0) {
+				j.put(X.STATE, 200);
+				j.put(X.MESSAGE, sb.toString());
+			} else {
+				j.put(X.STATE, 201);
+				j.put(X.ERROR, lang.get("task.notfound"));
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			j.put(X.STATE, 201);
+			j.put(X.ERROR, lang.get("task.notfound"));
+		}
 
-  }
+		this.response(j);
 
-  @Path(path = "dumpall", login = true, access = "access.config.admin")
-  public void dumpall() {
-    JSON j = JSON.create();
-    StringBuilder sb = new StringBuilder();
-    try {
-      int i = 0;
-      Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
-      for (Thread t : dumps.keySet()) {
-        StackTraceElement[] ss = dumps.get(t);
-        if (ss != null) {
-          i++;
-          sb.append(i).append(") ID: ").append(t.getId()).append("(0x").append(Long.toHexString(t.getId()))
-              .append("), Thread: ").append(t.getName()).append(", State: <i style='color:green'>").append(t.getState())
-              .append("</i>").append("<br/>");
-          for (StackTraceElement e : ss) {
-            sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".").append(e.getMethodName())
-                .append("(").append(e.getLineNumber()).append(")").append("<br/>");
-          }
-        }
-      }
-      if (sb.length() > 0) {
-        j.put(X.STATE, 200);
-        j.put(X.MESSAGE, sb.toString());
-      } else {
-        j.put(X.STATE, 201);
-        j.put(X.ERROR, lang.get("task.notfound"));
-      }
-    } catch (Throwable e) {
-      log.error(e.getMessage(), e);
-      j.put(X.STATE, 201);
-      j.put(X.ERROR, lang.get("task.notfound"));
-    }
+	}
 
-    this.response(j);
-  }
+	@Path(path = "dumpall", login = true, access = "access.config.admin")
+	public void dumpall() {
+		JSON j = JSON.create();
+		StringBuilder sb = new StringBuilder();
+		try {
+			int i = 0;
+			Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
+			for (Thread t : dumps.keySet()) {
+				StackTraceElement[] ss = dumps.get(t);
+				if (ss != null) {
+					i++;
+					sb.append(i).append(") ID: ").append(t.getId()).append("(0x").append(Long.toHexString(t.getId()))
+							.append("), Thread: ").append(t.getName()).append(", State: <i style='color:green'>")
+							.append(t.getState()).append("</i>").append("<br/>");
+					for (StackTraceElement e : ss) {
+						sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".")
+								.append(e.getMethodName()).append("(").append(e.getLineNumber()).append(")")
+								.append("<br/>");
+					}
+				}
+			}
+			if (sb.length() > 0) {
+				j.put(X.STATE, 200);
+				j.put(X.MESSAGE, sb.toString());
+			} else {
+				j.put(X.STATE, 201);
+				j.put(X.ERROR, lang.get("task.notfound"));
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			j.put(X.STATE, 201);
+			j.put(X.ERROR, lang.get("task.notfound"));
+		}
+
+		this.response(j);
+	}
 
 }
