@@ -1127,6 +1127,9 @@ public final class Http {
 		// }
 
 		System.out.println(_UA());
+
+		System.out.println(format("http://top.sogou.com/hot/../movie/../tvshow/./all_1.html"));
+		System.out.println(format("http://top.sogou.com/tvshow/all_1.html?aaa=111"));
 	}
 
 	/**
@@ -1361,7 +1364,7 @@ public final class Http {
 
 		String[] ss = X.split(href, "[#?&]");
 		if (ss.length < 2) {
-			return ss[0].replaceAll("/\\./", "/");
+			return _format(ss[0]);
 		}
 		TreeMap<String, String> p = new TreeMap<String, String>();
 		for (int i = 1; i < ss.length; i++) {
@@ -1390,9 +1393,36 @@ public final class Http {
 			}
 		}
 		if (sb.length() > 0) {
-			return ss[0].replaceAll("/\\./", "/") + "?" + sb.toString();
+			return _format(ss[0]) + "?" + sb.toString();
 		}
-		return ss[0].replaceAll("/\\./", "/");
+		return _format(ss[0]);
+	}
+
+	private static String _format(String url) {
+		if (url.indexOf("/./") > 0 || url.indexOf("/../") > 0) {
+			String s1 = url.substring(0, 8);
+			url = url.substring(8);
+			String[] ss = X.split(url, "/");
+			List<String> l1 = new ArrayList<String>();
+			for (String s : ss) {
+				if (X.isSame(".", s)) {
+					continue;
+				}
+				if (X.isSame("..", s)) {
+					l1.remove(l1.size() - 1);
+					continue;
+				}
+				l1.add(s);
+			}
+			StringBuilder sb = new StringBuilder();
+			for (String s : l1) {
+				if (sb.length() > 0)
+					sb.append("/");
+				sb.append(s);
+			}
+			url = s1 + sb.toString();
+		}
+		return url;
 	}
 
 	public static String server(String url) {
