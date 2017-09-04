@@ -1237,19 +1237,23 @@ public class Helper implements Serializable {
 					}
 				}
 
+			// index order too
 			if (!X.isEmpty(order)) {
-				LinkedHashMap<String, Integer> r = new LinkedHashMap<String, Integer>();
+				if (l1.isEmpty()) {
+					l1.add(new LinkedHashMap<String, Integer>());
+				}
 				for (Entity e : order.toArray(new Entity[order.size()])) {
-					if (!r.containsKey(e.name)) {
-						int i = X.toInt(e.value);
-						if (i < 0) {
-							r.put(e.name, -1);
-						} else {
-							r.put(e.name, 1);
+					for (LinkedHashMap<String, Integer> m : l1) {
+						if (!m.containsKey(e.name)) {
+							int i = X.toInt(e.value);
+							if (i < 0) {
+								m.put(e.name, -1);
+							} else {
+								m.put(e.name, 1);
+							}
 						}
 					}
 				}
-				l1.add(r);
 			}
 
 			return l1;
@@ -2643,12 +2647,19 @@ public class Helper implements Serializable {
 		}
 		System.out.println(sql.query());
 		System.out.println(sql.where());
+		System.out.println(sql.sortkeys());
+
 		sql = W.create();
 		sql.and("a", "b");
-		sql.and("a", "c");
-		sql.and(W.create("a", "x"));
+		sql.or("c", "1");
+		sql.and(W.create("b", "x"));
 		System.out.println(sql.query());
 		System.out.println(sql.where());
+		System.out.println(sql.sortkeys());
+
+		q = W.create("a", 1).sort("b", -1);
+		System.out.println(q.sortkeys());
+
 	}
 
 	/**
