@@ -1570,7 +1570,11 @@ public class Model {
 	 * @return List of the request names
 	 */
 	final public List<String> getNames() {
-		if (this._multipart) {
+		String c1 = req.getContentType();
+		if(c1 != null && c1.indexOf("application/json") > -1){
+			this.getString(null);//initialize uploads
+			return new ArrayList<String>(uploads.keySet());
+		}else if (this._multipart) {
 			getFiles();
 			return new ArrayList<String>(uploads.keySet());
 		} else {
