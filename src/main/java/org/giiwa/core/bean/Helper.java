@@ -463,6 +463,10 @@ public class Helper implements Serializable {
 			return m.size();
 		}
 
+		public boolean isEmpty() {
+			return m.isEmpty();
+		}
+
 		/**
 		 * To string.
 		 *
