@@ -46,6 +46,7 @@
 			<form method="post">
 				<div><label><h3>$lang.get('setup.label.driver')：</h3>
 					<select name='driver' onchange='_ondriver();'>
+						<option user='0' value=''></option>
 						<option user='0' tips='hsqldb' value='org.hsqldb.jdbc.JDBCDriver' #if($global.getString('db.driver', '') == 'org.hsqldb.jdbc.JDBCDriver') selected #end>HSQLDB</option>
 						<option user='0' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
 						<option user='0' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
