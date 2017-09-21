@@ -503,9 +503,10 @@ public final class JSON extends HashMap<String, Object> {
     System.out.println(l1);
     System.out.println(l1.get(0).get("b").getClass());
 
-    ss = "{\"list\":[1.0,2.0,3.0,5.0,7.0,11.0,13.0,17.0,19.0,23.0,29.0,31.0,37.0,41.0,43.0,47.0,53.0,59.0,61.0,67.0,71.0,73.0,79.0,83.0,89.0,97.0]}";
+    ss = "{\"list\":['333',1.0,2.0,3.0,5.0,7.0,11.0,13.0,17.0,19.0,23.0,29.0,31.0,37.0,41.0,43.0,47.0,53.0,59.0,61.0,67.0,71.0,73.0,79.0,83.0,89.0,97.0]}";
     j = JSON.fromObject(ss);
-    System.out.println(j);
+    System.out.println(j.getObjects("list").get(0).getClass());
+    System.out.println(j.getObjects("list").get(1).getClass());
   }
 
   /**
