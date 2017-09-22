@@ -557,3 +557,4 @@ zoo.url=Zookeeper URL
 logger.detail.title=Log Detail
 disk.speed=Speed of Repo(sec)
 cpu.num=CPU Cores
+total.memory=Total Memory

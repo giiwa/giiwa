@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import org.apache.commons.configuration.Configuration;
+import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.framework.bean.Repo;
@@ -51,6 +52,7 @@ public class dashboard extends Model {
 		this.set("total", lang.size(Runtime.getRuntime().totalMemory()));
 		this.set("diskspeed", Repo.getSpeed());
 		this.set("cpus", Runtime.getRuntime().availableProcessors());
+		this.set("totalmemory", Host.getMemTotal() + "GB");
 
 		show("admin/dashboard.html");
 	}
