@@ -17,6 +17,7 @@ package org.giiwa.framework.web;
 import java.io.*;
 
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 
@@ -28,68 +29,69 @@ import org.giiwa.core.conf.Local;
  */
 public class DefaultModel extends Model {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see com.giiwa.framework.web.Model#onGet()
-   */
-  @Override
-  public void onGet() {
-    onPost();
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.giiwa.framework.web.Model#onGet()
+	 */
+	@Override
+	public void onGet() {
+		onPost();
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see com.giiwa.framework.web.Model#onPost()
-   */
-  @Override
-  public void onPost() {
-    /**
-     * if the file exists, and the extension is not .html and htm then get back
-     * directly, and set contenttype
-     */
-    log.debug("uri=" + uri);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.giiwa.framework.web.Model#onPost()
+	 */
+	@Override
+	public void onPost() {
+		/**
+		 * if the file exists, and the extension is not .html and htm then get back
+		 * directly, and set contenttype
+		 */
+		log.debug("uri=" + uri);
 
-    if (!_onPost(uri)) {
-      for (String suffix : Controller.welcomes) {
-        if (_onPost(uri + "/" + suffix)) {
-          return;
-        }
-      }
+		if (!_onPost(uri)) {
+			for (String suffix : Controller.welcomes) {
+				if (_onPost(uri + "/" + suffix)) {
+					return;
+				}
+			}
 
-      // not found
-      this.notfound();
-    }
+			// not found
+			this.notfound();
+		}
 
-  }
+	}
 
-  public boolean isMobile() {
-    return this.browser().matches(".*(iPhone|Android).*");
-  }
+	public boolean isMobile() {
+		return this.browser().matches(".*(iPhone|Android).*");
+	}
 
-  private boolean _onPost(String uri) {
-    uri = uri.replaceAll("//", "/");
-    File f = Module.home.getFile(uri);
-    if (f != null && f.exists() && f.isFile()) {
-      this.set(this.getJSON());
+	private boolean _onPost(String uri) {
+		uri = uri.replaceAll("//", "/");
+		File f = Module.home.getFile(uri);
+		if (f != null && f.exists() && f.isFile()) {
+			this.set(this.getJSON());
 
-      this.set("me", this.getUser());
-      this.put("lang", lang);
-      this.put(X.URI, uri);
-      this.put("module", Module.home);
-      this.put("path", path);
-      this.put("request", req);
-      this.put("this", this);
-      this.put("response", resp);
-      this.set("session", this.getSession());
-      this.set("global", Global.getInstance());
-      this.set("local", Local.getInstance());
+			this.set("me", this.getUser());
+			this.put("lang", lang);
+			this.put(X.URI, uri);
+			this.put("module", Module.home);
+			this.put("path", path);
+			this.put("request", req);
+			this.put("this", this);
+			this.put("response", resp);
+			this.set("session", this.getSession());
+			this.set("global", Global.getInstance());
+			this.set("conf", Config.getConf());
+			this.set("local", Local.getInstance());
 
-      show(uri);
-      return true;
-    }
-    return false;
-  }
+			show(uri);
+			return true;
+		}
+		return false;
+	}
 
 }

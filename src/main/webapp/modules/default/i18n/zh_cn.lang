@@ -225,7 +225,7 @@ mq.enabled.hint=是否开启 Active MQ, yes ＝开启
 mq.group.hint=mq数据组
 mq.url.hint=Active MQ server
 new_password_error=新密码错误
-node.hint=节点名，在相同的分布式系统中，节点名称必须唯一, [node]
+node.hint=节点名，在相同的分布式系统中，节点名称必须唯一, [node.name]
 node.type_default=
 notes.upload.module=上传模块包文件 package(*.zip)，框架会自动根据模块名称确定是新模块或是更新已经存在的模块，请访问 <a href='http://giiwa.org' target='_blank'>giiwa.org</a> 搜索更多模块。
 notification.newbuild=有新版本
@@ -422,8 +422,8 @@ logs.index.title=日志管理
 menu.logs=运行日志
 home.uri=首页URI
 home.uri.hint=缺省首页重定向到, 比如：'/forum',[home.uri]
-session.alive=会话过期时间
-session.alive.hint=小时,缺省1周,-1=永不过期
+session.alive=会话过期时间（小时）
+session.alive.hint=小时, 缺省1周,-1=永不过期
 title.data_will_be_replaced=恢复数据，现在的数据将被覆盖?
 backup.status_0=未知
 backup.status_1=开始备份

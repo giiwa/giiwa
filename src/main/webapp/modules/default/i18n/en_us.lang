@@ -236,7 +236,7 @@ mq.enabled.hint=the indicated of Active MQ, yes to enabled
 mq.group.hint=the group of mq
 mq.url.hint=the Active MQ server
 new_password_error=new password error
-node.hint=node name, MUST unique in a distributed system, [node]
+node.hint=node name, MUST unique in a distributed system, [node.name]
 node.type_default=
 notes.upload.module=Upload new or replace module package(*.zip) which packaged by "ant " script, the module management use "name" to identify it's new or exists, Please browser <a href='http://giiwa.org' target='_blank'>giiwa.org</a> to get more modules.
 notification.newbuild=has new release
@@ -428,7 +428,7 @@ logs.index.title=Logs Management
 menu.logs=Logs
 home.uri=Home URI
 home.uri.hint=The home uri, etc. '/forum', [home.uri]
-session.alive=Session alive
+session.alive=Session alive(Hour)
 session.alive.hint=Session expired time, (*)hour, default 1 week, -1=forever
 title.data_will_be_replaced=Data will be replaced?
 backup.status_0=Unknown

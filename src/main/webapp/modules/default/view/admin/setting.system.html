@@ -66,7 +66,7 @@
 		<input type='checkbox' name='user_token' #if($global.getInt('user.token',0) == 1) checked #end/>
 		<g>$lang.get('user.token.hint')</g></label></div>
 	<div><label><h3>$lang.get('session.alive'):</h3>
-		<input type='number' name='session_alive' value="$global.getLong('session.alive',60480000)"/>
+		<input type='number' name='session_alive' value="$global.getLong('session.alive',168)"/>
 		<g>$lang.get('session.alive.hint')</g></label></div>
 
 	<div><label><h3>$lang.get('user.system'):</h3>
@@ -88,7 +88,7 @@
 		
 	<div><label><g>$lang.get('base.setting.notes')</g></label></div>
 	<hr/>
-	<div><label><h3>node:</h3><i>$!global.getString('node.name','')</i><g>$lang.get('node.hint')</g></label></div>
+	<div><label><h3>node:</h3><i>$!conf.getString('node.name','')</i><g>$lang.get('node.hint')</g></label></div>
 	<div><label><h3>cache.url:</h3><i>$!cache_url</i><g>$lang.get('cache.url.hint')</g></label></div>
 	<div><label><h3>cache.group:</h3><i>$!cache_group</i><g>$lang.get('cache.group.hint')</g></label></div>
 	<div><label><h3>mongo[default].url:</h3><i>$!mongo_url</i><g>$lang.get('mongo[default].url.hint')</g></label></div>

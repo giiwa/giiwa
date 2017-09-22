@@ -375,6 +375,7 @@ public class Model {
 		this.put("response", resp);
 		this.set("session", this.getSession());
 		this.set("global", Global.getInstance());
+		this.set("conf", Config.getConf());
 		this.set("local", Local.getInstance());
 
 		this.createQuery();
@@ -491,6 +492,7 @@ public class Model {
 			this.put("response", resp);
 			this.set("session", this.getSession());
 			this.set("global", Global.getInstance());
+			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());
 
 			show(uri);
@@ -549,6 +551,7 @@ public class Model {
 			this.put("this", this);
 			this.put("session", this.getSession());
 			this.put("global", Global.getInstance());
+			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());
 
 			if (!Module.home.before(this)) {
@@ -1571,10 +1574,10 @@ public class Model {
 	 */
 	final public List<String> getNames() {
 		String c1 = req.getContentType();
-		if(c1 != null && c1.indexOf("application/json") > -1){
-			this.getString(null);//initialize uploads
+		if (c1 != null && c1.indexOf("application/json") > -1) {
+			this.getString(null);// initialize uploads
 			return new ArrayList<String>(uploads.keySet());
-		}else if (this._multipart) {
+		} else if (this._multipart) {
 			getFiles();
 			return new ArrayList<String>(uploads.keySet());
 		} else {
