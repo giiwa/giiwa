@@ -1670,5 +1670,6 @@ button:hover, button:active {
 }
 .state i{
 	font-style: italic;
-	padding: 0 6px;	
+	padding: 0 6px;
+	color: #666;	
 }
