@@ -1080,7 +1080,8 @@ public final class Http {
 		s = "http://aaa.com?aaa";
 		s = "http://aaa.com&aaa";
 		s = "http://aaa.com#aaa";
-		System.out.println(host(s));
+		s = "https://aaa.com#aaa";
+		System.out.println(format(s));
 		// Http h = Http.create();
 		// System.out.println("response=" + h.get("http://giiwa.org").body);
 		//
@@ -1362,7 +1363,7 @@ public final class Http {
 		if (X.isEmpty(href))
 			return null;
 
-		String[] ss = X.split(href, "[#?&]");
+		String[] ss = X.split(href, "[?&]");
 		if (ss.length < 2) {
 			return _format(ss[0]);
 		}
