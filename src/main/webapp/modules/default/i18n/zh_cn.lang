@@ -558,6 +558,6 @@ oplog.level_0=信息
 oplog.level_1=警告
 oplog.level_2=错误
 oplog.level.hint=记录操作日志的级别
-disk.speed=文件仓库速度（每秒)
+disk.speed=文件仓库速度(M/s)
 cpu.num=CPU核数
 total.memory=总内存

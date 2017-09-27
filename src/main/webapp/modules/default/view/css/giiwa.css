@@ -1668,3 +1668,7 @@ button:hover, button:active {
     background: #33a1df;
     color: #fff;
 }
+.state i{
+	font-style: italic;
+	padding: 0 6px;	
+}

@@ -18,7 +18,6 @@ import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
-import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.*;
 
@@ -43,7 +42,7 @@ public class dashboard extends Model {
 		Configuration conf = Config.getConf();
 
 		this.set("me", this.getUser());
-		this.set("uptime", lang.format(Model.UPTIME, "yy-MM-dd"));
+		this.set("uptime", lang.format(Model.UPTIME, "yy-MM-dd HH:mm:ss"));
 		this.set("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
 		this.set("past", lang.past(Model.UPTIME));
 		this.set("node", conf.getString("node.name", X.EMPTY));
@@ -51,7 +50,7 @@ public class dashboard extends Model {
 		this.set("build", Module.load("default").getBuild());
 		this.set("free", lang.size(Runtime.getRuntime().freeMemory()));
 		this.set("total", lang.size(Runtime.getRuntime().totalMemory()));
-		this.set("diskspeed", Repo.getSpeed());
+		this.set("diskspeed", Repo.getSpeed() / 1024 / 1024);
 		this.set("cpus", Runtime.getRuntime().availableProcessors());
 		this.set("totalmemory", Host.getMemTotal() + "GB");
 

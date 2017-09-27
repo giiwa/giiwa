@@ -15,15 +15,21 @@
 #end
 
 <div class='state' style='display:block;'>
-	<div class='login'>$lang.get('label.node'):$!node</div>
-	<div class='login'>$lang.get('cpu.num'):$!cpus</div>
-	<div class='login'>$lang.get('total.memory'):$!totalmemory</div>
-	<div class='login'>$lang.get('memory.total'):$!total, $lang.get('memory.free'):$!free</div>
-	<div class='login'>$lang.get('disk.speed'): #if($diskspeed>0) $lang.size($diskspeed) #end</div>
-	<div class='uptime'>$lang.get('label.uptime'):<span class='uptime'>$uptime</span>, $lang.get('label.past'):<span class='past'>$past</span></div>
-	<div class='release'>$lang.get('label.release'):$!release</div>
-	<div class='build'>$lang.get('label.build'):$!build</div>
-	<div class='build'>$lang.get('label.now'):$!now</div>
+	<div class='login'>$lang.get('label.node'):<i>$!node</i></div>
+	<div class='login'>$lang.get('cpu.num'):<i>$!cpus</i></div>
+	<div class='login'>$lang.get('total.memory'):<i>$!totalmemory</i></div>
+	<div class='login'>$lang.get('memory.total'):<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i></div>
+	<div class='login'>$lang.get('disk.speed'):
+		 #if($diskspeed>200) <i style='color:green'>$diskspeed</i>
+		 #elseif ($diskspeed>0) <i style='color:red'>$diskspeed</i>
+		 #else
+		 <i>...</i>
+		 #end
+	</div>
+	<div class='uptime'>$lang.get('label.uptime'):<i>$uptime</i>, $lang.get('label.past'):<i>$past</i></div>
+	<div class='release'>$lang.get('label.release'):<i>$!release</i></div>
+	<div class='build'>$lang.get('label.build'):<i>$!build</i></div>
+	<div class='build'>$lang.get('label.now'):<i>$!now</i></div>
 	
 </div>
 

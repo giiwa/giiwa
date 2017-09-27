@@ -874,14 +874,24 @@ public class Repo extends Bean {
 
 	public static synchronized void test() {
 
+		TimeStamp t = TimeStamp.create();
+
+		int n = 100;
+		long total = 0;
+		for (int i = 0; i < n; i++) {
+			total += _test(n);
+		}
+		speed = total * 1000L / t.pastms();
+
+	}
+
+	private static long _test(int n) {
 		FileOutputStream out = null;
 		try {
 			File f = new File(ROOT + "/1");
 			f.getParentFile().mkdirs();
 			byte[] bb = new byte[1024 * 1024];
 
-			TimeStamp t = TimeStamp.create();
-			int n = 1024;
 			out = new FileOutputStream(f);
 			for (int i = 0; i < n; i++) {
 				out.write(bb, 0, bb.length);
@@ -890,14 +900,14 @@ public class Repo extends Bean {
 			out = null;
 			f.delete();
 
-			speed = n * bb.length * 1000L / t.pastms();
-			log.debug("speed=" + speed + ", n=" + n + ", bb=" + bb.length);
+			return n * bb.length;
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
 			X.close(out);
 		}
+		return 0;
 	}
 
 }
