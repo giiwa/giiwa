@@ -555,6 +555,6 @@ zoo.url.hint=etc, g08:2181
 a.setting.mq=MQ Setting
 zoo.url=Zookeeper URL
 logger.detail.title=Log Detail
-disk.speed=Speed of Repo(M/s)
+disk.speed=Speed of Repo
 cpu.num=CPU Cores
 total.memory=Total Memory

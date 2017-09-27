@@ -20,8 +20,8 @@
 	<div class='login'>$lang.get('total.memory'):<i>$!totalmemory</i></div>
 	<div class='login'>$lang.get('memory.total'):<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i></div>
 	<div class='login'>$lang.get('disk.speed'):
-		 #if($diskspeed>200) <i style='color:green'>$diskspeed</i>
-		 #elseif ($diskspeed>0) <i style='color:red'>$diskspeed</i>
+		 #if($diskspeed>200) <i style='color:green'>${diskspeed}(M/s)</i>
+		 #elseif ($diskspeed>0) <i style='color:red'>${diskspeed}(M/s)</i>
 		 #else
 		 <i>...</i>
 		 #end
