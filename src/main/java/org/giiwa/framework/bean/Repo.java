@@ -931,8 +931,10 @@ public class Repo extends Bean {
 			byte[] bb = new byte[32 * 1024];
 
 			out = new FileOutputStream(f);
-			out.write(bb, 0, bb.length);
-			out.flush();
+			for (int i = 0; i < 32; i++) {
+				out.write(bb, 0, bb.length);
+				out.flush();
+			}
 			out.close();
 			out = null;
 			in = new FileInputStream(f);
