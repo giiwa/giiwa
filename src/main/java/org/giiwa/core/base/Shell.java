@@ -41,350 +41,358 @@ import org.giiwa.framework.web.Module;
  */
 public class Shell {
 
-  /** The log. */
-  static Log log = LogFactory.getLog(Shell.class);
+	/** The log. */
+	static Log log = LogFactory.getLog(Shell.class);
 
-  public static enum Logger {
-    error("ERROR"), warn("WARN"), info("INFO");
+	public static enum Logger {
+		error("ERROR"), warn("WARN"), info("INFO");
 
-    String level;
+		String level;
 
-    /**
-     * Instantiates a new logger.
-     *
-     * @param s
-     *          the s
-     */
-    Logger(String s) {
-      this.level = s;
-    }
+		/**
+		 * Instantiates a new logger.
+		 *
+		 * @param s
+		 *            the s
+		 */
+		Logger(String s) {
+			this.level = s;
+		}
 
-  };
+	};
 
-  /**
-   * Log.
-   *
-   * @param ip
-   *          the ip
-   * @param level
-   *          the level
-   * @param module
-   *          the module
-   * @param message
-   *          the message
-   */
-  // 192.168.1.1#系统名称#2014-10-31#ERROR#日志消息#程序名称
-  public static void log(String ip, Logger level, String module, String message) {
-    String deli = Module.home.get("log_deli", "#");
-    StringBuilder sb = new StringBuilder();
-    sb.append(ip).append(deli);
-    sb.append("support").append(deli);
-    sb.append(Language.getLanguage().format(System.currentTimeMillis(), "yyyy-MM-dd hh:mm:ss"));
-    sb.append(deli).append(level.name()).append(deli).append(message).append(deli).append(module);
+	/**
+	 * Log.
+	 *
+	 * @param ip
+	 *            the ip
+	 * @param level
+	 *            the level
+	 * @param module
+	 *            the module
+	 * @param message
+	 *            the message
+	 */
+	// 192.168.1.1#系统名称#2014-10-31#ERROR#日志消息#程序名称
+	public static void log(String ip, Logger level, String module, String message) {
+		String deli = Module.home.get("log_deli", "#");
+		StringBuilder sb = new StringBuilder();
+		sb.append(ip).append(deli);
+		sb.append("support").append(deli);
+		sb.append(Language.getLanguage().format(System.currentTimeMillis(), "yyyy-MM-dd hh:mm:ss"));
+		sb.append(deli).append(level.name()).append(deli).append(message).append(deli).append(module);
 
-    try {
-      Shell.run("logger " + level.level + deli + sb.toString());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-  }
+		try {
+			Shell.run("logger " + level.level + deli + sb.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-  /**
-   * test is Linux
-   * 
-   * @return true if linux
-   */
-  public static boolean isLinux() {
-    if (_linux == -1) {
-      try {
-        if (OS.isFamilyUnix()) {
-          String uname = Shell.run("uname -a");
-          log.debug("uname -a=" + uname);
-          _linux = uname.indexOf("Linux") > -1 ? 1 : 0;
-        } else {
-          _linux = 0;
-        }
-      } catch (Exception e) {
-        log.error(e.getMessage(), e);
-      }
-    }
-    return _linux == 1;
-  }
+	/**
+	 * test is Linux
+	 * 
+	 * @return true if linux
+	 */
+	public static boolean isLinux() {
+		if (_linux == -1) {
+			try {
+				if (OS.isFamilyUnix()) {
+					String uname = Shell.run("uname -a");
+					log.debug("uname -a=" + uname);
+					_linux = uname.indexOf("Linux") > -1 ? 1 : 0;
+				} else {
+					_linux = 0;
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+		return _linux == 1;
+	}
 
-  private static int _linux  = -1;
-  private static int _ubuntu = -1;
+	public static boolean isMac() {
+		if (_mac == -1) {
+			_mac = OS.isFamilyMac() ? 1 : 0;
+		}
+		return _mac == 1;
+	}
 
-  /**
-   * test is ubuntu
-   * 
-   * @return true if is ubuntu
-   */
-  public static boolean isUbuntu() {
-    if (_ubuntu == -1) {
-      try {
-        String uname = Shell.run("uname -a");
-        _ubuntu = uname.indexOf("Ubuntu") > -1 ? 1 : 0;
-      } catch (Exception e) {
-        return false;
-      }
-    }
-    return _ubuntu == 1;
-  }
+	private static int _mac = -1;
+	private static int _linux = -1;
+	private static int _ubuntu = -1;
 
-  /**
-   * run a command with the out, err and in.
-   *
-   * @param cmd
-   *          the command line
-   * @param out
-   *          the console outputstream
-   * @param err
-   *          the error outputstream
-   * @param in
-   *          the inputstream
-   * @param workdir
-   *          the working dir
-   * @return the result
-   * @throws IOException
-   *           throw IOException if error
-   */
-  public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir)
-      throws IOException {
+	/**
+	 * test is ubuntu
+	 * 
+	 * @return true if is ubuntu
+	 */
+	public static boolean isUbuntu() {
+		if (_ubuntu == -1) {
+			try {
+				String uname = Shell.run("uname -a");
+				_ubuntu = uname.indexOf("Ubuntu") > -1 ? 1 : 0;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		return _ubuntu == 1;
+	}
 
-    try {
+	/**
+	 * run a command with the out, err and in.
+	 *
+	 * @param cmd
+	 *            the command line
+	 * @param out
+	 *            the console outputstream
+	 * @param err
+	 *            the error outputstream
+	 * @param in
+	 *            the inputstream
+	 * @param workdir
+	 *            the working dir
+	 * @return the result
+	 * @throws IOException
+	 *             throw IOException if error
+	 */
+	public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir)
+			throws IOException {
 
-      CommandLine cmdLine = CommandLine.parse(cmd);
+		try {
 
-      DefaultExecutor executor = new DefaultExecutor();
-      ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
-      int[] exit = new int[512];
-      for (int i = 0; i < exit.length; i++) {
-        exit[i] = i - 256;
-      }
-      executor.setExitValues(exit);
+			CommandLine cmdLine = CommandLine.parse(cmd);
 
-      executor.setStreamHandler(stream);
-      if (!X.isEmpty(workdir)) {
-        executor.setWorkingDirectory(new File(workdir));
-      }
+			DefaultExecutor executor = new DefaultExecutor();
+			ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
+			int[] exit = new int[512];
+			for (int i = 0; i < exit.length; i++) {
+				exit[i] = i - 256;
+			}
+			executor.setExitValues(exit);
 
-      // ExecuteWatchdog watchdog = new ExecuteWatchdog(60000);
-      // executor.setWatchdog(watchdog);
-      // watchdog.destroyProcess();
-      return executor.execute(cmdLine);
-    } catch (IOException e) {
-      log.error("cmd=" + cmd, e);
-      throw e;
-    }
-  }
+			executor.setStreamHandler(stream);
+			if (!X.isEmpty(workdir)) {
+				executor.setWorkingDirectory(new File(workdir));
+			}
 
-  /**
-   * using bash to execute the lines.
-   *
-   * @param lines
-   *          the command lines
-   * @param out
-   *          the output stream
-   * @param err
-   *          the error stream
-   * @param in
-   *          the input stream
-   * @param workdir
-   *          the workdir
-   * @return the int
-   * @throws IOException
-   *           throw IOException if error
-   */
-  public static int bash(String lines, OutputStream out, OutputStream err, InputStream in, String workdir)
-      throws IOException {
+			// ExecuteWatchdog watchdog = new ExecuteWatchdog(60000);
+			// executor.setWatchdog(watchdog);
+			// watchdog.destroyProcess();
+			return executor.execute(cmdLine);
+		} catch (IOException e) {
+			log.error("cmd=" + cmd, e);
+			throw e;
+		}
+	}
 
-    File f = new File(UID.id(lines).toLowerCase() + ".bash");
+	/**
+	 * using bash to execute the lines.
+	 *
+	 * @param lines
+	 *            the command lines
+	 * @param out
+	 *            the output stream
+	 * @param err
+	 *            the error stream
+	 * @param in
+	 *            the input stream
+	 * @param workdir
+	 *            the workdir
+	 * @return the int
+	 * @throws IOException
+	 *             throw IOException if error
+	 */
+	public static int bash(String lines, OutputStream out, OutputStream err, InputStream in, String workdir)
+			throws IOException {
 
-    try {
-      if (!X.isEmpty(workdir)) {
-        lines = "cd " + workdir + ";" + lines;
-      }
-      FileUtils.writeStringToFile(f, lines);
+		File f = new File(UID.id(lines).toLowerCase() + ".bash");
 
-      // Execute the file we just creted. No flags are due if it is
-      // executed with bash directly
-      CommandLine commandLine = CommandLine.parse("bash " + f.getCanonicalPath());
+		try {
+			if (!X.isEmpty(workdir)) {
+				lines = "cd " + workdir + ";" + lines;
+			}
+			FileUtils.writeStringToFile(f, lines);
 
-      ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
+			// Execute the file we just creted. No flags are due if it is
+			// executed with bash directly
+			CommandLine commandLine = CommandLine.parse("bash " + f.getCanonicalPath());
 
-      DefaultExecutor executor = new DefaultExecutor();
-      int[] exit = new int[3];
-      for (int i = 0; i < exit.length; i++) {
-        exit[i] = i - 1;
-      }
-      executor.setExitValues(exit);
+			ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
 
-      executor.setStreamHandler(stream);
-      if (!X.isEmpty(workdir)) {
-        executor.setWorkingDirectory(new File(workdir));
-      }
+			DefaultExecutor executor = new DefaultExecutor();
+			int[] exit = new int[3];
+			for (int i = 0; i < exit.length; i++) {
+				exit[i] = i - 1;
+			}
+			executor.setExitValues(exit);
 
-      return executor.execute(commandLine);
+			executor.setStreamHandler(stream);
+			if (!X.isEmpty(workdir)) {
+				executor.setWorkingDirectory(new File(workdir));
+			}
 
-    } catch (IOException e) {
-      log.error("lines=" + lines, e);
-      throw e;
-    } finally {
-      f.delete();
-    }
-  }
+			return executor.execute(commandLine);
 
-  /**
-   * run command, and return the console output.
-   *
-   * @param cmd
-   *          the command line
-   * @return the output of console and error
-   * @throws IOException
-   *           throw IOException if error
-   */
-  public static String run(String cmd) throws IOException {
-    return run(cmd, null);
-  }
+		} catch (IOException e) {
+			log.error("lines=" + lines, e);
+			throw e;
+		} finally {
+			f.delete();
+		}
+	}
 
-  /**
-   * using bash to execute the command.
-   *
-   * @param cmd
-   *          the command
-   * @return the console output
-   * @throws IOException
-   *           throw IOException if error
-   */
-  public static String bash(String cmd) throws IOException {
-    return bash(cmd, null);
-  }
+	/**
+	 * run command, and return the console output.
+	 *
+	 * @param cmd
+	 *            the command line
+	 * @return the output of console and error
+	 * @throws IOException
+	 *             throw IOException if error
+	 */
+	public static String run(String cmd) throws IOException {
+		return run(cmd, null);
+	}
 
-  /**
-   * run the command in workdir.
-   *
-   * @param cmd
-   *          the command
-   * @param workdir
-   *          the path
-   * @return the output of console and error
-   * @throws IOException
-   *           throw IOException if error
-   */
-  public static String run(String cmd, String workdir) throws IOException {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    run(cmd, out, out, null, workdir);
-    out.close();
-    return out.toString();
-  }
+	/**
+	 * using bash to execute the command.
+	 *
+	 * @param cmd
+	 *            the command
+	 * @return the console output
+	 * @throws IOException
+	 *             throw IOException if error
+	 */
+	public static String bash(String cmd) throws IOException {
+		return bash(cmd, null);
+	}
 
-  /**
-   * using bash to execute the cmd.
-   *
-   * @param cmd
-   *          the command
-   * @param workdir
-   *          the workdir
-   * @return the output string
-   * @throws IOException
-   *           throw IOException if error
-   */
-  public static String bash(String cmd, String workdir) throws IOException {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    bash(cmd, out, out, null, workdir);
-    out.close();
-    return out.toString();
-  }
+	/**
+	 * run the command in workdir.
+	 *
+	 * @param cmd
+	 *            the command
+	 * @param workdir
+	 *            the path
+	 * @return the output of console and error
+	 * @throws IOException
+	 *             throw IOException if error
+	 */
+	public static String run(String cmd, String workdir) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		run(cmd, out, out, null, workdir);
+		out.close();
+		return out.toString();
+	}
 
-  /**
-   * get the status of the processname.
-   *
-   * @param processname
-   *          the process name
-   * @return the status of the process
-   * @throws IOException
-   *           throw IOException if occur error
-   */
-  public static String getProcessStatus(String processname) throws IOException {
-    if (isLinux() || OS.isFamilyMac()) {
+	/**
+	 * using bash to execute the cmd.
+	 *
+	 * @param cmd
+	 *            the command
+	 * @param workdir
+	 *            the workdir
+	 * @return the output string
+	 * @throws IOException
+	 *             throw IOException if error
+	 */
+	public static String bash(String cmd, String workdir) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		bash(cmd, out, out, null, workdir);
+		out.close();
+		return out.toString();
+	}
 
-      String line = "ps -ef";
-      String r = run(line);
-      StringBuilder sb = new StringBuilder();
-      String[] ss = r.split("\n");
-      if (ss != null && ss.length > 0) {
-        for (String s : ss) {
-          if (s.contains(processname)) {
-            sb.append(s).append("\n");
-          }
-        }
-      }
+	/**
+	 * get the status of the processname.
+	 *
+	 * @param processname
+	 *            the process name
+	 * @return the status of the process
+	 * @throws IOException
+	 *             throw IOException if occur error
+	 */
+	public static String getProcessStatus(String processname) throws IOException {
+		if (isLinux() || OS.isFamilyMac()) {
 
-      return sb.toString();
-    } else if (OS.isFamilyWindows()) {
+			String line = "ps -ef";
+			String r = run(line);
+			StringBuilder sb = new StringBuilder();
+			String[] ss = r.split("\n");
+			if (ss != null && ss.length > 0) {
+				for (String s : ss) {
+					if (s.contains(processname)) {
+						sb.append(s).append("\n");
+					}
+				}
+			}
 
-      String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
-      return run(cmd);
+			return sb.toString();
+		} else if (OS.isFamilyWindows()) {
 
-    } else {
-      throw new IOException("not support");
-    }
+			String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
+			return run(cmd);
 
-  }
+		} else {
+			throw new IOException("not support");
+		}
 
-  /**
-   * Kill.
-   *
-   * @param processname
-   *          the processname
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   */
-  public static void kill(String processname) throws IOException {
-    if (isLinux() || OS.isFamilyMac()) {
-      String line = "kill -9 `ps -ef | grep " + processname + " | awk '{print $2}'`;";
+	}
 
-      // Create a tmp file. Write permissions!?
-      File f = new File(UID.random(10) + ".bash");
-      FileUtils.writeStringToFile(f, line);
+	/**
+	 * Kill.
+	 *
+	 * @param processname
+	 *            the processname
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static void kill(String processname) throws IOException {
+		if (isLinux() || OS.isFamilyMac()) {
+			String line = "kill -9 `ps -ef | grep " + processname + " | awk '{print $2}'`;";
 
-      // Execute the file we just creted. No flags are due if it is
-      // executed with bash directly
-      CommandLine commandLine = CommandLine.parse("bash " + f.getName());
+			// Create a tmp file. Write permissions!?
+			File f = new File(UID.random(10) + ".bash");
+			FileUtils.writeStringToFile(f, line);
 
-      DefaultExecutor executor = new DefaultExecutor();
-      executor.execute(commandLine);
-      f.delete();
-    } else if (OS.isFamilyWindows()) {
+			// Execute the file we just creted. No flags are due if it is
+			// executed with bash directly
+			CommandLine commandLine = CommandLine.parse("bash " + f.getName());
 
-      String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
+			DefaultExecutor executor = new DefaultExecutor();
+			executor.execute(commandLine);
+			f.delete();
+		} else if (OS.isFamilyWindows()) {
 
-      String line = run(cmd);
-      String[] lineArray = line.split(" ");
-      String pid = lineArray[17].trim();
-      run("taskkill /F /PID " + pid);
+			String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
 
-    } else {
-      throw new IOException("not support");
-    }
-  }
+			String line = run(cmd);
+			String[] lineArray = line.split(" ");
+			String pid = lineArray[17].trim();
+			run("taskkill /F /PID " + pid);
 
-  /**
-   * The main method.
-   *
-   * @param args
-   *          the arguments
-   */
-  public static void main(String[] args) {
-    try {
-      System.out.println(run("uname -a"));
+		} else {
+			throw new IOException("not support");
+		}
+	}
 
-      System.out.println();
+	/**
+	 * The main method.
+	 *
+	 * @param args
+	 *            the arguments
+	 */
+	public static void main(String[] args) {
+		try {
+			System.out.println(run("uname -a"));
 
-    } catch (Exception e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-  }
+			System.out.println();
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 }

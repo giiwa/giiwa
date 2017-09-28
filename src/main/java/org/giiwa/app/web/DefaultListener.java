@@ -66,6 +66,11 @@ public class DefaultListener implements IListener {
 
 		public static NtpTask owner = new NtpTask();
 
+		@Override
+		public String getName() {
+			return "ntp.task";
+		}
+
 		private NtpTask() {
 		}
 
@@ -85,6 +90,12 @@ public class DefaultListener implements IListener {
 		@Override
 		public void onFinish() {
 			this.schedule(X.AHOUR);
+		}
+
+		public void start() {
+			if (Shell.isLinux() || Shell.isMac()) {
+				NtpTask.owner.schedule(X.AMINUTE);
+			}
 		}
 	}
 
@@ -188,9 +199,7 @@ public class DefaultListener implements IListener {
 		setting.register(10, "smtp", setting.mail.class);
 		setting.register(11, "counter", setting.counter.class);
 
-		if (Shell.isLinux()) {
-			NtpTask.owner.schedule(X.AMINUTE);
-		}
+		NtpTask.owner.start();
 		new CleanupTask(conf).schedule(X.AMINUTE);
 		// new AppdogTask().schedule(X.AMINUTE);
 		RecycleTask.owner.schedule(X.AMINUTE);

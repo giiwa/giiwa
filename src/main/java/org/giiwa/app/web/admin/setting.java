@@ -238,7 +238,7 @@ public class setting extends Model {
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
 			Global.setConfig("repo.speed", X.isSame("on", this.getString("repo.speed")) ? 1 : 0);
 
-			NtpTask.owner.schedule(0);
+			NtpTask.owner.start();
 
 			String url = this.getString("site_url").trim();
 			while (url.endsWith("/")) {
