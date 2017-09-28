@@ -233,13 +233,7 @@ public class DefaultListener implements IListener {
 			OpLog.info(mq.class, "startup", "disabled", null, null);
 		}
 
-		Task.create(new Runnable() {
-
-			@Override
-			public void run() {
-				Repo.test();
-			}
-		}).schedule(X.AMINUTE);
+		Repo.test();
 	}
 
 	private void delete(File f) {

@@ -561,3 +561,5 @@ oplog.level.hint=记录操作日志的级别
 disk.speed=文件仓库速度
 cpu.num=CPU核数
 total.memory=总内存
+repo.speed.hint=每隔1分钟测试1次
+repo.speed=测试文件仓库速度

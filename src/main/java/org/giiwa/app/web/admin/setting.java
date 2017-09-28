@@ -25,6 +25,7 @@ import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.web.*;
 
@@ -235,6 +236,7 @@ public class setting extends Model {
 			// Global.setConfig("items.per.page", this.getInt("items.per.page"));
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
+			Global.setConfig("repo.speed", X.isSame("on", this.getString("repo.speed")) ? 1 : 0);
 
 			NtpTask.owner.schedule(0);
 
@@ -252,6 +254,8 @@ public class setting extends Model {
 			} else {
 				Helper.setOptmizer(null);
 			}
+
+			Repo.test();
 
 			get();
 		}

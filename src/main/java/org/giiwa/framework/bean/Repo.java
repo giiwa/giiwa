@@ -15,12 +15,15 @@
 package org.giiwa.framework.bean;
 
 import java.io.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
 
 /**
@@ -525,7 +528,7 @@ public class Repo extends Bean {
 					bb = resp.getBytes();
 					out.write(bb);
 					long pos = 0;
-					bb = new byte[4 * 1024];
+					bb = new byte[32 * 1024];
 
 					int len = in.read(bb);
 					while (len > 0) {
@@ -565,6 +568,7 @@ public class Repo extends Bean {
 					// }
 
 					log.debug("stored, id=" + this.getId() + ", pos=" + pos);
+
 					return pos;
 				} catch (IOException e) {
 					Repo.delete(getId());
@@ -608,7 +612,7 @@ public class Repo extends Bean {
 					if (getPos() >= position) {
 						raf.seek(head + 5 + position);
 
-						bb = new byte[4 * 1024];
+						bb = new byte[32 * 1024];
 						int len = in.read(bb);
 						while (len > 0) {
 							raf.write(bb, 0, len);
@@ -866,46 +870,85 @@ public class Repo extends Bean {
 		return Helper.load(q, s, n, Entity.class);
 	}
 
-	public static long speed = -1;
+	private static AtomicLong total = new AtomicLong(0); // byte
+	private static AtomicLong cost = new AtomicLong(0); // ms
 
 	public static long getSpeed() {
-		return speed;
+		if (cost.get() > 0) {
+			return total.get() * 1000L / cost.get();
+		}
+		return 0;
 	}
 
 	public static synchronized void test() {
 
-		TimeStamp t = TimeStamp.create();
-
-		int n = 100;
-		long total = 0;
-		for (int i = 0; i < n; i++) {
-			total += _test(n);
+		if (Global.getInt("repo.speed", 0) == 0) {
+			return;
 		}
-		speed = total * 1000L / t.pastms();
+
+		new Task() {
+
+			@Override
+			public String getName() {
+				return "repo.speed";
+			}
+
+			@Override
+			public void onFinish() {
+				if (Global.getInt("repo.speed", 0) == 1) {
+					this.schedule(X.AMINUTE);
+				}
+			}
+
+			@Override
+			public void onExecute() {
+				total.set(0);
+				cost.set(0);
+				int n = 10;
+				for (int i = 0; i < n; i++) {
+					_test(n);
+				}
+
+				try {
+					IOUtil.delete(new File(ROOT + "/test"));
+				} catch (IOException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}.schedule(2000);
 
 	}
 
 	private static long _test(int n) {
-		FileOutputStream out = null;
+
+		OutputStream out = null;
+		InputStream in = null;
+		File f = new File(ROOT + "/test/" + n);
 		try {
-			File f = new File(ROOT + "/1");
+			TimeStamp t = TimeStamp.create();
+
 			f.getParentFile().mkdirs();
-			byte[] bb = new byte[1024 * 1024];
+			byte[] bb = new byte[32 * 1024];
 
 			out = new FileOutputStream(f);
-			for (int i = 0; i < n; i++) {
-				out.write(bb, 0, bb.length);
-			}
+			out.write(bb, 0, bb.length);
+			out.flush();
 			out.close();
 			out = null;
-			f.delete();
+			in = new FileInputStream(f);
+			while (in.read(bb, 0, bb.length) > 0)
+				;
 
-			return n * bb.length;
+			in.close();
+			in = null;
+
+			total.addAndGet(n * bb.length);
+			cost.addAndGet(t.pastms());
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
-			X.close(out);
+			X.close(out, in);
 		}
 		return 0;
 	}

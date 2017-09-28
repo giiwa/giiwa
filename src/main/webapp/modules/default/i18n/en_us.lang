@@ -558,3 +558,5 @@ logger.detail.title=Log Detail
 disk.speed=Speed of Repo
 cpu.num=CPU Cores
 total.memory=Total Memory
+repo.speed.hint=testing repo speed every minute
+repo.speed=Repo Speed Testing
