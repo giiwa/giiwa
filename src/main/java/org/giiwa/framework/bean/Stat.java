@@ -130,7 +130,60 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return Helper.load(q, Stat.class);
 	}
 
+	/***
+	 * @deprecated
+	 * @param name
+	 * @param size
+	 * @param n
+	 */
 	public static void log(String name, String size, long... n) {
+		snapshot(name, size, n);
+	}
+
+	/**
+	 * 
+	 * @param name
+	 * @param size
+	 * @param n
+	 */
+	public static void delta(String name, String size, long... n) {
+		Language lang = Language.getLanguage();
+
+		String date = null;
+
+		if (X.isSame(size, "min")) {
+			date = lang.format(System.currentTimeMillis(), "yyyyMMddmm");
+		} else if (X.isSame(size, "hour")) {
+			date = lang.format(System.currentTimeMillis(), "yyyyMMddHH");
+		} else if (X.isSame(size, "day")) {
+			date = lang.format(System.currentTimeMillis(), "yyyyMMdd");
+		} else if (X.isSame(size, "month")) {
+			date = lang.format(System.currentTimeMillis(), "yyyyMM");
+		} else if (X.isSame(size, "year")) {
+			date = lang.format(System.currentTimeMillis(), "yyyy");
+		} else {
+			log.error("not support the [" + size + "], supported: min, hour, day, month, year");
+			return;
+		}
+
+		Stat s1 = Stat.load(W.create("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq)
+				.sort("created", -1));
+		long[] d = new long[n.length];
+		for (int i = 0; i < d.length; i++) {
+			d[i] = s1 == null ? n[i] : n[i] + s1.getLong("n" + i);
+		}
+		Stat.insertOrUpdate(name + ".snapshot", date, size, d);
+		Stat.insertOrUpdate(name + ".delta", date, size, n);
+
+	}
+
+	/**
+	 * 
+	 * @param name
+	 * @param size
+	 * @param n
+	 */
+	public static void snapshot(String name, String size, long... n) {
 		Language lang = Language.getLanguage();
 
 		String date = null;
