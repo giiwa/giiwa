@@ -54,23 +54,35 @@
 								"access" : "access.config.admin",
 								"classes" : "icon-clock"
 							}, {
-								"name" : "menu.repo",
-								"load" : "/admin/repo",
+								"name" : "menu.sysinfo",
+								"load" : "/admin/sysinfo",
 								"seq" : 20,
 								"access" : "access.config.admin",
-								"classes" : "icon-cloud"
+								"classes" : "icon-info"
+							}, {
+								"name" : "menu.sysstat",
+								"load" : "/admin/sysstat",
+								"seq" : 30,
+								"access" : "access.config.admin",
+								"classes" : "icon-stats-dots"
+							}, {
+								"name" : "menu.repo",
+								"load" : "/admin/repo",
+								"seq" : 40,
+								"access" : "access.config.admin",
+								"classes" : "icon-database"
 							}, {
 								"name" : "menu.backup",
 								"load" : "/admin/backup",
-								"seq" : 30,
+								"seq" : 50,
 								"access" : "access.config.admin",
 								"classes" : "icon-floppy-disk"
 							}, {
-								name : 'menu.i18n',
-								load : '/admin/i18n',
-								seq : 40,
-								access : 'access.config.admin',
-								classes : 'icon-magic-wand'
+								"name" : 'menu.i18n',
+								"load" : '/admin/i18n',
+								"seq" : 60,
+								"access" : 'access.config.admin',
+								"classes" : 'icon-magic-wand'
 							}]
 				}, {
 					"name" : "menu.app",

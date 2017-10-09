@@ -20,6 +20,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.*;
+import org.hyperic.sigar.SigarException;
 
 /**
  * web api: /admin/dashboard <br>
@@ -52,7 +53,11 @@ public class dashboard extends Model {
 		this.set("total", lang.size(Runtime.getRuntime().totalMemory()));
 		this.set("diskspeed", Repo.getSpeed() / 1024 / 1024);
 		this.set("cpus", Runtime.getRuntime().availableProcessors());
-		this.set("totalmemory", Host.getMemTotal() + "GB");
+		try {
+			this.set("totalmemory", lang.size(Host.getMem().getTotal()));
+		} catch (SigarException e) {
+			log.error(e.getMessage(), e);
+		}
 
 		show("admin/dashboard.html");
 	}

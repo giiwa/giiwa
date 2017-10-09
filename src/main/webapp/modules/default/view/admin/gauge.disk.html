@@ -17,7 +17,7 @@ $(function () {
             text: "$lang.get('gauge.disk.title')"
         },
         xAxis: {
-        	categories: [#foreach($d in $list) "$d.name" , #end]
+        	categories: [#foreach($d in $list.keySet()) "$d" , #end]
         },
         credits:{
         	enabled: false
@@ -53,11 +53,11 @@ $(function () {
         },
         series: [{
             name: "$lang.get('gauge.disk.free')",
-            data: [#foreach($d in $list) $d.free, #end],
+            data: [#foreach($d in $list.keySet()) $list.get($d).free, #end],
             color: '#009df5'
         }, {
             name: "$lang.get('gauge.disk.used')",
-            data: [#foreach($d in $list) $d.used, #end],
+            data: [#foreach($d in $list.keySet()) $list.get($d).used, #end],
             color: '#961616'
         }]
     });

@@ -19,6 +19,7 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 import org.giiwa.framework.web.Tps;
+import org.hyperic.sigar.SigarException;
 
 /**
  * web api: /admin/gauge <br>
@@ -29,66 +30,81 @@ import org.giiwa.framework.web.Tps;
  */
 public class gauge extends Model {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model#onGet()
-   */
-  public void onGet() {
-    this.redirect("/user");
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model#onGet()
+	 */
+	public void onGet() {
+		this.redirect("/user");
+	}
 
-  /**
-   * Cpu.
-   */
-  @Path(path = "tps", login = true, accesslog = false)
-  public void tps() {
-    this.set("max", Tps.max());
-    this.show("/admin/gauge.tps.html");
-  }
+	/**
+	 * Cpu.
+	 */
+	@Path(path = "tps", login = true, accesslog = false)
+	public void tps() {
+		this.set("max", Tps.max());
+		this.show("/admin/gauge.tps.html");
+	}
 
-  /**
-   * Cpu_status.
-   */
-  @Path(path = "tps/status", login = true, accesslog = false)
-  public void tps_status() {
-    // todo
-    JSON jo = new JSON();
-    jo.put("total", Tps.get());
+	/**
+	 * Cpu_status.
+	 */
+	@Path(path = "tps/status", login = true, accesslog = false)
+	public void tps_status() {
+		// todo
+		JSON jo = new JSON();
+		jo.put("total", Tps.get());
 
-    this.response(jo);
+		this.response(jo);
 
-  }
+	}
 
-  /**
-   * Mem_status.
-   */
-  @Path(path = "mem/status", login = true, accesslog = false)
-  public void mem_status() {
-    // todo
-    JSON jo = new JSON();
-    jo.put("used", Host.getMemUsed());
+	/**
+	 * Mem_status.
+	 */
+	@Path(path = "mem/status", login = true, accesslog = false)
+	public void mem_status() {
+		// todo
+		JSON jo = new JSON();
+		try {
+			jo.put("used", Host.getMem().getUsed());
+		} catch (SigarException e) {
+			log.error(e.getMessage(), e);
+		}
 
-    this.response(jo);
+		this.response(jo);
 
-  }
+	}
 
-  /**
-   * Mem.
-   */
-  @Path(path = "mem", login = true, accesslog = false)
-  public void mem() {
-    this.set("total", Host.getMemTotal());
-    this.show("/admin/gauge.mem.html");
-  }
+	/**
+	 * Mem.
+	 */
+	@Path(path = "mem", login = true, accesslog = false)
+	public void mem() {
+		try {
+			this.set("total", Host.getMem().getTotal());
+		} catch (SigarException e) {
+			log.error(e.getMessage(), e);
+		}
 
-  /**
-   * Disk.
-   */
-  @Path(path = "disk", login = true, accesslog = false)
-  public void disk() {
-    this.set("list", Host.getDisks());
-    this.show("/admin/gauge.disk.html");
-  }
+		this.show("/admin/gauge.mem.html");
+	}
+
+	/**
+	 * Disk.
+	 */
+	@Path(path = "disk", login = true, accesslog = false)
+	public void disk() {
+
+		try {
+			this.set("list", Host.getFileSystemUsage());
+		} catch (SigarException e) {
+			log.error(e.getMessage(), e);
+		}
+
+		this.show("/admin/gauge.disk.html");
+	}
 
 }
