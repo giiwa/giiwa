@@ -97,7 +97,7 @@ rem ---------------------------------------------------------------------------
 
 setlocal
 
-set "JAVA_OPTS=%JAVA_OPTS% -Xms256m -Xmx512m -XX:-UseParallelGC"
+set "JAVA_OPTS=%JAVA_OPTS% -Xms256m -Xmx512m -XX:-UseParallelGC -Djava.library.path=$GIIWA_HOME\lib\sigar"
 
 rem Suppress Terminate batch job on CTRL+C
 if not ""%1"" == ""run"" goto mainEntry

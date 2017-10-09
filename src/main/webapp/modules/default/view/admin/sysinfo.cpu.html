@@ -1,0 +1,74 @@
+<div class='head'>$lang.get('task.index.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysinfo/cpu' class='selected'>$lang.get('a.sysinfo.cpu')</a>
+	<a href='/admin/sysinfo/os'>$lang.get('a.sysinfo.os')</a>
+	<a href='/admin/sysinfo/top'>$lang.get('a.sysinfo.top')</a>
+	<a href='/admin/sysinfo/net'>$lang.get('a.sysinfo.net')</a>
+	<a href='/admin/sysinfo/disk'>$lang.get('a.sysinfo.disk')</a>
+</div>
+
+<table id='task-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('cpu.vendor')</th>
+			<th>$lang.get('cpu.model')</th>
+			<th>$lang.get('cpu.mhz')</th>
+			<th>$lang.get('cpu.cachesize')</th>
+			<th>$lang.get('cpu.totalsockets')</th>
+			<th>$lang.get('cpu.totalcores')</th>
+			<th>$lang.get('cpu.corespersocket')</th>
+		</tr>
+	</thead>
+	<tbody>
+#set($i=0)
+#foreach($f in $cpuinfo)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$!f.vendor</td>
+		<td>$!f.model</td>
+		<td>$!f.mhz</td>
+		<td>$!f.cacheSize</td>
+		<td>$!f.totalSockets</td>
+		<td>$!f.totalCores</td>
+		<td>$!f.coresPerSocket</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<table id='task-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('cpu.sys')</th>
+			<th>$lang.get('cpu.user')</th>
+			<th>$lang.get('cpu.wait')</th>
+			<th>$lang.get('cpu.nice')</th>
+			<th>$lang.get('cpu.idle')</th>
+			<th>$lang.get('cpu.softirp')</th>
+			<th>$lang.get('cpu.stolen')</th>
+		</tr>
+	</thead>
+	<tbody>
+#set($i=0)
+#foreach($f in $cpuperc)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$!f.sys</td>
+		<td>$!f.user</td>
+		<td>$!f.wait</td>
+		<td>$!f.nice</td>
+		<td>$!f.idle</td>
+		<td>$!f.softirp</td>
+		<td>$!f.stolen</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
