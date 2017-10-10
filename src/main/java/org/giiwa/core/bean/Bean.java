@@ -220,9 +220,11 @@ public class Bean implements Serializable, Map<String, Object> {
 				Field[] ff = c1.getDeclaredFields();
 				for (Field f : ff) {
 					Column f1 = f.getAnnotation(Column.class);
-					String name = f1.name().toLowerCase();
-					if (f1 != null && !m.containsKey(name)) {
-						m.put(name, f);
+					if (f1 != null) {
+						String name = f1.name().toLowerCase();
+						if (!m.containsKey(name)) {
+							m.put(name, f);
+						}
 					}
 				}
 				if (Bean.class.isAssignableFrom(c1.getSuperclass())) {
