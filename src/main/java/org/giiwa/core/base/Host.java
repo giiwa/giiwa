@@ -36,10 +36,13 @@ import org.hyperic.sigar.NetFlags;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.NetInterfaceStat;
 import org.hyperic.sigar.OperatingSystem;
+import org.hyperic.sigar.ProcCpu;
 import org.hyperic.sigar.ProcCred;
 import org.hyperic.sigar.ProcCredName;
 import org.hyperic.sigar.ProcExe;
+import org.hyperic.sigar.ProcMem;
 import org.hyperic.sigar.ProcStat;
+import org.hyperic.sigar.ProcState;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.Swap;
@@ -143,9 +146,15 @@ public class Host {
 				ProcCred ce = sigar.getProcCred(pid);
 				ProcExe p = sigar.getProcExe(pid);
 				ProcCredName cn = sigar.getProcCredName(pid);
+				ProcState st = sigar.getProcState(pid);
+				ProcMem m = sigar.getProcMem(pid);
+				ProcCpu c = sigar.getProcCpu(pid);
 
 				l1.add(JSON.create().append("pid", pid).append("name", p.getName()).append("cwd", p.getCwd())
-						.append("uid", ce.getUid()).append("user", cn.getUser()));
+						.append("uid", ce.getUid()).append("user", cn.getUser()).append("threads", st.getThreads())
+						.append("ppid", st.getPpid()).append("mem", m.getResident()).append("cpu", c.getPercent())
+						.append("cputotal", c.getTotal()));
+
 			} catch (Exception e) {
 				// ignore
 			}

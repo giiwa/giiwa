@@ -14,10 +14,14 @@
 		<tr>
 			<th></th>
 			<th>$lang.get('process.pid')</th>
+			<th>$lang.get('process.ppid')</th>
 			<th>$lang.get('process.uid')</th>
 			<th>$lang.get('process.user')</th>
-			<th style="width:30%">$lang.get('process.name')</th>
-			<th style="width:30%">$lang.get('process.cwd')</th>
+			<th>$lang.get('process.mem')</th>
+			<th>$lang.get('process.cpu')</th>
+			<th>$lang.get('process.threads')</th>
+			<th style="width:25%">$lang.get('process.name')</th>
+			<th style="width:25%">$lang.get('process.cwd')</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -27,8 +31,12 @@
 		#set($i=$i+1)
 		<td>$i</td>
 		<td>$f.pid</td>
+		<td>$f.ppid</td>
 		<td>$!f.uid</td>
 		<td>$!f.user</td>
+		<td>$!lang.size($f.mem)</td>
+		<td>#if($f.cpu>0) $lang.percent($!f.cpu, '%.1f') #end</td>
+		<td>#if($f.threads>0) $f.threads #end</td>
 		<td>$!f.name</td>
 		<td>$!f.cwd</td>
 	</tr>
