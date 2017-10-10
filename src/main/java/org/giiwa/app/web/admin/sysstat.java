@@ -89,10 +89,22 @@ public class sysstat extends Model {
 
 		try {
 			this.set("list", Host.getDisks());
+			this.set("id", "diskstat" + UID.random());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		this.show("/admin/sysinfo.disk.html");
+		this.show("/admin/sysstat.disk.html");
+	}
+
+	@Path(path = "disk/list", login = true, access = "access.config.admin")
+	public void disk_list() {
+
+		try {
+			this.set("list", Host.getDisks());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysstat.disk.list.html");
 	}
 
 }

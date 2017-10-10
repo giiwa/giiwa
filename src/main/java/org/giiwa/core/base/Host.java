@@ -195,7 +195,10 @@ public class Host {
 			FileSystemUsage p = sigar.getFileSystemUsage(f.getDirName());
 			l1.add(JSON.create().append("devname", f.getDevName()).append("dirname", f.getDirName())
 					.append("typename", f.getTypeName()).append("total", p.getTotal()).append("used", p.getUsed())
-					.append("free", p.getFree()).append("files", p.getFiles()).append("usepercent", p.getUsePercent()));
+					.append("free", p.getFree()).append("files", p.getFiles()).append("usepercent", p.getUsePercent())
+					.append("diskreads", p.getDiskReads()).append("diskreadbytes", p.getDiskReadBytes())
+					.append("diskwrites", p.getDiskWrites()).append("diskwritebytes", p.getDiskWriteBytes())
+					.append("diskqueue", p.getDiskQueue()));
 
 		}
 		return l1;
@@ -227,12 +230,11 @@ public class Host {
 		List<JSON> l1 = new ArrayList<JSON>();
 		for (int i = 0; i < ifaces.length; i++) {
 			NetInterfaceConfig cfg = sigar.getNetInterfaceConfig(ifaces[i]);
-			if ((cfg.getFlags() & 1L) <= 0L) {
+			if ((cfg.getFlags() & 1L) <= 0L || X.isSame(cfg.getAddress(), "0.0.0.0")) {
 				continue;
 			}
 
 			NetInterfaceStat s = sigar.getNetInterfaceStat(ifaces[i]);
-
 			l1.add(JSON.create().append("address", cfg.getAddress()).append("name", cfg.getName())
 					.append("rxbytes", s.getRxBytes()).append("rxdropped", s.getRxDropped())
 					.append("rxerrors", s.getRxErrors()).append("rxframe", s.getRxFrame())

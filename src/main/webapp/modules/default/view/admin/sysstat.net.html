@@ -22,7 +22,6 @@
 			<th>$lang.get('net.txpackets')</th>
 			<th>$lang.get('net.txbytes')</th>
 			<th>$lang.get('net.txerrors')</th>
-			<th>$lang.get('net.txdropped')</th>
 		</tr>
 	</thead>
 	<tbody id="$!id">
@@ -35,13 +34,12 @@
 		<td>$!f.name</td>
 		<td>$lang.size($!f.speed)</td>
 		<td>$!f.rxpackets</td>
-		<td>$!f.rxbytes</td>
+		<td>$lang.size($!f.rxbytes)</td>
 		<td>$!f.rxerrors</td>
 		<td>$!f.rxdropped</td>
 		<td>$!f.txpackets</td>
-		<td>$!f.txbytes</td>
+		<td>$lang.size($!f.txbytes)</td>
 		<td>$!f.txerrors</td>
-		<td>$!f.txdropped</td>
 	</tr>
 #end
 	</tbody>
