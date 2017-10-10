@@ -1082,7 +1082,7 @@ public class Helper implements Serializable {
 			// sb.append(" (").append(w.where(tansfers)).append(") ");
 			// }
 
-			return "(" + sb + ")";
+			return sb.length() == 0 ? X.EMPTY : "(" + sb + ")";
 
 		}
 
