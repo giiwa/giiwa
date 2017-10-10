@@ -32,16 +32,17 @@ import org.hyperic.sigar.CpuPerc;
 import org.hyperic.sigar.FileSystem;
 import org.hyperic.sigar.FileSystemUsage;
 import org.hyperic.sigar.Mem;
+import org.hyperic.sigar.NetConnection;
 import org.hyperic.sigar.NetFlags;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.NetInterfaceStat;
+import org.hyperic.sigar.NetStat;
 import org.hyperic.sigar.OperatingSystem;
 import org.hyperic.sigar.ProcCpu;
 import org.hyperic.sigar.ProcCred;
 import org.hyperic.sigar.ProcCredName;
 import org.hyperic.sigar.ProcExe;
 import org.hyperic.sigar.ProcMem;
-import org.hyperic.sigar.ProcStat;
 import org.hyperic.sigar.ProcState;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
@@ -248,6 +249,46 @@ public class Host {
 					.append("txoverruns", s.getTxOverruns()).append("txpackets", s.getTxPackets()));
 		}
 
+		return l1;
+	}
+
+	public static NetStat getNetStat() throws SigarException {
+		_init();
+		return sigar.getNetStat();
+	}
+
+	public static List<JSON> getNetStats() throws SigarException {
+		_init();
+		int flags = NetFlags.CONN_CLIENT | NetFlags.CONN_SERVER | NetFlags.CONN_TCP | NetFlags.CONN_UDP
+				| NetFlags.CONN_PROTOCOLS;
+		NetConnection[] nn = sigar.getNetConnectionList(flags);
+		List<JSON> l1 = new ArrayList<JSON>();
+		for (NetConnection n : nn) {
+			if (n.getRemotePort() == 0 && n.getLocalPort() == 0)
+				continue;
+
+			JSON jo = JSON.create().append("remoteaddress", n.getRemoteAddress())
+					.append("remoteport", n.getRemotePort()).append("localaddress", n.getLocalAddress())
+					.append("localport", n.getLocalPort()).append("recvqueue", n.getReceiveQueue())
+					.append("sendqueue", n.getSendQueue()).append("state", n.getState()).append("type", n.getType())
+					.append("typename", n.getTypeString());
+			if (n.getType() != NetFlags.CONN_UDP) {
+				jo.append("statename", n.getStateString());
+			}
+			try {
+				long pid = sigar.getProcPort(n.getType(), n.getLocalPort());
+				if (pid != 0) {
+					ProcState p = sigar.getProcState(pid);
+					if (p != null) {
+						jo.append("pid", pid + "/" + p.getName());
+					}
+				}
+			} catch (Exception e) {
+				// ignore
+				log.warn("get pid error, type=" + n.getType() + ", port=" + n.getLocalPort());
+			}
+			l1.add(jo);
+		}
 		return l1;
 	}
 

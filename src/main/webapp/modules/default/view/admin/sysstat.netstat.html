@@ -1,0 +1,55 @@
+<div class='head'>$lang.get('sysstat.netstat.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysstat/cpu'>$lang.get('a.sysstat.cpu')</a>
+	<a href='/admin/sysstat/net'>$lang.get('a.sysstat.net')</a>
+	<a href='/admin/sysstat/netstat' class='selected'>$lang.get('a.sysstat.netstat')</a>
+	<a href='/admin/sysstat/disk'>$lang.get('a.sysstat.disk')</a>
+</div>
+
+<div class='state' style="display:block">
+	<div>$lang.get('netstat.listen'):<i>$stat.tcpListen</i></div>
+	<div>$lang.get('netstat.established'):<i>$stat.tcpEstablished</i></div>
+	<div>$lang.get('netstat.closing'):<i>$stat.tcpClosing</i></div>
+	<div>$lang.get('netstat.closewait'):<i>$stat.tcpCloseWait</i></div>
+	<div>$lang.get('netstat.close'):<i>$stat.tcpClose</i></div>
+	<div>$lang.get('netstat.allin'):<i>$stat.allInboundTotal</i></div>
+	<div>$lang.get('netstat.allout'):<i>$stat.allOutboundTotal</i></div>
+</div>
+
+<table id='task-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('netstat.typename')</th>
+			<th>$lang.get('netstat.local')</th>
+			<th>$lang.get('netstat.remote')</th>
+			<th>$lang.get('netstat.sendqueue')</th>
+			<th>$lang.get('netstat.recvqueue')</th>
+			<th>$lang.get('netstat.state')</th>
+			<th>$lang.get('netstat.pid')</th>
+		</tr>
+	</thead>
+	<tbody id="$!id">
+#set($i=0)
+#foreach($f in $list)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$!f.typename</td>
+		<td>
+			#if($f.localport>0) $!{f.localaddress}:$!{f.localport} #end
+		</td>
+		<td>
+			#if($f.remoteport>0) $!{f.remoteaddress}:$!{f.remoteport} #end
+		</td>
+		<td>$!f.sendqueue</td>
+		<td>$!f.recvqueue</td>
+		<td>$!f.statename</td>
+		<td>$!f.pid</td>
+	</tr>
+#end
+	</tbody>
+</table>

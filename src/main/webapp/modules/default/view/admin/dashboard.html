@@ -16,7 +16,7 @@
 $(function(){
 	$('#memgauge').highcharts({
 	    title: {
-	        text: "$lang.get('gauge.mem.title')($lang.size($mem.total))"
+	        text: "$lang.get('gauge.mem.title')($lang.size($mem.total)B)"
 	    },
 	    credits:{
         		enabled: false
@@ -38,8 +38,8 @@ $(function(){
 	    series: [{
 	        type: 'pie',
 	        data: [
-	        		{name:"$lang.get('mem.used')",  y:$mem.used, hint:"$lang.size($mem.used)", color:'#961616'},
-	        		{name:"$lang.get('mem.free')",  y:$mem.free, hint:"$lang.size($mem.free)", color:'#009df5'}
+	        		{name:"$lang.get('mem.used')",  y:$mem.used, hint:"$lang.size($mem.used)B", color:'#961616'},
+	        		{name:"$lang.get('mem.free')",  y:$mem.free, hint:"$lang.size($mem.free)B", color:'#009df5'}
 	        ]
 	    }]
 	});	//endof mem
@@ -76,13 +76,13 @@ $(function(){
             name: "$lang.get('disk.free')",
             color:'#009df5',
             data: [
-            	#foreach($d in $disk) {y:$d.free, hint:"$lang.size($d.free)"}, #end
+            	#foreach($d in $disk) {y:$d.free, hint:"$lang.size($d.free)B"}, #end
             	]
         },{
             name: "$lang.get('disk.used')",
             color: '#961616',
             data: [
-            	#foreach($d in $disk) {y:$d.used, hint:"$lang.size($d.used)"}, #end
+            	#foreach($d in $disk) {y:$d.used, hint:"$lang.size($d.used)B"}, #end
             	]
         }]
 	});	//end disk
@@ -113,12 +113,12 @@ $(function(){
         series: [{
             name: "$lang.get('net.rxbytes')",
             data: [
-            	#foreach($d in $net) {y:$d.rxbytes, hint:"$lang.size($d.rxbytes)"}, #end
+            	#foreach($d in $net) {y:$d.rxbytes, hint:"$lang.size($d.rxbytes)B"}, #end
             	]
         },{
             name: "$lang.get('net.txbytes')",
             data: [
-            	#foreach($d in $net) {y:$d.txbytes, hint:"$lang.size($d.txbytes)"}, #end
+            	#foreach($d in $net) {y:$d.txbytes, hint:"$lang.size($d.txbytes)B"}, #end
             	]
         }]
 	});	

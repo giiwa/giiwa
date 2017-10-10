@@ -107,4 +107,17 @@ public class sysstat extends Model {
 		this.show("/admin/sysstat.disk.list.html");
 	}
 
+	@Path(path = "netstat", login = true, access = "access.config.admin")
+	public void netstat() {
+
+		try {
+			this.set("stat", Host.getNetStat());
+			this.set("list", Host.getNetStats());
+			this.set("id", "netstat" + UID.random());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysstat.netstat.html");
+	}
+
 }
