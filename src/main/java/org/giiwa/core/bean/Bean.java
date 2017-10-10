@@ -135,12 +135,10 @@ public class Bean implements Serializable, Map<String, Object> {
 
 		Object old = null;
 
+		// change all to lower case avoid some database auto change to upper case
+		name = name.toLowerCase();
 		// looking for all the fields
 		Field f1 = getField(name);
-		if (f1 == null) {
-			// some database may ignore case, auto change to uppercase
-			f1 = getField(name.toLowerCase());
-		}
 
 		if (f1 != null) {
 			try {
@@ -191,7 +189,7 @@ public class Bean implements Serializable, Map<String, Object> {
 			if (value == null) {
 				data.remove(name);
 			} else {
-				data.put(name.toLowerCase(), value);
+				data.put(name, value);
 			}
 		}
 		return old;
@@ -222,8 +220,9 @@ public class Bean implements Serializable, Map<String, Object> {
 				Field[] ff = c1.getDeclaredFields();
 				for (Field f : ff) {
 					Column f1 = f.getAnnotation(Column.class);
-					if (f1 != null && !m.containsKey(f1.name())) {
-						m.put(f1.name(), f);
+					String name = f1.name().toLowerCase();
+					if (f1 != null && !m.containsKey(name)) {
+						m.put(name, f);
 					}
 				}
 				if (Bean.class.isAssignableFrom(c1.getSuperclass())) {
@@ -258,7 +257,7 @@ public class Bean implements Serializable, Map<String, Object> {
 			return null;
 		}
 
-		String s = name.toString();
+		String s = name.toString().toLowerCase();
 		Field f = getField(s);
 		if (f != null) {
 			try {
