@@ -33,7 +33,7 @@
 		<td>$!f.devname</td>
 		<td>$lang.size($!f.total)</td>
 		<td>$lang.size($!f.used)</td>
-		<td>$lang.format($!f.diskqueue, '%.3f')</td>
+		<td>#if($f.diskqueue>0) $lang.format($!f.diskqueue, '%.3f') #end</td>
 		<td>$!f.diskreads</td>
 		<td>$lang.size($!f.diskreadbytes)</td>
 		<td>$!f.diskwrites</td>
