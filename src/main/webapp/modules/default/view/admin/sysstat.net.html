@@ -1,0 +1,64 @@
+<div class='head'>$lang.get('sysstat.net.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysstat/cpu'>$lang.get('a.sysstat.cpu')</a>
+	<a href='/admin/sysstat/net' class='selected'>$lang.get('a.sysstat.net')</a>
+	<a href='/admin/sysstat/disk'>$lang.get('a.sysstat.disk')</a>
+</div>
+
+<table id='task-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('net.address')</th>
+			<th>$lang.get('net.name')</th>
+			<th>$lang.get('net.speed')</th>
+			<th>$lang.get('net.rxpackets')</th>
+			<th>$lang.get('net.rxbytes')</th>
+			<th>$lang.get('net.rxerrors')</th>
+			<th>$lang.get('net.rxdropped')</th>
+			<th>$lang.get('net.txpackets')</th>
+			<th>$lang.get('net.txbytes')</th>
+			<th>$lang.get('net.txerrors')</th>
+			<th>$lang.get('net.txdropped')</th>
+		</tr>
+	</thead>
+	<tbody id="$!id">
+#set($i=0)
+#foreach($f in $list)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$!f.address</td>
+		<td>$!f.name</td>
+		<td>$lang.size($!f.speed)</td>
+		<td>$!f.rxpackets</td>
+		<td>$!f.rxbytes</td>
+		<td>$!f.rxerrors</td>
+		<td>$!f.rxdropped</td>
+		<td>$!f.txpackets</td>
+		<td>$!f.txbytes</td>
+		<td>$!f.txerrors</td>
+		<td>$!f.txdropped</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<script>
+$(function(){
+	setTimeout(_reload, 3000);
+});
+
+function _reload(){
+	if($('#$!id').length > 0) {
+		$.post('/admin/sysstat/net/list', {}, function(d){
+			$('#$!id').html(d);			
+			setTimeout(_reload, 3000);
+		});
+	}
+}
+
+</script>

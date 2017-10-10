@@ -1,0 +1,12 @@
+#set($i=0)
+#foreach($f in $cpuperc)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$lang.percent($!f.sys, '%.1f')</td>
+		<td>$lang.percent($!f.user, '%.1f')</td>
+		<td>$lang.percent($!f.wait, '%.1f')</td>
+		<td>$lang.percent($!f.nice, '%.1f')</td>
+		<td>$lang.percent($!f.idle, '%.1f')</td>
+	</tr>
+#end

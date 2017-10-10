@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import org.giiwa.core.base.Host;
+import org.giiwa.core.bean.UID;
 import org.giiwa.framework.web.*;
 
 /**
@@ -25,7 +26,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class sysinfo extends Model {
+public class sysstat extends Model {
 
 	/*
 	 * (non-Javadoc)
@@ -34,42 +35,53 @@ public class sysinfo extends Model {
 	 */
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
-		this.redirect("/admin/sysinfo/cpu");
+		this.redirect("/admin/sysstat/cpu");
 	}
 
 	@Path(path = "cpu", login = true, access = "access.config.admin")
 	public void cpu() {
 
 		try {
-			this.set("cpuinfo", Host.getCpuInfo()[0]);
 			this.set("cpuperc", Host.getCpuPerc());
-			this.set("os", Host.getOS());
+			this.set("id", "cpustat" + UID.random());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		this.show("/admin/sysinfo.cpu.html");
+		this.show("/admin/sysstat.cpu.html");
 	}
 
-	@Path(path = "process", login = true, access = "access.config.admin")
-	public void process() {
+	@Path(path = "cpu/list", login = true, access = "access.config.admin")
+	public void cpu_list() {
 
 		try {
-			this.set("list", Host.getProcess());
+			this.set("cpuperc", Host.getCpuPerc());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		this.show("/admin/sysinfo.process.html");
+		this.show("/admin/sysstat.cpu.list.html");
 	}
 
 	@Path(path = "net", login = true, access = "access.config.admin")
 	public void net() {
 
 		try {
-			this.set("list", Host.getIfaces());
+			this.set("list", Host.getIfstats());
+			this.set("id", "netstat" + UID.random());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		this.show("/admin/sysinfo.net.html");
+		this.show("/admin/sysstat.net.html");
+	}
+
+	@Path(path = "net/list", login = true, access = "access.config.admin")
+	public void net_list() {
+
+		try {
+			this.set("list", Host.getIfstats());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysstat.net.list.html");
 	}
 
 	@Path(path = "disk", login = true, access = "access.config.admin")

@@ -219,24 +219,31 @@ public class Host {
 		return l1.toArray(new NetInterfaceConfig[l1.size()]);
 	}
 
-	public static NetInterfaceStat[] getIfstats() throws SigarException {
+	public static List<JSON> getIfstats() throws SigarException {
 		_init();
 
 		String[] ifaces = sigar.getNetInterfaceList();
 
-		List<NetInterfaceStat> l1 = new ArrayList<NetInterfaceStat>();
+		List<JSON> l1 = new ArrayList<JSON>();
 		for (int i = 0; i < ifaces.length; i++) {
-			NetInterfaceConfig ifconfig = sigar.getNetInterfaceConfig(ifaces[i]);
-			if ((ifconfig.getFlags() & 1L) <= 0L) {
+			NetInterfaceConfig cfg = sigar.getNetInterfaceConfig(ifaces[i]);
+			if ((cfg.getFlags() & 1L) <= 0L) {
 				continue;
 			}
 
-			NetInterfaceStat cfg = sigar.getNetInterfaceStat(ifaces[i]);
+			NetInterfaceStat s = sigar.getNetInterfaceStat(ifaces[i]);
 
-			l1.add(cfg);
+			l1.add(JSON.create().append("address", cfg.getAddress()).append("name", cfg.getName())
+					.append("rxbytes", s.getRxBytes()).append("rxdropped", s.getRxDropped())
+					.append("rxerrors", s.getRxErrors()).append("rxframe", s.getRxFrame())
+					.append("rxoverrunns", s.getRxOverruns()).append("rxpackets", s.getRxPackets())
+					.append("speed", s.getSpeed()).append("txbytes", s.getTxBytes())
+					.append("txcarrier", s.getTxCarrier()).append("txcollisions", s.getTxCollisions())
+					.append("txdropped", s.getTxDropped()).append("txerrors", s.getTxErrors())
+					.append("txoverruns", s.getTxOverruns()).append("txpackets", s.getTxPackets()));
 		}
 
-		return l1.toArray(new NetInterfaceStat[l1.size()]);
+		return l1;
 	}
 
 	private static synchronized void _init() {
