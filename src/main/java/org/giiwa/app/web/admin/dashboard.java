@@ -55,10 +55,19 @@ public class dashboard extends Model {
 		this.set("cpus", Runtime.getRuntime().availableProcessors());
 		try {
 			this.set("totalmemory", lang.size(Host.getMem().getTotal()));
-		} catch (SigarException e) {
+		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
 
+		if (login.hasAccess("access.config.admin")) {
+			try {
+				this.set("mem", Host.getMem());
+				this.set("disk", Host.getDisks());
+				this.set("net", Host.getIfstats());
+			} catch (Throwable e) {
+				log.error(e.getMessage(), e);
+			}
+		}
 		show("admin/dashboard.html");
 	}
 

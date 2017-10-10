@@ -8,10 +8,123 @@
 
 #if($me.hasAccess('access.config.admin'))
 <div class='chart'>
-	<iframe class='cpu_gauge' src="/admin/gauge/tps"></iframe>
-	<iframe class='mem_gauge' src="/admin/gauge/mem"></iframe>
-	<iframe class='disk_usage' src="/admin/gauge/disk"></iframe>
+	<div id='memgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>
+	<div id='diskgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>
+	<div id='netgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>
 </div>
+<script>
+$(function(){
+	$('#memgauge').highcharts({
+	    title: {
+	        text: "$lang.get('gauge.mem.title')($lang.size($mem.total))"
+	    },
+	    credits:{
+        		enabled: false
+        },
+	    tooltip: {
+            headerFormat: '',
+            pointFormat: '{point.name}: <b>{point.hint}</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true
+            }
+        },
+	    series: [{
+	        type: 'pie',
+	        data: [
+	        		{name:"$lang.get('mem.used')",  y:$mem.used, hint:"$lang.size($mem.used)", color:'#961616'},
+	        		{name:"$lang.get('mem.free')",  y:$mem.free, hint:"$lang.size($mem.free)", color:'#009df5'}
+	        ]
+	    }]
+	});	//endof mem
+	
+	$('#diskgauge').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: "$lang.get('gauge.disk.title')"
+        },
+        xAxis: {
+            categories: [#foreach($d in $disk) "$d.dirname" , #end]
+        },
+        credits:{
+            enabled: false
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: ' '
+            }
+        },
+        tooltip: {
+            headerFormat: '',
+            pointFormat: '{series.name}: <b>{point.hint}</b>'
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+            }
+        },
+        series: [{
+            name: "$lang.get('disk.free')",
+            color:'#009df5',
+            data: [
+            	#foreach($d in $disk) {y:$d.free, hint:"$lang.size($d.free)"}, #end
+            	]
+        },{
+            name: "$lang.get('disk.used')",
+            color: '#961616',
+            data: [
+            	#foreach($d in $disk) {y:$d.used, hint:"$lang.size($d.used)"}, #end
+            	]
+        }]
+	});	//end disk
+
+	$('#netgauge').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: "$lang.get('gauge.net.title')"
+        },
+        xAxis: {
+            categories: [#foreach($d in $net) "$d.address" , #end]
+        },
+        credits:{
+            enabled: false
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: ' '
+            }
+        },
+        tooltip: {
+            headerFormat: '',
+            pointFormat: '{series.name}: <b>{point.hint}</b>'
+        },
+        series: [{
+            name: "$lang.get('net.rxbytes')",
+            data: [
+            	#foreach($d in $net) {y:$d.rxbytes, hint:"$lang.size($d.rxbytes)"}, #end
+            	]
+        },{
+            name: "$lang.get('net.txbytes')",
+            data: [
+            	#foreach($d in $net) {y:$d.txbytes, hint:"$lang.size($d.txbytes)"}, #end
+            	]
+        }]
+	});	
+	
+})
+</script>
 #end
 
 <div class='state' style='display:block;'>

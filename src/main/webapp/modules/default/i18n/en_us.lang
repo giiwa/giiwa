@@ -632,3 +632,6 @@ net.txbytes=TxBytes
 net.txpackets=TxPackets
 disk.diskqueue=Queue
 sysstat.cpu.title=CPU Stat
+mem.used=Used
+mem.free=Free
+gauge.net.title=Net Traffic

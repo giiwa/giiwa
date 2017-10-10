@@ -14,6 +14,8 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.util.List;
+
 import org.giiwa.core.base.Host;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
@@ -69,7 +71,7 @@ public class gauge extends Model {
 		// todo
 		JSON jo = new JSON();
 		try {
-			jo.put("used", Host.getMem().getUsed());
+			jo.put("used", lang.format(Host.getMem().getUsed() / 1024 / 1024 / 1024F, "%.1f"));
 		} catch (SigarException e) {
 			log.error(e.getMessage(), e);
 		}
@@ -84,7 +86,7 @@ public class gauge extends Model {
 	@Path(path = "mem", login = true, accesslog = false)
 	public void mem() {
 		try {
-			this.set("total", Host.getMem().getTotal());
+			this.set("total", lang.format(Host.getMem().getTotal() / 1024 / 1024 / 1024F, "%.1f"));
 		} catch (SigarException e) {
 			log.error(e.getMessage(), e);
 		}
@@ -99,8 +101,15 @@ public class gauge extends Model {
 	public void disk() {
 
 		try {
-			this.set("list", Host.getFileSystemUsage());
-		} catch (SigarException e) {
+			List<JSON> l1 = Host.getDisks();
+			for (JSON j : l1) {
+				long free = j.getLong("free");
+				long used = j.getLong("used");
+				j.put("free", lang.format(free / 1024F / 1024 / 1024, "%.1f"));
+				j.put("used", lang.format(used / 1024F / 1024 / 1024, "%.1f"));
+			}
+			this.set("list", l1);
+		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
 

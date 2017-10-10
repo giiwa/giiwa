@@ -635,3 +635,6 @@ net.txbytes=发字节
 net.txpackets=发包
 disk.diskqueue=队列
 sysstat.cpu.title=CPU统计信息
+mem.used=已使用
+mem.free=空余
+gauge.net.title=网络流量
