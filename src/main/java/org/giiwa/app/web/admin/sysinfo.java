@@ -46,12 +46,46 @@ public class sysinfo extends Model {
 	public void cpu() {
 
 		try {
-			this.set("cpuinfo", Host.getCpuInfo());
+			this.set("cpuinfo", Host.getCpuInfo()[0]);
 			this.set("cpuperc", Host.getCpuPerc());
+			this.set("os", Host.getOS());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 		this.show("/admin/sysinfo.cpu.html");
+	}
+
+	@Path(path = "process", login = true, access = "access.config.admin")
+	public void process() {
+
+		try {
+			this.set("list", Host.getProcess());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysinfo.process.html");
+	}
+
+	@Path(path = "net", login = true, access = "access.config.admin")
+	public void net() {
+
+		try {
+			this.set("list", Host.getIfaces());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysinfo.net.html");
+	}
+
+	@Path(path = "disk", login = true, access = "access.config.admin")
+	public void disk() {
+
+		try {
+			this.set("list", Host.getDisks());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysinfo.disk.html");
 	}
 
 }

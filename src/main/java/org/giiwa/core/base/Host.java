@@ -26,6 +26,7 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.hyperic.sigar.CpuInfo;
 import org.hyperic.sigar.CpuPerc;
 import org.hyperic.sigar.FileSystem;
@@ -35,6 +36,10 @@ import org.hyperic.sigar.NetFlags;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.NetInterfaceStat;
 import org.hyperic.sigar.OperatingSystem;
+import org.hyperic.sigar.ProcCred;
+import org.hyperic.sigar.ProcCredName;
+import org.hyperic.sigar.ProcExe;
+import org.hyperic.sigar.ProcStat;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.Swap;
@@ -128,8 +133,29 @@ public class Host {
 		return OperatingSystem.getInstance();
 	}
 
-	public static long[] getProcess() throws SigarException {
+	public static List<JSON> getProcess() throws SigarException {
 		_init();
+
+		long[] pids = getPids();
+		List<JSON> l1 = new ArrayList<JSON>();
+		for (long pid : pids) {
+			try {
+				ProcCred ce = sigar.getProcCred(pid);
+				ProcExe p = sigar.getProcExe(pid);
+				ProcCredName cn = sigar.getProcCredName(pid);
+
+				l1.add(JSON.create().append("pid", pid).append("name", p.getName()).append("cwd", p.getCwd())
+						.append("uid", ce.getUid()).append("user", cn.getUser()));
+			} catch (Exception e) {
+				// ignore
+			}
+		}
+		return l1;
+	}
+
+	public static long[] getPids() throws SigarException {
+		_init();
+
 		return sigar.getProcList();
 	}
 
@@ -146,6 +172,22 @@ public class Host {
 		Map<String, FileSystemUsage> l1 = new TreeMap<String, FileSystemUsage>();
 		for (FileSystem f : fs) {
 			l1.put(f.getDirName(), sigar.getFileSystemUsage(f.getDirName()));
+		}
+		return l1;
+	}
+
+	public static List<JSON> getDisks() throws SigarException {
+		_init();
+
+		FileSystem[] fs = getFileSystem();
+		List<JSON> l1 = new ArrayList<JSON>();
+		for (FileSystem f : fs) {
+
+			FileSystemUsage p = sigar.getFileSystemUsage(f.getDirName());
+			l1.add(JSON.create().append("devname", f.getDevName()).append("dirname", f.getDirName())
+					.append("typename", f.getTypeName()).append("total", p.getTotal()).append("used", p.getUsed())
+					.append("free", p.getFree()).append("files", p.getFiles()).append("usepercent", p.getUsePercent()));
+
 		}
 		return l1;
 	}

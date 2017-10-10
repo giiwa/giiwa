@@ -1,0 +1,42 @@
+<div class='head'>$lang.get('sysinfo.disk.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysinfo/cpu' >$lang.get('a.sysinfo.cpu')</a>
+	<a href='/admin/sysinfo/process'>$lang.get('a.sysinfo.process')</a>
+	<a href='/admin/sysinfo/net'>$lang.get('a.sysinfo.net')</a>
+	<a href='/admin/sysinfo/disk' class='selected'>$lang.get('a.sysinfo.disk')</a>
+</div>
+
+<table id='task-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('disk.dirname')</th>
+			<th>$lang.get('disk.devname')</th>
+			<th>$lang.get('disk.total')</th>
+			<th>$lang.get('disk.used')</th>
+			<th>$lang.get('disk.free')</th>
+			<th>$lang.get('disk.usepercent')</th>
+			<th>$lang.get('disk.files')</th>
+		</tr>
+	</thead>
+	<tbody>
+#set($i=0)
+#foreach($f in $list)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$!f.dirname</td>
+		<td>$!f.devname</td>
+		<td>$!lang.size($!f.total)</td>
+		<td>$!lang.size($!f.used)</td>
+		<td>$!lang.size($!f.free)</td>
+		<td>$!f.usepercent</td>
+		<td>$!f.files</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
