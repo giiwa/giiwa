@@ -6,6 +6,7 @@
 	<a href='/admin/sysinfo/cpu' class='selected'>$lang.get('a.sysinfo.cpu')</a>
 	<a href='/admin/sysinfo/process'>$lang.get('a.sysinfo.process')</a>
 	<a href='/admin/sysinfo/net'>$lang.get('a.sysinfo.net')</a>
+	<a href='/admin/sysinfo/route'>$lang.get('a.sysinfo.route')</a>
 	<a href='/admin/sysinfo/disk'>$lang.get('a.sysinfo.disk')</a>
 </div>
 
@@ -13,10 +14,10 @@
 	<div>$lang.get('cpu.vendor'): <i>$!cpuinfo.vendor</i></div>
 	<div>$lang.get('cpu.model'): <i>$!cpuinfo.model</i></div>
 	<div>$lang.get('cpu.mhz'): <i>$!cpuinfo.mhz</i></div>
-	<div>$lang.get('cpu.cachesize'): <i>$!cpuinfo.cacheSize</i></div>
 	<div>$lang.get('cpu.totalcores'): <i>$!cpuinfo.totalCores</i></div>
-	<div>$lang.get('os.cpuendian'): <i>$!os.cpuEndian</i></div>
-	<div>$lang.get('os.datamodel'): <i>$!os.dataModel</i></div>
+
+	<div>$lang.get('os.name'): <i>$!os.name, $!os.version, $!os.arch</i></div>
+	<div>$lang.get('os.vendor'): <i>$!os.vendor, $!os.vendorVersion</i></div>
 	
 </div>
 

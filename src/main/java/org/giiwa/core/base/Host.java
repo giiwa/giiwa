@@ -36,6 +36,7 @@ import org.hyperic.sigar.NetConnection;
 import org.hyperic.sigar.NetFlags;
 import org.hyperic.sigar.NetInterfaceConfig;
 import org.hyperic.sigar.NetInterfaceStat;
+import org.hyperic.sigar.NetRoute;
 import org.hyperic.sigar.NetStat;
 import org.hyperic.sigar.OperatingSystem;
 import org.hyperic.sigar.ProcCpu;
@@ -134,7 +135,10 @@ public class Host {
 
 	public static OperatingSystem getOS() throws SigarException {
 		_init();
-		return OperatingSystem.getInstance();
+
+		OperatingSystem os = OperatingSystem.getInstance();
+
+		return os;
 	}
 
 	public static List<JSON> getProcess() throws SigarException {
@@ -299,5 +303,11 @@ public class Host {
 	}
 
 	private static Sigar sigar = null;
+
+	public static NetRoute[] getRoutes() throws SigarException {
+		_init();
+
+		return sigar.getNetRouteList();
+	}
 
 }

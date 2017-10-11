@@ -72,6 +72,17 @@ public class sysinfo extends Model {
 		this.show("/admin/sysinfo.net.html");
 	}
 
+	@Path(path = "route", login = true, access = "access.config.admin")
+	public void route() {
+
+		try {
+			this.set("list", Host.getRoutes());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysinfo.route.html");
+	}
+
 	@Path(path = "disk", login = true, access = "access.config.admin")
 	public void disk() {
 
