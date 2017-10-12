@@ -624,6 +624,9 @@ public final class JSON extends HashMap<String, Object> {
 					this.put(k, v2);
 				} else {
 					Object v1 = this.get(k);
+					if (X.isSame(v1, v2))
+						continue;
+
 					List<Object> l1 = new ArrayList<Object>();
 					if (v1 instanceof List) {
 						l1.addAll((List) v1);
