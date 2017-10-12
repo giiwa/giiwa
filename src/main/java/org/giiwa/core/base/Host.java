@@ -147,22 +147,49 @@ public class Host {
 		long[] pids = getPids();
 		List<JSON> l1 = new ArrayList<JSON>();
 		for (long pid : pids) {
+			JSON jo = JSON.create().append("pid", pid);
 			try {
 				ProcCred ce = sigar.getProcCred(pid);
+				jo.append("uid", ce.getUid());
+			} catch (Exception e) {
+				// ignore
+			}
+			try {
 				ProcExe p = sigar.getProcExe(pid);
-				ProcCredName cn = sigar.getProcCredName(pid);
-				ProcState st = sigar.getProcState(pid);
-				ProcMem m = sigar.getProcMem(pid);
-				ProcCpu c = sigar.getProcCpu(pid);
+				jo.append("name", p.getName()).append("cwd", p.getCwd());
+			} catch (Exception e) {
+				// ignore
+			}
+			try {
 
-				l1.add(JSON.create().append("pid", pid).append("name", p.getName()).append("cwd", p.getCwd())
-						.append("uid", ce.getUid()).append("user", cn.getUser()).append("threads", st.getThreads())
-						.append("ppid", st.getPpid()).append("mem", m.getResident()).append("cpu", c.getPercent())
-						.append("cputotal", c.getTotal()));
+				ProcCredName cn = sigar.getProcCredName(pid);
+				jo.append("user", cn.getUser());
+			} catch (Exception e) {
+				// ignore
+			}
+			try {
+
+				ProcState st = sigar.getProcState(pid);
+				jo.append("threads", st.getThreads()).append("ppid", st.getPpid());
+			} catch (Exception e) {
+				// ignore
+			}
+			try {
+
+				ProcMem m = sigar.getProcMem(pid);
+				jo.append("mem", m.getResident());
+			} catch (Exception e) {
+				// ignore
+			}
+			try {
+
+				ProcCpu c = sigar.getProcCpu(pid);
+				jo.append("cpu", c.getPercent()).append("cputotal", c.getTotal());
 
 			} catch (Exception e) {
 				// ignore
 			}
+			l1.add(jo);
 		}
 		return l1;
 	}
@@ -199,13 +226,13 @@ public class Host {
 
 			FileSystemUsage p = sigar.getFileSystemUsage(f.getDirName());
 			if (p.getTotal() > 0) {
-				l1.add(JSON.create().append("devname", f.getDevName())
-						.append("dirname", f.getDirName()).append("typename", f.getTypeName())
-						.append("total", 1024 * p.getTotal()).append("used", 1024 * p.getUsed())
-						.append("free", 1024 * p.getFree()).append("files", p.getFiles())
-						.append("usepercent", p.getUsePercent()).append("diskreads", p.getDiskReads())
-						.append("diskreadbytes", p.getDiskReadBytes()).append("diskwrites", p.getDiskWrites())
-						.append("diskwritebytes", p.getDiskWriteBytes()).append("diskqueue", p.getDiskQueue()));
+				l1.add(JSON.create().append("devname", f.getDevName()).append("dirname", f.getDirName())
+						.append("typename", f.getTypeName()).append("total", 1024 * p.getTotal())
+						.append("used", 1024 * p.getUsed()).append("free", 1024 * p.getFree())
+						.append("files", p.getFiles()).append("usepercent", p.getUsePercent())
+						.append("diskreads", p.getDiskReads()).append("diskreadbytes", p.getDiskReadBytes())
+						.append("diskwrites", p.getDiskWrites()).append("diskwritebytes", p.getDiskWriteBytes())
+						.append("diskqueue", p.getDiskQueue()));
 			}
 
 		}
