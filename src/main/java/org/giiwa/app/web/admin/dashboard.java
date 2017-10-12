@@ -71,4 +71,7 @@ public class dashboard extends Model {
 		show("admin/dashboard.html");
 	}
 
+	public String eclipse(String path) {
+		return path.replaceAll("\\\\", "/");
+	}
 }

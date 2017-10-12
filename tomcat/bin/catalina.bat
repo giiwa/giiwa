@@ -97,8 +97,6 @@ rem ---------------------------------------------------------------------------
 
 setlocal
 
-set "JAVA_OPTS=%JAVA_OPTS% -Xms256m -Xmx512m -XX:-UseParallelGC -Djava.library.path=%GIIWA_HOME%\lib\sigar"
-
 rem Suppress Terminate batch job on CTRL+C
 if not ""%1"" == ""run"" goto mainEntry
 if "%TEMP%" == "" goto mainEntry
@@ -213,11 +211,14 @@ set "JAVA_OPTS=%JAVA_OPTS% %LOGGING_MANAGER%"
 
 rem ----- Execute The Requested Command ---------------------------------------
 
+set "GIIWA_HOME=%CATALINA_HOME%"
+set "JAVA_OPTS=%JAVA_OPTS% -Xms256m -Xmx512m -XX:-UseParallelGC -Djava.library.path=%GIIWA_HOME%\lib\sigar"
 echo Using CATALINA_BASE:   "%CATALINA_BASE%"
 echo Using CATALINA_HOME:   "%CATALINA_HOME%"
-set "GIIWA_HOME=%CATALINA_HOME%"
 echo Using GIIWA_HOME:   "%GIIWA_HOME%"
 echo Using CATALINA_TMPDIR: "%CATALINA_TMPDIR%"
+echo Using JAVA_OPTS: "%JAVA_OPTS%"
+
 if ""%1"" == ""debug"" goto use_jdk
 echo Using JRE_HOME:        "%JRE_HOME%"
 goto java_dir_displayed

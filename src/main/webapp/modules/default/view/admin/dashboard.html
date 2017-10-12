@@ -52,7 +52,7 @@ $(function(){
             text: "$lang.get('gauge.disk.title')"
         },
         xAxis: {
-            categories: [#foreach($d in $disk) "$d.dirname" , #end]
+            categories: [#foreach($d in $disk) "$this.eclipse($d.dirname)" , #end]
         },
         credits:{
             enabled: false
