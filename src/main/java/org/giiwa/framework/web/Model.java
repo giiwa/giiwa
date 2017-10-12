@@ -2388,6 +2388,8 @@ public class Model {
 
 	private static String node = null;
 
+	public static String instanceid = null;
+
 	/**
 	 * get the name of this node in cluster.
 	 *

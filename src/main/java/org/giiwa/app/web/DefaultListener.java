@@ -33,6 +33,7 @@ import org.giiwa.app.web.admin.setting;
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Optimizer;
+import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
@@ -180,6 +181,13 @@ public class DefaultListener implements IListener {
 				log.warn("giiwa is stopped");
 			}
 		});
+
+		String instanceid = Global.getString("instanceid", null);
+		if (X.isEmpty(instanceid)) {
+			instanceid = UID.uuid();
+			Global.setConfig("instanceid", instanceid);
+		}
+		Model.instanceid = instanceid;
 
 		// if (log.isDebugEnabled()) {
 		// log.debug("upgrade.enabled=" +
