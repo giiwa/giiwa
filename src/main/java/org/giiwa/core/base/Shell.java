@@ -44,6 +44,8 @@ public class Shell {
 	/** The log. */
 	static Log log = LogFactory.getLog(Shell.class);
 
+	private static DefaultExecutor executor = new DefaultExecutor();
+
 	public static enum Logger {
 		error("ERROR"), warn("WARN"), info("INFO");
 
@@ -163,7 +165,6 @@ public class Shell {
 
 			CommandLine cmdLine = CommandLine.parse(cmd);
 
-			DefaultExecutor executor = new DefaultExecutor();
 			ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
 			int[] exit = new int[512];
 			for (int i = 0; i < exit.length; i++) {
@@ -179,6 +180,7 @@ public class Shell {
 			// ExecuteWatchdog watchdog = new ExecuteWatchdog(60000);
 			// executor.setWatchdog(watchdog);
 			// watchdog.destroyProcess();
+
 			return executor.execute(cmdLine);
 		} catch (IOException e) {
 			log.error("cmd=" + cmd, e);

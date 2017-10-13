@@ -1484,7 +1484,11 @@ public class Helper implements Serializable {
 
 			public BasicDBObject query() {
 				if (op == OP.eq) {
-					return new BasicDBObject(name, value);
+					if (value == null) {
+						return new BasicDBObject(name, new BasicDBObject("$exists", true));
+					} else {
+						return new BasicDBObject(name, value);
+					}
 				} else if (op == OP.gt) {
 					return new BasicDBObject(name, new BasicDBObject("$gt", value));
 				} else if (op == OP.gte) {
@@ -1497,7 +1501,11 @@ public class Helper implements Serializable {
 					Pattern p1 = Pattern.compile(value.toString(), Pattern.CASE_INSENSITIVE);
 					return new BasicDBObject(name, p1);
 				} else if (op == OP.neq) {
-					return new BasicDBObject(name, new BasicDBObject("$ne", value));
+					if (value == null) {
+						return new BasicDBObject(name, new BasicDBObject("$exists", false));
+					} else {
+						return new BasicDBObject(name, new BasicDBObject("$ne", value));
+					}
 				} else if (op == OP.exists) {
 					return new BasicDBObject(name, new BasicDBObject("$exists", value));
 				} else if (op == OP.in) {
@@ -1540,6 +1548,8 @@ public class Helper implements Serializable {
 			}
 
 			public String where(Map<String, String> tansfers) {
+				// TODO, for "null" value, some db "is null"
+
 				StringBuilder sb = new StringBuilder();
 
 				if (tansfers != null && tansfers.containsKey(name)) {
