@@ -16,6 +16,9 @@ package org.giiwa.core.conf;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
@@ -213,6 +216,10 @@ public final class Global extends Bean {
 		return getString(name, null);
 	}
 
+	public static Lock createLock(String name) {
+		return new GlobalLock(name);
+	}
+
 	/**
 	 * Lock a global lock
 	 *
@@ -222,7 +229,7 @@ public final class Global extends Bean {
 	 *            the timeout
 	 * @return true, if successful
 	 */
-	public static synchronized boolean lock(String name, long timeout) {
+	private static synchronized boolean lock(String name, long timeout) {
 
 		name = "lock." + name;
 		heartbeat.schedule(10);
@@ -231,12 +238,8 @@ public final class Global extends Bean {
 			return true;
 		}
 
-		if (timeout <= 0) {
-			return false;
-		}
-
 		try {
-			long now = System.currentTimeMillis();
+			TimeStamp t = TimeStamp.create();
 
 			String node = Model.node();
 
@@ -254,7 +257,11 @@ public final class Global extends Bean {
 					synchronized (name) {
 						name.wait(1000);
 					}
-					return lock(name, timeout - System.currentTimeMillis() + now);
+					if (timeout <= t.pastms()) {
+						return false;
+					}
+
+					return lock(name, timeout - t.pastms());
 				}
 
 				locked.put(name, Thread.currentThread());
@@ -272,12 +279,15 @@ public final class Global extends Bean {
 						synchronized (name) {
 							name.wait(1000);
 						}
-						return lock(name, timeout - System.currentTimeMillis() + now);
+						if (timeout <= t.pastms()) {
+							return false;
+						}
+						return lock(name, timeout - t.pastms());
 					}
 				}
 			}
 
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
 
@@ -291,7 +301,7 @@ public final class Global extends Bean {
 	 *            the name of lock
 	 * @return true, if successful
 	 */
-	public static synchronized boolean unlock(String name) {
+	private static synchronized boolean unlock(String name) {
 		name = "lock." + name;
 		try {
 			String node = Model.node();
@@ -334,5 +344,45 @@ public final class Global extends Bean {
 	}
 
 	private static Map<String, Thread> locked = new HashMap<String, Thread>();
+
+	private static class GlobalLock implements Lock {
+
+		String name;
+
+		public GlobalLock(String name) {
+			this.name = name;
+		}
+
+		@Override
+		public void lock() {
+			Global.lock(name, Long.MAX_VALUE);
+		}
+
+		@Override
+		public void lockInterruptibly() throws InterruptedException {
+			lock();
+		}
+
+		@Override
+		public boolean tryLock() {
+			return Global.lock(name, -1);
+		}
+
+		@Override
+		public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+			return Global.lock(name, unit.toMillis(time));
+		}
+
+		@Override
+		public void unlock() {
+			Global.unlock(name);
+		}
+
+		@Override
+		public Condition newCondition() {
+			return null;
+		}
+
+	}
 
 }
