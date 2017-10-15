@@ -216,7 +216,7 @@ public final class Global extends Bean {
 		return getString(name, null);
 	}
 
-	public static Lock createLock(String name) {
+	public static Lock getLock(String name) {
 		return new GlobalLock(name);
 	}
 
