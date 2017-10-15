@@ -134,6 +134,7 @@ public abstract class MQ {
 
 		private static Map<String, Caller> caller = new HashMap<String, Caller>();
 
+		String name;
 		IStub cb;
 		LinkedBlockingDeque<Request> queue = new LinkedBlockingDeque<Request>();
 
@@ -142,6 +143,7 @@ public abstract class MQ {
 			if (c == null) {
 				c = new Caller();
 				c.cb = cb;
+				c.name = name;
 				caller.put(name, c);
 				c.schedule(0);
 			}
@@ -155,7 +157,7 @@ public abstract class MQ {
 					queue.addLast(r);
 				}
 
-				queue.notify();
+				queue.notifyAll();
 			}
 		}
 
