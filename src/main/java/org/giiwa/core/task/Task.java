@@ -15,6 +15,7 @@
 package org.giiwa.core.task;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -117,8 +118,12 @@ public abstract class Task implements Runnable {
 			Field[] ff = this.getClass().getDeclaredFields();
 			if (ff != null) {
 				for (Field f : ff) {
-					f.setAccessible(true);
-					sb.append(f.getName()).append("=").append(f.get(this)).append("\r\n");
+
+					if ((f.getModifiers() & Modifier.PRIVATE) == 0) {
+						f.setAccessible(true);
+						sb.append(f.getName()).append("=").append(f.get(this)).append("\r\n");
+					}
+
 				}
 			}
 		} catch (Exception e) {
