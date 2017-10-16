@@ -232,7 +232,6 @@ public final class Global extends Bean {
 	private static synchronized boolean lock(String name, long timeout) {
 
 		name = "lock." + name;
-		heartbeat.schedule(10);
 
 		if (locked.containsKey(name)) {
 			return true;
@@ -265,6 +264,7 @@ public final class Global extends Bean {
 				}
 
 				locked.put(name, Thread.currentThread());
+				heartbeat.schedule(10);
 
 				return true;
 			} else {
@@ -273,6 +273,7 @@ public final class Global extends Bean {
 				if (X.isEmpty(s) || System.currentTimeMillis() - f.getUpdated() > 10000) {
 					if (Helper.update(W.create(X.ID, name).and("s", s), V.create("s", node), Global.class) > 0) {
 						locked.put(name, Thread.currentThread());
+						heartbeat.schedule(10);
 
 						return true;
 					} else {
@@ -338,7 +339,9 @@ public final class Global extends Bean {
 
 		@Override
 		public void onFinish() {
-			this.schedule(3000);
+			if (!locked.isEmpty()) {
+				this.schedule(3000);
+			}
 		}
 
 	}
