@@ -1900,7 +1900,7 @@ public class Model {
 				// log.debug("showing viewname = " + viewname + ", cost: " + t1.past() +
 				// "ms");
 			} else {
-				notfound();
+				notfound("page not found, page=" + viewname);
 			}
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
@@ -2019,6 +2019,10 @@ public class Model {
 	 * type <br>
 	 */
 	final public void notfound() {
+		notfound(null);
+	}
+
+	final public void notfound(String message) {
 		if (log.isWarnEnabled())
 			log.warn(this.getClass().getName() + "[" + this.getURI() + "]");
 
@@ -2043,11 +2047,11 @@ public class Model {
 		if (isAjax()) {
 			JSON jo = new JSON();
 			jo.put(X.STATE, HttpServletResponse.SC_NOT_FOUND);
-			jo.put(X.MESSAGE, "not found");
+			jo.put(X.MESSAGE, "not found, " + message);
 			this.response(jo);
 		} else {
 			this.set("me", this.getUser());
-			this.print("not found.");
+			this.print("not found, " + message);
 			this.setStatus(HttpServletResponse.SC_NOT_FOUND);
 		}
 	}
@@ -2062,12 +2066,12 @@ public class Model {
 	 */
 	public boolean isAjax() {
 		String request = this.getHeader("X-Requested-With");
-		if (request != null && request.equals("XMLHttpRequest")) {
+		if (X.isSame(request, "XMLHttpRequest")) {
 			return true;
 		}
 
 		String type = this.getHeader("Content-Type");
-		if (type != null && type.contains("application/json")) {
+		if (X.isSame(type, "application/json")) {
 			return true;
 		}
 

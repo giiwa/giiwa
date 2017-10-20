@@ -1485,7 +1485,7 @@ public class Helper implements Serializable {
 			public BasicDBObject query() {
 				if (op == OP.eq) {
 					if (value == null) {
-						return new BasicDBObject(name, new BasicDBObject("$exists", true));
+						return new BasicDBObject(name, new BasicDBObject("$exists", false));
 					} else {
 						return new BasicDBObject(name, value);
 					}
@@ -1502,7 +1502,7 @@ public class Helper implements Serializable {
 					return new BasicDBObject(name, p1);
 				} else if (op == OP.neq) {
 					if (value == null) {
-						return new BasicDBObject(name, new BasicDBObject("$exists", false));
+						return new BasicDBObject(name, new BasicDBObject("$exists", true));
 					} else {
 						return new BasicDBObject(name, new BasicDBObject("$ne", value));
 					}

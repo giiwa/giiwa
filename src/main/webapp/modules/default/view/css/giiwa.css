@@ -7,11 +7,14 @@
 }
 html, body {
 	width: 100%;
+	height: 100%;
+	position: relative;	
 	font-family: 'Open Sans', sans-serif;
 	font-size: 14px;
 	line-height: 23px;
 	text-align: center;
 	background: #fff;
+	overflow: hidden;	
 }
 ::-webkit-scrollbar, ::-webkit-scrollbar-thumb {
 	overflow: visible;
@@ -70,18 +73,6 @@ img {
 	top: 0;
 	left: 0;
 	background: #204a84;
-}
-#content {
-	text-align: center;
-	margin-left: 220px;
-	margin-top: 120px;
-	position: relative;
-	width: auto;
-	border: 0;
-	overflow: hidden;
-}
-#content.full {
-	margin-left: 0;
 }
 #foot {
 	position: relative;
@@ -213,10 +204,15 @@ input:focus, select:focus, textarea:focus {
 	margin-left: -1px;
 }
 .w1200 #panel {
-	width: 100%;
-	border: 0;
-	margin: 0;
-	padding: 0;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    position: fixed;
+    top: 120px;
+    bottom: 0;
+    left: 220px;
+    right: 0;
 }
 #panel.full {
 	width: 980px;
@@ -316,7 +312,7 @@ a.disabled {
 	background-size: 32px;
 	padding-left: 40px;
 }
-#content .toolbar {
+.toolbar {
 	height: 39px;
 	background: #1369c0;
 	border-top: 1px solid #135dbc;
@@ -1456,10 +1452,6 @@ div.submit {
 }
 ::-webkit-scrollbar-button, .toolbar.full .left, form div.confirm, #menu .loading i.icon, .fileuploader-file {
 	display: none;
-}
-#content .center, #head .center {
-	height: 100%;
-	width: auto;
 }
 h3, i, .leanmodal-content {
 	word-break: break-all;
