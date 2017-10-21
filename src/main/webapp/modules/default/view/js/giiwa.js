@@ -375,7 +375,7 @@ giiwa.extend({
 		var w = $(window).width();
 		var menu = $('#menu');
 		var panel = $('#panel');
-		panel.css('width', (w - 220) + 'px');
+		panel.css('width', (w - panel.offset().left) + 'px');
 		panel.css('height', (h - 120) + 'px');
 		
 		if (menu.length > 0) {
@@ -463,7 +463,7 @@ $(function() {
 	e.click(function() {
 		var bar = $(this);
 		var menu = $('#menu');
-		var panel = $('#content');
+		var panel = $('#panel');
 		var toolbar = $('#toolbar');
 
 		if (bar.hasClass('info_but_close')) {

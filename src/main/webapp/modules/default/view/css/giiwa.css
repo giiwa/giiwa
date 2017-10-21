@@ -215,10 +215,7 @@ input:focus, select:focus, textarea:focus {
     right: 0;
 }
 #panel.full {
-	width: 980px;
-}
-.w1200 #panel.full {
-	width: 1180px;
+	left:0;
 }
 #panel .content {
 	text-align: left;
