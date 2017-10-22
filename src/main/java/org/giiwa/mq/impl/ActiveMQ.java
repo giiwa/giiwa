@@ -310,6 +310,8 @@ public final class ActiveMQ extends MQ {
 		int len = 0;
 
 		public void send(Request r) throws JMSException {
+			// log.debug("sending, r=" + r);
+
 			last = System.currentTimeMillis();
 			synchronized (p) {
 				try {
@@ -386,8 +388,9 @@ public final class ActiveMQ extends MQ {
 				if (m != null) {
 					p.send(m);
 
-					if (log.isDebugEnabled())
-						log.debug("Sending:" + group + "." + to);
+					if (log.isDebugEnabled()) {
+						log.debug("Sending:" + group + name);
+					}
 				} else if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
 					senders.remove(name);
 					p.close();
