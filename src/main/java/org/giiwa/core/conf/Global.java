@@ -50,6 +50,8 @@ public final class Global extends Bean {
 	@Column(name = "l")
 	long l;
 
+	private static String instanceid = UID.uuid();
+
 	private static Global owner = new Global();
 
 	public static Global getInstance() {
@@ -229,65 +231,66 @@ public final class Global extends Bean {
 	 *            the timeout
 	 * @return true, if successful
 	 */
-	private static synchronized boolean lock(String name, long timeout) {
+	private static boolean lock(String name, long timeout) {
 
 		name = "lock." + name;
 
-		if (locked.containsKey(name)) {
+		Thread th = locked.get(name);
+		if (th != null && th.getId() == Thread.currentThread().getId()) {
 			return true;
 		}
 
 		try {
 			TimeStamp t = TimeStamp.create();
 
-			String node = Model.node();
+			while (timeout <= t.pastms()) {
+				Global f = Helper.load(name, Global.class);
 
-			Global f = Helper.load(name, Global.class);
-
-			if (f == null) {
-				String linkid = UID.random();
-
-				Helper.insert(V.create(X.ID, name).set("s", node).set("linkid", linkid), Global.class);
-				f = Helper.load(name, Global.class);
 				if (f == null) {
-					log.error("occur error when create unique id, name=" + name);
-					return false;
-				} else if (!X.isSame(f.getString("linkid"), linkid)) {
-					synchronized (name) {
-						name.wait(1000);
-					}
-					if (timeout <= t.pastms()) {
+					String linkid = UID.random();
+
+					Helper.insert(V.create(X.ID, name).set("s", instanceid).set("linkid", linkid), Global.class);
+					f = Helper.load(name, Global.class);
+					if (f == null) {
+						log.error("occur error when create unique id, name=" + name);
 						return false;
-					}
-
-					return lock(name, timeout - t.pastms());
-				}
-
-				locked.put(name, Thread.currentThread());
-				heartbeat.schedule(10);
-
-				return true;
-			} else {
-				String s = f.getString("s");
-				// 10 seconds
-				if (X.isEmpty(s) || System.currentTimeMillis() - f.getUpdated() > 10000) {
-					if (Helper.update(W.create(X.ID, name).and("s", s), V.create("s", node), Global.class) > 0) {
-						locked.put(name, Thread.currentThread());
-						heartbeat.schedule(10);
-
-						return true;
-					} else {
-						synchronized (name) {
-							name.wait(1000);
+					} else if (!X.isSame(f.getString("linkid"), linkid)) {
+						synchronized (locked) {
+							locked.wait(1000);
 						}
 						if (timeout <= t.pastms()) {
 							return false;
 						}
-						return lock(name, timeout - t.pastms());
+
+						continue;
+					}
+
+					locked.put(name, Thread.currentThread());
+					heartbeat.schedule(10);
+
+					return true;
+				} else {
+					String s = f.getString("s");
+					// 10 seconds
+					if (X.isEmpty(s) || System.currentTimeMillis() - f.getUpdated() > 10000) {
+						if (Helper.update(W.create(X.ID, name).and("s", s), V.create("s", instanceid),
+								Global.class) > 0) {
+							locked.put(name, Thread.currentThread());
+							heartbeat.schedule(10);
+
+							return true;
+						} else {
+							synchronized (locked) {
+								locked.wait(1000);
+							}
+							if (timeout <= t.pastms()) {
+								return false;
+							}
+							continue;
+						}
 					}
 				}
 			}
-
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
@@ -302,15 +305,20 @@ public final class Global extends Bean {
 	 *            the name of lock
 	 * @return true, if successful
 	 */
-	private static synchronized boolean unlock(String name) {
+	private static boolean unlock(String name) {
 		name = "lock." + name;
-		try {
-			String node = Model.node();
-			return Helper.update(W.create(X.ID, name).and("s", node), V.create("s", X.EMPTY), Global.class) > 0;
 
-		} finally {
-			locked.remove(name);
+		synchronized (locked) {
+			Thread t = locked.remove(name);
+			if (t.getId() == Thread.currentThread().getId()) {
+				locked.remove(name);
+				Helper.update(W.create(X.ID, name).and("s", instanceid), V.create("s", X.EMPTY), Global.class);
+				locked.notifyAll();
+				return true;
+			}
+
 		}
+		return false;
 	}
 
 	private static Task heartbeat = new LockHeartbeat();
@@ -319,6 +327,7 @@ public final class Global extends Bean {
 
 		@Override
 		public void onExecute() {
+
 			if (locked.size() > 0) {
 				String[] names = locked.keySet().toArray(new String[locked.size()]);
 				String node = Model.node();
