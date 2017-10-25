@@ -339,6 +339,7 @@ public final class Global extends Bean {
 						Thread t = locked.get(name);
 						if (t != null) {
 							// interrupt this thread
+							log.warn("lock[" + name + "] was locked by others, interrupt the thread=" + t);
 							t.interrupt();
 						}
 						locked.remove(name);
