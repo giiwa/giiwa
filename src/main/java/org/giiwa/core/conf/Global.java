@@ -330,14 +330,15 @@ public final class Global extends Bean {
 
 			if (locked.size() > 0) {
 				String[] names = locked.keySet().toArray(new String[locked.size()]);
-				String node = Model.node();
 
 				for (String name : names) {
-					if (Helper.update(W.create(X.ID, name).and("s", node),
+					if (Helper.update(W.create(X.ID, name).and("s", instanceid),
 							V.create(X.UPDATED, System.currentTimeMillis()), Global.class) <= 0) {
+
 						// the lock has been acquired by other
 						Thread t = locked.get(name);
 						if (t != null) {
+							// interrupt this thread
 							t.interrupt();
 						}
 						locked.remove(name);

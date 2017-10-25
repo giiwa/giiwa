@@ -73,6 +73,7 @@ public class LiveHand {
 			lock.lock();
 			count++;
 			if (max > 0 && count > max) {
+				// log.debug("thread=" + Thread.interrupted());
 				door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(X.AMINUTE));
 			}
 		} catch (Exception e) {
@@ -110,6 +111,7 @@ public class LiveHand {
 				if (count <= 0)
 					return true;
 
+				// log.debug("thread=" + Thread.interrupted());
 				door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(timeout));
 				t1 = timeout - t.pastms();
 				// System.out.println("count=" + count);
