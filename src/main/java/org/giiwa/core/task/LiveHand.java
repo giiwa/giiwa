@@ -126,4 +126,11 @@ public class LiveHand {
 				+ "ms, attachs=" + attachs + "]";
 	}
 
+	public static void main(String[] args) {
+		LiveHand h = new LiveHand(-1, 20);
+		System.out.println("holding");
+		h.hold();
+		System.out.println("done");
+
+	}
 }
