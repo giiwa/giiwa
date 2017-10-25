@@ -130,6 +130,12 @@ public class LiveHand {
 		LiveHand h = new LiveHand(-1, 20);
 		System.out.println("holding");
 		h.hold();
+		try {
+			h.wait(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.out.println("done");
 
 	}
