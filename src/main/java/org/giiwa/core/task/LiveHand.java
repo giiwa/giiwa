@@ -131,7 +131,7 @@ public class LiveHand {
 		System.out.println("holding");
 		h.hold();
 		try {
-			h.wait(5000);
+			h.await(5000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
