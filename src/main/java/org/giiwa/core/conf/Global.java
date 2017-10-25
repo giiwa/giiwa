@@ -218,6 +218,13 @@ public final class Global extends Bean {
 		return getString(name, null);
 	}
 
+	/**
+	 * get a global lock in a cluster environment
+	 * 
+	 * @param name
+	 *            the name of lock
+	 * @return
+	 */
 	public static Lock getLock(String name) {
 		return new GlobalLock(name);
 	}
