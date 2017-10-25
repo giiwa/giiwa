@@ -512,7 +512,7 @@ public class Helper implements Serializable {
 		 * @return the v
 		 */
 		public V set(String name, Object v) {
-			if (name != null && v != null) {
+			if (name != null) {
 				if (m.containsKey(name)) {
 					return this;
 				}
