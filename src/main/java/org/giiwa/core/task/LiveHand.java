@@ -8,14 +8,10 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 
 public class LiveHand {
-
-	private Log log = LogFactory.getLog(LiveHand.class);
 
 	private boolean live = true;
 	private long count = 0;
@@ -37,6 +33,7 @@ public class LiveHand {
 		attachs.put(name, value);
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T get(String name) {
 		return (T) attachs.get(name);
 	}
@@ -68,16 +65,23 @@ public class LiveHand {
 		}
 	}
 
-	public void hold() {
+	public void hold() throws InterruptedException {
 		try {
 			lock.lock();
-			count++;
-			if (max > 0 && count > max) {
-				// log.debug("thread=" + Thread.interrupted());
-				door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(X.AMINUTE));
+			while (max > 0 && count >= max) {
+				long waittime = X.AMINUTE;
+				if (timeout > 0) {
+					waittime = timeout - created.pastms();
+				}
+				if (waittime > 0) {
+					door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(waittime));
+				} else {
+					throw new InterruptedException("timeout for hold the hand");
+				}
 			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+
+			count++;
+
 		} finally {
 			lock.unlock();
 		}
@@ -94,7 +98,7 @@ public class LiveHand {
 	}
 
 	public boolean await() throws InterruptedException {
-		if (timeout <= 0) {
+		if (timeout < 0) {
 			return await(Long.MAX_VALUE - created.pastms());
 		}
 		return await(timeout - created.pastms());
@@ -131,8 +135,8 @@ public class LiveHand {
 	public static void main(String[] args) {
 		LiveHand h = new LiveHand(-1, 20);
 		System.out.println("holding");
-		h.hold();
 		try {
+			h.hold();
 			h.await(5000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
