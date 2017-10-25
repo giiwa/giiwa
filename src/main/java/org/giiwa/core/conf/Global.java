@@ -19,12 +19,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.web.Model;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -243,7 +243,8 @@ public final class Global extends Bean {
 		try {
 			TimeStamp t = TimeStamp.create();
 
-			while (timeout <= t.pastms()) {
+			while (timeout == 0 || timeout >= t.pastms()) {
+
 				Global f = Helper.load(name, Global.class);
 
 				if (f == null) {
@@ -255,11 +256,11 @@ public final class Global extends Bean {
 						log.error("occur error when create unique id, name=" + name);
 						return false;
 					} else if (!X.isSame(f.getString("linkid"), linkid)) {
-						synchronized (locked) {
-							locked.wait(1000);
-						}
 						if (timeout <= t.pastms()) {
 							return false;
+						}
+						synchronized (locked) {
+							locked.wait(1000);
 						}
 
 						continue;
@@ -280,11 +281,11 @@ public final class Global extends Bean {
 
 							return true;
 						} else {
-							synchronized (locked) {
-								locked.wait(1000);
-							}
 							if (timeout <= t.pastms()) {
 								return false;
+							}
+							synchronized (locked) {
+								locked.wait(1000);
 							}
 							continue;
 						}
@@ -361,14 +362,16 @@ public final class Global extends Bean {
 
 	private static class GlobalLock implements Lock {
 
-		String name;
+		private String name;
+		private Lock lock = new ReentrantLock();
 
-		public GlobalLock(String name) {
+		private GlobalLock(String name) {
 			this.name = name;
 		}
 
 		@Override
 		public void lock() {
+			lock.lock();
 			Global.lock(name, Long.MAX_VALUE);
 		}
 
@@ -379,22 +382,29 @@ public final class Global extends Bean {
 
 		@Override
 		public boolean tryLock() {
-			return Global.lock(name, -1);
+			if (lock.tryLock()) {
+				return Global.lock(name, 0);
+			}
+			return false;
 		}
 
 		@Override
 		public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-			return Global.lock(name, unit.toMillis(time));
+			if (lock.tryLock(time, unit)) {
+				return Global.lock(name, unit.toMillis(time));
+			}
+			return false;
 		}
 
 		@Override
 		public void unlock() {
+			lock.unlock();
 			Global.unlock(name);
 		}
 
 		@Override
 		public Condition newCondition() {
-			return null;
+			return lock.newCondition();
 		}
 
 	}
