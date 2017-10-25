@@ -310,7 +310,7 @@ public final class Global extends Bean {
 
 		synchronized (locked) {
 			Thread t = locked.remove(name);
-			if (t.getId() == Thread.currentThread().getId()) {
+			if (t != null && t.getId() == Thread.currentThread().getId()) {
 				locked.remove(name);
 				Helper.update(W.create(X.ID, name).and("s", instanceid), V.create("s", X.EMPTY), Global.class);
 				locked.notifyAll();
