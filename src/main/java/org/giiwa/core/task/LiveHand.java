@@ -3,6 +3,7 @@ package org.giiwa.core.task;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -72,7 +73,7 @@ public class LiveHand {
 			lock.lock();
 			count++;
 			if (max > 0 && count > max) {
-				door.wait(X.AMINUTE);
+				door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(X.AMINUTE));
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -108,8 +109,8 @@ public class LiveHand {
 			while (t1 > 0 && isLive()) {
 				if (count <= 0)
 					return true;
-				
-				door.wait(t1);
+
+				door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(timeout));
 				t1 = timeout - t.pastms();
 				// System.out.println("count=" + count);
 			}
