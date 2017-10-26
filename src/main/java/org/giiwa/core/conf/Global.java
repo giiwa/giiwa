@@ -219,7 +219,8 @@ public final class Global extends Bean {
 	}
 
 	/**
-	 * get a global lock in a cluster environment
+	 * get a global lock in a cluster environment <br>
+	 * the lock will be coordinated in multiple-servers <br>
 	 * 
 	 * @param name
 	 *            the name of lock
