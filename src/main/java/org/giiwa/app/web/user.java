@@ -187,33 +187,39 @@ public class user extends Model {
 
 	}
 
+	@Path(login = true, path = "set", log = Model.METHOD_POST)
+	public void set() {
+
+		List<String> ss = this.getNames();
+		Session s = this.getSession();
+		if (ss != null && !ss.isEmpty()) {
+			for (String s1 : ss) {
+				s.set("ss//" + s1, this.getString(s1));
+			}
+			s.store();
+		}
+
+		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
+
+	}
+
 	@Path(login = true, path = "get", log = Model.METHOD_POST)
 	public void get() {
-		long uid = this.getLong("uid", -1);
-		if (uid <= 0) {
-			uid = login.getId();
-		}
-		String cols = this.getString("cols");
-		User u = User.loadById(uid);
-		JSON jo = new JSON();
-		if (u != null) {
-			JSON j1 = JSON.create();
-			String[] ss = cols.split("[, ]");
-			j1.put("name", u.getName());
-			j1.put("id", u.getId());
+
+		JSON jo = JSON.create();
+		String names = this.getString("names");
+		if (names != null) {
+			Session s = this.getSession();
+			String[] ss = X.split(names, "[,;]");
 			if (ss != null && ss.length > 0) {
-				for (String s : ss) {
-					j1.put(s, u.get(s));
+				for (String s1 : ss) {
+					String v = s.get("ss//" + s1);
+					jo.put(s1, v);
 				}
 			}
-			jo.put("data", j1);
-			jo.put(X.STATE, 200);
-			jo.put(X.MESSAGE, "ok");
-		} else {
-			jo.put(X.STATE, 201);
-			jo.put(X.MESSAGE, "not exists");
 		}
-		this.response(jo);
+
+		this.response(jo.append(X.STATE, 200).append(X.MESSAGE, "ok"));
 
 	}
 
