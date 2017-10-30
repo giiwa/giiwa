@@ -661,3 +661,7 @@ route.destination=Destination
 sysinfo.route.title=路由信息
 route.flag=Flag
 route.use=Use
+access.module.admin=模块管理
+group.access.module=模块
+access.system.admin=系统信息
+group.access.system=系统信息

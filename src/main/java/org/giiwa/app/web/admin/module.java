@@ -583,7 +583,7 @@ public class module extends Model {
   /**
    * Index.
    */
-  @Path(login = true, access = "access.config.admin")
+  @Path(login = true, access = "access.config.admin|access.module.admin")
   public void onGet() {
 
     List<Module> actives = new ArrayList<Module>();

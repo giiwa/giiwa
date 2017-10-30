@@ -658,3 +658,7 @@ route.destination=Destination
 sysinfo.route.title=Route Info
 route.flag=Flag
 route.use=Use
+access.module.admin=Module Admin
+group.access.module=Module
+access.system.admin=Sys Info Admin
+group.access.system=Sys Info
