@@ -48,7 +48,7 @@ public class LiveHand {
 		return timeout;
 	}
 
-	public LiveHand(int timeout, int max) {
+	public LiveHand(long timeout, int max) {
 		this.timeout = timeout;
 		if (max < 0)
 			max = Integer.MAX_VALUE;
