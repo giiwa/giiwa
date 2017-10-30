@@ -189,6 +189,19 @@ public final class Http {
 	}
 
 	/**
+	 * close the client and release any resource associated with this client
+	 */
+	public void close() {
+		if (client != null) {
+			try {
+				client.close();
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+	}
+
+	/**
 	 * Post.
 	 *
 	 * @param url

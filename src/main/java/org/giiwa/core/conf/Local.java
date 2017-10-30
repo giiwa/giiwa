@@ -230,6 +230,11 @@ public final class Local extends Bean {
 		return getString(name, null);
 	}
 
+	/**
+	 * get the unique id of this node in the cluster
+	 * 
+	 * @return
+	 */
 	public static String id() {
 		return Config.id();
 	}

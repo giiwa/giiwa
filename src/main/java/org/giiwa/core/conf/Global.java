@@ -417,6 +417,11 @@ public final class Global extends Bean {
 
 	private static String _id = null;
 
+	/**
+	 * get the unique id of this cluster in the world
+	 * 
+	 * @return
+	 */
 	public static String id() {
 		if (X.isEmpty(_id)) {
 			_id = Global.getString("global.id", null);
