@@ -20,10 +20,10 @@ import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.framework.web.Model;
 
 /**
  * Internal used bean, used for module management. <br>
@@ -35,104 +35,104 @@ import org.giiwa.framework.web.Model;
 @Table(name = "gi_jar")
 public class Jar extends Bean {
 
-  /**
-   * 
-   */
-  private static final long serialVersionUID = 1L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-  /**
-   * Update.
-   *
-   * @param module
-   *          the module
-   * @param name
-   *          the name
-   */
-  public static void update(String module, String name) {
-    String node = Model.node();
-    String id = UID.id(module, name, node);
+	/**
+	 * Update.
+	 *
+	 * @param module
+	 *            the module
+	 * @param name
+	 *            the name
+	 */
+	public static void update(String module, String name) {
+		String node = Local.id();
+		String id = UID.id(module, name, node);
 
-    try {
-      if (!Helper.exists(W.create(X.ID, id), Jar.class)) {
-        V v = V.create(X.ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
-        Helper.insert(v, Jar.class);
-      } else {
-        Helper.update(id, V.create("reset", 1), Jar.class);
-      }
-    } catch (Exception e1) {
-      log.error(e1.getMessage(), e1);
-    }
+		try {
+			if (!Helper.exists(W.create(X.ID, id), Jar.class)) {
+				V v = V.create(X.ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
+				Helper.insert(v, Jar.class);
+			} else {
+				Helper.update(id, V.create("reset", 1), Jar.class);
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		}
 
-  }
+	}
 
-  /**
-   * Removes the.
-   *
-   * @param module
-   *          the module
-   * @param name
-   *          the name
-   */
-  public static void remove(String module, String name) {
-    String node = Model.node();
+	/**
+	 * Removes the.
+	 *
+	 * @param module
+	 *            the module
+	 * @param name
+	 *            the name
+	 */
+	public static void remove(String module, String name) {
+		String node = Local.id();
 
-    Helper.delete(W.create("module", module).and("name", name).and("node", node), Jar.class);
-  }
+		Helper.delete(W.create("module", module).and("name", name).and("node", node), Jar.class);
+	}
 
-  /**
-   * Removes the.
-   *
-   * @param name
-   *          the name
-   */
-  public static void remove(String name) {
-    Helper.delete(W.create("name", name), Jar.class);
-  }
+	/**
+	 * Removes the.
+	 *
+	 * @param name
+	 *            the name
+	 */
+	public static void remove(String name) {
+		Helper.delete(W.create("name", name), Jar.class);
+	}
 
-  /**
-   * Load all.
-   *
-   * @param q
-   *          the q
-   * @return the list
-   */
-  public static List<String> loadAll(W q) {
-    String node = Model.node();
-    return Helper.distinct("name", q.and("node", node), Jar.class, String.class);
-  }
+	/**
+	 * Load all.
+	 *
+	 * @param q
+	 *            the q
+	 * @return the list
+	 */
+	public static List<String> loadAll(W q) {
+		String node = Local.id();
+		return Helper.distinct("name", q.and("node", node), Jar.class, String.class);
+	}
 
-  /**
-   * Load.
-   *
-   * @param name
-   *          the name
-   * @return the list
-   */
-  public static List<String> load(String name) {
-    String node = Model.node();
+	/**
+	 * Load.
+	 *
+	 * @param name
+	 *            the name
+	 * @return the list
+	 */
+	public static List<String> load(String name) {
+		String node = Local.id();
 
-    return Helper.distinct("module", W.create("name", name).and("node", node), Jar.class, String.class);
-  }
+		return Helper.distinct("module", W.create("name", name).and("node", node), Jar.class, String.class);
+	}
 
-  /**
-   * remove all jars.
-   *
-   * @param module
-   *          the module
-   */
-  public static void reset(String module) {
-    String node = Model.node();
-    Helper.delete(W.create("module", module).and("node", node), Jar.class);
-  }
+	/**
+	 * remove all jars.
+	 *
+	 * @param module
+	 *            the module
+	 */
+	public static void reset(String module) {
+		String node = Local.id();
+		Helper.delete(W.create("module", module).and("node", node), Jar.class);
+	}
 
-  public static boolean exists(W q) {
-    try {
-      return Helper.exists(q, Jar.class);
-    } catch (Exception e) {
-      log.error(q.toString(), e);
-      OpLog.error("db", "exists", q.toString(), null, null);
-    }
-    return true;
-  }
+	public static boolean exists(W q) {
+		try {
+			return Helper.exists(q, Jar.class);
+		} catch (Exception e) {
+			log.error(q.toString(), e);
+			OpLog.error("db", "exists", q.toString(), null, null);
+		}
+		return true;
+	}
 
 }

@@ -80,23 +80,30 @@
 								"classes": "icon-stats-dots"
 							},
 							{
+								"name": "menu.node",
+								"load": "/admin/node",
+								"seq": 40,
+								"access": "access.config.admin|access.system.admin",
+								"classes": "icon-laptop"
+							},
+							{
 								"name": "menu.repo",
 								"load": "/admin/repo",
-								"seq": 40,
+								"seq": 50,
 								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-database"
 							},
 							{
 								"name": "menu.backup",
 								"load": "/admin/backup",
-								"seq": 50,
+								"seq": 60,
 								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-floppy-disk"
 							},
 							{
 								"name": 'menu.i18n',
 								"load": '/admin/i18n',
-								"seq": 60,
+								"seq": 70,
 								"access": 'access.config.admin|access.system.admin',
 								"classes": 'icon-magic-wand'
 							}

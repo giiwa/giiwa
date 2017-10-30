@@ -17,6 +17,7 @@ package org.giiwa.app.web.admin;
 import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
@@ -24,14 +25,14 @@ import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
 /**
- * web api: /admin/token <br>
+ * web api: /admin/node <br>
  * used to manage user<br>
  * required "access.user.admin"
  * 
  * @author joe
  *
  */
-public class token extends Model {
+public class node extends Model {
 
 	/**
 	 * Delete.
@@ -43,7 +44,7 @@ public class token extends Model {
 		JSON jo = new JSON();
 
 		String id = this.getString("id");
-		AuthToken.delete(W.create(X.ID, id));
+		Node.delete(W.create(X.ID, id));
 		jo.put(X.STATE, 200);
 
 		this.response(jo);
@@ -55,7 +56,7 @@ public class token extends Model {
 	public void clean() {
 		JSON jo = JSON.create();
 
-		AuthToken.delete(W.create());
+		Node.delete(W.create());
 		jo.put(X.STATE, HttpServletResponse.SC_OK);
 		jo.put(X.MESSAGE, "ok");
 
@@ -71,26 +72,17 @@ public class token extends Model {
 	@Path(login = true, access = "access.config.admin|access.user.admin")
 	public void onGet() {
 
-		String name = this.getString("name");
-		W q = W.create();
-		if (X.isEmpty(this.path) && !X.isEmpty(name)) {
-
-			q.or("sid", name, W.OP.like);
-			q.or("token", name, W.OP.like);
-			q.or("uid", X.toLong(name));
-
-			this.set("name", name);
-		}
+		W q = W.create().and("updated", System.currentTimeMillis() - 10000, W.OP.gte);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
-		Beans<AuthToken> bs = AuthToken.load(q, s, n);
+		Beans<Node> bs = Node.load(q, s, n);
+		bs.setTotal((int) Helper.count(q, Node.class));
 		this.set(bs, s, n);
 
-		this.query.path("/admin/token");
-
-		this.show("/admin/token.index.html");
+		this.query.path("/admin/node");
+		this.show("/admin/node.index.html");
 	}
 
 }

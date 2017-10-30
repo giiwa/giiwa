@@ -77,7 +77,6 @@
 		<div id="system" class='panel' data-next="cache" data-prev="db">
 			<div class='head'>$lang.get('configure.title.system')</div>	
 			<form method="post">
-				<div><label><h3>$lang.get('label.node')<r>*</r>:</h3><input type='text' name='node.name' value="$local.getString('node.name','g01')"/><g>同一个分布式节点，名称必须唯一</g></label></div>
 				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='cluster.code' value="$!global.getLong('cluster.code',0)"/><g>同一个分布式节点编号相同</g></label></div>
 				
 				<div class='btns'>
@@ -204,7 +203,6 @@ $(function(){
 		p["db.passwd"] = $('#db input[name=passwd]').val();
 		p["mongo.url"] = $('#mongo input[name=url]').val();
 		p["mongo.db"] = $('#mongo input[name=db]').val();
-		p["node"] = $('#system input[name=node]').val();
 		p["code"] = $('#system input[name=code]').val();
 		p["cache.url"] = $('#cache input[name=url]').val();
 		p["cache.group"] = $('#cache input[name=group]').val();

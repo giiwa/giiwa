@@ -2390,22 +2390,6 @@ public class Model {
 		return null;
 	}
 
-	private static String node = null;
-
-	public static String instanceid = null;
-
-	/**
-	 * get the name of this node in cluster.
-	 *
-	 * @return string of name
-	 */
-	public static String node() {
-		if (node == null) {
-			node = Config.getConf().getString("node.name", X.EMPTY);
-		}
-		return node;
-	}
-
 	/**
 	 * get the name pair from the request header
 	 * 

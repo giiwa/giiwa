@@ -1,7 +1,6 @@
 package org.giiwa.mq;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -14,10 +13,10 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
-import org.giiwa.framework.web.Model;
 import org.giiwa.mq.impl.*;
 
 /**
@@ -56,7 +55,7 @@ public abstract class MQ {
 	 */
 	public synchronized static boolean init() {
 		if (mq == null) {
-			_node = Model.node();
+			_node = Local.id();
 			String type = Global.getString("mq.type", X.EMPTY);
 			if (X.isSame(type, "activemq")) {
 				mq = ActiveMQ.create();

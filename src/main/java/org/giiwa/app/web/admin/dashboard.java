@@ -20,7 +20,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.*;
-import org.hyperic.sigar.SigarException;
 
 /**
  * web api: /admin/dashboard <br>

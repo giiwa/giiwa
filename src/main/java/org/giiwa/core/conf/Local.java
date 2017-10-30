@@ -22,7 +22,8 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
-import org.giiwa.framework.web.Model;
+import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.Node;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -65,21 +66,21 @@ public final class Local extends Bean {
 	 */
 	public static int getInt(String name, int defaultValue) {
 
-		name = Model.node() + "." + name;
+		String s = name + "." + Local.id();
 
 		if (!Helper.isConfigured()) {
-			return X.toInt(cache.get(name), defaultValue);
+			return X.toInt(cache.get(s), defaultValue);
 		}
 
-		Local c = Cache.get("global/" + name);
+		Local c = Cache.get("local/" + s);
 		if (c == null || c.expired()) {
-			c = Helper.load(W.create(X.ID, name), Local.class);
+			c = Helper.load(W.create(X.ID, s), Local.class);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
 				c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-				Cache.set("global/" + name, c);
+				Cache.set("local/" + s, c);
 				return X.toInt(c.i, defaultValue);
 			} else {
 				return Config.getConf().getInt(name, defaultValue);
@@ -145,21 +146,21 @@ public final class Local extends Bean {
 	 */
 	public static long getLong(String name, long defaultValue) {
 
-		name = Model.node() + "." + name;
+		String s = name + "." + Local.id();
 
 		if (!Helper.isConfigured()) {
-			return X.toLong(cache.get(name), defaultValue);
+			return X.toLong(cache.get(s), defaultValue);
 		}
 
-		Local c = Cache.get("global/" + name);
+		Local c = Cache.get("local/" + s);
 		if (c == null || c.expired()) {
-			c = Helper.load(W.create(X.ID, name), Local.class);
+			c = Helper.load(W.create(X.ID, s), Local.class);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
 				c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-				Cache.set("global/" + name, c);
+				Cache.set("local/" + s, c);
 
 				return X.toLong(c.l, defaultValue);
 			} else {
@@ -181,21 +182,20 @@ public final class Local extends Bean {
 	 */
 	public synchronized static void setConfig(String name, Object o) {
 
-		name = Model.node() + "." + name;
-
 		if (X.isEmpty(name)) {
 			return;
 		}
 
-		Cache.remove("global/" + name);
+		String s = name + "." + Local.id();
+		Cache.remove("local/" + s);
 
 		if (o == null) {
-			Helper.delete(W.create(X.ID, name), Local.class);
+			Helper.delete(W.create(X.ID, s), Local.class);
 			return;
 		}
 
 		if (!Helper.isConfigured()) {
-			cache.put(name, o);
+			cache.put(s, o);
 			return;
 		}
 
@@ -209,10 +209,10 @@ public final class Local extends Bean {
 				v.set("s", o.toString());
 			}
 
-			if (Helper.exists(W.create(X.ID, name), Local.class)) {
-				Helper.update(W.create(X.ID, name), v, Local.class);
+			if (Helper.exists(W.create(X.ID, s), Local.class)) {
+				Helper.update(W.create(X.ID, s), v, Local.class);
 			} else {
-				Helper.insert(v.set(X.ID, name), Local.class);
+				Helper.insert(v.set(X.ID, s), Local.class);
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -228,6 +228,38 @@ public final class Local extends Bean {
 	 */
 	public String get(String name) {
 		return getString(name, null);
+	}
+
+	public static String id() {
+		return Config.id();
+	}
+
+	public static void init() {
+		new Task() {
+
+			long t = 0;
+
+			@Override
+			public void onExecute() {
+				if (System.currentTimeMillis() - t > 10 * X.AMINUTE) {
+					Node.touch(true);
+					t = System.currentTimeMillis();
+				} else {
+					Node.touch(false);
+				}
+			}
+
+			@Override
+			public String getName() {
+				return "local.node.hb";
+			}
+
+			@Override
+			public void onFinish() {
+				this.schedule(1000 * 10);
+			}
+
+		}.schedule(1000);
 	}
 
 }

@@ -67,9 +67,6 @@ public class setup extends Model {
 			}
 
 			this.set("home", Model.GIIWA_HOME);
-			if (X.isEmpty(Global.getString("node.name", X.EMPTY))) {
-				Global.setConfig("node.name", "T" + UID.digital(9));
-			}
 			this.show("/admin/setup.html");
 
 		} catch (Exception e1) {
@@ -120,7 +117,6 @@ public class setup extends Model {
 		conf.setProperty("cache.url", this.getString("cache.url"));
 		conf.setProperty("site.group", this.getString("cache.group"));
 
-		conf.setProperty("node.name", this.getString("node.name"));
 		conf.setProperty("cluster.code", this.getLong("cluster.code"));
 
 		Config.save();

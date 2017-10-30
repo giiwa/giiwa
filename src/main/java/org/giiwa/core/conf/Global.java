@@ -50,8 +50,6 @@ public final class Global extends Bean {
 	@Column(name = "l")
 	long l;
 
-	private static String instanceid = UID.uuid();
-
 	private static Global owner = new Global();
 
 	public static Global getInstance() {
@@ -258,7 +256,7 @@ public final class Global extends Bean {
 				if (f == null) {
 					String linkid = UID.random();
 
-					Helper.insert(V.create(X.ID, name).set("s", instanceid).set("linkid", linkid), Global.class);
+					Helper.insert(V.create(X.ID, name).set("s", Local.id()).set("linkid", linkid), Global.class);
 					f = Helper.load(name, Global.class);
 					if (f == null) {
 						log.error("occur error when create unique id, name=" + name);
@@ -282,7 +280,7 @@ public final class Global extends Bean {
 					String s = f.getString("s");
 					// 10 seconds
 					if (X.isEmpty(s) || System.currentTimeMillis() - f.getUpdated() > 10000) {
-						if (Helper.update(W.create(X.ID, name).and("s", s), V.create("s", instanceid),
+						if (Helper.update(W.create(X.ID, name).and("s", s), V.create("s", Local.id()),
 								Global.class) > 0) {
 							locked.put(name, Thread.currentThread());
 							heartbeat.schedule(10);
@@ -321,7 +319,7 @@ public final class Global extends Bean {
 			Thread t = locked.remove(name);
 			if (t != null && t.getId() == Thread.currentThread().getId()) {
 				locked.remove(name);
-				Helper.update(W.create(X.ID, name).and("s", instanceid), V.create("s", X.EMPTY), Global.class);
+				Helper.update(W.create(X.ID, name).and("s", Local.id()), V.create("s", X.EMPTY), Global.class);
 				locked.notifyAll();
 				return true;
 			}
@@ -341,7 +339,7 @@ public final class Global extends Bean {
 				String[] names = locked.keySet().toArray(new String[locked.size()]);
 
 				for (String name : names) {
-					if (Helper.update(W.create(X.ID, name).and("s", instanceid),
+					if (Helper.update(W.create(X.ID, name).and("s", Local.id()),
 							V.create(X.UPDATED, System.currentTimeMillis()), Global.class) <= 0) {
 
 						// the lock has been acquired by other
@@ -417,4 +415,16 @@ public final class Global extends Bean {
 
 	}
 
+	private static String _id = null;
+
+	public static String id() {
+		if (X.isEmpty(_id)) {
+			_id = Global.getString("global.id", null);
+			if (!X.isEmpty(_id)) {
+				_id = UID.uuid();
+				Global.setConfig("global.id", _id);
+			}
+		}
+		return _id;
+	}
 }

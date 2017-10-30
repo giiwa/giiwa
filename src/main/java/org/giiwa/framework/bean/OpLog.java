@@ -23,6 +23,7 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 
@@ -109,7 +110,7 @@ public class OpLog extends Bean {
 	 *            the ip address
 	 */
 	public static void info(String model, String op, String message, String trace, User u, String ip) {
-		info(Model.node(), model, op, message, trace, u, ip);
+		info(Local.id(), model, op, message, trace, u, ip);
 	}
 
 	/**
@@ -241,7 +242,7 @@ public class OpLog extends Bean {
 	 *            the ip address
 	 */
 	public static void warn(String model, String op, String message, String trace, User u, String ip) {
-		warn(Model.node(), model, op, message, trace, u, ip);
+		warn(Local.id(), model, op, message, trace, u, ip);
 	}
 
 	/**
@@ -429,7 +430,7 @@ public class OpLog extends Bean {
 	 *            the ip address
 	 */
 	public static void error(String model, String op, String message, String trace, User u, String ip) {
-		error(Model.node(), model, op, message, trace, u, ip);
+		error(Local.id(), model, op, message, trace, u, ip);
 	}
 
 	/**

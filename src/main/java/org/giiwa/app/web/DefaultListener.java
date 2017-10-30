@@ -182,18 +182,6 @@ public class DefaultListener implements IListener {
 			}
 		});
 
-		String instanceid = Global.getString("instanceid", null);
-		if (X.isEmpty(instanceid)) {
-			instanceid = UID.uuid();
-			Global.setConfig("instanceid", instanceid);
-		}
-		Model.instanceid = instanceid;
-
-		// if (log.isDebugEnabled()) {
-		// log.debug("upgrade.enabled=" +
-		// Local.getString("upgrade.framework.enabled", "false"));
-		// }
-
 		/**
 		 * cleanup html
 		 */
@@ -251,6 +239,9 @@ public class DefaultListener implements IListener {
 		}
 
 		Repo.test();
+
+		Local.init();
+
 	}
 
 	private void delete(File f) {
