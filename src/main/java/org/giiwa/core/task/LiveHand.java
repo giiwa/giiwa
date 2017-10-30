@@ -3,23 +3,25 @@ package org.giiwa.core.task;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 
+/**
+ * used to communicating between multiple thread<br>
+ * it contains a semaphore used to control the man in hold <br>
+ * 
+ * @author joe
+ *
+ */
 public class LiveHand {
 
 	private boolean live = true;
-	private long count = 0;
-	private long max = 0;
 	private long timeout = 0;
 
-	private Lock lock = new ReentrantLock();
-	private Condition door = lock.newCondition();
+	private Semaphore door;
 
 	private TimeStamp created = TimeStamp.create();
 
@@ -46,9 +48,11 @@ public class LiveHand {
 		return timeout;
 	}
 
-	public LiveHand(long timeout, long max) {
+	public LiveHand(int timeout, int max) {
 		this.timeout = timeout;
-		this.max = max;
+		if (max < 0)
+			max = Integer.MAX_VALUE;
+		this.door = new Semaphore(max);
 	}
 
 	public boolean isLive() {
@@ -56,44 +60,32 @@ public class LiveHand {
 	}
 
 	public void stop() {
-		try {
-			live = false;
-			lock.lock();
-			door.signalAll();
-		} finally {
-			lock.unlock();
-		}
+		live = false;
+		door.release(Integer.MAX_VALUE);
 	}
 
-	public void hold() throws InterruptedException {
-		try {
-			lock.lock();
-			while (max > 0 && count >= max) {
-				long waittime = X.AMINUTE;
-				if (timeout > 0) {
-					waittime = timeout - created.pastms();
-				}
-				if (waittime > 0) {
-					door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(waittime));
-				} else {
-					throw new InterruptedException("timeout for hold the hand");
-				}
+	public boolean hold() throws InterruptedException {
+		while (isLive()) {
+			long waittime = X.AMINUTE;
+			if (timeout > 0) {
+				waittime = timeout - created.pastms();
 			}
-
-			count++;
-
-		} finally {
-			lock.unlock();
+			if (waittime > 0) {
+				if (door.tryAcquire(waittime, TimeUnit.MILLISECONDS)) {
+					return true;
+				}
+			} else {
+				throw new InterruptedException("timeout for hold the hand");
+			}
 		}
+		return false;
 	}
 
 	public void drop() {
-		try {
-			lock.lock();
-			count--;
-			door.signalAll();
-		} finally {
-			lock.unlock();
+		door.release();
+
+		synchronized (door) {
+			door.notifyAll();
 		}
 	}
 
@@ -109,27 +101,23 @@ public class LiveHand {
 		TimeStamp t = TimeStamp.create();
 
 		long t1 = timeout - t.pastms();
-		try {
-			lock.lock();
-			while (t1 > 0 && isLive()) {
-				if (count <= 0)
-					return true;
-
-				// log.debug("thread=" + Thread.interrupted());
-				door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(timeout));
-				t1 = timeout - t.pastms();
-				// System.out.println("count=" + count);
+		while (t1 > 0 && isLive()) {
+			if (door.drainPermits() == 0) {
+				return true;
 			}
-		} finally {
-			lock.unlock();
+			synchronized (door) {
+				door.wait(t1);
+			}
+			t1 = timeout - t.pastms();
 		}
-		return count <= 0;
+
+		return isLive();
 	}
 
 	@Override
 	public String toString() {
-		return "LiveHand [live=" + live + ", count=" + count + ", timeout=" + timeout + ", past=" + created.pastms()
-				+ "ms, attachs=" + attachs + "]";
+		return "LiveHand [live=" + live + ", count=" + door.drainPermits() + ", timeout=" + timeout + ", past="
+				+ created.pastms() + "ms, attachs=" + attachs + "]";
 	}
 
 	public static void main(String[] args) {
