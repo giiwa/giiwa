@@ -28,7 +28,6 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Config;
-import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.OpLog;
@@ -115,7 +114,6 @@ public class setup extends Model {
 		}
 
 		conf.setProperty("cache.url", this.getString("cache.url"));
-		conf.setProperty("site.group", this.getString("cache.group"));
 
 		conf.setProperty("cluster.code", this.getLong("cluster.code"));
 
@@ -233,15 +231,14 @@ public class setup extends Model {
 
 		} else if ("cache".equals(op)) {
 			String url = this.getHtml(X.URL).trim();
-			String group = this.getString("group").trim();
 
 			try {
 				if (!X.isEmpty(url)) {
 					Configuration conf = Config.getConf();
 					conf.setProperty("cache.url", url);
-					conf.setProperty("site.group", group);
+					conf.setProperty("site.group", "demo");
 
-					Cache.init(url, group);
+					Cache.init(url, "demo");
 
 					String s1 = "1";
 					Cache.set("test", s1);

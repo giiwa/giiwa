@@ -19,6 +19,10 @@
 	<div><label><h3>$lang.get('cluster.code'):</h3>
 		<input type='number' name='cluster.code' value="$!global.getLong('cluster.code',0)"/>
 		<g>$lang.get('cluster.code.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('site.group'):</h3>
+		<input type='text' name='site.group' value="$!global.getString('site.group','demo')"/>
+		<g>$lang.get('site.group.hint')</g></label></div>
 		
 	<div><label><h3>$lang.get('cross.domain'):</h3>
 		<input type='text' name='cross_domain' value="$!cross_domain"/>
@@ -92,9 +96,8 @@
 		
 	<div><label><g>$lang.get('base.setting.notes')</g></label></div>
 	<hr/>
-	<div><label><h3>node:</h3><i>$!conf.getString('node.name','')</i><g>$lang.get('node.hint')</g></label></div>
+	<div><label><h3>node:</h3><i>$!conf.getString('node.id','')</i></label></div>
 	<div><label><h3>cache.url:</h3><i>$!cache_url</i><g>$lang.get('cache.url.hint')</g></label></div>
-	<div><label><h3>cache.group:</h3><i>$!cache_group</i><g>$lang.get('cache.group.hint')</g></label></div>
 	<div><label><h3>mongo[default].url:</h3><i>$!mongo_url</i><g>$lang.get('mongo[default].url.hint')</g></label></div>
 	<div><label><h3>mongo[default].db:</h3><i>$!mongo_db</i><g>$lang.get('mongo[default].db.hint')</g></label></div>
 	<div><label><h3>db[default].url:</h3><i>$!db_url</i><g>$lang.get('db[default].url.hint')</g></label></div>

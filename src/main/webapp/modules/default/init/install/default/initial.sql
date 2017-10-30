@@ -281,3 +281,16 @@ create table gi_app
 	created bigint
 );
 create index gi_app_index_appid on gi_app(appid);
+
+create table gi_node
+(
+	id varchar(50),
+	ip varchar(100),
+	uptime bigint,
+	cores int,
+	os varchar(100),
+	mem bigint,
+	updated bigint,
+	created bigint
+);
+create index gi_node_index_id on gi_node(id);

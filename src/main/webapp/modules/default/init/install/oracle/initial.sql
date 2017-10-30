@@ -281,3 +281,16 @@ create table gi_app
 	created NUMBER(20,0) default 0
 );
 create index gi_app_index_appid on gi_app(appid);
+
+create table gi_node
+(
+	id varchar2(50),
+	ip varchar2(100),
+	uptime number(20,0),
+	cores number(10,0),
+	os varchar2(100),
+	mem number(20,0),
+	updated number(20,0),
+	created number(20,0)
+);
+create index gi_node_index_id on gi_node(id);

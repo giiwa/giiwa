@@ -223,6 +223,8 @@ public class setting extends Model {
 			Global.setConfig("language", lang1);
 
 			Global.setConfig("home.uri", this.getHtml("home_uri"));
+			Global.setConfig("cluster.code", this.getLong("cluster.code"));
+			Global.setConfig("site.group", this.getString("site.group"));
 			Global.setConfig("user.name.rule", this.getHtml("user_name"));
 			Global.setConfig("user.passwd.rule", this.getHtml("user_passwd"));
 			Global.setConfig("user.captcha", X.isSame(this.getString("user_captcha"), "on") ? 1 : 0);
@@ -233,7 +235,6 @@ public class setting extends Model {
 			Global.setConfig("cross.header", this.getString("cross_header"));
 			Global.setConfig("session.alive", this.getLong("session_alive"));
 			Global.setConfig("ntp.server", this.getString("ntpserver"));
-			// Global.setConfig("items.per.page", this.getInt("items.per.page"));
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
 			Global.setConfig("repo.speed", X.isSame("on", this.getString("repo.speed")) ? 1 : 0);
@@ -276,7 +277,6 @@ public class setting extends Model {
 			this.set("cross_header", Global.getString("cross.header", "Content-Type, accept, Origin"));
 
 			this.set("cache_url", Global.getString("cache.url", null));
-			this.set("cache_group", Global.getString("site.group", "demo"));
 			this.set("mongo_url", Global.getString("mongo[default].url", null));
 			this.set("mongo_db", Global.getString("mongo[default].db", null));
 			this.set("mongo_user", Global.getString("mongo[default].user", null));

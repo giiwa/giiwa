@@ -27,7 +27,7 @@
 	</div>
 	
 <div id="content">
-	<div class='center'>
+	<div class='center' style="overflow: visible;">
 
 		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
 			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
@@ -74,23 +74,10 @@
 			</form>
 		</div>
 
-		<div id="system" class='panel' data-next="cache" data-prev="db">
-			<div class='head'>$lang.get('configure.title.system')</div>	
-			<form method="post">
-				<div><label><h3>$lang.get('label.deploycode'):</h3><input type='number' name='cluster.code' value="$!global.getLong('cluster.code',0)"/><g>同一个分布式节点编号相同</g></label></div>
-				
-				<div class='btns'>
-						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
-						<a class='next btn btn-success'>$lang.get('a.next')</a>
-				</div>
-			</form>
-		</div>		
-
 		<div id="cache" class='panel' data-prev="system">
 			<div class='head'>$lang.get('setup.title.cache')</div>	
 			<form method="post">
-				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!global.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
-				<div><label><h3>$lang.get('setup.label.group')：</h3><input type='text' name='group' value="$!global.getString('cache.group', '')"/></label></div>
+				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!config.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
