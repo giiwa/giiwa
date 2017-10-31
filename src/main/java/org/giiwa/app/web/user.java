@@ -275,13 +275,14 @@ public class user extends Model {
 					jo.put(X.MESSAGE, lang.get("captcha.bad"));
 					jo.put(X.STATE, 202);
 
-					GLog.securitylog.warn(user.class, "login", lang.get("captcha.bad"), null, this.getRemoteHost());
+					GLog.securitylog.error(user.class, "login", lang.get("captcha.bad"), null, this.getRemoteHost());
 
 				} else if (Captcha.Result.expired == r) {
 					jo.put(X.MESSAGE, lang.get("captcha.expired"));
 					jo.put(X.STATE, 203);
 
-					GLog.securitylog.warn(user.class, "login", lang.get("captcha.expired"), null, this.getRemoteHost());
+					GLog.securitylog.error(user.class, "login", lang.get("captcha.expired"), null,
+							this.getRemoteHost());
 
 				} else {
 
@@ -302,7 +303,7 @@ public class user extends Model {
 							jo.put("name", name);
 							jo.put("pwd", pwd);
 
-							GLog.securitylog.warn(user.class, "login", lang.get("account.locked.error"), me,
+							GLog.securitylog.error(user.class, "login", lang.get("account.locked.error"), me,
 									this.getRemoteHost());
 
 						} else {
@@ -313,6 +314,9 @@ public class user extends Model {
 								jo.put("name", name);
 								jo.put("pwd", pwd);
 								jo.put(X.STATE, 204);
+
+								GLog.securitylog.error(user.class, "login", lang.get("account.locked.error"), me,
+										this.getRemoteHost());
 							} else {
 
 								this.setUser(me);
@@ -354,14 +358,15 @@ public class user extends Model {
 
 					} else {
 
-						GLog.securitylog.warn(user.class, "login", lang.get("login.failed") + ":" + name, login,
-								this.getRemoteHost());
-
 						User u = User.load(name);
 						if (u == null) {
 							jo.put("message", lang.get("login.name_password.error"));
 							jo.put(X.STATE, 201);
+
+							GLog.securitylog.error(user.class, "login",
+									lang.get("login.name_password.error") + ":" + name, u, this.getRemoteHost());
 						} else {
+
 							u.failed(this.getRemoteHost(), sid(), this.browser());
 
 							List<User.Lock> list = User.Lock.loadByHost(u.getId(), System.currentTimeMillis() - X.AHOUR,
@@ -370,15 +375,27 @@ public class user extends Model {
 							if (list != null && list.size() >= 6) {
 								jo.put("message", lang.get("login.locked.error"));
 								jo.put(X.STATE, 204);
+
+								GLog.securitylog.error(user.class, "login", lang.get("login.failed") + ":" + name,
+										login, this.getRemoteHost());
+
 							} else {
 								list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid());
 								if (list != null && list.size() >= 3) {
 									jo.put("message", lang.get("login.locked.error"));
 									jo.put(X.STATE, 204);
+
+									GLog.securitylog.error(user.class, "login",
+											lang.get("login.locked.error") + ":" + name, login, this.getRemoteHost());
+
 								} else {
-									jo.put("message", String.format(lang.get("login.name_password.error.times"),
+									jo.put(X.MESSAGE, String.format(lang.get("login.name_password.error.times"),
 											list == null ? 0 : list.size()));
 									jo.put(X.STATE, 204);
+
+									GLog.securitylog.warn(user.class, "login", jo.getString(X.MESSAGE) + ":" + name,
+											login, this.getRemoteHost());
+
 								}
 							}
 						}
