@@ -76,383 +76,6 @@ public class GLog extends Bean {
 		return Helper.load(id, GLog.class);
 	}
 
-	public static GLog oplog = new OpLog();
-	public static GLog applog = new AppLog();
-	public static GLog securitylog = new SecurityLog();
-
-	// --------------API
-	/**
-	 * record info log
-	 * 
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void info(String model, String op, String message, User u, String ip) {
-		info(model, op, message, null, u, ip);
-	}
-
-	/**
-	 * record info log
-	 * 
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void info(String model, String op, String message, String trace, User u, String ip) {
-		info(Local.id(), model, op, message, trace, u, ip);
-	}
-
-	/**
-	 * record info log
-	 * 
-	 * @param model
-	 *            the subclass of Model
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void info(Class<? extends Model> model, String op, String message, User u, String ip) {
-		info(model, op, message, null, u, ip);
-	}
-
-	/**
-	 * record info log
-	 * 
-	 * @param model
-	 *            the subclass of Model
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
-		info(Module.shortName(model), op, message, trace, u, ip);
-	}
-
-	/**
-	 * record info log
-	 * 
-	 * @param node
-	 *            the node or subsystem node
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-	}
-
-	protected void _log(int type, int level, String node, String model, String op, String message, String trace, User u,
-			String ip) {
-
-		int l1 = Global.getInt("oplog.level", GLog.LEVEL_WARN);
-		if (l1 > level)
-			return;
-
-		if (Helper.isConfigured()) {
-			if (message != null && message.length() > 1020) {
-				message = message.substring(0, 1024);
-			}
-			if (trace != null && trace.length() > 8192) {
-				trace = trace.substring(0, 8192);
-			}
-			if (!X.isEmpty(trace)) {
-				message = message + "...";
-			}
-
-			long t = System.currentTimeMillis();
-			String id = UID.id(t, op, message);
-			V v = V.create("id", id).set(X.CREATED, t).set("node", node).set("model", model).set("op", op)
-					.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type).append("level", level);
-			v.set("message", message);
-			v.set("trace", trace);
-
-			Helper.insert(v, GLog.class);
-		}
-	}
-
-	/**
-	 * record warn log
-	 * 
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void warn(String model, String op, String message, User u, String ip) {
-		warn(model, op, message, null, u, ip);
-	}
-
-	/**
-	 * record warn log
-	 * 
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void warn(String model, String op, String message, String trace, User u, String ip) {
-		warn(Local.id(), model, op, message, trace, u, ip);
-	}
-
-	/**
-	 * record warn log
-	 * 
-	 * @param model
-	 *            the subclass of Model
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void warn(Class<? extends Model> model, String op, String message, User u, String ip) {
-		warn(model, op, message, null, u, ip);
-	}
-
-	/**
-	 * record warn log
-	 * 
-	 * @param model
-	 *            the subclass of Model
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
-		warn(Module.shortName(model), op, message, trace, u, ip);
-	}
-
-	/**
-	 * record warn log
-	 * 
-	 * @param node
-	 *            the node or subsystem name
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-	}
-
-	/**
-	 * record error log
-	 * 
-	 * @param model
-	 *            the subclass
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void error(Class<? extends Model> model, String op, String message, User u, String ip) {
-		error(model, op, message, (String) null, u, ip);
-	}
-
-	/**
-	 * record error log
-	 * 
-	 * @param model
-	 *            the subclass of Model
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param e
-	 *            the Exception
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
-		error(Module.shortName(model), op, message, e, u, ip);
-	}
-
-	/**
-	 * record error log
-	 * 
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param e
-	 *            the Exception
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void error(String model, String op, String message, Exception e, User u, String ip) {
-		String s = X.EMPTY;
-		if (e != null) {
-			StringWriter sw = new StringWriter();
-			PrintWriter out = new PrintWriter(sw);
-			e.printStackTrace(out);
-			s = sw.toString();
-			String lineSeparator = System.lineSeparator();
-			s = s.replaceAll(lineSeparator, "<br/>");
-			s = s.replaceAll(" ", "&nbsp;");
-			s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
-		}
-
-		error(model, op, message, s, u, ip);
-	}
-
-	/**
-	 * record error log
-	 * 
-	 * @param model
-	 *            the subclass of Model
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
-		error(Module.shortName(model), op, message, trace, u, ip);
-	}
-
-	/**
-	 * record error log
-	 * 
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void error(String model, String op, String message, User u, String ip) {
-		error(model, op, message, (String) null, u, ip);
-	}
-
-	/**
-	 * record error log
-	 * 
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	public void error(String model, String op, String message, String trace, User u, String ip) {
-		error(Local.id(), model, op, message, trace, u, ip);
-	}
-
-	/**
-	 * record error log
-	 * 
-	 * @param node
-	 *            the node or subsystem name
-	 * @param model
-	 *            the model name
-	 * @param op
-	 *            the operation
-	 * @param message
-	 *            the message
-	 * @param trace
-	 *            the trace info
-	 * @param u
-	 *            the user object
-	 * @param ip
-	 *            the ip address
-	 */
-	protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-	}
-
 	/**
 	 * get the node or subsystem name
 	 * 
@@ -531,11 +154,388 @@ public class GLog extends Bean {
 		return user_obj;
 	}
 
-	private static class SecurityLog extends GLog {
+	public static ILog oplog = new OpLog();
+	public static ILog applog = new AppLog();
+	public static ILog securitylog = new SecurityLog();
+
+	// --------------API
+
+	public static abstract class ILog {
 		/**
+		 * record info log
 		 * 
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
 		 */
-		private static final long serialVersionUID = 1L;
+		public void info(String model, String op, String message, User u, String ip) {
+			info(model, op, message, null, u, ip);
+		}
+
+		/**
+		 * record info log
+		 * 
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void info(String model, String op, String message, String trace, User u, String ip) {
+			info(Local.id(), model, op, message, trace, u, ip);
+		}
+
+		/**
+		 * record info log
+		 * 
+		 * @param model
+		 *            the subclass of Model
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void info(Class<? extends Model> model, String op, String message, User u, String ip) {
+			info(model, op, message, null, u, ip);
+		}
+
+		/**
+		 * record info log
+		 * 
+		 * @param model
+		 *            the subclass of Model
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+			info(Module.shortName(model), op, message, trace, u, ip);
+		}
+
+		/**
+		 * record info log
+		 * 
+		 * @param node
+		 *            the node or subsystem node
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		protected abstract void info(String node, String model, String op, String message, String trace, User u,
+				String ip);
+
+		protected void _log(int type, int level, String node, String model, String op, String message, String trace,
+				User u, String ip) {
+
+			int l1 = Global.getInt("oplog.level", GLog.LEVEL_WARN);
+			if (l1 > level)
+				return;
+
+			if (Helper.isConfigured()) {
+				if (message != null && message.length() > 1020) {
+					message = message.substring(0, 1024);
+				}
+				if (trace != null && trace.length() > 8192) {
+					trace = trace.substring(0, 8192);
+				}
+				if (!X.isEmpty(trace)) {
+					message = message + "...";
+				}
+
+				long t = System.currentTimeMillis();
+				String id = UID.id(t, op, message);
+				V v = V.create("id", id).set(X.CREATED, t).set("node", node).set("model", model).set("op", op)
+						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type).append("level", level);
+				v.set("message", message);
+				v.set("trace", trace);
+
+				Helper.insert(v, GLog.class);
+			}
+		}
+
+		/**
+		 * record warn log
+		 * 
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void warn(String model, String op, String message, User u, String ip) {
+			warn(model, op, message, null, u, ip);
+		}
+
+		/**
+		 * record warn log
+		 * 
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void warn(String model, String op, String message, String trace, User u, String ip) {
+			warn(Local.id(), model, op, message, trace, u, ip);
+		}
+
+		/**
+		 * record warn log
+		 * 
+		 * @param model
+		 *            the subclass of Model
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void warn(Class<? extends Model> model, String op, String message, User u, String ip) {
+			warn(model, op, message, null, u, ip);
+		}
+
+		/**
+		 * record warn log
+		 * 
+		 * @param model
+		 *            the subclass of Model
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+			warn(Module.shortName(model), op, message, trace, u, ip);
+		}
+
+		/**
+		 * record warn log
+		 * 
+		 * @param node
+		 *            the node or subsystem name
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		protected abstract void warn(String node, String model, String op, String message, String trace, User u,
+				String ip);
+
+		/**
+		 * record error log
+		 * 
+		 * @param model
+		 *            the subclass
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void error(Class<? extends Model> model, String op, String message, User u, String ip) {
+			error(model, op, message, (String) null, u, ip);
+		}
+
+		/**
+		 * record error log
+		 * 
+		 * @param model
+		 *            the subclass of Model
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param e
+		 *            the Exception
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
+			error(Module.shortName(model), op, message, e, u, ip);
+		}
+
+		/**
+		 * record error log
+		 * 
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param e
+		 *            the Exception
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void error(String model, String op, String message, Exception e, User u, String ip) {
+			String s = X.EMPTY;
+			if (e != null) {
+				StringWriter sw = new StringWriter();
+				PrintWriter out = new PrintWriter(sw);
+				e.printStackTrace(out);
+				s = sw.toString();
+				String lineSeparator = System.lineSeparator();
+				s = s.replaceAll(lineSeparator, "<br/>");
+				s = s.replaceAll(" ", "&nbsp;");
+				s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
+			}
+
+			error(model, op, message, s, u, ip);
+		}
+
+		/**
+		 * record error log
+		 * 
+		 * @param model
+		 *            the subclass of Model
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+			error(Module.shortName(model), op, message, trace, u, ip);
+		}
+
+		/**
+		 * record error log
+		 * 
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void error(String model, String op, String message, User u, String ip) {
+			error(model, op, message, (String) null, u, ip);
+		}
+
+		/**
+		 * record error log
+		 * 
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		public void error(String model, String op, String message, String trace, User u, String ip) {
+			error(Local.id(), model, op, message, trace, u, ip);
+		}
+
+		/**
+		 * record error log
+		 * 
+		 * @param node
+		 *            the node or subsystem name
+		 * @param model
+		 *            the model name
+		 * @param op
+		 *            the operation
+		 * @param message
+		 *            the message
+		 * @param trace
+		 *            the trace info
+		 * @param u
+		 *            the user object
+		 * @param ip
+		 *            the ip address
+		 */
+		protected abstract void error(String node, String model, String op, String message, String trace, User u,
+				String ip);
+
+	}
+
+	private static class SecurityLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
@@ -551,12 +551,7 @@ public class GLog extends Bean {
 
 	}
 
-	private static class OpLog extends GLog {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
+	private static class OpLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
 			_log(GLog.TYPE_OPLOG, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
@@ -572,12 +567,7 @@ public class GLog extends Bean {
 
 	}
 
-	private static class AppLog extends GLog {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
+	private static class AppLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
 			_log(GLog.TYPE_APP, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);

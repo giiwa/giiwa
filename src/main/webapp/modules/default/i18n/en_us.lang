@@ -677,3 +677,4 @@ node.index.title=Cluster Nodes
 a.node=Node
 site.group.hint=used to identify multiple system in same Cache, MQ
 site.group=Group
+log.trace=Trace

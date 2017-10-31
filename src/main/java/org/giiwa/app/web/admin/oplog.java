@@ -100,13 +100,8 @@ public class oplog extends Model {
 			q.and(X.CREATED, lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.lte);
 		}
 
-		String sortby = this.getString("sortby");
-		if (!X.isEmpty(sortby)) {
-			int sortby_type = this.getInt("sortby_type");
-			q.sort(sortby, sortby_type);
-		} else {
-			q.sort(X.CREATED, -1);
-		}
+		int sortby_type = this.getInt("sortby_type", -1);
+		q.sort(X.CREATED, sortby_type);
 		this.set(jo);
 
 		return q;

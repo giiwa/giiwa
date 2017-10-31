@@ -14,11 +14,45 @@
 		</tr>
 	</thead>
 	<tbody>
-#foreach($f in $b.keySet())
-	<tr>
-		<td>$f</td>
-		<td>$!b.get($f)</td>
-	</tr>
-#end
+		<tr>
+			<td>$!lang.get('log.node')</td>
+			<td>$!b.node</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.created')</td>
+			<td>$!lang.format($b.created, 'yyyy-MM-dd HH:mm:ss')</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.type')</td>
+			<td>$!lang.get("log.type_$!b.type")</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.level')</td>
+			<td>$!lang.get("log.level_$!b.level")</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.user')</td>
+			<td>$!b.user_obj.nickname</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.ip')</td>
+			<td>$!b.ip</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.model')</td>
+			<td>$!b.model</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.op')</td>
+			<td>$!b.op</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.message')</td>
+			<td>$!b.message</td>
+		</tr>
+		<tr>
+			<td>$!lang.get('log.trace')</td>
+			<td>$!b.trace</td>
+		</tr>
 	</tbody>
 </table>

@@ -1872,7 +1872,7 @@ public class Model {
 		this.setContentType(Model.MIME_JSON);
 		this.print(jsonstr);
 
-		GLog.oplog.info(this.getClass(), this.path,
+		GLog.oplog.info(this.getClass(), this.path, X.EMPTY,
 				"header=" + Arrays.toString(this.getHeaders()) + ",request=" + this.getJSON() + ", response=" + jsonstr,
 				login, this.getRemoteHost());
 	}
