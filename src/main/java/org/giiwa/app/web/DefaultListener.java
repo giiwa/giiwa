@@ -33,7 +33,6 @@ import org.giiwa.app.web.admin.setting;
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Optimizer;
-import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
@@ -43,7 +42,7 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.Menu;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.bean.User;
@@ -81,9 +80,9 @@ public class DefaultListener implements IListener {
 			if (!X.isEmpty(ntp)) {
 				try {
 					String r = Shell.run("ntpdate -u " + ntp);
-					OpLog.info("ntp", "sync", "NTP syncing: " + r, null, ntp);
+					GLog.applog.info("ntp", "sync", "NTP syncing: " + r, null, ntp);
 				} catch (Exception e) {
-					OpLog.error("ntp", "sync", "NTP syncing failed ", e, null, ntp);
+					GLog.applog.error("ntp", "sync", "NTP syncing failed ", e, null, ntp);
 				}
 			}
 		}
@@ -235,7 +234,7 @@ public class DefaultListener implements IListener {
 
 			}.schedule(10);
 		} else {
-			OpLog.info(mq.class, "startup", "disabled", null, null);
+			GLog.applog.info(mq.class, "startup", "disabled", null, null);
 		}
 
 		Repo.test();
@@ -308,7 +307,7 @@ public class DefaultListener implements IListener {
 									}
 								} catch (Exception e) {
 									log.error(sb.toString(), e);
-									OpLog.error(m.getName(), "init", e.getMessage(), e, null, null);
+									GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
 
 									m.setError(e.getMessage());
 								}
@@ -327,7 +326,7 @@ public class DefaultListener implements IListener {
 				} catch (Exception e) {
 					if (log.isErrorEnabled()) {
 						log.error(sb.toString(), e);
-						OpLog.error(m.getName(), "init", e.getMessage(), e, null, null);
+						GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
 					}
 
 					m.setError(e.getMessage());
@@ -340,7 +339,7 @@ public class DefaultListener implements IListener {
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			OpLog.error(m.getName(), "init", e.getMessage(), e, null, null);
+			GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
 
 			m.setError(e.getMessage());
 
@@ -411,7 +410,7 @@ public class DefaultListener implements IListener {
 						} catch (Exception e) {
 							if (log.isErrorEnabled()) {
 								log.error(f.getAbsolutePath(), e);
-								OpLog.error(module.getName(), "init", e.getMessage(), e, null, null);
+								GLog.applog.error(module.getName(), "init", e.getMessage(), e, null, null);
 							}
 							module.setError(e.getMessage());
 						}
@@ -478,7 +477,7 @@ public class DefaultListener implements IListener {
 				} catch (Exception e) {
 					if (log.isErrorEnabled()) {
 						log.error(e.getMessage(), e);
-						OpLog.error(module.getName(), "init", e.getMessage(), e, null, null);
+						GLog.applog.error(module.getName(), "init", e.getMessage(), e, null, null);
 					}
 
 					module.setError(e.getMessage());
@@ -627,7 +626,7 @@ public class DefaultListener implements IListener {
 			} catch (Exception e) {
 				if (log.isErrorEnabled()) {
 					log.error(e.getMessage(), e);
-					OpLog.error(this.getName(), "cleanup", e.getMessage(), e, null, null);
+					GLog.applog.error(this.getName(), "cleanup", e.getMessage(), e, null, null);
 				}
 			}
 

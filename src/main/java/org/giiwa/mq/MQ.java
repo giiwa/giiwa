@@ -16,7 +16,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.impl.*;
 
 /**
@@ -114,7 +114,7 @@ public abstract class MQ {
 	 */
 	public static void bind(String name, IStub stub, Mode mode) throws Exception {
 		if (mq == null) {
-			OpLog.warn(org.giiwa.app.web.admin.mq.class, "bind",
+			GLog.applog.warn(org.giiwa.app.web.admin.mq.class, "bind",
 					"failed bind, [" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
 
 			throw new Exception("MQ not init yet");

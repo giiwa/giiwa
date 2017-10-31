@@ -10,6 +10,17 @@
 	<a href='/admin/oplog' class='selected'>$lang.get('a.oplog')</a>
 </div>
 
+<style>
+td.log_level_0 {
+	color: #61CA0F!important;
+}
+td.log_level_1 {
+	color: #CA9D0F!important;
+}
+td.log_level_2 {
+	color: #CF1010!important;
+}
+</style>
 <div class='search'>
 	<form action='/admin/oplog' method='get' #if($s>0) style='display:none' #end > 
 		<span>
@@ -23,35 +34,27 @@
 			</label>
 		</span> 
 		<span>
-			<label><h3>$lang.get('log.user'):</h3>
-				<input type='text' name='user' value='$!user' />
-			</label>
-		</span> 
-		<span>
 			<label><h3>$lang.get('log.ip'):</h3>
 				<input type='text' name='ip' value='$!ip' />
 			</label>
 		</span> 
 		<span>
-			<label><h3>$lang.get('log.node'):</h3>
-				<input type='text' name='node' value='$!node' />
-			</label>
-		</span>
-		<span>
-			<label><h3>$lang.get('log.model'):</h3>
-			<input type='text' name='model' value='$!model' /></label>
-		</span> 
-		<span>
-			<label><h3>$lang.get('log.op'):</h3>
-			<input type='text' name='op' value='$!op' /></label>
-		</span> 
-		<span>
 			<label><h3>$lang.get('log.type'):</h3>
 				<select name='type'>
 					<option value=''>$lang.get('log.type_all')</option>
-					<option value='0' #if($type == 0) selected #end>$lang.get('log.type_0')</option>
-					<option value='1' #if($type == 1) selected #end>$lang.get('log.type_1')</option>
-					<option value='2' #if($type == 2) selected #end>$lang.get('log.type_2')</option>
+					<option value='0' #if($type == 0) selected #end>$!lang.get('log.type_0')</option>
+					<option value='1' #if($type == 1) selected #end>$!lang.get('log.type_1')</option>
+					<option value='2' #if($type == 2) selected #end>$!lang.get('log.type_2')</option>
+				</select>
+			</label>
+		</span>
+		<span>
+			<label><h3>$lang.get('log.level'):</h3>
+				<select name='level'>
+					<option value=''>$lang.get('log.level_all')</option>
+					<option value='0' #if($level == 0) selected #end>$!lang.get('log.level_0')</option>
+					<option value='1' #if($level == 1) selected #end>$!lang.get('log.level_1')</option>
+					<option value='2' #if($level == 2) selected #end>$!lang.get('log.level_2')</option>
 				</select>
 			</label>
 		</span>
@@ -83,9 +86,9 @@
 		<tr>
 			<th>$lang.get('log.created')</th>
 			<th>$lang.get('log.type')</th>
+			<th>$lang.get('log.level')</th>
 			<th>$lang.get('user.name')</th>
 			<th>$lang.get('log.ip')</th>
-			<th>$lang.get('log.node')</th>
 			<th>$lang.get('log.model')</th>
 			<th>$lang.get('log.op')</th>
 			<th style='width: 30%'>$lang.get('log.message')</th>
@@ -94,12 +97,12 @@
 	</thead>
 	<tbody>
 		#foreach($f in $list)
-		<tr class='log_type_$f.type'>
+		<tr>
 			<td>$lang.format($f.created, 'yy-MM-dd HH:mm:ss')</td>
-			<td class='type'>#if($f.type)$lang.get("log.type_$f.type")#end</td>
+			<td class='log_type_$!f.type'>$!lang.get("log.type_$!f.type")</td>
+			<td class='log_level_$!f.level'>$!lang.get("log.level_$!f.level")</td>
 			<td>#if($f.user_obj)<i class='user'>$!f.user_obj.nickname</i>#end</td>
 			<td>$!f.ip</td>
-			<td>$!f.node</td>
 			<td>$!f.model</td>
 			<td>$f.op</td>
 			<td>$!f.message</td>
@@ -127,4 +130,17 @@ function _deleteall() {
 		});
 	}
 }
+$(function(){
+	$('input[name=starttime]').datepicker({
+		format: 'yyyy-mm-dd',
+		autoHide: true,
+		autoPick: true,
+		yearFirst: true
+	});
+	$('input[name=endtime]').datepicker({
+		format: 'yyyy-mm-dd',
+		autoHide: true,
+		yearFirst: true
+	});
+})
 </script>

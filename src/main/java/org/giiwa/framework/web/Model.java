@@ -285,7 +285,7 @@ public class Model {
 										this.put("lang", lang);
 										this.deny();
 
-										OpLog.warn(this.getClass(), pp.path(),
+										GLog.securitylog.warn(this.getClass(), pp.path(),
 												"deny the access, requred: " + lang.get(pp.access()), getUser(),
 												this.getRemoteHost());
 										return pp;
@@ -330,7 +330,7 @@ public class Model {
 											jo.put("passwd", "******");
 										}
 
-										OpLog.info(this.getClass(), pp.path(), jo.toString(), getUser(),
+										GLog.oplog.info(this.getClass(), pp.path(), jo.toString(), getUser(),
 												this.getRemoteHost());
 
 									}
@@ -338,7 +338,7 @@ public class Model {
 									if (log.isErrorEnabled())
 										log.error(e.getMessage(), e);
 
-									OpLog.error(this.getClass(), pp.path(), e.getMessage(), e, getUser(),
+									GLog.oplog.error(this.getClass(), pp.path(), e.getMessage(), e, getUser(),
 											this.getRemoteHost());
 
 									error(e);
@@ -351,7 +351,7 @@ public class Model {
 						if (log.isErrorEnabled())
 							log.error(s, e);
 
-						OpLog.error(this.getClass(), path, e.getMessage(), e, getUser(), this.getRemoteHost());
+						GLog.oplog.error(this.getClass(), path, e.getMessage(), e, getUser(), this.getRemoteHost());
 
 						error(e);
 					}
@@ -1872,7 +1872,7 @@ public class Model {
 		this.setContentType(Model.MIME_JSON);
 		this.print(jsonstr);
 
-		OpLog.info(this.getClass(), this.path,
+		GLog.oplog.info(this.getClass(), this.path,
 				"header=" + Arrays.toString(this.getHeaders()) + ",request=" + this.getJSON() + ", response=" + jsonstr,
 				login, this.getRemoteHost());
 	}

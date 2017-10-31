@@ -24,7 +24,7 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.web.*;
@@ -93,7 +93,7 @@ public class setting extends Model {
 
 			} catch (Exception e) {
 				log.error(name, e);
-				OpLog.error(setting.class, "reset", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "reset", e.getMessage(), e, login, this.getRemoteHost());
 
 				this.show("/admin/setting.html");
 			}
@@ -127,7 +127,7 @@ public class setting extends Model {
 
 			} catch (Exception e) {
 				log.error(name, e);
-				OpLog.error(setting.class, "get", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "get", e.getMessage(), e, login, this.getRemoteHost());
 
 				this.show("/admin/setting.html");
 			}
@@ -159,7 +159,7 @@ public class setting extends Model {
 				s.show("/admin/setting.html");
 			} catch (Exception e) {
 				log.error(name, e);
-				OpLog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
 
 				this.show("/admin/setting.html");
 			}

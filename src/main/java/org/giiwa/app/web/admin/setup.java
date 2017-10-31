@@ -30,7 +30,7 @@ import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
@@ -179,7 +179,7 @@ public class setup extends Model {
 				jo.put(X.STATE, 200);
 			} catch (Exception e1) {
 				log.error(e1.getMessage(), e1);
-				OpLog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
+				GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
 
 				jo.put(X.STATE, 201);
 				jo.put(X.MESSAGE, e1.getMessage());
@@ -220,7 +220,7 @@ public class setup extends Model {
 					client.close();
 				} catch (Exception e1) {
 					log.error(e1.getMessage(), e1);
-					OpLog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
+					GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
 
 					jo.put(X.STATE, 201);
 					jo.put(X.MESSAGE, e1.getMessage());

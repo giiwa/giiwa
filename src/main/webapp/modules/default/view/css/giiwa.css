@@ -956,15 +956,6 @@ label i {
 	word-wrap: break-word;
 	display: inline;
 }
-tr.log_type_0 td.type {
-	color: #61CA0F;
-}
-tr.log_type_1 td.type {
-	color: #CA9D0F;
-}
-tr.log_type_2 td.type {
-	color: #CF1010;
-}
 label {
 	position: relative;
 	display: inline-block;

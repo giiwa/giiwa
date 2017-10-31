@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 
 /**
  * @author wujun
@@ -59,7 +59,7 @@ public class Sms {
 	public static boolean send(String mobile, String template, JSON jo) {
 		jo.put("template", template);
 
-		OpLog.info("sms", "send", "mobile=" + mobile + ", jo=" + jo.toString(), null, null);
+		GLog.applog.info("sms", "send", "mobile=" + mobile + ", jo=" + jo.toString(), null, null);
 
 		for (ISender s : senders) {
 			if (s.send(mobile, jo)) {

@@ -18,7 +18,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.web.Path;
 
 public class mq extends setting {
@@ -35,7 +35,7 @@ public class mq extends setting {
 
 		W q = W.create("model", "admin.mq").sort("created", -1);
 
-		Beans<OpLog> bs = OpLog.load(q, s, n);
+		Beans<GLog> bs = GLog.load(q, s, n);
 		this.set(bs, s, n);
 
 		this.show("/admin/mq.logs.html");

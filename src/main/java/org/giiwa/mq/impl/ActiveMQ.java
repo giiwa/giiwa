@@ -40,7 +40,7 @@ import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
 import org.giiwa.mq.Request;
@@ -78,13 +78,14 @@ public final class ActiveMQ extends MQ {
 
 			m.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-			OpLog.info(org.giiwa.app.web.admin.mq.class, "startup", "connected ActiveMQ with [" + url + "]", null,
+			GLog.applog.info(org.giiwa.app.web.admin.mq.class, "startup", "connected ActiveMQ with [" + url + "]", null,
 					null);
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 			// e.printStackTrace();
-			OpLog.warn(org.giiwa.app.web.admin.mq.class, "startup", "failed ActiveMQ with [" + url + "]", null, null);
+			GLog.applog.warn(org.giiwa.app.web.admin.mq.class, "startup", "failed ActiveMQ with [" + url + "]", null,
+					null);
 		}
 
 		return m;
@@ -208,7 +209,7 @@ public final class ActiveMQ extends MQ {
 		if (session == null)
 			throw new JMSException("MQ not init yet");
 
-		OpLog.info(org.giiwa.app.web.admin.mq.class, "bind",
+		GLog.applog.info(org.giiwa.app.web.admin.mq.class, "bind",
 				"[" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
 
 		new R(name, stub, mode);

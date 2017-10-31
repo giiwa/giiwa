@@ -17,7 +17,7 @@ package org.giiwa.app.web.admin;
 import java.io.File;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.*;
 
@@ -31,74 +31,75 @@ import org.giiwa.framework.web.*;
  */
 public class logs extends Model {
 
-  @Path(path = "download", login = true, access = "access.config.admin|access.logs.admin")
-  public void download() {
+	@Path(path = "download", login = true, access = "access.config.admin|access.logs.admin")
+	public void download() {
 
-    JSON jo = JSON.create();
-    String f = this.getString("f");
+		JSON jo = JSON.create();
+		String f = this.getString("f");
 
-    File f0 = new File(Model.GIIWA_HOME + "/logs/");
-    File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
-    try {
-      if (f1.getCanonicalPath().startsWith(f0.getCanonicalPath())) {
+		File f0 = new File(Model.GIIWA_HOME + "/logs/");
+		File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
+		try {
+			if (f1.getCanonicalPath().startsWith(f0.getCanonicalPath())) {
 
-        Temp t = Temp.create(f + ".zip");
-        t.zipcopy(f1.getName(), f1);
+				Temp t = Temp.create(f + ".zip");
+				t.zipcopy(f1.getName(), f1);
 
-        jo.put(X.STATE, 200);
-        jo.put("src", t.getUri());
-      } else {
-        jo.put(X.MESSAGE, "not found, name=" + f);
-        jo.put(X.STATE, 201);
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      jo.put(X.MESSAGE, e.getMessage());
-      jo.put(X.STATE, 201);
-    }
+				jo.put(X.STATE, 200);
+				jo.put("src", t.getUri());
+			} else {
+				jo.put(X.MESSAGE, "not found, name=" + f);
+				jo.put(X.STATE, 201);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			jo.put(X.MESSAGE, e.getMessage());
+			jo.put(X.STATE, 201);
+		}
 
-    this.response(jo);
-  }
+		this.response(jo);
+	}
 
-  /**
-   * Delete.
-   */
-  @Path(path = "delete", login = true, access = "access.config.admin|access.logs.admin")
-  public void delete() {
-    JSON jo = new JSON();
-    String f = this.getString("f");
+	/**
+	 * Delete.
+	 */
+	@Path(path = "delete", login = true, access = "access.config.admin|access.logs.admin")
+	public void delete() {
+		JSON jo = new JSON();
+		String f = this.getString("f");
 
-    File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
-    try {
-      if (f1.getCanonicalPath().startsWith(new File(Model.GIIWA_HOME + "/logs/").getCanonicalPath()) && f1.delete()) {
-        OpLog.warn(logs.class, "delete", "deleted=" + f, login, this.getRemoteHost());
-        jo.put(X.STATE, 200);
-      } else {
-        jo.put(X.STATE, 201);
-        jo.put(X.MESSAGE, "file not exists");
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-      jo.put(X.STATE, 201);
-      jo.put(X.MESSAGE, e.getMessage());
-    }
-    this.response(jo);
-  }
+		File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
+		try {
+			if (f1.getCanonicalPath().startsWith(new File(Model.GIIWA_HOME + "/logs/").getCanonicalPath())
+					&& f1.delete()) {
+				GLog.oplog.warn(logs.class, "delete", "deleted=" + f, login, this.getRemoteHost());
+				jo.put(X.STATE, 200);
+			} else {
+				jo.put(X.STATE, 201);
+				jo.put(X.MESSAGE, "file not exists");
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			jo.put(X.STATE, 201);
+			jo.put(X.MESSAGE, e.getMessage());
+		}
+		this.response(jo);
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model#onGet()
-   */
-  @Path(login = true, access = "access.config.admin|access.logs.admin")
-  public void onGet() {
-    File f = new File(Model.GIIWA_HOME + "/logs");
-    File[] ff = f.listFiles();
-    this.set("list", ff);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model#onGet()
+	 */
+	@Path(login = true, access = "access.config.admin|access.logs.admin")
+	public void onGet() {
+		File f = new File(Model.GIIWA_HOME + "/logs");
+		File[] ff = f.listFiles();
+		this.set("list", ff);
 
-    this.query.path("/admin/logs");
+		this.query.path("/admin/logs");
 
-    this.show("/admin/logs.index.html");
-  }
+		this.show("/admin/logs.index.html");
+	}
 
 }

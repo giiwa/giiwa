@@ -16,8 +16,6 @@ package org.giiwa.framework.bean;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
@@ -37,14 +35,18 @@ import org.giiwa.framework.web.Module;
  * @author yjiang
  * 
  */
-@Table(name = "gi_oplog")
-public class OpLog extends Bean {
+@Table(name = "gi_glog")
+public class GLog extends Bean {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final int TYPE_INFO = 0;
-	private static final int TYPE_WARN = 1;
-	private static final int TYPE_ERROR = 2;
+	private static final int TYPE_SECURITY = 0;
+	private static final int TYPE_APP = 1;
+	private static final int TYPE_OPLOG = 2;
+
+	private static final int LEVEL_INFO = 0;
+	private static final int LEVEL_WARN = 1;
+	private static final int LEVEL_ERROR = 2;
 
 	/**
 	 * Removes all the oplog.
@@ -52,7 +54,7 @@ public class OpLog extends Bean {
 	 * @return the number was deleted
 	 */
 	public static int cleanup() {
-		return Helper.delete(W.create(), OpLog.class);
+		return Helper.delete(W.create(), GLog.class);
 	}
 
 	/**
@@ -66,13 +68,17 @@ public class OpLog extends Bean {
 	 *            the limit
 	 * @return Beans
 	 */
-	public static Beans<OpLog> load(W query, int offset, int limit) {
-		return Helper.load(query, offset, limit, OpLog.class);
+	public static Beans<GLog> load(W query, int offset, int limit) {
+		return Helper.load(query, offset, limit, GLog.class);
 	}
 
-	public static OpLog load(String id) {
-		return Helper.load(id, OpLog.class);
+	public static GLog load(String id) {
+		return Helper.load(id, GLog.class);
 	}
+
+	public static GLog oplog = new OpLog();
+	public static GLog applog = new AppLog();
+	public static GLog securitylog = new SecurityLog();
 
 	// --------------API
 	/**
@@ -89,7 +95,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void info(String model, String op, String message, User u, String ip) {
+	public void info(String model, String op, String message, User u, String ip) {
 		info(model, op, message, null, u, ip);
 	}
 
@@ -109,7 +115,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void info(String model, String op, String message, String trace, User u, String ip) {
+	public void info(String model, String op, String message, String trace, User u, String ip) {
 		info(Local.id(), model, op, message, trace, u, ip);
 	}
 
@@ -127,7 +133,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void info(Class<? extends Model> model, String op, String message, User u, String ip) {
+	public void info(Class<? extends Model> model, String op, String message, User u, String ip) {
 		info(model, op, message, null, u, ip);
 	}
 
@@ -147,7 +153,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+	public void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
 		info(Module.shortName(model), op, message, trace, u, ip);
 	}
 
@@ -169,15 +175,14 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void info(String node, String model, String op, String message, String trace, User u, String ip) {
-		_log(OpLog.TYPE_INFO, node, model, op, message, trace, u, ip);
+	protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
 	}
 
-	private static void _log(int type, String node, String model, String op, String message, String trace, User u,
+	protected void _log(int type, int level, String node, String model, String op, String message, String trace, User u,
 			String ip) {
 
-		int level = Global.getInt("oplog.level", OpLog.TYPE_WARN);
-		if (level > type)
+		int l1 = Global.getInt("oplog.level", GLog.LEVEL_WARN);
+		if (l1 > level)
 			return;
 
 		if (Helper.isConfigured()) {
@@ -194,16 +199,11 @@ public class OpLog extends Bean {
 			long t = System.currentTimeMillis();
 			String id = UID.id(t, op, message);
 			V v = V.create("id", id).set(X.CREATED, t).set("node", node).set("model", model).set("op", op)
-					.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type);
+					.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type).append("level", level);
 			v.set("message", message);
 			v.set("trace", trace);
 
-			Helper.insert(v, OpLog.class);
-			if (loggers.size() > 0) {
-				for (ILogger l : loggers) {
-					l.log(v);
-				}
-			}
+			Helper.insert(v, GLog.class);
 		}
 	}
 
@@ -221,7 +221,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void warn(String model, String op, String message, User u, String ip) {
+	public void warn(String model, String op, String message, User u, String ip) {
 		warn(model, op, message, null, u, ip);
 	}
 
@@ -241,7 +241,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void warn(String model, String op, String message, String trace, User u, String ip) {
+	public void warn(String model, String op, String message, String trace, User u, String ip) {
 		warn(Local.id(), model, op, message, trace, u, ip);
 	}
 
@@ -259,7 +259,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void warn(Class<? extends Model> model, String op, String message, User u, String ip) {
+	public void warn(Class<? extends Model> model, String op, String message, User u, String ip) {
 		warn(model, op, message, null, u, ip);
 	}
 
@@ -279,7 +279,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+	public void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
 		warn(Module.shortName(model), op, message, trace, u, ip);
 	}
 
@@ -301,8 +301,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-		_log(OpLog.TYPE_WARN, node, model, op, message, trace, u, ip);
+	protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
 	}
 
 	/**
@@ -319,7 +318,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void error(Class<? extends Model> model, String op, String message, User u, String ip) {
+	public void error(Class<? extends Model> model, String op, String message, User u, String ip) {
 		error(model, op, message, (String) null, u, ip);
 	}
 
@@ -339,7 +338,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
+	public void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
 		error(Module.shortName(model), op, message, e, u, ip);
 	}
 
@@ -359,7 +358,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void error(String model, String op, String message, Exception e, User u, String ip) {
+	public void error(String model, String op, String message, Exception e, User u, String ip) {
 		String s = X.EMPTY;
 		if (e != null) {
 			StringWriter sw = new StringWriter();
@@ -391,7 +390,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+	public void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
 		error(Module.shortName(model), op, message, trace, u, ip);
 	}
 
@@ -409,7 +408,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void error(String model, String op, String message, User u, String ip) {
+	public void error(String model, String op, String message, User u, String ip) {
 		error(model, op, message, (String) null, u, ip);
 	}
 
@@ -429,7 +428,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void error(String model, String op, String message, String trace, User u, String ip) {
+	public void error(String model, String op, String message, String trace, User u, String ip) {
 		error(Local.id(), model, op, message, trace, u, ip);
 	}
 
@@ -451,8 +450,7 @@ public class OpLog extends Bean {
 	 * @param ip
 	 *            the ip address
 	 */
-	public static void error(String node, String model, String op, String message, String trace, User u, String ip) {
-		_log(OpLog.TYPE_ERROR, node, model, op, message, trace, u, ip);
+	protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
 	}
 
 	/**
@@ -533,28 +531,66 @@ public class OpLog extends Bean {
 		return user_obj;
 	}
 
-	private static List<ILogger> loggers = new ArrayList<ILogger>();
+	private static class SecurityLog extends GLog {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
-	/**
-	 * Add personal logger
-	 * 
-	 * @param logger
-	 *            the logger
-	 */
-	public static void addLogger(ILogger logger) {
-		if (!loggers.contains(logger)) {
-			loggers.add(logger);
+		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
+
+		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
+		}
+
+		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+		}
+
 	}
 
-	/**
-	 * personal Logger interface
-	 * 
-	 * @author wujun
-	 *
-	 */
-	public static interface ILogger {
-		void log(V v);
+	private static class OpLog extends GLog {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_OPLOG, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
+		}
+
+		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_OPLOG, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
+		}
+
+		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_OPLOG, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+		}
+
+	}
+
+	private static class AppLog extends GLog {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_APP, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
+		}
+
+		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_APP, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
+		}
+
+		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
+			_log(GLog.TYPE_APP, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+		}
+
 	}
 
 }

@@ -130,7 +130,7 @@ public class Jar extends Bean {
 			return Helper.exists(q, Jar.class);
 		} catch (Exception e) {
 			log.error(q.toString(), e);
-			OpLog.error("db", "exists", q.toString(), null, null);
+			GLog.applog.error("db", "exists", q.toString(), null, null);
 		}
 		return true;
 	}

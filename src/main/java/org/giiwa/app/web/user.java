@@ -34,7 +34,7 @@ import org.giiwa.core.noti.Email;
 import org.giiwa.core.noti.Sms;
 import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.Code;
-import org.giiwa.framework.bean.OpLog;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.User;
@@ -121,8 +121,8 @@ public class user extends Model {
 							u.setRole(r.getId());
 						}
 						this.setUser(u);
-						OpLog.info(user.class, "register", lang.get("create.success") + ":" + name + ", uid=" + id,
-								login, this.getRemoteHost());
+						GLog.securitylog.info(user.class, "register",
+								lang.get("create.success") + ":" + name + ", uid=" + id, login, this.getRemoteHost());
 
 						Session s = this.getSession();
 						if (s.has("uri")) {
@@ -135,10 +135,10 @@ public class user extends Model {
 
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
-						OpLog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
+						GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
 
 						this.put(X.MESSAGE, lang.get("create_user_error_1"));
-						OpLog.info(user.class, "register", lang.get("create.failed") + ":" + name, login,
+						GLog.securitylog.info(user.class, "register", lang.get("create.failed") + ":" + name, login,
 								this.getRemoteHost());
 					}
 				}
@@ -251,6 +251,8 @@ public class user extends Model {
 				jo.put("expired", a.getExpired());
 				User u = a.getUser_obj();
 				this.setUser(u);
+
+				GLog.securitylog.info(user.class, "login", null, u, this.getRemoteHost());
 			} else {
 				String name = this.getString("name");
 				if (name != null) {
@@ -272,9 +274,15 @@ public class user extends Model {
 				if (Captcha.Result.badcode == r) {
 					jo.put(X.MESSAGE, lang.get("captcha.bad"));
 					jo.put(X.STATE, 202);
+
+					GLog.securitylog.warn(user.class, "login", lang.get("captcha.bad"), null, this.getRemoteHost());
+
 				} else if (Captcha.Result.expired == r) {
 					jo.put(X.MESSAGE, lang.get("captcha.expired"));
 					jo.put(X.STATE, 203);
+
+					GLog.securitylog.warn(user.class, "login", lang.get("captcha.expired"), null, this.getRemoteHost());
+
 				} else {
 
 					User me = User.load(name, pwd);
@@ -293,6 +301,10 @@ public class user extends Model {
 							jo.put(X.STATE, 204);
 							jo.put("name", name);
 							jo.put("pwd", pwd);
+
+							GLog.securitylog.warn(user.class, "login", lang.get("account.locked.error"), me,
+									this.getRemoteHost());
+
 						} else {
 							list = User.Lock.loadBySid(uid, time, sid());
 							if (list != null && list.size() >= 3) {
@@ -304,6 +316,7 @@ public class user extends Model {
 							} else {
 
 								this.setUser(me);
+								GLog.securitylog.info(user.class, "login", null, me, this.getRemoteHost());
 
 								/**
 								 * logined, to update the stat data
@@ -341,7 +354,7 @@ public class user extends Model {
 
 					} else {
 
-						OpLog.warn(user.class, "login", lang.get("login.failed") + ":" + name, login,
+						GLog.securitylog.warn(user.class, "login", lang.get("login.failed") + ":" + name, login,
 								this.getRemoteHost());
 
 						User u = User.load(name);
@@ -396,7 +409,7 @@ public class user extends Model {
 				this.getSession().set("uri", URLDecoder.decode(refer, "UTF-8")).store();
 			} catch (Exception e) {
 				log.error(refer, e);
-				OpLog.error(user.class, "login", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.securitylog.error(user.class, "login", e.getMessage(), e, login, this.getRemoteHost());
 			}
 		}
 
@@ -417,6 +430,8 @@ public class user extends Model {
 			 * clear auth-token
 			 */
 			AuthToken.delete(u.getId(), sid());
+
+			GLog.securitylog.info(user.class, "logout", null, u, this.getRemoteHost());
 
 			login.logout();
 
@@ -456,7 +471,7 @@ public class user extends Model {
 				jo.put(X.STATE, 201);
 				jo.put(X.MESSAGE, lang.get("user.name.exists"));
 
-				OpLog.info(user.class, "verify", "name=" + name + ",value=" + value + ",exists", login,
+				GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",exists", login,
 						this.getRemoteHost());
 
 			} else {
@@ -466,8 +481,8 @@ public class user extends Model {
 					jo.put(X.STATE, 201);
 					jo.put(X.MESSAGE, lang.get("user.name.format.error"));
 
-					OpLog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
-							this.getRemoteHost());
+					GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule,
+							login, this.getRemoteHost());
 				} else {
 					jo.put(X.STATE, 200);
 				}
@@ -478,7 +493,7 @@ public class user extends Model {
 				jo.put(X.STATE, 201);
 				jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
 
-				OpLog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
+				GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
 						this.getRemoteHost());
 			} else {
 				jo.put(X.STATE, 200);
