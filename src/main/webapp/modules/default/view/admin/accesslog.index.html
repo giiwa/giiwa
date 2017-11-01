@@ -46,7 +46,6 @@
 			<th>USERNAME</th>
 			<th>IP</th>
 			<th>Created</th>
-			<th style='width:15%;'>Client</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -64,7 +63,6 @@
 		<td>$!f.username</td>
 		<td>$!f.ip</td>
 		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
-		<td>$!f.client</td>
 		<td>
 			<a class="btn btn-xs btn-info" href="/admin/accesslog/detail?id=$f.id">$lang.get("a.detail")</a>
 		</td>

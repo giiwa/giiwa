@@ -31,6 +31,7 @@ import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
@@ -1872,9 +1873,12 @@ public class Model {
 		this.setContentType(Model.MIME_JSON);
 		this.print(jsonstr);
 
-		GLog.oplog.info(this.getClass(), this.path, X.EMPTY,
-				"header=" + Arrays.toString(this.getHeaders()) + ",request=" + this.getJSON() + ", response=" + jsonstr,
-				login, this.getRemoteHost());
+		if (AccessLog.isOn())
+			AccessLog.create(getRemoteHost(), uri,
+					V.create().set("status", getStatus()).set("header", Arrays.toString(getHeaders()))
+							.set("client", browser()).set("module", module.getName()).set("model", getClass().getName())
+							.append("request", this.getJSON().toString()).append("response", jsonstr));
+
 	}
 
 	/**
