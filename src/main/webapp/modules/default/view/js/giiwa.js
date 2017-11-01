@@ -376,10 +376,10 @@ giiwa.extend({
 		var menu = $('#menu');
 		var panel = $('#panel');
 		panel.css('width', (w - panel.offset().left) + 'px');
-		panel.css('height', (h - 120) + 'px');
+		panel.css('height', (h - 92) + 'px');
 		
 		if (menu.length > 0) {
-			menu.css('height', (h - 120) + 'px');
+			menu.css('height', (h - 92) + 'px');
 
 			if (!giiwa.menuapi) {
 				giiwa.menuapi = menu.jScrollPane().data('jsp');

@@ -64,7 +64,7 @@ img {
 	margin: 0 auto;
 }
 #head {
-	height: 80px;
+	height: 52px;
 	text-align: center;
 	width: 100%;
 	overflow: hidden;
@@ -177,7 +177,6 @@ input:focus, select:focus, textarea:focus {
 #head .logo {
 	position: relative;
 	float: left;
-	margin: 14px 10px;
 }
 #head .title {
 	position: relative;
@@ -209,7 +208,7 @@ input:focus, select:focus, textarea:focus {
     padding: 0;
     overflow: auto;
     position: fixed;
-    top: 120px;
+    top: 92px;
     bottom: 0;
     left: 220px;
     right: 0;
@@ -791,7 +790,7 @@ table th.checkbox {
 	position: fixed;
 	color: white;
 	line-height: 39px;
-	top: 80px;
+	top: 52px;
 	left: 0;
 	width: 100%;
 	overflow: hidden;
@@ -803,7 +802,7 @@ table th.checkbox {
 }
 #menu {
 	position: fixed;
-	top: 120px;
+	top: 92px;
 	left: 0;
 	box-shadow: 0 6px 6px #666;
 	z-index: 100;
