@@ -149,6 +149,7 @@ input[type=text], input[type=password] {
 }
 input[type=checkbox],input[type=radio] {
 	margin-top: 16px;
+	margin-right: 5px;	
 }
 input:focus, select:focus, textarea:focus {
 	border: 1px solid #4d90fe !important;
