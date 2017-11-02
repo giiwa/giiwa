@@ -659,4 +659,8 @@ public final class JSON extends HashMap<String, Object> {
 		return this;
 	}
 
+	public Map<String, Object> toMap() {
+		return this;
+	}
+	
 }
