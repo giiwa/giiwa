@@ -18,6 +18,7 @@ import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
+import org.giiwa.core.conf.Local;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.*;
 
@@ -39,13 +40,11 @@ public class dashboard extends Model {
 	@Path(login = true)
 	public void onGet() {
 
-		Configuration conf = Config.getConf();
-
 		this.set("me", this.getUser());
 		this.set("uptime", lang.format(Model.UPTIME, "yy-MM-dd HH:mm:ss"));
 		this.set("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
 		this.set("past", lang.past(Model.UPTIME));
-		this.set("node", conf.getString("node.name", X.EMPTY));
+		this.set("node", Local.id());
 		this.set("release", Module.load("default").getVersion());
 		this.set("build", Module.load("default").getBuild());
 		this.set("free", lang.size(Runtime.getRuntime().freeMemory()));
