@@ -60,7 +60,9 @@ giiwa.extend({
 		i = query.indexOf('&');
 		while(i > 0) {
 			var s = query.substring(0, i);
-			i = s.substring('=');
+			query = query.substring(i+1);
+
+			i = s.indexOf('=');
 			if(i >0) {
 				var s1 = s.substring(0, i);
 				var s2 = s.substring(i+1);
@@ -68,11 +70,10 @@ giiwa.extend({
 					p[s1] = s2;
 				}
 			}
-			query = query.substring(i+1);
 			i = query.indexOf('&');
 		}
 		s = query;
-		i = s.substring('=');
+		i = s.indexOf('=');
 		if(i >0) {
 			var s1 = s.substring(0, i);
 			var s2 = s.substring(i+1);
@@ -85,12 +86,11 @@ giiwa.extend({
 	_compare: function(url1, url2) {
 		var p1 = giiwa._format(url1);
 		var p2 = giiwa._format(url2);
-		console.log(url1);
-		console.log(p1);
-
-		console.log(url2);
-		console.log(p2);
-
+//		console.log(url1);
+//		console.log(p1);
+//		console.log(url2);
+//		console.log(p2);
+		
 		for (var key in p1) {  
             if(p1[key] != p2[key]){
             		return false;
@@ -111,7 +111,7 @@ giiwa.extend({
 			if (!giiwa._compare(giiwa.__history[giiwa.__history.length - 1], url)) {
 				giiwa.__history.push(url);
 			}
-			console.log(giiwa.__history);
+//			console.log(giiwa.__history);
 		}
 	},
 	back: function() {
