@@ -527,6 +527,7 @@ public class DefaultListener implements IListener {
 		static Log log = LogFactory.getLog(CleanupTask.class);
 
 		String home;
+		int count = 0;
 
 		/**
 		 * Instantiates a new cleanup task.
@@ -554,7 +555,7 @@ public class DefaultListener implements IListener {
 				/**
 				 * clean up the local temp files
 				 */
-				int count = 0;
+				count = 0;
 				for (String f : folders) {
 					String path = home + f;
 					count += cleanup(path, X.ADAY);
@@ -599,7 +600,6 @@ public class DefaultListener implements IListener {
 		}
 
 		private int cleanup(String path, long expired) {
-			int count = 0;
 			try {
 				File f = new File(path);
 
