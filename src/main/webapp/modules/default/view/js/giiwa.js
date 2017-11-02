@@ -15,15 +15,103 @@ giiwa.extend({
 	menuapi: false,
 	panelapi: false,
 	uploaddone: false,
+	
+	_format: function(url) {
+		var p = {};
+		var i = url.indexOf('?');
+		if(i >= 0) {
+			var uri = url.substring(0, i);
+			var query = url.substring(i+1);
+		} else {
+			i = url.indexOf('&');
+			if(i >=0) {
+				var uri = url.substring(0, i);
+				var query = url.substring(i+1);
+			} else {
+				i = url.indexOf('#');
+				if(i >=0) {
+					var uri = url.substring(0, i);
+					var query = url.substring(i+1);
+				}else{
+					uri = url;
+					query = '';
+				}
+			}
+		}
+		i = uri.indexOf('//');
+		if(i >= 0) {
+			var s = uri.substring(i+2);
+			i = s.indexOf('/');
+			if(i>=0) {
+				p.uri = s.substring(i);
+			} else {
+				p.uri = '/';
+			}
+		} else {
+			p.uri = uri;
+		}
+		if(p.uri[0] != '/') {
+			p.uri = '/' + p.uri;
+		}
+		if(p.uri.length>1 && p.uri[p.uri.length-1] == '/') {
+			p.uri = p.uri.substring(0, p.uri.length -1);
+		}
+		
+		i = query.indexOf('&');
+		while(i > 0) {
+			var s = query.substring(0, i);
+			i = s.substring('=');
+			if(i >0) {
+				var s1 = s.substring(0, i);
+				var s2 = s.substring(i+1);
+				if(s1.length >0 && s2.length >0) {
+					p[s1] = s2;
+				}
+			}
+			query = query.substring(i+1);
+			i = query.indexOf('&');
+		}
+		s = query;
+		i = s.substring('=');
+		if(i >0) {
+			var s1 = s.substring(0, i);
+			var s2 = s.substring(i+1);
+			if(s1.length >0 && s2.length >0) {
+				p[s1] = s2;
+			}
+		}
+		return p;
+	},
+	_compare: function(url1, url2) {
+		var p1 = giiwa._format(url1);
+		var p2 = giiwa._format(url2);
+		console.log(url1);
+		console.log(p1);
 
+		console.log(url2);
+		console.log(p2);
+
+		for (var key in p1) {  
+            if(p1[key] != p2[key]){
+            		return false;
+            }
+        }
+		for (var key in p2) {  
+            if(p1[key] != p2[key]){
+            		return false;
+            }
+        }
+		return true;
+	},
 	history: function(url) {
 		if (url && url.length > 0) {
 			if(url[url.length-1] == '?') {
 				url = url.substring(0, url.length-1);
 			}
-			if (giiwa.__history[giiwa.__history.length - 1] !== url) {
+			if (!giiwa._compare(giiwa.__history[giiwa.__history.length - 1], url)) {
 				giiwa.__history.push(url);
 			}
+			console.log(giiwa.__history);
 		}
 	},
 	back: function() {
@@ -123,7 +211,7 @@ giiwa.extend({
 					} else {
 						__url = url + '?' + data;
 					}
-					if (giiwa.__history.length > 0 && giiwa.__history[giiwa.__history.length - 1] == __url) {
+					if (giiwa.__history.length > 0 && giiwa._compare(giiwa.__history[giiwa.__history.length - 1], __url)) {
 						giiwa.__history.pop();
 					}
 					giiwa.__history.push(__url);
@@ -301,7 +389,7 @@ giiwa.extend({
 	load: function(uri) {
 		processing && processing.show();
 
-		if (giiwa.__history.length > 0 && giiwa.__history[giiwa.__history.length - 1] == uri) {
+		if (giiwa.__history.length > 0 && giiwa._compare(giiwa.__history[giiwa.__history.length - 1], uri)) {
 			giiwa.__history.pop();
 		}
 		giiwa.__history.push(uri);
