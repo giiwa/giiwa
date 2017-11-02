@@ -574,9 +574,6 @@ public class Model {
 
 	private void createQuery() {
 		String url = uri;
-		if (this.path != null && !"index".equals(this.path)) {
-			url += "/" + path;
-		}
 
 		if (url.endsWith("/")) {
 			url = url.substring(0, url.length() - 1);

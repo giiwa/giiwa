@@ -18,13 +18,17 @@ giiwa.extend({
 
 	history: function(url) {
 		if (url && url.length > 0) {
+			if(url[url.length-1] == '?') {
+				url = url.substring(0, url.length-1);
+			}
 			if (giiwa.__history[giiwa.__history.length - 1] !== url) {
 				giiwa.__history.push(url);
 			}
 		}
 	},
 	back: function() {
-		if (giiwa.__history.length > 2) {
+		
+		if (giiwa.__history.length > 1) {
 
 			var h = giiwa.__history.pop();
 			h = giiwa.__history.pop();
@@ -65,7 +69,6 @@ giiwa.extend({
 						giiwa.load(href);
 					}
 
-					// console.log(href);
 					e1.preventDefault();
 				});
 			}
