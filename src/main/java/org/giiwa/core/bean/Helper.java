@@ -446,7 +446,7 @@ public class Helper implements Serializable {
 		 */
 		public Set<String> names() {
 			Set<String> s1 = new HashSet<String>(m.keySet());
-			for (String s : s1) {
+			for (String s : s1.toArray(new String[s1.size()])) {
 				if (m.get(s) == ignore) {
 					s1.remove(s);
 				}
