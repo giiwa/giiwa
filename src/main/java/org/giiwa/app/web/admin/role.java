@@ -178,7 +178,7 @@ public class role extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.role.admin｜access.user.admin")
+	@Path(login = true, access = "access.config.admin|access.role.admin")
 	public void onGet() {
 
 		int s = this.getInt("s");
