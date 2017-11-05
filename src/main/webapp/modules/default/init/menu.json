@@ -52,7 +52,7 @@
 					{
 						"name": "menu.tools",
 						"seq": 40,
-						"access": "access.config.admin|access.config.system.admin",
+						"access": "access.config.admin|access.config.system.admin|access.config.module.admin",
 						"classes": "icon-hammer",
 						"childs": [
 							{
@@ -95,6 +95,7 @@
 								"name": 'menu.i18n',
 								"load": '/admin/i18n',
 								"seq": 70,
+								"access":"access.config.admin|access.config.module.admin",
 								"classes": 'icon-magic-wand'
 							}
 						]

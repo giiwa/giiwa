@@ -48,7 +48,7 @@ public class backup extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin")
+	@Path(login = true, access = "access.config.admin|access.config.system.admin")
 	@Override
 	public void onGet() {
 		String path = BackupTask.path();
@@ -73,7 +73,7 @@ public class backup extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.system.admin")
 	public void delete() {
 
 		try {
@@ -92,7 +92,7 @@ public class backup extends Model {
 
 	}
 
-	@Path(path = "download", login = true, access = "access.config.admin")
+	@Path(path = "download", login = true, access = "access.config.admin|access.config.system.admin")
 	public void download() {
 		JSON jo = JSON.create();
 		try {
@@ -120,7 +120,7 @@ public class backup extends Model {
 	/**
 	 * Now.
 	 */
-	@Path(path = "now", login = true, access = "access.config.admin")
+	@Path(path = "now", login = true, access = "access.config.admin|access.config.system.admin")
 	public synchronized void now() {
 		if (btask == null || btask.finished) {
 			btask = new BackupTask();
@@ -138,7 +138,7 @@ public class backup extends Model {
 	/**
 	 * Restore.
 	 */
-	@Path(path = "restore", login = true, access = "access.config.admin")
+	@Path(path = "restore", login = true, access = "access.config.admin|access.config.system.admin")
 	public synchronized void restore() {
 
 		JSON jo = new JSON();
@@ -156,7 +156,7 @@ public class backup extends Model {
 	/**
 	 * Restoring.
 	 */
-	@Path(path = "restoring", login = true, access = "access.config.admin")
+	@Path(path = "restoring", login = true, access = "access.config.admin|access.config.system.admin")
 	public void restoring() {
 		long id = this.getLong("id");
 

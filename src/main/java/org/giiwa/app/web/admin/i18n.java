@@ -13,19 +13,19 @@ import org.giiwa.framework.web.Path;
  */
 public class i18n extends Model {
 
-  @Path(login = true, access = "access.config.admin")
-  public void onGet() {
-    Map<String, String> missed = lang.getMissed();
-    StringBuilder sb = new StringBuilder();
-    for (String n : missed.keySet()) {
-      sb.append(n).append("=").append("<br>");
-    }
-    this.set("missed", sb.toString());
+	@Path(login = true, access = "access.config.admin|access.config.module.admin")
+	public void onGet() {
+		Map<String, String> missed = lang.getMissed();
+		StringBuilder sb = new StringBuilder();
+		for (String n : missed.keySet()) {
+			sb.append(n).append("=").append("<br>");
+		}
+		this.set("missed", sb.toString());
 
-    Map<String, String[]> d = lang.getData();
-    this.set("d", d);
-    this.show("/admin/i18n.index.html");
+		Map<String, String[]> d = lang.getData();
+		this.set("d", d);
+		this.show("/admin/i18n.index.html");
 
-  }
+	}
 
 }
