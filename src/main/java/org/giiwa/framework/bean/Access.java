@@ -35,112 +35,112 @@ import org.giiwa.core.bean.Helper.W;
  */
 @Table(name = "gi_access")
 public class Access extends Bean {
-  /**
-  * 
-  */
-  private static final long serialVersionUID = 1L;
+	/**
+	* 
+	*/
+	private static final long serialVersionUID = 1L;
 
-  @Column(name = X.ID, index = true, unique = true)
-  private String            name;
+	@Column(name = X.ID, index = true, unique = true)
+	private String name;
 
-  /**
-   * get the group name of the access name
-   * 
-   * @return the string
-   */
-  public String groupName() {
-    int i = name.indexOf(".");
-    if (i > 0) {
-      int j = name.indexOf(".", i + 1);
-      if (j > 0) {
-        return name.substring(0, j);
-      } else {
-        return name.substring(0, i);
-      }
-    }
-    return "access";
-  }
+	/**
+	 * get the group name of the access name
+	 * 
+	 * @return the string
+	 */
+	public String groupName() {
+		int i = name.indexOf(".");
+		if (i > 0) {
+			int j = name.indexOf(".", i + 1);
+			if (j > 0) {
+				return name.substring(0, j);
+			} else {
+				return name.substring(0, i);
+			}
+		}
+		return "access";
+	}
 
-  /**
-   * get the access name
-   * 
-   * @return String
-   */
-  public String getName() {
-    return name;
-  }
+	/**
+	 * get the access name
+	 * 
+	 * @return String
+	 */
+	public String getName() {
+		return name;
+	}
 
-  /**
-   * Add a access name, the access name MUST fit with "access.[group].[name]" .
-   * 
-   * @param name
-   *          the name
-   */
-  public static void set(String name) {
-    if (X.isEmpty(name) || !name.startsWith("access.")) {
-      log.error("error access.name: " + name, new Exception("error access name:" + name));
-    } else {
-      String[] ss = name.split("[\\|｜]");
-      for (String s : ss) {
-        if (!exists(s)) {
-          Helper.insert(V.create(X.ID, s), Access.class);
-        }
-      }
-    }
-  }
+	/**
+	 * Add a access name, the access name MUST fit with "access.[group].[name]" .
+	 * 
+	 * @param name
+	 *            the name
+	 */
+	public static void set(String name) {
+		if (X.isEmpty(name) || !name.startsWith("access.")) {
+			log.error("error access.name: " + name, new Exception("error access name:" + name));
+		} else {
+			String[] ss = name.split("[\\|｜]");
+			for (String s : ss) {
+				if (!exists(s)) {
+					Helper.insert(V.create(X.ID, s), Access.class);
+				}
+			}
+		}
+	}
 
-  static private Set<String> cache = new HashSet<String>();
+	static private Set<String> cache = new HashSet<String>();
 
-  /**
-   * check exists of the name
-   *
-   * @param name
-   *          the name
-   * @return true, if successful
-   */
-  public static boolean exists(String name) {
-    if (cache.contains(name)) {
-      return true;
-    }
+	/**
+	 * check exists of the name
+	 *
+	 * @param name
+	 *            the name
+	 * @return true, if successful
+	 */
+	public static boolean exists(String name) {
+		if (cache.contains(name)) {
+			return true;
+		}
 
-    try {
-      if (Helper.exists(name, Access.class)) {
-        cache.add(name);
-        return true;
-      }
-    } catch (Exception e1) {
-      log.error(e1.getMessage(), e1);
-    }
-    return false;
-  }
+		try {
+			if (Helper.exists(name, Access.class)) {
+				cache.add(name);
+				return true;
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		}
+		return false;
+	}
 
-  /**
-   * Load all access and group by [group] name.
-   *
-   * @return the map
-   */
-  public static Map<String, List<Access>> load() {
-    Beans<Access> bs = Helper.load(W.create(), 0, Integer.MAX_VALUE, Access.class);
-    List<Access> list = bs;
-    Map<String, List<Access>> r = new TreeMap<String, List<Access>>();
-    String group = null;
-    List<Access> last = null;
-    for (Access a : list) {
-      if (!X.isEmpty(a.name)) {
-        String name = a.groupName();
-        if (!r.containsKey(name)) {
-          group = name;
-          last = new ArrayList<Access>();
-          last.add(a);
-          r.put(group, last);
-        }else{
-        	  r.get(name).add(a);
-        }
-        //last.add(a);
-      }
-    }
+	/**
+	 * Load all access and group by [group] name.
+	 *
+	 * @return the map
+	 */
+	public static Map<String, List<Access>> load() {
+		Beans<Access> bs = Helper.load(W.create(), 0, Integer.MAX_VALUE, Access.class);
+		List<Access> list = bs;
+		Map<String, List<Access>> r = new TreeMap<String, List<Access>>();
+		String group = null;
+		List<Access> last = null;
+		for (Access a : list) {
+			if (!X.isEmpty(a.name)) {
+				String name = a.groupName();
+				if (!r.containsKey(name)) {
+					group = name;
+					last = new ArrayList<Access>();
+					last.add(a);
+					r.put(group, last);
+				} else {
+					r.get(name).add(a);
+				}
+				// last.add(a);
+			}
+		}
 
-    return r;
-  }
+		return r;
+	}
 
 }

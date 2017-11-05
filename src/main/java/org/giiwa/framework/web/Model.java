@@ -397,7 +397,7 @@ public class Model {
 						}
 
 						// check access
-						if (!X.isEmpty(p.access())) {
+						if (!X.isEmpty(p.access()) && !X.NONE.equals(p.access())) {
 							if (!login.hasAccess(p.access())) {
 								deny();
 								return null;
