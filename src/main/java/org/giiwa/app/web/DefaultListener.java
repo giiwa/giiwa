@@ -529,6 +529,7 @@ public class DefaultListener implements IListener {
 
 		String home;
 		int count = 0;
+		String file;
 
 		/**
 		 * Instantiates a new cleanup task.
@@ -559,14 +560,14 @@ public class DefaultListener implements IListener {
 				count = 0;
 				for (String f : folders) {
 					String path = home + f;
-					count += cleanup(path, X.ADAY);
+					cleanup(path, X.ADAY, true);
 				}
 
 				/**
 				 * clean files in Temp
 				 */
 				if (!X.isEmpty(Temp.ROOT)) {
-					count += cleanup(Temp.ROOT, X.ADAY);
+					cleanup(Temp.ROOT, X.ADAY, true);
 				}
 
 				/**
@@ -574,8 +575,8 @@ public class DefaultListener implements IListener {
 				 */
 				if (!X.isEmpty(Model.GIIWA_HOME)) {
 					// do it
-					count += cleanup(Model.GIIWA_HOME + "/work", X.ADAY);
-					count += cleanup(Model.GIIWA_HOME + "/logs", X.ADAY * 3);
+					cleanup(Model.GIIWA_HOME + "/work", X.ADAY, true);
+					cleanup(Model.GIIWA_HOME + "/logs", X.ADAY * 3, true);
 				}
 				if (log.isInfoEnabled()) {
 					log.info("cleanup temp files: " + count);
@@ -600,23 +601,24 @@ public class DefaultListener implements IListener {
 			}
 		}
 
-		private int cleanup(String path, long expired) {
+		private int cleanup(String path, long expired, boolean root) {
 			try {
 				File f = new File(path);
+				file = f.getCanonicalPath();
 
 				/**
 				 * test the file last modified exceed the cache time
 				 */
 				if (f.isFile() && System.currentTimeMillis() - f.lastModified() > expired) {
-					IOUtil.delete(f);
+					count += IOUtil.delete(f);
 					if (log.isInfoEnabled()) {
 						log.info("delete file: " + f.getCanonicalPath());
 					}
 					count++;
 				} else if (f.isDirectory()) {
-					if (System.currentTimeMillis() - f.lastModified() > expired) {
+					if (!root && System.currentTimeMillis() - f.lastModified() > expired) {
 						// delete the folder
-						IOUtil.delete(f);
+						count += IOUtil.delete(f);
 
 						if (log.isInfoEnabled()) {
 							log.info("delete file: " + f.getCanonicalPath());
@@ -628,7 +630,7 @@ public class DefaultListener implements IListener {
 							 * cleanup the sub folder
 							 */
 							for (File f1 : list) {
-								count += cleanup(f1.getAbsolutePath(), expired);
+								count += cleanup(f1.getAbsolutePath(), expired, false);
 							}
 						}
 					}
