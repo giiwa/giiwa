@@ -528,7 +528,7 @@ public class DefaultListener implements IListener {
 		static Log log = LogFactory.getLog(CleanupTask.class);
 
 		String home;
-		int count = 0;
+		long count = 0;
 		String file;
 
 		/**
@@ -601,7 +601,7 @@ public class DefaultListener implements IListener {
 			}
 		}
 
-		private int cleanup(String path, long expired, boolean root) {
+		private long cleanup(String path, long expired, boolean root) {
 			try {
 				File f = new File(path);
 				file = f.getCanonicalPath();
@@ -611,18 +611,11 @@ public class DefaultListener implements IListener {
 				 */
 				if (f.isFile() && System.currentTimeMillis() - f.lastModified() > expired) {
 					count += IOUtil.delete(f);
-					if (log.isInfoEnabled()) {
-						log.info("delete file: " + f.getCanonicalPath());
-					}
-					count++;
 				} else if (f.isDirectory()) {
 					if (!root && System.currentTimeMillis() - f.lastModified() > expired) {
 						// delete the folder
 						count += IOUtil.delete(f);
 
-						if (log.isInfoEnabled()) {
-							log.info("delete file: " + f.getCanonicalPath());
-						}
 					} else {
 						File[] list = f.listFiles();
 						if (list != null) {

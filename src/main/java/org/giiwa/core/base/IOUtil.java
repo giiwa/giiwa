@@ -23,6 +23,8 @@ import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 
 // TODO: Auto-generated Javadoc
@@ -33,6 +35,8 @@ import org.giiwa.core.bean.X;
  *
  */
 public final class IOUtil {
+
+	private static Log log = LogFactory.getLog(IOUtil.class);
 
 	/**
 	 * the utility api of copying all data in "inputstream" to "outputstream".
@@ -63,6 +67,11 @@ public final class IOUtil {
 		int count = 0;
 		if (f.isFile() || isLink(f)) {
 			f.delete();
+
+			if (log.isInfoEnabled()) {
+				log.info("delete file: " + f.getCanonicalPath());
+			}
+
 			count++;
 		} else if (f.isDirectory()) {
 			File[] ff = f.listFiles();
@@ -72,6 +81,10 @@ public final class IOUtil {
 				}
 			}
 			f.delete();
+			if (log.isInfoEnabled()) {
+				log.info("delete folder: " + f.getCanonicalPath());
+			}
+
 			count++;
 		}
 		return count;
