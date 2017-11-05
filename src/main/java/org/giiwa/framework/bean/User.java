@@ -374,7 +374,12 @@ public class User extends Bean {
 			getRole();
 		}
 
-		return role.hasAccess(name);
+		try {
+			return role.hasAccess(name);
+		} catch (Exception e) {
+			// ignore
+		}
+		return false;
 	}
 
 	transient Roles role = null;

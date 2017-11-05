@@ -24,16 +24,22 @@ import org.giiwa.core.bean.*;
  * @author yjiang
  * 
  */
-public class Roles extends Bean {
+public class Roles extends Bean implements IRole {
 
 	/**
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
 
+	private static List<IRole> handlers = new ArrayList<IRole>();
+
 	private Set<String> access;
 
 	List<Role> list;
+
+	public static void addHandler(IRole r) {
+		handlers.add(r);
+	}
 
 	public List<Role> getList() {
 		return list;
@@ -70,13 +76,20 @@ public class Roles extends Bean {
 	 *            the name
 	 * @return true, if successful
 	 */
-	public boolean hasAccess(String... name) {
+	public boolean hasAccess(String... name) throws Exception {
 		if (name == null) {
 			return true;
 		}
+		if (handlers != null && !handlers.isEmpty()) {
+			for (IRole r : handlers) {
+				if (r.hasAccess(name)) {
+					return true;
+				}
+			}
+		}
 
 		for (String s : name) {
-			if (access != null && access.size() > 0) {
+			if (access != null && !access.isEmpty()) {
 				if (access.contains(s)) {
 					return true;
 				}
@@ -102,8 +115,8 @@ public class Roles extends Bean {
 		}
 
 		return access != null && access.contains("access.config.admin");
-		//}
-		//return false;
+		// }
+		// return false;
 	}
 
 }
