@@ -476,7 +476,7 @@ public class user extends Model {
 	/**
 	 * Verify.
 	 */
-	@Path(path = "verify", access = "access.user.query")
+	@Path(path = "verify", access = "access.config.user.query")
 	public void verify() {
 		String name = this.getString("name").trim().toLowerCase();
 		String value = this.getString("value").trim().toLowerCase();
@@ -523,7 +523,7 @@ public class user extends Model {
 	/**
 	 * get user list by "access" token
 	 */
-	@Path(path = "popup2", login = true, access = "access.user.query")
+	@Path(path = "popup2", login = true, access = "access.config.user.query")
 	public void popup2() {
 		String access = this.getString("access");
 		List<User> list = null;

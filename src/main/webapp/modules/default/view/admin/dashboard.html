@@ -1,12 +1,12 @@
 <div class='head'>
 	$lang.get('title.welcome') <b>$!me.nickname</b>
 	<span class='right'>
-		#if($me.hasAccess('access.config.admin'))
+		#if($me.hasAccess('access.config.admin', 'access.config.restart.host'))
 		<a href='javascript:;' class='btn btn-danger' onclick="_showrestart()">$lang.get('a.restart')</a>
 		#end
 	</span></div>
 
-#if($me.hasAccess('access.config.admin'))
+#if($me.hasAccess('access.config.admin', 'access.config.system.admin'))
 <div class='chart'>
 	<div id='memgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>
 	<div id='diskgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>

@@ -54,7 +54,7 @@ public class dashboard extends Model {
 			log.error(e.getMessage(), e);
 		}
 
-		if (login.hasAccess("access.config.admin")) {
+		if (login.hasAccess("access.config.admin", "access.config.system.admin")) {
 			try {
 				this.set("mem", Host.getMem());
 				this.set("disk", Host.getDisks());
