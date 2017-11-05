@@ -6,7 +6,7 @@
 			{
 				"name": "menu.system",
 				"classes": "icon-cog",
-				"access": "access.config.admin|access.config.logs.admin|access.config.module.admin|access.config.system.admin",
+				"access": "access.config.admin|access.menu.sysmenu",
 				"seq": 10,
 				"childs": [
 					{
@@ -95,7 +95,7 @@
 								"name": 'menu.i18n',
 								"load": '/admin/i18n',
 								"seq": 70,
-								"access":"access.config.admin|access.config.module.admin",
+								"access": "access.config.admin|access.config.module.admin",
 								"classes": 'icon-magic-wand'
 							}
 						]
@@ -112,7 +112,7 @@
 			{
 				"name": "menu.usermgr",
 				"classes": "icon-users",
-				"access": "access.config.admin|access.config.user.admin|access.config.role.admin",
+				"access": "access.config.admin|access.menu.usermgmt",
 				"seq": 20,
 				"childs": [
 					{
@@ -154,15 +154,5 @@
 		"role": "USER",
 		"memo": "普通用户",
 		"access": ""
-	},
-	{
-		"role": "USERADMIN",
-		"memo": "用户管理",
-		"access": "access.config.user.admin"
-	},
-	{
-		"role": "ROLEADMIN",
-		"memo": "角色管理",
-		"access": "access.config.role.admin"
 	}
 ]

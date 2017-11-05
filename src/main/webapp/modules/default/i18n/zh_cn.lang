@@ -678,3 +678,6 @@ access.config.logs.admin=日志管理
 access.config.module.admin=模块管理
 access.config.system.admin=系统信息
 access.config.restart.host=重启服务
+access.menu.usermgmt=用户管理
+group.access.menu=菜单项
+access.menu.sysmenu=系统管理
