@@ -26,64 +26,79 @@ import org.giiwa.core.json.JSON;
  * it's includes the total count for the query
  * 
  * @param <T>
- *          the generic type
+ *            the generic type
  */
 public final class Beans<E extends Bean> extends ArrayList<E> implements Serializable {
 
-  /** The Constant serialVersionUID. */
-  private static final long serialVersionUID = 2L;
+	/** The Constant serialVersionUID. */
+	private static final long serialVersionUID = 2L;
 
-  /** The log. */
-  protected static Log      log              = LogFactory.getLog(Beans.class);
+	/** The log. */
+	protected static Log log = LogFactory.getLog(Beans.class);
 
-  /** The total. */
-  public int                total            = -1;                            // unknown
+	/** The total. */
+	public int total = -1; // unknown
 
-  public JSON               stats;
+	public JSON stats;
 
-  public long               cost             = -1;
+	public long cost = -1;
 
-  public List<String>       columns          = null;
+	public List<String> columns = null;
 
-  public int getTotal() {
-    return total;
-  }
+	public int getTotal() {
+		return total;
+	}
 
-  public void setTotal(int total) {
-    this.total = total;
-  }
+	public void setTotal(int total) {
+		this.total = total;
+	}
 
-  public JSON getStats() {
-    return stats;
-  }
+	public JSON getStats() {
+		return stats;
+	}
 
-  public void setStats(JSON stats) {
-    this.stats = stats;
-  }
+	public void setStats(JSON stats) {
+		this.stats = stats;
+	}
 
-  public long getCost() {
-    return cost;
-  }
+	public long getCost() {
+		return cost;
+	}
 
-  public void setCost(long cost) {
-    this.cost = cost;
-  }
+	public void setCost(long cost) {
+		this.cost = cost;
+	}
 
-  public List<String> getColumns() {
-    return columns;
-  }
+	public List<String> getColumns() {
+		return columns;
+	}
 
-  public void setColumns(List<String> columns) {
-    this.columns = columns;
-  }
+	public void setColumns(List<String> columns) {
+		this.columns = columns;
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#toString()
-   */
-  public String toString() {
-    return "Beans[total=" + total + ", size=" + size() + "]";
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+		return "Beans[total=" + total + ", size=" + size() + "]";
+	}
+
+	private long expired = -1;
+
+	public void setExpired(long expired) {
+		this.expired = expired;
+	}
+
+	/**
+	 * Expired.
+	 *
+	 * @return true, if successful
+	 */
+	public boolean expired() {
+		return expired > 0 && System.currentTimeMillis() > expired;
+	}
 
 }
