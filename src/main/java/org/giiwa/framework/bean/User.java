@@ -375,7 +375,7 @@ public class User extends Bean {
 		}
 
 		try {
-			return role.hasAccess(name);
+			return role.hasAccess(id, name);
 		} catch (Exception e) {
 			// ignore
 		}

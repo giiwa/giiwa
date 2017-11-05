@@ -76,13 +76,13 @@ public class Roles extends Bean implements IRole {
 	 *            the name
 	 * @return true, if successful
 	 */
-	public boolean hasAccess(String... name) throws Exception {
+	public boolean hasAccess(long uid, String... name) throws Exception {
 		if (name == null) {
 			return true;
 		}
 		if (handlers != null && !handlers.isEmpty()) {
 			for (IRole r : handlers) {
-				if (r.hasAccess(name)) {
+				if (r.hasAccess(uid, name)) {
 					return true;
 				}
 			}
