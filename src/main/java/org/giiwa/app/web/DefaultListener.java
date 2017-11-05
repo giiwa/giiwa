@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.setting;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Optimizer;
@@ -607,19 +608,28 @@ public class DefaultListener implements IListener {
 				 * test the file last modified exceed the cache time
 				 */
 				if (f.isFile() && System.currentTimeMillis() - f.lastModified() > expired) {
-					f.delete();
+					IOUtil.delete(f);
 					if (log.isInfoEnabled()) {
 						log.info("delete file: " + f.getCanonicalPath());
 					}
 					count++;
 				} else if (f.isDirectory()) {
-					File[] list = f.listFiles();
-					if (list != null) {
-						/**
-						 * cleanup the sub folder
-						 */
-						for (File f1 : list) {
-							count += cleanup(f1.getAbsolutePath(), expired);
+					if (System.currentTimeMillis() - f.lastModified() > expired) {
+						// delete the folder
+						IOUtil.delete(f);
+
+						if (log.isInfoEnabled()) {
+							log.info("delete file: " + f.getCanonicalPath());
+						}
+					} else {
+						File[] list = f.listFiles();
+						if (list != null) {
+							/**
+							 * cleanup the sub folder
+							 */
+							for (File f1 : list) {
+								count += cleanup(f1.getAbsolutePath(), expired);
+							}
 						}
 					}
 				}
