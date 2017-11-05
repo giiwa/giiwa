@@ -47,7 +47,7 @@ public class user extends Model {
 	 * Adds the.
 	 */
 	@SuppressWarnings("deprecation")
-	@Path(path = "create", login = true, access = "access.config.admin|access.user.admin")
+	@Path(path = "create", login = true, access = "access.config.admin|access.config.user.admin")
 	public void create() {
 		if (method.isPost()) {
 
@@ -167,7 +167,7 @@ public class user extends Model {
 	 * Delete.
 	 */
 	@SuppressWarnings("deprecation")
-	@Path(path = "delete", login = true, access = "access.config.admin|access.user.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin")
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -197,7 +197,7 @@ public class user extends Model {
 	 * Edits the user.
 	 */
 	@SuppressWarnings("deprecation")
-	@Path(path = "edit", login = true, access = "access.config.admin|access.user.admin")
+	@Path(path = "edit", login = true, access = "access.config.admin|access.config.user.admin")
 	public void edit() {
 		long id = this.getLong("id");
 
@@ -280,7 +280,7 @@ public class user extends Model {
 	/**
 	 * Detail.
 	 */
-	@Path(path = "detail", login = true, access = "access.config.admin|access.user.query")
+	@Path(path = "detail", login = true, access = "access.config.admin|access.config.user.admin")
 	public void detail() {
 		String id = this.getString("id");
 		if (id != null) {
@@ -299,7 +299,7 @@ public class user extends Model {
 		}
 	}
 
-	@Path(path = "oplog", login = true, access = "access.config.admin|access.user.admin")
+	@Path(path = "oplog", login = true, access = "access.config.admin|access.config.user.admin")
 	public void oplog() {
 
 		int s = this.getInt("s");
@@ -312,7 +312,7 @@ public class user extends Model {
 		this.show("/admin/user.oplog.html");
 	}
 
-	@Path(path = "accesslog", login = true, access = "access.config.admin|access.logs.admin")
+	@Path(path = "accesslog", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void accesslog() {
 		long uid = this.getLong("uid");
 		this.set("uid", uid);
@@ -334,7 +334,7 @@ public class user extends Model {
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
 	@Override
-	@Path(login = true, access = "access.config.admin|access.user.admin")
+	@Path(login = true, access = "access.config.admin|access.config.user.admin")
 	public void onGet() {
 
 		String name = this.getString("name");

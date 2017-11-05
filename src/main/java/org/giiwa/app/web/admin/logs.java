@@ -31,7 +31,7 @@ import org.giiwa.framework.web.*;
  */
 public class logs extends Model {
 
-	@Path(path = "download", login = true, access = "access.config.admin|access.logs.admin")
+	@Path(path = "download", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void download() {
 
 		JSON jo = JSON.create();
@@ -63,7 +63,7 @@ public class logs extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.logs.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void delete() {
 		JSON jo = new JSON();
 		String f = this.getString("f");
@@ -91,7 +91,7 @@ public class logs extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.logs.admin")
+	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
 	public void onGet() {
 		File f = new File(Model.GIIWA_HOME + "/logs");
 		File[] ff = f.listFiles();

@@ -534,7 +534,8 @@ public class module extends Model {
 	/**
 	 * Adds the.
 	 */
-	@Path(path = "add", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "add", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
+			| Model.METHOD_GET)
 	public void add() {
 
 		String url = this.getString(X.URL);
@@ -587,7 +588,7 @@ public class module extends Model {
 	/**
 	 * Index.
 	 */
-	@Path(login = true, access = "access.config.admin|access.module.admin")
+	@Path(login = true, access = "access.config.admin|access.config.module.admin")
 	public void onGet() {
 
 		List<Module> actives = new ArrayList<Module>();
@@ -613,7 +614,7 @@ public class module extends Model {
 	/**
 	 * Download.
 	 */
-	@Path(path = "download", login = true, access = "access.config.admin")
+	@Path(path = "download", login = true, access = "access.config.admin|access.config.module.admin")
 	public void download() {
 		String name = this.getString("name");
 
@@ -639,7 +640,8 @@ public class module extends Model {
 	/**
 	 * Disable.
 	 */
-	@Path(path = "disable", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "disable", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
+			| Model.METHOD_GET)
 	public void disable() {
 		String name = this.getString("name");
 
@@ -654,7 +656,7 @@ public class module extends Model {
 	/**
 	 * Update.
 	 */
-	@Path(path = "update", login = true, access = "access.config.admin")
+	@Path(path = "update", login = true, access = "access.config.admin|access.config.module.admin")
 	public void update() {
 		String name = this.getString("name");
 		int id = this.getInt("id");
@@ -750,7 +752,8 @@ public class module extends Model {
 	/**
 	 * Enable.
 	 */
-	@Path(path = "enable", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "enable", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
+			| Model.METHOD_GET)
 	public void enable() {
 		String name = this.getString("name");
 
@@ -765,7 +768,8 @@ public class module extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
+			| Model.METHOD_GET)
 	public void delete() {
 		String name = this.getString("name");
 		Module m = Module.load(name);

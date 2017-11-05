@@ -14,10 +14,7 @@
 */
 package org.giiwa.app.web.admin;
 
-import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.base.Host;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Local;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.*;

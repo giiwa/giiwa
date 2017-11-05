@@ -35,75 +35,75 @@ import org.giiwa.framework.web.Path;
  */
 public class accesslog extends Model {
 
-  @Path(path = "open", login = true, access = "access.config.admin|access.logs.admin")
-  public void open() {
-    JSON jo = JSON.create();
-    int on = this.getInt("on");
-    Global.setConfig("accesslog.on", on);
-    jo.put(X.STATE, HttpServletResponse.SC_OK);
-    jo.put("on", on);
-    this.response(jo);
-  }
+	@Path(path = "open", login = true, access = "access.config.admin|access.config.logs.admin")
+	public void open() {
+		JSON jo = JSON.create();
+		int on = this.getInt("on");
+		Global.setConfig("accesslog.on", on);
+		jo.put(X.STATE, HttpServletResponse.SC_OK);
+		jo.put("on", on);
+		this.response(jo);
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model#onGet()
-   */
-  @Path(login = true, access = "access.config.admin|access.logs.admin")
-  public void onGet() {
-    String uri = this.getString("guri");
-    String ip = this.getString("ip");
-    String gsid = this.getString("gsid");
-    String sortby = this.getString("sortby");
-    int sortby_type = this.getInt("sortby_type", -1);
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model#onGet()
+	 */
+	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
+	public void onGet() {
+		String uri = this.getString("guri");
+		String ip = this.getString("ip");
+		String gsid = this.getString("gsid");
+		String sortby = this.getString("sortby");
+		int sortby_type = this.getInt("sortby_type", -1);
 
-    W q = W.create();
-    if (!X.isEmpty(uri)) {
-      q.and(X.URL, uri);
-      this.set("guri", uri);
-    }
-    if (!X.isEmpty(ip)) {
-      q.and("ip", ip);
-      this.set("ip", ip);
-    }
-    if (!X.isEmpty(gsid)) {
-      q.and("sid", gsid);
-      this.set("gsid", gsid);
-    }
-    int s = this.getInt("s");
-    int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		W q = W.create();
+		if (!X.isEmpty(uri)) {
+			q.and(X.URL, uri);
+			this.set("guri", uri);
+		}
+		if (!X.isEmpty(ip)) {
+			q.and("ip", ip);
+			this.set("ip", ip);
+		}
+		if (!X.isEmpty(gsid)) {
+			q.and("sid", gsid);
+			this.set("gsid", gsid);
+		}
+		int s = this.getInt("s");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
-    if (X.isEmpty(sortby)) {
-      sortby = X.CREATED;
-    }
-    this.set("sortby", sortby);
-    this.set("sortby_type", sortby_type);
+		if (X.isEmpty(sortby)) {
+			sortby = X.CREATED;
+		}
+		this.set("sortby", sortby);
+		this.set("sortby_type", sortby_type);
 
-    q.sort(sortby, sortby_type);
-    Beans<AccessLog> bs = AccessLog.load(q, s, n);
+		q.sort(sortby, sortby_type);
+		Beans<AccessLog> bs = AccessLog.load(q, s, n);
 
-    this.set(bs, s, n);
+		this.set(bs, s, n);
 
-    this.query.path("/admin/accesslog");
-    this.show("/admin/accesslog.index.html");
-  }
+		this.query.path("/admin/accesslog");
+		this.show("/admin/accesslog.index.html");
+	}
 
-  /**
-   * Deleteall.
-   */
-  @Path(path = "deleteall", login = true, access = "access.config.admin|access.logs.admin")
-  public void deleteall() {
-    AccessLog.deleteAll();
-  }
+	/**
+	 * Deleteall.
+	 */
+	@Path(path = "deleteall", login = true, access = "access.config.admin|access.config.logs.admin")
+	public void deleteall() {
+		AccessLog.deleteAll();
+	}
 
-  @Path(path = "detail", login = true, access = "access.config.admin")
-  public void detail() {
-    String id = this.getString("id");
-    AccessLog d = AccessLog.load(id);
-    this.set("b", d);
-    this.set("id", id);
-    this.show("/admin/accesslog.detail.html");
-  }
+	@Path(path = "detail", login = true, access = "access.config.admin|access.config.logs.admin")
+	public void detail() {
+		String id = this.getString("id");
+		AccessLog d = AccessLog.load(id);
+		this.set("b", d);
+		this.set("id", id);
+		this.show("/admin/accesslog.detail.html");
+	}
 
 }

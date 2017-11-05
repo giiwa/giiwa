@@ -6,7 +6,7 @@
 			{
 				"name": "menu.system",
 				"classes": "icon-cog",
-				"access": "access.config.admin|access.logs.admin|access.module.admin|access.system.admin",
+				"access": "access.config.admin|access.config.logs.admin|access.config.module.admin|access.config.system.admin",
 				"seq": 10,
 				"childs": [
 					{
@@ -20,34 +20,31 @@
 						"name": "menu.module",
 						"load": "/admin/module",
 						"seq": 20,
-						"access": "access.config.admin|access.module.admin",
+						"access": "access.config.admin|access.config.module.admin",
 						"classes": "icon-google-drive"
 					},
 					{
 						"name": "menu.log",
 						"seq": 30,
 						"classes": "icon-list",
-						"access": "access.config.admin|access.logs.admin",
+						"access": "access.config.admin|access.config.logs.admin",
 						"childs": [
 							{
 								"name": "menu.oplog",
 								"load": "/admin/oplog",
 								"seq": 10,
-								"access": "access.config.admin|access.logs.admin",
 								"classes": "icon-hammer"
 							},
 							{
 								"name": "menu.accesslog",
 								"load": "/admin/accesslog",
 								"seq": 20,
-								"access": "access.config.admin|access.logs.admin",
 								"classes": "icon-user"
 							},
 							{
 								"name": "menu.logs",
 								"load": "/admin/logs",
 								"seq": 30,
-								"access": "access.config.admin|access.logs.admin",
 								"classes": "icon-drawer"
 							}
 						]
@@ -55,56 +52,49 @@
 					{
 						"name": "menu.tools",
 						"seq": 40,
-						"access": "access.config.admin|access.system.admin",
+						"access": "access.config.admin|access.config.system.admin",
 						"classes": "icon-hammer",
 						"childs": [
 							{
 								"name": "menu.task",
 								"load": "/admin/task",
 								"seq": 10,
-								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-clock"
 							},
 							{
 								"name": "menu.sysinfo",
 								"load": "/admin/sysinfo",
 								"seq": 20,
-								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-info"
 							},
 							{
 								"name": "menu.sysstat",
 								"load": "/admin/sysstat",
 								"seq": 30,
-								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-stats-dots"
 							},
 							{
 								"name": "menu.node",
 								"load": "/admin/node",
 								"seq": 40,
-								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-laptop"
 							},
 							{
 								"name": "menu.repo",
 								"load": "/admin/repo",
 								"seq": 50,
-								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-database"
 							},
 							{
 								"name": "menu.backup",
 								"load": "/admin/backup",
 								"seq": 60,
-								"access": "access.config.admin|access.system.admin",
 								"classes": "icon-floppy-disk"
 							},
 							{
 								"name": 'menu.i18n',
 								"load": '/admin/i18n',
 								"seq": 70,
-								"access": 'access.config.admin|access.system.admin',
 								"classes": 'icon-magic-wand'
 							}
 						]
@@ -121,27 +111,27 @@
 			{
 				"name": "menu.usermgr",
 				"classes": "icon-users",
-				"access": "access.config.admin|access.user.admin|access.role.admin",
+				"access": "access.config.admin|access.config.user.admin|access.config.role.admin",
 				"seq": 20,
 				"childs": [
 					{
 						"name": "menu.user",
 						"load": "/admin/user",
-						"access": "access.config.admin|access.user.admin",
+						"access": "access.config.admin|access.config.user.admin",
 						"seq": 10,
 						"classes": "icon-user"
 					},
 					{
 						"name": "menu.role",
 						"load": "/admin/role",
-						"access": "access.config.admin|access.role.admin",
+						"access": "access.config.admin|access.config.role.admin",
 						"seq": 20,
 						"classes": "icon-shield"
 					},
 					{
 						"name": "menu.token",
 						"load": "/admin/token",
-						"access": "access.config.admin|access.user.admin",
+						"access": "access.config.admin|access.config.user.admin",
 						"seq": 30,
 						"classes": "icon-link"
 					}
@@ -161,17 +151,17 @@
 	},
 	{
 		"role": "USER",
-		"memo": "User",
+		"memo": "普通用户",
 		"access": ""
 	},
 	{
 		"role": "USERADMIN",
-		"memo": "User management",
-		"access": "access.user.admin"
+		"memo": "用户管理",
+		"access": "access.config.user.admin"
 	},
 	{
 		"role": "ROLEADMIN",
-		"memo": "Role management",
-		"access": "access.role.admin"
+		"memo": "角色管理",
+		"access": "access.config.role.admin"
 	}
 ]

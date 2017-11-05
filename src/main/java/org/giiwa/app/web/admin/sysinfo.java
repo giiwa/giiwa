@@ -32,12 +32,12 @@ public class sysinfo extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.system.admin")
+	@Path(login = true, access = "access.config.admin|access.config.system.admin")
 	public void onGet() {
 		this.redirect("/admin/sysinfo/cpu");
 	}
 
-	@Path(path = "cpu", login = true, access = "access.config.admin|access.system.admin")
+	@Path(path = "cpu", login = true, access = "access.config.admin|access.config.system.admin")
 	public void cpu() {
 
 		try {
@@ -50,7 +50,7 @@ public class sysinfo extends Model {
 		this.show("/admin/sysinfo.cpu.html");
 	}
 
-	@Path(path = "process", login = true, access = "access.config.admin|access.system.admin")
+	@Path(path = "process", login = true, access = "access.config.admin|access.config.system.admin")
 	public void process() {
 
 		try {
@@ -61,7 +61,7 @@ public class sysinfo extends Model {
 		this.show("/admin/sysinfo.process.html");
 	}
 
-	@Path(path = "net", login = true, access = "access.config.admin|access.system.admin")
+	@Path(path = "net", login = true, access = "access.config.admin|access.config.system.admin")
 	public void net() {
 
 		try {
@@ -72,7 +72,7 @@ public class sysinfo extends Model {
 		this.show("/admin/sysinfo.net.html");
 	}
 
-	@Path(path = "route", login = true, access = "access.config.admin|access.system.admin")
+	@Path(path = "route", login = true, access = "access.config.admin|access.config.system.admin")
 	public void route() {
 
 		try {
@@ -83,7 +83,7 @@ public class sysinfo extends Model {
 		this.show("/admin/sysinfo.route.html");
 	}
 
-	@Path(path = "disk", login = true, access = "access.config.admin|access.system.admin")
+	@Path(path = "disk", login = true, access = "access.config.admin|access.config.system.admin")
 	public void disk() {
 
 		try {

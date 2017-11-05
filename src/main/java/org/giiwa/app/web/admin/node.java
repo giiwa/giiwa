@@ -37,7 +37,7 @@ public class node extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.user.admin", log = Model.METHOD_POST
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.system.admin", log = Model.METHOD_POST
 			| Model.METHOD_GET)
 	public void delete() {
 
@@ -51,7 +51,7 @@ public class node extends Model {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin|access.user.admin", log = Model.METHOD_POST
+	@Path(path = "clean", login = true, access = "access.config.admin|access.config.system.admin", log = Model.METHOD_POST
 			| Model.METHOD_GET)
 	public void clean() {
 		JSON jo = JSON.create();
@@ -69,7 +69,7 @@ public class node extends Model {
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
 	@Override
-	@Path(login = true, access = "access.config.admin|access.user.admin")
+	@Path(login = true, access = "access.config.admin|access.config.system.admin")
 	public void onGet() {
 
 		W q = W.create().and("updated", System.currentTimeMillis() - 10000, W.OP.gte);

@@ -36,7 +36,7 @@ public class token extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.user.admin", log = Model.METHOD_POST
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin", log = Model.METHOD_POST
 			| Model.METHOD_GET)
 	public void delete() {
 
@@ -50,7 +50,7 @@ public class token extends Model {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin|access.user.admin", log = Model.METHOD_POST
+	@Path(path = "clean", login = true, access = "access.config.admin|access.config.user.admin", log = Model.METHOD_POST
 			| Model.METHOD_GET)
 	public void clean() {
 		JSON jo = JSON.create();
@@ -68,7 +68,7 @@ public class token extends Model {
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
 	@Override
-	@Path(login = true, access = "access.config.admin|access.user.admin")
+	@Path(login = true, access = "access.config.admin|access.config.user.admin")
 	public void onGet() {
 
 		String name = this.getString("name");

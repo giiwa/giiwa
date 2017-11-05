@@ -35,7 +35,7 @@ public class oplog extends Model {
 	/**
 	 * Deleteall.
 	 */
-	@Path(path = "deleteall", login = true, access = "access.config.admin|access.logs.admin")
+	@Path(path = "deleteall", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void deleteall() {
 		JSON jo = new JSON();
 		int i = GLog.cleanup();
@@ -112,7 +112,7 @@ public class oplog extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.logs.admin")
+	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
 	public void onGet() {
 
 		int s = this.getInt("s");
@@ -130,7 +130,7 @@ public class oplog extends Model {
 		this.show("/admin/oplog.index.html");
 	}
 
-	@Path(path = "detail", login = true, access = "access.config.admin")
+	@Path(path = "detail", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void detail() {
 		String id = this.getString("id");
 		GLog d = GLog.load(id);

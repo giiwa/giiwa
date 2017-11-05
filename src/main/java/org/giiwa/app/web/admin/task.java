@@ -36,7 +36,7 @@ public class task extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin")
+	@Path(login = true, access = "access.config.admin|access.config.system.admin")
 	public void onGet() {
 
 		this.set("pending", Task.tasksInQueue());
@@ -50,7 +50,7 @@ public class task extends Model {
 		this.show("/admin/task.index.html");
 	}
 
-	@Path(path = "dump", login = true, access = "access.config.admin")
+	@Path(path = "dump", login = true, access = "access.config.admin|access.config.system.admin")
 	public void dump() {
 		String name = this.getString("name");
 		Task t = Task.get(name);
@@ -95,7 +95,7 @@ public class task extends Model {
 
 	}
 
-	@Path(path = "dumpall", login = true, access = "access.config.admin")
+	@Path(path = "dumpall", login = true, access = "access.config.admin|access.config.system.admin")
 	public void dumpall() {
 		JSON j = JSON.create();
 		StringBuilder sb = new StringBuilder();
