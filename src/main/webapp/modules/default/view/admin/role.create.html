@@ -26,7 +26,7 @@
 					<td>$lang.get("group.$a")</td>
 					<td>
 						#foreach($p in $accesses.get($a))
-							<label><input type="checkbox" name="access" value="$p.name" #if($r.has($p)) checked="true" #end/>$lang.get($p.name)</label>
+							<label style="width: initial;"><input type="checkbox" name="access" value="$p.name" #if($r.has($p)) checked="true" #end/>$lang.get($p.name)</label>
 						#end
 					</td>
 				</tr>
