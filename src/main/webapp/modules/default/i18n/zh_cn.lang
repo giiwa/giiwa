@@ -107,7 +107,7 @@ copyright=Copyright © 2016
 powerby=Powered By <a href="http://giiwa.org" target="_blank">Giiwa</a>
 done=完成
 group.access=缺省
-group.access.config=配置
+group.access.config=系统管理
 group.access.user=用户
 h=小时
 head.contact=联系人
