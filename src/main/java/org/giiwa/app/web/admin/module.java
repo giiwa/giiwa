@@ -574,6 +574,11 @@ public class module extends Model {
 			}
 
 		} catch (Exception e1) {
+			log.error(url, e1);
+
+			GLog.applog.error(module.class, "add", "entity not found in repo for [" + url + "]", e1, login,
+					this.getRemoteHost());
+
 			jo.put(X.STATE, 404);
 			jo.put(X.ERROR, "entity not found in repo for [" + url + "]");
 
