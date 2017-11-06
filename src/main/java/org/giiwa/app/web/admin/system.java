@@ -29,43 +29,43 @@ import org.giiwa.framework.web.*;
  */
 public class system extends Model {
 
-  /**
-   * Restart.
-   */
-  @Path(path = "restart", login = true, access = "access.config.admin", log = Model.METHOD_POST)
-  public void restart() {
+	/**
+	 * Restart.
+	 */
+	@Path(path = "restart", login = true, access = "access.config.admin|access.config.restart.host", log = Model.METHOD_POST)
+	public void restart() {
 
-    JSON jo = new JSON();
-    User me = User.loadById(login.getId());
-    String pwd = this.getString("pwd");
+		JSON jo = new JSON();
+		User me = User.loadById(login.getId());
+		String pwd = this.getString("pwd");
 
-    if (me.validate(pwd)) {
-      jo.put("state", "ok");
+		if (me.validate(pwd)) {
+			jo.put("state", "ok");
 
-      new Task() {
+			new Task() {
 
-        @Override
-        public String getName() {
-          return "restart";
-        }
+				@Override
+				public String getName() {
+					return "restart";
+				}
 
-        @Override
-        public void onExecute() {
-          System.exit(0);
-        }
+				@Override
+				public void onExecute() {
+					System.exit(0);
+				}
 
-        @Override
-        public void onFinish() {
+				@Override
+				public void onFinish() {
 
-        }
+				}
 
-      }.schedule(1000);
-    } else {
-      jo.put("state", "fail");
-      jo.put("message", lang.get("invalid.password"));
-    }
+			}.schedule(1000);
+		} else {
+			jo.put("state", "fail");
+			jo.put("message", lang.get("invalid.password"));
+		}
 
-    this.response(jo);
-  }
+		this.response(jo);
+	}
 
 }
