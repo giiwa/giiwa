@@ -57,7 +57,7 @@ function _delete(id, o) {
 		processing && processing.show();
 		$.post('/admin/repo/delete', {id: id}, function(d){
 			processing && processing.hide();
-			$(o).parent().parent().remove();
+			giiwa.reload();
 		});
 	}
 }

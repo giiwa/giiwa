@@ -575,8 +575,8 @@ public class DefaultListener implements IListener {
 				 */
 				if (!X.isEmpty(Model.GIIWA_HOME)) {
 					// do it
-					cleanup(Model.GIIWA_HOME + "/work", X.ADAY, true);
-					cleanup(Model.GIIWA_HOME + "/logs", X.ADAY * 3, true);
+					cleanup(Model.GIIWA_HOME + "/work", X.ADAY, false);
+					cleanup(Model.GIIWA_HOME + "/logs", X.ADAY * 3, false);
 				}
 				if (log.isInfoEnabled()) {
 					log.info("cleanup temp files: " + count);
@@ -601,7 +601,7 @@ public class DefaultListener implements IListener {
 			}
 		}
 
-		private long cleanup(String path, long expired, boolean root) {
+		private long cleanup(String path, long expired, boolean deletefolder) {
 			try {
 				File f = new File(path);
 				file = f.getCanonicalPath();
@@ -609,23 +609,26 @@ public class DefaultListener implements IListener {
 				/**
 				 * test the file last modified exceed the cache time
 				 */
-				if (f.isFile() && System.currentTimeMillis() - f.lastModified() > expired) {
-					count += IOUtil.delete(f);
-				} else if (f.isDirectory()) {
-					if (!root && System.currentTimeMillis() - f.lastModified() > expired) {
-						// delete the folder
+				if (f.isFile()) {
+					if (System.currentTimeMillis() - f.lastModified() > expired) {
 						count += IOUtil.delete(f);
-
 					} else {
-						File[] list = f.listFiles();
-						if (list != null) {
-							/**
-							 * cleanup the sub folder
-							 */
-							for (File f1 : list) {
-								count += cleanup(f1.getAbsolutePath(), expired, false);
-							}
+						return 1;
+					}
+				} else if (f.isDirectory()) {
+					long files = 0;
+					File[] list = f.listFiles();
+					if (list != null) {
+						/**
+						 * cleanup the sub folder
+						 */
+						for (File f1 : list) {
+							files += cleanup(f1.getAbsolutePath(), expired, deletefolder);
 						}
+					}
+					if (files == 0 && deletefolder) {
+						// delete the folder
+						IOUtil.delete(f);
 					}
 				}
 			} catch (Exception e) {
@@ -635,7 +638,7 @@ public class DefaultListener implements IListener {
 				}
 			}
 
-			return count;
+			return 0;
 		}
 
 		/*

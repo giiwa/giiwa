@@ -65,6 +65,7 @@ public final class IOUtil {
 	 */
 	public static int delete(File f) throws IOException {
 		int count = 0;
+		
 		if (f.isFile() || isLink(f)) {
 			f.delete();
 
