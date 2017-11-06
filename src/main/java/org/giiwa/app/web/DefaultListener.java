@@ -611,24 +611,21 @@ public class DefaultListener implements IListener {
 				 */
 				if (f.isFile()) {
 					if (System.currentTimeMillis() - f.lastModified() > expired) {
-						count += IOUtil.delete(f);
-					} else {
-						return 1;
+						IOUtil.delete(f);
 					}
 				} else if (f.isDirectory()) {
-					long files = 0;
 					File[] list = f.listFiles();
-					if (list != null) {
+					if (list == null || list.length == 0) {
+						if (deletefolder) {
+							IOUtil.delete(f);
+						}
+					} else if (list != null) {
 						/**
 						 * cleanup the sub folder
 						 */
 						for (File f1 : list) {
-							files += cleanup(f1.getAbsolutePath(), expired, deletefolder);
+							cleanup(f1.getAbsolutePath(), expired, deletefolder);
 						}
-					}
-					if (files == 0 && deletefolder) {
-						// delete the folder
-						IOUtil.delete(f);
 					}
 				}
 			} catch (Exception e) {
