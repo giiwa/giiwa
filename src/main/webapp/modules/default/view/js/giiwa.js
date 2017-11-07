@@ -461,13 +461,14 @@ giiwa.extend({
 			giiwa.show(d);
 		});
 	},
-	resize: function() {
+	resize: function(e) {
 		var h = $(window).height();
 		var w = $(window).width();
 		var menu = $('#menu');
 		var panel = $('#panel');
 		panel.css('width', (w - panel.offset().left) + 'px');
 		panel.css('height', (h - 92) + 'px');
+		panel.trigger('panelresize', panel);
 		
 		if (menu.length > 0) {
 			menu.css('height', (h - 92) + 'px');
