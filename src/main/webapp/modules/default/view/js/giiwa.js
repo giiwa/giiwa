@@ -16,6 +16,38 @@ giiwa.extend({
 	panelapi: false,
 	uploaddone: false,
 	
+	css : function(urls) {
+		if(urls && urls.length > 0) {
+			var ss = urls.split(',');
+			var ll = $(document).find('link');
+			$(ss).each(function(i, f){
+				f = f.trim();
+				for(var i=0;i<ll.length; i++) {
+					if(ll[i].href && ll[i].href.indexOf(f) >= 0) {
+						return;
+					}
+				}
+				$('head').append('<link href="' + f + '" rel="stylesheet" />');
+			});
+		}
+	},
+	
+	js : function(urls) {
+		if(urls && urls.length > 0) {
+			var ss = urls.split(',');
+			var ll = $(document).find('script');
+			$(ss).each(function(i, f){
+				f = f.trim();
+				for(var i=0;i<ll.length; i++) {
+					if(ll[i].src && ll[i].src.indexOf(f) >= 0) {
+						return;
+					}
+				}
+				$('body').append('<script type="text/javascript" src="' + f + '"></script>');
+			});
+		}
+	},
+	
 	_format: function(url) {
 		var p = {};
 		var i = url.indexOf('?');
