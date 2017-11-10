@@ -158,13 +158,13 @@ function _showrestart(){
 }
 function _restart(){
 	
-	processing && processing.show();
+	giiwa.processing.show();
 	$.post('/admin/system/restart', {pwd:$('#restart input[name=password]').val()}, function(d){
 		if(d.state == 'ok') {
 			$('#restart').dialog('close');
 			_timer = setInterval(_load, 5000);
 		} else {
-			processing && processing.hide();
+			giiwa.processing.hide();
 			$.error(d.message);
 		}
 	})

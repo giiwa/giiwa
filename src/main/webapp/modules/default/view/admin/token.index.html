@@ -66,18 +66,18 @@
 $('#user-table').tablesorter({headers:{7:{sorter:false}}});
 function _clean() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/token/clean', {}, function(d){
-			processing && processing.hide();
+			giiwa.processing.hide();
 			giiwa.reload();
 		});
 	}
 }
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/token/delete', {id:id}, function(d){
-			processing && processing.hide();
+			giiwa.processing.hide();
 			if(d.state == 200) {
 				$(o).parent().parent().remove();
 			} else if(d.message){

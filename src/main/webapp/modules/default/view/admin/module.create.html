@@ -27,7 +27,7 @@
 
 <script>
 function oncreate() {
-	processing && processing.show();
+	giiwa.processing.show();
 	var p = {};
 	$('div.form input[type=text]').each(function(i, e){
 		e = $(e);
@@ -35,7 +35,7 @@ function oncreate() {
 	})
 	p.includes = $('input[type=checkbox]').prop('checked')?'on':'';
 	$.post('/admin/module/create', p, function(d){
-		processing && processing.hide();
+		giiwa.processing.hide();
 		
 		if(d.state == 200) {
 			$('#download').attr('src', d.file);

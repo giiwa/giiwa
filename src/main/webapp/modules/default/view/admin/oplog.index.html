@@ -109,9 +109,9 @@ td.log_level_2 {
 <script>
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/oplog/deleteall', {}, function(d) {
-			processing && processing.hide();
+			giiwa.processing.hide();
 			giiwa.reload();
 		});
 	}

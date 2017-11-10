@@ -123,7 +123,7 @@
 <script>
 	function _ok() {
 		$('#ideditor').dialog('close');
-		processing && processing.show();
+		giiwa.processing.show();
 
 		var name = $('#ideditor input[name=name]').val();
 		var id = $('#ideditor input[name=id]').val();
@@ -131,7 +131,7 @@
 			name : name,
 			id : id
 		}, function(d) {
-			processing && processing.hide();
+			giiwa.processing.hide();
 			if (d.state == 200) {
 				$('span.id[data-name="' + name + '"]').text(id);
 				$.hint("$lang.get('restart.required')");
@@ -172,11 +172,11 @@
 			msg_stop : "$lang.get('msg.stop')",
 			msg_done : "$lang.get('msg.done')",
 			done : function(url) {
-				processing && processing.show();
+				giiwa.processing.show();
 				$.post('/admin/module/add', {
 					url : url
 				}, function(d) {
-					processing && processing.hide();
+					giiwa.processing.hide();
 					
 					if (d.state == 200) {
 						$.message(d.warn);

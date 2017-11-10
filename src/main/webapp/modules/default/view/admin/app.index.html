@@ -64,9 +64,9 @@
 <script>
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/app/delete', {id:id}, function(d){
-			processing && processing.hide();
+			giiwa.processing.hide();
 			if(d.state == 200) {
 				$(o).parent().parent().remove();
 			} else if(d.message){
@@ -77,9 +77,9 @@ function _delete(id, o) {
 }
 function _reset(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_reset')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/app/reset', {id:id}, function(d){
-			processing && processing.hide();
+			giiwa.processing.hide();
 			if(d.state == 200) {
 				giiwa.reload();
 			} else if(d.message){

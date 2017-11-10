@@ -54,9 +54,9 @@
 $('#user-table').tablesorter({headers:{5:{sorter:false}}});
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/repo/delete', {id: id}, function(d){
-			processing && processing.hide();
+			giiwa.processing.hide();
 			giiwa.reload();
 		});
 	}

@@ -57,9 +57,9 @@ $('#accesslog-table').tablesorter();
 
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/accesslog/deleteall', {}, function(d) {
-			processing && processing.hide();
+			giiwa.processing.hide();
 			giiwa.reload();
 		});
 	}

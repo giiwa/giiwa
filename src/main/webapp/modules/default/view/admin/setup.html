@@ -198,7 +198,7 @@ $(function(){
 		p["email"] = $('#admin input[name=email]').val();
 		p["phone"] = $('#admin input[name=phone]').val();
 		
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/setup/save', p, function(d){
 			
 			if(d.state == 200) {
@@ -217,14 +217,14 @@ $(function(){
 })
 var dbadmin = 0;
 function check_db(f){
-	processing && processing.show();
+	giiwa.processing.show();
 	var  p = {op:'db'};
 	p.driver = $('#db select[name=driver]').val();
 	p.url = $('#db input[name=url]').val();
 	p.username = $('#db input[name=username]').val();
 	p.passwd = $('#db input[name=passwd]').val();
 	$.post('/admin/setup/check', p).done(function(d){
-		processing && processing.hide();
+		giiwa.processing.hide();
 		if(d.state == 200) {
 			dbadmin = d.admin;
 			f();
@@ -232,18 +232,18 @@ function check_db(f){
 			$.error(d.message);
 		}
 	}).fail(function(){
-		processing && processing.hide();
+		giiwa.processing.hide();
 		$.error("$lang.get('try.later')");
 	});
 }
 var mongoadmin = 0
 function check_mongo(f){
-	processing && processing.show();
+	giiwa.processing.show();
 	var  p = {op:'mongo'};
 	p.db = $('#mongo input[name=db]').val();
 	p.url = $('#mongo input[name=url]').val();
 	$.post('/admin/setup/check', p, function(d){
-		processing && processing.hide();
+		giiwa.processing.hide();
 		if(d.state == 200) {
 			mongoadmin = d.admin;
 			f();
@@ -253,12 +253,12 @@ function check_mongo(f){
 	})
 }
 function check_cache(f){
-	processing && processing.show();
+	giiwa.processing.show();
 	var  p = {op:'cache'};
 	p.url = $('#cache input[name=url]').val();
 	p.group = $('#cache input[name=group]').val();
 	$.post('/admin/setup/check', p, function(d){
-		processing && processing.hide();
+		giiwa.processing.hide();
 		if(d.state == 200) {
 			f();
 		} else {
@@ -267,10 +267,10 @@ function check_cache(f){
 	})
 }
 function check_admin(f){
-	processing && processing.show();
+	giiwa.processing.show();
 	var  p = {op:'admin'};
 	$.post('/admin/setup/check', p, function(d){
-		processing && processing.hide();
+		giiwa.processing.hide();
 		f();
 	})
 }

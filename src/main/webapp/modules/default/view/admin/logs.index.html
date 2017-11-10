@@ -47,9 +47,9 @@ function _delete(id, o) {
 	}
 }
 function _download(name) {
-	processing && processing.show();
+	giiwa.processing.show();
 	$.post('/admin/logs/download', {f:name}, function(d){
-		processing && processing.hide();
+		giiwa.processing.hide();
 		if(d.state == 200) {
 			$('#download').attr('src', d.src);
 		} else {

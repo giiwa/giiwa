@@ -16,6 +16,20 @@ giiwa.extend({
 	panelapi: false,
 	uploaddone: false,
 	
+	processing = {
+			show: function() {
+				var p = $('#processing');
+				if(p.length == 0) {
+					p = $('<div id="processing" style="display: none;"><div class="bg"></div><div class="img"><img src="/images/loading2.gif"></div></div>');
+					$('body').append(p);
+				}
+				p.show();
+			},
+			hide: function() {
+				$('#processing').hide();
+			}
+		},
+		
 	css : function(urls) {
 		if(urls && urls.length > 0) {
 			var ss = urls.split(',');
@@ -232,7 +246,7 @@ giiwa.extend({
 
 			if (form != undefined && url != undefined) {
 
-				processing && processing.show();
+				giiwa.processing.show();
 
 				if (form.method == 'get') {
 					var data = $(form).serialize();
@@ -257,7 +271,7 @@ giiwa.extend({
 					$.get(
 					__url, {}, function(d) {
 						giiwa.show(d);
-						processing && processing.hide();
+						giiwa.processing.hide();
 					});
 
 				} else {
@@ -272,7 +286,7 @@ giiwa.extend({
 						if (xhr.readyState == 4) {
 							if (xhr.status == 200) {
 								giiwa.show(xhr.responseText);
-								processing && processing.hide();
+								giiwa.processing.hide();
 							}
 						}
 					}
@@ -419,7 +433,7 @@ giiwa.extend({
 	},
 
 	load: function(uri) {
-		processing && processing.show();
+		giiwa.processing.show();
 
 		if (giiwa.__history.length > 0 && giiwa._compare(giiwa.__history[giiwa.__history.length - 1], uri)) {
 			giiwa.__history.pop();
@@ -437,11 +451,11 @@ giiwa.extend({
 			type: 'GET',
 			data: {},
 			error: function(d) {
-				processing && processing.hide();
+				giiwa.processing.hide();
 				window.location.href = "/";
 			},
 			success: function(d, status, xhr) {
-				processing && processing.hide();
+				giiwa.processing.hide();
 				var resp = {
 					"status": xhr.getResponseHeader('status')
 				};
@@ -455,7 +469,7 @@ giiwa.extend({
 	},
 
 	load1: function(uri) {
-		processing && processing.show();
+		giiwa.processing.show();
 
 		// $('#page').attr('src', uri);
 		if (uri.indexOf('?') > 0) {
@@ -464,7 +478,7 @@ giiwa.extend({
 			uri += '?' + new Date().getTime();
 		}
 		var s = '<iframe src="' + uri + '"></iframe>';
-		processing && processing.hide();
+		giiwa.processing.hide();
 		giiwa.show(s);
 	},
 	_post: function(o, table, max) {
@@ -615,12 +629,3 @@ $(function() {
 	});
 
 });
-
-var processing = {
-	show: function() {
-		$('#processing').show();
-	},
-	hide: function() {
-		$('#processing').hide();
-	}
-};

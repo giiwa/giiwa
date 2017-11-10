@@ -66,33 +66,33 @@
 
 <script>
 function _run(id, o) {
-	processing && processing.show();
+	giiwa.processing.show();
 	$.post('/admin/dbmon/run', {id:id}, function(d) {
-		processing && processing.hide();
+		giiwa.processing.hide();
 		giiwa.reload();
 	});
 }
 function _repair() {
-	processing && processing.show();
+	giiwa.processing.show();
 	$.post('/admin/dbmon/repair', {}, function(d) {
-		processing && processing.hide();
+		giiwa.processing.hide();
 		giiwa.reload();
 	});
 }
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/dbmon/delete', {id:id}, function(d) {
-			processing && processing.hide();
+			giiwa.processing.hide();
 			giiwa.reload();
 		});
 	}
 }
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		processing && processing.show();
+		giiwa.processing.show();
 		$.post('/admin/dbmon/delete', {}, function(d) {
-			processing && processing.hide();
+			giiwa.processing.hide();
 			giiwa.reload();
 		});
 	}
