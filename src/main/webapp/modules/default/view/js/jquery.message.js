@@ -108,7 +108,5 @@ jQuery.extend({
 		m.click(function() {
 					overlay.click();
 				});
-	},
-	confirm : function(title, message) {
 	}
 });

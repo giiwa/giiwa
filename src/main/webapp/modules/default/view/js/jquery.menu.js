@@ -152,3 +152,52 @@
 		}
 	})
 })(jQuery);
+
+$(function(){
+	var e = $('#ss_tab');
+	e.bind('mouseenter', function() {
+		var e1 = $(this);
+		if (e1.hasClass('info_but_close')) {
+			e1.addClass('info_but_close_on');
+		} else {
+			e1.addClass('info_but_open_on');
+		}
+	});
+
+	e.bind('mouseleave', function() {
+		var e1 = $(this);
+		e1.removeClass('info_but_close_on');
+		e1.removeClass('info_but_open_on');
+	});
+
+	e.click(function() {
+		var bar = $(this);
+		var menu = $('#menu');
+		var panel = $('#panel');
+		var toolbar = $('#toolbar');
+
+		if (bar.hasClass('info_but_close')) {
+			bar.addClass('info_but_open');
+			bar.removeClass('info_but_close');
+			bar.removeClass('info_but_close_on');
+
+			panel.addClass('full');
+			toolbar.addClass('full');
+			menu.hide();
+
+			giiwa.resize();
+		} else {
+			bar.addClass('info_but_close');
+			bar.removeClass('info_but_open');
+			bar.removeClass('info_but_open_on');
+
+			panel.removeClass('full');
+			toolbar.removeClass('full');
+
+			menu.show();
+
+			giiwa.resize();
+		}
+	});
+
+})
