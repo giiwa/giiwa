@@ -345,12 +345,12 @@ public class Role extends Bean {
 			for (JSON e : l1) {
 				long id = e.getLong(X.ID);
 				V v = V.fromJSON(e);
-				v.remove(X.ID, "_id", "updated", "created");
+				v.remove(X.ID, "_id");
 				Role s = Role.load(id);
 				if (s != null) {
 					Helper.update(id, v, Role.class);
 				} else {
-					Helper.insert(v, Role.class);
+					Helper.insert(v.append(X.ID, id), Role.class);
 				}
 				total++;
 			}

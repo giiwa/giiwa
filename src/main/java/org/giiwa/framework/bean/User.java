@@ -964,12 +964,12 @@ public class User extends Bean {
 			for (JSON e : l1) {
 				long id = e.getLong(X.ID);
 				V v = V.fromJSON(e);
-				v.remove(X.ID, "_id", "updated", "created");
+				v.remove(X.ID, "_id");
 				User s = User.load(W.create(X.ID, id));
 				if (s != null) {
 					Helper.update(id, v, User.class);
 				} else {
-					Helper.insert(v, User.class);
+					Helper.insert(v.append(X.ID, id), User.class);
 				}
 				total++;
 			}
