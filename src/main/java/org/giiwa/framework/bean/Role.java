@@ -20,6 +20,7 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
+import org.giiwa.core.json.JSON;
 
 /**
  * Role bean. <br>
@@ -315,4 +316,46 @@ public class Role extends Bean {
 
 		return Helper.load(q.sort("name", 1), s, n, Role.class);
 	}
+
+	public static void to(JSON j) {
+		int s = 0;
+		W q = W.create().sort(X.ID, 1);
+
+		List<JSON> l1 = new ArrayList<JSON>();
+		Beans<Role> bs = Role.load(q, s, 100);
+		while (bs != null && !bs.isEmpty()) {
+			for (Role e : bs) {
+				l1.add(e.getJSON());
+			}
+			s += bs.size();
+			bs = Role.load(q, s, 100);
+		}
+
+		j.append("roles", l1);
+	}
+
+	private static Beans<Role> load(W q, int s, int n) {
+		return Helper.load(q, s, n, Role.class);
+	}
+
+	public static int from(JSON j) {
+		int total = 0;
+		List<JSON> l1 = j.getList("roles");
+		if (l1 != null) {
+			for (JSON e : l1) {
+				long id = e.getLong(X.ID);
+				V v = V.fromJSON(e);
+				v.remove(X.ID, "_id", "updated", "created");
+				Role s = Role.load(id);
+				if (s != null) {
+					Helper.update(id, v, Role.class);
+				} else {
+					Helper.insert(v, Role.class);
+				}
+				total++;
+			}
+		}
+		return total;
+	}
+
 }

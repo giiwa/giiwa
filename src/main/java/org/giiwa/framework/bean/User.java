@@ -24,6 +24,7 @@ import org.bouncycastle.jce.provider.JDKMessageDigest.MD4;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 /**
@@ -938,4 +939,42 @@ public class User extends Bean {
 		}
 
 	}
+
+	public static void to(JSON j) {
+		int s = 0;
+		W q = W.create().and(X.ID, 0, W.OP.gt).sort(X.ID, 1);
+
+		List<JSON> l1 = new ArrayList<JSON>();
+		Beans<User> bs = User.load(q, s, 100);
+		while (bs != null && !bs.isEmpty()) {
+			for (User e : bs) {
+				l1.add(e.getJSON());
+			}
+			s += bs.size();
+			bs = User.load(q, s, 100);
+		}
+
+		j.append("users", l1);
+	}
+
+	public static int from(JSON j) {
+		int total = 0;
+		List<JSON> l1 = j.getList("users");
+		if (l1 != null) {
+			for (JSON e : l1) {
+				long id = e.getLong(X.ID);
+				V v = V.fromJSON(e);
+				v.remove(X.ID, "_id", "updated", "created");
+				User s = User.load(W.create(X.ID, id));
+				if (s != null) {
+					Helper.update(id, v, User.class);
+				} else {
+					Helper.insert(v, User.class);
+				}
+				total++;
+			}
+		}
+		return total;
+	}
+
 }
