@@ -17,6 +17,25 @@ giiwa
 			panelapi : false,
 			uploaddone : false,
 
+			download : function(url, opt) {
+				giiwa.processing.show();
+				$
+						.post(
+								url,
+								opt,
+								function(d) {
+									giiwa.processing.hide();
+									if (d.state == 200) {
+										var d = $('iframe#download');
+										if (d.length == 0) {
+											d = $("<iframe id='download' style='display:none'></iframe>");
+											$('body').append(d);
+										}
+										d.attr('src', d.file);
+									}
+								});
+			},
+
 			processing : {
 				show : function() {
 					var p = $('#processing');
