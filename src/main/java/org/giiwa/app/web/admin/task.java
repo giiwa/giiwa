@@ -14,6 +14,8 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.giiwa.core.bean.X;
@@ -70,11 +72,8 @@ public class task extends Model {
 							.append("</div>");
 
 					if (ss != null && ss.length > 0) {
-						sb.append(ss[0].toString()).append("<br/>");
 						for (StackTraceElement e : ss) {
-							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".")
-									.append(e.getMethodName()).append("(").append(e.getLineNumber()).append(")")
-									.append("<br/>");
+							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("<br/>");
 						}
 					}
 				}
@@ -111,11 +110,8 @@ public class task extends Model {
 						.append(t.getState()).append("</i>").append("<br/>");
 
 				if (ss != null && ss.length > 0) {
-					sb.append(ss[0].toString()).append("<br/>");
 					for (StackTraceElement e : ss) {
-						sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".")
-								.append(e.getMethodName()).append("(").append(e.getLineNumber()).append(")")
-								.append("<br/>");
+						sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("<br/>");
 					}
 				}
 			}
