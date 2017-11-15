@@ -61,15 +61,16 @@ public class task extends Model {
 				Thread t1 = t.getThread();
 				if (t1 != null) {
 					StackTraceElement[] ss = t1.getStackTrace();
-					if (ss != null) {
-						sb.append("ID: ").append(t1.getId()).append("(0x").append(Long.toHexString(t1.getId()))
-								.append("), Thread: ").append(t1.getName()).append(", State: <i style='color:green'>")
-								.append(t1.getState()).append("</i>, Task:").append(t.getClass().getName())
-								.append("<br/>");
-						sb.append("<div style='color: #888;'>")
-								.append(t.onDump(new StringBuilder()).toString().replaceAll("\r\n", "<br/>"))
-								.append("</div>");
+					sb.append("ID: ").append(t1.getId()).append("(0x").append(Long.toHexString(t1.getId()))
+							.append("), Thread: ").append(t1.getName()).append(", State: <i style='color:green'>")
+							.append(t1.getState()).append("</i>, Task:").append(t.getClass().getName()).append("<br/>");
 
+					sb.append("<div style='color: #888;'>")
+							.append(t.onDump(new StringBuilder()).toString().replaceAll("\r\n", "<br/>"))
+							.append("</div>");
+
+					if (ss != null && ss.length > 0) {
+						sb.append(ss[0].toString()).append("<br/>");
 						for (StackTraceElement e : ss) {
 							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".")
 									.append(e.getMethodName()).append("(").append(e.getLineNumber()).append(")")
@@ -104,11 +105,13 @@ public class task extends Model {
 			Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
 			for (Thread t : dumps.keySet()) {
 				StackTraceElement[] ss = dumps.get(t);
-				if (ss != null) {
-					i++;
-					sb.append(i).append(") ID: ").append(t.getId()).append("(0x").append(Long.toHexString(t.getId()))
-							.append("), Thread: ").append(t.getName()).append(", State: <i style='color:green'>")
-							.append(t.getState()).append("</i>").append("<br/>");
+				i++;
+				sb.append(i).append(") ID: ").append(t.getId()).append("(0x").append(Long.toHexString(t.getId()))
+						.append("), Thread: ").append(t.getName()).append(", State: <i style='color:green'>")
+						.append(t.getState()).append("</i>").append("<br/>");
+
+				if (ss != null && ss.length > 0) {
+					sb.append(ss[0].toString()).append("<br/>");
 					for (StackTraceElement e : ss) {
 						sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.getClassName()).append(".")
 								.append(e.getMethodName()).append("(").append(e.getLineNumber()).append(")")
