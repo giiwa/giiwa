@@ -425,7 +425,7 @@ public final class Global extends Bean {
 	public static String id() {
 		if (X.isEmpty(_id)) {
 			_id = Global.getString("global.id", null);
-			if (!X.isEmpty(_id)) {
+			if (X.isEmpty(_id)) {
 				_id = UID.uuid();
 				Global.setConfig("global.id", _id);
 			}
