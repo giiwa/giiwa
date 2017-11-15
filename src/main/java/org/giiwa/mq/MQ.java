@@ -137,7 +137,7 @@ public abstract class MQ {
 		IStub cb;
 		LinkedBlockingDeque<Request> queue = new LinkedBlockingDeque<Request>();
 
-		public static Caller get(String name, IStub cb) {
+		public static synchronized Caller get(String name, IStub cb) {
 			Caller c = caller.get(name);
 			if (c == null) {
 				c = new Caller();
@@ -152,7 +152,7 @@ public abstract class MQ {
 		void call(List<Request> l1) {
 			synchronized (queue) {
 				for (Request r : l1) {
-					// log.debug("push, r=" + new String(r.data));
+					log.debug("push, r=" + new String(r.data));
 					queue.addLast(r);
 				}
 
@@ -198,6 +198,8 @@ public abstract class MQ {
 		totalGot.incrementAndGet();
 
 		Caller c = Caller.get(name, cb);
+
+		log.debug("caller=" + c + ", name=" + name);
 		c.call(rs);
 
 	}

@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 
@@ -18,8 +20,11 @@ import org.giiwa.core.bean.X;
  */
 public class LiveHand {
 
+	private static Log log = LogFactory.getLog(LiveHand.class);
+
 	private boolean live = true;
 	private long timeout = 0;
+	private int max = 0;
 
 	private Semaphore door;
 
@@ -52,6 +57,7 @@ public class LiveHand {
 		this.timeout = timeout;
 		if (max < 0)
 			max = Integer.MAX_VALUE;
+		this.max = max;
 		this.door = new Semaphore(max);
 	}
 
@@ -71,6 +77,7 @@ public class LiveHand {
 				waittime = timeout - created.pastms();
 			}
 			if (waittime > 0) {
+				log.debug("door=" + door.availablePermits() + ", " + this);
 				if (door.tryAcquire(waittime, TimeUnit.MILLISECONDS)) {
 					return true;
 				}
@@ -102,7 +109,7 @@ public class LiveHand {
 
 		long t1 = timeout - t.pastms();
 		while (t1 > 0 && isLive()) {
-			if (door.drainPermits() == 0) {
+			if ((max - door.availablePermits()) == 0) {
 				return true;
 			}
 			synchronized (door) {
@@ -116,8 +123,8 @@ public class LiveHand {
 
 	@Override
 	public String toString() {
-		return "LiveHand [live=" + live + ", count=" + door.drainPermits() + ", timeout=" + timeout + ", past="
-				+ created.pastms() + "ms, attachs=" + attachs + "]";
+		return "LiveHand [" + super.toString() + ", live=" + live + ", available=" + door.availablePermits() + ", max="
+				+ max + ", timeout=" + timeout + ", past=" + created.pastms() + "ms, attachs=" + attachs + "]";
 	}
 
 	public static void main(String[] args) {
