@@ -77,8 +77,8 @@ public class LiveHand {
 				waittime = timeout - created.pastms();
 			}
 			if (waittime > 0) {
-				log.debug("door=" + door.availablePermits() + ", " + this);
 				if (door.tryAcquire(waittime, TimeUnit.MILLISECONDS)) {
+					log.debug("hold, door=" + door.availablePermits() + ", " + this);
 					return true;
 				}
 			} else {
@@ -90,6 +90,8 @@ public class LiveHand {
 
 	public void drop() {
 		door.release();
+
+		log.debug("drop, door=" + door.availablePermits() + ", " + this);
 
 		synchronized (door) {
 			door.notifyAll();
@@ -110,6 +112,7 @@ public class LiveHand {
 		long t1 = timeout - t.pastms();
 		while (t1 > 0 && isLive()) {
 			if ((max - door.availablePermits()) == 0) {
+				log.debug("await, door=" + door.availablePermits() + ", " + this);
 				return true;
 			}
 			synchronized (door) {
@@ -118,13 +121,16 @@ public class LiveHand {
 			t1 = timeout - t.pastms();
 		}
 
+		log.debug("await, door=" + door.availablePermits() + ", " + this.toString());
+
 		return isLive();
 	}
 
 	@Override
 	public String toString() {
-		return "LiveHand [" + super.toString() + ", live=" + live + ", available=" + door.availablePermits() + ", max="
-				+ max + ", timeout=" + timeout + ", past=" + created.pastms() + "ms, attachs=" + attachs + "]";
+		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", live=" + live + ", available="
+				+ door.availablePermits() + ", max=" + max + ", timeout=" + timeout + ", past=" + created.pastms()
+				+ "ms, attachs=" + attachs + "]";
 	}
 
 	public static void main(String[] args) {
