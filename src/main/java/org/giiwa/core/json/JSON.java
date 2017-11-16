@@ -662,5 +662,14 @@ public final class JSON extends HashMap<String, Object> {
 	public Map<String, Object> toMap() {
 		return this;
 	}
-	
+
+	public JSON remove(String... name) {
+		if (name != null && name.length > 0) {
+			for (String s : name) {
+				remove(s);
+			}
+		}
+		return this;
+	}
+
 }
