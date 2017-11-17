@@ -356,17 +356,18 @@ giiwa
 					console.error(e);
 				}
 
-				giiwa.hook();
+				giiwa.hook($('#panel .content'));
 
 				// resize();
 
 			},
 
-			hook : function() {
+			hook : function(panel) {
+				
 				/**
 				 * hook all the <a> tag
 				 */
-				$('#panel .content a').each(
+				panel.find('.content a').each(
 
 						function(i, e) {
 							e = $(e);
@@ -390,7 +391,7 @@ giiwa
 				/**
 				 * hook all <form> to smooth submit
 				 */
-				$('#panel form').submit(
+				panel.find('form').submit(
 
 				function(e) {
 					e.preventDefault();
@@ -403,7 +404,7 @@ giiwa
 
 				});
 
-				$('#panel table th.checkbox').click(function(e) {
+				panel.find('table th.checkbox').click(function(e) {
 					var ch = $(this).find('input[type=checkbox]');
 					if (ch.length > 0) {
 						var en = ch[0].checked;
@@ -424,7 +425,7 @@ giiwa
 				/**
 				 * hook all <select> associated group
 				 */
-				$('#panel select[parentnode=true]')
+				panel.find('select[parentnode=true]')
 						.change(
 
 								function(e) {
@@ -483,7 +484,7 @@ giiwa
 				/**
 				 * hook all <select> to make
 				 */
-				$('#panel select').each(function(i, e) {
+				panel.find('select').each(function(i, e) {
 					if (e.value == '') {
 						$(e).removeClass('setted');
 					} else {
@@ -500,7 +501,7 @@ giiwa
 				/**
 				 * hook tr.hover
 				 */
-				$('#panel table.tablesorter tr').bind('mouseenter', function() {
+				panel.find('table.tablesorter tr').bind('mouseenter', function() {
 					$(this).addClass('hover');
 				}).bind('mouseleave', function() {
 					$(this).removeClass('hover');
@@ -509,7 +510,7 @@ giiwa
 				/**
 				 * hook td.hover
 				 */
-				$('#panel table.tablesorter td').bind('mouseenter', function() {
+				panel.find('table.tablesorter td').bind('mouseenter', function() {
 					$(this).addClass('hover');
 				}).bind('mouseleave', function() {
 					$(this).removeClass('hover');
@@ -518,9 +519,9 @@ giiwa
 				/**
 				 * setting all searchbar
 				 */
-				$('#panel div.search').searchbar();
+				panel.find('div.search').searchbar();
 
-				$('#panel input').bind('focus', function() {
+				panel.find('input').bind('focus', function() {
 					$(this).parent().addClass('focus');
 				}).bind(
 						'blur',
@@ -539,7 +540,7 @@ giiwa
 						});
 
 				setTimeout(function() {
-					$('.blink').each(function(i, e) {
+					panel.find('.blink').each(function(i, e) {
 						$(e).removeClass('blink');
 					});
 				}, 100);
