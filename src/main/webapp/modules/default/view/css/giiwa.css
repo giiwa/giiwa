@@ -1683,4 +1683,6 @@ button:hover, button:active {
     border-radius: 5px;
     overflow-x: hidden;
     overflow-y:auto;
+	text-align: left;
+    padding: 10px;    
 }
