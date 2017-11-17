@@ -1681,5 +1681,6 @@ button:hover, button:active {
     position: absolute;
     top: 15%;
     border-radius: 5px;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y:auto;
 }
