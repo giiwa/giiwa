@@ -8,7 +8,7 @@
 
 <div class='search'>
 	<form action='/admin/user' method='get' #if($s>0) style='display:none' #end >
-		<span><label><h3>$lang.get('label.name'):</h3><input type='text' name='name' value="$!name" placeholder="name/nickname"/></label></span>
+		<span><label><h3>$lang.get('user.name'):</h3><input type='text' name='name' value="$!name"/></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
 	
@@ -66,7 +66,6 @@
 </div>
 
 <script>
-$('#user-table').tablesorter({headers:{7:{sorter:false}}});
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
