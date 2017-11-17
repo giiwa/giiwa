@@ -367,7 +367,7 @@ giiwa
 				/**
 				 * hook all the <a> tag
 				 */
-				panel.find('.content a').each(
+				panel.find('a').each(
 
 						function(i, e) {
 							e = $(e);
