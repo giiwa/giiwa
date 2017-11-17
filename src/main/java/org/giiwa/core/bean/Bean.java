@@ -40,10 +40,10 @@ import org.giiwa.core.json.JSON;
  * almost includes all methods that need for database <br>
  * 
  */
-public class Bean implements Serializable, Map<String, Object> {
+public class Bean implements Serializable {
 
 	/** The Constant serialVersionUID. */
-	private static final long serialVersionUID = 3L;
+	private static final long serialVersionUID = 4L;
 
 	/** The log utility */
 	protected static Log log = LogFactory.getLog(Bean.class);
@@ -254,7 +254,8 @@ public class Bean implements Serializable, Map<String, Object> {
 	 *            the name of the data or the column
 	 * @return Object the value of the name, return null if the name not exists
 	 */
-	public final Object get(Object name) {
+	@SuppressWarnings("unchecked")
+	public final <T> T get(Object name) {
 		if (name == null) {
 			return null;
 		}
@@ -264,7 +265,7 @@ public class Bean implements Serializable, Map<String, Object> {
 		if (f != null) {
 			try {
 				f.setAccessible(true);
-				return f.get(this);
+				return (T) f.get(this);
 			} catch (Exception e) {
 				log.error(name, e);
 			}
@@ -275,7 +276,7 @@ public class Bean implements Serializable, Map<String, Object> {
 		}
 
 		if (data.containsKey(s)) {
-			return data.get(s);
+			return (T) data.get(s);
 		}
 
 		return null;
@@ -286,7 +287,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 *
 	 * @return the int
 	 */
-	@Override
 	public final int size() {
 		return getAll().size();
 	}
@@ -294,7 +294,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	/**
 	 * test is empty bean
 	 */
-	@Override
 	public final boolean isEmpty() {
 		return getAll().isEmpty();
 	}
@@ -304,7 +303,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 * 
 	 * @see java.util.Map#containsKey(java.lang.Object)
 	 */
-	@Override
 	public final boolean containsKey(Object key) {
 		return getAll().containsKey(key);
 	}
@@ -314,7 +312,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 * 
 	 * @see java.util.Map#containsValue(java.lang.Object)
 	 */
-	@Override
 	public final boolean containsValue(Object value) {
 		return getAll().containsValue(value);
 	}
@@ -328,7 +325,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 *            the value
 	 * @return the object of old data
 	 */
-	@Override
 	public final Object put(String key, Object value) {
 		return set(key, value);
 	}
@@ -340,7 +336,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 *            the name
 	 * @return the object of old value
 	 */
-	@Override
 	public final Object remove(Object key) {
 		return this.set(key.toString(), null);
 	}
@@ -351,7 +346,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 * @param m
 	 *            the data map
 	 */
-	@Override
 	public final void putAll(Map<? extends String, ? extends Object> m) {
 		for (String s : m.keySet()) {
 			set(s, m.get(s));
@@ -362,7 +356,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 * remove all data from the bean, <br>
 	 * set the fields to null that annotation by @Column.
 	 */
-	@Override
 	public final void clear() {
 		/**
 		 * clear data in data
@@ -394,7 +387,6 @@ public class Bean implements Serializable, Map<String, Object> {
 	 *
 	 * @return the sets of the names
 	 */
-	@Override
 	public final Set<String> keySet() {
 		return getAll().keySet();
 	}
@@ -404,19 +396,8 @@ public class Bean implements Serializable, Map<String, Object> {
 	 *
 	 * @return the collection
 	 */
-	@Override
 	public final Collection<Object> values() {
 		return getAll().values();
-	}
-
-	/**
-	 * get all the Entries, include the field annotation by @Column.
-	 *
-	 * @return the sets the
-	 */
-	@Override
-	public final Set<Entry<String, Object>> entrySet() {
-		return getAll().entrySet();
 	}
 
 	/**
