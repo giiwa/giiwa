@@ -17,34 +17,118 @@ giiwa
 			panelapi : false,
 			uploaddone : false,
 
+			submit : function(form, opt) {
+				var beforesubmit = $(form).attr('beforesubmit');
+				if (typeof window[beforesubmit] === 'function') {
+					if (!window[beforesubmit](form)) {
+						return;
+					}
+				}
+
+				/**
+				 * check the bad flag
+				 */
+				var bad = $(form).find(
+						"input[bad=1], textarea[bad=1], select[bad=1]");
+				if (bad.length > 0) {
+					bad[0].focus();
+					return;
+				}
+				var bb = $(form).find(
+						"input[required=true], select[required=true]");
+				for (i = 0; i < bb.length; i++) {
+					var e = $(bb[i]);
+					if (e.val() == '') {
+						e.focus();
+						return;
+					}
+				}
+
+				var url = form.action;
+
+				if (form != undefined && url != undefined) {
+
+					giiwa.processing.show();
+
+					if (form.method == 'get') {
+						var data = $(form).serialize();
+
+						var __url = '';
+						if (url.indexOf('?') > 0) {
+							__url = url + '&' + data;
+						} else {
+							__url = url + '?' + data;
+						}
+						if (giiwa.__history.length > 0
+								&& giiwa
+										._compare(
+												giiwa.__history[giiwa.__history.length - 1],
+												__url)) {
+							giiwa.__history.pop();
+						}
+						giiwa.__history.push(__url);
+
+						if (__url.indexOf('?') > 0) {
+							__url += '&' + new Date().getTime();
+						} else {
+							__url += '?' + new Date().getTime();
+						}
+
+						$.get(__url, {}, function(d) {
+							giiwa.processing.hide();
+							opt && opt.success && opt.success(d);
+						});
+
+					} else {
+						var data = new FormData(form);
+
+						var xhr = new XMLHttpRequest();
+						xhr.open("POST", url);
+						xhr.overrideMimeType("multipart/form-data");
+						xhr.send(data);
+
+						xhr.onreadystatechange = function() {
+							if (xhr.readyState == 4) {
+								if (xhr.status == 200) {
+									giiwa.processing.hide();
+									opt && opt.success && opt.success(xhr.responseText);
+								}
+							}
+						}
+
+					}
+				}
+			},
+
 			popup : function(url, opt) {
 				opt = $.extend({}, opt);
-				
+
 				var p = $('#popup');
 				if (p.length == 0) {
 					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"></div></div>');
 					$('body').append(p);
 
-					$("#popup .popup" ).draggable();
-				    $('#popup .popupbg').click(function(d) {
-				    		p.fadeOut();
-				    });
+					$("#popup .popup").draggable();
+					$('#popup .popupbg').click(function(d) {
+						p.fadeOut();
+					});
 				}
-				var pp = $('#popup .popup'); 
-				if(opt.style) {
+				var pp = $('#popup .popup');
+				if (opt.style) {
 					pp.attr('style', opt.style);
 				}
 				pp.empty();
 				giiwa.processing.show();
-				$.post(url, opt, function(d){
+				$.post(url, opt, function(d) {
 					giiwa.processing.hide();
 					pp.html(d);
 				})
 				var w = $(window);
-				if(opt.width) {
-					if(opt.width.endsWith('%')) {
+				if (opt.width) {
+					if (opt.width.endsWith('%')) {
 						pp.css('width', opt.width);
-						var left = parseInt(opt.width.substring(0, opt.width.length - 1))
+						var left = parseInt(opt.width.substring(0,
+								opt.width.length - 1))
 						pp.css('left', (100 - width) / 2 + '%');
 					} else {
 						pp.css('width', opt.width + 'px');
@@ -54,22 +138,23 @@ giiwa
 					pp.css('width', '70%');
 					pp.css('left', '15%');
 				}
-				if(opt.height) {
-					if(opt.height.endsWith('%')) {
+				if (opt.height) {
+					if (opt.height.endsWith('%')) {
 						pp.css('height', opt.height);
-						var top = parseInt(opt.height.substring(0, opt.height.length - 1))
+						var top = parseInt(opt.height.substring(0,
+								opt.height.length - 1))
 						pp.css('top', (100 - height) / 2 + '%');
 					} else {
 						pp.css('height', height + 'px');
-						pp.css('top', (w.height() - height)/2 + 'px');
+						pp.css('top', (w.height() - height) / 2 + 'px');
 					}
 				} else {
 					pp.css('height', '70%');
 					pp.css('top', '15%');
 				}
-				
+
 				p.fadeIn();
-				
+
 				return p;
 			},
 
@@ -299,103 +384,18 @@ giiwa
 				/**
 				 * hook all <form> to smooth submit
 				 */
-				$('#panel form')
-						.submit(
+				$('#panel form').submit(
 
-								function(e) {
-									e.preventDefault();
+				function(e) {
+					e.preventDefault();
 
-									var form = e.target;
+					var form = e.target;
 
-									var beforesubmit = $(form).attr(
-											'beforesubmit');
-									if (typeof window[beforesubmit] === 'function') {
-										if (!window[beforesubmit](form)) {
-											return;
-										}
-									}
+					giiwa.submit(form, {success: function(d){
+						giiwa.show(d);
+					}});
 
-									/**
-									 * check the bad flag
-									 */
-									var bad = $(form)
-											.find(
-													"input[bad=1], textarea[bad=1], select[bad=1]");
-									if (bad.length > 0) {
-										bad[0].focus();
-										return;
-									}
-									var bb = $(form)
-											.find(
-													"input[required=true], select[required=true]");
-									for (i = 0; i < bb.length; i++) {
-										var e = $(bb[i]);
-										if (e.val() == '') {
-											e.focus();
-											return;
-										}
-									}
-
-									var url = form.action;
-
-									if (form != undefined && url != undefined) {
-
-										giiwa.processing.show();
-
-										if (form.method == 'get') {
-											var data = $(form).serialize();
-
-											var __url = '';
-											if (url.indexOf('?') > 0) {
-												__url = url + '&' + data;
-											} else {
-												__url = url + '?' + data;
-											}
-											if (giiwa.__history.length > 0
-													&& giiwa
-															._compare(
-																	giiwa.__history[giiwa.__history.length - 1],
-																	__url)) {
-												giiwa.__history.pop();
-											}
-											giiwa.__history.push(__url);
-
-											if (__url.indexOf('?') > 0) {
-												__url += '&'
-														+ new Date().getTime();
-											} else {
-												__url += '?'
-														+ new Date().getTime();
-											}
-
-											$.get(__url, {}, function(d) {
-												giiwa.show(d);
-												giiwa.processing.hide();
-											});
-
-										} else {
-											var data = new FormData(form);
-
-											var xhr = new XMLHttpRequest();
-											xhr.open("POST", url);
-											xhr
-													.overrideMimeType("multipart/form-data");
-											xhr.send(data);
-
-											xhr.onreadystatechange = function() {
-												if (xhr.readyState == 4) {
-													if (xhr.status == 200) {
-														giiwa
-																.show(xhr.responseText);
-														giiwa.processing.hide();
-													}
-												}
-											}
-
-										}
-									}
-
-								});
+				});
 
 				$('#panel table th.checkbox').click(function(e) {
 					var ch = $(this).find('input[type=checkbox]');
