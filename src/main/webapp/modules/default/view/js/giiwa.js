@@ -16,6 +16,7 @@ giiwa
 			menuapi : false,
 			panelapi : false,
 			uploaddone : false,
+			_popup :false,
 
 			submit : function(form, opt) {
 				var beforesubmit = $(form).attr('beforesubmit');
@@ -101,6 +102,10 @@ giiwa
 			},
 
 			popup : function(url, opt) {
+				if(!url) {
+					return giiwa._popup;
+				}
+				
 				opt = $.extend({}, opt);
 
 				var p = $('#popup');
@@ -155,6 +160,7 @@ giiwa
 
 				p.fadeIn();
 
+				giiwa._popup = p;
 				return p;
 			},
 
