@@ -1651,3 +1651,35 @@ button:hover, button:active {
 	padding: 0 6px;
 	color: #666;	
 }
+
+#popup{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;	
+    z-index: 102;
+    overflow: hidden;
+}
+
+#popup .popupbg{
+	width: 100%;
+    height: 100%;
+    position: absolute;
+    background: #aaa;
+    opacity: .3;
+    left: 0;
+    top: 0;
+}
+#popup .popup{
+    width: 70%;
+    display: inline-block;
+    height: 70%;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    left: 15%;
+    position: absolute;
+    top: 15%;
+    border-radius: 5px;
+    overflow: auto;
+}
