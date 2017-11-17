@@ -593,8 +593,9 @@ public class Bean implements Serializable {
 	}
 
 	public static void main(String[] args) {
-		Demo d = new Demo();
+		Demo d = new Demo1();
 		d.set("l1", Arrays.asList("aaaa", "bbbb"));
+		d.set("l2", Arrays.asList("2", "2"));
 		d.print();
 	}
 
@@ -604,6 +605,16 @@ public class Bean implements Serializable {
 
 		public void print() {
 			System.out.println(l1);
+		}
+	}
+
+	private static class Demo1 extends Demo {
+		@Column(name = "l2")
+		List<String> l2;
+
+		public void print() {
+			System.out.println(l1);
+			System.out.println(l2);
 		}
 	}
 
