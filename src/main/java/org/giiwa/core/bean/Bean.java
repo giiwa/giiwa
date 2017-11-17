@@ -512,6 +512,8 @@ public class Bean implements Serializable {
 
 	private Map<String, Object> data = null;
 
+	private transient JSON json_obj;
+
 	/**
 	 * create the data as json.<br>
 	 * 
@@ -519,11 +521,12 @@ public class Bean implements Serializable {
 	 */
 	public final JSON getJSON() {
 
-		JSON jo = new JSON();
+		if (json_obj == null) {
+			json_obj = new JSON();
 
-		toJSON(jo);
-
-		return jo;
+			toJSON(json_obj);
+		}
+		return json_obj;
 	}
 
 	/**
