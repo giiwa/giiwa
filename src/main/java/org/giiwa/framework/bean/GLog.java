@@ -522,14 +522,21 @@ public class GLog extends Bean {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
+
+			Message.create(V.create("touid", 0).append("title", message));
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
+
+			Message.create(V.create("touid", 0).append("title", message));
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+			
+			Message.create(V.create("touid", 0).append("title", message));
+			
 		}
 
 	}

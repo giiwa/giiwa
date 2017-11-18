@@ -11,6 +11,9 @@
 			<a class='icon icon-arrow-left' href='javascript:;' onclick='giiwa.back();' title="$lang.get('a.back')"></a>
 			<a class='icon icon-laptop' href='javascript:;' onclick='giiwa.load("/admin/dashboard")' title="$lang.get('a.dashboard')"></a>
 		</div>
+		<div class='t_right' style="margin-right: 200px;">
+			<a class='icon icon-mail2 message' href='javascript:;' onclick='giiwa.load("/admin/dashboard")' title="$lang.get('a.dashboard')"><i></i></a>
+		</div>
 	</div>
 </div>
 <div id="menu">
@@ -32,37 +35,54 @@
  * load the menu first
  */
 
-	$(function() {
-		$("#menu .menu").menu({
-			url : "/menu",
-			root : 0,
-			name : 'admin'
-		});
+$(function() {
+	$("#menu .menu").menu({
+		url : "/menu",
+		root : 0,
+		name : 'admin'
+	});
 
-		giiwa.load('/admin/dashboard');
+	giiwa.load('/admin/dashboard');
 
-		$('body').bind('keydown', function(e) {
-			var target = e.target.nodeName;
-			var edit = (target == 'INPUT' || target == 'SELECT' || target == 'TEXTAREA');
-			
-			if(e.which == 116) {
-				//F5
-				if(giiwa.reload()) {
-					e.preventDefault();
-				}
-			} else if(!edit && e.which == 8){
-				//backspace
-				if(typeof(back) == 'function') {
-					giiwa.back();
-					e.preventDefault();
-				}
-			} else if(!edit && e.which == 36) {
-				//home
-				window.location.href = "/";				
+	$('body').bind('keydown', function(e) {
+		var target = e.target.nodeName;
+		var edit = (target == 'INPUT' || target == 'SELECT' || target == 'TEXTAREA');
+		
+		if(e.which == 116) {
+			//F5
+			if(giiwa.reload()) {
 				e.preventDefault();
 			}
+		} else if(!edit && e.which == 8){
+			//backspace
+			if(typeof(back) == 'function') {
+				giiwa.back();
+				e.preventDefault();
+			}
+		} else if(!edit && e.which == 36) {
+			//home
+			window.location.href = "/";				
+			e.preventDefault();
+		}
+	});
+	
+	function _check_message() {
+		$.post('/admin/message', {}, function(d){
+			if(d.state == 200) {
+				$('#toolbar .message i').text(d.count);
+				$('#toolbar .message').css('color', '#fff');
+			} else {
+				$('#toolbar .message').css('color', '#ddd');
+			}
+			
+			setTimeout(_check_message, 3000);
 		});
-	})
+	}
+	
+	_check_message();
+	
+})
+
 </script>
 
 #parse('/admin/foot.html')

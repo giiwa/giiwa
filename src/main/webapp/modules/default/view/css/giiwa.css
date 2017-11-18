@@ -348,6 +348,7 @@ a.disabled {
 	color: #eee;
 	text-decoration: none;
 	display: inline-block;
+	line-height: 40px;	
 }
 .toolbar .home a {
 	line-height: 40px;
