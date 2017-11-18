@@ -77,7 +77,8 @@ public class node extends Model {
 		int n = this.getInt("n", 10);
 
 		Beans<Node> bs = Node.dao.load(q, s, n);
-		bs.setTotal((int) Node.dao.count(q));
+		bs.count();
+
 		this.set(bs, s, n);
 
 		this.query.path("/admin/node");

@@ -58,7 +58,8 @@ public class message extends Model {
 		}
 		
 		Beans<Message> bs = Message.dao.load(q, s, n);
-		bs.setTotal(Message.dao.count(q));
+		bs.count();
+
 		this.set(bs, s, n);
 
 		this.query.path("/admin/message");

@@ -50,7 +50,12 @@ public class BeanDAO<T extends Bean> {
 	}
 
 	public Beans<T> load(W q, int s, int n) {
-		return Helper.load(q, s, n, t);
+		Beans<T> bs = Helper.load(q, s, n, t);
+		if (bs != null) {
+			bs.q = q;
+			bs.dao = this;
+		}
+		return bs;
 	}
 
 	public boolean exists(W q) throws SQLException {

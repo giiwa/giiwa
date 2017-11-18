@@ -19,6 +19,7 @@ import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -45,13 +46,22 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 	public List<String> columns = null;
 
+	transient W q;
+	transient BeanDAO<?> dao;
+
+	public void count() {
+		if (dao != null) {
+			total = dao.count(q);
+		}
+	}
+
 	public long getTotal() {
 		return total;
 	}
 
-	public void setTotal(long total) {
-		this.total = total;
-	}
+	// public void setTotal(long total) {
+	// this.total = total;
+	// }
 
 	public JSON getStats() {
 		return stats;
