@@ -126,7 +126,7 @@ public class module extends Model {
 			File[] ff1 = f1.listFiles();
 			if (ff1 != null) {
 				for (File f2 : ff1) {
-					if (includes || Jar.exists(W.create("module", "default").and("name", f2.getName()))) {
+					if (includes || Jar.dao.exists(W.create("module", "default").and("name", f2.getName()))) {
 						list.add(f2.getName());
 						create(out, name + "/depends/" + f2.getName());
 						copy(out, f2);

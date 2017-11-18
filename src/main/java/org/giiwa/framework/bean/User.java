@@ -56,6 +56,8 @@ public class User extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
+	public static final BeanDAO<User> dao = new BeanDAO<User>();
+
 	@Column(name = X.ID)
 	private long id;
 
@@ -167,7 +169,7 @@ public class User extends Bean {
 	 */
 	public boolean isRole(Role r) {
 		try {
-			return Helper.exists(W.create("uid", this.getId()).and("rid", r.getId()), UserRole.class);
+			return dao.exists(W.create("uid", this.getId()).and("rid", r.getId()));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -195,7 +197,7 @@ public class User extends Bean {
 		if (id == null) {
 			id = UID.next("user.id");
 			try {
-				while (Helper.exists(id, User.class)) {
+				while (dao.exists(id)) {
 					id = UID.next("user.id");
 				}
 			} catch (Exception e1) {
@@ -205,9 +207,8 @@ public class User extends Bean {
 		if (log.isDebugEnabled())
 			log.debug("v=" + v);
 
-		Helper.insert(
-				v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()),
-				User.class);
+		dao.insert(
+				v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()));
 
 		return id;
 	}
@@ -228,7 +229,7 @@ public class User extends Bean {
 		log.debug("name=" + name + ", passwd=" + password);
 		// System.out.println("name=" + name + ", passwd=" + password);
 
-		return Helper.load(W.create("name", name).and("password", password).and("deleted", 1, W.OP.neq), User.class);
+		return dao.load(W.create("name", name).and("password", password).and("deleted", 1, W.OP.neq));
 
 	}
 
@@ -244,40 +245,7 @@ public class User extends Bean {
 	 * @return User
 	 */
 	public static User load(String name) {
-		return Helper.load(W.create("name", name).and("deleted", 1, W.OP.neq).sort(X.ID, -1), User.class);
-	}
-
-	/**
-	 * load user by query
-	 * 
-	 * @param q
-	 * @return
-	 */
-	public static User load(W q) {
-		return Helper.load(q.sort(X.ID, -1), User.class);
-	}
-
-	/**
-	 * Load user by id.
-	 * 
-	 * @param id
-	 *            the user id
-	 * @return User
-	 */
-	public static User loadById(long id) {
-
-		return Helper.load(id, User.class);
-	}
-
-	/**
-	 * Load the user object by id
-	 *
-	 * @param id
-	 *            the id
-	 * @return the user
-	 */
-	public static User load(long id) {
-		return Helper.load(id, User.class);
+		return dao.load(W.create("name", name).and("deleted", 1, W.OP.neq).sort(X.ID, -1));
 	}
 
 	/**
@@ -305,7 +273,7 @@ public class User extends Bean {
 
 		}
 
-		Beans<UserRole> b2 = Helper.load(q, 0, 1000, UserRole.class);
+		Beans<UserRole> b2 = UserRole.dao.load(q, 0, 1000);
 		q = W.create();
 		if (b2 != null) {
 			if (b2.size() > 1) {
@@ -321,7 +289,7 @@ public class User extends Bean {
 
 		q.and("deleted", 1, W.OP.neq);
 
-		Beans<User> us = Helper.load(q.sort("name", 1), 0, Integer.MAX_VALUE, User.class);
+		Beans<User> us = dao.load(q.sort("name", 1), 0, Integer.MAX_VALUE);
 		return us;
 
 	}
@@ -392,7 +360,7 @@ public class User extends Bean {
 	 */
 	public Roles getRole() {
 		if (role == null) {
-			Beans<UserRole> bs = Helper.load(W.create("uid", this.getId()), 0, 100, UserRole.class);
+			Beans<UserRole> bs = UserRole.dao.load(W.create("uid", this.getId()), 0, 100);
 			if (bs != null) {
 				List<Long> roles = new ArrayList<Long>();
 				for (UserRole r : bs) {
@@ -412,8 +380,8 @@ public class User extends Bean {
 	 */
 	public void setRole(long rid) {
 		try {
-			if (!Helper.exists(W.create("uid", this.getId()).and("rid", rid), UserRole.class)) {
-				Helper.insert(V.create("uid", this.getId()).set("rid", rid), UserRole.class);
+			if (!UserRole.dao.exists(W.create("uid", this.getId()).and("rid", rid))) {
+				UserRole.dao.insert(V.create("uid", this.getId()).set("rid", rid));
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -427,14 +395,14 @@ public class User extends Bean {
 	 *            the rid
 	 */
 	public void removeRole(long rid) {
-		Helper.delete(W.create("uid", this.getId()).and("rid", rid), UserRole.class);
+		UserRole.dao.delete(W.create("uid", this.getId()).and("rid", rid));
 	}
 
 	/**
 	 * Removes the all roles.
 	 */
 	public void removeAllRoles() {
-		Helper.delete(W.create("uid", this.getId()), UserRole.class);
+		UserRole.dao.delete(W.create("uid", this.getId()));
 
 	}
 
@@ -529,7 +497,7 @@ public class User extends Bean {
 	 * @return Beans
 	 */
 	public static Beans<User> load(W q, int offset, int limit) {
-		return Helper.load(q.and(X.ID, 0, W.OP.gt).sort("name", 1), offset, limit, User.class);
+		return dao.load(q.and(X.ID, 0, W.OP.gt), offset, limit);
 	}
 
 	/**
@@ -568,7 +536,7 @@ public class User extends Bean {
 		} else {
 			v.remove("password");
 		}
-		return Helper.update(id, v.set(X.UPDATED, System.currentTimeMillis()), User.class);
+		return dao.update(id, v);
 	}
 
 	/**
@@ -591,7 +559,7 @@ public class User extends Bean {
 		} else {
 			v.remove("password");
 		}
-		return Helper.update(q, v.set(X.UPDATED, System.currentTimeMillis()), User.class);
+		return dao.update(q, v);
 	}
 
 	/***
@@ -630,7 +598,7 @@ public class User extends Bean {
 	 * @return the int
 	 */
 	public int logout() {
-		return Helper.update(getId(), V.create("sid", X.EMPTY).set(X.UPDATED, System.currentTimeMillis()), User.class);
+		return dao.update(getId(), V.create("sid", X.EMPTY));
 	}
 
 	/**
@@ -652,13 +620,12 @@ public class User extends Bean {
 		/**
 		 * cleanup the old sid for the old logined user
 		 */
-		Helper.update(W.create("sid", sid), V.create("sid", X.EMPTY), User.class);
+		dao.update(W.create("sid", sid), V.create("sid", X.EMPTY));
 
-		return Helper.update(getId(),
+		return dao.update(getId(),
 				V.create("lastlogintime", System.currentTimeMillis()).set("logintimes", getInt("logintimes"))
 						.set("ip", ip).set("failtimes", 0).set("locked", 0).set("lockexpired", 0).set("sid", sid)
-						.set(X.UPDATED, System.currentTimeMillis()),
-				User.class);
+						.set(X.UPDATED, System.currentTimeMillis()));
 
 	}
 
@@ -669,6 +636,8 @@ public class User extends Bean {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
+
+		public static final BeanDAO<UserRole> dao = new BeanDAO<UserRole>();
 
 		@Column(name = "uid")
 		long uid;
@@ -694,6 +663,8 @@ public class User extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
+		public static final BeanDAO<Lock> dao = new BeanDAO<Lock>();
+
 		/**
 		 * Locked.
 		 *
@@ -708,8 +679,8 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
-			return Helper.insert(V.create("uid", uid).set("sid", sid).set("host", host).set("useragent", useragent)
-					.set(X.CREATED, System.currentTimeMillis()), Lock.class);
+			return Lock.dao.insert(V.create("uid", uid).set("sid", sid).set("host", host).set("useragent", useragent)
+					.set(X.CREATED, System.currentTimeMillis()));
 		}
 
 		/**
@@ -720,7 +691,7 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int removed(long uid) {
-			return Helper.delete(W.create("uid", uid), Lock.class);
+			return Lock.dao.delete(W.create("uid", uid));
 		}
 
 		/**
@@ -733,7 +704,7 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int removed(long uid, String sid) {
-			return Helper.delete(W.create("uid", uid).and("sid", sid), Lock.class);
+			return Lock.dao.delete(W.create("uid", uid).and("sid", sid));
 		}
 
 		/**
@@ -746,8 +717,8 @@ public class User extends Bean {
 		 * @return the list
 		 */
 		public static List<Lock> load(long uid, long time) {
-			Beans<Lock> bs = Helper.load(W.create("uid", uid).and(X.CREATED, time, W.OP.gt).sort(X.CREATED, 1), 0,
-					Integer.MAX_VALUE, Lock.class);
+			Beans<Lock> bs = Lock.dao.load(W.create("uid", uid).and(X.CREATED, time, W.OP.gt).sort(X.CREATED, 1), 0,
+					Integer.MAX_VALUE);
 			return bs;
 		}
 
@@ -763,9 +734,9 @@ public class User extends Bean {
 		 * @return the list
 		 */
 		public static List<Lock> loadBySid(long uid, long time, String sid) {
-			Beans<Lock> bs = Helper.load(
+			Beans<Lock> bs = Lock.dao.load(
 					W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("sid", sid).sort(X.CREATED, 1), 0,
-					Integer.MAX_VALUE, Lock.class);
+					Integer.MAX_VALUE);
 			return bs;
 		}
 
@@ -781,9 +752,9 @@ public class User extends Bean {
 		 * @return the list
 		 */
 		public static List<Lock> loadByHost(long uid, long time, String host) {
-			Beans<Lock> bs = Helper.load(
+			Beans<Lock> bs = Lock.dao.load(
 					W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("host", host).sort(X.CREATED, 1), 0,
-					Integer.MAX_VALUE, Lock.class);
+					Integer.MAX_VALUE);
 			return bs;
 		}
 
@@ -795,7 +766,7 @@ public class User extends Bean {
 		 * @return the number deleted
 		 */
 		public static int cleanup(long uid) {
-			return Helper.delete(W.create("uid", uid), Lock.class);
+			return Lock.dao.delete(W.create("uid", uid));
 		}
 
 		public long getUid() {
@@ -831,7 +802,7 @@ public class User extends Bean {
 
 		Lock.cleanup(id);
 
-		return Helper.delete(id, User.class);
+		return dao.delete(id);
 	}
 
 	private List<AuthToken> token_obj;
@@ -853,91 +824,26 @@ public class User extends Bean {
 	 */
 	public static void checkAndInit() {
 		if (Helper.isConfigured()) {
-			if (!User.exists(0)) {
-				List<User> list = User.loadByAccess("access.config.admin");
-				if (list == null || list.size() == 0) {
-					String passwd = UID.random(20);
-					try {
-						PrintStream out = new PrintStream(Model.GIIWA_HOME + "/admin.pwd");
-						out.print(passwd);
-						out.close();
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
+			try {
+				if (!dao.exists(0)) {
+					List<User> list = User.loadByAccess("access.config.admin");
+					if (list == null || list.size() == 0) {
+						String passwd = UID.random(20);
+						try {
+							PrintStream out = new PrintStream(Model.GIIWA_HOME + "/admin.pwd");
+							out.print(passwd);
+							out.close();
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+						User.create(
+								V.create("id", 0L).set("name", "admin").set("password", passwd).set("title", "Admin"));
 					}
-					User.create(V.create("id", 0L).set("name", "admin").set("password", passwd).set("title", "Admin"));
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
-	}
-
-	/**
-	 * test the user exists for the query.
-	 *
-	 * @param q
-	 *            the query
-	 * @return boolean
-	 */
-	public static boolean exists(W q) {
-		try {
-			return Helper.exists(q, User.class);
-		} catch (Exception e1) {
-			log.error(e1.getMessage(), e1);
-		}
-		return false;
-	}
-
-	/**
-	 * test the user exists for the id.
-	 *
-	 * @param id
-	 *            the id
-	 * @return boolean
-	 */
-	public static boolean exists(long id) {
-		try {
-			return Helper.exists(id, User.class);
-		} catch (Exception e1) {
-			log.error(e1.getMessage(), e1);
-		}
-		return false;
-	}
-
-	public static class Param {
-		V v = V.create();
-
-		public static Param create() {
-			return new Param();
-		}
-
-		public V build() {
-			return v;
-		}
-
-		public Param name(String name) {
-			v.force("name", name);
-			return this;
-		}
-
-		public Param nickname(String nickname) {
-			v.force("nickname", nickname);
-			return this;
-		}
-
-		public Param title(String title) {
-			v.force("title", title);
-			return this;
-		}
-
-		public Param password(String password) {
-			v.force("password", password);
-			return this;
-		}
-
-		public Param photo(String photo) {
-			v.force("photo", photo);
-			return this;
-		}
-
 	}
 
 	public static void to(JSON j) {
@@ -965,11 +871,11 @@ public class User extends Bean {
 				long id = e.getLong(X.ID);
 				V v = V.fromJSON(e);
 				v.remove(X.ID, "_id");
-				User s = User.load(W.create(X.ID, id));
+				User s = dao.load(W.create(X.ID, id));
 				if (s != null) {
-					Helper.update(id, v, User.class);
+					dao.update(id, v);
 				} else {
-					Helper.insert(v.append(X.ID, id), User.class);
+					dao.insert(v.append(X.ID, id));
 				}
 				total++;
 			}

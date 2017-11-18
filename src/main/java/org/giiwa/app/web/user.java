@@ -116,7 +116,7 @@ public class user extends Model {
 
 						String role = Global.getString("user.role", "N/A");
 						Role r = Role.loadByName(role);
-						User u = User.loadById(id);
+						User u = User.dao.load(id);
 						if (r != null) {
 							u.setRole(r.getId());
 						}
@@ -417,7 +417,7 @@ public class user extends Model {
 			}
 		} else {
 			String sid = this.getString("sid");
-			AuthToken.delete(W.create("sid", sid));
+			AuthToken.dao.delete(W.create("sid", sid));
 		}
 
 		String refer = this.getString("refer");
@@ -483,26 +483,31 @@ public class user extends Model {
 
 		JSON jo = new JSON();
 		if ("name".equals(name)) {
-			if (User.exists(W.create("name", value))) {
+			try {
+				if (User.dao.exists(W.create("name", value))) {
 
-				jo.put(X.STATE, 201);
-				jo.put(X.MESSAGE, lang.get("user.name.exists"));
-
-				GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",exists", login,
-						this.getRemoteHost());
-
-			} else {
-				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
-
-				if (X.isEmpty(value) || !value.matches(rule)) {
 					jo.put(X.STATE, 201);
-					jo.put(X.MESSAGE, lang.get("user.name.format.error"));
+					jo.put(X.MESSAGE, lang.get("user.name.exists"));
 
-					GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule,
-							login, this.getRemoteHost());
+					GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",exists", login,
+							this.getRemoteHost());
+
 				} else {
-					jo.put(X.STATE, 200);
+					String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
+
+					if (X.isEmpty(value) || !value.matches(rule)) {
+						jo.put(X.STATE, 201);
+						jo.put(X.MESSAGE, lang.get("user.name.format.error"));
+
+						GLog.securitylog.info(user.class, "verify",
+								"name=" + name + ",value=" + value + ",rule=" + rule, login, this.getRemoteHost());
+					} else {
+						jo.put(X.STATE, 200);
+					}
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				jo.append(X.STATE, 500).append(X.MESSAGE, "internal error");
 			}
 		} else if ("password".equals(name)) {
 			String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
@@ -571,7 +576,7 @@ public class user extends Model {
 		if (method.isPost()) {
 			long id = login.getId();
 			JSON j = this.getJSON();
-			User u = User.loadById(id);
+			User u = User.dao.load(id);
 			if (u != null) {
 				String password = this.getString("password");
 				if (!X.isEmpty(password)) {
@@ -586,7 +591,7 @@ public class user extends Model {
 
 					this.set(X.MESSAGE, lang.get("save.success"));
 
-					u = User.loadById(id);
+					u = User.dao.load(id);
 					AuthToken.delete(id);
 					this.setUser(u);
 				}
@@ -596,7 +601,7 @@ public class user extends Model {
 			}
 			this.set(j);
 		} else {
-			User u = User.loadById(login.getId());
+			User u = User.dao.load(login.getId());
 			this.set("u", u);
 			JSON jo = new JSON();
 			u.toJSON(jo);
@@ -614,7 +619,7 @@ public class user extends Model {
 		if (method.isPost()) {
 			long id = login.getId();
 			JSON j = this.getJSON();
-			User u = User.loadById(id);
+			User u = User.dao.load(id);
 			if (u != null) {
 				String password = this.getString("password");
 				if (!X.isEmpty(password)) {
@@ -629,7 +634,7 @@ public class user extends Model {
 
 					this.set(X.MESSAGE, lang.get("save.success"));
 
-					u = User.loadById(id);
+					u = User.dao.load(id);
 					AuthToken.delete(id);
 					this.setUser(u);
 				}
@@ -639,7 +644,7 @@ public class user extends Model {
 			}
 			this.set(j);
 		} else {
-			User u = User.loadById(login.getId());
+			User u = User.dao.load(login.getId());
 			this.set("u", u);
 			JSON jo = new JSON();
 			u.toJSON(jo);
@@ -665,7 +670,7 @@ public class user extends Model {
 			if (!X.isEmpty(email)) {
 				if (phase == 0) {
 					// verify email and send a code
-					Code c = Code.load(W.create("s2", email).sort(X.CREATED, -1));
+					Code c = Code.dao.load(W.create("s2", email).sort(X.CREATED, -1));
 					if (c != null && c.getUpdated() < X.AMINUTE) {
 
 						jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
@@ -714,7 +719,7 @@ public class user extends Model {
 									if (Email.send(lang.get("mail.validation.code"), body, email)) {
 										jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
 										jo.put(X.STATE, HttpServletResponse.SC_OK);
-										Code.update(W.create("s1", code).and("s2", email),
+										Code.dao.update(W.create("s1", code).and("s2", email),
 												V.create(X.UPDATED, System.currentTimeMillis()));
 
 									} else {
@@ -766,7 +771,7 @@ public class user extends Model {
 
 				if (phase == 0) {
 					// verify email and send a code
-					Code c = Code.load(W.create("s2", phone).sort(X.CREATED, -1));
+					Code c = Code.dao.load(W.create("s2", phone).sort(X.CREATED, -1));
 					if (c != null && c.getUpdated() < X.AMINUTE) {
 
 						jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
@@ -811,7 +816,7 @@ public class user extends Model {
 							if (Sms.send(phone, "user.forget.password", j1)) {
 								jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
 								jo.put(X.STATE, HttpServletResponse.SC_OK);
-								Code.update(W.create("s1", code).and("s2", phone),
+								Code.dao.update(W.create("s1", code).and("s2", phone),
 										V.create(X.UPDATED, System.currentTimeMillis()));
 
 							} else {

@@ -14,14 +14,12 @@
 */
 package org.giiwa.framework.bean;
 
-import java.sql.SQLException;
 import java.util.Base64;
 
 import org.giiwa.core.base.Digest;
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
@@ -44,6 +42,8 @@ public class App extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	public static final BeanDAO<App> dao = new BeanDAO<App>();
 
 	@Column(name = X.ID, index = true, unique = true)
 	private long id;
@@ -96,7 +96,7 @@ public class App extends Bean {
 
 	public Role getRole_obj() {
 		if (role_obj == null) {
-			role_obj = Role.loadById(role);
+			role_obj = Role.dao.load(role);
 		}
 		return role_obj;
 	}
@@ -168,19 +168,6 @@ public class App extends Bean {
 	}
 
 	/**
-	 * Exists.
-	 *
-	 * @param appid
-	 *            the appid
-	 * @return true, if successful
-	 * @throws SQLException
-	 *             the SQL exception
-	 */
-	public static boolean exists(String appid) throws SQLException {
-		return Helper.exists(W.create("appid", appid), App.class);
-	}
-
-	/**
 	 * Creates the.
 	 *
 	 * @param v
@@ -190,25 +177,14 @@ public class App extends Bean {
 	public static int create(V v) {
 		try {
 			long id = UID.next("app.id");
-			if (Helper.exists(id, App.class)) {
+			if (dao.exists(id)) {
 				id = UID.next("app.id");
 			}
-			return Helper.insert(v.set(X.ID, id), App.class);
+			return dao.insert(v.set(X.ID, id));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 		return -1;
-	}
-
-	/**
-	 * Load.
-	 *
-	 * @param id
-	 *            the id
-	 * @return the app
-	 */
-	public static App load(long id) {
-		return Helper.load(id, App.class);
 	}
 
 	/**
@@ -219,7 +195,7 @@ public class App extends Bean {
 	 */
 	public static void delete(String appid) {
 		Cache.remove("app/" + appid);
-		Helper.delete(W.create("appid", appid), App.class);
+		dao.delete(W.create("appid", appid));
 	}
 
 	/**
@@ -232,37 +208,11 @@ public class App extends Bean {
 	public static App load(String appid) {
 		App a = Cache.get("app/" + appid);
 		if (a == null || a.expired()) {
-			a = load(W.create("appid", appid));
+			a = dao.load(W.create("appid", appid));
 			a.setExpired(System.currentTimeMillis() + X.AMINUTE);
 			Cache.set("app/" + appid, a);
 		}
 		return a;
-	}
-
-	/**
-	 * Load.
-	 *
-	 * @param q
-	 *            the q
-	 * @return the app
-	 */
-	public static App load(W q) {
-		return Helper.load(q, App.class);
-	}
-
-	/**
-	 * Load.
-	 *
-	 * @param q
-	 *            the q
-	 * @param s
-	 *            the s
-	 * @param n
-	 *            the n
-	 * @return the beans
-	 */
-	public static Beans<App> load(W q, int s, int n) {
-		return Helper.load(q, s, n, App.class);
 	}
 
 	/**
@@ -276,7 +226,7 @@ public class App extends Bean {
 	 */
 	public static int update(String appid, V v) {
 		Cache.remove("node/" + appid);
-		return Helper.update(W.create("appid", appid), v, App.class);
+		return dao.update(W.create("appid", appid), v);
 	}
 
 	public static class Param {
@@ -399,7 +349,7 @@ public class App extends Bean {
 	}
 
 	public int inc(String name, int n) {
-		return Helper.inc(W.create(X.ID, id), name, n, null, App.class);
+		return dao.inc(W.create(X.ID, id), name, n, null);
 	}
 
 }

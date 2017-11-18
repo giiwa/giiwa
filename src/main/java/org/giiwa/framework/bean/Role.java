@@ -37,6 +37,8 @@ public class Role extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
+	public static final BeanDAO<Role> dao = new BeanDAO<Role>();
+
 	@Column(name = X.ID)
 	private long id;
 
@@ -83,11 +85,11 @@ public class Role extends Bean {
 
 		long id = UID.next("role.id");
 		try {
-			while (Helper.exists(W.create(X.ID, id), Role.class)) {
+			while (dao.exists(id)) {
 				id = UID.next("role.id");
 			}
-			if (Helper.insert(V.create(X.ID, id).set("id", id).set("name", name).set("memo", memo).set(X.UPDATED,
-					System.currentTimeMillis()), Role.class) > 0) {
+			if (dao.insert(V.create(X.ID, id).set("id", id).set("name", name).set("memo", memo).set(X.UPDATED,
+					System.currentTimeMillis())) > 0) {
 				return id;
 			}
 		} catch (Exception e1) {
@@ -106,7 +108,7 @@ public class Role extends Bean {
 	 */
 	public List<String> getAccesses() {
 		if (accesses == null) {
-			accesses = Helper.distinct("name", W.create("rid", this.getId()), RoleAccess.class, String.class);
+			accesses = dao.distinct("name", W.create("rid", this.getId()), String.class);
 		}
 
 		return accesses;
@@ -123,9 +125,9 @@ public class Role extends Bean {
 	public static void setAccess(long rid, String name) {
 
 		try {
-			if (!Helper.exists(W.create("rid", rid).and("name", name), RoleAccess.class)) {
-				Helper.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)), RoleAccess.class);
-				Helper.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()), Role.class);
+			if (!dao.exists(W.create("rid", rid).and("name", name))) {
+				dao.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)));
+				dao.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -142,9 +144,9 @@ public class Role extends Bean {
 	 *            the name
 	 */
 	public static void removeAccess(long rid, String name) {
-		Helper.delete(W.create("rid", rid).and("name", name), RoleAccess.class);
+		dao.delete(W.create("rid", rid).and("name", name));
 
-		Helper.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()), Role.class);
+		dao.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
 
 	}
 
@@ -168,27 +170,11 @@ public class Role extends Bean {
 		return list;
 	}
 
-	/**
-	 * Exist.
-	 *
-	 * @param rid
-	 *            the rid
-	 * @return true, if successful
-	 */
-	public static boolean exist(long rid) {
-		try {
-			return Helper.exists(rid, Role.class);
-		} catch (Exception e1) {
-			log.error(e1.getMessage(), e1);
-		}
-		return false;
-	}
-
 	private static Role load(long rid) {
 		Role r = Cache.get("role://" + rid);
 
 		if (r == null || r.expired()) {
-			r = Helper.load(rid, Role.class);
+			r = dao.load(rid);
 
 			if (r != null) {
 				r.setExpired(60 * 1000 + System.currentTimeMillis());
@@ -207,7 +193,7 @@ public class Role extends Bean {
 	 * @return the role
 	 */
 	public static Role loadByName(String name) {
-		return Helper.load(W.create("name", name), Role.class);
+		return dao.load(W.create("name", name));
 	}
 
 	public long getId() {
@@ -228,51 +214,17 @@ public class Role extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Role> load(int offset, int limit) {
-		return Helper.load(W.create().sort("name", 1), offset, limit, Role.class);
-	}
-
-	/**
-	 * Load by id.
-	 * 
-	 * @param id
-	 *            the id
-	 * @return the role
-	 */
-	public static Role loadById(long id) {
-		return Helper.load(id, Role.class);
-	}
-
-	/**
-	 * Update.
-	 * 
-	 * @param v
-	 *            the v
-	 * @return the int
-	 */
-	public int update(V v) {
-		return Helper.update(this.getId(), v.set(X.UPDATED, System.currentTimeMillis()), Role.class);
+		return dao.load(W.create().sort("name", 1), offset, limit);
 	}
 
 	public void setAccess(String[] accesses) {
 		if (accesses != null) {
-			Helper.delete(W.create("rid", this.getId()), RoleAccess.class);
+			dao.delete(W.create("rid", this.getId()));
 
 			for (String a : accesses) {
-				Helper.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)),
-						RoleAccess.class);
+				dao.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)));
 			}
 		}
-	}
-
-	/**
-	 * Delete.
-	 * 
-	 * @param id
-	 *            the id
-	 * @return the int
-	 */
-	public static int delete(long id) {
-		return Helper.delete(id, Role.class);
 	}
 
 	@Table(name = "gi_roleaccess")
@@ -282,6 +234,8 @@ public class Role extends Bean {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
+
+		public static final BeanDAO<RoleAccess> dao = new BeanDAO<RoleAccess>();
 
 	}
 
@@ -297,7 +251,7 @@ public class Role extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Role> loadByAccess(String access, int s, int n) {
-		Beans<RoleAccess> bs = Helper.load(W.create("name", access).sort("rid", 1), 0, 1000, RoleAccess.class);
+		Beans<RoleAccess> bs = RoleAccess.dao.load(W.create("name", access).sort("rid", 1), 0, 1000);
 
 		W q = W.create();
 		if (bs == null || bs.isEmpty()) {
@@ -314,7 +268,7 @@ public class Role extends Bean {
 			q.and(X.ID, bs.get(0).getLong("rid"));
 		}
 
-		return Helper.load(q.sort("name", 1), s, n, Role.class);
+		return dao.load(q.sort("name", 1), s, n);
 	}
 
 	public static void to(JSON j) {
@@ -322,20 +276,16 @@ public class Role extends Bean {
 		W q = W.create().sort(X.ID, 1);
 
 		List<JSON> l1 = new ArrayList<JSON>();
-		Beans<Role> bs = Role.load(q, s, 100);
+		Beans<Role> bs = dao.load(q, s, 100);
 		while (bs != null && !bs.isEmpty()) {
 			for (Role e : bs) {
 				l1.add(e.getJSON());
 			}
 			s += bs.size();
-			bs = Role.load(q, s, 100);
+			bs = dao.load(q, s, 100);
 		}
 
 		j.append("roles", l1);
-	}
-
-	private static Beans<Role> load(W q, int s, int n) {
-		return Helper.load(q, s, n, Role.class);
 	}
 
 	public static int from(JSON j) {
@@ -348,9 +298,9 @@ public class Role extends Bean {
 				v.remove(X.ID, "_id");
 				Role s = Role.load(id);
 				if (s != null) {
-					Helper.update(id, v, Role.class);
+					dao.update(id, v);
 				} else {
-					Helper.insert(v.append(X.ID, id), Role.class);
+					dao.insert(v.append(X.ID, id));
 				}
 				total++;
 			}

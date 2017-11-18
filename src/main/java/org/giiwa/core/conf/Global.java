@@ -38,6 +38,8 @@ public final class Global extends Bean {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
+	public static final BeanDAO<Global> dao = new BeanDAO<Global>();
+
 	@Column(name = X.ID)
 	String id;
 
@@ -69,7 +71,7 @@ public final class Global extends Bean {
 
 		Global c = cached.get("global/" + name);
 		if (c == null || c.expired()) {
-			c = Helper.load(W.create(X.ID, name), Global.class);
+			c = dao.load(name);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
@@ -99,7 +101,7 @@ public final class Global extends Bean {
 
 		Global c = cached.get("global/" + name);
 		if (c == null || c.expired()) {
-			c = Helper.load(W.create(X.ID, name), Global.class);
+			c = dao.load(name);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
@@ -131,7 +133,7 @@ public final class Global extends Bean {
 		try {
 			Global c = cached.get("global/" + name);
 			if (c == null || c.expired()) {
-				c = Helper.load(W.create(X.ID, name), Global.class);
+				c = dao.load(name);
 				if (c != null) {
 					/**
 					 * avoid restarted, can not load new config
@@ -173,7 +175,7 @@ public final class Global extends Bean {
 		}
 
 		if (o == null) {
-			Helper.delete(W.create(X.ID, name), Global.class);
+			dao.delete(W.create(X.ID, name));
 			return;
 		}
 
@@ -194,10 +196,10 @@ public final class Global extends Bean {
 			cached.put("global/" + name, g);
 
 			if (Helper.isConfigured()) {
-				if (Helper.exists(W.create(X.ID, name), Global.class)) {
-					Helper.update(W.create(X.ID, name), v, Global.class);
+				if (dao.exists(name)) {
+					dao.update(name, v);
 				} else {
-					Helper.insert(v.set(X.ID, name), Global.class);
+					dao.insert(v.force(X.ID, name));
 				}
 			}
 		} catch (Exception e1) {
@@ -251,13 +253,13 @@ public final class Global extends Bean {
 
 			while (timeout == 0 || timeout >= t.pastms()) {
 
-				Global f = Helper.load(name, Global.class);
+				Global f = dao.load(name);
 
 				if (f == null) {
 					String linkid = UID.random();
 
-					Helper.insert(V.create(X.ID, name).set("s", Local.id()).set("linkid", linkid), Global.class);
-					f = Helper.load(name, Global.class);
+					dao.insert(V.create(X.ID, name).set("s", Local.id()).set("linkid", linkid));
+					f = dao.load(name);
 					if (f == null) {
 						log.error("occur error when create unique id, name=" + name);
 						return false;
@@ -280,8 +282,7 @@ public final class Global extends Bean {
 					String s = f.getString("s");
 					// 10 seconds
 					if (X.isEmpty(s) || System.currentTimeMillis() - f.getUpdated() > 10000) {
-						if (Helper.update(W.create(X.ID, name).and("s", s), V.create("s", Local.id()),
-								Global.class) > 0) {
+						if (dao.update(W.create(X.ID, name).and("s", s), V.create("s", Local.id())) > 0) {
 							locked.put(name, Thread.currentThread());
 							heartbeat.schedule(10);
 
@@ -319,7 +320,7 @@ public final class Global extends Bean {
 			Thread t = locked.remove(name);
 			if (t != null && t.getId() == Thread.currentThread().getId()) {
 				locked.remove(name);
-				Helper.update(W.create(X.ID, name).and("s", Local.id()), V.create("s", X.EMPTY), Global.class);
+				dao.update(W.create(X.ID, name).and("s", Local.id()), V.create("s", X.EMPTY));
 				locked.notifyAll();
 				return true;
 			}
@@ -339,8 +340,8 @@ public final class Global extends Bean {
 				String[] names = locked.keySet().toArray(new String[locked.size()]);
 
 				for (String name : names) {
-					if (Helper.update(W.create(X.ID, name).and("s", Local.id()),
-							V.create(X.UPDATED, System.currentTimeMillis()), Global.class) <= 0) {
+					if (dao.update(W.create(X.ID, name).and("s", Local.id()),
+							V.create(X.UPDATED, System.currentTimeMillis())) <= 0) {
 
 						// the lock has been acquired by other
 						Thread t = locked.get(name);

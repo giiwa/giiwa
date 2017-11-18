@@ -40,6 +40,8 @@ public class Access extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
+	public final static BeanDAO<Access> dao = new BeanDAO<Access>();
+
 	@Column(name = X.ID, index = true, unique = true)
 	private String name;
 
@@ -83,7 +85,7 @@ public class Access extends Bean {
 			String[] ss = name.split("[\\|｜]");
 			for (String s : ss) {
 				if (!exists(s)) {
-					Helper.insert(V.create(X.ID, s), Access.class);
+					dao.insert(V.create(X.ID, s));
 				}
 			}
 		}
@@ -104,7 +106,7 @@ public class Access extends Bean {
 		}
 
 		try {
-			if (Helper.exists(name, Access.class)) {
+			if (dao.exists(name)) {
 				cache.add(name);
 				return true;
 			}
@@ -120,7 +122,7 @@ public class Access extends Bean {
 	 * @return the map
 	 */
 	public static Map<String, List<Access>> load() {
-		Beans<Access> bs = Helper.load(W.create(), 0, Integer.MAX_VALUE, Access.class);
+		Beans<Access> bs = dao.load(W.create(), 0, Integer.MAX_VALUE);
 		List<Access> list = bs;
 		Map<String, List<Access>> r = new TreeMap<String, List<Access>>();
 		String group = null;

@@ -33,13 +33,14 @@ import org.giiwa.core.task.Task;
  * @author yjiang
  * 
  */
-@Table(name = "gi_repo")
 public class Repo extends Bean {
 
 	/**
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
+
+	public static final BeanDAO<Entity> dao = new BeanDAO<Entity>();
 
 	private static Log log = LogFactory.getLog(Repo.class);
 
@@ -66,7 +67,7 @@ public class Repo extends Bean {
 	public static String id() {
 		String id = UID.id(System.currentTimeMillis(), UID.random());
 		try {
-			while (Helper.exists(id, Repo.class)) {
+			while (dao.exists(id)) {
 				id = UID.id(System.currentTimeMillis(), UID.random());
 			}
 		} catch (Exception e) {
@@ -87,7 +88,7 @@ public class Repo extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Entity> list(long uid, int offset, int limit) {
-		return Helper.load(W.create("uid", uid).sort(X.CREATED, -1), offset, limit, Entity.class);
+		return dao.load(W.create("uid", uid).sort(X.CREATED, -1), offset, limit);
 	}
 
 	/**
@@ -102,7 +103,7 @@ public class Repo extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Entity> list(String tag, int offset, int limit) {
-		return Helper.load(W.create("tag", tag).sort(X.CREATED, -1), offset, limit, Entity.class);
+		return dao.load(W.create("tag", tag).sort(X.CREATED, -1), offset, limit);
 	}
 
 	/**
@@ -270,7 +271,7 @@ public class Repo extends Bean {
 		if (f.exists()) {
 			Entity e = null;
 			if (!X.isEmpty(id)) {
-				e = Helper.load(id, Entity.class);
+				e = dao.load(id);
 			}
 
 			if (e == null) {
@@ -359,7 +360,7 @@ public class Repo extends Bean {
 		/**
 		 * delete the info in table
 		 */
-		Helper.delete(id, Entity.class);
+		dao.delete(id);
 
 		return 1;
 	}
@@ -449,7 +450,7 @@ public class Repo extends Bean {
 
 		public User getUser() {
 			if (user == null) {
-				user = User.loadById(this.getLong("uid"));
+				user = User.dao.load(this.getLong("uid"));
 			}
 			return user;
 		}
@@ -547,13 +548,12 @@ public class Repo extends Bean {
 					}
 
 					try {
-						if (Helper.exists(getId(), Entity.class)) {
-							Helper.update(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()),
-									Entity.class);
+						if (dao.exists(getId())) {
+							dao.update(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()));
 						} else {
-							Helper.insert(V.create(X.ID, getId()).set("uid", 0).set("total", pp).set("tag", tag)
+							dao.insert(V.create(X.ID, getId()).set("uid", 0).set("total", pp).set("tag", tag)
 									.set("expired", getExpired()).set(X.CREATED, System.currentTimeMillis())
-									.set("flag", flag).set("name", name), Entity.class);
+									.set("flag", flag).set("name", name));
 						}
 					} catch (Exception e1) {
 						log.error(e1.getMessage(), e1);
@@ -746,17 +746,6 @@ public class Repo extends Bean {
 		}
 
 		/**
-		 * Update.
-		 * 
-		 * @param v
-		 *            the v
-		 * @return the int
-		 */
-		public int update(V v) {
-			return Helper.update(getId(), v, Entity.class);
-		}
-
-		/**
 		 * Move to.
 		 * 
 		 * @param folder
@@ -776,7 +765,7 @@ public class Repo extends Bean {
 				log.error("rename file failed!!! dest=" + f2.getName() + ", src=" + f1.getName());
 			}
 
-			Helper.update(getId(), V.create("folder", folder), Entity.class);
+			dao.update(getId(), V.create("folder", folder));
 
 		}
 
@@ -853,21 +842,6 @@ public class Repo extends Bean {
 			}
 
 		}
-	}
-
-	/**
-	 * Load.
-	 *
-	 * @param q
-	 *            the query and order
-	 * @param s
-	 *            the start number
-	 * @param n
-	 *            the number of items
-	 * @return the beans
-	 */
-	public static Beans<Entity> load(W q, int s, int n) {
-		return Helper.load(q, s, n, Entity.class);
 	}
 
 	private static AtomicLong total = new AtomicLong(0); // byte

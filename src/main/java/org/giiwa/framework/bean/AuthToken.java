@@ -18,9 +18,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Column;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
@@ -38,222 +38,186 @@ import org.giiwa.core.conf.Global;
 @Table(name = "gi_authtoken")
 public class AuthToken extends Bean {
 
-  /**
-   * 
-   */
-  private static final long serialVersionUID = 1L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-  @Column(name = X.ID, index = true, unique = true)
-  private String            id;
+	public static final BeanDAO<AuthToken> dao = new BeanDAO<AuthToken>();
 
-  @Column(name = "uid")
-  private long              uid;
+	@Column(name = X.ID, index = true, unique = true)
+	private String id;
 
-  @Column(name = "token", index = true)
-  private String            token;
+	@Column(name = "uid")
+	private long uid;
 
-  @Column(name = "expired", index = true)
-  private long              expired;
+	@Column(name = "token", index = true)
+	private String token;
 
-  @Column(name = "sid")
-  private String            sid;
+	@Column(name = "expired", index = true)
+	private long expired;
 
-  /**
-   * get the id
-   * 
-   * @return String
-   */
-  public String getId() {
-    return id;
-  }
+	@Column(name = "sid")
+	private String sid;
 
-  /**
-   * get the uid
-   * 
-   * @return long
-   */
-  public long getUid() {
-    return uid;
-  }
+	/**
+	 * get the id
+	 * 
+	 * @return String
+	 */
+	public String getId() {
+		return id;
+	}
 
-  /**
-   * get the token
-   * 
-   * @return String
-   */
-  public String getToken() {
-    return token;
-  }
+	/**
+	 * get the uid
+	 * 
+	 * @return long
+	 */
+	public long getUid() {
+		return uid;
+	}
 
-  /**
-   * get the expired timestamp
-   * 
-   * @return long
-   */
-  public long getExpired() {
-    return expired;
-  }
+	/**
+	 * get the token
+	 * 
+	 * @return String
+	 */
+	public String getToken() {
+		return token;
+	}
 
-  private User user_obj;
+	/**
+	 * get the expired timestamp
+	 * 
+	 * @return long
+	 */
+	public long getExpired() {
+		return expired;
+	}
 
-  /**
-   * get the user object
-   * 
-   * @return User
-   */
-  public User getUser_obj() {
-    if (user_obj == null && this.getUid() >= 0) {
-      user_obj = User.loadById(this.getUid());
-    }
-    return user_obj;
-  }
+	private User user_obj;
 
-  /**
-   * get the session id
-   * 
-   * @return String
-   */
-  public String getSid() {
-    return sid;
-  }
+	/**
+	 * get the user object
+	 * 
+	 * @return User
+	 */
+	public User getUser_obj() {
+		if (user_obj == null && this.getUid() >= 0) {
+			user_obj = User.dao.load(this.getUid());
+		}
+		return user_obj;
+	}
 
-  /**
-   * update the session token.
-   *
-   * @param uid
-   *          the uid
-   * @param sid
-   *          the sid
-   * @param ip
-   *          the ip
-   * @return the auth token
-   */
-  public static AuthToken update(long uid, String sid, String ip) {
-    String token = UID.random(20);
-    long expired = System.currentTimeMillis() + Global.getLong("token.expired", X.AWEEK);
-    String id = UID.id(uid, sid, ip, token);
+	/**
+	 * get the session id
+	 * 
+	 * @return String
+	 */
+	public String getSid() {
+		return sid;
+	}
 
-    V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
+	/**
+	 * update the session token.
+	 *
+	 * @param uid
+	 *            the uid
+	 * @param sid
+	 *            the sid
+	 * @param ip
+	 *            the ip
+	 * @return the auth token
+	 */
+	public static AuthToken update(long uid, String sid, String ip) {
+		String token = UID.random(20);
+		long expired = System.currentTimeMillis() + Global.getLong("token.expired", X.AWEEK);
+		String id = UID.id(uid, sid, ip, token);
 
-    try {
-      if (Helper.exists(id, AuthToken.class)) {
-        // update
-        Helper.update(id, v, AuthToken.class);
-      } else {
-        // insert
-        Helper.insert(v.set(X.ID, id), AuthToken.class);
-      }
-    } catch (Exception e1) {
-      log.error(e1.getMessage(), e1);
-    }
+		V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
 
-    return load(id);
-  }
+		try {
+			if (dao.exists(id)) {
+				// update
+				dao.update(id, v);
+			} else {
+				// insert
+				dao.insert(v.set(X.ID, id));
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		}
 
-  /**
-   * load the authtoken.
-   *
-   * @param id
-   *          the id
-   * @return AuthToken
-   */
-  public static AuthToken load(String id) {
-    return Helper.load(id, AuthToken.class);
-  }
+		return dao.load(id);
+	}
 
-  /**
-   * load the AuthToken by the session and token.
-   *
-   * @param sid
-   *          the sid
-   * @param token
-   *          the token
-   * @return AuthToken
-   */
-  public static AuthToken load(String sid, String token) {
-    return Helper.load(W.create("sid", sid).and("token", token).and("expired", System.currentTimeMillis(), W.OP.gt),
-        AuthToken.class);
-  }
+	/**
+	 * load the AuthToken by the session and token.
+	 *
+	 * @param sid
+	 *            the sid
+	 * @param token
+	 *            the token
+	 * @return AuthToken
+	 */
+	public static AuthToken load(String sid, String token) {
+		return dao.load(W.create("sid", sid).and("token", token).and("expired", System.currentTimeMillis(), W.OP.gt));
+	}
 
-  /**
-   * remove all the session and token for the uid, and return all the session id
-   * for the user.
-   *
-   * @param uid
-   *          the user id
-   * @return List of session
-   */
-  public static List<String> delete(long uid) {
-    List<String> list = new ArrayList<String>();
-    W q = W.create("uid", uid);
-    int s = 0;
-    Beans<AuthToken> bs = load(q, s, 10);
-    while (bs != null && !bs.isEmpty()) {
-      for (AuthToken t : bs) {
-        String sid = t.getSid();
-        list.add(sid);
-      }
-      s += bs.size();
-      bs = load(q, s, 10);
-    }
-    Helper.delete(W.create("uid", uid), AuthToken.class);
-    return list;
-  }
+	/**
+	 * remove all the session and token for the uid, and return all the session id
+	 * for the user.
+	 *
+	 * @param uid
+	 *            the user id
+	 * @return List of session
+	 */
+	public static List<String> delete(long uid) {
+		List<String> list = new ArrayList<String>();
+		W q = W.create("uid", uid);
+		int s = 0;
+		Beans<AuthToken> bs = dao.load(q, s, 10);
+		while (bs != null && !bs.isEmpty()) {
+			for (AuthToken t : bs) {
+				String sid = t.getSid();
+				list.add(sid);
+			}
+			s += bs.size();
+			bs = dao.load(q, s, 10);
+		}
+		dao.delete(W.create("uid", uid));
+		return list;
+	}
 
-  /**
-   * Load the Token by the query
-   *
-   * @param q
-   *          the query and order
-   * @param s
-   *          the start number
-   * @param n
-   *          the number of items
-   * @return Beans of the Token
-   */
-  public static Beans<AuthToken> load(W q, int s, int n) {
-    return Helper.load(q, s, n, AuthToken.class);
-  }
+	/**
+	 * load Beans by uid, a uid may has more AuthToken.
+	 *
+	 * @param uid
+	 *            the user id
+	 * @return Beans of the Token
+	 */
+	public static Beans<AuthToken> load(long uid) {
+		return dao.load(W.create("uid", uid).and("expired", System.currentTimeMillis(), W.OP.gt), 0, 100);
+	}
 
-  /**
-   * load Beans by uid, a uid may has more AuthToken.
-   *
-   * @param uid
-   *          the user id
-   * @return Beans of the Token
-   */
-  public static Beans<AuthToken> load(long uid) {
-    return Helper.load(W.create("uid", uid).and("expired", System.currentTimeMillis(), W.OP.gt), 0, 100,
-        AuthToken.class);
-  }
+	/**
+	 * delete all the token by the uid and sid
+	 * 
+	 * @param uid
+	 *            the user id
+	 * @param sid
+	 *            the session id
+	 */
+	public static void delete(long uid, String sid) {
+		dao.delete(W.create("uid", uid).and("sid", sid));
+	}
 
-  /**
-   * delete all the token by the uid and sid
-   * 
-   * @param uid
-   *          the user id
-   * @param sid
-   *          the session id
-   */
-  public static void delete(long uid, String sid) {
-    delete(W.create("uid", uid).and("sid", sid));
-  }
-
-  /**
-   * delete the auth-token by the query
-   * 
-   * @param q
-   *          the query
-   */
-  public static void delete(W q) {
-    Helper.delete(q, AuthToken.class);
-  }
-
-  /**
-   * cleanup the expired token
-   */
-  public static void cleanup() {
-    Helper.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lt), AuthToken.class);
-  }
+	/**
+	 * cleanup the expired token
+	 */
+	public static void cleanup() {
+		dao.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lt));
+	}
 
 }

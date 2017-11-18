@@ -20,7 +20,6 @@ import java.util.Map;
 import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Node;
@@ -36,6 +35,8 @@ public final class Local extends Bean {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
+
+	public static final BeanDAO<Local> dao = new BeanDAO<Local>();
 
 	@Column(name = X.ID)
 	String id;
@@ -74,7 +75,7 @@ public final class Local extends Bean {
 
 		Local c = Cache.get("local/" + s);
 		if (c == null || c.expired()) {
-			c = Helper.load(W.create(X.ID, s), Local.class);
+			c = dao.load(s);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
@@ -117,7 +118,7 @@ public final class Local extends Bean {
 
 		Local c = Cache.get("global/" + name1);
 		if (c == null || c.expired()) {
-			c = Helper.load(W.create(X.ID, name1), Local.class);
+			c = dao.load(name1);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
@@ -154,7 +155,7 @@ public final class Local extends Bean {
 
 		Local c = Cache.get("local/" + s);
 		if (c == null || c.expired()) {
-			c = Helper.load(W.create(X.ID, s), Local.class);
+			c = dao.load(s);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
@@ -190,7 +191,7 @@ public final class Local extends Bean {
 		Cache.remove("local/" + s);
 
 		if (o == null) {
-			Helper.delete(W.create(X.ID, s), Local.class);
+			dao.delete(s);
 			return;
 		}
 
@@ -209,10 +210,10 @@ public final class Local extends Bean {
 				v.set("s", o.toString());
 			}
 
-			if (Helper.exists(W.create(X.ID, s), Local.class)) {
-				Helper.update(W.create(X.ID, s), v, Local.class);
+			if (dao.exists(s)) {
+				dao.update(s, v);
 			} else {
-				Helper.insert(v.set(X.ID, s), Local.class);
+				dao.insert(v.force(X.ID, s));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);

@@ -39,7 +39,7 @@ public class app extends Model {
 		if (method.isPost()) {
 			String appid = this.getString("appid");
 			try {
-				if (!App.exists(appid)) {
+				if (!App.dao.exists(appid)) {
 					String secret = UID.random(32);
 					App.create(App.Param.create().appid(appid).role(this.getLong("role")).secret(secret)
 							.memo(this.getString("memo")).build());
@@ -96,7 +96,7 @@ public class app extends Model {
 	@Path(path = "detail", login = true, access = "access.config.admin")
 	public void detail() {
 		long id = this.getLong("id");
-		App d = App.load(id);
+		App d = App.dao.load(id);
 		this.set("b", d);
 		this.set("id", id);
 		this.show("/admin/app.detail.html");
@@ -121,7 +121,7 @@ public class app extends Model {
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
-		Beans<App> bs = App.load(q, s, n);
+		Beans<App> bs = App.dao.load(q, s, n);
 		this.set(bs, s, n);
 
 		this.query.path("/admin/app");

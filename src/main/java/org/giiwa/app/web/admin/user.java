@@ -63,7 +63,7 @@ public class user extends Model {
 					/**
 					 * create the user
 					 */
-					if (User.exists(W.create("name", name))) {
+					if (User.dao.exists(W.create("name", name))) {
 						/**
 						 * exists, create failded
 						 */
@@ -81,7 +81,7 @@ public class user extends Model {
 						log.debug("roles=" + Helper.toString(roles));
 
 						if (roles != null) {
-							User u = User.loadById(id);
+							User u = User.dao.load(id);
 							List<Long> list = new ArrayList<Long>();
 							for (String s : roles) {
 								list.add(X.toLong(s));
@@ -227,7 +227,7 @@ public class user extends Model {
 			}
 
 			User.update(id, v);
-			User u = User.loadById(id);
+			User u = User.dao.load(id);
 
 			String[] roles = this.getStrings("role");
 			if (roles != null) {
@@ -256,7 +256,7 @@ public class user extends Model {
 
 		} else {
 
-			User u = User.loadById(id);
+			User u = User.dao.load(id);
 			if (u != null) {
 				this.set(u.getJSON());
 				this.set("u", u);
@@ -285,7 +285,7 @@ public class user extends Model {
 		String id = this.getString("id");
 		if (id != null) {
 			long i = X.toLong(id, -1);
-			User u = User.loadById(i);
+			User u = User.dao.load(i);
 			this.set("u", u);
 
 			Beans<Role> bs = Role.load(0, 100);
@@ -306,7 +306,7 @@ public class user extends Model {
 		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
 		W q = getW(this.getJSON());
-		Beans<GLog> bs = GLog.load(q, s, n);
+		Beans<GLog> bs = GLog.dao.load(q, s, n);
 		this.set(bs, s, n);
 
 		this.show("/admin/user.oplog.html");
@@ -321,7 +321,7 @@ public class user extends Model {
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
-		Beans<AccessLog> bs = AccessLog.load(q, s, n);
+		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
 
 		this.set(bs, s, n);
 

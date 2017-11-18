@@ -20,9 +20,8 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
@@ -31,8 +30,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
-
-import com.mongodb.BasicDBObject;
 
 /**
  * The web access log bean. <br>
@@ -48,6 +45,8 @@ public class AccessLog extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	public static final BeanDAO<AccessLog> dao = new BeanDAO<AccessLog>();
 
 	static AtomicLong seq = new AtomicLong(0);
 	static String node = Config.getConf().getString("node.name");
@@ -76,7 +75,7 @@ public class AccessLog extends Bean {
 	 * @return the long
 	 */
 	public static long count(W q) {
-		return Helper.count(q, AccessLog.class);
+		return dao.count(q);
 	}
 
 	public String getUrl() {
@@ -100,44 +99,24 @@ public class AccessLog extends Bean {
 			public void onExecute() {
 				long created = System.currentTimeMillis();
 				String id = UID.id(ip, url, created, node, seq.incrementAndGet());
-				Helper.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created), AccessLog.class);
+				dao.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created));
 			}
 
 		}.schedule(0);
 	}
 
 	/**
-	 * Load.
-	 *
-	 * @param q
-	 *            the query and order
-	 * @param s
-	 *            the start number
-	 * @param n
-	 *            the number of items
-	 * @return the beans
-	 */
-	public static Beans<AccessLog> load(W q, int s, int n) {
-		return Helper.load(q, s, n, AccessLog.class);
-	}
-
-	public static AccessLog load(String id) {
-		return Helper.load(id, AccessLog.class);
-	}
-
-	/**
 	 * Cleanup.
 	 */
 	public static void cleanup() {
-		Helper.delete(new BasicDBObject().append(X.CREATED,
-				new BasicDBObject().append("$lt", System.currentTimeMillis() - X.AMONTH)), AccessLog.class);
+		dao.delete(W.create().and("created", System.currentTimeMillis() - X.AMONTH, W.OP.lt));
 	}
 
 	/**
 	 * Delete all.
 	 */
 	public static void deleteAll() {
-		Helper.delete(W.create(), AccessLog.class);
+		dao.delete(W.create());
 	}
 
 	/**
@@ -148,10 +127,12 @@ public class AccessLog extends Bean {
 	 * @return Map
 	 */
 	public static Map<Object, Long> distinct(String name) {
-		List<String> list = Helper.distinct(name, W.create("status", 200), AccessLog.class, String.class);
+
+		List<String> list = dao.distinct(name, W.create("status", 200), String.class);
+
 		Map<Object, Long> m = new TreeMap<Object, Long>();
 		for (String v : list) {
-			long d = Helper.count(W.create(name, v).and("status", 200), AccessLog.class);
+			long d = dao.count(W.create(name, v).and("status", 200));
 			m.put(v, d);
 		}
 

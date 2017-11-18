@@ -5,9 +5,8 @@
 package org.giiwa.framework.bean;
 
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.framework.web.Language;
@@ -28,6 +27,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
+
+	public static final BeanDAO<Stat> dao = new BeanDAO<Stat>();
 
 	@Column(name = X.ID)
 	protected String id; // 日期
@@ -67,13 +68,13 @@ public class Stat extends Bean implements Comparable<Stat> {
 		String id = UID.id(date, module, size);
 
 		try {
-			if (!Helper.exists(W.create("date", date).and("id", id), Stat.class)) {
+			if (!dao.exists(W.create("date", date).and("id", id))) {
 				V v = V.create("date", date).set(X.ID, id).set("id", id).set("size", size).set("module", module);
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
 				}
 
-				return Helper.insert(v, Stat.class);
+				return dao.insert(v);
 
 			} else {
 				/**
@@ -83,7 +84,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
 				}
-				return Helper.update(W.create("date", date).and("id", id), v, Stat.class);
+				return dao.update(W.create("date", date).and("id", id), v);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -102,32 +103,6 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		int c = getDate().compareTo(o.getDate());
 		return c;
-	}
-
-	/**
-	 * Load.
-	 *
-	 * @param q
-	 *            the q
-	 * @param s
-	 *            the s
-	 * @param n
-	 *            the n
-	 * @return the beans
-	 */
-	public static Beans<Stat> load(W q, int s, int n) {
-		return Helper.load(q, s, n, Stat.class);
-	}
-
-	/**
-	 * Load.
-	 *
-	 * @param q
-	 *            the q
-	 * @return the stat
-	 */
-	public static Stat load(W q) {
-		return Helper.load(q, Stat.class);
 	}
 
 	/***
@@ -166,7 +141,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			return;
 		}
 
-		Stat s1 = Stat.load(W.create("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq)
+		Stat s1 = dao.load(W.create("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq)
 				.sort("created", -1));
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
@@ -203,7 +178,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			return;
 		}
 
-		Stat s1 = Stat.load(W.create("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq)
+		Stat s1 = dao.load(W.create("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq)
 				.sort("created", -1));
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {

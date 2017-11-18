@@ -81,7 +81,7 @@ public class accesslog extends Model {
 		this.set("sortby_type", sortby_type);
 
 		q.sort(sortby, sortby_type);
-		Beans<AccessLog> bs = AccessLog.load(q, s, n);
+		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
 
 		this.set(bs, s, n);
 
@@ -100,7 +100,7 @@ public class accesslog extends Model {
 	@Path(path = "detail", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void detail() {
 		String id = this.getString("id");
-		AccessLog d = AccessLog.load(id);
+		AccessLog d = AccessLog.dao.load(id);
 		this.set("b", d);
 		this.set("id", id);
 		this.show("/admin/accesslog.detail.html");

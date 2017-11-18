@@ -40,6 +40,8 @@ public class GLog extends Bean {
 
 	private static final long serialVersionUID = 1L;
 
+	public static final BeanDAO<GLog> dao = new BeanDAO<GLog>();
+
 	private static final int TYPE_SECURITY = 0;
 	private static final int TYPE_APP = 1;
 	private static final int TYPE_OPLOG = 2;
@@ -54,26 +56,7 @@ public class GLog extends Bean {
 	 * @return the number was deleted
 	 */
 	public static int cleanup() {
-		return Helper.delete(W.create(), GLog.class);
-	}
-
-	/**
-	 * Load the oplo
-	 *
-	 * @param query
-	 *            the query and order
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @return Beans
-	 */
-	public static Beans<GLog> load(W query, int offset, int limit) {
-		return Helper.load(query, offset, limit, GLog.class);
-	}
-
-	public static GLog load(String id) {
-		return Helper.load(id, GLog.class);
+		return dao.delete(W.create());
 	}
 
 	/**
@@ -139,7 +122,7 @@ public class GLog extends Bean {
 		return this.getString("ip");
 	}
 
-	private User user_obj;
+	private transient User user_obj;
 
 	/**
 	 * get the user object
@@ -149,7 +132,7 @@ public class GLog extends Bean {
 	public User getUser_obj() {
 		long uid = this.getUid();
 		if (user_obj == null && uid > -1) {
-			user_obj = User.loadById(uid);
+			user_obj = User.dao.load(uid);
 		}
 		return user_obj;
 	}
@@ -283,7 +266,7 @@ public class GLog extends Bean {
 				v.set("message", message);
 				v.set("trace", trace);
 
-				Helper.insert(v, GLog.class);
+				dao.insert(v);
 			}
 		}
 

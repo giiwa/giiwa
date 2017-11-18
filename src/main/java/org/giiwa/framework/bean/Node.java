@@ -16,11 +16,9 @@ package org.giiwa.framework.bean;
 
 import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Local;
 import org.giiwa.framework.web.Model;
 import org.hyperic.sigar.CpuInfo;
@@ -42,6 +40,8 @@ public class Node extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	public static final BeanDAO<Node> dao = new BeanDAO<Node>();
+
 	@Column(name = X.ID, index = true)
 	private String id;
 
@@ -53,16 +53,16 @@ public class Node extends Bean {
 
 	public static void touch(boolean force) {
 		try {
-			if (Helper.exists(Local.id(), Node.class)) {
+			if (dao.exists(Local.id())) {
 				// update
 				if (force) {
-					Helper.update(Local.id(), getNodeInfo(), Node.class);
+					dao.update(Local.id(), getNodeInfo());
 				} else {
-					Helper.update(Local.id(), V.create(), Node.class);
+					dao.update(Local.id(), V.create());
 				}
 			} else {
 				// create
-				Helper.insert(getNodeInfo().append(X.ID, Local.id()), Node.class);
+				dao.insert(getNodeInfo().append(X.ID, Local.id()));
 			}
 
 		} catch (Exception e) {
@@ -84,18 +84,6 @@ public class Node extends Bean {
 			log.error(e.getMessage(), e);
 		}
 		return v;
-	}
-
-	public static Node load(W q) {
-		return Helper.load(q, Node.class);
-	}
-
-	public static Beans<Node> load(W q, int s, int n) {
-		return Helper.load(q, s, n, Node.class);
-	}
-
-	public static void delete(W q) {
-		Helper.delete(q, Node.class);
 	}
 
 }

@@ -43,7 +43,7 @@ public class token extends Model {
 		JSON jo = new JSON();
 
 		String id = this.getString("id");
-		AuthToken.delete(W.create(X.ID, id));
+		AuthToken.dao.delete(id);
 		jo.put(X.STATE, 200);
 
 		this.response(jo);
@@ -55,7 +55,7 @@ public class token extends Model {
 	public void clean() {
 		JSON jo = JSON.create();
 
-		AuthToken.delete(W.create());
+		AuthToken.dao.delete(W.create());
 		jo.put(X.STATE, HttpServletResponse.SC_OK);
 		jo.put(X.MESSAGE, "ok");
 
@@ -85,7 +85,7 @@ public class token extends Model {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
-		Beans<AuthToken> bs = AuthToken.load(q, s, n);
+		Beans<AuthToken> bs = AuthToken.dao.load(q, s, n);
 		this.set(bs, s, n);
 
 		this.query.path("/admin/token");

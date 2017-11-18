@@ -53,7 +53,7 @@ public class repo extends Model {
 		} else {
 			q.sort(X.UPDATED, -1);
 		}
-		Beans<Repo.Entity> bs = Repo.load(q, s, n);
+		Beans<Repo.Entity> bs = Repo.dao.load(q, s, n);
 		this.set(bs, s, n);
 		this.show("/admin/repo.index.html");
 

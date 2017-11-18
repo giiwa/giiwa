@@ -102,9 +102,9 @@ public class role extends Model {
 
 			long id = this.getLong("id");
 			String name = this.getString("name");
-			Role r = Role.loadById(id);
+			Role r = Role.dao.load(id);
 			if (r != null) {
-				if (r.update(V.create("name", name).set("memo", this.getString("memo"))) > 0) {
+				if (Role.dao.update(id, V.create("name", name).set("memo", this.getString("memo"))) > 0) {
 					this.path = null;
 					this.set(X.MESSAGE, lang.get("save.success"));
 
@@ -128,7 +128,7 @@ public class role extends Model {
 		} else {
 
 			long id = this.getLong("id");
-			Role r = Role.loadById(id);
+			Role r = Role.dao.load(id);
 			this.set("r", r);
 
 			JSON jo = new JSON();
@@ -154,8 +154,8 @@ public class role extends Model {
 			String[] ss = ids.split(",");
 			for (String s : ss) {
 				long id = X.toLong(s);
-				Role r = Role.loadById(id);
-				int i = Role.delete(id);
+				Role r = Role.dao.load(id);
+				int i = Role.dao.delete(id);
 				if (i > 0) {
 					updated += i;
 					GLog.oplog.info(role.class, "delete", r.getName(), null, login, this.getRemoteHost());

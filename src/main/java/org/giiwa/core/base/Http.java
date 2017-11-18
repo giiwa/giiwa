@@ -65,6 +65,7 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
@@ -1314,7 +1315,7 @@ public final class Http {
 	 * Save cookies to database.
 	 */
 	public void saveCookies() {
-		Helper.delete(W.create(), _C.class);
+		_C.dao.delete(W.create());
 
 		// clear(new Date(System.currentTimeMillis()));
 		List<Cookie> l1 = getCookies();
@@ -1353,6 +1354,8 @@ public final class Http {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
+
+		public static final BeanDAO<_C> dao = new BeanDAO<_C>();
 
 		@Column(name = "name")
 		String name;

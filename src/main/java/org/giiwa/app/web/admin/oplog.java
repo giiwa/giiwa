@@ -123,7 +123,7 @@ public class oplog extends Model {
 		JSON jo = this.getJSON();
 		W w = getW(jo);
 
-		Beans<GLog> bs = GLog.load(w, s, n);
+		Beans<GLog> bs = GLog.dao.load(w, s, n);
 		this.set(bs, s, n);
 
 		this.query.path("/admin/oplog");
@@ -133,7 +133,7 @@ public class oplog extends Model {
 	@Path(path = "detail", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void detail() {
 		String id = this.getString("id");
-		GLog d = GLog.load(id);
+		GLog d = GLog.dao.load(id);
 		this.set("b", d);
 		this.set("id", id);
 		this.show("/admin/oplog.detail.html");

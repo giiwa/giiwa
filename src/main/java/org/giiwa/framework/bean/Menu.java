@@ -43,6 +43,8 @@ public class Menu extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
+	public static final BeanDAO<Menu> dao = new BeanDAO<Menu>();
+
 	// int id;
 
 	/**
@@ -241,32 +243,31 @@ public class Menu extends Bean {
 		W q = W.create().and("parent", parent).and("name", name).and("node", node);
 
 		try {
-			if (Helper.exists(q, Menu.class)) {
+			if (dao.exists(q)) {
 				/**
 				 * update
 				 */
-				Helper.update(q, v, Menu.class);
+				dao.update(q, v);
 
 			} else {
 				long id = UID.next("menu.id");
-				while (Helper.exists(W.create(X.ID, id), Menu.class)) {
+				while (dao.exists(id)) {
 					id = UID.next("menu.id");
 
 					log.debug("id=" + id);
 				}
 
-				Helper.insert(v.set(X.ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node),
-						Menu.class);
+				dao.insert(v.set(X.ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node));
 
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
 		}
 
-		long count = Helper.count(W.create("parent", parent), Menu.class);
-		Helper.update(parent, V.create("childs", count), Menu.class);
+		long count = dao.count(W.create("parent", parent));
+		dao.update(parent, V.create("childs", count));
 
-		return Helper.load(q, Menu.class);
+		return dao.load(q);
 	}
 
 	public String getTip() {
@@ -282,7 +283,7 @@ public class Menu extends Bean {
 	 */
 	public static Beans<Menu> submenu(long id) {
 		// load it
-		Beans<Menu> bb = Helper.load(W.create("parent", id).sort("seq", -1), 0, -1, Menu.class);
+		Beans<Menu> bb = dao.load(W.create("parent", id).sort("seq", -1), 0, Integer.MAX_VALUE);
 		return bb;
 	}
 
@@ -297,7 +298,7 @@ public class Menu extends Bean {
 	 */
 	public static Menu load(long parent, String name) {
 		String node = Local.id();
-		Menu m = Helper.load(W.create("parent", parent).and("name", name).and("node", node), Menu.class);
+		Menu m = dao.load(W.create("parent", parent).and("name", name).and("node", node));
 		return m;
 	}
 
@@ -317,7 +318,7 @@ public class Menu extends Bean {
 	 *            the id
 	 */
 	public static void remove(long id) {
-		Helper.delete(W.create(X.ID, id), Menu.class);
+		dao.delete(id);
 
 		/**
 		 * remove all the sub
@@ -409,7 +410,7 @@ public class Menu extends Bean {
 	 */
 	public static void remove(String tag) {
 		String node = Local.id();
-		Helper.delete(W.create("tag", tag).and("node", node), Menu.class);
+		dao.delete(W.create("tag", tag).and("node", node));
 	}
 
 	/**
@@ -418,7 +419,7 @@ public class Menu extends Bean {
 	public static void reset() {
 		String node = Local.id();
 		// log.debug("node=" + node);
-		Helper.update(W.create("node", node), V.create("seq", -1), Menu.class);
+		dao.update(W.create("node", node), V.create("seq", -1));
 	}
 
 	/**
@@ -426,7 +427,7 @@ public class Menu extends Bean {
 	 */
 	public static void cleanup() {
 		String node = Local.id();
-		Helper.delete(W.create("node", node).and("seq", 0, W.OP.lt), Menu.class);
+		dao.delete(W.create("node", node).and("seq", 0, W.OP.lt));
 	}
 
 	public String getStyle() {

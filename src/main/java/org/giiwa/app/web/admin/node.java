@@ -17,7 +17,6 @@ package org.giiwa.app.web.admin;
 import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
@@ -44,7 +43,7 @@ public class node extends Model {
 		JSON jo = new JSON();
 
 		String id = this.getString("id");
-		Node.delete(W.create(X.ID, id));
+		Node.dao.delete(id);
 		jo.put(X.STATE, 200);
 
 		this.response(jo);
@@ -56,7 +55,7 @@ public class node extends Model {
 	public void clean() {
 		JSON jo = JSON.create();
 
-		Node.delete(W.create());
+		Node.dao.delete(W.create());
 		jo.put(X.STATE, HttpServletResponse.SC_OK);
 		jo.put(X.MESSAGE, "ok");
 
@@ -77,8 +76,8 @@ public class node extends Model {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
-		Beans<Node> bs = Node.load(q, s, n);
-		bs.setTotal((int) Helper.count(q, Node.class));
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.setTotal((int) Node.dao.count(q));
 		this.set(bs, s, n);
 
 		this.query.path("/admin/node");

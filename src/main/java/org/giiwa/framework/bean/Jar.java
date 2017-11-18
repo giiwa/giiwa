@@ -17,7 +17,7 @@ package org.giiwa.framework.bean;
 import java.util.List;
 
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Local;
@@ -40,6 +40,8 @@ public class Jar extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	public static final BeanDAO<Jar> dao = new BeanDAO<Jar>();
+
 	/**
 	 * Update.
 	 *
@@ -53,11 +55,11 @@ public class Jar extends Bean {
 		String id = UID.id(module, name, node);
 
 		try {
-			if (!Helper.exists(W.create(X.ID, id), Jar.class)) {
+			if (!dao.exists(W.create(X.ID, id))) {
 				V v = V.create(X.ID, id).set("module", module).set("name", name).set("node", node).set("reset", 1);
-				Helper.insert(v, Jar.class);
+				dao.insert(v);
 			} else {
-				Helper.update(id, V.create("reset", 1), Jar.class);
+				dao.update(id, V.create("reset", 1));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -76,7 +78,7 @@ public class Jar extends Bean {
 	public static void remove(String module, String name) {
 		String node = Local.id();
 
-		Helper.delete(W.create("module", module).and("name", name).and("node", node), Jar.class);
+		dao.delete(W.create("module", module).and("name", name).and("node", node));
 	}
 
 	/**
@@ -86,7 +88,7 @@ public class Jar extends Bean {
 	 *            the name
 	 */
 	public static void remove(String name) {
-		Helper.delete(W.create("name", name), Jar.class);
+		dao.delete(W.create("name", name));
 	}
 
 	/**
@@ -98,7 +100,7 @@ public class Jar extends Bean {
 	 */
 	public static List<String> loadAll(W q) {
 		String node = Local.id();
-		return Helper.distinct("name", q.and("node", node), Jar.class, String.class);
+		return dao.distinct("name", q.and("node", node), String.class);
 	}
 
 	/**
@@ -111,7 +113,7 @@ public class Jar extends Bean {
 	public static List<String> load(String name) {
 		String node = Local.id();
 
-		return Helper.distinct("module", W.create("name", name).and("node", node), Jar.class, String.class);
+		return dao.distinct("module", W.create("name", name).and("node", node), String.class);
 	}
 
 	/**
@@ -122,17 +124,7 @@ public class Jar extends Bean {
 	 */
 	public static void reset(String module) {
 		String node = Local.id();
-		Helper.delete(W.create("module", module).and("node", node), Jar.class);
-	}
-
-	public static boolean exists(W q) {
-		try {
-			return Helper.exists(q, Jar.class);
-		} catch (Exception e) {
-			log.error(q.toString(), e);
-			GLog.applog.error("db", "exists", q.toString(), null, null);
-		}
-		return true;
+		dao.delete(W.create("module", module).and("node", node));
 	}
 
 }

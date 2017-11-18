@@ -36,7 +36,7 @@ public class system extends Model {
 	public void restart() {
 
 		JSON jo = new JSON();
-		User me = User.loadById(login.getId());
+		User me = User.dao.load(login.getId());
 		String pwd = this.getString("pwd");
 
 		if (me.validate(pwd)) {
