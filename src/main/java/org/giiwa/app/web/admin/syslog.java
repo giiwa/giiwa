@@ -30,7 +30,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class oplog extends Model {
+public class syslog extends Model {
 
 	/**
 	 * Deleteall.
@@ -39,7 +39,7 @@ public class oplog extends Model {
 	public void deleteall() {
 		JSON jo = new JSON();
 		int i = GLog.cleanup();
-		GLog.oplog.warn(oplog.class, "deleteall", "deleted=" + i, login, this.getRemoteHost());
+		GLog.oplog.warn(syslog.class, "deleteall", "deleted=" + i, login, this.getRemoteHost());
 		jo.put(X.STATE, 200);
 		this.response(jo);
 	}
@@ -126,8 +126,8 @@ public class oplog extends Model {
 		Beans<GLog> bs = GLog.dao.load(w, s, n);
 		this.set(bs, s, n);
 
-		this.query.path("/admin/oplog");
-		this.show("/admin/oplog.index.html");
+		this.query.path("/admin/syslog");
+		this.show("/admin/syslog.index.html");
 	}
 
 	@Path(path = "detail", login = true, access = "access.config.admin|access.config.logs.admin")
@@ -136,7 +136,7 @@ public class oplog extends Model {
 		GLog d = GLog.dao.load(id);
 		this.set("b", d);
 		this.set("id", id);
-		this.show("/admin/oplog.detail.html");
+		this.show("/admin/syslog.detail.html");
 	}
 
 }

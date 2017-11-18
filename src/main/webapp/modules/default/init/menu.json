@@ -30,8 +30,8 @@
 						"access": "access.config.admin|access.config.logs.admin",
 						"childs": [
 							{
-								"name": "menu.oplog",
-								"load": "/admin/oplog",
+								"name": "menu.syslog",
+								"load": "/admin/syslog",
 								"seq": 10,
 								"classes": "icon-hammer"
 							},
