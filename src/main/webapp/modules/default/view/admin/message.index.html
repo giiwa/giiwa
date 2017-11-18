@@ -4,33 +4,33 @@
 	padding:0;
 }
 #message-table .ico{
-	background: url(/images/mail.png);
+	background-image: url(/images/mail.png);
 	display: inline-block;
     width: 18px;
     height: 16px;	
 }
-.ico.mail-attr{
+#message-table .ico.mail-att{
 	background-position: 1px -82px;
     width: 26px;
 }
-.ico.mail-0{
+#message-table .ico.mail-0{
 	background-position: -48px 0;
 }
-.ico.mail-1{
+#message-table .ico.mail-1{
     background-position: -48px -16px;
 }
-.ico.mail-2{
+#message-table .ico.mail-2{
     background-position: -48px -32px;
 }
-.ico.mail-3{
+#message-table .ico.mail-3{
     background-position: -48px -48px;
 }
-.ico.star-0{
+#message-table .ico.star-0{
     background-position: -32px -160px;
 	width: 14px;
     height: 14px;    
 }
-.ico.star-1{
+#message-table .ico.star-1{
     background-position: -48px -160px;
 	width: 14px;
     height: 14px;    
@@ -77,27 +77,27 @@
 			</th>
 			<th style="width:10px">
 			</th>
-			<th style="width:200px">$lang.get("message.from")</th>
+			<th style="width:80px">$lang.get("message.from")</th>
 			<th style="width:200px">$lang.get("message.title")</th>
 			<th>$lang.get("message.content")</th>
-			<th style="width:50px">$lang.get("message.created")</th>
+			<th style="width:100px">$lang.get("message.created")</th>
 		</tr>
 	</thead>
 	<tbody>
 #foreach($f in $list)
 	<tr>
 		<td>
-			<input type='checkbox' onchange="_onall();"/>
+			<input type='checkbox' value="$!f.id"/>
 		</td>
 		<td>
-			<i class="ico mail-open"></i>
+			<i class="ico mail-$!f.flag"></i>
 		</td>
 		<td>
-			<i class="ico start-1"></i>
+			<i class="ico star-$!f.star" style="cursor:pointer" onclick="_onstar('$f.id', this)"></i>
 		</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')">$!f.from_obj.nickname</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')">$!f.title</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')">$!f.content</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')" style="cursor: pointer">$!f.from_obj.nickname</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')" style="cursor: pointer">$!lang.truncate($!f.title, 100)</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')" style="cursor: pointer">$!lang.truncate($!f.content, 200)</td>
 		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
 	</tr>
 #end
@@ -107,26 +107,34 @@
  #parse('/widget/goto.page.html')
 
 <div class='btns'>
-	<a href='javascript:;' class='btn btn-danger' onclick='_cleanup();'>$lang.get('a.cleanup')</a>
+	<a href='javascript:;' class='btn btn-danger' onclick='_delete();'>$lang.get('a.delete')</a>
 </div>
 
 <script>
-function _cleanup() {
-	if(confirm("$lang.get('title.are_u_sure_cleanup')")) {
+function _onall() {
+	var all = $('#message-table th input[type=checkbox]').prop('checked');
+	$('#message-table td input[type=checkbox]').prop('checked', all);
+}
+
+function _delete() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		var s = '';
+		$('#message-table td input[checked=true]').each(function(i, e){
+			s += $(e).val() + ",";
+		});
+
 		giiwa.processing.show();
-		$.post('/admin/message/cleanup', {}, function(d) {
+		$.post('/admin/message/delete', {id:s}, function(d) {
 			giiwa.processing.hide();
 			giiwa.reload();
 		});
 	}
 }
-function _delete(id) {
-	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		giiwa.processing.show();
-		$.post('/admin/message/delete', {id:id}, function(d) {
-			giiwa.processing.hide();
-			giiwa.reload();
-		});
-	}
+function _onstar(id, o) {
+	$.post('/admin/message/star', {id:id}, function(d) {
+		if(d.state == 200) {
+			$(o).attr('class', 'ico star-' + d.star);
+		}
+	});
 }
 </script>

@@ -57,18 +57,15 @@ public class message extends Model {
 		this.show("/admin/message.index.html");
 	}
 
-	@Path(path = "cleanup", login = true)
-	public void cleanup() {
-		Message.dao.delete(W.create("touid", login.getId()));
-
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
-
-	}
-
 	@Path(path = "delete", login = true)
 	public void delete() {
-		long id = this.getLong(X.ID);
-		Message.dao.delete(W.create("touid", login.getId()).and(X.ID, id));
+		String id = this.getString(X.ID);
+		String[] ss = X.split(id, "[,; ]");
+		if (ss != null) {
+			for (String s : ss) {
+				Message.dao.delete(W.create("touid", login.getId()).and(X.ID, X.toLong(s)));
+			}
+		}
 
 		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
 	}
@@ -98,6 +95,19 @@ public class message extends Model {
 		int n = (int) Message.dao.count(W.create("touid", login.getId()).and("flag", flag));
 
 		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("count", n));
+	}
+
+	@Path(path = "star", login = true)
+	public void star() {
+		long id = this.getLong("id");
+		Message m = Message.dao.load(id);
+		if (m != null) {
+			int star = m.getStar() == 0 ? 1 : 0;
+			Message.dao.update(id, V.create("star", star));
+			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "ok").append("star", star));
+		} else {
+			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "not found"));
+		}
 	}
 
 }

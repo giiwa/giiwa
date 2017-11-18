@@ -67,6 +67,9 @@ public class Message extends Bean {
 	@Column(name = "flag")
 	private int flag;
 
+	@Column(name = "star")
+	private int star;
+
 	@Column(name = "title")
 	private String title;
 
@@ -104,6 +107,10 @@ public class Message extends Bean {
 
 	public long getTouid() {
 		return touid;
+	}
+
+	public int getStar() {
+		return star;
 	}
 
 	private transient User to_obj;
