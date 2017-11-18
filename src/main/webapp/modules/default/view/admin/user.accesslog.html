@@ -20,6 +20,7 @@
 			<th>SID</th>
 			<th>IP</th>
 			<th style='width:15%;'>Client</th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -35,6 +36,9 @@
 		<td>$!f.sid</td>
 		<td>$!f.ip</td>
 		<td>$!f.client</td>
+		<td>
+			<a class="btn btn-xs btn-info" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')">$lang.get("a.detail")</a>
+		</td>
 	</tr>
 #end
 	</tbody>
@@ -49,8 +53,6 @@
 #end
 
 <script>
-$('#accesslog-table').tablesorter();
-
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();

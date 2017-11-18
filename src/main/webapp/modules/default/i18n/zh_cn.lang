@@ -697,3 +697,6 @@ message.title=标题
 message.id=ID
 message.created=时间
 message.detail.title=消息详情
+syslog.index.title=系统日志
+menu.syslog=系统日志
+a.syslog=系统日志
