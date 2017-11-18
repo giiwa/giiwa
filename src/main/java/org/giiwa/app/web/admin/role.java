@@ -185,7 +185,7 @@ public class role extends Model {
 		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
 		Beans<Role> bs = Role.load(s, n);
-		bs.setTotal((int) Helper.count(W.create(), Role.class));
+		bs.setTotal((int) Role.dao.count(W.create()));
 		this.set(bs, s, n);
 
 		this.query.path("/admin/role");

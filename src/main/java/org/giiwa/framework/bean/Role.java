@@ -108,7 +108,7 @@ public class Role extends Bean {
 	 */
 	public List<String> getAccesses() {
 		if (accesses == null) {
-			accesses = dao.distinct("name", W.create("rid", this.getId()), String.class);
+			accesses = RoleAccess.dao.distinct("name", W.create("rid", this.getId()), String.class);
 		}
 
 		return accesses;
@@ -222,7 +222,7 @@ public class Role extends Bean {
 			dao.delete(W.create("rid", this.getId()));
 
 			for (String a : accesses) {
-				dao.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)));
+				RoleAccess.dao.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)));
 			}
 		}
 	}
