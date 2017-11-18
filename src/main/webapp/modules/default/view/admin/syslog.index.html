@@ -1,9 +1,9 @@
-<div class='head'>$lang.get('oplog.index.title')</div>
+<div class='head'>$lang.get('syslog.index.title')</div>
 
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/oplog' class='selected'>$lang.get('a.oplog')</a>
+	<a href='/admin/syslog' class='selected'>$lang.get('a.syslog')</a>
 </div>
 
 <style>
@@ -18,7 +18,7 @@ td.log_level_2 {
 }
 </style>
 <div class='search'>
-	<form action='/admin/oplog' method='get' #if($s>0) style='display:none' #end > 
+	<form action='/admin/syslog' method='get' #if($s>0) style='display:none' #end > 
 		<span>
 			<label><h3>$lang.get('log.starttime'):</h3>
 				<input type='text' name='starttime' value='$!starttime' />
@@ -93,7 +93,7 @@ td.log_level_2 {
 			<td>$f.op</td>
 			<td>$!f.message</td>
 			<td>
-				<a class="btn btn-xs btn-info" href="javascript:;" onclick="giiwa.popup('/admin/oplog/detail?id=$f.id')">$lang.get("a.detail")</a>
+				<a class="btn btn-xs btn-info" href="javascript:;" onclick="giiwa.popup('/admin/syslog/detail?id=$f.id')">$lang.get("a.detail")</a>
 			</td>
 		</tr>
 		#end
@@ -110,7 +110,7 @@ td.log_level_2 {
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
-		$.post('/admin/oplog/deleteall', {}, function(d) {
+		$.post('/admin/syslog/deleteall', {}, function(d) {
 			giiwa.processing.hide();
 			giiwa.reload();
 		});
