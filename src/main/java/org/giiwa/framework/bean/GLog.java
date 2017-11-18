@@ -241,12 +241,12 @@ public class GLog extends Bean {
 		protected abstract void info(String node, String model, String op, String message, String trace, User u,
 				String ip);
 
-		protected void _log(int type, int level, String node, String model, String op, String message, String trace,
+		protected String _log(int type, int level, String node, String model, String op, String message, String trace,
 				User u, String ip) {
 
 			int l1 = Global.getInt("oplog.level", GLog.LEVEL_WARN);
 			if (l1 > level)
-				return;
+				return null;
 
 			if (Helper.isConfigured()) {
 				if (message != null && message.length() > 1020) {
@@ -267,7 +267,9 @@ public class GLog extends Bean {
 				v.set("trace", trace);
 
 				dao.insert(v);
+				return id;
 			}
+			return null;
 		}
 
 		/**
@@ -521,22 +523,30 @@ public class GLog extends Bean {
 	private static class SecurityLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-			_log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
+			String id = _log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 
-			Message.create(V.create("touid", 0).append("title", message));
+			if (!X.isEmpty(id)) {
+				Message.create(V.create("touid", 0).append("title", op + "//" + message).append("content",
+						"<a href='giiwa.popup(\"/admin/syslog/detail?id=" + id + "\")'>" + id + "</a>"));
+			}
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-			_log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
-
-			Message.create(V.create("touid", 0).append("title", message));
+			String id = _log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
+			if (!X.isEmpty(id)) {
+				Message.create(V.create("touid", 0).append("title", op + "//" + message).append("content",
+						"<a href='giiwa.popup(\"/admin/syslog/detail?id=" + id + "\")'>" + id + "</a>"));
+			}
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-			_log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
-			
-			Message.create(V.create("touid", 0).append("title", message));
-			
+			String id = _log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+
+			if (!X.isEmpty(id)) {
+				Message.create(V.create("touid", 0).append("title", op + "//" + message).append("content",
+						"<a href='giiwa.popup(\"/admin/syslog/detail?id=" + id + "\")'>" + id + "</a>"));
+			}
+
 		}
 
 	}

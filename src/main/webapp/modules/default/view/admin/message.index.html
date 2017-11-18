@@ -53,8 +53,6 @@
 				<option value=''></option>
 				<option value='0' #if($flag == 0) selected #end>$lang.get('message.flag_0')</option>
 				<option value='1' #if($flag == 1) selected #end>$lang.get('message.flag_1')</option>
-				<option value='2' #if($flag == 2) selected #end>$lang.get('message.flag_2')</option>
-				<option value='3' #if($flag == 3) selected #end>$lang.get('message.flag_3')</option>
 			</select>
 		</span>
 		<button type='submit' class='btns1 icon icon-search'></button>
@@ -95,9 +93,9 @@
 		<td>
 			<i class="ico star-$!f.star" style="cursor:pointer" onclick="_onstar('$f.id', this)"></i>
 		</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')" style="cursor: pointer">$!f.from_obj.nickname</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')" style="cursor: pointer">$!lang.truncate($!f.title, 100)</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id')" style="cursor: pointer">$!lang.truncate($!f.content, 200)</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');giiwa.reload();" style="cursor: pointer">$!f.from_obj.nickname</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');giiwa.reload();" style="cursor: pointer">$!lang.truncate($!f.title, 100)</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');giiwa.reload();" style="cursor: pointer">$!lang.truncate($!f.content, 200)</td>
 		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
 	</tr>
 #end

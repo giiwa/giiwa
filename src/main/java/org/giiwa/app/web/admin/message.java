@@ -44,11 +44,19 @@ public class message extends Model {
 		int n = this.getInt("n", 10);
 
 		W q = W.create("touid", login.getId()).sort("created", -1);
+
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {
 			q.and("title", name, W.OP.like);
 			this.set("name", name);
 		}
+
+		int flag = this.getInt("flag", -1);
+		if(flag > -1) {
+			q.and("flag", flag);
+			this.set("flag", flag);
+		}
+		
 		Beans<Message> bs = Message.dao.load(q, s, n);
 		bs.setTotal(Message.dao.count(q));
 		this.set(bs, s, n);
