@@ -43,7 +43,7 @@ public class message extends Model {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
-		W q = W.create("touid", login.getId());
+		W q = W.create("touid", login.getId()).sort("created", -1);
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {
 			q.and("title", name, W.OP.like);
@@ -104,7 +104,7 @@ public class message extends Model {
 		if (m != null) {
 			int star = m.getStar() == 0 ? 1 : 0;
 			Message.dao.update(id, V.create("star", star));
-			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "ok").append("star", star));
+			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("star", star));
 		} else {
 			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "not found"));
 		}

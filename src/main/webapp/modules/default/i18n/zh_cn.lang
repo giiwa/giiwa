@@ -696,3 +696,4 @@ message.word=搜索
 message.title=标题
 message.id=ID
 message.created=时间
+message.detail.title=消息详情

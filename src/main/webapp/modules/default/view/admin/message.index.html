@@ -119,8 +119,11 @@ function _onall() {
 function _delete() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		var s = '';
-		$('#message-table td input[checked=true]').each(function(i, e){
-			s += $(e).val() + ",";
+		$('#message-table td input[type=checkbox]').each(function(i, e){
+			e = $(e);
+			if(e.prop('checked')) {
+				s += e.val() + ",";
+			}
 		});
 
 		giiwa.processing.show();
