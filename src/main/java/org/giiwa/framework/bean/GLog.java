@@ -40,7 +40,7 @@ public class GLog extends Bean {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<GLog> dao = new BeanDAO<GLog>();
+	public static final BeanDAO<GLog> dao = BeanDAO.create(GLog.class);
 
 	private static final int TYPE_SECURITY = 0;
 	private static final int TYPE_APP = 1;

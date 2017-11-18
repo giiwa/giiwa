@@ -37,7 +37,7 @@ public class Role extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Role> dao = new BeanDAO<Role>();
+	public static final BeanDAO<Role> dao = BeanDAO.create(Role.class);
 
 	@Column(name = X.ID)
 	private long id;
@@ -235,7 +235,7 @@ public class Role extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<RoleAccess> dao = new BeanDAO<RoleAccess>();
+		public static final BeanDAO<RoleAccess> dao = BeanDAO.create(RoleAccess.class);
 
 	}
 

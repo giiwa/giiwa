@@ -36,7 +36,7 @@ public final class Local extends Bean {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Local> dao = new BeanDAO<Local>();
+	public static final BeanDAO<Local> dao = BeanDAO.create(Local.class);
 
 	@Column(name = X.ID)
 	String id;

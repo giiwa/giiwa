@@ -43,7 +43,7 @@ public class AuthToken extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<AuthToken> dao = new BeanDAO<AuthToken>();
+	public static final BeanDAO<AuthToken> dao = BeanDAO.create(AuthToken.class);
 
 	@Column(name = X.ID, index = true, unique = true)
 	private String id;

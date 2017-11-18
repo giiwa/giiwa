@@ -40,7 +40,7 @@ public class Repo extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Entity> dao = new BeanDAO<Entity>();
+	public static final BeanDAO<Entity> dao = BeanDAO.create(Entity.class);
 
 	private static Log log = LogFactory.getLog(Repo.class);
 

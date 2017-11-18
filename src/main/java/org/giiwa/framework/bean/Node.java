@@ -40,7 +40,7 @@ public class Node extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Node> dao = new BeanDAO<Node>();
+	public static final BeanDAO<Node> dao = BeanDAO.create(Node.class);
 
 	@Column(name = X.ID, index = true)
 	private String id;

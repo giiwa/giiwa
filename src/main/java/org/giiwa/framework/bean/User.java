@@ -56,7 +56,7 @@ public class User extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<User> dao = new BeanDAO<User>();
+	public static final BeanDAO<User> dao = BeanDAO.create(User.class);
 
 	@Column(name = X.ID)
 	private long id;
@@ -637,7 +637,7 @@ public class User extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<UserRole> dao = new BeanDAO<UserRole>();
+		public static final BeanDAO<UserRole> dao = BeanDAO.create(UserRole.class);
 
 		@Column(name = "uid")
 		long uid;
@@ -663,7 +663,7 @@ public class User extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<Lock> dao = new BeanDAO<Lock>();
+		public static final BeanDAO<Lock> dao = BeanDAO.create(Lock.class);
 
 		/**
 		 * Locked.

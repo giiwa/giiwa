@@ -38,7 +38,7 @@ public final class Global extends Bean {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Global> dao = new BeanDAO<Global>();
+	public static final BeanDAO<Global> dao = BeanDAO.create(Global.class);
 
 	@Column(name = X.ID)
 	String id;

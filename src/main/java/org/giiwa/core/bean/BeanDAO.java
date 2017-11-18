@@ -14,7 +14,6 @@
 */
 package org.giiwa.core.bean;
 
-import java.lang.reflect.ParameterizedType;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -22,6 +21,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.framework.bean.User;
 
 public class BeanDAO<T extends Bean> {
 
@@ -30,13 +30,15 @@ public class BeanDAO<T extends Bean> {
 
 	Class<T> t;
 
-	@SuppressWarnings("unchecked")
-	public BeanDAO() {
-		try {
-			t = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-		} catch (Throwable e) {
-			log.error(e.getMessage(), e);
-		}
+	private BeanDAO(Class<T> t) {
+		this.t = t;
+		// try {
+		// t = (Class<T>) ((ParameterizedType)
+		// getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+		// } catch (Throwable e) {
+		// log.error(e.getMessage(), e);
+		// e.printStackTrace();
+		// }
 	}
 
 	public T load(W q) {
@@ -91,4 +93,11 @@ public class BeanDAO<T extends Bean> {
 		return Helper.inc(q, name, n, v, t);
 	}
 
+	public static void main(String[] args) {
+		System.out.println(User.dao.t);
+	}
+
+	public static <E extends Bean> BeanDAO<E> create(Class<E> t) {
+		return new BeanDAO<E>(t);
+	}
 }

@@ -40,7 +40,7 @@ public class Access extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public final static BeanDAO<Access> dao = new BeanDAO<Access>();
+	public final static BeanDAO<Access> dao = BeanDAO.create(Access.class);
 
 	@Column(name = X.ID, index = true, unique = true)
 	private String name;

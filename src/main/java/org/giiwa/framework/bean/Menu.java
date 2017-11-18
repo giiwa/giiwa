@@ -43,7 +43,7 @@ public class Menu extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Menu> dao = new BeanDAO<Menu>();
+	public static final BeanDAO<Menu> dao = BeanDAO.create(Menu.class);
 
 	// int id;
 

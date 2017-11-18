@@ -43,7 +43,7 @@ public class App extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<App> dao = new BeanDAO<App>();
+	public static final BeanDAO<App> dao = BeanDAO.create(App.class);
 
 	@Column(name = X.ID, index = true, unique = true)
 	private long id;

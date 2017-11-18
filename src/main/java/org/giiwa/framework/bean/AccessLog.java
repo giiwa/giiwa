@@ -46,7 +46,7 @@ public class AccessLog extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<AccessLog> dao = new BeanDAO<AccessLog>();
+	public static final BeanDAO<AccessLog> dao = BeanDAO.create(AccessLog.class);
 
 	static AtomicLong seq = new AtomicLong(0);
 	static String node = Config.getConf().getString("node.name");

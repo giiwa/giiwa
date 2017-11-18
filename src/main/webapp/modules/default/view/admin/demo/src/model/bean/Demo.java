@@ -1,6 +1,7 @@
 package org.giiwa.demo.bean;
 
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.Helper;
@@ -19,79 +20,51 @@ import org.giiwa.core.bean.X;
 @Table(name = "tbldemo")
 public class Demo extends Bean {
 
-  /**
-   * 
-   */
-  private static final long serialVersionUID = 1L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-  @Column(name = X.ID)
-  String                    id;
+	public static final BeanDAO<Demo> dao = BeanDAO.create(Demo.class);
 
-  @Column(name = "name")
-  String                    name;
+	@Column(name = X.ID)
+	String id;
 
-  @Column(name = "content")
-  String                    content;
+	@Column(name = "name")
+	String name;
 
-  public String getId() {
-    return id;
-  }
+	@Column(name = "content")
+	String content;
 
-  public String getName() {
-    return name;
-  }
+	public String getId() {
+		return id;
+	}
 
-  public String getContent() {
-    return content;
-  }
+	public String getName() {
+		return name;
+	}
 
-  // ------------
+	public String getContent() {
+		return content;
+	}
 
-  public static String create(V v) {
-    /**
-     * generate a unique id in distribute system
-     */
-    String id = "d" + UID.next("demo.id");
-    try {
-      while (exists(id)) {
-        id = "d" + UID.next("demo.id");
-      }
-      Helper.insert(v.force(X.ID, id), Demo.class);
-      return id;
-    } catch (Exception e1) {
-      log.error(e1.getMessage(), e1);
-    }
-    return null;
-  }
+	// ------------
 
-  public static boolean exists(String id) {
-    try {
-      return Helper.exists(id, Demo.class);
-    } catch (Exception e1) {
-      log.error(e1.getMessage(), e1);
-    }
-    return false;
-  }
-
-  public static int update(String id, V v) {
-    return Helper.update(id, v, Demo.class);
-  }
-
-  public static Beans<Demo> load(W q, int s, int n) {
-    return Helper.load(q.sort(X.ID, 1), s, n, Demo.class);
-  }
-
-  public static Demo load(String id) {
-    return Helper.load(id, Demo.class);
-  }
-
-  public static void delete(String id) {
-    Helper.delete(id, Demo.class);
-  }
-
-  public static void cleanup() {
-    // TODO Auto-generated method stub
-    // just for demo
-  }
+	public static String create(V v) {
+		/**
+		 * generate a unique id in distribute system
+		 */
+		String id = "d" + UID.next("demo.id");
+		try {
+			while (dao.exists(id)) {
+				id = "d" + UID.next("demo.id");
+			}
+			dao.insert(v.force(X.ID, id));
+			return id;
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		}
+		return null;
+	}
 
 }

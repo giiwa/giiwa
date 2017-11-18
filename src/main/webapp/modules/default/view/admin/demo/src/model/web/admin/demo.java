@@ -14,7 +14,7 @@ public class demo extends Model {
 	@Path(login = true, access = "access.demo.admin")
 	public void onGet() {
 		int s = this.getInt("s");
-		int n = this.getInt("n", 20, "number.per.page");
+		int n = this.getInt("n", 10);
 
 		W q = W.create();
 		String name = this.getString("name");
@@ -23,7 +23,7 @@ public class demo extends Model {
 			q.and("name", name, W.OP.like);
 			this.set("name", name);
 		}
-		Beans<Demo> bs = Demo.load(q, s, n);
+		Beans<Demo> bs = Demo.dao.load(q, s, n);
 		this.set(bs, s, n);
 
 		this.show("/admin/demo.index.html");
@@ -32,7 +32,7 @@ public class demo extends Model {
 	@Path(path = "detail", login = true, access = "access.demo.admin")
 	public void detail() {
 		String id = this.getString("id");
-		Demo d = Demo.load(id);
+		Demo d = Demo.dao.load(id);
 		this.set("b", d);
 		this.set("id", id);
 		this.show("/admin/demo.detail.html");
@@ -41,7 +41,7 @@ public class demo extends Model {
 	@Path(path = "delete", login = true, access = "access.demo.admin")
 	public void delete() {
 		String id = this.getString("id");
-		Demo.delete(id);
+		Demo.dao.delete(id);
 		JSON jo = new JSON();
 		jo.put(X.STATE, 200);
 		this.response(jo);
@@ -50,7 +50,7 @@ public class demo extends Model {
 	@Path(path = "create", login = true, access = "access.demo.admin")
 	public void create() {
 		if (method.isPost()) {
-		  JSON jo = this.getJSON();
+			JSON jo = this.getJSON();
 			V v = V.create().copy(jo, "name");
 			v.set("content", this.getHtml("content"));
 			String id = Demo.create(v);
@@ -67,17 +67,17 @@ public class demo extends Model {
 	public void edit() {
 		String id = this.getString("id");
 		if (method.isPost()) {
-		  JSON jo = this.getJSON();
+			JSON jo = this.getJSON();
 			V v = V.create().copy(jo, "name");
 			v.set("content", this.getHtml("content"));
-			Demo.update(id, v);
+			Demo.dao.update(id, v);
 
 			this.set(X.MESSAGE, lang.get("save.success"));
 			onGet();
 			return;
 		}
 
-		Demo d = Demo.load(id);
+		Demo d = Demo.dao.load(id);
 		this.set(d.getJSON());
 		this.set("id", id);
 		this.show("/admin/demo.edit.html");

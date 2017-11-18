@@ -1355,7 +1355,7 @@ public final class Http {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<_C> dao = new BeanDAO<_C>();
+		public static final BeanDAO<_C> dao = BeanDAO.create(_C.class);
 
 		@Column(name = "name")
 		String name;

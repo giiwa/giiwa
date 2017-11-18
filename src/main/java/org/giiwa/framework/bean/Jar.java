@@ -40,7 +40,7 @@ public class Jar extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Jar> dao = new BeanDAO<Jar>();
+	public static final BeanDAO<Jar> dao = BeanDAO.create(Jar.class);
 
 	/**
 	 * Update.

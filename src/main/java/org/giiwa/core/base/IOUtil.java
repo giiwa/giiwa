@@ -65,13 +65,13 @@ public final class IOUtil {
 	 */
 	public static int delete(File f) throws IOException {
 		int count = 0;
-		
+
 		if (f.isFile() || isLink(f)) {
 			f.delete();
 
-			if (log.isInfoEnabled()) {
-				log.info("delete file: " + f.getCanonicalPath());
-			}
+			// if (log.isInfoEnabled()) {
+			// log.info("delete file: " + f.getCanonicalPath());
+			// }
 
 			count++;
 		} else if (f.isDirectory()) {
@@ -82,9 +82,9 @@ public final class IOUtil {
 				}
 			}
 			f.delete();
-			if (log.isInfoEnabled()) {
-				log.info("delete folder: " + f.getCanonicalPath());
-			}
+			// if (log.isInfoEnabled()) {
+			// log.info("delete folder: " + f.getCanonicalPath());
+			// }
 
 			count++;
 		}

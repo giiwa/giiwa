@@ -37,7 +37,7 @@ public class Message extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static BeanDAO<Message> dao = new BeanDAO<Message>();
+	public static BeanDAO<Message> dao = BeanDAO.create(Message.class);
 
 	@Column(name = X.ID, index = true)
 	private long id;

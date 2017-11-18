@@ -37,7 +37,7 @@ public class Code extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Code> dao = new BeanDAO<Code>();
+	public static final BeanDAO<Code> dao = BeanDAO.create(Code.class);
 
 	@Column(name = "s1", index = true)
 	private String s1;

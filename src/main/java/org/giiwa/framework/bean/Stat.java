@@ -28,7 +28,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Stat> dao = new BeanDAO<Stat>();
+	public static final BeanDAO<Stat> dao = BeanDAO.create(Stat.class);
 
 	@Column(name = X.ID)
 	protected String id; // 日期
