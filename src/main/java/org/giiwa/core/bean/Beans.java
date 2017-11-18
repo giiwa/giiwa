@@ -37,7 +37,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	protected static Log log = LogFactory.getLog(Beans.class);
 
 	/** The total. */
-	public int total = -1; // unknown
+	public long total = -1; // unknown
 
 	public JSON stats;
 
@@ -45,11 +45,11 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 	public List<String> columns = null;
 
-	public int getTotal() {
+	public long getTotal() {
 		return total;
 	}
 
-	public void setTotal(int total) {
+	public void setTotal(long total) {
 		this.total = total;
 	}
 

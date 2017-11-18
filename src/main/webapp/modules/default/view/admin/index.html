@@ -12,7 +12,7 @@
 			<a class='icon icon-laptop' href='javascript:;' onclick='giiwa.load("/admin/dashboard")' title="$lang.get('a.dashboard')"></a>
 		</div>
 		<div class='t_right' style="margin-right: 200px;">
-			<a class='icon icon-mail2 message' href='javascript:;' onclick='giiwa.load("/admin/dashboard")' title="$lang.get('a.dashboard')"><i></i></a>
+			<a class='icon icon-mail2 message' href='javascript:;' onclick='giiwa.load("/admin/message")'><i></i></a>
 		</div>
 	</div>
 </div>
@@ -67,15 +67,18 @@ $(function() {
 	});
 	
 	function _check_message() {
-		$.post('/admin/message', {}, function(d){
+		$.post('/admin/message/count', {}, function(d){
 			if(d.state == 200) {
-				$('#toolbar .message i').text(d.count);
-				$('#toolbar .message').css('color', '#fff');
-			} else {
-				$('#toolbar .message').css('color', '#ddd');
+				if(d.count > 0) {
+					$('#toolbar .message i').text("$lang.get('home.message')(" + d.count + ")");
+					$('#toolbar .message').css('color', '#fff');
+				} else {
+					$('#toolbar .message i').text('');
+					$('#toolbar .message').css('color', '#ddd');
+				}
 			}
 			
-			setTimeout(_check_message, 3000);
+			setTimeout(_check_message, 6000);
 		});
 	}
 	

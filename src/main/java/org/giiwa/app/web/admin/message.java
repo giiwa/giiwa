@@ -16,6 +16,7 @@ package org.giiwa.app.web.admin;
 
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Message;
@@ -49,7 +50,7 @@ public class message extends Model {
 			this.set("name", name);
 		}
 		Beans<Message> bs = Message.dao.load(q, s, n);
-
+		bs.setTotal(Message.dao.count(q));
 		this.set(bs, s, n);
 
 		this.query.path("/admin/message");
@@ -82,6 +83,10 @@ public class message extends Model {
 			this.deny();
 			return;
 		}
+		if (d.getFlag() == Message.FLAG_UNREAD) {
+			Message.dao.update(d.getId(), V.create("flag", Message.FLAG_READ));
+		}
+
 		this.set("b", d);
 		this.set("id", id);
 		this.show("/admin/message.detail.html");

@@ -82,7 +82,7 @@ public class Message extends Bean {
 			while (dao.exists(id)) {
 				id = UID.next("message.id");
 			}
-			dao.insert(v.force(X.ID, id));
+			dao.insert(v.force(X.ID, id).append("flag", Message.FLAG_UNREAD));
 			return id;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
