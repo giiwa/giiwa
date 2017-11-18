@@ -59,9 +59,9 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return total;
 	}
 
-	// public void setTotal(long total) {
-	// this.total = total;
-	// }
+	public void setTotal(long total) {
+		this.total = total;
+	}
 
 	public JSON getStats() {
 		return stats;
