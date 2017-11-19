@@ -2301,4 +2301,9 @@ public class RDSHelper implements Helper.DBHelper {
 		return (T) n;
 	}
 
+	public static Connection getConnection(String name, String url, String username, String passwd)
+			throws SQLException {
+		return RDB.getConnectionByUrl(name, url, username, passwd);
+	}
+
 }

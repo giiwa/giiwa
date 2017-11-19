@@ -264,12 +264,12 @@ public class RDB {
       if (!X.isEmpty(error) && error.indexOf("Cannot load JDBC driver") >= 0) {
         if (!X.isEmpty(jar)) {
           // download the driver from giiwa
-          int len = Http.owner.download("http://www.giiwa.org/archive/" + jar,
-              new File(Model.GIIWA_HOME + "/giiwa/WEB-INF/lib/" + jar));
-          if (len > 0) {
-            // restart the giiwa
-            System.exit(0);
-          }
+//          int len = Http.owner.download("http://www.giiwa.org/archive/" + jar,
+//              new File(Model.GIIWA_HOME + "/giiwa/WEB-INF/lib/" + jar));
+//          if (len > 0) {
+//            // restart the giiwa
+//            System.exit(0);
+//          }
         } else {
           throw new SQLException(e.getMessage() + ", please download the jdbc driver, copy to {giiwa}/WEB-INF/lib");
         }
