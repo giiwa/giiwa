@@ -1860,6 +1860,10 @@ public class Helper implements Serializable {
 		return load(q, t, getDB(t));
 	}
 
+	public static <T extends Bean> T load(String[] fields, W q, Class<T> t) {
+		return load(fields, q, t, getDB(t));
+	}
+
 	/**
 	 * Load.
 	 *
@@ -1875,7 +1879,12 @@ public class Helper implements Serializable {
 	 */
 	public static <T extends Bean> T load(W q, Class<T> t, String db) {
 		String table = getTable(t);
-		return load(table, q, t, db);
+		return load(table, null, q, t, db);
+	}
+
+	public static <T extends Bean> T load(String[] fields, W q, Class<T> t, String db) {
+		String table = getTable(t);
+		return load(table, fields, q, t, db);
 	}
 
 	/**
@@ -1892,7 +1901,7 @@ public class Helper implements Serializable {
 	 * @return the bean
 	 */
 	public static <T extends Bean> T load(String table, W q, Class<T> t) {
-		return load(table, q, t, getDB(t));
+		return load(table, null, q, t, getDB(t));
 	}
 
 	/**
@@ -1910,7 +1919,7 @@ public class Helper implements Serializable {
 	 *            the db
 	 * @return the t
 	 */
-	public static <T extends Bean> T load(String table, W q, Class<T> t, String db) {
+	public static <T extends Bean> T load(String table, String[] fields, W q, Class<T> t, String db) {
 
 		if (table != null) {
 			if (monitor != null) {
@@ -1918,11 +1927,11 @@ public class Helper implements Serializable {
 			}
 
 			if (primary != null && primary.getDB(db) != null) {
-				return primary.load(table, q, t, db);
+				return primary.load(table, fields, q, t, db);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(db) != null) {
-						return h.load(table, q, t, db);
+						return h.load(table, fields, q, t, db);
 					}
 				}
 			}
@@ -2288,6 +2297,10 @@ public class Helper implements Serializable {
 		return load(table, q, s, n, t, getDB(t));
 	}
 
+	public static <T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t) {
+		return load(table, fields, q, s, n, t, getDB(t));
+	}
+
 	/**
 	 * Load.
 	 *
@@ -2308,11 +2321,16 @@ public class Helper implements Serializable {
 	 * @return the beans
 	 */
 	public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db) {
-		return _load(table, q, s, n, t, db, 1);
+		return _load(table, null, q, s, n, t, db, 1);
 	}
 
-	private static <T extends Bean> Beans<T> _load(final String table, final W q, final int s, final int n,
-			final Class<T> t, final String db, int refer) {
+	public static <T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t,
+			String db) {
+		return _load(table, fields, q, s, n, t, db, 1);
+	}
+
+	private static <T extends Bean> Beans<T> _load(final String table, final String[] fields, final W q, final int s,
+			final int n, final Class<T> t, final String db, int refer) {
 
 		if (monitor != null) {
 			monitor.query(db, table, q);
@@ -2320,11 +2338,11 @@ public class Helper implements Serializable {
 
 		Beans<T> bs = null;
 		if (primary != null && primary.getDB(db) != null) {
-			bs = primary.load(table, q, s, n, t, db);
+			bs = primary.load(table, fields, q, s, n, t, db);
 		} else if (!X.isEmpty(customs)) {
 			for (DBHelper h : customs) {
 				if (h.getDB(db) != null) {
-					bs = h.load(table, q, s, n, t, db);
+					bs = h.load(table, fields, q, s, n, t, db);
 					break;
 				}
 			}
@@ -2338,7 +2356,7 @@ public class Helper implements Serializable {
 					@Override
 					public void run() {
 						// Cause the DB to load the more data in memory
-						_load(table, q, s + n * 10, n, t, db, 0);
+						_load(table, fields, q, s + n * 10, n, t, db, 0);
 					}
 
 				}).schedule(1000);
@@ -2366,6 +2384,11 @@ public class Helper implements Serializable {
 	public static <T extends Bean> Beans<T> load(W q, int s, int n, Class<T> t) {
 		String table = getTable(t);
 		return load(table, q, s, n, t);
+	}
+
+	public static <T extends Bean> Beans<T> load(String[] fields, W q, int s, int n, Class<T> t) {
+		String table = getTable(t);
+		return load(table, fields, q, s, n, t);
 	}
 
 	/**
@@ -2802,11 +2825,11 @@ public class Helper implements Serializable {
 
 		void createIndex(String table, LinkedHashMap<String, Integer> ss, String db);
 
-		<T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db);
+		<T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t, String db);
 
 		<T extends Bean> Cursor<T> query(String table, W q, int s, int n, Class<T> t, String db);
 
-		<T extends Bean> T load(String table, W q, Class<T> clazz, String db);
+		<T extends Bean> T load(String table, String[] fields, W q, Class<T> clazz, String db);
 
 		int delete(String table, W q, String db);
 

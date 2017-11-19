@@ -56,7 +56,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
-import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListCollectionsIterable;
 import com.mongodb.client.MongoCollection;
@@ -298,7 +297,7 @@ public class MongoHelper implements Helper.DBHelper {
 				if (d != null) {
 					Document d1 = d.first();
 					if (d1 != null) {
-						b.load(d1);
+						b.load(d1, null);
 						return b;
 					}
 				}
@@ -328,7 +327,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return the Bean
 	 */
-	public <T extends Bean> T load(String collection, Bson query, Bson order, T b, String db) {
+	public <T extends Bean> T load(String collection, String[] fields, Bson query, Bson order, T b, String db) {
 		TimeStamp t = TimeStamp.create();
 		try {
 			MongoCollection<Document> db1 = getCollection(db, collection);
@@ -346,7 +345,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 					Document d1 = d.first();
 					if (d1 != null) {
-						b.load(d1);
+						b.load(d1, fields);
 						return b;
 					}
 
@@ -385,7 +384,7 @@ public class MongoHelper implements Helper.DBHelper {
 	public <T extends Bean> T load(Bson query, Bson order, T obj) {
 		String collection = getCollection(obj.getClass());
 		if (collection != null) {
-			return load(collection, query, order, obj, Helper.DEFAULT);
+			return load(collection, null, query, order, obj, Helper.DEFAULT);
 		}
 		return null;
 
@@ -410,8 +409,8 @@ public class MongoHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return Beans
 	 */
-	public <T extends Bean> Beans<T> load(String collection, W q, int offset, int limit, final Class<T> clazz,
-			String db) {
+	public <T extends Bean> Beans<T> load(String collection, String[] fields, W q, int offset, int limit,
+			final Class<T> clazz, String db) {
 
 		TimeStamp t = TimeStamp.create();
 		MongoCollection<Document> db1 = null;
@@ -450,7 +449,7 @@ public class MongoHelper implements Helper.DBHelper {
 					// log.debug("next=" + t.past() +"ms, count=" + bs.total);
 					if (d != null) {
 						T b = clazz.newInstance();
-						b.load(d);
+						b.load(d, fields);
 						bs.add(b);
 						limit--;
 					}
@@ -567,10 +566,10 @@ public class MongoHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return the t
 	 */
-	public <T extends Bean> T load(String collection, W q, Class<T> t, String db) {
+	public <T extends Bean> T load(String collection, String[] fields, W q, Class<T> t, String db) {
 		try {
 			T obj = t.newInstance();
-			return load(collection, q.query(), q.order(), obj, db);
+			return load(collection, fields, q.query(), q.order(), obj, db);
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error(e.getMessage(), e);
@@ -1165,7 +1164,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 				try {
 					T b = t.newInstance();
-					b.load(cur.next());
+					b.load(cur.next(), null);
 					return b;
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);

@@ -594,7 +594,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return boolean
 	 */
-	public boolean load(String cols, String table, W q, Bean b, String db) {
+	public boolean load(String table, String[] fields, W q, Bean b, String db) {
 		/**
 		 * create the sql statement
 		 */
@@ -656,7 +656,7 @@ public class RDSHelper implements Helper.DBHelper {
 
 			r = p.executeQuery();
 			if (r.next()) {
-				b.load(r);
+				b.load(r, fields);
 
 				return true;
 			}
@@ -689,7 +689,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the Class Bean
 	 * @return the list
 	 */
-	public final <T extends Bean> List<T> load(String table, String[] cols, W q, Class<T> clazz) {
+	public final <T extends Bean> Beans<T> load(String table, String[] cols, W q, Class<T> clazz) {
 		return load(table, cols, q, -1, -1, clazz);
 	}
 
@@ -706,7 +706,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the Bean Class
 	 * @return List
 	 */
-	public final <T extends Bean> List<T> load(String[] cols, W q, Class<T> clazz) {
+	public final <T extends Bean> Beans<T> load(String[] cols, W q, Class<T> clazz) {
 		return load(cols, q, -1, -1, clazz);
 	}
 
@@ -727,7 +727,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the Bean Class
 	 * @return List
 	 */
-	public final <T extends Bean> List<T> load(String[] cols, W q, int offset, int limit, Class<T> t) {
+	public final <T extends Bean> Beans<T> load(String[] cols, W q, int offset, int limit, Class<T> t) {
 		/**
 		 * get the require annotation onGet
 		 */
@@ -760,7 +760,8 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the Bean Class
 	 * @return List
 	 */
-	public <T extends Bean> List<T> load(String table, String[] cols, W q, int offset, int limit, Class<T> clazz) {
+	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz,
+			String db) {
 		/**
 		 * create the sql statement
 		 */
@@ -776,19 +777,19 @@ public class RDSHelper implements Helper.DBHelper {
 		ResultSet r = null;
 
 		try {
-			c = getConnection();
+			c = getConnection(db);
 
 			if (c == null)
 				return null;
 
 			StringBuilder sql = new StringBuilder();
 			sql.append("select ");
-			if (cols != null) {
-				for (int i = 0; i < cols.length - 1; i++) {
-					sql.append(cols[i]).append(", ");
+			if (fields != null) {
+				for (int i = 0; i < fields.length - 1; i++) {
+					sql.append(fields[i]).append(", ");
 				}
 
-				sql.append(cols[cols.length - 1]);
+				sql.append(fields[fields.length - 1]);
 
 			} else {
 				sql.append("*");
@@ -842,10 +843,10 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 			r = p.executeQuery();
-			List<T> list = new ArrayList<T>();
+			Beans<T> list = new Beans<T>();
 			while (r.next()) {
 				T b = clazz.newInstance();
-				b.load(r);
+				b.load(r, fields);
 				list.add(b);
 			}
 
@@ -880,7 +881,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the Class Bean
 	 * @return List the list of Bean
 	 */
-	public <T extends Bean> List<T> loadBy(String select, W q, int offset, int limit, Class<T> clazz) {
+	public <T extends Bean> Beans<T> loadBy(String select, W q, int offset, int limit, Class<T> clazz) {
 		/**
 		 * create the sql statement
 		 */
@@ -950,10 +951,10 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 			r = p.executeQuery();
-			List<T> list = new ArrayList<T>();
+			Beans<T> list = new Beans<T>();
 			while (r.next()) {
 				T b = clazz.newInstance();
-				b.load(r);
+				b.load(r, null);
 				list.add(b);
 			}
 
@@ -989,132 +990,8 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return Beans
 	 */
-	public <T extends Bean> Beans<T> load(String table, W q, int offset, int limit, Class<T> clazz, String db) {
-		return load(null, table, q, offset, limit, clazz, db);
-	}
-
-	/**
-	 * load the data of cols from table, with the query, offset, limit, class and
-	 * dbname
-	 * 
-	 * @param <T>
-	 *            the Class
-	 * @param cols
-	 *            the cols, * if null
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @param clazz
-	 *            the Class of Bean
-	 * @param db
-	 *            th dbname
-	 * @return the Beans
-	 */
-	public <T extends Bean> Beans<T> load(String cols, String table, W q, int offset, int limit, Class<T> clazz,
-			String db) {
-		/**
-		 * create the sql statement
-		 */
-		TimeStamp t = TimeStamp.create();
-
-		// log.debug("sql:" + sql.toString());
-		/**
-		 * search it in database
-		 */
-		Connection c = null;
-		PreparedStatement p = null;
-		ResultSet r = null;
-		StringBuilder sql = new StringBuilder();
-
-		try {
-
-			c = getConnection(db);
-
-			if (c == null)
-				return null;
-
-			sql.append("select ");
-			if (X.isEmpty(cols)) {
-				sql.append("*");
-			} else {
-				sql.append(cols);
-			}
-			sql.append(" from ").append(table);
-
-			String where = _where(q, c);
-			Object[] args = q.args();
-			String orderby = _orderby(q, c);
-
-			if (!X.isEmpty(where)) {
-				sql.append(" where ").append(where);
-			}
-
-			if (isOracle(c)) {
-				if (X.isEmpty(where)) {
-					sql.append(" where ");
-				} else {
-					sql.append(" and ");
-				}
-				if (offset < 0) {
-					offset = MAXROWS;
-				}
-				sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
-
-				if (!X.isEmpty(orderby)) {
-					sql.append(" ").append(orderby);
-				}
-			} else {
-				if (!X.isEmpty(orderby)) {
-					sql.append(" ").append(orderby);
-				}
-
-				if (limit > 0) {
-					sql.append(" limit ").append(limit);
-				}
-				if (offset > 0) {
-					sql.append(" offset ").append(offset);
-				}
-			}
-
-			Beans<T> rs = new Beans<T>();
-
-			p = c.prepareStatement(sql.toString());
-
-			int order = 1;
-			if (args != null) {
-				for (int i = 0; i < args.length; i++) {
-					Object o = args[i];
-
-					setParameter(p, order++, o);
-				}
-			}
-
-			r = p.executeQuery();
-			while (r.next()) {
-				T b = clazz.newInstance();
-				b.load(r);
-				rs.add(b);
-			}
-
-			if (log.isDebugEnabled())
-				log.debug("load - cost=" + t.pastms() + "ms, collection=" + table + ", sql=" + sql + ", q=" + q
-						+ ", result=" + rs);
-
-			rs.setCost(t.pastms());
-			return rs;
-		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(sql, e);
-
-		} finally {
-			close(r, p, c);
-		}
-		return null;
+	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz) {
+		return load(table, fields, q, offset, limit, clazz, Helper.DEFAULT);
 	}
 
 	/**
@@ -1600,32 +1477,11 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return Bean
 	 */
-	public <T extends Bean> T load(String table, W q, Class<T> clazz, String db) {
-		return load(null, table, q, clazz, db);
-	}
-
-	/**
-	 * load the data of cols from table
-	 * 
-	 * @param <T>
-	 *            the object
-	 * @param cols
-	 *            the cols, * if null
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query
-	 * @param clazz
-	 *            the Class of Bean
-	 * @param db
-	 *            the dbname
-	 * @return the Beans
-	 */
-	public <T extends Bean> T load(String cols, String table, W q, Class<T> clazz, String db) {
+	public <T extends Bean> T load(String table, String[] fields, W q, Class<T> clazz, String db) {
 		try {
 			T b = (T) clazz.newInstance();
 
-			if (load(cols, table, q, b, db)) {
+			if (load(table, fields, q, b, db)) {
 				return b;
 			}
 		} catch (Exception e) {
@@ -2216,9 +2072,8 @@ public class RDSHelper implements Helper.DBHelper {
 			r = md.getTables(null, null, null, null);
 
 			while (r.next()) {
-				Bean b = new Bean() {
-				};
-				b.load(r);
+				Bean b = new Bean();
+				b.load(r, null);
 				list.add(b.getJSON());
 			}
 
@@ -2339,7 +2194,7 @@ public class RDSHelper implements Helper.DBHelper {
 			public T next() {
 				try {
 					T t1 = t.newInstance();
-					t1.load(r);
+					t1.load(r, null);
 					return t1;
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);

@@ -45,8 +45,21 @@ public class BeanDAO<T extends Bean> {
 		return Helper.load(q, t);
 	}
 
+	public T load(String[] fields, W q) {
+		return Helper.load(fields, q, t);
+	}
+
 	public T load(Object id) {
 		return Helper.load(id, t);
+	}
+
+	public Beans<T> load(String[] fields, W q, int s, int n) {
+		Beans<T> bs = Helper.load(fields, q, s, n, t);
+		if (bs != null) {
+			bs.q = q;
+			bs.dao = this;
+		}
+		return bs;
 	}
 
 	public Beans<T> load(W q, int s, int n) {

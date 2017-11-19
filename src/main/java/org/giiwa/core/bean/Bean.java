@@ -127,7 +127,7 @@ public class Bean implements Serializable {
 	 *            the value, if the value=null, then remove the name from the data
 	 * @return Object of the old value
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final Object set(String name, Object value) {
 		if (data == null) {
 			data = new HashMap<String, Object>();
@@ -209,6 +209,7 @@ public class Bean implements Serializable {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private Map<String, Field> _getFields() {
 
 		Class<? extends Bean> c1 = this.getClass();
@@ -537,13 +538,23 @@ public class Bean implements Serializable {
 	 * @param d
 	 *            the Document
 	 */
-	public void load(Document d) {
-		for (String name : d.keySet()) {
-			Object o = d.get(name);
-			if (o instanceof ObjectId) {
-				o = ((ObjectId) o).toString();
+	public void load(Document d, String[] fields) {
+		if (fields == null || fields.length == 0) {
+			for (String name : d.keySet()) {
+				Object o = d.get(name);
+				if (o instanceof ObjectId) {
+					o = ((ObjectId) o).toString();
+				}
+				this.set(name, o);
 			}
-			this.set(name, o);
+		} else {
+			for (String name : fields) {
+				Object o = d.get(name);
+				if (o instanceof ObjectId) {
+					o = ((ObjectId) o).toString();
+				}
+				this.set(name, o);
+			}
 		}
 	}
 
@@ -557,26 +568,47 @@ public class Bean implements Serializable {
 	 * @throws SQLException
 	 *             the SQL exception
 	 */
-	public void load(ResultSet r) throws SQLException {
-		ResultSetMetaData m = r.getMetaData();
-		int cols = m.getColumnCount();
-		for (int i = 1; i <= cols; i++) {
-			try {
-				Object o = r.getObject(i);
-				if (o instanceof java.sql.Date) {
-					o = ((java.sql.Date) o).getTime();// .toString();
-				} else if (o instanceof java.sql.Time) {
-					o = ((java.sql.Time) o).getTime();// .toString();
-				} else if (o instanceof java.sql.Timestamp) {
-					o = ((java.sql.Timestamp) o).getTime();// .toString();
-					// } else if (o instanceof java.math.BigDecimal) {
-					// o = o.toString();
-				}
+	public void load(ResultSet r, String[] fields) throws SQLException {
+		if (fields == null || fields.length == 0) {
+			ResultSetMetaData m = r.getMetaData();
+			int cols = m.getColumnCount();
+			for (int i = 1; i <= cols; i++) {
+				try {
+					Object o = r.getObject(i);
+					if (o instanceof java.sql.Date) {
+						o = ((java.sql.Date) o).getTime();// .toString();
+					} else if (o instanceof java.sql.Time) {
+						o = ((java.sql.Time) o).getTime();// .toString();
+					} else if (o instanceof java.sql.Timestamp) {
+						o = ((java.sql.Timestamp) o).getTime();// .toString();
+						// } else if (o instanceof java.math.BigDecimal) {
+						// o = o.toString();
+					}
 
-				String name = m.getColumnName(i);
-				this.set(name, o);
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+					String name = m.getColumnName(i);
+					this.set(name, o);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		} else {
+			for (String name : fields) {
+				try {
+					Object o = r.getObject(name);
+					if (o instanceof java.sql.Date) {
+						o = ((java.sql.Date) o).getTime();// .toString();
+					} else if (o instanceof java.sql.Time) {
+						o = ((java.sql.Time) o).getTime();// .toString();
+					} else if (o instanceof java.sql.Timestamp) {
+						o = ((java.sql.Timestamp) o).getTime();// .toString();
+						// } else if (o instanceof java.math.BigDecimal) {
+						// o = o.toString();
+					}
+
+					this.set(name, o);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
 			}
 		}
 	}
@@ -593,32 +625,6 @@ public class Bean implements Serializable {
 		}
 
 		return true;
-	}
-
-	public static void main(String[] args) {
-		Demo d = new Demo1();
-		d.set("l1", Arrays.asList("aaaa", "bbbb"));
-		d.set("l2", Arrays.asList("2", "2"));
-		d.print();
-	}
-
-	private static class Demo extends Bean {
-		@Column(name = "l1")
-		List<String> l1;
-
-		public void print() {
-			System.out.println(l1);
-		}
-	}
-
-	private static class Demo1 extends Demo {
-		@Column(name = "l2")
-		List<String> l2;
-
-		public void print() {
-			System.out.println(l1);
-			System.out.println(l2);
-		}
 	}
 
 }
