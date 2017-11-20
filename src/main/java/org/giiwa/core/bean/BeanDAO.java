@@ -88,6 +88,9 @@ public class BeanDAO<T extends Bean> {
 	}
 
 	public int insert(V v) {
+		if (X.isEmpty(v.value(X.ID))) {
+			log.error("v=" + v, new Exception("id missed in V"));
+		}
 		return Helper.insert(v, t);
 	}
 
