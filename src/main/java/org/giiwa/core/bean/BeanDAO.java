@@ -16,6 +16,7 @@ package org.giiwa.core.bean;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -114,6 +115,20 @@ public class BeanDAO<T extends Bean> {
 		return Helper.inc(q, name, n, v, t);
 	}
 
+	public T copy(Bean src) {
+		try {
+			T b = t.newInstance();
+			Map<String, Object> m = src.getAll();
+			for (String name : m.keySet()) {
+				b.set(name, m.get(name));
+			}
+			return b;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
 	public static void main(String[] args) {
 		System.out.println(User.dao.t);
 	}
@@ -121,4 +136,5 @@ public class BeanDAO<T extends Bean> {
 	public static <E extends Bean> BeanDAO<E> create(Class<E> t) {
 		return new BeanDAO<E>(t);
 	}
+
 }
