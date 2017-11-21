@@ -152,7 +152,7 @@ public abstract class MQ {
 		void call(List<Request> l1) {
 			synchronized (queue) {
 				for (Request r : l1) {
-					log.debug("push, r=" + new String(r.data));
+					// log.debug("push, r=" + new String(r.data));
 					queue.addLast(r);
 				}
 
