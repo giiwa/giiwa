@@ -19,7 +19,7 @@ public class Url {
 	String protocol;
 	String uri;
 	String ip;
-	int port;
+	String port;
 
 	Map<String, String> query;
 
@@ -45,7 +45,12 @@ public class Url {
 	}
 
 	public int getPort(int defaultPort) {
-		return port > 0 ? port : defaultPort;
+		int p = X.toInt(port);
+		return p > 0 ? p : defaultPort;
+	}
+
+	public String getPort() {
+		return port;
 	}
 
 	public Map<String, String> getQuery() {
@@ -111,7 +116,7 @@ public class Url {
 		if (s != null) {
 			i = s.indexOf(":");
 			if (i >= 0) {
-				port = (i >= (s.length() - 1)) ? 0 : X.toInt(s.substring(i + 1));
+				port = (i >= (s.length() - 1)) ? null : s.substring(i + 1);
 				ip = i > 0 ? s.substring(0, i) : null;
 			} else {
 				ip = s;
@@ -147,7 +152,7 @@ public class Url {
 		if (!X.isEmpty(ip)) {
 			sb.append(ip);
 		}
-		if (port > 0) {
+		if (!X.isEmpty(port)) {
 			sb.append(":").append(port);
 		}
 		if (!X.isEmpty(uri)) {
