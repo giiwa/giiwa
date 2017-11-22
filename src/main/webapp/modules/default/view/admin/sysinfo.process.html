@@ -22,7 +22,6 @@
 			<th>$lang.get('process.cpu')</th>
 			<th>$lang.get('process.threads')</th>
 			<th style="width:25%">$lang.get('process.name')</th>
-			<th style="width:25%">$lang.get('process.cwd')</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -39,7 +38,6 @@
 		<td>#if($f.cpu>0) $lang.percent($!f.cpu, '%.1f') #end</td>
 		<td>#if($f.threads>0) $f.threads #end</td>
 		<td>$!f.name</td>
-		<td>$!f.cwd</td>
 	</tr>
 #end
 	</tbody>

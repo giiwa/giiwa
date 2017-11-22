@@ -18,6 +18,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -45,10 +46,12 @@ import org.hyperic.sigar.ProcCredName;
 import org.hyperic.sigar.ProcExe;
 import org.hyperic.sigar.ProcMem;
 import org.hyperic.sigar.ProcState;
+import org.hyperic.sigar.ProcUtil;
 import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.Swap;
 import org.hyperic.sigar.Uptime;
+import org.hyperic.sigar.cmd.Ps;
 
 /**
  * The Class Host.
@@ -146,8 +149,10 @@ public class Host {
 
 		long[] pids = getPids();
 		List<JSON> l1 = new ArrayList<JSON>();
+
 		for (long pid : pids) {
 			JSON jo = JSON.create().append("pid", pid);
+
 			try {
 				ProcCred ce = sigar.getProcCred(pid);
 				jo.append("uid", ce.getUid());
@@ -155,8 +160,11 @@ public class Host {
 				// ignore
 			}
 			try {
-				ProcExe p = sigar.getProcExe(pid);
-				jo.append("name", p.getName()).append("cwd", p.getCwd());
+				// ProcExe p = sigar.getProcExe(pid);
+				// jo.append("name", p.getName()).append("cwd", p.getCwd());
+
+				String name = ProcUtil.getDescription(sigar, pid);
+				jo.put("name", name);
 			} catch (Exception e) {
 				// ignore
 			}
@@ -189,6 +197,7 @@ public class Host {
 			} catch (Exception e) {
 				// ignore
 			}
+
 			l1.add(jo);
 		}
 		return l1;
