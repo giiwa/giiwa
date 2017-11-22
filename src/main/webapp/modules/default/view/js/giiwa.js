@@ -110,7 +110,7 @@ giiwa
 
 				var p = $('#popup');
 				if (p.length == 0) {
-					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"></div></div>');
+					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
 					$("#popup .popup").draggable();
@@ -118,45 +118,13 @@ giiwa
 						p.fadeOut();
 					});
 				}
-				var pp = $('#popup .popup');
-				if (opt.style) {
-					pp.attr('style', opt.style);
-				}
+				var pp = $('#popup .popup>.scroll');
 				pp.empty();
 				giiwa.processing.show();
 				$.post(url, opt, function(d) {
 					giiwa.processing.hide();
 					pp.html(d);
 				})
-				var w = $(window);
-				if (opt.width) {
-					if (opt.width.endsWith('%')) {
-						pp.css('width', opt.width);
-						var left = parseInt(opt.width.substring(0,
-								opt.width.length - 1))
-						pp.css('left', (100 - width) / 2 + '%');
-					} else {
-						pp.css('width', opt.width + 'px');
-						pp.css('left', (w.width() - opt.width / 2) + 'px');
-					}
-				} else {
-					pp.css('width', '70%');
-					pp.css('left', '15%');
-				}
-				if (opt.height) {
-					if (opt.height.endsWith('%')) {
-						pp.css('height', opt.height);
-						var top = parseInt(opt.height.substring(0,
-								opt.height.length - 1))
-						pp.css('top', (100 - height) / 2 + '%');
-					} else {
-						pp.css('height', height + 'px');
-						pp.css('top', (w.height() - height) / 2 + 'px');
-					}
-				} else {
-					pp.css('height', '70%');
-					pp.css('top', '15%');
-				}
 
 				p.fadeIn();
 
