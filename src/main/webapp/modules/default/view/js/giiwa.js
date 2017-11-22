@@ -110,7 +110,7 @@ giiwa
 
 				var p = $('#popup');
 				if (p.length == 0) {
-					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"><div class="scroll"></div></div></div>');
+					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
 					$("#popup .popup").draggable();
@@ -126,6 +126,10 @@ giiwa
 					pp.html(d);
 				})
 
+				$('#popup .popup>a.close').bind('click', function(){
+					p.fadeOut();
+				});
+				
 				p.fadeIn();
 
 				giiwa._popup = p;
