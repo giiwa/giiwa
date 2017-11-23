@@ -682,21 +682,33 @@ public class MongoHelper implements Helper.DBHelper {
 	 */
 	final public int updateTable(String collection, W q, V v, String db) {
 
-		Document d = new Document();
+		Document set = new Document();
+		Document unset = new Document();
 
 		// int len = v.size();
 		for (String name : v.names()) {
 			Object v1 = v.value(name);
-			d.append(name, v1);
+			if (v1 == null) {
+				unset.append(name, X.EMPTY);
+			} else {
+				set.append(name, v1);
+			}
 		}
 
 		try {
 			// log.debug("data=" + d);
 			MongoCollection<Document> c = getCollection(db, collection);
-			UpdateResult r = c.updateMany(q.query(), new Document("$set", d));
+			Document d = new Document();
+			if (!set.isEmpty()) {
+				d.append("$set", set);
+			}
+			if (!unset.isEmpty()) {
+				d.append("$unset", unset);
+			}
+			UpdateResult r = c.updateMany(q.query(), d);
 
 			if (log.isDebugEnabled())
-				log.debug("updated collection=" + collection + ", query=" + q + ", d=" + d + ", n="
+				log.debug("updated collection=" + collection + ", query=" + q + ", d=" + set + ", n="
 						+ r.getModifiedCount() + ",result=" + r);
 
 			// r.getN();
