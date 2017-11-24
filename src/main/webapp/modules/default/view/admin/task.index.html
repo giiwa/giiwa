@@ -17,7 +17,7 @@
 	<thead>
 		<tr>
 			<th></th>
-			<th>$lang.get('task.name')</th>
+			<th style="width: 20%;">$lang.get('task.name')</th>
 			<th>$lang.get('task.class')</th>
 			<th>$lang.get('task.state')</th>
 			<th>$lang.get('task.remain')</th>
@@ -64,7 +64,6 @@
 </div>
 
 <script>
-$('#task-table').tablesorter({headers:{0:{sorter:false}}});
 
 function _dump(name) {
 	giiwa.processing.show();
