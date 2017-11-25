@@ -156,7 +156,7 @@ public class Bean implements Serializable {
 					f1.set(this, X.toDouble(value, 0));
 				} else if (t1 == float.class) {
 					f1.set(this, X.toFloat(value, 0));
-				} else if (t1.isAssignableFrom(List.class) || t1.isArray()) {
+				} else if (List.class.isAssignableFrom(t1) || t1.isArray()) {
 					// change the value to list
 					List<Object> l1 = new ArrayList<Object>();
 					if (value instanceof List) {
@@ -171,7 +171,7 @@ public class Bean implements Serializable {
 					} else {
 						f1.set(this, l1);
 					}
-				} else if (t1.isAssignableFrom(Map.class)) {
+				} else if (Map.class.isAssignableFrom(t1)) {
 					// change the value to map
 					Map<?, ?> l1 = new HashMap<>();
 					if (value instanceof Map) {
