@@ -160,15 +160,13 @@ public abstract class MQ {
 
 		@Override
 		public void onExecute() {
-			while (!queue.isEmpty()) {
-				try {
-					Request r = queue.pollFirst(X.AMINUTE, TimeUnit.MILLISECONDS);
-					if (r != null) {
-						cb.onRequest(r.seq, r);
-					}
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+			try {
+				Request r = queue.pollFirst(X.AMINUTE, TimeUnit.MILLISECONDS);
+				if (r != null) {
+					cb.onRequest(r.seq, r);
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 
