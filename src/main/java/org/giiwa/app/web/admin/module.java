@@ -288,6 +288,36 @@ public class module extends Model {
 			}
 			// end of resources
 
+			/***
+			 * create junit test
+			 */
+			{
+				create(out, name + "/src/test/").closeEntry();
+				create(out, name + "/src/test/java/").closeEntry();
+				String[] ss = package1.split("\\.");
+				String s1 = null;
+				for (String s : ss) {
+					if (s1 == null) {
+						s1 = s;
+					} else {
+						s1 = s1 + "/" + s;
+					}
+					create(out, name + "/src/test/java/" + s1 + "/").closeEntry();
+				}
+
+				String p1 = package1.replaceAll("\\.", "/");
+				create(out, name + "/src/test/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/bean/").closeEntry();
+
+				create(out, name + "/src/test/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/bean/DemoTest.java");
+				f1 = module.getFile("/admin/demo/src/test/bean/DemoTest.java");
+				if (f1 != null) {
+					copy(out, f1, new String[] { "org.giiwa.demo.bean",
+							(p1.substring(0, p1.lastIndexOf("/")) + "/bean").replaceAll("/", ".") });
+				}
+				out.closeEntry();
+
+			}
+
 			/**
 			 * create model info
 			 */
