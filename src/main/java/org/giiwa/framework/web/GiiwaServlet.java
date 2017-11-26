@@ -80,7 +80,7 @@ public class GiiwaServlet extends HttpServlet {
 			Model.s️ervletContext = getServletContext();
 
 			log.debug("init view ...");
-			Enumeration e = getInitParameterNames();
+			Enumeration<?> e = getInitParameterNames();
 			while (e.hasMoreElements()) {
 				String name = e.nextElement().toString();
 				String value = getInitParameter(name);

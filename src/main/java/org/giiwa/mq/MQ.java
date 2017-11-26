@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.JMSException;
@@ -150,34 +151,23 @@ public abstract class MQ {
 		}
 
 		void call(List<Request> l1) {
-			synchronized (queue) {
-				for (Request r : l1) {
-					// log.debug("push, r=" + new String(r.data));
-					queue.addLast(r);
-				}
-
-				queue.notifyAll();
+			for (Request r : l1) {
+				// log.debug("push, r=" + new String(r.data));
+				queue.addLast(r);
 			}
+
 		}
 
 		@Override
 		public void onExecute() {
-			synchronized (queue) {
-				if (queue.isEmpty()) {
-					try {
-						queue.wait(10000);
-					} catch (InterruptedException e) {
-						log.error(e.getMessage(), e);
-					}
-				}
-			}
 			while (!queue.isEmpty()) {
-				Request r = null;
-				synchronized (queue) {
-					r = queue.pollFirst();
-				}
-				if (r != null) {
-					cb.onRequest(r.seq, r);
+				try {
+					Request r = queue.pollFirst(X.AMINUTE, TimeUnit.MILLISECONDS);
+					if (r != null) {
+						cb.onRequest(r.seq, r);
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}

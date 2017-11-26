@@ -93,8 +93,8 @@ public class LiveHand {
 
 		log.debug("drop, door=" + door.availablePermits() + ", " + this);
 
-		synchronized (door) {
-			door.notifyAll();
+		synchronized (this) {
+			this.notifyAll();
 		}
 	}
 
@@ -115,8 +115,8 @@ public class LiveHand {
 				log.debug("await, door=" + door.availablePermits() + ", " + this);
 				return true;
 			}
-			synchronized (door) {
-				door.wait(t1);
+			synchronized (this) {
+				this.wait(t1);
 			}
 			t1 = timeout - t.pastms();
 		}

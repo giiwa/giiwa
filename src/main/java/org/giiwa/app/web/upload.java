@@ -127,10 +127,10 @@ public class upload extends Model {
 						jo.put("pos", pos);
 						jo.put("size", total);
 					}
+					jo.put(X.STATE, 200);
+					jo.put("site", Global.getString("site.url", X.EMPTY));
 				}
 
-				jo.put(X.STATE, 200);
-				jo.put("site", Global.getString("site.url", X.EMPTY));
 				// Session.load(sid()).set("access.repo." + id, 1).store();
 			} else {
 				if (jo == null) {
