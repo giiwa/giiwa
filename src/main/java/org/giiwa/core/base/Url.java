@@ -49,6 +49,10 @@ public class Url {
 		return p > 0 ? p : defaultPort;
 	}
 
+	public String getUri() {
+		return uri;
+	}
+
 	public String getPort() {
 		return port;
 	}
@@ -181,6 +185,10 @@ public class Url {
 	}
 
 	public static String encode(String url) {
+		if (X.isEmpty(url)) {
+			return url;
+		}
+
 		try {
 			return URLEncoder.encode(url, "UTF8");
 		} catch (UnsupportedEncodingException e) {
@@ -190,6 +198,10 @@ public class Url {
 	}
 
 	public static String decode(String url) {
+		if (X.isEmpty(url)) {
+			return url;
+		}
+
 		try {
 			return URLDecoder.decode(url, "UTF8");
 		} catch (UnsupportedEncodingException e) {
@@ -198,11 +210,4 @@ public class Url {
 		return null;
 	}
 
-	public static void main(String[] args) {
-		String s = "http://11/aaa?a=1";
-		Url u = Url.create(s);
-		System.out.println(u);
-		System.out.println(u.encodedUrl());
-
-	}
 }
