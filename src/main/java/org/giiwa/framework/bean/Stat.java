@@ -132,8 +132,13 @@ public class Stat extends Bean implements Comparable<Stat> {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHH");
 		} else if (X.isSame(size, "day")) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMdd");
+		} else if (X.isSame(size, "week")) {
+			date = lang.format(System.currentTimeMillis(), "yyyyww");
 		} else if (X.isSame(size, "month")) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMM");
+		} else if (X.isSame(size, "season")) {
+			int season = X.toInt(lang.format(System.currentTimeMillis(), "MM")) / 3 + 1;
+			date = lang.format(System.currentTimeMillis(), "yyyy") + "0" + season;
 		} else if (X.isSame(size, "year")) {
 			date = lang.format(System.currentTimeMillis(), "yyyy");
 		} else {
@@ -169,8 +174,13 @@ public class Stat extends Bean implements Comparable<Stat> {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHH");
 		} else if (X.isSame(size, "day")) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMdd");
+		} else if (X.isSame(size, "week")) {
+			date = lang.format(System.currentTimeMillis(), "yyyyww");
 		} else if (X.isSame(size, "month")) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMM");
+		} else if (X.isSame(size, "season")) {
+			int season = X.toInt(lang.format(System.currentTimeMillis(), "MM")) / 3 + 1;
+			date = lang.format(System.currentTimeMillis(), "yyyy") + "0" + season;
 		} else if (X.isSame(size, "year")) {
 			date = lang.format(System.currentTimeMillis(), "yyyy");
 		} else {
