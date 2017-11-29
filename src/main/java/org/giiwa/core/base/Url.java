@@ -23,6 +23,26 @@ public class Url {
 
 	Map<String, String> query;
 
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
+		this.url = null;
+	}
+
+	public void setUri(String uri) {
+		this.uri = uri;
+		this.url = null;
+	}
+
+	public void setIp(String ip) {
+		this.ip = ip;
+		this.url = null;
+	}
+
+	public void setPort(String port) {
+		this.port = port;
+		this.url = null;
+	}
+
 	public JSON toJson() {
 		return JSON.create().append("url", url);
 	}
@@ -33,6 +53,39 @@ public class Url {
 	}
 
 	public String getUrl() {
+		if (X.isEmpty(url)) {
+
+			StringBuilder sb = new StringBuilder();
+			if (!X.isEmpty(protocol)) {
+				sb.append(protocol).append("://");
+			}
+			if (!X.isEmpty(ip)) {
+				sb.append(ip);
+			}
+			if (!X.isEmpty(port)) {
+				sb.append(":").append(port);
+			}
+			if (!X.isEmpty(uri)) {
+				sb.append(uri);
+			}
+			if (query != null && !query.isEmpty()) {
+				try {
+					StringBuilder sb1 = new StringBuilder();
+					for (String name : query.keySet()) {
+						if (sb1.length() > 0) {
+							sb1.append("&");
+						}
+						sb1.append(name).append("=");
+						sb1.append(query.get(name));
+					}
+					sb.append("?").append(sb1.toString());
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+			url = sb.toString();
+
+		}
 		return url;
 	}
 
@@ -145,6 +198,8 @@ public class Url {
 			query = new TreeMap<String, String>();
 		}
 		query.put(name, value);
+		this.url = null;
+
 		return this;
 	}
 
