@@ -16,7 +16,7 @@ giiwa
 			menuapi : false,
 			panelapi : false,
 			uploaddone : false,
-			_popup :false,
+			_popup : false,
 
 			submit : function(form, opt) {
 				var beforesubmit = $(form).attr('beforesubmit');
@@ -92,7 +92,8 @@ giiwa
 							if (xhr.readyState == 4) {
 								if (xhr.status == 200) {
 									giiwa.processing.hide();
-									opt && opt.success && opt.success(xhr.responseText);
+									opt && opt.success
+											&& opt.success(xhr.responseText);
 								}
 							}
 						}
@@ -102,10 +103,10 @@ giiwa
 			},
 
 			popup : function(url, opt) {
-				if(!url) {
+				if (!url) {
 					return giiwa._popup;
 				}
-				
+
 				opt = $.extend({}, opt);
 
 				var p = $('#popup');
@@ -124,12 +125,33 @@ giiwa
 				$.post(url, opt, function(d) {
 					giiwa.processing.hide();
 					pp.html(d);
+
+					pp.find('a').each(
+
+							function(i, e) {
+								e = $(e);
+								var href = e.attr('href');
+								var target = e.attr('target');
+								if (target == undefined && href != undefined
+										&& (href.indexOf('javascript') == -1)
+										&& (href.indexOf('#') != 0)) {
+
+									e.click(function(e1) {
+										var href = $(this).attr('href');
+										if (href != undefined) {
+											giiwa.popup(href);
+										}
+
+										e1.preventDefault();
+									});
+								}
+							});
 				})
 
-				$('#popup .popup>a.close').bind('click', function(){
+				$('#popup .popup>a.close').bind('click', function() {
 					p.fadeOut();
 				});
-				
+
 				p.fadeIn();
 
 				giiwa._popup = p;
@@ -335,7 +357,7 @@ giiwa
 			},
 
 			hook : function(panel) {
-				
+
 				/**
 				 * hook all the <a> tag
 				 */
@@ -370,9 +392,11 @@ giiwa
 
 					var form = e.target;
 
-					giiwa.submit(form, {success: function(d){
-						giiwa.show(d);
-					}});
+					giiwa.submit(form, {
+						success : function(d) {
+							giiwa.show(d);
+						}
+					});
 
 				});
 
@@ -397,7 +421,8 @@ giiwa
 				/**
 				 * hook all <select> associated group
 				 */
-				panel.find('select[parentnode=true]')
+				panel
+						.find('select[parentnode=true]')
 						.change(
 
 								function(e) {
@@ -473,18 +498,20 @@ giiwa
 				/**
 				 * hook tr.hover
 				 */
-				panel.find('table.tablesorter tr').bind('mouseenter', function() {
-					$(this).addClass('hover');
-				}).bind('mouseleave', function() {
+				panel.find('table.tablesorter tr').bind('mouseenter',
+						function() {
+							$(this).addClass('hover');
+						}).bind('mouseleave', function() {
 					$(this).removeClass('hover');
 				});
 
 				/**
 				 * hook td.hover
 				 */
-				panel.find('table.tablesorter td').bind('mouseenter', function() {
-					$(this).addClass('hover');
-				}).bind('mouseleave', function() {
+				panel.find('table.tablesorter td').bind('mouseenter',
+						function() {
+							$(this).addClass('hover');
+						}).bind('mouseleave', function() {
 					$(this).removeClass('hover');
 				});
 
