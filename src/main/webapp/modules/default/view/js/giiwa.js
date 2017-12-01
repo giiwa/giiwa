@@ -639,9 +639,12 @@ giiwa
 				var w = $(window).width();
 				var menu = $('#menu');
 				var panel = $('#panel');
-				panel.css('width', (w - panel.offset().left) + 'px');
-				panel.css('height', (h - 92) + 'px');
-				panel.trigger('panelresize', panel);
+				if ((panel.width() != w - panel.offset().left)
+						|| (panel.height() != h - 92)) {
+					panel.css('width', (w - panel.offset().left) + 'px');
+					panel.css('height', (h - 92) + 'px');
+					panel.trigger('panelresize', panel);
+				}
 
 				if (menu.length > 0) {
 					menu.css('height', (h - 92) + 'px');
