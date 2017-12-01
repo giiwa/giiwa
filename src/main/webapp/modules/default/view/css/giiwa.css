@@ -2019,14 +2019,16 @@ button:hover, button:active {
 	position: absolute;
 	left: 100px;
 	top: 100px;
-	padding: 20px;
-	border: 1px solid #aaa;
-	background: #fff;
-	border-radius: 5px;
+    padding: 10px;
+    border: 1px solid #aaa;
+    background: #fff;
+    border-radius: 2px;
 }
 
 #popupmenu>.menu .menuitem {
 	cursor: pointer;
+    padding: 2px 16px;
+    text-align: left;
 }
 
 #popupmenu>.menu .menuitem:hover {
