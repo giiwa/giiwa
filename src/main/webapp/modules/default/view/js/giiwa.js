@@ -18,6 +18,24 @@ giiwa
 			uploaddone : false,
 			_popup : false,
 
+			popupmenu : function(menu) {
+				var p = $("#popupmenu");
+				if (p.length == 0) {
+					p = $("<div id='popupmenu'><div class='bg'></div<div class='content'></div></div>");
+					$('body').append(p);
+				}
+				p.find('.bg').on('click', function(e) {
+					p.fadeOut();
+				});
+
+				var p1 = p.find('.content');
+				p1.empty();
+				p1.append(menu);
+				
+				p.fadeIn();
+				
+			},
+
 			submit : function(form, opt) {
 				var beforesubmit = $(form).attr('beforesubmit');
 				if (typeof window[beforesubmit] === 'function') {
