@@ -2030,7 +2030,7 @@ button:hover, button:active {
 
 #popupmenu>.menu .menuitem {
 	cursor: pointer;
-	padding: 2px 16px;
+	padding: 2px 8px;
 	text-align: left;
 }
 
