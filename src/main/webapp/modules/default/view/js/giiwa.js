@@ -149,7 +149,7 @@ giiwa
 				var pp = $('#popup .popup>.scroll');
 				pp.empty();
 				giiwa.processing.show();
-				$.post(url, opt, function(d) {
+				$.get(url, function(d) {
 					giiwa.processing.hide();
 					pp.html(d);
 
