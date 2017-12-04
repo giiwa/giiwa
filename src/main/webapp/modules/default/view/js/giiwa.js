@@ -19,6 +19,7 @@ giiwa
 			_popup : false,
 
 			popupmenu : function(menu, xy, cb) {
+				// popup menu
 				var p = $("#popupmenu");
 				if (p.length == 0) {
 					p = $("<div id='popupmenu'><div class='bg'></div><div class='menu'></div></div>");
@@ -149,31 +150,69 @@ giiwa
 				var pp = $('#popup .popup>.scroll');
 				pp.empty();
 				giiwa.processing.show();
-				$.get(url, function(d) {
-					giiwa.processing.hide();
-					pp.html(d);
+				$
+						.get(
+								url,
+								function(d) {
+									giiwa.processing.hide();
+									pp.html(d);
 
-					pp.find('a').each(
+									hook();
 
-							function(i, e) {
-								e = $(e);
-								var href = e.attr('href');
-								var target = e.attr('target');
-								if (target == undefined && href != undefined
-										&& (href.indexOf('javascript') == -1)
-										&& (href.indexOf('#') != 0)) {
+									function hook() {
+										pp
+												.find('a')
+												.each(
 
-									e.click(function(e1) {
-										var href = $(this).attr('href');
-										if (href != undefined) {
-											giiwa.popup(href);
-										}
+														function(i, e) {
+															e = $(e);
+															var href = e
+																	.attr('href');
+															var target = e
+																	.attr('target');
+															if (target == undefined
+																	&& href != undefined
+																	&& (href
+																			.indexOf('javascript') == -1)
+																	&& (href
+																			.indexOf('#') != 0)) {
 
-										e1.preventDefault();
-									});
-								}
-							});
-				})
+																e
+																		.click(function(
+																				e1) {
+																			var href = $(
+																					this)
+																					.attr(
+																							'href');
+																			if (href != undefined) {
+																				giiwa
+																						.popup(href);
+																			}
+
+																			e1
+																					.preventDefault();
+																		});
+															}
+														});
+
+										pp.find('form').submit(
+
+										function(e) {
+											e.preventDefault();
+
+											var form = e.target;
+
+											giiwa.submit(form, {
+												success : function(d) {
+													p.fadeOut();
+													giiwa.show(d);
+												}
+											});
+
+										});
+									}
+
+								})
 
 				$('#popup .popup>a.close').bind('click', function() {
 					p.fadeOut();
