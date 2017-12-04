@@ -146,7 +146,6 @@ giiwa
 					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
-					$("#dialog .dialog").draggable();
 					$('#dialog .dialogbg, #dialog a.close').click(function(d) {
 						p.fadeOut();
 					});
