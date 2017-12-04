@@ -204,6 +204,8 @@ giiwa
 				}
 				if (giiwa.popuphistory.length > 0) {
 					p.find('a.prev').show();
+				} else {
+					p.find('a.prev').hide();
 				}
 				giiwa.popuphistory.push(url);
 
