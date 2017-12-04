@@ -130,6 +130,50 @@ giiwa
 				}
 			},
 
+			dialog : function(panel, opt) {
+
+				if (!panel || panel.length == 0) {
+					return giiwa._dialog;
+				}
+
+				opt = $.extend({
+					width : 400,
+					height : 200
+				}, opt);
+
+				var p = $('#dialog');
+				if (p.length == 0) {
+					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"></div></div></div>');
+					$('body').append(p);
+
+					$("#dialog .dialog").draggable();
+					$('#dialog .dialogbg, #dialog a.close').click(function(d) {
+						p.fadeOut();
+					});
+				}
+				var p1 = $('#dialog .dialog');
+				p1.css('width', opt.width + 'px');
+				p1.css('height', opt.height + 'px');
+				p1.css('left', '50%');
+				p1.css('top', '50%');
+				p1.css('margin-left', (-opt.width / 2) + 'px');
+				p1.css('margin-top', (-opt.height / 2) + 'px');
+
+				var pp = $('#dialog .dialog>.scroll');
+				pp.empty();
+				pp.append(panel);
+				panel.show();
+				$('#popup .popup>a.close').bind('click', function() {
+					p.fadeOut();
+				});
+
+				p.fadeIn();
+
+				giiwa._dialog = p;
+				return p;
+
+			},
+
 			popup : function(url, opt) {
 				if (!url) {
 					return giiwa._popup;

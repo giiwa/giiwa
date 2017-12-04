@@ -1958,7 +1958,7 @@ button:hover, button:active {
 	color: #666;
 }
 
-#popup, #popupmenu {
+#popup, #popupmenu, #dialog {
 	width: 100%;
 	height: 100%;
 	position: absolute;
@@ -1969,7 +1969,11 @@ button:hover, button:active {
 	display: none;
 }
 
-#popup>.popupbg, #popupmenu>.bg {
+#dialog {
+	z-index: 104;
+}
+
+#popup>.popupbg, #popupmenu>.bg, #dialog>.dialogbg {
 	width: 100%;
 	height: 100%;
 	position: absolute;
@@ -1983,7 +1987,7 @@ button:hover, button:active {
 	opacity: 0;
 }
 
-#popup>.popup {
+#popup>.popup, #dialog>.dialog {
 	width: 70%;
 	display: inline-block;
 	height: 70%;
@@ -1998,7 +2002,7 @@ button:hover, button:active {
 	padding: 30px 20px 20px 20px;
 }
 
-#popup>.popup>a.close {
+#popup>.popup>a.close, #dialog>.dialog>a.close {
 	position: absolute;
 	right: 22px;
 	top: 5px;
@@ -2007,11 +2011,11 @@ button:hover, button:active {
 	cursor: pointer;
 }
 
-#popup>.popup>a.close:hover {
+#popup>.popup>a.close:hover, #dialog>.dialog>a.close:hover {
 	color: #4ea6ff;
 }
 
-#popup>.popup>.scroll {
+#popup>.popup>.scroll, #dialog>.dialog>.scroll {
 	width: 100%;
 	height: 100%;
 	overflow: auto;
@@ -2039,14 +2043,14 @@ button:hover, button:active {
 	color: #fff;
 }
 
-#popupmenu>.menu .menuitem>i[class*=icon-]{
-	margin-right: 4px;	
+#popupmenu>.menu .menuitem>i[class*=icon-] {
+	margin-right: 4px;
 }
 
 #popupmenu>.menu .line {
-    background: #ccc;
-    display: inline-block;
-    height: 1px;
-    width: 100%;
-    margin: 4px 0;	
+	background: #ccc;
+	display: inline-block;
+	height: 1px;
+	width: 100%;
+	margin: 4px 0;
 }

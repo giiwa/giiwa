@@ -1,16 +1,20 @@
 <div class='head'>
-	$lang.get('title.welcome') <b>$!me.nickname</b>
-	<span class='right'>
-		#if($me.hasAccess('access.config.admin', 'access.config.restart.host'))
-		<a href='javascript:;' class='btn btn-danger' onclick="_showrestart()">$lang.get('a.restart')</a>
+	$lang.get('title.welcome') <b>$!me.nickname</b> <span class='right'>
+		#if($me.hasAccess('access.config.admin',
+		'access.config.restart.host')) <a href='javascript:;'
+		class='btn btn-danger' onclick="_showrestart()">$lang.get('a.restart')</a>
 		#end
-	</span></div>
+	</span>
+</div>
 
 #if($me.hasAccess('access.config.admin', 'access.config.system.admin'))
 <div class='chart'>
-	<div id='memgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>
-	<div id='diskgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>
-	<div id='netgauge' style="height: 300px;float: left;width: 30%;border: 0;"></div>
+	<div id='memgauge'
+		style="height: 300px; float: left; width: 30%; border: 0;"></div>
+	<div id='diskgauge'
+		style="height: 300px; float: left; width: 30%; border: 0;"></div>
+	<div id='netgauge'
+		style="height: 300px; float: left; width: 30%; border: 0;"></div>
 </div>
 <script>
 $(function(){
@@ -127,41 +131,61 @@ $(function(){
 </script>
 #end
 
-<div class='state' style='display:block;'>
-	<div class='login'>$lang.get('label.node'):<i>$!node</i></div>
-	<div class='login'>$lang.get('cpu.num'):<i>$!cpus</i></div>
-	<div class='login'>$lang.get('total.memory'):<i>$!totalmemory</i></div>
-	<div class='login'>$lang.get('memory.total'):<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i></div>
-	<div class='login'>$lang.get('disk.speed'):
-		 #if($diskspeed>100) <i style='color:green'>${diskspeed}(M/s)</i>
-		 #elseif ($diskspeed>0) <i style='color:red'>${diskspeed}(M/s)</i>
-		 #else
-		 <i>...</i>
-		 #end
+<div class='state' style='display: block;'>
+	<div class='login'>
+		$lang.get('label.node'):<i>$!node</i>
 	</div>
-	<div class='uptime'>$lang.get('label.uptime'):<i>$uptime</i>, $lang.get('label.past'):<i>$past</i></div>
-	<div class='release'>$lang.get('label.release'):<i>$!release</i></div>
-	<div class='build'>$lang.get('label.build'):<i>$!build</i></div>
-	<div class='build'>$lang.get('label.now'):<i>$!now</i></div>
-	
+	<div class='login'>
+		$lang.get('cpu.num'):<i>$!cpus</i>
+	</div>
+	<div class='login'>
+		$lang.get('total.memory'):<i>$!totalmemory</i>
+	</div>
+	<div class='login'>
+		$lang.get('memory.total'):<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i>
+	</div>
+	<div class='login'>
+		$lang.get('disk.speed'): #if($diskspeed>100) <i style='color: green'>${diskspeed}(M/s)</i>
+		#elseif ($diskspeed>0) <i style='color: red'>${diskspeed}(M/s)</i>
+		#else <i>...</i> #end
+	</div>
+	<div class='uptime'>
+		$lang.get('label.uptime'):<i>$uptime</i>, $lang.get('label.past'):<i>$past</i>
+	</div>
+	<div class='release'>
+		$lang.get('label.release'):<i>$!release</i>
+	</div>
+	<div class='build'>
+		$lang.get('label.build'):<i>$!build</i>
+	</div>
+	<div class='build'>
+		$lang.get('label.now'):<i>$!now</i>
+	</div>
+
 </div>
 
-<div id='restart' title="$lang.get('title.restart.service')" style="display:none">
-	<div><label><h3>$lang.get('user.password'):</h3><input type='password' name='password'/></label></div>
-	<button onclick='_restart();'>$lang.get('btn.ok')</button>
+<div id='restart' title="$lang.get('title.restart.service')"
+	style="display: none">
+	<div>
+		<label><h3>$lang.get('user.password'):</h3>
+			<input type='password' name='password' /></label>
+	</div>
+	<div class='btns' style="text-align: center;">
+		<button onclick='_restart();'>$lang.get('btn.ok')</button>
+	</div>
 </div>
 
 <script>
 var _timer = false;
 function _showrestart(){
-	$('#restart').dialog({modal : true,close:function(e,ui){$(this).dialog('destroy');}});
+	giiwa.dialog($('#restart'), {width: 280, height:90});
 }
 function _restart(){
 	
 	giiwa.processing.show();
 	$.post('/admin/system/restart', {pwd:$('#restart input[name=password]').val()}, function(d){
 		if(d.state == 'ok') {
-			$('#restart').dialog('close');
+			giiwa.dialog().fadeOut();
 			_timer = setInterval(_load, 5000);
 		} else {
 			giiwa.processing.hide();
