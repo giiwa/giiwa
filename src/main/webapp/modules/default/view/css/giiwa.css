@@ -2011,7 +2011,18 @@ button:hover, button:active {
 	cursor: pointer;
 }
 
-#popup>.popup>a.close:hover, #dialog>.dialog>a.close:hover {
+#popup>.popup>a.prev {
+	position: absolute;
+	left: 22px;
+	top: 5px;
+	text-decoration: none;
+	color: #aaa;
+	cursor: pointer;
+	display: none;
+}
+
+#popup>.popup>a.close:hover, #popup>.popup>a.prev:hover, #dialog>.dialog>a.close:hover
+	{
 	color: #4ea6ff;
 }
 

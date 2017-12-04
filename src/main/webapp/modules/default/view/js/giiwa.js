@@ -182,14 +182,31 @@ giiwa
 
 				var p = $('#popup');
 				if (p.length == 0) {
-					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"><a class="close">X</a><div class="scroll"></div></div></div>');
+					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
 					$("#popup .popup").draggable();
-					$('#popup .popupbg').click(function(d) {
-						p.fadeOut();
+					$('#popup .popupbg, #popup a.close').click(function(d) {
+						p.fadeOut(function() {
+							p.remove();
+						});
 					});
+
+					$('#popup a.prev').click(function(d) {
+						if (giiwa.popuphistory.length > 1) {
+							var h = giiwa.popuphistory.pop();
+							h = giiwa.popuphistory.pop();
+							giiwa.popup(h);
+						}
+					});
+
+					giiwa.popuphistory = [];
 				}
+				if (giiwa.popuphistory.length > 0) {
+					p.find('a.prev').show();
+				}
+				giiwa.popuphistory.push(url);
+
 				var pp = $('#popup .popup>.scroll');
 				pp.empty();
 				giiwa.processing.show();
@@ -247,7 +264,9 @@ giiwa
 
 											giiwa.submit(form, {
 												success : function(d) {
-													p.fadeOut();
+													p.fadeOut(function() {
+														p.remove();
+													});
 													giiwa.show(d);
 												}
 											});
@@ -256,10 +275,6 @@ giiwa
 									}
 
 								})
-
-				$('#popup .popup>a.close').bind('click', function() {
-					p.fadeOut();
-				});
 
 				p.fadeIn();
 
