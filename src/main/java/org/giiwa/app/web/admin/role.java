@@ -194,4 +194,27 @@ public class role extends Model {
 		this.show("/admin/role.index.html");
 	}
 
+	@Path(path = "access", login = true, access = "access.config.admin")
+	public void access() {
+		int s = this.getInt("s");
+		int n = this.getInt("n", 10);
+
+		Beans<Access> bs = Access.dao.load(W.create().sort(X.ID, 1), s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/role/access");
+
+		this.show("/admin/role.access.html");
+	}
+
+	@Path(path = "accessdelete", login = true, access = "access.config.admin")
+	public void accessdelete() {
+		String id = this.getString("id");
+		Access.dao.delete(id);
+
+		this.response(JSON.create().append(X.STATE, 200));
+	}
+
 }

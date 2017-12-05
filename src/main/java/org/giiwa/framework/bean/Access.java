@@ -45,6 +45,9 @@ public class Access extends Bean {
 	@Column(name = X.ID, index = true, unique = true)
 	private String name;
 
+	@Column(name = "memo")
+	private String memo;
+
 	/**
 	 * get the group name of the access name
 	 * 
@@ -85,7 +88,7 @@ public class Access extends Bean {
 			String[] ss = name.split("[\\|｜]");
 			for (String s : ss) {
 				if (!exists(s)) {
-					dao.insert(V.create(X.ID, s));
+					dao.insert(V.create(X.ID, s).append("memo", X.toString(new Exception())));
 				}
 			}
 		}

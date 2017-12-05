@@ -1,21 +1,18 @@
-<div class='head'>$lang.get('role.index.title')</div>
+<div class='head'>$lang.get('role.access.title')</div>
 
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/role' class='selected'>$lang.get('a.role')</a>
-	#if($me.hasAccess('access.config.admin'))
-	<a href='/admin/role/access'>$lang.get('a.role.access')</a>
-	#end
+	<a href='/admin/role'>$lang.get('a.role')</a>
+	<a href='/admin/role/access' class='selected'>$lang.get('a.role.access')</a>
 </div>
-
-#set($edit = $me.hasAccess('access.config.admin','access.config.role.admin'))
 
 <table id='role-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th>$lang.get('role.name')</th>
-			<th>$lang.get('role.memo')</th>
+			<th>Name</th>
+			<th>i18n</th>
+			<th>Trace</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -23,13 +20,11 @@
 #foreach($f in $list)
 	<tr>
 		<td>$f.name</td>
-		<td>$f.memo</td>
-	#if($edit)
+		<td>$lang.get($f.name)</td>
+		<td>$f.memo.replaceAll('\r\n', '<br/>')</td>
 		<td>
-			<a class='btn btn-success btn-xs' href="/admin/role/edit?id=$f.id">$lang.get('a.edit')</a>
-			<a class='btn btn-danger btn-xs' href="javascript:;" onclick="_delete('$f.id', this)">$lang.get('a.delete')</a>
+			<a class='btn btn-warning btn-xs' href="javascript:;" onclick="_delete('$f.id', this)">$lang.get('a.delete')</a>
 		</td>
-	#end
 	</tr>
 #end
 	</tbody>
@@ -37,11 +32,11 @@
 
  #parse('/widget/goto.page.html')
 
-#if($edit)
 <div class='btns'>
+#if($edit)
 	<a class='btn btn-success' href='/admin/role/create'>$lang.get('a.create')</a>
-</div>
 #end
+</div>
 
 <script>
 function _delete(id, o) {
