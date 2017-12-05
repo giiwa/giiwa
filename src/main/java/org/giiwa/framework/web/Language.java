@@ -627,19 +627,24 @@ public class Language {
 		}
 	}
 
-	public static void main(String[] args) {
-		long t = System.currentTimeMillis();
-		Language lang = Language.getLanguage();
-		System.out.println(lang.format(t, "yyyy-MM-dd HH:mm"));
-		t = lang.parse("1900-11-11", "yyyy-MM-dd");
-		System.out.println("t=" + t);
-		System.out.println(lang.format(t, "yyyy-MM-dd HH:mm"));
+	public String icon(String file) {
+		String mime = Model.getMimeType(file);
+		log.debug("mime=" + mime);
 
-		System.out.println(X.ADAY);
-
-		lang.data.put("test", new String[] { "您已经被添加到项目[%s]，角色[%s]。" });
-		System.out.println(lang.get("test", "yyyy-MM-dd HH:mm", "asdasd"));
-
+		String icon = get(mime);
+		if (X.isEmpty(icon) && mime != null) {
+			if (mime.startsWith("audio/")) {
+				return "icon-music";
+			} else if (mime.startsWith("image/")) {
+				return "icon-image";
+			} else if (mime.startsWith("text/")) {
+				return "icon-file-text";
+			} else if (mime.indexOf("officedocument") > 0) {
+				return "icon-file-word";
+			}
+			icon = "icon-file-empty";
+		}
+		return icon;
 	}
 
 }
