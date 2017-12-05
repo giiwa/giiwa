@@ -14,9 +14,6 @@
 */
 package org.giiwa.framework.bean;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -424,19 +421,8 @@ public class GLog extends Bean {
 		 *            the ip address
 		 */
 		public void error(String model, String op, String message, Exception e, User u, String ip) {
-			String s = X.EMPTY;
-			if (e != null) {
-				StringWriter sw = new StringWriter();
-				PrintWriter out = new PrintWriter(sw);
-				e.printStackTrace(out);
-				s = sw.toString();
-				String lineSeparator = System.lineSeparator();
-				s = s.replaceAll(lineSeparator, "<br/>");
-				s = s.replaceAll(" ", "&nbsp;");
-				s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
-			}
-
-			error(model, op, message, s, u, ip);
+			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
+					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);
 		}
 
 		/**

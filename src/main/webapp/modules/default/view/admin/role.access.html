@@ -12,7 +12,7 @@
 		<tr>
 			<th>Name</th>
 			<th>i18n</th>
-			<th>Trace</th>
+			<th style="width:50%">Trace</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -21,7 +21,7 @@
 	<tr>
 		<td>$f.name</td>
 		<td>$lang.get($f.name)</td>
-		<td>$f.memo.replaceAll('\r\n', '<br/>')</td>
+		<td>$!f.memo.replaceAll("\\r", "<br/>")</td>
 		<td>
 			<a class='btn btn-warning btn-xs' href="javascript:;" onclick="_delete('$f.id', this)">$lang.get('a.delete')</a>
 		</td>

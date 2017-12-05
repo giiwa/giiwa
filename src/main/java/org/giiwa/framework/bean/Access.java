@@ -88,7 +88,9 @@ public class Access extends Bean {
 			String[] ss = name.split("[\\|｜]");
 			for (String s : ss) {
 				if (!exists(s)) {
-					dao.insert(V.create(X.ID, s).append("memo", X.toString(new Exception())));
+					dao.insert(V.create(X.ID, s).append("memo",
+							X.toString(new Exception()).replaceAll(System.lineSeparator(), "<br/>")
+									.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")));
 				}
 			}
 		}
