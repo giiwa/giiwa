@@ -22,6 +22,7 @@ import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.dle.Velocity;
+import org.giiwa.framework.bean.Repo;
 
 /**
  * language data which located at /modules/[module]/i18n/
@@ -645,6 +646,10 @@ public class Language {
 			icon = "icon-file-empty";
 		}
 		return icon;
+	}
+
+	public Repo.Entity repo(String repo) {
+		return Repo.load(repo);
 	}
 
 }
