@@ -141,6 +141,7 @@ giiwa
 					height : 200
 				}, opt);
 
+				var p0 = panel.parent();
 				var p = $('#dialog');
 				if (p.length == 0) {
 					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"></div></div></div>');
@@ -148,6 +149,8 @@ giiwa
 
 					$('#dialog .dialogbg, #dialog a.close').click(function(d) {
 						p.fadeOut(function() {
+							panel.hide();
+							p0.append(panel);
 							p.remove();
 						});
 					});
@@ -163,13 +166,15 @@ giiwa
 				var pp = $('#dialog .dialog>.scroll');
 				pp.empty();
 				pp.append(panel);
-				panel.show();
+				panel.css('display', 'inline-block');
 
 				p.fadeIn();
 
 				giiwa._dialog = {
 					close : function() {
 						p.fadeOut(function() {
+							panel.hide();
+							p0.append(panel);
 							p.remove();
 						})
 					}
