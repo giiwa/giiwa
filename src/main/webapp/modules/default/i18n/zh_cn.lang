@@ -703,6 +703,7 @@ a.syslog=系统日志
 a.role.access=权限令牌
 role.access.title=权限令牌管理
 text/html=icon-html-five
+text/csv=icon-file-excel
 application/zip=icon-file-zip
 image/jpeg=icon-image
 application/msword=icon-file-word
