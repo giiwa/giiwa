@@ -147,7 +147,9 @@ giiwa
 					$('body').append(p);
 
 					$('#dialog .dialogbg, #dialog a.close').click(function(d) {
-						p.fadeOut();
+						p.fadeOut(function() {
+							p.remove();
+						});
 					});
 				}
 				var p1 = $('#dialog .dialog');
@@ -162,14 +164,17 @@ giiwa
 				pp.empty();
 				pp.append(panel);
 				panel.show();
-				$('#popup .popup>a.close').bind('click', function() {
-					p.fadeOut();
-				});
 
 				p.fadeIn();
 
-				giiwa._dialog = p;
-				return p;
+				giiwa._dialog = {
+					close : function() {
+						p.fadeOut(function() {
+							p.remove();
+						})
+					}
+				};
+				return giiwa._dialog;
 
 			},
 
@@ -280,8 +285,14 @@ giiwa
 
 				p.fadeIn();
 
-				giiwa._popup = p;
-				return p;
+				giiwa._popup = {
+					close : function() {
+						p.fadeOut(function() {
+							p.remove();
+						});
+					}
+				};
+				return giiwa._popup;
 			},
 
 			download : function(url, opt) {
