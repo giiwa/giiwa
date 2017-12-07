@@ -269,23 +269,33 @@ giiwa
 															}
 														});
 
-										pp.find('form').submit(
+										pp
+												.find('form')
+												.submit(
 
-										function(e) {
-											e.preventDefault();
+														function(e) {
+															e.preventDefault();
 
-											var form = e.target;
+															var form = e.target;
 
-											giiwa.submit(form, {
-												success : function(d) {
-													p.fadeOut(function() {
-														p.remove();
-													});
-													giiwa.show(d);
-												}
-											});
+															giiwa
+																	.submit(
+																			form,
+																			{
+																				success : function(
+																						d) {
+																					p
+																							.fadeOut(function() {
+																								p
+																										.remove();
+																							});
+																					opt.onsubmit
+																							&& opt
+																									.onsubmit(d);
+																				}
+																			});
 
-										});
+														});
 									}
 
 								})
