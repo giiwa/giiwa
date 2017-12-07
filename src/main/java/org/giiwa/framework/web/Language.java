@@ -596,6 +596,40 @@ public class Language {
 		return t1 + get("past.y");
 	}
 
+	public String time(long duration) {
+		if (duration <= 0) {
+			return X.EMPTY;
+		}
+
+		int t = (int) (duration / 1000);
+		if (t < 60) {
+			return t + get("time.s");
+		}
+
+		t /= 60;
+		if (t < 60) {
+			return t + get("time.m");
+		}
+
+		t /= 60;
+		if (t < 24) {
+			return t + get("time.h");
+		}
+
+		t /= 24;
+		if (t < 30) {
+			return t + get("time.d");
+		}
+
+		int t1 = t / 30;
+		if (t < 365) {
+			return t1 + get("time.M");
+		}
+
+		t1 = t / 365;
+		return t1 + get("time.y");
+	}
+
 	public long pastms(long t) {
 		return System.currentTimeMillis() - t;
 	}
