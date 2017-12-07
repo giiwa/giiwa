@@ -219,7 +219,7 @@ public class Role extends Bean {
 
 	public void setAccess(String[] accesses) {
 		if (accesses != null) {
-			dao.delete(W.create("rid", this.getId()));
+			RoleAccess.dao.delete(W.create("rid", this.getId()));
 
 			for (String a : accesses) {
 				RoleAccess.dao.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)));
