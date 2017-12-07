@@ -190,25 +190,27 @@ giiwa
 
 				opt = $.extend({}, opt);
 
-				var p = $('#popup');
+				var p = $('#gwpopup');
 				if (p.length == 0) {
-					p = $('<div id="popup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="close">X</a><div class="scroll"></div></div></div>');
+					p = $('<div id="gwpopup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
-					$("#popup .popup").draggable();
-					$('#popup .popupbg, #popup a.close').click(function(d) {
+					$("#gwpopup .popup").draggable();
+					$('#gwpopup .popupbg, #gwpopup a.close').click(function(d) {
 						p.fadeOut(function() {
 							p.remove();
 						});
 					});
 
-					$('#popup a.prev').click(function(d) {
-						if (giiwa.popuphistory && giiwa.popuphistory.length > 1) {
-							var h = giiwa.popuphistory.pop();
-							h = giiwa.popuphistory.pop();
-							giiwa.popup(h);
-						}
-					});
+					$('#gwpopup a.prev').click(
+							function(d) {
+								if (giiwa.popuphistory
+										&& giiwa.popuphistory.length > 1) {
+									var h = giiwa.popuphistory.pop();
+									h = giiwa.popuphistory.pop();
+									giiwa.popup(h);
+								}
+							});
 
 					giiwa.popuphistory = [];
 				}
@@ -219,7 +221,7 @@ giiwa
 				}
 				giiwa.popuphistory.push(url);
 
-				var pp = $('#popup .popup>.scroll');
+				var pp = $('#gwpopup .popup>.scroll');
 				pp.empty();
 				giiwa.processing.show();
 				$
