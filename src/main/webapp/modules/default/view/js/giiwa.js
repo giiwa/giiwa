@@ -203,7 +203,7 @@ giiwa
 					});
 
 					$('#popup a.prev').click(function(d) {
-						if (giiwa.popuphistory.length > 1) {
+						if (giiwa.popuphistory && giiwa.popuphistory.length > 1) {
 							var h = giiwa.popuphistory.pop();
 							h = giiwa.popuphistory.pop();
 							giiwa.popup(h);
@@ -212,7 +212,7 @@ giiwa
 
 					giiwa.popuphistory = [];
 				}
-				if (giiwa.popuphistory.length > 0) {
+				if (giiwa.popuphistory && giiwa.popuphistory.length > 0) {
 					p.find('a.prev').show();
 				} else {
 					p.find('a.prev').hide();
