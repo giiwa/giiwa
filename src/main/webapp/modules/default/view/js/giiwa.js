@@ -312,11 +312,13 @@ giiwa
 
 				giiwa._popup = {
 					close : function() {
-						p.fadeOut(function() {
-							p.remove();
-							opt && opt.onclose && opt.onclose();
+						if (p && p.length > 0 && p.css('display') != 'none') {
+							p.fadeOut(function() {
+								p.remove();
+								opt && opt.onclose && opt.onclose();
 
-						});
+							});
+						}
 					},
 					isShowing : function() {
 						return p && p.length > 0 && p.css('display') != 'none';
@@ -727,6 +729,8 @@ giiwa
 
 			load : function(uri) {
 				giiwa.processing.show();
+
+				giiwa.popup() && giiwa.popup().close();
 
 				if (giiwa.__history.length > 0
 						&& giiwa._compare(
