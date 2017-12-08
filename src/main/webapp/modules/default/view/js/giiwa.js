@@ -317,6 +317,13 @@ giiwa
 							opt && opt.onclose && opt.onclose();
 
 						});
+					},
+					isShowing : function() {
+						return p && p.length > 0 && p.css('display') != 'none';
+					},
+					reload : function() {
+						var h = giiwa.popuphistory.pop();
+						giiwa.popup(h);
 					}
 				};
 				return giiwa._popup;
