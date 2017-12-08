@@ -199,6 +199,7 @@ giiwa
 					$('#gwpopup .popupbg, #gwpopup a.close').click(function(d) {
 						p.fadeOut(function() {
 							p.remove();
+							opt && opt.onclose && opt.onclose();
 						});
 					});
 
@@ -260,7 +261,9 @@ giiwa
 																							'href');
 																			if (href != undefined) {
 																				giiwa
-																						.popup(href);
+																						.popup(
+																								href,
+																								opt);
 																			}
 
 																			e1
@@ -288,6 +291,11 @@ giiwa
 																							.fadeOut(function() {
 																								p
 																										.remove();
+																								opt
+																										&& opt.onclose
+																										&& opt
+																												.onclose();
+
 																							});
 																					opt.onsubmit
 																							&& opt
@@ -306,6 +314,8 @@ giiwa
 					close : function() {
 						p.fadeOut(function() {
 							p.remove();
+							opt && opt.onclose && opt.onclose();
+
 						});
 					}
 				};
