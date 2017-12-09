@@ -139,7 +139,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		String date = null;
 
 		if (X.isSame(size, "min")) {
-			date = lang.format(System.currentTimeMillis(), "yyyyMMddmm");
+			date = lang.format(System.currentTimeMillis(), "yyyyMMddHHmm");
 		} else if (X.isSame(size, "hour")) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHH");
 		} else if (X.isSame(size, "day")) {
@@ -189,7 +189,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		String date = null;
 
 		if (X.isSame(size, "min")) {
-			date = lang.format(System.currentTimeMillis(), "yyyyMMddmm");
+			date = lang.format(System.currentTimeMillis(), "yyyyMMddHHmm");
 		} else if (X.isSame(size, "hour")) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHH");
 		} else if (X.isSame(size, "day")) {
