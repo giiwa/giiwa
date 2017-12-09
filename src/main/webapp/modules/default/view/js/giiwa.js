@@ -718,16 +718,16 @@ giiwa
 				}, 100);
 			},
 
-			reload : function() {
+			reload : function(cb) {
 				if (giiwa.__history.length > 1) {
-					giiwa.load(giiwa.__history.pop());
+					giiwa.load(giiwa.__history.pop(), cb);
 					return true;
 				}
 
 				return false;
 			},
 
-			load : function(uri) {
+			load : function(uri, cb) {
 				giiwa.processing.show();
 
 				giiwa.popup() && giiwa.popup().close();
@@ -761,6 +761,8 @@ giiwa
 						};
 						if (resp.status == '401') {
 							window.location.href = "/";
+						} else if (cb) {
+							cb(d);
 						} else {
 							giiwa.show(d);
 						}
@@ -991,6 +993,18 @@ giiwa
 				m.click(function() {
 					overlay.click();
 				});
+			},
+
+			fullscreen : function(ele) {
+				if (ele.requestFullscreen) {
+					ele.requestFullscreen();
+				} else if (ele.mozRequestFullScreen) {
+					ele.mozRequestFullScreen();
+				} else if (ele.webkitRequestFullscreen) {
+					ele.webkitRequestFullscreen();
+				} else if (element.msRequestFullscreen) {
+					ele.msRequestFullscreen();
+				}
 			}
 
 		});
