@@ -69,10 +69,12 @@ public class Stat extends Bean implements Comparable<Stat> {
 		String id = UID.id(date, module, size);
 		if (v == null) {
 			v = V.create();
+		} else {
+			v = v.copy();
 		}
 		try {
 			if (!dao.exists(W.create("date", date).and("id", id))) {
-				v.append("date", date).set(X.ID, id).append("id", id).append("size", size).append("module", module);
+				v.append("date", date).force(X.ID, id).append("size", size).append("module", module);
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
 				}

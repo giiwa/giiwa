@@ -605,6 +605,10 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		public V copy() {
+			return V.create().copy(m);
+		}
+
 		/**
 		 * copy all in json to this, if names is null, then nothing to copy.
 		 *
