@@ -6,6 +6,7 @@ package org.giiwa.framework.bean;
 
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
+import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -197,6 +198,15 @@ public class Stat extends Bean implements Comparable<Stat> {
 		Stat.insertOrUpdate(name + ".snapshot", date, size, n);
 		Stat.insertOrUpdate(name + ".delta", date, size, d);
 
+	}
+
+	public static Beans<Stat> load(String name, String size, String type, W q, int s, int n) {
+		if (q == null) {
+			q = W.create();
+		}
+		q.and("module", name + "." + type).and("size", size);
+
+		return dao.load(q, s, n);
 	}
 
 }
