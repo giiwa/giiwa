@@ -249,6 +249,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 					shortdate = shortdate.substring(len);
 					break;
 				}
+				len--;
 			}
 		}
 		this.set("shortdate", shortdate);
