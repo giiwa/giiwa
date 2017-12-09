@@ -231,7 +231,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			Stat e = null;
 			for (int i = 0; i < bs.size(); i++) {
 				e = bs.get(i);
-				e.cut(date);
+				e.cut(date, size);
 				date = e.date;
 			}
 			e.set("shortdate", e.date);
@@ -239,17 +239,17 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return bs;
 	}
 
-	private void cut(String date) {
+	private void cut(String date, String size) {
 		String shortdate = this.date;
 		if (!X.isEmpty(date)) {
-			int len = Math.min(date.length(), shortdate.length()) - 1;
+			int len = Math.min(date.length(), shortdate.length()) - 2;
 			while (len > 0) {
 				String s = date.substring(0, len);
 				if (shortdate.startsWith(s)) {
 					shortdate = shortdate.substring(len);
 					break;
 				}
-				len--;
+				len -= 2;
 			}
 		}
 		this.set("shortdate", shortdate);
