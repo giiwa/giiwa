@@ -90,7 +90,7 @@ giiwa
 
 						$.get(__url, {}, function(d) {
 							giiwa.processing.hide();
-							opt && opt.success && opt.success(d);
+							opt && opt.success && opt.success(d, 'get');
 						});
 
 					} else {
@@ -105,8 +105,10 @@ giiwa
 							if (xhr.readyState == 4) {
 								if (xhr.status == 200) {
 									giiwa.processing.hide();
-									opt && opt.success
-											&& opt.success(xhr.responseText);
+									opt
+											&& opt.success
+											&& opt.success(xhr.responseText,
+													'post');
 								}
 							}
 						}
@@ -551,19 +553,22 @@ giiwa
 					var form = e.target;
 
 					giiwa.submit(form, {
-						success : function(d) {
-							try {
-								d = eval("(" + d + ")");
-							} catch (e) {
-								console.error(e);
+						success : function(d, method) {
+							if (method == 'post') {
+								try {
+									d = eval("(" + d + ")");
+								} catch (e) {
+									console.error(e);
+								}
+								if (d.state == 200) {
+									giiwa.back();
+									giiwa.hint(d.message);
+								} else if (d.message) {
+									giiwa.error(d.message);
+								}
+							} else {
+								giiwa.show(d);
 							}
-							if (d.state == 200) {
-								giiwa.back();
-								giiwa.hint(d.message);
-							} else if (d.message) {
-								giiwa.error(d.message);
-							}
-							// giiwa.show(d);
 						}
 					});
 
