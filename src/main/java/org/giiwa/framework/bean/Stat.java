@@ -217,11 +217,11 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 	}
 
-	public static Beans<Stat> load(String name, String size, W q, int s, int n) {
+	public static Beans<Stat> load(String name, String type, String size, W q, int s, int n) {
 		if (q == null) {
 			q = W.create();
 		}
-		q.and("module", name).and("size", size);
+		q.and("module", name + "." + type).and("size", size);
 
 		return dao.load(q, s, n);
 	}
