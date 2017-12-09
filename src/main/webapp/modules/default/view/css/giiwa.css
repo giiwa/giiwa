@@ -841,7 +841,7 @@ div.error {
 	display: inline-block;
 	width: 100%;
 	position: relative;
-	padding: 10px 5px;
+	padding: 10px 0;
 }
 
 .search form span {
