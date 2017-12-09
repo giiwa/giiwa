@@ -39,19 +39,23 @@ public class app extends Model {
 		if (method.isPost()) {
 			String appid = this.getString("appid");
 			try {
-				if (!App.dao.exists(appid)) {
+				if (!App.dao.exists(W.create("appid", appid))) {
 					String secret = UID.random(32);
 					App.create(App.Param.create().appid(appid).role(this.getLong("role")).secret(secret)
 							.memo(this.getString("memo")).build());
-					onGet();
+
+					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
-				this.set(X.ERROR, lang.get("appid.already.exists"));
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("appid.already.exists")));
+				return;
 			} catch (Exception e) {
-				this.set(X.ERROR, e.getMessage());
+				log.error(e.getMessage(), e);
+
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+				return;
 			}
 
-			this.set(this.getJSON());
 		}
 
 		Beans<Role> rs = Role.load(0, 1000);

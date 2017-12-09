@@ -47,22 +47,7 @@ giiwa
 			},
 
 			submit : function(form, opt) {
-				var beforesubmit = $(form).attr('beforesubmit');
-				if (typeof window[beforesubmit] === 'function') {
-					if (!window[beforesubmit](form)) {
-						return;
-					}
-				}
 
-				/**
-				 * check the bad flag
-				 */
-				var bad = $(form).find(
-						"input[bad=1], textarea[bad=1], select[bad=1]");
-				if (bad.length > 0) {
-					bad[0].focus();
-					return;
-				}
 				var bb = $(form).find(
 						"input[required=true], select[required=true]");
 				for (i = 0; i < bb.length; i++) {
@@ -567,7 +552,18 @@ giiwa
 
 					giiwa.submit(form, {
 						success : function(d) {
-							giiwa.show(d);
+							try {
+								d = eval("(" + d + ")");
+							} catch (e) {
+								console.error(e);
+							}
+							if (d.state == 200) {
+								giiwa.back();
+								giiwa.hint(d.message);
+							} else if (d.message) {
+								giiwa.error(d.message);
+							}
+							// giiwa.show(d);
 						}
 					});
 

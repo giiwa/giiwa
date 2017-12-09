@@ -55,8 +55,10 @@ public class user extends Model {
 			final String name = this.getString("name").trim().toLowerCase();
 			String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
 			if (!X.isEmpty(rule) && !name.matches(rule)) {
-				this.set(jo);
-				this.set(X.MESSAGE, lang.get("user.name.format.error"));
+
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.format.error")));
+				return;
+
 			} else {
 				try {
 
@@ -67,7 +69,10 @@ public class user extends Model {
 						/**
 						 * exists, create failded
 						 */
-						this.set(X.ERROR, lang.get("user.name.exists"));
+						this.response(
+								JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.exists")));
+						return;
+
 					} else {
 
 						V v = V.create("name", name).copy(jo).set("locked", 0);
@@ -94,8 +99,6 @@ public class user extends Model {
 						 */
 						GLog.securitylog.info(user.class, "create", this.getJSONNonPassword().toString(), login,
 								this.getRemoteHost());
-
-						this.set(X.MESSAGE, lang.get("save.success"));
 
 						if (Global.getInt("user.updated.noti", 1) == 1) {
 							final String email = this.getString("email");
@@ -140,16 +143,16 @@ public class user extends Model {
 							}
 						}
 
-						onGet();
+						this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 						return;
 					}
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 					GLog.securitylog.error(user.class, "create", e.getMessage(), e, login, this.getRemoteHost());
 
-					this.set(X.ERROR, lang.get("save.failed"));
-
-					this.set(jo);
+					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+							lang.get("save.failed") + ":" + e.getMessage()));
+					return;
 				}
 			}
 
@@ -205,10 +208,9 @@ public class user extends Model {
 
 			String password = this.getString("password");
 			if (!X.isEmpty(password)) {
-				JSON jo = new JSON();
 				User.update(id, V.create("password", password));
-				jo.put(X.STATE, 200);
-				this.response(jo);
+
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 				return;
 			}
 			JSON j = this.getJSON();
@@ -250,9 +252,8 @@ public class user extends Model {
 			GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login,
 					this.getRemoteHost());
 
-			this.set(X.MESSAGE, lang.get("save.success"));
-
-			onGet();
+			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			return;
 
 		} else {
 

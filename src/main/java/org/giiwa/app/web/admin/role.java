@@ -54,14 +54,15 @@ public class role extends Model {
 					}
 				}
 
-				this.set(X.MESSAGE, lang.get("save.success"));
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+				return;
+
 			} else {
-				this.set("name", name);
-				this.set(X.ERROR, lang.get("save.failed"));
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
+				return;
+
 			}
 
-			onGet();
-			return;
 		}
 
 		Map<String, List<Access>> bs = Access.load();
@@ -105,24 +106,17 @@ public class role extends Model {
 			Role r = Role.dao.load(id);
 			if (r != null) {
 				if (Role.dao.update(id, V.create("name", name).set("memo", this.getString("memo"))) > 0) {
-					this.path = null;
-					this.set(X.MESSAGE, lang.get("save.success"));
 
 					String[] accesses = this.getStrings("access");
 					r.setAccess(accesses);
 
 				} else {
-					this.set("name", name);
-					this.set(X.ERROR, lang.get("save.failed"));
+					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
+					return;
 				}
-			} else {
-				this.set("name", name);
-				this.set(X.ERROR, lang.get("save.failed"));
 			}
 
-			this.set(X.MESSAGE, lang.get("save.success"));
-
-			onGet();
+			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 
 		} else {

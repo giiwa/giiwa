@@ -90,14 +90,9 @@ public class user extends Model {
 				Captcha.remove(this.sid());
 			}
 
-			JSON jo = this.getJSON();
-
-			if (Captcha.Result.badcode == r1) {
-				jo.put(X.MESSAGE, lang.get("captcha.bad"));
-				jo.put(X.STATE, 202);
-			} else if (Captcha.Result.expired == r1) {
-				jo.put(X.MESSAGE, lang.get("captcha.expired"));
-				jo.put(X.STATE, 203);
+			if (Captcha.Result.badcode == r1 || Captcha.Result.expired == r1) {
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("captcha.bad")));
+				return;
 			} else {
 
 				String name = this.getString("name").trim().toLowerCase();
@@ -106,12 +101,17 @@ public class user extends Model {
 				String namerule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
 				String passwdrule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
 				if (!X.isEmpty(namerule) && !name.matches(namerule)) {
-					jo.put(X.MESSAGE, lang.get("user.name.format.error"));
+					this.response(
+							JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.format.error")));
+					return;
+
 				} else if (!X.isEmpty(passwdrule) && !passwd.matches(passwdrule)) {
-					jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
+					this.response(
+							JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.passwd.format.error")));
+					return;
 				} else {
 					try {
-						V v = V.create("name", name).copy(jo);
+						V v = V.create("name", name).copy(this);
 						long id = User.create(v);
 
 						String role = Global.getString("user.role", "N/A");
@@ -129,21 +129,21 @@ public class user extends Model {
 							this.redirect((String) s.get("uri"));
 							return;
 						} else {
-							this.set(X.MESSAGE, lang.get("user.register.success"));
-							this.set("success", 1);
+							this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE,
+									lang.get("user.register.success")));
+							return;
 						}
 
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
 						GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
 
-						this.put(X.MESSAGE, lang.get("create_user_error_1"));
-						GLog.securitylog.info(user.class, "register", lang.get("create.failed") + ":" + name, login,
-								this.getRemoteHost());
+						this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
+						return;
+
 					}
 				}
 			}
-			this.set(jo);
 		}
 
 		show("/user/user.register.html");
@@ -581,25 +581,23 @@ public class user extends Model {
 				String password = this.getString("password");
 				if (!X.isEmpty(password)) {
 					u.update(V.create("password", password));
-					JSON jo = new JSON();
-					jo.put(X.STATE, 200);
 
-					this.response(jo);
-					return;
 				} else {
 					u.update(V.create().copy(j, "nickname", "title", "email", "phone"));
-
-					this.set(X.MESSAGE, lang.get("save.success"));
 
 					u = User.dao.load(id);
 					AuthToken.delete(id);
 					this.setUser(u);
+
 				}
-				this.set(u.getJSON());
+
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+				return;
+
 			} else {
-				this.set(X.ERROR, lang.get("save.failed"));
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
+				return;
 			}
-			this.set(j);
 		} else {
 			User u = User.dao.load(login.getId());
 			this.set("u", u);
@@ -624,25 +622,23 @@ public class user extends Model {
 				String password = this.getString("password");
 				if (!X.isEmpty(password)) {
 					u.update(V.create("password", password));
-					JSON jo = new JSON();
-					jo.put(X.STATE, 200);
 
-					this.response(jo);
+					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				} else {
 					u.update(V.create().copy(j, "nickname", "title", "email", "phone"));
 
-					this.set(X.MESSAGE, lang.get("save.success"));
-
 					u = User.dao.load(id);
 					AuthToken.delete(id);
 					this.setUser(u);
+
+					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+					return;
 				}
-				this.set(u.getJSON());
 			} else {
-				this.set(X.ERROR, lang.get("save.failed"));
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
+				return;
 			}
-			this.set(j);
 		} else {
 			User u = User.dao.load(login.getId());
 			this.set("u", u);
@@ -864,17 +860,11 @@ public class user extends Model {
 				jo.put(X.MESSAGE, lang.get("param.error"));
 			}
 
-			if (this.isAjax()) {
-				this.response(jo);
-				return;
-			} else {
-				this.set(jo);
-			}
-			this.set("email", email);
-			this.set("phone", phone);
+			this.response(jo);
+			return;
 		}
 
-		show("/user/user.forget.html");
+		this.show("/user/user.forget.html");
 
 	}
 

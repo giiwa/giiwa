@@ -69,8 +69,9 @@ public class module extends Model {
 				log.error(e.getMessage(), e);
 				GLog.oplog.error(module.class, "create", e.getMessage(), e, login, this.getRemoteHost());
 
-				jo.put(X.MESSAGE, e.getMessage());
-				jo.put(X.STATE, 201);
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+				return;
+
 
 			}
 			this.response(jo);

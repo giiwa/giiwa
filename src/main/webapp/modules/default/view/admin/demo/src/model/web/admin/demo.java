@@ -55,8 +55,7 @@ public class demo extends Model {
 			v.set("content", this.getHtml("content"));
 			String id = Demo.create(v);
 
-			this.set(X.MESSAGE, lang.get("create.success"));
-			onGet();
+			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 		}
 
@@ -72,8 +71,7 @@ public class demo extends Model {
 			v.set("content", this.getHtml("content"));
 			Demo.dao.update(id, v);
 
-			this.set(X.MESSAGE, lang.get("save.success"));
-			onGet();
+			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 		}
 
