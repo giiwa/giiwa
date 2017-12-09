@@ -116,6 +116,14 @@ public class Stat extends Bean implements Comparable<Stat> {
 		snapshot(name, size, n);
 	}
 
+	public static void delta(String name, String[] sizes, long... n) {
+		if (sizes != null) {
+			for (String size : sizes) {
+				delta(name, size, n);
+			}
+		}
+	}
+
 	/**
 	 * 
 	 * @param name
@@ -156,6 +164,14 @@ public class Stat extends Bean implements Comparable<Stat> {
 		Stat.insertOrUpdate(name + ".snapshot", date, size, d);
 		Stat.insertOrUpdate(name + ".delta", date, size, n);
 
+	}
+
+	public static void snapshot(String name, String[] sizes, long... n) {
+		if (sizes != null) {
+			for (String size : sizes) {
+				snapshot(name, size, n);
+			}
+		}
 	}
 
 	/**
