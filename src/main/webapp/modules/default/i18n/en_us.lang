@@ -690,3 +690,4 @@ application/msword=icon-file-word
 application/pdf=icon-file-pdf
 application/vnd.ms-excel=icon-file-excel
 text/csv=icon-file-excel
+appid.exists=Appid Exists

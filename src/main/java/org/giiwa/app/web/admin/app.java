@@ -47,7 +47,7 @@ public class app extends Model {
 					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("appid.already.exists")));
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("appid.exists")));
 				return;
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
