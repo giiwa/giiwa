@@ -225,7 +225,32 @@ public class Stat extends Bean implements Comparable<Stat> {
 		}
 		q.and("module", name + "." + type).and("size", size);
 
-		return dao.load(q, s, n);
+		Beans<Stat> bs = dao.load(q, s, n);
+		if (bs != null && !bs.isEmpty()) {
+			String date = null;
+			Stat e = null;
+			for (int i = 0; i < bs.size(); i++) {
+				e = bs.get(i);
+				e.cut(date);
+				date = e.date;
+			}
+			e.set("shortdate", e.date);
+		}
+		return bs;
 	}
 
+	private void cut(String date) {
+		String shortdate = this.date;
+		if (!X.isEmpty(date)) {
+			int len = Math.min(date.length(), shortdate.length()) - 1;
+			while (len > 0) {
+				String s = date.substring(0, len);
+				if (shortdate.startsWith(s)) {
+					shortdate = shortdate.substring(len);
+					break;
+				}
+			}
+		}
+		this.set("shortdate", shortdate);
+	}
 }
