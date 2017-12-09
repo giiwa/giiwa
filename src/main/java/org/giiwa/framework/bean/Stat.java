@@ -65,12 +65,14 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 *            the n
 	 * @return the int
 	 */
-	public static int insertOrUpdate(String module, String date, String size, long... n) {
+	public static int insertOrUpdate(String module, String date, String size, V v, long... n) {
 		String id = UID.id(date, module, size);
-
+		if (v == null) {
+			v = V.create();
+		}
 		try {
 			if (!dao.exists(W.create("date", date).and("id", id))) {
-				V v = V.create("date", date).set(X.ID, id).set("id", id).set("size", size).set("module", module);
+				v.append("date", date).set(X.ID, id).append("id", id).append("size", size).append("module", module);
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
 				}
@@ -81,7 +83,6 @@ public class Stat extends Bean implements Comparable<Stat> {
 				/**
 				 * only update if count > original
 				 */
-				V v = V.create();
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
 				}
@@ -113,13 +114,13 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param n
 	 */
 	public static void log(String name, String size, long... n) {
-		snapshot(name, size, n);
+		snapshot(name, size, null, n);
 	}
 
-	public static void delta(String name, String[] sizes, long... n) {
+	public static void delta(String name, String[] sizes, V v, long... n) {
 		if (sizes != null) {
 			for (String size : sizes) {
-				delta(name, size, n);
+				delta(name, size, v, n);
 			}
 		}
 	}
@@ -130,7 +131,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param size
 	 * @param n
 	 */
-	public static void delta(String name, String size, long... n) {
+	public static void delta(String name, String size, V v, long... n) {
 		Language lang = Language.getLanguage();
 
 		String date = null;
@@ -161,15 +162,15 @@ public class Stat extends Bean implements Comparable<Stat> {
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] + s1.getLong("n" + i);
 		}
-		Stat.insertOrUpdate(name + ".snapshot", date, size, d);
-		Stat.insertOrUpdate(name + ".delta", date, size, n);
+		Stat.insertOrUpdate(name + ".snapshot", date, size, v, d);
+		Stat.insertOrUpdate(name + ".delta", date, size, v, n);
 
 	}
 
-	public static void snapshot(String name, String[] sizes, long... n) {
+	public static void snapshot(String name, String[] sizes, V v, long... n) {
 		if (sizes != null) {
 			for (String size : sizes) {
-				snapshot(name, size, n);
+				snapshot(name, size, v, n);
 			}
 		}
 	}
@@ -180,7 +181,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param size
 	 * @param n
 	 */
-	public static void snapshot(String name, String size, long... n) {
+	public static void snapshot(String name, String size, V v, long... n) {
 		Language lang = Language.getLanguage();
 
 		String date = null;
@@ -211,16 +212,16 @@ public class Stat extends Bean implements Comparable<Stat> {
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] - s1.getLong("n" + i);
 		}
-		Stat.insertOrUpdate(name + ".snapshot", date, size, n);
-		Stat.insertOrUpdate(name + ".delta", date, size, d);
+		Stat.insertOrUpdate(name + ".snapshot", date, size, v, n);
+		Stat.insertOrUpdate(name + ".delta", date, size, v, d);
 
 	}
 
-	public static Beans<Stat> load(String name, String size, String type, W q, int s, int n) {
+	public static Beans<Stat> load(String name, String size, W q, int s, int n) {
 		if (q == null) {
 			q = W.create();
 		}
-		q.and("module", name + "." + type).and("size", size);
+		q.and("module", name).and("size", size);
 
 		return dao.load(q, s, n);
 	}
