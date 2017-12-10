@@ -31,6 +31,17 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 	public static final BeanDAO<Stat> dao = BeanDAO.create(Stat.class);
 
+	public static final String SIZE_MIN = "min";
+	public static final String SIZE_HOUR = "hour";
+	public static final String SIZE_DAY = "day";
+	public static final String SIZE_WEEK = "week";
+	public static final String SIZE_MONTH = "month";
+	public static final String SIZE_SEASON = "season";
+	public static final String SIZE_YEAR = "year";
+
+	public static final String TYPE_DELTA = "delta";
+	public static final String TYPE_SNAPSHOT = "snapshot";
+
 	@Column(name = X.ID)
 	protected long id; // 日期
 
@@ -41,8 +52,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 	protected String date; // 日期
 
 	@Column(name = "size")
-	protected String size; // minute, hour, day, week,
-							// month, year
+	protected String size;
+	// min, hour, day, week,month, year
 
 	public String getDate() {
 		return date;
@@ -71,9 +82,12 @@ public class Stat extends Bean implements Comparable<Stat> {
 		} else {
 			v = v.copy();
 		}
+		
 		try {
 			W q = W.create().copy(v).and("date", date).and("size", size).and("module", module);
+
 			if (!dao.exists(q)) {
+				
 				long id = UID.next("stat.id");
 				while (dao.exists(id)) {
 					id = UID.next("stat.id");
@@ -142,20 +156,20 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		String date = null;
 
-		if (X.isSame(size, "min")) {
+		if (X.isSame(size, Stat.SIZE_MIN)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHHmm");
-		} else if (X.isSame(size, "hour")) {
+		} else if (X.isSame(size, Stat.SIZE_HOUR)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHH");
-		} else if (X.isSame(size, "day")) {
+		} else if (X.isSame(size, Stat.SIZE_DAY)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMdd");
-		} else if (X.isSame(size, "week")) {
+		} else if (X.isSame(size, Stat.SIZE_WEEK)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyww");
-		} else if (X.isSame(size, "month")) {
+		} else if (X.isSame(size, Stat.SIZE_MONTH)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMM");
-		} else if (X.isSame(size, "season")) {
+		} else if (X.isSame(size, Stat.SIZE_SEASON)) {
 			int season = X.toInt(lang.format(System.currentTimeMillis(), "MM")) / 3 + 1;
 			date = lang.format(System.currentTimeMillis(), "yyyy") + "0" + season;
-		} else if (X.isSame(size, "year")) {
+		} else if (X.isSame(size, Stat.SIZE_YEAR)) {
 			date = lang.format(System.currentTimeMillis(), "yyyy");
 		} else {
 			log.error("not support the [" + size + "], supported: min, hour, day, month, year");
@@ -164,14 +178,14 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		W q = W.create().copy(v);
 
-		Stat s1 = dao.load(
-				q.and("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq).sort("created", -1));
+		Stat s1 = dao.load(q.and("module", name + "." + Stat.TYPE_SNAPSHOT).and("size", size)
+				.and("date", date, W.OP.neq).sort("created", -1));
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] + s1.getLong("n" + i);
 		}
-		Stat.insertOrUpdate(name + ".snapshot", date, size, v, d);
-		Stat.insertOrUpdate(name + ".delta", date, size, v, n);
+		Stat.insertOrUpdate(name + "." + Stat.TYPE_SNAPSHOT, date, size, v, d);
+		Stat.insertOrUpdate(name + "." + Stat.TYPE_DELTA, date, size, v, n);
 
 	}
 
@@ -194,20 +208,20 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		String date = null;
 
-		if (X.isSame(size, "min")) {
+		if (X.isSame(size, Stat.SIZE_MIN)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHHmm");
-		} else if (X.isSame(size, "hour")) {
+		} else if (X.isSame(size, Stat.SIZE_HOUR)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMddHH");
-		} else if (X.isSame(size, "day")) {
+		} else if (X.isSame(size, Stat.SIZE_DAY)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMMdd");
-		} else if (X.isSame(size, "week")) {
+		} else if (X.isSame(size, Stat.SIZE_WEEK)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyww");
-		} else if (X.isSame(size, "month")) {
+		} else if (X.isSame(size, Stat.SIZE_MONTH)) {
 			date = lang.format(System.currentTimeMillis(), "yyyyMM");
-		} else if (X.isSame(size, "season")) {
+		} else if (X.isSame(size, Stat.SIZE_SEASON)) {
 			int season = X.toInt(lang.format(System.currentTimeMillis(), "MM")) / 3 + 1;
 			date = lang.format(System.currentTimeMillis(), "yyyy") + "0" + season;
-		} else if (X.isSame(size, "year")) {
+		} else if (X.isSame(size, Stat.SIZE_YEAR)) {
 			date = lang.format(System.currentTimeMillis(), "yyyy");
 		} else {
 			log.error("not support the [" + size + "], supported: min, hour, day, month, year");
@@ -221,8 +235,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] - s1.getLong("n" + i);
 		}
-		Stat.insertOrUpdate(name + ".snapshot", date, size, v, n);
-		Stat.insertOrUpdate(name + ".delta", date, size, v, d);
+		Stat.insertOrUpdate(name + "." + Stat.TYPE_SNAPSHOT, date, size, v, n);
+		Stat.insertOrUpdate(name + "." + Stat.TYPE_DELTA, date, size, v, d);
 
 	}
 
