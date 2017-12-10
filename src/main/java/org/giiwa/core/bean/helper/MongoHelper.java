@@ -868,7 +868,8 @@ public class MongoHelper implements Helper.DBHelper {
 
 		} finally {
 			if (log.isDebugEnabled())
-				log.debug("count, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q + ", n=" + n);
+				log.debug("count, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q.query()
+						+ ", n=" + n);
 		}
 		return n;
 	}

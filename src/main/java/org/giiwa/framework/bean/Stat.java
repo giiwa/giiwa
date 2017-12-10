@@ -158,8 +158,10 @@ public class Stat extends Bean implements Comparable<Stat> {
 			return;
 		}
 
-		Stat s1 = dao.load(W.create("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq)
-				.sort("created", -1));
+		W q = W.create().copy(v);
+
+		Stat s1 = dao.load(
+				q.and("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq).sort("created", -1));
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] + s1.getLong("n" + i);
@@ -208,8 +210,9 @@ public class Stat extends Bean implements Comparable<Stat> {
 			return;
 		}
 
-		Stat s1 = dao.load(W.create("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq)
-				.sort("created", -1));
+		W q = W.create().copy(v);
+		Stat s1 = dao.load(
+				q.and("module", name + ".snapshot").and("size", size).and("date", date, W.OP.neq).sort("created", -1));
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] - s1.getLong("n" + i);

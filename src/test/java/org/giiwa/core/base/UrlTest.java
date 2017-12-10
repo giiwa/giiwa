@@ -2,6 +2,7 @@ package org.giiwa.core.base;
 
 import static org.junit.Assert.*;
 
+import org.giiwa.framework.web.Language;
 import org.junit.Test;
 
 public class UrlTest {
@@ -19,6 +20,8 @@ public class UrlTest {
 		assertEquals("/aaa", u.getUri());
 		assertEquals("1", u.get("a"));
 
+		long t = 1512835200000L;
+		System.out.println(Language.getLanguage().format(t, "yyyy-MM-dd HH:mm:ss"));
 	}
 
 }

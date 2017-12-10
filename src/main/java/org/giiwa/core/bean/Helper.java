@@ -1817,6 +1817,15 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		public W copy(V v) {
+			if (v != null && !v.isEmpty()) {
+				for (String name : v.m.keySet()) {
+					and(name, v.m.get(name));
+				}
+			}
+			return this;
+		}
+
 	}
 
 	public static interface IOptimizer {
