@@ -1,0 +1,33 @@
+
+<div><label><h3>$lang.get('user.name'):</h3><i>$!me.name</i></label></div>
+<div><label><h3>$lang.get('user.nickname'):</h3><input type='text' name='nickname' value='$!me.nickname'/></label></div>
+<div><label><h3>$lang.get('user.title'):</h3><input type='text' name='title' value='$!me.title' /></label></div>
+<div><label><h3>$lang.get('user.email'):</h3><input type='text' name='email' value='$!me.email' /></label></div>
+<div><label><h3>$lang.get('user.phone'):</h3><input type='text' name='phone' value='$!me.phone' /></label></div>
+
+<a class='btn btn-info btn-sm' href='javascript:;' onclick="_showpassword()">$lang.get('a.password')</a>	
+
+<div id='password' title="$lang.get('user.edit.password')" style="display:none">
+	<div><label><h3>$lang.get('user.new.password'):</h3><input type='password' name='password' value=''/></label></div>
+	<div class='btns' style="text-align: center;margin-bottom:0">
+		<button onclick='_password();'>$lang.get('btn.ok')</button>
+	</div>
+</div>
+
+<script>
+function _showpassword(){
+	giiwa.dialog($('#password'), {width: 280, height:80});
+}
+
+function _password() {
+	giiwa.dialog().close();
+	var v = $('#password input[name=password]').val();
+	$.post('/user/profile', {password:v}, function(d){
+		if(d.state == 200) {
+			giiwa.message("$lang.get('save.success')");
+		} else {
+			giiwa.error(d.message);
+		}
+	})
+}
+</script>

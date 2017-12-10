@@ -29,6 +29,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.mq;
+import org.giiwa.app.web.admin.profile;
 import org.giiwa.app.web.admin.setting;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Shell;
@@ -194,6 +195,8 @@ public class DefaultListener implements IListener {
 		setting.register(1, "mq", mq.class);
 		setting.register(10, "smtp", setting.mail.class);
 		setting.register(11, "counter", setting.counter.class);
+
+		profile.register(0, "my", profile.my.class);
 
 		NtpTask.owner.start();
 		new CleanupTask(conf).schedule(X.AMINUTE);

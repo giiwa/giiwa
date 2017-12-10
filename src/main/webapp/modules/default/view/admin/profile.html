@@ -1,0 +1,24 @@
+<div class='head'>$lang.get("profile.${name}.title")</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	#foreach($p in $settings)
+	<a href='/admin/profile/get/$p' #if($name==$p) class='selected' #end>$lang.get("a.profile.$p")</a>
+	#end
+</div>
+<div id="profile">
+	<form action='/admin/profile/set/$name' method='post' class='form' enctype="multipart/form-data">
+		#if($page)
+			#parse($page)
+		#end
+		<div class="btns">
+			<button type='submit'>$lang.get('btn.save')</button>
+		</div>
+	</form>
+</div>
+<script>
+$(function(){
+	$('#profile .btns').append($('#profile a.btn'));
+})
+</script>
