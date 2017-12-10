@@ -32,7 +32,7 @@ public class profile extends Model {
 		register(-1, name, m);
 	}
 
-	@Path(path = "get/(.*)", login = true, access = "access.config.admin")
+	@Path(path = "get/(.*)", login = true)
 	final public Object get(String name) {
 		Class<? extends profile> c = settings.get(name);
 		log.debug("/get/" + c);
@@ -65,7 +65,7 @@ public class profile extends Model {
 	 * @param name
 	 *            the name
 	 */
-	@Path(path = "set/(.*)", login = true, access = "access.config.admin", log = Model.METHOD_POST)
+	@Path(path = "set/(.*)", login = true, log = Model.METHOD_POST)
 	final public void set(String name) {
 		Class<? extends profile> c = settings.get(name);
 		log.debug("/set/" + c);
