@@ -31,9 +31,9 @@ function _password() {
 	var v = $('#password input[name=password]').val();
 	$.post('/user/edit', {password:v}, function(d){
 		if(d.state == 200) {
-			$.message("$lang.get('save.success')");
+			giiwa.message("$lang.get('save.success')");
 		} else {
-			$.error(d.message);
+			giiwa.error(d.message);
 		}
 	})
 }

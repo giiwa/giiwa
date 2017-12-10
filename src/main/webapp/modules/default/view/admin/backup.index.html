@@ -45,7 +45,7 @@ function _download(name) {
 		if(d.state == 200) {
 			$("#download").attr('src', d.url);
 		} else {
-			$.error(d.message);
+			giiwa.error(d.message);
 		}
 	});
 }
@@ -76,15 +76,15 @@ function _recovering(){
 	$.post('/admin/backup/restoring', {id:tid}, function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {
-			$.message(d.message);
+			giiwa.message(d.message);
 		} else if(d.state == 201){
-			$.message(d.message);
+			giiwa.message(d.message);
 			
 			setTimeout(function(){
 				_recovering();
 			}, 5000);
 		} else if(d.message) {
-			$.error(d.message);
+			giiwa.error(d.message);
 		}
 	});
 }

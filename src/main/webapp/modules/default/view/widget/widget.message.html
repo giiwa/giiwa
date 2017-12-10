@@ -1,15 +1,15 @@
 <script>
 #if($error)
 	$(function() {
-		$.error('$error')
+		giiwa.error('$error')
 	})
 #elseif($warn)
 	$(function() {
-		$.warn('$warn')
+		giiwa.warn('$warn')
 	})
 #elseif($message)
 	$(function() {
-		$.hint('$message')
+		giiwa.hint('$message')
 	})
 #end
 	giiwa.history('$!query');

@@ -40,9 +40,9 @@ function oncreate() {
 		if(d.state == 200) {
 			$('#download').attr('src', d.file);
 		} else if(d.message) {
-			$.error(d.message);
+			giiwa.error(d.message);
 		} else {
-			$.error('unknown error');
+			giiwa.error('unknown error');
 		}
 	})
 }

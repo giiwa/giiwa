@@ -134,9 +134,9 @@
 			giiwa.processing.hide();
 			if (d.state == 200) {
 				$('span.id[data-name="' + name + '"]').text(id);
-				$.hint("$lang.get('restart.required')");
+				giiwa.hint("$lang.get('restart.required')");
 			} else {
-				$.error(d.message);
+				giiwa.error(d.message);
 			}
 		})
 	}
@@ -179,14 +179,14 @@
 					giiwa.processing.hide();
 					
 					if (d.state == 200) {
-						$.message(d.warn);
+						giiwa.message(d.warn);
 					} else if (d.state == 201) {
-						$.warn(d.warn, 3000);
+						giiwa.warn(d.warn, 3000);
 						setTimeout(function() {
 							setInterval(_load, 5000);
 						}, 3000);
 					} else {
-						$.error(d.error);
+						giiwa.error(d.error);
 					}
 
 				});

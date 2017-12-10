@@ -53,7 +53,7 @@ function _download(name) {
 		if(d.state == 200) {
 			$('#download').attr('src', d.src);
 		} else {
-			$.error(d.message);
+			giiwa.error(d.message);
 		}
 	})
 }

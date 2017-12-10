@@ -189,7 +189,7 @@ function _restart(){
 			_timer = setInterval(_load, 5000);
 		} else {
 			giiwa.processing.hide();
-			$.error(d.message);
+			giiwa.error(d.message);
 		}
 	})
 }

@@ -80,7 +80,7 @@ function _delete(id, o) {
 			if(d.state == 200) {
 				$(o).parent().parent().remove();
 			} else if(d.message){
-				$.error(d.message);
+				giiwa.error(d.message);
 			}
 		});
 	}
