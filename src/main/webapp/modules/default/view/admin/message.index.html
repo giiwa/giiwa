@@ -93,9 +93,9 @@
 		<td>
 			<i class="ico star-$!f.star" style="cursor:pointer" onclick="_onstar('$f.id', this)"></i>
 		</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');giiwa.reload();" style="cursor: pointer">$!f.from_obj.nickname</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');giiwa.reload();" style="cursor: pointer">$!lang.truncate($!f.title, 100)</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');giiwa.reload();" style="cursor: pointer">$!lang.truncate($!f.content, 200)</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');" style="cursor: pointer">$!f.from_obj.nickname</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');" style="cursor: pointer">$!lang.truncate($!f.title, 100)</td>
+		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');" style="cursor: pointer">$!lang.truncate($!f.content, 200)</td>
 		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
 	</tr>
 #end
