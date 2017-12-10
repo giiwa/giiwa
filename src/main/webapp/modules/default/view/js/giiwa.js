@@ -952,7 +952,7 @@ giiwa
 					m = $("<div id='leanmodal' class='hint'><div class='bg'></div><div class='leanmodal-content'></div></div>");
 					$('body').append(m);
 				}
-				m.attr('class', 'warn');
+				m.attr('class', 'error');
 				m.find('.leanmodal-content').html(message);
 				m.css({
 					'display' : 'block'
