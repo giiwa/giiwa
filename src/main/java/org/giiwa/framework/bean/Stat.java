@@ -32,7 +32,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	public static final BeanDAO<Stat> dao = BeanDAO.create(Stat.class);
 
 	@Column(name = X.ID)
-	protected String id; // 日期
+	protected long id; // 日期
 
 	@Column(name = "module")
 	protected String module; // 统计模块
@@ -66,14 +66,18 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @return the int
 	 */
 	public static int insertOrUpdate(String module, String date, String size, V v, long... n) {
-		String id = UID.id(date, module, size);
 		if (v == null) {
 			v = V.create();
 		} else {
 			v = v.copy();
 		}
 		try {
-			if (!dao.exists(W.create("date", date).and("id", id))) {
+			W q = W.create().copy(v).and("date", date).and("size", size).and("module", module);
+			if (!dao.exists(q)) {
+				long id = UID.next("stat.id");
+				while (dao.exists(id)) {
+					id = UID.next("stat.id");
+				}
 				v.append("date", date).force(X.ID, id).append("size", size).append("module", module);
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
@@ -88,7 +92,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
 				}
-				return dao.update(W.create("date", date).and("id", id), v);
+				return dao.update(q, v);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
