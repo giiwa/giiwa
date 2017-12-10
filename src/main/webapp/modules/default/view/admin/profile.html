@@ -12,13 +12,13 @@
 		#if($page)
 			#parse($page)
 		#end
-		<div class="btns">
+		<div class="profile btns">
 			<button type='submit'>$lang.get('btn.save')</button>
 		</div>
 	</form>
 </div>
 <script>
 $(function(){
-	$('#profile .btns').append($('#profile a.btn'));
+	$('#profile .profile.btns').append($('#profile a.btn'));
 })
 </script>

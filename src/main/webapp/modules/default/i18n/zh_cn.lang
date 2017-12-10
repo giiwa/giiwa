@@ -718,3 +718,5 @@ application/pdf=icon-file-pdf
 application/vnd.ms-excel=icon-file-excel
 appid.exists=应用名称已经存在
 a.profile=我的设置
+a.profile.my=我的
+profile.my.title=我的设置

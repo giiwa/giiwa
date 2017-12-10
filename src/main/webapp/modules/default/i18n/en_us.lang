@@ -692,3 +692,5 @@ application/vnd.ms-excel=icon-file-excel
 text/csv=icon-file-excel
 appid.exists=Appid Exists
 a.profile=Profile
+a.profile.my=My
+profile.my.title=My Setting
