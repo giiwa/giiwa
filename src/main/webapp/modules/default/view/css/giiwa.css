@@ -1146,40 +1146,56 @@ form label.inline {
 	margin-right: 20px;
 }
 
-.leanmodal {
+#leanmodal {
 	position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
 	z-index: 11000;
+}
+
+#leanmodal .bg {
+	position: absolute;
+	top: 0;
+	left: 0; background : RGBA( 0, 0, 0, 0.3);
+	width: 100%;
+	height: 100%;
+	background: RGBA(0, 0, 0, 0.3);
+}
+
+#leanmodal .leanmodal-content {
 	left: 40%;
 	top: 40%;
-	display: none;
-	opacity: 1;
+	position: absolute;
 	font-size: 20px;
 	border-radius: 5px;
 	max-width: 300px;
 	line-height: 32px;
 	padding: 20px 40px;
+	word-break: break-all;
 }
 
-#error.leanmodal {
+#leanmodal.error .leanmodal-content {
 	background: rgba(220, 10, 10, 0.8);
 	color: #FCF5F5;
 	box-shadow: 0 0 6px #903434;
 }
 
-#message.leanmodal {
-	background: rgba(9, 86, 6, 0.8);
+#leanmodal.message .leanmodal-content {
+	background: rgba(31, 109, 46, 0.8);
 	color: #ffffff;
 	box-shadow: 0 0 10px #bfc7c3;
 }
 
-#hint.leanmodal {
-	background: rgba(90, 95, 94, 0.8);
+#leanmodal.hint .leanmodal-content {
+	background: rgba(31, 109, 46, 0.8);
 	color: #ffffff;
 	box-shadow: 0 0 10px #bfc7c3;
 }
 
-#warn.leanmodal {
-	background: rgba(117, 46, 7, 0.8);
+#leanmodal.warn .leanmodal-content {
+	background: rgba(158, 61, 18, 0.8);
 	color: #FCF5F5;
 	box-shadow: 0 0 6px #C35A22;
 }
@@ -1701,7 +1717,7 @@ div.submit {
 	display: none;
 }
 
-h3, i, .leanmodal-content {
+h3, i {
 	word-break: break-all;
 }
 
