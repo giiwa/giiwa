@@ -49,6 +49,12 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	transient W q;
 	transient BeanDAO<?> dao;
 
+	private String id = UID.random(20);
+
+	public String getId() {
+		return id;
+	}
+
 	public void count() {
 		if (dao != null) {
 			total = dao.count(q);

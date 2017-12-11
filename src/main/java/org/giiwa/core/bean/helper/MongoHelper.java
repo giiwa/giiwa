@@ -442,6 +442,7 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 				cur = cur.limit(limit);
 
+				long rowid = offset;
 				MongoCursor<Document> it = cur.iterator();
 				while (it.hasNext() && limit > 0) {
 					// log.debug("hasnext=" + t.past() + "ms, count=" + bs.total);
@@ -450,6 +451,7 @@ public class MongoHelper implements Helper.DBHelper {
 					if (d != null) {
 						T b = clazz.newInstance();
 						b.load(d, fields);
+						b.rowid = rowid++;
 						bs.add(b);
 						limit--;
 					}

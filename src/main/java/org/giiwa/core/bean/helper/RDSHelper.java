@@ -843,10 +843,13 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 			r = p.executeQuery();
+			long rowid = offset;
 			Beans<T> list = new Beans<T>();
 			while (r.next()) {
 				T b = clazz.newInstance();
 				b.load(r, fields);
+				b.rowid = rowid++;
+
 				list.add(b);
 			}
 

@@ -50,6 +50,12 @@ public class Bean implements Serializable {
 
 	private long expired = -1;
 
+	public long rowid;
+
+	public long getRowid() {
+		return rowid;
+	}
+
 	public void setExpired(long expired) {
 		this.expired = expired;
 	}
