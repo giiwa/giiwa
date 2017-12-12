@@ -21,6 +21,10 @@ public class LanguageTest {
 
 		// lang.data.put("test", new String[] { "您已经被添加到项目[%s]，角色[%s]。" });
 		System.out.println(lang.get("test", "yyyy-MM-dd HH:mm", "asdasd"));
+
+		// yyyy-MM-ddTHH:mm:ss
+		t = System.currentTimeMillis();
+		System.out.println(lang.format(t, "yyyy-MM-dd'T'HH:mm"));
 	}
 
 }
