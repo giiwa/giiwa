@@ -1,0 +1,19 @@
+<div id="menu">
+	<div class='menu'></div>
+</div>
+<div id="ss_tab" class="info_but info_but_close">
+	<div class="info_but_con">
+		<div class="info_but_div">
+			<span class="info_but_span"></span>
+		</div>
+	</div>
+</div>
+<script>
+$(function() {
+	$("#menu .menu").menu({
+		url : "/menu",
+		root : 0,
+		name : 'admin'
+	});
+})
+</script>

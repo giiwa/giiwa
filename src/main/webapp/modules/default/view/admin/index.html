@@ -1,91 +1,11 @@
 #parse('/admin/head.html')
 
-<div id='toolbar' class='toolbar'>
-	<div class='left'>
-		<div class='home'>
-			<a href='/' class='icon icon-home'>$lang.get('home')</a>
-		</div>
-	</div>
-	<div class='right'>
-		<div class='t_left'>
-			<a class='icon icon-arrow-left' href='javascript:;' onclick='giiwa.back();' title="$lang.get('a.back')"></a>
-			<a class='icon icon-laptop' href='javascript:;' onclick='giiwa.load("/admin/dashboard")' title="$lang.get('a.dashboard')"></a>
-		</div>
-		<div class='t_right' style="margin-right: 200px;">
-			<a class='icon icon-mail2 message' href='javascript:;' onclick='giiwa.load("/admin/message")'><i></i></a>
-		</div>
-	</div>
-</div>
-<div id="menu">
-	<div class='menu'></div>
-</div>
-<div id="ss_tab" class="info_but info_but_close">
-	<div class="info_but_con">
-		<div class="info_but_div">
-			<span class="info_but_span"></span>
-		</div>
-	</div>
-</div>
+#parse('/admin/index.toolbar.html')
+
+#parse('/admin/index.menu.html')
 		
 <div id='panel'>
 	<div class='content main_content'></div>
 </div>
-<script>
-/**
- * load the menu first
- */
-
-$(function() {
-	$("#menu .menu").menu({
-		url : "/menu",
-		root : 0,
-		name : 'admin'
-	});
-
-	giiwa.load('/admin/dashboard');
-
-	$('body').bind('keydown', function(e) {
-		var target = e.target.nodeName;
-		var edit = (target == 'INPUT' || target == 'SELECT' || target == 'TEXTAREA');
-		
-		if(e.which == 116) {
-			//F5
-			if(giiwa.reload()) {
-				e.preventDefault();
-			}
-		} else if(!edit && e.which == 8){
-			//backspace
-			if(typeof(back) == 'function') {
-				giiwa.back();
-				e.preventDefault();
-			}
-		} else if(!edit && e.which == 36) {
-			//home
-			window.location.href = "/";				
-			e.preventDefault();
-		}
-	});
-	
-	function _check_message() {
-		$.post('/admin/message/count', {}, function(d){
-			if(d.state == 200) {
-				if(d.count > 0) {
-					$('#toolbar .message i').text("$lang.get('home.message')(" + d.count + ")");
-					$('#toolbar .message').css('color', '#fff');
-				} else {
-					$('#toolbar .message i').text('');
-					$('#toolbar .message').css('color', '#ddd');
-				}
-			}
-			
-			setTimeout(_check_message, 6000);
-		});
-	}
-	
-	_check_message();
-	
-})
-
-</script>
 
 #parse('/admin/foot.html')

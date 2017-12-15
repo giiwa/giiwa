@@ -381,6 +381,7 @@ a.disabled {
 	position: relative;
 	text-align: left;
 	width: 220px;
+	z-index: 2;
 }
 
 .toolbar .right {
@@ -936,7 +937,6 @@ table th.checkbox {
 	top: 52px;
 	left: 0;
 	width: 100%;
-	overflow: hidden;
 }
 
 #toolbar .right {
