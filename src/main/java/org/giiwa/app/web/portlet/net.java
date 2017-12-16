@@ -15,8 +15,4 @@ public class net extends portlet {
 		this.show("/portlet/net.html");
 	}
 
-	@Override
-	public void setup() {
-	}
-
 }

@@ -15,10 +15,6 @@ public class disk extends portlet {
 		this.show("/portlet/disk.html");
 	}
 
-	@Override
-	public void setup() {
-	}
-
 	public String eclipse(String path) {
 		return path.replaceAll("\\\\", "/");
 	}

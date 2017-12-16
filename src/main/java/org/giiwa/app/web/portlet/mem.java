@@ -15,8 +15,4 @@ public class mem extends portlet {
 		this.show("/portlet/mem.html");
 	}
 
-	@Override
-	public void setup() {
-	}
-
 }

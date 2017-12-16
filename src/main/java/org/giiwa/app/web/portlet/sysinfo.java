@@ -10,7 +10,7 @@ public class sysinfo extends portlet {
 
 	@Override
 	public void get() {
-		
+
 		this.set("uptime", lang.format(Model.UPTIME, "yy-MM-dd HH:mm:ss"));
 		this.set("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
 		this.set("past", lang.past(Model.UPTIME));
@@ -28,10 +28,6 @@ public class sysinfo extends portlet {
 		}
 
 		this.show("/portlet/sysinfo.html");
-	}
-
-	@Override
-	public void setup() {
 	}
 
 }

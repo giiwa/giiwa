@@ -40,6 +40,9 @@ public class dashboard extends Model {
 		this.set("me", this.getUser());
 
 		List<Portlet> l1 = Portlet.load(login.getId(), "dashbroad");
+		if (l1 == null || l1.isEmpty() || login.hasAccess("access.config.system.admin")) {
+			l1 = Portlet.load(0, "dashbroad");
+		}
 		this.set("portlets", l1);
 
 		show("admin/dashboard.html");

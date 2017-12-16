@@ -202,9 +202,9 @@ public class DefaultListener implements IListener {
 		setting.register(11, "counter", setting.counter.class);
 
 		profile.register(0, "my", profile.my.class);
-		portlet.register(mem.class);
-		portlet.register(disk.class);
-		portlet.register(net.class);
+		// portlet.register(mem.class);
+		// portlet.register(disk.class);
+		// portlet.register(net.class);
 
 		Portlet.create(0, "dashbroad", "/portlet/mem");
 		Portlet.create(0, "dashbroad", "/portlet/disk");
