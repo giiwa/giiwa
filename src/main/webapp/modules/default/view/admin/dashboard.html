@@ -1,24 +1,18 @@
 <div class='head'>
 	$lang.get('title.welcome') <b>$!me.nickname</b> <span class='right'>
-		#if($me.hasAccess('access.config.admin',
-		'access.config.restart.host')) <a href='javascript:;'
-		class='btn btn-danger' onclick="_showrestart()">$lang.get('a.restart')</a>
+		#if($me.hasAccess('access.config.admin','access.config.restart.host')) 
+			<a href='javascript:;' class='btn btn-danger' onclick="_showrestart()">$lang.get('a.restart')</a>
 		#end
 	</span>
 </div>
 
-#if($portlets && $portlets.size()>0)
+#if($portlets)
 	#foreach($p in $portlets)
 	<div class="portlet" data-uri="$p.uri" style="$!p.style"></div>
 	#end
-#else
-	<div class='portlet'>
-		<a class="btn btn-primary" href='/admin/profile/get/myportlet'>$lang.get('a.profile.myportlet')</a>
-	</div>
 #end
 
-<div id='restart' title="$lang.get('title.restart.service')"
-	style="display: none">
+<div id='restart' title="$lang.get('title.restart.service')" style="display: none">
 	<div>
 		<label><h3>$lang.get('user.password'):</h3>
 			<input type='password' name='password' /></label>
