@@ -20,6 +20,11 @@ public class profile extends Model {
 	private static Map<String, Class<? extends profile>> settings = new HashMap<String, Class<? extends profile>>();
 
 	final public static void register(int seq, String name, Class<? extends profile> m) {
+		if (names.contains(name)) {
+			log.error("duplicated name, name=" + name, new Exception("duplicated name=" + name));
+			return;
+		}
+
 		if (seq < 0 || seq >= names.size()) {
 			names.add(name);
 		} else {

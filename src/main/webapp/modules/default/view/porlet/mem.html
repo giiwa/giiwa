@@ -1,0 +1,34 @@
+<div id='memgauge' style="height: 300px; float: left; width: 300px; border: 0;"></div>
+<script>
+$(function(){
+	$('#memgauge').highcharts({
+	    title: {
+	        text: "$lang.get('gauge.mem.title')($lang.size($mem.total)B)"
+	    },
+	    credits:{
+        		enabled: false
+        },
+	    tooltip: {
+            headerFormat: '',
+            pointFormat: '{point.name}: <b>{point.hint}</b>'
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: false
+                },
+                showInLegend: true
+            }
+        },
+	    series: [{
+	        type: 'pie',
+	        data: [
+	        		{name:"$lang.get('mem.used')",  y:$mem.used, hint:"$lang.size($mem.used)B", color:'#961616'},
+	        		{name:"$lang.get('mem.free')",  y:$mem.free, hint:"$lang.size($mem.free)B", color:'#009df5'}
+	        ]
+	    }]
+	});	//endof mem
+})
+</script>

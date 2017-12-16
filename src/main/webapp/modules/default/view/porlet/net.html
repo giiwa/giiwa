@@ -1,0 +1,42 @@
+<div id='netgauge' style="height: 300px; float: left; width: 300px; border: 0;"></div>
+<script>
+$(function(){
+	$('#netgauge').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: "$lang.get('gauge.net.title')"
+        },
+        xAxis: {
+            categories: [#foreach($d in $net) "$d.address" , #end]
+        },
+        credits:{
+            enabled: false
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: ' '
+            }
+        },
+        tooltip: {
+            headerFormat: '',
+            pointFormat: '{series.name}: <b>{point.hint}</b>'
+        },
+        series: [{
+            name: "$lang.get('net.rxbytes')",
+            data: [
+            	#foreach($d in $net) {y:$d.rxbytes, hint:"$lang.size($d.rxbytes)B"}, #end
+            	]
+        },{
+            name: "$lang.get('net.txbytes')",
+            data: [
+            	#foreach($d in $net) {y:$d.txbytes, hint:"$lang.size($d.txbytes)B"}, #end
+            	]
+        }]
+	});	
+	
+})
+</script>
+

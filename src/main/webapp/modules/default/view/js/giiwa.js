@@ -518,6 +518,10 @@ giiwa
 
 			hook : function(panel) {
 
+				porlet.load(panel, function(e) {
+					giiwa.hook(e);
+				})
+
 				/**
 				 * hook all the <a> tag
 				 */
@@ -978,6 +982,7 @@ giiwa
 		});
 
 $(function() {
+
 	$(window).resize(function() {
 		giiwa.resize();
 	});

@@ -2080,3 +2080,7 @@ button:hover, button:active {
 	width: 100%;
 	margin: 4px 0;
 }
+
+.porlet{
+	display: inline-block;
+}

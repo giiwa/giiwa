@@ -1,0 +1,48 @@
+<div id='diskgauge' style="height: 300px; float: left; width: 300px; border: 0;"></div>
+<script>
+$(function(){
+	$('#diskgauge').highcharts({
+        chart: {
+            type: 'column'
+        },
+        title: {
+            text: "$lang.get('gauge.disk.title')"
+        },
+        xAxis: {
+            categories: [#foreach($d in $disk) "$this.eclipse($d.dirname)" , #end]
+        },
+        credits:{
+            enabled: false
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: ' '
+            }
+        },
+        tooltip: {
+            headerFormat: '',
+            pointFormat: '{series.name}: <b>{point.hint}</b>'
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+            }
+        },
+        series: [{
+            name: "$lang.get('disk.free')",
+            color:'#009df5',
+            data: [
+            	#foreach($d in $disk) {y:$d.free, hint:"$lang.size($d.free)B"}, #end
+            	]
+        },{
+            name: "$lang.get('disk.used')",
+            color: '#961616',
+            data: [
+            	#foreach($d in $disk) {y:$d.used, hint:"$lang.size($d.used)B"}, #end
+            	]
+        }]
+	});	//end disk
+})
+</script>
+
