@@ -518,7 +518,7 @@ giiwa
 
 			hook : function(panel) {
 
-				porlet.load(panel, function(e) {
+				portlet.load(panel, function(e) {
 					giiwa.hook(e);
 				})
 

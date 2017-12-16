@@ -12,7 +12,7 @@ public class disk extends portlet {
 			log.error(e.getMessage(), e);
 		}
 
-		this.show("/porlet/disk.html");
+		this.show("/portlet/disk.html");
 	}
 
 	@Override

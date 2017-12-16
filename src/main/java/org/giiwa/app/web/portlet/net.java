@@ -12,7 +12,7 @@ public class net extends portlet {
 			log.error(e.getMessage(), e);
 		}
 
-		this.show("/porlet/net.html");
+		this.show("/portlet/net.html");
 	}
 
 	@Override

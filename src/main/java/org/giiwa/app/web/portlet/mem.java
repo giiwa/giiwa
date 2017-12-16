@@ -12,7 +12,7 @@ public class mem extends portlet {
 			log.error(e.getMessage(), e);
 		}
 
-		this.show("/porlet/mem.html");
+		this.show("/portlet/mem.html");
 	}
 
 	@Override

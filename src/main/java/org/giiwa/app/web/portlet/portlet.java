@@ -17,19 +17,19 @@ public class portlet extends Model {
 		if (!portlets.contains(p)) {
 			portlets.add(p);
 		}
-		profile.register("myporlet", myportlet.class);
+		profile.register("myportlet", myportlet.class);
 	}
 
 	@Path(path = "list", login = true)
 	public final void list() {
 		this.set("list", portlets);
-		this.show("/admin/porlet.html");
+		this.show("/admin/portlet.html");
 	}
 
 	@Path(path = "delete", login = true)
 	public final void delete() {
 		
-		this.show("/admin/porlet.html");
+		this.show("/admin/portlet.html");
 	}
 
 	@Path()
@@ -43,15 +43,15 @@ public class portlet extends Model {
 			q.and("uid", login.getId());
 		}
 
-		porlet = Portlet.dao.load(q);
-		if (porlet == null) {
-			porlet = Portlet.dao.load(W.create("uri", this.uri).and("uid", 0));
+		portlet = Portlet.dao.load(q);
+		if (portlet == null) {
+			portlet = Portlet.dao.load(W.create("uri", this.uri).and("uid", 0));
 		}
 
 		get();
 	}
 
-	protected Portlet porlet;
+	protected Portlet portlet;
 
 	public void get() {
 

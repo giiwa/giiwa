@@ -206,10 +206,10 @@ public class DefaultListener implements IListener {
 		portlet.register(disk.class);
 		portlet.register(net.class);
 
-		Portlet.create(0, "dashbroad", "/porlet/mem");
-		Portlet.create(0, "dashbroad", "/porlet/disk");
-		Portlet.create(0, "dashbroad", "/porlet/net");
-		Portlet.create(0, "dashbroad", "/porlet/sysinfo");
+		Portlet.create(0, "dashbroad", "/portlet/mem");
+		Portlet.create(0, "dashbroad", "/portlet/disk");
+		Portlet.create(0, "dashbroad", "/portlet/net");
+		Portlet.create(0, "dashbroad", "/portlet/sysinfo");
 
 		NtpTask.owner.start();
 		new CleanupTask(conf).schedule(X.AMINUTE);

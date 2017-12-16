@@ -1,14 +1,14 @@
-window.porlet = {};
-porlet.extend = function(m) {
+window.portlet = {};
+portlet.extend = function(m) {
 	for ( var k in m) {
-		porlet[k] = m[k];
+		portlet[k] = m[k];
 	}
 };
-porlet.extend({
+portlet.extend({
 	that : false,
 
 	load : function(panel, cb) {
-		panel.find('.porlet').each(function(i, e) {
+		panel.find('.portlet').each(function(i, e) {
 			e = $(e);
 			if (e.attr('data-loaded') != '1') {
 				var uri = e.attr('data-uri');
@@ -25,5 +25,5 @@ porlet.extend({
 });
 
 $(function() {
-	giiwa.css('/css/porlet.css');
+	giiwa.css('/css/portlet.css');
 })

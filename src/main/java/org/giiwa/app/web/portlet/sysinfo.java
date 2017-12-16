@@ -27,7 +27,7 @@ public class sysinfo extends portlet {
 			log.error(e.getMessage(), e);
 		}
 
-		this.show("/porlet/sysinfo.html");
+		this.show("/portlet/sysinfo.html");
 	}
 
 	@Override

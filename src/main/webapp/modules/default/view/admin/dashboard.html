@@ -7,13 +7,13 @@
 	</span>
 </div>
 
-#if($porlets && $porlets.size()>0)
-	#foreach($p in $porlets)
-	<div class="porlet" data-uri="$p.uri" style="$!p.style"></div>
+#if($portlets && $portlets.size()>0)
+	#foreach($p in $portlets)
+	<div class="portlet" data-uri="$p.uri" style="$!p.style"></div>
 	#end
 #else
-	<div class='porlet'>
-		<a class="btn btn-primary" href='/admin/profile/get/myporlet'>$lang.get('a.profile.myporlet')</a>
+	<div class='portlet'>
+		<a class="btn btn-primary" href='/admin/profile/get/myportlet'>$lang.get('a.profile.myportlet')</a>
 	</div>
 #end
 
