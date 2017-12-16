@@ -1,35 +1,39 @@
-package org.giiwa.app.web.porlet;
+package org.giiwa.app.web.portlet;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.giiwa.app.web.admin.profile;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.framework.bean.Porlet;
+import org.giiwa.framework.bean.Portlet;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
-public class porlet extends Model {
+public class portlet extends Model {
 
-	private static List<Class<? extends porlet>> porlets = new ArrayList<Class<? extends porlet>>();
+	private static List<Class<? extends portlet>> portlets = new ArrayList<Class<? extends portlet>>();
 
-	public static final void register(Class<? extends porlet> p) {
-		if (!porlets.contains(p)) {
-			porlets.add(p);
+	public static final void register(Class<? extends portlet> p) {
+		if (!portlets.contains(p)) {
+			portlets.add(p);
 		}
-		profile.register("myporlet", myporlet.class);
+		profile.register("myporlet", myportlet.class);
 	}
 
 	@Path(path = "list", login = true)
 	public final void list() {
-		this.set("list", porlets);
+		this.set("list", portlets);
+		this.show("/admin/porlet.html");
+	}
+
+	@Path(path = "delete", login = true)
+	public final void delete() {
+		
 		this.show("/admin/porlet.html");
 	}
 
 	@Path()
 	public final void onGet() {
-
-		// log.debug("porlet/onGet");
 
 		login = this.getUser();
 		W q = W.create("uri", this.uri);
@@ -39,15 +43,15 @@ public class porlet extends Model {
 			q.and("uid", login.getId());
 		}
 
-		porlet = Porlet.dao.load(q);
+		porlet = Portlet.dao.load(q);
 		if (porlet == null) {
-			porlet = Porlet.dao.load(W.create("uri", this.uri).and("uid", 0));
+			porlet = Portlet.dao.load(W.create("uri", this.uri).and("uid", 0));
 		}
 
 		get();
 	}
 
-	protected Porlet porlet;
+	protected Portlet porlet;
 
 	public void get() {
 
@@ -58,7 +62,7 @@ public class porlet extends Model {
 
 	}
 
-	public static class myporlet extends profile {
+	public static class myportlet extends profile {
 
 		@Override
 		public void set() {
@@ -68,6 +72,7 @@ public class porlet extends Model {
 		public void get() {
 		}
 
+		
 	}
 
 }

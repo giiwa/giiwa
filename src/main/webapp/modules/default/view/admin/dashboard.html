@@ -7,8 +7,14 @@
 	</span>
 </div>
 
-#foreach($p in $porlets)
-<div class="porlet" data-uri="$p.uri" style="$!p.style"></div>
+#if($porlets && $porlets.size()>0)
+	#foreach($p in $porlets)
+	<div class="porlet" data-uri="$p.uri" style="$!p.style"></div>
+	#end
+#else
+	<div class='porlet'>
+		<a class="btn btn-primary" href='/admin/profile/get/myporlet'>$lang.get('a.profile.myporlet')</a>
+	</div>
 #end
 
 <div id='restart' title="$lang.get('title.restart.service')"

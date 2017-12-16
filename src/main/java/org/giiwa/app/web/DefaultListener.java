@@ -31,10 +31,10 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.profile;
 import org.giiwa.app.web.admin.setting;
-import org.giiwa.app.web.porlet.disk;
-import org.giiwa.app.web.porlet.mem;
-import org.giiwa.app.web.porlet.net;
-import org.giiwa.app.web.porlet.porlet;
+import org.giiwa.app.web.portlet.disk;
+import org.giiwa.app.web.portlet.mem;
+import org.giiwa.app.web.portlet.net;
+import org.giiwa.app.web.portlet.portlet;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Helper;
@@ -48,7 +48,7 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.Menu;
-import org.giiwa.framework.bean.Porlet;
+import org.giiwa.framework.bean.Portlet;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
@@ -202,14 +202,14 @@ public class DefaultListener implements IListener {
 		setting.register(11, "counter", setting.counter.class);
 
 		profile.register(0, "my", profile.my.class);
-		porlet.register(mem.class);
-		porlet.register(disk.class);
-		porlet.register(net.class);
+		portlet.register(mem.class);
+		portlet.register(disk.class);
+		portlet.register(net.class);
 
-		Porlet.create(0, "dashbroad", "/porlet/mem");
-		Porlet.create(0, "dashbroad", "/porlet/disk");
-		Porlet.create(0, "dashbroad", "/porlet/net");
-		Porlet.create(0, "dashbroad", "/porlet/sysinfo");
+		Portlet.create(0, "dashbroad", "/porlet/mem");
+		Portlet.create(0, "dashbroad", "/porlet/disk");
+		Portlet.create(0, "dashbroad", "/porlet/net");
+		Portlet.create(0, "dashbroad", "/porlet/sysinfo");
 
 		NtpTask.owner.start();
 		new CleanupTask(conf).schedule(X.AMINUTE);

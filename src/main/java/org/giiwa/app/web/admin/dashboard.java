@@ -16,8 +16,7 @@ package org.giiwa.app.web.admin;
 
 import java.util.List;
 
-import org.giiwa.core.base.Host;
-import org.giiwa.framework.bean.Porlet;
+import org.giiwa.framework.bean.Portlet;
 import org.giiwa.framework.web.*;
 
 /**
@@ -40,8 +39,8 @@ public class dashboard extends Model {
 
 		this.set("me", this.getUser());
 
-		List<Porlet> l1 = Porlet.load(login.getId(), "dashbroad");
-		this.set("porlets", l1);
+		List<Portlet> l1 = Portlet.load(login.getId(), "dashbroad");
+		this.set("portlets", l1);
 
 		show("admin/dashboard.html");
 	}

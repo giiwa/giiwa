@@ -1,4 +1,4 @@
-package org.giiwa.app.web.porlet;
+package org.giiwa.app.web.portlet;
 
 import org.giiwa.core.base.Host;
 import org.giiwa.core.conf.Local;
@@ -6,7 +6,7 @@ import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 
-public class sysinfo extends porlet {
+public class sysinfo extends portlet {
 
 	@Override
 	public void get() {

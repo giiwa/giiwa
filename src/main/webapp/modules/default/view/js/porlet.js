@@ -12,11 +12,13 @@ porlet.extend({
 			e = $(e);
 			if (e.attr('data-loaded') != '1') {
 				var uri = e.attr('data-uri');
-				$.get(uri, function(d) {
-					e.html(d);
-					e.attr('data-loaded', '1');
-					cb && cb(e);
-				})
+				if (uri && uri.length > 0) {
+					$.get(uri, function(d) {
+						e.html(d);
+						e.attr('data-loaded', '1');
+						cb && cb(e);
+					})
+				}
 			}
 		})
 	}

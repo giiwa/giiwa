@@ -720,3 +720,5 @@ appid.exists=应用名称已经存在
 a.profile=我的设置
 a.profile.my=我的
 profile.my.title=我的设置
+a.profile.myportlet=桌面设置
+profile.myportlet.title=桌面窗口设置

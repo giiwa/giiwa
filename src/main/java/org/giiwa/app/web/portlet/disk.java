@@ -1,8 +1,8 @@
-package org.giiwa.app.web.porlet;
+package org.giiwa.app.web.portlet;
 
 import org.giiwa.core.base.Host;
 
-public class disk extends porlet {
+public class disk extends portlet {
 
 	@Override
 	public void get() {

@@ -32,15 +32,15 @@ import org.giiwa.core.bean.X;
  * @author wujun
  *
  */
-@Table(name = "gi_porlet")
-public class Porlet extends Bean {
+@Table(name = "gi_portlet")
+public class Portlet extends Bean {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Porlet> dao = BeanDAO.create(Porlet.class);
+	public static final BeanDAO<Portlet> dao = BeanDAO.create(Portlet.class);
 
 	@Column(name = X.ID)
 	private long id;
@@ -66,17 +66,17 @@ public class Porlet extends Bean {
 	@Column(name = "uri")
 	private String uri;
 
-	public static List<Porlet> load(long uid, String tag) {
+	public static List<Portlet> load(long uid, String tag) {
 		return dao.load(W.create("uid", uid).and("tag", tag), 0, 100);
 	}
 
 	public static int create(long uid, String tag, V v) {
 
 		try {
-			long id = UID.next("porlet.id");
+			long id = UID.next("portlet.id");
 
 			if (dao.exists(id)) {
-				id = UID.next("porlet.id");
+				id = UID.next("portlet.id");
 			}
 			return dao.insert(v.force(X.ID, id).append("tag", tag).append("uid", uid));
 		} catch (Exception e) {
