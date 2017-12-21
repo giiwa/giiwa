@@ -134,6 +134,10 @@ giiwa
 					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
+					if (!opt || !opt.moveable) {
+						$("#dialog .dialog").draggable();
+					}
+
 					$('#dialog .dialogbg, #dialog a.close').click(function(d) {
 						p.fadeOut(function() {
 							panel.hide();
@@ -182,7 +186,9 @@ giiwa
 					p = $('<div id="gwpopup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
-					$("#gwpopup .popup").draggable();
+					if (!opt || !opt.moveable) {
+						$("#gwpopup .popup").draggable();
+					}
 					$('#gwpopup .popupbg, #gwpopup a.close').click(function(d) {
 						p.fadeOut(function() {
 							p.remove();
