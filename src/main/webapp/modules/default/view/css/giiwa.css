@@ -812,19 +812,6 @@ div.search label h3 {
 	min-width: 0;
 }
 
-div.error {
-	border: 1px solid #f33;
-	color: #006dba;
-	-moz-box-shadow: 0 0 .25em #b2d1ff;
-	-webkit-box-shadow: 0 0 .25em #f88;
-	box-shadow: 0 0 .25em #f88;
-	font-size: 15px;
-	line-height: 2;
-	text-indent: 10px;
-	margin: 10px;
-	padding: 5px;
-}
-
 .error h3 {
 	color: red !important;
 }

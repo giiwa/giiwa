@@ -1460,31 +1460,40 @@ public final class Http {
 		}
 	}
 
-	public static String domain(String url, int subnum) {
-		String host = host(url);
-		String[] ss = X.split(host, "\\.");
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < ss.length; i++) {
-			if (sb.length() > 0) {
-				sb.append(".").append(ss[i]);
-			} else {
-				if (X.isIn(ss[i], "com", "net", "cn", "cc", "org", "xin", "so", "top", "site", "shop", "club")) {
-					for (int ii = subnum; ii >= 0; ii--) {
-						if (i - ii - 1 >= 0) {
-							sb.append(ss[i - ii - 1]).append(".");
-						}
-					}
-					for (int ii = i; ii < ss.length; ii++) {
-						sb.append(ss[ii]);
-						if (ii != ss.length - 1) {
-							sb.append(".");
-						}
-					}
-					break;
+	private static final String[] TOP = { "top", "cn", "com", "net", "love", "org", "biz", "info", "name", "tv", "me",
+			"mobi", "asia", "eu", "in", "us", "cc", "com.cn", "net.cn", "org.cn", "gov.cn" };
+
+	private static String _top(String host) {
+		int len = 0;
+		String s = null;
+		for (String s1 : TOP) {
+			if (host.endsWith(s1)) {
+				if (s1.length() > len) {
+					s = s1;
+					len = s1.length();
 				}
 			}
 		}
-		return sb.toString();
+		return s;
+	}
+
+	public static String domain(String url, int subnum) {
+		String host = host(url);
+		String top = _top(host);
+		String s = host.substring(0, host.length() - top.length() - 1);
+
+		String[] ss = X.split(s, "\\.");
+
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = Math.max(0, ss.length - subnum); i < ss.length; i++) {
+			if (sb.length() > 0) {
+				sb.append(".");
+			}
+
+			sb.append(ss[i]);
+		}
+		return sb.length() == 0 ? null : sb.append(".").append(top).toString();
 	}
 
 	public static String path(String url) {
