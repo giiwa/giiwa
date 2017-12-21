@@ -209,8 +209,10 @@ public class App extends Bean {
 		App a = Cache.get("app/" + appid);
 		if (a == null || a.expired()) {
 			a = dao.load(W.create("appid", appid));
-			a.setExpired(System.currentTimeMillis() + X.AMINUTE);
-			Cache.set("app/" + appid, a);
+			if (a != null) {
+				a.setExpired(System.currentTimeMillis() + X.AMINUTE);
+				Cache.set("app/" + appid, a);
+			}
 		}
 		return a;
 	}
