@@ -339,11 +339,13 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 
 				if (d != null) {
-					if (log.isDebugEnabled())
-						log.debug("load - cost=" + t.pastms() + "ms, collection=" + collection + ", query=" + query
-								+ ", order=" + order);
 
 					Document d1 = d.first();
+
+					if (log.isDebugEnabled())
+						log.debug("load - cost=" + t.pastms() + "ms, collection=" + collection + ", db=" + db
+								+ ", query=" + query + ", order=" + order + ", d=" + (d1 != null ? 1 : 0));
+
 					if (d1 != null) {
 						b.load(d1, fields);
 						return b;
