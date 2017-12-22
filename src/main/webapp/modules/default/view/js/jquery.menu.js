@@ -61,17 +61,14 @@
 				s += '"></i>';
 				s += '<img class="icon" src="/images/loading.gif"/>';
 				if (e.url) {
-					s += '<span><a href="' + e.url + '" target="_blank">' + e.text
+					s += '&nbsp;<span><a href="' + e.url + '" target="_blank">' + e.text
 							+ '</a></span>';
 				} else {
-					s += '<span>' + e.text + '</span>';
+					s += '&nbsp;<span>' + e.text + '</span>';
 				}
 				if (e.hasChildren) {
 					s += '<i class="arrow"></i>';
 				}
-				// if (e.content) {
-				// s += '<div class="extra">' + e.content + '</div>';
-				// }
 				s += '</div>';
 
 				if (e.hasChildren) {
@@ -181,9 +178,9 @@ $(function(){
 			bar.removeClass('info_but_close');
 			bar.removeClass('info_but_close_on');
 
-			panel.addClass('full');
-			toolbar.addClass('full');
-			menu.hide();
+			panel.toggleClass('full');
+			toolbar.toggleClass('full');
+			menu.toggleClass('full');
 
 			giiwa.resize();
 		} else {
@@ -191,10 +188,9 @@ $(function(){
 			bar.removeClass('info_but_open');
 			bar.removeClass('info_but_open_on');
 
-			panel.removeClass('full');
-			toolbar.removeClass('full');
-
-			menu.show();
+			panel.toggleClass('full');
+			toolbar.toggleClass('full');
+			menu.toggleClass('full');
 
 			giiwa.resize();
 		}
