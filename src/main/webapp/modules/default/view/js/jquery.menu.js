@@ -152,20 +152,6 @@
 
 $(function(){
 	var e = $('#ss_tab');
-	e.bind('mouseenter', function() {
-		var e1 = $(this);
-		if (e1.hasClass('info_but_close')) {
-			e1.addClass('info_but_close_on');
-		} else {
-			e1.addClass('info_but_open_on');
-		}
-	});
-
-	e.bind('mouseleave', function() {
-		var e1 = $(this);
-		e1.removeClass('info_but_close_on');
-		e1.removeClass('info_but_open_on');
-	});
 
 	e.click(function() {
 		var bar = $(this);
@@ -173,27 +159,12 @@ $(function(){
 		var panel = $('#panel');
 		var toolbar = $('#toolbar');
 
-		if (bar.hasClass('info_but_close')) {
-			bar.addClass('info_but_open');
-			bar.removeClass('info_but_close');
-			bar.removeClass('info_but_close_on');
+		bar.toggleClass('full');
+		panel.toggleClass('full');
+		toolbar.toggleClass('full');
+		menu.toggleClass('full');
 
-			panel.toggleClass('full');
-			toolbar.toggleClass('full');
-			menu.toggleClass('full');
-
-			giiwa.resize();
-		} else {
-			bar.addClass('info_but_close');
-			bar.removeClass('info_but_open');
-			bar.removeClass('info_but_open_on');
-
-			panel.toggleClass('full');
-			toolbar.toggleClass('full');
-			menu.toggleClass('full');
-
-			giiwa.resize();
-		}
+		giiwa.resize();
 	});
 
 })

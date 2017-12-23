@@ -1,19 +1,30 @@
 <div id="menu" class='full'>
 	<div class='menu'></div>
 </div>
-<div id="ss_tab" class="info_but info_but_close">
-	<div class="info_but_con">
-		<div class="info_but_div">
-			<span class="info_but_span"></span>
-		</div>
-	</div>
-</div>
+<a id="ss_tab" class="full" href='javascript:;'> 
+	<span class="arrow"></span>
+</a>
 <script>
-$(function() {
-	$("#menu .menu").menu({
-		url : "/menu",
-		root : 0,
-		name : 'admin'
+	$(function() {
+		giiwa.menu($("#menu .menu"), {
+			url : "/menu",
+			root : 0,
+			name : 'admin'
+		});
+	})
+	
+	$('#ss_tab').click(function() {
+		var bar = $(this);
+		var menu = $('#menu');
+		var panel = $('#panel');
+		var toolbar = $('#toolbar');
+
+		bar.toggleClass('full');
+		panel.toggleClass('full');
+		toolbar.toggleClass('full');
+		menu.toggleClass('full');
+
+		giiwa.resize();
 	});
-})
+	
 </script>
