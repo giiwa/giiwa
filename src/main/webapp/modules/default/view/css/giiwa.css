@@ -433,15 +433,17 @@ a.disabled {
 	overflow: hidden;
 	position: fixed;
 	top: calc(40% - 12px);
-	left: 56px;
+	left: 52px;
 	z-index: 99;
 	height: 63px;
 	cursor: pointer;
 	border: 1px solid #ccc;
+	border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;	
 }
 
 #ss_tab.full {
-	left: 216px;
+	left: 212px;
 }
 
 #ss_tab .arrow {
@@ -450,7 +452,7 @@ a.disabled {
 	margin: 23px 5px 0 0;
 	border: 5px solid transparent;
 	border-left-color: #ccc;
-	margin-left: 8px;
+	margin-left: 10px;
 }
 
 #ss_tab:hover .arrow {
@@ -460,7 +462,7 @@ a.disabled {
 #ss_tab.full .arrow {
 	border-right-color: #ccc;
 	border-left-color: transparent;
-	margin-left: 3px;
+	margin-left: 5px;
 }
 
 #ss_tab.full:hover .arrow {
@@ -939,6 +941,10 @@ table th.checkbox {
 
 #menu.full {
 	width: 220px;
+}
+
+#menu.full .jspPane{
+    margin-left: 0!important;	
 }
 
 .form .task {
@@ -1474,6 +1480,7 @@ div.submit {
     border-left-color: transparent;
     border-top-color: #fff;
     right: 6px;
+    top: 18px;
 }
 
 .fileuploader-btns {

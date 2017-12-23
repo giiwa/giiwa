@@ -42,11 +42,12 @@ giiwa
 				});
 
 				function tohtml(e) {
-					var s = '<div ';
+					var s = '<div class="';
 					if (e.hasChildren || e.click || e.url || e.load) {
 						// this is menu item
-						s += ' class="item" ';
+						s += 'item';
 					}
+					s += '"';
 					if (e.style) {
 						s += ' style="' + e.style + '" ';
 					}
