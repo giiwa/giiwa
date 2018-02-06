@@ -398,7 +398,7 @@ public class Model {
 
 						// check access
 						if (!X.isEmpty(p.access()) && !X.NONE.equals(p.access())) {
-							if (!login.hasAccess(p.access())) {
+							if (!login.hasAccess(p.access().split("\\|"))) {
 								deny();
 								return null;
 							}
@@ -426,7 +426,7 @@ public class Model {
 
 						// check access
 						if (!X.isEmpty(p.access())) {
-							if (!login.hasAccess(p.access())) {
+							if (!login.hasAccess(p.access().split("\\|"))) {
 								deny();
 								return null;
 							}
@@ -453,7 +453,7 @@ public class Model {
 
 						// check access
 						if (!X.isEmpty(p.access())) {
-							if (!login.hasAccess(p.access())) {
+							if (!login.hasAccess(p.access().split("\\|"))) {
 								deny();
 								return null;
 							}
