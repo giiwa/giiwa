@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v6.0.3 (2017-11-14)
+ * @license Highcharts JS v6.0.4 (2017-12-15)
  * Highcharts Drilldown module
  * 
  * Author: Torstein Honsi
@@ -24,7 +24,8 @@
          */
 
 
-        var noop = H.noop,
+        var animObject = H.animObject,
+            noop = H.noop,
             color = H.color,
             defaultOptions = H.defaultOptions,
             each = H.each,
@@ -85,6 +86,46 @@
              * @apioption drilldown.allowPointDrilldown
              */
 
+
+
+            /**
+             * Additional styles to apply to the X axis label for a point that
+             * has drilldown data. By default it is underlined and blue to invite
+             * to interaction.
+             * 
+             * @type {CSSObject}
+             * @see In styled mode, active label styles can be set with the `.highcharts-drilldown-axis-label` class.
+             * @sample {highcharts} highcharts/drilldown/labels/ Label styles
+             * @default { "cursor": "pointer", "color": "#003399", "fontWeight": "bold", "textDecoration": "underline" }
+             * @since 3.0.8
+             * @product highcharts highmaps
+             */
+            activeAxisLabelStyle: {
+                cursor: 'pointer',
+                color: '#003399',
+                fontWeight: 'bold',
+                textDecoration: 'underline'
+            },
+
+            /**
+             * Additional styles to apply to the data label of a point that has
+             * drilldown data. By default it is underlined and blue to invite to
+             * interaction.
+             * 
+             * @type {CSSObject}
+             * @see In styled mode, active data label styles can be applied with
+             * the `.highcharts-drilldown-data-label` class.
+             * @sample {highcharts} highcharts/drilldown/labels/ Label styles
+             * @default { "cursor": "pointer", "color": "#003399", "fontWeight": "bold", "textDecoration": "underline" }
+             * @since 3.0.8
+             * @product highcharts highmaps
+             */
+            activeDataLabelStyle: {
+                cursor: 'pointer',
+                color: '#003399',
+                fontWeight: 'bold',
+                textDecoration: 'underline'
+            },
 
 
             /**
@@ -353,7 +394,7 @@
 
 
             colorProp = {
-                colorIndex: pick(point.colorIndex, oldSeries.colorIndex)
+                color: point.color || oldSeries.color
             };
 
 
@@ -660,7 +701,7 @@
 
 
                 // Do dummy animation on first point to get to complete
-                setTimeout(function() {
+                H.syncTimeout(function() {
                     if (newSeries.points) { // May be destroyed in the meantime, #3389
                         each(newSeries.points, function(point, i) {
                             // Fade in other points			  
@@ -675,9 +716,9 @@
                             }
 
                             if (dataLabel && !dataLabel.hidden) { // #6127
-                                dataLabel[verb](inherit);
+                                dataLabel.fadeIn(); // #7384
                                 if (point.connector) {
-                                    point.connector[verb](inherit);
+                                    point.connector.fadeIn();
                                 }
                             }
                         });
@@ -694,13 +735,16 @@
             var series = this,
                 drilldownLevels = this.chart.drilldownLevels,
                 animateFrom,
-                animationOptions = this.chart.options.drilldown.animation,
+                animationOptions = animObject(this.chart.options.drilldown.animation),
                 xAxis = this.xAxis;
 
             if (!init) {
                 each(drilldownLevels, function(level) {
                     if (series.options._ddSeriesId === level.lowerSeriesOptions._ddSeriesId) {
                         animateFrom = level.shapeArgs;
+
+                        // Add the point colors to animate from
+                        animateFrom.fill = level.color;
 
                     }
                 });
@@ -710,6 +754,9 @@
                 each(this.points, function(point) {
                     var animateTo = point.shapeArgs;
 
+
+                    // Add the point colors to animate to
+                    animateTo.fill = point.color;
 
 
                     if (point.graphic) {
@@ -736,7 +783,7 @@
          * and animate them into the origin point in the upper series.
          */
         ColumnSeries.prototype.animateDrillupFrom = function(level) {
-            var animationOptions = this.chart.options.drilldown.animation,
+            var animationOptions = animObject(this.chart.options.drilldown.animation),
                 group = this.group,
                 // For 3d column series all columns are added to one group 
                 // so we should not delete the whole group. #5297
@@ -769,8 +816,10 @@
                     delete point.graphic;
 
 
+                    animateTo.fill = level.color;
 
-                    if (animationOptions) {
+
+                    if (animationOptions.duration) {
                         graphic.animate(
                             animateTo,
                             H.merge(animationOptions, {
@@ -802,6 +851,9 @@
                         each(this.points, function(point, i) {
                             var animateTo = point.shapeArgs;
 
+
+                            animateFrom.fill = level.color;
+                            animateTo.fill = point.color;
 
 
                             if (point.graphic) {
@@ -910,9 +962,15 @@
                     label.drillable = true;
 
 
+                    if (!label.basicStyles) {
+                        label.basicStyles = H.merge(label.styles);
+                    }
+
 
                     label
                         .addClass('highcharts-drilldown-axis-label')
+
+                        .css(axis.chart.options.drilldown.activeAxisLabelStyle)
 
                         .on('click', function(e) {
                             axis.drilldownCategory(pos, e);
@@ -920,6 +978,9 @@
 
                 } else if (label && label.drillable) {
 
+
+                    label.styles = {}; // reset for full overwrite of styles
+                    label.css(label.basicStyles);
 
 
                     label.on('click', null); // #3806			
@@ -1001,6 +1062,10 @@
                         .addClass('highcharts-drilldown-data-label');
 
 
+                    point.dataLabel
+                        .css(css)
+                        .css(pointCSS);
+
                 }
             }, this);
         });
@@ -1009,6 +1074,10 @@
         var applyCursorCSS = function(element, cursor, addClass) {
             element[addClass ? 'addClass' : 'removeClass']('highcharts-drilldown-point');
 
+
+            element.css({
+                cursor: cursor
+            });
 
         };
 

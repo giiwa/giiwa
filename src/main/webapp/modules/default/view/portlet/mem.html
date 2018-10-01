@@ -1,34 +1,59 @@
-<div id='memgauge' style="height: 300px; float: left; width: 300px; border: 0;"></div>
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/mem/more')"><i class='icon-menu'></i></a>
+
+<div id='mem_$!requestid' style="height: 300px; float: left; width: 400px; border: 0;"></div>
+
 <script>
 $(function(){
-	$('#memgauge').highcharts({
-	    title: {
-	        text: "$lang.get('gauge.mem.title')($lang.size($mem.total)B)"
+	var t = Highcharts.chart('mem_$!requestid', {
+	    chart: {
+	        type: 'spline'
 	    },
-	    credits:{
-        		enabled: false
-        },
+	    title: {
+	        text: "$lang.get('host.mem.title')($!lang.size($!total)B)"
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
 	    tooltip: {
-            headerFormat: '',
-            pointFormat: '{point.name}: <b>{point.hint}</b>'
-        },
-        plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    enabled: false
-                },
-                showInLegend: true
-            }
-        },
-	    series: [{
-	        type: 'pie',
-	        data: [
-	        		{name:"$lang.get('mem.used')",  y:$mem.used, hint:"$lang.size($mem.used)B", color:'#961616'},
-	        		{name:"$lang.get('mem.free')",  y:$mem.free, hint:"$lang.size($mem.free)B", color:'#009df5'}
-	        ]
-	    }]
-	});	//endof mem
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.hint}B</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+	    				{name: "$lang.get('mem.used')", color:'#860606', data: [#foreach($c in $list) {x:$this.time($c), y:$c.used, hint:"$lang.size($c.used)"},#end]}
+	    			], 
+	});
+	
+	function reload() {
+		if($('#mem_$!requestid').length > 0) {
+			$.post('/portlet/mem/data', {}, function(d){
+				if(d.state == 200) {
+					var series=t.series; 
+			        while(series.length > 0){
+			          	series[0].remove(false); 
+			       	}
+			       	t.addSeries(d.data[0]);
+			       	t.redraw();			
+				}
+		    })
+			giiwa.call(reload, 60000);
+		}
+	}
+	
+	giiwa.call(reload, 60000);
+
 })
 </script>
+

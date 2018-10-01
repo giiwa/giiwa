@@ -15,6 +15,7 @@
 package org.giiwa.mq;
 
 import org.giiwa.mq.MQ.Mode;
+import org.giiwa.mq.MQ.Request;
 
 /**
  * The IStub Class used to define the APIs of Message stub
@@ -24,89 +25,102 @@ import org.giiwa.mq.MQ.Mode;
  */
 public abstract class IStub {
 
-  /**
-   * the service name that will bind on ActiveMQ
-   */
-  protected String name;
+	/**
+	 * the service name that will bind on ActiveMQ
+	 */
+	protected String name;
 
-  /**
-   * Instantiates a new i stub.
-   *
-   * @param name
-   *          the name
-   */
-  public IStub(String name) {
-    this.name = name;
-  }
+	public String getName() {
+		return name;
+	}
 
-  /**
-   * Bind the stub on the MQ as Queue
-   *
-   * @throws Exception
-   *           the exception
-   */
-  final public void bind() throws Exception {
-    bind(Mode.QUEUE);
-  }
+	/**
+	 * Instantiates a new i stub.
+	 *
+	 * @param name
+	 *            the name
+	 */
+	public IStub(String name) {
+		this.name = name;
+	}
 
-  /**
-   * Bind the stub on the ActiveMQ with the mode
-   *
-   * @param m
-   *          the mode
-   * @throws Exception
-   *           the exception
-   */
-  final public void bind(Mode m) throws Exception {
-    MQ.bind(name, this, m);
-  }
+	/**
+	 * Bind the stub on the MQ as Queue
+	 *
+	 * @throws Exception
+	 *             the exception
+	 */
+	final public void bind() throws Exception {
+		bind(Mode.QUEUE);
+	}
 
-  /**
-   * Send message to destination
-   *
-   * @param to
-   *          the destination queue
-   * @param type
-   *          the message type
-   * @param message
-   *          the message
-   * @throws Exception
-   *           the exception
-   */
-  public void send(String to, Request req) throws Exception {
-    req.from = name;
-    MQ.send(to, req);
-  }
+	/**
+	 * Bind the stub on the ActiveMQ with the mode
+	 *
+	 * @param m
+	 *            the mode
+	 * @throws Exception
+	 *             the exception
+	 */
+	final public void bind(Mode m) throws Exception {
+		MQ.bind(name, this, m);
+	}
 
-  /**
-   * send a topic to the destination
-   * 
-   * @param to
-   *          the destination topic
-   * @param type
-   *          the message type
-   * @param message
-   *          the message
-   * @throws Exception
-   *           the exception
-   */
-  public void topic(String to, Request req) throws Exception {
-    req.from = name;
-    MQ.topic(to, req);
-  }
+	/**
+	 * unbind the stub
+	 * 
+	 * @throws Exception
+	 */
+	final public void unbind() throws Exception {
+		MQ.unbind(this);
+	}
 
-  /**
-   * On request triggered when message arrive
-   *
-   * @param seq
-   *          the sequence
-   * @param from
-   *          the source destination queue
-   * @param type
-   *          the message type
-   * @param message
-   *          the message
-   */
-  public abstract void onRequest(long seq, Request req);
+	/**
+	 * Send message to destination
+	 *
+	 * @param to
+	 *            the destination queue
+	 * @param type
+	 *            the message type
+	 * @param message
+	 *            the message
+	 * @throws Exception
+	 *             the exception
+	 */
+	public void send(String to, Request req) throws Exception {
+		req.from = name;
+		MQ.send(to, req);
+	}
+
+	/**
+	 * send a topic to the destination
+	 * 
+	 * @param to
+	 *            the destination topic
+	 * @param type
+	 *            the message type
+	 * @param message
+	 *            the message
+	 * @throws Exception
+	 *             the exception
+	 */
+	public void topic(String to, Request req) throws Exception {
+		req.from = name;
+		MQ.topic(to, req);
+	}
+
+	/**
+	 * On request triggered when message arrive
+	 *
+	 * @param seq
+	 *            the sequence
+	 * @param from
+	 *            the source destination queue
+	 * @param type
+	 *            the message type
+	 * @param message
+	 *            the message
+	 */
+	public abstract void onRequest(long seq, Request req);
 
 }

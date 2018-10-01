@@ -43,7 +43,7 @@ public class App extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<App> dao = BeanDAO.create(App.class);
+	public static final BeanDAO<Long, App> dao = BeanDAO.create(App.class);
 
 	@Column(name = X.ID, index = true, unique = true)
 	private long id;
@@ -210,7 +210,7 @@ public class App extends Bean {
 		if (a == null || a.expired()) {
 			a = dao.load(W.create("appid", appid));
 			if (a != null) {
-				a.setExpired(System.currentTimeMillis() + X.AMINUTE);
+				a.expired(System.currentTimeMillis() + X.AMINUTE);
 				Cache.set("app/" + appid, a);
 			}
 		}

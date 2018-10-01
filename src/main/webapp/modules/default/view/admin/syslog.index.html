@@ -1,4 +1,3 @@
-<div class='head'>$lang.get('syslog.index.title')</div>
 
 #parse('/widget/widget.message.html')
 
@@ -52,6 +51,11 @@ td.log_level_2 {
 
 		<span class='line'></span>
 		<span><label><h3>$lang.get('sort.by'):</h3>
+			<select name='sortby'>
+				<option value='level' #if($sortby == 'level') selected #end>$lang.get('log.level')</option>
+				<option value='ip' #if($sortby == 'ip') selected #end>$lang.get('log.ip')</option>
+				<option value='model' #if($sortby == 'model') selected #end>$lang.get('log.model')</option>
+			</select>
 			<select name='sortby_type'>
 				<option value='1' #if($sortby_type == '1') selected #end>$lang.get('sortby.type_')</option>
 				<option value='-1' #if($sortby_type == '-1') selected #end>$lang.get('sortby.type_desc')</option>
@@ -66,15 +70,15 @@ td.log_level_2 {
 	</div>
 </div>
 
-<table id='log-table' class='tablesorter nospace' border="0"
+<table class='tablesorter nospace' border="0"
 	cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th>$lang.get('log.created')</th>
+			<th style="width: 110px;">$lang.get('log.created')</th>
 			<th>$lang.get('log.type')</th>
 			<th>$lang.get('log.level')</th>
 			<th>$lang.get('user.name')</th>
-			<th>$lang.get('log.ip')</th>
+			<th style="width: 120px;">$lang.get('log.ip')</th>
 			<th>$lang.get('log.model')</th>
 			<th>$lang.get('log.op')</th>
 			<th style='width: 30%'>$lang.get('log.message')</th>
@@ -90,10 +94,12 @@ td.log_level_2 {
 			<td>#if($f.user_obj)<i class='user'>$!f.user_obj.nickname</i>#end</td>
 			<td>$!f.ip</td>
 			<td>$!f.model</td>
-			<td>$f.op</td>
+			<td>$lang.get("log.op_${f.model}.${f.op}", $f.op)</td>
 			<td>$!f.message</td>
-			<td>
-				<a class="btn btn-xs btn-info" href="javascript:;" onclick="giiwa.popup('/admin/syslog/detail?id=$f.id')">$lang.get("a.detail")</a>
+			<td class="a">
+				<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/syslog/detail?id=$f.id')">
+					<i class='icon-file-text2'></i>
+				</a>
 			</td>
 		</tr>
 		#end

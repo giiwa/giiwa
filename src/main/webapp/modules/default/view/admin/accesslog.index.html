@@ -1,4 +1,3 @@
-<div class='head'>$lang.get('accesslog.title')</div>
 
 #parse('/widget/widget.message.html')
 
@@ -37,15 +36,15 @@
 		<tr>
 			<th>URL</th>
 			<th>Module</th>
-			<th>Model</th>
+			<th style="width: 110px;">Model</th>
 			<th>Method</th>
 			<th>Status</th>
 			<th>Cost(ms)</th>
-			<th>SID</th>
+			<th style="width: 110px;">SID</th>
 			<th>UID</th>
 			<th>USERNAME</th>
-			<th>IP</th>
-			<th>Created</th>
+			<th style="width: 100px;">IP</th>
+			<th style="width: 110px;">Created</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -63,8 +62,8 @@
 		<td>$!f.username</td>
 		<td>$!f.ip</td>
 		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
-		<td>
-			<a class="btn btn-xs btn-info" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')">$lang.get("a.detail")</a>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')"><i class="icon-file-text2"></i></a>
 		</td>
 	</tr>
 #end

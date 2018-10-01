@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v6.0.3 (2017-11-14)
+ * @license Highcharts JS v6.0.4 (2017-12-15)
  * Gantt series
  *
  * (c) 2016 Lars A. V. Cabrera
@@ -167,6 +167,8 @@
                         align: textAlign
                     })
                     .addClass('highcharts-axis-title')
+
+                    .css(axisTitleOptions.style)
 
                     // Add to axisParent instead of axisGroup, to ignore the space
                     // it takes
@@ -859,6 +861,32 @@
 
 
 
+                    // Presentational
+                    point.graphicOriginal
+                        .attr(series.pointAttribs(point, state))
+                        .shadow(seriesOpts.shadow, null, cutOff);
+                    if (partShapeArgs) {
+                        // Ensure pfOptions is an object
+                        if (!isObject(pfOptions)) {
+                            pfOptions = {};
+                        }
+                        if (isObject(seriesOpts.partialFill)) {
+                            pfOptions = merge(pfOptions, seriesOpts.partialFill);
+                        }
+
+                        fill = (
+                            pfOptions.fill ||
+                            color(point.color || series.color).brighten(-0.3).get()
+                        );
+
+                        point.graphicOverlay
+                            .attr(series.pointAttribs(point, state))
+                            .attr({
+                                'fill': fill
+                            })
+                            .shadow(seriesOpts.shadow, null, cutOff);
+                    }
+
 
                 } else if (graphic) {
                     point.graphic = graphic.destroy(); // #1269
@@ -910,6 +938,15 @@
                     this.y = 0;
                 }
 
+
+                if (series.options.colorByPoint) {
+                    colors = series.options.colors || series.chart.options.colors;
+                    colorCount = colors.length;
+
+                    if (!this.options.color && colors[this.y % colorCount]) {
+                        this.color = colors[this.y % colorCount];
+                    }
+                }
 
                 this.colorIndex = this.y % colorCount;
 
@@ -973,6 +1010,10 @@
          * 
          * @type {Object}
          * @extends series,plotOptions.xrange
+         * @excluding boostThreshold,crisp,cropThreshold,depth,edgeColor,edgeWidth,
+         *         findNearestPointBy,getExtremesFromAll,grouping,groupPadding,
+         *         negativeColor,pointInterval,pointIntervalUnit,pointPlacement,
+         *         pointRange,pointStart,softThreshold,stacking,threshold,data
          * @product highcharts highstock
          * @apioption series.xrange
          */

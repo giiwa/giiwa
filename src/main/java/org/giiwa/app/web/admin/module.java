@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.zip.*;
 
@@ -28,8 +29,7 @@ import org.dom4j.io.XMLWriter;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.base.MD5;
-import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.base.RSA;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
@@ -72,7 +72,6 @@ public class module extends Model {
 				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 				return;
 
-
 			}
 			this.response(jo);
 		} else {
@@ -94,7 +93,6 @@ public class module extends Model {
 		String package1 = this.getString("package");
 		String lifelistener = package1 + "." + name.substring(0, 1).toUpperCase() + name.substring(1) + "Listener";
 		String readme = this.getString("readme");
-		boolean includes = X.isSame(this.getString("includes"), "on");
 
 		String fid = UID.id(login == null ? UID.random() : login.getId(), System.currentTimeMillis());
 
@@ -110,6 +108,10 @@ public class module extends Model {
 		try {
 			out = new ZipOutputStream(new FileOutputStream(f));
 
+			RSA.Key key = RSA.generate(1024);
+
+			String modulecode = Base64.getEncoder().encodeToString(RSA.encode("giiwa".getBytes(), key.pub_key));
+
 			/**
 			 * create project info
 			 */
@@ -118,20 +120,32 @@ public class module extends Model {
 			File f1 = module.getFile("/admin/demo/.project");
 			if (f1.exists()) {
 				// copy to out
-				copy(out, f1, new String[] { "webdemo", name });
+				copy(out, f1, new String[] { "demo", name });
 			}
 
 			create(out, name + "/depends/").closeEntry();
-			f1 = new File(Model.HOME + "/WEB-INF/lib/");
 			List<String> list = new ArrayList<String>();
+
+			// boolean none = Jar.dao.count(W.create("module", "default")) == 0;
+			f1 = new File(Module.load("default").getPath() + "/WEB-INF/lib/");
+
 			File[] ff1 = f1.listFiles();
 			if (ff1 != null) {
 				for (File f2 : ff1) {
-					if (includes || Jar.dao.exists(W.create("module", "default").and("name", f2.getName()))) {
-						list.add(f2.getName());
-						create(out, name + "/depends/" + f2.getName());
-						copy(out, f2);
-						out.closeEntry();
+					try {
+						// if (includes || none || Jar.dao.exists(W.create("module",
+						// "default").and("name", f2.getName()))) {
+						if (f2.isFile()) {
+							log.debug("name=" + f2.getName());
+
+							list.add(f2.getName());
+							create(out, name + "/depends/" + f2.getName());
+							copy(out, f2);
+							out.closeEntry();
+						}
+						// }
+					} catch (Exception e) {
+						log.error(f2.getName(), e);
 					}
 				}
 			}
@@ -155,6 +169,10 @@ public class module extends Model {
 			}
 			out.closeEntry();
 
+			create(out, name + "/pubkey.txt");
+			out.write(key.pub_key.getBytes());
+			out.closeEntry();
+
 			create(out, name + "/src/").closeEntry();
 			create(out, name + "/src/module.xml");
 
@@ -171,8 +189,6 @@ public class module extends Model {
 			e = root.addElement("package");
 			e.setText(package1);
 
-			e = root.addElement("screenshot");
-			e.setText("/images/demo_screenshot.png");
 			e = root.addElement("version");
 			e.setText("1.0");
 			e = root.addElement("build");
@@ -186,29 +202,20 @@ public class module extends Model {
 			e = e.addElement("class");
 			e.setText(lifelistener);
 
-			e = root.addElement("setting");
-			e.addComment("TODO, remove it, please refer module.get(d1)");
-			Element e1 = e.addElement("param");
-			e1.addAttribute("name", "d1");
-			e1.addAttribute("value", "1");
-
 			e = root.addElement("filter");
-			e.addComment("TODO, remove it, please refer web.IFilter");
-			e1 = e.addElement("pattern");
-			e1.setText("/user/login");
-			e1 = e.addElement("class");
-			e1.setText("org.giiwa.demo.web.UserFilter");
+			e.addComment(
+					"TODO, please refer web.IFilter, eg. <pattern>/user/login</pattern>,<class>org.giiwa.demo.web.UserFiler</class>");
 
 			e = root.addElement("required");
 			e.addComment("add all required modules here");
-			e1 = e.addElement("module");
+			Element e1 = e.addElement("module");
 			e1.addAttribute("name", "default");
 			Module m0 = Module.load("default");
 			e1.addAttribute("minversion", m0.getVersion() + "." + m0.getBuild());
 			e1.addAttribute("maxversion", m0.getVersion() + ".*");
 
-			e = root.addElement("license");
-			e.setText("Commercial License");
+			e = root.addElement("key");
+			e.setText(key.pri_key);
 
 			OutputFormat format = OutputFormat.createPrettyPrint();
 			format.setEncoding("UTF-8");
@@ -364,7 +371,7 @@ public class module extends Model {
 							new String[] { "org.giiwa.demo.web",
 									lifelistener.substring(0, lifelistener.lastIndexOf(".")) },
 							new String[] { "DemoListener", lifelistener.substring(lifelistener.lastIndexOf(".") + 1) },
-							new String[] { "webdemo", name });
+							new String[] { "demo", name }, new String[] { "modulecode", modulecode });
 				}
 				out.closeEntry();
 			}
@@ -562,6 +569,44 @@ public class module extends Model {
 		return out;
 	}
 
+	@Path(path = "license", login = true, access = "access.config.admin")
+	public void license() {
+
+		String url = this.getString(X.URL);
+		Entity e = Repo.load(url);
+		BufferedReader in = null;
+
+		try {
+			in = new BufferedReader(new InputStreamReader(e.getInputStream()));
+			String name = in.readLine();
+
+			String code = in.readLine();
+			String content = in.readLine();
+
+			License a = new License();
+			a.set(X.ID, name);
+			a.set("code", code);
+			a.set("content", content);
+
+			if (a.decode()) {
+				a.store();
+
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			} else {
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("license.bad")));
+			}
+
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+			GLog.applog.error(module.class, "license", e1.getMessage(), e1, login, this.getRemoteHost());
+
+			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e1.getMessage()));
+		} finally {
+			X.close(in);
+			e.delete();
+		}
+	}
+
 	/**
 	 * Adds the.
 	 */
@@ -588,20 +633,16 @@ public class module extends Model {
 			}
 
 			if (restart) {
-				Task.create(new Runnable() {
+				Task.schedule(() -> {
 
-					@Override
-					public void run() {
-						// cleanup first, otherwise may cause can not be startup
-						// DefaultListener.cleanup(new File(Model.HOME), new HashMap<String,
-						// FileVersion>());
+					// cleanup first, otherwise may cause can not be startup
+					// DefaultListener.cleanup(new File(Model.HOME), new HashMap<String,
+					// FileVersion>());
 
-						log.info("WEB-INF has been merged, need to restart");
-						System.exit(0);
+					log.info("WEB-INF has been merged, need to restart");
+					System.exit(0);
 
-					}
-
-				}).schedule(2000);
+				}, 2000);
 			}
 
 		} catch (Exception e1) {
@@ -638,6 +679,10 @@ public class module extends Model {
 		this.set("node", conf.getString("node.name", ""));
 
 		this.set("actives", actives);
+
+		String name = ManagementFactory.getRuntimeMXBean().getName();
+		this.set("pid", X.split(name, "[@]")[0]);
+		this.set("uptime", Model.UPTIME);
 
 		this.set("list", Module.getAll(false));
 
@@ -711,80 +756,6 @@ public class module extends Model {
 		this.response(jo);
 	}
 
-	@Path(path = "query")
-	public void query() {
-		String name = this.getString("name");
-
-		JSON jo = new JSON();
-		if (Global.getInt("module.center", 0) == 1) {
-			Module m = Module.load(name);
-			if (m != null) {
-
-				Entity e = Repo.load(m.getRepo());
-				if (e != null) {
-					try {
-						InputStream in = e.getInputStream();
-						String md5 = MD5.md5(in);
-						if (md5 != null) {
-							jo.put("md5", md5);
-							jo.put(X.STATE, 200);
-							jo.put(X.URI, m.getRepo());
-							jo.put("name", name);
-							jo.put("version", m.getVersion());
-							jo.put("build", m.getBuild());
-						} else {
-							jo.put(X.STATE, 201);
-							jo.put(X.MESSAGE, "get md5 failed for the repo=" + m.getRepo());
-						}
-					} catch (Exception e1) {
-						jo.put(X.STATE, 201);
-						jo.put(X.MESSAGE, e1.getMessage());
-
-					}
-				} else {
-					jo.put(X.STATE, 201);
-					jo.put(X.MESSAGE, "repo file was missed, id=" + m.getRepo());
-				}
-			} else if (X.isSame(name, "*")) {
-				jo.put(X.STATE, 200);
-				List<Module> list = Module.getAll(true);
-				List<JSON> l1 = new ArrayList<JSON>();
-				if (list != null) {
-					for (Module m1 : list) {
-						Entity e = Repo.load(m1.getRepo());
-						if (e != null) {
-							try {
-								InputStream in = e.getInputStream();
-								String md5 = MD5.md5(in);
-								if (md5 != null) {
-									JSON j1 = JSON.create();
-									j1.put("md5", md5);
-									j1.put(X.STATE, 200);
-									j1.put(X.URI, m1.getRepo());
-									j1.put("name", m1.getName());
-									j1.put("version", m1.getVersion());
-									j1.put("build", m1.getBuild());
-									l1.add(j1);
-								}
-							} catch (Exception e1) {
-								log.error(e1.getMessage(), e1);
-							}
-						}
-					}
-					jo.put("list", l1);
-					jo.put("name", name);
-				}
-			} else {
-				jo.put(X.STATE, 201);
-				jo.put(X.MESSAGE, "not found, name=" + name);
-			}
-		} else {
-			jo.put(X.STATE, 202);
-			jo.put(X.MESSAGE, "not support");
-		}
-		this.response(jo);
-	}
-
 	/**
 	 * Enable.
 	 */
@@ -801,6 +772,15 @@ public class module extends Model {
 		onGet();
 	}
 
+	@Path(path = "deletelicense", login = true, access = "access.config.admin|access.config.module.admin")
+	public void deletelicense() {
+		String name = this.getString("name");
+		License.dao.delete(name);
+		License.remove(name);
+
+		onGet();
+	}
+
 	/**
 	 * Delete.
 	 */
@@ -809,11 +789,6 @@ public class module extends Model {
 	public void delete() {
 		String name = this.getString("name");
 		Module m = Module.load(name);
-		String url = m.getRepo();
-		Entity e = Repo.load(url);
-		if (e != null) {
-			e.delete();
-		}
 		m.delete();
 
 		Module.reset();

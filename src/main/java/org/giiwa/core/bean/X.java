@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.task.MyFunc;
 
 /**
  * The {@code X} Class used to define contains.
@@ -117,6 +118,21 @@ public final class X {
 
 		if (s1 instanceof String && s2 instanceof String) {
 			return ((String) s1).equalsIgnoreCase((String) s2);
+		}
+
+		if (s1 instanceof Collection && s2 instanceof Collection) {
+			Collection<?> c1 = (Collection<?>) s1;
+			Collection<?> c2 = (Collection<?>) s2;
+
+			for (Object o1 : c1) {
+				if (!c2.contains(o1))
+					return false;
+			}
+			for (Object o2 : c2) {
+				if (!c1.contains(o2))
+					return false;
+			}
+			return true;
 		}
 
 		if (s1 != null) {
@@ -430,19 +446,6 @@ public final class X {
 	}
 
 	/**
-	 * The main method.
-	 *
-	 * @param args
-	 *            the arguments
-	 */
-	public static void main(String[] args) {
-		int s = 10;
-		System.out.println(X.toDouble(s));
-
-		System.out.println(X.getCanonicalPath("\\aaa"));
-	}
-
-	/**
 	 * split the src string by the regex, and filter the empty.
 	 *
 	 * @param src
@@ -574,4 +577,196 @@ public final class X {
 		}
 		return false;
 	}
+
+	public static List<Long> toLong(List<?> l1) {
+		if (l1 == null || l1.isEmpty())
+			return null;
+
+		List<Long> l2 = new ArrayList<Long>(l1.size());
+		for (Object e : l1) {
+			long i = X.toLong(e);
+			l2.add(i);
+		}
+		return l2;
+	}
+
+	public static List<String> toString(List<?> l1) {
+		if (l1 == null || l1.isEmpty())
+			return null;
+
+		List<String> l2 = new ArrayList<String>(l1.size());
+		for (Object e : l1) {
+			if (e != null) {
+				l2.add(e.toString());
+			}
+		}
+		return l2;
+	}
+
+	public static List<Integer> toInt(List<?> l1) {
+		if (l1 == null || l1.isEmpty())
+			return null;
+
+		List<Integer> l2 = new ArrayList<Integer>(l1.size());
+		for (Object e : l1) {
+			int i = X.toInt(e);
+			l2.add(i);
+		}
+		return l2;
+	}
+
+	public static <T, E> List<T> toArray(List<E> l1, MyFunc<T, E> cb) {
+		List<T> l2 = new ArrayList<T>(l1.size());
+		for (E e : l1) {
+			T t = cb.call(e);
+			if (t != null) {
+				l2.add(t);
+			}
+		}
+		return l2;
+	}
+
+	public static <T, E> List<T> toArray(E[] l1, MyFunc<T, E> cb) {
+		List<T> l2 = new ArrayList<T>(l1.length);
+		for (E e : l1) {
+			T t = cb.call(e);
+			if (t != null) {
+				l2.add(t);
+			}
+		}
+		return l2;
+	}
+
+	/**
+	 * count the char number in the string
+	 * 
+	 * @param s
+	 * @param c
+	 * @return
+	 */
+	public static int count(String s, char c) {
+		if (s == null)
+			return 0;
+		int n = 0;
+		int i = s.indexOf(c);
+		while (i > -1) {
+			n++;
+			i = s.indexOf(c, i + 1);
+		}
+		return n;
+	}
+
+	/**
+	 * fill a new string with the s
+	 * 
+	 * @param s
+	 * @param n
+	 * @return
+	 */
+	public static String fill(String s, int n) {
+		StringBuilder sb = new StringBuilder();
+		while (sb.length() < n) {
+			sb.append(s);
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Descartes list
+	 * 
+	 * @param l
+	 * @return
+	 */
+	public static <T> List<List<T>> descartes(List<List<T>> l1, List<List<T>> l2) {
+		if (l2 == null || l2.isEmpty())
+			return l1;
+
+		List<List<T>> r = new ArrayList<List<T>>();
+		List<T> l3 = l2.remove(0);
+		if (l1.isEmpty()) {
+			for (T t : l3) {
+				List<T> l4 = new ArrayList<T>();
+				l4.add(t);
+				r.add(l4);
+			}
+		} else
+			for (List<T> e : l1) {
+				for (T t : l3) {
+					List<T> l4 = new ArrayList<T>(e);
+					l4.add(t);
+					r.add(l4);
+				}
+			}
+		return descartes(r, l2);
+	}
+
+	public static long max(long[] ll) {
+		long t = ll[0];
+		for (int i = 1; i < ll.length; i++) {
+			if (t < ll[i]) {
+				t = ll[i];
+			}
+		}
+		return t;
+	}
+
+	public static long min(long[] ll) {
+		long t = ll[0];
+		for (int i = 1; i < ll.length; i++) {
+			if (t > ll[i]) {
+				t = ll[i];
+			}
+		}
+		return t;
+	}
+
+	public static int max(int[] ll) {
+		int t = ll[0];
+		for (int i = 1; i < ll.length; i++) {
+			if (t < ll[i]) {
+				t = ll[i];
+			}
+		}
+		return t;
+	}
+
+	public static int min(int[] ll) {
+		int t = ll[0];
+		for (int i = 1; i < ll.length; i++) {
+			if (t > ll[i]) {
+				t = ll[i];
+			}
+		}
+		return t;
+	}
+
+	public static double max(double[] ll) {
+		double t = ll[0];
+		for (int i = 1; i < ll.length; i++) {
+			if (t < ll[i]) {
+				t = ll[i];
+			}
+		}
+		return t;
+	}
+
+	public static double min(double[] ll) {
+		double t = ll[0];
+		for (int i = 1; i < ll.length; i++) {
+			if (t > ll[i]) {
+				t = ll[i];
+			}
+		}
+		return t;
+	}
+
+	// public static void main(String[] aa) {
+	// List<List<Integer>> l1 = new ArrayList<List<Integer>>();
+	// l1.add(Arrays.asList(1, 2, 3));
+	// l1.add(Arrays.asList(4, 5, 6));
+	// l1.add(Arrays.asList(3, 4));
+	//
+	// System.out.println(descartes(new ArrayList<List<Integer>>(), l1));
+	// }
+
 }

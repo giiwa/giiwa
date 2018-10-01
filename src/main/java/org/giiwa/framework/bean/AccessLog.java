@@ -46,7 +46,7 @@ public class AccessLog extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<AccessLog> dao = BeanDAO.create(AccessLog.class);
+	public static final BeanDAO<String, AccessLog> dao = BeanDAO.create(AccessLog.class);
 
 	static AtomicLong seq = new AtomicLong(0);
 	static String node = Config.getConf().getString("node.name");
@@ -93,23 +93,18 @@ public class AccessLog extends Bean {
 	 *            the values
 	 */
 	public static void create(final String ip, final String url, final V v) {
-		new Task() {
-
-			@Override
-			public void onExecute() {
-				long created = System.currentTimeMillis();
-				String id = UID.id(ip, url, created, node, seq.incrementAndGet());
-				dao.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created));
-			}
-
-		}.schedule(0);
+		Task.schedule(() -> {
+			long created = System.currentTimeMillis();
+			String id = UID.id(ip, url, created, node, seq.incrementAndGet());
+			dao.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created));
+		}, 0);
 	}
 
 	/**
 	 * Cleanup.
 	 */
-	public static void cleanup() {
-		dao.delete(W.create().and("created", System.currentTimeMillis() - X.AMONTH, W.OP.lt));
+	public void cleanup() {
+		dao.cleanup();
 	}
 
 	/**
@@ -128,10 +123,10 @@ public class AccessLog extends Bean {
 	 */
 	public static Map<Object, Long> distinct(String name) {
 
-		List<String> list = dao.distinct(name, W.create("status", 200), String.class);
+		List<?> list = dao.distinct(name, W.create("status", 200));
 
 		Map<Object, Long> m = new TreeMap<Object, Long>();
-		for (String v : list) {
+		for (Object v : list) {
 			long d = dao.count(W.create(name, v).and("status", 200));
 			m.put(v, d);
 		}

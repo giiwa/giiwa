@@ -19,6 +19,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,6 @@ import org.hyperic.sigar.OperatingSystem;
 import org.hyperic.sigar.ProcCpu;
 import org.hyperic.sigar.ProcCred;
 import org.hyperic.sigar.ProcCredName;
-import org.hyperic.sigar.ProcExe;
 import org.hyperic.sigar.ProcMem;
 import org.hyperic.sigar.ProcState;
 import org.hyperic.sigar.ProcUtil;
@@ -51,7 +51,6 @@ import org.hyperic.sigar.Sigar;
 import org.hyperic.sigar.SigarException;
 import org.hyperic.sigar.Swap;
 import org.hyperic.sigar.Uptime;
-import org.hyperic.sigar.cmd.Ps;
 
 /**
  * The Class Host.
@@ -96,7 +95,7 @@ public class Host {
 							if (sb.length() > 0) {
 								sb.append(";");
 							}
-							System.out.println(ia.getClass());
+							// System.out.println(ia.getClass());
 
 							sb.append(ia.getHostAddress());
 						}
@@ -226,26 +225,31 @@ public class Host {
 		return l1;
 	}
 
-	public static List<JSON> getDisks() throws SigarException {
+	public static Collection<JSON> getDisks() throws SigarException {
 		_init();
 
 		FileSystem[] fs = getFileSystem();
-		List<JSON> l1 = new ArrayList<JSON>();
+		Map<String, JSON> m1 = new TreeMap<String, JSON>();
 		for (FileSystem f : fs) {
 
-			FileSystemUsage p = sigar.getFileSystemUsage(f.getDirName());
-			if (p.getTotal() > 0) {
-				l1.add(JSON.create().append("devname", f.getDevName()).append("dirname", f.getDirName())
-						.append("typename", f.getTypeName()).append("total", 1024 * p.getTotal())
-						.append("used", 1024 * p.getUsed()).append("free", 1024 * p.getFree())
-						.append("files", p.getFiles()).append("usepercent", p.getUsePercent())
-						.append("diskreads", p.getDiskReads()).append("diskreadbytes", p.getDiskReadBytes())
-						.append("diskwrites", p.getDiskWrites()).append("diskwritebytes", p.getDiskWriteBytes())
-						.append("diskqueue", p.getDiskQueue()));
-			}
+			if (Arrays.asList(FileSystem.TYPE_LOCAL_DISK, FileSystem.TYPE_NETWORK, FileSystem.TYPE_NONE,
+					FileSystem.TYPE_UNKNOWN, FileSystem.TYPE_CDROM).contains(f.getType())) {
+				FileSystemUsage p = sigar.getFileSystemUsage(f.getDirName());
 
+				// log.debug("p.total=" + p.getTotal());
+				if (p.getTotal() > 0) {
+
+					m1.put(f.getDirName(), JSON.create().append("devname", f.getDevName())
+							.append("dirname", f.getDirName()).append("typename", f.getTypeName())
+							.append("total", 1024 * p.getTotal()).append("used", 1024 * p.getUsed())
+							.append("free", 1024 * p.getFree()).append("files", p.getFiles())
+							.append("usepercent", p.getUsePercent()).append("diskreads", p.getDiskReads())
+							.append("diskreadbytes", p.getDiskReadBytes()).append("diskwrites", p.getDiskWrites())
+							.append("diskwritebytes", p.getDiskWriteBytes()).append("diskqueue", p.getDiskQueue()));
+				}
+			}
 		}
-		return l1;
+		return m1.values();
 	}
 
 	public static NetInterfaceConfig[] getIfaces() throws SigarException {
@@ -266,7 +270,7 @@ public class Host {
 		return l1.toArray(new NetInterfaceConfig[l1.size()]);
 	}
 
-	public static List<JSON> getIfstats() throws SigarException {
+	public static Collection<JSON> getIfstats() throws SigarException {
 		_init();
 
 		String[] ifaces = sigar.getNetInterfaceList();
@@ -280,15 +284,12 @@ public class Host {
 
 			NetInterfaceStat s = sigar.getNetInterfaceStat(ifaces[i]);
 			l1.add(JSON.create().append("address", cfg.getAddress()).append("name", cfg.getName())
-					.append("rxbytes", s.getRxBytes()).append("rxdropped", s.getRxDropped())
-					.append("rxerrors", s.getRxErrors()).append("rxframe", s.getRxFrame())
-					.append("rxoverrunns", s.getRxOverruns()).append("rxpackets", s.getRxPackets())
-					.append("speed", s.getSpeed()).append("txbytes", s.getTxBytes())
-					.append("txcarrier", s.getTxCarrier()).append("txcollisions", s.getTxCollisions())
-					.append("txdropped", s.getTxDropped()).append("txerrors", s.getTxErrors())
-					.append("txoverruns", s.getTxOverruns()).append("txpackets", s.getTxPackets()));
+					.append("rxbytes", s.getRxBytes()).append("rxdrop", s.getRxDropped())
+					.append("rxerr", s.getRxErrors()).append("rxpackets", s.getRxPackets())
+					.append("speed", s.getSpeed()).append("txbytes", s.getTxBytes()).append("txdrop", s.getTxDropped())
+					.append("txerr", s.getTxErrors()).append("txpackets", s.getTxPackets())
+					.append("created", System.currentTimeMillis()));
 		}
-
 		return l1;
 	}
 

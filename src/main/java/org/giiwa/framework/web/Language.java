@@ -14,6 +14,8 @@
 */
 package org.giiwa.framework.web;
 
+import java.io.File;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -22,6 +24,8 @@ import org.giiwa.core.base.Html;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.dle.Velocity;
+import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Callable;
 import org.giiwa.framework.bean.Repo;
 
 /**
@@ -264,17 +268,17 @@ public class Language {
 	 *            the args which used to format the string
 	 * @return the string
 	 */
-	public String get(String name, Object... args) {
+	public String get(String name) {
+		return get(name, name);
+	}
+
+	public String get(String name, String defaultString) {
 		if (X.isEmpty(name)) {
-			return X.EMPTY;
+			return defaultString;
 		}
 
 		if (data.containsKey(name)) {
-			if (args != null && args.length > 0) {
-				return String.format(data.get(name)[0], args);
-			} else {
-				return data.get(name)[0];
-			}
+			return data.get(name)[0];
 		} else if (missed.containsKey(name)) {
 			return missed.get(name);
 		} else {
@@ -282,12 +286,12 @@ public class Language {
 				return name.substring(2);
 			}
 
-			if (name.indexOf("$") > -1) {
-				return null;
-			}
+			// if (name.indexOf("$") > -1) {
+			// return null;
+			// }
 
-			missed.put(name, name);
-			return name;
+			missed.put(name, defaultString);
+			return defaultString;
 		}
 	}
 
@@ -304,11 +308,6 @@ public class Language {
 			// log.error("doesnt support the locale: " + locale);
 		}
 	}
-
-	/**
-	 * @deprecated
-	 */
-	private SimpleDateFormat sdf = null;
 
 	private static Map<String, SimpleDateFormat> formats = new HashMap<String, SimpleDateFormat>();
 
@@ -527,6 +526,18 @@ public class Language {
 		return s;
 	}
 
+	public String size(long length) {
+		return size((double) length);
+	}
+
+	public String size(long length, int step) {
+		return size((double) length, step);
+	}
+
+	public String size(double length) {
+		return size(length, 1024);
+	}
+
 	/**
 	 * Size.
 	 * 
@@ -534,24 +545,35 @@ public class Language {
 	 *            the length
 	 * @return the string
 	 */
-	public String size(long length) {
+	public String size(double length, int step) {
+		if (length > 0.00001 && length < 0.00001) {
+			return X.EMPTY;
+		}
+
 		String unit = X.EMPTY;
 		double d = Math.abs(length);
 		if (d < 1024) {
-		} else if (d < 1024 * 1024) {
-			unit = "K";
+		} else if (d < step * step) {
+			unit = "k";
 			d /= 1024f;
-		} else if (d < 1024 * 1024 * 1024) {
+		} else if (d < step * step * step) {
 			unit = "M";
-			d /= 1024f * 1024;
+			d /= step * step;
 		} else {
 			unit = "G";
-			d /= 1024f * 1024 * 1024;
+			d /= step * step * step;
 		}
 
 		if (length > 0) {
-			return ((long) (d * 10)) / 10f + unit;
+			long l = (long) (d * 10);
+			if (l % 10 == 0)
+				return l / 10 + unit;
+			return l / 10f + unit;
 		} else {
+			long l = (long) (d * 10);
+			if (l % 10 == 0)
+				return -l / 10 + unit;
+
 			return -((long) (d * 10)) / 10f + unit;
 		}
 	}
@@ -597,38 +619,52 @@ public class Language {
 		return t1 + get("past.y");
 	}
 
+	public long time(long time, String m) {
+		return time(time, 8, m);
+	}
+
+	public long time(long time, int timeoffset, String m) {
+		time += timeoffset * X.AHOUR;
+		if ("ms".equals(m)) {
+			return time;
+		} else if ("s".equals(m)) {
+			return time / 1000 * 1000;
+		} else if ("m".equals(m)) {
+			return time / X.AMINUTE * X.AMINUTE;
+		} else if ("h".equals(m)) {
+			return time / X.AHOUR * X.AHOUR;
+		} else if ("d".equals(m)) {
+			return time / X.ADAY * X.ADAY;
+		} else if ("M".equals(m)) {
+			return time / X.AMONTH * X.AMONTH;
+		} else if ("y".equalsIgnoreCase(m)) {
+			return time / X.AYEAR * X.AYEAR;
+		}
+		return time;
+	}
+
 	public String time(long duration) {
 		if (duration <= 0) {
 			return X.EMPTY;
 		}
 
-		int t = (int) (duration / 1000);
-		if (t < 60) {
-			return t + get("time.s");
+		StringBuilder sb = new StringBuilder();
+		if (duration > X.ADAY) {
+			sb.append(duration / X.ADAY).append(get("time.d"));
+			duration %= X.ADAY;
 		}
-
-		t /= 60;
-		if (t < 60) {
-			return t + get("time.m");
+		if (duration > X.AHOUR) {
+			sb.append(duration / X.AHOUR).append(get("time.h"));
+			duration %= X.AHOUR;
 		}
-
-		t /= 60;
-		if (t < 24) {
-			return t + get("time.h");
+		if (duration > X.AMINUTE) {
+			sb.append(duration / X.AMINUTE).append(get("time.m"));
+			duration %= X.AMINUTE;
 		}
-
-		t /= 24;
-		if (t < 30) {
-			return t + get("time.d");
+		if (duration > 1000) {
+			sb.append(duration / 1000).append(get("time.s"));
 		}
-
-		int t1 = t / 30;
-		if (t < 365) {
-			return t1 + get("time.M");
-		}
-
-		t1 = t / 365;
-		return t1 + get("time.y");
+		return sb.toString();
 	}
 
 	public long pastms(long t) {
@@ -664,27 +700,95 @@ public class Language {
 	}
 
 	public String icon(String file) {
-		String mime = Model.getMimeType(file);
-		log.debug("mime=" + mime);
+		if (X.isEmpty(file)) {
+			return "icon-file-empty";
+		}
 
+		String mime = Model.getMimeType(file);
+		log.debug("mime=" + mime + ", file=" + file);
+
+		// image/png
 		String icon = get(mime);
-		if (X.isEmpty(icon) && mime != null) {
+		if (mime != null && (X.isEmpty(icon) || X.isSame(icon, mime))) {
 			if (mime.startsWith("audio/")) {
-				return "icon-music";
+				icon = "icon-music";
 			} else if (mime.startsWith("image/")) {
-				return "icon-image";
+				icon = "icon-image";
 			} else if (mime.startsWith("text/")) {
-				return "icon-file-text";
-			} else if (mime.indexOf("officedocument") > 0) {
-				return "icon-file-word";
+				icon = "icon-file-text2";
+			} else if (mime.contains("officedocument")) {
+				icon = "icon-file-word";
+			} else {
+				icon = "icon-file-text2";
 			}
+		} else if (X.isEmpty(mime)) {
+			if (file.contains(".gsp")) {
+				icon = "icon-file-video";
+			}
+		}
+
+		if (X.isEmpty(icon)) {
 			icon = "icon-file-empty";
 		}
 		return icon;
 	}
 
+	public boolean isImage(String file) {
+		String mime = Model.getMimeType(file);
+		log.debug("mime=" + mime);
+
+		return mime != null && mime.startsWith("image/");
+	}
+
 	public Repo.Entity repo(String repo) {
 		return Repo.load(repo);
+	}
+
+	public String eclipse(String path) {
+		return path.replaceAll("\\\\", "/");
+	}
+
+	public synchronized String theme(int min, String name) {
+
+		if (themeplugin != null) {
+			String s = themeplugin.call(min, name);
+			if (!X.isEmpty(s)) {
+				return s;
+			}
+		}
+
+		if (theme == null) {
+			theme = JSON.create();
+		}
+		if (theme.get(name) == null) {
+			theme.append(name, JSON.create());
+		}
+		JSON j = (JSON) theme.get(name);
+		if (System.currentTimeMillis() - j.getLong("created") > min * X.AMINUTE) {
+			File f = Module.home.getFile("/images/theme/");
+			if (f != null) {
+				String[] ss = f.list();
+				if (ss != null && ss.length > 0) {
+					j.append("created", System.currentTimeMillis()).append("image",
+							"/images/theme/" + ss[(int) (ss.length * Math.random())]);
+				}
+			}
+		}
+
+		log.debug("theme=" + j);
+
+		return j.getString("image");
+	}
+
+	private JSON theme = null;
+	private Callable<String, String> themeplugin;
+
+	public void setTheme(Callable<String, String> m) {
+		themeplugin = m;
+	}
+
+	public long parse(Timestamp t) {
+		return t.getTime();
 	}
 
 }

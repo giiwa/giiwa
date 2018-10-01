@@ -20,6 +20,7 @@ import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.dfile.FileServer;
 import org.giiwa.framework.web.Model;
 import org.hyperic.sigar.CpuInfo;
 import org.giiwa.core.bean.Table;
@@ -40,7 +41,7 @@ public class Node extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Node> dao = BeanDAO.create(Node.class);
+	public static final BeanDAO<String, Node> dao = BeanDAO.create(Node.class);
 
 	@Column(name = X.ID, index = true)
 	private String id;
@@ -48,8 +49,31 @@ public class Node extends Bean {
 	@Column(name = "ip")
 	private String ip;
 
+	@Column(name = "port")
+	private int port;
+
 	@Column(name = "uptime")
 	private long uptime;
+
+	public String getId() {
+		return id;
+	}
+
+	public long getUptime() {
+		return uptime;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public String getIp() {
+		return ip;
+	}
+
+	public boolean isLocal() {
+		return X.isSame(id, Local.id());
+	}
 
 	public static void touch(boolean force) {
 		try {
@@ -80,6 +104,7 @@ public class Node extends Bean {
 			}
 			v.append("os", Host.getOS().getName());
 			v.append("mem", Host.getMem().getTotal());
+			v.append("port", FileServer.PORT);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

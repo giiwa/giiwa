@@ -14,6 +14,11 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.lang.management.ManagementFactory;
+
+import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.User;
@@ -29,6 +34,13 @@ import org.giiwa.framework.web.*;
  */
 public class system extends Model {
 
+	@Path(path = "info", login = true)
+	public void info() {
+		String name = ManagementFactory.getRuntimeMXBean().getName();
+		this.response(JSON.create().append(X.STATE, 200).append("uptime", Model.UPTIME).append("local", Local.id())
+				.append("global", Global.id()).append("pid", X.split(name, "[@]")[0]));
+	}
+
 	/**
 	 * Restart.
 	 */
@@ -42,24 +54,9 @@ public class system extends Model {
 		if (me.validate(pwd)) {
 			jo.put("state", "ok");
 
-			new Task() {
-
-				@Override
-				public String getName() {
-					return "restart";
-				}
-
-				@Override
-				public void onExecute() {
-					System.exit(0);
-				}
-
-				@Override
-				public void onFinish() {
-
-				}
-
-			}.schedule(1000);
+			Task.schedule(() -> {
+				System.exit(0);
+			}, 1000);
 		} else {
 			jo.put("state", "fail");
 			jo.put("message", lang.get("invalid.password"));

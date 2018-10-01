@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -190,7 +189,7 @@ public class MongoHelper implements Helper.DBHelper {
 		}
 
 		MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(30000)
-				.serverSelectionTimeout(1000).connectionsPerHost(conns);
+				.serverSelectionTimeout(1000).maxConnectionIdleTime(10000).connectionsPerHost(conns);
 		client = new MongoClient(new MongoClientURI(url, opts));
 		return client.getDatabase(db);
 	}
@@ -228,6 +227,7 @@ public class MongoHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(database + " was miss configured, please access http://[host:port]/setup to configure");
 		}
+		
 		return d;
 	}
 
@@ -365,6 +365,8 @@ public class MongoHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error("query=" + query + ", order=" + order, e);
+			
+			//bad connection ? close the it ?
 		}
 
 		return null;
@@ -453,7 +455,7 @@ public class MongoHelper implements Helper.DBHelper {
 					if (d != null) {
 						T b = clazz.newInstance();
 						b.load(d, fields);
-						b.rowid = rowid++;
+						b._rowid = rowid++;
 						bs.add(b);
 						limit--;
 					}
@@ -823,24 +825,51 @@ public class MongoHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return List of the value
 	 */
-	public <T> List<T> distinct(String collection, String key, W q, Class<T> t, String db) {
+	// public <T> List<T> distinct(String collection, String key, W q, String db,
+	// Class<T> t) {
+	//
+	// TimeStamp t1 = TimeStamp.create();
+	// try {
+	//
+	// MongoCollection<Document> c = getCollection(db, collection);
+	// if (c != null) {
+	//
+	// Iterator<T> it = c.distinct(key, q.query(), t).iterator();
+	//
+	// List<T> list = new ArrayList<T>();
+	// while (it.hasNext()) {
+	// list.add((T) it.next());
+	// }
+	//
+	// return list;
+	// }
+	// } catch (Exception e) {
+	// if (log.isErrorEnabled())
+	// log.error(q.query(), e);
+	// } finally {
+	// if (log.isDebugEnabled())
+	// log.debug(
+	// "disinct[" + key + "] cost=" + t1.pastms() + "ms, collection=" + collection +
+	// ", query=" + q);
+	// }
+	// return null;
+	// }
+
+	public List<?> distinct(String collection, String key, W q, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			MongoCollection<Document> c = getCollection(db, collection);
-			if (c != null) {
-				Iterator<T> it = c.distinct(key, q.query(), t).iterator();
-				List<T> list = new ArrayList<T>();
-				while (it.hasNext()) {
-					list.add(it.next());
-				}
-
-				return (List<T>) list;
+			MongoDatabase g = getDB(db);
+			Document d = g.runCommand(
+					new BasicDBObject("distinct", collection).append("key", key).append("query", q.query()));
+			if (d.containsKey("values")) {
+				return (List<?>) (d.get("values"));
 			}
+
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
+				log.error(q.query(), e);
 		} finally {
 			if (log.isDebugEnabled())
 				log.debug(
@@ -884,7 +913,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param filename
 	 *            the file name
 	 */
-	public void backup(String filename) {
+	public void backup(String filename, String[] cc) {
 		File f = new File(filename);
 		f.getParentFile().mkdirs();
 
@@ -892,10 +921,11 @@ public class MongoHelper implements Helper.DBHelper {
 			ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(f));
 			zip.putNextEntry(new ZipEntry("db"));
 			PrintStream out = new PrintStream(zip);
-
-			Set<String> c1 = getCollections();
-			log.debug("collections=" + c1);
-			for (String table : c1) {
+			if (cc == null) {
+				Set<String> ss = MongoHelper.getCollections();
+				cc = ss.toArray(new String[ss.size()]);
+			}
+			for (String table : cc) {
 				_backup(out, table);
 			}
 
@@ -941,17 +971,6 @@ public class MongoHelper implements Helper.DBHelper {
 			zip.getNextEntry();
 			BufferedReader in = new BufferedReader(new InputStreamReader(zip));
 
-			Set<String> c1 = getCollections();
-			log.debug("collections=" + c1);
-			for (String table : c1) {
-				MongoCollection<Document> c2 = getCollection(Helper.DEFAULT, table);
-				try {
-					c2.drop();
-				} catch (Exception e) {
-					log.error("table=" + table, e);
-				}
-			}
-
 			String line = in.readLine();
 			while (line != null) {
 				_recover(line);
@@ -971,6 +990,7 @@ public class MongoHelper implements Helper.DBHelper {
 			V v = V.create().copy(jo);
 			String tablename = jo.getString("_table");
 			v.remove("_table");
+			inst.delete(tablename, W.create(X.ID, jo.get(X.ID)), Helper.DEFAULT);
 			inst.insertTable(tablename, v, Helper.DEFAULT);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -1001,7 +1021,7 @@ public class MongoHelper implements Helper.DBHelper {
 			Document d2 = new Document("$inc", d);
 
 			Document d1 = null;
-			if (v != null) {
+			if (v != null && !v.isEmpty()) {
 				d1 = new Document();
 				for (String s : v.names()) {
 					Object v1 = v.value(s);
@@ -1232,6 +1252,7 @@ public class MongoHelper implements Helper.DBHelper {
 		System.out.println("t=" + t);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T sum(String collection, W q, String name, String db) {
 
@@ -1241,14 +1262,14 @@ public class MongoHelper implements Helper.DBHelper {
 
 			MongoCollection<Document> c = getCollection(db, collection);
 			if (c != null) {
+				BasicDBObject match = new BasicDBObject("$match", q == null ? new BasicDBObject() : q.query());
 				BasicDBObject group = new BasicDBObject();
 				group.append("$group", new BasicDBObject().append("_id", name).append(name,
 						new BasicDBObject().append("$sum", "$" + name)));
 
-				List<BasicDBObject> l1 = Arrays.asList(group,
-						new BasicDBObject("$match", q == null ? new BasicDBObject() : q.query()));
+				List<BasicDBObject> l1 = Arrays.asList(match, group);
 
-				System.out.println(l1);
+				log.debug("l1=" + l1);
 
 				MongoCursor<Document> it = c.aggregate(l1).iterator();
 				if (it != null && it.hasNext()) {
@@ -1261,9 +1282,118 @@ public class MongoHelper implements Helper.DBHelper {
 
 		} finally {
 			if (log.isDebugEnabled())
-				log.debug("count, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q + ", n=" + n);
+				log.debug("sum, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q + ", n=" + n);
 		}
 		return (T) n;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T max(String collection, W q, String name, String db) {
+		TimeStamp t1 = TimeStamp.create();
+		Object n = 0;
+		try {
+
+			MongoCollection<Document> c = getCollection(db, collection);
+			if (c != null) {
+				BasicDBObject match = new BasicDBObject("$match", q == null ? new BasicDBObject() : q.query());
+				BasicDBObject group = new BasicDBObject();
+				group.append("$group", new BasicDBObject().append("_id", name).append(name,
+						new BasicDBObject().append("$max", "$" + name)));
+
+				List<BasicDBObject> l1 = Arrays.asList(match, group);
+
+				// System.out.println(l1);
+
+				MongoCursor<Document> it = c.aggregate(l1).iterator();
+				if (it != null && it.hasNext()) {
+					Document d = it.next();
+					if (d != null) {
+						n = d.get(name);
+					}
+				}
+			}
+
+		} finally {
+			if (log.isDebugEnabled())
+				log.debug("max, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q + ", n=" + n);
+		}
+		return (T) n;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T min(String collection, W q, String name, String db) {
+		TimeStamp t1 = TimeStamp.create();
+		Object n = 0;
+		try {
+
+			MongoCollection<Document> c = getCollection(db, collection);
+			if (c != null) {
+				BasicDBObject match = new BasicDBObject("$match", q == null ? new BasicDBObject() : q.query());
+				BasicDBObject group = new BasicDBObject();
+				group.append("$group", new BasicDBObject().append("_id", name).append(name,
+						new BasicDBObject().append("$min", "$" + name)));
+
+				List<BasicDBObject> l1 = Arrays.asList(match, group);
+
+				// System.out.println(l1);
+
+				MongoCursor<Document> it = c.aggregate(l1).iterator();
+				if (it != null && it.hasNext()) {
+					Document d = it.next();
+					if (d != null) {
+						n = d.get(name);
+					}
+				}
+			}
+
+		} finally {
+			if (log.isDebugEnabled())
+				log.debug("min, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q + ", n=" + n);
+		}
+		return (T) n;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T avg(String collection, W q, String name, String db) {
+		TimeStamp t1 = TimeStamp.create();
+		Object n = 0;
+		try {
+
+			MongoCollection<Document> c = getCollection(db, collection);
+			if (c != null) {
+				BasicDBObject match = new BasicDBObject("$match", q == null ? new BasicDBObject() : q.query());
+				BasicDBObject group = new BasicDBObject();
+				group.append("$group", new BasicDBObject().append("_id", name).append(name,
+						new BasicDBObject().append("$avg", "$" + name)));
+
+				List<BasicDBObject> l1 = Arrays.asList(match, group);
+
+				// System.out.println(l1);
+
+				MongoCursor<Document> it = c.aggregate(l1).iterator();
+				if (it != null && it.hasNext()) {
+					Document d = it.next();
+					if (d != null) {
+						n = d.get(name);
+					}
+				}
+			}
+
+		} finally {
+			if (log.isDebugEnabled())
+				log.debug("avg, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q + ", n=" + n);
+		}
+		return (T) n;
+	}
+
+	@Override
+	public void repair() {
+
+		MongoDatabase g = getDB();
+		g.runCommand(new BasicDBObject().append("repairDatabase", 1));
+
 	}
 
 }

@@ -55,7 +55,7 @@ public class Velocity {
       }
       // System.out.println(i);
     }
-    System.out.println(t.past() + "ms");
+    System.out.println(t.pastms() + "ms");
   }
 
   /**

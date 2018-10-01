@@ -1,12 +1,17 @@
 package org.giiwa.mq;
 
-import java.util.HashMap;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
@@ -57,13 +62,14 @@ public abstract class MQ {
 	public synchronized static boolean init() {
 		if (mq == null) {
 			_node = Local.id();
+
 			String type = Global.getString("mq.type", X.EMPTY);
 			if (X.isSame(type, "activemq")) {
 				mq = ActiveMQ.create();
-				// } else if (X.isSame(type, "rabbitmq")) {
-				// mq = RabbitMQ.create();
 			} else if (X.isSame(type, "kafkamq")) {
 				mq = KafkaMQ.create();
+			} else {
+				mq = LocalMQ.create();
 			}
 		}
 		return mq != null;
@@ -128,51 +134,46 @@ public abstract class MQ {
 		bind(name, stub, Mode.QUEUE);
 	}
 
+	public static void unbind(IStub stub) throws Exception {
+		mq._unbind(stub);
+	}
+
 	protected abstract void _bind(String name, IStub stub, Mode mode) throws Exception;
+
+	protected abstract void _unbind(IStub stub) throws Exception;
 
 	static class Caller extends Task {
 
-		private static Map<String, Caller> caller = new HashMap<String, Caller>();
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
 		String name;
 		IStub cb;
-		LinkedBlockingDeque<Request> queue = new LinkedBlockingDeque<Request>();
+		List<Request> queue;
 
-		public static synchronized Caller get(String name, IStub cb) {
-			Caller c = caller.get(name);
-			if (c == null) {
-				c = new Caller();
-				c.cb = cb;
-				c.name = name;
-				caller.put(name, c);
-				c.schedule(0);
-			}
+		static Task call(String name, IStub cb, List<Request> l1) {
+			Caller c = new Caller();
+			c.cb = cb;
+			c.name = name;
+			c.queue = l1;
+			c.schedule(0);
 			return c;
-		}
-
-		void call(List<Request> l1) {
-			for (Request r : l1) {
-				// log.debug("push, r=" + new String(r.data));
-				queue.addLast(r);
-			}
-
 		}
 
 		@Override
 		public void onExecute() {
-			try {
-				Request r = queue.pollFirst(X.AMINUTE, TimeUnit.MILLISECONDS);
-				if (r != null) {
-					cb.onRequest(r.seq, r);
+			while (!queue.isEmpty()) {
+				try {
+					Request r = queue.remove(0);
+					if (r != null) {
+						cb.onRequest(r.seq, r);
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
 			}
-		}
-
-		@Override
-		public void onFinish() {
-			this.schedule(0);
 		}
 
 	}
@@ -185,10 +186,7 @@ public abstract class MQ {
 
 		totalGot.incrementAndGet();
 
-		Caller c = Caller.get(name, cb);
-
-		log.debug("caller=" + c + ", name=" + name);
-		c.call(rs);
+		Caller.call(name, cb, rs);
 
 	}
 
@@ -216,8 +214,8 @@ public abstract class MQ {
 		}
 
 		long s1 = seq.incrementAndGet();
-		// if (Logger.isEnabled())
-		// Logger.log(s1, "send", to, req);
+		if (log.isDebugEnabled())
+			log.debug("send topic  to [" + to + "], seq=" + s1 + ", req=" + req);
 
 		req.seq = s1;
 		mq._topic(to, req);
@@ -245,8 +243,6 @@ public abstract class MQ {
 		if (req.seq <= 0) {
 			req.seq = seq.incrementAndGet();
 		}
-		// if (Logger.isEnabled())
-		// Logger.log(req.seq, "send", to, req);
 
 		return mq._send(to, req);
 	}
@@ -282,5 +278,136 @@ public abstract class MQ {
 	// public static void logger(boolean log) {
 	// Logger.logger(log);
 	// }
+
+	public static class Request {
+
+		public long seq = -1;
+		public int type = 0;
+
+		public String from;
+		public int priority = 1;
+		public int ttl = (int) X.AMINUTE;
+		public int persistent = DeliveryMode.NON_PERSISTENT;
+		public byte[] data;
+
+		public DataInputStream getInput() {
+			return new DataInputStream(new ByteArrayInputStream(data));
+		}
+
+		public DataOutputStream getOutput() {
+			final ByteArrayOutputStream bb = new ByteArrayOutputStream();
+			return new DataOutputStream(bb) {
+
+				@Override
+				public void close() throws IOException {
+					super.close();
+					data = bb.toByteArray();
+				}
+
+			};
+		}
+
+		public void setBody(byte[] bb) {
+			data = bb;
+		}
+
+		public static Request create() {
+			return new Request();
+		}
+
+		public Request seq(long seq) {
+			this.seq = seq;
+			return this;
+		}
+
+		public Request type(int type) {
+			this.type = type;
+			return this;
+		}
+
+		public Request from(String from) {
+			this.from = from;
+			return this;
+		}
+
+		public Request data(byte[] data) {
+			this.data = data;
+			return this;
+		}
+
+		public Request ttl(long t) {
+			this.ttl = (int) t;
+			return this;
+		}
+
+		public Request put(Serializable t) {
+			if (t != null) {
+				ByteArrayOutputStream bb = new ByteArrayOutputStream();
+				try {
+					ObjectOutputStream out = new ObjectOutputStream(bb);
+					out.writeObject(t);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				} finally {
+					X.close(bb);
+				}
+				data = bb.toByteArray();
+			}
+			return this;
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T> T get() {
+			if (data == null || data.length == 0)
+				return null;
+
+			ByteArrayInputStream bb = new ByteArrayInputStream(data);
+			try {
+				ObjectInputStream in = new ObjectInputStream(bb);
+				return (T) in.readObject();
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				X.close(bb);
+			}
+			return null;
+		}
+	}
+
+	public static class Response extends Request {
+
+		int state;
+		String error;
+
+		public void copy(Request r) {
+			seq = r.seq;
+			type = r.type;
+			data = r.data;
+			from = r.from;
+		}
+
+	}
+
+	public static void notify(String name, Serializable data) {
+		try {
+			MQ.topic(Notify.name, Request.create().from(name).put(data));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	public static <T> T wait(String name, long timeout) {
+		return Notify.wait(name, timeout, null);
+	}
+
+	public static <T> T wait(String name, long timeout, Runnable prepare) {
+		return Notify.wait(name, timeout, prepare);
+	}
+
+	public static <T> Queue<T> create(String name) throws Exception {
+		Queue<T> q = Queue.create(name);
+		q.bind();
+		return q;
+	}
 
 }

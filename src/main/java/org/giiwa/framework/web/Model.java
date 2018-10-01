@@ -146,6 +146,10 @@ public class Model {
 
 	private static final ThreadLocal<Module> _currentmodule = new ThreadLocal<Module>();
 
+	protected static enum LoginType {
+		web, ajax
+	};
+
 	/**
 	 * get the request as inputstream.
 	 * 
@@ -206,6 +210,24 @@ public class Model {
 	}
 
 	private Path process() throws Exception {
+
+		if (method.isGet()) {
+			String non = Global.getString("site.browser.nonredirect", null);
+			String ignore = Global.getString("site.browser.ignoreurl", null);
+			if (!X.isEmpty(non) && !X.isSame(non, uri) && !X.isSame(uri, "/admin/browserinfo")
+					&& (X.isEmpty(ignore) || !uri.matches(ignore))) {
+
+				String ua = Global.getString("site.browser", "*");
+
+				if (!X.isEmpty(ua) && !X.isSame(ua, "*")) {
+					String b = this.browser();
+					if (!b.matches(ua)) {
+						this.redirect(non);
+						return null;
+					}
+				}
+			}
+		}
 
 		if (pathmapping != null) {
 
@@ -339,8 +361,8 @@ public class Model {
 									if (log.isErrorEnabled())
 										log.error(e.getMessage(), e);
 
-									GLog.oplog.error(this.getClass(), pp.path(), e.getMessage(), e, getUser(),
-											this.getRemoteHost());
+									GLog.oplog.error(this.getClass(), pp.path(), this.getJSON().toString(), e,
+											getUser(), this.getRemoteHost());
 
 									error(e);
 								}
@@ -364,20 +386,6 @@ public class Model {
 		if (staticfile()) {
 			return null;
 		}
-		/**
-		 * default handler
-		 */
-		this.put("lang", lang);
-		this.put(X.URI, uri);
-		this.put("module", Module.home);
-		this.put("path", path);
-		this.put("request", req);
-		this.put("this", this);
-		this.put("response", resp);
-		this.set("session", this.getSession());
-		this.set("global", Global.getInstance());
-		this.set("conf", Config.getConf());
-		this.set("local", Local.getInstance());
 
 		this.createQuery();
 
@@ -398,7 +406,7 @@ public class Model {
 
 						// check access
 						if (!X.isEmpty(p.access()) && !X.NONE.equals(p.access())) {
-							if (!login.hasAccess(p.access().split("\\|"))) {
+							if (!login.hasAccess(p.access())) {
 								deny();
 								return null;
 							}
@@ -426,7 +434,7 @@ public class Model {
 
 						// check access
 						if (!X.isEmpty(p.access())) {
-							if (!login.hasAccess(p.access().split("\\|"))) {
+							if (!login.hasAccess(p.access())) {
 								deny();
 								return null;
 							}
@@ -453,7 +461,7 @@ public class Model {
 
 						// check access
 						if (!X.isEmpty(p.access())) {
-							if (!login.hasAccess(p.access().split("\\|"))) {
+							if (!login.hasAccess(p.access())) {
 								deny();
 								return null;
 							}
@@ -554,6 +562,7 @@ public class Model {
 			this.put("global", Global.getInstance());
 			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());
+			this.set("requestid", UID.random(20));
 
 			if (!Module.home.before(this)) {
 				log.debug("handled by filter, and stop to dispatch");
@@ -572,7 +581,7 @@ public class Model {
 		return null;
 	}
 
-	private void createQuery() {
+	protected void createQuery() {
 		String url = uri;
 
 		if (url.endsWith("/")) {
@@ -1165,9 +1174,12 @@ public class Model {
 	 * @return String
 	 */
 	final public String getURI() {
-		String uri = req.getRequestURI();
-		while (uri.indexOf("//") > -1) {
-			uri = uri.replaceAll("//", "/");
+		if (X.isEmpty(uri)) {
+			uri = req.getRequestURI();
+			while (uri.indexOf("//") > -1) {
+				uri = uri.replaceAll("//", "/");
+			}
+			return uri;
 		}
 		return uri;
 	}
@@ -1315,16 +1327,22 @@ public class Model {
 					log.debug("params=" + sb.toString());
 
 					JSON jo = JSON.fromObject(sb.toString());
-					uploads = new HashMap<String, Object>();
-					uploads.putAll(jo);
+					if (jo != null) {
+						uploads = new HashMap<String, Object>();
+						uploads.putAll(jo);
+					}
 				}
 
-				Object v1 = uploads.get(name);
-				if (v1 != null) {
-					return v1.toString().trim();
+				if (uploads != null) {
+					Object v1 = uploads.get(name);
+					if (v1 != null) {
+						return v1.toString().trim();
+					}
+					return null;
 				}
-				return null;
-			} else if (this._multipart) {
+			}
+
+			if (this._multipart) {
 				getFiles();
 
 				FileItem i = this.getFile(name);
@@ -1574,19 +1592,21 @@ public class Model {
 		String c1 = req.getContentType();
 		if (c1 != null && c1.indexOf("application/json") > -1) {
 			this.getString(null);// initialize uploads
-			return new ArrayList<String>(uploads.keySet());
+			if (uploads != null) {
+				return new ArrayList<String>(uploads.keySet());
+			}
 		} else if (this._multipart) {
 			getFiles();
 			return new ArrayList<String>(uploads.keySet());
-		} else {
-			Enumeration<?> e = req.getParameterNames();
-			List<String> list = new ArrayList<String>();
-
-			while (e.hasMoreElements()) {
-				list.add(e.nextElement().toString());
-			}
-			return list;
 		}
+
+		Enumeration<?> e = req.getParameterNames();
+		List<String> list = new ArrayList<String>();
+
+		while (e.hasMoreElements()) {
+			list.add(e.nextElement().toString());
+		}
+		return list;
 
 	}
 
@@ -1661,7 +1681,6 @@ public class Model {
 			login = (User) s.get("user");
 
 			if (login == null) {
-
 				if (Global.getInt("user.token", 1) == 1) {
 					String sid = sid();
 					String token = getToken();
@@ -1669,7 +1688,7 @@ public class Model {
 						AuthToken t = AuthToken.load(sid, token);
 						if (t != null) {
 							login = t.getUser_obj();
-							this.setUser(login);
+							this.setUser(login, LoginType.ajax);
 						}
 					}
 				}
@@ -1678,9 +1697,30 @@ public class Model {
 			// log.debug("getUser, user=" + login + " session=" + s);
 		}
 
+		if (login != null) {
+			if (System.currentTimeMillis() - login.getLong("lastlogined") > X.AMINUTE) {
+				login.set("lastlogined", System.currentTimeMillis());
+
+				V v = V.create();
+				String type = login.get("logintype");
+				if (X.isSame(type, "web")) {
+					v.append("weblogined", System.currentTimeMillis());
+				} else if (X.isSame(type, "ajax")) {
+					v.append("ajaxlogined", System.currentTimeMillis());
+				}
+				if (!v.isEmpty()) {
+					User.dao.update(login.getId(), v);
+				}
+			}
+		}
+
 		this.put("me", login);
 
 		return login;
+	}
+
+	final public void setUser(User u) {
+		this.setUser(u, LoginType.web);
 	}
 
 	/**
@@ -1689,7 +1729,8 @@ public class Model {
 	 * @param u
 	 *            the user object associated with the session
 	 */
-	final public void setUser(User u) {
+	final public void setUser(User u, LoginType logintype) {
+
 		Session s = getSession();
 		User u1 = (User) s.get("user");
 		if (u != null && u1 != null && u1.getId() != u.getId()) {
@@ -1698,6 +1739,27 @@ public class Model {
 		}
 
 		if (u != null) {
+			if (!X.isEmpty(logintype)) {
+				u.set("logintype", logintype.toString());
+			}
+			if (System.currentTimeMillis() - u.getLong("lastlogined") > X.AMINUTE) {
+				u.set("lastlogined", System.currentTimeMillis());
+				u.set("ip", this.getRemoteHost());
+
+				V v = V.create();
+				String type = u.get("logintype");
+				if (X.isSame(type, "web")) {
+					v.append("weblogined", System.currentTimeMillis());
+					v.append("ip", this.getRemoteHost());
+				} else if (X.isSame(type, "ajax")) {
+					v.append("ajaxlogined", System.currentTimeMillis());
+					v.append("ip", this.getRemoteHost());
+				}
+				if (!v.isEmpty()) {
+					User.dao.update(u.getId(), v);
+				}
+			}
+
 			s.set("user", u);
 		} else {
 			log.warn("clear the data in session");
@@ -1870,11 +1932,18 @@ public class Model {
 		this.setContentType(Model.MIME_JSON);
 		this.print(jsonstr);
 
-		if (AccessLog.isOn())
-			AccessLog.create(getRemoteHost(), uri,
-					V.create().set("status", getStatus()).set("header", Arrays.toString(getHeaders()))
-							.set("client", browser()).set("module", module.getName()).set("model", getClass().getName())
-							.append("request", this.getJSON().toString()).append("response", jsonstr));
+		if (AccessLog.isOn()) {
+			try {
+				// TODO, may cause null exception
+				AccessLog.create(getRemoteHost(), uri,
+						V.create().set("status", getStatus()).set("header", Arrays.toString(getHeaders()))
+								.set("client", browser()).set("module", module.getName())
+								.set("model", getClass().getName()).append("request", this.getJSON().toString())
+								.append("response", jsonstr));
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
 
 	}
 
@@ -1897,17 +1966,43 @@ public class Model {
 			if (file != null && file.exists()) {
 				View.merge(file, this, viewname);
 
-				// if (log.isDebugEnabled())
-				// log.debug("showing viewname = " + viewname + ", cost: " + t1.past() +
-				// "ms");
+				return true;
 			} else {
+				if (Global.getInt("dfile.web", 0) == 1) {
+					DFile d = Disk.seek(uri);
+					if (d.exists()) {
+
+						View.merge(d, this, viewname);
+
+						return true;
+					}
+				}
 				notfound("page not found, page=" + viewname);
 			}
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error(viewname, e);
 
-			// error(e);
+			GLog.applog.error(this.getClass(), "show", e.getMessage(), e, login, this.getRemoteHost());
+		}
+
+		return false;
+	}
+
+	final public boolean passup(String viewname) {
+
+		try {
+
+			File file = module.floor() != null ? module.floor().getFile(viewname) : null;
+			if (file != null && file.exists()) {
+				View.merge(file, this, viewname);
+				return true;
+			} else {
+				notfound("page not found, page=" + viewname);
+			}
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(viewname, e);
 		}
 
 		return false;
@@ -1924,21 +2019,7 @@ public class Model {
 	 * On post requested from HTTP POST method.
 	 */
 	public void onPost() {
-		// TODO, may cause dead loop ?
-		/*
-		 * if (module != null) { Module t = module.floor(); if (t != null) { Model m =
-		 * t.getModel(Model.METHOD_POST, uri); if (m != null) { m.dispatch(uri, req,
-		 * resp, method); return; } } }
-		 */
-
-		String uri = req.getRequestURI();
-		while (uri.indexOf("//") > -1) {
-			uri = uri.replaceAll("//", "/");
-		}
-		Model mo = new DefaultModel();
-		mo.module = Module.load(0);
-		mo.copy(this);
-		mo.dispatch(uri, req, resp, method);
+		// TODO
 
 	}
 
@@ -2028,9 +2109,15 @@ public class Model {
 			log.warn(this.getClass().getName() + "[" + this.getURI() + "]");
 
 		Model m = Module.home.getModel(method.method, "/notfound");
-		// log.debug("m=" + m);
+
+		if (m != null) {
+			log.debug("m.class=" + m.getClass() + ", this.class=" + this.getClass());
+		}
+
 		if (m != null && !m.getClass().equals(this.getClass())) {
 			try {
+				log.info("m.class=" + m.getClass() + ", this.class=" + this.getClass());
+
 				m.copy(this);
 
 				if (method.isGet()) {
@@ -2039,6 +2126,7 @@ public class Model {
 					m.onPost();
 				}
 
+				status = m.getStatus();
 				return;
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -2098,6 +2186,8 @@ public class Model {
 	final public void setStatus(int statuscode) {
 		resp.setStatus(statuscode);
 		status = statuscode;
+
+		// GLog.applog.info("test", "test", "status=" + statuscode, null, null);
 	}
 
 	/**
@@ -2197,6 +2287,7 @@ public class Model {
 		this.login = m.login;
 		this.method = m.method;
 		this.path = m.path;
+		this.query = m.query;
 		this.sid = m.sid;
 		this.uri = m.uri;
 		this._multipart = ServletFileUpload.isMultipartContent(req);

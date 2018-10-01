@@ -355,8 +355,8 @@ public class GImage {
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
 
-//			if (w > w1 || h > h1)
-//				return -1;
+			// if (w > w1 || h > h1)
+			// return -1;
 
 			int w0 = w;
 			int h0 = h;
@@ -1252,4 +1252,32 @@ public class GImage {
 		scale3(s1, s2, 1176, 100);
 
 	}
+
+	public static void cut(String source, int w, int h, String target) {
+		try {
+
+			BufferedImage img = ImageIO.read(new File(source));
+			if (img == null || w < 0 || h < 0)
+				return;
+
+			int h1 = img.getHeight();
+			int w1 = img.getWidth();
+
+			if (w > w1 || h > h1)
+				return;
+
+			for (int x = 0; x < w1; x += w) {
+				for (int y = 0; y < h1; y += h) {
+					BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);
+					Graphics g = out.getGraphics();
+					g.drawImage(img, 0, 0, w, h, x, y, x + w, y + h, null);
+					ImageIO.write(out, "png", new File(target + "/" + x + "_" + y + ".png"));
+				}
+			}
+
+		} catch (Exception e) {
+			log.error(source, e);
+		}
+	}
+
 }

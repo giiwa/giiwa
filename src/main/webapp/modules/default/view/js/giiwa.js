@@ -13,12 +13,253 @@ giiwa.extend = function(m) {
 giiwa
 		.extend({
 			__history : [],
-			menuapi : false,
-			panelapi : false,
 			uploaddone : false,
 			_popup : false,
 
-			menu : function(menuid, settings) {
+			loadimage : function(url, cb) {
+				if(url && url != '') {
+					var m = new Image();
+					m.onload = function(){
+						cb && cb(url);
+					}
+					m.src = url;
+				}
+			},
+			
+			popover : function (el, pop, opt){
+				var pp = $("#popover");
+				if(pp.length == 0) {
+					pp = $("<div id='popover'><span class='top'></span><span class='right'></span><span  class='bottom'></span><span class='left'></span><div class='cc'></div></div>");
+					$('body').append(pp);
+				}
+				
+				el.each(function(i, e){
+					e = $(e);
+					e.on('mouseover', function(evt){
+
+						pp.find('>span').hide();
+
+						var e1 = pop.clone();
+						opt && opt.onprepare && opt.onprepare(e, e1);
+
+						e1.show();
+						var cc = pp.find('>.cc');
+						cc.empty();
+						cc.append(e1);
+						
+						var hint = e.attr('data-hint');
+						if(hint == 'top') {
+							// top
+							pp.find('>span.bottom').show();
+							pp.css('top', (e.offset().top - pp.height() - 21) + 'px');
+							pp.css('left', (e.offset().left + e.width()/2 - pp.width()/2) + 'px');
+						} else if(hint == 'right') {
+							// right
+							pp.find('>span.left').show();
+							pp.css('top', (e.offset().top + e.height()/2 - pp.height()/2) + 'px');
+							pp.css('left', (e.offset().left + e.width()  + 21) + 'px');
+						} else if(hint == 'left') {
+							// left
+							pp.find('>span.right').show();
+							pp.css('top', (e.offset().top + e.height()/2 - pp.height()/2) + 'px');
+							pp.css('left', (e.offset().left - pp.width() - 21) + 'px');
+						} else {
+							// bottom
+							pp.find('>span.top').show();
+							pp.css('top', (e.offset().top + e.height() + 21) + 'px');
+							pp.css('left', (e.offset().left + e.width()/2 - pp.width()/2) + 'px');
+						}
+						
+						pp.show();
+					}).on('mouseout', function(e){
+						pp.hide();
+					})
+				})
+			},
+			
+			upload : function(files, opt) {
+				opt = $.extend({
+					chunksize : 16 * 1024
+				}, opt);
+
+				// console.log(files);
+				$(files).each(
+						function(i, file) {
+							// console.log(file);
+							var lastmodified = file.lastModified;
+							var name = file.name;
+							var size = file.size;
+							var pos = 0;
+
+							var xhr = new XMLHttpRequest();
+							xhr.onreadystatechange = function(e) {
+								if (xhr.readyState == 4) {
+									// got response
+									e = eval("(" + xhr.response + ")");
+
+									opt.onprogress && opt.onprogress(e);
+									pos = e.pos;
+									if (pos < size) {
+										_next();
+									} else {
+										opt.ondone && opt.ondone(e);
+									}
+								}
+							}
+							xhr.onerror = function(e) {
+								console.log(xhr);
+							}
+
+							var _upload = function(bb) {
+
+								xhr.open('POST', opt.url, true);
+								// console.log(bb);
+								xhr.setRequestHeader('lastModified',
+										file.lastModified);
+								xhr.setRequestHeader('Content-Range', 'bytes '
+										+ pos + '-' + (pos + opt.chunksize + 1)
+										+ '/' + file.size);
+								var data = new FormData();
+								data.append("filename", name);
+								data.append("file", bb);
+								xhr.send(data);
+							}
+
+							var _next = function() {
+								var bb = false;
+								if (file.webkitSlice) {
+									bb = file.webkitSlice(pos, pos
+											+ opt.chunksize + 1);
+								} else if (file.mozSlice) {
+									bb = file.mozSlice(pos, pos + opt.chunksize
+											+ 1);
+								} else if (file.slice) {
+									bb = file.slice(pos, pos + opt.chunksize
+											+ 1);
+								}
+								if (bb) {
+									_upload(bb);
+								} else {
+									// not support post all in one
+									_upload(file);
+								}
+							}
+							opt.onstart && opt.onstart({
+								name : name,
+								pos : pos
+							});
+
+							_next();
+
+						})
+			},
+
+			size : function(d) {
+				var unit = '';
+				if (d < 1024) {
+				} else if (d < 1024 * 1024) {
+					unit = "k";
+					d /= 1024;
+				} else if (d < 1024 * 1024 * 1024) {
+					unit = "M";
+					d /= 1024 * 1024;
+				} else {
+					unit = "G";
+					d /= 1024 * 1024 * 1024;
+				}
+				return (parseInt(d) * 10 / 10) + unit;
+			},
+
+			link : function(e, cb) {
+				e = $(e);
+				var target = e.attr('target');
+				if (target && target.length > 0) {
+					// ignore
+					return;
+				}
+				var on = e.attr('onclick');
+				if (on && on.length > 0) {
+					// ignore
+					return;
+				}
+
+				var href = e.attr('href');
+				if (!href) {
+					return;
+				}
+
+				if (href.indexOf('javascript') != 0 && href.indexOf('#') != 0) {
+					e.click(function(e1) {
+						if (e1.done != 1) {
+							// href may changed
+							href = e.attr('href');
+							cb && cb(href);
+							// console.log(e1);
+							e1.done = 1;
+							e1.preventDefault();
+							e1.stopPropagation();
+						}
+					});
+				}
+			},
+
+			call : function(func, timeout) {
+				setTimeout(function(){
+					func();				
+				}, timeout);
+			},
+			
+			portlet : function(panel, cb) {
+				panel.find('.portlet').each(function(i, e) {
+					var pp = $(e);
+					
+					pp.bind('reload', function(){
+						pp.attr('data-loaded', '0');
+						reload();
+					});
+					
+					reload();
+					
+					function reload(){
+						if (pp.attr('data-loaded') != '1') {
+							var url = pp.attr('data-url');
+							if (url && url.length > 0) {
+								load(url);
+							}
+						}
+					}
+
+					function load(url) {
+
+						// console.log("portlet.load:" + url);
+
+						$.get(url, function(d) {
+							pp.attr('data-loaded', '1');
+							if(d.length > 0) {
+								pp.html(d);
+								pp.fadeIn();
+								
+								// console.log(pp);
+
+								hook(pp);
+
+								cb && cb(pp);
+							}
+						})
+					}
+
+					function hook(p) {
+						p.find('a').each(function(i, a) {
+							giiwa.link(a, function(url) {
+								load(url);
+							});
+						})
+					}
+
+				})
+			},
+
+			initmenu : function(menuid, settings) {
 				settings = $.extend({
 					root : 0,
 					name : 'home'
@@ -67,14 +308,14 @@ giiwa
 					if (e.tag) {
 						s += ' tag="' + e.tag + '" ';
 					}
-					s += '> ';
+					s += ' data-title="' + e.text + '"> ';
 
 					s += '<i class="icon ';
 					if (e.classes) {
 						s += e.classes;
 					}
 					s += '"></i>';
-					s += '<img class="icon" src="/images/loading.gif"/>';
+					// s += '<img class="icon" src="/images/loading.gif"/>';
 					if (e.url) {
 						s += '&nbsp;<span><a href="' + e.url
 								+ '" target="_blank">' + e.text + '</a></span>';
@@ -143,6 +384,15 @@ giiwa
 								var e = parent.find('.children');
 								e.html(s);
 
+								// title
+								if (o.attr('title') && o.attr('title') != '') {
+									// add title
+									e.find('.item .title').each(function(i, e) {
+										e = $(e);
+										e.attr('title', e.attr('data-title'));
+									});
+								}
+
 								_hook(e);
 
 								$(parent.find('.children')[0]).slideDown(500,
@@ -175,13 +425,17 @@ giiwa
 
 				var p1 = p.find('>.menu');
 				p1.empty();
-				p1.append(menu);
+				var m1 = menu.clone();
+				p1.append(m1);
 				p1.css('left', xy[0] + 'px');
 				p1.css('top', xy[1] + 'px');
-				menu.show();
+				m1.show();
 				p.find('.menuitem').on('click', function() {
-					p.hide();
 					var that = this;
+					if ($(that).hasClass('disabled')) {
+						return;
+					}
+					p.hide();
 					setTimeout(function() {
 						cb(that)
 					}, 100);
@@ -217,14 +471,7 @@ giiwa
 						} else {
 							__url = url + '?' + data;
 						}
-						if (giiwa.__history.length > 0
-								&& giiwa
-										._compare(
-												giiwa.__history[giiwa.__history.length - 1],
-												__url)) {
-							giiwa.__history.pop();
-						}
-						giiwa.__history.push(__url);
+						giiwa.history(__url);
 
 						if (__url.indexOf('?') > 0) {
 							__url += '&' + new Date().getTime();
@@ -269,49 +516,69 @@ giiwa
 
 				opt = $.extend({
 					width : 400,
-					height : 200
+					height : 200,
+					z : 10001,
+					moveable: true
 				}, opt);
 
-				var p0 = panel.parent();
 				var p = $('#dialog');
 				if (p.length == 0) {
 					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
-					if (!opt || !opt.moveable) {
+					if (opt && opt.moveable) {
 						$("#dialog .dialog").draggable();
 					}
 
 					$('#dialog .dialogbg, #dialog a.close').click(function(d) {
-						p.fadeOut(function() {
-							panel.hide();
-							p0.append(panel);
+						p.fadeOut(100, function() {
 							p.remove();
 						});
 					});
+				} else if (giiwa._dialog) {
+					giiwa._dialog.remove();
 				}
+				p.css("z-index", opt.z);
+				
 				var p1 = $('#dialog .dialog');
 				p1.css('width', opt.width + 'px');
 				p1.css('height', opt.height + 'px');
-				p1.css('left', '50%');
-				p1.css('top', '50%');
-				p1.css('margin-left', (-opt.width / 2) + 'px');
-				p1.css('margin-top', (-opt.height / 2) + 'px');
+				p1.css('left', 'calc(50% - ' + opt.width/2 + 'px)');
+				p1.css('top', 'calc(50% - ' + opt.height/2 + 'px');
 
 				var pp = $('#dialog .dialog>.scroll');
 				pp.empty();
-				pp.append(panel);
-				panel.css('display', 'inline-block');
+				var p2 = panel.clone();
+				pp.append(p2);
+				p2.css('display', 'inline-block');
 
-				p.fadeIn();
+				opt && opt.prepare && opt.prepare(p2);
+				
+				p2.find('form').submit(function(e) {
+					e.preventDefault();
+					var form = e.target;
+
+					giiwa.submit(form, {
+						success : function(d) {
+							p.fadeOut(100, function() {
+								p.remove();
+								opt.onclose && opt.onclose('success');
+							});
+							opt.onsubmit && opt.onsubmit(d);
+						}
+					});
+				});
+
+				p.fadeIn(100);
 
 				giiwa._dialog = {
+					panel : p2,
 					close : function() {
-						p.fadeOut(function() {
-							panel.hide();
-							p0.append(panel);
+						p.fadeOut(100, function() {
 							p.remove();
 						})
+					},
+					remove : function() {
 					}
 				};
 				return giiwa._dialog;
@@ -323,21 +590,45 @@ giiwa
 					return giiwa._popup;
 				}
 
-				opt = $.extend({}, opt);
+				opt = $.extend({
+					max : true,
+					close : true,
+					z : 10000,
+					width: '70%',
+					height: '70%',
+					moveable: false
+				}, opt);
 
 				var p = $('#gwpopup');
 				if (p.length == 0) {
-					p = $('<div id="gwpopup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="close">X</a><div class="scroll"></div></div></div>');
+					p = $('<div id="gwpopup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="max"><i class="icon-checkbox-unchecked"></i></a><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
-					if (!opt || !opt.moveable) {
-						$("#gwpopup .popup").draggable();
-					}
+					$("#gwpopup>.popup").draggable();
+						
 					$('#gwpopup .popupbg, #gwpopup a.close').click(function(d) {
-						p.fadeOut(function() {
+						try{
+							opt.beforeclose && opt.beforeclose('close');
+						}catch(e1){
+							console.error(e1);
+						}
+						
+						p.fadeOut(100, function() {
 							p.remove();
-							opt && opt.onclose && opt.onclose();
+							opt.onclose && opt.onclose('close');
 						});
+					});
+					$('#gwpopup a.max').click(function(d) {
+						// max or restore
+						$('#gwpopup .popup').toggleClass('max');
+						
+						try{
+							opt.beforeclose && opt.beforeclose('max');
+						}catch(e1){
+							console.error(e1);
+						}
+						
+						giiwa._popup.reload();
 					});
 
 					$('#gwpopup a.prev').click(
@@ -346,145 +637,170 @@ giiwa
 										&& giiwa.popuphistory.length > 1) {
 									var h = giiwa.popuphistory.pop();
 									h = giiwa.popuphistory.pop();
+
+									try{
+										opt.beforeclose && opt.beforeclose('back');
+									}catch(e1){
+										console.error(e1);
+									}
 									giiwa.popup(h);
 								}
 							});
 
 					giiwa.popuphistory = [];
 				}
+				p.css("z-index", opt.z);
+
 				if (giiwa.popuphistory && giiwa.popuphistory.length > 0) {
 					p.find('a.prev').show();
 				} else {
 					p.find('a.prev').hide();
 				}
-				giiwa.popuphistory.push(url);
+				if (giiwa.popuphistory.length == 0
+						|| url != giiwa.popuphistory[giiwa.popuphistory.length - 1]) {
+					giiwa.popuphistory.push(url);
+				}
+				if (opt.max) {
+					$("#gwpopup a.max").show();
+				} else {
+					$("#gwpopup a.max").hide();
+				}
 
-				var pp = $('#gwpopup .popup>.scroll');
-				pp.empty();
+				// console.log(opt);
+				
+				var p1 = $('#gwpopup>.popup');
+				if(!isNaN(opt.width)) {
+					p1.css('width', opt.width + 'px');
+					p1.css('left', 'calc(50% - ' + (opt.width/2) + 'px)');
+				} else {
+					p1.css('width', opt.width);
+					p1.css('left', opt.left);
+				}
+				if(!isNaN(opt.height)) {
+					p1.css('height', opt.height + 'px');
+					p1.css('top', 'calc(50% - ' + (opt.height/2) + 'px');
+				} else {
+					p1.css('height', opt.height);
+					p1.css('top', opt.top);
+				}
+
+				var pp = $('#gwpopup>.popup>.scroll');
+
 				giiwa.processing.show();
-				$
-						.get(
-								url,
-								function(d) {
-									giiwa.processing.hide();
-									pp.html(d);
+				$.get(url, function(d) {
+					giiwa.processing.hide();
+					pp.html(d);
 
-									hook();
+					hook(pp);
 
-									function hook() {
-										pp
-												.find('a')
-												.each(
+					function hook(pp) {
+						pp.find('a').each(function(i, e) {
+							giiwa.link(e, function(url) {
+								giiwa.popup(url, opt);
+							});
+						});
 
-														function(i, e) {
-															e = $(e);
-															var href = e
-																	.attr('href');
-															var target = e
-																	.attr('target');
-															if (target == undefined
-																	&& href != undefined
-																	&& (href
-																			.indexOf('javascript') == -1)
-																	&& (href
-																			.indexOf('#') != 0)) {
+						pp.find('form').submit(
 
-																e
-																		.click(function(
-																				e1) {
-																			var href = $(
-																					this)
-																					.attr(
-																							'href');
-																			if (href != undefined) {
-																				giiwa
-																						.popup(
-																								href,
-																								opt);
-																			}
+						function(e) {
+							e.preventDefault();
 
-																			e1
-																					.preventDefault();
-																		});
-															}
-														});
+							var form = e.target;
 
-										pp
-												.find('form')
-												.submit(
-
-														function(e) {
-															e.preventDefault();
-
-															var form = e.target;
-
-															giiwa
-																	.submit(
-																			form,
-																			{
-																				success : function(
-																						d) {
-																					p
-																							.fadeOut(function() {
-																								p
-																										.remove();
-																								opt
-																										&& opt.onclose
-																										&& opt
-																												.onclose();
-
-																							});
-																					opt.onsubmit
-																							&& opt
-																									.onsubmit(d);
-																				}
-																			});
-
-														});
+							giiwa.submit(form, {
+								success : function(d) {
+									if(opt.onsubmit) {
+										opt.onsubmit(d);	
+									} else {
+										p.fadeOut(100, function() {
+											p.remove();
+											opt.onclose && opt.onclose('success');
+										});
 									}
+								}
+							});
 
-								})
+						});
 
-				p.fadeIn();
+						giiwa.portlet(pp, function(e) {
+							// portlet already hook
+							// hook($(e));
+						})
+
+					}
+
+				})
+
+				p.fadeIn(100);
 
 				giiwa._popup = {
-					close : function() {
+					close : function(s) {
+						giiwa.popuphistory = [];
 						if (p && p.length > 0 && p.css('display') != 'none') {
-							p.fadeOut(function() {
-								p.remove();
-								opt && opt.onclose && opt.onclose();
 
+							try{
+								opt.beforeclose && opt.beforeclose(s);
+							}catch(e1){
+								console.error(e1);
+							}
+							
+							p.fadeOut(100, function() {
+								p.remove();
+								opt.onclose && opt.onclose(s);
 							});
 						}
+					},
+					data : function(s) {
+						opt.ondata && opt.ondata(s);
 					},
 					isShowing : function() {
 						return p && p.length > 0 && p.css('display') != 'none';
 					},
 					reload : function() {
+						try{
+							opt.beforeclose && opt.beforeclose('reload');
+						}catch(e1){
+							console.error(e1);
+						}
+						
 						var h = giiwa.popuphistory.pop();
-						giiwa.popup(h);
+						giiwa.popup(h, opt);
+					},
+					back : function() {
+						var h = giiwa.popuphistory.pop();
+						var h = giiwa.popuphistory.pop();
+						
+						try{
+							opt.beforeclose && opt.beforeclose('back');
+						}catch(e1){
+							console.error(e1);
+						}
+						
+						giiwa.popup(h, opt);
+					},
+					moveable : function(b) {
+						if (b) {
+							$("#gwpopup>.popup").draggable("enable");
+						} else {
+							$("#gwpopup>.popup").draggable("disable");
+						}
 					}
 				};
+
+				giiwa._popup.opt = opt;
+				giiwa._popup.moveable(opt && opt.moveable);
+				
 				return giiwa._popup;
 			},
 
-			download : function(url, opt) {
-				giiwa.processing.show();
-				$
-						.post(
-								url,
-								opt,
-								function(d) {
-									giiwa.processing.hide();
-									if (d.state == 200) {
-										var d = $('iframe#download');
-										if (d.length == 0) {
-											d = $("<iframe id='download' style='display:none'></iframe>");
-											$('body').append(d);
-										}
-										d.attr('src', d.file);
-									}
-								});
+			download : function(url) {
+				var d = $('a#download');
+				if (d.length == 0) {
+					d = $("<a id='download' download hidden></a>");
+					$('body').append(d);
+				}
+				d.attr('href', url);
+				d[0].click();
 			},
 
 			processing : {
@@ -609,7 +925,7 @@ giiwa
 				}
 				return p;
 			},
-			_compare : function(url1, url2) {
+			_equals : function(url1, url2) {
 				var p1 = giiwa._format(url1);
 				var p2 = giiwa._format(url2);
 				// console.log(url1);
@@ -630,15 +946,22 @@ giiwa
 				return true;
 			},
 			history : function(url) {
-				if (url && url.length > 0) {
+				if (url !== undefined && url.length > 0) {
 					if (url[url.length - 1] == '?') {
 						url = url.substring(0, url.length - 1);
 					}
-					if (!giiwa._compare(
-							giiwa.__history[giiwa.__history.length - 1], url)) {
+					var p = giiwa.__history.pop();
+					if (p !== undefined) {
+						giiwa.__history.push(p);
+					}
+					if (p === undefined || !giiwa._equals(p, url)) {
 						giiwa.__history.push(url);
 					}
-					// console.log(giiwa.__history);
+					while (giiwa.__history.length > 100) {
+						// remove the first
+						giiwa.__history.shift();
+					}
+					 // console.log(giiwa.__history);
 				}
 			},
 			back : function() {
@@ -647,13 +970,19 @@ giiwa
 
 					var h = giiwa.__history.pop();
 					h = giiwa.__history.pop();
-
+					
 					giiwa.load(h);
+					
 				}
 			},
 			show : function(html) {
 
 				giiwa.uploaddone = false;
+				try {
+					$('#panel').trigger('beforechange');
+				}catch(e1){
+					console.error(e1);
+				}
 				try {
 					$('#panel .content').html(html);
 				} catch (e) {
@@ -668,33 +997,18 @@ giiwa
 
 			hook : function(panel) {
 
-				portlet.load(panel, function(e) {
+				giiwa.portlet(panel, function(e) {
 					giiwa.hook(e);
 				})
 
 				/**
 				 * hook all the <a> tag
 				 */
-				panel.find('a').each(
-
-						function(i, e) {
-							e = $(e);
-							var href = e.attr('href');
-							var target = e.attr('target');
-							if (target == undefined && href != undefined
-									&& (href.indexOf('javascript') == -1)
-									&& (href.indexOf('#') != 0)) {
-
-								e.click(function(e1) {
-									var href = $(this).attr('href');
-									if (href != undefined) {
-										giiwa.load(href);
-									}
-
-									e1.preventDefault();
-								});
-							}
-						});
+				panel.find('a').each(function(i, e) {
+					giiwa.link(e, function(url) {
+						giiwa.load(url);
+					})
+				});
 
 				/**
 				 * hook all <form> to smooth submit
@@ -828,9 +1142,27 @@ giiwa
 				 */
 				panel.find('table.tablesorter tr').bind('mouseenter',
 						function() {
-							$(this).addClass('hover');
+							var e = $(this);
+							while (e.hasClass('link')) {
+								e = e.prev();
+							}
+							e.addClass('hover');
+							e = e.next();
+							while (e.hasClass('link')) {
+								e.addClass('hover');
+								e = e.next();
+							}
 						}).bind('mouseleave', function() {
-					$(this).removeClass('hover');
+					var e = $(this);
+					while (e.hasClass('link')) {
+						e = e.prev();
+					}
+					e.removeClass('hover');
+					e = e.next();
+					while (e.hasClass('link')) {
+						e.removeClass('hover');
+						e = e.next();
+					}
 				});
 
 				/**
@@ -861,8 +1193,9 @@ giiwa
 							if (that.attr('max')) {
 								// check max
 								var value = that.val();
-								console.log(value + ", " + value.length + ", "
-										+ that.attr('max'));
+								// console.log(value + ", " + value.length + ",
+								// "
+								// + that.attr('max'));
 							}
 						});
 
@@ -883,17 +1216,15 @@ giiwa
 			},
 
 			load : function(uri, cb) {
+				if (!uri)
+					return;
+
 				giiwa.processing.show();
 
 				giiwa.popup() && giiwa.popup().close();
+				giiwa.dialog() && giiwa.dialog().close();
 
-				if (giiwa.__history.length > 0
-						&& giiwa._compare(
-								giiwa.__history[giiwa.__history.length - 1],
-								uri)) {
-					giiwa.__history.pop();
-				}
-				giiwa.__history.push(uri);
+				// giiwa.history(uri);
 
 				// $('#page').attr('src', uri);
 				if (uri.indexOf('?') > 0) {
@@ -971,21 +1302,21 @@ giiwa
 				var w = $(window).width();
 				var menu = $('#menu');
 				var panel = $('#panel');
-				if ((panel.width() != w - panel.offset().left)
-						|| (panel.height() != h - 92)) {
+				if (panel.length > 0
+						&& ((panel.width() != w - panel.offset().left) || (panel
+								.height() != h - 92))) {
 					panel.css('width', (w - panel.offset().left) + 'px');
 					panel.css('height', (h - 92) + 'px');
-					panel.trigger('panelresize', panel);
+					
+					try {
+						panel.trigger('panelresize', panel);
+					}catch(e1) {
+						console.error(e1);
+					}
 				}
 
 				if (menu.length > 0) {
 					menu.css('height', (h - 92) + 'px');
-
-					if (!giiwa.menuapi) {
-						giiwa.menuapi = menu.jScrollPane().data('jsp');
-					} else {
-						giiwa.menuapi.reinitialise();
-					}
 				}
 			},
 			verify : function(obj, url) {
@@ -1078,7 +1409,7 @@ giiwa
 					m.hide();
 				});
 				setTimeout(function() {
-					m.fadeOut();
+					m.fadeOut(100);
 				}, delay);
 
 			},
@@ -1136,4 +1467,5 @@ $(function() {
 	$(window).resize(function() {
 		giiwa.resize();
 	});
+
 });

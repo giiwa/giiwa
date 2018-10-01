@@ -1,19 +1,28 @@
 <div class='head'>
 	$lang.get('title.welcome') <b>$!me.nickname</b> 
-	<span class='right'>
-		#if($me.hasAccess('access.config.admin','access.config.restart.host')) 
-			<a href='javascript:;' class='btn btn-danger' onclick="_showrestart()">$lang.get('a.restart')</a>
-		#end
-	</span>
+	#if($me.hasAccess('access.config.admin','access.config.restart.host')) 
+		<a href='javascript:;' class='btn btn-danger' onclick="_showrestart()" style='float:right'>$lang.get('a.restart')</a>
+	#end
 </div>
 
-#if($portlets)
-	#foreach($p in $portlets)
-	<div class="portlet" data-uri="$p.uri" style="$!p.style"></div>
+#if($global.getInt('perf.moniter', 0) == 1)
+	#if($me.hasAccess('access.config.admin', 'access.config.system.admin'))
+		<div class="portlet" data-url="/portlet/cpu"></div>
+		<div class="portlet" data-url="/portlet/mem"></div>
+		
+		<div class="portlet" data-url="/portlet/disk"></div>
+		
+		#foreach($p in $nets)
+		<div class="portlet" data-url="/portlet/net?name=$!p.name"></div>
+		#end
+		
 	#end
 #end
 
-<div id='restart' title="$lang.get('title.restart.service')" style="display: none">
+##	<div class="portlet" data-url="/portlet/loginfo" style="width:100%"></div>
+	<div class="portlet" data-url="/portlet/sysinfo" style="width:100%"></div>
+
+<div id='restart' title="$lang.get('title.restart.service')" class="form" style="display: none">
 	<div>
 		<label><h3>$lang.get('user.password'):</h3>
 			<input type='password' name='password' /></label>
@@ -24,14 +33,22 @@
 </div>
 
 <script>
+
+giiwa.history('$!query');
+
 var _timer = false;
 function _showrestart(){
-	giiwa.dialog($('#restart'), {width: 280, height:80});
+	giiwa.dialog($('#restart'), {width: 280, height:100, moveable: true});
 }
 function _restart(){
 	
+	$.get('/admin/system/info', {}, function(d){
+		pid = d.pid;
+	});
+	
 	giiwa.processing.show();
-	$.post('/admin/system/restart', {pwd:$('#restart input[name=password]').val()}, function(d){
+	var p = giiwa.dialog().panel.find('input[name=password]').val();
+	$.post('/admin/system/restart', {pwd:p}, function(d){
 		if(d.state == 'ok') {
 			giiwa.dialog().close();
 			_timer = setInterval(_load, 5000);
@@ -42,9 +59,13 @@ function _restart(){
 	})
 }
 
+var pid = false;
+
 function _load() {
-	$.get('/admin/dashboard', {}, function(d){
-		window.location.href = window.location.href;
+	$.get('/admin/system/info', {}, function(d){
+		if(d.pid != pid) {
+			window.location.href = window.location.href;
+		}
 	});
 }
 </script>

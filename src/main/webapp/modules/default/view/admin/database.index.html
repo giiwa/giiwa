@@ -1,0 +1,70 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/database' class='selected'>$lang.get('a.database')</a>
+	<a href='/admin/backup'>$lang.get('a.backup')</a>
+	<a href='/admin/backup/auto'>$lang.get('a.backup.auto')</a>
+</div>
+
+<form id="E$!requestid" action='/admin/database/er'  method='post' class='form nospace' style="padding-left: 0;padding-top: 0;">
+	
+	<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+		<thead>
+			<tr>
+				<th>$lang.get('table.memo')</th>
+				<th>$lang.get('table.bean')</th>
+				<th>$lang.get('table.name')</th>
+				<th>$lang.get('table.size')</th>
+			</tr>
+		</thead>
+		<tbody>
+		#foreach($t in $list)
+			<tr>
+				<td>
+					#if($t.size > 0)
+						<label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!lang.get("name.$!t.name")</label>
+					#else
+						$!lang.get("name.$!t.name")
+					#end
+				</td>
+				<td>$!t.name</td>
+				<td>$!t.table</td>
+				<td class="a">
+					$!t.size
+					<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$t.table')"><i class='icon-cancel-circle'></i></a>
+				</td>
+			</tr>
+		#end
+		</tbody>
+	</table>
+
+	<div class='btns'>
+		<a class='btn btn-success' href="javascript:;" onclick="_submit();">$lang.get('btn.database.er')</a>
+	</div>
+	
+</form>
+
+<script>
+function _delete(table) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post('/admin/database/delete', {table: table}, function(d){
+			giiwa.hint(d.message);
+			giiwa.reload();
+		})
+	}
+}
+
+function _submit(){
+	giiwa.submit($("#E$!requestid")[0], {
+		success : function(d){
+			d = eval("(" + d + ")");
+			if(d.state == 200) {
+				giiwa.download(d.file);
+			} else {
+				giiwa.error(d.message);
+			}
+		}
+	});
+}
+</script>

@@ -64,7 +64,7 @@
 	
 </div>
 
-<table id='message-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+<table id="message-table" class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
 			<th style="width:10px">
@@ -78,7 +78,7 @@
 			<th style="width:80px">$lang.get("message.from")</th>
 			<th style="width:200px">$lang.get("message.title")</th>
 			<th>$lang.get("message.content")</th>
-			<th style="width:100px">$lang.get("message.created")</th>
+			<th style="width:110px">$lang.get("message.created")</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -93,9 +93,9 @@
 		<td>
 			<i class="ico star-$!f.star" style="cursor:pointer" onclick="_onstar('$f.id', this)"></i>
 		</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');" style="cursor: pointer">$!f.from_obj.nickname</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');" style="cursor: pointer">$!lang.truncate($!f.title, 100)</td>
-		<td onclick="giiwa.popup('/admin/message/detail?id=$f.id');" style="cursor: pointer">$!lang.truncate($!f.content, 200)</td>
+		<td>$!f.from_obj.nickname</td>
+		<td>$!f.title</td>
+		<td>$!f.content</td>
 		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
 	</tr>
 #end

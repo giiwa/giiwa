@@ -10,6 +10,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.framework.bean.License;
 import org.giiwa.framework.web.Model.HTTPMethod;
 import org.giiwa.framework.web.view.View;
 
@@ -88,6 +89,9 @@ public class GiiwaServlet extends HttpServlet {
 			}
 
 			View.init(config);
+			
+			License.init();
+
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}

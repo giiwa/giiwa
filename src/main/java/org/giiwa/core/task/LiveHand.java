@@ -1,5 +1,6 @@
 package org.giiwa.core.task;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +19,12 @@ import org.giiwa.core.bean.X;
  * @author joe
  *
  */
-public class LiveHand {
+public class LiveHand implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private static Log log = LogFactory.getLog(LiveHand.class);
 
@@ -111,7 +117,7 @@ public class LiveHand {
 
 		long t1 = timeout - t.pastms();
 		while (t1 > 0 && isLive()) {
-			if ((max - door.availablePermits()) == 0) {
+			if ((door.availablePermits() >= max)) {
 				log.debug("await, door=" + door.availablePermits() + ", " + this);
 				return true;
 			}

@@ -40,7 +40,7 @@ public class Access extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public final static BeanDAO<Access> dao = BeanDAO.create(Access.class);
+	public final static BeanDAO<String, Access> dao = BeanDAO.create(Access.class);
 
 	@Column(name = X.ID, index = true, unique = true)
 	private String name;
@@ -85,12 +85,14 @@ public class Access extends Bean {
 		if (X.isEmpty(name) || !name.startsWith("access.")) {
 			log.error("error access.name: " + name, new Exception("error access name:" + name));
 		} else {
-			String[] ss = name.split("[\\|｜]");
-			for (String s : ss) {
-				if (!exists(s)) {
-					dao.insert(V.create(X.ID, s).append("memo",
-							X.toString(new Exception()).replaceAll(System.lineSeparator(), "<br/>")
-									.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")));
+			String[] ss = X.split(name, "[\\|｜]");
+			if (ss != null) {
+				for (String s : ss) {
+					if (!exists(s)) {
+						dao.insert(V.create(X.ID, s).append("memo",
+								X.toString(new Exception()).replaceAll(System.lineSeparator(), "<br/>")
+										.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")));
+					}
 				}
 			}
 		}

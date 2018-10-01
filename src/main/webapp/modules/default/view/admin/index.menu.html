@@ -5,26 +5,64 @@
 	<span class="arrow"></span>
 </a>
 <script>
-	$(function() {
-		giiwa.menu($("#menu .menu"), {
-			url : "/menu",
-			root : 0,
-			name : 'admin'
-		});
-	})
-	
-	$('#ss_tab').click(function() {
-		var bar = $(this);
+$(function() {
+	giiwa.initmenu($("#menu .menu"), {
+		url : "/menu",
+		root : 0,
+		name : 'admin'
+	});
+	giiwa.menu = function(s) {
+		var bar = $('#ss_tab');
 		var menu = $('#menu');
 		var panel = $('#panel');
 		var toolbar = $('#toolbar');
 
-		bar.toggleClass('full');
-		panel.toggleClass('full');
-		toolbar.toggleClass('full');
-		menu.toggleClass('full');
+		if(s == 'expand') {
+			bar.show();
+			!bar.hasClass('full') && bar.addClass('full');
+			!menu.hasClass('full') && menu.addClass('full');
+			panel.removeClass('full');
+			toolbar.removeClass('full');
+		} else if(s == 'hide') {
+			bar.hide();
+			bar.removeClass('full');
+			menu.removeClass('full');
+			!panel.hasClass('full') && panel.addClass('full');
+			!toolbar.hasClass('full') && toolbar.addClass('full');
+		} else if(s == 'collapse') {
+			bar.show();
+			bar.removeClass('full');
+			menu.removeClass('full');
+			!panel.hasClass('full') && panel.addClass('full');
+			!toolbar.hasClass('full') && toolbar.addClass('full');
+		}
+		
+		if(bar.hasClass('full')) {
+			//remove title
+			menu.find('.item .title').each(function(i, e){
+				e = $(e);
+				e.attr('title', '');
+			});
+		} else {
+			//add title
+			menu.find('.item .title').each(function(i, e){
+				e = $(e);
+				e.attr('title', e.attr('data-title'));
+			});
+		}
+	};
+})
 
-		giiwa.resize();
-	});
+
+$('#ss_tab').click(function() {
+	var bar = $('#ss_tab');
+	if(bar.hasClass('full')) {
+		giiwa.menu('collapse');
+	} else {
+		giiwa.menu('expand');	
+	}
 	
+	giiwa.resize();
+});
+
 </script>

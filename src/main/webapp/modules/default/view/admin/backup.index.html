@@ -1,9 +1,10 @@
-<div class='head'>$lang.get('backup.index.title')</div>
 
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/backup' class='selected'>$lang.get('a.backup')</a>
+	<a href='/admin/database'>$lang.get('a.database')</a>
+	<a href='/admin/backup' class='selected'>$lang.get('a.backup.files')</a>
+	<a href='/admin/backup/auto'>$lang.get('a.backup.auto')</a>
 </div>
 
 <table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
@@ -24,9 +25,9 @@
 		#set($s=$global.getInt("backup/$f.name", 0))
 		<td>$!lang.size($f.length())</td>
 		<td>$!lang.get("backup.status_$s")</td>
-		<td>
-			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_recover("$f.name")'>$lang.get('a.recover')</a>
-			<a class='btn btn-warning btn-xs' href='javascript:;' onclick='_delete("$f.name")'>$lang.get('a.delete')</a>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.recover')" href="javascript:;" onclick="_recover('$f.name')"><i class="icon-undo"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f.name')"><i class="icon-cancel-circle"></i></a>
 		</td>
 	</tr>
 #end
@@ -34,22 +35,53 @@
 </table>
 
 <div class='btns'>
-	<a class='btn btn-success' href='/admin/backup/now'>$lang.get('a.backup')</a>
+	<a class='btn btn-success' href='/admin/backup/create'>$lang.get('a.backup.create')</a>
+	<a class='btn btn-primary' href='javascript:;' onclick="_import();">$lang.get('a.backup.import')</a>
 </div>
 
-<iframe id="download" style="display:none"></iframe>
+<div id="m$!requestid" style="display: none">
+	<input type='hidden' name='repo'/>
+</div>
 
 <script>
+function _import() {
+	giiwa.dialog($("#m$!requestid"), {
+		moveable: true,
+		prepare : function(p) {
+			p.find('input[name=repo]').upload({
+				caption : "$lang.get('btn.upload.backup')",
+				btn_resume : "$lang.get('btn.resume')",
+				btn_delete : "$lang.get('btn.delete')",
+				btn_cancel : "$lang.get('btn.cancel')",
+				msg_stop : "$lang.get('msg.stop')",
+				msg_done : "$lang.get('msg.done')",
+				done : function(url) {
+					giiwa.processing.show();
+					$.post('/admin/backup/upload', {
+						repo : url
+					}, function(d) {
+						giiwa.processing.hide();
+						giiwa.dialog().close();
+						
+						giiwa.reload();
+
+					});
+				}
+			});
+			
+		}
+	});
+}
+
 function _download(name) {
 	$.post("/admin/backup/download", {name:name}, function(d){
 		if(d.state == 200) {
-			$("#download").attr('src', d.url);
+			giiwa.download(d.url);
 		} else {
 			giiwa.error(d.message);
 		}
 	});
 }
-$('#user-table').tablesorter({headers:{2:{sorter:false}}});
 function _delete(name) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();

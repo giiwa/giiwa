@@ -103,7 +103,7 @@ public class app extends Model {
 		App d = App.dao.load(id);
 		this.set("b", d);
 		this.set("id", id);
-		this.show("/admin/app.detail.html");
+		this.show("/admin/bean.detail.html");
 	}
 
 	/*

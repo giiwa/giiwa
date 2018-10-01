@@ -23,92 +23,92 @@ import com.whalin.MemCached.SockIOPool;
  * The Class MemCache is used to memcached cache <br>
  * url: memcached://host:port
  */
-class MemCache implements ICacheSystem {
+public class MemCache implements ICacheSystem {
 
-  /** The log. */
-  static Log              log = LogFactory.getLog(MemCache.class);
+	/** The log. */
+	static Log log = LogFactory.getLog(MemCache.class);
 
-  private MemCachedClient memCachedClient;
+	private MemCachedClient memCachedClient;
 
-  private String          url;
+	private String url;
 
-  /**
-   * Inits the.
-   *
-   * @param conf
-   *          the conf
-   * @return the i cache system
-   */
-  public static ICacheSystem create(String server) {
+	/**
+	 * Inits the.
+	 *
+	 * @param conf
+	 *            the conf
+	 * @return the i cache system
+	 */
+	public static ICacheSystem create(String server) {
 
-    MemCache f = new MemCache();
+		MemCache f = new MemCache();
 
-    f.url = server.substring(Cache.MEMCACHED.length());
+		f.url = server.substring(Cache.MEMCACHED.length());
 
-    SockIOPool pool = SockIOPool.getInstance();
-    pool.setServers(new String[] { f.url });
-    pool.setFailover(true);
-    pool.setInitConn(10);
-    pool.setMinConn(5);
-    pool.setMaxConn(1000);
-    pool.setMaintSleep(30);
-    pool.setNagle(false);
-    pool.setSocketTO(3000);
-    pool.setAliveCheck(true);
-    pool.initialize();
+		SockIOPool pool = SockIOPool.getInstance();
+		pool.setServers(new String[] { f.url });
+		pool.setFailover(true);
+		pool.setInitConn(10);
+		pool.setMinConn(5);
+		pool.setMaxConn(1000);
+		pool.setMaintSleep(30);
+		pool.setNagle(false);
+		pool.setSocketTO(3000);
+		pool.setAliveCheck(true);
+		pool.initialize();
 
-    f.memCachedClient = new MemCachedClient();
+		f.memCachedClient = new MemCachedClient();
 
-    return f;
-  }
+		return f;
+	}
 
-  /**
-   * get object.
-   *
-   * @param id
-   *          the id
-   * @return the object
-   */
-  public synchronized Object get(String id) {
-    return memCachedClient.get(id);
-  }
+	/**
+	 * get object.
+	 *
+	 * @param id
+	 *            the id
+	 * @return the object
+	 */
+	public synchronized Object get(String id) {
+		return memCachedClient.get(id);
+	}
 
-  /**
-   * Sets the data linked the id, the maximum size of data 1M
-   *
-   * @param id
-   *          the id
-   * @param o
-   *          the o
-   * @return true, if successful
-   */
-  public synchronized boolean set(String id, Object o) {
-    try {
-      if (o == null) {
-        return delete(id);
-      } else {
-        return memCachedClient.set(id, o);
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-    return false;
-  }
+	/**
+	 * Sets the data linked the id, the maximum size of data 1M
+	 *
+	 * @param id
+	 *            the id
+	 * @param o
+	 *            the o
+	 * @return true, if successful
+	 */
+	public synchronized boolean set(String id, Object o) {
+		try {
+			if (o == null) {
+				return delete(id);
+			} else {
+				return memCachedClient.set(id, o);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return false;
+	}
 
-  /**
-   * Delete.
-   *
-   * @param id
-   *          the id
-   * @return true, if successful
-   */
-  public synchronized boolean delete(String id) {
-    return memCachedClient.delete(id);
-  }
+	/**
+	 * Delete.
+	 *
+	 * @param id
+	 *            the id
+	 * @return true, if successful
+	 */
+	public synchronized boolean delete(String id) {
+		return memCachedClient.delete(id);
+	}
 
-  @Override
-  public String toString() {
-    return "MemCache [url=" + url + "]";
-  }
+	@Override
+	public String toString() {
+		return "MemCache [url=" + url + "]";
+	}
 
 }

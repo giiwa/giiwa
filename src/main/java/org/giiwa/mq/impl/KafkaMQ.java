@@ -18,9 +18,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -42,7 +44,6 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
-import org.giiwa.mq.Request;
 
 // TODO: Auto-generated Javadoc
 public final class KafkaMQ extends MQ {
@@ -101,6 +102,8 @@ public final class KafkaMQ extends MQ {
 		return m;
 	}
 
+	private transient List<WeakReference<R>> cached = new ArrayList<WeakReference<R>>();
+
 	/**
 	 * QueueTask
 	 * 
@@ -108,6 +111,11 @@ public final class KafkaMQ extends MQ {
 	 * 
 	 */
 	public class R extends Task {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		public String name;
 		IStub cb;
 		Consumer<String, byte[]> consumer;
@@ -134,6 +142,8 @@ public final class KafkaMQ extends MQ {
 			consumer = new KafkaConsumer<>(props);
 			consumer.subscribe(Arrays.asList(group + "." + name.replaceAll(":", ".")));
 
+			cached.add(new WeakReference<R>(this));
+
 		}
 
 		@Override
@@ -155,7 +165,7 @@ public final class KafkaMQ extends MQ {
 
 				in = new DataInputStream(new ByteArrayInputStream(data));
 
-				List<Request> l1 = new ArrayList<Request>();
+				List<Request> l1 = new LinkedList<Request>();
 
 				while (in.available() > 0) {
 
@@ -204,15 +214,15 @@ public final class KafkaMQ extends MQ {
 	}
 
 	@Override
-	protected long _topic(String to, org.giiwa.mq.Request r) throws Exception {
+	protected long _topic(String to, MQ.Request r) throws Exception {
 		return _send(to, r);
 	}
 
 	@Override
-	protected long _send(String to, org.giiwa.mq.Request r) throws Exception {
+	protected long _send(String to, MQ.Request r) throws Exception {
 
-		if (X.isEmpty(r.data))
-			throw new Exception("message can not be empty");
+		// if (X.isEmpty(r.data))
+		// throw new Exception("message can not be empty");
 
 		to = to.replaceAll(":", ".");
 
@@ -258,6 +268,11 @@ public final class KafkaMQ extends MQ {
 
 	class Sender extends Task {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		long last = System.currentTimeMillis();
 		String name;
 		String to;
@@ -277,6 +292,7 @@ public final class KafkaMQ extends MQ {
 				} catch (Exception e) {
 					// forget this exception
 				}
+
 				if (m == null) {
 					m = new ByteArrayOutputStream();
 					out = new DataOutputStream(m);
@@ -328,7 +344,7 @@ public final class KafkaMQ extends MQ {
 				byte[] m = null;
 				synchronized (p) {
 					while (this.m == null) {
-						if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+						if (last < System.currentTimeMillis() - X.AMINUTE) {
 							break;
 						}
 
@@ -350,7 +366,8 @@ public final class KafkaMQ extends MQ {
 
 					if (log.isDebugEnabled())
 						log.debug("Sending:" + group + "." + to);
-				} else if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
+					// the name has mode in the end
 					senders.remove(name);
 					p.close();
 				}
@@ -361,13 +378,27 @@ public final class KafkaMQ extends MQ {
 
 		@Override
 		public void onFinish() {
-			if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+			if (last < System.currentTimeMillis() - X.AMINUTE) {
 				log.debug("sender." + name + " is stopped.");
 			} else {
 				this.schedule(0);
 			}
 		}
 
+	}
+
+	@Override
+	protected void _unbind(IStub stub) throws Exception {
+		// find R
+		for (int i = cached.size(); i >= 0; i--) {
+			WeakReference<R> w = cached.get(i);
+			if (w == null || w.get() == null) {
+				cached.remove(i);
+			} else if (w.get().cb == stub) {
+				w.get().close();
+				cached.remove(i);
+			}
+		}
 	}
 
 }

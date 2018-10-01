@@ -20,7 +20,9 @@ public class i18n extends Model {
 		for (String n : missed.keySet()) {
 			sb.append(n).append("=").append("<br>");
 		}
-		this.set("missed", sb.toString());
+		if (sb.length() > 0) {
+			this.set("missed", sb.toString());
+		}
 
 		Map<String, String[]> d = lang.getData();
 		this.set("d", d);

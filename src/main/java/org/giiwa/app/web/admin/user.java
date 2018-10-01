@@ -27,7 +27,6 @@ import org.giiwa.core.conf.Local;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.noti.Email;
-import org.giiwa.core.noti.Sms;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
@@ -53,107 +52,88 @@ public class user extends Model {
 
 			JSON jo = this.getJSON();
 			final String name = this.getString("name").trim().toLowerCase();
-			String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
-			if (!X.isEmpty(rule) && !name.matches(rule)) {
+			try {
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.format.error")));
-				return;
+				/**
+				 * create the user
+				 */
+				if (User.dao.exists(W.create("name", name))) {
+					/**
+					 * exists, create failded
+					 */
+					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.exists")));
+					return;
 
-			} else {
-				try {
+				} else {
+
+					V v = V.create("name", name).copy(jo).set("locked", 0);
+					v.remove("role");
+					long id = User.create(v);
 
 					/**
-					 * create the user
+					 * set the role
 					 */
-					if (User.dao.exists(W.create("name", name))) {
-						/**
-						 * exists, create failded
-						 */
-						this.response(
-								JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.exists")));
-						return;
+					String[] roles = this.getStrings("role");
+					log.debug("roles=" + Helper.toString(roles));
 
-					} else {
-
-						V v = V.create("name", name).copy(jo).set("locked", 0);
-						v.remove("role");
-						long id = User.create(v);
-
-						/**
-						 * set the role
-						 */
-						String[] roles = this.getStrings("role");
-						log.debug("roles=" + Helper.toString(roles));
-
-						if (roles != null) {
-							User u = User.dao.load(id);
-							List<Long> list = new ArrayList<Long>();
-							for (String s : roles) {
-								list.add(X.toLong(s));
-							}
-							u.setRoles(list);
+					if (roles != null) {
+						User u = User.dao.load(id);
+						List<Long> list = new ArrayList<Long>();
+						for (String s : roles) {
+							list.add(X.toLong(s));
 						}
+						u.setRoles(list);
+					}
 
-						/**
-						 * log
-						 */
-						GLog.securitylog.info(user.class, "create", this.getJSONNonPassword().toString(), login,
-								this.getRemoteHost());
+					/**
+					 * log
+					 */
+					GLog.securitylog.info(user.class, "create", this.getJSONNonPassword().toString(), login,
+							this.getRemoteHost());
 
-						if (Global.getInt("user.updated.noti", 1) == 1) {
-							final String email = this.getString("email");
-							final String phone = this.getString("phone");
-							final String passwd = this.getString("password");
+					if (Global.getInt("user.updated.noti", 1) == 1) {
+						final String email = this.getString("email");
+						final String passwd = this.getString("password");
 
-							if (!X.isEmpty(email) || !X.isEmpty(phone)) {
-								new Task() {
+						if (!X.isEmpty(email)) {
 
-									@Override
-									public void onExecute() {
-										if (!X.isEmpty(phone)) {
-											JSON jo = JSON.create();
-											jo.put("account", name);
-											jo.put("passwd", passwd);
-											Sms.send(phone, "add.account", jo);
-										}
+							Task.schedule(() -> {
 
-										if (!X.isEmpty(email)) {
+								if (!X.isEmpty(email)) {
 
-											File f = module
-													.getFile("/admin/email.creation." + lang.getLocale() + ".template");
-											if (f != null) {
-												JSON j1 = JSON.create();
-												j1.put("email", email);
-												j1.put("account", name);
-												j1.put("passwd", passwd);
-												j1.put("lang", lang);
-												j1.put("global", Global.getInstance());
-												j1.put("local", Local.getInstance());
+									File f = module.getFile("/admin/email.creation." + lang.getLocale() + ".template");
+									if (f != null) {
+										JSON j1 = JSON.create();
+										j1.put("email", email);
+										j1.put("account", name);
+										j1.put("passwd", passwd);
+										j1.put("lang", lang);
+										j1.put("global", Global.getInstance());
+										j1.put("local", Local.getInstance());
 
-												VelocityView v1 = new VelocityView();
-												String body = v1.parse(f, j1);
-												if (body != null) {
-													Email.send(lang.get("mail.creation.noti"), body, email);
-												}
-											}
-
+										VelocityView v1 = new VelocityView();
+										String body = v1.parse(f, j1);
+										if (body != null) {
+											Email.send(lang.get("mail.creation.noti"), body, email);
 										}
 									}
-								}.schedule(10);
-							}
+
+								}
+
+							}, 10);
 						}
-
-						this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
-						return;
 					}
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-					GLog.securitylog.error(user.class, "create", e.getMessage(), e, login, this.getRemoteHost());
 
-					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
-							lang.get("save.failed") + ":" + e.getMessage()));
+					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				GLog.securitylog.error(user.class, "create", e.getMessage(), e, login, this.getRemoteHost());
+
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+						lang.get("save.failed") + ":" + e.getMessage()));
+				return;
 			}
 
 		}
@@ -206,54 +186,63 @@ public class user extends Model {
 
 		if (method.isPost()) {
 
-			String password = this.getString("password");
-			if (!X.isEmpty(password)) {
-				User.update(id, V.create("password", password));
+			try {
+				String password = this.getString("password");
+				if (!X.isEmpty(password)) {
+					User.update(id, V.create("password", password));
+
+					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login,
+							this.getRemoteHost());
+
+					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+					return;
+				}
+				JSON j = this.getJSON();
+				V v = V.create().copy(j);
+				v.remove("role", X.ID);
+
+				v.force("failtimes", this.getInt("failtimes"));
+				if (!"on".equals(this.getString("locked"))) {
+					/**
+					 * clean all the locked info
+					 */
+					User.Lock.removed(id);
+					v.force("locked", 0);
+				} else {
+					v.force("locked", 1);
+				}
+
+				User.update(id, v);
+				User u = User.dao.load(id);
+
+				String[] roles = this.getStrings("role");
+				if (roles != null) {
+					List<Long> list = new ArrayList<Long>();
+					for (String s : roles) {
+						list.add(X.toLong(s));
+					}
+
+					u.setRoles(list);
+					v.set("roles", list);
+				}
+
+				List<String> list = AuthToken.delete(id);
+				if (list != null && list.size() > 0) {
+					for (String s : list) {
+						Session.delete(s);
+					}
+				}
+
+				GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login,
+						this.getRemoteHost());
 
 				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 				return;
+			} catch (Exception e) {
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+						lang.get("save.failed") + ":" + e.getMessage()));
+				return;
 			}
-			JSON j = this.getJSON();
-			V v = V.create().copy(j);
-			v.remove("role", X.ID);
-
-			v.force("failtimes", this.getInt("failtimes"));
-			if (!"on".equals(this.getString("locked"))) {
-				/**
-				 * clean all the locked info
-				 */
-				User.Lock.removed(id);
-				v.force("locked", 0);
-			} else {
-				v.force("locked", 1);
-			}
-
-			User.update(id, v);
-			User u = User.dao.load(id);
-
-			String[] roles = this.getStrings("role");
-			if (roles != null) {
-				List<Long> list = new ArrayList<Long>();
-				for (String s : roles) {
-					list.add(X.toLong(s));
-				}
-
-				u.setRoles(list);
-				v.set("roles", list);
-			}
-
-			List<String> list = AuthToken.delete(id);
-			if (list != null && list.size() > 0) {
-				for (String s : list) {
-					Session.delete(s);
-				}
-			}
-
-			GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login,
-					this.getRemoteHost());
-
-			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
-			return;
 
 		} else {
 
@@ -318,9 +307,9 @@ public class user extends Model {
 		long uid = this.getLong("uid");
 		this.set("uid", uid);
 
-		W q = W.create("uid", uid);
+		W q = W.create("uid", uid).sort("created", -1);
 		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		int n = this.getInt("n", 10);
 
 		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
 
@@ -354,6 +343,7 @@ public class user extends Model {
 		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
 		Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt), s, n);
+		bs.count();
 		this.set(bs, s, n);
 
 		this.query.path("/admin/user");

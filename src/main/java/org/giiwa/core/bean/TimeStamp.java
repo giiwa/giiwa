@@ -14,6 +14,8 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.Serializable;
+
 // TODO: Auto-generated Javadoc
 /**
  * The {@code TimeStamp} Class used to create a time stamp
@@ -21,101 +23,106 @@ package org.giiwa.core.bean;
  * @author joe
  *
  */
-public class TimeStamp {
+public class TimeStamp implements Serializable {
 
-  /** The start. */
-  long start;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
-  /**
-   * Creates the.
-   *
-   * @return the time stamp
-   */
-  public static TimeStamp create() {
-    return new TimeStamp();
-  }
+	/** The start. */
+	long start;
 
-  /**
-   * Instantiates a new time stamp.
-   */
-  public TimeStamp() {
-    start = System.nanoTime();
-  }
+	/**
+	 * Creates the.
+	 *
+	 * @return the time stamp
+	 */
+	public static TimeStamp create() {
+		return new TimeStamp();
+	}
 
-  /**
-   * Sets the.
-   *
-   * @param s
-   *          the s
-   * @return the time stamp
-   */
-  public TimeStamp set(long s) {
-    start = s;
+	/**
+	 * Instantiates a new time stamp.
+	 */
+	public TimeStamp() {
+		start = System.nanoTime();
+	}
 
-    return this;
-  }
+	/**
+	 * Sets the.
+	 *
+	 * @param s
+	 *            the s
+	 * @return the time stamp
+	 */
+	public TimeStamp set(long s) {
+		start = s;
 
-  /**
-   * past ms
-   *
-   * @deprecated
-   * @return the long
-   */
-  public long past() {
-    return pastms();
-  }
+		return this;
+	}
 
-  /**
-   * past ms
-   * 
-   * @return
-   */
-  public long pastms() {
-    return (System.nanoTime() - start) / 1000000;
-  }
+	/**
+	 * past ms
+	 *
+	 * @deprecated
+	 * @return the long
+	 */
+	public long past() {
+		return pastms();
+	}
 
-  /**
-   * past us
-   * 
-   * @return
-   */
-  public long pastus() {
-    return (System.nanoTime() - start) / 1000;
-  }
+	/**
+	 * past ms
+	 * 
+	 * @return
+	 */
+	public long pastms() {
+		return (System.nanoTime() - start) / 1000000;
+	}
 
-  /**
-   * past ns
-   * 
-   * @return
-   */
-  public long pastns() {
-    return System.nanoTime() - start;
-  }
+	/**
+	 * past us
+	 * 
+	 * @return
+	 */
+	public long pastus() {
+		return (System.nanoTime() - start) / 1000;
+	}
 
-  /**
-   * Gets the.
-   *
-   * @return the long
-   */
-  public long get() {
-    return start;
-  }
+	/**
+	 * past ns
+	 * 
+	 * @return
+	 */
+	public long pastns() {
+		return System.nanoTime() - start;
+	}
 
-  /**
-   * Reset.
-   *
-   * @return the long
-   */
-  public long reset() {
-    long r = past();
-    start = System.nanoTime();
-    return r;
-  }
+	/**
+	 * Gets the.
+	 *
+	 * @return the long
+	 */
+	public long get() {
+		return start;
+	}
 
-  public static void main(String[] args) {
-    TimeStamp t = TimeStamp.create();
-    System.out.println(t.past());
-    System.out.println(t.pastns());
-    System.out.println(t.past());
-  }
+	/**
+	 * Reset.
+	 *
+	 * @return the long
+	 */
+	public long reset() {
+		long r = past();
+		start = System.nanoTime();
+		return r;
+	}
+
+	public static void main(String[] args) {
+		TimeStamp t = TimeStamp.create();
+		System.out.println(t.past());
+		System.out.println(t.pastns());
+		System.out.println(t.past());
+	}
 }

@@ -1,0 +1,40 @@
+
+<div class='tabs'>
+	<a href='javascript:;' class='selected'>$lang.get("login.info.title")</a>
+</div>
+
+<style>
+td.log_level_0 {
+	color: #61CA0F!important;
+}
+td.log_level_1 {
+	color: #CA9D0F!important;
+}
+td.log_level_2 {
+	color: #CF1010!important;
+}
+</style>
+
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th colspan="2" style="width: 110px;">$lang.get('log.created')</th>
+			<th>$lang.get('log.level')</th>
+			<th style="width: 120px;">$lang.get('log.ip')</th>
+			<th>$lang.get('log.op')</th>
+			<th style='width: 30%'>$lang.get('log.message')</th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach($f in $list)
+		<tr>
+			<td style="width: 120px;">$lang.format($f.created, 'yy-MM-dd HH:mm:ss')</td>
+			<td style="width: 80px;">$lang.past($f.created)</td>
+			<td class='log_level_$!f.level'>$!lang.get("log.level_$!f.level")</td>
+			<td>$!f.ip</td>
+			<td>$lang.get("log.op_${f.model}.${f.op}", $f.op)</td>
+			<td>$!f.message</td>
+		</tr>
+		#end
+	</tbody>
+</table>

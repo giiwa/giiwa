@@ -14,11 +14,13 @@
 */
 package org.giiwa.core.base;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
@@ -212,12 +214,12 @@ public final class IOUtil {
 			byte[] bb = new byte[1024 * 32];
 			int total = 0;
 			in.skip(start);
-			int ii = (int) Math.min((end - start), bb.length);
+			int ii = (int) Math.min((end - start + 1), bb.length);
 			int len = in.read(bb, 0, ii);
 			while (len > 0) {
 				out.write(bb, 0, len);
 				total += len;
-				ii = (int) Math.min((end - start - total), bb.length);
+				ii = (int) Math.min((end - start - total + 1), bb.length);
 				len = in.read(bb, 0, ii);
 				out.flush();
 			}
@@ -270,4 +272,44 @@ public final class IOUtil {
 		}
 	}
 
+	public static String read(File f, String encoding) {
+		StringBuilder sb = new StringBuilder();
+
+		BufferedReader in = null;
+
+		try {
+			if (X.isEmpty(encoding)) {
+				encoding = "UTF-8";
+			}
+			in = new BufferedReader(new InputStreamReader(new FileInputStream(f), encoding));
+			String line = null;
+			while ((line = in.readLine()) != null) {
+				sb.append(line).append("\r\n");
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			X.close(in);
+		}
+		return sb.toString();
+	}
+
+	public static long count(File f) {
+		if (f == null) {
+			return 0;
+		}
+
+		long n = 0;
+		if (f.isFile()) {
+			n = 1;
+		} else if (f.isDirectory()) {
+			File[] ff = f.listFiles();
+			if (ff != null) {
+				for (File f1 : ff) {
+					n += count(f1);
+				}
+			}
+		}
+		return n;
+	}
 }

@@ -121,17 +121,119 @@ public class Url {
 	 * @return
 	 */
 	public static Url create(String url) {
-		Url u = new Url();
-		u.url = url;
-		try {
-			if (u.parse()) {
-				return u;
+		if (!X.isEmpty(url)) {
+			Url u = new Url();
+			u.url = url;
+			try {
+				if (u.parse()) {
+					return u;
+				}
+			} catch (Exception e) {
+				// e.printStackTrace();
+				log.error(e.getMessage(), e);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			log.error(e.getMessage(), e);
 		}
 		return null;
+	}
+
+	/**
+	 * parse more parameter from original url according to the refer
+	 * 
+	 * @param refer
+	 *            e.g. "http://{ip}:{port}/{path}?
+	 * @return
+	 */
+	public boolean parse(String refer) {
+		if (X.isEmpty(refer))
+			return false;
+
+		Url u1 = Url.create(refer);
+
+		if (u1 == null) {
+			return false;
+		}
+
+		if (!X.isSame(this.protocol, u1.protocol)) {
+			return false;
+		}
+
+		// ip
+		String ip = u1.getIp();
+		if (!X.isEmpty(ip)) {
+			int i = ip.indexOf("{");
+			if (i >= 0) {
+				int j = ip.indexOf("}", i + 1);
+				if (j > i) {
+					String name = ip.substring(i + 1, j);
+					int k = name.indexOf("=");
+					if (k > 0) {
+						name = name.substring(0, k);
+					}
+					String value = this.ip.substring(i, this.ip.length() - (ip.length() - j - 1));
+					put(name, value);
+				}
+			}
+		}
+
+		// port
+		String port = u1.getPort();
+		if (!X.isEmpty(port)) {
+			int i = port.indexOf("{");
+			if (i >= 0) {
+				int j = port.indexOf("}", i + 1);
+				if (j > i) {
+					String name = port.substring(i + 1, j);
+					int k = name.indexOf("=");
+					if (k > 0) {
+						name = name.substring(0, k);
+					}
+					String value = X.isEmpty(this.port) ? X.EMPTY
+							: (this.port.substring(i, this.port.length() - (port.length() - j - 1)));
+					put(name, value);
+				}
+			}
+		}
+
+		// uri
+		String uri = u1.getUri();
+		if (!X.isEmpty(uri)) {
+			int i = uri.indexOf("{");
+			if (i >= 0) {
+				int j = uri.indexOf("}", i + 1);
+				if (j > i) {
+					String name = uri.substring(i + 1, j);
+					int k = name.indexOf("=");
+					if (k > 0) {
+						name = name.substring(0, k);
+					}
+					String value = this.uri.substring(i, this.uri.length() - (uri.length() - j - 1));
+					put(name, value);
+				}
+			}
+		}
+
+		// query
+		if (u1.query != null && !u1.query.isEmpty()) {
+			for (String s : u1.query.keySet()) {
+				String v = u1.query.get(s);
+
+				int i = v.indexOf("{");
+				if (i >= 0) {
+					int j = v.indexOf("}", i + 1);
+					if (j > i) {
+						String name = v.substring(i + 1, j);
+						int k = name.indexOf("=");
+						if (k > 0) {
+							name = name.substring(0, k);
+						}
+						String value = this.get(s);
+						put(name, value);
+					}
+				}
+
+			}
+		}
+		return true;
 	}
 
 	private boolean parse() throws Exception {
@@ -149,14 +251,13 @@ public class Url {
 
 			// parse query
 			if (!X.isEmpty(query)) {
-				this.query = new TreeMap<String, String>();
 				String[] ss = query.split("&");
 				for (String s1 : ss) {
 					i = s1.indexOf("=");
 					if (i > -1) {
 						String n = s1.substring(0, i);
 						String v = s1.substring(i + 1);
-						this.query.put(n, URLDecoder.decode(v, "UTF8"));
+						this.put(n, URLDecoder.decode(v, "UTF8"));
 					}
 				}
 			}
@@ -187,6 +288,13 @@ public class Url {
 	public String toString() {
 		return "Url [url=" + url + ", protocol=" + protocol + ", ip=" + ip + ", port=" + port + ", uri=" + uri
 				+ ", query=" + query + "]";
+	}
+
+	public void put(String name, String value) {
+		if (query == null) {
+			this.query = new TreeMap<String, String>();
+		}
+		this.query.put(name, value);
 	}
 
 	public String get(String name) {

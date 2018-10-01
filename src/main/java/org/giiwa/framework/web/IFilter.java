@@ -35,28 +35,28 @@ package org.giiwa.framework.web;
  */
 public interface IFilter {
 
-  /**
-   * before dispatch to the model
-   * 
-   * @param m
-   *          the model
-   * @return boolean, true = pass to the model, pass to the next "filter"; false
-   *         = stop pass to the model, and stop pass to the next "filter"
-   */
-  default boolean before(Model m) {
-    return true;
-  };
+	/**
+	 * before dispatch to the model
+	 * 
+	 * @param m
+	 *            the model
+	 * @return boolean, true = pass to the model, pass to the next "filter"; false =
+	 *         stop pass to the model, and stop pass to the next "filter"
+	 */
+	default boolean before(Model m) {
+		return true;
+	};
 
-  /**
-   * after dispatched to the model
-   * 
-   * @param m
-   *          the model
-   * @return boolean, true = pass to the next "filter", false = stop the pass to
-   *         the next "filter"
-   */
-  default boolean after(Model m) {
-    return true;
-  };
+	/**
+	 * after dispatched to the model
+	 * 
+	 * @param m
+	 *            the model
+	 * @return boolean, true = pass to the next "filter", false = stop the pass to
+	 *         the next "filter"
+	 */
+	default boolean after(Model m) {
+		return true;
+	};
 
 }

@@ -43,7 +43,7 @@ public class AuthToken extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<AuthToken> dao = BeanDAO.create(AuthToken.class);
+	public static final BeanDAO<String, AuthToken> dao = BeanDAO.create(AuthToken.class);
 
 	@Column(name = X.ID, index = true, unique = true)
 	private String id;
@@ -132,10 +132,10 @@ public class AuthToken extends Bean {
 	 */
 	public static AuthToken update(long uid, String sid, String ip) {
 		String token = UID.random(20);
-		long expired = System.currentTimeMillis() + Global.getLong("token.expired", X.AWEEK);
+
 		String id = UID.id(uid, sid, ip, token);
 
-		V v = V.create("uid", uid).set("sid", sid).set("token", token).set("expired", expired).set("ip", ip);
+		V v = V.create("uid", uid).set("sid", sid).set("token", token).set("ip", ip);
 
 		try {
 			if (dao.exists(id)) {
@@ -143,7 +143,9 @@ public class AuthToken extends Bean {
 				dao.update(id, v);
 			} else {
 				// insert
-				dao.insert(v.set(X.ID, id));
+				long expired = System.currentTimeMillis()
+						+ Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+				dao.insert(v.set(X.ID, id).append("expired", expired));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -216,8 +218,9 @@ public class AuthToken extends Bean {
 	/**
 	 * cleanup the expired token
 	 */
-	public static void cleanup() {
+	public void cleanup() {
 		dao.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lt));
+		dao.cleanup();
 	}
 
 }

@@ -25,7 +25,7 @@ public class Demo extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Demo> dao = BeanDAO.create(Demo.class);
+	public static final BeanDAO<String, Demo> dao = BeanDAO.create(Demo.class);
 
 	@Column(name = X.ID)
 	String id;

@@ -16,7 +16,6 @@ package org.giiwa.framework.bean;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.framework.web.Model;
@@ -37,23 +36,30 @@ public class GLog extends Bean {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<GLog> dao = BeanDAO.create(GLog.class);
+	public static final BeanDAO<String, GLog> dao = BeanDAO.create(GLog.class);
 
-	private static final int TYPE_SECURITY = 0;
-	private static final int TYPE_APP = 1;
-	private static final int TYPE_OPLOG = 2;
+	public static final int TYPE_SECURITY = 0;
+	public static final int TYPE_APP = 1;
+	public static final int TYPE_OPLOG = 2;
 
 	private static final int LEVEL_INFO = 0;
 	private static final int LEVEL_WARN = 1;
 	private static final int LEVEL_ERROR = 2;
+
+	@Column(name = "type1")
+	int type;
+
+	public int getType() {
+		return type;
+	}
 
 	/**
 	 * Removes all the oplog.
 	 * 
 	 * @return the number was deleted
 	 */
-	public static int cleanup() {
-		return dao.delete(W.create());
+	public void cleanup() {
+		dao.cleanup();
 	}
 
 	/**
@@ -242,7 +248,7 @@ public class GLog extends Bean {
 				User u, String ip) {
 
 			int l1 = Global.getInt("oplog.level", GLog.LEVEL_WARN);
-			if (l1 > level)
+			if (type != GLog.TYPE_SECURITY && l1 > level)
 				return null;
 
 			if (Helper.isConfigured()) {
@@ -259,7 +265,7 @@ public class GLog extends Bean {
 				long t = System.currentTimeMillis();
 				String id = UID.id(t, op, message);
 				V v = V.create("id", id).set(X.CREATED, t).set("node", node).set("model", model).set("op", op)
-						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type", type).append("level", level);
+						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type1", type).append("level", level);
 				v.set("message", message);
 				v.set("trace", trace);
 
@@ -509,30 +515,15 @@ public class GLog extends Bean {
 	private static class SecurityLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-			String id = _log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
-
-			if (!X.isEmpty(id)) {
-				Message.create(V.create("touid", 0).append("title", op + "//" + message).append("content",
-						"<a href='giiwa.popup(\"/admin/syslog/detail?id=" + id + "\")'>" + id + "</a>"));
-			}
+			_log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-			String id = _log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
-			if (!X.isEmpty(id)) {
-				Message.create(V.create("touid", 0).append("title", op + "//" + message).append("content",
-						"<a href='giiwa.popup(\"/admin/syslog/detail?id=" + id + "\")'>" + id + "</a>"));
-			}
+			_log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-			String id = _log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
-
-			if (!X.isEmpty(id)) {
-				Message.create(V.create("touid", 0).append("title", op + "//" + message).append("content",
-						"<a href='giiwa.popup(\"/admin/syslog/detail?id=" + id + "\")'>" + id + "</a>"));
-			}
-
+			_log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 
 	}

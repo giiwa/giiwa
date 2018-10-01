@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v6.0.3 (2017-11-14)
+ * @license Highcharts JS v6.0.4 (2017-12-15)
  * Plugin for displaying a message when there is no data visible in chart.
  *
  * (c) 2010-2017 Highsoft AS
@@ -125,6 +125,17 @@
         };
 
 
+        // Presentational
+        /**
+         * CSS styles for the no-data label.
+         * @optionparent noData.style
+         */
+        defaultOptions.noData.style = {
+            fontWeight: 'bold',
+            fontSize: '12px',
+            color: '#666666'
+        };
+
 
 
         // Define hasData function for non-cartesian seris. Returns true if the series
@@ -134,6 +145,7 @@
             'gauge',
             'heatmap',
             'pie',
+            'sankey',
             'treemap',
             'waterfall'
         ], function(type) {
@@ -177,6 +189,10 @@
                         'no-data'
                     );
 
+
+                chart.noDataLabel
+                    .attr(noDataOptions.attr)
+                    .css(noDataOptions.style);
 
 
                 chart.noDataLabel.add();

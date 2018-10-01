@@ -19,6 +19,11 @@
 <p>提供统一请求参数获取APIs:getString, getHtml, getFile, etc. 以应对GET,POST, AJAX, application/json, File， multipart/form-data等对请求数据格式的不同。</p>
 <p>使得编写应用更简单。</p>
 
+<h2>分布式并行计算</h2>
+<p>提供分布式共享锁，多级缓存，分布式文件存储，分布式任务，MapReduce支持。</p>
+<p>高效分布式任务协调。</p>
+<p>大型计算任务可以分片。</p>
+
 <h2>下载</h2>
 <p>最新Giiwa运行包 <a href="https://www.giiwa.org/archive/giiwa-1.5.tgz">giiwa-1.5.tgz</a>，或者<a href="https://www.giiwa.org/archive/giiwa-1.5.zip">giiwa-1.5.zip</a>。</p>
 

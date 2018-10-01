@@ -49,6 +49,10 @@ public class Roles extends Bean implements IRole {
 		return access;
 	}
 
+	public Roles() {
+
+	}
+
 	/**
 	 * Instantiates a new roles.
 	 * 
@@ -61,9 +65,11 @@ public class Roles extends Bean implements IRole {
 			list = Role.loadAll(roles);
 
 			for (Role r : list) {
-				List<String> names = r.getAccesses();
+				List<?> names = r.getAccesses();
 				if (names != null && names.size() > 0) {
-					access.addAll(names);
+					for (Object o : names) {
+						access.add(o.toString());
+					}
 				}
 			}
 		}

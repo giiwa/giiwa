@@ -17,6 +17,7 @@ package org.giiwa.core.bean;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.apache.commons.configuration.Configuration;
@@ -34,8 +34,8 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.helper.MongoHelper;
 import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
 
 import com.mongodb.BasicDBList;
@@ -379,7 +379,7 @@ public class Helper implements Serializable {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		private final static Object ignore = new Object();
+		protected final static Object ignore = new Object();
 
 		/** The list. */
 		protected Map<String, Object> m = new LinkedHashMap<String, Object>();
@@ -547,6 +547,16 @@ public class Helper implements Serializable {
 		 */
 		public V append(String name, Object v) {
 			return set(name, v);
+		}
+
+		/**
+		 * same as copy(v);
+		 * 
+		 * @param v
+		 * @return
+		 */
+		public V append(V v) {
+			return this.copy(v);
 		}
 
 		/**
@@ -882,7 +892,7 @@ public class Helper implements Serializable {
 		 */
 		public static W fromJSON(JSON jo) {
 			W q = W.create();
-			List<JSON> l1 = jo.getList("w");
+			Collection<JSON> l1 = jo.getList("w");
 			if (l1 != null && l1.size() > 0) {
 				for (JSON j1 : l1) {
 					W q1 = W.fromJSON(j1);
@@ -1063,29 +1073,6 @@ public class Helper implements Serializable {
 				sb.append(clause.where(tansfers));
 			}
 
-			// for (Entity e : elist) {
-			// if (sb.length() > 0) {
-			// if (e.cond == AND) {
-			// sb.append(" and ");
-			// } else if (e.cond == OR) {
-			// sb.append(" or ");
-			// }
-			// }
-			// sb.append(e.where(tansfers));
-			// }
-			//
-			// for (W w : wlist) {
-			// if (sb.length() > 0) {
-			// if (w.cond == AND) {
-			// sb.append(" and ");
-			// } else if (w.cond == OR) {
-			// sb.append(" or ");
-			// }
-			// }
-			//
-			// sb.append(" (").append(w.where(tansfers)).append(") ");
-			// }
-
 			return sb.length() == 0 ? X.EMPTY : "(" + sb + ")";
 
 		}
@@ -1097,6 +1084,16 @@ public class Helper implements Serializable {
 		 */
 		public static W create() {
 			return new W();
+		}
+
+		/**
+		 * create a empty q, only query the data of this node in clusters envir
+		 * 
+		 * @return
+		 */
+		public static W createLocal() {
+			W q = create().and("_node", Global.id());
+			return q;
 		}
 
 		/**
@@ -1267,6 +1264,18 @@ public class Helper implements Serializable {
 			return l1;
 		}
 
+		public W and(String[] name, Object v) {
+			return and(name, v, W.OP.eq);
+		}
+
+		public W and(String[] name, Object v, OP op) {
+			W q = W.create();
+			for (String s : name) {
+				q.or(s, v, op);
+			}
+			return and(q);
+		}
+
 		/**
 		 * set the namd and parameter with "op" conditions.
 		 *
@@ -1278,9 +1287,43 @@ public class Helper implements Serializable {
 		 *            the operation
 		 * @return the W
 		 */
+		@SuppressWarnings("rawtypes")
 		public W and(String name, Object v, OP op) {
-			elist.add(new Entity(name, v, op, AND));
-			queryList.add(new Entity(name, v, op, AND));
+			if (v != null && v instanceof Collection) {
+				W q = W.create();
+				Collection l1 = (Collection) v;
+				for (Object o : l1) {
+					if (o instanceof W) {
+						o = ((W) o).query();
+					}
+					if (op.equals(OP.eq)) {
+						q.or(name, o);
+					} else if (op.equals(OP.neq)) {
+						q.and(name, o, OP.neq);
+					}
+				}
+				this.and(q);
+			} else if (v != null && v.getClass().isArray()) {
+				W q = W.create();
+				Object[] l1 = (Object[]) v;
+				for (Object o : l1) {
+					if (o instanceof W) {
+						o = ((W) o).query();
+					}
+					if (op.equals(OP.eq)) {
+						q.or(name, o);
+					} else if (op.equals(OP.neq)) {
+						q.and(name, o, OP.neq);
+					}
+				}
+				this.and(q);
+			} else {
+				if (v instanceof W) {
+					v = ((W) v).query();
+				}
+				elist.add(new Entity(name, v, op, AND));
+				queryList.add(new Entity(name, v, op, AND));
+			}
 			return this;
 		}
 
@@ -1297,6 +1340,17 @@ public class Helper implements Serializable {
 		 */
 		public W append(String name, Object v, OP op) {
 			return and(name, v, op);
+		}
+
+		public W or(String[] name, Object v) {
+			return or(name, v, W.OP.eq);
+		}
+
+		public W or(String[] name, Object v, OP op) {
+			for (String s : name) {
+				this.or(s, v, op);
+			}
+			return this;
 		}
 
 		/**
@@ -1323,10 +1377,43 @@ public class Helper implements Serializable {
 		 *            the op
 		 * @return W
 		 */
+		@SuppressWarnings("rawtypes")
 		public W or(String name, Object v, OP op) {
-
-			elist.add(new Entity(name, v, op, OR));
-			queryList.add(new Entity(name, v, op, OR));
+			if (v != null && v instanceof Collection) {
+				W q = W.create();
+				Collection l1 = (Collection) v;
+				for (Object o : l1) {
+					if (o instanceof W) {
+						o = ((W) o).query();
+					}
+					if (op.equals(OP.eq)) {
+						q.or(name, o);
+					} else if (op.equals(OP.neq)) {
+						q.and(name, o, OP.neq);
+					}
+				}
+				this.and(q);
+			} else if (v != null && v.getClass().isArray()) {
+				W q = W.create();
+				Object[] l1 = (Object[]) v;
+				for (Object o : l1) {
+					if (o instanceof W) {
+						o = ((W) o).query();
+					}
+					if (op.equals(OP.eq)) {
+						q.or(name, o);
+					} else if (op.equals(OP.neq)) {
+						q.and(name, o, OP.neq);
+					}
+				}
+				this.or(q);
+			} else {
+				if (v instanceof W) {
+					v = ((W) v).query();
+				}
+				elist.add(new Entity(name, v, op, OR));
+				queryList.add(new Entity(name, v, op, OR));
+			}
 			return this;
 		}
 
@@ -1415,8 +1502,7 @@ public class Helper implements Serializable {
 		 */
 		public static W create(String name, Object v, OP op) {
 			W w = new W();
-			w.elist.add(new Entity(name, v, op, AND));
-			w.queryList.add(new Entity(name, v, op, AND));
+			w.and(name, v, op);
 			return w;
 		}
 
@@ -1629,162 +1715,45 @@ public class Helper implements Serializable {
 			}
 		}
 
-		// /**
-		// * _parse.
-		// *
-		// * @param e
-		// * the e
-		// * @param q
-		// * the q
-		// * @return the basic db object
-		// */
-		// BasicDBObject _parse(Entity e, BasicDBObject q) {
-		// if (q.containsField(e.name)) {
-		// // get out of it and "$and" them
-		// Object v = q.removeField(e.name);
-		// List<BasicDBObject> l1 = new ArrayList<BasicDBObject>();
-		// l1.add(new BasicDBObject().append(e.name, v));
-		// l1.add(new BasicDBObject().append(e.name, e.getMongoQuery()));
-		//
-		// if (q.containsField("$and")) {
-		// List<BasicDBObject> l2 = (List<BasicDBObject>) q.get("$and");
-		// l2.addAll(l1);
-		// } else {
-		// q.append("$and", l1);
-		// }
-		// } else {
-		// q.append(e.name, e.getMongoQuery());
-		// }
-		// return q;
-		// }
-
-		/**
-		 * Query.
-		 *
-		 * @return the basic db object
-		 */
 		public BasicDBObject query() {
-			BasicDBObject q = new BasicDBObject();
+
 			BasicDBList list = new BasicDBList();
-			// List<List> l1 = new ArrayList<List>();
-			Stack<Object> stack = new Stack<Object>();
+
+			int cond = -1;
 			for (IClause clause : queryList) {
-				if (stack.isEmpty() || stack.size() < 2) {
-					stack.push(clause);
-				}
-				if (stack.size() == 2) {
-					int cond = -1;
-					list = new BasicDBList();
-					Object right = stack.pop();
-					Object left = stack.pop();
-					if (left instanceof BasicDBObject) {
-						list.add(left);
-					} else if (left instanceof IClause) {
-						list.add(((IClause) left).query());
-					}
-
-					if (right instanceof IClause) {
-						cond = ((IClause) right).getCondition();
-						list.add(((IClause) right).query());
-					}
+				if (!list.isEmpty() && cond != clause.getCondition()) {
 					if (cond == AND) {
-						q.append("$and", list);
-						stack.push(q);
-						q = new BasicDBObject();
+						BasicDBObject q = new BasicDBObject("$and", list.clone());
+						list.clear();
+						list.add(q);
 					} else if (cond == OR) {
-						q.append("$or", list);
-						stack.push(q);
-						q = new BasicDBObject();
+						BasicDBObject q = new BasicDBObject("$or", list.clone());
+						list.clear();
+						list.add(q);
 					}
-
 				}
+
+				if (clause instanceof IClause) {
+					list.add(((IClause) clause).query());
+				} else {
+					list.add(clause);
+				}
+				cond = clause.getCondition();
+
 			}
-			if (stack.empty()) {
+
+			if (list.isEmpty()) {
 				return new BasicDBObject();
-			}
-			Object query = stack.pop();
-			if (query instanceof BasicDBObject) {
-				return (BasicDBObject) query;
-			} else if (query instanceof IClause) {
-				return ((IClause) query).query();
+			} else if (list.size() == 1) {
+				return (BasicDBObject) list.get(0);
+			} else {
+				if (cond == AND) {
+					return new BasicDBObject().append("$and", list);
+				} else if (cond == OR) {
+					return new BasicDBObject().append("$or", list);
+				}
 			}
 			return new BasicDBObject();
-			// {
-			// List l2 = new ArrayList();
-			// for (Entity e : elist) {
-			// if (e.cond == OR && l2.size() > 0) {
-			// l1.add(l2);
-			// l2 = new ArrayList<Entity>();
-			// }
-			// l2.add(e);
-			// }
-			// for (W e : wlist) {
-			// if (e.cond == OR && l2.size() > 0) {
-			// l1.add(l2);
-			// l2 = new ArrayList<Entity>();
-			// }
-			// l2.add(e);
-			// }
-			//
-			// if (l2.size() > 0) {
-			// l1.add(l2);
-			// }
-			// }
-			//
-			// if (l1.size() > 1) {
-			// List<BasicDBObject> l3 = new ArrayList<BasicDBObject>();
-			// for (List l2 : l1) {
-			// BasicDBObject q1 = new BasicDBObject();
-			// for (Object e : l2) {
-			// if (e instanceof Entity) {
-			// _parse((Entity) e, q1);
-			// } else if (e instanceof W) {
-			// BasicDBObject q2 = ((W) e).query();
-			// q1 = _merge(q1, q2);
-			// }
-			// }
-			// l3.add(q1);
-			// }
-			// q.append("$or", l3);
-			// } else if (!l1.isEmpty()) {
-			// for (Object e : l1.get(0)) {
-			// if (e instanceof Entity) {
-			// _parse((Entity) e, q);
-			// } else if (e instanceof W) {
-			// BasicDBObject q2 = ((W) e).query();
-			// q = _merge(q, q2);
-			// }
-			// }
-			// }
-			//
-			// return q;
-		}
-
-		private BasicDBObject _merge(BasicDBObject q1, BasicDBObject q2) {
-			for (String name : q2.keySet()) {
-				if (q1.containsField(name)) {
-					if (X.isSame(name, "$or") || X.isSame(name, "$and")) {
-						List<BasicDBObject> l1 = (List<BasicDBObject>) q1.get(name);
-						List<BasicDBObject> l2 = (List<BasicDBObject>) q2.get(name);
-						l1.addAll(l2);
-					} else {
-						List<BasicDBObject> l1 = new ArrayList<BasicDBObject>();
-						l1.add(new BasicDBObject().append(name, q1.remove(name)));
-						l1.add(new BasicDBObject().append(name, q2.get(name)));
-
-						if (q1.containsField("$and")) {
-							List<BasicDBObject> l2 = (List<BasicDBObject>) q1.get("$and");
-							l2.addAll(l1);
-						} else {
-							q1.append("$and", l1);
-						}
-					}
-				} else {
-					q1.append(name, q2.get(name));
-				}
-			}
-
-			return q1;
 		}
 
 		/**
@@ -1968,6 +1937,10 @@ public class Helper implements Serializable {
 		return insert(value, t, getDB(t));
 	}
 
+	public static int insert(String table, V value) {
+		return insert(value, table, DEFAULT);
+	}
+
 	/**
 	 * batch insert
 	 * 
@@ -2070,6 +2043,7 @@ public class Helper implements Serializable {
 
 		if (table != null) {
 			value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
+			value.set("_node", Global.id());
 
 			/**
 			 * trigger the insert
@@ -2361,20 +2335,22 @@ public class Helper implements Serializable {
 			}
 		}
 
-		if (n > 0) {
-			if (refer > 0 && bs != null && !X.isEmpty(bs) && bs.size() >= n && (s % n % 10 == 0)) {
-				// not loop; has data; s % n % 10 == 0
-				Task.create(new Runnable() {
-
-					@Override
-					public void run() {
-						// Cause the DB to load the more data in memory
-						_load(table, fields, q, s + n * 10, n, t, db, 0);
-					}
-
-				}).schedule(1000);
-			}
-		}
+		// TODO, comment this.
+		// if (n > 0 && bs != null && !bs.isEmpty()) {
+		// if (refer > 0 && bs != null && !X.isEmpty(bs) && bs.size() >= n && (s % n %
+		// 10 == 0)) {
+		// // not loop; has data; s % n % 10 == 0
+		// Task.create(new Runnable() {
+		//
+		// @Override
+		// public void run() {
+		// // Cause the DB to load the more data in memory
+		// _load(table, fields, q, s + n * 10, n, t, db, 0);
+		// }
+		//
+		// }).schedule(1000);
+		// }
+		// }
 		return bs;
 
 	}
@@ -2454,6 +2430,18 @@ public class Helper implements Serializable {
 		return sum(q, name, t, getDB(t));
 	}
 
+	public static <T> T max(W q, String name, Class<? extends Bean> t) {
+		return max(q, name, t, getDB(t));
+	}
+
+	public static <T> T min(W q, String name, Class<? extends Bean> t) {
+		return min(q, name, t, getDB(t));
+	}
+
+	public static <T> T avg(W q, String name, Class<? extends Bean> t) {
+		return avg(q, name, t, getDB(t));
+	}
+
 	/**
 	 * count the items in the db.
 	 *
@@ -2473,6 +2461,21 @@ public class Helper implements Serializable {
 	public static <T> T sum(W q, String name, Class<? extends Bean> t, String db) {
 		String table = getTable(t);
 		return sum(q, name, table, db);
+	}
+
+	public static <T> T max(W q, String name, Class<? extends Bean> t, String db) {
+		String table = getTable(t);
+		return max(q, name, table, db);
+	}
+
+	public static <T> T min(W q, String name, Class<? extends Bean> t, String db) {
+		String table = getTable(t);
+		return min(q, name, table, db);
+	}
+
+	public static <T> T avg(W q, String name, Class<? extends Bean> t, String db) {
+		String table = getTable(t);
+		return avg(q, name, table, db);
 	}
 
 	/**
@@ -2530,6 +2533,72 @@ public class Helper implements Serializable {
 		return null;
 	}
 
+	public static <T> T max(W q, String name, String table, String db) {
+		if (table != null) {
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
+
+			if (primary != null && primary.getDB(db) != null) {
+				return primary.max(table, q, name, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						return h.max(table, q, name, db);
+					}
+				}
+			}
+
+			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+		}
+
+		return null;
+	}
+
+	public static <T> T min(W q, String name, String table, String db) {
+		if (table != null) {
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
+
+			if (primary != null && primary.getDB(db) != null) {
+				return primary.min(table, q, name, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						return h.min(table, q, name, db);
+					}
+				}
+			}
+
+			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+		}
+
+		return null;
+	}
+
+	public static <T> T avg(W q, String name, String table, String db) {
+		if (table != null) {
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
+
+			if (primary != null && primary.getDB(db) != null) {
+				return primary.avg(table, q, name, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						return h.avg(table, q, name, db);
+					}
+				}
+			}
+
+			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+		}
+
+		return null;
+	}
+
 	/**
 	 * get the distinct list for the name, by the query.
 	 * 
@@ -2545,8 +2614,8 @@ public class Helper implements Serializable {
 	 *            the Class of T
 	 * @return the List of objects
 	 */
-	public static <T> List<T> distinct(String name, W q, Class<? extends Bean> b, Class<T> t) {
-		return distinct(name, q, b, t, getDB(b));
+	public static List<?> distinct(String name, W q, Class<? extends Bean> b) {
+		return distinct(name, q, b, getDB(b));
 	}
 
 	/**
@@ -2566,9 +2635,9 @@ public class Helper implements Serializable {
 	 *            the db
 	 * @return the list
 	 */
-	public static <T> List<T> distinct(String name, W q, Class<? extends Bean> b, Class<T> t, String db) {
+	public static List<?> distinct(String name, W q, Class<? extends Bean> b, String db) {
 		String table = getTable(b);
-		return distinct(name, q, table, t, db);
+		return distinct(name, q, table, db);
 	}
 
 	/**
@@ -2586,7 +2655,7 @@ public class Helper implements Serializable {
 	 *            the db name
 	 * @return the list
 	 */
-	public static <T> List<T> distinct(String name, W q, String table, Class<T> t, String db) {
+	public static List<?> distinct(String name, W q, String table, String db) {
 
 		if (table != null) {
 			if (monitor != null) {
@@ -2594,12 +2663,12 @@ public class Helper implements Serializable {
 			}
 
 			if (primary != null && primary.getDB(db) != null) {
-				return primary.distinct(table, name, q, t, db);
+				return primary.distinct(table, name, q, db);
 
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(db) != null) {
-						return h.distinct(table, name, q, t, db);
+						return h.distinct(table, name, q, db);
 					}
 				}
 			}
@@ -2862,13 +2931,21 @@ public class Helper implements Serializable {
 
 		<T> T sum(String table, W q, String name, String db);
 
-		<T> List<T> distinct(String table, String name, W q, Class<T> t, String db);
+		<T> T max(String table, W q, String name, String db);
+
+		<T> T min(String table, W q, String name, String db);
+
+		<T> T avg(String table, W q, String name, String db);
+
+		List<?> distinct(String table, String name, W q, String db);
 
 		List<JSON> listTables(String db);
 
 		void close();
 
 		List<JSON> getMetaData(String tablename);
+
+		void repair();
 	}
 
 	public static DBHelper getPrimary() {

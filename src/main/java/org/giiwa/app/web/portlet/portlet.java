@@ -1,23 +1,12 @@
 package org.giiwa.app.web.portlet;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.giiwa.app.web.admin.profile;
+import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.Portlet;
-import org.giiwa.framework.bean.User;
+import org.giiwa.core.bean.X;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
 
 public class portlet extends Model {
-
-	@Path(path = "delete", login = true)
-	public final void delete() {
-
-		this.show("/admin/portlet.html");
-	}
 
 	@Path()
 	public final void onGet() {
@@ -30,18 +19,19 @@ public class portlet extends Model {
 			q.and("uid", login.getId());
 		}
 
-		portlet = Portlet.dao.load(q);
-		if (portlet == null) {
-			portlet = Portlet.dao.load(W.create("uri", this.uri).and("uid", 0));
-		}
-
 		get();
 	}
 
-	protected Portlet portlet;
-
 	public void get() {
+	}
 
+	/**
+	 * @deprecated
+	 * @param b
+	 * @return
+	 */
+	public long time(Bean b) {
+		return b.getCreated() + X.AHOUR * 8;
 	}
 
 }

@@ -21,6 +21,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Callable;
+import org.giiwa.core.task.MyFunc;
 
 /**
  * The {@code Beans} Class used to contains the Bean in query. <br>
@@ -47,18 +49,23 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	public List<String> columns = null;
 
 	transient W q;
-	transient BeanDAO<?> dao;
+	transient BeanDAO<?, ?> dao;
 
 	private String id = UID.random(20);
+
+	public static <E extends Bean> Beans<E> create() {
+		return new Beans<E>();
+	}
 
 	public String getId() {
 		return id;
 	}
 
-	public void count() {
-		if (dao != null) {
+	public long count() {
+		if (dao != null && total < 0) {
 			total = dao.count(q);
 		}
+		return total;
 	}
 
 	public long getTotal() {
@@ -115,6 +122,46 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	 */
 	public boolean expired() {
 		return expired > 0 && System.currentTimeMillis() > expired;
+	}
+
+	public List<JSON> toJSON(Callable<JSON, E> cb) {
+		List<JSON> l1 = JSON.createList();
+		for (E e : this) {
+			JSON j = null;
+			if (cb != null) {
+				j = cb.call(200, e);
+			} else {
+				j = e.getJSON();
+
+			}
+			if (j != null) {
+				l1.add(j);
+			}
+		}
+		return l1;
+	}
+
+	public <K> List<K> toArray(Callable<K, E> cb) {
+		List<K> l1 = new ArrayList<K>();
+		int i = 0;
+		for (E e : this) {
+			K k = cb.call(i++, e);
+			if (k != null) {
+				l1.add(k);
+			}
+		}
+		return l1;
+	}
+
+	public <K> List<K> toArray(MyFunc<K, E> cb) {
+		List<K> l1 = new ArrayList<K>();
+		for (E e : this) {
+			K k = cb.call(e);
+			if (k != null) {
+				l1.add(k);
+			}
+		}
+		return l1;
 	}
 
 }

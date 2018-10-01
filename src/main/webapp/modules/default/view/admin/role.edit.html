@@ -1,4 +1,3 @@
-<div class='head'>$lang.get('role.edit.title')</div>
 
 #parse('/widget/widget.message.html')
 
@@ -17,7 +16,7 @@
 			<table id='access-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 				<thead>
 					<tr>
-						<th>$lang.get('access.group')</th>
+						<th style="width: 100px;">$lang.get('access.group')</th>
 						<th>$lang.get('access.name')</th>
 					</tr>
 				</thead>
@@ -36,10 +35,24 @@
 			</table>
 
 	</div>
-	<div class='btns'><button class='btn btn-success' type='submit'>$lang.get('btn.save')</button></div>
+	<div class='btns'>
+		<button class='btn btn-success' type='submit'>$lang.get('btn.save')</button>
+		#if($me.hasAccess('access.config.admin'))
+		<a class='btn btn-warning' href="javascript:;" onclick="_cleanup();">$lang.get('a.cleanup')</a>
+		#end
+	</div>
 </form>
 
 <script>
+function _cleanup(){
+	$.post('/admin/role/cleanup', {}, function(d){
+		if(d.state == 200) {
+			giiwa.reload();
+		} else if(d.message) {
+			giiwa.error(d.message);
+		}
+	})
+}
 function selectall(){
 	var ch = $('.access_title input[type=checkbox]');
 	if (ch.length > 0) {

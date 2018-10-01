@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v6.0.3 (2017-11-14)
+ * @license Highcharts JS v6.0.4 (2017-12-15)
  * Client side exporting module
  *
  * (c) 2015 Torstein Honsi / Oystein Moseng
@@ -606,39 +606,6 @@
             // inline styles that we want to pass through. There are so many styles by
             // default in IE that we don't want to blacklist them all.
 
-            if (isMSBrowser) {
-                Highcharts.SVGRenderer.prototype.inlineWhitelist = [
-                    /^blockSize/,
-                    /^border/,
-                    /^caretColor/,
-                    /^color/,
-                    /^columnRule/,
-                    /^columnRuleColor/,
-                    /^cssFloat/,
-                    /^cursor/,
-                    /^fill$/,
-                    /^fillOpacity/,
-                    /^font/,
-                    /^inlineSize/,
-                    /^length/,
-                    /^lineHeight/,
-                    /^opacity/,
-                    /^outline/,
-                    /^parentRule/,
-                    /^rx$/,
-                    /^ry$/,
-                    /^stroke/,
-                    /^textAlign/,
-                    /^textAnchor/,
-                    /^textDecoration/,
-                    /^transform/,
-                    /^vectorEffect/,
-                    /^visibility/,
-                    /^x$/,
-                    /^y$/
-                ];
-            }
-
 
             // Always fall back on:
             // - MS browsers: Embedded images JPEG/PNG, or any PDF
@@ -670,7 +637,7 @@
 
         // Extend the default options to use the local exporter logic
         merge(true, Highcharts.getOptions().exporting, {
-            libURL: 'https://code.highcharts.com/6.0.3/lib/',
+            libURL: 'https://code.highcharts.com/6.0.4/lib/',
 
             // When offline-exporting is loaded, redefine the menu item definitions
             // related to download.

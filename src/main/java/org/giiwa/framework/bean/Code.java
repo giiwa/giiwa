@@ -37,7 +37,7 @@ public class Code extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Code> dao = BeanDAO.create(Code.class);
+	public static final BeanDAO<String, Code> dao = BeanDAO.create(Code.class);
 
 	@Column(name = "s1", index = true)
 	private String s1;
@@ -74,6 +74,11 @@ public class Code extends Bean {
 
 	public static void delete(String s1, String s2) {
 		dao.delete(W.create("s1", s1).and("s2", s2));
+	}
+
+	@Override
+	public void cleanup() {
+		dao.cleanup();
 	}
 
 }

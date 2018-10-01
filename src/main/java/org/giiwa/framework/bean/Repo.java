@@ -19,12 +19,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
-import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.task.Task;
 
 /**
  * repository of file system bean. <br>
@@ -40,7 +38,7 @@ public class Repo extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Entity> dao = BeanDAO.create(Entity.class);
+	public static final BeanDAO<String, Entity> dao = BeanDAO.create(Entity.class);
 
 	private static Log log = LogFactory.getLog(Repo.class);
 
@@ -804,21 +802,25 @@ public class Repo extends Bean {
 	/**
 	 * Cleanup.
 	 */
-	public static void cleanup() {
+	public void cleanup() {
+
+		dao.cleanup();
+
+		int days = Global.getInt("glog.keep.days", 30);
 		File f = new File(ROOT);
 
 		File[] fs = f.listFiles();
 		if (fs != null) {
 			for (File f1 : fs) {
-				delete(f1);
+				delete(f1, days);
 			}
 		}
 
 	}
 
-	private static void delete(File f) {
+	private static void delete(File f, int days) {
 		if (f.isFile()) {
-			if (System.currentTimeMillis() - f.lastModified() > X.ADAY) {
+			if (System.currentTimeMillis() - f.lastModified() > days * X.ADAY) {
 				// check the file is fine?
 				Entity e = Repo.load(null, null, f);
 				if (e.getTotal() > e.getPos()) {
@@ -829,7 +831,7 @@ public class Repo extends Bean {
 			File[] fs = f.listFiles();
 			if (fs != null) {
 				for (File f1 : fs) {
-					delete(f1);
+					delete(f1, days);
 				}
 			}
 
@@ -850,81 +852,6 @@ public class Repo extends Bean {
 	public static long getSpeed() {
 		if (cost.get() > 0) {
 			return total.get() * 1000L / cost.get();
-		}
-		return 0;
-	}
-
-	public static synchronized void test() {
-
-		if (Global.getInt("repo.speed", 0) == 0) {
-			return;
-		}
-
-		new Task() {
-
-			@Override
-			public String getName() {
-				return "repo.speed";
-			}
-
-			@Override
-			public void onFinish() {
-				if (Global.getInt("repo.speed", 0) == 1) {
-					this.schedule(X.AMINUTE);
-				}
-			}
-
-			@Override
-			public void onExecute() {
-				total.set(0);
-				cost.set(0);
-				int n = 10;
-				for (int i = 0; i < n; i++) {
-					_test(n);
-				}
-
-				try {
-					IOUtil.delete(new File(ROOT + "/test"));
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		}.schedule(2000);
-
-	}
-
-	private static long _test(int n) {
-
-		OutputStream out = null;
-		InputStream in = null;
-		File f = new File(ROOT + "/test/" + n);
-		try {
-			TimeStamp t = TimeStamp.create();
-
-			f.getParentFile().mkdirs();
-			byte[] bb = new byte[32 * 1024];
-
-			out = new FileOutputStream(f);
-			for (int i = 0; i < 32; i++) {
-				out.write(bb, 0, bb.length);
-				out.flush();
-			}
-			out.close();
-			out = null;
-			in = new FileInputStream(f);
-			while (in.read(bb, 0, bb.length) > 0)
-				;
-
-			in.close();
-			in = null;
-
-			total.addAndGet(n * bb.length);
-			cost.addAndGet(t.pastms());
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		} finally {
-			X.close(out, in);
 		}
 		return 0;
 	}

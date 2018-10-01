@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteStreamHandler;
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.OS;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.FileUtils;
@@ -30,8 +31,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Language;
-import org.giiwa.framework.web.Module;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -43,8 +44,6 @@ public class Shell {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(Shell.class);
-
-	private static DefaultExecutor executor = new DefaultExecutor();
 
 	public static enum Logger {
 		error("ERROR"), warn("WARN"), info("INFO");
@@ -77,7 +76,7 @@ public class Shell {
 	 */
 	// 192.168.1.1#系统名称#2014-10-31#ERROR#日志消息#程序名称
 	public static void log(String ip, Logger level, String module, String message) {
-		String deli = Module.home.get("log_deli", "#");
+		String deli = Global.getString("log_deli", "#");
 		StringBuilder sb = new StringBuilder();
 		sb.append(ip).append(deli);
 		sb.append("support").append(deli);
@@ -85,7 +84,7 @@ public class Shell {
 		sb.append(deli).append(level.name()).append(deli).append(message).append(deli).append(module);
 
 		try {
-			Shell.run("logger " + level.level + deli + sb.toString());
+			Shell.run("logger " + level.level + deli + sb.toString(), 10 * 1000);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -100,7 +99,7 @@ public class Shell {
 		if (_linux == -1) {
 			try {
 				if (OS.isFamilyUnix()) {
-					String uname = Shell.run("uname -a");
+					String uname = Shell.run("uname -a", 5 * 1000);
 					log.debug("uname -a=" + uname);
 					_linux = uname.indexOf("Linux") > -1 ? 1 : 0;
 				} else {
@@ -132,7 +131,7 @@ public class Shell {
 	public static boolean isUbuntu() {
 		if (_ubuntu == -1) {
 			try {
-				String uname = Shell.run("uname -a");
+				String uname = Shell.run("uname -a", 5 * 1000);
 				_ubuntu = uname.indexOf("Ubuntu") > -1 ? 1 : 0;
 			} catch (Exception e) {
 				return false;
@@ -158,7 +157,7 @@ public class Shell {
 	 * @throws IOException
 	 *             throw IOException if error
 	 */
-	public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir)
+	public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir, long timeout)
 			throws IOException {
 
 		try {
@@ -166,20 +165,48 @@ public class Shell {
 			CommandLine cmdLine = CommandLine.parse(cmd);
 
 			ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
-			int[] exit = new int[512];
-			for (int i = 0; i < exit.length; i++) {
+			int[] exit = new int[513];
+			for (int i = 0; i < 512; i++) {
 				exit[i] = i - 256;
 			}
-			executor.setExitValues(exit);
+			// TODO, should ignore all
+			exit[512] = -559038737;
 
+			DefaultExecutor executor = new DefaultExecutor();
+			executor.setExitValues(exit);
 			executor.setStreamHandler(stream);
 			if (!X.isEmpty(workdir)) {
 				executor.setWorkingDirectory(new File(workdir));
 			}
 
-			// ExecuteWatchdog watchdog = new ExecuteWatchdog(60000);
-			// executor.setWatchdog(watchdog);
+			ExecuteWatchdog watchdog = new ExecuteWatchdog(timeout);
+			executor.setWatchdog(watchdog);
 			// watchdog.destroyProcess();
+
+			return executor.execute(cmdLine);
+		} catch (IOException e) {
+			log.error("cmd=" + cmd, e);
+			throw e;
+		}
+	}
+
+	public static int run(String cmd, ExecuteWatchdog dog) throws IOException {
+
+		try {
+
+			CommandLine cmdLine = CommandLine.parse(cmd);
+
+			int[] exit = new int[513];
+			for (int i = 0; i < 512; i++) {
+				exit[i] = i - 256;
+			}
+			// TODO, should ignore all
+			exit[512] = -559038737;
+
+			DefaultExecutor executor = new DefaultExecutor();
+			executor.setExitValues(exit);
+
+			executor.setWatchdog(dog);
 
 			return executor.execute(cmdLine);
 		} catch (IOException e) {
@@ -253,8 +280,8 @@ public class Shell {
 	 * @throws IOException
 	 *             throw IOException if error
 	 */
-	public static String run(String cmd) throws IOException {
-		return run(cmd, null);
+	public static String run(String cmd, long timeout) throws IOException {
+		return run(cmd, (String) null, timeout);
 	}
 
 	/**
@@ -281,9 +308,10 @@ public class Shell {
 	 * @throws IOException
 	 *             throw IOException if error
 	 */
-	public static String run(String cmd, String workdir) throws IOException {
+	public static String run(String cmd, String workdir, long timeout) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		run(cmd, out, out, null, workdir);
+		run(cmd, out, out, null, workdir, timeout);
+		out.flush();
 		out.close();
 		return out.toString();
 	}
@@ -319,7 +347,7 @@ public class Shell {
 		if (isLinux() || OS.isFamilyMac()) {
 
 			String line = "ps -ef";
-			String r = run(line);
+			String r = run(line, 5 * 1000);
 			StringBuilder sb = new StringBuilder();
 			String[] ss = r.split("\n");
 			if (ss != null && ss.length > 0) {
@@ -334,7 +362,7 @@ public class Shell {
 		} else if (OS.isFamilyWindows()) {
 
 			String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
-			return run(cmd);
+			return run(cmd, 5 * 1000);
 
 		} else {
 			throw new IOException("not support");
@@ -369,10 +397,10 @@ public class Shell {
 
 			String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
 
-			String line = run(cmd);
+			String line = run(cmd, 5 * 1000);
 			String[] lineArray = line.split(" ");
 			String pid = lineArray[17].trim();
-			run("taskkill /F /PID " + pid);
+			run("taskkill /F /PID " + pid, 5 * 1000);
 
 		} else {
 			throw new IOException("not support");
@@ -387,7 +415,7 @@ public class Shell {
 	 */
 	public static void main(String[] args) {
 		try {
-			System.out.println(run("uname -a"));
+			System.out.println(run("uname -a", 5 * 1000));
 
 			System.out.println();
 

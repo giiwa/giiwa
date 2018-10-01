@@ -2,15 +2,9 @@
 <div class='head'>$lang.get('logger.detail.title')</div>
 
 <table id='table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
-	<thead>
-		<tr>
-			<th style="width: 100px;">$lang.get("detail.name")</th>
-			<th>$lang.get("detail.value")</th>
-		</tr>
-	</thead>
 	<tbody>
 		<tr>
-			<td>$!lang.get('log.node')</td>
+			<td style="width: 100px;">$!lang.get('log.node')</td>
 			<td>$!b.node</td>
 		</tr>
 		<tr>
@@ -51,3 +45,10 @@
 		</tr>
 	</tbody>
 </table>
+
+#if($b)
+<div class="btns">
+	<a class='btn btn-success' href="/admin/syslog/detail?prev=$b.created">$lang.get('a.syslog.prev')</a>
+	<a class='btn btn-primary' href="/admin/syslog/detail?next=$b.created">$lang.get('a.syslog.next')</a>
+</div>
+#end

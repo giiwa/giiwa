@@ -231,7 +231,10 @@ public class repo extends Model {
 				 */
 				if (e != null) {
 
-					this.setContentType(Model.getMimeType(e.getName()));
+					String cType = Model.getMimeType(e.getName());
+					this.setContentType(cType);
+
+					log.debug("setcontent=" + cType);
 
 					String date2 = lang.format(e.getCreated(), "yyyy-MM-dd HH:mm:ss z");
 

@@ -1,8 +1,3 @@
-<div class='head'>$lang.get('repo.index.title')</div>
-
-<div class='notes'>
-	$lang.get('repo.notes')
-</div>
 
 #parse('/widget/widget.message.html')
 
@@ -12,7 +7,7 @@
 
 <div class='search'>
 	<form action='/admin/repo' method='get' #if($s>0) style='display:none' #end >
-		<span><label><h3>$lang.get('label.name'):</h3><input type='text' name='name' value="$!name" placeholder="name"/></label></span>
+		<span><label><h3>$lang.get('label.name'):</h3><input type='text' name='name' value="$!name" /></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
 	
@@ -21,7 +16,11 @@
 	</div>
 </div>
 
-<table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+<div class='notes'>
+	$lang.get('repo.notes')
+</div>
+
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
 			<th>ID</th>
@@ -40,8 +39,8 @@
 		<td>$lang.size($f.total)</td>
 		<td>$lang.format($f.created, 'yyyy-MM-dd HH:m')</td>
 		<td>$!f.user.name</td>
-		<td>
-			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this)'>$lang.get('a.delete')</a>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f.id', this)"><i class="icon-cancel-circle"></i></a>
 		</td>
 	</tr>
 #end
@@ -51,7 +50,6 @@
  #parse('/widget/goto.page.html')
 
 <script>
-$('#user-table').tablesorter({headers:{5:{sorter:false}}});
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();

@@ -1,4 +1,3 @@
-<div class='head'>$lang.get('oplog.index.title')</div>
 
 #parse('/widget/widget.message.html')
 
@@ -77,14 +76,13 @@
 	cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th class='date'>$lang.get('log.created')</th>
-			<th class='type'>$lang.get('log.type')</th>
-			<th class='user'>$lang.get('user.name')</th>
-			<th class='ip'>$lang.get('log.ip')</th>
-			<th class='system'>$lang.get('log.node')</th>
-			<th class='module'>$lang.get('log.model')</th>
-			<th class='op'>$lang.get('log.op')</th>
-			<th class='breif' style='width: 30%'>$lang.get('log.message')</th>
+			<th style="width: 110px;">$lang.get('log.created')</th>
+			<th >$lang.get('log.type')</th>
+			<th >$lang.get('user.name')</th>
+			<th style="width: 120px;">$lang.get('log.ip')</th>
+			<th >$lang.get('log.model')</th>
+			<th >$lang.get('log.op')</th>
+			<th style='width: 30%'>$lang.get('log.message')</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -92,15 +90,14 @@
 		#foreach($f in $list)
 		<tr class='log_type_$f.type'>
 			<td>$lang.format($f.created, 'yy-MM-dd HH:mm:ss')</td>
-			<td class='type'>#if($f.type)$lang.get("log.type_$f.type")#end</td>
+			<td>#if($f.type)$lang.get("log.type_$f.type")#end</td>
 			<td>#if($f.user_obj)<i class='user'>$!f.user_obj.nickname</i>#end</td>
 			<td>$!f.ip</td>
-			<td>$!f.node</td>
 			<td>$!f.model</td>
 			<td>$f.op</td>
 			<td>$!f.message</td>
-			<td>
-				<a class="btn btn-xs btn-info" href="javascript:;" onclick="giiwa.popup('/admin/syslog/detail?id=$f.id')">$lang.get("a.detail")</a>
+			<td class='a'>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/syslog/detail?id=$f.id')"><i class='icon-file-text2'></i></a>
 			</td>
 		</tr>
 		#end

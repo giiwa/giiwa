@@ -17,7 +17,6 @@ package org.giiwa.core.conf;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.configuration.Configuration;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.cache.Cache;
@@ -36,7 +35,7 @@ public final class Local extends Bean {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Local> dao = BeanDAO.create(Local.class);
+	public static final BeanDAO<String, Local> dao = BeanDAO.create(Local.class);
 
 	@Column(name = X.ID)
 	String id;
@@ -80,7 +79,7 @@ public final class Local extends Bean {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+				c.expired(System.currentTimeMillis() + X.AMINUTE);
 				Cache.set("local/" + s, c);
 				return X.toInt(c.i, defaultValue);
 			} else {
@@ -105,32 +104,28 @@ public final class Local extends Bean {
 
 		// log.debug("loading local." + name);
 
-		String name1 = Config.getConf().getString("node.name", X.EMPTY) + "." + name;
+		String s = name + "." + Local.id();
 
 		if (!Helper.isConfigured()) {
-			Object c1 = cache.get(name1);
-			if (c1 != null) {
-				return c1.toString();
-			}
-			Configuration conf = Config.getConf();
-			return conf != null ? conf.getString(name1, defaultValue) : defaultValue;
+			return (String) cache.get(s);
 		}
 
-		Local c = Cache.get("global/" + name1);
+		Local c = Cache.get("local/" + s);
 		if (c == null || c.expired()) {
-			c = dao.load(name1);
+			c = dao.load(s);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.setExpired(System.currentTimeMillis() + X.AMINUTE);
-				Cache.set("global/" + name1, c);
-
-				return c.s != null ? c.s : defaultValue;
+				c.expired(System.currentTimeMillis() + X.AMINUTE);
+				Cache.set("local/" + s, c);
+				return c.s;
+			} else {
+				return Config.getConf().getString(name, defaultValue);
 			}
 		}
 
-		return c != null && c.s != null ? c.s : Config.getConf().getString(name, defaultValue);
+		return c != null ? c.s : defaultValue;
 
 	}
 
@@ -160,7 +155,7 @@ public final class Local extends Bean {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+				c.expired(System.currentTimeMillis() + X.AMINUTE);
 				Cache.set("local/" + s, c);
 
 				return X.toLong(c.l, defaultValue);
@@ -243,6 +238,10 @@ public final class Local extends Bean {
 	public static void init() {
 		new Task() {
 
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
 			long t = 0;
 
 			@Override

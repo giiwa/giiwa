@@ -1,13 +1,18 @@
 <style>
-	#module-table .id a{
+#module-table .id a{
     float: right;
     text-decoration: none;
     padding: 5px;
-    }
+}
+div.free, div.licensed{
+	color: green;
+	font-style: normal;
+}    
+div.limited, div.trial, div.issue{
+	color: red;
+	font-style: normal;
+}    
 </style>
-<div class='head'>
-	$lang.get('module.title')
-</div>
 
 <div class='tabs'>
 	<a href='/admin/module' class='selected'>$lang.get('a.module')</a>
@@ -18,22 +23,22 @@
 	<r>$lang.get('label.node'):$!node</r>, $lang.get('notes.upload.module')
 </div>
 
-<input type='hidden' name='repo'/>
+<div class="btns">
+	<a class="btn btn-success" href="javascript:;" onclick="_module();">$lang.get("a.upload.module")</a>
+	<a class="btn btn-warning" href="javascript:;" onclick="_license();">$lang.get("a.upload.license")</a>
+</div>
 
 #parse('/widget/widget.message.html')
 
-<table id='module-table' class='tablesorter nospace' border="0"
-	cellpadding="0" cellspacing="1">
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
 			<th>$lang.get('module.name')</th>
 			<th style="min-width:60px;">$lang.get('module.id')</th>
 			<th>$lang.get('module.version')</th>
 			<th>$lang.get('module.build')</th>
-			<th>$lang.get('module.package')</th>
-			<th>$lang.get('module.license')</th>
 			<th style="width:20%">$lang.get('module.readme')</th>
-			<th style="width:20%">$lang.get('module.log')</th>
+			<th style="width:20%">$lang.get('module.license')</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -42,23 +47,26 @@
 		<tr>
 			<td>
 				$!f.name
-				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$f.repo'></a>#end
 			</td>
 			<td class="id">
 				<span class='id' data-name='$m.name'>$!f.id</span>
-				#if($f.id > 0) <a href='javascript:;' onclick="_id('$f.name','$f.id')" class='icon icon-pencil'></a> #end
 			</td>
 			<td>$!f.version</td>
 			<td>$!f.build</td>
-			<td>$!f.pack</td>
-			<td>$!f.license</td>
 			<td>$!f.readme</td>
-			<td class='status'>
-				$!f.status
+			<td class="a" style="color: #888;font-style: italic;">
+				<div class="$!f.license">$!lang.get("license_$!f.license")</div>
+				#if($f.has('company'))
+					<div>$!f.get('company')</div>
+					#foreach($p in $f.setting.keySet())
+					<div>$!lang.get("$!{f.name}.$!{p}")=$!f.get($p)</div>
+					#end
+					<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/deletelicense?name=$f.name"><i class="icon-cancel-circle"></i></a>
+				#end
 			</td>
-			<td>
+			<td class="a">
 				#if($f.id > 0)
-				<a class='btn btn-warning btn-xs' href='/admin/module/disable?name=$f.name'><i></i>$lang.get('a.disable')</a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.disable')" href="/admin/module/disable?name=$f.name"><i class="icon-blocked"></i></a>
 				#end
 			</td>
 		</tr>
@@ -71,15 +79,13 @@
 		$lang.get('title.disabled.module')
 	</div>
 </div>
-<table id='module-table' class='tablesorter nospace' border="0"
-	cellpadding="0" cellspacing="1">
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
 			<th>$lang.get('module.name')</th>
 			<th>$lang.get('module.id')</th>
 			<th>$lang.get('module.version')</th>
 			<th>$lang.get('module.build')</th>
-			<th>$lang.get('module.package')</th>
 			<th style="width:20%">$lang.get('module.readme')</th>
 			<th></th>
 		</tr>
@@ -87,124 +93,108 @@
 	<tbody>
 		#foreach($f in $list)
 		<tr>
-			<td>$!f.name
-				#if($f.repo)<a href='javascript:;' onclick='_download("$f.repo")' target='_blank' class='icon icon-folder-download' title='$lang.get("module.download.hint")'></a>#end
-			</td>
+			<td>$!f.name</td>
 			<td>
 				<span class='id' data-name='$m.name'>$!f.id</span>
 			</td>
 			<td>$!f.version</td>
 			<td>$!f.build</td>
-			<td>$!f.pack</td>
 			<td>$!f.readme</td>
-			<td>
-				<a class='btn btn-info btn-xs' href='/admin/module/enable?name=$f.name'>$lang.get('a.enable')</a>
-				<a class='btn btn-danger btn-xs' href='/admin/module/delete?name=$f.name'>$lang.get('a.delete')</a>
+			<td class="a">
+				<a class="hint hint--bottom" data-hint="$lang.get('a.enable')" href="/admin/module/enable?name=$f.name"><i class="icon-plus"></i></a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/delete?name=$f.name"><i class="icon-cancel-circle"></i></a>
 			</td>
 		</tr>
 		#end
 	</tbody>
 </table>
 
-<div id='ideditor' title="$lang.get('module.id.title')" style='display:none'>
-	<input type='hidden' name='name' value=''/>
-	<div>
-		<label><h3>ID:</h3>
-			<input type='number' name='id' value=''>
-		</label>
-	</div>
-	<button onclick='_ok();'>
-		$lang.get('btn.ok')
-	</button>
+<div id="m$!requestid" style="display: none">
+	<input type='hidden' name='repo'/>
 </div>
 
-<iframe id='download' style='display:none'></iframe>
-
 <script>
-	function _ok() {
-		$('#ideditor').dialog('close');
-		giiwa.processing.show();
 
-		var name = $('#ideditor input[name=name]').val();
-		var id = $('#ideditor input[name=id]').val();
-		$.post('/admin/module/update', {
-			name : name,
-			id : id
-		}, function(d) {
-			giiwa.processing.hide();
-			if (d.state == 200) {
-				$('span.id[data-name="' + name + '"]').text(id);
-				giiwa.hint("$lang.get('restart.required')");
-			} else {
-				giiwa.error(d.message);
-			}
-		})
-	}
+var pid = $!pid;
 
-	function _id(name, id) {
-		$('#ideditor input[name=name]').val(name);
-		$('#ideditor input[name=id]').val(id);
-		$('#ideditor').dialog({
-			modal : true,
-			close : function(e, ui) {
-				$(this).dialog('destroy');
-			}
-		});
-	}
-
-	function _download(url) {
-		$('#download').attr('src', url);
-	}
-
-	function _load() {
-		$.get('/admin/dashboard', {}, function(d) {
+function _load() {
+	$.get('/admin/system/info', {}, function(d) {
+		if(d.pid != pid) {
 			window.location.href = window.location.href;
-		});
-	}
+		}
+	});
+}
+function _license(){
+	giiwa.dialog($("#m$!requestid"), {
+		width: 350,
+		height: 150,
+		moveable: true,
+		prepare: function(p){
+			p.find('input[name=repo]').upload({
+				caption : "$lang.get('btn.upload.license')",
+				btn_resume : "$lang.get('btn.resume')",
+				btn_delete : "$lang.get('btn.delete')",
+				btn_cancel : "$lang.get('btn.cancel')",
+				msg_stop : "$lang.get('msg.stop')",
+				msg_done : "$lang.get('msg.done')",
+				done : function(url) {
+					giiwa.processing.show();
+					$.post('/admin/module/license', {
+						url : url
+					}, function(d) {
+						giiwa.processing.hide();
+						giiwa.dialog().close();
+						
+						if (d.state == 200) {
+							giiwa.message(d.message);
+							giiwa.reload();
+						}else {
+							giiwa.error(d.message);
+						}
 
-	$(function() {
-		$('input[name=repo]').upload({
-			caption : "$lang.get('btn.upload.module')",
-			hint : "$lang.get('hint.upload.module')",
-			btn_resume : "$lang.get('btn.resume')",
-			btn_delete : "$lang.get('btn.delete')",
-			btn_cancel : "$lang.get('btn.cancel')",
-			msg_stop : "$lang.get('msg.stop')",
-			msg_done : "$lang.get('msg.done')",
-			done : function(url) {
-				giiwa.processing.show();
-				$.post('/admin/module/add', {
-					url : url
-				}, function(d) {
-					giiwa.processing.hide();
-					
-					if (d.state == 200) {
-						giiwa.message(d.warn);
-					} else if (d.state == 201) {
-						giiwa.warn(d.warn, 3000);
-						setTimeout(function() {
-							setInterval(_load, 5000);
-						}, 3000);
-					} else {
-						giiwa.error(d.error);
-					}
+					});
+				}
+			});
+		}
+	})		
+}
 
-				});
-			}
-		});
-		
-		$('.module .right .error1 i').click(function(){
-			var e = $('.module .right .error1');
-			var e1 = $('.module .right .error1 i');
-			if(e.hasClass('inline')) {
-				e.removeClass('inline');
-				e1.removeClass('icon-arrow-right');
-				e1.addClass('icon-arrow-down');
-			} else {
-				e1.removeClass('icon-arrow-down');
-				e1.addClass('icon-arrow-right');
-				e.addClass('inline');
-			}
-		});
-	})
+function _module(){
+	giiwa.dialog($("#m$!requestid"), {
+		width: 350,
+		height: 150,
+		moveable: true,
+		prepare: function(p){
+			p.find('input[name=repo]').upload({
+				caption : "$lang.get('btn.upload.module')",
+				btn_resume : "$lang.get('btn.resume')",
+				btn_delete : "$lang.get('btn.delete')",
+				btn_cancel : "$lang.get('btn.cancel')",
+				msg_stop : "$lang.get('msg.stop')",
+				msg_done : "$lang.get('msg.done')",
+				done : function(url) {
+					giiwa.processing.show();
+					$.post('/admin/module/add', {
+						url : url
+					}, function(d) {
+						giiwa.processing.hide();
+						giiwa.dialog().close();
+						
+						if (d.state == 200) {
+							giiwa.message(d.warn);
+						} else if (d.state == 201) {
+							giiwa.warn(d.warn, 3000);
+							setTimeout(function() {
+								setInterval(_load, 5000);
+							}, 5000);
+						} else {
+							giiwa.error(d.error);
+						}
+
+					});
+				}
+			});
+		}
+	})		
+}
 </script>

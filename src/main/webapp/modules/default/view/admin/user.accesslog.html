@@ -1,4 +1,3 @@
-<div class='head'>$lang.get('accesslog.title')</div>
 
 #parse('/widget/widget.message.html')
 
@@ -36,8 +35,8 @@
 		<td>$!f.sid</td>
 		<td>$!f.ip</td>
 		<td>$!f.client</td>
-		<td>
-			<a class="btn btn-xs btn-info" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')">$lang.get("a.detail")</a>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')"><i class="icon-file-text2"></i></a>
 		</td>
 	</tr>
 #end

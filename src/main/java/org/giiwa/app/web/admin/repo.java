@@ -54,6 +54,8 @@ public class repo extends Model {
 			q.sort(X.UPDATED, -1);
 		}
 		Beans<Repo.Entity> bs = Repo.dao.load(q, s, n);
+		bs.count();
+		
 		this.set(bs, s, n);
 		this.show("/admin/repo.index.html");
 

@@ -1,4 +1,3 @@
-<div class='head'>$lang.get('role.create.title')</div>
 
 #parse('/widget/widget.message.html')
 
@@ -16,14 +15,14 @@
 			<table id='access-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 				<thead>
 					<tr>
-						<th>$lang.get('access.group')</th>
+						<th style="width: 100px;">$lang.get('access.group')</th>
 						<th>$lang.get('access.name')</th>
 					</tr>
 				</thead>
 				<tbody>
 			#foreach($a in $accesses.keySet())
 				<tr>
-					<td>$lang.get("group.$a")</td>
+					<td>$lang.get("group.$a", "$a")</td>
 					<td>
 						#foreach($p in $accesses.get($a))
 							<label style="width: initial;"><input type="checkbox" name="access" value="$p.name" #if($r.has($p)) checked="true" #end/>$lang.get($p.name)</label>

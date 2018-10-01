@@ -1,22 +1,45 @@
 package org.giiwa.app.web.portlet;
 
-import org.giiwa.core.base.Host;
+import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Local;
+import org.giiwa.framework.bean.m._Disk;
+import org.giiwa.framework.web.Path;
 
 public class disk extends portlet {
 
 	@Override
 	public void get() {
-		try {
-			this.set("disk", Host.getDisks());
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
 
-		this.show("/portlet/disk.html");
+		Beans<_Disk> bs = _Disk.dao.load(W.create("node", Local.id()).sort("path", 1), 0, 100);
+		if (bs != null && !bs.isEmpty()) {
+			// Collections.reverse(bs);
+
+			// this.set("disk", bs.get(0));
+			this.set("list", bs);
+			this.show("/portlet/disk.html");
+		}
 	}
 
-	public String eclipse(String path) {
-		return path.replaceAll("\\\\", "/");
+	@Path(path = "more", login = true)
+	public void more() {
+		long id = this.getLong("id");
+		this.set("id", id);
+		String name = this.getString("name");
+		this.set("name", name);
+
+		long time = System.currentTimeMillis() - X.AMONTH;
+
+		Beans<_Disk.Record> bs = _Disk.Record.dao.load(
+				W.create("node", Local.id()).and("name", name).and("created", time, W.OP.gte).sort("created", 1), 0,
+				24 * 60 * 30);
+
+		if (bs != null && !bs.isEmpty()) {
+			this.set("list", bs);
+		}
+		this.show("/portlet/disk.more.html");
+
 	}
 
 }

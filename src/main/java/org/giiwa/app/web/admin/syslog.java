@@ -38,7 +38,7 @@ public class syslog extends Model {
 	@Path(path = "deleteall", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void deleteall() {
 		JSON jo = new JSON();
-		int i = GLog.cleanup();
+		int i = GLog.dao.delete(W.create());
 		GLog.oplog.warn(syslog.class, "deleteall", "deleted=" + i, login, this.getRemoteHost());
 		jo.put(X.STATE, 200);
 		this.response(jo);
@@ -72,7 +72,7 @@ public class syslog extends Model {
 			}
 		}
 		if (!X.isEmpty(jo.get("type"))) {
-			q.and("type", X.toInt(jo.get("type")));
+			q.and("type1", X.toInt(jo.get("type")));
 		}
 
 		if (!X.isEmpty(jo.get("level"))) {
@@ -133,9 +133,29 @@ public class syslog extends Model {
 	@Path(path = "detail", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void detail() {
 		String id = this.getString("id");
-		GLog d = GLog.dao.load(id);
-		this.set("b", d);
-		this.set("id", id);
+
+		if (!X.isEmpty(id)) {
+			GLog d = GLog.dao.load(id);
+			this.set("b", d);
+			this.set("id", id);
+		} else {
+			long prev = this.getLong("prev");
+			if (prev > 0) {
+				GLog d = GLog.dao.load(W.create().and("created", prev, W.OP.gt));
+				if (d != null) {
+					this.set("b", d);
+					this.set("id", d.get(X.ID));
+				}
+			} else {
+				long next = this.getLong("next");
+				GLog d = GLog.dao.load(W.create().and("created", next, W.OP.lt));
+				if (d != null) {
+					this.set("b", d);
+					this.set("id", d.get(X.ID));
+				}
+			}
+		}
+
 		this.show("/admin/syslog.detail.html");
 	}
 

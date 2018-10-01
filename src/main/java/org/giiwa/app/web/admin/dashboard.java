@@ -14,9 +14,14 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.giiwa.framework.bean.Portlet;
+import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Local;
+import org.giiwa.framework.bean.m._Net;
 import org.giiwa.framework.web.*;
 
 /**
@@ -36,16 +41,42 @@ public class dashboard extends Model {
 	@Override
 	@Path(login = true)
 	public void onGet() {
-
-		this.set("me", this.getUser());
-
-		List<Portlet> l1 = Portlet.load(login.getId(), "dashbroad");
-		if (l1 == null || l1.isEmpty() || login.hasAccess("access.config.system.admin")) {
-			l1 = Portlet.load(0, "dashbroad");
+		login = this.getUser();
+		if (login != null && !X.isEmpty(login.getString("desktop"))) {
+			if (!X.isSame("/admin/dashboard", login.getString("desktop"))) {
+				this.redirect(login.getString("desktop"));
+				return;
+			}
 		}
-		this.set("portlets", l1);
 
-		show("admin/dashboard.html");
+		this.set("me", login);
+
+		String name = ManagementFactory.getRuntimeMXBean().getName();
+		this.set("pid", X.split(name, "[@]")[0]);
+		this.set("uptime", Model.UPTIME);
+
+		if (login != null
+				&& (login.hasAccess("access.config.admin") || login.hasAccess("access.config.system.admin"))) {
+
+			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
+
+			this.show("/admin/dashboard.html");
+
+		} else if (X.isSame("/admin/dashboard", HOME)) {
+			this.show("/admin/dashboard.html");
+		} else {
+			this.redirect(HOME);
+		}
+
 	}
+
+	public static void add(String url) {
+		if (!desks.contains(url)) {
+			desks.add(url);
+		}
+	}
+
+	public static String HOME = "/admin/dashboard";
+	public static List<String> desks = new ArrayList<String>();
 
 }

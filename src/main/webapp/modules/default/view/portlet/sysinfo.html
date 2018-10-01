@@ -1,4 +1,4 @@
-<div class='state' style='display: block;'>
+<div class='state' style='display:block;float: left; width: 80%;'>
 	<div class='login'>
 		$lang.get('label.node'):<i>$!node</i>
 	</div>
@@ -9,13 +9,22 @@
 		$lang.get('total.memory'):<i>$!totalmemory</i>
 	</div>
 	<div class='login'>
-		$lang.get('memory.total'):<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i>
+		$lang.get('jdk.info'):<i>$!{jdkversion}($!jdkvendor)</i>
 	</div>
 	<div class='login'>
-		$lang.get('disk.speed'): #if($diskspeed>100) <i style='color: green'>${diskspeed}(M/s)</i>
-		#elseif ($diskspeed>0) <i style='color: red'>${diskspeed}(M/s)</i>
-		#else <i>...</i> #end
+		$lang.get('memory.total'):<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i>
 	</div>
+		
+	#if($diskspeed>100) 
+	<div class='login'>
+		$lang.get('disk.speed'): <i style='color: green'>${diskspeed}(M/s)</i>
+	</div>
+	#elseif ($diskspeed>0) 
+	<div class='login'>
+		$lang.get('disk.speed'): <i style='color: red'>${diskspeed}(M/s)</i>
+	</div>
+	#end
+		
 	<div class='uptime'>
 		$lang.get('label.uptime'):<i>$uptime</i>, $lang.get('label.past'):<i>$past</i>
 	</div>

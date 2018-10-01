@@ -5,7 +5,7 @@
 		<g>$lang.get('home.uri.hint')</g></label></div>
 		
 	<div><label><h3>$lang.get('ntp.server'):</h3>
-		<input type='text' name='ntpserver' value="$!global.getString('ntp.server','')"/>
+		<input type='text' name='ntpserver' value="$!global.getString('ntp.server','cn.ntp.org.cn')"/>
 		<g>$lang.get('ntp.server.hint')</g></label></div>
 		
 	<div><label><h3>$lang.get('language'):</h3>
@@ -31,23 +31,41 @@
 		<input type='text' name='cross_header' value="$!cross_header" style="width:40%"/>
 		<g>$lang.get('cross.header.hint')</g></label></div>
 
+	<div><label><h3>$lang.get('site.browser'):</h3>
+		<input type='text' name='site_browser' value="$!global.getString('site.browser','*')" />
+		<g>$lang.get('site.browser.hint')</g>
+	</label></div>
+	
+	<div style="margin-left:20px"><label><h3>$lang.get('site.browser.nonredirect'):</h3>
+		<input type='text' name='site_browser_nonredirect' value="$!global.getString('site.browser.nonredirect','')" />
+		<g>$lang.get('site.browser.nonredirect.hint')</g>
+	</label></div>
+	<div style="margin-left:20px"><label><h3>$lang.get('site.browser.ignoreurl'):</h3>
+		<input type='text' name='site_browser_ignoreurl' value="$!global.getString('site.browser.ignoreurl','')" />
+		<g>$lang.get('site.browser.ignoreurl.hint')</g>
+	</label></div>
+
 	<div><label><h3>$lang.get('site.url'):</h3>
 		<input type='text' name='site_url' value="$!global.getString('site.url','')" />
 		<g>$lang.get('site.url.hint')</g>
 	</label></div>
 
-	<div><label><h3>$lang.get('module.center'):</h3>
-		<input type='checkbox' name='module_center' #if($global.getInt('module.center',0)==1) checked="checked" #end/>
-		<g>$lang.get('module.center.hint')</g></label></div>
+	<div><label><h3>$lang.get('web.cache'):</h3>
+		<input type='text' name='web.cache' value="$global.getString('web.cache','')"/>
+		<g>$lang.get('web.cache.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('perf.moniter'):</h3>
+		<input type='checkbox' name='perf.moniter' #if($global.getInt('perf.moniter',0)==1) checked="checked" #end/>
+		<g>$lang.get('perf.moniter.hint')</g></label></div>
 
 	<div><label><h3>$lang.get('db.optimizer'):</h3>
 		<input type='checkbox' name='db.optimizer' #if($global.getInt("db.optimizer", 1)==1) checked="checked" #end />
 		<g>$lang.get('db.optimizer.hint')</g></label></div>
 
-	<div><label><h3>$lang.get('repo.speed'):</h3>
-		<input type='checkbox' name='repo.speed' #if($global.getInt("repo.speed", 0)==1) checked="checked" #end />
-		<g>$lang.get('repo.speed.hint')</g></label></div>
-	
+	<div><label><h3>$lang.get('dfile.web'):</h3>
+		<input type='checkbox' name='dfile.web' #if($global.getInt("dfile.web", 0)==1) checked="checked" #end />
+		<g>$lang.get('dfile.web.hint')</g></label></div>
+
 	<div><label><h3>$lang.get('oplog.level'):</h3>
 		<select name='oplog.level'>
 			<option value='0' #if($global.getInt('oplog.level', 1) == 0) selected #end>$lang.get('oplog.level_0')</option>
@@ -56,6 +74,12 @@
 		</select>
 		<g>$lang.get('oplog.level.hint')</g>
 	</label></div>
+	<div><label><h3>$lang.get('glog.keep.days'):</h3>
+		<input type='number' name='glog.keep.days' value="$global.getInt('glog.keep.days', 30)" />
+		<g>$lang.get('glog.keep.days.hint')</g></label></div>
+	<div><label><h3>$lang.get('message.max'):</h3>
+		<input type='number' name='message.max' value="$global.getInt('message.max', 1000)" />
+		<g>$lang.get('message.max.hint')</g></label></div>
 	
 	<div><label><g>$lang.get('base.setting.user')</g></label></div>
 	<hr/>
@@ -85,7 +109,7 @@
 		<g>$lang.get('user.system.hint')</g>
 	</label></div>
 		
-	<div><label><h3>$lang.get('user.role'):</h3>
+	<div style="margin-left: 20px;"><label><h3>$lang.get('user.role'):</h3>
 		<select name='user_role'>
 			#foreach($r in $roles)
 			<option value='$r.name' #if($user_role == "$r.name") selected #end>$r.name</option>

@@ -15,20 +15,33 @@
 package org.giiwa.app.web.admin;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+import org.giiwa.app.task.CleanupTask;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Zip;
+import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.helper.MongoHelper;
 import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Monitor;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
+import org.giiwa.framework.bean.Repo;
+import org.giiwa.framework.bean.Repo.Entity;
+import org.giiwa.framework.bean.Temp.Exporter;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
@@ -115,21 +128,185 @@ public class backup extends Model {
 
 	}
 
-	private static BackupTask btask = null;
+	@Path(path = "upload", login = true, access = "access.config.admin|access.config.system.admin")
+	public void upload() {
+		String repo = this.getString("repo");
 
-	/**
-	 * Now.
-	 */
-	@Path(path = "now", login = true, access = "access.config.admin|access.config.system.admin")
-	public synchronized void now() {
-		if (btask == null || btask.finished) {
-			btask = new BackupTask();
-			btask.schedule(10);
-			this.set(X.MESSAGE, lang.get("backup.starting"));
-		} else {
-			this.set(X.MESSAGE, lang.get("backup.started"));
+		Entity e = Repo.load(repo);
+
+		JSON jo = JSON.create();
+		try {
+			String root = BackupTask.path();
+			File f = new File(root + "/" + e.getName());
+
+			if (f.exists()) {
+				f.delete();
+			} else {
+				f.getParentFile().mkdirs();
+			}
+			IOUtil.copy(e.getInputStream(), new FileOutputStream(f));
+
+			jo.put(X.STATE, 200);
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+			GLog.oplog.error(backup.class, "upload", e1.getMessage(), e1, login, this.getRemoteHost());
+			jo.put(X.STATE, 201);
+			jo.put(X.MESSAGE, e1.getMessage());
+		} finally {
+			e.delete();
 		}
-		onGet();
+
+		this.response(jo);
+
+	}
+
+	@Path(path = "create", login = true, access = "access.config.admin|access.config.system.admin")
+	public void create() {
+
+		// GLog.applog.info(backup.class, "create", "method=" + method, login,
+		// this.getRemoteHost());
+
+		if (method.isPost()) {
+			String[] ss = this.getStrings("name");
+			if (ss != null && ss.length > 0) {
+				new BackupTask(ss).schedule(0);
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("backup.started")));
+
+			} else {
+
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("backup.error.notable")));
+			}
+			return;
+		}
+
+		List<Class<? extends Bean>> l1 = CleanupTask.beans;
+		Map<String, JSON> l2 = new TreeMap<String, JSON>();
+		for (Class<? extends Bean> c : l1) {
+			String table = Helper.getTable(c);
+			if (!X.isEmpty(table) && !l2.containsKey(table)) {
+				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+						Helper.count(W.create(), c));
+				l2.put(table, j);
+			}
+		}
+		this.set("list", l2.values());
+		this.show("/admin/backup.create.html");
+
+	}
+
+	@Path(path = "er", login = true, access = "access.config.admin|access.config.system.admin")
+	public void er() {
+
+		// GLog.applog.info(backup.class, "create", "method=" + method, login,
+		// this.getRemoteHost());
+
+		if (method.isPost()) {
+			String[] ss = this.getStrings("name");
+			if (ss != null && ss.length > 0) {
+				new BackupTask(ss).schedule(0);
+				Temp t = Temp.create("er.csv");
+				Exporter<Bean> e = t.export("GBK", Temp.Exporter.FORMAT.csv);
+
+				for (String s : ss) {
+
+					Class<? extends Bean> c = _getBean(s);
+					if (c == null)
+						continue;
+
+					Map<String, Class<?>> st = new TreeMap<String, Class<?>>();
+					Beans<Bean> bs = Helper.load(s, W.create().sort("created", -1), 0, 10, Bean.class, Helper.DEFAULT);
+					for (Bean b : bs) {
+						Map<String, Object> m = b.getAll();
+						for (String name : m.keySet()) {
+							Class<?> c1 = m.get(name).getClass();
+							Class<?> c2 = st.get(name);
+							if (c2 == null) {
+								st.put(name, c1);
+							} else if (!X.isSame(c1, c2)) {
+								st.put(name, Object.class);
+							}
+						}
+					}
+
+					// TODO
+					try {
+						e.print(new String[] { "" });
+						e.print(new String[] { s });
+						e.print(new String[] { lang.get("name." + c.getName()) });
+						e.print(new String[] { "Field", "Type", "Memo" });
+						for (String s1 : st.keySet()) {
+							Class<?> c1 = st.get(s1);
+							String t1 = "text";
+							if (c1.equals(Integer.class)) {
+								t1 = "int";
+							} else if (c1.equals(Long.class)) {
+								t1 = "bigint";
+							} else if (c1.equals(Float.class)) {
+								t1 = "float";
+							} else if (c1.equals(Double.class)) {
+								t1 = "double";
+							} else if (c1.isArray()) {
+								t1 = "list";
+							}
+							e.print(new String[] { s1, t1 });
+						}
+					} catch (Exception e1) {
+						log.error(e1.getMessage(), e1);
+					}
+				}
+				e.close();
+
+				this.response(JSON.create().append(X.STATE, 200).append("file", t.getUri()));
+
+			} else {
+
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("nonselect.error")));
+			}
+			return;
+		}
+
+		List<Class<? extends Bean>> l1 = CleanupTask.beans;
+		Map<String, JSON> l2 = new TreeMap<String, JSON>();
+		for (Class<? extends Bean> c : l1) {
+			String table = Helper.getTable(c);
+			if (!X.isEmpty(table) && !l2.containsKey(table)) {
+				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+						Helper.count(W.create(), c));
+				l2.put(table, j);
+			}
+		}
+		this.set("list", l2.values());
+		this.show("/admin/backup.er.html");
+
+	}
+
+	private Class<? extends Bean> _getBean(String table) {
+		List<Class<? extends Bean>> l1 = CleanupTask.beans;
+		for (Class<? extends Bean> c : l1) {
+			if (X.isSame(table, Helper.getTable(c))) {
+				return c;
+			}
+		}
+		return null;
+	}
+
+	@Path(path = "auto", login = true, access = "access.config.admin|access.config.system.admin")
+	public void auto() {
+
+		if (method.isPost()) {
+			Local.setConfig("backup.auto", X.isSame("on", this.getString("backup.auto")) ? 1 : 0);
+			Local.setConfig("backup.point", this.getString("backup.point"));
+
+			Global.setConfig("backup.clean", X.isSame("on", this.getString("backup.clean")) ? 1 : 0);
+			Global.setConfig("backup.keep.days", this.getInt("backup.keep.days"));
+
+			org.giiwa.app.task.BackupTask.init();
+
+			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
+			return;
+		}
+
+		this.show("/admin/backup.auto.html");
 
 	}
 
@@ -179,7 +356,15 @@ public class backup extends Model {
 	 */
 	public static class BackupTask extends Task {
 
-		private boolean finished = false;
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		String[] cc; // collections
+
+		public BackupTask(String[] l1) {
+			cc = l1;
+		}
 
 		/**
 		 * Path.
@@ -187,7 +372,7 @@ public class backup extends Model {
 		 * @return the string
 		 */
 		public static String path() {
-			return Global.getString("backup.path", "/opt/backup");
+			return Global.getString("backup.path", "/opt/nfs/backup");
 		}
 
 		@Override
@@ -221,27 +406,27 @@ public class backup extends Model {
 				 */
 				if (MongoHelper.inst.isConfigured()) {
 					Global.setConfig("backup/" + name, 2); // backup mongo
-					MongoHelper.inst.backup(out + "/mongo.dmp");
+					MongoHelper.inst.backup(out + "/mongo.dmp", cc);
 				}
 				if (RDSHelper.inst.isConfigured()) {
 					Global.setConfig("backup/" + name, 3); // backup RDS
-					RDSHelper.inst.backup(out + "/rds.dmp");
+					RDSHelper.inst.backup(out + "/rds.dmp", cc);
 				}
 
 				/**
 				 * 2, backup repo
 				 */
 				// File f = m.getFile("/admin/clone/backup_tar.sh");
-				String url = Config.getConf().getString("repo.path", null);
-				if (!X.isEmpty(url)) {
-					Global.setConfig("backup/" + name, 3); // backup repo
-
-					IOUtil.copyDir(new File(url), new File(out + "/repo"));
-
-					// Shell.run("chmod ugo+x " + f.getCanonicalPath());
-					// Shell.run(f.getCanonicalPath() + " " + out + "/repo.tar.gz " +
-					// url);
-				}
+//				String url = Config.getConf().getString("repo.path", null);
+//				if (!X.isEmpty(url)) {
+//					Global.setConfig("backup/" + name, 3); // backup repo
+//
+//					IOUtil.copyDir(new File(url), new File(out + "/repo"));
+//
+//					// Shell.run("chmod ugo+x " + f.getCanonicalPath());
+//					// Shell.run(f.getCanonicalPath() + " " + out + "/repo.tar.gz " +
+//					// url);
+//				}
 
 				log.debug("zipping, dir=" + f.getCanonicalPath());
 
@@ -260,15 +445,33 @@ public class backup extends Model {
 			}
 		}
 
-		@Override
-		public void onFinish() {
-			finished = true;
+		public static void clean(int days) {
+
+			File f = new File(path());
+			if (f.exists()) {
+				File[] ff = f.listFiles();
+				if (ff != null && ff.length > 0) {
+					for (File f1 : ff) {
+						if (f1.lastModified() < System.currentTimeMillis() - days * X.ADAY) {
+							try {
+								IOUtil.delete(f1);
+							} catch (IOException e) {
+								log.error(e.getMessage(), e);
+							}
+						}
+					}
+				}
+			}
 		}
 
 	};
 
 	static class RecoverTask extends Task {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		long tid;
 		String name;
 		boolean done;

@@ -7,8 +7,11 @@ import java.util.Map;
 
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.UID;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.noti.Email;
 import org.giiwa.framework.bean.AuthToken;
+import org.giiwa.framework.bean.Code;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
@@ -39,6 +42,9 @@ public class profile extends Model {
 
 	@Path(path = "get/(.*)", login = true)
 	final public Object get(String name) {
+
+		this.query.path("/admin/profile/get/" + name);
+
 		Class<? extends profile> c = settings.get(name);
 		log.debug("/get/" + c);
 		if (c != null) {
@@ -72,6 +78,10 @@ public class profile extends Model {
 	 */
 	@Path(path = "set/(.*)", login = true, log = Model.METHOD_POST)
 	final public void set(String name) {
+
+		// this.query.path("/admin/profile/get/" + name);
+		// this.set("query", this.query);
+
 		Class<? extends profile> c = settings.get(name);
 		log.debug("/set/" + c);
 		if (c != null) {
@@ -80,16 +90,16 @@ public class profile extends Model {
 				s.copy(this);
 				s.set();
 
-				s.set("lang", lang);
-				s.set("module", module);
-				s.set("name", name);
-				s.set("settings", names);
-				s.show("/admin/profile.html");
+				// s.set("lang", lang);
+				// s.set("module", module);
+				// s.set("name", name);
+				// s.set("settings", names);
+				// s.show("/admin/profile.html");
 			} catch (Exception e) {
 				log.error(name, e);
 				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
 
-				this.show("/admin/profile.html");
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 			}
 		}
 	}
@@ -141,20 +151,40 @@ public class profile extends Model {
 		@Override
 		public void set() {
 
-			String password = this.getString("password");
-			if (!X.isEmpty(password)) {
-				login.update(V.create("password", password));
+			try {
+				String password = this.getString("password");
+				if (!X.isEmpty(password)) {
 
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
-				return;
-			} else {
-				login.update(V.create().copy(this, "nickname", "title", "email", "phone"));
+					login.update(V.create("password", password));
 
-				login = User.dao.load(login.getId());
-				AuthToken.delete(login.getId());
-				this.setUser(login);
+					GLog.securitylog.info(profile.class, "passwd", lang.get("user.passwd.change"), login,
+							this.getRemoteHost());
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
+					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+					return;
+				} else {
+					V v = V.create().copy(this, "nickname", "title", "email", "phone", "desktop");
+					String email = this.getString("email1");
+					if (!X.isEmpty(email)) {
+						v.force("email", email);
+					}
+					String phone = this.getString("phone1");
+					if (!X.isEmpty(phone)) {
+						v.force("phone", phone);
+					}
+
+					login.update(v);
+
+					login = User.dao.load(login.getId());
+					AuthToken.delete(login.getId());
+					this.setUser(login, LoginType.web);
+
+					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
+					return;
+				}
+			} catch (Exception e) {
+				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+						lang.get("save.failed") + ":" + e.getMessage()));
 				return;
 			}
 		}
@@ -166,9 +196,45 @@ public class profile extends Model {
 		 */
 		@Override
 		public void get() {
+			this.set("desks", dashboard.desks);
 			this.settingPage("/admin/profile.my.html");
 		}
 
+	}
+
+	@Path(path = "verify1", login = true)
+	public void verify1() {
+		String email = this.getString("email");
+		if (!X.isEmpty(email)) {
+			String code = UID.random(10);
+			Code.create(email, code, V.create("expired", System.currentTimeMillis() + X.AMINUTE * 10));
+			if (Email.send(lang.get("email.verify.subject"), code, email)) {
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
+				return;
+			}
+		}
+		this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.sent.error")));
+	}
+
+	@Path(path = "verify2", login = true)
+	public void verify2() {
+		String email = this.getString("email");
+		String phone = this.getString("phone");
+		String code = this.getString("code");
+		if (!X.isEmpty(email)) {
+			Code e = Code.load(email, code);
+			if (e != null && e.getExpired() > System.currentTimeMillis()) {
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
+				return;
+			}
+		} else if (!X.isEmpty(phone)) {
+			Code e = Code.load(phone, code);
+			if (e != null && e.getExpired() > System.currentTimeMillis()) {
+				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
+				return;
+			}
+		}
+		this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.error")));
 	}
 
 }

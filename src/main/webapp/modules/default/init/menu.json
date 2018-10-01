@@ -6,7 +6,7 @@
 			{
 				"name": "menu.system",
 				"classes": "icon-cog",
-				"access": "access.config.admin|access.menu.sysmenu",
+				"access": "access.menu.sysmenu|access.config.admin",
 				"seq": 10,
 				"childs": [
 					{
@@ -80,16 +80,16 @@
 								"classes": "icon-laptop"
 							},
 							{
-								"name": "menu.repo",
-								"load": "/admin/repo",
+								"name": "menu.dfile",
+								"load": "/admin/dfile/disk",
 								"seq": 50,
-								"classes": "icon-database"
+								"classes": "icon-drawer"
 							},
 							{
-								"name": "menu.backup",
-								"load": "/admin/backup",
+								"name": "menu.database",
+								"load": "/admin/database",
 								"seq": 60,
-								"classes": "icon-floppy-disk"
+								"classes": "icon-database"
 							},
 							{
 								"name": 'menu.i18n',
@@ -112,7 +112,7 @@
 			{
 				"name": "menu.usermgr",
 				"classes": "icon-users",
-				"access": "access.config.admin|access.menu.usermgmt",
+				"access": "access.menu.usermgmt|access.config.admin",
 				"seq": 20,
 				"childs": [
 					{
@@ -128,13 +128,6 @@
 						"access": "access.config.admin|access.config.role.admin",
 						"seq": 20,
 						"classes": "icon-shield"
-					},
-					{
-						"name": "menu.token",
-						"load": "/admin/token",
-						"access": "access.config.admin|access.config.user.admin",
-						"seq": 30,
-						"classes": "icon-link"
 					}
 				]
 			}
@@ -149,6 +142,11 @@
 		"name": "user",
 		"seq": 30,
 		"childs": []
+	},
+	{
+		"role": "SYSADM",
+		"memo": "系统管理员",
+		"access": "access.config.admin,access.config.debug"
 	},
 	{
 		"role": "USER",

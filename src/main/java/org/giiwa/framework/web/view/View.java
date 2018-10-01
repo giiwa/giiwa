@@ -20,79 +20,96 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.framework.bean.DFile;
 import org.giiwa.framework.web.Model;
 
 public abstract class View {
 
-  static Log log = LogFactory.getLog(View.class);
+	static Log log = LogFactory.getLog(View.class);
 
-  /**
-   * parse the file with the model
-   * 
-   * @param file
-   *          the file
-   * @param m
-   *          the model
-   * @param viewname
-   *          the template name
-   * @return true: successful,
-   * @throws Exception
-   *           if occur error
-   */
-  protected abstract boolean parse(File file, Model m, String viewname) throws Exception;
+	/**
+	 * parse the file with the model
+	 * 
+	 * @param file
+	 *            the file
+	 * @param m
+	 *            the model
+	 * @param viewname
+	 *            the template name
+	 * @return true: successful,
+	 * @throws Exception
+	 *             if occur error
+	 */
+	protected abstract boolean parse(File file, Model m, String viewname) throws Exception;
 
-  /**
-   * init the views by config
-   * 
-   * @param config
-   *          the config
-   */
-  public static void init(Map<String, String> config) {
+	protected abstract boolean parse(DFile in, Model m, String viewname) throws Exception;
 
-    for (String name : config.keySet()) {
-      if (name.startsWith(".")) {
-        String value = config.get(name);
-        try {
-          View v = (View) Class.forName(value).newInstance();
-          views.put(name, v);
-        } catch (Exception e1) {
-          log.error(value, e1);
-        }
-      }
-    }
+	/**
+	 * init the views by config
+	 * 
+	 * @param config
+	 *            the config
+	 */
+	public static void init(Map<String, String> config) {
 
-    log.debug("View Parser: ");
-    for (String name : views.keySet()) {
-      log.debug("\t" + name + "=" + views.get(name).getClass().getName());
-    }
-  }
+		for (String name : config.keySet()) {
+			if (name.startsWith(".")) {
+				String value = config.get(name);
+				try {
+					View v = (View) Class.forName(value).newInstance();
+					views.put(name, v);
+				} catch (Exception e1) {
+					log.error(value, e1);
+				}
+			}
+		}
 
-  /**
-   * parse the file with the model
-   * 
-   * @param file
-   *          the file
-   * @param m
-   *          the model
-   * @param viewname
-   *          the template name
-   * @throws Exception
-   *           if occur error
-   */
-  public static void merge(File file, Model m, String viewname) throws Exception {
+		log.debug("View Parser: ");
+		for (String name : views.keySet()) {
+			log.debug("\t" + name + "=" + views.get(name).getClass().getName());
+		}
+	}
 
-    String name = file.getName();
-    for (String suffix : views.keySet()) {
-      if (name.endsWith(suffix)) {
-        View v = views.get(suffix);
-        v.parse(file, m, viewname);
-        return;
-      }
-    }
+	/**
+	 * parse the file with the model
+	 * 
+	 * @param file
+	 *            the file
+	 * @param m
+	 *            the model
+	 * @param viewname
+	 *            the template name
+	 * @throws Exception
+	 *             if occur error
+	 */
+	public static void merge(File file, Model m, String viewname) throws Exception {
 
-    fileview.parse(file, m, viewname);
-  }
+		String name = file.getName();
+		for (String suffix : views.keySet()) {
+			if (name.endsWith(suffix)) {
+				View v = views.get(suffix);
+				v.parse(file, m, viewname);
+				return;
+			}
+		}
 
-  private static Map<String, View> views    = new HashMap<String, View>();
-  private static View              fileview = new FileView();
+		fileview.parse(file, m, viewname);
+	}
+
+	public static void merge(DFile f, Model m, String viewname) throws Exception {
+
+		for (String suffix : views.keySet()) {
+			if (viewname.endsWith(suffix)) {
+				View v = views.get(suffix);
+				v.parse(f, m, viewname);
+				return;
+			}
+		}
+
+		fileview.parse(f, m, viewname);
+	}
+
+	private static Map<String, View> views = new HashMap<String, View>();
+	private static FileView fileview = new FileView();
+
 }

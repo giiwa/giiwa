@@ -20,6 +20,8 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
+import org.giiwa.framework.bean.DFile;
+import org.giiwa.framework.bean.Disk;
 
 /**
  * default model for which model has not found
@@ -50,7 +52,7 @@ public class DefaultModel extends Model {
 		 * if the file exists, and the extension is not .html and htm then get back
 		 * directly, and set contenttype
 		 */
-		log.debug("uri=" + uri);
+		log.debug("uri=" + uri + ", remote=" + this.getRemoteHost());
 
 		if (!_onPost(uri)) {
 			for (String suffix : Controller.welcomes) {
@@ -88,9 +90,39 @@ public class DefaultModel extends Model {
 			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());
 
+			createQuery();
+
 			show(uri);
 			return true;
 		}
+
+		// check dfile
+		if (Global.getInt("dfile.web", 0) == 1) {
+			DFile d = Disk.seek(uri);
+			if (d.exists()) {
+				// show it
+				this.set(this.getJSON());
+
+				this.set("me", this.getUser());
+				this.put("lang", lang);
+				this.put(X.URI, uri);
+				this.put("module", Module.home);
+				this.put("path", path);
+				this.put("request", req);
+				this.put("this", this);
+				this.put("response", resp);
+				this.set("session", this.getSession());
+				this.set("global", Global.getInstance());
+				this.set("conf", Config.getConf());
+				this.set("local", Local.getInstance());
+
+				createQuery();
+
+				show(uri);
+				return true;
+			}
+		}
+
 		return false;
 	}
 

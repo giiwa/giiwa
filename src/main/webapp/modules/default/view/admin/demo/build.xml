@@ -23,7 +23,7 @@
 		</fileset>
 	</path>
 	<target name="build" description="build sever all" depends="compile">
-		<delete file="target/${module.name}_*.zip" />
+		<delete file="target" />
 		<zip destfile="target/${module.name}_${module.version}_${BUILDNO}.zip" encoding="UTF-8">
 			<fileset dir="target/${module.name}">
 				<exclude name="**/classes/**" />

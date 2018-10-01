@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v6.0.3 (2017-11-14)
+ * @license Highcharts JS v6.0.4 (2017-12-15)
  * Drag-panes module
  *
  * (c) 2010-2017 Highsoft AS
@@ -128,6 +128,54 @@
 
 
                     /**
+                     * Cursor style for the control line.
+                     *
+                     * In styled mode use class `highcharts-axis-resizer` instead.
+                     *
+                     * This feature requires the `drag-panes.js` module.
+                     */
+                    cursor: 'ns-resize',
+
+                    /**
+                     * Color of the control line.
+                     *
+                     * In styled mode use class `highcharts-axis-resizer` instead.
+                     *
+                     * This feature requires the `drag-panes.js` module.
+                     *
+                     * @type {Color}
+                     * @sample {highstock} stock/yaxis/styled-resizer Styled resizer
+                     */
+                    lineColor: '#cccccc',
+
+                    /**
+                     * Dash style of the control line.
+                     *
+                     * In styled mode use class `highcharts-axis-resizer` instead.
+                     *
+                     * This feature requires the `drag-panes.js` module.
+                     *
+                     * @default Solid
+                     * @sample {highstock} stock/yaxis/styled-resizer Styled resizer
+                     * @see For supported options check
+                     * [dashStyle](#plotOptions.series.dashStyle)
+                     */
+                    lineDashStyle: 'Solid',
+
+                    /**
+                     * Width of the control line.
+                     *
+                     * In styled mode use class `highcharts-axis-resizer` instead.
+                     *
+                     * This feature requires the `drag-panes.js` module.
+                     *
+                     * @sample {highstock} stock/yaxis/styled-resizer Styled resizer
+                     */
+                    lineWidth: 4,
+
+
+
+                    /**
                      * Horizontal offset of the control line.
                      *
                      * This feature requires the `drag-panes.js` module.
@@ -195,6 +243,13 @@
                     lineWidth;
 
 
+                attr = {
+                    cursor: options.cursor,
+                    stroke: options.lineColor,
+                    'stroke-width': options.lineWidth,
+                    dashstyle: options.lineDashStyle
+                };
+
 
                 // Register current position for future reference.
                 resizer.lastPos = pos - y;
@@ -206,12 +261,10 @@
 
                 // Add to axisGroup after axis update, because the group is recreated
 
-                // Do .add() before path is calculated because strokeWidth() needs it.
-
                 resizer.controlLine.add(axis.axisGroup);
 
 
-                lineWidth = resizer.controlLine.strokeWidth();
+                lineWidth = options.lineWidth;
 
                 attr.d = chart.renderer.crispLine(
                     [

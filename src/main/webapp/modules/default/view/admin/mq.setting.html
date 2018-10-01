@@ -9,25 +9,34 @@
 		</select>
 	<g>$lang.get('mq.type_activemq.hint')</g></label></div>
 	
-	<div class="activemq mq_more" style="padding-left:20px;"><label><h3>$lang.get('activemq.url'):</h3><input type='text' style='width:40%' name='activemq.url' value="$!global.getString('activemq.url', 'failover:(tcp://[host]:61616)?timeout=3000&jms.prefetchPolicy.all=2&jms.useAsyncSend=true')"/><g>$lang.get('activemq.url.hint')</g></label></div>
-	<input type='password' name="activemq.passwd" style="display:none"/>
-	<div class="activemq mq_more" style="padding-left:20px;"><label><h3>$lang.get('activemq.user'):</h3><input type='text' name='activemq.user' value="$!global.getString('activemq.user', '')"/><g>$lang.get('activemq.user.hint')</g></label></div>
-	<div class="activemq mq_more" style="padding-left:20px;"><label><h3>$lang.get('activemq.passwd'):</h3><input type='password' name='activemq.passwd' value="$!global.getString('activemq.passwd', '')"/><g>$lang.get('activemq.passwd.hint')</g></label></div>
+	<div class="activemq mq_more" style="display: none">
+		<div style="padding-left:20px;"><label><h3>$lang.get('activemq.url'):</h3><input type='text' style='width:40%' name='activemq.url' value="$!global.getString('activemq.url', 'failover:(tcp://[host]:61616)?timeout=3000&jms.prefetchPolicy.all=2&jms.useAsyncSend=true')"/><g>$lang.get('activemq.url.hint')</g></label></div>
+		<input type='password' style="display:none"/>
+		<div style="padding-left:20px;"><label><h3>$lang.get('activemq.user'):</h3><input type='text' name='activemq.user' value="$!global.getString('activemq.user', '')"/><g>$lang.get('activemq.user.hint')</g></label></div>
+		<div style="padding-left:20px;"><label><h3>$lang.get('activemq.passwd'):</h3><input type='password' name='activemq.passwd' value="$!global.getString('activemq.passwd', '')"/><g>$lang.get('activemq.passwd.hint')</g></label></div>
+	</div>
 
-	<div class="rabbitmq mq_more" style="padding-left:20px;"><label><h3>$lang.get('rabbitmq.url'):</h3><input type='text' style='width:40%' name='rabbitmq.url' value="$!global.getString('rabbitmq.url', 'amqp://[host]:5672')"/><g>$lang.get('rabbitmq.url.hint')</g></label></div>
-
-	<div class="kafkamq mq_more" style="padding-left:20px;"><label><h3>$lang.get('kafkamq.url'):</h3><input type='text' style='width:40%' name='kafkamq.url' value="$!global.getString('kafkamq.url', 'master:9092')"/><g>$lang.get('kafkamq.url.hint')</g></label></div>
-	<div class="kafkamq mq_more" style="padding-left:20px;"><label><h3>$lang.get('zoo.url'):</h3><input type='text' style='width:40%' name='zoo.url' value="$!global.getString('zoo.url', 's1:2181')"/><g>$lang.get('zoo.url.hint')</g></label></div>
-
+	<div class="rabbitmq mq_more" style="display: none">
+		<div style="padding-left:20px;"><label><h3>$lang.get('rabbitmq.url'):</h3><input type='text' style='width:40%' name='rabbitmq.url' value="$!global.getString('rabbitmq.url', 'amqp://[host]:5672')"/><g>$lang.get('rabbitmq.url.hint')</g></label></div>
+	</div>
+	
+	<div class="kafkamq mq_more" style="display: none">
+		<div style="padding-left:20px;"><label><h3>$lang.get('kafkamq.url'):</h3><input type='text' style='width:40%' name='kafkamq.url' value="$!global.getString('kafkamq.url', 'master:9092')"/><g>$lang.get('kafkamq.url.hint')</g></label></div>
+		<div style="padding-left:20px;"><label><h3>$lang.get('zoo.url'):</h3><input type='text' style='width:40%' name='zoo.url' value="$!global.getString('zoo.url', 's1:2181')"/><g>$lang.get('zoo.url.hint')</g></label></div>
+	</div>
+	
 <script>
 function _ontype(){
 	var c = $('select[name="mq.type"]').val();
 	$('.mq_more').hide();
 	if(c && c != '') {
-		$('.mq_more.' + c).show();
+		$('.mq_more.' + c).slideDown();
 	}
 }
 $(function(){
-	_ontype();
+	var c = $('select[name="mq.type"]').val();
+	if(c && c != '') {
+		$('.mq_more.' + c).show();
+	}
 })
 </script>

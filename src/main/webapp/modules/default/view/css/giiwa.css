@@ -16,26 +16,40 @@ html, body {
 	text-align: center;
 	background: #fff;
 	overflow: hidden;
+	-ms-overflow-style:none;
 }
 
-::-webkit-scrollbar, ::-webkit-scrollbar-thumb {
+::-ms-scrollbar,
+::-moz-scrollbar,
+::-webkit-scrollbar, 
+::-ms-scrollbar-thumb,
+::-moz-scrollbar-thumb,
+::-webkit-scrollbar-thumb {
 	overflow: visible;
 }
 
+::-ms-scrollbar,
+::-moz-scrollbar,
 ::-webkit-scrollbar {
 	width: 6px;
 	height: 6px;
 	background-color: #4EA6FF;
 }
 
+::-ms-scrollbar-thumb,
+::-moz-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
 	background-color: #213B54;
 }
 
+::-ms-scrollbar-thumb:hover,
+::-moz-scrollbar-thumb:hover,
 ::-webkit-scrollbar-thumb:hover {
 	background-color: #39648E;
 }
 
+::-ms-scrollbar-thumb:active,
+::-moz-scrollbar-thumb:active,
 ::-webkit-scrollbar-thumb:active {
 	background-color: rgba(161, 208, 253, 0.9);
 }
@@ -54,20 +68,6 @@ img {
 
 .logo img {
 	height: 50px;
-}
-
-#wrapper {
-	background: #fff;
-	box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
-	position: relative;
-	width: 1000px;
-	margin: 0 auto;
-}
-
-.w1200 #wrapper {
-	width: 100%;
-	position: relative;
-	box-shadow: none;
 }
 
 .center {
@@ -212,21 +212,25 @@ input:focus, select:focus, textarea:focus {
 	width: 1200px;
 }
 
+.wfull .center {
+	width: 100%;
+}
+
 #head .logo {
 	position: relative;
 	float: left;
 }
 
 #head .title {
-	position: relative;
-	font-size: 20pt;
-	width: 420px;
-	text-align: left;
-	color: #EEE;
-	font-weight: bold;
-	letter-spacing: 3px;
-	line-height: 80px;
-	float: left;
+    position: relative;
+    font-size: 18pt;
+    width: 600px;
+    text-align: left;
+    color: #EEE;
+    letter-spacing: 3px;
+    line-height: 60px;
+    float: left;
+    margin-left: 20px;
 }
 
 #head .title g {
@@ -235,15 +239,8 @@ input:focus, select:focus, textarea:focus {
 
 #panel {
 	position: relative;
-	top: 0;
 	height: 100%;
 	float: left;
-	border-left: 1px solid #eee;
-	padding-left: 19px;
-	margin-left: -1px;
-}
-
-.w1200 #panel {
 	border: 0;
 	margin: 0;
 	padding: 0;
@@ -256,7 +253,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 #panel.full {
-	left: 60px;
+	left: 45px;
 }
 
 #panel .content {
@@ -286,7 +283,7 @@ textarea {
 	position: fixed;
 	left: calc(50% - 75px);
 	top: calc(50% - 30px);
-	z-index: 9999;
+	z-index: 10100;
 	height: 60px;
 	width: 150px;
 	display: none;
@@ -383,16 +380,16 @@ a.disabled {
 }
 
 #toolbar .right {
-	float: left;
-	width: 749px;
-	text-align: left;
+	float: none;
+	text-align: center;
 	position: relative;
+	width: auto;
+	display: block;
 }
 
-.w1200 #toolbar .right {
-	width: 949px;
+#toolbar .right .t_left{
+	float: left;
 }
-
 #toolbar.full .right {
 	width: 100% !important;
 }
@@ -433,13 +430,15 @@ a.disabled {
 	overflow: hidden;
 	position: fixed;
 	top: calc(40% - 12px);
-	left: 52px;
+	left: 37px;
 	z-index: 99;
 	height: 63px;
 	cursor: pointer;
 	border: 1px solid #ccc;
-	border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;	
+	border-top-right-radius: 4px;
+	border-bottom-right-radius: 4px;
+	transition: 0.2s ease;
+	background: RGBA(255,255,255,0.9);
 }
 
 #ss_tab.full {
@@ -558,6 +557,13 @@ a.page_1, a.page_2 {
 	padding: 0 10px;
 }
 
+a.page_1.active{
+	background-color: #4d90fe;
+	border: 1px solid #3079ed;
+	color: white !important;
+    cursor: default;
+}
+
 .page_2 {
 	cursor: default;
 	border: 0;
@@ -629,6 +635,7 @@ div.tabs {
 	width: 100%;
 	display: inline-block;
 	border-bottom: 4px solid #3f9dd1;
+	margin-top: 13px;
 }
 
 div.tabs a {
@@ -700,12 +707,20 @@ div.tabs a.selected {
 	cursor: pointer;
 }
 
-.head {
+#panel>.main_content>.head, .popup>.scroll>.head {
 	font-size: 32px;
+	line-height: 32px;
 	color: #3254a0;
-	border-bottom: 1px solid #007ED2;
+	border-bottom: 4px solid #007ED2;
 	padding-bottom: 5px;
-	margin: 20px 20px 20px 0;
+	margin: 16px 0;
+	display: inline-block;
+	width: 100%;
+}
+
+.popup>.scroll>.head {
+	margin: 0;
+	margin-bottom: 16px;
 }
 
 div.state {
@@ -919,12 +934,6 @@ table th.checkbox {
 	width: 100%;
 }
 
-#toolbar .right {
-	width: auto;
-	display: block;
-	float: none;
-}
-
 #menu {
 	position: fixed;
 	top: 92px;
@@ -936,15 +945,30 @@ table th.checkbox {
 	background: #4fade1;
 	color: #f1f1f1;
 	height: 100%;
-	width: 60px;
+	width: 45px;
+	overflow-y: auto;
+	transition: 0.2s ease;
+}
+
+#menu::-ms-scrollbar,
+#menu::-moz-scrollbar,
+#menu::-webkit-scrollbar {
+	width: 0;
+	height: 0;
 }
 
 #menu.full {
 	width: 220px;
 }
 
-#menu.full .jspPane{
-    margin-left: 0!important;	
+#menu .jspPane {
+	margin-left: 0 !important;
+	width: 45px !important;
+}
+
+#menu.full .jspPane {
+	margin-left: 4px !important;
+	width: 200px !important;
 }
 
 .form .task {
@@ -1152,7 +1176,7 @@ form label.inline {
 }
 
 #leanmodal .leanmodal-content {
-	left: 40%;
+	left: calc(50% - 150px);
 	top: 40%;
 	position: absolute;
 	font-size: 20px;
@@ -1397,6 +1421,7 @@ div.submit {
 
 #menu .item .title {
 	padding-left: 10px;
+	white-space: nowrap;
 }
 
 #menu .item .title.selected {
@@ -1469,18 +1494,29 @@ div.submit {
 
 #menu .haschild i.arrow {
 	overflow: hidden;
-    right: 3px;
-    top: 14px;
-    position: absolute;
-    border: 5px solid transparent;
-    border-left-color: #fff;	
+	right: 0;
+	top: 28px;
+	position: absolute;
+	border: 4px solid transparent;
+	border-left-color: #fff;
+}
+
+#menu.full .haschild i.arrow {
+	right: 3px;
+	top: 14px;
+	border-width: 5px;
 }
 
 #menu .open i.arrow {
-    border-left-color: transparent;
-    border-top-color: #fff;
-    right: 6px;
-    top: 18px;
+	border-left-color: transparent;
+	border-top-color: #fff;
+	right: 2px;
+	top: 30px;
+}
+
+#menu.full .open i.arrow {
+	right: 6px;
+	top: 18px;
 }
 
 .fileuploader-btns {
@@ -1561,7 +1597,6 @@ div.submit {
 .fileupload .fileupload-btns {
 	position: relative;
 	width: initial !important;
-	margin: 20px;
 }
 
 .fileupload .btn {
@@ -1599,23 +1634,22 @@ div.submit {
 .fileupload .file-item {
 	display: inline-block;
 	margin: 2px 0;
+	position: relative;
 }
 
 .fileupload .fileupload-progress {
-	width: 200px;
-	height: 22px;
-	background: #aaa;
+	width: calc(100% + 80px);
+	line-height: 26px;
+    height: 26px;
 	display: inline-block;
-	position: relative;
+	position: absolute;
 	overflow: hidden;
-	background-color: #C0BBBB;
-	border-radius: 4px;
 	-webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
-	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
 	float: left;
 	-webkit-transition: width .6s ease;
 	transition: width .6s ease;
-	margin: 2px 10px;
+	margin: 0;
+	left: 0;
 }
 
 .fileupload .fileupload-filename {
@@ -1623,7 +1657,6 @@ div.submit {
 	height: 26px;
 	display: inline-block;
 	float: left;
-	width: 150px;
 	overflow: hidden;
 	word-break: break-all;
 	-webkit-transition: width .6s ease;
@@ -1643,7 +1676,7 @@ div.submit {
 	font-size: 12px;
 	line-height: 20px;
 	text-align: center;
-	background-color: #758799;
+	background-color: RGBA(22,33,44,0.3);
 	-webkit-box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.15);
 	box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.15);
 	-webkit-transition: width .6s ease;
@@ -1653,12 +1686,14 @@ div.submit {
 .fileupload .fileupload-message {
 	position: absolute;
 	left: 0;
-	top: 5px;
+	top: 0;
 	font-size: 11px;
 	width: 100%;
 	text-align: center;
-	color: #fff;
-	line-height: 13px;
+	color: #ff0202;
+	line-height: 26px;
+	text-align: right;
+	background-color: RGBA(0,0,0,0.2);
 }
 
 .fileupload .notes {
@@ -1706,13 +1741,15 @@ div.submit {
 	color: #39198E;
 }
 
+::-ms-scrollbar-button,
+::-moz-scrollbar-button,
 ::-webkit-scrollbar-button, form div.confirm, #menu .loading i.icon,
 	.fileuploader-file {
 	display: none;
 }
 
 #toolbar.full .left {
-	width: 60px;
+	width: 45px;
 }
 
 #toolbar .left span {
@@ -1815,7 +1852,7 @@ input.good {
 	vertical-align: middle;
 	-ms-touch-action: manipulation;
 	touch-action: manipulation;
-	transition: .5s ease;
+	transition: .2s ease;
 	text-decoration: none;
 	cursor: pointer;
 	-webkit-user-select: none;
@@ -1986,13 +2023,17 @@ button:hover, button:active {
 	position: absolute;
 	left: 0;
 	top: 0;
-	z-index: 102;
+	z-index: 10000;
 	overflow: hidden;
 	display: none;
 }
 
 #dialog {
-	z-index: 104;
+	z-index: 20000;
+}
+
+#popupmenu{
+	z-index: 100000;
 }
 
 #gwpopup>.popupbg, #popupmenu>.bg, #dialog>.dialogbg {
@@ -2011,26 +2052,38 @@ button:hover, button:active {
 
 #gwpopup>.popup, #dialog>.dialog {
 	width: 70%;
-	display: inline-block;
 	height: 70%;
+	left: 15%;
+	top: 15%;
+	display: inline-block;
 	background: #fff;
 	border: 1px solid #dcdcdc;
-	left: 15%;
 	position: absolute;
-	top: 15%;
 	border-radius: 5px;
-	overflow: hidden;
 	text-align: left;
 	padding: 30px 20px 20px 20px;
 }
 
-#gwpopup>.popup>a.close, #dialog>.dialog>a.close {
+#gwpopup>.popup.max {
+	width: calc(100% - 40px) !important;
+	height: calc(100% - 50px) !important;
+	left: 0 !important;
+	top: 0 !important;
+}
+
+#gwpopup>.popup>a.close, #gwpopup>.popup>a.max, #dialog>.dialog>a.close
+	{
 	position: absolute;
 	right: 22px;
 	top: 5px;
 	text-decoration: none;
 	color: #aaa;
 	cursor: pointer;
+}
+
+#gwpopup>.popup>a.max {
+	right: 40px;
+	top: 9px;
 }
 
 #gwpopup>.popup>a.prev {
@@ -2043,8 +2096,8 @@ button:hover, button:active {
 	display: none;
 }
 
-#gwpopup>.popup>a.close:hover, #gwpopup>.popup>a.prev:hover, #dialog>.dialog>a.close:hover
-	{
+#gwpopup>.popup>a.close:hover, #gwpopup>.popup>a.max:hover, #gwpopup>.popup>a.prev:hover,
+	#dialog>.dialog>a.close:hover {
 	color: #4ea6ff;
 }
 
@@ -2055,31 +2108,33 @@ button:hover, button:active {
 }
 
 #popupmenu>.menu {
-	position: absolute;
-	left: 100px;
-	top: 100px;
-	padding: 10px;
-	border: 1px solid #aaa;
-	background: #fff;
-	border-radius: 5px;
-	box-shadow: 1px 1px 3px #aaa;
+    position: absolute;
+    left: 100px;
+    top: 100px;
+    padding: 5px 10px;
+    border: 1px solid #aaa;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 1px 1px 3px #ccc;
+    font-weight: 300;
 }
 
 #popupmenu>.menu .menuitem {
 	cursor: pointer;
-	padding: 2px 8px;
+	padding: 0 12px;
 	text-align: left;
 }
-
-#popupmenu>.menu .menuitem:hover {
-	background: #aaa;
-	color: #fff;
+#popupmenu>.menu .menuitem.disabled, #popupmenu>.menu .menuitem.disabled i:before{
+	color: #bbb!important;
+	background: transparent!important;
+    cursor: default;	
 }
-
+#popupmenu>.menu .menuitem:hover {
+	background: #eee;
+}
 #popupmenu>.menu .menuitem>i[class*=icon-] {
 	margin-right: 4px;
 }
-
 #popupmenu>.menu .line {
 	background: #ccc;
 	display: inline-block;
@@ -2087,15 +2142,165 @@ button:hover, button:active {
 	width: 100%;
 	margin: 4px 0;
 }
-
 .portlet {
-	display: inline-block;
-}
-
-#menu .jspVerticalBar {
 	display: none;
+	position: relative;
+	float: left;
+}
+.portlet a.more{
+	position: absolute;
+    top: 4px;
+    right: 4px;
+    color: #aaa;
+    text-decoration: none;
+    z-index: 1;}
+.portlet a.more:hover{
+	color: #4ea6ff;
+}
+#popover{
+	display: none;
+    z-index: 10100;
+    position: absolute;
+   	border-radius: 4px;
+    background: #FDFAD5;
+    border: 1px solid #ddd;   	
+}
+#popover>.cc{
+    padding: 5px 10px;
+    text-align: left;
+}
+#popover>span{
+	position: absolute;
+    border: 10px solid transparent;
+    display: none;
+}
+#popover>span.top{
+	left: calc(50% - 10px);
+    top: -20px;
+    border-bottom-color: #FDFAD5;    
+}
+#popover>span.right{
+	top: calc(50% - 10px);
+    left: calc(100%);
+    border-left-color: #FDFAD5;    
+}
+#popover>span.bottom{
+	left: calc(50% - 10px);
+    top: calc(100%);
+    border-top-color: #FDFAD5;    
+}
+#popover>span.left{
+	top: calc(50% - 10px);
+    left: -20px;
+    border-right-color: #FDFAD5;    
+}
+td.a a {
+    text-decoration: none;
+    color: #666;
+}
+td.a a:hover{
+	color: #4ea6ff;
+}
+i.blue{
+	color: blue;
+}
+i.red{
+	color: #940f30;
+}
+i.green{
+	color: green;
+}
+i.grey{
+	color: #aaa;
+}
+i.yellow{
+	color:#bd7f26;
+}
+.popup div.tabs{
+	margin-top: 0;
 }
 
-#menu.full .jspVerticalBar {
-	display: inline-block;
+#menu {
+-ms-overflow-style: none;
+overflow: -moz-scrollbars-none;
+}
+
+#menu::-webkit-scrollbar {
+-ms-overflow-style: none;
+overflow: -moz-scrollbars-none;
+}
+
+#menu::-webkit-scrollbar-button {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-webkit-scrollbar-track {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-webkit-scrollbar-track-piece {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-webkit-scrollbar-thumb {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-webkit-scrollbar-corner {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-webkit-scrollbar-resizer {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-webkit-scrollbar {
+width: 0px;
+height: 0px;
+}
+
+/*o内核*/
+
+#menu .-o-scrollbar {
+-moz-appearance: none !important;
+background: rgba(0, 255, 0, 0) !important;
+}
+
+#menu::-o-scrollbar-button {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-o-scrollbar-track {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-o-scrollbar-track-piece {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-o-scrollbar-thumb {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-o-scrollbar-corner {
+background-color: rgba(0, 0, 0, 0);
+}
+
+#menu::-o-scrollbar-resizer {
+background-color: rgba(0, 0, 0, 0);
+}
+
+/*IE10,IE11,IE12*/
+
+#menu {
+-ms-scroll-chaining: chained;
+-ms-overflow-style: none;
+-ms-content-zooming: zoom;
+-ms-scroll-rails: none;
+-ms-content-zoom-limit-min: 100%;
+-ms-content-zoom-limit-max: 500%;
+-ms-scroll-snap-type: proximity;
+-ms-scroll-snap-points-x: snapList(100%, 200%, 300%, 400%, 500%);
+-ms-overflow-style: none;
+overflow: auto;
 }

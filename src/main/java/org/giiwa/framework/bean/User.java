@@ -18,13 +18,16 @@ import java.io.PrintStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.bouncycastle.jce.provider.JDKMessageDigest.MD4;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
+import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
 
 /**
@@ -56,7 +59,7 @@ public class User extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<User> dao = BeanDAO.create(User.class);
+	public static final BeanDAO<Long, User> dao = BeanDAO.create(User.class);
 
 	@Column(name = X.ID)
 	private long id;
@@ -169,11 +172,31 @@ public class User extends Bean {
 	 */
 	public boolean isRole(Role r) {
 		try {
-			return dao.exists(W.create("uid", this.getId()).and("rid", r.getId()));
+			return UserRole.dao.exists(W.create("uid", this.getId()).and("rid", r.getId()));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 		return false;
+	}
+
+	private static void _check(V v, String... ss) throws Exception {
+		if (ss == null || ss.length == 0)
+			return;
+
+		for (String s : ss) {
+			String o = (String) v.value(s);
+			if (X.isSame("name", s)) {
+				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
+				if (!X.isEmpty(rule) && !o.matches(rule)) {
+					throw new Exception(Language.getLanguage().get("user.bad.name"));
+				}
+			} else if (X.isSame("password", s)) {
+				String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
+				if (!X.isEmpty(rule) && !o.matches(rule)) {
+					throw new Exception(Language.getLanguage().get("user.bad.passwd"));
+				}
+			}
+		}
 	}
 
 	/**
@@ -184,12 +207,16 @@ public class User extends Bean {
 	 * @param v
 	 *            the values
 	 * @return long of the user id, if failed, return -1
+	 * @throws Exception
 	 */
-	public static long create(V v) {
+	public static long create(V v) throws Exception {
+
+		// check name and password
+		_check(v, "name", "password");
 
 		String s = (String) v.value("password");
 		if (s != null) {
-			v.force("md4passwd", s);
+			v.force("md4passwd", User.md4encrypt(s));
 			v.force("password", encrypt(s));
 		}
 
@@ -245,7 +272,7 @@ public class User extends Bean {
 	 * @return User
 	 */
 	public static User load(String name) {
-		return dao.load(W.create("name", name).and("deleted", 1, W.OP.neq).sort(X.ID, -1));
+		return dao.load(W.create("name", name).and("deleted", 1, W.OP.neq).sort(X.UPDATED, -1));
 	}
 
 	/**
@@ -258,38 +285,29 @@ public class User extends Bean {
 	public static List<User> loadByAccess(String access) {
 
 		Beans<Role> bs = Role.loadByAccess(access, 0, 1000);
-		W q = W.create();
 
-		if (bs != null) {
-			if (bs.size() > 1) {
-				W list = W.create();
-				for (Role a : bs) {
-					list.or("rid", a.getId());
-				}
-				q.and(list);
-			} else if (bs.size() == 1) {
-				q.and("rid", bs.get(0).getId());
-			}
-
+		if (bs == null || bs.isEmpty()) {
+			return null;
 		}
 
-		Beans<UserRole> b2 = UserRole.dao.load(q, 0, 1000);
-		q = W.create();
-		if (b2 != null) {
-			if (b2.size() > 1) {
-				W list = W.create();
-				for (UserRole a : b2) {
-					list.or("id", a.getLong("uid"));
-				}
-				q.and(list);
-			} else if (b2.size() == 1) {
-				q.and("id", b2.get(0).getLong("uid"));
-			}
+		List<Long> l1 = new ArrayList<Long>();
+		for (Role a : bs) {
+			l1.add(a.getId());
 		}
 
-		q.and("deleted", 1, W.OP.neq);
+		Beans<UserRole> b2 = UserRole.dao.load(W.create().and("rid", l1), 0, 1000);
 
-		Beans<User> us = dao.load(q.sort("name", 1), 0, Integer.MAX_VALUE);
+		if (b2 == null || b2.isEmpty()) {
+			return null;
+		}
+
+		l1.clear();
+		for (UserRole a : b2) {
+			l1.add(a.getLong("uid"));
+		}
+
+		Beans<User> us = dao.load(W.create().and("id", l1).and("delete", 1, W.OP.neq).sort("name", 1), 0,
+				Integer.MAX_VALUE);
 		return us;
 
 	}
@@ -506,8 +524,9 @@ public class User extends Bean {
 	 * @param v
 	 *            the values
 	 * @return int
+	 * @throws Exception
 	 */
-	public int update(V v) {
+	public int update(V v) throws Exception {
 		for (String name : v.names()) {
 			this.set(name, v.value(name));
 		}
@@ -524,12 +543,16 @@ public class User extends Bean {
 	 * @param v
 	 *            the values
 	 * @return int, 0 no user updated
+	 * @throws Exception
 	 */
-	public static int update(long id, V v) {
+	public static int update(long id, V v) throws Exception {
+
+		v.remove("name");
 
 		String passwd = (String) v.value("password");
 		if (!X.isEmpty(passwd)) {
 
+			_check(v, "password");
 			v.force("md4passwd", md4encrypt(passwd));
 			passwd = encrypt(passwd);
 			v.force("password", passwd);
@@ -547,11 +570,16 @@ public class User extends Bean {
 	 * @param v
 	 *            the value
 	 * @return the number of updated
+	 * @throws Exception
 	 */
-	public static int update(W q, V v) {
+	public static int update(W q, V v) throws Exception {
+
+		v.remove("name");
 
 		String passwd = (String) v.value("password");
 		if (!X.isEmpty(passwd)) {
+
+			_check(v, "password");
 
 			v.force("md4passwd", md4encrypt(passwd));
 			passwd = encrypt(passwd);
@@ -610,7 +638,7 @@ public class User extends Bean {
 	 *            the ip that the user come fram
 	 * @return the int
 	 */
-	public int logined(String sid, String ip) {
+	public int logined(String sid, String ip, V v) {
 
 		// update
 		set("logintimes", getInt("logintimes") + 1);
@@ -623,9 +651,8 @@ public class User extends Bean {
 		dao.update(W.create("sid", sid), V.create("sid", X.EMPTY));
 
 		return dao.update(getId(),
-				V.create("lastlogintime", System.currentTimeMillis()).set("logintimes", getInt("logintimes"))
-						.set("ip", ip).set("failtimes", 0).set("locked", 0).set("lockexpired", 0).set("sid", sid)
-						.set(X.UPDATED, System.currentTimeMillis()));
+				v.append("logintimes", getInt("logintimes")).append("ip", ip).append("failtimes", 0).append("locked", 0)
+						.append("lockexpired", 0).append("sid", sid).append(X.UPDATED, System.currentTimeMillis()));
 
 	}
 
@@ -637,7 +664,7 @@ public class User extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<UserRole> dao = BeanDAO.create(UserRole.class);
+		public static final BeanDAO<String, UserRole> dao = BeanDAO.create(UserRole.class);
 
 		@Column(name = "uid")
 		long uid;
@@ -663,7 +690,7 @@ public class User extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<Lock> dao = BeanDAO.create(Lock.class);
+		public static final BeanDAO<String, Lock> dao = BeanDAO.create(Lock.class);
 
 		/**
 		 * Locked.
@@ -679,8 +706,9 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
-			return Lock.dao.insert(V.create("uid", uid).set("sid", sid).set("host", host).set("useragent", useragent)
-					.set(X.CREATED, System.currentTimeMillis()));
+			return Lock.dao.insert(
+					V.create("uid", uid).append(X.ID, UID.id(uid, sid, System.currentTimeMillis())).set("sid", sid)
+							.set("host", host).set("useragent", useragent).set(X.CREATED, System.currentTimeMillis()));
 		}
 
 		/**
@@ -825,10 +853,10 @@ public class User extends Bean {
 	public static void checkAndInit() {
 		if (Helper.isConfigured()) {
 			try {
-				if (!dao.exists(0)) {
+				if (!dao.exists(0L)) {
 					List<User> list = User.loadByAccess("access.config.admin");
 					if (list == null || list.size() == 0) {
-						String passwd = UID.random(20);
+						String passwd = UID.random(16);
 						try {
 							PrintStream out = new PrintStream(Model.GIIWA_HOME + "/admin.pwd");
 							out.print(passwd);
@@ -836,8 +864,8 @@ public class User extends Bean {
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
-						User.create(
-								V.create("id", 0L).set("name", "admin").set("password", passwd).set("title", "Admin"));
+						User.create(V.create("id", 0L).set("name", "admin").set("password", passwd).set("nickname",
+								"admin"));
 					}
 				}
 			} catch (Exception e) {
@@ -865,7 +893,7 @@ public class User extends Bean {
 
 	public static int from(JSON j) {
 		int total = 0;
-		List<JSON> l1 = j.getList("users");
+		Collection<JSON> l1 = j.getList("users");
 		if (l1 != null) {
 			for (JSON e : l1) {
 				long id = e.getLong(X.ID);

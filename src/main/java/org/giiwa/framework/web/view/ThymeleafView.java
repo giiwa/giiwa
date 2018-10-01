@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.giiwa.framework.bean.DFile;
 import org.giiwa.framework.web.Model;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.IContext;
@@ -79,5 +80,11 @@ public class ThymeleafView extends View {
       }
     };
   }
+
+@Override
+protected boolean parse(DFile in, Model m, String viewname) throws Exception {
+	// TODO Auto-generated method stub
+	return false;
+}
 
 }

@@ -5,6 +5,8 @@ table.tablesorter {
 	font-size: 8pt;
 	width: 100%;
 	text-align: left;
+    border-collapse: collapse;
+    border: 1px solid #CDCDCD;	
 }
 
 table.tablesorter thead tr th,table.tablesorter tfoot tr th {
@@ -12,6 +14,8 @@ table.tablesorter thead tr th,table.tablesorter tfoot tr th {
 	font-size: 8pt;
 	padding: 4px;
 	vertical-align: middle;
+    border-collapse: collapse;
+    border: 1px solid #CDCDCD;	
 }
 
 table.tablesorter thead tr .header {
@@ -28,7 +32,9 @@ table.tablesorter tbody td {
 	background-color: #FFF;
 	vertical-align: middle;
 	word-break: break-all;
-	transition-duration: 0.5s;	
+	transition-duration: 0.5s;
+    border-collapse: collapse;
+    border: 1px solid #CDCDCD;		
 }
 
 table.tablesorter tbody tr:nth-child(even) td {

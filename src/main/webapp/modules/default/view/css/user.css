@@ -1,11 +1,18 @@
 html, body, table {
-	background-color: #f5f5f5;
-	width: 100%;
-	text-align: center;
+	background-color: #456;
+    width: 100%;
+    text-align: center;
+    background-image: url(/images/user_bg.jpg);
+    background-repeat: no-repeat;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;	
 }
 .header {
 	height: 80px;
 	padding-top: 20px;
+	position: relative;	
 }
 .form-signin-heading {
 	font-family: Helvetica, Georgia, Arial, sans-serif, 黑体;
@@ -14,6 +21,7 @@ html, body, table {
 	margin-bottom: 20px;
 	color: #0663a2;
 	font-weight: bold;
+	position: relative;
 }
 .form-signin {
 	position: relative;
@@ -22,7 +30,7 @@ html, body, table {
 	width: 350px;
 	padding: 25px 29px 29px;
 	margin: 0 auto 20px;
-	background-color: #fff;
+	background-color: RGBA(255,255,255,0.8);
 	border: 1px solid #e5e5e5;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;

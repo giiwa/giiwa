@@ -1,48 +1,52 @@
-<div id='diskgauge' style="height: 300px; float: left; width: 300px; border: 0;"></div>
+
+<div id='disk_$!requestid' style="height: 300px; float: left; width: 400px; border: 0;"></div>
+
 <script>
 $(function(){
-	$('#diskgauge').highcharts({
-        chart: {
-            type: 'column'
-        },
-        title: {
-            text: "$lang.get('gauge.disk.title')"
-        },
-        xAxis: {
-            categories: [#foreach($d in $disk) "$this.eclipse($d.dirname)" , #end]
-        },
-        credits:{
-            enabled: false
-        },
-        yAxis: {
-            min: 0,
-            title: {
-                text: ' '
-            }
-        },
-        tooltip: {
-            headerFormat: '',
-            pointFormat: '{series.name}: <b>{point.hint}</b>'
-        },
-        plotOptions: {
-            column: {
-                stacking: 'normal',
-            }
-        },
-        series: [{
-            name: "$lang.get('disk.free')",
-            color:'#009df5',
-            data: [
-            	#foreach($d in $disk) {y:$d.free, hint:"$lang.size($d.free)B"}, #end
-            	]
-        },{
-            name: "$lang.get('disk.used')",
-            color: '#961616',
-            data: [
-            	#foreach($d in $disk) {y:$d.used, hint:"$lang.size($d.used)B"}, #end
-            	]
-        }]
-	});	//end disk
+	var t = Highcharts.chart('disk_$!requestid', {
+	    chart: {
+	        type: 'column'
+	    },
+	    title: {
+	        text: "$!lang.get('disk.state')"
+	    },
+	    xAxis: {
+	   	 	categories: [#foreach($p in $list) '$p.path', #end]
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+	    tooltip: {
+	    		pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.hint}</b> ({point.percentage:.0f}%)<br/>',
+	        shared: true
+	    },
+		plotOptions : {	 
+			column: {
+			      stacking: 'y'
+			    },
+		    series: {
+	        		cursor: 'pointer',
+	        		point:{
+	        			events: {
+	        				click: function(e){
+	        					giiwa.popup('/portlet/disk/more?name=' + e.point.name);
+	        				}
+	        			}
+	        		}
+       		}	    
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+	    				{name: "$lang.get('disk.free')", color:'#0dad76', data: [#foreach($p in $list) {name:"$p.name", y:$p.free, hint:"$lang.size($p.free)"},#end]},
+	    				{name: "$lang.get('disk.used')", color:'#860606', data: [#foreach($p in $list) {name:"$p.name", y:$p.used, hint:"$lang.size($p.used)"},#end]}
+	    			], 
+	});
+
+
 })
 </script>
 

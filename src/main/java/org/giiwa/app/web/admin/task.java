@@ -14,8 +14,6 @@
 */
 package org.giiwa.app.web.admin;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.giiwa.core.bean.X;
@@ -50,6 +48,16 @@ public class task extends Model {
 
 		this.query.path("/admin/task");
 		this.show("/admin/task.index.html");
+	}
+
+	@Path(path = "kill", login = true, access = "access.config.admin|access.config.system.admin")
+	public void kill() {
+		String name = this.getString("name");
+		Task t = Task.get(name);
+		t.stop(false);
+
+		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "killed"));
+
 	}
 
 	@Path(path = "dump", login = true, access = "access.config.admin|access.config.system.admin")

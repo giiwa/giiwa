@@ -19,13 +19,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.giiwa.app.web.DefaultListener.NtpTask;
+import org.giiwa.app.task.NtpTask;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.web.*;
 
@@ -150,13 +151,13 @@ public class setting extends Model {
 			try {
 				setting s = c.newInstance();
 				s.copy(this);
-				s.set();
-
 				s.set("lang", lang);
 				s.set("module", module);
 				s.set("name", name);
 				s.set("settings", names);
-				s.show("/admin/setting.html");
+				s.set();
+
+				// s.show("/admin/setting.html");
 			} catch (Exception e) {
 				log.error(name, e);
 				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
@@ -237,18 +238,24 @@ public class setting extends Model {
 			Global.setConfig("ntp.server", this.getString("ntpserver"));
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
-			Global.setConfig("repo.speed", X.isSame("on", this.getString("repo.speed")) ? 1 : 0);
+			Global.setConfig("perf.moniter", X.isSame("on", this.getString("perf.moniter")) ? 1 : 0);
+			Global.setConfig("glog.keep.days", this.getInt("glog.keep.days"));
+			Global.setConfig("message.max", this.getInt("message.max"));
+			Global.setConfig("web.cache", this.getString("web.cache"));
+			Global.setConfig("dfile.web", X.isSame("on", this.getString("dfile.web")) ? 1 : 0);
 
-			NtpTask.owner.start();
+			NtpTask.owner.schedule(0);
 
 			String url = this.getString("site_url").trim();
 			while (url.endsWith("/")) {
 				url = url.substring(0, url.length() - 1);
 			}
 			Global.setConfig("site.url", url);
-			Global.setConfig("module.center", X.isSame(this.getString("module_center"), "on") ? 1 : 0);
+			Global.setConfig("site.browser", this.getString("site_browser"));
+			Global.setConfig("site.browser.nonredirect", this.getString("site_browser_nonredirect"));
+			Global.setConfig("site.browser.ignoreurl", this.getString("site_browser_ignoreurl"));
 
-			this.set(X.MESSAGE, lang.get("save.success"));
+			Global.setConfig("module.center", X.isSame(this.getString("module_center"), "on") ? 1 : 0);
 
 			if (Global.getInt("db.optimizer", 1) == 1) {
 				Helper.setOptmizer(new Optimizer());
@@ -256,9 +263,7 @@ public class setting extends Model {
 				Helper.setOptmizer(null);
 			}
 
-			Repo.test();
-
-			get();
+			this.response(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
 
 		/*
@@ -276,11 +281,11 @@ public class setting extends Model {
 			this.set("cross_domain", Global.getString("cross.domain", "no"));
 			this.set("cross_header", Global.getString("cross.header", "Content-Type, accept, Origin"));
 
-			this.set("cache_url", Global.getString("cache.url", null));
-			this.set("mongo_url", Global.getString("mongo[default].url", null));
-			this.set("mongo_db", Global.getString("mongo[default].db", null));
-			this.set("mongo_user", Global.getString("mongo[default].user", null));
-			this.set("db_url", Global.getString("db[default].url", null));
+			this.set("cache_url", Config.getConf().getString("cache.url", null));
+			this.set("mongo_url", Config.getConf().getString("mongo[default].url", null));
+			this.set("mongo_db", Config.getConf().getString("mongo[default].db", null));
+			this.set("mongo_user", Config.getConf().getString("mongo[default].user", null));
+			this.set("db_url", Config.getConf().getString("db[default].url", null));
 			this.set("db_primary", Helper.primary == null ? X.EMPTY : Helper.primary.getClass().getName());
 			this.set("roles", Role.load(0, 100));
 
@@ -305,9 +310,7 @@ public class setting extends Model {
 			Global.setConfig("mail.user", this.getString("user"));
 			Global.setConfig("mail.passwd", this.getString("passwd"));
 
-			this.set(X.MESSAGE, lang.get("save.success"));
-
-			get();
+			this.response(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
 
 		/*
@@ -340,9 +343,7 @@ public class setting extends Model {
 		public void set() {
 			Global.setConfig("site.counter", this.getHtml("counter"));
 
-			this.set(X.MESSAGE, lang.get("save.success"));
-
-			get();
+			this.response(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
 
 		/*
@@ -355,6 +356,5 @@ public class setting extends Model {
 			// this.set("counter", ConfigGlobal.s("site.counter", X.EMPTY));
 			this.set("page", "/admin/setting.counter.html");
 		}
-
 	}
 }

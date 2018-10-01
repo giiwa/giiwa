@@ -22,17 +22,21 @@ import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Calendar;
 import java.util.List;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.task.BackupTask;
+import org.giiwa.app.task.CleanupTask;
+import org.giiwa.app.task.DiskStatTask;
+import org.giiwa.app.task.NtpTask;
+import org.giiwa.app.task.RecycleTask;
+import org.giiwa.app.task.StateTask;
+import org.giiwa.app.web.admin.dashboard;
 import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.profile;
 import org.giiwa.app.web.admin.setting;
-import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.base.Shell;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.X;
@@ -40,19 +44,20 @@ import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.dfile.FileServer;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.Menu;
-import org.giiwa.framework.bean.Portlet;
+import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Repo;
-import org.giiwa.framework.bean.Temp;
+import org.giiwa.framework.bean.License;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.mq.MQ;
+import org.giiwa.mq.MQ.Mode;
+import org.giiwa.mq.Notify;
 import org.giiwa.mq.demo.Echo;
 
 /**
@@ -65,98 +70,6 @@ public class DefaultListener implements IListener {
 
 	public static final DefaultListener owner = new DefaultListener();
 
-	public static class NtpTask extends Task {
-
-		public static NtpTask owner = new NtpTask();
-
-		@Override
-		public String getName() {
-			return "ntp.task";
-		}
-
-		private NtpTask() {
-		}
-
-		@Override
-		public void onExecute() {
-			String ntp = Global.getString("ntp.server", null);
-			if (!X.isEmpty(ntp)) {
-				try {
-					String r = Shell.run("ntpdate -u " + ntp);
-					GLog.applog.info("ntp", "sync", "NTP syncing: " + r, null, ntp);
-				} catch (Exception e) {
-					GLog.applog.error("ntp", "sync", "NTP syncing failed ", e, null, ntp);
-				}
-			}
-		}
-
-		@Override
-		public void onFinish() {
-			this.schedule(X.AHOUR);
-		}
-
-		public void start() {
-			if (Shell.isLinux() || Shell.isMac()) {
-				NtpTask.owner.schedule(X.AMINUTE);
-			}
-		}
-	}
-
-	/**
-	 * auto recycle the server, local configuration, recycle.task=时1｜时2
-	 * 
-	 * @author wujun
-	 *
-	 */
-	private static class RecycleTask extends Task {
-
-		static RecycleTask owner = new RecycleTask();
-
-		private RecycleTask() {
-		}
-
-		@Override
-		public void onExecute() {
-			String s = Local.getString("recycle.task", "-1");
-			if ((!X.isSame(s, "-1")) && System.currentTimeMillis() - Model.UPTIME > X.AHOUR) {
-				/**
-				 * recycle.task="-1" or " ", and the server started after 1 hour
-				 */
-				String[] ss = s.split("\\|");
-
-				Calendar c = Calendar.getInstance();
-				c.setTimeInMillis(System.currentTimeMillis());
-				int hour = c.get(Calendar.HOUR_OF_DAY);
-				for (String s1 : ss) {
-					if (hour == X.toInt(s1, -1)) {
-						// yes
-						recycle();
-						break;
-					}
-				}
-			}
-		}
-
-		private void recycle() {
-			long t = X.toLong(Math.random() * X.AMINUTE, X.AMINUTE);
-			log.warn("going to recycle in [" + t / 1000 + "] seconds");
-
-			new Task() {
-
-				@Override
-				public void onExecute() {
-					System.exit(0);
-				}
-
-			}.schedule(t);
-		}
-
-		@Override
-		public void onFinish() {
-			this.schedule(X.AHOUR);
-		}
-	}
-
 	static Log log = LogFactory.getLog(DefaultListener.class);
 
 	/*
@@ -168,91 +81,101 @@ public class DefaultListener implements IListener {
 	public void onStart(Configuration conf, Module module) {
 		log.info("giiwa is starting...");
 
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			public void run() {
-				// stop all task
-				Task.stopAll(true);
+		try {
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					// stop all task
+					Task.stopAll(true);
 
-				// stop all modules
-				List<Module> l1 = Module.getAll(true);
-				if (!X.isEmpty(l1)) {
-					for (Module m : l1) {
-						m.stop();
+					// stop all modules
+					List<Module> l1 = Module.getAll(true);
+					if (!X.isEmpty(l1)) {
+						for (Module m : l1) {
+							m.stop();
+						}
 					}
+					log.warn("giiwa is stopped");
 				}
-				log.warn("giiwa is stopped");
+			});
+
+			/**
+			 * cleanup html
+			 */
+			File f = new File(Model.GIIWA_HOME + "/html/");
+			if (f.exists()) {
+				delete(f);
 			}
-		});
 
-		/**
-		 * cleanup html
-		 */
-		File f = new File(Model.GIIWA_HOME + "/html/");
-		if (f.exists()) {
-			delete(f);
-		}
+			setting.register(0, "system", setting.system.class);
+			setting.register(1, "mq", mq.class);
+			setting.register(10, "smtp", setting.mail.class);
+			// setting.register(11, "counter", setting.counter.class);
 
-		setting.register(0, "system", setting.system.class);
-		setting.register(1, "mq", mq.class);
-		setting.register(10, "smtp", setting.mail.class);
-		setting.register(11, "counter", setting.counter.class);
+			profile.register(0, "my", profile.my.class);
+			// portlet.register(mem.class);
+			// portlet.register(disk.class);
+			// portlet.register(net.class);
 
-		profile.register(0, "my", profile.my.class);
-		// portlet.register(mem.class);
-		// portlet.register(disk.class);
-		// portlet.register(net.class);
+			// Portlet.create(0, "dashbroad", "/portlet/mem");
+			// Portlet.create(0, "dashbroad", "/portlet/disk");
+			// Portlet.create(0, "dashbroad", "/portlet/net");
+			// Portlet.create(0, "dashbroad", "/portlet/sysinfo");
 
-		Portlet.create(0, "dashbroad", "/portlet/mem");
-		Portlet.create(0, "dashbroad", "/portlet/disk");
-		Portlet.create(0, "dashbroad", "/portlet/net");
-		Portlet.create(0, "dashbroad", "/portlet/sysinfo");
+			NtpTask.owner.schedule(X.AMINUTE);
+			new CleanupTask(conf).schedule(X.AMINUTE);
+			RecycleTask.owner.schedule(X.AMINUTE);
+			StateTask.owner.schedule(X.AMINUTE);
+			BackupTask.init();
 
-		NtpTask.owner.start();
-		new CleanupTask(conf).schedule(X.AMINUTE);
-		// new AppdogTask().schedule(X.AMINUTE);
-		RecycleTask.owner.schedule(X.AMINUTE);
+			/**
+			 * check and initialize
+			 */
+			User.checkAndInit();
 
-		/**
-		 * check and initialize
-		 */
-		User.checkAndInit();
+			/**
+			 * start the optimizer
+			 */
+			if (Global.getInt("db.optimizer", 1) == 1) {
+				Helper.setOptmizer(new Optimizer());
+			}
 
-		/**
-		 * start the optimizer
-		 */
-		if (Global.getInt("db.optimizer", 1) == 1) {
-			Helper.setOptmizer(new Optimizer());
-		}
+			DiskStatTask.init();
 
-		if (!X.isEmpty(Global.getString("mq.type", X.EMPTY))) {
-			new Task() {
+			Task.schedule(() -> {
+				MQ.init();
 
-				@Override
-				public void onExecute() {
-					MQ.init();
-
-					// if (Global.getInt("mq.logger", 0) == 1) {
-					// MQ.logger(true);
-					// }
-
-					// this is for "echo" service
-					Echo e = new Echo("echo");
-					try {
-						e.bind();
-					} catch (Exception e1) {
-						log.error(e1.getMessage(), e1);
-					}
-
+				Notify n = new Notify();
+				try {
+					n.bind(Mode.TOPIC);
+				} catch (Exception e1) {
+					log.error(e1.getMessage(), e1);
 				}
 
-			}.schedule(10);
-		} else {
-			GLog.applog.info(mq.class, "startup", "disabled", null, null);
+				// this is for "echo" service
+				Echo e = new Echo("echo");
+				try {
+					e.bind();
+				} catch (Exception e1) {
+					log.error(e1.getMessage(), e1);
+				}
+			}, 10);
+
+			Local.init();
+
+			module.setLicense(License.LICENSE.free,
+					"MFEjwN3hxRT8BD8dRGwTY+mod5O9m7gau0MXwwxx+gN7SI2NXKZYGBmyUD65fPmnPgrB3q8/7Y2TwOLsMa3gVVz9bx1OiKN02S9mQtoYvuiy1fD7OwdXJ4EWgilIn1/Rur4LsIu9JCCN5MSO3ucqxaI0Ccu94s+GsIAwWtCQ65M=");
+
+			dashboard.add("/admin/dashboard");
+			dashboard.add("/admin/home.html");
+
+			Disk.repair();
+			FileServer.inst.start();
+
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
 		}
 
-		Repo.test();
-
-		Local.init();
+		log.info("giiwa is started");
 
 	}
 
@@ -405,16 +328,17 @@ public class DefaultListener implements IListener {
 				}
 
 				if (f != null && f.exists()) {
-					String key = module.getName() + ".db.initial." + dbname + "." + f.lastModified();
-					int b = Global.getInt(key, 0);
-					if (b == 0) {
+					String key = module.getName() + ".db.initial." + dbname;
+					// + "." + f.lastModified();
+					// int b = Global.getInt(key, 0);
+					if (Local.getLong(key, 0) != f.lastModified()) {
 						if (log.isWarnEnabled()) {
 							log.warn("db[" + key + "] has not been initialized! initializing...");
 						}
 
 						try {
 							runDBScript(f, module);
-							Global.setConfig(key, (int) 1);
+							Local.setConfig(key, f.lastModified());
 
 							if (log.isWarnEnabled()) {
 								log.warn("db[" + key + "] has been initialized! ");
@@ -527,150 +451,6 @@ public class DefaultListener implements IListener {
 	 */
 	public void uninstall(Configuration conf, Module module) {
 		Menu.remove(module.getName());
-	}
-
-	/**
-	 * clean up the oplog, temp file in Temp
-	 * 
-	 * @author joe
-	 * 
-	 */
-	private static class CleanupTask extends Task {
-
-		static Log log = LogFactory.getLog(CleanupTask.class);
-
-		String home;
-		long count = 0;
-		String file;
-
-		/**
-		 * Instantiates a new cleanup task.
-		 * 
-		 * @param conf
-		 *            the conf
-		 */
-		public CleanupTask(Configuration conf) {
-			home = Model.GIIWA_HOME;
-		}
-
-		@Override
-		public String getName() {
-			return "cleanup.task";
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.giiwa.worker.WorkerTask#onExecute()
-		 */
-		@Override
-		public void onExecute() {
-			try {
-				/**
-				 * clean up the local temp files
-				 */
-				count = 0;
-				for (String f : folders) {
-					String path = home + f;
-					cleanup(path, X.ADAY, true);
-				}
-
-				/**
-				 * clean files in Temp
-				 */
-				if (!X.isEmpty(Temp.ROOT)) {
-					cleanup(Temp.ROOT, X.ADAY, true);
-				}
-
-				/**
-				 * clean temp files in tomcat
-				 */
-				if (!X.isEmpty(Model.GIIWA_HOME)) {
-					// do it
-					cleanup(Model.GIIWA_HOME + "/work", X.ADAY, false);
-					cleanup(Model.GIIWA_HOME + "/logs", X.ADAY * 3, false);
-				}
-				if (log.isInfoEnabled()) {
-					log.info("cleanup temp files: " + count);
-				}
-
-				// OpLog.cleanup();
-
-				// AccessLog.cleanup();
-
-				/**
-				 * cleanup repo
-				 */
-				Repo.cleanup();
-
-				/**
-				 * cleanup authtoken
-				 */
-				AuthToken.cleanup();
-
-			} catch (Exception e) {
-				// eat the exception
-			}
-		}
-
-		private long cleanup(String path, long expired, boolean deletefolder) {
-			try {
-				File f = new File(path);
-				file = f.getCanonicalPath();
-
-				/**
-				 * test the file last modified exceed the cache time
-				 */
-				if (f.isFile()) {
-					if (System.currentTimeMillis() - f.lastModified() > expired) {
-						IOUtil.delete(f);
-					}
-				} else if (f.isDirectory()) {
-					File[] list = f.listFiles();
-					if (list == null || list.length == 0) {
-						if (deletefolder) {
-							IOUtil.delete(f);
-						}
-					} else if (list != null) {
-						/**
-						 * cleanup the sub folder
-						 */
-						for (File f1 : list) {
-							cleanup(f1.getAbsolutePath(), expired, deletefolder);
-						}
-					}
-				}
-			} catch (Exception e) {
-				if (log.isErrorEnabled()) {
-					log.error(e.getMessage(), e);
-					GLog.applog.error(this.getName(), "cleanup", e.getMessage(), e, null, null);
-				}
-			}
-
-			return 0;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.giiwa.worker.WorkerTask#priority()
-		 */
-		@Override
-		public int priority() {
-			return Thread.MIN_PRIORITY;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see org.giiwa.worker.WorkerTask#onFinish()
-		 */
-		@Override
-		public void onFinish() {
-			this.schedule(X.AHOUR);
-		}
-
-		static String[] folders = { "/temp/_cache", "/temp/_raw" };
 	}
 
 }

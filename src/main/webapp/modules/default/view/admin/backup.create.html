@@ -1,0 +1,38 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/database'>$lang.get('a.database')</a>
+	<a href='/admin/backup'>$lang.get('a.backup.files')</a>
+	<a href='/admin/backup/auto'>$lang.get('a.backup.auto')</a>
+	<a href='/admin/backup/create' class='selected'>$lang.get('a.backup.create')</a>
+</div>
+
+<form action='/admin/backup/create'  method='post' class='form nospace' style="padding-left: 0;padding-top: 0;">
+	
+	<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+		<thead>
+			<tr>
+				<th>$lang.get('table.memo')</th>
+				<th>$lang.get('table.bean')</th>
+				<th>$lang.get('table.name')</th>
+				<th>$lang.get('table.size')</th>
+			</tr>
+		</thead>
+		<tbody>
+		#foreach($t in $list)
+			<tr>
+				<td><label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!lang.get("name.$!t.name")</label></label></td>
+				<td>$!t.name</td>
+				<td>$!t.table</td>
+				<td>$!t.size</td>
+			</tr>
+		#end
+		</tbody>
+	</table>
+
+	<div class='btns'>
+		<button class='btn btn-success' type='submit'>$lang.get('btn.create')</button>
+	</div>
+	
+</form>

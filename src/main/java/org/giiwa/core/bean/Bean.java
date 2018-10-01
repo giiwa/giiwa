@@ -30,9 +30,9 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.MyFunc;
 
 /**
  * The {@code Bean} Class is entity class that mapping to a table,<br>
@@ -48,16 +48,16 @@ public class Bean implements Serializable {
 	/** The log utility */
 	protected static Log log = LogFactory.getLog(Bean.class);
 
-	private long expired = -1;
+	private long _expired = -1;
 
-	public long rowid;
+	public long _rowid;
 
-	public long getRowid() {
-		return rowid;
+	public long _rowid() {
+		return _rowid;
 	}
 
-	public void setExpired(long expired) {
-		this.expired = expired;
+	public void expired(long expired) {
+		this._expired = expired;
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class Bean implements Serializable {
 	 * @return true, if successful
 	 */
 	public boolean expired() {
-		return expired > 0 && System.currentTimeMillis() > expired;
+		return _expired > 0 && System.currentTimeMillis() > _expired;
 	}
 
 	/**
@@ -75,7 +75,7 @@ public class Bean implements Serializable {
 	 * @return long of the created
 	 */
 	public long getCreated() {
-		return X.toLong(get(X.CREATED));
+		return X.toLong((Object)get(X.CREATED));
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class Bean implements Serializable {
 	 * @return long the of the updated
 	 */
 	public long getUpdated() {
-		return X.toLong(get(X.UPDATED));
+		return X.toLong((Object)get(X.UPDATED));
 	}
 
 	/**
@@ -135,6 +135,9 @@ public class Bean implements Serializable {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final Object set(String name, Object value) {
+		if (value == V.ignore)
+			return null;
+
 		if (data == null) {
 			data = new HashMap<String, Object>();
 		}
@@ -223,7 +226,11 @@ public class Bean implements Serializable {
 		if (m == null) {
 			m = new HashMap<String, java.lang.reflect.Field>();
 
+			int i = 0;
 			for (; c1 != null;) {
+				i++;
+				log.debug("c1=" + c1);
+
 				Field[] ff = c1.getDeclaredFields();
 				for (Field f : ff) {
 					Column f1 = f.getAnnotation(Column.class);
@@ -234,6 +241,10 @@ public class Bean implements Serializable {
 						}
 					}
 				}
+				if (i > 5) {
+					log.error("c1=" + c1);
+				}
+
 				if (Bean.class.isAssignableFrom(c1.getSuperclass())) {
 					if (c1.getSuperclass().isAssignableFrom(Bean.class)) {
 						c1 = null;
@@ -246,12 +257,12 @@ public class Bean implements Serializable {
 
 			}
 
-			_fields.put(c1, m);
+			_fields.put(this.getClass(), m);
 		}
 		return m;
 	}
 
-	private static Map<Class<? extends Bean>, Map<String, Field>> _fields = new HashMap<Class<? extends Bean>, Map<String, Field>>();
+	private final static Map<Class<? extends Bean>, Map<String, Field>> _fields = new HashMap<Class<? extends Bean>, Map<String, Field>>();
 
 	/**
 	 * get the value by name from bean <br>
@@ -469,31 +480,36 @@ public class Bean implements Serializable {
 		return X.toDouble(get(name), 0);
 	}
 
+	private transient Map<String, Object> map_obj;
+
 	/**
 	 * get all data, include the field annotation by @Column
 	 * 
 	 * @return Map of data
 	 */
 	public Map<String, Object> getAll() {
-		Map<String, Object> m1 = new HashMap<String, Object>();
-		if (data != null && data.size() > 0) {
-			m1.putAll(data);
-		}
+		if (map_obj == null) {
+			map_obj = new HashMap<String, Object>();
+			if (data != null && data.size() > 0) {
+				map_obj.putAll(data);
+			}
 
-		Map<String, Field> m2 = _getFields();
-		if (m2 != null && m2.size() > 0) {
-			for (String name : m2.keySet()) {
-				Field f = m2.get(name);
-				try {
-					f.setAccessible(true);
-					m1.put(name, f.get(this));
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+			Map<String, Field> m2 = _getFields();
+			if (m2 != null && m2.size() > 0) {
+				for (String name : m2.keySet()) {
+					if (!X.isSame("data", name)) {
+						Field f = m2.get(name);
+						try {
+							f.setAccessible(true);
+							map_obj.put(name, f.get(this));
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					}
 				}
 			}
 		}
-
-		return m1;
+		return map_obj;
 	}
 
 	/**
@@ -548,17 +564,11 @@ public class Bean implements Serializable {
 		if (fields == null || fields.length == 0) {
 			for (String name : d.keySet()) {
 				Object o = d.get(name);
-				if (o instanceof ObjectId) {
-					o = ((ObjectId) o).toString();
-				}
 				this.set(name, o);
 			}
 		} else {
 			for (String name : fields) {
 				Object o = d.get(name);
-				if (o instanceof ObjectId) {
-					o = ((ObjectId) o).toString();
-				}
 				this.set(name, o);
 			}
 		}
@@ -631,6 +641,16 @@ public class Bean implements Serializable {
 		}
 
 		return true;
+	}
+
+	public void cleanup() {
+		// TODO Auto-generated method stub
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T extends Bean> JSON refine(MyFunc<JSON, T> e) {
+		return e.call((T) this);
 	}
 
 }

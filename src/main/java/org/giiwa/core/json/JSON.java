@@ -15,6 +15,7 @@
 package org.giiwa.core.json;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -22,15 +23,22 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dom4j.Document;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.giiwa.core.base.Base32;
+import org.giiwa.core.base.Digest;
 import org.giiwa.core.bean.X;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.jayway.jsonpath.JsonPath;
 
@@ -40,7 +48,7 @@ import com.jayway.jsonpath.JsonPath;
  * 
  * @author wujun
  */
-public final class JSON extends HashMap<String, Object> {
+public final class JSON extends LinkedHashMap<String, Object> {
 
 	/**
 	 * 
@@ -83,6 +91,9 @@ public final class JSON extends HashMap<String, Object> {
 				JsonReader reader = new JsonReader(new StringReader((String) json));
 				reader.setLenient(lenient);
 				j = g.fromJson(reader, JSON.class);
+			} else if (json instanceof InputStream) {
+				Gson g = new Gson();
+				j = g.fromJson(new InputStreamReader((InputStream) json), JSON.class);
 			} else if (json instanceof Reader) {
 				Gson g = new Gson();
 				j = g.fromJson((Reader) json, JSON.class);
@@ -227,6 +238,10 @@ public final class JSON extends HashMap<String, Object> {
 		return new JSON();
 	}
 
+	public static List<JSON> createList() {
+		return new ArrayList<JSON>();
+	}
+
 	/**
 	 * create the JSON from the args
 	 * 
@@ -254,6 +269,34 @@ public final class JSON extends HashMap<String, Object> {
 		return g.toJson(this);
 	}
 
+	public String toPrettyString() {
+		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		return gson.toJson(this);
+	}
+
+	public static JSON decodeBycode(String str, String code) {
+		try {
+			byte[] bb = Base32.decode(str);
+			bb = Digest.des_decrypt(bb, code);
+			return JSON.fromObject(bb);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	public String encodeBycode(String code) {
+		try {
+			String s = this.toString();
+			byte[] bb = Digest.des_encrypt(s.getBytes(), code);
+			return Base32.encode(bb);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
 	private static void _refine(Map<String, Object> jo) {
 		if (jo == null) {
 			return;
@@ -277,6 +320,7 @@ public final class JSON extends HashMap<String, Object> {
 		}
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static List<Object> _refine(List<Object> l1) {
 		if (l1 == null) {
 			return null;
@@ -457,10 +501,10 @@ public final class JSON extends HashMap<String, Object> {
 	 * @return the list, or null if not exists
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public List<JSON> getList(String name) {
+	public Collection<JSON> getList(String name) {
 		Object o = this.get(name);
-		if (o != null && o instanceof List) {
-			return (List<JSON>) o;
+		if (o != null && o instanceof Collection) {
+			return (Collection<JSON>) o;
 		}
 		return null;
 	}
@@ -473,10 +517,10 @@ public final class JSON extends HashMap<String, Object> {
 	 * @return the objects, or null if not exists
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public List<Object> getObjects(String name) {
+	public Collection<Object> getObjects(String name) {
 		Object o = this.get(name);
-		if (o != null && o instanceof List) {
-			return (List) o;
+		if (o != null && o instanceof Collection) {
+			return (Collection) o;
 		}
 		return null;
 	}
@@ -507,8 +551,8 @@ public final class JSON extends HashMap<String, Object> {
 
 		ss = "{\"list\":['333',1.0,2.0,3.0,5.0,7.0,11.0,13.0,17.0,19.0,23.0,29.0,31.0,37.0,41.0,43.0,47.0,53.0,59.0,61.0,67.0,71.0,73.0,79.0,83.0,89.0,97.0]}";
 		j = JSON.fromObject(ss);
-		System.out.println(j.getObjects("list").get(0).getClass());
-		System.out.println(j.getObjects("list").get(1).getClass());
+		System.out.println(j.getObjects("list").iterator().next().getClass());
+		System.out.println(j.getObjects("list").iterator().next().getClass());
 	}
 
 	/**
@@ -589,6 +633,36 @@ public final class JSON extends HashMap<String, Object> {
 	}
 
 	/**
+	 * copy this json, and return a new one
+	 * 
+	 * @return
+	 */
+	public JSON copy() {
+		JSON j = JSON.create();
+		for (String s : this.keySet()) {
+			j.put(s, this.get(s));
+		}
+		return j;
+	}
+
+	/**
+	 * copy the data in map to this json
+	 * 
+	 * @param m
+	 * @param name
+	 * @return
+	 */
+	public JSON copy(Map<String, Object> m, String... name) {
+		if (m == null || name == null || name.length == 0)
+			return this;
+
+		for (String s : name) {
+			this.append(s, m.get(s));
+		}
+		return this;
+	}
+
+	/**
 	 * set the value by xpath
 	 * 
 	 * @param json
@@ -616,6 +690,7 @@ public final class JSON extends HashMap<String, Object> {
 	 * @param jo
 	 * @return
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public JSON merge(JSON jo) {
 		if (jo != null && !jo.isEmpty()) {
 			for (String k : jo.keySet()) {
@@ -659,15 +734,149 @@ public final class JSON extends HashMap<String, Object> {
 		return this;
 	}
 
-	public Map<String, Object> toMap() {
-		return this;
-	}
-
 	public JSON remove(String... name) {
 		if (name != null && name.length > 0) {
 			for (String s : name) {
 				remove(s);
 			}
+		}
+		return this;
+	}
+
+	@Override
+	public Object get(Object key) {
+		if (X.isEmpty(key))
+			return null;
+
+		String name = key.toString();
+
+		if (this.containsKey(name)) {
+			return super.get(key);
+		}
+
+		int i = name.indexOf(".");
+		if (i > 0) {
+			String s0 = name.substring(0, i);
+			Object o = this.get(s0);
+			if (o instanceof JSON) {
+				JSON m = (JSON) o;
+				return m.get(name.substring(i + 1));
+			}
+		}
+		return null;
+	}
+
+	public JSON json(String name) {
+		JSON j = (JSON) get(name);
+		if (j == null) {
+			j = JSON.create();
+			append(name, j);
+		}
+		return j;
+	}
+
+	public String toXml(String encoding) {
+		StringBuilder sb = new StringBuilder();
+		if (!X.isEmpty(encoding)) {
+			sb.append("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>").append("\r\n");
+		}
+
+		for (String name : this.keySet()) {
+			Object o = this.get(name);
+			_toxml(sb, name, o);
+		}
+
+		return sb.toString();
+	}
+
+	@SuppressWarnings("rawtypes")
+	private void _toxml(StringBuilder sb, String name, Object o) {
+		if (o instanceof JSON) {
+			sb.append("<").append(name).append(">");
+			sb.append(((JSON) o).toXml(null));
+			sb.append("</").append(name).append(">");
+		} else if (o instanceof List) {
+			List l1 = (List) o;
+			for (int i = 0; i < l1.size(); i++) {
+				Object o1 = l1.get(i);
+				sb.append("<").append(name).append(" id='").append(i).append("'>");
+
+				if (o1 instanceof JSON) {
+					sb.append(((JSON) o1).toXml(null));
+				} else {
+					sb.append(o1);
+				}
+				sb.append("</").append(name).append(">");
+			}
+		} else {
+			sb.append("<").append(name).append(">");
+			sb.append(o);
+			sb.append("</").append(name).append(">");
+		}
+	}
+
+	public static JSON fromXml(String xml) {
+
+		try {
+
+			SAXReader reader = new SAXReader();
+			Document document = reader.read(new StringReader(xml));
+			Element r1 = document.getRootElement();
+
+			return JSON.create().append(r1.getName(), _fromXml(r1));
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return null;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static Object _fromXml(Element r1) {
+
+		List<Element> l1 = r1.elements();
+		if (l1 == null || l1.isEmpty()) {
+			return r1.getText();
+		} else {
+			JSON jo = JSON.create();
+			for (Element e : l1) {
+				String name = e.getName();
+				Object o = jo.get(name);
+				if (o == null) {
+					// add it
+					jo.append(name, _fromXml(e));
+				} else {
+					// add to list
+					Object o1 = _fromXml(e);
+					if (o instanceof List) {
+						((List) o).add(o1);
+					} else {
+						List<Object> l2 = new ArrayList<Object>();
+						l2.add(o);
+						l2.add(o1);
+						jo.append(name, l2);
+					}
+				}
+			}
+			return jo;
+		}
+
+	}
+
+	public JSON merge(JSON source, String sourcename, String destname) {
+		return merge(source, sourcename, destname, null);
+	}
+
+	public JSON merge(JSON source, String sourcename, String destname, String type) {
+		if (X.isSame(type, "int")) {
+			this.append(destname, X.toInt(source.get(sourcename)));
+		} else if (X.isSame(type, "long")) {
+			this.append(destname, X.toLong(source.get(sourcename)));
+		} else if (X.isSame(type, "double")) {
+			this.append(destname, X.toDouble(source.get(sourcename)));
+		} else {
+			this.append(destname, source.get(sourcename));
 		}
 		return this;
 	}

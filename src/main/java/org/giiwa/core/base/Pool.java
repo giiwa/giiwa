@@ -32,179 +32,173 @@ import org.giiwa.core.task.Task;
  *
  */
 public class Pool<E> {
-  static Log              log     = LogFactory.getLog(Pool.class);
+	static Log log = LogFactory.getLog(Pool.class);
 
-  private ReentrantLock   lock    = new ReentrantLock();
-  private Condition       door    = lock.newCondition();
+	private ReentrantLock lock = new ReentrantLock();
+	private Condition door = lock.newCondition();
 
-  private List<E>         list    = new ArrayList<E>();
-  private int             initial = 10;
-  private int             max     = 10;
-  private int             created = 0;
+	private List<E> list = new ArrayList<E>();
+	private int initial = 10;
+	private int max = 10;
+	private int created = 0;
 
-  private IPoolFactory<E> factory = null;
+	private IPoolFactory<E> factory = null;
 
-  /**
-   * create a pool by initial, max and factory.
-   *
-   * @param <E>
-   *          the element type
-   * @param initial
-   *          the initial
-   * @param max
-   *          the max
-   * @param factory
-   *          the factory
-   * @return the pool
-   */
-  public static <E> Pool<E> create(int initial, int max, IPoolFactory<E> factory) {
-    Pool<E> p = new Pool<E>();
-    p.initial = initial;
-    p.max = max;
-    p.factory = factory;
-    new Task() {
-      @Override
-      public void onExecute() {
-        p.init();
-      }
-    }.schedule(0);
-    return p;
-  }
+	/**
+	 * create a pool by initial, max and factory.
+	 *
+	 * @param <E>
+	 *            the element type
+	 * @param initial
+	 *            the initial
+	 * @param max
+	 *            the max
+	 * @param factory
+	 *            the factory
+	 * @return the pool
+	 */
+	public static <E> Pool<E> create(int initial, int max, IPoolFactory<E> factory) {
+		Pool<E> p = new Pool<E>();
+		p.initial = initial;
+		p.max = max;
+		p.factory = factory;
 
-  private void init() {
-    for (int i = 0; i < initial; i++) {
-      E t = factory.create();
-      if (t != null) {
-        try {
-          lock.lock();
-          list.add(t);
-          door.signal();
-        } finally {
-          lock.unlock();
-        }
-      }
-    }
-    created = list.size();
-  }
+		Task.schedule(() -> {
+			p.init();
+		}, 0);
+		return p;
+	}
 
-  /**
-   * release a object to the pool.
-   *
-   * @param t
-   *          the t
-   */
-  public void release(E t) {
-    if (t == null) {
-      created--;
-    } else {
-      factory.cleanup(t);
-      try {
-        lock.lock();
-        list.add(t);
-        door.signal();
-      } finally {
-        lock.unlock();
-      }
-    }
-  }
+	private void init() {
+		for (int i = 0; i < initial; i++) {
+			E t = factory.create();
+			if (t != null) {
+				try {
+					lock.lock();
+					list.add(t);
+					door.signal();
+				} finally {
+					lock.unlock();
+				}
+			}
+		}
+		created = list.size();
+	}
 
-  /**
-   * destroy the pool, and destroy all the object in the pool.
-   */
-  public void destroy() {
-    synchronized (list) {
-      for (E e : list) {
-        factory.destroy(e);
-      }
-      list.clear();
-    }
-  }
+	/**
+	 * release a object to the pool.
+	 *
+	 * @param t
+	 *            the t
+	 */
+	public void release(E t) {
+		if (t == null) {
+			created--;
+		} else {
+			factory.cleanup(t);
+			try {
+				lock.lock();
+				list.add(t);
+				door.signal();
+			} finally {
+				lock.unlock();
+			}
+		}
+	}
 
-  /**
-   * get a object from the pool, if meet the max, then wait till timeout.
-   *
-   * @param timeout
-   *          the timeout
-   * @return the e
-   */
-  public E get(long timeout) {
-    try {
-      TimeStamp t = TimeStamp.create();
+	/**
+	 * destroy the pool, and destroy all the object in the pool.
+	 */
+	public void destroy() {
+		synchronized (list) {
+			for (E e : list) {
+				factory.destroy(e);
+			}
+			list.clear();
+		}
+	}
 
-      long t1 = timeout;
+	/**
+	 * get a object from the pool, if meet the max, then wait till timeout.
+	 *
+	 * @param timeout
+	 *            the timeout
+	 * @return the e
+	 */
+	public E get(long timeout) {
+		try {
+			TimeStamp t = TimeStamp.create();
 
-      try {
-        lock.lock();
+			long t1 = timeout;
 
-        while (t1 > 0) {
-          if (list.size() > 0) {
-            return list.remove(0);
-          } else {
-            t1 = timeout - t.pastms();
-            if (t1 > 0) {
+			try {
+				lock.lock();
 
-              // log.debug("t1=" + t1);
-              //
-              if (created < max) {
-                new Task() {
+				while (t1 > 0) {
+					if (list.size() > 0) {
+						return list.remove(0);
+					} else {
+						t1 = timeout - t.pastms();
+						if (t1 > 0) {
 
-                  @Override
-                  public void onExecute() {
-                    E e = factory.create();
-                    if (e != null) {
-                      created++;
-                      release(e);
-                    }
+							// log.debug("t1=" + t1);
+							//
+							if (created < max) {
 
-                  }
-                }.schedule(0);
-              }
+								Task.schedule(() -> {
+									E e = factory.create();
+									if (e != null) {
+										created++;
+										release(e);
+									}
+								}, 0);
+							}
 
-              door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(t1));
-            }
-          }
-        }
-      } finally {
-        lock.unlock();
-      }
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
+							door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(t1));
+						}
+					}
+				}
+			} finally {
+				lock.unlock();
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 
-    return null;
-  }
+		return null;
+	}
 
-  /**
-   * the pool factory interface using to create E object in pool
-   * 
-   * @author wujun
-   *
-   * @param <E>
-   *          the Object
-   */
-  public interface IPoolFactory<E> {
+	/**
+	 * the pool factory interface using to create E object in pool
+	 * 
+	 * @author wujun
+	 *
+	 * @param <E>
+	 *            the Object
+	 */
+	public interface IPoolFactory<E> {
 
-    /**
-     * create a object.
-     *
-     * @return the e
-     */
-    public E create();
+		/**
+		 * create a object.
+		 *
+		 * @return the e
+		 */
+		public E create();
 
-    /**
-     * clean up a object after used.
-     *
-     * @param t
-     *          the t
-     */
-    public void cleanup(E t);
+		/**
+		 * clean up a object after used.
+		 *
+		 * @param t
+		 *            the t
+		 */
+		public void cleanup(E t);
 
-    /**
-     * destroy a object.
-     *
-     * @param t
-     *          the t
-     */
-    public void destroy(E t);
-  }
+		/**
+		 * destroy a object.
+		 *
+		 * @param t
+		 *            the t
+		 */
+		public void destroy(E t);
+	}
 }

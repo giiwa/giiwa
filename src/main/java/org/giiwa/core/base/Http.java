@@ -1145,6 +1145,13 @@ public final class Http {
 
 		System.out.println(format("http://top.sogou.com/hot/../movie/../tvshow/./all_1.html"));
 		System.out.println(format("http://top.sogou.com/tvshow/all_1.html?aaa=111"));
+
+//		String s1 = "http://10.30.2.5:8088/dahuaIS/rest/devChn/search";
+//
+//		Response s2 = owner.get(s1 + "?q=" + URLEncoder.encode("{}"), JSON.create().append("authorization", "DAHUA")
+//				.append("Accept", "application/json").append("Content-Type", "application/json"));
+//		System.out.println(s2.body);
+
 	}
 
 	/**
@@ -1355,7 +1362,7 @@ public final class Http {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<_C> dao = BeanDAO.create(_C.class);
+		public static final BeanDAO<String, _C> dao = BeanDAO.create(_C.class);
 
 		@Column(name = "name")
 		String name;
@@ -1540,6 +1547,73 @@ public final class Http {
 			}
 		}
 		return null;
+	}
+
+	public Response json(String url, JSON headers, String body, long timeout) {
+
+		log.debug("url=" + url);
+
+		Response r = new Response();
+
+		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+
+		if (client == null) {
+			client = getClient(url, ua, timeout);
+		}
+
+		if (localContext == null) {
+			localContext = HttpClientContext.create();
+			localContext.setCookieStore(cookies);
+		}
+
+		if (client != null) {
+			TimeStamp t = TimeStamp.create();
+
+			HttpPost post = new HttpPost(url);
+			CloseableHttpResponse resp = null;
+			try {
+
+				if (headers != null && headers.size() > 0) {
+					log.debug("header: " + headers);
+					for (String s : headers.keySet()) {
+						post.addHeader(s, headers.getString(s));
+					}
+				}
+
+				log.debug("post url=" + url);
+
+				StringEntity e = new StringEntity(body);
+				post.setEntity(e);
+
+				System.out.println("json");
+				System.out.println(post);
+
+				resp = client.execute(post, localContext);
+				r.status = resp.getStatusLine().getStatusCode();
+				r.body = getContext(resp, null);
+				r.headers = resp.getAllHeaders();
+
+				log.debug("post: cost=" + t.past() + "ms, status=" + r.status + ", body=" + r.body);
+
+			} catch (Throwable e) {
+				log.error("cost=" + t.past() + "ms, " + url, e);
+				r.status = 600;
+				r.body = "error: " + e.getMessage();
+			} finally {
+				if (resp != null)
+					try {
+						resp.close();
+					} catch (IOException e) {
+					}
+
+			}
+
+		} else {
+			r.status = 600;
+			r.body = "error: can not init a client";
+		}
+
+		return r;
 	}
 
 }

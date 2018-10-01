@@ -32,12 +32,15 @@ import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.base.RSA;
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Access;
-import org.giiwa.framework.bean.Jar;
+import org.giiwa.framework.bean.GLog;
+import org.giiwa.framework.bean.License;
+import org.giiwa.framework.bean.License.LICENSE;
 import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.bean.User;
@@ -74,8 +77,7 @@ public class Module {
 	public int id;
 
 	/**
-	 * the name of the module, the name of module should be unique in whole
-	 * context
+	 * the name of the module, the name of module should be unique in whole context
 	 */
 	String name;
 
@@ -90,17 +92,15 @@ public class Module {
 
 	String version;
 	String build;
-	String license;
-	String screenshot;
+	License.LICENSE license;
+	String key;
 	List<Required> required;
 
 	/**
-	 * the root package name of the module, which will use to mapping the
-	 * handler
+	 * the root package name of the module, which will use to mapping the handler
 	 */
 	String pack;
 
-	Map<String, String> settings = new TreeMap<String, String>();
 	Map<String, Object> filters = new TreeMap<String, Object>();
 
 	/**
@@ -146,10 +146,65 @@ public class Module {
 		return true;
 	}
 
+	/**
+	 * check and merge
+	 * 
+	 * @return true if changed
+	 */
+	public static boolean checkAndMerge() {
+
+		if (!new File(Model.HOME + "/modules/default/WEB-INF/lib/").exists()) {
+			return false;
+		}
+
+		boolean changed = false;
+
+		// load all
+		Set<String> jars = new HashSet<String>();
+		for (Module m : modules.values()) {
+			if (m.enabled) {
+				File f = new File(m.path + "/WEB-INF/lib/");
+				if (f.exists()) {
+					String[] ss = f.list();
+					if (ss != null) {
+						for (String s : ss) {
+							if (s.endsWith(".jar")) {
+								jars.add(s);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		File f = new File(Model.HOME + "/WEB-INF/lib/");
+		File[] ff = f.listFiles();
+		if (ff != null) {
+			for (File f1 : ff) {
+				if (f1.getName().endsWith(".jar") && !jars.contains(f1.getName())) {
+					try {
+						// TODO, should remove the unused jars in future.
+						IOUtil.delete(f1);
+						changed = true;
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+			}
+		}
+		return changed;
+	}
+
+	/**
+	 * upgrade
+	 * 
+	 * @return
+	 */
 	public static boolean checkAndUpgrade() {
 
-		boolean merged = false;
+		boolean changed = false;
 
+		// upgrade
 		File u1 = new File(Model.HOME + "/upgrade/");
 		File[] ff = u1.listFiles();
 		if (ff != null) {
@@ -167,16 +222,13 @@ public class Module {
 						new File(f2.getCanonicalPath() + "/ok").delete();
 						IOUtil.delete(f1);
 
-						Jar.reset(name);
-
 						// merge WEB-INF/lib
 						File f3 = new File(f2.getCanonicalPath() + "/WEB-INF");
 						if (f3.exists()) {
 							// merge all
 							if (move(name, f3, Model.HOME)) {
-								merged = true;
+								changed = true;
 							}
-
 						}
 
 					} else {
@@ -186,9 +238,9 @@ public class Module {
 					log.error(e.getMessage(), e);
 				}
 			}
-		}
+		} // end of upgrade
 
-		return merged;
+		return changed;
 	}
 
 	/**
@@ -206,16 +258,19 @@ public class Module {
 		}
 		// String url = e.getUrl();
 
-		String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
-		String root = Model.HOME + "/upgrade/" + temp + "/";
+		ZipInputStream in = null;
 
 		try {
+
+			in = new ZipInputStream(e.getInputStream());
+
+			String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
+			String root = Model.HOME + "/upgrade/" + temp + "/";
+
 			File f0 = new File(root);
 			if (f0.exists()) {
 				IOUtil.delete(f0);
 			}
-
-			ZipInputStream in = new ZipInputStream(e.getInputStream());
 
 			/**
 			 * unzip the module.zip
@@ -251,20 +306,47 @@ public class Module {
 			 * prepare the module
 			 */
 			String f = root + "/module.xml";
-			SAXReader reader = new SAXReader();
-			Document document = reader.read(f);
-			Element r1 = document.getRootElement();
-			Module t = new Module();
-			t._load(r1);
-			String dest = Model.HOME + "/upgrade/" + t.getName();
-			File d1 = new File(dest);
-			if (d1.exists()) {
-				IOUtil.delete(d1);
-			}
-			new File(root).renameTo(new File(dest));
-			new File(dest + "/ok").createNewFile();
 
-			return true;
+			SAXReader reader = new SAXReader();
+
+			if (new File(f).exists()) {
+				Document document = reader.read(f);
+				Element r1 = document.getRootElement();
+				Module t = new Module();
+				t._load(r1);
+				String dest = Model.HOME + "/upgrade/" + t.getName();
+				File d1 = new File(dest);
+				if (d1.exists()) {
+					IOUtil.delete(d1);
+				}
+				new File(root).renameTo(new File(dest));
+				new File(dest + "/ok").createNewFile();
+
+				return true;
+
+			} else {
+				// multiple modules
+				boolean r = false;
+				File r1 = new File(root);
+				File[] ff = r1.listFiles();
+				if (ff != null) {
+					for (File f1 : ff) {
+						// move f1 to upgrade
+						if (f1.isDirectory()) {
+							if (new File(f1.getCanonicalPath() + "/module.xml").exists()) {
+								String name = f1.getName();
+								f1.renameTo(new File(Model.HOME + "/upgrade/" + name));
+								new File(Model.HOME + "/upgrade/" + name + "/ok").createNewFile();
+								r = true;
+							}
+						}
+					}
+				}
+
+				IOUtil.delete(r1);
+
+				return r;
+			}
 
 		} finally {
 
@@ -282,8 +364,13 @@ public class Module {
 	 * @return boolean
 	 */
 	public boolean after(Model m) {
+		String uri = m.getURI();
+
+		// log.debug("after//" + name + "//uri=" + uri + ", filter=" +
+		// filters.keySet());
+
 		for (String name : filters.keySet()) {
-			if (m.getURI().matches(name)) {
+			if (uri.matches(name)) {
 
 				Object o = filters.get(name);
 				try {
@@ -324,11 +411,6 @@ public class Module {
 		return new StringBuilder("Module [").append(id).append(",").append(name).append(",enabled=").append(enabled)
 				.append("]").toString();
 	}
-
-	/**
-	 * module class loader
-	 */
-	public static GClassLoader classLoader;
 
 	/**
 	 * the default home module
@@ -406,20 +488,15 @@ public class Module {
 				e.setText(this.pack);
 			}
 
-			if (!X.isEmpty(this.screenshot)) {
-				e = root.addElement("screenshot");
-				e.setText(this.screenshot);
+			if (!X.isEmpty(this.key)) {
+				e = root.addElement("key");
+				e.setText(this.key);
 			}
 			e = root.addElement("version");
 			e.setText(this.version);
 
 			e = root.addElement("build");
 			e.setText(this.build);
-
-			if (!X.isEmpty(license)) {
-				e = root.addElement("license");
-				e.setText(this.license);
-			}
 
 			e = root.addElement("enabled");
 			e.setText(Boolean.toString(this.enabled).toLowerCase());
@@ -433,16 +510,6 @@ public class Module {
 				e = root.addElement("listener");
 				e = e.addElement("class");
 				e.setText(this.listener);
-			}
-
-			/**
-			 * setting
-			 */
-			e = root.addElement("setting");
-			for (String name : settings.keySet()) {
-				Element e1 = e.addElement("param");
-				e1.addAttribute("name", name);
-				e1.addAttribute("value", settings.get(name));
 			}
 
 			/**
@@ -498,41 +565,9 @@ public class Module {
 		return get(name, null);
 	}
 
-	public String getRepo() {
-		return get(this.name + "_repo");
-	}
-
-	/**
-	 * Gets the int.
-	 * 
-	 * @param setting
-	 *            the setting
-	 * @return the int
-	 */
-	public int getInt(String setting) {
-		return X.toInt(get(setting), 0);
-	}
-
-	/**
-	 * Gets the long.
-	 * 
-	 * @param setting
-	 *            the setting
-	 * @return the long
-	 */
-	public long getLong(String setting) {
-		return X.toLong(get(setting), 0);
-	}
-
-	/**
-	 * Checks if is enabled.
-	 * 
-	 * @param setting
-	 *            the setting
-	 * @return true, if is enabled
-	 */
-	public boolean isEnabled(String setting) {
-		return "true".equalsIgnoreCase(get(setting, "false"));
+	public boolean has(String name) {
+		String s1 = License.get(this.name, name);
+		return !X.isEmpty(s1);
 	}
 
 	/**
@@ -545,58 +580,65 @@ public class Module {
 	 * @return the string
 	 */
 	public String get(String name, String defaultValue) {
-		String s = name;
-		if (!s.startsWith("setting.")) {
-			s = "setting." + name;
+
+		String s1 = License.get(this.name, name);
+		if (!X.isEmpty(s1)) {
+			return s1;
 		}
 
-		if (settings.containsKey(s)) {
-			return settings.get(s);
-		} else {
-			Module m = this.floor();
-			if (m != null) {
-				return m.get(s, defaultValue);
-			}
-
-			// set(s, defaultValue);
-			//
-			return Global.getString(name, defaultValue);
-		}
+		// possible license issue
+		this.setLicense(License.LICENSE.issue, null);
+		return defaultValue;
 	}
 
-	/**
-	 * Sets the.
-	 * 
-	 * @param name
-	 *            the name
-	 * @param value
-	 *            the value
-	 */
-	public void set(String name, String value) {
-		if (name.startsWith("setting.")) {
-			settings.put(name, value);
-		} else {
-			settings.put("setting." + name, value);
-		}
+	public Set<String> listJars() {
 
-	}
+		Set<String> l1 = new HashSet<String>();
+		File root = new File(path + "/WEB-INF/lib/");
 
-	/**
-	 * loading all jar files in /model
-	 */
-	private void initModels() {
-		File root = new File(path + "/model");
-		// log.debug("looking for: " + root.getAbsolutePath());
-
-		File[] list = root.listFiles();
-		if (list != null) {
-			for (File f : list) {
-				if (f.getName().endsWith(".jar")) {
-					classLoader.addJar(f.getAbsolutePath());
-					log.debug("loading: " + f.getAbsolutePath());
+		if (root.exists()) {
+			File[] list = root.listFiles();
+			if (list != null) {
+				for (File f : list) {
+					if (f.getName().endsWith(".jar")) {
+						l1.add(f.getName());
+					}
 				}
 			}
 		}
+		return l1;
+	}
+
+	/**
+	 * merge all jars of the module to giiwa
+	 */
+	private boolean mergeJars() {
+
+		boolean changed = false;
+
+		File root = new File(path + "/WEB-INF/lib/");
+
+		if (root.exists()) {
+			File[] list = root.listFiles();
+			if (list != null) {
+				for (File f : list) {
+					if (f.getName().endsWith(".jar")) {
+						File f1 = new File(Model.HOME + "/WEB-INF/lib/" + f.getName());
+						if (!f1.exists() || f1.length() < f.length() || f1.lastModified() < f.lastModified()) {
+							// copy to
+							try {
+								IOUtil.copy(f, f1);
+								changed = true;
+							} catch (Exception e) {
+								log.error(e.getMessage(), e);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return changed;
 
 	}
 
@@ -640,8 +682,8 @@ public class Module {
 			File f = new File(viewroot + File.separator + resource);
 			if (f.exists()) {
 				/**
-				 * test the file is still in the path? if not, then do not allow
-				 * to access, avoid user using "../../" to access system file
+				 * test the file is still in the path? if not, then do not allow to access,
+				 * avoid user using "../../" to access system file
 				 */
 				if (inbox && f.getCanonicalPath().startsWith(viewroot)) {
 					return f;
@@ -742,12 +784,34 @@ public class Module {
 		return enabled;
 	}
 
-	public String getLicense() {
+	public License.LICENSE getLicense() {
 		return license;
 	}
 
-	public String getScreenshot() {
-		return screenshot;
+	public JSON getSetting() {
+		return License.get(name);
+	}
+
+	public void setLicense(License.LICENSE s, String code) {
+		try {
+			if (s != LICENSE.issue) {
+				// TODO, verify the code
+				String s1 = new String(RSA.decode(Base64.getDecoder().decode(code), key));
+				if (X.isSame("giiwa", s1)) {
+					license = s;
+					return;
+				}
+			}
+
+			log.debug(s + ", code=" + code, new Exception());
+			license = LICENSE.issue;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	public String getKey() {
+		return key;
 	}
 
 	public String getVersion() {
@@ -777,20 +841,19 @@ public class Module {
 	 *            the conf
 	 */
 	public static void init(Configuration conf) {
+
+		boolean changed = false;
+
 		try {
 			_conf = conf;
 
+			// check upgrade
 			if (checkAndUpgrade()) {
 				log.info("has been merged, restart it now");
 				System.exit(0);
 			}
 
-			classLoader = new GClassLoader(Module.class.getClassLoader());
-
-			Thread thread = Thread.currentThread();
-			thread.setContextClassLoader(classLoader);
-
-			// String t = SystemConfig.s("home.module", "default");
+			// load modules
 			File f = new File(Model.HOME + "/modules/");
 
 			if (f.exists()) {
@@ -806,11 +869,15 @@ public class Module {
 								 */
 								log.info("[" + f1.getName() + "] is not a valid module");
 
+								GLog.applog.warn("syslog", "init", "[" + f1.getName() + "] is not a valid module", null,
+										null);
+
 							} else if (!m.enabled) {
 								/**
 								 * the module was disabled
 								 */
 								log.info("[" + f1.getName() + "] is disabled");
+								GLog.applog.info("syslog", "init", "[" + f1.getName() + "] is disabled", null, null);
 
 							} else if (modules.containsKey(m.id)) {
 								/**
@@ -818,14 +885,21 @@ public class Module {
 								 */
 								log.error("the [id] duplicated, [" + m.name + ", " + modules.get(m.id).name
 										+ "], ignore the [" + m.name + "]");
-								m.error = Language.getLanguage().get("module.error.duplicatedid");
+
+								GLog.applog.error(
+										"syslog", "init", "the [id] duplicated, [" + m.name + ", "
+												+ modules.get(m.id).name + "], ignore the [" + m.name + "]",
+										null, null);
 
 							} else if (!X.isSame(m.name, f1.getName())) {
 								/**
 								 * the module name was invalid
 								 */
 								log.error("the [name] is invlaid, folder=" + f1.getName() + ", module=" + m.name);
-								m.error = Language.getLanguage().get("module.error.name");
+
+								GLog.applog.error("syslog", "init",
+										"the [name] is invlaid, folder=" + f1.getName() + ", module=" + m.name, null,
+										null);
 
 							} else {
 								/**
@@ -854,75 +928,58 @@ public class Module {
 				/**
 				 * loading the models
 				 */
-				m.initModels();
+				if (m.mergeJars()) {
+					changed = true;
+				}
 
 				// log.debug("2 ...");
-				/**
-				 * initialize the life listener
-				 */
-				if (!m._init(_conf)) {
-					log.error("module init failed. disabled it, name=" + m.getName());
-					modules.remove(m.getId());
+				try {
+					/**
+					 * initialize the life listener
+					 */
+					if (!m._init(_conf)) {
+						log.error("module init failed, name=" + m.getName());
+					}
+				} catch (Throwable e) {
+					log.error(e.getMessage(), e);
 				}
 
 			}
 			// log.debug("3 ...");
-			Menu.cleanup();
+			Menu.deleteall();
 
 			// log.debug("4 ...");
 			// the the default locale
 			String locale = null;
 			Module f1 = home;
 			while (locale == null && f1 != null) {
-				locale = f1.get("default.locale");
+				locale = Global.getString("default.locale", "zh_cn");
 				f1 = f1.floor();
 			}
 			if (locale != null) {
 				Locale.setDefault(new Locale(locale));
 			}
 
-			log.debug("menu inited.\r\nchecking unused jar ...");
+			log.debug("menu inited. checking unused jar ... changed=" + changed);
+
 			/**
 			 * check is there any jar file not used by any module
 			 */
-			boolean changed = false;
 
-			List<String> names = Jar.loadAll(W.create());
-			if (names != null && names.size() > 0) {
-				for (Object name : names) {
-					List<String> modules = Jar.load(name.toString());
-					boolean used = false;
-					if (modules != null && modules.size() > 0) {
-						for (Object m1 : modules) {
-							Module m2 = Module.load(m1.toString());
-							if (m2 != null) {
-								used = true;
-							}
-						}
-					}
-					if (!used) {
-						File f2 = new File(Model.HOME + File.separator + "WEB-INF" + File.separator + "lib"
-								+ File.separator + name);
-						if (f2.exists()) {
-							log.info("as not module used the jar, delete it, [" + name + "]");
-							f2.delete();
-
-							changed = true;
-						}
-						Jar.remove(name.toString());
-					}
-				}
+			// merge jars
+			if (checkAndMerge()) {
+				changed = true;
 			}
 
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
 			if (changed) {
 				log.warn("jar files changed, restarting again...");
 				System.exit(0);
 			} else {
 				log.debug("jar is ok.");
 			}
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 		}
 
 	}
@@ -1010,54 +1067,45 @@ public class Module {
 				if (X.isSame(tag, "id")) {
 					id = X.toInt(e1.getText(), Integer.MAX_VALUE);
 				} else if (X.isSame(tag, "name")) {
-					name = e1.getText();
+					name = e1.getText().trim();
 				} else if (X.isSame(tag, "package")) {
-					pack = e1.getText();
-				} else if (X.isSame(tag, "screenshot")) {
-					screenshot = e1.getText();
+					pack = e1.getText().trim();
+				} else if (X.isSame(tag, "key")) {
+					key = e1.getText().trim();
 				} else if (X.isSame(tag, "version")) {
-					version = e1.getText();
+					version = e1.getText().trim();
 				} else if (X.isSame(tag, "build")) {
-					build = e1.getText();
+					build = e1.getText().trim();
 				} else if (X.isSame(tag, "enabled")) {
 					enabled = X.isSame("true", e1.getText().toLowerCase());
 				} else if (X.isSame(tag, "readme")) {
-					readme = e1.getText();
-
-				} else if (X.isSame(tag, "license")) {
-					license = e1.getText();
-
+					readme = e1.getText().trim();
 				} else if (X.isSame(tag, "listener")) {
+
 					List<Element> l2 = e1.elements();
 					for (Element e2 : l2) {
 						String tag2 = e2.getName();
 						if (X.isSame(tag2, "class")) {
-							listener = e2.getText();
-						}
-					}
-				} else if (X.isSame(tag, "setting")) {
-					List<Element> l2 = e1.elements();
-					for (Element e2 : l2) {
-						String tag2 = e2.getName();
-						if (X.isSame(tag2, "param")) {
-							String name = e2.attributeValue("name");
-							String value = e2.attributeValue("value");
-							settings.put(name, value);
+							listener = e2.getText().trim();
 						}
 					}
 				} else if (X.isSame(tag, "filter")) {
 
-					List<Element> l2 = e1.elements();
 					String pattern = null;
 					String clazz = null;
+
+					List<Element> l2 = e1.elements();
 					for (Element e2 : l2) {
 						String tag2 = e2.getName();
 						if (X.isSame(tag2, "pattern")) {
-							pattern = e2.getText();
+							pattern = e2.getText().trim();
 						} else if (X.isSame(tag2, "class")) {
-							clazz = e2.getText();
+							clazz = e2.getText().trim();
 						}
 					}
+
+					// log.debug("filter,patter=" + pattern + ", clazz=" + clazz + ", e1=" + e1);
+
 					if (!X.isEmpty(pattern) && !X.isEmpty(clazz)) {
 						filters.put(pattern, clazz);
 					}
@@ -1096,16 +1144,14 @@ public class Module {
 		try {
 			if (this.id > 0) {
 				/**
-				 * force: using default lifelistener to initialize the install
-				 * script
+				 * force: using default lifelistener to initialize the install script
 				 */
 				DefaultListener d = new DefaultListener();
 				d.upgrade(conf, this);
 			}
 
 			/**
-			 * loading the module's lifelistener, to initialize the install
-			 * script
+			 * loading the module's lifelistener, to initialize the install script
 			 */
 			if (!X.isEmpty(listener)) {
 				String name = listener;
@@ -1113,7 +1159,7 @@ public class Module {
 
 					try {
 						if (_listener == null) {
-							Class<?> c = Class.forName(name, true, classLoader);
+							Class<?> c = Class.forName(name);
 							Object o = c.newInstance();
 
 							if (o instanceof IListener) {
@@ -1133,8 +1179,11 @@ public class Module {
 					}
 				}
 			}
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+
+			GLog.applog.error("syslog", "init", "module [" + name + "] init failed", e, null, null);
+
 			return false;
 		}
 		return true;
@@ -1239,7 +1288,7 @@ public class Module {
 					 */
 					String name = (pack + "." + uri).replace("/", ".").replace("..", ".");
 
-					Class<Model> c1 = (Class<Model>) Class.forName(name, false, classLoader);
+					Class<Model> c1 = (Class<Model>) Class.forName(name);
 
 					/**
 					 * cache it and cache all the path
@@ -1564,7 +1613,7 @@ public class Module {
 					String name = listener;
 					if (name != null) {
 						try {
-							Class<?> c = Class.forName(name, true, classLoader);
+							Class<?> c = Class.forName(name);
 							Object o = c.newInstance();
 
 							if (o instanceof IListener) {
@@ -1716,10 +1765,6 @@ public class Module {
 		return 0;
 	}
 
-	public Set<String> getSettings() {
-		return settings.keySet();
-	}
-
 	private static String[] source = new String[] { "/model", "/view", "/i18n", "/module.xml" };
 
 	/**
@@ -1785,8 +1830,8 @@ public class Module {
 		} else {
 			try {
 				/**
-				 * possible the original has been moved to ..., always using the
-				 * package to initialize
+				 * possible the original has been moved to ..., always using the package to
+				 * initialize
 				 */
 				m.path = new File(Model.HOME + "/modules/" + m.name).getCanonicalPath();
 				m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
@@ -1794,7 +1839,7 @@ public class Module {
 				/**
 				 * loading the models
 				 */
-				m.initModels();
+				m.mergeJars();
 
 				/**
 				 * initialize the life listener
@@ -1871,15 +1916,12 @@ public class Module {
 			}
 		} else {
 			/**
-			 * check the file version, and remove all the related version (may
-			 * newer or elder); <br>
-			 * looking for all the "f.getName()" in "classpath", and remove the
-			 * same package but different "version"<br>
+			 * check the file version, and remove all the related version (may newer or
+			 * elder); <br>
+			 * looking for all the "f.getName()" in "classpath", and remove the same package
+			 * but different "version"<br>
 			 */
 			r1 = true;
-			if (f.getName().endsWith(".jar")) {
-				Jar.update(module, f.getName());
-			}
 
 			File d = new File(dest + File.separator + f.getName());
 			try {
@@ -1888,12 +1930,6 @@ public class Module {
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
 			}
-		}
-
-		try {
-			IOUtil.delete(f);
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
 		}
 
 		return r1;
@@ -2089,11 +2125,10 @@ public class Module {
 
 				try {
 					if (_listener == null) {
-						Class<?> c = Class.forName(name, true, classLoader);
+						Class<?> c = Class.forName(name);
 						Object o = c.newInstance();
 
 						if (o instanceof IListener) {
-
 							_listener = (IListener) o;
 						}
 					}

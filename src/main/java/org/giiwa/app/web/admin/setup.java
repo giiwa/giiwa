@@ -125,14 +125,10 @@ public class setup extends Model {
 
 		jo.put(X.STATE, 200);
 		this.response(jo);
-		new Task() {
 
-			@Override
-			public void onExecute() {
-				System.exit(0);
-			}
-
-		}.schedule(10);
+		Task.schedule(() -> {
+			System.exit(0);
+		}, 10);
 	}
 
 	/**

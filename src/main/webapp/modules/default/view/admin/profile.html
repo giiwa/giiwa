@@ -1,7 +1,5 @@
 <div class='head'>$lang.get("profile.${name}.title")</div>
 
-#parse('/widget/widget.message.html')
-
 <div class='tabs'>
 	#foreach($p in $settings)
 	<a href='/admin/profile/get/$p' #if($name==$p) class='selected' #end>$lang.get("a.profile.$p")</a>
@@ -18,6 +16,8 @@
 	</form>
 </div>
 <script>
+giiwa.history('$!query');
+
 $(function(){
 	$('#profile .profile.btns').append($('#profile a.btn'));
 })

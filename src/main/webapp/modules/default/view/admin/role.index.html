@@ -1,10 +1,9 @@
-<div class='head'>$lang.get('role.index.title')</div>
 
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
 	<a href='/admin/role' class='selected'>$lang.get('a.role')</a>
-	#if($me.hasAccess('access.config.admin'))
+	#if($me.hasAccess('access.config.debug'))
 	<a href='/admin/role/access'>$lang.get('a.role.access')</a>
 	#end
 </div>
@@ -25,9 +24,9 @@
 		<td>$f.name</td>
 		<td>$f.memo</td>
 	#if($edit)
-		<td>
-			<a class='btn btn-success btn-xs' href="/admin/role/edit?id=$f.id">$lang.get('a.edit')</a>
-			<a class='btn btn-danger btn-xs' href="javascript:;" onclick="_delete('$f.id', this)">$lang.get('a.delete')</a>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/role/edit?id=$f.id"><i class="icon-pencil"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href='javascript:;' onclick='_delete("$f.id", this);'><i class="icon-cancel-circle"></i></a>
 		</td>
 	#end
 	</tr>
@@ -46,7 +45,7 @@
 <script>
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		$.post('/admin/role/accessdelete', {id: id}, function(d){
+		$.post('/admin/role/delete', {id: id}, function(d){
 			giiwa.reload();
 		})
 	}

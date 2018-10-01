@@ -43,7 +43,7 @@ public class Menu extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Menu> dao = BeanDAO.create(Menu.class);
+	public static final BeanDAO<Long, Menu> dao = BeanDAO.create(Menu.class);
 
 	// int id;
 
@@ -157,9 +157,12 @@ public class Menu extends Bean {
 				 * create the access if not exists
 				 */
 				if (jo.containsKey("access")) {
-					String[] ss = jo.getString("access").split("[|&]");
-					for (String s : ss) {
-						Access.set(s);
+					String access = jo.getString("access");
+					String[] ss = X.split(access, "[,]");
+					if (ss != null) {
+						for (String s : ss) {
+							Access.set(s);
+						}
 					}
 				}
 
@@ -177,16 +180,12 @@ public class Menu extends Bean {
 				 * get all childs from the json
 				 */
 				if (jo.containsKey("childs")) {
-					List<JSON> arr = jo.getList("childs");
-					int len = arr.size();
-					for (int i = 0; i < len; i++) {
-						JSON j = arr.get(i);
-						if (j != null) {
-							if (jo.containsKey("tag")) {
-								j.put("tag", jo.get("tag"));
-							}
-							insertOrUpdate(j, m.getId());
+					Collection<JSON> arr = jo.getList("childs");
+					for (JSON j : arr) {
+						if (jo.containsKey("tag")) {
+							j.put("tag", jo.get("tag"));
 						}
+						insertOrUpdate(j, m.getId());
 					}
 				}
 			} else {
@@ -207,11 +206,13 @@ public class Menu extends Bean {
 						}
 					}
 					if (rid > 0) {
-						String[] ss = access.split("[|&]");
-						for (String s : ss) {
-							if (!X.isEmpty(s)) {
-								Access.set(s);
-								Role.setAccess(rid, s);
+						String[] ss = X.split(access, "[,]");
+						if (ss != null) {
+							for (String s : ss) {
+								if (!X.isEmpty(s)) {
+									Access.set(s);
+									Role.setAccess(rid, s);
+								}
 							}
 						}
 					} else {
@@ -425,7 +426,7 @@ public class Menu extends Bean {
 	/**
 	 * Cleanup.
 	 */
-	public static void cleanup() {
+	public static void deleteall() {
 		String node = Local.id();
 		dao.delete(W.create("node", node).and("seq", 0, W.OP.lt));
 	}

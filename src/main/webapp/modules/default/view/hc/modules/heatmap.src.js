@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v6.0.3 (2017-11-14)
+ * @license Highcharts JS v6.0.4 (2017-12-15)
  *
  * (c) 2009-2017 Torstein Honsi
  *
@@ -290,7 +290,17 @@
                         },
 
                         /** @ignore */
-                        width: 0.01
+                        width: 0.01,
+
+
+                        /**
+                         * The color of the marker.
+                         * 
+                         * @type {Color}
+                         * @default #999999
+                         * @product highcharts highmaps
+                         */
+                        color: '#999999'
 
                     },
 
@@ -432,7 +442,8 @@
                     }, userOptions, {
                         opposite: !horiz,
                         showEmpty: false,
-                        title: null
+                        title: null,
+                        visible: chart.options.legend.enabled
                     });
 
                     Axis.prototype.init.call(this, chart, options);
@@ -471,7 +482,15 @@
                         dataClasses.push(dataClass);
 
 
+                        if (dataClass.color) {
+                            return;
+                        }
+
                         if (options.dataClassColor === 'category') {
+
+                            colors = chart.options.colors;
+                            colorCount = colors.length;
+                            dataClass.color = colors[colorCounter];
 
                             dataClass.colorIndex = colorCounter;
 
@@ -579,6 +598,8 @@
                                 (from === undefined || value >= from) &&
                                 (to === undefined || value <= to)
                             ) {
+
+                                color = dataClass.color;
 
                                 if (point) {
                                     point.dataClass = i;
@@ -700,7 +721,11 @@
                 /**
                  * Fool the legend
                  */
-                setState: noop,
+                setState: function(state) {
+                    each(this.series, function(series) {
+                        series.setState(state);
+                    });
+                },
                 visible: true,
                 setVisible: noop,
                 getSeriesExtremes: function() {
@@ -736,11 +761,21 @@
                         point.plotX = plotX;
                         point.plotY = plotY;
 
-                        if (this.cross) {
+                        if (
+                            this.cross &&
+                            !this.cross.addedToColorAxis &&
+                            this.legendGroup
+                        ) {
                             this.cross
                                 .addClass('highcharts-coloraxis-marker')
                                 .add(this.legendGroup);
 
+                            this.cross.addedToColorAxis = true;
+
+
+                            this.cross.attr({
+                                fill: this.crosshair.color
+                            });
 
 
                         }
@@ -979,7 +1014,12 @@
              * a null point
              */
             isValid: function() {
-                return this.value !== null;
+                // undefined is allowed
+                return (
+                    this.value !== null &&
+                    this.value !== Infinity &&
+                    this.value !== -Infinity
+                );
             },
 
             /**
@@ -1015,6 +1055,8 @@
             parallelArrays: ['x', 'y', 'value'],
             colorKey: 'value',
 
+
+            pointAttribs: seriesTypes.column.prototype.pointAttribs,
 
 
             /**
@@ -1139,6 +1181,15 @@
 
 
 
+            /**
+             * The color applied to null points. In styled mode, a general CSS class is
+             * applied instead.
+             *
+             * @type {Color}
+             */
+            nullColor: '#f7f7f7',
+
+
             dataLabels: {
 
                 formatter: function() { // #2945
@@ -1257,9 +1308,7 @@
 
                 each(this.points, function(point) {
 
-                    // In styled mode, use CSS, otherwise the fill used in the style
-                    // sheet will take precedence over the fill attribute.
-                    point.graphic.css(this.colorAttribs(point));
+                    point.graphic.attr(this.colorAttribs(point));
 
                 }, this);
             },

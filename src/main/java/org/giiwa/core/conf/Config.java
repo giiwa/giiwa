@@ -50,6 +50,7 @@ public final class Config {
 	 * @param file
 	 *            the conf file
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static void init(File file) {
 
 		try {
@@ -249,6 +250,7 @@ public final class Config {
 	/**
 	 * set the configuration back to the file.
 	 */
+	@SuppressWarnings("unchecked")
 	public static void save() {
 
 		if (conf != null && confFile != null) {

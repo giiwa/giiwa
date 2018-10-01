@@ -32,25 +32,25 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Column {
 
-  /**
-   * the column name.
-   *
-   * @return String
-   */
-  String name() default X.EMPTY;
+	/**
+	 * the column name.
+	 *
+	 * @return String
+	 */
+	String name() default X.EMPTY;
 
-  /**
-   * is Index field.
-   *
-   * @return true, if successful
-   */
-  boolean index() default false;
+	/**
+	 * is Index field.
+	 *
+	 * @return true, if successful
+	 */
+	boolean index() default false;
 
-  /**
-   * is Unique column.
-   *
-   * @return true, if successful
-   */
-  boolean unique() default false;
+	/**
+	 * is Unique column.
+	 *
+	 * @return true, if successful
+	 */
+	boolean unique() default false;
 
 }

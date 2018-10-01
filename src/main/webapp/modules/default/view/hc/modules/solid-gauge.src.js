@@ -1,5 +1,5 @@
 /**
- * @license  Highcharts JS v6.0.3 (2017-11-14)
+ * @license  Highcharts JS v6.0.4 (2017-12-15)
  * Solid angular gauge module
  *
  * (c) 2010-2017 Torstein Honsi
@@ -326,6 +326,17 @@
                             })
                             .add(series.group);
 
+
+                        if (options.linecap !== 'square') {
+                            point.graphic.attr({
+                                'stroke-linecap': 'round',
+                                'stroke-linejoin': 'round'
+                            });
+                        }
+                        point.graphic.attr({
+                            stroke: options.borderColor || 'none',
+                            'stroke-width': options.borderWidth || 0
+                        });
 
                     }
                 });

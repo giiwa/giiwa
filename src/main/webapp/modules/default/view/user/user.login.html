@@ -1,5 +1,59 @@
 #parse('/user/head.html')
 
+<style>
+#bg{
+	height: 100%;
+	padding: 0px;
+	margin: 0px;
+	position: fixed;
+	width: 100%;    
+	background-repeat: no-repeat;
+    background-color: #000;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    display: none;
+}
+.footer{
+	color: #fff;
+    position: relative;
+}
+</style>
+<div id="bg" >
+</div>
+
+<script type="text/javascript" src="/js/canvas-particle.js"></script>
+<script type="text/javascript">
+$(function(){
+	giiwa.loadimage("$!lang.theme(60, 'login')", function(url){
+		var bg = $('#bg');
+		bg.css('background-image', 'url(' + url + ')');
+
+	    bg.fadeIn(3000, function(){
+		    var config = {
+		    		id: 'bg',
+		        vx: 4,	//小球x轴速度,正为右，负为左
+		        vy: 4,	//小球y轴速度
+		        height: 2,	//小球高宽，其实为正方形，所以不宜太大
+		        width: 2,
+		        count: 40,		//点个数
+		        bgcolor: "100,100,100",
+		        color: "121, 162, 185", 	//点颜色
+		        stroke: "130,255,255", 		//线条颜色
+		        bgcolor: "transparent",
+		        dist: 6000, 	//点吸附距离
+		        e_dist: 20000, 	//鼠标吸附加速距离
+		        max_conn: 10 	//点到点最大连接数
+		    }
+
+		    //调用
+		    CanvasParticle(config);
+	    });
+	})
+})
+</script>
+
 <div class="header">
 	#if($message)
 	<div id="messageBox" class="alert alert-error">
@@ -7,7 +61,9 @@
 	</div>
 	#end
 </div>
-<h1 class="form-signin-heading icon-wink">$lang.get('user.login')</h1>
+<h1 class="form-signin-heading">
+	<div class='logo'><a href="/"><img src="$lang.get('site.logo')"></a>$lang.get('site.title')</div>
+</h1>
 <form id="loginForm" class="form-signin" action="/user/login" method="post">
 	<div class=''>
 		<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
@@ -52,6 +108,8 @@
 <div class="footer">
 	$lang.get('copyright') - $lang.get('powerby') 
 </div>
+
+<script type="text/javascript" src='/js/giiwa.js?${module.module("default").build}'></script>
 
 #parse('/user/foot.html')
 

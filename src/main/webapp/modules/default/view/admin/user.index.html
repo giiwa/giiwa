@@ -1,4 +1,3 @@
-<div class='head'>$lang.get('user.index.title')</div>
 
 #parse('/widget/widget.message.html')
 
@@ -37,7 +36,10 @@
 	<tbody>
 #foreach($f in $list)
 	<tr #if($f.isLocked()) class='deleted' #end>
-		<td class='name'><a href='/admin/user/detail?id=$f.id'>#if($f.name)$f.name#end</a></td>
+		<td class='a'>
+			$!f.name
+			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="/admin/user/detail?id=$f.id"><i class="icon-file-text2"></i></a>
+		</td>
 		<td>$!f.nickname</td>
 		<td>$!f.email</td>
 		<td>$!f.phone</td>
@@ -45,11 +47,10 @@
 		<td>#foreach($r in $f.role.list)<div class='icon-shield'>$r.name</div>#end</td>
 		<td>$!lang.format($f.created, 'yy-MM-dd HH:mm')</td>
 		#if($edit)
-		<td>
-			<a class='btn btn-success btn-xs' href='/admin/user/edit?id=$f.id'>$lang.get('a.edit')</a>
-			<a class='btn btn-info btn-xs' href='/admin/user/oplog?uid=$f.id'>$lang.get('a.oplog')</a>
-			<a class='btn btn-primary btn-xs' href='/admin/user/accesslog?uid=$f.id'>$lang.get('a.accesslog')</a>
-			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this);'>$lang.get('a.delete')</a>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/user/edit?id=$f.id"><i class="icon-pencil"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.oplog')" href="/admin/user/oplog?uid=$f.id"><i class="icon-list"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href='javascript:;' onclick='_delete("$f.id", this);'><i class="icon-cancel-circle"></i></a>
 		</td>
 		#end
 	</tr>

@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.GLog;
 
 public class Optimizer implements Helper.IOptimizer {
 
@@ -19,10 +20,10 @@ public class Optimizer implements Helper.IOptimizer {
 	@Override
 	public void query(final String db, final String table, final W w) {
 		if (w != null && !w.isEmpty()) {
-			new Task() {
 
-				@Override
-				public void onExecute() {
+			Task.schedule(() -> {
+
+				try {
 					// all keys
 					List<LinkedHashMap<String, Integer>> l1 = w.sortkeys();
 
@@ -36,30 +37,30 @@ public class Optimizer implements Helper.IOptimizer {
 							}
 
 							String id = UID.id(db, table, sb.toString());
-							try {
-								if (!exists.contains(id)) {
-									_init(db, table);
-								}
-
-								if (!exists.contains(id)) {
-									exists.add(id);
-									if (!keys.isEmpty()) {
-										Helper.createIndex(db, table, keys);
-									}
-								}
-
-							} catch (Exception e) {
-								log.error("table=" + table + ", keys=" + keys, e);
+							if (!exists.contains(id)) {
+								_init(db, table);
 							}
+
+							if (!exists.contains(id)) {
+								exists.add(id);
+								if (!keys.isEmpty()) {
+									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + sb.toString(),
+											null, null);
+									Helper.createIndex(db, table, keys);
+								}
+							}
+
 						}
 					}
-
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 
-			}.schedule(0);
+			}, 0);
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void _init(String db, String table) {
 
 		List<Map<String, Object>> l1 = Helper.getIndexes(table, db);
@@ -75,6 +76,7 @@ public class Optimizer implements Helper.IOptimizer {
 						sb.append(s).append(":").append(keys.get(s));
 					}
 
+					// GLog.applog.info("db", table, sb.toString(), null, null);
 					String id = UID.id(db, table, sb.toString());
 					exists.add(id);
 				}

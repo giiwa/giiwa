@@ -22,6 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Local;
+import org.giiwa.mq.MQ.Request;
+import org.giiwa.mq.MQ.Response;
 
 /**
  * The RPC Class, used to remote method call, and got result until finish

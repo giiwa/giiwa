@@ -49,10 +49,17 @@ public class upload extends Model {
 			// String access = Module.home.get("upload.require.access");
 
 			FileItem file = this.getFile("file");
-			store(me.getId(), file, jo);
-
+			if (file != null) {
+				String filename = this.getString("filename");
+				if (X.isEmpty(filename)) {
+					filename = file.getName();
+				}
+				store(me.getId(), file, filename, jo);
+			} else {
+				jo.append(X.STATE, 201).append(X.MESSAGE, lang.get("not [file]"));
+			}
 		} else {
-			this.set(X.ERROR, HttpServletResponse.SC_UNAUTHORIZED);
+			jo.append(X.ERROR, HttpServletResponse.SC_UNAUTHORIZED);
 			jo.put(X.MESSAGE, lang.get("login.required"));
 		}
 
@@ -64,7 +71,7 @@ public class upload extends Model {
 
 	}
 
-	private boolean store(long me, FileItem file, JSON jo) {
+	private boolean store(long me, FileItem file, String filename, JSON jo) {
 		String tag = this.getString("tag");
 
 		try {
@@ -98,32 +105,32 @@ public class upload extends Model {
 				// log.debug(range + ", " + position + "/" + total);
 			}
 
-			String id = UID.id(me, tag, file.getName(), total, lastModified);
+			String id = UID.id(me, tag, filename, total, lastModified);
 
-			log.debug("storing, id=" + id + ", name=" + file.getName() + ", tag=" + tag + ", total=" + total + ", last="
+			log.debug("storing, id=" + id + ", name=" + filename + ", tag=" + tag + ", total=" + total + ", last="
 					+ lastModified);
 
 			String share = this.getString("share");
 			String folder = this.getString("folder");
 
-			long pos = Repo.store(folder, id, file.getName(), tag, position, total, file.getInputStream(), -1,
+			long pos = Repo.store(folder, id, filename, tag, position, total, file.getInputStream(), -1,
 					!"no".equals(share), me);
 			if (pos >= 0) {
 				if (jo == null) {
-					this.put("url", "/repo/" + id + "/" + file.getName());
+					this.put("url", "/repo/" + id + "/" + filename);
 					this.put(X.ERROR, 0);
 					this.put("repo", id);
 					if (total > 0) {
-						this.put("name", file.getName());
+						this.put("name", filename);
 						this.put("pos", pos);
 						this.put("size", total);
 					}
 				} else {
-					jo.put("url", "/repo/" + id + "/" + file.getName());
+					jo.put("url", "/repo/" + id + "/" + filename);
 					jo.put("repo", id);
 					jo.put(X.ERROR, 0);
 					if (total > 0) {
-						jo.put("name", file.getName());
+						jo.put("name", filename);
 						jo.put("pos", pos);
 						jo.put("size", total);
 					}

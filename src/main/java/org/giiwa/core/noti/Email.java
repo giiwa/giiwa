@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.framework.bean.GLog;
 
 /**
  * send the email
@@ -35,147 +36,150 @@ import org.giiwa.core.conf.Global;
  */
 public class Email {
 
-  static Log log = LogFactory.getLog(Email.class);
+	static Log log = LogFactory.getLog(Email.class);
 
-  private static class auth extends Authenticator {
-    public PasswordAuthentication getPasswordAuthentication() {
-      String user = Global.getString("mail.user", "service@giisoo.com");
-      String passwd = Global.getString("mail.passwd", "123456");
-      if (log.isDebugEnabled())
-        log.debug("user=" + user + ", passwd=" + passwd);
-      return new PasswordAuthentication(user, passwd);
-    }
-  }
+	private static class auth extends Authenticator {
+		public PasswordAuthentication getPasswordAuthentication() {
+			String user = Global.getString("mail.user", "service@giisoo.com");
+			String passwd = Global.getString("mail.passwd", "123456");
+			if (log.isDebugEnabled())
+				log.debug("user=" + user + ", passwd=" + passwd);
+			return new PasswordAuthentication(user, passwd);
+		}
+	}
 
-  /**
-   * Send.
-   *
-   * @param subject
-   *          the subject
-   * @param body
-   *          the body
-   * @param to
-   *          the to
-   * @param attachments
-   *          the attachments
-   * @param names
-   *          the names
-   * @param contents
-   *          the contents
-   * @return true, if successful
-   */
-  public static boolean send(String subject, String body, String to, InputStream[] attachments, String[] names,
-      String[] contents) {
-    Properties props = new Properties();
+	/**
+	 * Send.
+	 *
+	 * @param subject
+	 *            the subject
+	 * @param body
+	 *            the body
+	 * @param to
+	 *            the to
+	 * @param attachments
+	 *            the attachments
+	 * @param names
+	 *            the names
+	 * @param contents
+	 *            the contents
+	 * @return true, if successful
+	 */
+	public static boolean send(String subject, String body, String to, InputStream[] attachments, String[] names,
+			String[] contents) {
+		Properties props = new Properties();
 
-    props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp").toLowerCase());
-    props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
-    props.setProperty("mail.smtp.auth", "true");
-    props.setProperty("mail.smtps.auth", "true");
+		props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp").toLowerCase());
+		props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
+		props.setProperty("mail.smtp.auth", "true");
+		props.setProperty("mail.smtps.auth", "true");
 
-    try {
+		try {
 
-      Session mailSession = Session.getDefaultInstance(props, new auth());
-      Transport transport = mailSession.getTransport();
+			Session mailSession = Session.getDefaultInstance(props, new auth());
+			Transport transport = mailSession.getTransport();
 
-      MimeMessage message = new MimeMessage(mailSession);
-      message.setSubject(subject, "utf-8");
+			MimeMessage message = new MimeMessage(mailSession);
+			message.setSubject(subject, "utf-8");
 
-      BodyPart messageBodyPart = new MimeBodyPart();
-      body = body.replaceAll("\r", "<br/>").replaceAll(" ", "&nbsp;");
-      messageBodyPart.setContent(body, "text/html; charset=utf-8");
-      Multipart multipart = new MimeMultipart();
-      multipart.addBodyPart(messageBodyPart);
+			BodyPart messageBodyPart = new MimeBodyPart();
+			body = body.replaceAll("\r", "<br/>").replaceAll(" ", "&nbsp;");
+			messageBodyPart.setContent(body, "text/html; charset=utf-8");
+			Multipart multipart = new MimeMultipart();
+			multipart.addBodyPart(messageBodyPart);
 
-      if (attachments != null) {
+			if (attachments != null) {
 
-        for (int i = 0; i < attachments.length; i++) {
-          InputStream in = attachments[i];
-          BodyPart attachmentPart = new MimeBodyPart();
-          DataSource source = new ByteArrayDataSource(in, contents[i]);
-          attachmentPart.setDataHandler(new DataHandler(source));
-          attachmentPart.setFileName(names[i]);
-          multipart.addBodyPart(attachmentPart);
-        }
-      }
+				for (int i = 0; i < attachments.length; i++) {
+					InputStream in = attachments[i];
+					BodyPart attachmentPart = new MimeBodyPart();
+					DataSource source = new ByteArrayDataSource(in, contents[i]);
+					attachmentPart.setDataHandler(new DataHandler(source));
+					attachmentPart.setFileName(names[i]);
+					multipart.addBodyPart(attachmentPart);
+				}
+			}
 
-      message.setContent(multipart);
-      message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-      InternetAddress f = new InternetAddress(Global.getString("mail.email", "service@giiwa.com"));
-      f.setPersonal(Global.getString("mail.email", X.EMPTY));
-      message.setFrom(f);
+			message.setContent(multipart);
+			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+			InternetAddress f = new InternetAddress(Global.getString("mail.email", "service@giiwa.com"));
+			f.setPersonal(Global.getString("mail.email", X.EMPTY));
+			message.setFrom(f);
 
-      transport.connect();
-      transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-      transport.close();
-      return true;
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
+			transport.connect();
+			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
+			transport.close();
 
-    return false;
-  }
+			return true;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 
-  /**
-   * Send.
-   *
-   * @param subject
-   *          the subject
-   * @param body
-   *          the body
-   * @param to
-   *          the to
-   * @return true, if successful
-   */
-  public static boolean send(String subject, String body, String to) {
-    return send(subject, body, to, null, null, null);
-  }
+			GLog.applog.error("email", "send", e.getMessage(), e, null, null);
+		}
 
-  /**
-   * Send.
-   *
-   * @param subject
-   *          the subject
-   * @param body
-   *          the body
-   * @param to
-   *          the to
-   * @param from
-   *          the from
-   * @param displayname
-   *          the displayname
-   * @return true, if successful
-   */
-  public static boolean send(String subject, String body, String to, String from, String displayname) {
-    Properties props = new Properties();
+		return false;
+	}
 
-    props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp"));
-    props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
-    props.setProperty("mail.smtp.auth", "true");
-    props.setProperty("mail.smtps.auth", "true");
+	/**
+	 * Send.
+	 *
+	 * @param subject
+	 *            the subject
+	 * @param body
+	 *            the body
+	 * @param to
+	 *            the to
+	 * @return true, if successful
+	 */
+	public static boolean send(String subject, String body, String to) {
+		return send(subject, body, to, null, null, null);
+	}
 
-    try {
+	/**
+	 * Send.
+	 *
+	 * @param subject
+	 *            the subject
+	 * @param body
+	 *            the body
+	 * @param to
+	 *            the to
+	 * @param from
+	 *            the from
+	 * @param displayname
+	 *            the displayname
+	 * @return true, if successful
+	 */
+	public static boolean send(String subject, String body, String to, String from, String displayname) {
+		Properties props = new Properties();
 
-      Session mailSession = Session.getDefaultInstance(props, new auth());
-      Transport transport = mailSession.getTransport();
+		props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp"));
+		props.setProperty("mail.host", Global.getString("mail.host", "smtp.exmail.qq.com"));
+		props.setProperty("mail.smtp.auth", "true");
+		props.setProperty("mail.smtps.auth", "true");
 
-      MimeMessage message = new MimeMessage(mailSession);
-      message.setSubject(subject);
-      message.setContent(body, "text/html; charset=UTF-8");
-      message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-      InternetAddress f = new InternetAddress(from);
-      f.setPersonal(displayname);
-      message.setFrom(f);
+		try {
 
-      transport.connect();
-      transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-      transport.close();
-      return true;
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
+			Session mailSession = Session.getDefaultInstance(props, new auth());
+			Transport transport = mailSession.getTransport();
 
-    return false;
-  }
+			MimeMessage message = new MimeMessage(mailSession);
+			message.setSubject(subject);
+			message.setContent(body, "text/html; charset=UTF-8");
+			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+			InternetAddress f = new InternetAddress(from);
+			f.setPersonal(displayname);
+			message.setFrom(f);
+
+			transport.connect();
+			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
+			transport.close();
+			return true;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return false;
+	}
 
 }

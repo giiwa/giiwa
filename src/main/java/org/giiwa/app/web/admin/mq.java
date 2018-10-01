@@ -18,6 +18,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.web.Path;
 
@@ -61,8 +62,7 @@ public class mq extends setting {
 		//
 		// MQ.logger(logger == 1 ? true : false);
 
-		this.set(X.WARN, lang.get("restart.required"));
-		get();
+		this.response(JSON.create().append(X.MESSAGE, lang.get("restart.required")).append(X.STATE, 201));
 	}
 
 	public void get() {

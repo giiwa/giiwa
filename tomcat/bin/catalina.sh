@@ -212,7 +212,7 @@ fi
 CLASSPATH="$CLASSPATH""$CATALINA_HOME"/bin/bootstrap.jar
 
 if [ -z "$CATALINA_OUT" ] ; then
-  CATALINA_OUT="$CATALINA_BASE"/logs/catalina.out
+  CATALINA_OUT=/dev/null
 fi
 
 if [ -z "$CATALINA_TMPDIR" ] ; then
@@ -267,7 +267,7 @@ fi
 # Uncomment the following line to make the umask available when using the
 # org.apache.catalina.security.SecurityListener
 #JAVA_OPTS="$JAVA_OPTS -Dorg.apache.catalina.security.SecurityListener.UMASK=`umask`"
-JAVA_OPTS="$JAVA_OPTS -Xms256m -Xmx2048m -XX:-UseParallelGC -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
+JAVA_OPTS="$JAVA_OPTS -Dplatform.dependencies -Duser.timezone=Asia/Shanghai -Xms256m -Xmx2048m -XX:-UseParallelGC -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
 
 if [ -z "$USE_NOHUP" ]; then
     if $hpux; then

@@ -14,11 +14,14 @@
 */
 package org.giiwa.framework.bean;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -26,7 +29,10 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.UID;
+import org.giiwa.core.bean.X;
+import org.giiwa.core.task.Callable;
 
 /**
  * Create Temporary file, which can be accessed by web api, please refer
@@ -202,6 +208,110 @@ public class Temp {
 		out.close();
 		in.close();
 		return i;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <V extends Bean> Exporter<V> export(String charset, Exporter.FORMAT format) {
+		Exporter<V> e = Exporter.create(this.getFile(), charset, format);
+		return e;
+	}
+
+	public static class Exporter<V extends Bean> {
+		public enum FORMAT {
+			csv
+		}
+
+		BufferedWriter out = null;
+		FORMAT format;
+		Callable<Object[], V> cols = null;
+
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		private static Exporter create(File file, String charset, FORMAT format) {
+			try {
+				Exporter s = new Exporter();
+				s.out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset));
+				s.format = format;
+
+				return s;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+			return null;
+		}
+
+		public Exporter<V> createSheet(Callable<Object[], V> cols) {
+			this.cols = cols;
+			return this;
+		}
+
+		public void close() {
+			X.close(out);
+			out = null;
+		}
+
+		public void print(String... cols) throws IOException {
+			if (out == null) {
+				throw new IOException("out is null?");
+			}
+
+			for (int i = 0; i < cols.length; i++) {
+				String s = cols[i];
+				if (i > 0) {
+					out.write(",");
+				}
+				out.write("\"");
+				if (s != null) {
+					s = s.replaceAll("\"", "\\\"").replaceAll("\r\n", "");
+					out.write(s);
+				}
+				out.write("\"");
+			}
+			out.write("\r\n");
+		}
+
+		public void print(List<V> bs) throws IOException {
+			if (out == null) {
+				throw new IOException("out is null? ");
+			}
+
+			if (bs != null && !bs.isEmpty()) {
+				for (V b : bs) {
+					print(b);
+				}
+			}
+		}
+
+		public void print(V b) throws IOException {
+			if (out == null) {
+				throw new IOException("out is null? ");
+			}
+
+			Object[] ss = cols.call(200, b);
+
+			for (int i = 0; i < ss.length; i++) {
+				if (i > 0) {
+					out.write(",");
+				}
+
+				out.write("\"");
+
+				Object o = ss[i];
+
+				String s = X.EMPTY;
+				if (o != null) {
+					if (o instanceof String) {
+						s = ((String) o).replaceAll("\"", "\\\"").replaceAll("\r\n", "");
+					} else {
+						s = o.toString();
+					}
+					out.write(s);
+				}
+				out.write("\"");
+			}
+			out.write("\r\n");
+
+		}
+
 	}
 
 }

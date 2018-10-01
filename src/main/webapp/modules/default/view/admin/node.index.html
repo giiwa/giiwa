@@ -1,16 +1,15 @@
-<div class='head'>$lang.get('node.index.title')</div>
-
-#parse('/widget/widget.message.html')
-
 <div class='tabs'>
 	<a href='/admin/node' class='selected'>$lang.get('a.node')</a>
 </div>
+
+#parse('/widget/widget.message.html')
 
 <table id='node-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
 			<th>$lang.get('node.id')</th>
 			<th>$lang.get('node.ip')</th>
+			<th>$lang.get('node.port')</th>
 			<th>$lang.get('node.cores')</th>
 			<th>$lang.get('node.mem')</th>
 			<th>$lang.get('node.os')</th>
@@ -22,11 +21,12 @@
 	<tr #if($lang.pastms($f.updated) < 3000) class="blink" #end>
 		<td>$!f.id</td>
 		<td>$!f.ip</td>
+		<td>$!f.port</td>
 		<td>$!f.cores</td>
 		<td>$!lang.size($!f.mem)</td>
 		<td>$!f.os</td>
-		<td>
-			<a class='btn btn-danger btn-xs' href="javascript:;" onclick="_delete('$f.id', this)">$lang.get('a.delete')</a>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f.id', this)"><i class="icon-cancel-circle"></i></a>
 		</td>
 	</tr>
 #end

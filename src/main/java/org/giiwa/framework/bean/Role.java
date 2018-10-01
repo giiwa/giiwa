@@ -37,7 +37,7 @@ public class Role extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Role> dao = BeanDAO.create(Role.class);
+	public static final BeanDAO<Long, Role> dao = BeanDAO.create(Role.class);
 
 	@Column(name = X.ID)
 	private long id;
@@ -56,7 +56,7 @@ public class Role extends Bean {
 	 * @return true, if successful
 	 */
 	public boolean has(String a) {
-		List<String> list = getAccesses();
+		List<?> list = getAccesses();
 		log.debug("list=" + list + ", a=" + a);
 		return list == null ? false : list.contains(a);
 	}
@@ -99,16 +99,16 @@ public class Role extends Bean {
 		return -1;
 	}
 
-	private transient List<String> accesses;
+	private transient List<?> accesses;
 
 	/**
 	 * Gets the access.
 	 * 
 	 * @return the access
 	 */
-	public List<String> getAccesses() {
+	public List<?> getAccesses() {
 		if (accesses == null) {
-			accesses = RoleAccess.dao.distinct("name", W.create("rid", this.getId()), String.class);
+			accesses = RoleAccess.dao.distinct("name", W.create("rid", this.getId()));
 		}
 
 		return accesses;
@@ -125,8 +125,9 @@ public class Role extends Bean {
 	public static void setAccess(long rid, String name) {
 
 		try {
-			if (!dao.exists(W.create("rid", rid).and("name", name))) {
-				dao.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)));
+			if (!RoleAccess.dao.exists(W.create("rid", rid).and("name", name))) {
+				RoleAccess.dao.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)));
+
 				dao.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
 			}
 		} catch (Exception e1) {
@@ -177,7 +178,7 @@ public class Role extends Bean {
 			r = dao.load(rid);
 
 			if (r != null) {
-				r.setExpired(60 * 1000 + System.currentTimeMillis());
+				r.expired(60 * 1000 + System.currentTimeMillis());
 				Cache.set("role://" + rid, r);
 			}
 		}
@@ -235,7 +236,7 @@ public class Role extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<RoleAccess> dao = BeanDAO.create(RoleAccess.class);
+		public static final BeanDAO<String, RoleAccess> dao = BeanDAO.create(RoleAccess.class);
 
 	}
 
@@ -290,7 +291,7 @@ public class Role extends Bean {
 
 	public static int from(JSON j) {
 		int total = 0;
-		List<JSON> l1 = j.getList("roles");
+		Collection<JSON> l1 = j.getList("roles");
 		if (l1 != null) {
 			for (JSON e : l1) {
 				long id = e.getLong(X.ID);

@@ -16,15 +16,16 @@ package org.giiwa.core.conf;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.task.Task;
+import org.giiwa.core.task.GlobalLock;
+import org.giiwa.mq.IStub;
+import org.giiwa.mq.MQ;
+import org.giiwa.mq.MQ.Request;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -38,7 +39,7 @@ public final class Global extends Bean {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Global> dao = BeanDAO.create(Global.class);
+	public static final BeanDAO<String, Global> dao = BeanDAO.create(Global.class);
 
 	@Column(name = X.ID)
 	String id;
@@ -51,6 +52,9 @@ public final class Global extends Bean {
 
 	@Column(name = "l")
 	long l;
+
+	@Column(name = "memo")
+	String memo;
 
 	private static Global owner = new Global();
 
@@ -76,7 +80,7 @@ public final class Global extends Bean {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+				c.expired(System.currentTimeMillis() + X.AMINUTE);
 				cached.put("global/" + name, c);
 				return X.toInt(c.i, defaultValue);
 			}
@@ -106,14 +110,44 @@ public final class Global extends Bean {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+				c.expired(System.currentTimeMillis() + X.AMINUTE);
 				cached.put("global/" + name, c);
 
+				// if (!X.isEmpty(c.memo))
+				// return c.memo;
 				return c.s != null ? c.s : defaultValue;
 			}
 		}
 
+		// if (!X.isEmpty(c.memo))
+		// return c.memo;
+
 		return c != null && c.s != null ? c.s : Config.getConf().getString(name, defaultValue);
+
+	}
+
+	public static String getMemo(String name, String defaultValue) {
+
+		Global c = cached.get("global/" + name);
+		if (c == null || c.expired()) {
+			c = dao.load(name);
+			if (c != null) {
+				/**
+				 * avoid restarted, can not load new config
+				 */
+				c.expired(System.currentTimeMillis() + X.AMINUTE);
+				cached.put("global/" + name, c);
+
+				// if (!X.isEmpty(c.memo))
+				// return c.memo;
+				return c.memo != null ? c.memo : defaultValue;
+			}
+		}
+
+		// if (!X.isEmpty(c.memo))
+		// return c.memo;
+
+		return c != null && c.memo != null ? c.memo : Config.getConf().getString(name, defaultValue);
 
 	}
 
@@ -138,7 +172,7 @@ public final class Global extends Bean {
 					/**
 					 * avoid restarted, can not load new config
 					 */
-					c.setExpired(System.currentTimeMillis() + X.AMINUTE);
+					c.expired(System.currentTimeMillis() + X.AMINUTE);
 					cached.put("global/" + name, c);
 
 					return X.toLong(c.l, defaultValue);
@@ -189,9 +223,41 @@ public final class Global extends Bean {
 				v.set("l", o);
 				g.l = X.toLong(o);
 			} else {
-				v.set("s", o.toString());
-				g.s = o.toString();
+				String s = o.toString();
+				// if (s.length() > 1000) {
+				// v.append("memo", s).append("s", X.EMPTY);
+				// g.memo = s;
+				// g.s = s;
+				// } else {
+				v.append("s", s);
+				g.s = s;
+				// }
 			}
+
+			cached.put("global/" + name, g);
+
+			if (Helper.isConfigured()) {
+				if (dao.exists(name)) {
+					dao.update(name, v);
+				} else {
+					dao.insert(v.force(X.ID, name));
+				}
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		}
+	}
+
+	public synchronized static void setMemo(String name, String s) {
+		if (X.isEmpty(name)) {
+			return;
+		}
+
+		try {
+			Global g = new Global();
+			V v = V.create();
+			v.append("memo", s);
+			g.memo = s;
 
 			cached.put("global/" + name, g);
 
@@ -225,195 +291,10 @@ public final class Global extends Bean {
 	 * @param name
 	 *            the name of lock
 	 * @return
+	 * @throws Exception
 	 */
-	public static Lock getLock(String name) {
-		return new GlobalLock(name);
-	}
-
-	/**
-	 * Lock a global lock
-	 *
-	 * @param name
-	 *            the name of lock
-	 * @param timeout
-	 *            the timeout
-	 * @return true, if successful
-	 */
-	private static boolean lock(String name, long timeout) {
-
-		name = "lock." + name;
-
-		Thread th = locked.get(name);
-		if (th != null && th.getId() == Thread.currentThread().getId()) {
-			return true;
-		}
-
-		try {
-			TimeStamp t = TimeStamp.create();
-
-			while (timeout == 0 || timeout >= t.pastms()) {
-
-				Global f = dao.load(name);
-
-				if (f == null) {
-					String linkid = UID.random();
-
-					dao.insert(V.create(X.ID, name).set("s", Local.id()).set("linkid", linkid));
-					f = dao.load(name);
-					if (f == null) {
-						log.error("occur error when create unique id, name=" + name);
-						return false;
-					} else if (!X.isSame(f.getString("linkid"), linkid)) {
-						if (timeout <= t.pastms()) {
-							return false;
-						}
-						synchronized (locked) {
-							locked.wait(1000);
-						}
-
-						continue;
-					}
-
-					locked.put(name, Thread.currentThread());
-					heartbeat.schedule(10);
-
-					return true;
-				} else {
-					String s = f.getString("s");
-					// 10 seconds
-					if (X.isEmpty(s) || System.currentTimeMillis() - f.getUpdated() > 10000) {
-						if (dao.update(W.create(X.ID, name).and("s", s), V.create("s", Local.id())) > 0) {
-							locked.put(name, Thread.currentThread());
-							heartbeat.schedule(10);
-
-							return true;
-						} else {
-							if (timeout <= t.pastms()) {
-								return false;
-							}
-							synchronized (locked) {
-								locked.wait(1000);
-							}
-							continue;
-						}
-					}
-				}
-			}
-		} catch (Throwable e) {
-			log.error(e.getMessage(), e);
-		}
-
-		return false;
-	}
-
-	/**
-	 * Release the global lock
-	 *
-	 * @param name
-	 *            the name of lock
-	 * @return true, if successful
-	 */
-	private static boolean unlock(String name) {
-		name = "lock." + name;
-
-		synchronized (locked) {
-			Thread t = locked.remove(name);
-			if (t != null && t.getId() == Thread.currentThread().getId()) {
-				locked.remove(name);
-				dao.update(W.create(X.ID, name).and("s", Local.id()), V.create("s", X.EMPTY));
-				locked.notifyAll();
-				return true;
-			}
-
-		}
-		return false;
-	}
-
-	private static Task heartbeat = new LockHeartbeat();
-
-	private static class LockHeartbeat extends Task {
-
-		@Override
-		public void onExecute() {
-
-			if (locked.size() > 0) {
-				String[] names = locked.keySet().toArray(new String[locked.size()]);
-
-				for (String name : names) {
-					if (dao.update(W.create(X.ID, name).and("s", Local.id()),
-							V.create(X.UPDATED, System.currentTimeMillis())) <= 0) {
-
-						// the lock has been acquired by other
-						Thread t = locked.get(name);
-						if (t != null) {
-							// interrupt this thread
-							log.warn("lock[" + name + "] was locked by others, interrupt the thread=" + t);
-							t.interrupt();
-						}
-						locked.remove(name);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void onFinish() {
-			if (!locked.isEmpty()) {
-				this.schedule(3000);
-			}
-		}
-
-	}
-
-	private static Map<String, Thread> locked = new HashMap<String, Thread>();
-
-	private static class GlobalLock implements Lock {
-
-		private String name;
-		private Lock lock = new ReentrantLock();
-
-		private GlobalLock(String name) {
-			this.name = name;
-		}
-
-		@Override
-		public void lock() {
-			lock.lock();
-			Global.lock(name, Long.MAX_VALUE);
-		}
-
-		@Override
-		public void lockInterruptibly() throws InterruptedException {
-			lock();
-		}
-
-		@Override
-		public boolean tryLock() {
-			if (lock.tryLock()) {
-				return Global.lock(name, 0);
-			}
-			return false;
-		}
-
-		@Override
-		public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-			if (lock.tryLock(time, unit)) {
-				return Global.lock(name, unit.toMillis(time));
-			}
-			return false;
-		}
-
-		@Override
-		public void unlock() {
-			lock.unlock();
-			Global.unlock(name);
-		}
-
-		@Override
-		public Condition newCondition() {
-			return lock.newCondition();
-		}
-
+	public static Lock getLock(String name) throws Exception {
+		return GlobalLock.create(name);
 	}
 
 	private static String _id = null;
@@ -433,4 +314,65 @@ public final class Global extends Bean {
 		}
 		return _id;
 	}
+
+	public static void wait(String name, long timeout) throws InterruptedException {
+		Coordinator.inst.wait(name, timeout);
+	}
+
+	public static void notifyAll(String name) {
+		try {
+			MQ.topic(Coordinator.inst.getName(), Request.create().data(name.getBytes()));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	private static class Coordinator extends IStub {
+
+		private static Coordinator inst = new Coordinator("global.coordinator");
+
+		private Map<String, AtomicInteger> pending = new HashMap<String, AtomicInteger>();
+
+		public void wait(String name, long timeout) throws InterruptedException {
+			AtomicInteger a = null;
+
+			synchronized (pending) {
+				a = pending.get(name);
+				if (a == null) {
+					a = new AtomicInteger();
+				}
+				a.incrementAndGet();
+			}
+
+			synchronized (a) {
+				a.wait(timeout);
+			}
+
+			synchronized (pending) {
+				a = pending.get(name);
+				if (a != null && a.decrementAndGet() == 0) {
+					pending.remove(name);
+				}
+			}
+		}
+
+		public Coordinator(String name) {
+			super(name);
+		}
+
+		@Override
+		public void onRequest(long seq, Request req) {
+			String name = new String(req.data);
+			synchronized (pending) {
+				AtomicInteger a = pending.get(name);
+				if (a != null) {
+					a.notifyAll();
+					pending.remove(name);
+				}
+
+			}
+		}
+
+	}
+
 }

@@ -1,0 +1,50 @@
+
+<div id='cpu_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('cpu_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}%</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
+	    series: [
+	    				{name: "$lang.get('cpu.sys')", color:'#860606', data: [#foreach($c in $list) [$lang.time($c.created, 'm'), $!lang.format($!c.sys, '%.1f')],#end]},
+	    				{name: "$lang.get('cpu.user')", color:'#0dad76', data: [#foreach($c in $list) [$lang.time($c.created, 'm'), $!lang.format($!c.user, '%.1f')],#end]}
+	    			], 
+	});
+
+})
+</script>
+

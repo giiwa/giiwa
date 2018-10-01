@@ -14,8 +14,10 @@
 */
 package org.giiwa.mq.impl;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +45,6 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
-import org.giiwa.mq.Request;
 
 // TODO: Auto-generated Javadoc
 public final class ActiveMQ extends MQ {
@@ -91,6 +92,8 @@ public final class ActiveMQ extends MQ {
 		return m;
 	}
 
+	private transient List<WeakReference<R>> cached = new ArrayList<WeakReference<R>>();
+
 	/**
 	 * QueueTask
 	 * 
@@ -98,6 +101,7 @@ public final class ActiveMQ extends MQ {
 	 * 
 	 */
 	public class R implements MessageListener {
+
 		public String name;
 		IStub cb;
 		MessageConsumer consumer;
@@ -132,6 +136,8 @@ public final class ActiveMQ extends MQ {
 				consumer = session.createConsumer(dest);
 				consumer.setMessageListener(this);
 
+				cached.add(new WeakReference<R>(this));
+
 			} else {
 				log.warn("MQ not init yet!");
 				throw new JMSException("MQ not init yet!");
@@ -156,7 +162,7 @@ public final class ActiveMQ extends MQ {
 					long length = m1.getBodyLength();
 					int pos = 0;
 
-					List<Request> l1 = new ArrayList<Request>();
+					List<Request> l1 = new LinkedList<Request>();
 					while (pos < length) {
 
 						count++;
@@ -216,10 +222,10 @@ public final class ActiveMQ extends MQ {
 	}
 
 	@Override
-	protected long _topic(String to, org.giiwa.mq.Request r) throws Exception {
+	protected long _topic(String to, MQ.Request r) throws Exception {
 
-		if (X.isEmpty(r.data))
-			throw new Exception("message can not be empty");
+		// if (X.isEmpty(r.data))
+		// throw new Exception("message can not be empty");
 
 		if (session == null) {
 			throw new Exception("MQ not init yet");
@@ -228,7 +234,7 @@ public final class ActiveMQ extends MQ {
 		/**
 		 * get the message producer by destination name
 		 */
-		Sender p = getSender(to, 1);
+		Sender p = getSender(to, MQ.Mode.TOPIC);
 		if (p == null) {
 			throw new Exception("MQ not ready yet");
 		}
@@ -239,10 +245,10 @@ public final class ActiveMQ extends MQ {
 	}
 
 	@Override
-	protected long _send(String to, org.giiwa.mq.Request r) throws Exception {
+	protected long _send(String to, MQ.Request r) throws Exception {
 
-		if (X.isEmpty(r.data))
-			throw new Exception("message can not be empty");
+		// if (X.isEmpty(r.data))
+		// throw new Exception("message can not be empty");
 
 		if (session == null) {
 			throw new Exception("MQ not init yet");
@@ -251,7 +257,7 @@ public final class ActiveMQ extends MQ {
 		/**
 		 * get the message producer by destination name
 		 */
-		Sender p = getSender(to, 0);
+		Sender p = getSender(to, MQ.Mode.QUEUE);
 		if (p == null) {
 			throw new Exception("MQ not ready yet");
 		}
@@ -261,7 +267,7 @@ public final class ActiveMQ extends MQ {
 
 	}
 
-	private Sender getSender(String name, int type) {
+	private Sender getSender(String name, MQ.Mode type) {
 		String name1 = name + ":" + type;
 		synchronized (senders) {
 			if (session != null) {
@@ -271,7 +277,7 @@ public final class ActiveMQ extends MQ {
 
 				try {
 					Destination dest = null;
-					if (type == 0) {
+					if (MQ.Mode.QUEUE.equals(type)) {
 						dest = new ActiveMQQueue(group + name);
 					} else {
 						dest = new ActiveMQTopic(group + name);
@@ -283,8 +289,8 @@ public final class ActiveMQ extends MQ {
 					// p.setTimeToLive(0);
 
 					Sender s = new Sender(name1, name, p);
-					s.schedule(0);
 					senders.put(name1, s);
+					s.schedule(0);
 
 					return s;
 				} catch (Exception e) {
@@ -303,15 +309,24 @@ public final class ActiveMQ extends MQ {
 
 	class Sender extends Task {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		long last = System.currentTimeMillis();
 		String name;
 		String to;
 		MessageProducer p;
 		BytesMessage m = null;
 		int len = 0;
+		int priority = 1;
+		long ttl = (int) X.AMINUTE;
+		int persistent = DeliveryMode.NON_PERSISTENT;
 
 		public void send(Request r) throws JMSException {
-			// log.debug("sending, r=" + r);
+
+			log.debug("sending, r=" + r);
 
 			last = System.currentTimeMillis();
 			synchronized (p) {
@@ -353,6 +368,10 @@ public final class ActiveMQ extends MQ {
 					len += r.data.length;
 				}
 
+				ttl = r.ttl;
+				priority = r.priority;
+				persistent = r.persistent;
+
 				p.notify();
 			}
 		}
@@ -373,7 +392,7 @@ public final class ActiveMQ extends MQ {
 				BytesMessage m = null;
 				synchronized (p) {
 					while (this.m == null) {
-						if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+						if (last < System.currentTimeMillis() - X.AMINUTE) {
 							break;
 						}
 
@@ -387,12 +406,13 @@ public final class ActiveMQ extends MQ {
 				}
 
 				if (m != null) {
-					p.send(m);
+					p.send(m, persistent, priority, ttl);
+					// p.send(m);
 
 					if (log.isDebugEnabled()) {
 						log.debug("Sending:" + group + name);
 					}
-				} else if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
 					senders.remove(name);
 					p.close();
 				}
@@ -403,13 +423,27 @@ public final class ActiveMQ extends MQ {
 
 		@Override
 		public void onFinish() {
-			if (last > System.currentTimeMillis() + X.AMINUTE * 10) {
+			if (last < System.currentTimeMillis() - X.AMINUTE) {
 				log.debug("sender." + name + " is stopped.");
 			} else {
 				this.schedule(0);
 			}
 		}
 
+	}
+
+	@Override
+	protected void _unbind(IStub stub) throws Exception {
+		// find R
+		for (int i = cached.size(); i >= 0; i--) {
+			WeakReference<R> w = cached.get(i);
+			if (w == null || w.get() == null) {
+				cached.remove(i);
+			} else if (w.get().cb == stub) {
+				w.get().close();
+				cached.remove(i);
+			}
+		}
 	}
 
 }

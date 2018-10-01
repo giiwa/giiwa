@@ -1,5 +1,7 @@
 package org.giiwa.app.web.portlet;
 
+import java.util.Properties;
+
 import org.giiwa.core.base.Host;
 import org.giiwa.core.conf.Local;
 import org.giiwa.framework.bean.Repo;
@@ -21,6 +23,11 @@ public class sysinfo extends portlet {
 		this.set("total", lang.size(Runtime.getRuntime().totalMemory()));
 		this.set("diskspeed", Repo.getSpeed() / 1024 / 1024);
 		this.set("cpus", Runtime.getRuntime().availableProcessors());
+
+		Properties props = System.getProperties();
+		this.set("jdkversion", props.getProperty("java.version"));
+		this.set("jdkvendor", props.getProperty("java.vendor"));
+
 		try {
 			this.set("totalmemory", lang.size(Host.getMem().getTotal()));
 		} catch (Throwable e) {

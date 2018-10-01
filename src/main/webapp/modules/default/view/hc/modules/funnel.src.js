@@ -1,5 +1,5 @@
 /**
- * @license Highcharts JS v6.0.3 (2017-11-14)
+ * @license Highcharts JS v6.0.4 (2017-12-15)
  * Highcharts funnel module
  *
  * (c) 2010-2017 Torstein Honsi
@@ -123,6 +123,29 @@
                 /** @ignore */
                 size: true, // to avoid adapting to data label size in Pie.drawDataLabels
 
+
+                // Presentational
+
+                dataLabels: {
+                    connectorWidth: 1
+                },
+
+                /**
+                 * Options for the series states.
+                 *
+                 * @optionparent plotOptions.funnel.states
+                 */
+                states: {
+
+                    /**
+                     * Options for a selected funnel item.
+                     */
+                    select: {
+                        color: '#cccccc',
+                        borderColor: '#000000',
+                        shadow: false
+                    }
+                }
 
             },
 

@@ -49,7 +49,12 @@
 
 		<copy todir="target/giiwa/giiwa">
 			<fileset dir="target/giiwa-${module.version}">
-				<exclude name="**/modules/default/WEB-INF" />
+			</fileset>
+		</copy>
+
+		<copy todir="target/giiwa/giiwa/modules/default/WEB-INF">
+			<fileset dir="target/giiwa-${module.version}/WEB-INF">
+				<exclude name="**/classes/**" />
 			</fileset>
 		</copy>
 

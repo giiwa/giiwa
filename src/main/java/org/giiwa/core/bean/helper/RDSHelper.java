@@ -115,73 +115,6 @@ public class RDSHelper implements Helper.DBHelper {
 	}
 
 	/**
-	 * update the data in db.
-	 * 
-	 * @param table
-	 *            the table name
-	 * @param sets
-	 *            the sets SQL sentence
-	 * @param q
-	 *            the query object
-	 * @param db
-	 *            the db name
-	 * @return int
-	 */
-	public int update(String table, String sets, W q, String db) {
-
-		/**
-		 * update it in database
-		 */
-		Connection c = null;
-		PreparedStatement p = null;
-		ResultSet r = null;
-
-		try {
-			if (X.isEmpty(db)) {
-				c = getConnection();
-			} else {
-				c = getConnection(db);
-			}
-			if (c == null)
-				return -1;
-
-			/**
-			 * create the sql statement
-			 */
-			StringBuilder sql = new StringBuilder();
-			sql.append("update ").append(table).append(" set ").append(sets);
-
-			String where = _where(q, c);
-			Object[] args = q.args();
-
-			if (where != null) {
-				sql.append(" where ").append(where);
-			}
-
-			p = c.prepareStatement(sql.toString());
-
-			int order = 1;
-			if (args != null) {
-				for (int i = 0; i < args.length; i++) {
-					Object o = args[i];
-
-					setParameter(p, order++, o);
-				}
-			}
-
-			return p.executeUpdate();
-
-		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-		} finally {
-			close(c, p, r);
-		}
-
-		return 0;
-	}
-
-	/**
 	 * Sets the parameter.
 	 * 
 	 * @param p
@@ -476,7 +409,10 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return int
 	 */
-	public int updateTable(String table, W q, V sets, String db) {
+	public int updateTable(String table, W q, V v, String db) {
+
+		if (v == null || v.isEmpty())
+			return 0;
 
 		/**
 		 * update it in database
@@ -492,6 +428,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (c == null)
 				return -1;
 
+			// _check(c, table, v);
+
 			/**
 			 * create the sql statement
 			 */
@@ -501,7 +439,7 @@ public class RDSHelper implements Helper.DBHelper {
 			boolean isoracle = isOracle(c);
 
 			StringBuilder s = new StringBuilder();
-			for (String name : sets.names()) {
+			for (String name : v.names()) {
 				if (s.length() > 0)
 					s.append(",");
 				if (isoracle && oracle.containsKey(name)) {
@@ -523,12 +461,12 @@ public class RDSHelper implements Helper.DBHelper {
 			p = c.prepareStatement(sql.toString());
 
 			int order = 1;
-			for (String name : sets.names()) {
-				Object v = sets.value(name);
+			for (String name : v.names()) {
+				Object v1 = v.value(name);
 				try {
-					setParameter(p, order++, v);
+					setParameter(p, order++, v1);
 				} catch (Exception e) {
-					log.error(name + "=" + v, e);
+					log.error(name + "=" + v1, e);
 				}
 			}
 
@@ -544,7 +482,7 @@ public class RDSHelper implements Helper.DBHelper {
 
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
-				log.error(q + ",values=" + sets.toString(), e);
+				log.error(q + ",values=" + v.toString(), e);
 		} finally {
 			close(p, c);
 		}
@@ -831,6 +769,8 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 			}
 
+			log.debug("sql=" + sql.toString());
+
 			p = c.prepareStatement(sql.toString());
 
 			int order = 1;
@@ -848,7 +788,7 @@ public class RDSHelper implements Helper.DBHelper {
 			while (r.next()) {
 				T b = clazz.newInstance();
 				b.load(r, fields);
-				b.rowid = rowid++;
+				b._rowid = rowid++;
 
 				list.add(b);
 			}
@@ -1010,6 +950,9 @@ public class RDSHelper implements Helper.DBHelper {
 	 */
 	public int insertTable(String table, V sets, String db) {
 
+		if (sets == null || sets.isEmpty())
+			return 0;
+
 		/**
 		 * insert it in database
 		 */
@@ -1035,6 +978,9 @@ public class RDSHelper implements Helper.DBHelper {
 
 	private int insertTable(String table, V sets, Connection c) {
 
+		if (sets == null || sets.isEmpty())
+			return 0;
+
 		/**
 		 * insert it in database
 		 */
@@ -1044,6 +990,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 			if (c == null)
 				return -1;
+
+			// _check(c, table, sets);
 
 			/**
 			 * create the sql statement
@@ -1589,8 +1537,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the db
 	 * @return the list of Object
 	 */
-	@SuppressWarnings("unchecked")
-	public <T> List<T> distinct(String table, String name, W q, Class<T> clazz, String db) {
+	public List<?> distinct(String table, String name, W q, String db) {
 		/**
 		 * create the sql statement
 		 */
@@ -1634,9 +1581,9 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 			r = p.executeQuery();
-			List<T> list = new ArrayList<T>();
+			List<Object> list = new ArrayList<Object>();
 			while (r.next()) {
-				list.add((T) r.getObject(1));
+				list.add(r.getObject(1));
 			}
 
 			if (log.isDebugEnabled())
@@ -1664,7 +1611,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @param filename
 	 *            the filename
 	 */
-	public void backup(String filename) {
+	public void backup(String filename, String[] cc) {
 
 		File f = new File(filename);
 		f.getParentFile().mkdirs();
@@ -1677,10 +1624,16 @@ public class RDSHelper implements Helper.DBHelper {
 			PrintStream out = new PrintStream(zip);
 
 			c = getConnection();
-			DatabaseMetaData m1 = c.getMetaData();
-			r1 = m1.getTables(null, null, null, new String[] { "TABLE" });
-			while (r1.next()) {
-				_backup(out, c, r1.getString("TABLE_NAME"));
+			if (cc == null) {
+				DatabaseMetaData m1 = c.getMetaData();
+				r1 = m1.getTables(null, null, null, new String[] { "TABLE" });
+				while (r1.next()) {
+					_backup(out, c, r1.getString("TABLE_NAME"));
+				}
+			} else {
+				for (String s : cc) {
+					_backup(out, c, s);
+				}
 			}
 			zip.closeEntry();
 			zip.close();
@@ -1746,18 +1699,6 @@ public class RDSHelper implements Helper.DBHelper {
 			BufferedReader in = new BufferedReader(new InputStreamReader(zip));
 
 			c = getConnection();
-			DatabaseMetaData m1 = c.getMetaData();
-			r1 = m1.getTables(null, null, null, new String[] { "TABLE" });
-			while (r1.next()) {
-				try {
-					stat = c.createStatement();
-					stat.execute("delete from " + r1.getString("TABLE_NAME"));
-					stat.close();
-					stat = null;
-				} catch (Exception e) {
-					log.error("ignore this exception", e);
-				}
-			}
 
 			String line = in.readLine();
 			while (line != null) {
@@ -1779,6 +1720,8 @@ public class RDSHelper implements Helper.DBHelper {
 			V v = V.create().copy(jo);
 			String tablename = jo.getString("_table");
 			v.remove("_table");
+
+			delete(tablename, W.create(X.ID, jo.get(X.ID)), Helper.DEFAULT);
 			insertTable(tablename, v, c);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -1993,6 +1936,9 @@ public class RDSHelper implements Helper.DBHelper {
 	@Override
 	public int insertTable(String table, List<V> values, String db) {
 
+		if (values == null || values.isEmpty())
+			return 0;
+
 		/**
 		 * insert it in database
 		 */
@@ -2003,6 +1949,8 @@ public class RDSHelper implements Helper.DBHelper {
 				return 0;
 
 			c = getConnection(db);
+
+			// _check(c, table, values.get(0));
 
 			/**
 			 * create the sql statement
@@ -2241,6 +2189,7 @@ public class RDSHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T sum(String table, W q, String name, String db) {
 
@@ -2298,7 +2247,7 @@ public class RDSHelper implements Helper.DBHelper {
 			close(r, p, c);
 
 			if (log.isDebugEnabled())
-				log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+				log.debug("sum, cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
 		}
 
 		return (T) n;
@@ -2307,6 +2256,203 @@ public class RDSHelper implements Helper.DBHelper {
 	public static Connection getConnection(String name, String url, String username, String passwd)
 			throws SQLException {
 		return RDB.getConnectionByUrl(name, url, username, passwd);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T max(String table, W q, String name, String db) {
+
+		/**
+		 * create the sql statement
+		 */
+		TimeStamp t = TimeStamp.create();
+
+		// log.debug("sql:" + sql.toString());
+
+		/**
+		 * search it in database
+		 */
+		Connection c = null;
+		PreparedStatement p = null;
+		ResultSet r = null;
+		Object n = 0;
+		try {
+
+			c = getConnection(db);
+
+			if (c == null) {
+				n = 0;
+			} else {
+				StringBuilder sum = new StringBuilder();
+				sum.append("select max(" + name + ") t from ").append(table);
+				String where = _where(q, c);
+				Object[] args = q.args();
+
+				if (!X.isEmpty(where)) {
+					sum.append(" where ").append(where);
+				}
+
+				p = c.prepareStatement(sum.toString());
+
+				int order = 1;
+				if (args != null) {
+					for (int i = 0; i < args.length; i++) {
+						Object o = args[i];
+
+						setParameter(p, order++, o);
+					}
+				}
+
+				r = p.executeQuery();
+				if (r.next()) {
+					n = r.getObject("t");
+				}
+			}
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(q, e);
+
+		} finally {
+			close(r, p, c);
+
+			if (log.isDebugEnabled())
+				log.debug("max, cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+		}
+
+		return (T) n;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T min(String table, W q, String name, String db) {
+
+		/**
+		 * create the sql statement
+		 */
+		TimeStamp t = TimeStamp.create();
+
+		// log.debug("sql:" + sql.toString());
+
+		/**
+		 * search it in database
+		 */
+		Connection c = null;
+		PreparedStatement p = null;
+		ResultSet r = null;
+		Object n = 0;
+		try {
+
+			c = getConnection(db);
+
+			if (c == null) {
+				n = 0;
+			} else {
+				StringBuilder sum = new StringBuilder();
+				sum.append("select min(" + name + ") t from ").append(table);
+				String where = _where(q, c);
+				Object[] args = q.args();
+
+				if (!X.isEmpty(where)) {
+					sum.append(" where ").append(where);
+				}
+
+				p = c.prepareStatement(sum.toString());
+
+				int order = 1;
+				if (args != null) {
+					for (int i = 0; i < args.length; i++) {
+						Object o = args[i];
+
+						setParameter(p, order++, o);
+					}
+				}
+
+				r = p.executeQuery();
+				if (r.next()) {
+					n = r.getObject("t");
+				}
+			}
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(q, e);
+
+		} finally {
+			close(r, p, c);
+
+			if (log.isDebugEnabled())
+				log.debug("min, cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+		}
+
+		return (T) n;
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T avg(String table, W q, String name, String db) {
+
+		/**
+		 * create the sql statement
+		 */
+		TimeStamp t = TimeStamp.create();
+
+		// log.debug("sql:" + sql.toString());
+
+		/**
+		 * search it in database
+		 */
+		Connection c = null;
+		PreparedStatement p = null;
+		ResultSet r = null;
+		Object n = 0;
+		try {
+
+			c = getConnection(db);
+
+			if (c == null) {
+				n = 0;
+			} else {
+				StringBuilder sum = new StringBuilder();
+				sum.append("select avg(" + name + ") t from ").append(table);
+				String where = _where(q, c);
+				Object[] args = q.args();
+
+				if (!X.isEmpty(where)) {
+					sum.append(" where ").append(where);
+				}
+
+				p = c.prepareStatement(sum.toString());
+
+				int order = 1;
+				if (args != null) {
+					for (int i = 0; i < args.length; i++) {
+						Object o = args[i];
+
+						setParameter(p, order++, o);
+					}
+				}
+
+				r = p.executeQuery();
+				if (r.next()) {
+					n = r.getObject("t");
+				}
+			}
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(q, e);
+
+		} finally {
+			close(r, p, c);
+
+			if (log.isDebugEnabled())
+				log.debug("avg, cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+		}
+
+		return (T) n;
+	}
+
+	@Override
+	public void repair() {
+		// TODO not support
+
 	}
 
 }

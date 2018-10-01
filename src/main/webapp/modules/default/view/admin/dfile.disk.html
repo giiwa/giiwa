@@ -1,0 +1,100 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/dfile/disk' class="selected">$lang.get('a.dfile.disk')</a>
+	<a href='/admin/dfile/file'>$lang.get('a.dfile.file')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/dfile/disk' method='get' #if($s>0) style='display:none' #end >
+		<span><label><h3>$lang.get('disk.path'):</h3><input type='text' name='name' value="$!name" /></label></span>
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+	
+	<div class='s1tab #if($s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 250px;">$lang.get('disk.node')</th>
+			<th>$lang.get('node.ip')</th>
+			<th>$lang.get('disk.path')</th>
+			<th>$lang.get('disk.priority')</th>
+			<th>$lang.get('disk.state')</th>
+			<th>$lang.get('disk.total')</th>
+			<th>$lang.get('disk.free')</th>
+			<th colspan="2">$lang.get('disk.used')</th>
+			<th>$lang.get('disk.count')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f1 in $list)
+	<tr>
+		<td>$!f1.node</td>
+		<td>$!f1.node_obj.ip</td>
+		<td><i class="icon-folder" style="color: #58b957;"></i>&nbsp;$f1.path</td>
+		<td>$f1.priority</td>
+		<td>
+			#if($f1.live)
+			<i class='icon-radio-checked' style="color: green"></i>
+			#else
+			<i class='icon-radio-checked' style="color: red"></i>
+			#end
+		</td>
+		<td>$lang.size($f1.total)</td>
+		<td>$lang.size($f1.free)</td>
+		<td>$lang.size($f1.used)</td>
+		<td>${f1.usage}%</td>
+		<td>$!f1.count</td>
+		<td class="a">
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.edit')" onclick="_edit('$f1.id')"><i class="icon-pencil"></i></a>
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.delete')" onclick="_delete('$f1.id')"><i class="icon-cancel-circle"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+#parse('/widget/goto.page.html')
+
+<div class='btns'>
+	<a class='btn btn-success' href="javascript:;" onclick="_add();">$lang.get('a.disk.add')</a>
+</div>
+
+<script>
+function _edit(id){
+	giiwa.popup('/admin/dfile/disk/edit?id=' + id, {
+		width: 500,
+		height: 250,
+		moveable: true,
+		max: false,
+		onsubmit: function(){
+			giiwa.reload();
+		}
+	});
+}
+function _add(){
+	giiwa.popup('/admin/dfile/disk/add', {
+		width: 500,
+		height: 250,
+		moveable: true,
+		max: false,
+		onsubmit: function(){
+			giiwa.reload();
+		}
+	});
+}
+function _delete(id) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post("/admin/dfile/disk/delete", {id:id}, function(d){
+			giiwa.reload();
+		})
+	}
+}
+
+</script>

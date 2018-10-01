@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
@@ -92,6 +91,28 @@ public class role extends Model {
 		}
 
 		this.response(jo);
+	}
+
+	@Path(path = "cleanup", login = true, access = "access.config.admin")
+	public void cleanup() {
+
+		Map<String, List<Access>> m1 = Access.load();
+		for (String g : m1.keySet()) {
+			List<Access> l1 = m1.get(g);
+			if (!lang.has("group." + g)) {
+				for (Access a : l1) {
+					Access.dao.delete(a.getName());
+				}
+			} else {
+				for (Access a : l1) {
+					if (!lang.has(a.getName())) {
+						Access.dao.delete(a.getName());
+					}
+				}
+			}
+		}
+
+		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 	}
 
 	/**
@@ -188,7 +209,7 @@ public class role extends Model {
 		this.show("/admin/role.index.html");
 	}
 
-	@Path(path = "access", login = true, access = "access.config.admin")
+	@Path(path = "access", login = true, access = "access.config.debug")
 	public void access() {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
@@ -203,7 +224,7 @@ public class role extends Model {
 		this.show("/admin/role.access.html");
 	}
 
-	@Path(path = "accessdelete", login = true, access = "access.config.admin")
+	@Path(path = "accessdelete", login = true, access = "access.config.debug")
 	public void accessdelete() {
 		String id = this.getString("id");
 		Access.dao.delete(id);

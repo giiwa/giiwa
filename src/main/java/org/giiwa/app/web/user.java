@@ -31,7 +31,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.noti.Email;
-import org.giiwa.core.noti.Sms;
+import org.giiwa.framework.bean.App;
 import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.Code;
 import org.giiwa.framework.bean.GLog;
@@ -68,6 +68,44 @@ public class user extends Model {
 	}
 
 	/**
+	 * 3rd redirect user/app
+	 */
+	@Path(path = "app")
+	public void app() {
+		String appid = this.getString("appid");
+		String data = this.getString("data");
+		if (X.isEmpty(appid) || X.isEmpty(data)) {
+			this.print("bad appid or data");
+			return;
+		}
+		App a = App.dao.load(W.create("appid", appid));
+		if (a == null) {
+			this.print("bad appid");
+			return;
+		}
+
+		JSON jo = App.parseParameters(data, a.getSecret());
+		if (jo != null) {
+			long time = jo.getLong("time");
+			String name = jo.getString("name");
+			if (System.currentTimeMillis() - time < X.AMINUTE) {
+				User u = User.load(name);
+				if (u != null) {
+					this.setUser(u);
+					this.redirect("/");
+					return;
+				} else {
+					this.print("bad name in data");
+				}
+			} else {
+				this.print("bad time in data, please check time/clock");
+			}
+		} else {
+			this.print("bad data");
+		}
+	}
+
+	/**
 	 * Register.
 	 */
 	@Path(path = "register")
@@ -91,57 +129,41 @@ public class user extends Model {
 			}
 
 			if (Captcha.Result.badcode == r1 || Captcha.Result.expired == r1) {
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("captcha.bad")));
-				return;
+				this.set(X.MESSAGE, lang.get("captcha.bad"));
 			} else {
 
 				String name = this.getString("name").trim().toLowerCase();
-				String passwd = this.getString("password").trim().toLowerCase();
 
-				String namerule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
-				String passwdrule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
-				if (!X.isEmpty(namerule) && !name.matches(namerule)) {
-					this.response(
-							JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.format.error")));
-					return;
+				try {
+					V v = V.create("name", name).copy(this, "password", "nickname", "email", "phone");
+					long id = User.create(v);
 
-				} else if (!X.isEmpty(passwdrule) && !passwd.matches(passwdrule)) {
-					this.response(
-							JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.passwd.format.error")));
-					return;
-				} else {
-					try {
-						V v = V.create("name", name).copy(this);
-						long id = User.create(v);
-
-						String role = Global.getString("user.role", "N/A");
-						Role r = Role.loadByName(role);
-						User u = User.dao.load(id);
-						if (r != null) {
-							u.setRole(r.getId());
-						}
-						this.setUser(u);
-						GLog.securitylog.info(user.class, "register",
-								lang.get("create.success") + ":" + name + ", uid=" + id, login, this.getRemoteHost());
-
-						Session s = this.getSession();
-						if (s.has("uri")) {
-							this.redirect((String) s.get("uri"));
-							return;
-						} else {
-							this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE,
-									lang.get("user.register.success")));
-							return;
-						}
-
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-						GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
-
-						this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
-						return;
-
+					String role = Global.getString("user.role", "N/A");
+					Role r = Role.loadByName(role);
+					User u = User.dao.load(id);
+					if (r != null) {
+						u.setRole(r.getId());
 					}
+					this.setUser(u, LoginType.web);
+					GLog.securitylog.info(user.class, "register",
+							lang.get("create.success") + ":" + name + ", uid=" + id, login, this.getRemoteHost());
+
+					Session s = this.getSession();
+					if (s.has("uri")) {
+						this.redirect((String) s.get("uri"));
+						return;
+					} else {
+						this.set(X.MESSAGE, lang.get("user.register.success"));
+						this.set("success", 1);
+					}
+
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+					GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
+
+					this.set(X.MESSAGE, e.getMessage());
+
+					this.set(this.getJSON());
 				}
 			}
 		}
@@ -187,7 +209,7 @@ public class user extends Model {
 
 	}
 
-	@Path(login = true, path = "set", log = Model.METHOD_POST)
+	@Path(login = true, path = "set")
 	public void set() {
 
 		List<String> ss = this.getNames();
@@ -203,7 +225,17 @@ public class user extends Model {
 
 	}
 
-	@Path(login = true, path = "get", log = Model.METHOD_POST)
+	@Path(path = "info")
+	public void info() {
+		if (this.getUser() != null) {
+			User u = User.dao.load(login.getId());
+			this.response(JSON.create().append(X.STATE, 200).append("data", u.getJSON()));
+		} else {
+			this.response(JSON.create().append(X.STATE, 401).append(X.MESSAGE, "login required"));
+		}
+	}
+
+	@Path(login = true, path = "get")
 	public void get() {
 
 		JSON jo = JSON.create();
@@ -250,7 +282,7 @@ public class user extends Model {
 				jo.put("uid", a.getUid());
 				jo.put("expired", a.getExpired());
 				User u = a.getUser_obj();
-				this.setUser(u);
+				this.setUser(u, LoginType.ajax);
 
 				GLog.securitylog.info(user.class, "login", null, u, this.getRemoteHost());
 			} else {
@@ -319,17 +351,15 @@ public class user extends Model {
 										this.getRemoteHost());
 							} else {
 
-								this.setUser(me);
 								GLog.securitylog.info(user.class, "login", null, me, this.getRemoteHost());
-
-								/**
-								 * logined, to update the stat data
-								 */
-								me.logined(sid(), this.getRemoteHost());
 
 								if (X.isSame("json", this.getString("type")) || this.isAjax()) {
 
+									this.setUser(me, LoginType.ajax);
 									log.debug("isAjax login");
+
+									login.logined(sid(), this.getRemoteHost(),
+											V.create("ajaxlogined", System.currentTimeMillis()));
 
 									jo.put("sid", sid());
 									jo.put("uid", me.getId());
@@ -350,6 +380,15 @@ public class user extends Model {
 									}
 									this.response(jo);
 								} else {
+
+									this.setUser(me, LoginType.web);
+
+									/**
+									 * logined, to update the stat data
+									 */
+									me.logined(sid(), this.getRemoteHost(),
+											V.create("weblogined", System.currentTimeMillis()));
+
 									this.redirect("/user/go");
 								}
 								return;
@@ -357,6 +396,8 @@ public class user extends Model {
 						}
 
 					} else {
+
+						jo.append(X.STATE, 200).append(X.MESSAGE, "ok");
 
 						User u = User.load(name);
 						if (u == null) {
@@ -376,8 +417,8 @@ public class user extends Model {
 								jo.put("message", lang.get("login.locked.error"));
 								jo.put(X.STATE, 204);
 
-								GLog.securitylog.error(user.class, "login", lang.get("login.failed") + ":" + name,
-										login, this.getRemoteHost());
+								GLog.securitylog.error(user.class, "login", lang.get("login.failed") + ":" + name, u,
+										this.getRemoteHost());
 
 							} else {
 								list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid());
@@ -386,15 +427,15 @@ public class user extends Model {
 									jo.put(X.STATE, 204);
 
 									GLog.securitylog.error(user.class, "login",
-											lang.get("login.locked.error") + ":" + name, login, this.getRemoteHost());
+											lang.get("login.locked.error") + ":" + name, u, this.getRemoteHost());
 
 								} else {
 									jo.put(X.MESSAGE, String.format(lang.get("login.name_password.error.times"),
 											list == null ? 0 : list.size()));
 									jo.put(X.STATE, 204);
 
-									GLog.securitylog.warn(user.class, "login", jo.getString(X.MESSAGE) + ":" + name,
-											login, this.getRemoteHost());
+									GLog.securitylog.warn(user.class, "login", jo.getString(X.MESSAGE) + ":" + name, u,
+											this.getRemoteHost());
 
 								}
 							}
@@ -455,14 +496,14 @@ public class user extends Model {
 			/**
 			 * clear the user in session, but still keep the session
 			 */
-			setUser(null);
+			setUser(null, null);
 
 		}
 
 		/**
 		 * redirect to home
 		 */
-		if (isAjax()) {
+		if (isAjax() || method.isPost()) {
 			JSON jo = JSON.create();
 			jo.put(X.STATE, HttpServletResponse.SC_OK);
 			jo.put(X.MESSAGE, "ok");
@@ -679,9 +720,14 @@ public class user extends Model {
 						jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
 						jo.put(X.MESSAGE, "user.passwd.format.error");
 					} else {
-						User.update(W.create("email", email), V.create("password", passwd));
-						jo.put(X.STATE, HttpServletResponse.SC_OK);
-						jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
+						try {
+							User.update(W.create("email", email), V.create("password", passwd));
+							jo.put(X.STATE, HttpServletResponse.SC_OK);
+							jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
+						} catch (Exception e) {
+							jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+							jo.put(X.MESSAGE, lang.get("save.failed") + ":" + e.getMessage());
+						}
 					}
 				}
 			} else if (!X.isEmpty(phone)) {
@@ -730,17 +776,17 @@ public class user extends Model {
 							j1.put("account", sb.toString());
 							j1.put("code", code);
 
-							if (Sms.send(phone, "user.forget.password", j1)) {
-								jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
-								jo.put(X.STATE, HttpServletResponse.SC_OK);
-								Code.dao.update(W.create("s1", code).and("s2", phone),
-										V.create(X.UPDATED, System.currentTimeMillis()));
-
-							} else {
-								jo.put(X.MESSAGE, lang.get("user.forget.phone.sent.failed"));
-								jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-
-							}
+							// if (Sms.send(phone, "user.forget.password", j1)) {
+							// jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
+							// jo.put(X.STATE, HttpServletResponse.SC_OK);
+							// Code.dao.update(W.create("s1", code).and("s2", phone),
+							// V.create(X.UPDATED, System.currentTimeMillis()));
+							//
+							// } else {
+							// jo.put(X.MESSAGE, lang.get("user.forget.phone.sent.failed"));
+							// jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+							//
+							// }
 
 						} else {
 							jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
@@ -770,9 +816,14 @@ public class user extends Model {
 						jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
 						jo.put(X.MESSAGE, "user.passwd.format.error");
 					} else {
-						User.update(W.create("phone", phone), V.create("password", passwd));
-						jo.put(X.STATE, HttpServletResponse.SC_OK);
-						jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
+						try {
+							User.update(W.create("phone", phone), V.create("password", passwd));
+							jo.put(X.STATE, HttpServletResponse.SC_OK);
+							jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
+						} catch (Exception e) {
+							jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+							jo.put(X.MESSAGE, lang.get("save.failed") + ":" + e.getMessage());
+						}
 					}
 				}
 

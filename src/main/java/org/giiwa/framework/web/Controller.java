@@ -40,247 +40,250 @@ import org.giiwa.framework.web.Model.HTTPMethod;
  */
 public class Controller {
 
-  static Log                    log      = LogFactory.getLog(Controller.class);
+	static Log log = LogFactory.getLog(Controller.class);
 
-  /**
-   * the configured context path
-   */
-  public static String          PATH;
+	/**
+	 * the configured context path
+	 */
+	public static String PATH;
 
-  /**
-   * os info
-   */
-  public static String          OS;
+	/**
+	 * os info
+	 */
+	public static String OS;
 
-  protected static List<String> welcomes = new ArrayList<String>();
+	protected static List<String> welcomes = new ArrayList<String>();
 
-  /**
-   * uptime of the app
-   */
-  public final static long      UPTIME   = System.currentTimeMillis();
+	/**
+	 * uptime of the app
+	 */
+	public final static long UPTIME = System.currentTimeMillis();
 
-  /**
-   * Inits the.
-   * 
-   * @param conf
-   *          the conf
-   * @param path
-   *          the path
-   */
-  public static void init(Configuration conf, String path) {
-    Controller.PATH = path;
+	/**
+	 * Inits the.
+	 * 
+	 * @param conf
+	 *            the conf
+	 * @param path
+	 *            the path
+	 */
+	public static void init(Configuration conf, String path) {
+		Controller.PATH = path;
 
-    OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
-        + System.getProperty("os.arch");
+		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
+				+ System.getProperty("os.arch");
 
-    Model.HOME = Model.GIIWA_HOME + "/giiwa";
+		Model.HOME = Model.GIIWA_HOME + "/giiwa";
 
-    /**
-     * initialize the module
-     */
-    Module.init(conf);
+		/**
+		 * initialize the module
+		 */
+		Module.init(conf);
 
-    // get welcome list
-    init_welcome();
-    
-    log.info("controller has been initialized.");
-  }
+		// get welcome list
+		init_welcome();
 
-  @SuppressWarnings("unchecked")
-  private static void init_welcome() {
-    try {
-      SAXReader reader = new SAXReader();
-      Document document = reader.read(Model.HOME + "/WEB-INF/web.xml");
-      Element root = document.getRootElement();
-      Element e1 = root.element("welcome-file-list");
-      List<Element> l1 = e1.elements("welcome-file");
-      for (Element e2 : l1) {
-        welcomes.add(e2.getText().trim());
-      }
+		log.info("controller has been initialized.");
+	}
 
-      log.debug("welcome=" + welcomes);
-    } catch (Exception e) {
-      log.error(e.getMessage(), e);
-    }
-  }
+	@SuppressWarnings("unchecked")
+	private static void init_welcome() {
+		try {
+			SAXReader reader = new SAXReader();
+			Document document = reader.read(Model.HOME + "/WEB-INF/web.xml");
+			Element root = document.getRootElement();
+			Element e1 = root.element("welcome-file-list");
+			List<Element> l1 = e1.elements("welcome-file");
+			for (Element e2 : l1) {
+				welcomes.add(e2.getText().trim());
+			}
 
-  /**
-   * Gets the model.
-   *
-   * @param method
-   *          the method
-   * @param uri
-   *          the uri
-   * @return the model
-   */
-  public static Model getModel(int method, String uri) {
-    return Module.home.getModel(method, uri);
-  }
+			log.debug("welcome=" + welcomes);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
 
-  /**
-   * Dispatch.
-   * 
-   * @param uri
-   *          the uri
-   * @param req
-   *          the req
-   * @param resp
-   *          the resp
-   * @param method
-   *          the method
-   */
-  @SuppressWarnings("deprecation")
-  public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, Model.HTTPMethod method) {
+	/**
+	 * Gets the model.
+	 *
+	 * @param method
+	 *            the method
+	 * @param uri
+	 *            the uri
+	 * @return the model
+	 */
+	public static Model getModel(int method, String uri) {
+		return Module.home.getModel(method, uri);
+	}
 
-    TimeStamp t = TimeStamp.create();
-    Tps.add(1);
+	/**
+	 * Dispatch.
+	 * 
+	 * @param uri
+	 *            the uri
+	 * @param req
+	 *            the req
+	 * @param resp
+	 *            the resp
+	 * @param method
+	 *            the method
+	 */
+	@SuppressWarnings("deprecation")
+	public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, Model.HTTPMethod method) {
 
-    /**
-     * test and load from cache first
-     */
-    Model mo = Module.home.loadModelFromCache(method.method, uri);
-    if (mo != null) {
+		TimeStamp t = TimeStamp.create();
+		Tps.add(1);
 
-      Path p = mo.dispatch(uri, req, resp, method);
+		/**
+		 * test and load from cache first
+		 */
+		Model mo = Module.home.loadModelFromCache(method.method, uri);
+		if (mo != null) {
 
-      if (p == null || p.accesslog()) {
-        if (log.isInfoEnabled())
-          log.info(
-              method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost() + " " + mo);
+			Path p = mo.dispatch(uri, req, resp, method);
 
-        V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-        User u1 = mo.getUser();
-        if (u1 != null) {
-          v.set("uid", u1.getId()).set("username", u1.get("name"));
-        }
-        if (AccessLog.isOn())
-          AccessLog.create(mo.getRemoteHost(), uri,
-              v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-                  .set("client", mo.browser()).set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-                  .set("model", mo.getClass().getName()));
-      }
+			if (p == null || p.accesslog()) {
+				if (log.isInfoEnabled())
+					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -"
+							+ mo.getRemoteHost() + " " + mo);
 
-      // Counter.max("web.request.max", t.past(), uri);
-      return;
-    }
+				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+				User u1 = mo.getUser();
+				if (u1 != null) {
+					v.set("uid", u1.getId()).set("username", u1.get("name"));
+				}
+				if (AccessLog.isOn())
+					AccessLog.create(mo.getRemoteHost(), uri,
+							v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
+									.set("client", mo.browser())
+									.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+									.set("model", mo.getClass().getName()));
+			}
 
-    if (X.isSame("/", uri) || !_dispatch(uri, req, resp, method, t)) {
+			// Counter.max("web.request.max", t.past(), uri);
+			return;
+		}
 
-      for (String suffix : welcomes) {
-        if (_dispatch(uri + "/" + suffix, req, resp, method, t)) {
-          return;
-        }
-      }
+		if (X.isSame("/", uri) || !_dispatch(uri, req, resp, method, t)) {
 
-      /**
-       * get back of the uri, and set the path to the model if found, and the
-       * path instead
-       */
-      int i = uri.lastIndexOf("/");
-      while (i > 0) {
-        String path = uri.substring(i + 1);
-        String u = uri.substring(0, i);
-        mo = getModel(method.method, u);
-        if (mo != null) {
+			for (String suffix : welcomes) {
+				if (_dispatch(uri + "/" + suffix, req, resp, method, t)) {
+					return;
+				}
+			}
 
-          mo.setPath(path);
-          Path p = mo.dispatch(u, req, resp, method);
+			/**
+			 * get back of the uri, and set the path to the model if found, and the path
+			 * instead
+			 */
+			int i = uri.lastIndexOf("/");
+			while (i > 0) {
+				String path = uri.substring(i + 1);
+				String u = uri.substring(0, i);
+				mo = getModel(method.method, u);
+				if (mo != null) {
 
-          if (p == null || p.accesslog()) {
-            if (log.isInfoEnabled())
-              log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost()
-                  + " " + mo);
+					mo.setPath(path);
+					Path p = mo.dispatch(u, req, resp, method);
 
-            V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-            User u1 = mo.getUser();
-            if (u1 != null) {
-              v.set("uid", u1.getId()).set("username", u1.get("name"));
-            }
-            if (AccessLog.isOn())
-              AccessLog.create(mo.getRemoteHost(), uri,
-                  v.set("status", mo.getStatus()).set("client", mo.browser())
-                      .set("header", Arrays.toString(mo.getHeaders()))
-                      .set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-                      .set("model", mo.getClass().getName()));
-          }
+					if (p == null || p.accesslog()) {
+						if (log.isInfoEnabled())
+							log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -"
+									+ mo.getRemoteHost() + " " + mo);
 
-          // Counter.max("web.request.max", t.past(), uri);
-          return;
-        }
-        i = uri.lastIndexOf("/", i - 1);
-      }
+						V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+						User u1 = mo.getUser();
+						if (u1 != null) {
+							v.set("uid", u1.getId()).set("username", u1.get("name"));
+						}
+						if (AccessLog.isOn())
+							AccessLog.create(mo.getRemoteHost(), uri,
+									v.set("status", mo.getStatus()).set("client", mo.browser())
+											.set("header", Arrays.toString(mo.getHeaders()))
+											.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+											.set("model", mo.getClass().getName()));
+					}
 
-      /**
-       * not found, then using dummymodel instead, and cache it
-       */
-      mo = new DefaultModel();
-      mo.module = Module.load(0);
+					// Counter.max("web.request.max", t.past(), uri);
+					return;
+				}
+				i = uri.lastIndexOf("/", i - 1);
+			}
 
-      /**
-       * do not put in model cache, <br>
-       * let's front-end (CDN, http server) do the the "static" resource cache
-       */
-      // Module.home.modelMap.put(uri, (Class<Model>)
-      // mo.getClass());
-      mo.dispatch(uri, req, resp, method);
+			/**
+			 * not found, then using dummymodel instead, and cache it
+			 */
+			mo = new DefaultModel();
+			mo.module = Module.load(0);
 
-      if (log.isInfoEnabled())
-        log.info(
-            method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost() + " " + mo);
-      V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-      User u1 = mo.getUser();
-      if (u1 != null) {
-        v.set("uid", u1.getId()).set("username", u1.get("name"));
-      }
-      if (AccessLog.isOn())
-        AccessLog.create(mo.getRemoteHost(), uri,
-            v.set("status", mo.getStatus()).set("client", mo.browser()).set("header", Arrays.toString(mo.getHeaders()))
-                .set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-                .set("model", mo.getClass().getName()));
+			/**
+			 * do not put in model cache, <br>
+			 * let's front-end (CDN, http server) do the the "static" resource cache
+			 */
+			// Module.home.modelMap.put(uri, (Class<Model>)
+			// mo.getClass());
+			mo.dispatch(uri, req, resp, method);
 
-      // Counter.max("web.request.max", t.past(), uri);
-    }
+			if (log.isInfoEnabled())
+				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost()
+						+ " " + mo);
+			V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+			User u1 = mo.getUser();
+			if (u1 != null) {
+				v.set("uid", u1.getId()).set("username", u1.get("name"));
+			}
+			if (AccessLog.isOn())
+				AccessLog.create(mo.getRemoteHost(), uri,
+						v.set("status", mo.getStatus()).set("client", mo.browser())
+								.set("header", Arrays.toString(mo.getHeaders()))
+								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+								.set("model", mo.getClass().getName()));
 
-  }
+			// Counter.max("web.request.max", t.past(), uri);
+		}
 
-  private static boolean _dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method,
-      TimeStamp t) {
-    /**
-     * load model from the modules
-     */
+	}
 
-    while (uri.indexOf("//") > -1) {
-      uri = uri.replaceAll("//", "/");
-    }
+	private static boolean _dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method,
+			TimeStamp t) {
+		/**
+		 * load model from the modules
+		 */
 
-    // log.debug("dispatch, uri=" + uri);
+		while (uri.indexOf("//") > -1) {
+			uri = uri.replaceAll("//", "/");
+		}
 
-    Model mo = getModel(method.method, uri);
-    if (mo != null) {
+		// log.debug("dispatch, uri=" + uri);
 
-      Path p = mo.dispatch(uri, req, resp, method);
+		Model mo = getModel(method.method, uri);
+		if (mo != null) {
 
-      if (p == null || p.accesslog()) {
-        if (log.isInfoEnabled())
-          log.info(
-              method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost() + " " + mo);
+			Path p = mo.dispatch(uri, req, resp, method);
 
-        V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-        User u1 = mo.getUser();
-        if (u1 != null) {
-          v.set("uid", u1.getId()).set("username", u1.get("name"));
-        }
-        if (AccessLog.isOn())
-          AccessLog.create(mo.getRemoteHost(), uri,
-              v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-                  .set("client", mo.browser()).set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-                  .set("model", mo.getClass().getName()));
-      }
+			if (p == null || p.accesslog()) {
+				if (log.isInfoEnabled())
+					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.pastms() + "ms -"
+							+ mo.getRemoteHost() + " " + mo);
 
-      // Counter.max("web.request.max", t.past(), uri);
-      return true;
-    } else {
-      return false;
-    }
-  }
+				V v = V.create("method", method.toString()).set("cost", t.pastms()).set("sid", mo.sid());
+				User u1 = mo.getUser();
+				if (u1 != null) {
+					v.set("uid", u1.getId()).set("username", u1.get("name"));
+				}
+				if (AccessLog.isOn())
+					AccessLog.create(mo.getRemoteHost(), uri,
+							v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
+									.set("client", mo.browser())
+									.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+									.set("model", mo.getClass().getName()));
+			}
+
+			// Counter.max("web.request.max", t.past(), uri);
+			return true;
+		} else {
+			return false;
+		}
+	}
 }

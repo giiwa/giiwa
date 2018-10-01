@@ -16,6 +16,7 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
+import org.giiwa.framework.bean.GLog;
 
 public class SQL {
 
@@ -69,6 +70,7 @@ public class SQL {
 
 		} catch (Exception e) {
 			log.error(sql, e);
+			GLog.applog.error("sql", "query", sql, e, null, null);
 		}
 		return null;
 
@@ -77,7 +79,7 @@ public class SQL {
 	private static JSON _sql(StringFinder sf) {
 
 		log.debug("select ...");
-		sf.next(null);
+		sf.next(" ");
 		sf.trim();
 		String cols = sf.nextTo("from");
 		if (X.isEmpty(cols)) {
@@ -88,9 +90,9 @@ public class SQL {
 		r.put("cols", cols);
 
 		sf.trim();
-		sf.next(null);
+		sf.next(" ");
 		sf.trim();
-		String table = sf.next("_");
+		String table = sf.next(" ");
 		if (X.isEmpty(table)) {
 			return null;
 		}
@@ -101,7 +103,7 @@ public class SQL {
 
 	private static JSON _condition(StringFinder sf, JSON r) {
 		sf.trim();
-		String s = sf.next(null);
+		String s = sf.next(" ");
 		if (X.isEmpty(s)) {
 			return r;
 		}
@@ -144,7 +146,7 @@ public class SQL {
 			}
 		} else if (X.isSame(s, "limit")) {
 			sf.trim();
-			String o = sf.next(null);
+			String o = sf.next(" ");
 			if (!X.isEmpty(o)) {
 				r.put("limit", X.toInt(o));
 				return _condition(sf, r);
@@ -208,7 +210,7 @@ public class SQL {
 				} else {
 					// like ?
 					s1.skip(-1);
-					op = s.next(null);
+					op = s.next(" ");
 				}
 
 				s1.trim();
@@ -273,7 +275,7 @@ public class SQL {
 				}
 
 				s.skip(-1);
-				String s1 = s.next(null);
+				String s1 = s.next(" ");
 				conn.push(s1);
 			}
 
@@ -349,8 +351,13 @@ public class SQL {
 		String s = "a>10/2*5 and b>11";
 		W q = SQL.where2W(StringFinder.create(s));
 		System.out.println(q);
+
+		// SQL.query(null, "select *");
+		JSON q1 = _sql(StringFinder.create("select * from gi_oplog limit 10"));
+		System.out.println(q1);
 	}
 
-	private static String[] KW = { "and", "or", "like", "=", "!=", ">", ">=", "<", "<=" };
+	// private static String[] KW = { "and", "or", "like", "=", "!=", ">", ">=",
+	// "<", "<=" };
 
 }
