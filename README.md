@@ -22,10 +22,10 @@
 <h2>分布式并行计算</h2>
 <p>提供分布式共享锁，多级缓存，分布式文件存储，分布式任务，MapReduce支持。</p>
 <p>高效分布式任务协调。</p>
-<p>大型计算任务可以分片。</p>
+<p>大型计算任务分片执行。</p>
 
 <h2>下载</h2>
-<p>最新Giiwa运行包 <a href="https://www.giiwa.org/archive/giiwa-1.5.tgz">giiwa-1.5.tgz</a>，或者<a href="https://www.giiwa.org/archive/giiwa-1.5.zip">giiwa-1.5.zip</a>。</p>
+<p>最新Giiwa运行包 <a href="https://www.giiwa.org/archive/giiwa-1.6.tgz">giiwa-1.6.tgz</a>，或者<a href="https://www.giiwa.org/archive/giiwa-1.6.zip">giiwa-1.6.zip</a>。</p>
 
 <h2>获取代码</h2>
 <p>所有最新源码已经托管在Github:</p>
