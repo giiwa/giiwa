@@ -2,10 +2,10 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/sysstat/cpu'>$lang.get('a.sysstat.cpu')</a>
-	<a href='/admin/sysstat/net' class='selected'>$lang.get('a.sysstat.net')</a>
-	<a href='/admin/sysstat/netstat'>$lang.get('a.sysstat.netstat')</a>
-	<a href='/admin/sysstat/disk'>$lang.get('a.sysstat.disk')</a>
+	<a href='/admin/sysstat/cpu?__node=$!__node'>$lang.get('a.sysstat.cpu')</a>
+	<a href='/admin/sysstat/net?__node=$!__node' class='selected'>$lang.get('a.sysstat.net')</a>
+	<a href='/admin/sysstat/netstat?__node=$!__node'>$lang.get('a.sysstat.netstat')</a>
+	<a href='/admin/sysstat/disk?__node=$!__node'>$lang.get('a.sysstat.disk')</a>
 </div>
 
 <table id='task-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
@@ -52,7 +52,7 @@ $(function(){
 
 function _reload(){
 	if($('#$!id').length > 0) {
-		$.post('/admin/sysstat/net/list', {}, function(d){
+		$.post('/admin/sysstat/net/list?__node=$!__node', {}, function(d){
 			$('#$!id').html(d);			
 			setTimeout(_reload, 3000);
 		});

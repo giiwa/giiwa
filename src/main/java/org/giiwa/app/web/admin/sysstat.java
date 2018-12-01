@@ -33,12 +33,12 @@ public class sysstat extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 		this.redirect("/admin/sysstat/cpu");
 	}
 
-	@Path(path = "cpu", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "cpu", login = true, access = "access.config.admin")
 	public void cpu() {
 
 		try {
@@ -50,7 +50,7 @@ public class sysstat extends Model {
 		this.show("/admin/sysstat.cpu.html");
 	}
 
-	@Path(path = "cpu/list", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "cpu/list", login = true, access = "access.config.admin")
 	public void cpu_list() {
 
 		try {
@@ -61,7 +61,7 @@ public class sysstat extends Model {
 		this.show("/admin/sysstat.cpu.list.html");
 	}
 
-	@Path(path = "net", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "net", login = true, access = "access.config.admin")
 	public void net() {
 
 		try {
@@ -73,7 +73,7 @@ public class sysstat extends Model {
 		this.show("/admin/sysstat.net.html");
 	}
 
-	@Path(path = "net/list", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "net/list", login = true, access = "access.config.admin")
 	public void net_list() {
 
 		try {
@@ -84,7 +84,7 @@ public class sysstat extends Model {
 		this.show("/admin/sysstat.net.list.html");
 	}
 
-	@Path(path = "disk", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "disk", login = true, access = "access.config.admin")
 	public void disk() {
 
 		try {
@@ -96,7 +96,7 @@ public class sysstat extends Model {
 		this.show("/admin/sysstat.disk.html");
 	}
 
-	@Path(path = "disk/list", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "disk/list", login = true, access = "access.config.admin")
 	public void disk_list() {
 
 		try {
@@ -107,7 +107,7 @@ public class sysstat extends Model {
 		this.show("/admin/sysstat.disk.list.html");
 	}
 
-	@Path(path = "netstat", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "netstat", login = true, access = "access.config.admin")
 	public void netstat() {
 
 		try {

@@ -24,7 +24,6 @@ import javax.crypto.Cipher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-// TODO: Auto-generated Javadoc
 /**
  * RSA utility, RSA is using for encode some short key (such as password or DES
  * key), it's slow, and output longer data, NOT suitable for encode file.

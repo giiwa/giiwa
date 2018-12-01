@@ -46,7 +46,6 @@ import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
 
-// TODO: Auto-generated Javadoc
 public final class ActiveMQ extends MQ {
 
 	private static Log log = LogFactory.getLog(ActiveMQ.class);
@@ -198,10 +197,10 @@ public final class ActiveMQ extends MQ {
 
 					process(name, l1, cb);
 
-					log.debug("got: " + l1.size() + " in one packet, name=" + name);
+					log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
 				} else {
-					System.out.println(m);
+					log.warn("unknown message=" + m);
 				}
 
 			} catch (Exception e) {
@@ -435,13 +434,19 @@ public final class ActiveMQ extends MQ {
 	@Override
 	protected void _unbind(IStub stub) throws Exception {
 		// find R
-		for (int i = cached.size(); i >= 0; i--) {
+		for (int i = cached.size() - 1; i >= 0; i--) {
 			WeakReference<R> w = cached.get(i);
-			if (w == null || w.get() == null) {
+
+			if (w == null) {
 				cached.remove(i);
-			} else if (w.get().cb == stub) {
-				w.get().close();
-				cached.remove(i);
+			} else {
+				R r = w.get();
+				if (r == null || r.cb == null) {
+					cached.remove(i);
+				} else if (r.cb == stub) {
+					r.close();
+					cached.remove(i);
+				}
 			}
 		}
 	}

@@ -2,11 +2,11 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/repo' class='selected'>$lang.get('a.repo')</a>
+	<a href='/admin/repo?__node=$!__node' class='selected'>$lang.get('a.repo')</a>
 </div>
 
 <div class='search'>
-	<form action='/admin/repo' method='get' #if($s>0) style='display:none' #end >
+	<form action='/admin/repo?__node=$!__node' method='get' #if($s>0) style='display:none' #end >
 		<span><label><h3>$lang.get('label.name'):</h3><input type='text' name='name' value="$!name" /></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
@@ -53,7 +53,7 @@
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
-		$.post('/admin/repo/delete', {id: id}, function(d){
+		$.post('/admin/repo/delete?__node=$!__node', {id: id}, function(d){
 			giiwa.processing.hide();
 			giiwa.reload();
 		});

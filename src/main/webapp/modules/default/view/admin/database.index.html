@@ -2,12 +2,12 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/database' class='selected'>$lang.get('a.database')</a>
-	<a href='/admin/backup'>$lang.get('a.backup')</a>
-	<a href='/admin/backup/auto'>$lang.get('a.backup.auto')</a>
+	<a href='/admin/database?__node=$!__node' class='selected'>$lang.get('a.database')</a>
+	<a href='/admin/backup?__node=$!__node'>$lang.get('a.backup')</a>
+	<a href='/admin/backup/auto?__node=$!__node'>$lang.get('a.backup.auto')</a>
 </div>
 
-<form id="E$!requestid" action='/admin/database/er'  method='post' class='form nospace' style="padding-left: 0;padding-top: 0;">
+<form id="E$!requestid" action='/admin/database/er?__node=$!__node'  method='post' class='form nospace' style="padding-left: 0;padding-top: 0;">
 	
 	<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 		<thead>
@@ -48,7 +48,7 @@
 <script>
 function _delete(table) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		$.post('/admin/database/delete', {table: table}, function(d){
+		$.post('/admin/database/delete?__node=$!__node', {table: table}, function(d){
 			giiwa.hint(d.message);
 			giiwa.reload();
 		})

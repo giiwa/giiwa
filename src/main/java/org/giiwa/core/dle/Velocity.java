@@ -24,7 +24,6 @@ import org.apache.velocity.VelocityContext;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * @author wujun
  *

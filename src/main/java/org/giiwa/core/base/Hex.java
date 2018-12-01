@@ -14,7 +14,6 @@
 */
 package org.giiwa.core.base;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class Hex.
  *

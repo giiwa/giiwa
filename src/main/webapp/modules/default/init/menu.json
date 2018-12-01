@@ -52,7 +52,7 @@
 					{
 						"name": "menu.tools",
 						"seq": 40,
-						"access": "access.config.admin|access.config.system.admin|access.config.module.admin",
+						"access": "access.config.admin",
 						"classes": "icon-hammer",
 						"childs": [
 							{
@@ -63,13 +63,13 @@
 							},
 							{
 								"name": "menu.sysinfo",
-								"load": "/admin/sysinfo",
+								"load": "/admin/sysinfo/cpu",
 								"seq": 20,
 								"classes": "icon-info"
 							},
 							{
 								"name": "menu.sysstat",
-								"load": "/admin/sysstat",
+								"load": "/admin/sysstat/cpu",
 								"seq": 30,
 								"classes": "icon-stats-dots"
 							},
@@ -99,13 +99,6 @@
 								"classes": 'icon-magic-wand'
 							}
 						]
-					},
-					{
-						"name": "menu.app",
-						"load": "/admin/app",
-						"seq": 60,
-						"access": "access.config.admin",
-						"classes": "icon-link"
 					}
 				]
 			},
@@ -116,32 +109,29 @@
 				"seq": 20,
 				"childs": [
 					{
-						"name": "menu.user",
-						"load": "/admin/user",
-						"access": "access.config.admin|access.config.user.admin",
-						"seq": 10,
-						"classes": "icon-user"
-					},
-					{
 						"name": "menu.role",
 						"load": "/admin/role",
 						"access": "access.config.admin|access.config.role.admin",
-						"seq": 20,
+						"seq": 10,
 						"classes": "icon-shield"
-					}
+					},
+					{
+						"name": "menu.user",
+						"load": "/admin/user",
+						"access": "access.config.admin|access.config.user.admin",
+						"seq": 20,
+						"classes": "icon-user"
+					},
+					{
+						"name": "menu.app",
+						"load": "/admin/app",
+						"seq": 30,
+						"access": "access.config.admin",
+						"classes": "icon-link"
+					},
 				]
 			}
 		]
-	},
-	{
-		"name": "home",
-		"seq": 20,
-		"childs": []
-	},
-	{
-		"name": "user",
-		"seq": 30,
-		"childs": []
 	},
 	{
 		"role": "SYSADM",

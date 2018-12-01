@@ -1,7 +1,7 @@
 <div id='toolbar' class='toolbar'>
 	<div class='left'>
 		<div class='home'>
-			<a href='/'>
+			<a href='/?__node=$!__node'>
 				<i class='icon-home'></i>&nbsp;
 				<span>$lang.get('home')</span>
 			</a>
@@ -10,13 +10,13 @@
 	<div class='right'>
 		<div class='t_left'>
 			<a class='icon icon-arrow-left' href='javascript:;' onclick='giiwa.back();' title="$lang.get('a.back')"></a>
-			<a class='icon icon-laptop' href='javascript:;' onclick='giiwa.load("/admin/dashboard")' title="$lang.get('a.dashboard')"></a>
+			<a class='icon icon-laptop' href='javascript:;' onclick='giiwa.load("/admin/dashboard?__node=$!__node")' title="$lang.get('a.dashboard')"></a>
 		</div>
 	</div>
 </div>
 <script>
 $(function() {
-	giiwa.load('/admin/dashboard');
+	giiwa.load('/admin/dashboard?__node=$!__node');
 
 	$('body').bind('keydown', function(e) {
 		var target = e.target.nodeName;
@@ -35,7 +35,7 @@ $(function() {
 			}
 		} else if(!edit && e.which == 36) {
 			//home
-			window.location.href = "/";				
+			window.location.href = "/?__node=$!__node";				
 			e.preventDefault();
 		}
 	});

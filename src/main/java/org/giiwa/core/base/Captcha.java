@@ -37,7 +37,6 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
 
-// TODO: Auto-generated Javadoc
 public class Captcha {
 
 	static Log log = LogFactory.getLog(Captcha.class);

@@ -18,7 +18,6 @@ import java.util.Stack;
 
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 public class StringFinder {
 
 	/**

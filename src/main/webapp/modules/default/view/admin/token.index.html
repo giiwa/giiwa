@@ -2,11 +2,11 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/token' class='selected'>$lang.get('a.token')</a>
+	<a href='/admin/token?__node=$!__node' class='selected'>$lang.get('a.token')</a>
 </div>
 
 <div class='search'>
-	<form action='/admin/token' method='get' #if($s>0) style='display:none' #end >
+	<form action='/admin/token?__node=$!__node' method='get' #if($s>0) style='display:none' #end >
 		<span><label><h3>$lang.get('user.uid'):</h3><input type='text' name='name' value="$!name"/></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
@@ -65,7 +65,7 @@
 function _clean() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
-		$.post('/admin/token/clean', {}, function(d){
+		$.post('/admin/token/clean?__node=$!__node', {}, function(d){
 			giiwa.processing.hide();
 			giiwa.reload();
 		});
@@ -74,7 +74,7 @@ function _clean() {
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
-		$.post('/admin/token/delete', {id:id}, function(d){
+		$.post('/admin/token/delete?__node=$!__node', {id:id}, function(d){
 			giiwa.processing.hide();
 			if(d.state == 200) {
 				$(o).parent().parent().remove();

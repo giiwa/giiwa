@@ -14,18 +14,15 @@
 */
 package org.giiwa.framework.web.view;
 
-import java.io.File;
-
 import javax.servlet.RequestDispatcher;
 
-import org.giiwa.framework.bean.DFile;
 import org.giiwa.framework.web.Model;
 
 public class JspView extends View {
 
 	@Override
-	protected boolean parse(File file, Model m, String viewname) throws Exception {
-		String name = file.getCanonicalPath().substring(Model.HOME.length());
+	protected boolean parse(Object file, Model m, String viewname) throws Exception {
+		String name = View.getCanonicalPath(file).substring(Model.HOME.length());
 		log.debug("viewname=" + name);
 
 		name = name.replaceAll("\\\\", "/");
@@ -48,12 +45,6 @@ public class JspView extends View {
 		rd.include(m.req, m.resp);
 
 		return true;
-	}
-
-	@Override
-	protected boolean parse(DFile in, Model m, String viewname) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
 	}
 
 }

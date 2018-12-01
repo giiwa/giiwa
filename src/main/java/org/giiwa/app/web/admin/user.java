@@ -68,6 +68,9 @@ public class user extends Model {
 
 					V v = V.create("name", name).copy(jo).set("locked", 0);
 					v.remove("role");
+					v.append("createdip", this.getRemoteHost()).append("createdua", this.browser()).append("createdby",
+							login.getId());
+
 					long id = User.create(v);
 
 					/**

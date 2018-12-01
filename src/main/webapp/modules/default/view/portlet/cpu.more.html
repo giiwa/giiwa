@@ -40,8 +40,7 @@ $(function(){
 	           }
 	       },
 	    series: [
-	    				{name: "$lang.get('cpu.sys')", color:'#860606', data: [#foreach($c in $list) [$lang.time($c.created, 'm'), $!lang.format($!c.sys, '%.1f')],#end]},
-	    				{name: "$lang.get('cpu.user')", color:'#0dad76', data: [#foreach($c in $list) [$lang.time($c.created, 'm'), $!lang.format($!c.user, '%.1f')],#end]}
+					{name: "$lang.get('cpu.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$lang.format($!c.usage, '%.1f')},#end]}
 	    			], 
 	});
 

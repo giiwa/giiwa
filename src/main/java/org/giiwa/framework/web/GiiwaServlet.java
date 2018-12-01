@@ -1,8 +1,11 @@
 package org.giiwa.framework.web;
 
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,6 +27,20 @@ public class GiiwaServlet extends HttpServlet {
 	static Log log = LogFactory.getLog(GiiwaServlet.class);
 
 	@Override
+	protected void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		log.info("method=" + req.getMethod());
+		super.doHead(req, resp);
+	}
+
+	@Override
+	protected void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		log.info("method=" + req.getMethod());
+		super.doOptions(req, resp);
+	}
+
+	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) {
 		try {
 			HttpServletRequest r1 = (HttpServletRequest) req;
@@ -42,6 +59,8 @@ public class GiiwaServlet extends HttpServlet {
 			if (!X.isEmpty(domain)) {
 				r2.addHeader("Access-Control-Allow-Origin", domain);
 			}
+
+			// log.info("method=" + req.getMethod());
 
 			Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
 		} catch (Throwable e) {
@@ -76,7 +95,7 @@ public class GiiwaServlet extends HttpServlet {
 	}
 
 	@Override
-	public void init() {
+	public synchronized void init() {
 		try {
 			Model.s️ervletContext = getServletContext();
 
@@ -89,7 +108,7 @@ public class GiiwaServlet extends HttpServlet {
 			}
 
 			View.init(config);
-			
+
 			License.init();
 
 		} catch (Throwable e) {

@@ -92,7 +92,7 @@ public class License extends Bean {
 	}
 
 	public boolean decode() {
-		Module m = Module.load(id);
+		Module m = Module.module(id);
 		if (m != null) {
 			String key = m.getKey();
 			try {

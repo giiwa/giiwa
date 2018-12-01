@@ -5,7 +5,7 @@
 	#end
 </div>
 
-<div class="portlet" data-url="/portlet/loginfo" style="width:100%"></div>
+<div class="portlet" data-url="/portlet/loginfo?__node=$!__node" style="width:100%"></div>
 
 <div id='restart' title="$lang.get('title.restart.service')" class="form" style="display: none">
 	<div>
@@ -27,13 +27,13 @@ function _showrestart(){
 }
 function _restart(){
 	
-	$.get('/admin/system/info', {}, function(d){
+	$.get('/admin/system/info?__node=$!__node', {}, function(d){
 		pid = d.pid;
 	});
 
 	giiwa.processing.show();
 	var p = giiwa.dialog().panel.find('input[name=password]').val();
-	$.post('/admin/system/restart', {pwd:p}, function(d){
+	$.post('/admin/system/restart?__node=$!__node', {pwd:p}, function(d){
 		if(d.state == 'ok') {
 			giiwa.dialog().close();
 			_timer = setInterval(_load, 5000);
@@ -47,7 +47,7 @@ function _restart(){
 var pid = false;
 
 function _load() {
-	$.get('/admin/system/info', {}, function(d){
+	$.get('/admin/system/info?__node=$!__node', {}, function(d){
 		if(d.pid != pid) {
 			window.location.href = window.location.href;
 		}

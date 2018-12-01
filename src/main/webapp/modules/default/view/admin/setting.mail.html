@@ -5,8 +5,8 @@
 <div>
 	<label><h3>$lang.get('mail.protocol'):</h3>
 		<select name='protocol'>
-			<option class='smtp' #if($protocol=='smtp') selected #end>SMTP</option>
-			<option class='smtps' #if($protocol=='smtps') selected #end>SMTPS</option>
+			<option class='smtp' #if($protocol=='smtp') selected="selected" #end>SMTP</option>
+			<option class='smtps' #if($protocol=='smtps') selected="selected" #end>SMTPS</option>
 		</select>
 		<g>$lang.get('mail.protocol')</g></label>
 </div>

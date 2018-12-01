@@ -2,12 +2,12 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/dfile/disk' class="selected">$lang.get('a.dfile.disk')</a>
-	<a href='/admin/dfile/file'>$lang.get('a.dfile.file')</a>
+	<a href='/admin/dfile/disk?__node=$!__node' class="selected">$lang.get('a.dfile.disk')</a>
+	<a href='/admin/dfile/folder?__node=$!__node'>$lang.get('a.dfile.folder')</a>
 </div>
 
 <div class='search'>
-	<form action='/admin/dfile/disk' method='get' #if($s>0) style='display:none' #end >
+	<form action='/admin/dfile/disk?__node=$!__node' method='get' #if($s>0) style='display:none' #end >
 		<span><label><h3>$lang.get('disk.path'):</h3><input type='text' name='name' value="$!name" /></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
@@ -21,14 +21,13 @@
 	<thead>
 		<tr>
 			<th style="width: 250px;">$lang.get('disk.node')</th>
-			<th>$lang.get('node.ip')</th>
+			<th>$lang.get('node.url')</th>
 			<th>$lang.get('disk.path')</th>
 			<th>$lang.get('disk.priority')</th>
 			<th>$lang.get('disk.state')</th>
 			<th>$lang.get('disk.total')</th>
 			<th>$lang.get('disk.free')</th>
 			<th colspan="2">$lang.get('disk.used')</th>
-			<th>$lang.get('disk.count')</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -36,7 +35,7 @@
 #foreach($f1 in $list)
 	<tr>
 		<td>$!f1.node</td>
-		<td>$!f1.node_obj.ip</td>
+		<td>$!f1.node_obj.url</td>
 		<td><i class="icon-folder" style="color: #58b957;"></i>&nbsp;$f1.path</td>
 		<td>$f1.priority</td>
 		<td>
@@ -50,10 +49,11 @@
 		<td>$lang.size($f1.free)</td>
 		<td>$lang.size($f1.used)</td>
 		<td>${f1.usage}%</td>
-		<td>$!f1.count</td>
 		<td class="a">
 			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.edit')" onclick="_edit('$f1.id')"><i class="icon-pencil"></i></a>
-			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.delete')" onclick="_delete('$f1.id')"><i class="icon-cancel-circle"></i></a>
+			#if($list.size()>1)
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.unmount')" onclick="_delete('$f1.id')"><i class="icon-cancel-circle"></i></a>
+			#end
 		</td>
 	</tr>
 #end
@@ -68,7 +68,7 @@
 
 <script>
 function _edit(id){
-	giiwa.popup('/admin/dfile/disk/edit?id=' + id, {
+	giiwa.popup('/admin/dfile/disk/edit?__node=$!__node&id=' + id, {
 		width: 500,
 		height: 250,
 		moveable: true,
@@ -79,7 +79,7 @@ function _edit(id){
 	});
 }
 function _add(){
-	giiwa.popup('/admin/dfile/disk/add', {
+	giiwa.popup('/admin/dfile/disk/add?__node=$!__node', {
 		width: 500,
 		height: 250,
 		moveable: true,
@@ -91,7 +91,7 @@ function _add(){
 }
 function _delete(id) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		$.post("/admin/dfile/disk/delete", {id:id}, function(d){
+		$.post("/admin/dfile/disk/delete?__node=$!__node", {id:id}, function(d){
 			giiwa.reload();
 		})
 	}

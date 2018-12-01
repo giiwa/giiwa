@@ -336,7 +336,9 @@ public class Language {
 			// parse t to datetime, assume the datetime is
 			// "YYYY ? MM ? dd hh:mm:ss"
 
-			return sdf.format(new Date(_parseDatetime(t)));
+			synchronized (sdf) {
+				return sdf.format(new Date(_parseDatetime(t)));
+			}
 		} catch (Exception e) {
 			log.error(t, e);
 		}
@@ -418,7 +420,9 @@ public class Language {
 
 				formats.put(format, sdf);
 			}
-			return sdf.format(new Date(t));
+			synchronized (sdf) {
+				return sdf.format(new Date(t));
+			}
 		} catch (Exception e) {
 			log.error(t, e);
 			e.printStackTrace();
@@ -499,7 +503,9 @@ public class Language {
 				// sdf.setTimeZone(TimeZone.getTimeZone(get("date.timezone")));
 				formats.put(format, sdf);
 			}
-			return sdf.parse(t).getTime();
+			synchronized (sdf) {
+				return sdf.parse(t).getTime();
+			}
 		} catch (Exception e) {
 			log.error(t, e);
 		}

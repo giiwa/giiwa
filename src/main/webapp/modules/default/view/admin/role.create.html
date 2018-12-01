@@ -2,11 +2,11 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/role'>$lang.get('a.role')</a>
-	<a href='/admin/role/create' class='selected'>$lang.get('a.create')</a>
+	<a href='/admin/role?__node=$!__node'>$lang.get('a.role')</a>
+	<a href='/admin/role/create?__node=$!__node' class='selected'>$lang.get('a.create')</a>
 </div>
 
-<form action='/admin/role/create'  method='post' class='form'>
+<form action='/admin/role/create?__node=$!__node'  method='post' class='form'>
 	<div><label><h3>$lang.get('role.name')(<r>*</r>):</h3><input type='text' name='name' value=#if($name) '$name' #else '' #end/></label></div>
 	<div><label><h3>$lang.get('role.memo'):</h3><input type='text' name='memo' value=#if($memo) '$memo' #else '' #end/></label></div>	
 	

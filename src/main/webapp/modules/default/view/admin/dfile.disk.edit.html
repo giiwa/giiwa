@@ -2,9 +2,9 @@
 	<a href='javascript:;' class="selected">$lang.get('a.disk.edit')</a>
 </div>
 
-<form action='/admin/dfile/disk/edit'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
+<form action='/admin/dfile/disk/edit?__node=$!__node'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
 	<input type="hidden" name="id" value="$!s.id" />
-	<div><label><h3>$lang.get('node.ip'):</h3><i>$!s.node_obj.ip</i></label></div>
+	<div><label><h3>$lang.get('node.url'):</h3><i>$!s.node_obj.url</i></label></div>
 	<div><label><h3>$lang.get('disk.path'):</h3><i>$!s.path</i></label></div>
 	<div><label><h3>$lang.get('disk.priority')(<r>*</r>):</h3><input type='number' name='priority' value="$!s.priority"/><g>$lang.get('disk.priority.hint')</g></label></div>
 	

@@ -14,7 +14,13 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
@@ -36,7 +42,7 @@ public class task extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
 		this.set("pending", Task.tasksInQueue());
@@ -50,7 +56,7 @@ public class task extends Model {
 		this.show("/admin/task.index.html");
 	}
 
-	@Path(path = "kill", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "kill", login = true, access = "access.config.admin")
 	public void kill() {
 		String name = this.getString("name");
 		Task t = Task.get(name);
@@ -60,7 +66,7 @@ public class task extends Model {
 
 	}
 
-	@Path(path = "dump", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "dump", login = true, access = "access.config.admin")
 	public void dump() {
 		String name = this.getString("name");
 		Task t = Task.get(name);
@@ -103,7 +109,7 @@ public class task extends Model {
 
 	}
 
-	@Path(path = "dumpall", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "dumpall", login = true, access = "access.config.admin")
 	public void dumpall() {
 		JSON j = JSON.create();
 		StringBuilder sb = new StringBuilder();
@@ -137,6 +143,155 @@ public class task extends Model {
 		}
 
 		this.response(j);
+	}
+
+	@Path(login = true, path = "thread", access = "access.config.admin")
+	public void thread() {
+
+		List<JSON> l1 = JSON.createList();
+		TreeMap<Thread.State, Long> states = new TreeMap<Thread.State, Long>();
+
+		try {
+			Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
+			for (Thread t : dumps.keySet()) {
+
+				Long n = states.get(t.getState());
+				if (n == null) {
+					states.put(t.getState(), 1L);
+				} else {
+					states.put(t.getState(), n + 1);
+				}
+
+				JSON j = JSON.create();
+				j.append("name", t.getName());
+				j.append("priority", t.getPriority());
+				j.append("id", t.getId());
+				j.append("state", t.getState());
+
+				StackTraceElement[] ss = dumps.get(t);
+				StringBuilder sb1 = new StringBuilder();
+				StringBuilder sb2 = new StringBuilder();
+				if (ss != null && ss.length > 0) {
+					int ii = 0;
+					for (StackTraceElement e : ss) {
+						if (ii < 2) {
+							sb1.append(e.toString()).append("<br/>");
+							ii++;
+						}
+						sb2.append(e.toString()).append("<br/>");
+					}
+				}
+				j.append("trace1", sb1.toString());
+				j.append("trace2", sb2.toString());
+
+				l1.add(j);
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		}
+
+		Collections.sort(l1, new Comparator<JSON>() {
+
+			@Override
+			public int compare(JSON o1, JSON o2) {
+				long id1 = o1.getLong("id");
+				long id2 = o2.getLong("id");
+				if (id1 == id2)
+					return 0;
+
+				return id1 < id2 ? -1 : 1;
+			}
+
+		});
+
+		this.set("states", states);
+		this.set("list", l1);
+
+		this.query.path("/admin/task/thread");
+		this.show("/admin/task.thread.html");
+
+	}
+
+	@Path(login = true, path = "thread/kill", access = "access.config.admin")
+	public void thread_kill() {
+
+		long id = this.getLong("id");
+
+		try {
+			Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
+			for (Thread t : dumps.keySet()) {
+				if (t.getId() == id) {
+					t.interrupt();
+					break;
+				}
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		}
+
+		this.response(JSON.create().append(X.STATE, 200));
+
+	}
+
+	@Path(login = true, path = "thread/deadlock", access = "access.config.admin")
+	public void thread_deadlock() {
+
+		List<JSON> l1 = JSON.createList();
+
+		try {
+
+			ThreadMXBean tmxb = ManagementFactory.getThreadMXBean();
+			long[] tt = tmxb.findDeadlockedThreads();
+
+			if (tt != null && tt.length > 0) {
+				Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
+				for (Thread t : dumps.keySet()) {
+
+					if (!X.isIn(t.getId(), tt)) {
+						continue;
+					}
+
+					JSON j = JSON.create();
+					j.append("name", t.getName());
+					j.append("priority", t.getPriority());
+					j.append("id", t.getId());
+					j.append("state", t.getState());
+
+					StackTraceElement[] ss = dumps.get(t);
+					StringBuilder sb2 = new StringBuilder();
+					if (ss != null && ss.length > 0) {
+						for (StackTraceElement e : ss) {
+							sb2.append(e.toString()).append("<br/>");
+						}
+					}
+					j.append("trace2", sb2.toString());
+
+					l1.add(j);
+				}
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		}
+
+		Collections.sort(l1, new Comparator<JSON>() {
+
+			@Override
+			public int compare(JSON o1, JSON o2) {
+				long id1 = o1.getLong("id");
+				long id2 = o2.getLong("id");
+				if (id1 == id2)
+					return 0;
+
+				return id1 < id2 ? -1 : 1;
+			}
+
+		});
+
+		this.set("list", l1);
+
+		this.query.path("/admin/task/thread/deadlock");
+		this.show("/admin/task.thread.deadlock.html");
+
 	}
 
 }

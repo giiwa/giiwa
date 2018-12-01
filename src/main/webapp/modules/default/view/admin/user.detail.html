@@ -2,8 +2,8 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/user'>$lang.get('a.user')</a>
-	<a href='/admin/user/detail?id=$u.id' class='selected'>$lang.get('a.detail')</a>
+	<a href='/admin/user?__node=$!__node'>$lang.get('a.user')</a>
+	<a href='/admin/user/detail?__node=$!__node&id=$u.id' class='selected'>$lang.get('a.detail')</a>
 </div>
 
 <div class='form'>
@@ -62,6 +62,18 @@
 		<tr>
 			<td>$lang.get('user.failtimes')</td>
 			<td>$!u.failtimes</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.createdip')</td>
+			<td>$!u.createdip</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.createdua')</td>
+			<td>$!u.createdua</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.createdby')</td>
+			<td>$!u.createdby_obj.name</td>
 		</tr>
 		</tbody>
 	</table>

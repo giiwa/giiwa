@@ -203,19 +203,37 @@ public class RDB {
 	 */
 	public static Connection getConnectionByUrl(String name, String url, String username, String passwd)
 			throws SQLException {
+		return getConnectionByUrl(name, url, username, passwd, null);
+	}
+
+	public static Connection getConnectionByUrl(String name, String url, String username, String passwd, String locale)
+			throws SQLException {
 
 		String D = _getDiver(url);
 
 		log.debug("driver=" + D + ", url=" + url + ", user=" + username + ", password=" + passwd);
 
 		if (!X.isEmpty(D)) {
+			Locale oldlocale = Locale.getDefault();
 			try {
+				if (!X.isEmpty(locale)) {
+					if (X.isSame(locale, "en")) {
+						Locale.setDefault(Locale.US);
+					} else if (X.isSame(locale, "zh")) {
+						Locale.setDefault(Locale.CHINA);
+					}
+					// Locale.setDefault(new Locale(locale));
+				}
+				log.debug("locale， default=" + oldlocale + ", set=" + Locale.getDefault());
+
 				Class.forName(D);
 				DriverManager.setLoginTimeout(10);
 				Connection conn = DriverManager.getConnection(url, username, passwd);
 				return conn;
 			} catch (Exception e) {
 				throw new SQLException(e);
+			} finally {
+				Locale.setDefault(oldlocale);
 			}
 		} else {
 			throw new SQLException("unknown URL");
@@ -339,6 +357,12 @@ public class RDB {
 			return "sun.jdbc.odbc.JdbcOdbcDriver";
 		}
 		return null;
+	}
+
+	public static void main(String[] args) {
+		Locale e = Locale.ENGLISH;// new Locale("en_US");
+		System.out.println(e);
+		System.out.println(Locale.US.equals(e));
 	}
 
 }

@@ -16,33 +16,39 @@ package org.giiwa.core.cache;
 
 public interface ICacheSystem {
 
-  /**
-   * Gets the.
-   *
-   * @param id
-   *          the id
-   * @return the object
-   */
-  Object get(String id);
+	/**
+	 * Gets the.
+	 *
+	 * @param id
+	 *            the id
+	 * @return the object
+	 */
+	Object get(String name);
 
-  /**
-   * Delete.
-   *
-   * @param id
-   *          the id
-   * @return true, if successful
-   */
-  boolean delete(String id);
+	/**
+	 * Delete.
+	 *
+	 * @param id
+	 *            the id
+	 * @return true, if successful
+	 */
+	boolean delete(String name);
 
-  /**
-   * Sets the.
-   *
-   * @param id
-   *          the id
-   * @param data
-   *          the data
-   * @return true, if successful
-   */
-  boolean set(String id, Object data);
+	/**
+	 * Sets the.
+	 *
+	 * @param id
+	 *            the id
+	 * @param data
+	 *            the data
+	 * @return true, if successful
+	 */
+	boolean set(String name, Object data);
+
+	boolean trylock(String name, String value, long ms);
+
+	void expire(String name, String value, long ms);
+
+	boolean unlock(String name, String value);
 
 }

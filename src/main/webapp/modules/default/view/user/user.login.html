@@ -19,6 +19,12 @@
 	color: #fff;
     position: relative;
 }
+.form-signin-heading{
+	color: #fff;
+	margin-top: 5%;
+    position: relative;	
+}
+
 </style>
 <div id="bg" >
 </div>
@@ -73,7 +79,7 @@ $(function(){
 		<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
 		<input type="password" id="password" name="pwd" value="$!pwd" class="form-control" required />
 	</div>
-	#if($global.getInt('user.captcha', 1) == 1)
+	#if($global.getInt('user.captcha', 0) == 1)
 	<div class="validateCode">
 		<label class="input-label mid" for="validateCode">$lang.get('user.captcha')</label>
 		<input type="text" id="validateCode" name="code" maxlength="4" required class="form-control">

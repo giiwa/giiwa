@@ -429,7 +429,7 @@ a.disabled {
 	width: 17px;
 	overflow: hidden;
 	position: fixed;
-	top: calc(40% - 12px);
+	top: calc(50% - 12px);
 	left: 37px;
 	z-index: 99;
 	height: 63px;
@@ -2196,7 +2196,7 @@ button:hover, button:active {
 }
 td.a a {
     text-decoration: none;
-    color: #666;
+    color: #bbb;
 }
 td.a a:hover{
 	color: #4ea6ff;

@@ -34,7 +34,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Language;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code Shell} Class lets run shell command.
  *
@@ -160,11 +159,13 @@ public class Shell {
 	public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir, long timeout)
 			throws IOException {
 
+		DefaultExecutor executor = new DefaultExecutor();
+		ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
+
 		try {
 
 			CommandLine cmdLine = CommandLine.parse(cmd);
 
-			ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
 			int[] exit = new int[513];
 			for (int i = 0; i < 512; i++) {
 				exit[i] = i - 256;
@@ -172,21 +173,22 @@ public class Shell {
 			// TODO, should ignore all
 			exit[512] = -559038737;
 
-			DefaultExecutor executor = new DefaultExecutor();
 			executor.setExitValues(exit);
 			executor.setStreamHandler(stream);
 			if (!X.isEmpty(workdir)) {
 				executor.setWorkingDirectory(new File(workdir));
 			}
 
-			ExecuteWatchdog watchdog = new ExecuteWatchdog(timeout);
-			executor.setWatchdog(watchdog);
+			// ExecuteWatchdog watchdog = new ExecuteWatchdog(timeout);
+			// executor.setWatchdog(watchdog);
 			// watchdog.destroyProcess();
 
 			return executor.execute(cmdLine);
 		} catch (IOException e) {
 			log.error("cmd=" + cmd, e);
 			throw e;
+		} finally {
+			stream.stop();
 		}
 	}
 
@@ -310,9 +312,12 @@ public class Shell {
 	 */
 	public static String run(String cmd, String workdir, long timeout) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		run(cmd, out, out, null, workdir, timeout);
-		out.flush();
-		out.close();
+		try {
+			run(cmd, out, out, null, workdir, timeout);
+			out.flush();
+		} finally {
+			X.close(out);
+		}
 		return out.toString();
 	}
 

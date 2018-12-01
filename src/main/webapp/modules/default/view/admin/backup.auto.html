@@ -2,12 +2,12 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/database'>$lang.get('a.database')</a>
-	<a href='/admin/backup'>$lang.get('a.backup.files')</a>
-	<a href='/admin/backup/auto' class='selected'>$lang.get('a.backup.auto')</a>
+	<a href='/admin/database?__node=$!__node'>$lang.get('a.database')</a>
+	<a href='/admin/backup?__node=$!__node'>$lang.get('a.backup.files')</a>
+	<a href='/admin/backup/auto?__node=$!__node' class='selected'>$lang.get('a.backup.auto')</a>
 </div>
 
-<form action='/admin/backup/auto'  method='post' class='form' >
+<form action='/admin/backup/auto?__node=$!__node'  method='post' class='form' >
 
 	<div><label><h3>$lang.get('backup.auto'):</h3><input type='checkbox' name='backup.auto' #if($local.getInt('backup.auto', 0) ==1) checked="checked" #end/></label></div>
 	<div style="margin-left:20px;"><label><h3>$lang.get('backup.point'):</h3><input type='text' name='backup.point' value="$local.getString('backup.point', '2:00')"/><g>$lang.get('backup.point.hint')</g></label></div>

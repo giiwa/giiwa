@@ -20,7 +20,8 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.core.json.JSON;
+import org.giiwa.core.dfile.FileClient;
+import org.giiwa.core.dfile.command.NOTIFY;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.impl.*;
@@ -126,6 +127,10 @@ public abstract class MQ {
 
 			throw new Exception("MQ not init yet");
 		} else {
+			// if (Mode.TOPIC.equals(mode)) {
+			// NOTIFY.bind(name, stub);
+			// return;
+			// }
 			mq._bind(name, stub, mode);
 		}
 	}
@@ -209,13 +214,16 @@ public abstract class MQ {
 	 */
 
 	public static long topic(String to, Request req) throws Exception {
+
+		// FileClient.notify(to, req.get());
+
 		if (mq == null) {
 			throw new Exception("MQ not init yet");
 		}
 
 		long s1 = seq.incrementAndGet();
 		if (log.isDebugEnabled())
-			log.debug("send topic  to [" + to + "], seq=" + s1 + ", req=" + req);
+			log.debug("send topic to [" + to + "], seq=" + s1 + ", req=" + req);
 
 		req.seq = s1;
 		mq._topic(to, req);
@@ -245,34 +253,6 @@ public abstract class MQ {
 		}
 
 		return mq._send(to, req);
-	}
-
-	/**
-	 * send the request and wait the response until timeout
-	 * 
-	 * @param rpcname
-	 *            the rpc name
-	 * @param req
-	 *            the request
-	 * @param timeout
-	 * @return the response
-	 * @throws Exception
-	 */
-	public static Response call(String rpcname, Request req, int timeout) throws Exception {
-		return RPC.call(rpcname, req, timeout);
-	}
-
-	public static void log(JSON p) {
-		try {
-			Request r = new Request();
-			r.seq = 0;
-			r.from = _node;
-			r.type = 0;
-			r.setBody(p.toString().getBytes());
-			mq._send("logger", r);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
 	}
 
 	// public static void logger(boolean log) {
@@ -347,7 +327,7 @@ public abstract class MQ {
 					ObjectOutputStream out = new ObjectOutputStream(bb);
 					out.writeObject(t);
 				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+					log.error(t.toString(), e);
 				} finally {
 					X.close(bb);
 				}
@@ -366,7 +346,8 @@ public abstract class MQ {
 				ObjectInputStream in = new ObjectInputStream(bb);
 				return (T) in.readObject();
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				log.error(e.getMessage());
+				// log.error(e.getMessage(), e);
 			} finally {
 				X.close(bb);
 			}
@@ -390,22 +371,22 @@ public abstract class MQ {
 
 	public static void notify(String name, Serializable data) {
 		try {
-			MQ.topic(Notify.name, Request.create().from(name).put(data));
+			FileClient.notify(name, data);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 
 	public static <T> T wait(String name, long timeout) {
-		return Notify.wait(name, timeout, null);
+		return NOTIFY.wait(name, timeout, null);
 	}
 
 	public static <T> T wait(String name, long timeout, Runnable prepare) {
-		return Notify.wait(name, timeout, prepare);
+		return NOTIFY.wait(name, timeout, prepare);
 	}
 
-	public static <T> Queue<T> create(String name) throws Exception {
-		Queue<T> q = Queue.create(name);
+	public static <T> Result<T> create(String name) throws Exception {
+		Result<T> q = Result.create(name);
 		q.bind();
 		return q;
 	}

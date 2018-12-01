@@ -2,9 +2,9 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/database'>$lang.get('a.database')</a>
-	<a href='/admin/backup' class='selected'>$lang.get('a.backup.files')</a>
-	<a href='/admin/backup/auto'>$lang.get('a.backup.auto')</a>
+	<a href='/admin/database?__node=$!__node'>$lang.get('a.database')</a>
+	<a href='/admin/backup?__node=$!__node' class='selected'>$lang.get('a.backup.files')</a>
+	<a href='/admin/backup/auto?__node=$!__node'>$lang.get('a.backup.auto')</a>
 </div>
 
 <table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
@@ -35,7 +35,7 @@
 </table>
 
 <div class='btns'>
-	<a class='btn btn-success' href='/admin/backup/create'>$lang.get('a.backup.create')</a>
+	<a class='btn btn-success' href='/admin/backup/create?__node=$!__node'>$lang.get('a.backup.create')</a>
 	<a class='btn btn-primary' href='javascript:;' onclick="_import();">$lang.get('a.backup.import')</a>
 </div>
 
@@ -57,7 +57,7 @@ function _import() {
 				msg_done : "$lang.get('msg.done')",
 				done : function(url) {
 					giiwa.processing.show();
-					$.post('/admin/backup/upload', {
+					$.post('/admin/backup/upload?__node=$!__node', {
 						repo : url
 					}, function(d) {
 						giiwa.processing.hide();
@@ -74,7 +74,7 @@ function _import() {
 }
 
 function _download(name) {
-	$.post("/admin/backup/download", {name:name}, function(d){
+	$.post("/admin/backup/download?__node=$!__node", {name:name}, function(d){
 		if(d.state == 200) {
 			giiwa.download(d.url);
 		} else {
@@ -85,7 +85,7 @@ function _download(name) {
 function _delete(name) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
-		$.post('/admin/backup/delete', {name: name}, function(d){
+		$.post('/admin/backup/delete?__node=$!__node', {name: name}, function(d){
 			giiwa.processing.hide();
 			giiwa.reload();
 		});
@@ -95,7 +95,7 @@ var tid = 0;
 function _recover(name){
 	if(confirm("$lang.get('title.data_will_be_replaced')")) {
 		giiwa.processing.show();
-		$.post('/admin/backup/restore', {name: name}, function(d){
+		$.post('/admin/backup/restore?__node=$!__node', {name: name}, function(d){
 			giiwa.processing.hide();
 			tid = d.id;
 			_recovering();
@@ -105,7 +105,7 @@ function _recover(name){
 
 function _recovering(){
 	giiwa.processing.show();
-	$.post('/admin/backup/restoring', {id:tid}, function(d){
+	$.post('/admin/backup/restoring?__node=$!__node', {id:tid}, function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {
 			giiwa.message(d.message);

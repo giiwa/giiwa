@@ -25,6 +25,7 @@ import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Role;
@@ -239,10 +240,9 @@ public class setting extends Model {
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
 			Global.setConfig("perf.moniter", X.isSame("on", this.getString("perf.moniter")) ? 1 : 0);
+			Local.setConfig("web.debug", X.isSame("on", this.getString("web.debug")) ? 1 : 0);
 			Global.setConfig("glog.keep.days", this.getInt("glog.keep.days"));
-			Global.setConfig("message.max", this.getInt("message.max"));
 			Global.setConfig("web.cache", this.getString("web.cache"));
-			Global.setConfig("dfile.web", X.isSame("on", this.getString("dfile.web")) ? 1 : 0);
 
 			NtpTask.owner.schedule(0);
 

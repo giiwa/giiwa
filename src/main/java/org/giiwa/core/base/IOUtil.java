@@ -28,8 +28,8 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.dfile.DFile;
 
-// TODO: Auto-generated Javadoc
 /**
  * IO utility
  * 
@@ -56,6 +56,10 @@ public final class IOUtil {
 		return copy(in, out, true);
 	}
 
+	public static int delete(File f) throws IOException {
+		return delete(f, -1);
+	}
+
 	/**
 	 * delete the file or the path.
 	 *
@@ -65,10 +69,10 @@ public final class IOUtil {
 	 * @throws IOException
 	 *             throw exception when delete the file or directory error
 	 */
-	public static int delete(File f) throws IOException {
+	public static int delete(File f, long age) throws IOException {
 		int count = 0;
 
-		if (f.isFile() || isLink(f)) {
+		if ((f.isFile() || isLink(f)) && (age < 0 || System.currentTimeMillis() - f.lastModified() > age)) {
 			f.delete();
 
 			// if (log.isInfoEnabled()) {
@@ -80,15 +84,46 @@ public final class IOUtil {
 			File[] ff = f.listFiles();
 			if (ff != null && ff.length > 0) {
 				for (File f1 : ff) {
-					count += delete(f1);
+					count += delete(f1, age);
 				}
 			}
-			f.delete();
+			ff = f.listFiles();
+			if (ff == null || ff.length == 0) {
+				f.delete();
+			}
 			// if (log.isInfoEnabled()) {
 			// log.info("delete folder: " + f.getCanonicalPath());
 			// }
 
 			count++;
+		}
+		return count;
+	}
+
+	public static int delete(DFile f) throws IOException {
+		int count = 0;
+
+		if (f.isFile()) {
+			f.delete();
+
+			count++;
+		} else if (f.isDirectory()) {
+			try {
+				DFile[] ff = f.listFiles();
+				if (ff != null && ff.length > 0) {
+					for (DFile f1 : ff) {
+						count += delete(f1);
+					}
+				}
+				f.delete();
+				// if (log.isInfoEnabled()) {
+				// log.info("delete folder: " + f.getCanonicalPath());
+				// }
+
+				count++;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 		return count;
 	}
@@ -188,6 +223,10 @@ public final class IOUtil {
 		return copy(new FileInputStream(src), new FileOutputStream(dest), true);
 	}
 
+	public static int copy(DFile src, DFile dest) throws IOException {
+		return copy(src.getInputStream(), dest.getOutputStream(), true);
+	}
+
 	/**
 	 * copy the data in "inputstream" to "outputstream", from start to end.
 	 *
@@ -207,31 +246,40 @@ public final class IOUtil {
 	 */
 	public static int copy(InputStream in, OutputStream out, long start, long end, boolean closeAfterDone)
 			throws IOException {
+
 		try {
 			if (in == null || out == null)
 				return 0;
 
 			byte[] bb = new byte[1024 * 32];
 			int total = 0;
-			in.skip(start);
+
+			// log.debug("skip=" + start);
+			if (start > 0) {
+				in.skip(start);
+			}
+
 			int ii = (int) Math.min((end - start + 1), bb.length);
 			int len = in.read(bb, 0, ii);
+			// log.debug("len=" + len + ", ii=" + ii);
+
 			while (len > 0) {
 				out.write(bb, 0, len);
+				out.flush();
+
 				total += len;
 				ii = (int) Math.min((end - start - total + 1), bb.length);
-				len = in.read(bb, 0, ii);
-				out.flush();
+				if (ii > 0) {
+					len = in.read(bb, 0, ii);
+					// log.debug("len=" + len + ", ii=" + ii);
+				} else {
+					len = 0;
+				}
 			}
 			return total;
 		} finally {
 			if (closeAfterDone) {
-				if (in != null) {
-					in.close();
-				}
-				if (out != null) {
-					out.close();
-				}
+				X.close(in, out);
 			}
 		}
 	}

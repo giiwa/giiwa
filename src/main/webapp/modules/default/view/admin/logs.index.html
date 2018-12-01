@@ -2,7 +2,7 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/logs' class='selected'>$lang.get('a.logs')</a>
+	<a href='/admin/logs?__node=$!__node' class='selected'>$lang.get('a.logs')</a>
 </div>
 
 <table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
@@ -37,14 +37,14 @@
 <script>
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		$.post("/admin/logs/delete", {f:id}, function(d){
+		$.post("/admin/logs/delete?__node=$!__node", {f:id}, function(d){
 			$(o).parent().parent().remove();
 		})
 	}
 }
 function _download(name) {
 	giiwa.processing.show();
-	$.post('/admin/logs/download', {f:name}, function(d){
+	$.post('/admin/logs/download?__node=$!__node', {f:name}, function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {
 			giiwa.download(d.src);

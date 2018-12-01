@@ -45,7 +45,7 @@ public class database extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(login = true, access = "access.config.admin")
 	@Override
 	public void onGet() {
 
@@ -69,7 +69,7 @@ public class database extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin")
 	public void delete() {
 
 		String table = this.getString("table");
@@ -78,7 +78,7 @@ public class database extends Model {
 		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
-	@Path(path = "er", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "er", login = true, access = "access.config.admin")
 	public void er() {
 
 		// GLog.applog.info(backup.class, "create", "method=" + method, login,

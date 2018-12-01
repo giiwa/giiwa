@@ -6,11 +6,6 @@
 </a>
 <script>
 $(function() {
-	giiwa.initmenu($("#menu .menu"), {
-		url : "/menu",
-		root : 0,
-		name : 'admin'
-	});
 	giiwa.menu = function(s) {
 		var bar = $('#ss_tab');
 		var menu = $('#menu');
@@ -51,6 +46,13 @@ $(function() {
 			});
 		}
 	};
+	
+	giiwa.initmenu($("#menu .menu"), {
+		url : "/menu?__node=$!__node",
+		root : 0,
+		name : 'admin'
+	});
+	
 })
 
 

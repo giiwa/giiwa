@@ -2,9 +2,9 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/role' class='selected'>$lang.get('a.role')</a>
+	<a href='/admin/role?__node=$!__node' class='selected'>$lang.get('a.role')</a>
 	#if($me.hasAccess('access.config.debug'))
-	<a href='/admin/role/access'>$lang.get('a.role.access')</a>
+	<a href='/admin/role/access?__node=$!__node'>$lang.get('a.role.access')</a>
 	#end
 </div>
 
@@ -25,7 +25,7 @@
 		<td>$f.memo</td>
 	#if($edit)
 		<td class="a">
-			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/role/edit?id=$f.id"><i class="icon-pencil"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/role/edit?__node=$!__node&id=$f.id"><i class="icon-pencil"></i></a>
 			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href='javascript:;' onclick='_delete("$f.id", this);'><i class="icon-cancel-circle"></i></a>
 		</td>
 	#end
@@ -38,14 +38,14 @@
 
 #if($edit)
 <div class='btns'>
-	<a class='btn btn-success' href='/admin/role/create'>$lang.get('a.create')</a>
+	<a class='btn btn-success' href='/admin/role/create?__node=$!__node'>$lang.get('a.create')</a>
 </div>
 #end
 
 <script>
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		$.post('/admin/role/delete', {id: id}, function(d){
+		$.post('/admin/role/delete?__node=$!__node', {id: id}, function(d){
 			giiwa.reload();
 		})
 	}

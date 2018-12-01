@@ -39,7 +39,7 @@ $(function(){
 	           }
 	       },
 	    series: [
-	    				{name: "$lang.get('mem.used')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.used, hint:"$lang.size($c.used)"},#end]}
+					{name: "$lang.get('mem.used')", color:'#860606', data: [#foreach($c in $list) {x:$this.time($c), y:$c.used, hint:"$lang.size($c.used)"},#end]}
 	    			], 
 	});
 })

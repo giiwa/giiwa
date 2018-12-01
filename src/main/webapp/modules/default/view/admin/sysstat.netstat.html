@@ -2,10 +2,10 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/sysstat/cpu'>$lang.get('a.sysstat.cpu')</a>
-	<a href='/admin/sysstat/net'>$lang.get('a.sysstat.net')</a>
-	<a href='/admin/sysstat/netstat' class='selected'>$lang.get('a.sysstat.netstat')</a>
-	<a href='/admin/sysstat/disk'>$lang.get('a.sysstat.disk')</a>
+	<a href='/admin/sysstat/cpu?__node=$!__node'>$lang.get('a.sysstat.cpu')</a>
+	<a href='/admin/sysstat/net?__node=$!__node'>$lang.get('a.sysstat.net')</a>
+	<a href='/admin/sysstat/netstat?__node=$!__node' class='selected'>$lang.get('a.sysstat.netstat')</a>
+	<a href='/admin/sysstat/disk?__node=$!__node'>$lang.get('a.sysstat.disk')</a>
 </div>
 
 <div class='state' style="display:block">

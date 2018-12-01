@@ -18,7 +18,6 @@ import java.lang.annotation.*;
 
 import org.giiwa.core.bean.X;
 
-// TODO: Auto-generated Javadoc
 /**
  * the {@code Path} annotation interface used to define a Web api, for each
  * annotated method, the framework will auto generate the web api mapping for

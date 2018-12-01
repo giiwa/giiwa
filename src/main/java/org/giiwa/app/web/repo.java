@@ -46,8 +46,6 @@ public class repo extends Model {
 			Entity e = null;
 			// log.debug("e:" + e);
 
-			User me = this.getUser();
-
 			try {
 
 				e = Repo.loadByUri(id);
@@ -57,100 +55,97 @@ public class repo extends Model {
 				 * according to the app logic
 				 */
 				if (e != null) {
-					if (e.isShared() || (me != null)) {
 
-						this.setContentType("application/octet-stream");
-						this.addHeader("Content-Disposition", "attachment; filename=\"" + e.getName() + "\"");
+					this.setContentType("application/octet-stream");
+					this.addHeader("Content-Disposition", "attachment; filename=\"" + e.getName() + "\"");
 
-						String date2 = lang.format(e.getCreated(), "yyyy-MM-dd HH:mm:ss z");
+					String date2 = lang.format(e.getCreated(), "yyyy-MM-dd HH:mm:ss z");
 
-						/**
-						 * if not point-transfer, then check the if-modified-since
-						 */
-						String range = this.getHeader("range");
-						if (X.isEmpty(range)) {
-							String date = this.getHeader("If-Modified-Since");
-							if (date != null && date.equals(date2)) {
-								resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
-								return;
-							}
-						}
-
-						this.addHeader("Last-Modified", date2);
-
-						try {
-
-							String size = this.getString("size");
-							if (size != null && size.indexOf("x") < 0) {
-								size = lang.get("size." + size);
-							}
-
-							if (size != null) {
-								String[] ss = size.split("x");
-
-								if (ss.length == 2) {
-									boolean failed = false;
-									File f = Temp.get(id, size);
-									if (!f.exists()) {
-										f.getParentFile().mkdirs();
-
-										File src = Temp.get(id, null);
-										if (!src.exists()) {
-											src.getParentFile().mkdirs();
-										}
-										OutputStream out = new FileOutputStream(src);
-										IOUtil.copy(e.getInputStream(), out, false);
-										out.close();
-
-										if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
-												X.toInt(ss[1])) < 0) {
-											failed = true;
-											e.reset();
-										}
-									}
-
-									if (f.exists() && !failed) {
-										InputStream in = new FileInputStream(f);
-										OutputStream out = this.getOutputStream();
-
-										IOUtil.copy(in, out, false);
-										in.close();
-										return;
-									}
-								}
-							}
-
-							OutputStream out = this.getOutputStream();
-							InputStream in = e.getInputStream();
-
-							long total = e.getTotal() <= 0 ? in.available() : e.getTotal();
-							long start = 0;
-							long end = total;
-							if (range != null) {
-								String[] ss = range.split("(=|-)");
-								if (ss.length > 1) {
-									start = X.toLong(ss[1]);
-								}
-
-								if (ss.length > 2) {
-									end = Math.min(total, X.toLong(ss[2]));
-								}
-							}
-
-							if (end <= start) {
-								end = start + 16 * 1024;
-							}
-
-							this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
-
-							log.info(start + "-" + end + "/" + total);
-							IOUtil.copy(in, out, start, end, true);
-
+					/**
+					 * if not point-transfer, then check the if-modified-since
+					 */
+					String range = this.getHeader("range");
+					if (X.isEmpty(range)) {
+						String date = this.getHeader("If-Modified-Since");
+						if (date != null && date.equals(date2)) {
+							resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
 							return;
-						} catch (IOException e1) {
-							log.error(e1);
-							GLog.oplog.error(repo.class, "download", e1.getMessage(), e1, login, this.getRemoteHost());
 						}
+					}
+
+					this.addHeader("Last-Modified", date2);
+
+					try {
+
+						String size = this.getString("size");
+						if (size != null && size.indexOf("x") < 0) {
+							size = lang.get("size." + size);
+						}
+
+						if (size != null) {
+							String[] ss = size.split("x");
+
+							if (ss.length == 2) {
+								boolean failed = false;
+								File f = Temp.get(id, size);
+								if (!f.exists()) {
+									f.getParentFile().mkdirs();
+
+									File src = Temp.get(id, null);
+									if (!src.exists()) {
+										src.getParentFile().mkdirs();
+									}
+									OutputStream out = new FileOutputStream(src);
+									IOUtil.copy(e.getInputStream(), out, false);
+									out.close();
+
+									if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
+											X.toInt(ss[1])) < 0) {
+										failed = true;
+									}
+								}
+
+								if (f.exists() && !failed) {
+									InputStream in = new FileInputStream(f);
+									OutputStream out = this.getOutputStream();
+
+									IOUtil.copy(in, out, false);
+									in.close();
+									return;
+								}
+							}
+						}
+
+						OutputStream out = this.getOutputStream();
+						InputStream in = e.getInputStream();
+
+						long total = e.getTotal() <= 0 ? in.available() : e.getTotal();
+						long start = 0;
+						long end = total;
+						if (range != null) {
+							String[] ss = range.split("(=|-)");
+							if (ss.length > 1) {
+								start = X.toLong(ss[1]);
+							}
+
+							if (ss.length > 2) {
+								end = Math.min(total, X.toLong(ss[2]));
+							}
+						}
+
+						if (end <= start) {
+							end = start + 16 * 1024;
+						}
+
+						this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
+
+						log.info(start + "-" + end + "/" + total);
+						IOUtil.copy(in, out, start, end, true);
+
+						return;
+					} catch (IOException e1) {
+						log.error(e1);
+						GLog.oplog.error(repo.class, "download", e1.getMessage(), e1, login, this.getRemoteHost());
 					}
 				}
 			} finally {
@@ -274,7 +269,6 @@ public class repo extends Model {
 											X.toInt(ss[1])) < 0) {
 										failed = true;
 										log.warn("scale3 image failed");
-										e.reset();
 									}
 								} else {
 									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
@@ -325,7 +319,6 @@ public class repo extends Model {
 											X.toInt(ss[1])) < 0) {
 										log.warn("scale3 image failed");
 										failed = true;
-										e.reset();
 									}
 								} else {
 									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());

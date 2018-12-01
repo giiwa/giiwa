@@ -2,8 +2,8 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/role'>$lang.get('a.role')</a>
-	<a href='/admin/role/access' class='selected'>$lang.get('a.role.access')</a>
+	<a href='/admin/role?__node=$!__node'>$lang.get('a.role')</a>
+	<a href='/admin/role/access?__node=$!__node' class='selected'>$lang.get('a.role.access')</a>
 </div>
 
 <table id='role-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
@@ -33,14 +33,14 @@
 
 <div class='btns'>
 #if($edit)
-	<a class='btn btn-success' href='/admin/role/create'>$lang.get('a.create')</a>
+	<a class='btn btn-success' href='/admin/role/create?__node=$!__node'>$lang.get('a.create')</a>
 #end
 </div>
 
 <script>
 function _delete(id, o) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		$.post('/admin/role/accessdelete', {id: id}, function(d){
+		$.post('/admin/role/accessdelete?__node=$!__node', {id: id}, function(d){
 			giiwa.reload();
 		})
 	}

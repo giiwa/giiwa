@@ -34,116 +34,116 @@ import org.giiwa.framework.web.*;
  */
 public class menu extends Model {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model#onGet()
-   */
-  @Override
-  public void onGet() {
-    onPost();
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model#onGet()
+	 */
+	@Override
+	public void onGet() {
+		onPost();
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model#onPost()
-   */
-  public void onPost() {
-    User me = this.getUser();
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model#onPost()
+	 */
+	public void onPost() {
+		User me = this.getUser();
 
-    long id = this.getLong("root");
-    String name = this.getString("name");
+		long id = this.getLong("root");
+		String name = this.getString("name");
 
-    Beans<Menu> bs = null;
-    Menu m = null;
-    if (!X.isEmpty(name)) {
-      /**
-       * load the menu by id and name
-       */
-      m = Menu.load(id, name);
+		Beans<Menu> bs = null;
+		Menu m = null;
+		if (!X.isEmpty(name)) {
+			/**
+			 * load the menu by id and name
+			 */
+			m = Menu.load(id, name);
 
-      if (m != null) {
+			if (m != null) {
 
-        /**
-         * load the submenu of the menu
-         */
-        bs = m.submenu();
-      }
-    } else {
-      /**
-       * load the submenu by id
-       */
-      bs = Menu.submenu(id);
+				/**
+				 * load the submenu of the menu
+				 */
+				bs = m.submenu();
+			}
+		} else {
+			/**
+			 * load the submenu by id
+			 */
+			bs = Menu.submenu(id);
 
-    }
-    List<Menu> list = bs;
+		}
+		List<Menu> list = bs;
 
-    /**
-     * filter out the item which no access
-     */
-    Collection<Menu> ll = Menu.filterAccess(list, me);
+		/**
+		 * filter out the item which no access
+		 */
+		Collection<Menu> ll = Menu.filterAccess(list, me);
 
-    log.debug("load menu: id=" + id + ", size=" + (list == null ? 0 : list.size()) + ", filtered="
-        + (ll == null ? 0 : ll.size()));
+		log.debug("load menu: id=" + id + ", size=" + (list == null ? 0 : list.size()) + ", filtered="
+				+ (ll == null ? 0 : ll.size()));
 
-    /**
-     * convert the list to json array
-     */
-    List<JSON> arr = new ArrayList<JSON>();
+		/**
+		 * convert the list to json array
+		 */
+		List<JSON> arr = new ArrayList<JSON>();
 
-    if (ll != null) {
-      Iterator<Menu> it = ll.iterator();
+		if (ll != null) {
+			Iterator<Menu> it = ll.iterator();
 
-      while (it.hasNext()) {
-        JSON jo = new JSON();
-        m = it.next();
+			while (it.hasNext()) {
+				JSON jo = new JSON();
+				m = it.next();
 
-        /**
-         * set the text width language
-         */
-        jo.put("text", lang.get(m.getName()));
-        jo.put("id", m.getId());
-        if (!X.isEmpty(m.getClasses())) {
-          jo.put("classes", m.getClasses());
-        }
+				/**
+				 * set the text width language
+				 */
+				jo.put("text", lang.get(m.getName()));
+				jo.put("id", m.getId());
+				if (!X.isEmpty(m.getClasses())) {
+					jo.put("classes", m.getClasses());
+				}
 
-        if (!X.isEmpty(m.getStyle())) {
-          jo.put("style", m.getStyle());
-        }
+				if (!X.isEmpty(m.getStyle())) {
+					jo.put("style", m.getStyle());
+				}
 
-        /**
-         * set the url
-         */
-        if (!X.isEmpty(m.getUrl())) {
-          jo.put(X.URL, m.getUrl());
-        }
+				/**
+				 * set the url
+				 */
+				if (!X.isEmpty(m.getUrl())) {
+					jo.put(X.URL, m.getUrl());
+				}
 
-        /**
-         * set children
-         */
-        if (m.getChilds() > 0) {
-          jo.put("hasChildren", true);
-        }
+				/**
+				 * set children
+				 */
+				if (m.getChilds() > 0) {
+					jo.put("hasChildren", true);
+				}
 
-        jo.put("seq", m.getSeq());
-        jo.put("tag", m.getTag());
-        if (!X.isEmpty(m.getLoad1())) {
-          jo.put("load", m.getLoad1());
-        }
+				jo.put("seq", m.getSeq());
+				jo.put("tag", m.getTag());
+				if (!X.isEmpty(m.getLoad1())) {
+					jo.put("load", m.getLoad1() + "?__node=" + this.getString("__node"));
+				}
 
-        if (!X.isEmpty(m.getClick())) {
-          jo.put("click", m.getClick());
-        }
+				if (!X.isEmpty(m.getClick())) {
+					jo.put("click", m.getClick());
+				}
 
-        if (!X.isEmpty(m.getContent())) {
-          jo.put("content", m.getContent());
-        }
+				if (!X.isEmpty(m.getContent())) {
+					jo.put("content", m.getContent());
+				}
 
-        arr.add(jo);
-      }
-    }
+				arr.add(jo);
+			}
+		}
 
-    this.response(arr);
-  }
+		this.response(arr);
+	}
 }

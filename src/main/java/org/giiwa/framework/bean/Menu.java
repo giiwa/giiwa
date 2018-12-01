@@ -181,11 +181,15 @@ public class Menu extends Bean {
 				 */
 				if (jo.containsKey("childs")) {
 					Collection<JSON> arr = jo.getList("childs");
-					for (JSON j : arr) {
-						if (jo.containsKey("tag")) {
-							j.put("tag", jo.get("tag"));
+					if (arr != null) {
+						for (JSON j : arr) {
+							if (j != null) {
+								if (jo.containsKey("tag")) {
+									j.put("tag", jo.get("tag"));
+								}
+								insertOrUpdate(j, m.getId());
+							}
 						}
-						insertOrUpdate(j, m.getId());
 					}
 				}
 			} else {

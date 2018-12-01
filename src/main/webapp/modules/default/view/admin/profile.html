@@ -2,11 +2,11 @@
 
 <div class='tabs'>
 	#foreach($p in $settings)
-	<a href='/admin/profile/get/$p' #if($name==$p) class='selected' #end>$lang.get("a.profile.$p")</a>
+	<a href='/admin/profile/get/$p?__node=$!__node' #if($name==$p) class='selected' #end>$lang.get("a.profile.$p")</a>
 	#end
 </div>
 <div id="profile">
-	<form action='/admin/profile/set/$name' method='post' class='form' enctype="multipart/form-data">
+	<form action='/admin/profile/set/$name?__node=$!__node' method='post' class='form' enctype="multipart/form-data">
 		#if($page)
 			#parse($page)
 		#end

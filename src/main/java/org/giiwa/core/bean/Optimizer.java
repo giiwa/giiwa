@@ -31,6 +31,10 @@ public class Optimizer implements Helper.IOptimizer {
 						for (LinkedHashMap<String, Integer> keys : l1) {
 							StringBuilder sb = new StringBuilder();
 							for (String s : keys.keySet()) {
+
+								if (X.isSame(s, "_id"))
+									return;
+
 								if (sb.length() > 0)
 									sb.append(",");
 								sb.append(s).append(":").append(keys.get(s));
@@ -46,6 +50,9 @@ public class Optimizer implements Helper.IOptimizer {
 								if (!keys.isEmpty()) {
 									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + sb.toString(),
 											null, null);
+
+									log.debug("db.index, table=" + table + ", create.index=" + sb.toString());
+
 									Helper.createIndex(db, table, keys);
 								}
 							}
@@ -73,10 +80,11 @@ public class Optimizer implements Helper.IOptimizer {
 					for (String s : keys.keySet()) {
 						if (sb.length() > 0)
 							sb.append(",");
-						sb.append(s).append(":").append(keys.get(s));
+						sb.append(s).append(":").append(X.toInt(keys.get(s)));
 					}
 
-					// GLog.applog.info("db", table, sb.toString(), null, null);
+					log.debug("db.index, table=" + table + ", get.index=" + sb.toString());
+
 					String id = UID.id(db, table, sb.toString());
 					exists.add(id);
 				}

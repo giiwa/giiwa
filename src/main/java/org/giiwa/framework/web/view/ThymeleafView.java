@@ -14,14 +14,12 @@
 */
 package org.giiwa.framework.web.view;
 
-import java.io.File;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.giiwa.framework.bean.DFile;
 import org.giiwa.framework.web.Model;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.IContext;
@@ -29,62 +27,56 @@ import org.thymeleaf.templateresolver.FileTemplateResolver;
 
 public class ThymeleafView extends View {
 
-  private static TemplateEngine _engine;
+	private static TemplateEngine _engine;
 
-  @Override
-  public synchronized boolean parse(File file, Model m, String viewname) {
-    // load
-    try {
+	@Override
+	public synchronized boolean parse(Object file, Model m, String viewname) {
+		// load
+		try {
 
-      if (_engine == null) {
-        _engine = new TemplateEngine();
-        FileTemplateResolver tt = new FileTemplateResolver();
-        tt.setCharacterEncoding("UTF-8");
-        _engine.setTemplateResolver(tt);
-      }
+			if (_engine == null) {
+				_engine = new TemplateEngine();
+				FileTemplateResolver tt = new FileTemplateResolver();
+				tt.setCharacterEncoding("UTF-8");
+				_engine.setTemplateResolver(tt);
+			}
 
-      Writer out = new OutputStreamWriter(m.getOutputStream());
+			Writer out = new OutputStreamWriter(m.getOutputStream());
 
-      _engine.process(file.getCanonicalPath(), _parse(m.context), out);
+			_engine.process(View.getCanonicalPath(file), _parse(m.context), out);
 
-      out.flush();
+			out.flush();
 
-      return true;
-    } catch (Exception e) {
-      log.error(file.getName(), e);
-    }
-    return false;
-  }
+			return true;
+		} catch (Exception e) {
+			log.error(View.getName(file), e);
+		}
+		return false;
+	}
 
-  private IContext _parse(final Map<String, Object> m) {
-    return new IContext() {
+	private IContext _parse(final Map<String, Object> m) {
+		return new IContext() {
 
-      @Override
-      public boolean containsVariable(String name) {
-        return m.containsKey(name);
-      }
+			@Override
+			public boolean containsVariable(String name) {
+				return m.containsKey(name);
+			}
 
-      @Override
-      public Locale getLocale() {
-        return Locale.US;
-      }
+			@Override
+			public Locale getLocale() {
+				return Locale.US;
+			}
 
-      @Override
-      public Object getVariable(String name) {
-        return m.get(name);
-      }
+			@Override
+			public Object getVariable(String name) {
+				return m.get(name);
+			}
 
-      @Override
-      public Set<String> getVariableNames() {
-        return m.keySet();
-      }
-    };
-  }
-
-@Override
-protected boolean parse(DFile in, Model m, String viewname) throws Exception {
-	// TODO Auto-generated method stub
-	return false;
-}
+			@Override
+			public Set<String> getVariableNames() {
+				return m.keySet();
+			}
+		};
+	}
 
 }

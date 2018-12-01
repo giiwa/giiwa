@@ -37,7 +37,7 @@ public class repo extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(login = true, access = "access.config.admin")
 	@Override
 	public void onGet() {
 
@@ -64,7 +64,7 @@ public class repo extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin")
 	public void delete() {
 		JSON jo = new JSON();
 

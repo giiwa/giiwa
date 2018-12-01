@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.app.task;
 
 import java.io.File;
@@ -15,20 +29,38 @@ import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
+import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 
+/**
+ * The Class CleanupTask.
+ */
 public class CleanupTask extends Task {
 
 	/**
-	 * 
+	 * The Constant serialVersionUID.
 	 */
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * The log.
+	 */
 	private static Log log = LogFactory.getLog(CleanupTask.class);
 
+	/**
+	 * The home.
+	 */
 	String home;
+
+	/**
+	 * The count.
+	 */
 	long count = 0;
+
+	/**
+	 * The file.
+	 */
 	String file;
 
 	/**
@@ -46,6 +78,11 @@ public class CleanupTask extends Task {
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.core.task.Task#getName()
+	 */
 	@Override
 	public String getName() {
 		return "cleanup.task";
@@ -71,9 +108,12 @@ public class CleanupTask extends Task {
 			/**
 			 * clean files in Temp
 			 */
-			if (!X.isEmpty(Temp.ROOT)) {
-				cleanup(Temp.ROOT, X.ADAY, true);
-			}
+			Temp.cleanup(X.ADAY);
+
+			/**
+			 * clean up repo
+			 */
+			Repo.cleanup(X.ADAY);
 
 			/**
 			 * clean temp files in tomcat
@@ -103,6 +143,17 @@ public class CleanupTask extends Task {
 		}
 	}
 
+	/**
+	 * Cleanup.
+	 *
+	 * @param path
+	 *            the path
+	 * @param expired
+	 *            the expired
+	 * @param deletefolder
+	 *            the deletefolder
+	 * @return the long
+	 */
 	private long cleanup(String path, long expired, boolean deletefolder) {
 		try {
 			File f = new File(path);
@@ -150,10 +201,22 @@ public class CleanupTask extends Task {
 		this.schedule(X.AHOUR);
 	}
 
+	/**
+	 * The folders.
+	 */
 	static String[] folders = { "/temp/_cache", "/temp/_raw" };
 
+	/**
+	 * The beans.
+	 */
 	public static List<Class<? extends Bean>> beans = new ArrayList<Class<? extends Bean>>();
 
+	/**
+	 * Adds the.
+	 *
+	 * @param packname
+	 *            the packname
+	 */
 	public static void add(String packname) {
 		List<Class<Bean>> l1 = ClassUtil.listSubType(packname, Bean.class);
 		if (l1 != null) {
@@ -174,4 +237,5 @@ public class CleanupTask extends Task {
 		}
 
 	}
+
 }

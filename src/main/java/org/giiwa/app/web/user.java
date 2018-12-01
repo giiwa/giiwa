@@ -29,6 +29,7 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.noti.Email;
 import org.giiwa.framework.bean.App;
@@ -294,7 +295,7 @@ public class user extends Model {
 
 				Captcha.Result r = Captcha.Result.ok;
 
-				if (Global.getInt("user.captcha", 1) == 1) {
+				if (Global.getInt("user.captcha", 0) == 1) {
 					String code = this.getString("code");
 					if (code != null) {
 						code = code.toLowerCase();
@@ -840,10 +841,27 @@ public class user extends Model {
 
 	}
 
-	public static void main(String[] args) {
-		String rule = "^[a-zA-Z0-9]{4,16}$";
-		String name = "joej";
-		System.out.println(name.matches(rule));
+	// public static void main(String[] args) {
+	// // String rule = "^[a-zA-Z0-9]{4,16}$";
+	// // String name = "joej";
+	// // System.out.println(name.matches(rule));
+	//
+	// try {
+	// StringBuilder sb = new StringBuilder();
+	// sb.append("var a = 1 + 1;");
+	// sb.append("a");
+	// Object o = JS.run(sb.toString());
+	//
+	// System.out.println(o);
+	// } catch (Exception e) {
+	// log.error(e.getMessage(), e);
+	// }
+	// }
 
+	@Path(path = "access", login = true)
+	public void access() {
+		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("list",
+				login.getRole().getAccesses()));
 	}
+
 }

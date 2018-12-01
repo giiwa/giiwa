@@ -48,7 +48,6 @@ import org.giiwa.core.dfile.FileServer;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Menu;
-import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.License;
 import org.giiwa.framework.bean.User;
@@ -56,9 +55,6 @@ import org.giiwa.framework.web.IListener;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Module;
 import org.giiwa.mq.MQ;
-import org.giiwa.mq.MQ.Mode;
-import org.giiwa.mq.Notify;
-import org.giiwa.mq.demo.Echo;
 
 /**
  * default startup life listener.
@@ -82,6 +78,12 @@ public class DefaultListener implements IListener {
 		log.info("giiwa is starting...");
 
 		try {
+
+			// start dfile, very important
+			Local.init();
+			DiskStatTask.init();
+			FileServer.inst.start();
+
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
 					// stop all task
@@ -98,39 +100,16 @@ public class DefaultListener implements IListener {
 				}
 			});
 
-			/**
-			 * cleanup html
-			 */
-			File f = new File(Model.GIIWA_HOME + "/html/");
-			if (f.exists()) {
-				delete(f);
-			}
+			Task.schedule(() -> {
+				MQ.init();
 
-			setting.register(0, "system", setting.system.class);
-			setting.register(1, "mq", mq.class);
-			setting.register(10, "smtp", setting.mail.class);
-			// setting.register(11, "counter", setting.counter.class);
+				NtpTask.owner.schedule(X.AMINUTE);
+				new CleanupTask(conf).schedule(X.AMINUTE);
+				RecycleTask.owner.schedule(X.AMINUTE);
+				StateTask.owner.schedule(X.AMINUTE);
+				BackupTask.init();
 
-			profile.register(0, "my", profile.my.class);
-			// portlet.register(mem.class);
-			// portlet.register(disk.class);
-			// portlet.register(net.class);
-
-			// Portlet.create(0, "dashbroad", "/portlet/mem");
-			// Portlet.create(0, "dashbroad", "/portlet/disk");
-			// Portlet.create(0, "dashbroad", "/portlet/net");
-			// Portlet.create(0, "dashbroad", "/portlet/sysinfo");
-
-			NtpTask.owner.schedule(X.AMINUTE);
-			new CleanupTask(conf).schedule(X.AMINUTE);
-			RecycleTask.owner.schedule(X.AMINUTE);
-			StateTask.owner.schedule(X.AMINUTE);
-			BackupTask.init();
-
-			/**
-			 * check and initialize
-			 */
-			User.checkAndInit();
+			}, 10);
 
 			/**
 			 * start the optimizer
@@ -139,37 +118,30 @@ public class DefaultListener implements IListener {
 				Helper.setOptmizer(new Optimizer());
 			}
 
-			DiskStatTask.init();
-
-			Task.schedule(() -> {
-				MQ.init();
-
-				Notify n = new Notify();
-				try {
-					n.bind(Mode.TOPIC);
-				} catch (Exception e1) {
-					log.error(e1.getMessage(), e1);
-				}
-
-				// this is for "echo" service
-				Echo e = new Echo("echo");
-				try {
-					e.bind();
-				} catch (Exception e1) {
-					log.error(e1.getMessage(), e1);
-				}
-			}, 10);
-
-			Local.init();
-
-			module.setLicense(License.LICENSE.free,
+			module.setLicense(License.LICENSE.licensed,
 					"MFEjwN3hxRT8BD8dRGwTY+mod5O9m7gau0MXwwxx+gN7SI2NXKZYGBmyUD65fPmnPgrB3q8/7Y2TwOLsMa3gVVz9bx1OiKN02S9mQtoYvuiy1fD7OwdXJ4EWgilIn1/Rur4LsIu9JCCN5MSO3ucqxaI0Ccu94s+GsIAwWtCQ65M=");
 
 			dashboard.add("/admin/dashboard");
 			dashboard.add("/admin/home.html");
 
-			Disk.repair();
-			FileServer.inst.start();
+			setting.register(0, "system", setting.system.class);
+			setting.register(1, "mq", mq.class);
+			setting.register(10, "smtp", setting.mail.class);
+			// setting.register(11, "counter", setting.counter.class);
+			profile.register(0, "my", profile.my.class);
+
+			/**
+			 * check and initialize
+			 */
+			User.checkAndInit();
+
+			/**
+			 * cleanup html
+			 */
+			File f = new File(Model.GIIWA_HOME + "/html/");
+			if (f.exists()) {
+				delete(f);
+			}
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
@@ -177,6 +149,11 @@ public class DefaultListener implements IListener {
 
 		log.info("giiwa is started");
 
+	}
+
+	@Override
+	public void onStop() {
+		FileServer.inst.shutdown();
 	}
 
 	private void delete(File f) {

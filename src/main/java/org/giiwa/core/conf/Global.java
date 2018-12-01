@@ -16,16 +16,12 @@ package org.giiwa.core.conf;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.task.GlobalLock;
-import org.giiwa.mq.IStub;
-import org.giiwa.mq.MQ;
-import org.giiwa.mq.MQ.Request;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -291,9 +287,8 @@ public final class Global extends Bean {
 	 * @param name
 	 *            the name of lock
 	 * @return
-	 * @throws Exception
 	 */
-	public static Lock getLock(String name) throws Exception {
+	public static Lock getLock(String name) {
 		return GlobalLock.create(name);
 	}
 
@@ -313,66 +308,6 @@ public final class Global extends Bean {
 			}
 		}
 		return _id;
-	}
-
-	public static void wait(String name, long timeout) throws InterruptedException {
-		Coordinator.inst.wait(name, timeout);
-	}
-
-	public static void notifyAll(String name) {
-		try {
-			MQ.topic(Coordinator.inst.getName(), Request.create().data(name.getBytes()));
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-	}
-
-	private static class Coordinator extends IStub {
-
-		private static Coordinator inst = new Coordinator("global.coordinator");
-
-		private Map<String, AtomicInteger> pending = new HashMap<String, AtomicInteger>();
-
-		public void wait(String name, long timeout) throws InterruptedException {
-			AtomicInteger a = null;
-
-			synchronized (pending) {
-				a = pending.get(name);
-				if (a == null) {
-					a = new AtomicInteger();
-				}
-				a.incrementAndGet();
-			}
-
-			synchronized (a) {
-				a.wait(timeout);
-			}
-
-			synchronized (pending) {
-				a = pending.get(name);
-				if (a != null && a.decrementAndGet() == 0) {
-					pending.remove(name);
-				}
-			}
-		}
-
-		public Coordinator(String name) {
-			super(name);
-		}
-
-		@Override
-		public void onRequest(long seq, Request req) {
-			String name = new String(req.data);
-			synchronized (pending) {
-				AtomicInteger a = pending.get(name);
-				if (a != null) {
-					a.notifyAll();
-					pending.remove(name);
-				}
-
-			}
-		}
-
 	}
 
 }

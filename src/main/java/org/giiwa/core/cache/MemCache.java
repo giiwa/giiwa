@@ -14,6 +14,8 @@
 */
 package org.giiwa.core.cache;
 
+import java.util.Date;
+
 import org.apache.commons.logging.*;
 
 import com.whalin.MemCached.MemCachedClient;
@@ -69,8 +71,8 @@ public class MemCache implements ICacheSystem {
 	 *            the id
 	 * @return the object
 	 */
-	public synchronized Object get(String id) {
-		return memCachedClient.get(id);
+	public synchronized Object get(String name) {
+		return memCachedClient.get(name);
 	}
 
 	/**
@@ -82,16 +84,17 @@ public class MemCache implements ICacheSystem {
 	 *            the o
 	 * @return true, if successful
 	 */
-	public synchronized boolean set(String id, Object o) {
+	public synchronized boolean set(String name, Object o) {
 		try {
 			if (o == null) {
-				return delete(id);
+				return delete(name);
 			} else {
-				return memCachedClient.set(id, o);
+				return memCachedClient.set(name, o);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
+
 		return false;
 	}
 
@@ -102,13 +105,26 @@ public class MemCache implements ICacheSystem {
 	 *            the id
 	 * @return true, if successful
 	 */
-	public synchronized boolean delete(String id) {
-		return memCachedClient.delete(id);
+	public synchronized boolean delete(String name) {
+		return memCachedClient.delete(name);
 	}
 
 	@Override
 	public String toString() {
 		return "MemCache [url=" + url + "]";
+	}
+
+	public boolean trylock(String name, String value, long ms) {
+		return memCachedClient.add(name, value, new Date(System.currentTimeMillis() + 12000));
+	}
+
+	public void expire(String name, String value, long ms) {
+		memCachedClient.set(name, value, new Date(System.currentTimeMillis() + ms));
+	}
+
+	@Override
+	public boolean unlock(String name, String value) {
+		return memCachedClient.delete(name);
 	}
 
 }

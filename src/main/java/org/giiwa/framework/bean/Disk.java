@@ -20,7 +20,7 @@ import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Local;
-import org.giiwa.core.task.Task;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Model;
 import org.giiwa.core.bean.Column;
@@ -190,7 +190,7 @@ public class Disk extends Bean {
 			}
 		}
 
-		// log.info("seek, not found, filename=" + filename, new Exception());
+		// log.debug("seek, not found, filename=" + filename, new Exception());
 		DFile f = DFile.create(Disk.get(), filename);
 
 		return f;
@@ -213,13 +213,14 @@ public class Disk extends Bean {
 
 	public static Disk get() {
 
-		W q = W.create("bad", 0).sort("priority", -1).sort("path", 1);
-		Beans<Disk> bs = dao.load(q, 0, 100);
+		Beans<Disk> bs = disks(true);
 
 		Selector s = Selector.creeate();
 		for (Disk e : bs) {
-			long f1 = e.free * e.priority;
-			s.add(e, f1);
+			if (e.bad != 1) {
+				long f1 = e.free * e.priority;
+				s.add(e, f1);
+			}
 		}
 
 		return s.get();
@@ -256,19 +257,32 @@ public class Disk extends Bean {
 		return l1.values();
 	}
 
-	public static void delete(String filename) {
-		delete(filename, true);
+	public static void delete(String filename, long age) {
+		delete(filename, age, true);
 	}
 
-	public static void delete(String filename, boolean global) {
+	public static void delete(String filename) {
+		delete(filename, -1, true);
+	}
+
+	public static void delete(String filename, long age, boolean global) {
 
 		Beans<Disk> bs = disks(global);
 
 		for (Disk e : bs) {
+
 			DFile f = DFile.create(e, filename);
-			f.delete();
+
+			f.delete(age);
+
 		}
 
+	}
+
+	public static long move(DFile src, DFile dest) throws IOException {
+		long len = IOUtil.copy(src.getInputStream(), dest.getOutputStream());
+		src.delete();
+		return len;
 	}
 
 	public static long copy(DFile src, String filename) throws IOException {
@@ -322,6 +336,8 @@ public class Disk extends Bean {
 		Disk d = new Disk();
 		d.path = path;
 		d.priority = 1;
+		d.node_obj = new Node();
+		d.node_obj.set(X.ID, Local.id());
 		_disks = new Beans<Disk>();
 		_disks.add(d);
 		_disks.setExpired(X.AHOUR + System.currentTimeMillis());
@@ -358,36 +374,6 @@ public class Disk extends Bean {
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
-		} else {
-			while (bs != null && !bs.isEmpty()) {
-				for (Disk d : bs) {
-					if (X.isEmpty(d.node)) {
-						dao.update(d.getId(), V.create("node", Local.id()).ignore("updated"));
-
-						// repair the files
-						Task.schedule(() -> {
-							int s1 = 0;
-							W q1 = W.create().and("node", Local.id()).sort("created", 1);
-							Beans<DFile> bs1 = DFile.dao.load(q1, s1, 100);
-							while (bs1 != null && !bs1.isEmpty()) {
-								for (DFile d1 : bs1) {
-									if (!d1.check() || !d1.exists()) {
-										DFile.dao.delete(d.getId());
-									}
-								}
-								s1 += bs1.size();
-								bs1 = DFile.dao.load(q1, s1, 100);
-							}
-							File f = d.getFile_obj();
-							d._check(f);
-
-						}, 0);
-
-					}
-				}
-				s += bs.size();
-				bs = dao.load(q, s, 10);
-			}
 		}
 	}
 
@@ -395,34 +381,8 @@ public class Disk extends Bean {
 
 		V v = V.create("checktime", System.currentTimeMillis());
 		v.append("total", this.reloadTotal()).append("free", this.reloadFree());
-		v.append("count", DFile.dao.count(W.create("disk", this.getId())));
 		dao.update(id, v);
 
-	}
-
-	private void _check(File f) {
-		File[] l1 = f.listFiles();
-		if (l1 != null && l1.length > 0) {
-			for (File f1 : l1) {
-				if (f1.isDirectory()) {
-					_check(f1);
-				} else if (f1.isFile()) {
-					try {
-						String filename = f1.getCanonicalPath().replace(path, "");
-						if (!filename.startsWith("/")) {
-							filename = "/" + filename;
-						}
-						if (!DFile.dao.exists(W.create("disk", this.id).and("filename", filename))) {
-							DFile.create(V.create("disk", this.id).append("filename", filename));
-						}
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					}
-				}
-			}
-		} else {
-			f.delete();
-		}
 	}
 
 	@Override

@@ -227,7 +227,7 @@ public class MongoHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(database + " was miss configured, please access http://[host:port]/setup to configure");
 		}
-		
+
 		return d;
 	}
 
@@ -365,8 +365,8 @@ public class MongoHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error("query=" + query + ", order=" + order, e);
-			
-			//bad connection ? close the it ?
+
+			// bad connection ? close the it ?
 		}
 
 		return null;
@@ -1048,7 +1048,12 @@ public class MongoHelper implements Helper.DBHelper {
 		MongoCollection<Document> c = getCollection(db, table);
 		BasicDBObject q = new BasicDBObject();
 		for (String s : ss.keySet()) {
-			q.append(s, ss.get(s));
+			int i = ss.get(s);
+			if (i == 2) {
+				q.append(s, "2d");
+			} else {
+				q.append(s, ss.get(s));
+			}
 		}
 		try {
 			c.createIndex(q);

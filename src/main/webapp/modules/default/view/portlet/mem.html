@@ -1,4 +1,4 @@
-<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/mem/more')"><i class='icon-menu'></i></a>
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/mem/more?__node=$!__node')"><i class='icon-menu'></i></a>
 
 <div id='mem_$!requestid' style="height: 300px; float: left; width: 400px; border: 0;"></div>
 
@@ -38,7 +38,7 @@ $(function(){
 	
 	function reload() {
 		if($('#mem_$!requestid').length > 0) {
-			$.post('/portlet/mem/data', {}, function(d){
+			$.post('/portlet/mem/data?__node=$!__node', {}, function(d){
 				if(d.state == 200) {
 					var series=t.series; 
 			        while(series.length > 0){

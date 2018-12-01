@@ -1,7 +1,7 @@
 
 <div class='tabs'>
-	<a href='/admin/module'>$lang.get('a.module')</a>
-	<a href='/admin/module/create' class='selected'>$lang.get('a.create')</a>
+	<a href='/admin/module?__node=$!__node'>$lang.get('a.module')</a>
+	<a href='/admin/module/create?__node=$!__node' class='selected'>$lang.get('a.create')</a>
 </div>
 
 #parse('/widget/widget.message.html')
@@ -32,7 +32,7 @@ function oncreate() {
 		p[e.attr('name')] = e.val();
 	})
 	p.includes = $('input[type=checkbox]').prop('checked')?'on':'';
-	$.post('/admin/module/create', p, function(d){
+	$.post('/admin/module/create?__node=$!__node', p, function(d){
 		giiwa.processing.hide();
 		
 		if(d.state == 200) {

@@ -56,7 +56,7 @@ public class dashboard extends Model {
 		this.set("uptime", Model.UPTIME);
 
 		if (login != null
-				&& (login.hasAccess("access.config.admin") || login.hasAccess("access.config.system.admin"))) {
+				&& login.hasAccess("access.config.admin")) {
 
 			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
 

@@ -2,11 +2,11 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/user'>$lang.get('a.user')</a>
-	<a href='/admin/user/create' class='selected'>$lang.get('a.create')</a>
+	<a href='/admin/user?__node=$!__node'>$lang.get('a.user')</a>
+	<a href='/admin/user/create?__node=$!__node' class='selected'>$lang.get('a.create')</a>
 </div>
 
-<form action='/admin/user/create'  method='post' class='form' >
+<form action='/admin/user/create?__node=$!__node'  method='post' class='form' >
 	<input type='password' style="display:none"/>
 	
 	<div><label><h3>$lang.get('user.name')(<r>*</r>):</h3><input type='text' onblur="giiwa.verify(this, '/user/verify');" name='name' value=#if($name) '$name' #else '' bad="1"  #end required/><g>$lang.get("user.name.note")</g></label></div>

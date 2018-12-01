@@ -7,15 +7,23 @@ import org.giiwa.framework.web.Path;
 
 public class index extends Model {
 
-  @Path()
-  public void onGet() {
-    String h1 = Global.getString("home.uri", X.EMPTY);
-    if (!X.isEmpty(h1)) {
-      this.redirect(h1);
-    } else {
-      this.set("me", this.getUser());
-      this.show("/index.html");
-    }
-  }
+	@Path()
+	public void onGet() {
+		String h1 = Global.getString("home.uri", X.EMPTY);
+		if (X.isEmpty(h1)) {
+			h1 = "/index.html";
+		}
+
+		String node = this.getString("__node");
+		if (X.isEmpty(node)) {
+			this.redirect(h1);
+		} else {
+			if (h1.indexOf("?") > 0) {
+				this.redirect(h1 + "&__node=" + node);
+			} else {
+				this.redirect(h1 + "?__node=" + node);
+			}
+		}
+	}
 
 }

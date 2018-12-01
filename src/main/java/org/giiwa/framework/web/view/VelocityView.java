@@ -15,35 +15,47 @@
 package org.giiwa.framework.web.view;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.giiwa.core.bean.TimeStamp;
+import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.DFile;
 import org.giiwa.framework.web.Model;
 
 public class VelocityView extends View {
+
+	private static Log log = LogFactory.getLog(VelocityView.class);
+
 	public VelocityView() {
-		// TODO Auto-generated constructor stub
-		Properties p = new Properties();
-		p.setProperty("input.encoding", "utf-8");
-		p.setProperty("output.encoding", "utf-8");
-		p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
-		p.setProperty("directive.set.null.allowed", "true");
-		p.setProperty("file.resource.loader.class", "org.giiwa.framework.web.view.VelocityTemplateLoader");
-		Velocity.init(p);
+
+		try {
+			// TODO Auto-generated constructor stub
+			Properties p = new Properties();
+			p.setProperty("input.encoding", "utf-8");
+			p.setProperty("output.encoding", "utf-8");
+			p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
+			p.setProperty("directive.set.null.allowed", "true");
+			p.setProperty("file.resource.loader.class", "org.giiwa.framework.web.view.VelocityTemplateLoader");
+			Velocity.init(p);
+		} catch (Exception e) {
+			log.warn(e.getMessage(), e);
+		}
 	}
 
 	@Override
-	public boolean parse(File file, Model m, String viewname) throws IOException {
-		Template template = getTemplate(file);
+	public boolean parse(Object file, Model m, String viewname) throws IOException {
+
+		TimeStamp t = TimeStamp.create();
+		Template template = getTemplate(viewname, file);
 
 		// System.out.println(viewname + "=>" + template);
 		if (template != null) {
@@ -53,6 +65,8 @@ public class VelocityView extends View {
 
 			template.merge(new VelocityContext(m.context), writer);
 			writer.flush();
+
+			log.debug("cost t=" + t.past() + ", file=" + file);
 
 			return true;
 		}
@@ -68,10 +82,10 @@ public class VelocityView extends View {
 	 *            the json
 	 * @return the string of the results
 	 */
-	public String parse(File file, JSON m) {
+	public String parse(Object file, JSON m) {
 
 		try {
-			Template template = getTemplate(file);
+			Template template = getTemplate(View.getCanonicalPath(file), file);
 
 			if (template != null) {
 
@@ -99,20 +113,23 @@ public class VelocityView extends View {
 	 * @return Template
 	 * @throws IOException
 	 */
-	private Template getTemplate(File f) throws IOException {
+	private Template getTemplate(String viewname, Object file) throws IOException {
 
-		String fullname = f.getCanonicalPath();
-		T t = cache.get(fullname);
+		// String fullname = View.getCanonicalPath(f);
+		T t = cache.get(viewname);
 
-		if (t == null || t.last != f.lastModified()) {
+		if (t == null || t.last != View.lastModified(file)) {
 
 			/**
 			 * get the template from the top
 			 */
-			Template t1 = Velocity.getTemplate(fullname, "UTF-8");
-			t = T.create(t1, f.lastModified());
+			Template t1 = Velocity.getTemplate(viewname, "UTF-8");
+			t = T.create(t1, View.lastModified(file));
 
-			cache.put(fullname, t);
+			if (Local.getInt("web.debug", 0) == 0) {
+				// not debug
+				cache.put(viewname, t);
+			}
 		}
 
 		return t == null ? null : t.template;
@@ -135,11 +152,5 @@ public class VelocityView extends View {
 	 * cache the template by viewname, the template will be override in child module
 	 */
 	private static Map<String, T> cache = new HashMap<String, T>();
-
-	@Override
-	protected boolean parse(DFile in, Model m, String viewname) throws Exception {
-		//TODO
-		return false;
-	}
 
 }

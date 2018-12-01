@@ -4,6 +4,11 @@
 */
 package org.giiwa.framework.bean;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Beans;
@@ -135,6 +140,31 @@ public class Stat extends Bean implements Comparable<Stat> {
 		}
 	}
 
+	public static long[] time(SIZE size, String date) {
+		if (SIZE.min == size) {
+			long t = lang.parse(date, "yyyy-MM-dd/HH");
+			t = Stat.tohour(t);
+			return new long[] { t, t + X.AHOUR };
+		} else if (SIZE.hour == size) {
+			long t = lang.parse(date, "yyyy-MM-dd");
+			t = Stat.today(t);
+			return new long[] { t, t + X.ADAY };
+		} else if (SIZE.day == size) {
+			long t = lang.parse(date, "yyyy-MM");
+			t = Stat.tomonth(t);
+			Calendar c = Calendar.getInstance();
+			c.setTimeInMillis(t);
+			c.add(Calendar.MONTH, 1);
+			return new long[] { t, c.getTimeInMillis() };
+		} else if (SIZE.month == size) {
+			long t = lang.parse(date, "yyyy");
+			t = Stat.toyear(t);
+			return new long[] { t, t + X.AYEAR };
+		}
+
+		return new long[] { 0, 0 };
+	}
+
 	public static void delta(String name, SIZE size, V v, long... n) {
 		delta(System.currentTimeMillis(), name, size, W.create().copy(v), v, n);
 	}
@@ -257,7 +287,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object)dao.max(field, q));
+		return X.toLong((Object) dao.max(field, q));
 	}
 
 	public static long sum(String field, String name, SIZE size, W q) {
@@ -265,7 +295,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object)dao.sum(field, q));
+		return X.toLong((Object) dao.sum(field, q));
 	}
 
 	public static long avg(String field, String name, SIZE size, W q) {
@@ -273,7 +303,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object)dao.avg(field, q));
+		return X.toLong((Object) dao.avg(field, q));
 	}
 
 	public static long min(String field, String name, SIZE size, W q) {
@@ -281,7 +311,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object)dao.min(field, q));
+		return X.toLong((Object) dao.min(field, q));
 	}
 
 	/**
@@ -370,17 +400,63 @@ public class Stat extends Bean implements Comparable<Stat> {
 	public void cleanup() {
 		// min, hour, day, week,month, year
 
-		int days = Global.getInt("glog.keep.days", 30);
+		int days = Global.getInt("glog.keep.days", 7);
+
 		int n = dao.delete(W.create("size", "min").and("created", System.currentTimeMillis() - X.ADAY, W.OP.lt));
-		n += dao.delete(W.create("size", "hour").and("created", System.currentTimeMillis() - days * X.AHOUR, W.OP.lt));
-		n += dao.delete(W.create("size", "day").and("created", System.currentTimeMillis() - days * X.ADAY, W.OP.lt));
+		n += dao.delete(W.create("size", "hour").and("created", System.currentTimeMillis() - days * X.ADAY, W.OP.lt));
+		n += dao.delete(W.create("size", "day").and("created", System.currentTimeMillis() - days * X.AMONTH, W.OP.lt));
+		n += dao.delete(W.create("size", "month").and("created", System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
 		n += dao.delete(
-				W.create("size", "month").and("created", System.currentTimeMillis() - days * X.AMONTH, W.OP.lt));
+				W.create("size", "season").and("created", System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
 		n += dao.delete(W.create("size", "year").and("created", System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
 
 		if (n > 0) {
 			GLog.applog.info("dao", "cleanup", dao.tableName() + " cleanup=" + n, null, null);
 		}
+
+	}
+
+	public static List<Stat> merge(W q, String groupby, MergeFunc func) {
+		// load from stat, and group
+		List<Stat> l1 = new ArrayList<Stat>();
+		List<?> l2 = dao.distinct(groupby, q.copy().and(groupby, null, W.OP.neq).and(groupby, X.EMPTY, W.OP.neq));
+		if (l2 != null) {
+			for (Object o : l2) {
+				Beans<Stat> bs = Stat.dao.load(q.copy().and(groupby, o), 0, 10000);
+				if (!bs.isEmpty()) {
+					Stat s = bs.get(0);
+
+					for (String name : s.keySet()) {
+						if (name.startsWith("n")) {
+							Object o1 = s.get(name);
+							if (o1 instanceof Long) {
+								long v = func.call(name, bs);
+								s.set(name, v);
+							}
+						}
+					}
+
+					l1.add(s);
+				}
+			}
+		}
+		return l1;
+
+	}
+
+	@FunctionalInterface
+	public static interface MergeFunc extends Serializable {
+		public long call(String name, List<Stat> l1);
+	}
+
+	public static void main(String[] args) {
+		long t = System.currentTimeMillis();
+
+		SIZE s1 = SIZE.day;
+		String s2 = Stat.format(t, s1);
+		long[] ss = Stat.time(s1, s2);
+
+		System.out.println(s2 + ", " + Stat.format(ss[0], s1) + ", " + Stat.format(ss[1], s1));
 
 	}
 

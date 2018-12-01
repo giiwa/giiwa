@@ -16,7 +16,6 @@ package org.giiwa.core.bean;
 
 import java.io.Serializable;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code TimeStamp} Class used to create a time stamp
  * 
@@ -65,11 +64,23 @@ public class TimeStamp implements Serializable {
 	/**
 	 * past ms
 	 *
-	 * @deprecated
 	 * @return the long
 	 */
-	public long past() {
-		return pastms();
+	public String past() {
+		long s = pastns();
+		if (s < 1000) {
+			return s + "ns";
+		}
+		s /= 1000;
+		if (s < 1000) {
+			return s + "us";
+		}
+		s /= 1000;
+		if (s < 1000) {
+			return s + "ms";
+		}
+		s /= 1000;
+		return s + "s";
 	}
 
 	/**
@@ -114,7 +125,7 @@ public class TimeStamp implements Serializable {
 	 * @return the long
 	 */
 	public long reset() {
-		long r = past();
+		long r = pastms();
 		start = System.nanoTime();
 		return r;
 	}

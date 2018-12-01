@@ -23,7 +23,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,6 +156,10 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		} else if (jsons instanceof String) {
 			Gson g = new Gson();
 			list = g.fromJson((String) jsons, List.class);
+		} else if (jsons instanceof InputStream) {
+			Gson g = new Gson();
+			JsonReader reader = new JsonReader(new StringReader((String) jsons));
+			list = g.fromJson(reader, List.class);
 		} else if (jsons instanceof Reader) {
 			Gson g = new Gson();
 			list = g.fromJson((Reader) jsons, List.class);
@@ -501,10 +504,10 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * @return the list, or null if not exists
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public Collection<JSON> getList(String name) {
+	public List<JSON> getList(String name) {
 		Object o = this.get(name);
-		if (o != null && o instanceof Collection) {
-			return (Collection<JSON>) o;
+		if (o != null && o instanceof List) {
+			return (List<JSON>) o;
 		}
 		return null;
 	}
@@ -516,11 +519,11 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 *            the name
 	 * @return the objects, or null if not exists
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public Collection<Object> getObjects(String name) {
+	@SuppressWarnings({ "rawtypes" })
+	public List<?> getObjects(String name) {
 		Object o = this.get(name);
-		if (o != null && o instanceof Collection) {
-			return (Collection) o;
+		if (o != null && o instanceof List) {
+			return (List) o;
 		}
 		return null;
 	}

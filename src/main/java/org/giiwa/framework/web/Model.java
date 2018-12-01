@@ -37,6 +37,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
@@ -212,20 +213,24 @@ public class Model {
 	private Path process() throws Exception {
 
 		if (method.isGet()) {
-			String non = Global.getString("site.browser.nonredirect", null);
-			String ignore = Global.getString("site.browser.ignoreurl", null);
-			if (!X.isEmpty(non) && !X.isSame(non, uri) && !X.isSame(uri, "/admin/browserinfo")
-					&& (X.isEmpty(ignore) || !uri.matches(ignore))) {
+			try {
+				String non = Global.getString("site.browser.nonredirect", null);
+				String ignore = Global.getString("site.browser.ignoreurl", null);
+				if (!X.isEmpty(non) && !X.isSame(non, uri) && !X.isSame(uri, "/admin/browserinfo")
+						&& (X.isEmpty(ignore) || !uri.matches(ignore))) {
 
-				String ua = Global.getString("site.browser", "*");
+					String ua = Global.getString("site.browser", "*");
 
-				if (!X.isEmpty(ua) && !X.isSame(ua, "*")) {
-					String b = this.browser();
-					if (!b.matches(ua)) {
-						this.redirect(non);
-						return null;
+					if (!X.isEmpty(ua) && !X.isSame(ua, "*")) {
+						String b = this.browser();
+						if (!b.matches(ua)) {
+							this.redirect(non);
+							return null;
+						}
 					}
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 
@@ -393,7 +398,7 @@ public class Model {
 		case METHOD_GET: {
 
 			Method m = this.getClass().getMethod("onGet");
-			log.debug("m=" + m);
+			// log.debug("m=" + m);
 			if (m != null) {
 				Path p = m.getAnnotation(Path.class);
 				if (p != null) {
@@ -617,7 +622,12 @@ public class Model {
 			this.response(jo);
 
 		} else {
-			this.redirect("/user/login");
+			String node = this.getString("__node");
+			if (!X.isEmpty(node)) {
+				this.redirect("/user/login?__node=" + node);
+			} else {
+				this.redirect("/user/login");
+			}
 		}
 	}
 
@@ -1313,6 +1323,8 @@ public class Model {
 	final public String getString(String name) {
 		try {
 			String c1 = req.getContentType();
+			// log.debug("contenttype=" + c1);
+
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 				if (uploads == null) {
 					BufferedReader in = req.getReader();
@@ -1968,14 +1980,12 @@ public class Model {
 
 				return true;
 			} else {
-				if (Global.getInt("dfile.web", 0) == 1) {
-					DFile d = Disk.seek(uri);
-					if (d.exists()) {
+				DFile d = Disk.seek(viewname);
+				if (d.exists()) {
 
-						View.merge(d, this, viewname);
+					View.merge(d, this, viewname);
 
-						return true;
-					}
+					return true;
 				}
 				notfound("page not found, page=" + viewname);
 			}
@@ -2255,6 +2265,8 @@ public class Model {
 	 */
 	final public static int METHOD_PUT = 4;
 
+	final public static int METHOD_HEAD = 8;
+
 	/**
 	 * MIME TYPE of JSON
 	 */
@@ -2370,7 +2382,7 @@ public class Model {
 	 *
 	 */
 	public static class HTTPMethod {
-		int method = Model.METHOD_GET;
+		public int method = Model.METHOD_GET;
 
 		/*
 		 * (non-Javadoc)

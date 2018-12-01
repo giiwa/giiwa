@@ -10,7 +10,6 @@
 	<classpathentry kind="lib" path="depends/Memcached-Java-Client-3.0.2.jar"/>
 	<classpathentry kind="lib" path="depends/unbescape-1.1.4.RELEASE.jar"/>
 	<classpathentry kind="lib" path="depends/metadata-extractor-2.9.1.jar"/>
-	<classpathentry kind="lib" path="depends/giiwa-1.5.jar"/>
 	<classpathentry kind="lib" path="depends/activation-1.1.jar"/>
 	<classpathentry kind="lib" path="depends/commons-configuration-1.6.jar"/>
 	<classpathentry kind="lib" path="depends/commons-beanutils-1.7.0.jar"/>
@@ -27,17 +26,13 @@
 	<classpathentry kind="lib" path="depends/xml-apis-1.0.b2.jar"/>
 	<classpathentry kind="lib" path="depends/ognl-3.1.12.jar"/>
 	<classpathentry kind="lib" path="depends/commons-pool2-2.3.jar"/>
-	<classpathentry kind="lib" path="depends/httpclient-4.5.2.jar"/>
-	<classpathentry kind="lib" path="depends/commons-codec-1.9.jar"/>
 	<classpathentry kind="lib" path="depends/commons-dbcp-1.4.jar"/>
 	<classpathentry kind="lib" path="depends/commons-fileupload-1.3.1.jar"/>
-	<classpathentry kind="lib" path="depends/velocity-1.7.jar"/>
 	<classpathentry kind="lib" path="depends/postgresql-9.0-801.jdbc4.jar"/>
 	<classpathentry kind="lib" path="depends/javassist-3.20.0-GA.jar"/>
 	<classpathentry kind="lib" path="depends/mail-1.4.jar"/>
 	<classpathentry kind="lib" path="depends/commons-beanutils-core-1.8.0.jar"/>
 	<classpathentry kind="lib" path="depends/jedis-2.8.0.jar"/>
-	<classpathentry kind="lib" path="depends/hsqldb-2.3.4.jar"/>
 	<classpathentry kind="lib" path="depends/commons-io-2.2.jar"/>
 	<classpathentry kind="lib" path="depends/commons-exec-1.3.jar"/>
 	<classpathentry kind="lib" path="depends/dom4j-1.6.1.jar"/>
@@ -51,10 +46,8 @@
 	<classpathentry kind="lib" path="depends/sigar-1.6.4.jar"/>
 	<classpathentry kind="lib" path="depends/lz4-1.3.0.jar"/>
 	<classpathentry kind="lib" path="depends/jsoup-1.10.2.jar"/>
-	<classpathentry kind="lib" path="depends/httpcore-4.4.6.jar"/>
 	<classpathentry kind="lib" path="depends/accessors-smart-1.1.jar"/>
 	<classpathentry kind="lib" path="depends/snappy-java-1.1.2.6.jar"/>
-	<classpathentry kind="lib" path="depends/httpmime-4.5.2.jar"/>
 	<classpathentry kind="lib" path="depends/bcprov-jdk16-1.46.jar"/>
 	<classpathentry kind="lib" path="depends/commons-pool-1.5.4.jar"/>
 	<classpathentry kind="lib" path="depends/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
@@ -64,5 +57,10 @@
 	<classpathentry kind="lib" path="depends/core-3.1.0.jar"/>
 	<classpathentry kind="lib" path="depends/mongo-java-driver-3.4.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="depends/giiwa-1.6.jar"/>
+	<classpathentry kind="lib" path="depends/httpclient-4.5.4.jar"/>
+	<classpathentry kind="lib" path="depends/httpcore-4.4.9.jar"/>
+	<classpathentry kind="lib" path="depends/httpmime-4.5.4.jar"/>
+	<classpathentry kind="lib" path="depends/velocity-engine-core-2.0.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

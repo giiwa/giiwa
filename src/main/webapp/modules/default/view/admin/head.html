@@ -14,6 +14,7 @@
 <link href='/css/giiwa.css?${module.module("default").build}' rel='stylesheet' />
 
 <script type="text/javascript" src="/js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src='/js/giiwa.js?${module.module("default").build}'></script>
 
 </head>
 <body class="wfull">
@@ -26,12 +27,12 @@
 		<div class='right'>
 			<div class='top'>
 				<div class='item'><i class='icon-user'></i>&nbsp;#if($me.nickname)$me.nickname #else $!me.name #end</div>
-				<div class='item'><a href='javascript:;' onclick='giiwa.load("/admin/profile/my")'><i class='icon-cogs'></i>&nbsp;$lang.get('a.profile')</a></div>
+				<div class='item'><a href='javascript:;' onclick='giiwa.load("/admin/profile/my?__node=$!__node")'><i class='icon-cogs'></i>&nbsp;$lang.get('a.profile')</a></div>
 				
 				#if($me.hasAccess('access.config.admin'))
 				<div class='item'><a href="/docs/icomoon/demo.html" target='_blank'><i class='icon-image'></i>&nbsp;Icomoon</a></div>
 				#end
-				<div class='item'><a href="/user/logout" ><i class='icon-exit'></i>&nbsp;$lang.get("a.logout")</a></div>
+				<div class='item'><a href="/user/logout?__node=$!__node" ><i class='icon-exit'></i>&nbsp;$lang.get("a.logout")</a></div>
 			</div>
 		</div>
 	</div>

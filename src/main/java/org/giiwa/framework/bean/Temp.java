@@ -287,31 +287,73 @@ public class Temp {
 			}
 
 			Object[] ss = cols.call(200, b);
+			if (ss != null) {
 
-			for (int i = 0; i < ss.length; i++) {
-				if (i > 0) {
-					out.write(",");
-				}
-
-				out.write("\"");
-
-				Object o = ss[i];
-
-				String s = X.EMPTY;
-				if (o != null) {
-					if (o instanceof String) {
-						s = ((String) o).replaceAll("\"", "\\\"").replaceAll("\r\n", "");
-					} else {
-						s = o.toString();
+				for (int i = 0; i < ss.length; i++) {
+					if (i > 0) {
+						out.write(",");
 					}
-					out.write(s);
+
+					out.write("\"");
+
+					Object o = ss[i];
+
+					String s = X.EMPTY;
+					if (o != null) {
+						if (o instanceof String) {
+							s = ((String) o).replaceAll("\"", "\\\"").replaceAll("\r\n", "");
+						} else {
+							s = o.toString();
+						}
+						out.write(s);
+					}
+					out.write("\"");
 				}
-				out.write("\"");
+				out.write("\r\n");
 			}
-			out.write("\r\n");
 
 		}
 
+	}
+
+	private static void _cleanup(String path, long expired) {
+
+		try {
+			File f = new File(path);
+
+			/**
+			 * test the file last modified exceed the cache time
+			 */
+			if (f.isFile()) {
+				if (System.currentTimeMillis() - f.lastModified() > expired) {
+					IOUtil.delete(f);
+				}
+			} else if (f.isDirectory()) {
+				File[] list = f.listFiles();
+				if (list == null || list.length == 0) {
+					IOUtil.delete(f);
+				} else if (list != null) {
+					/**
+					 * cleanup the sub folder
+					 */
+					for (File f1 : list) {
+						_cleanup(f1.getAbsolutePath(), expired);
+					}
+				}
+			}
+		} catch (Exception e) {
+			if (log.isErrorEnabled()) {
+				log.error(e.getMessage(), e);
+				GLog.applog.error("cleanup", "cleanup", e.getMessage(), e, null, null);
+			}
+		}
+
+	}
+
+	public static void cleanup(long expired) {
+		if (!X.isEmpty(ROOT)) {
+			_cleanup(ROOT, expired);
+		}
 	}
 
 }

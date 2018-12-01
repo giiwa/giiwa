@@ -14,6 +14,7 @@
 */
 package org.giiwa.framework.web;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,12 +26,22 @@ import org.apache.commons.logging.*;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.TimeStamp;
+import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Config;
+import org.giiwa.core.conf.Global;
+import org.giiwa.core.conf.Local;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.AccessLog;
+import org.giiwa.framework.bean.Disk;
+import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model.HTTPMethod;
+import org.giiwa.framework.web.view.View;
 
 /**
  * load module, default module
@@ -68,6 +79,7 @@ public class Controller {
 	 *            the path
 	 */
 	public static void init(Configuration conf, String path) {
+
 		Controller.PATH = path;
 
 		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
@@ -132,21 +144,36 @@ public class Controller {
 	@SuppressWarnings("deprecation")
 	public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, Model.HTTPMethod method) {
 
+		// log.debug("uri=" + uri);
+
 		TimeStamp t = TimeStamp.create();
 		Tps.add(1);
+
+		String node = req.getParameter("__node");
+		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
+			Node n = Node.dao
+					.load(W.create(X.ID, node).and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte));
+			if (n != null) {
+				n.forward(uri, req, resp, method);
+				return;
+			}
+		}
+
+		uri = Url.decode(uri);
 
 		/**
 		 * test and load from cache first
 		 */
 		Model mo = Module.home.loadModelFromCache(method.method, uri);
 		if (mo != null) {
+			mo.set("__node", node);
 
 			Path p = mo.dispatch(uri, req, resp, method);
 
 			if (p == null || p.accesslog()) {
 				if (log.isInfoEnabled())
-					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -"
-							+ mo.getRemoteHost() + " " + mo);
+					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
+							+ " " + mo);
 
 				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
 				User u1 = mo.getUser();
@@ -163,6 +190,59 @@ public class Controller {
 
 			// Counter.max("web.request.max", t.past(), uri);
 			return;
+		}
+
+		try {
+			File f = Module.home.getFile(uri);
+			if (f != null && f.exists() && f.isFile()) {
+				Model m = new DefaultModel();
+				m.req = req;
+				m.resp = resp;
+				m.set(m.getJSON());
+
+				m.set("me", m.getUser());
+				m.put("lang", m.lang);
+				m.put(X.URI, uri);
+				m.put("module", Module.home);
+				m.put("request", req);
+				m.put("this", m);
+				m.put("response", resp);
+				m.set("session", m.getSession());
+				m.set("global", Global.getInstance());
+				m.set("conf", Config.getConf());
+				m.set("local", Local.getInstance());
+				m.set("requestid", UID.random(20));
+				View.merge(f, m, uri);
+
+				return;
+			}
+
+			DFile f1 = Disk.seek(uri);
+			if (f1 != null && f1.exists() && f1.isFile()) {
+				Model m = new DefaultModel();
+				m.req = req;
+				m.resp = resp;
+				m.set(m.getJSON());
+
+				m.set("me", m.getUser());
+				m.put("lang", m.lang);
+				m.put(X.URI, uri);
+				m.put("module", Module.home);
+				m.put("request", req);
+				m.put("this", m);
+				m.put("response", resp);
+				m.set("session", m.getSession());
+				m.set("global", Global.getInstance());
+				m.set("conf", Config.getConf());
+				m.set("local", Local.getInstance());
+				m.set("requestid", UID.random(20));
+
+				View.merge(f1, m, uri);
+
+				return;
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 
 		if (X.isSame("/", uri) || !_dispatch(uri, req, resp, method, t)) {
@@ -184,12 +264,14 @@ public class Controller {
 				mo = getModel(method.method, u);
 				if (mo != null) {
 
+					mo.set("__node", node);
+
 					mo.setPath(path);
 					Path p = mo.dispatch(u, req, resp, method);
 
 					if (p == null || p.accesslog()) {
 						if (log.isInfoEnabled())
-							log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -"
+							log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -"
 									+ mo.getRemoteHost() + " " + mo);
 
 						V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
@@ -216,6 +298,7 @@ public class Controller {
 			 */
 			mo = new DefaultModel();
 			mo.module = Module.load(0);
+			mo.set("__node", node);
 
 			/**
 			 * do not put in model cache, <br>
@@ -226,7 +309,7 @@ public class Controller {
 			mo.dispatch(uri, req, resp, method);
 
 			if (log.isInfoEnabled())
-				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + "ms -" + mo.getRemoteHost()
+				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
 						+ " " + mo);
 			V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
 			User u1 = mo.getUser();
@@ -250,15 +333,14 @@ public class Controller {
 		/**
 		 * load model from the modules
 		 */
-
 		while (uri.indexOf("//") > -1) {
 			uri = uri.replaceAll("//", "/");
 		}
-
 		// log.debug("dispatch, uri=" + uri);
 
 		Model mo = getModel(method.method, uri);
 		if (mo != null) {
+			mo.set("__node", req.getParameter("__node"));
 
 			Path p = mo.dispatch(uri, req, resp, method);
 

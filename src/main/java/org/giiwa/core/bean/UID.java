@@ -16,11 +16,11 @@ package org.giiwa.core.bean;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,8 +29,8 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.task.GlobalLock;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code UID} Class used to create unique id, or sequence, random string
  * 
@@ -51,9 +51,68 @@ public final class UID {
 	 */
 	public synchronized static long next(String key) {
 
-		long prefix = Global.getLong("cluster.code", 0) * 10000000000000L;
+		Lock door = GlobalLock.create("uid." + key);
 
 		try {
+			if (door.tryLock()) {
+				try {
+					return _next(key);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				} finally {
+					door.unlock();
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return -1;
+	}
+
+	private static long _next(String key) {
+
+		long prefix = Global.getLong("cluster.code", 0) * 10000000000000L;
+
+		/**
+		 * remove cache
+		 */
+		Cache.remove("global/" + key);
+
+		Global f = Helper.load(key, Global.class);
+
+		long v = 1;
+		if (f == null) {
+			String linkid = UID.random();
+
+			Helper.insert(V.create(X.ID, key).set("l", v).set("linkid", linkid), Global.class);
+			f = Helper.load(key, Global.class);
+			if (f == null) {
+				log.error("occur error when create unique id, name=" + key);
+				return -1;
+			} else if (!X.isSame(f.getString("linkid"), linkid)) {
+				return _next(key);
+			}
+
+		} else {
+			v = f.getLong("l");
+			// log.debug("v=" + v + ", f=" + f);
+
+			if (Helper.update(W.create(X.ID, key).and("l", v), V.create("l", v + 1L), Global.class) <= 0) {
+				return _next(key);
+			}
+			v += 1;
+		}
+
+		return prefix + v;
+	}
+
+	public synchronized static long get(String key) {
+
+		Lock door = GlobalLock.create("uid." + key);
+
+		try {
+			door.lock();
 
 			/**
 			 * remove cache
@@ -64,30 +123,15 @@ public final class UID {
 
 			long v = 1;
 			if (f == null) {
-				String linkid = UID.random();
-
-				Helper.insert(V.create(X.ID, key).set("l", v).set("linkid", linkid), Global.class);
-				f = Helper.load(key, Global.class);
-				if (f == null) {
-					log.error("occur error when create unique id, name=" + key);
-					return -1;
-				} else if (!X.isSame(f.getString("linkid"), linkid)) {
-					return next(key);
-				}
-
+				return 0L;
 			} else {
 				v = f.getLong("l");
-				// log.debug("v=" + v + ", f=" + f);
-
-				if (Helper.update(W.create(X.ID, key).and("l", v), V.create("l", v + 1L), Global.class) <= 0) {
-					return next(key);
-				}
-				v += 1;
+				return v;
 			}
-
-			return prefix + v;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			door.unlock();
 		}
 
 		return -1;
@@ -299,10 +343,23 @@ public final class UID {
 	 *             the exception
 	 */
 	public static void main(String[] args) throws Exception {
-		int[] ii = UID.random("12131", 10000);
-		System.out.println(Arrays.toString(ii));
+		// int[] ii = UID.random("12131", 10000);
+		// System.out.println(Arrays.toString(ii));
+		//
+		// ii = UID.random1("12131", 10);
+		// System.out.println(Arrays.toString(ii));
 
-		ii = UID.random1("12131", 10);
-		System.out.println(Arrays.toString(ii));
+		tt(10);
+	}
+
+	private static void tt(int i) {
+		try {
+			if (i > 0) {
+				System.out.println("i=" + i);
+				tt(i - 1);
+			}
+		} finally {
+			System.out.println("i=" + i);
+		}
 	}
 }

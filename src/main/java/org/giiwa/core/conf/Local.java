@@ -20,7 +20,7 @@ import java.util.Map;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.cache.Cache;
-import org.giiwa.core.task.Task;
+import org.giiwa.core.task.SysTask;
 import org.giiwa.framework.bean.Node;
 
 /**
@@ -236,7 +236,7 @@ public final class Local extends Bean {
 	}
 
 	public static void init() {
-		new Task() {
+		new SysTask() {
 
 			/**
 			 * 
@@ -261,7 +261,7 @@ public final class Local extends Bean {
 
 			@Override
 			public void onFinish() {
-				this.schedule(1000 * 10);
+				this.schedule(1000 * 6);
 			}
 
 		}.schedule(1000);

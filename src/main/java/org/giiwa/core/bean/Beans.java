@@ -22,7 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Callable;
-import org.giiwa.core.task.MyFunc;
+import org.giiwa.core.task.ReduceFunction;
 
 /**
  * The {@code Beans} Class used to contains the Bean in query. <br>
@@ -153,7 +153,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return l1;
 	}
 
-	public <K> List<K> toArray(MyFunc<K, E> cb) {
+	public <K> List<K> toArray(ReduceFunction<K, E> cb) {
 		List<K> l1 = new ArrayList<K>();
 		for (E e : this) {
 			K k = cb.call(e);

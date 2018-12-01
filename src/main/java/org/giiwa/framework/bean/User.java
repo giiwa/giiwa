@@ -79,6 +79,24 @@ public class User extends Bean {
 	@Column(name = "md4passwd")
 	private String md4passwd;
 
+	@Column(name = "createdip")
+	private String createdip;
+
+	@Column(name = "createdua")
+	private String createdua;
+
+	@Column(name = "createdby")
+	private long createdby;
+
+	transient User createdby_obj;
+
+	public User getCreatedby_obj() {
+		if (createdby_obj == null) {
+			createdby_obj = dao.load(createdby);
+		}
+		return createdby_obj;
+	}
+
 	/**
 	 * get the MD4 passwd
 	 * 

@@ -2,13 +2,13 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/database'>$lang.get('a.database')</a>
-	<a href='/admin/backup'>$lang.get('a.backup.files')</a>
-	<a href='/admin/backup/auto'>$lang.get('a.backup.auto')</a>
-	<a href='/admin/backup/create' class='selected'>$lang.get('a.backup.create')</a>
+	<a href='/admin/database?__node=$!__node'>$lang.get('a.database')</a>
+	<a href='/admin/backup?__node=$!__node'>$lang.get('a.backup.files')</a>
+	<a href='/admin/backup/auto?__node=$!__node'>$lang.get('a.backup.auto')</a>
+	<a href='/admin/backup/create?__node=$!__node' class='selected'>$lang.get('a.backup.create')</a>
 </div>
 
-<form action='/admin/backup/create'  method='post' class='form nospace' style="padding-left: 0;padding-top: 0;">
+<form action='/admin/backup/create?__node=$!__node'  method='post' class='form nospace' style="padding-left: 0;padding-top: 0;">
 	
 	<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 		<thead>

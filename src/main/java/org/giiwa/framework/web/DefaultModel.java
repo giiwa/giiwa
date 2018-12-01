@@ -20,7 +20,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.framework.bean.DFile;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.Disk;
 
 /**
@@ -97,30 +97,28 @@ public class DefaultModel extends Model {
 		}
 
 		// check dfile
-		if (Global.getInt("dfile.web", 0) == 1) {
-			DFile d = Disk.seek(uri);
-			if (d.exists()) {
-				// show it
-				this.set(this.getJSON());
+		DFile d = Disk.seek(uri);
+		if (d.exists()) {
+			// show it
+			this.set(this.getJSON());
 
-				this.set("me", this.getUser());
-				this.put("lang", lang);
-				this.put(X.URI, uri);
-				this.put("module", Module.home);
-				this.put("path", path);
-				this.put("request", req);
-				this.put("this", this);
-				this.put("response", resp);
-				this.set("session", this.getSession());
-				this.set("global", Global.getInstance());
-				this.set("conf", Config.getConf());
-				this.set("local", Local.getInstance());
+			this.set("me", this.getUser());
+			this.put("lang", lang);
+			this.put(X.URI, uri);
+			this.put("module", Module.home);
+			this.put("path", path);
+			this.put("request", req);
+			this.put("this", this);
+			this.put("response", resp);
+			this.set("session", this.getSession());
+			this.set("global", Global.getInstance());
+			this.set("conf", Config.getConf());
+			this.set("local", Local.getInstance());
 
-				createQuery();
+			createQuery();
 
-				show(uri);
-				return true;
-			}
+			show(uri);
+			return true;
 		}
 
 		return false;

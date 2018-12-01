@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.MyFunc;
+import org.giiwa.core.task.ReduceFunction;
 
 /**
  * The {@code Bean} Class is entity class that mapping to a table,<br>
@@ -75,7 +75,7 @@ public class Bean implements Serializable {
 	 * @return long of the created
 	 */
 	public long getCreated() {
-		return X.toLong((Object)get(X.CREATED));
+		return X.toLong((Object) get(X.CREATED));
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class Bean implements Serializable {
 	 * @return long the of the updated
 	 */
 	public long getUpdated() {
-		return X.toLong((Object)get(X.UPDATED));
+		return X.toLong((Object) get(X.UPDATED));
 	}
 
 	/**
@@ -167,18 +167,20 @@ public class Bean implements Serializable {
 					f1.set(this, X.toFloat(value, 0));
 				} else if (List.class.isAssignableFrom(t1) || t1.isArray()) {
 					// change the value to list
-					List<Object> l1 = new ArrayList<Object>();
-					if (value instanceof List) {
-						l1.addAll((List<Object>) value);
-					} else if (value.getClass().isArray()) {
-						l1.add(Arrays.asList(value));
-					} else {
-						l1.add(value);
-					}
-					if (t1.isArray()) {
-						f1.set(this, l1.toArray());
-					} else {
-						f1.set(this, l1);
+					if (value != null) {
+						List<Object> l1 = new ArrayList<Object>();
+						if (value instanceof List) {
+							l1.addAll((List<Object>) value);
+						} else if (value.getClass().isArray()) {
+							l1.add(Arrays.asList(value));
+						} else {
+							l1.add(value);
+						}
+						if (t1.isArray()) {
+							f1.set(this, l1.toArray());
+						} else {
+							f1.set(this, l1);
+						}
 					}
 				} else if (Map.class.isAssignableFrom(t1)) {
 					// change the value to map
@@ -649,7 +651,7 @@ public class Bean implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T extends Bean> JSON refine(MyFunc<JSON, T> e) {
+	public <T extends Bean> JSON refine(ReduceFunction<JSON, T> e) {
 		return e.call((T) this);
 	}
 

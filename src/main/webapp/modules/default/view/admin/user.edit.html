@@ -2,11 +2,11 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/user'>$lang.get('a.user')</a>
-	<a href='/admin/user/edit?id=$id' class='selected'>$lang.get('a.edit')</a>
+	<a href='/admin/user?__node=$!__node'>$lang.get('a.user')</a>
+	<a href='/admin/user/edit?__node=$!__node&id=$id' class='selected'>$lang.get('a.edit')</a>
 </div>
 
-<form action='/admin/user/edit'  method='post' class='form' >
+<form action='/admin/user/edit?__node=$!__node'  method='post' class='form' >
 	<input type='hidden' name="id" value="$id"/>
 	<div><label><h3>$lang.get('user.name'):</h3><i>$!name</i></label></div>
 	<div><label><h3>$lang.get('user.nickname'):</h3><input type='text' name='nickname' value='$!nickname'/></label></div>
@@ -74,7 +74,7 @@ function _showpassword() {
 function _password(o) {
 	giiwa.dialog().close();
 	var v = $(o).parent().parent().find('input[name=password]').val();
-	$.post('/admin/user/edit', {id:"$id",password:v}, function(d){
+	$.post('/admin/user/edit?__node=$!__node', {id:"$id",password:v}, function(d){
 		if(d.state == 200) {
 			giiwa.message("$lang.get('save.success')");
 		} else {

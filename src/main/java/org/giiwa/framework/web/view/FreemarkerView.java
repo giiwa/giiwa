@@ -21,7 +21,7 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.giiwa.framework.bean.DFile;
+import org.giiwa.core.conf.Local;
 import org.giiwa.framework.web.Model;
 
 import freemarker.template.Template;
@@ -29,7 +29,7 @@ import freemarker.template.Template;
 public class FreemarkerView extends View {
 
 	@Override
-	public boolean parse(File file, Model m, String viewname) {
+	public boolean parse(Object file, Model m, String viewname) {
 		// load
 		try {
 
@@ -43,23 +43,27 @@ public class FreemarkerView extends View {
 				return true;
 			}
 		} catch (Exception e) {
-			log.error(file.getName(), e);
+			log.error(View.getName(file), e);
 		}
 		return false;
 	}
 
-	Template getTemplate(File f) throws IOException {
+	Template getTemplate(Object f) throws IOException {
 
-		String fullname = f.getCanonicalPath();
+		String fullname = View.getCanonicalPath(f);
 		T t = cache.get(fullname);
-		if (t == null || t.last != f.lastModified()) {
+		if (t == null || t.last != View.lastModified(f)) {
 			if (cache.size() == 0) {
 				cfg.setDirectoryForTemplateLoading(new File(Model.HOME));
 			}
 
-			Template t1 = cfg.getTemplate(f.getCanonicalPath().substring(Model.HOME.length()), "UTF-8");
-			t = T.create(t1, f.lastModified());
-			cache.put(fullname, t);
+			Template t1 = cfg.getTemplate(View.getCanonicalPath(f).substring(Model.HOME.length()), "UTF-8");
+			t = T.create(t1, View.lastModified(f));
+			
+			if (Local.getInt("web.debug", 0) == 0) {
+				// not debug
+				cache.put(fullname, t);
+			}
 		}
 		return t == null ? null : t.template;
 	}
@@ -79,11 +83,5 @@ public class FreemarkerView extends View {
 	private static Map<String, T> cache = new HashMap<String, T>();
 	private static freemarker.template.Configuration cfg = new freemarker.template.Configuration(
 			freemarker.template.Configuration.VERSION_2_3_24);
-
-	@Override
-	protected boolean parse(DFile in, Model m, String viewname) throws Exception {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 }

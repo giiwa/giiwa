@@ -83,8 +83,8 @@ public class RedisCache implements ICacheSystem {
 	 *            the id
 	 * @return the object
 	 */
-	public synchronized Object get(String id) {
-		byte[] bb = jedis.get(id.getBytes());
+	public synchronized Object get(String name) {
+		byte[] bb = jedis.get(name.getBytes());
 		if (bb != null) {
 			return unserialize(bb);
 		}
@@ -100,12 +100,12 @@ public class RedisCache implements ICacheSystem {
 	 *            the o
 	 * @return true, if successful
 	 */
-	public synchronized boolean set(String id, Object o) {
+	public synchronized boolean set(String name, Object o) {
 		try {
 			if (o == null) {
-				return delete(id);
+				return delete(name);
 			} else {
-				return jedis.set(id.getBytes(), serialize(o)) != null;
+				return jedis.set(name.getBytes(), serialize(o)) != null;
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -120,13 +120,13 @@ public class RedisCache implements ICacheSystem {
 	 *            the id
 	 * @return true, if successful
 	 */
-	public synchronized boolean delete(String id) {
+	public synchronized boolean delete(String name) {
 		try {
-			jedis.del(id);
+			return jedis.del(name) > 0;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		return true;
+		return false;
 	}
 
 	private static byte[] serialize(Object object) {
@@ -161,12 +161,34 @@ public class RedisCache implements ICacheSystem {
 		return "RedisCache [url=" + url + "]";
 	}
 
-	public synchronized long setnx(String name, String valueOf) {
-		return jedis.setnx(name, valueOf);
+	public synchronized boolean trylock(String name, String value, long ms) {
+		String n = jedis.set(name, value, "NX", "PX", 12);
+		return X.isSame("OK", n);
 	}
 
-	public synchronized void expire(String name, int sec) {
+	public synchronized void expire(String name, String value, long ms) {
+		int sec = (int) (ms / 1000);
 		jedis.expire(name, sec);
 	}
+
+	@Override
+	public synchronized boolean unlock(String name, String value) {
+		return jedis.del(name) > 0;
+	}
+
+	// public static void main(String[] args) {
+	// Task.init(10);
+	//
+	// try {
+	// ICacheSystem r = RedisCache.create("redis://s01:6379");
+	// System.out.println(r.trylock("a", 12000));
+	// Thread.sleep(10000);
+	// System.out.println(r.delete("a"));
+	// System.out.println(r.trylock("a", 12000));
+	// } catch (Exception e) {
+	// log.error(e.getMessage(), e);
+	// }
+	//
+	// }
 
 }

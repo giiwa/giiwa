@@ -2,12 +2,12 @@
 	<a href='javascript:;' class="selected">$lang.get('a.disk.add')</a>
 </div>
 
-<form action='/admin/dfile/disk/add'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
+<form action='/admin/dfile/disk/add?__node=$!__node'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
 
 	<div><label><h3>$lang.get('disk.node')(<r>*</r>):</h3>
 		<select name="node">
 			#foreach($p in $nodes)
-			<option value="$p.id">$p.ip</option>
+			<option value="$p.id">$p.url</option>
 			#end
 		</select>
 		<g>$lang.get('disk.node.hint')</g></label></div>

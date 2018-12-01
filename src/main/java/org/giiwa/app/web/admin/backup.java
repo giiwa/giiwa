@@ -61,7 +61,7 @@ public class backup extends Model {
 	 * 
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(login = true, access = "access.config.admin")
 	@Override
 	public void onGet() {
 		String path = BackupTask.path();
@@ -86,7 +86,7 @@ public class backup extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin")
 	public void delete() {
 
 		try {
@@ -105,7 +105,7 @@ public class backup extends Model {
 
 	}
 
-	@Path(path = "download", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "download", login = true, access = "access.config.admin")
 	public void download() {
 		JSON jo = JSON.create();
 		try {
@@ -128,7 +128,7 @@ public class backup extends Model {
 
 	}
 
-	@Path(path = "upload", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "upload", login = true, access = "access.config.admin")
 	public void upload() {
 		String repo = this.getString("repo");
 
@@ -160,7 +160,7 @@ public class backup extends Model {
 
 	}
 
-	@Path(path = "create", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "create", login = true, access = "access.config.admin")
 	public void create() {
 
 		// GLog.applog.info(backup.class, "create", "method=" + method, login,
@@ -194,7 +194,7 @@ public class backup extends Model {
 
 	}
 
-	@Path(path = "er", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "er", login = true, access = "access.config.admin")
 	public void er() {
 
 		// GLog.applog.info(backup.class, "create", "method=" + method, login,
@@ -290,7 +290,7 @@ public class backup extends Model {
 		return null;
 	}
 
-	@Path(path = "auto", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "auto", login = true, access = "access.config.admin")
 	public void auto() {
 
 		if (method.isPost()) {
@@ -315,7 +315,7 @@ public class backup extends Model {
 	/**
 	 * Restore.
 	 */
-	@Path(path = "restore", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "restore", login = true, access = "access.config.admin")
 	public synchronized void restore() {
 
 		JSON jo = new JSON();
@@ -333,7 +333,7 @@ public class backup extends Model {
 	/**
 	 * Restoring.
 	 */
-	@Path(path = "restoring", login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(path = "restoring", login = true, access = "access.config.admin")
 	public void restoring() {
 		long id = this.getLong("id");
 

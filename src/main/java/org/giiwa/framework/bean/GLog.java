@@ -46,8 +46,15 @@ public class GLog extends Bean {
 	private static final int LEVEL_WARN = 1;
 	private static final int LEVEL_ERROR = 2;
 
+	@Column(name = X.ID)
+	String id;
+
 	@Column(name = "type1")
 	int type;
+
+	public String getId() {
+		return id;
+	}
 
 	public int getType() {
 		return type;

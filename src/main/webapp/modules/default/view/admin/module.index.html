@@ -15,8 +15,8 @@ div.limited, div.trial, div.issue{
 </style>
 
 <div class='tabs'>
-	<a href='/admin/module' class='selected'>$lang.get('a.module')</a>
-	<a href='/admin/module/create'>$lang.get('a.create')</a>
+	<a href='/admin/module?__node=$!__node' class='selected'>$lang.get('a.module')</a>
+	<a href='/admin/module/create?__node=$!__node'>$lang.get('a.create')</a>
 </div>
 
 <div class='notes'>
@@ -61,12 +61,12 @@ div.limited, div.trial, div.issue{
 					#foreach($p in $f.setting.keySet())
 					<div>$!lang.get("$!{f.name}.$!{p}")=$!f.get($p)</div>
 					#end
-					<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/deletelicense?name=$f.name"><i class="icon-cancel-circle"></i></a>
+					<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/deletelicense?__node=$!__node&name=$f.name"><i class="icon-cancel-circle"></i></a>
 				#end
 			</td>
 			<td class="a">
 				#if($f.id > 0)
-				<a class="hint hint--bottom" data-hint="$lang.get('a.disable')" href="/admin/module/disable?name=$f.name"><i class="icon-blocked"></i></a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.disable')" href="/admin/module/disable?__node=$!__node&name=$f.name"><i class="icon-blocked"></i></a>
 				#end
 			</td>
 		</tr>
@@ -101,8 +101,8 @@ div.limited, div.trial, div.issue{
 			<td>$!f.build</td>
 			<td>$!f.readme</td>
 			<td class="a">
-				<a class="hint hint--bottom" data-hint="$lang.get('a.enable')" href="/admin/module/enable?name=$f.name"><i class="icon-plus"></i></a>
-				<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/delete?name=$f.name"><i class="icon-cancel-circle"></i></a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.enable')" href="/admin/module/enable?__node=$!__node&name=$f.name"><i class="icon-plus"></i></a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/delete?__node=$!__node&name=$f.name"><i class="icon-cancel-circle"></i></a>
 			</td>
 		</tr>
 		#end
@@ -118,7 +118,7 @@ div.limited, div.trial, div.issue{
 var pid = $!pid;
 
 function _load() {
-	$.get('/admin/system/info', {}, function(d) {
+	$.get('/admin/system/info?__node=$!__node', {}, function(d) {
 		if(d.pid != pid) {
 			window.location.href = window.location.href;
 		}
@@ -139,7 +139,7 @@ function _license(){
 				msg_done : "$lang.get('msg.done')",
 				done : function(url) {
 					giiwa.processing.show();
-					$.post('/admin/module/license', {
+					$.post('/admin/module/license?__node=$!__node', {
 						url : url
 					}, function(d) {
 						giiwa.processing.hide();
@@ -174,7 +174,7 @@ function _module(){
 				msg_done : "$lang.get('msg.done')",
 				done : function(url) {
 					giiwa.processing.show();
-					$.post('/admin/module/add', {
+					$.post('/admin/module/add?__node=$!__node', {
 						url : url
 					}, function(d) {
 						giiwa.processing.hide();

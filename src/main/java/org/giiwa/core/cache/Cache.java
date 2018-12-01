@@ -46,7 +46,7 @@ public final class Cache {
 	public final static String REDIS = "redis://";
 	private static String GROUP = "g://";
 
-	public static ICacheSystem cacheSystem;
+	private static ICacheSystem cacheSystem;
 
 	/**
 	 * initialize the cache with configuration.
@@ -225,6 +225,26 @@ public final class Cache {
 			}
 		}
 		return null;
+	}
+
+	public static boolean trylock(String name, String value, long expire) {
+		if (cacheSystem != null) {
+			return cacheSystem.trylock(name, value, expire);
+		}
+		return false;
+	}
+
+	public static void expire(String name, String value, long ms) {
+		if (cacheSystem != null) {
+			cacheSystem.expire(name, value, ms);
+		}
+	}
+
+	public static boolean unlock(String name, String value) {
+		if (cacheSystem != null) {
+			return cacheSystem.unlock(name, value);
+		}
+		return false;
 	}
 
 }

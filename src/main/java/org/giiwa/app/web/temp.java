@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
@@ -45,7 +46,7 @@ public class temp extends Model {
 			return;
 		}
 
-		String[] ss = this.path.split("/");
+		String[] ss = X.split(Url.decode(this.path), "[/]");
 		if (ss.length != 2) {
 			this.notfound();
 			return;
@@ -86,7 +87,7 @@ public class temp extends Model {
 			long length = end - start;
 
 			this.setContentType("application/octet");
-			this.setHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
+			this.setHeader("Content-Disposition", "attachment; filename=\"" + Url.encode(name) + "\"");
 			this.setHeader("Content-Length", Long.toString(length));
 			this.setHeader("Last-Modified", lang.format(f1.lastModified(), "yyyy-MM-dd HH:mm:ss z"));
 			this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);

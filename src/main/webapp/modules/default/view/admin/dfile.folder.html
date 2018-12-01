@@ -1,0 +1,122 @@
+<style>
+td.a a{
+	color: #333;
+}
+td i.icon-folder{
+	color: #e2af47;
+}
+td i.icon-html-five{
+	color: #468443;
+}
+td i.icon-image{
+	color: #3d6d16;
+}
+</style>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/dfile/disk?__node=$!__node'>$lang.get('a.dfile.disk')</a>
+	<a href='/admin/dfile/folder?__node=$!__node' class="selected">$lang.get('a.dfile.folder')</a>
+</div>
+
+<div style="margin: 10px 0 5px;color: #666;">
+	<span>$!f.filename</span>
+</div>
+
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('file.name')</th>
+			<th>$lang.get('file.size')</th>
+			<th>$lang.get('file.updated')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#if($f)
+	<tr>
+		<td class='a'><a href="/admin/dfile/folder?f=$!f.getParentFile().filename">
+			<i class="icon-folder"></i>&nbsp;..</a></td>
+		<td colspan="3">&nbsp;</td>
+	</tr>
+#end
+#foreach($f1 in $list)
+	<tr>
+		<td class='a'>
+			#if($f1.isFile())
+			<a href="$!f1.filename" target="_blank">
+				<i class="$lang.icon($f1.name)"></i>
+				$f1.name
+			</a>
+			#else
+			<a href="/admin/dfile/folder?f=$!{f1.filename}">
+				<i class="icon-folder"></i>
+				$f1.name
+			</a>
+			#end
+		</td>
+		<td>
+			#if($f1.isFile())
+			$lang.size($!f1.length())
+			#end
+		</td>
+		<td>$!lang.format($f1.lastModified(), 'yyyy-MM-dd HH:mm:ss')</td>
+		<td class="a">
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.delete')" onclick="_delete('$f1.id', '$!f1.filename')"><i class="icon-cancel-circle"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<div class='btns'>
+	<a class='btn btn-primary' href="javascript:;" onclick="_addfile();">$lang.get('a.add.file')</a>
+</div>
+
+<div id="m$!requestid" style="display: none">
+	<div style="margin-bottom: 20px;">
+		<label>存储位置:<input type="text" name="name" value="$!f.filename"/></label>
+	</div>
+	<input type='hidden' name='repo'/>
+</div>
+
+<script>
+function _addfile() {
+	
+	giiwa.dialog($("#m$!requestid"), {
+		width: 350,
+		height: 150,
+		prepare: function(p){
+			p.find('input[name=repo]').upload({
+				caption : "$lang.get('btn.upload.file')",
+				btn_resume : "$lang.get('btn.resume')",
+				btn_delete : "$lang.get('btn.delete')",
+				btn_cancel : "$lang.get('btn.cancel')",
+				msg_stop : "$lang.get('msg.stop')",
+				msg_done : "$lang.get('msg.done')",
+				done : function(url) {
+						giiwa.processing.show();
+						$.post('/admin/dfile/file/add?__node=$!__node', {repo: url, f: p.find('input[name=name]').val()}, function(d){
+							giiwa.processing.hide();
+							giiwa.reload();
+						})
+						giiwa.dialog().close();
+					}
+				})
+			}
+		})
+}
+
+function _delete(id, filename) {
+	if(confirm(filename + ", $lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post("/admin/dfile/file/delete?__node=$!__node", {id:id, f:filename}, function(d){
+			giiwa.processing.hide();
+			giiwa.hint(d.message);
+			giiwa.reload();
+		})
+	}
+}
+</script>
+

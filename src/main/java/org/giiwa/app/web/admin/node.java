@@ -17,6 +17,7 @@ package org.giiwa.app.web.admin;
 import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
@@ -36,8 +37,7 @@ public class node extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.system.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "delete", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -50,8 +50,18 @@ public class node extends Model {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin|access.config.system.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "update", login = true, access = "access.config.admin")
+	public void update() {
+
+		String label = this.getString("label");
+		String id = this.getString("id");
+		Node.dao.update(id, V.create("label", label));
+
+		this.response(JSON.create().append(X.STATE, 200));
+
+	}
+
+	@Path(path = "clean", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
 	public void clean() {
 		JSON jo = JSON.create();
 
@@ -68,13 +78,23 @@ public class node extends Model {
 	 * @see org.giiwa.framework.web.Model#onGet()
 	 */
 	@Override
-	@Path(login = true, access = "access.config.admin|access.config.system.admin")
+	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - 10000, W.OP.gte);
+		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("name", 1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
+
+		String name = this.getString("name");
+		if (!X.isEmpty(name)) {
+			W q1 = W.create();
+			q1.or("label", name, W.OP.like);
+			q1.or("ip", name, W.OP.like);
+			q1.or("id", name, W.OP.like);
+			q.and(q1);
+			this.set("name", name);
+		}
 
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();

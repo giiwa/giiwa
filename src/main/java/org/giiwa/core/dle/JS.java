@@ -15,6 +15,10 @@ public class JS {
 
 	static Log log = LogFactory.getLog(JS.class);
 
+	public static Object run(String js) throws Exception {
+		return run(js, null);
+	}
+
 	public static Object run(String js, Map<String, Object> params) throws Exception {
 
 		ScriptEngineManager manager = new ScriptEngineManager();

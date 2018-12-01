@@ -63,7 +63,7 @@ function _verify_email() {
 }
 function _verify_email_1() {
 	giiwa.processing.show();
-	$.post('/admin/profile/verify1', {email: $('input[name=email]').val()}, function(d){
+	$.post('/admin/profile/verify1?__node=$!__node', {email: $('input[name=email]').val()}, function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {
 			giiwa.dialog().panel.find('.ve1').hide();
@@ -76,7 +76,7 @@ function _verify_email_1() {
 }
 function _verify_email_2() {
 	giiwa.processing.show();
-	$.post('/admin/profile/verify2', {email: $('input[name=email]').val(), code:giiwa.dialog().panel.find('input[name=code]').val()}, function(d){
+	$.post('/admin/profile/verify2?__node=$!__node', {email: $('input[name=email]').val(), code:giiwa.dialog().panel.find('input[name=code]').val()}, function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {
 			giiwa.dialog().close();
@@ -99,7 +99,7 @@ function _showpassword(){
 function _password(o) {
 	giiwa.dialog().close();
 	var v = $(o).parent().parent().find('input[name=password]').val();
-	$.post('/admin/profile/set/my', {password:v}, function(d){
+	$.post('/admin/profile/set/my?__node=$!__node', {password:v}, function(d){
 		if(d.state == 200) {
 			giiwa.message("$lang.get('save.success')");
 		} else {

@@ -450,7 +450,7 @@ public class Module {
 	 *            the module
 	 * @return Module
 	 */
-	public Module module(String module) {
+	static public Module module(String module) {
 		for (Module m : modules.values()) {
 			if (m.name.equals(module)) {
 				return m;
@@ -1026,7 +1026,7 @@ public class Module {
 
 				return t;
 			} else {
-				log.warn("the module.xml doesnt exists, file=" + f.getCanonicalPath());
+				log.warn("the module.xml doesnt exists, file=" + f.getCanonicalPath(), new Exception());
 			}
 
 		} catch (Exception e) {

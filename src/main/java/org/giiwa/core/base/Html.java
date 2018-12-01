@@ -25,7 +25,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 
-// TODO: Auto-generated Javadoc
 /**
  * The {@code Html} Class used to string to html, html to plain, or get images
  * from the html string.

@@ -45,7 +45,6 @@ import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
 
-// TODO: Auto-generated Javadoc
 public final class KafkaMQ extends MQ {
 
 	private static Log log = LogFactory.getLog(KafkaMQ.class);
@@ -390,13 +389,19 @@ public final class KafkaMQ extends MQ {
 	@Override
 	protected void _unbind(IStub stub) throws Exception {
 		// find R
-		for (int i = cached.size(); i >= 0; i--) {
+		for (int i = cached.size() - 1; i >= 0; i--) {
 			WeakReference<R> w = cached.get(i);
-			if (w == null || w.get() == null) {
+
+			if (w == null) {
 				cached.remove(i);
-			} else if (w.get().cb == stub) {
-				w.get().close();
-				cached.remove(i);
+			} else {
+				R r = w.get();
+				if (r == null || r.cb == null) {
+					cached.remove(i);
+				} else if (r.cb == stub) {
+					r.close();
+					cached.remove(i);
+				}
 			}
 		}
 	}

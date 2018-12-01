@@ -215,6 +215,63 @@ public final class Http {
 		return post(url, params, X.AMINUTE);
 	}
 
+	public Response json(String url, JSON params) {
+
+		log.debug("url=" + url);
+
+		Response r = new Response();
+
+		if (client == null) {
+			client = getClient(url, _UA(), X.AMINUTE);
+		}
+
+		if (localContext == null) {
+			localContext = HttpClientContext.create();
+			localContext.setCookieStore(cookies);
+		}
+
+		if (client != null) {
+			TimeStamp t = TimeStamp.create();
+
+			HttpPost post = new HttpPost(url);
+			CloseableHttpResponse resp = null;
+			try {
+
+				post.addHeader("content-type", "application/json");
+
+				log.debug("post url=" + url);
+
+				StringEntity e = new StringEntity(params.toString(), "UTF8");
+				post.setEntity(e);
+
+				resp = client.execute(post, localContext);
+				r.status = resp.getStatusLine().getStatusCode();
+				r.body = getContext(resp, null);
+				r.headers = resp.getAllHeaders();
+
+				log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+			} catch (Throwable e) {
+				log.error("cost=" + t.past() + ", " + url, e);
+				r.status = 600;
+				r.body = "error: " + e.getMessage();
+			} finally {
+				if (resp != null)
+					try {
+						resp.close();
+					} catch (IOException e) {
+					}
+
+			}
+
+		} else {
+			r.status = 600;
+			r.body = "error: can not init a client";
+		}
+
+		return r;
+	}
+
 	public Response put(String url, JSON params) {
 		return put(url, params, X.AMINUTE);
 	}
@@ -679,10 +736,10 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("post: cost=" + t.past() + "ms, status=" + r.status + ", body=" + r.body);
+				log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
-				log.error("cost=" + t.past() + "ms, " + url, e);
+				log.error("cost=" + t.past() + ", " + url, e);
 				r.status = 600;
 				r.body = "error: " + e.getMessage();
 			} finally {
@@ -743,10 +800,10 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("put: cost=" + t.past() + "ms, status=" + r.status + ", body=" + r.body);
+				log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
-				log.error("cost=" + t.past() + "ms, " + url, e);
+				log.error("cost=" + t.past() + ", " + url, e);
 				r.status = 600;
 				r.body = "error: " + e.getMessage();
 			} finally {
@@ -801,10 +858,10 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("delete: cost=" + t.past() + "ms, status=" + r.status + ", body=" + r.body);
+				log.debug("delete: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
-				log.error("cost=" + t.past() + "ms, " + url, e);
+				log.error("cost=" + t.past() + ", " + url, e);
 				r.status = 600;
 				r.body = "error: " + e.getMessage();
 			} finally {
@@ -861,10 +918,10 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("head: cost=" + t.past() + "ms, status=" + r.status + ", body=" + r.body);
+				log.debug("head: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
-				log.error("cost=" + t.past() + "ms, " + url, e);
+				log.error("cost=" + t.past() + ", " + url, e);
 				r.status = 600;
 				r.body = "error: " + e.getMessage();
 			} finally {
@@ -1146,11 +1203,13 @@ public final class Http {
 		System.out.println(format("http://top.sogou.com/hot/../movie/../tvshow/./all_1.html"));
 		System.out.println(format("http://top.sogou.com/tvshow/all_1.html?aaa=111"));
 
-//		String s1 = "http://10.30.2.5:8088/dahuaIS/rest/devChn/search";
-//
-//		Response s2 = owner.get(s1 + "?q=" + URLEncoder.encode("{}"), JSON.create().append("authorization", "DAHUA")
-//				.append("Accept", "application/json").append("Content-Type", "application/json"));
-//		System.out.println(s2.body);
+		// String s1 = "http://10.30.2.5:8088/dahuaIS/rest/devChn/search";
+		//
+		// Response s2 = owner.get(s1 + "?q=" + URLEncoder.encode("{}"),
+		// JSON.create().append("authorization", "DAHUA")
+		// .append("Accept", "application/json").append("Content-Type",
+		// "application/json"));
+		// System.out.println(s2.body);
 
 	}
 
@@ -1593,10 +1652,10 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("post: cost=" + t.past() + "ms, status=" + r.status + ", body=" + r.body);
+				log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
-				log.error("cost=" + t.past() + "ms, " + url, e);
+				log.error("cost=" + t.past() + ", " + url, e);
 				r.status = 600;
 				r.body = "error: " + e.getMessage();
 			} finally {

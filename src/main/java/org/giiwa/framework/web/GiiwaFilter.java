@@ -64,6 +64,9 @@ public class GiiwaFilter implements Filter {
 			uri = URL.rewrite(uri);
 
 			String method = r1.getMethod();
+			
+			log.info("method=" + method);
+
 			String domain = Global.getString("cross.domain", "");
 
 			if ("GET".equalsIgnoreCase(method)) {
@@ -85,7 +88,7 @@ public class GiiwaFilter implements Filter {
 				r2.addHeader("Access-Control-Allow-Headers", Global.getString("cross.header", "forbidden"));
 				r2.getOutputStream().write(domain.getBytes());
 			} else if ("HEAD".equals(method)) {
-
+				log.warn("HEAD - uri=" + uri);
 			}
 
 			// chain.doFilter(req, resp);

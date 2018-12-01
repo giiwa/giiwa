@@ -2,8 +2,8 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/user'>$lang.get('a.user')</a>
-	<a href='/admin/user/accesslog?uid=$!uid' class='selected'>$lang.get('a.accesslog')</a>
+	<a href='/admin/user?__node=$!__node'>$lang.get('a.user')</a>
+	<a href='/admin/user/accesslog?__node=$!__node&uid=$!uid' class='selected'>$lang.get('a.accesslog')</a>
 </div>
 
 <table id='accesslog-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
@@ -36,7 +36,7 @@
 		<td>$!f.ip</td>
 		<td>$!f.client</td>
 		<td class="a">
-			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')"><i class="icon-file-text2"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?__node=$!__node&id=$f.id')"><i class="icon-file-text2"></i></a>
 		</td>
 	</tr>
 #end
@@ -55,7 +55,7 @@
 function _deleteall() {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
-		$.post('/admin/accesslog/deleteall', {}, function(d) {
+		$.post('/admin/accesslog/deleteall?__node=$!__node', {}, function(d) {
 			giiwa.processing.hide();
 			giiwa.reload();
 		});

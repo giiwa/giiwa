@@ -2,12 +2,12 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/user'>$lang.get('a.user')</a>
-	<a href='/admin/user/oplog?uid=$!uid' class='selected'>$lang.get('a.oplog')</a>
+	<a href='/admin/user?__node=$!__node'>$lang.get('a.user')</a>
+	<a href='/admin/user/oplog?__node=$!__node&uid=$!uid' class='selected'>$lang.get('a.oplog')</a>
 </div>
 
 <div class='search'>
-	<form action='/admin/user/oplog' method='get' #if($s>0) style='display:none' #end > 
+	<form action='/admin/user/oplog?__node=$!__node' method='get' #if($s>0) style='display:none' #end > 
 		<span>
 			<label><h3>$lang.get('log.starttime'):</h3>
 				<input type='text' name='starttime' value='$!starttime' />
@@ -97,7 +97,7 @@
 			<td>$f.op</td>
 			<td>$!f.message</td>
 			<td class='a'>
-				<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/syslog/detail?id=$f.id')"><i class='icon-file-text2'></i></a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/syslog/detail?__node=$!__node&id=$f.id')"><i class='icon-file-text2'></i></a>
 			</td>
 		</tr>
 		#end

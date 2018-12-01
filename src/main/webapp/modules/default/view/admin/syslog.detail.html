@@ -48,7 +48,7 @@
 
 #if($b)
 <div class="btns">
-	<a class='btn btn-success' href="/admin/syslog/detail?prev=$b.created">$lang.get('a.syslog.prev')</a>
-	<a class='btn btn-primary' href="/admin/syslog/detail?next=$b.created">$lang.get('a.syslog.next')</a>
+	<a class='btn btn-success' href="/admin/syslog/detail?__node=$!__node&prev=$b.created">$lang.get('a.syslog.prev')</a>
+	<a class='btn btn-primary' href="/admin/syslog/detail?__node=$!__node&next=$b.created">$lang.get('a.syslog.next')</a>
 </div>
 #end

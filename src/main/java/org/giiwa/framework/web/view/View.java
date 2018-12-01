@@ -15,12 +15,15 @@
 package org.giiwa.framework.web.view;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.framework.bean.DFile;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.web.Model;
 
 public abstract class View {
@@ -40,9 +43,7 @@ public abstract class View {
 	 * @throws Exception
 	 *             if occur error
 	 */
-	protected abstract boolean parse(File file, Model m, String viewname) throws Exception;
-
-	protected abstract boolean parse(DFile in, Model m, String viewname) throws Exception;
+	protected abstract boolean parse(Object file, Model m, String viewname) throws Exception;
 
 	/**
 	 * init the views by config
@@ -112,4 +113,43 @@ public abstract class View {
 	private static Map<String, View> views = new HashMap<String, View>();
 	private static FileView fileview = new FileView();
 
+	protected static InputStream getInputStream(Object file) throws IOException {
+		if (file instanceof DFile) {
+			return ((DFile) file).getInputStream();
+		} else {
+			return new FileInputStream((File) file);
+		}
+	}
+
+	public static String getName(Object file) {
+		if (file instanceof DFile) {
+			return ((DFile) file).getName();
+		} else {
+			return ((File) file).getName();
+		}
+	}
+
+	public static long lastModified(Object file) {
+		if (file instanceof DFile) {
+			return ((DFile) file).lastModified();
+		} else {
+			return ((File) file).lastModified();
+		}
+	}
+
+	public static long length(Object file) {
+		if (file instanceof DFile) {
+			return ((DFile) file).length();
+		} else {
+			return ((File) file).length();
+		}
+	}
+
+	public static String getCanonicalPath(Object file) throws IOException {
+		if (file instanceof DFile) {
+			return ((DFile) file).getCanonicalPath();
+		} else {
+			return ((File) file).getCanonicalPath();
+		}
+	}
 }

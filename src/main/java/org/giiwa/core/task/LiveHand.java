@@ -94,14 +94,12 @@ public class LiveHand implements Serializable {
 		return false;
 	}
 
-	public void drop() {
+	public synchronized void drop() {
 		door.release();
 
 		log.debug("drop, door=" + door.availablePermits() + ", " + this);
 
-		synchronized (this) {
-			this.notifyAll();
-		}
+		this.notifyAll();
 	}
 
 	public boolean await() throws InterruptedException {
@@ -121,9 +119,11 @@ public class LiveHand implements Serializable {
 				log.debug("await, door=" + door.availablePermits() + ", " + this);
 				return true;
 			}
+
 			synchronized (this) {
 				this.wait(t1);
 			}
+
 			t1 = timeout - t.pastms();
 		}
 

@@ -1,5 +1,7 @@
 <div class='tabs'>
-	<a href='/admin/task' class='selected'>$lang.get('a.task')</a>
+	<a href='/admin/task?__node=$!__node' class='selected'>$lang.get('a.task')</a>
+	<a href='/admin/task/thread?__node=$!__node'>$lang.get('a.task.thread')</a>
+	<a href='/admin/task/thread/deadlock?__node=$!__node'>$lang.get('a.task.thread.deadlock')</a>
 </div>
 
 #parse('/widget/widget.message.html')
@@ -25,7 +27,6 @@
 			<th>$lang.get('task.delay')</th>
 			<th>$lang.get('task.runtime')</th>
 			<th>$lang.get('task.costing')</th>
-			<th>$lang.get('task.cost')</th>
 			<th>$lang.get('task.duration')</th>
 			<th>$lang.get('task.runtimes')</th>
 		</tr>
@@ -52,7 +53,6 @@
 			<td>$!f.delay</td>
 			<td>$!f.runtime</td>
 			<td>$!f.costing</td>
-			<td>$!f.cost</td>
 			<td>$!f.duration</td>
 			<td>$!f.runtimes</td>
 		</tr>
@@ -106,7 +106,7 @@
 
 	function _dump(name) {
 		giiwa.processing.show();
-		$.post("/admin/task/dump", {
+		$.post("/admin/task/dump?__node=$!__node", {
 			name : name
 		}, function(d) {
 			giiwa.processing.hide();
@@ -122,7 +122,7 @@
 	function _kill(name) {
 		if(confirm("$lang.get('title.are_u_sure_delete')")) {
 			giiwa.processing.show();
-			$.post("/admin/task/kill", {
+			$.post("/admin/task/kill?__node=$!__node", {
 				name : name
 			}, function(d) {
 				giiwa.processing.hide();
@@ -136,7 +136,7 @@
 	}
 	function _dumpall() {
 		giiwa.processing.show();
-		$.post("/admin/task/dumpall", {
+		$.post("/admin/task/dumpall?__node=$!__node", {
 			name : name
 		}, function(d) {
 			giiwa.processing.hide();

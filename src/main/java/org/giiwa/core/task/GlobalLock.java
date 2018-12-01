@@ -11,7 +11,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
-import org.giiwa.core.cache.RedisCache;
 import org.giiwa.core.json.JSON;
 import org.giiwa.mq.MQ;
 
@@ -20,21 +19,13 @@ public class GlobalLock implements Lock {
 	private static Log log = LogFactory.getLog(GlobalLock.class);
 
 	private String name;
-	private RedisCache redis;
+	private String value;
 
-	public static Lock create(String name) throws Exception {
-		if (Cache.cacheSystem instanceof RedisCache) {
-
-			log.debug("create global lock=" + name);
-			GlobalLock l = new GlobalLock();
-			l.name = name;
-			l.redis = (RedisCache) Cache.cacheSystem;
-			if (l.redis != null) {
-				return l;
-			}
-		}
-
-		throw new Exception("need redis");
+	public static Lock create(String name) {
+		GlobalLock l = new GlobalLock();
+		l.name = name;
+		l.value = Long.toString(System.currentTimeMillis());
+		return l;
 	}
 
 	@Override
@@ -67,17 +58,14 @@ public class GlobalLock implements Lock {
 	public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
 
 		TimeStamp t = TimeStamp.create();
-		long expires = unit.toMillis(time);
+		long expire = unit.toMillis(time);
 
-		log.debug("tryLock, global lock=" + name);
+		// log.debug("tryLock, global lock=" + name);
 
 		try {
-			while (expires == 0 || expires < t.pastms()) {
-				long value = System.currentTimeMillis() + expires;
-				long status = redis.setnx(name, String.valueOf(value));
+			while (expire == 0 || expire > t.pastms()) {
 
-				if (status == 1) {
-					touch();
+				if (Cache.trylock(name, value, expire)) {
 					heartbeat.add(this);
 
 					log.debug("locked, global lock=" + name);
@@ -85,10 +73,11 @@ public class GlobalLock implements Lock {
 					return true;
 				}
 
-				if (expires == 0 || expires > t.pastms()) {
+				if (expire == 0 || expire < t.pastms()) {
 					return false;
 				}
-				MQ.wait("lock." + name, expires - t.pastms());
+
+				MQ.wait("lock." + name, Math.min(1000, expire - t.pastms()));
 			}
 		} catch (Exception e) {
 			log.warn("lock failed, global lock=" + name, e);
@@ -98,20 +87,25 @@ public class GlobalLock implements Lock {
 
 	}
 
+	@Override
+	public String toString() {
+		return "GlobalLock [name=" + name + "]";
+	}
+
 	public void touch() {
-		redis.expire(name, 12);
+		Cache.expire(name, value, 12000);
 	}
 
 	@Override
 	public void unlock() {
 		heartbeat.remove(this);
 
-		redis.delete(name);
-
-		MQ.notify("lock." + name, JSON.create());
-
-		log.debug("unlocked, global lock=" + name);
-
+		if (Cache.unlock(name, value)) {
+			MQ.notify("lock." + name, JSON.create());
+			log.debug("unlocked, global lock=" + name);
+		} else {
+			log.debug("what's wrong with the lock=" + name);
+		}
 	}
 
 	@Override
@@ -119,9 +113,34 @@ public class GlobalLock implements Lock {
 		return null;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GlobalLock other = (GlobalLock) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
+	}
+
 	private static LockHeartbeat heartbeat = new LockHeartbeat();
 
-	private static class LockHeartbeat extends Task {
+	private static class LockHeartbeat extends SysTask {
 
 		/**
 		 * 
@@ -144,9 +163,9 @@ public class GlobalLock implements Lock {
 			this.schedule(10);
 		}
 
-		public void remove(GlobalLock name) {
+		public void remove(GlobalLock lock) {
 			synchronized (locked) {
-				locked.remove(name);
+				locked.remove(lock);
 			}
 		}
 
@@ -159,6 +178,7 @@ public class GlobalLock implements Lock {
 						l.touch();
 					}
 				}
+				// log.debug("touch name=" + locked);
 			}
 		}
 

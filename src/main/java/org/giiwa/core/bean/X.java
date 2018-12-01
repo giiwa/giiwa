@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.task.MyFunc;
+import org.giiwa.core.task.ReduceFunction;
 
 /**
  * The {@code X} Class used to define contains.
@@ -615,7 +615,7 @@ public final class X {
 		return l2;
 	}
 
-	public static <T, E> List<T> toArray(List<E> l1, MyFunc<T, E> cb) {
+	public static <T, E> List<T> toArray(List<E> l1, ReduceFunction<T, E> cb) {
 		List<T> l2 = new ArrayList<T>(l1.size());
 		for (E e : l1) {
 			T t = cb.call(e);
@@ -626,7 +626,7 @@ public final class X {
 		return l2;
 	}
 
-	public static <T, E> List<T> toArray(E[] l1, MyFunc<T, E> cb) {
+	public static <T, E> List<T> toArray(E[] l1, ReduceFunction<T, E> cb) {
 		List<T> l2 = new ArrayList<T>(l1.length);
 		for (E e : l1) {
 			T t = cb.call(e);
@@ -670,6 +670,22 @@ public final class X {
 		}
 		return sb.toString();
 	}
+
+	public static String fill(String s, int n, int max) {
+		int len = Integer.toString(max).length();
+		String n1 = Integer.toString(n);
+		StringBuilder sb = new StringBuilder();
+		len -= n1.length();
+
+		while (sb.length() < len) {
+			sb.append(s);
+		}
+		return sb.append(n1).toString();
+	}
+
+	// public static void main(String[] args) {
+	// System.out.println(X.fill("0", 1, 900));
+	// }
 
 	/**
 	 * Descartes list
@@ -758,6 +774,17 @@ public final class X {
 			}
 		}
 		return t;
+	}
+
+	public static boolean isIn(long id, long[] tt) {
+		if (tt == null)
+			return false;
+
+		for (long t : tt) {
+			if (t == id)
+				return true;
+		}
+		return false;
 	}
 
 	// public static void main(String[] aa) {

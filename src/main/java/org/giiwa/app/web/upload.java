@@ -40,27 +40,22 @@ public class upload extends Model {
 	 * @see org.giiwa.framework.web.Model#onPost()
 	 */
 	@Override
+	@Path(login = true)
 	public void onPost() {
 
 		JSON jo = new JSON();
-		User me = this.getUser();
 
-		if (me != null) {
-			// String access = Module.home.get("upload.require.access");
+		// String access = Module.home.get("upload.require.access");
 
-			FileItem file = this.getFile("file");
-			if (file != null) {
-				String filename = this.getString("filename");
-				if (X.isEmpty(filename)) {
-					filename = file.getName();
-				}
-				store(me.getId(), file, filename, jo);
-			} else {
-				jo.append(X.STATE, 201).append(X.MESSAGE, lang.get("not [file]"));
+		FileItem file = this.getFile("file");
+		if (file != null) {
+			String filename = this.getString("filename");
+			if (X.isEmpty(filename)) {
+				filename = file.getName();
 			}
+			store(file, filename, jo);
 		} else {
-			jo.append(X.ERROR, HttpServletResponse.SC_UNAUTHORIZED);
-			jo.put(X.MESSAGE, lang.get("login.required"));
+			jo.append(X.STATE, 201).append(X.MESSAGE, lang.get("not [file]"));
 		}
 
 		// /**
@@ -71,7 +66,7 @@ public class upload extends Model {
 
 	}
 
-	private boolean store(long me, FileItem file, String filename, JSON jo) {
+	private boolean store(FileItem file, String filename, JSON jo) {
 		String tag = this.getString("tag");
 
 		try {
@@ -105,16 +100,13 @@ public class upload extends Model {
 				// log.debug(range + ", " + position + "/" + total);
 			}
 
-			String id = UID.id(me, tag, filename, total, lastModified);
+			String id = UID.id(login.getId(), tag, filename, total, lastModified);
 
 			log.debug("storing, id=" + id + ", name=" + filename + ", tag=" + tag + ", total=" + total + ", last="
 					+ lastModified);
 
-			String share = this.getString("share");
-			String folder = this.getString("folder");
-
-			long pos = Repo.store(folder, id, filename, tag, position, total, file.getInputStream(), -1,
-					!"no".equals(share), me);
+			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(),
+					this.getRemoteHost());
 			if (pos >= 0) {
 				if (jo == null) {
 					this.put("url", "/repo/" + id + "/" + filename);

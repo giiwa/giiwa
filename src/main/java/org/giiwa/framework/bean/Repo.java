@@ -22,7 +22,7 @@ import org.apache.commons.logging.*;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
+import org.giiwa.core.dfile.DFile;
 
 /**
  * repository of file system bean. <br>
@@ -42,7 +42,7 @@ public class Repo extends Bean {
 
 	private static Log log = LogFactory.getLog(Repo.class);
 
-	private static String ROOT;
+	private static String ROOT = "/_repo";
 
 	/**
 	 * Initialize the Repo, this will be invoke when giiwa startup
@@ -51,7 +51,7 @@ public class Repo extends Bean {
 	 *            the conf
 	 */
 	public static void init(Configuration conf) {
-		ROOT = conf.getString("repo.path", "/opt/repo");
+		// ROOT = conf.getString("repo.path", "/opt/repo");
 
 		log.info("repo has been initialized.");
 
@@ -85,123 +85,63 @@ public class Repo extends Bean {
 	 *            the limit
 	 * @return the beans
 	 */
-	public static Beans<Entity> list(long uid, int offset, int limit) {
-		return dao.load(W.create("uid", uid).sort(X.CREATED, -1), offset, limit);
+	public static Beans<Entity> list(int offset, int limit) {
+		return dao.load(W.create().sort(X.CREATED, -1), offset, limit);
 	}
 
 	/**
-	 * List.
+	 * store the input data into the repo with a random id
 	 * 
-	 * @param tag
-	 *            the tag
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @return the beans
-	 */
-	public static Beans<Entity> list(String tag, int offset, int limit) {
-		return dao.load(W.create("tag", tag).sort(X.CREATED, -1), offset, limit);
-	}
-
-	/**
-	 * store the inputstream data in repo.
-	 *
-	 * @param id
-	 *            the id
-	 * @param name
-	 *            the name
+	 * @param filename
 	 * @param in
-	 *            the in
-	 * @return long
+	 * @return
 	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
 	 */
-	public static long store(String id, String name, InputStream in) throws IOException {
-		return store(X.EMPTY, id, name, X.EMPTY, 0, in.available(), in, -1, true, -1);
-	}
-
-	/**
-	 * store the input stream to the repo, and return id
-	 * 
-	 * @param name
-	 *            the name
-	 * @param in
-	 *            the inputstream
-	 * @return the ID
-	 * @throws IOException
-	 *             throw IOException if failed
-	 */
-	public static String store(String name, InputStream in) throws IOException {
-		String id = id();
-		store(X.EMPTY, id, name, X.EMPTY, 0, in.available(), in, -1, true, -1);
-		return id;
-	}
-
-	/**
-	 * store the file in repo
-	 * 
-	 * @param name
-	 *            the name
-	 * @param file
-	 *            the file
-	 * @return the id
-	 * @throws IOException
-	 *             throw exception if failed
-	 */
-	public static String store(String name, File file) throws IOException {
-		FileInputStream in = null;
-
+	public static String append(String filename, InputStream in) throws IOException {
 		try {
-			in = new FileInputStream(file);
-			String id = id();
-			store(X.EMPTY, id, name, X.EMPTY, 0, in.available(), in, -1, true, -1);
-			return id;
-		} finally {
-			if (in != null) {
-				in.close();
+			String id = UID.id(filename, System.currentTimeMillis(), UID.random());
+			while (dao.exists(id)) {
+				id = UID.id(filename, System.currentTimeMillis(), UID.random());
 			}
+
+			append(id, filename, 0, in.available(), in, -1, null);
+
+			return id;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
+		return null;
 	}
 
 	/**
-	 * Store.
+	 * Store the input data to associated id
 	 * 
-	 * @param folder
-	 *            the folder
 	 * @param id
 	 *            the id
 	 * @param name
 	 *            the name
-	 * @param tag
-	 *            the tag
 	 * @param position
 	 *            the position
 	 * @param total
 	 *            the total
 	 * @param in
 	 *            the in
-	 * @param expired
-	 *            the expired
-	 * @param share
-	 *            the share
 	 * @param uid
 	 *            the uid
 	 * @return the long
 	 * @throws IOException
 	 *             Signals that an I/O exception has occurred.
 	 */
-	public static long store(String folder, String id, String name, String tag, long position, long total,
-			InputStream in, long expired, boolean share, long uid) throws IOException {
-		Entity e = new Entity();
-		e.set("folder", folder);
-		e.set("name", name);
-		e.set(X.ID, id);
-		e.set("total", total);
-		e.set("expired", expired);
-		e.set("uid", uid);
+	public static long append(String id, String filename, long position, long total, InputStream in, long uid,
+			String ip) throws IOException {
+		Entity e = dao.load(id);
+		if (e == null) {
+			dao.insert(V.create().append(X.ID, id).append("name", filename).append("total", total).append("uid", uid)
+					.append("ip", ip));
+			e = dao.load(id);
+		}
 
-		return e.store(tag, position, in, total, name, (byte) (share ? 0x01 : 0));
+		return e.store(position, in, total);
 	}
 
 	/**
@@ -256,90 +196,16 @@ public class Repo extends Bean {
 
 	/**
 	 * Load.
-	 *
+	 * 
 	 * @param folder
 	 *            the folder
-	 * @param id
-	 *            the id
-	 * @param f
-	 *            the f
-	 * @return the entity
-	 */
-	public static Entity load(String folder, String id, File f) {
-		if (f.exists()) {
-			Entity e = null;
-			if (!X.isEmpty(id)) {
-				e = dao.load(id);
-			}
-
-			if (e == null) {
-				try {
-					InputStream in = new FileInputStream(f);
-
-					/**
-					 * will not close the inputstream
-					 */
-					return Entity.create(in);
-
-				} catch (Exception e1) {
-					log.error("load: id=" + id, e1);
-				}
-			}
-
-			return e;
-		} else {
-			try {
-				log.warn("not find the file: " + f.getCanonicalPath() + ", id=" + id);
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * Load.
-	 * 
 	 * @param id
 	 *            the id
 	 * @return the entity
 	 */
 	public static Entity load(String id) {
 		id = getId(id);
-		if (!X.isEmpty(id)) {
-			return load(null, id);
-		}
-		return null;
-	}
-
-	/**
-	 * Delete.
-	 *
-	 * @param folder
-	 *            the folder
-	 * @param id
-	 *            the id
-	 */
-	public static void delete(String folder, String id) {
-		File f = new File(path(folder, id));
-
-		if (f.exists()) {
-			f.delete();
-		}
-	}
-
-	/**
-	 * Load.
-	 * 
-	 * @param folder
-	 *            the folder
-	 * @param id
-	 *            the id
-	 * @return the entity
-	 */
-	public static Entity load(String folder, String id) {
-		String path = path(folder, id);
-		return load(folder, id, new File(path));
+		return dao.load(id);
 	}
 
 	/**
@@ -353,7 +219,7 @@ public class Repo extends Bean {
 		/**
 		 * delete the file in the repo
 		 */
-		Repo.delete(null, id);
+		Disk.delete(path(id));
 
 		/**
 		 * delete the info in table
@@ -377,21 +243,22 @@ public class Repo extends Bean {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		// private byte version = 1;
-		//
-		// public long pos;
-		// public int flag;
-		// public long expired;
-		// public long total;
-		// public long uid;
-		// public String id;
-		// public String name;
-		// public long created;
-		// public String folder;
-		// String memo;
+		@Column(name = X.ID)
+		String id;
 
-		private transient InputStream in;
-		private transient int headsize;
+		@Column(name = "total")
+		long total;
+
+		@Column(name = "name")
+		String name;
+
+		@Column(name = "uid")
+		long uid;
+
+		@Column(name = "ip")
+		String ip;
+
+		private InputStream in;
 
 		public String getMemo() {
 			return getString("memo");
@@ -399,22 +266,6 @@ public class Repo extends Bean {
 
 		public String getUrl() {
 			return "/repo/" + getId() + "/" + getName();
-		}
-
-		public byte getVersion() {
-			return (byte) getInt("version");
-		}
-
-		public long getPos() {
-			return getLong("pos");
-		}
-
-		public int getFlag() {
-			return getInt("flag");
-		}
-
-		public long getExpired() {
-			return getLong("expired");
 		}
 
 		public long getTotal() {
@@ -453,17 +304,6 @@ public class Repo extends Bean {
 			return user;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.lang.Object#toString()
-		 */
-		@Override
-		public String toString() {
-			return new StringBuilder("Repo.Entity[").append(getId()).append(", name=").append(getName())
-					.append(", pos:").append(getPos()).append(", total:").append(getTotal()).append("]").toString();
-		}
-
 		/**
 		 * Delete.
 		 */
@@ -471,180 +311,14 @@ public class Repo extends Bean {
 			Repo.delete(getId());
 		}
 
-		@SuppressWarnings("resource")
-		private long store(String tag, long position, InputStream in, long total, String name, int flag)
-				throws IOException {
-			File f = new File(path(getFolder(), getId()));
+		private long store(long position, InputStream in, long total) throws IOException {
 
-			if (f.exists()) {
-				InputStream tmp = null;
-				try {
-					tmp = new FileInputStream(f);
-					if (!load(tmp)) {// && (total != this.getTotal() ||
-						// !name.equals(this.getName()))) {
+			String filename = path(getId());
+			DFile f = Disk.seek(filename);
+			f.upload(position, in);
 
-						log.error("file: " + f.getCanonicalPath());
-
-						/**
-						 * this file is not original file
-						 */
-						throw new IOException("same filename[" + getId() + "/" + this.getName()
-								+ "], but different size, old.total=" + this.getTotal() + ", new.total=" + total
-								+ ", old.name=" + this.getName() + ", new.name=" + name + ", ?"
-								+ (total != this.getTotal() || !name.equals(this.getName())));
-					}
-				} finally {
-					close();
-				}
-			} else {
-				f.getParentFile().mkdirs();
-			}
-
-			if (!f.exists() || total != this.getTotal()) {
-				/**
-				 * initialize the storage, otherwise append
-				 */
-				OutputStream out = null;
-				try {
-					out = new FileOutputStream(f);
-					set("pos", in.available());
-
-					Response resp = new Response();
-					resp.writeLong(getPos());
-					resp.writeInt(flag);
-					resp.writeLong(getExpired());
-					resp.writeLong(total);
-					resp.writeInt((int) 0);
-					resp.writeString(getId());
-					resp.writeString(name);
-					byte[] bb = resp.getBytes();
-					resp = new Response();
-
-					resp.writeByte(getVersion());
-					resp.writeInt(bb.length);
-
-					resp.writeBytes(bb);
-					bb = resp.getBytes();
-					out.write(bb);
-					long pos = 0;
-					bb = new byte[32 * 1024];
-
-					int len = in.read(bb);
-					while (len > 0) {
-						out.write(bb, 0, len);
-						pos += len;
-						len = in.read(bb);
-					}
-
-					long pp = pos;
-					if (total > 0) {
-						while (pp < total) {
-							len = (int) Math.min(total - pp, bb.length);
-							out.write(bb, 0, len);
-							pp += len;
-						}
-					}
-
-					try {
-						if (dao.exists(getId())) {
-							dao.update(getId(), V.create("total", pp).set("tag", tag).set("expired", getExpired()));
-						} else {
-							dao.insert(V.create(X.ID, getId()).set("uid", 0).set("total", pp).set("tag", tag)
-									.set("expired", getExpired()).set(X.CREATED, System.currentTimeMillis())
-									.set("flag", flag).set("name", name));
-						}
-					} catch (Exception e1) {
-						log.error(e1.getMessage(), e1);
-					}
-
-					/**
-					 * check the free of the user
-					 */
-					// long free = User.checkFree(getUid());
-					// if (free < 0) {
-					// throw new IOException("repo.no.space");
-					// }
-
-					log.debug("stored, id=" + this.getId() + ", pos=" + pos);
-
-					return pos;
-				} catch (IOException e) {
-					Repo.delete(getId());
-
-					throw e;
-				} finally {
-					if (out != null) {
-						try {
-							out.close();
-						} catch (IOException e) {
-							log.error(e);
-						}
-					}
-
-					try {
-						in.close();
-					} catch (IOException e) {
-						log.error(e);
-					}
-				}
-
-			} else {
-				/**
-				 * append
-				 */
-				RandomAccessFile raf = null;
-				/**
-				 * load head, and skip
-				 */
-				try {
-					raf = new RandomAccessFile(f, "rws");
-					byte[] bb = new byte[17]; // version(1) + head.length(4) +
-					// pos(8) + flag(4)
-					raf.read(bb);
-					Request req = new Request(bb, 0);
-
-					set("version", req.readByte());
-					int head = req.readInt();
-					set("pos", req.readLong());
-
-					if (getPos() >= position) {
-						raf.seek(head + 5 + position);
-
-						bb = new byte[32 * 1024];
-						int len = in.read(bb);
-						while (len > 0) {
-							raf.write(bb, 0, len);
-							position += len;
-							len = in.read(bb);
-						}
-
-						if (position > getPos()) {
-							Response resp = new Response();
-							resp.writeLong(position);
-							raf.seek(5);
-							raf.write(resp.getBytes());
-							set("pos", position);
-						}
-					}
-
-					return getPos();
-				} finally {
-					if (raf != null) {
-						try {
-							raf.close();
-						} catch (IOException e) {
-							log.error(e);
-						}
-					}
-					if (in != null) {
-						try {
-							in.close();
-						} catch (IOException e) {
-							log.error(e);
-						}
-					}
-				}
-			}
+			f = Disk.seek(filename);
+			return f.length();
 
 		}
 
@@ -657,37 +331,19 @@ public class Repo extends Bean {
 		 */
 		public InputStream getInputStream() throws IOException {
 			if (in == null) {
-				File f = new File(path(getFolder(), getId()));
-
-				if (f.exists()) {
-					try {
-						in = new FileInputStream(f);
-						load(in);
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					}
-				}
+				DFile f = Disk.seek(path(getId()));
+				in = f.getInputStream();
 			}
 
 			return in;
-		}
-
-		private String getFolder() {
-			return getString("folder");
 		}
 
 		/**
 		 * Close.
 		 */
 		public synchronized void close() {
-			if (in != null) {
-				try {
-					in.close();
-					in = null;
-				} catch (IOException e) {
-					log.error(e);
-				}
-			}
+			X.close(in);
+			in = null;
 		}
 
 		/*
@@ -701,87 +357,9 @@ public class Repo extends Bean {
 			super.finalize();
 		}
 
-		private boolean load(InputStream in) {
-			try {
-				byte[] bb = new byte[1];
-				in.read(bb);
-
-				set("version", bb[0]);
-				bb = new byte[4];
-				in.read(bb);
-				Request req = new Request(bb, 0);
-				headsize = req.readInt();
-				bb = new byte[headsize];
-				in.read(bb);
-				req = new Request(bb, 0);
-
-				set("pos", req.readLong());
-				set("flag", req.readInt());
-				set("expired", req.readLong());
-				set("total", req.readLong());
-				set("uid", req.readInt());
-				set("id", req.readString());
-				set("name", req.readString());
-
-				this.in = in;
-
-				return true;
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-			return false;
-		}
-
-		public boolean isShared() {
-			return (getFlag() & 0x01) != 0;
-		}
-
-		private static Entity create(InputStream in) throws IOException {
-			Entity e = new Entity();
-
-			e.load(in);
-			return e;
-		}
-
-		/**
-		 * Move to.
-		 * 
-		 * @param folder
-		 *            the folder
-		 */
-		public void moveTo(String folder) {
-
-			File f1 = new File(path(this.getFolder(), getId()));
-			File f2 = new File(path(folder, getId()));
-			if (f2.exists()) {
-				f2.delete();
-			} else {
-				f2.getParentFile().mkdirs();
-			}
-			if (!f1.renameTo(f2)) {
-				// TODO
-				log.error("rename file failed!!! dest=" + f2.getName() + ", src=" + f1.getName());
-			}
-
-			dao.update(getId(), V.create("folder", folder));
-
-		}
-
-		/**
-		 * Reset.
-		 */
-		public void reset() {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-				}
-			}
-			in = null;
-		}
 	}
 
-	static private String path(String folder, String path) {
+	static private String path(String path) {
 		long id = Math.abs(UID.hash(path));
 		char p1 = (char) (id % 23 + 'a');
 		char p2 = (char) (id % 19 + 'A');
@@ -790,60 +368,9 @@ public class Repo extends Bean {
 
 		StringBuilder sb = new StringBuilder(ROOT);
 
-		if (folder != null && "".equals(folder)) {
-			sb.append("/").append(folder);
-		}
-
 		sb.append("/").append(p1).append("/").append(p2).append("/").append(p3).append("/").append(p4).append("/")
 				.append(id);
 		return sb.toString();
-	}
-
-	/**
-	 * Cleanup.
-	 */
-	public void cleanup() {
-
-		dao.cleanup();
-
-		int days = Global.getInt("glog.keep.days", 30);
-		File f = new File(ROOT);
-
-		File[] fs = f.listFiles();
-		if (fs != null) {
-			for (File f1 : fs) {
-				delete(f1, days);
-			}
-		}
-
-	}
-
-	private static void delete(File f, int days) {
-		if (f.isFile()) {
-			if (System.currentTimeMillis() - f.lastModified() > days * X.ADAY) {
-				// check the file is fine?
-				Entity e = Repo.load(null, null, f);
-				if (e.getTotal() > e.getPos()) {
-					e.delete();
-				}
-			}
-		} else if (f.isDirectory()) {
-			File[] fs = f.listFiles();
-			if (fs != null) {
-				for (File f1 : fs) {
-					delete(f1, days);
-				}
-			}
-
-			/**
-			 * delete the empty directory
-			 */
-			fs = f.listFiles();
-			if (fs == null || fs.length == 0) {
-				f.delete();
-			}
-
-		}
 	}
 
 	private static AtomicLong total = new AtomicLong(0); // byte
@@ -854,6 +381,11 @@ public class Repo extends Bean {
 			return total.get() * 1000L / cost.get();
 		}
 		return 0;
+	}
+
+	public static void cleanup(long expired) {
+		// TODO
+
 	}
 
 }

@@ -28,7 +28,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.cache.Cache;
 import org.giiwa.core.json.JSON;
 
-// TODO: Auto-generated Javadoc
 /**
  * The App bean, used to store appid and secret table="gi_app"
  * 

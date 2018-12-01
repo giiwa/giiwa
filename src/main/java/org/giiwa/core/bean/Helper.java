@@ -807,7 +807,7 @@ public class Helper implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		public enum OP {
-			eq, gt, gte, lt, lte, like, neq, none, in, exists, nin, type, mod, all, size
+			eq, gt, gte, lt, lte, like, neq, none, in, exists, nin, type, mod, all, size, near
 		};
 
 		/**
@@ -1250,11 +1250,15 @@ public class Helper implements Serializable {
 				for (Entity e : order.toArray(new Entity[order.size()])) {
 					for (LinkedHashMap<String, Integer> m : l1) {
 						if (!m.containsKey(e.name)) {
-							int i = X.toInt(e.value);
-							if (i < 0) {
-								m.put(e.name, -1);
+							if (X.isSame(e.name, "geo")) {
+								m.put(e.name, 2);
 							} else {
-								m.put(e.name, 1);
+								int i = X.toInt(e.value);
+								if (i < 0) {
+									m.put(e.name, -1);
+								} else {
+									m.put(e.name, 1);
+								}
 							}
 						}
 					}
@@ -1289,6 +1293,10 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("rawtypes")
 		public W and(String name, Object v, OP op) {
+			if (X.isSame("id", name)) {
+				name = "_id";
+			}
+
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
 				Collection l1 = (Collection) v;
@@ -1379,6 +1387,10 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("rawtypes")
 		public W or(String name, Object v, OP op) {
+			if (X.isSame("id", name)) {
+				name = "_id";
+			}
+
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
 				Collection l1 = (Collection) v;
@@ -1610,6 +1622,8 @@ public class Helper implements Serializable {
 					return new BasicDBObject(name, new BasicDBObject("$all", value));
 				} else if (op == OP.size) {
 					return new BasicDBObject(name, new BasicDBObject("$size", value));
+				} else if (op == OP.near) {
+					return new BasicDBObject(name, new BasicDBObject("$near", value));
 				}
 				return new BasicDBObject();
 			}
@@ -1702,6 +1716,10 @@ public class Helper implements Serializable {
 			}
 
 			private Entity(String name, Object v, OP op, int cond) {
+				if (X.isSame(name, "id")) {
+					name = "_id";
+				}
+
 				this.name = name;
 				this.op = op;
 				this.cond = cond;
