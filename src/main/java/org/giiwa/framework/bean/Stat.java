@@ -132,10 +132,10 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return c;
 	}
 
-	public static void delta(String name, SIZE[] sizes, V v, long... n) {
+	public static void delta(long time, String name, SIZE[] sizes, V v, long... n) {
 		if (sizes != null) {
 			for (SIZE size : sizes) {
-				delta(name, size, v, n);
+				delta(time, name, size, W.create(), v, n);
 			}
 		}
 	}
@@ -165,14 +165,6 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return new long[] { 0, 0 };
 	}
 
-	public static void delta(String name, SIZE size, V v, long... n) {
-		delta(System.currentTimeMillis(), name, size, W.create().copy(v), v, n);
-	}
-
-	public static void delta(String name, SIZE size, W q, V v, long... n) {
-		delta(System.currentTimeMillis(), name, size, q, v, n);
-	}
-
 	public static void delta(long time, String name, SIZE size, W q, V v, long... n) {
 
 		String date = format(time, size);
@@ -188,16 +180,12 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 	}
 
-	public static void snapshot(String name, SIZE[] sizes, W q, V v, long... n) {
+	public static void snapshot(long time, String name, SIZE[] sizes, W q, V v, long... n) {
 		if (sizes != null) {
 			for (SIZE size : sizes) {
-				snapshot(name, size, q, v, n);
+				snapshot(time, name, size, q, v, n);
 			}
 		}
-	}
-
-	public static void snapshot(String name, SIZE size, W q, V v, long... n) {
-		snapshot(System.currentTimeMillis(), name, size, q, v, n);
 	}
 
 	public static String format(long time, SIZE size) {

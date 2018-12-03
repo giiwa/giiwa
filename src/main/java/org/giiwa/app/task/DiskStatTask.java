@@ -52,7 +52,7 @@ public class DiskStatTask extends Task {
 		long free = Disk.dao.sum("free", W.create());
 		long count = Disk.dao.sum("count", W.create());
 
-		Stat.snapshot("dfile.stat", Stat.SIZE.hour, W.create(), V.create(),
+		Stat.snapshot(System.currentTimeMillis(), "dfile.stat", Stat.SIZE.hour, W.create(), V.create(),
 				new long[] { total, free, total - free, count });
 
 	}

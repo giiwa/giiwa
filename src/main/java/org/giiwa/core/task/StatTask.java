@@ -41,6 +41,25 @@ public abstract class StatTask extends Task {
 		return null;
 	}
 
+	protected long[] time1(Stat.SIZE s) {
+		if (Stat.SIZE.day.equals(s)) {
+			return new long[] { Stat.today(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.hour.equals(s)) {
+			return new long[] { Stat.tohour(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.min.equals(s)) {
+			return new long[] { Stat.tomin(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.month.equals(s)) {
+			return new long[] { Stat.tomonth(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.season.equals(s)) {
+			return new long[] { Stat.toseason(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.week.equals(s)) {
+			return new long[] { Stat.toweek(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.year.equals(s)) {
+			return new long[] { Stat.toyear(), System.currentTimeMillis() };
+		}
+		return null;
+	}
+
 	@Override
 	public void onExecute() {
 
@@ -59,6 +78,10 @@ public abstract class StatTask extends Task {
 						Stat.SIZE[] ss = this.getSizes();
 						for (Stat.SIZE s : ss) {
 							long[] time = time(s);
+							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time));
+							onStat(s, time[0], time[1], o);
+
+							time = time1(s);
 							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time));
 							onStat(s, time[0], time[1], o);
 						}
