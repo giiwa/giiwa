@@ -70,7 +70,7 @@ $(function(){
 <h1 class="form-signin-heading">
 	<div class='logo'><a href="/"><img src="$lang.get('site.logo')"></a>$lang.get('site.title')</div>
 </h1>
-<form id="loginForm" class="form-signin" action="/user/login" method="post">
+<form id="loginForm" class="form-signin" action="/user/login" method="post" enctype="multipart/form-data">
 	<div class=''>
 		<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
 		<input type="text" id="username" name="name" value="$!name" class="form-control" required />
