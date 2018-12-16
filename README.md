@@ -15,6 +15,17 @@
 <p>针对关系型数据库和Mongo，提供统一的API访问，减少移植迁移成本。也提供数据库直接接口以便你使用某些数据库特有的特性。</p>
 <p>关系型数据库支持 内嵌HSQLDB，和大部分流行数据库。</p>
 
+```flow
+st=>start: Start
+e=>end
+op=>operation: My Operation
+cond=>condition: Yes or No?
+
+st->op->cond
+cond(yes)->e
+cond(no)->op
+```
+
 <h2>Web接口</h2>
 <p>提供统一请求参数获取APIs:getString, getHtml, getFile, etc. 以应对GET,POST, AJAX, application/json, File， multipart/form-data等对请求数据格式的不同。</p>
 <p>使得编写应用更简单。</p>
