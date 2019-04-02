@@ -101,8 +101,8 @@ task prepare(dependsOn: build) {
 		    into('build/upgrade/')
 		}
 		copy {
-		    from('build/giiwa/giiwa/WEB-INF/lib')
-		    into('build/upgrade/default/WEB-INF/lib')
+		    from('build/giiwa/giiwa/WEB-INF')
+		    into('build/upgrade/default/WEB-INF')
 		}
 	}
 }
