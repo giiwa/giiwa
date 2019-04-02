@@ -1,7 +1,4 @@
-![giiwa](https://www.giisoo.com/images/giiwa.png)
-
-轻量级分布式应用框架 [giiwa](https://www.giiwa.org)
-
+### 轻量级分布式应用框架 [giiwa](https://www.giiwa.org)
 
 #### 缓存系统，临时文件系统，文件仓库
 * 框架本身支持 Memcached，Redis 或直接文件系统缓存。
