@@ -1,6 +1,7 @@
 ![giiwa](https://www.giisoo.com/images/giiwa.png)
 
-giiwa, Java Web 高性能服务器软件快速开发框架, 我们的目标是 *简单*，<strong>快速开发</strong>, 项目之间可以 <strong>重用</strong>， * “重载”*。
+轻量级分布式应用框架 [giiwa](https://www.giiwa.org)
+
 
 #### 缓存系统，临时文件系统，文件仓库
 * 框架本身支持 Memcached，Redis 或直接文件系统缓存。
