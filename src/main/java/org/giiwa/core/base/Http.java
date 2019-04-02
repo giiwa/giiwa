@@ -14,6 +14,7 @@
 */
 package org.giiwa.core.base;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.net.ssl.SSLContext;
 
@@ -51,10 +53,8 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.BufferedHttpEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.entity.mime.MultipartEntity;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -83,8 +83,8 @@ import org.jsoup.nodes.Element;
  * 
  * @author joe
  * 
+ * @deprecated
  */
-@SuppressWarnings("deprecation")
 public final class Http {
 
 	// private static final long MIN_ZIP_SIZE = 1024 * 1024 * 1024;
@@ -301,23 +301,6 @@ public final class Http {
 
 	public Response put(String url, JSON params, long timeout) {
 		return put(url, null, params, timeout);
-	}
-
-	/**
-	 * port to the url with the custom header
-	 * 
-	 * @param url
-	 *            the url
-	 * @param headers
-	 *            the headers
-	 * @param params
-	 *            the params
-	 * @param timeout
-	 *            the timeout
-	 * @return the Response
-	 */
-	public Response post(String url, JSON headers, JSON params, long timeout) {
-		return post(url, "application/x-javascript; charset=UTF8", headers, params, timeout);
 	}
 
 	public Response put(String url, JSON headers, JSON params, long timeout) {
@@ -627,8 +610,8 @@ public final class Http {
 	 *            the timeout
 	 * @return Response
 	 */
-	public Response post(String url, String contenttype, JSON headers, JSON params, long timeout) {
-		return post(url, contenttype, headers, params, null, timeout);
+	public Response post(String url, JSON headers, JSON params, long timeout) {
+		return post(url, headers, params, null, timeout);
 	}
 
 	/**
@@ -648,7 +631,7 @@ public final class Http {
 	 *            the timeout
 	 * @return Response
 	 */
-	public Response post(String url, String contenttype, JSON headers, JSON body, JSON attachments, long timeout) {
+	public Response post(String url, JSON headers, JSON body, InputStream stream, long timeout) {
 
 		log.debug("url=" + url);
 
@@ -681,7 +664,7 @@ public final class Http {
 
 				log.debug("post url=" + url);
 
-				if (attachments == null || attachments.size() == 0) {
+				if (stream != null) {
 					if (body != null && body.size() > 0) {
 						log.debug("body: " + body);
 						List<NameValuePair> paramList = new ArrayList<NameValuePair>();
@@ -704,30 +687,18 @@ public final class Http {
 						// }
 					}
 				} else {
-					MultipartEntity e = new MultipartEntity();
-					for (String f : attachments.keySet()) {
-						Object o = attachments.get(f);
-						if (o instanceof File) {
-							FileBody fileBody = new FileBody((File) o);
-							e.addPart(f, fileBody);
-						}
-					}
-
-					if (body != null && body.size() > 0) {
-						for (String s : body.keySet()) {
-							StringBody stringBody = new StringBody(body.getString(s));
-							e.addPart(s, stringBody);
-						}
-					}
+					// MultipartEntity e = new MultipartEntity();
 					// if (e.getContentLength() > MIN_ZIP_SIZE) {
 					// post.setHeader("Content-Encoding", "gzip");
-					// ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					// GZIPOutputStream gzipOut = new GZIPOutputStream(baos);
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					GZIPOutputStream out = new GZIPOutputStream(baos);
 					// e.writeTo(gzipOut);
-					// gzipOut.finish();
-					// post.setEntity(new ByteArrayEntity(baos.toByteArray()));
+					IOUtil.copy(stream, out, false);
+					out.finish();
+					post.setEntity(new ByteArrayEntity(baos.toByteArray()));
+					X.close(stream, out);
 					// } else {
-					post.setEntity(e);
+					// post.setEntity(e);
 					// }
 				}
 

@@ -234,7 +234,7 @@ public class setup extends Model {
 					conf.setProperty("cache.url", url);
 					conf.setProperty("site.group", "demo");
 
-					Cache.init(url, "demo");
+					Cache.init(url);
 
 					String s1 = "1";
 					Cache.set("test", s1);

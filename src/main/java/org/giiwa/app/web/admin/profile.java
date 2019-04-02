@@ -57,6 +57,7 @@ public class profile extends Model {
 				s.set("module", module);
 				s.set("name", name);
 				s.set("settings", names);
+				s.set("me", this.getUser());
 				s.show("/admin/profile.html");
 
 			} catch (Exception e) {
@@ -163,14 +164,23 @@ public class profile extends Model {
 					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				} else {
-					V v = V.create().copy(this, "nickname", "title", "email", "phone", "desktop");
+					V v = V.create();
+
+					v.append("nickname", this.getString("nickname"));
+					v.append("title", this.getString("title"));
+					v.append("desktop", this.getString("desktop"));
+
 					String email = this.getString("email1");
 					if (!X.isEmpty(email)) {
-						v.force("email", email);
+						v.append("email", email);
+					} else {
+						v.append("email", this.getString("email"));
 					}
 					String phone = this.getString("phone1");
 					if (!X.isEmpty(phone)) {
-						v.force("phone", phone);
+						v.append("phone", phone);
+					} else {
+						v.append("phone", this.getString("phone"));
 					}
 
 					login.update(v);
@@ -183,6 +193,7 @@ public class profile extends Model {
 					return;
 				}
 			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
 						lang.get("save.failed") + ":" + e.getMessage()));
 				return;

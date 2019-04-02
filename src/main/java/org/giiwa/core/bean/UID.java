@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
@@ -49,12 +50,12 @@ public final class UID {
 	 *            the key
 	 * @return long of the unique sequence
 	 */
-	public synchronized static long next(String key) {
+	public static long next(String key) {
 
 		Lock door = GlobalLock.create("uid." + key);
 
 		try {
-			if (door.tryLock()) {
+			if (door.tryLock(10, TimeUnit.SECONDS)) {
 				try {
 					return _next(key);
 				} catch (Exception e) {
@@ -107,7 +108,7 @@ public final class UID {
 		return prefix + v;
 	}
 
-	public synchronized static long get(String key) {
+	public static long get(String key) {
 
 		Lock door = GlobalLock.create("uid." + key);
 
@@ -146,7 +147,7 @@ public final class UID {
 	 *            the length
 	 * @return the string
 	 */
-	public synchronized static String next(String key, int len) {
+	public static String next(String key, int len) {
 		StringBuilder p = new StringBuilder("00000000000");
 		while (p.length() < len) {
 			p.append("0000000000");

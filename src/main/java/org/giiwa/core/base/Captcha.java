@@ -41,11 +41,17 @@ public class Captcha {
 
 	static Log log = LogFactory.getLog(Captcha.class);
 
+	/**
+	 * the result of the checking
+	 * 
+	 * @author joe
+	 *
+	 */
 	public static enum Result {
 		badcode, expired, ok
 	};
 
-	private static final String VERIFY_CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	static final String VERIFY_CODES = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	private static Random random = new Random();
 
 	/**
@@ -67,26 +73,18 @@ public class Captcha {
 	 * @throws IOException
 	 *             throw exception when write image to the file
 	 */
-	public static boolean create(String sid, long expired, int w, int h, File outputFile, int len) throws IOException {
-		if (outputFile == null) {
-			return false;
-		}
-		File dir = outputFile.getParentFile();
-		if (!dir.exists()) {
-			dir.mkdirs();
-		}
+	public static boolean create(String sid, long expired, int w, int h, OutputStream output, int len)
+			throws IOException {
 		try {
 			String code = UID.random(len, VERIFY_CODES).toLowerCase();
-			outputFile.createNewFile();
-			FileOutputStream fos = new FileOutputStream(outputFile);
-			outputImage(w, h, fos, code.toUpperCase());
-			fos.close();
+			outputImage(w, h, output, code.toUpperCase());
 
 			Cache.set("//captcha/" + sid, Code.create(code, expired));
 			return true;
 		} catch (IOException e) {
-			log.debug("file=" + outputFile, e);
 			throw e;
+		} finally {
+			X.close(output);
 		}
 	}
 
@@ -284,11 +282,11 @@ public class Captcha {
 		int w = 200, h = 80;
 		for (int i = 0; i < 50; i++) {
 			File file = new File(dir, i + ".jpg");
-			create("1", System.currentTimeMillis() + 6 * X.AMINUTE, w, h, file, 4);
+			create("1", System.currentTimeMillis() + 6 * X.AMINUTE, w, h, new FileOutputStream(file), 4);
 		}
 	}
 
-	public static class Code implements Serializable {
+	static class Code implements Serializable {
 
 		/**
 		 * 

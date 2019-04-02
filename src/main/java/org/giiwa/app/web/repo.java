@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.bean.Repo.Entity;
@@ -87,15 +88,11 @@ public class repo extends Model {
 
 							if (ss.length == 2) {
 								boolean failed = false;
-								File f = Temp.get(id, size);
+								DFile f = Temp.get(id, size);
 								if (!f.exists()) {
-									f.getParentFile().mkdirs();
 
-									File src = Temp.get(id, null);
-									if (!src.exists()) {
-										src.getParentFile().mkdirs();
-									}
-									OutputStream out = new FileOutputStream(src);
+									DFile src = Temp.get(id, null);
+									OutputStream out = src.getOutputStream();
 									IOUtil.copy(e.getInputStream(), out, false);
 									out.close();
 
@@ -106,7 +103,7 @@ public class repo extends Model {
 								}
 
 								if (f.exists() && !failed) {
-									InputStream in = new FileInputStream(f);
+									InputStream in = f.getInputStream();
 									OutputStream out = this.getOutputStream();
 
 									IOUtil.copy(in, out, false);
@@ -246,19 +243,16 @@ public class repo extends Model {
 							String[] ss = size.split("x");
 
 							if (ss.length == 2) {
-								File f = Temp.get(id, "s_" + size);
+								DFile f = Temp.get(id, "s_" + size);
 								boolean failed = false;
 
 								if (!f.exists()) {
-									f.getParentFile().mkdirs();
 
-									File src = Temp.get(id, null);
-									if (!src.exists()) {
-										src.getParentFile().mkdirs();
-									} else {
+									DFile src = Temp.get(id, null);
+									if (src.exists()) {
 										src.delete();
 									}
-									OutputStream out = new FileOutputStream(src);
+									OutputStream out = src.getOutputStream();
 									IOUtil.copy(e.getInputStream(), out, false);
 									out.close();
 
@@ -277,7 +271,7 @@ public class repo extends Model {
 								if (f.exists() && !failed) {
 									log.debug("load the scaled image from " + f.getCanonicalPath());
 
-									InputStream in = new FileInputStream(f);
+									InputStream in = f.getInputStream();
 									OutputStream out = this.getOutputStream();
 
 									IOUtil.copy(in, out, false);
@@ -298,17 +292,14 @@ public class repo extends Model {
 
 							if (ss.length == 2) {
 								boolean failed = false;
-								File f = Temp.get(id, "s1_" + size);
+								DFile f = Temp.get(id, "s1_" + size);
 								if (!f.exists()) {
-									f.getParentFile().mkdirs();
 
-									File src = Temp.get(id, null);
-									if (!src.exists()) {
-										src.getParentFile().mkdirs();
-									} else {
+									DFile src = Temp.get(id, null);
+									if (src.exists()) {
 										src.delete();
 									}
-									OutputStream out = new FileOutputStream(src);
+									OutputStream out = src.getOutputStream();
 									IOUtil.copy(e.getInputStream(), out, false);
 									out.close();
 
@@ -327,7 +318,7 @@ public class repo extends Model {
 								if (f.exists() && !failed) {
 									log.debug("load scaled image from " + f.getCanonicalPath());
 
-									InputStream in = new FileInputStream(f);
+									InputStream in = f.getInputStream();
 									OutputStream out = this.getOutputStream();
 
 									IOUtil.copy(in, out, false);

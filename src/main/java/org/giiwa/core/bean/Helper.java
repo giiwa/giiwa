@@ -1293,9 +1293,6 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("rawtypes")
 		public W and(String name, Object v, OP op) {
-			if (X.isSame("id", name)) {
-				name = "_id";
-			}
 
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
@@ -1387,9 +1384,6 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("rawtypes")
 		public W or(String name, Object v, OP op) {
-			if (X.isSame("id", name)) {
-				name = "_id";
-			}
 
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
@@ -1716,10 +1710,6 @@ public class Helper implements Serializable {
 			}
 
 			private Entity(String name, Object v, OP op, int cond) {
-				if (X.isSame(name, "id")) {
-					name = "_id";
-				}
-
 				this.name = name;
 				this.op = op;
 				this.cond = cond;
@@ -1824,10 +1814,11 @@ public class Helper implements Serializable {
 		 *            the db name
 		 * @param table
 		 *            the table
-		 * @param w
-		 *            the w
+		 * @param q
+		 *            the W
 		 */
-		public void query(String db, String table, W w);
+		public void query(String db, String table, W q);
+
 	}
 
 	/**
@@ -2393,6 +2384,29 @@ public class Helper implements Serializable {
 		return load(table, q, s, n, t);
 	}
 
+	public static <T extends Bean> BeanStream<T> stream(W q, int s, int n, Class<T> t) {
+		String table = getTable(t);
+		String db = getDB(t);
+
+		if (monitor != null) {
+			monitor.query(db, table, q);
+		}
+
+		Cursor<T> cur = null;
+		if (primary != null && primary.getDB(db) != null) {
+			cur = primary.query(table, q, s, n, t, db);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(db) != null) {
+					cur = h.query(table, q, s, n, t, db);
+					break;
+				}
+			}
+		}
+
+		return BeanStream.create(cur);
+	}
+
 	public static <T extends Bean> Beans<T> load(String[] fields, W q, int s, int n, Class<T> t) {
 		String table = getTable(t);
 		return load(table, fields, q, s, n, t);
@@ -2804,9 +2818,12 @@ public class Helper implements Serializable {
 	 * @param m
 	 *            the optimizer
 	 */
-	public static void setOptmizer(IOptimizer m) {
-		monitor = m;
-		log.info("optimizer=" + m);
+	public static void enableOptmizer() {
+		monitor = new Optimizer();
+	}
+	
+	public static void disableOptmizer() {
+		monitor = null;
 	}
 
 	/**

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
+	version="2.4">
+	<display-name>Giiwa Webapp</display-name>
+	<listener>
+		<listener-class>org.giiwa.framework.web.GiiwaContextListener</listener-class>
+	</listener>
+	<servlet>
+		<servlet-name>giiwaServlet</servlet-name>
+		<servlet-class>org.giiwa.framework.web.GiiwaServlet</servlet-class>
+		<init-param>
+			<param-name>.html</param-name>
+			<param-value>org.giiwa.framework.web.view.VelocityView</param-value>
+		</init-param>
+		<init-param>
+			<param-name>.htm</param-name>
+			<param-value>org.giiwa.framework.web.view.VelocityView</param-value>
+		</init-param>
+		<init-param>
+			<param-name>.md</param-name>
+			<param-value>org.giiwa.framework.web.view.MarkdownView</param-value>
+		</init-param>
+		<init-param>
+			<param-name>.jsp</param-name>
+			<param-value>org.giiwa.framework.web.view.JspView</param-value>
+		</init-param>
+		<init-param>
+			<param-name>.ftl</param-name>
+			<param-value>org.giiwa.framework.web.view.FreemarkerView</param-value>
+		</init-param>
+		<init-param>
+			<param-name>.th</param-name>
+			<param-value>org.giiwa.framework.web.view.ThymeleafView</param-value>
+		</init-param>
+		<load-on-startup>0</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>giiwaServlet</servlet-name>
+		<url-pattern>/*</url-pattern>
+	</servlet-mapping>
+	<welcome-file-list>
+		<welcome-file>index</welcome-file>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>index.ftl</welcome-file>
+		<welcome-file>index.th</welcome-file>
+	</welcome-file-list>
+</web-app>

@@ -68,9 +68,12 @@ public class Data extends Bean {
 	 * update the data
 	 * 
 	 * @param table
+	 *            the tablename
 	 * @param q
+	 *            the query condition
 	 * @param data
-	 * @return
+	 *            the json data
+	 * @return the number of updated
 	 */
 	public static int update(String table, W q, JSON data) {
 		return Helper.update(table, q, V.create().copy(data));
@@ -80,8 +83,10 @@ public class Data extends Bean {
 	 * insert the json data to database
 	 * 
 	 * @param table
+	 *            the string of tablename
 	 * @param data
-	 * @return
+	 *            the json data
+	 * @return the number of inserted
 	 */
 	public static int insert(String table, JSON data) {
 		return Helper.insert(table, V.create().copy(data));

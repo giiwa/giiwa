@@ -68,7 +68,7 @@ public class GlobalLock implements Lock {
 				if (Cache.trylock(name, value, expire)) {
 					heartbeat.add(this);
 
-					log.debug("locked, global lock=" + name);
+					log.debug("global locked, name=" + name);
 
 					return true;
 				}
@@ -102,7 +102,7 @@ public class GlobalLock implements Lock {
 
 		if (Cache.unlock(name, value)) {
 			MQ.notify("lock." + name, JSON.create());
-			log.debug("unlocked, global lock=" + name);
+			log.debug("global unlocked, name=" + name);
 		} else {
 			log.debug("what's wrong with the lock=" + name);
 		}

@@ -373,4 +373,16 @@ public class Url {
 		return null;
 	}
 
+	public String getPath() {
+		return path(this.getUrl());
+	}
+
+	public static String path(String url) {
+		int i = url.lastIndexOf("/");
+		if (i > 8) {
+			return url.substring(0, i + 1);
+		}
+		return url + "/";
+	}
+
 }

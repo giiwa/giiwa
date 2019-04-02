@@ -189,7 +189,7 @@ public class MongoHelper implements Helper.DBHelper {
 		}
 
 		MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(30000)
-				.serverSelectionTimeout(1000).maxConnectionIdleTime(10000).connectionsPerHost(conns);
+				.serverSelectionTimeout(30000).maxConnectionIdleTime(30000).connectionsPerHost(conns);
 		client = new MongoClient(new MongoClientURI(url, opts));
 		return client.getDatabase(db);
 	}
@@ -666,8 +666,18 @@ public class MongoHelper implements Helper.DBHelper {
 					log.debug("inserted collection=" + collection + ", d=" + d);
 				return 1;
 			} catch (Exception e) {
-				if (log.isErrorEnabled())
+				if (log.isErrorEnabled()) {
 					log.error(d.toString(), e);
+
+					// FindIterable<Document> d1 = c.find(W.create("_id", id).query());
+					// if (d1 != null) {
+					// Document d2 = d1.first();
+					// if (d2 != null) {
+					// log.error("d2=" + d2.toString());
+					// }
+					// }
+
+				}
 			}
 		}
 		return 0;
@@ -809,52 +819,8 @@ public class MongoHelper implements Helper.DBHelper {
 	}
 
 	/**
-	 * get distinct value for key by the query.
-	 *
-	 * @param <T>
-	 *            the base object
-	 * @param collection
-	 *            the collection name
-	 * @param key
-	 *            the key that contain the value
-	 * @param q
-	 *            the query
-	 * @param t
-	 *            the class
-	 * @param db
-	 *            the db
-	 * @return List of the value
+	 * 
 	 */
-	// public <T> List<T> distinct(String collection, String key, W q, String db,
-	// Class<T> t) {
-	//
-	// TimeStamp t1 = TimeStamp.create();
-	// try {
-	//
-	// MongoCollection<Document> c = getCollection(db, collection);
-	// if (c != null) {
-	//
-	// Iterator<T> it = c.distinct(key, q.query(), t).iterator();
-	//
-	// List<T> list = new ArrayList<T>();
-	// while (it.hasNext()) {
-	// list.add((T) it.next());
-	// }
-	//
-	// return list;
-	// }
-	// } catch (Exception e) {
-	// if (log.isErrorEnabled())
-	// log.error(q.query(), e);
-	// } finally {
-	// if (log.isDebugEnabled())
-	// log.debug(
-	// "disinct[" + key + "] cost=" + t1.pastms() + "ms, collection=" + collection +
-	// ", query=" + q);
-	// }
-	// return null;
-	// }
-
 	public List<?> distinct(String collection, String key, W q, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
@@ -872,8 +838,8 @@ public class MongoHelper implements Helper.DBHelper {
 				log.error(q.query(), e);
 		} finally {
 			if (log.isDebugEnabled())
-				log.debug(
-						"disinct[" + key + "] cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q);
+				log.debug("distinct[" + key + "] cost=" + t1.pastms() + "ms,  collection=" + collection + ", query="
+						+ q.query());
 		}
 		return null;
 	}
@@ -1033,7 +999,7 @@ public class MongoHelper implements Helper.DBHelper {
 			UpdateResult r = c.updateMany(q.query(), d2);
 
 			if (log.isDebugEnabled())
-				log.debug("updated collection=" + table + ", query=" + q + ", d=" + d + ", n=" + r.getModifiedCount()
+				log.debug("updated collection=" + table + ", query=" + q + ", d2=" + d2 + ", n=" + r.getModifiedCount()
 						+ ",result=" + r);
 
 			return (int) r.getModifiedCount();

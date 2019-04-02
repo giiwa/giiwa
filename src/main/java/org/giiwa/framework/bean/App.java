@@ -72,14 +72,30 @@ public class App extends Bean {
 		update(appid, V.create("lastime", System.currentTimeMillis()).set("ip", ip));
 	}
 
+	/**
+	 * get the id
+	 * 
+	 * @return
+	 */
 	public long getId() {
 		return id;
 	}
 
+	/**
+	 * get the memo
+	 * 
+	 * @return
+	 */
 	public String getMemo() {
 		return memo;
 	}
 
+	/**
+	 * check has the access name
+	 * 
+	 * @param name
+	 * @return
+	 */
 	public boolean hasAccess(String... name) {
 		Role r = getRole_obj();
 		if (r != null) {
@@ -93,6 +109,11 @@ public class App extends Bean {
 
 	transient Role role_obj;
 
+	/**
+	 * get the role object attach with this appid
+	 * 
+	 * @return
+	 */
 	public Role getRole_obj() {
 		if (role_obj == null) {
 			role_obj = Role.dao.load(role);
@@ -100,26 +121,56 @@ public class App extends Bean {
 		return role_obj;
 	}
 
+	/**
+	 * get tht role id
+	 * 
+	 * @return
+	 */
 	public long getRole() {
 		return role;
 	}
 
+	/**
+	 * get the appid
+	 * 
+	 * @return
+	 */
 	public String getAppid() {
 		return appid;
 	}
 
+	/**
+	 * get the secret
+	 * 
+	 * @return
+	 */
 	public String getSecret() {
 		return secret;
 	}
 
+	/**
+	 * get the ip who used the appid
+	 * 
+	 * @return
+	 */
 	public String getIp() {
 		return ip;
 	}
 
+	/**
+	 * the the last access time
+	 * 
+	 * @return
+	 */
 	public long getLastime() {
 		return lastime;
 	}
 
+	/**
+	 * get the expire time
+	 * 
+	 * @return
+	 */
 	public long getExpired() {
 		return expired;
 	}
@@ -129,7 +180,9 @@ public class App extends Bean {
 	 * decode, params=AES(Base64(data));
 	 * 
 	 * @param data
-	 *            the data
+	 *            the string of data
+	 * @param secret
+	 *            the string of secret
 	 * @return JSON
 	 */
 	public static JSON parseParameters(String data, String secret) {
@@ -230,6 +283,12 @@ public class App extends Bean {
 		return dao.update(W.create("appid", appid), v);
 	}
 
+	/**
+	 * the parameter class of the App
+	 * 
+	 * @author joe
+	 *
+	 */
 	public static class Param {
 		V v = V.create();
 
@@ -243,7 +302,7 @@ public class App extends Bean {
 		}
 
 		/**
-		 * Builds the.
+		 * Builds the Value object
 		 *
 		 * @return the v
 		 */
@@ -252,7 +311,7 @@ public class App extends Bean {
 		}
 
 		/**
-		 * Appid.
+		 * set the appid
 		 *
 		 * @param appid
 		 *            the appid
@@ -264,7 +323,7 @@ public class App extends Bean {
 		}
 
 		/**
-		 * Secret.
+		 * set the secret
 		 *
 		 * @param secret
 		 *            the secret
@@ -276,7 +335,7 @@ public class App extends Bean {
 		}
 
 		/**
-		 * Expired.
+		 * set the Expired.
 		 *
 		 * @param expired
 		 *            the expired
@@ -288,7 +347,7 @@ public class App extends Bean {
 		}
 
 		/**
-		 * Lastime.
+		 * set the Lastime.
 		 *
 		 * @param lastime
 		 *            the lastime
@@ -300,7 +359,7 @@ public class App extends Bean {
 		}
 
 		/**
-		 * Ip.
+		 * set the Ip.
 		 *
 		 * @param ip
 		 *            the ip
@@ -312,7 +371,7 @@ public class App extends Bean {
 		}
 
 		/**
-		 * Memo.
+		 * set the Memo.
 		 *
 		 * @param memo
 		 *            the memo
@@ -323,6 +382,12 @@ public class App extends Bean {
 			return this;
 		}
 
+		/**
+		 * set the role
+		 * 
+		 * @param role
+		 * @return
+		 */
 		public Param role(long role) {
 			v.set("role", role);
 			return this;
@@ -347,10 +412,6 @@ public class App extends Bean {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-
-	public int inc(String name, int n) {
-		return dao.inc(W.create(X.ID, id), name, n, null);
 	}
 
 }

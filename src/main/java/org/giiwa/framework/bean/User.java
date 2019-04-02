@@ -14,18 +14,22 @@
 */
 package org.giiwa.framework.bean;
 
+import java.awt.Color;
 import java.io.PrintStream;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.bouncycastle.jce.provider.JDKMessageDigest.MD4;
+import org.giiwa.core.base.GImage;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
@@ -82,6 +86,9 @@ public class User extends Bean {
 	@Column(name = "createdip")
 	private String createdip;
 
+	@Column(name = "photo")
+	private String photo;
+
 	@Column(name = "createdua")
 	private String createdua;
 
@@ -95,6 +102,10 @@ public class User extends Bean {
 			createdby_obj = dao.load(createdby);
 		}
 		return createdby_obj;
+	}
+
+	public String getPhoto() {
+		return photo;
 	}
 
 	/**
@@ -226,6 +237,7 @@ public class User extends Bean {
 	 *            the values
 	 * @return long of the user id, if failed, return -1
 	 * @throws Exception
+	 *             throw Exception if name or password not matches the setting
 	 */
 	public static long create(V v) throws Exception {
 
@@ -252,10 +264,37 @@ public class User extends Bean {
 		if (log.isDebugEnabled())
 			log.debug("v=" + v);
 
+		// check photo
+		_checkphoto(v);
+
 		dao.insert(
 				v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()));
 
 		return id;
+	}
+
+	private static void _checkphoto(V v) {
+		Object nickname = v.value("nickname");
+		if (X.isEmpty(nickname)) {
+			nickname = v.value("name");
+		}
+
+		if (!X.isEmpty(nickname)) {
+			char c = nickname.toString().charAt(0);
+			Language lang = Language.getLanguage();
+			DFile f = Disk.seek("/user/photo/" + lang.format(System.currentTimeMillis(), "yyyyMMdd") + "/"
+					+ System.currentTimeMillis() + ".png");
+
+			if (f != null) {
+				try {
+					GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
+							(int) (156 * Math.random()), (int) (156 * Math.random())), f.getOutputStream());
+					v.append("photo", f.getFilename());
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+		}
 	}
 
 	/**
@@ -489,7 +528,8 @@ public class User extends Bean {
 			}
 			return sb.toString();
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			// ignore
+			// log.error(e.getMessage(), e);
 		}
 		return X.EMPTY;
 	}
@@ -577,6 +617,8 @@ public class User extends Bean {
 		} else {
 			v.remove("password");
 		}
+
+		_checkphoto(v);
 		return dao.update(id, v);
 	}
 
@@ -653,7 +695,10 @@ public class User extends Bean {
 	 * @param sid
 	 *            the session id
 	 * @param ip
-	 *            the ip that the user come fram
+	 *            the ip that the user come from
+	 * @param v
+	 *            the V object
+	 * 
 	 * @return the int
 	 */
 	public int logined(String sid, String ip, V v) {
@@ -876,14 +921,14 @@ public class User extends Bean {
 					if (list == null || list.size() == 0) {
 						String passwd = UID.random(16);
 						try {
-							PrintStream out = new PrintStream(Model.GIIWA_HOME + "/admin.pwd");
+							PrintStream out = new PrintStream(Model.GIIWA_HOME + "/root.pwd");
 							out.print(passwd);
 							out.close();
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
-						User.create(V.create("id", 0L).set("name", "admin").set("password", passwd).set("nickname",
-								"admin"));
+						User.create(V.create("id", 0L).set("name", "root").set("password", passwd).set("nickname",
+								"root"));
 					}
 				}
 			} catch (Exception e) {
@@ -927,6 +972,30 @@ public class User extends Bean {
 			}
 		}
 		return total;
+	}
+
+	public static void repair() {
+		Beans<User> bs = User.dao.load(W.create().sort("created", 1), 0, 1000);
+		if (bs != null) {
+			for (User u : bs) {
+				if (X.isEmpty(u.getPhoto())) {
+					V v = V.create();
+					v.append("name", u.getName());
+					v.append("nickname", u.getNickname());
+					_checkphoto(v);
+					dao.update(u.getId(), v);
+				}
+			}
+		}
+	}
+
+	public Set<String> getAccesses() {
+		if (role == null) {
+			getRole();
+		}
+
+		return role.getAccesses();
+
 	}
 
 }

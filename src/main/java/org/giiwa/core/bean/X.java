@@ -603,6 +603,22 @@ public final class X {
 		return l2;
 	}
 
+	public static String toString(List<?> l1, String deli) {
+		if (l1 == null || l1.isEmpty())
+			return X.EMPTY;
+
+		StringBuilder sb = new StringBuilder();
+		for (Object e : l1) {
+			if (e != null) {
+				if (sb.length() == 0)
+					sb.append(deli);
+
+				sb.append(e);
+			}
+		}
+		return sb.toString();
+	}
+
 	public static List<Integer> toInt(List<?> l1) {
 		if (l1 == null || l1.isEmpty())
 			return null;
@@ -690,8 +706,11 @@ public final class X {
 	/**
 	 * Descartes list
 	 * 
-	 * @param l
-	 * @return
+	 * @param l1
+	 *            the list
+	 * @param l2
+	 *            the list
+	 * @return the list
 	 */
 	public static <T> List<List<T>> descartes(List<List<T>> l1, List<List<T>> l2) {
 		if (l2 == null || l2.isEmpty())
@@ -787,13 +806,20 @@ public final class X {
 		return false;
 	}
 
-	// public static void main(String[] aa) {
-	// List<List<Integer>> l1 = new ArrayList<List<Integer>>();
-	// l1.add(Arrays.asList(1, 2, 3));
-	// l1.add(Arrays.asList(4, 5, 6));
-	// l1.add(Arrays.asList(3, 4));
-	//
-	// System.out.println(descartes(new ArrayList<List<Integer>>(), l1));
-	// }
+	public static String add(String number, int n) {
+		long a = X.toLong(number) + n;
+		String s = Long.toString(a);
+
+		if (s.length() >= number.length()) {
+			return s;
+		}
+
+		return number.substring(0, number.length() - s.length()) + s;
+	}
+
+	public static void main(String[] aa) {
+		String s = "001";
+		System.out.println(add(s, 1));
+	}
 
 }

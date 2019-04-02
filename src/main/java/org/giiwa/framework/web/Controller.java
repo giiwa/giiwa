@@ -147,7 +147,6 @@ public class Controller {
 		// log.debug("uri=" + uri);
 
 		TimeStamp t = TimeStamp.create();
-		Tps.add(1);
 
 		String node = req.getParameter("__node");
 		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {

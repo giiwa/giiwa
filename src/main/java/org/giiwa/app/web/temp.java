@@ -14,12 +14,10 @@
 */
 package org.giiwa.app.web;
 
-import java.io.File;
-import java.io.FileInputStream;
-
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
@@ -53,7 +51,7 @@ public class temp extends Model {
 		}
 
 		String name = ss[1];
-		File f1 = Temp.get(ss[0], name);
+		DFile f1 = Temp.get(ss[0], name);
 		if (!f1.exists()) {
 			this.notfound();
 			return;
@@ -98,7 +96,7 @@ public class temp extends Model {
 				this.setStatus(206);
 			}
 
-			IOUtil.copy(new FileInputStream(f1), this.getOutputStream(), start, end, true);
+			IOUtil.copy(f1.getInputStream(), this.getOutputStream(), start, end, true);
 
 			return;
 

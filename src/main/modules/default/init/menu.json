@@ -1,0 +1,152 @@
+[
+	{
+		"name": "admin",
+		"seq": 10,
+		"childs": [
+			{
+				"name": "menu.system",
+				"classes": "icon-cog",
+				"access": "access.menu.sysmenu|access.config.admin",
+				"seq": 10,
+				"childs": [
+					{
+						"name": "menu.setting",
+						"load": "/admin/setting",
+						"classes": "icon-cogs",
+						"access": "access.config.admin",
+						"seq": 10
+					},
+					{
+						"name": "menu.module",
+						"load": "/admin/module",
+						"seq": 20,
+						"access": "access.config.admin|access.config.module.admin",
+						"classes": "icon-google-drive"
+					},
+					{
+						"name": "menu.log",
+						"seq": 30,
+						"classes": "icon-list",
+						"access": "access.config.admin|access.config.logs.admin",
+						"childs": [
+							{
+								"name": "menu.syslog",
+								"load": "/admin/syslog",
+								"seq": 10,
+								"classes": "icon-hammer"
+							},
+							{
+								"name": "menu.accesslog",
+								"load": "/admin/accesslog",
+								"seq": 20,
+								"classes": "icon-user"
+							},
+							{
+								"name": "menu.footprint",
+								"load": "/admin/footprint",
+								"seq": 30,
+								"classes": "icon-history"
+							},
+							{
+								"name": "menu.logs",
+								"load": "/admin/logs",
+								"seq": 40,
+								"classes": "icon-drawer"
+							}
+						]
+					},
+					{
+						"name": "menu.tools",
+						"seq": 40,
+						"access": "access.config.admin",
+						"classes": "icon-hammer",
+						"childs": [
+							{
+								"name": "menu.task",
+								"load": "/admin/task",
+								"seq": 10,
+								"classes": "icon-clock"
+							},
+							{
+								"name": "menu.sysinfo",
+								"load": "/admin/sysinfo/cpu",
+								"seq": 20,
+								"classes": "icon-info"
+							},
+							{
+								"name": "menu.sysstat",
+								"load": "/admin/sysstat/cpu",
+								"seq": 30,
+								"classes": "icon-stats-dots"
+							},
+							{
+								"name": "menu.node",
+								"load": "/admin/node",
+								"seq": 40,
+								"classes": "icon-laptop"
+							},
+							{
+								"name": "menu.dfile",
+								"load": "/admin/dfile/disk",
+								"seq": 50,
+								"classes": "icon-drawer"
+							},
+							{
+								"name": "menu.database",
+								"load": "/admin/database",
+								"seq": 60,
+								"classes": "icon-database"
+							},
+							{
+								"name": 'menu.i18n',
+								"load": '/admin/i18n',
+								"seq": 70,
+								"access": "access.config.admin|access.config.module.admin",
+								"classes": 'icon-magic-wand'
+							}
+						]
+					}
+				]
+			},
+			{
+				"name": "menu.usermgr",
+				"classes": "icon-shield",
+				"access": "access.menu.usermgmt|access.config.admin",
+				"seq": 20,
+				"childs": [
+					{
+						"name": "menu.role",
+						"load": "/admin/role",
+						"access": "access.config.admin|access.config.role.admin",
+						"seq": 10,
+						"classes": "icon-accessibility"
+					},
+					{
+						"name": "menu.user",
+						"load": "/admin/user",
+						"access": "access.config.admin|access.config.user.admin",
+						"seq": 20,
+						"classes": "icon-users"
+					},
+					{
+						"name": "menu.app",
+						"load": "/admin/app",
+						"seq": 30,
+						"access": "access.config.admin",
+						"classes": "icon-link"
+					},
+				]
+			}
+		]
+	},
+	{
+		"role": "SYSADM",
+		"memo": "系统管理员",
+		"access": "access.config.admin,access.config.debug"
+	},
+	{
+		"role": "USER",
+		"memo": "普通用户",
+		"access": ""
+	}
+]

@@ -86,15 +86,15 @@ public class _Net extends Bean {
 			}
 
 			try {
-				String type = jo.getString("type");
+				String type = jo.getString("_type");
 
 				V v = V.fromJSON(jo);
 				if (X.isSame("snapshot", type)) {
-					v = V.create("name", name).append("type", "snapshot").append("snapshot", jo.toString());
+					v = V.create("name", name).append("_type", "snapshot").append("snapshot", jo.toString());
 					v.append("inet", inet).append("inet6", jo.getString("inet6"));
 
 					Record r = Record.dao
-							.load(W.create("node", node).and("name", name).and("type", "snapshot").sort("created", -1));
+							.load(W.create("node", node).and("name", name).and("_type", "snapshot").sort("created", -1));
 					if (r != null) {
 						JSON p = JSON.fromObject(r.get("snapshot"));
 						if (p != null) {

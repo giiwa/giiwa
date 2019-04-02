@@ -1,5 +1,11 @@
 package org.giiwa.core.task;
 
+/**
+ * using system thread queue to run this task
+ * 
+ * @author joe
+ *
+ */
 public abstract class SysTask extends Task {
 
 	/**
@@ -8,7 +14,7 @@ public abstract class SysTask extends Task {
 	private static final long serialVersionUID = 1L;
 
 	@Override
-	public boolean getSys() {
+	protected final boolean getSys() {
 		return true;
 	}
 

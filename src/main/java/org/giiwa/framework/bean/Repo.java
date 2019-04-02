@@ -77,8 +77,6 @@ public class Repo extends Bean {
 	/**
 	 * List.
 	 * 
-	 * @param uid
-	 *            the uid
 	 * @param offset
 	 *            the offset
 	 * @param limit

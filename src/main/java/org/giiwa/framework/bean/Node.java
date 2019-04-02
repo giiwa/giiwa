@@ -14,6 +14,8 @@
 */
 package org.giiwa.framework.bean;
 
+import java.lang.management.ManagementFactory;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -21,6 +23,7 @@ import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.FileClient;
@@ -56,6 +59,9 @@ public class Node extends Bean {
 	@Column(name = X.ID, index = true)
 	private String id;
 
+	@Column(name = "pid")
+	private String pid;
+
 	@Column(name = "ip")
 	private String ip;
 
@@ -65,8 +71,17 @@ public class Node extends Bean {
 	@Column(name = "url")
 	private String url;
 
-	@Column(name = "tasks")
-	private int tasks;
+	@Column(name = "globaltasks")
+	private int globaltasks;
+
+	@Column(name = "localthreads")
+	private int localthreads;
+
+	@Column(name = "localpending")
+	private int localpending;
+
+	@Column(name = "localrunning")
+	private int localrunning;
 
 	@Column(name = "uptime")
 	private long uptime;
@@ -80,12 +95,12 @@ public class Node extends Bean {
 	@Column(name = "giiwa")
 	private String giiwa;
 
-	public int getUsage() {
-		return usage;
+	public int getState() {
+		return Task.powerstate;
 	}
 
-	public int getTasks() {
-		return tasks;
+	public int getUsage() {
+		return usage;
 	}
 
 	public String getId() {
@@ -114,13 +129,24 @@ public class Node extends Bean {
 
 	public static void touch(boolean force) {
 		try {
+			if (!Helper.isConfigured()) {
+				return;
+			}
+
 			if (dao.exists(Local.id())) {
 				// update
-				if (force) {
-					dao.update(Local.id(), getNodeInfo().append("tasks", Task.globaltask.get()));
-				} else {
+				V v = V.create();
+				v.append("globaltasks", Task.globaltask.get());
+				v.append("localthreads", Task.activeThread());
+				v.append("localrunning", Task.tasksInRunning());
+				v.append("localpending", Task.tasksInQueue());
+				// v.append("lasttime", System.currentTimeMillis());
 
-					V v = V.create().append("tasks", Task.globaltask.get());
+				if (force) {
+					String process = ManagementFactory.getRuntimeMXBean().getName();
+					dao.update(Local.id(),
+							getNodeInfo().append("pid", process.substring(0, process.indexOf("@"))).append(v));
+				} else {
 
 					CpuPerc[] cc = Host.getCpuPerc();
 					double user = 0;

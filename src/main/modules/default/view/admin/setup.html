@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<meta name="viewport"  content="width=device-width, height=device-height,initial-scale=1.0">
+<link rel="shortcut icon" href="/favicon.ico"
+	type="image/vnd.microsoft.icon" />
+<title>$!lang.get('browser.title')</title>
+<meta name="description" content="$lang.get('browser.description')"/>
+<link href='/css/icons.css' rel='stylesheet' />
+<link href='/css/giiwa.css?$!{module.module("default").build}' rel='stylesheet' />
+<link href='/css/setup.css?$!{module.module("default").build}' rel='stylesheet' />
+
+<script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="/js/jquery.easing.1.3.js"></script>
+<script type="text/javascript" src='/js/giiwa.js?${module.module("default").build}'></script>
+
+</head>
+<body>
+
+	<div id='head'>
+		<div class='center'>
+			<div class='left'>
+			<div class="logo"><img src="/images/giiwa.png"></div>
+			</div>
+		</div>
+	</div>
+	
+<div id="content">
+	<div class='center' style="overflow: visible;">
+
+		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
+			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
+			<form method="post">
+				<div><label><h3>$lang.get('setup.label.url')：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>mongodb://host1:27017,host2:27017 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
+				<div><label><h3>$lang.get('setup.label.db')：</h3><input type='text' name='db' value="$!global.getString('mongo[prod].db','demo')"/></label></div>
+				<input type='text' style="display:none"/>
+				<div class='btns'>
+					<a class='next btn btn-success'>$lang.get('a.next')</a>
+				</div>
+			</form>
+		</div>
+
+		<div id="db" class='panel' data-next="cache" data-prev='mongo' data-check='check_db'>
+			<div class='head'>$!lang.get('configure.title.rdbs')</div>	
+			<form method="post">
+				<div><label><h3>$lang.get('setup.label.driver')：</h3>
+					<select name='driver' onchange='_ondriver();'>
+						<option user='0' value=''></option>
+						<option user='0' tips='h2' value='org.h2.Driver' #if($global.getString('db.driver', '') == 'org.h2.Driver') selected #end>$lang.get("db.h2")</option>
+						<option user='0' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
+						<option user='0' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
+						<option user='0' tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+					</select>
+				</label></div>
+				
+				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3>
+					<input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
+					<g class='h2' style='display:none' dd='jdbc:h2:file:${home}/db/demo'>jdbc:h2:file:db/demo</g>
+					<g class='postgres' style='display:none' dd=''>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
+					<g class='mysql' style='display:none' dd=''>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
+					<g class='oracle' style='display:none' dd=''>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
+				</label></div>
+				<input type="password" name="passwd" style="display:none">
+				<div class='username'><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
+				<div class='passwd'><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
+				
+				<div class='btns'>
+					<a class='prev btn btn-info'>$lang.get('a.prev')</a>
+					<a class='next btn btn-success'>$lang.get('a.next')</a>
+				</div>
+			</form>
+		</div>
+
+		<div id="cache" class='panel' data-prev="db">
+			<div class='head'>$lang.get('setup.title.cache')</div>	
+			<form method="post">
+				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!config.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
+				
+				<div class='btns'>
+						<a class='prev btn btn-info'>$lang.get('a.prev')</a>
+						<a class='done btn btn-success'>$lang.get('a.done')</a>
+				</div>
+			</form>
+		</div>		
+					
+	</div>
+</div>
+
+	<div id='foot'>
+	<div class='center'>
+		<div class='links'>$lang.get('user.foot.links')</div>
+		<div class='copyright'>
+			<span class='copyright'>$lang.get('copyright')</span> <span
+				class='designed'>$lang.get('powerby')</span>
+			<span>please refer {giiwa.home}/giiwa.properties</span>
+		</div>
+		<div class="foot-shield"></div>
+	</div>
+</div>
+<div id="processing" style="display: none;">
+	<div class="bg"></div>
+	<div class="img">
+		<img src="/images/loading2.gif">
+	</div>
+</div>
+
+<script>
+function _ondriver(){
+	$('#db .url g').hide();
+	var driver = $('#db select[name=driver]').val();
+	var tips = $('#db select option[value="' + driver + '"]').attr('tips');
+	$('#db .url g.' + tips).show();
+	
+	var user = $('#db select option[value="' + driver + '"]').attr('user');
+	if(user == '1') {
+		$('#db .username').show();
+		$('#db .passwd').show();
+	} else {
+		$('#db .username').hide();
+		$('#db .passwd').hide();
+	}
+	if(tips == 'h2') {
+		$('#db input[name=url]').hide();
+	} else {
+		$('#db input[name=url]').show();
+	}
+	$('#db input[name=url]').val($('#db .url g.' + tips).attr('dd'));
+}
+$(function(){
+	_ondriver();
+	
+	$('.panel .btns a.prev').click(function(e){
+		var a = $(this);
+		var p = a.parent();
+		while(p.length > 0 && !p.hasClass('panel')) {
+			p = p.parent();
+		}
+		
+		if(p.length > 0) {
+			var prev = p.attr('data-prev');
+			if(prev) {
+				p.fadeOut();
+				prev = $('#' + prev);
+				prev.fadeIn();
+				$('#content').css('height', (prev.height() + prev.offset().top) + 'px');
+			}
+		}
+	});
+
+	$('.panel .btns a.next').click(function(e){
+		var a = $(this);
+		var p = a.parent();
+		while(p.length > 0 && !p.hasClass('panel')) {
+			p = p.parent();
+		}
+			
+		if(p.length > 0) {
+			var check = p.attr('data-check');
+			if(check && window[check]) {
+				window[check](function(){
+					var next = p.attr('data-next');
+					if(next) {
+						p.fadeOut();
+						next = $('#' + next);
+						next.fadeIn();
+						$('#content').css('height', (next.height() + next.offset().top) + 'px');
+					}
+				})
+			} else {
+				var next = p.attr('data-next');
+				if(next) {
+					p.fadeOut();
+					next = $('#' + next);
+					next.fadeIn();
+					$('#content').css('height', (next.height() + next.offset().top) + 'px');
+				}
+			}
+		}
+	});
+	
+	$('.panel .btns a.done').click(function(e){
+		//save
+		var p = {};
+		p["db.driver"] = $('#db select[name=driver]').val();
+		p["db.url"] = $('#db input[name=url]').val();
+		p["db.user"] = $('#db input[name=username]').val();
+		p["db.passwd"] = $('#db input[name=passwd]').val();
+		p["mongo.url"] = $('#mongo input[name=url]').val();
+		p["mongo.db"] = $('#mongo input[name=db]').val();
+		p["code"] = $('#system input[name=code]').val();
+		p["cache.url"] = $('#cache input[name=url]').val();
+		p["cache.group"] = $('#cache input[name=group]').val();
+		p["admin"] = $('#admin input[name=admin]').val();
+		p["password"] = $('#admin input[name=password]').val();
+		p["email"] = $('#admin input[name=email]').val();
+		p["phone"] = $('#admin input[name=phone]').val();
+		
+		giiwa.processing.show();
+		$.post('/admin/setup/save?__node=$!__node', p, function(d){
+			
+			if(d.state == 200) {
+				setTimeout(function(){
+					window.location.href="/";
+				}, 5000);
+			}
+		});
+	});
+	
+	var mongo = $('#mongo');
+	$('#content').css('height', (mongo.height() + mongo.offset().top) + 'px');
+
+	$('#db select[name=driver]').trigger('change');
+	
+})
+var dbadmin = 0;
+function check_db(f){
+	giiwa.processing.show();
+	var  p = {op:'db'};
+	p.driver = $('#db select[name=driver]').val();
+	p.url = $('#db input[name=url]').val();
+	p.username = $('#db input[name=username]').val();
+	p.passwd = $('#db input[name=passwd]').val();
+	$.post('/admin/setup/check?__node=$!__node', p).done(function(d){
+		giiwa.processing.hide();
+		if(d.state == 200) {
+			dbadmin = d.admin;
+			f();
+		} else {
+			giiwa.error(d.message);
+		}
+	}).fail(function(){
+		giiwa.processing.hide();
+		giiwa.error("$lang.get('try.later')");
+	});
+}
+var mongoadmin = 0
+function check_mongo(f){
+	giiwa.processing.show();
+	var  p = {op:'mongo'};
+	p.db = $('#mongo input[name=db]').val();
+	p.url = $('#mongo input[name=url]').val();
+	$.post('/admin/setup/check?__node=$!__node', p, function(d){
+		giiwa.processing.hide();
+		if(d.state == 200) {
+			mongoadmin = d.admin;
+			f && f();
+		} else {
+			giiwa.error(d.message);
+		}
+	})
+}
+function check_cache(f){
+	giiwa.processing.show();
+	var  p = {op:'cache'};
+	p.url = $('#cache input[name=url]').val();
+	p.group = $('#cache input[name=group]').val();
+	$.post('/admin/setup/check?__node=$!__node', p, function(d){
+		giiwa.processing.hide();
+		if(d.state == 200) {
+			f && f();
+		} else {
+			giiwa.error(d.message);
+		}
+	})
+}
+function check_admin(f){
+	giiwa.processing.show();
+	var  p = {op:'admin'};
+	$.post('/admin/setup/check?__node=$!__node', p, function(d){
+		giiwa.processing.hide();
+		f();
+	})
+}
+var processing = {
+		show:function(){
+			$('#processing').show();
+		},
+		hide:function(){
+			$('#processing').hide();
+		}
+	};
+</script>
+</body>
+</html>

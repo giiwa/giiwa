@@ -41,6 +41,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,6 +55,7 @@ import org.giiwa.core.bean.Helper.Cursor;
 import org.giiwa.core.bean.Helper.DBHelper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -403,7 +405,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *            the table name
 	 * @param q
 	 *            the query object
-	 * @param sets
+	 * @param v
 	 *            the values
 	 * @param db
 	 *            the db
@@ -2455,4 +2457,23 @@ public class RDSHelper implements Helper.DBHelper {
 
 	}
 
+	public static void main(String[] args) {
+		String url = "jdbc:h2:file:/Users/joe/d/temp/db/demo1";
+		try {
+			Connection con = RDB.getConnectionByUrl("h2", url, null, null);
+			System.out.println(con);
+			con.close();
+
+			Configuration conf = Config.getConf();
+			conf.setProperty("db[default].url", url);
+			RDB.init();
+			
+			con = RDB.getConnection("default");
+			System.out.println(con);
+			con.close();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

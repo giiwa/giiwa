@@ -20,7 +20,7 @@ public class mem extends portlet {
 		long id = this.getLong("id");
 		this.set("id", id);
 
-		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id()).sort("created", -1), 0, 60);
+		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id()).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -36,7 +36,7 @@ public class mem extends portlet {
 		long id = this.getLong("id");
 		this.set("id", id);
 
-		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id()).sort("created", -1), 0, 60);
+		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id()).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 

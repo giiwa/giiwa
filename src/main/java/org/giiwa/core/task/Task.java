@@ -29,17 +29,18 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
 import org.apache.commons.logging.*;
-import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.*;
+import org.giiwa.core.cache.Cache;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
 import org.giiwa.mq.MQ.Mode;
 import org.giiwa.mq.MQ.Request;
-import org.hyperic.sigar.CpuPerc;
 import org.giiwa.mq.Result;
 
 /**
@@ -70,7 +71,14 @@ public abstract class Task implements Runnable, Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/** The log. */
-	private static Log log = LogFactory.getLog(Task.class);
+	public static Log log = LogFactory.getLog(Task.class);
+
+	/**
+	 * power state <br/>
+	 * 1: power on <br/>
+	 * 0: power off
+	 */
+	public static int powerstate = 1;
 
 	/** The stop. */
 	private transient boolean stop = false;
@@ -140,7 +148,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * run the prepare and wait the result
 	 * 
-	 * @param r
+	 * @param prepare
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
@@ -451,8 +459,9 @@ public abstract class Task implements Runnable, Serializable {
 	 *            the thread num
 	 */
 	public static void init(int usernum) {
-		LocalRunner.init(5, usernum);
+		LocalRunner.init(8, usernum);
 		GlobalRunner.init();
+		powerstate = Global.getInt("node." + Local.id(), 1);
 	}
 
 	/**
@@ -496,6 +505,10 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return WorkerTask
 	 */
 	final public Task schedule(String time) {
+		if (powerstate != 1 && !this.getSys()) {
+			return this;
+		}
+
 		try {
 			if (time.startsWith("*")) {
 				String[] ss = time.split(":");
@@ -544,6 +557,10 @@ public abstract class Task implements Runnable, Serializable {
 			if (stop) {
 				onStop(fast);
 			} else {
+
+				if (powerstate != 1 && !this.getSys()) {
+					return this;
+				}
 
 				if (this.getGlobal()) {
 					GlobalRunner.schedule(this, msec);
@@ -641,7 +658,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * 
 	 * @return
 	 */
-	public boolean getSys() {
+	protected boolean getSys() {
 		return false;
 	}
 
@@ -792,8 +809,8 @@ public abstract class Task implements Runnable, Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T, V> Result<Integer> reduce(Stream<V> l1, String reducecode, String cocode) throws Exception {
-		return reduce(l1, e -> {
+	public static <T, V> Result<Integer> mapreduce(Stream<V> l1, String reducecode, String cocode) throws Exception {
+		return mapreduce(l1, e -> {
 			try {
 				Object o = JS.run(reducecode, JSON.create().append("arg", e));
 				return (T) o;
@@ -810,20 +827,9 @@ public abstract class Task implements Runnable, Serializable {
 		});
 	}
 
-	/**
-	 * @deprecated
-	 * @param l1
-	 * @param reducefunc
-	 * @return
-	 * @throws Exception
-	 */
-	public <T, V> List<T> reduce(List<V> l1, ReduceFunction<T, V> reducefunc) throws Exception {
-		return reduce(l1.stream(), reducefunc);
-	}
-
-	public <T, V> Result<Integer> reduce(List<V> l1, ReduceFunction<T, V> reducefunc, CollectionFunction<T> cofunc)
-			throws Exception {
-		return reduce(l1.stream(), reducefunc, cofunc);
+	public static <T, V> Result<Integer> mapreduce(List<V> l1, ReduceFunction<T, V> reducefunc,
+			CollectionFunction<T> cofunc) throws Exception {
+		return mapreduce(l1.stream(), reducefunc, cofunc);
 	}
 
 	/**
@@ -832,18 +838,24 @@ public abstract class Task implements Runnable, Serializable {
 	 * @deprecated, please refer reduce(Stream, ReduceFunction, CollectionFunction)
 	 * 
 	 * @param l1
-	 * @param f
+	 * @param reducefunc
 	 * @return
 	 * @throws Exception
 	 */
-	public <T, V> List<T> reduce(Stream<V> l1, ReduceFunction<T, V> reducefunc) throws Exception {
-		final List<T> l2 = new ArrayList<T>();
-		Result<Integer> name = reduce(l1, reducefunc, e -> {
-			l2.add(e);
-		});
+	public static <T, V> List<T> mapreduce(Stream<V> l1, ReduceFunction<T, V> reducefunc) {
+		List<T> l2 = new ArrayList<T>();
 
-		name.read(Long.MAX_VALUE);
+		try {
+			Result<Integer> name = mapreduce(l1, reducefunc, e -> {
+				l2.add(e);
+			});
 
+			// log.debug("l2=" + l2);
+
+			name.read(Long.MAX_VALUE);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 		return l2;
 	}
 
@@ -855,16 +867,15 @@ public abstract class Task implements Runnable, Serializable {
 	 * @param reducefunc
 	 * @param cofunc
 	 * @return
-	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public <T, V> Result<Integer> reduce(Stream<V> l1, ReduceFunction<T, V> reducefunc, CollectionFunction<T> cofunc)
-			throws Exception {
+	public static <T, V> Result<Integer> mapreduce(Stream<V> l1, ReduceFunction<T, V> reducefunc,
+			CollectionFunction<T> cofunc) {
 
 		try {
-			if (this.getGlobal()) {
-				GlobalRunner.release();
-			}
+			// if (this.getGlobal()) {
+			// GlobalRunner.release();
+			// }
 
 			final String name = "reduce." + UID.id(UID.uuid());
 
@@ -897,7 +908,7 @@ public abstract class Task implements Runnable, Serializable {
 				if (slices != null)
 					slices.put(t.getName(), t);
 
-				t.status("parent", this.getName());
+				t.status("parent", Thread.currentThread().getName());
 				Reduce.create(queueName, t).schedule(0);
 
 			});
@@ -905,7 +916,7 @@ public abstract class Task implements Runnable, Serializable {
 			if (slices != null && !slices.isEmpty()) {
 				while (!slices.isEmpty()) {
 
-					status("slices", slices);
+					// status("slices", slices);
 
 					try {
 						Object[] e = q.readObject(X.AMINUTE);
@@ -922,7 +933,7 @@ public abstract class Task implements Runnable, Serializable {
 					} catch (Exception e) {
 						// looking for the task exists ?
 						log.warn("task=" + queueName + ", slices=" + slices);
-						status("slices", slices);
+						// status("slices", slices);
 
 						if (GlobalRunner.door.tryLock()) {
 							try {
@@ -949,15 +960,18 @@ public abstract class Task implements Runnable, Serializable {
 				}
 
 				// done
-				MQ.notify("state." + name, 0);
+				MQ.send("state." + name, Request.create().put(0));
 			}
 
 			return q1;
-
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			return null;
 		} finally {
-			if (this.getGlobal()) {
-				GlobalRunner.acquire();
-			}
+			// if (this.getGlobal()) {
+			// GlobalRunner.acquire();
+			// }
+			l1.close();
 		}
 	}
 
@@ -976,6 +990,7 @@ public abstract class Task implements Runnable, Serializable {
 			r.t = t;
 			r.queueName = master;
 			t.status("parent", t.status("parent"));
+
 			return r;
 		}
 
@@ -1077,14 +1092,11 @@ public abstract class Task implements Runnable, Serializable {
 			try {
 				inst.bind(Mode.TOPIC);
 
-				CpuPerc[] cc = Host.getCpuPerc();
-				if (cc != null && cc.length > 0) {
-					mycpu = cc.length;
-				}
+				mycpu = Runtime.getRuntime().availableProcessors();
 
 				inst.inited = true;
 
-				log.debug("globalrunner is binded. init pending=" + inst.pending);
+				log.debug("globalrunner is binded. init pending=" + inst.pending + ", cpu=" + mycpu);
 
 				if (inst.pending != null) {
 					for (Task t : inst.pending) {
@@ -1233,6 +1245,17 @@ public abstract class Task implements Runnable, Serializable {
 			// if (pendingqueue.contains(task))
 			// return;
 
+			try {
+				synchronized (pendingqueue) {
+					while (!pendingqueue.isEmpty()) {
+						slot.schedule(0);
+						pendingqueue.wait(1000);
+					}
+				}
+			} catch (Exception e) {
+				log.error(task.toString(), e);
+			}
+
 			task.node = null;
 			task.scheduledtime = System.currentTimeMillis() + ms;
 			task.state = Task.State.pending;
@@ -1310,13 +1333,20 @@ public abstract class Task implements Runnable, Serializable {
 
 				try {
 
-					Task t = pendingqueue.get(0);
+					Task t = null;
 
-					interval = (t == null) ? X.AMINUTE : (t.scheduledtime - System.currentTimeMillis());
-					if (interval <= 1) {
-						pendingqueue.remove(0);
-					} else {
-						t = null;
+					synchronized (pendingqueue) {
+						if (!pendingqueue.isEmpty()) {
+							t = pendingqueue.get(0);
+
+							interval = (t == null) ? X.AMINUTE : (t.scheduledtime - System.currentTimeMillis());
+							if (interval <= 1) {
+								pendingqueue.remove(0);
+								pendingqueue.notifyAll();
+							} else {
+								t = null;
+							}
+						}
 					}
 
 					if (t != null) {
@@ -1459,6 +1489,18 @@ public abstract class Task implements Runnable, Serializable {
 			if (user == null)
 				return false;
 
+			if (Task.tasksInQueue() > user.getCorePoolSize()) {
+				log.error("too many task less threads, pending=" + Task.tasksInQueue() + ", poolsize="
+						+ user.getCorePoolSize(), new Exception("the task will not be scheduled"));
+				GLog.applog
+						.error("task", "schedule",
+								"too many task less threads, pending=" + Task.tasksInQueue() + ", poolsize="
+										+ user.getCorePoolSize(),
+								new Exception("the task will not be scheduled"), null, null);
+				task.onFinish();
+				return false;
+			}
+
 			try {
 				lock.lock();
 				// scheduled
@@ -1576,7 +1618,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * lock the task avoid it run in other node
 	 * 
-	 * @return
+	 * @return true if lock success, otherwise false
 	 */
 	public final boolean tryLock() {
 		try {
@@ -1603,4 +1645,38 @@ public abstract class Task implements Runnable, Serializable {
 		}
 	}
 
+	public static void main(String[] ss) {
+
+		Config.init();
+		Global.setConfig("site.group", "demo");
+
+		Cache.init(null);
+		MQ.init();
+
+		Task.init(100);
+
+		try {
+
+			TimeStamp t = TimeStamp.create();
+			List<Integer> l1 = Task.mapreduce(Arrays.asList(1, 2, 3).stream(), e -> {
+				// TODO
+				return e * 10 + e / 2;
+			});
+
+			System.out.println("l1=" + l1 + ", cost=" + t.past());
+
+			t.reset();
+			l1 = Task.mapreduce(Arrays.asList(1, 2, 3).stream(), e -> {
+				// TODO
+				return e * 10 + e / 2 + e;
+			});
+
+			System.out.println("l1=" + l1 + ", cost=" + t.past());
+
+			// Thread.sleep(X.AHOUR);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
 }

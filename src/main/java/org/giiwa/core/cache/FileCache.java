@@ -16,8 +16,7 @@ package org.giiwa.core.cache;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.Semaphore;
 
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.UID;
@@ -86,6 +85,7 @@ class FileCache implements ICacheSystem {
 				}
 			}
 		} catch (Exception e) {
+
 		}
 		return null;
 	}
@@ -278,17 +278,17 @@ class FileCache implements ICacheSystem {
 	/** The queue. */
 	List<String> queue = new ArrayList<String>();
 
-	private static Map<String, Lock> _local = new HashMap<String, Lock>();
+	private static Map<String, Semaphore> _local = new HashMap<String, Semaphore>();
 
 	@Override
 	public boolean trylock(String name, String value, long ms) {
 		synchronized (_local) {
-			Lock d = _local.get(name);
+			Semaphore d = _local.get(name);
 			if (d == null) {
-				d = new ReentrantLock();
+				d = new Semaphore(1);
 				_local.put(name, d);
 			}
-			if (d.tryLock()) {
+			if (d.tryAcquire()) {
 				return true;
 			}
 		}
@@ -305,15 +305,17 @@ class FileCache implements ICacheSystem {
 	public boolean unlock(String name, String value) {
 		try {
 			synchronized (_local) {
-				Lock d = _local.remove(name);
-				if (d != null) {
-					d.unlock();
+				Semaphore d = _local.remove(name);
+				if (d != null && d.availablePermits() == 0) {
+					d.release();
 					return true;
 				}
 			}
 		} catch (Exception e) {
 			// eat it
+			log.debug("unlock error, name=" + name, e);
 		}
+
 		return true;
 	}
 

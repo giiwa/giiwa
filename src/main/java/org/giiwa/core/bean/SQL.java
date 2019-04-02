@@ -26,9 +26,8 @@ public class SQL {
 	 * 
 	 * @param h
 	 * @param sql
-	 *            "select * from
-	 *            <table>
-	 *            where a=1 orderby b <desc> offset 1 limit 10";
+	 *            "select * from [table] where a=1 orderby b [desc] offset 1 limit
+	 *            10";
 	 * @return
 	 */
 	public static List<Bean> query(DBHelper h, String sql) {
@@ -37,6 +36,8 @@ public class SQL {
 			JSON q = _sql(StringFinder.create(sql));
 
 			log.debug("q=" + q);
+
+			String cols = q.getString("cols");
 
 			W q1 = where2W(StringFinder.create(q.getString("where")));
 			if (q.containsKey("orderby")) {
@@ -63,8 +64,8 @@ public class SQL {
 				}
 			}
 
-			Beans<Bean> bs = h.load(q.getString("tablename"), null, q1, q.getInt("offset", 0), q.getInt("limit", 10),
-					Bean.class, X.EMPTY);
+			Beans<Bean> bs = h.load(q.getString("tablename"), X.isSame("*", cols) ? null : X.split(cols, "[,]"), q1,
+					q.getInt("offset", 0), q.getInt("limit", 10), Bean.class, X.EMPTY);
 
 			return bs;
 
@@ -76,14 +77,14 @@ public class SQL {
 
 	}
 
-	private static JSON _sql(StringFinder sf) {
+	private static JSON _sql(StringFinder sf) throws SQLException {
 
 		log.debug("select ...");
 		sf.next(" ");
 		sf.trim();
 		String cols = sf.nextTo("from");
 		if (X.isEmpty(cols)) {
-			return null;
+			throw new SQLException("unknow column [" + cols + "]");
 		}
 
 		JSON r = JSON.create();
@@ -94,14 +95,14 @@ public class SQL {
 		sf.trim();
 		String table = sf.next(" ");
 		if (X.isEmpty(table)) {
-			return null;
+			throw new SQLException("unknow table [" + table + "]");
 		}
 		r.put("tablename", table);
 
 		return _condition(sf, r);
 	}
 
-	private static JSON _condition(StringFinder sf, JSON r) {
+	private static JSON _condition(StringFinder sf, JSON r) throws SQLException {
 		sf.trim();
 		String s = sf.next(" ");
 		if (X.isEmpty(s)) {
@@ -115,7 +116,7 @@ public class SQL {
 				r.put("where", w);
 				return _condition(sf, r);
 			} else {
-				return null;
+				throw new SQLException("error where [" + w + "]");
 			}
 		} else if (X.isSame(s, "groupby")) {
 			sf.trim();
@@ -124,16 +125,21 @@ public class SQL {
 				r.put("groupby", g);
 				return _condition(sf, r);
 			} else {
-				return null;
+				throw new SQLException("error groupby [" + g + "]");
 			}
-		} else if (X.isSame(s, "orderby")) {
+		} else if (X.isSame(s, "order")) {
 			sf.trim();
-			String o = sf.nextTo("(offset|limit)");
-			if (!X.isEmpty(o)) {
-				r.put("orderby", o);
-				return _condition(sf, r);
+			String by = sf.next(" ");
+			if (X.isSame("by", by)) {
+				String o = sf.nextTo("(offset|limit)");
+				if (!X.isEmpty(o)) {
+					r.put("orderby", o);
+					return _condition(sf, r);
+				} else {
+					throw new SQLException("error order [" + o + "]");
+				}
 			} else {
-				return null;
+				throw new SQLException("error order [" + by + "]");
 			}
 		} else if (X.isSame(s, "offset")) {
 			sf.trim();
@@ -142,7 +148,7 @@ public class SQL {
 				r.put("offset", X.toInt(o));
 				return _condition(sf, r);
 			} else {
-				return null;
+				throw new SQLException("error offset [" + o + "]");
 			}
 		} else if (X.isSame(s, "limit")) {
 			sf.trim();
@@ -151,10 +157,10 @@ public class SQL {
 				r.put("limit", X.toInt(o));
 				return _condition(sf, r);
 			} else {
-				return null;
+				throw new SQLException("error limit [" + o + "]");
 			}
 		} else {
-			return null;
+			throw new SQLException("unknow key [" + s + "]");
 		}
 	}
 
@@ -353,8 +359,11 @@ public class SQL {
 		System.out.println(q);
 
 		// SQL.query(null, "select *");
-		JSON q1 = _sql(StringFinder.create("select * from gi_oplog limit 10"));
+		JSON q1 = _sql(StringFinder.create("select a,b,c from gi_oplog order by a limit 10"));
 		System.out.println(q1);
+
+		// SQL.query(h, sql);
+
 	}
 
 	// private static String[] KW = { "and", "or", "like", "=", "!=", ">", ">=",

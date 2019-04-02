@@ -1,0 +1,120 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/accesslog?__node=$!__node' class='selected'>$lang.get('a.accesslog')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/accesslog?__node=$!__node' method='get' #if($s>0) style='display:none' #end>
+		<span><label><h3>URI</h3>:<input type='text' name='guri' value="$!guri" /></label></span>
+		<span><label><h3>SID</h3>:<input type='text' name='gsid' value="$!gsid" /></label></span>
+		<span><label><h3>IP</h3>:<input type='text' name='ip' value="$!ip" /></label></span>
+	
+		<span class='line'></span>
+		<span><label><h3>$lang.get('sort.by'):</h3>
+			<select name='sortby'>
+				<option value='created' #if($sortby == 'created') selected #end>$lang.get('log.created')</option>
+				<option value='node' #if($sortby == 'node') selected #end>$lang.get('log.node')</option>
+				<option value='model' #if($sortby == 'model') selected #end>$lang.get('log.model')</option>
+			</select>
+			<select name='sortby_type'>
+				<option value='1' #if($sortby_type == '1') selected #end>$lang.get('sortby.type_')</option>
+				<option value='-1' #if($sortby_type == '-1') selected #end>$lang.get('sortby.type_desc')</option>
+			</select></label>
+		</span>
+	
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+	<div class='s1tab #if($s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table id='accesslog-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>URL</th>
+			<th>Module</th>
+			<th style="width: 110px;">Model</th>
+			<th>Method</th>
+			<th>Status</th>
+			<th>Cost(ms)</th>
+			<th style="width: 110px;">SID</th>
+			<th>UID</th>
+			<th>USERNAME</th>
+			<th style="width: 100px;">IP</th>
+			<th style="width: 110px;">Created</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$!f.url</td>
+		<td>$!f.module</td>
+		<td>$!f.model</td>
+		<td>$!f.method</td>
+		<td>$!f.status</td>
+		<td>$!f.cost</td>
+		<td>$!f.sid</td>
+		<td>$!f.uid</td>
+		<td>$!f.username</td>
+		<td>$!f.ip</td>
+		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')"><i class="icon-file-text2"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+#if($me.hasAccess('access.config.admin'))
+<div class='btns'>
+	<a href='javascript:;' class='btn btn-danger' onclick='_deleteall();'>$lang.get('a.clean')</a>
+	&nbsp;&nbsp;
+	<a href='javascript:;' class='closebtn btn btn-warning' style="display:none" onclick='_open(0);'>$lang.get('a.accesslog.disable')</a>
+	<a href='javascript:;' class='openbtn btn btn-success' style="display:none" onclick='_open(1);'>$lang.get('a.accesslog.enable')</a>
+</div>
+#end
+
+<script>
+$(function(){
+	#if($global.getInt('accesslog.on', 0) == 1)
+		$('a.closebtn').show();
+		$('a.openbtn').hide();
+	#else
+		$('a.closebtn').hide();
+		$('a.openbtn').show();
+	#end	
+})
+
+function _open(on) {
+	$.post('/admin/accesslog/open?__node=$!__node', {on:on}, function(d){
+		if(d.state == 200) {
+			if(d.on == 1) {
+				$('a.closebtn').show();
+				$('a.openbtn').hide();
+				giiwa.warn("$lang.get('accesslog.on')");
+			} else {
+				$('a.closebtn').hide();
+				$('a.openbtn').show();
+				giiwa.warn("$lang.get('accesslog.off')");
+			}
+		}
+	})
+}
+
+function _deleteall() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post('/admin/accesslog/deleteall?__node=$!__node', {}, function(d) {
+			giiwa.processing.hide();
+			giiwa.reload();
+		});
+	}
+}
+</script>

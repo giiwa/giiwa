@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.giiwa.core.bean.X;
-import org.giiwa.app.task.DiskHeartbeat;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
@@ -79,12 +78,11 @@ public class dfile extends Model {
 			try {
 				v.append("path", f.getCanonicalPath());
 				v.append("priority", this.getInt("priority"));
-				v.append("node", this.getString("node"));
+				v.append("node", this.getString("node1"));
 
 				Disk.create(v);
 				this.response(JSON.create().append(X.STATE, 200));
 
-				DiskHeartbeat.inst.schedule(0);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
@@ -137,8 +135,6 @@ public class dfile extends Model {
 			Disk.dao.update(id, v);
 			this.response(JSON.create().append(X.STATE, 200));
 
-			DiskHeartbeat.inst.schedule(0);
-
 			return;
 		}
 
@@ -181,8 +177,6 @@ public class dfile extends Model {
 								copy(d.getPath(), f1);
 							}
 						}
-
-						DiskHeartbeat.inst.schedule(0);
 
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);

@@ -1,0 +1,139 @@
+	<div><label><g>$lang.get('global.setting.notes')</g></label></div>
+	<hr/>
+	<div><label><h3>$lang.get('cluster.code'):</h3>
+		<input type='number' name='cluster.code' value="$!global.getLong('cluster.code',0)"/>
+		<g>$lang.get('cluster.code.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('site.group'):</h3>
+		<input type='text' name='site.group' value="$!global.getString('site.group','demo')"/>
+		<g>$lang.get('site.group.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('language'):</h3>
+		<select name='language'>
+			<option value='en_us' #if($language == 'en_us') selected #end>en_us</option>
+			<option value='zh_cn' #if($language == 'zh_cn') selected #end>zh_cn</option>
+		</select>
+		<g>$lang.get('language.hint')</g>
+	</label></div>
+	<div><label><h3>$lang.get('ntp.server'):</h3>
+		<input type='text' name='ntpserver' value="$!global.getString('ntp.server','cn.ntp.org.cn')"/>
+		<g>$lang.get('ntp.server.hint')</g></label></div>
+	<div><label><h3>$lang.get('perf.moniter'):</h3>
+		<input type='checkbox' name='perf.moniter' #if($global.getInt('perf.moniter',0)==1) checked="checked" #end/>
+		<g>$lang.get('perf.moniter.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('db.optimizer'):</h3>
+		<input type='checkbox' name='db.optimizer' #if($global.getInt("db.optimizer", 1)==1) checked="checked" #end />
+		<g>$lang.get('db.optimizer.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('oplog.level'):</h3>
+		<select name='oplog.level'>
+			<option value='0' #if($global.getInt('oplog.level', 1) == 0) selected #end>$lang.get('oplog.level_0')</option>
+			<option value='1' #if($global.getInt('oplog.level', 1) == 1) selected #end>$lang.get('oplog.level_1')</option>
+			<option value='2' #if($global.getInt('oplog.level', 1) == 2) selected #end>$lang.get('oplog.level_2')</option>
+		</select>
+		<g>$lang.get('oplog.level.hint')</g>
+	</label></div>
+	<div><label><h3>$lang.get('glog.keep.days'):</h3>
+		<input type='number' name='glog.keep.days' value="$global.getInt('glog.keep.days', 30)" />
+		<g>$lang.get('glog.keep.days.hint')</g></label></div>
+
+	<div><label><g>$lang.get('base.setting.web')</g></label></div>
+	<hr/>
+	<div><label><h3>$lang.get('home.uri'):</h3>
+		<input type='text' name='home_uri' value="$!global.getString('home.uri','')"/>
+		<g>$lang.get('home.uri.hint')</g></label></div>
+	<div><label><h3>$lang.get('home.uri.1'):</h3>
+		<input type='text' name='home.uri.1' value="$!local.getString('home.uri.1','')"/>
+		<g>$lang.get('home.uri.1.hint')</g></label></div>
+		
+	<div><label><h3>$lang.get('cross.domain'):</h3>
+		<input type='text' name='cross_domain' value="$!cross_domain"/>
+		<g>$lang.get('cross.domain.hint')</g></label></div>
+	<div><label><h3>$lang.get('cross.header'):</h3>
+		<input type='text' name='cross_header' value="$!cross_header" style="width:40%"/>
+		<g>$lang.get('cross.header.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('site.browser'):</h3>
+		<input type='text' name='site_browser' value="$!global.getString('site.browser','*')" />
+		<g>$lang.get('site.browser.hint')</g>
+	</label></div>
+	
+	<div style="margin-left:20px"><label><h3>$lang.get('site.browser.nonredirect'):</h3>
+		<input type='text' name='site_browser_nonredirect' value="$!global.getString('site.browser.nonredirect','')" />
+		<g>$lang.get('site.browser.nonredirect.hint')</g>
+	</label></div>
+	<div style="margin-left:20px"><label><h3>$lang.get('site.browser.ignoreurl'):</h3>
+		<input type='text' name='site_browser_ignoreurl' value="$!global.getString('site.browser.ignoreurl','')" />
+		<g>$lang.get('site.browser.ignoreurl.hint')</g>
+	</label></div>
+
+	<div><label><h3>$lang.get('site.url'):</h3>
+		<input type='text' name='site_url' value="$!global.getString('site.url','')" />
+		<g>$lang.get('site.url.hint')</g>
+	</label></div>
+	<div><label><h3>$lang.get('site.image'):</h3>
+		<input type='text' name='site.image' value="$!global.getString('site.image','')" />
+		<g>$lang.get('site.image.hint')</g>
+	</label></div>
+
+	<div><label><h3>$lang.get('web.cache'):</h3>
+		<input type='text' name='web.cache' value="$global.getString('web.cache','')"/>
+		<g>$lang.get('web.cache.hint')</g></label></div>
+	
+	<div><label><h3>$lang.get('web.debug'):</h3>
+		<input type='checkbox' name='web.debug' #if($local.getInt("web.debug", 0)==1) checked="checked" #end />
+		<g>$lang.get('web.debug.hint')</g></label></div>
+	
+	<div><label><g>$lang.get('base.setting.user')</g></label></div>
+	<hr/>
+	<div><label><h3>$lang.get('user.name.rule'):</h3>
+		<input type='text' name='user_name' value="$!global.getString('user.name.rule','^[a-zA-Z0-9]{4,16}$')"/>
+		<g>$lang.get('user.name.rule.hint')</g></label></div>
+		
+	<div><label><h3>$lang.get('user.passwd.rule'):</h3>
+		<input type='text' name='user_passwd' value="$!global.getString('user.passwd.rule','^[a-zA-Z0-9]{6,16}$')"/>
+		<g>$lang.get('user.passwd.rule.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('user.captcha'):</h3>
+		<input type='checkbox' name='user_captcha' #if($global.getInt('user.captcha',0) == 1) checked #end/>
+		<g>$lang.get('user.captcha.hint')</g></label></div>
+	<div><label><h3>$lang.get('user.token'):</h3>
+		<input type='checkbox' name='user_token' #if($global.getInt('user.token',0) == 1) checked #end/>
+		<g>$lang.get('user.token.hint')</g></label></div>
+	<div><label><h3>$lang.get('session.alive'):</h3>
+		<input type='number' name='session_alive' value="$global.getLong('session.alive',168)"/>
+		<g>$lang.get('session.alive.hint')</g></label></div>
+
+	<div><label><h3>$lang.get('user.system'):</h3>
+		<select name='user_system'>
+			<option value='open' #if($user_system == 'open') selected #end>$lang.get('user.system.open')</option>
+			<option value='close' #if($user_system == 'close') selected #end>$lang.get('user.system.close')</option>
+		</select>
+		<g>$lang.get('user.system.hint')</g>
+	</label></div>
+		
+	<div style="margin-left: 20px;"><label><h3>$lang.get('user.role'):</h3>
+		<select name='user_role'>
+			#foreach($r in $roles)
+			<option value='$r.name' #if($user_role == "$r.name") selected #end>$r.name</option>
+			#end
+		</select>
+		<g>$lang.get('user.role.hint')</g>
+	</label></div>		
+		
+	<div><label><g>$lang.get('base.setting.notes')</g></label></div>
+	<hr/>
+	<div><label><h3>node:</h3><i>$!conf.getString('node.id','')</i></label></div>
+	<div><label><h3>cache.url:</h3><i>$!cache_url</i><g>$lang.get('cache.url.hint')</g></label></div>
+	<div><label><h3>mongo[default].url:</h3><i>$!mongo_url</i><g>$lang.get('mongo[default].url.hint')</g></label></div>
+	<div><label><h3>mongo[default].db:</h3><i>$!mongo_db</i><g>$lang.get('mongo[default].db.hint')</g></label></div>
+	<div><label><h3>db[default].url:</h3><i>$!db_url</i><g>$lang.get('db[default].url.hint')</g></label></div>
+	<div><label><h3>db.primary:</h3><i>$!db_primary</i></label></div>
+
+	<div><label><g>$lang.get('partial.lang.notes')</g></label></div>
+	<hr/>
+	<div><label><h3>browser.title:</h3><i>$lang.get('browser.title')</i></label></div>
+	<div><label><h3>site.title:</h3><i>$lang.get('site.title')</i></label></div>
+	<div><label><h3>site.logo:</h3><i>$lang.get('site.logo')</i></label></div>
+	

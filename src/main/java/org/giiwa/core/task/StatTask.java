@@ -2,7 +2,6 @@ package org.giiwa.core.task;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,6 +10,12 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.Stat;
 import org.giiwa.framework.bean.Stat.SIZE;
 
+/**
+ * the task which using to stat
+ * 
+ * @author joe
+ *
+ */
 public abstract class StatTask extends Task {
 
 	/**
@@ -29,6 +34,12 @@ public abstract class StatTask extends Task {
 			return new long[] { Stat.tohour() - X.AHOUR, Stat.tohour() };
 		} else if (Stat.SIZE.min.equals(s)) {
 			return new long[] { Stat.tomin() - X.AMINUTE, Stat.tomin() };
+		} else if (Stat.SIZE.m10.equals(s)) {
+			return new long[] { Stat.tom10() - 10 * X.AMINUTE, Stat.tom10() };
+		} else if (Stat.SIZE.m15.equals(s)) {
+			return new long[] { Stat.tom15() - 15 * X.AMINUTE, Stat.tom15() };
+		} else if (Stat.SIZE.m30.equals(s)) {
+			return new long[] { Stat.tom30() - 30 * X.AMINUTE, Stat.tom30() };
 		} else if (Stat.SIZE.month.equals(s)) {
 			return new long[] { Stat.tomonth() - X.AMONTH, Stat.tomonth() };
 		} else if (Stat.SIZE.season.equals(s)) {
@@ -48,6 +59,12 @@ public abstract class StatTask extends Task {
 			return new long[] { Stat.tohour(), System.currentTimeMillis() };
 		} else if (Stat.SIZE.min.equals(s)) {
 			return new long[] { Stat.tomin(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.m10.equals(s)) {
+			return new long[] { Stat.tom10(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.m15.equals(s)) {
+			return new long[] { Stat.tom15(), System.currentTimeMillis() };
+		} else if (Stat.SIZE.m30.equals(s)) {
+			return new long[] { Stat.tom30(), System.currentTimeMillis() };
 		} else if (Stat.SIZE.month.equals(s)) {
 			return new long[] { Stat.tomonth(), System.currentTimeMillis() };
 		} else if (Stat.SIZE.season.equals(s)) {
@@ -61,13 +78,12 @@ public abstract class StatTask extends Task {
 	}
 
 	@Override
-	public void onExecute() {
+	public final void onExecute() {
 
 		String name = this.getName();
 		long last = Global.getLong("last.stat." + name, 0);
-		if (System.currentTimeMillis() - last >= X.AMINUTE * 10) {
-			Lock door = Global.getLock("door." + name);
-			if (door.tryLock()) {
+		if (System.currentTimeMillis() - last >= X.AMINUTE) {
+			if (this.tryLock()) {
 				try {
 					Global.setConfig("last.stat." + name, System.currentTimeMillis());
 
@@ -78,17 +94,19 @@ public abstract class StatTask extends Task {
 						Stat.SIZE[] ss = this.getSizes();
 						for (Stat.SIZE s : ss) {
 							long[] time = time(s);
-							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time));
+							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
+									+ ", cat=" + o);
 							onStat(s, time[0], time[1], o);
 
 							time = time1(s);
-							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time));
+							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
+									+ ", cat=" + o);
 							onStat(s, time[0], time[1], o);
 						}
 					}
 
 				} finally {
-					door.unlock();
+					this.unlock();
 				}
 			}
 		}

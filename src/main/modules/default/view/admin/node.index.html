@@ -1,0 +1,129 @@
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/node?__node=$!__node' class='selected'>$lang.get('a.node.list')</a>
+	<a href='/admin/node/usage?__node=$!__node'>$lang.get('a.node.usage')</a>
+	<a href='/admin/node/globaltask?__node=$!__node'>$lang.get('a.node.globaltask')</a>
+	<a href='/admin/node/threads?__node=$!__node'>$lang.get('a.node.threads')</a>
+	<a href='/admin/node/running?__node=$!__node'>$lang.get('a.node.running')</a>
+	<a href='/admin/node/pending?__node=$!__node'>$lang.get('a.node.pending')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/node?__node=$!__node' method='get' #if($s>0) style='display:none' #end >
+		<span><label><h3>$lang.get('node.label'):</h3><input type='text' name='name' value="$!name" /></label></span>
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+	
+	<div class='s1tab #if($s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table id='node-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('node.label')</th>
+			<th>$lang.get('node.url')</th>
+			<th>$lang.get('node.cores')</th>
+			<th>$lang.get('node.usage')</th>
+			<th>$lang.get('node.mem')</th>
+			<th>$lang.get('node.os')</th>
+			<th>$lang.get('node.giiwa')</th>
+			<th>$lang.get('node.tasks.global')</th>
+			<th>$lang.get('node.tasks.local.threads')</th>
+			<th>$lang.get('node.tasks.local.running')</th>
+			<th>$lang.get('node.tasks.local.pending')</th>
+			<th>$lang.get('node.state')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr #if($lang.pastms($f.updated) < 3000) class="blink" #end>
+		<td class="a">
+			$!f.label
+			<a class="hint hint--bottom" data-hint="Go" href="/admin?__node=$!f.id" target="_blank"><i class='icon-sphere'></i></a>
+			<a class="hint hint--bottom" data-hint="Edit" href="javascript:;" onclick="_showlabel('$f.id', '$!f.label')"><i class='icon-pencil'></i></a>
+		</td>
+		<td>$!f.url</td>
+		<td>$!f.cores</td>
+		<td>$!f.usage</td>
+		<td>$!lang.size($!f.mem)</td>
+		<td>$!f.os</td>
+		<td>$!f.giiwa</td>
+		<td>$!f.globaltasks</td>
+		<td>$!f.localthreads</td>
+		<td>$!f.localrunning</td>
+		<td>$!f.localpending</td>
+		<td>
+			#if($f.state == 1)
+			<i class='icon-radio-checked' style="color: green"></i>
+			#else
+			<i class='icon-radio-checked' style="color: red"></i>
+			#end
+		</td>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.stat')" href="javascript:;" onclick="giiwa.popup('/admin/node/stat?id=$f.id')"><i class="icon-stats-dots"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.poweron')" href="javascript:;" onclick="_power('$f.id', 1)"><i class="icon-play3"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.poweroff')" href="javascript:;" onclick="_power('$f.id', 0)"><i class="icon-stop2"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f.id')"><i class="icon-cancel-circle"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+#parse('/widget/goto.page.html')
+
+<div id='_label' class="form" style="display: none">
+	<input type="hidden" name="id" value=""/>
+	<div>
+		<label><h3>$lang.get('node.label'):</h3>
+			<input type='text' name='label' value=""/></label>
+	</div>
+	<div class='btns' style="text-align: center;margin-bottom:0">
+		<button onclick='_oklabel();'>$lang.get('btn.ok')</button>
+	</div>
+</div>
+
+<script>
+
+function _showlabel(id, old){
+	giiwa.dialog($('#_label'), {
+		width: 280, 
+		height:100, 
+		moveable: true,
+		prepare: function(p){
+			p.find("input[name=id]").val(id);
+			p.find("input[name=label]").val(old);
+		}
+	});
+}
+function _oklabel(){
+	
+	giiwa.processing.show();
+	var id = giiwa.dialog().panel.find('input[name=id]').val();
+	var label = giiwa.dialog().panel.find('input[name=label]').val();
+	
+	$.post('/admin/node/update?__node=$!__node', {id:id, label:label}, function(d){
+		giiwa.processing.hide();
+		giiwa.reload();
+	})
+}
+
+function _delete(id) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post('/admin/node/delete?__node=$!__node', {id: id}, function(d){
+			giiwa.reload();
+		})
+	}
+}
+
+function _power(id, p) {
+	$.post('/admin/node/power?__node=$!__node', {id: id, power:p}, function(d){
+		giiwa.reload();
+	})
+}
+
+</script>

@@ -36,18 +36,18 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface Table {
 
-  /**
-   * the table name.
-   *
-   * @return the table name
-   */
-  String name() default X.EMPTY;
+	/**
+	 * the table name.
+	 *
+	 * @return the table name
+	 */
+	String name() default X.EMPTY;
 
-  /**
-   * specify the dbname
-   * 
-   * @return the db name
-   */
-  String db() default Helper.DEFAULT;
+	/**
+	 * specify the dbname
+	 * 
+	 * @return the db name
+	 */
+	String db() default Helper.DEFAULT;
 
 }

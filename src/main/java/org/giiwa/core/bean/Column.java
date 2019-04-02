@@ -20,7 +20,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * the {@code Field} Class used to annotate the Bean, define the
+ * the {@code Column} Class used to annotate the Bean, define the
  * collection/table mapping with the Bean
  * 
  * 
@@ -39,11 +39,25 @@ public @interface Column {
 	String name() default X.EMPTY;
 
 	/**
+	 * the length of the column
+	 * 
+	 * @return
+	 */
+	int length() default -1;
+
+	/**
 	 * is Index field.
 	 *
 	 * @return true, if successful
 	 */
 	boolean index() default false;
+
+	/**
+	 * full text index, the number is the weight
+	 * 
+	 * @return
+	 */
+	int text() default 0;
 
 	/**
 	 * is Unique column.

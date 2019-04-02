@@ -20,9 +20,11 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
+import org.giiwa.mq.MQ;
 
 /**
  * web api: /admin/node <br>
@@ -50,6 +52,29 @@ public class node extends Model {
 
 	}
 
+	@Path(path = "power", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	public void power() {
+
+		JSON jo = new JSON();
+
+		String id = this.getString("id");
+		int power = this.getInt("power");
+
+		try {
+
+			Global.setConfig("node." + id, power);
+
+			MQ.topic("giiwa.state",
+					org.giiwa.mq.MQ.Request.create().put(JSON.create().append("node", id).append("power", power)));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		jo.put(X.STATE, 200);
+
+		this.response(jo);
+
+	}
+
 	@Path(path = "update", login = true, access = "access.config.admin")
 	public void update() {
 
@@ -58,6 +83,19 @@ public class node extends Model {
 		Node.dao.update(id, V.create("label", label));
 
 		this.response(JSON.create().append(X.STATE, 200));
+
+	}
+
+	@Path(path = "stat", login = true, access = "access.config.admin")
+	public void stat() {
+
+		String id = this.getString("id");
+
+		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("time", System.currentTimeMillis() - X.ADAY, W.OP.gte).sort("time", 1), 0, 24 * 60);
+
+		this.set("list", bs);
+		this.show("/admin/node.stat.html");
 
 	}
 
@@ -81,7 +119,8 @@ public class node extends Model {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("name", 1);
+		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
+				1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
@@ -103,6 +142,147 @@ public class node extends Model {
 
 		this.query.path("/admin/node");
 		this.show("/admin/node.index.html");
+	}
+
+	@Path(login = true, path = "usage", access = "access.config.admin")
+	public void usage() {
+
+		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
+				1);
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", 10);
+
+		String name = this.getString("name");
+		if (!X.isEmpty(name)) {
+			W q1 = W.create();
+			q1.or("label", name, W.OP.like);
+			q1.or("ip", name, W.OP.like);
+			q1.or("id", name, W.OP.like);
+			q.and(q1);
+			this.set("name", name);
+		}
+
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/node/usage");
+		this.show("/admin/node.usage.html");
+	}
+
+	@Path(login = true, path = "globaltask", access = "access.config.admin")
+	public void globaltask() {
+
+		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
+				1);
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", 10);
+
+		String name = this.getString("name");
+		if (!X.isEmpty(name)) {
+			W q1 = W.create();
+			q1.or("label", name, W.OP.like);
+			q1.or("ip", name, W.OP.like);
+			q1.or("id", name, W.OP.like);
+			q.and(q1);
+			this.set("name", name);
+		}
+
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/node/globaltask");
+		this.show("/admin/node.globaltask.html");
+	}
+
+	@Path(login = true, path = "threads", access = "access.config.admin")
+	public void threads() {
+
+		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
+				1);
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", 10);
+
+		String name = this.getString("name");
+		if (!X.isEmpty(name)) {
+			W q1 = W.create();
+			q1.or("label", name, W.OP.like);
+			q1.or("ip", name, W.OP.like);
+			q1.or("id", name, W.OP.like);
+			q.and(q1);
+			this.set("name", name);
+		}
+
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/node/threads");
+		this.show("/admin/node.threads.html");
+	}
+	
+	
+	@Path(login = true, path = "running", access = "access.config.admin")
+	public void running() {
+
+		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
+				1);
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", 10);
+
+		String name = this.getString("name");
+		if (!X.isEmpty(name)) {
+			W q1 = W.create();
+			q1.or("label", name, W.OP.like);
+			q1.or("ip", name, W.OP.like);
+			q1.or("id", name, W.OP.like);
+			q.and(q1);
+			this.set("name", name);
+		}
+
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/node/running");
+		this.show("/admin/node.running.html");
+	}
+
+	@Path(login = true, path = "pending", access = "access.config.admin")
+	public void pending() {
+
+		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
+				1);
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", 10);
+
+		String name = this.getString("name");
+		if (!X.isEmpty(name)) {
+			W q1 = W.create();
+			q1.or("label", name, W.OP.like);
+			q1.or("ip", name, W.OP.like);
+			q1.or("id", name, W.OP.like);
+			q.and(q1);
+			this.set("name", name);
+		}
+
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/node/pending");
+		this.show("/admin/node.pending.html");
 	}
 
 }

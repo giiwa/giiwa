@@ -20,11 +20,9 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.core.dfile.FileClient;
-import org.giiwa.core.dfile.command.NOTIFY;
+import org.giiwa.core.task.SysTask;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
-import org.giiwa.mq.impl.*;
 
 /**
  * the distribute message system, <br>
@@ -71,6 +69,12 @@ public abstract class MQ {
 				mq = KafkaMQ.create();
 			} else {
 				mq = LocalMQ.create();
+			}
+
+			try {
+				new Notify().bind(Mode.TOPIC);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 		return mq != null;
@@ -147,7 +151,7 @@ public abstract class MQ {
 
 	protected abstract void _unbind(IStub stub) throws Exception;
 
-	static class Caller extends Task {
+	static class Caller extends SysTask {
 
 		/**
 		 * 
@@ -157,6 +161,11 @@ public abstract class MQ {
 		String name;
 		IStub cb;
 		List<Request> queue;
+
+		@Override
+		public String toString() {
+			return "Caller [name=" + name + ", cb=" + cb + "]";
+		}
 
 		static Task call(String name, IStub cb, List<Request> l1) {
 			Caller c = new Caller();
@@ -202,12 +211,8 @@ public abstract class MQ {
 	 * 
 	 * @param to
 	 *            the destination topic
-	 * @param message
+	 * @param req
 	 *            the message
-	 * @param from
-	 *            the source queue
-	 * @param type
-	 *            the message type
 	 * @return the sequence of the message
 	 * @throws Exception
 	 *             the Exception
@@ -269,6 +274,11 @@ public abstract class MQ {
 		public int ttl = (int) X.AMINUTE;
 		public int persistent = DeliveryMode.NON_PERSISTENT;
 		public byte[] data;
+
+		@Override
+		public String toString() {
+			return "Request [seq=" + seq + "]";
+		}
 
 		public DataInputStream getInput() {
 			return new DataInputStream(new ByteArrayInputStream(data));
@@ -360,6 +370,11 @@ public abstract class MQ {
 		int state;
 		String error;
 
+		@Override
+		public String toString() {
+			return "Response [seq=" + seq + "]";
+		}
+
 		public void copy(Request r) {
 			seq = r.seq;
 			type = r.type;
@@ -371,18 +386,18 @@ public abstract class MQ {
 
 	public static void notify(String name, Serializable data) {
 		try {
-			FileClient.notify(name, data);
+			MQ.topic(Notify.name, Request.create().from(name).put(data));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 	}
 
 	public static <T> T wait(String name, long timeout) {
-		return NOTIFY.wait(name, timeout, null);
+		return Notify.wait(name, timeout, null);
 	}
 
 	public static <T> T wait(String name, long timeout, Runnable prepare) {
-		return NOTIFY.wait(name, timeout, prepare);
+		return Notify.wait(name, timeout, prepare);
 	}
 
 	public static <T> Result<T> create(String name) throws Exception {

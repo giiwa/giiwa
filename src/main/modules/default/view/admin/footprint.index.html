@@ -1,0 +1,83 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/footprint' class='selected'>$lang.get('a.footprint.list')</a>
+</div>
+
+<style>
+td.log_level_0 {
+	color: #61CA0F!important;
+}
+td.log_level_1 {
+	color: #CA9D0F!important;
+}
+td.log_level_2 {
+	color: #CF1010!important;
+}
+</style>
+<div class='search'>
+	<form action='/admin/footprint' method='get' #if($s>0) style='display:none' #end > 
+		<span><label><h3>$lang.get('footprint.table'):</h3>
+			<input type='text' name='table' value='$!table'  style="width: 80px;"/>
+		</label></span> 
+		<span><label><h3>$lang.get('footprint.dataid'):</h3>
+			<input type='text' name='dataid' value='$!dataid'  style="width: 80px;"/>
+		</label></span> 
+		<span><label><h3>$lang.get('footprint.field'):</h3>
+			<input type='text' name='field' value='$!field'  style="width: 80px;"/>
+		</label></span> 
+
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+
+	<div class='s1tab #if($s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('footprint.table')</th>
+			<th>$lang.get('footprint.dataid')</th>
+			<th>$lang.get('footprint.field')</th>
+			<th style="width: 50%;">$lang.get('footprint.data')</th>
+			<th>$lang.get('footprint.who')</th>
+			<th>$lang.get('footprint.created')</th>
+		</tr>
+	</thead>
+	<tbody>
+		#foreach($f in $list)
+		<tr>
+			<td>$!f.table</td>
+			<td>$!f.dataid</td>
+			<td>$!f.field</td>
+			<td>$!f.data</td>
+			<td>$!{f.uid_obj.nickname}($!f.uid_obj.name)</td>
+			<td>$lang.format($f.created, 'yyyy-MM-dd HH:mm:ss')</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+
+#parse('/widget/goto.page.html')
+
+#if($me.hasAccess('access.config.admin'))
+<div>
+	<a class='btn btn-danger' href='javascript:;' onclick='_deleteall();'>$lang.get('a.clean')</a>
+</div>
+#end
+
+<script>
+function _deleteall() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post('/admin/footprint/deleteall', {}, function(d) {
+			giiwa.processing.hide();
+			giiwa.reload();
+		});
+	}
+}
+</script>

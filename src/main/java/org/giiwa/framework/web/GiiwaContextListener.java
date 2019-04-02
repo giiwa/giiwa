@@ -89,13 +89,15 @@ public class GiiwaContextListener implements ServletContextListener {
 			System.setProperty("home", Model.GIIWA_HOME);
 
 			// TODO, remove it later, the old driver will cause can not startup
-			File f = new File(Model.GIIWA_HOME + "/giiwa/WEB-INF/lib/mongo-java-driver-2.10.0.jar");
-			if (f.exists()) {
-				f.delete();
-				System.out.println("Deleteing mongo-java-driver-2.10.0.jar, it will cause startup failed.");
-				System.out.println("Restart the giiwa.");
-				System.exit(0);
-			}
+			// File f = new File(Model.GIIWA_HOME +
+			// "/giiwa/WEB-INF/lib/mongo-java-driver-2.10.0.jar");
+			// if (f.exists()) {
+			// f.delete();
+			// System.out.println("Deleteing mongo-java-driver-2.10.0.jar, it will cause
+			// startup failed.");
+			// System.out.println("Restart the giiwa.");
+			// System.exit(0);
+			// }
 
 			/**
 			 * initialize the configuration
@@ -108,14 +110,14 @@ public class GiiwaContextListener implements ServletContextListener {
 			conf.setProperty("home", Model.GIIWA_HOME);
 
 			/**
-			 * initialize the cache
-			 */
-			Cache.init(conf.getString("cache.url", X.EMPTY), conf.getString("site.group", "demo"));
-
-			/**
 			 * initialize the helper, including RDB and Mongo
 			 */
 			Helper.init(conf);
+
+			/**
+			 * initialize the cache
+			 */
+			Cache.init(conf.getString("cache.url", X.EMPTY));
 
 			Task.init(conf.getInt("thread.number", 20));
 

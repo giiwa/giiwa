@@ -42,7 +42,8 @@ public class captcha extends Model {
 		Temp t = Temp.create("code.jpg");
 		try {
 
-			Captcha.create(this.sid(), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60, t.getFile(), 4);
+			Captcha.create(this.sid(), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
+					t.getFile().getOutputStream(), 4);
 
 			jo.put(X.STATE, 200);
 			jo.put("sid", sid());

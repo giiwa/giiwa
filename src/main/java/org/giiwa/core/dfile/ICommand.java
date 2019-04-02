@@ -2,8 +2,6 @@ package org.giiwa.core.dfile;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.nio.IResponseHandler;
-import org.giiwa.core.nio.Request;
 
 public interface ICommand {
 

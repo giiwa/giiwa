@@ -21,7 +21,7 @@ public class net extends portlet {
 		this.set("node", Local.id());
 		this.set("name", name);
 
-		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create("node", Local.id()).and("name", name).sort("created", -1),
+		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create("node", Local.id()).and("name", name).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1),
 				0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -39,7 +39,7 @@ public class net extends portlet {
 		this.set("node", Local.id());
 		this.set("name", name);
 
-		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create("node", Local.id()).and("name", name).sort("created", -1),
+		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create("node", Local.id()).and("name", name).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1),
 				0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);

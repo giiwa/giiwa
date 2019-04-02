@@ -321,15 +321,16 @@ public class RDB {
 	private static String _getDiver(String url) {
 		if (url.startsWith("jdbc:hsqldb:")) {
 			return "org.hsqldb.jdbc.JDBCDriver";
+		} else if (url.startsWith("jdbc:h2:")) {
+			return "org.h2.Driver";
 		} else if (url.startsWith("jdbc:derby:")) {
-			return "org.apache.derby.jdbc.ClientDriver";
+			return "org.apache.derby.jdbc.EmbeddedDriver";
 		} else if (url.startsWith("jdbc:firebirdsql:")) {
 			return "org.firebirdsql.jdbc.FBDriver";
 		} else if (url.startsWith("jdbc:sqlite:")) {
 			return "org.sqlite.JDBC";
-		} else if (url.startsWith("jdbc:h2:")) {
-			return "org.giiwa.h2.jdbc.H2Driver";
-
+			// } else if (url.startsWith("jdbc:h2:")) {
+			// return "org.giiwa.h2.jdbc.H2Driver";
 		} else if (url.startsWith("jdbc:mongodb:")) {
 			return "com.dbschema.MongoJdbcDriver";
 

@@ -30,7 +30,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
-import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 
 /**
@@ -106,11 +105,6 @@ public class CleanupTask extends Task {
 			}
 
 			/**
-			 * clean files in Temp
-			 */
-			Temp.cleanup(X.ADAY);
-
-			/**
 			 * clean up repo
 			 */
 			Repo.cleanup(X.ADAY);
@@ -129,14 +123,14 @@ public class CleanupTask extends Task {
 
 			log.debug("cleanup, beans=" + beans);
 
-			for (Class<? extends Bean> c : beans) {
-				try {
-					Bean b = c.newInstance();
-					b.cleanup();
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			}
+			// for (Class<? extends Bean> c : beans) {
+			// try {
+			// Bean b = c.newInstance();
+			// b.cleanup();
+			// } catch (Exception e) {
+			// log.error(e.getMessage(), e);
+			// }
+			// }
 
 		} catch (Exception e) {
 			// eat the exception
@@ -218,6 +212,7 @@ public class CleanupTask extends Task {
 	 *            the packname
 	 */
 	public static void add(String packname) {
+
 		List<Class<Bean>> l1 = ClassUtil.listSubType(packname, Bean.class);
 		if (l1 != null) {
 			for (Class<Bean> t : l1) {

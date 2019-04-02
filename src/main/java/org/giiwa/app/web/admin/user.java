@@ -30,7 +30,7 @@ import org.giiwa.core.noti.Email;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
-import org.giiwa.framework.web.view.VelocityView;
+import org.giiwa.framework.web.view.View;
 
 /**
  * web api: /admin/user <br>
@@ -114,7 +114,7 @@ public class user extends Model {
 										j1.put("global", Global.getInstance());
 										j1.put("local", Local.getInstance());
 
-										VelocityView v1 = new VelocityView();
+										View v1 = View.getVelocity();
 										String body = v1.parse(f, j1);
 										if (body != null) {
 											Email.send(lang.get("mail.creation.noti"), body, email);
@@ -345,7 +345,7 @@ public class user extends Model {
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
-		Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt), s, n);
+		Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt).sort("name", 1), s, n);
 		bs.count();
 		this.set(bs, s, n);
 

@@ -2,9 +2,10 @@ apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'org.giiwa'
-version = '1.4'
+version = '1.6'
+def buildno = new Date().format("ddHHmmss")
 
-description = """giiwa"""
+description = 'giiwa distributed web framework'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -12,39 +13,118 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
-
+println description
+println 'buildno: ' + buildno
 
 repositories {
-        
-     maven { url "http://repo.maven.apache.org/maven2" }
+     maven { url "http://central.maven.org/maven2" }
 }
+
 dependencies {
+    compile group: 'com.jcraft', name: 'jsch', version:'0.1.55'
+    compile group: 'commons-net', name: 'commons-net', version:'3.6'
+    compile group: 'org.apache.mina', name: 'mina-core', version:'2.0.19'
+    compile group: 'org.fusesource', name: 'sigar', version:'1.6.4'
+    compile group: 'org.ostermiller', name: 'utils', version:'1.07.00'
+    compile group: 'com.google.guava', name: 'guava', version:'25.1-jre'
     compile group: 'redis.clients', name: 'jedis', version:'2.8.0'
     compile group: 'commons-configuration', name: 'commons-configuration', version:'1.6'
     compile group: 'commons-dbcp', name: 'commons-dbcp', version:'1.4'
-    compile group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5.2'
-    compile group: 'org.apache.httpcomponents', name: 'httpmime', version:'4.5.2'
-    compile group: 'org.apache.httpcomponents', name: 'httpcore', version:'4.4.6'
-    compile group: 'org.apache.activemq', name: 'activemq-client', version:'5.14.3'
-    compile group: 'com.rabbitmq', name: 'amqp-client', version:'4.0.2'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5.4'
+    compile group: 'org.apache.httpcomponents', name: 'httpmime', version:'4.5.4'
+    compile group: 'org.apache.httpcomponents', name: 'httpcore', version:'4.4.9'
+    compile group: 'org.apache.activemq', name: 'activemq-client', version:'5.15.9'
+    compile group: 'org.apache.kafka', name: 'kafka-clients', version:'0.10.2.1'
     compile group: 'log4j', name: 'log4j', version:'1.2.16'
-    compile group: 'org.apache.velocity', name: 'velocity', version:'1.7'
+    compile group: 'org.apache.velocity', name: 'velocity-engine-core', version:'2.0'
     compile group: 'org.thymeleaf', name: 'thymeleaf', version:'3.0.3.RELEASE'
-    compile group: 'org.hsqldb', name: 'hsqldb', version:'2.3.4'
+    compile group: 'com.h2database', name: 'h2', version:'1.4.197'
     compile group: 'org.freemarker', name: 'freemarker', version:'2.3.24-incubating'
     compile group: 'com.whalin', name: 'Memcached-Java-Client', version:'3.0.2'
     compile group: 'javax.servlet', name: 'servlet-api', version:'2.5'
     compile group: 'javax.mail', name: 'mail', version:'1.4'
-    compile group: 'commons-fileupload', name: 'commons-fileupload', version:'1.3.1'
+    compile group: 'commons-fileupload', name: 'commons-fileupload', version:'1.4'
     compile group: 'postgresql', name: 'postgresql', version:'9.0-801.jdbc4'
     compile group: 'mysql', name: 'mysql-connector-java', version:'5.1.40'
     compile group: 'com.google.zxing', name: 'core', version:'3.1.0'
     compile group: 'com.drewnoakes', name: 'metadata-extractor', version:'2.9.1'
     compile group: 'dom4j', name: 'dom4j', version:'1.6.1'
     compile group: 'org.jsoup', name: 'jsoup', version:'1.10.2'
-    compile group: 'org.mongodb', name: 'mongodb-driver', version:'3.3.0'
+    compile group: 'org.mongodb', name: 'mongo-java-driver', version:'3.4.2'
     compile group: 'com.google.code.gson', name: 'gson', version:'2.8.0'
+    compile group: 'com.jayway.jsonpath', name: 'json-path', version:'2.2.0'
     compile group: 'com.jayway.jsonpath', name: 'json-path', version:'2.2.0'
     compile group: 'org.apache.commons', name: 'commons-exec', version:'1.3'
     compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
+    compile group: 'org.bouncycastle', name: 'bcprov-jdk16', version:'1.46'
+    compile group: 'com.vladsch.flexmark', name: 'flexmark', version:'0.35.0'
 }
+
+task prepare(dependsOn: build) {
+	doLast {
+		copy{
+		    from('tomcat')
+		    into('build/giiwa')
+		}
+		copy{
+		    from('src/main/modules')
+		    into('build/giiwa/giiwa/modules')
+		}
+		
+		def xml1 = new BufferedReader(new FileReader(new File('src/main/modules/default/module.xml')))
+		def xml2 = new PrintStream(new File('build/giiwa/giiwa/modules/default/module.xml'))
+		def line = xml1.readLine()
+		while( line != null ){
+			if( line.indexOf('>0<')>-1 ){
+				line = line.replace('>0<', '>' + buildno + '<')
+			}
+			xml2.println(line)
+			line = xml1.readLine();
+		}
+		xml1.close();
+		xml2.close();
+		
+		copy{
+		    from('src/main/WEB-INF')
+		    into('build/giiwa/giiwa/WEB-INF')
+		}
+		copy{
+		    from configurations.runtime
+		    into('build/giiwa/giiwa/WEB-INF/lib')
+		}
+		copy {
+		    from('build/libs')
+		    into('build/giiwa/giiwa/WEB-INF/lib')
+		}
+		copy {
+		    from('build/giiwa/giiwa/modules')
+		    into('build/upgrade/')
+		}
+		copy {
+		    from('build/giiwa/giiwa/WEB-INF/lib')
+		    into('build/upgrade/default/WEB-INF/lib')
+		}
+	}
+}
+
+task zip(type: Zip,dependsOn:prepare) {
+	from 'build/giiwa'
+	destinationDir file('build')
+	archiveName 'giiwa-1.6.zip'
+}
+
+task tar(type: Tar,dependsOn:prepare) {
+	from 'build/giiwa'
+	compression 'gzip'
+	destinationDir file('build')
+	archiveName 'giiwa-1.6.tgz'
+}
+
+task upgrade(type: Zip,dependsOn:prepare) {
+	from 'build/upgrade'
+	destinationDir file('build')
+	archiveName 'giiwa-1.6.' + buildno + '-upgrade.zip'
+}
+
+task release(dependsOn: [upgrade, zip, tar]);
+

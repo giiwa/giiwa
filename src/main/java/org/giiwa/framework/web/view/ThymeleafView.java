@@ -20,6 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.IContext;
@@ -77,6 +78,12 @@ public class ThymeleafView extends View {
 				return m.keySet();
 			}
 		};
+	}
+
+	@Override
+	public String parse(Object file, JSON params) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

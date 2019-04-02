@@ -15,6 +15,8 @@
 package org.giiwa.app.web.admin;
 
 import java.io.File;
+import java.io.FileInputStream;
+
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
@@ -43,7 +45,7 @@ public class logs extends Model {
 			if (f1.getCanonicalPath().startsWith(f0.getCanonicalPath())) {
 
 				Temp t = Temp.create(f + ".zip");
-				t.zipcopy(f1.getName(), f1);
+				t.zipcopy(f1.getName(), new FileInputStream(f1));
 
 				jo.put(X.STATE, 200);
 				jo.put("src", t.getUri());

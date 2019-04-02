@@ -4,22 +4,22 @@ import java.io.File;
 
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.dfile.ICommand;
-import org.giiwa.core.nio.IResponseHandler;
-import org.giiwa.core.nio.Request;
-import org.giiwa.core.nio.Response;
+import org.giiwa.core.dfile.IResponseHandler;
+import org.giiwa.core.dfile.Request;
+import org.giiwa.core.dfile.Response;
 
 public class DELETE implements ICommand {
 
 	@Override
 	public void process(Request in, IResponseHandler handler) {
 
-		String path = in.readString();
-		String filename = in.readString();
+		String path = in.readString().replaceAll("[/\\\\]", File.separator);
+		String filename = in.readString().replaceAll("[/\\\\]", File.separator);
 		long age = in.readLong();
 
-		File f = new File(path + "/" + filename);
+		File f = new File(path + File.separator + filename);
 
-		Response out = Response.create(in.seq);
+		Response out = Response.create(in.seq, Request.SMALL);
 
 		try {
 			IOUtil.delete(f, age);

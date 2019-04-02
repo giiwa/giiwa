@@ -126,6 +126,7 @@ public class app extends Model {
 		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
 
 		Beans<App> bs = App.dao.load(q, s, n);
+		bs.count();
 		this.set(bs, s, n);
 
 		this.query.path("/admin/app");

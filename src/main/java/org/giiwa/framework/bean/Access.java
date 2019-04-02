@@ -82,16 +82,18 @@ public class Access extends Bean {
 	 *            the name
 	 */
 	public static void set(String name) {
-		if (X.isEmpty(name) || !name.startsWith("access.")) {
-			log.error("error access.name: " + name, new Exception("error access name:" + name));
-		} else {
-			String[] ss = X.split(name, "[\\|｜]");
-			if (ss != null) {
-				for (String s : ss) {
-					if (!exists(s)) {
-						dao.insert(V.create(X.ID, s).append("memo",
-								X.toString(new Exception()).replaceAll(System.lineSeparator(), "<br/>")
-										.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")));
+		if (Helper.isConfigured()) {
+			if (X.isEmpty(name) || !name.startsWith("access.")) {
+				log.error("error access.name: " + name, new Exception("error access name:" + name));
+			} else {
+				String[] ss = X.split(name, "[\\|｜]");
+				if (ss != null) {
+					for (String s : ss) {
+						if (!exists(s)) {
+							dao.insert(V.create(X.ID, s).append("memo",
+									X.toString(new Exception()).replaceAll(System.lineSeparator(), "<br/>")
+											.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")));
+						}
 					}
 				}
 			}

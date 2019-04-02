@@ -158,7 +158,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			list = g.fromJson((String) jsons, List.class);
 		} else if (jsons instanceof InputStream) {
 			Gson g = new Gson();
-			JsonReader reader = new JsonReader(new StringReader((String) jsons));
+			JsonReader reader = new JsonReader(new InputStreamReader((InputStream) jsons));
 			list = g.fromJson(reader, List.class);
 		} else if (jsons instanceof Reader) {
 			Gson g = new Gson();

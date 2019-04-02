@@ -63,7 +63,8 @@ public final class Config {
 				prop.setProperty("log4j.rootLogger", "error, stdout");
 				prop.setProperty("log4j.appender.stdout", "org.apache.log4j.ConsoleAppender");
 				prop.setProperty("log4j.appender.stdout.layout", "org.apache.log4j.PatternLayout");
-				prop.setProperty("log4j.logger.org.giiwa", "info");
+				prop.setProperty("log4j.appender.stdout.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
+				prop.setProperty("log4j.logger.org.giiwa", "debug");
 
 				PropertyConfigurator.configure(prop);
 			}

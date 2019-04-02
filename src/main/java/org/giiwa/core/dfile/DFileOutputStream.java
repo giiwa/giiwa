@@ -3,7 +3,6 @@ package org.giiwa.core.dfile;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.giiwa.core.nio.Request;
 import org.giiwa.framework.bean.Disk;
 
 public class DFileOutputStream extends OutputStream {
@@ -13,7 +12,7 @@ public class DFileOutputStream extends OutputStream {
 	String filename;
 	Disk disk;
 
-	byte[] bb = new byte[Request.BUFFER_SIZE];
+	byte[] bb = new byte[Request.BIG];
 	int pos = 0;
 	long offset = 0;
 

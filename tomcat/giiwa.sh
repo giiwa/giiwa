@@ -14,6 +14,8 @@ running=True
 home=sys.path[0]
 app=home + "/bin/startup.sh"
 interval=1
+giiwapid = "/tmp/giiwa.pid"
+catalinapid = "/tmp/catalina.pid"
 
 def onkill(a,b):
 	global running
@@ -30,13 +32,14 @@ def _startx():
 		
 def _pidx():
 	try:
-		f = open('/tmp/catalina.pid', 'r');
+		f = open(catalinapid, 'r');
 		pid = f.readline().strip();
 		f.close()
 		os.popen("ps -p " + pid).readlines()[1]
 		return pid
 	except:
 		return -1
+	
 def _stopx():
 	pid=_pidx()
 	if pid>0:
@@ -47,9 +50,8 @@ def _start():
 
 	pid=os.fork()
 	if pid>0:
-		pidfile="/tmp/giiwa.pid"
 		try:
-			f=open(pidfile, "wb+")
+			f=open(giiwapid, "wb+")
 			print >>f, pid
 			f.close()
 			sys.exit(0)
@@ -73,7 +75,7 @@ def _start():
 def _stop():
 	global home
 	try:
-		f = open('/tmp/giiwa.pid', 'r');
+		f = open(giiwapid, 'r');
 		pid = f.readline().strip();
 		f.close()
 		os.popen("ps -p " + pid).readlines()[1]

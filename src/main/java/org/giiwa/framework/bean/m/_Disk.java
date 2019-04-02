@@ -58,15 +58,17 @@ public class _Disk extends Bean {
 		for (JSON jo : l1) {
 			// insert or update
 			String path = jo.getString("path");
-			if (X.isEmpty(path)) {
-				log.error(jo, new Exception("path missed"));
+			String name = jo.getString("name");
+			if (X.isEmpty(path) || X.isEmpty(name)) {
+				log.error(jo, new Exception("name or path missed"));
 				break;
 			}
 
 			String id = UID.id(node, path);
 			try {
 
-				V v = V.fromJSON(jo).append("node", node).remove("_id", X.ID);
+				name = name.replace("[\\\\]", "/");
+				V v = V.fromJSON(jo).append("node", node).force("name", name).remove("_id", X.ID);
 
 				// insert
 				dao.insert(v.copy().force(X.ID, id));

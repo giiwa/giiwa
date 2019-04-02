@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module" default="build" basedir=".">
+	<!-- Project Properties -->
+
+	<xmlproperty file="src/module.xml" />
+
+	<property name="DEPENDS" value="default" />
+	<tstamp>
+		<format property="TODAY" pattern="yyMMdd" locale="zh,CN" />
+		<format property="BUILDNO" pattern="yyMMddHHmm" locale="zh,CN" />
+	</tstamp>
+	<!-- Path Definitions -->
+	<path id="classpath">
+		<pathelement location="lib/servlet-api-2.3.jar" />
+		<fileset dir="depends">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="src/model">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="src/WEB-INF/lib">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	<target name="build" description="build sever all" depends="compile">
+		<delete file="target" />
+		<zip destfile="target/${module.name}_${module.version}_${BUILDNO}.zip" encoding="UTF-8">
+			<fileset dir="target/${module.name}">
+				<exclude name="**/classes/**" />
+				<exclude name="**/test/**" />
+				<exclude name="**/model/**" />
+			</fileset>
+		</zip>
+		<copy todir="../archives">
+			<fileset file="target/${module.name}_${module.version}_${BUILDNO}.zip" />
+		</copy>
+
+		<zip destfile="target/${module.name}_${module.version}_src.zip" encoding="UTF-8">
+			<fileset dir=".">
+				<exclude name="build/**" />
+				<exclude name="doc/**" />
+				<exclude name="html/**" />
+				<exclude name="target/**" />
+			</fileset>
+		</zip>
+
+	</target>
+	<target name="compile" description="compile Java source">
+		<delete dir="target" quiet="false" />
+		<mkdir dir="target/classes" />
+		<copy todir="target/${module.name}">
+			<fileset dir="src">
+				<exclude name="**/java/**" />
+			</fileset>
+		</copy>
+
+		<replaceregexp file="target/${module.name}/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
+
+		<javac srcdir="src/model/java" destdir="target/classes" debug="true" encoding="utf-8" target='1.8' source="1.8" includeantruntime="false">
+			<classpath refid="classpath" />
+		</javac>
+		<jar destfile="target/${module.name}/WEB-INF/lib/${module.name}-${module.version}.jar" basedir="target/classes" excludes="**/*Test.class" />
+	</target>
+	<target name="help" description="display the Help message">
+		<echo message="Quick Start web application" />
+		<echo message="===========================" />
+		<echo />
+		<echo message="Main targets:" />
+		<echo />
+		<echo message="deploy                 deploy the package to target tomcat" />
+		<echo message="build   	                webgiisoo module zip file" />
+		<echo message="compile               compile Java code" />
+		<echo message="update   	                update the depends according repository" />
+		<echo message="help                  display the Help message" />
+		<echo />
+		<echo />
+	</target>
+</project>

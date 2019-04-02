@@ -7,15 +7,16 @@ package org.giiwa.framework.bean;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Column;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Language;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
@@ -35,12 +36,10 @@ public class Stat extends Bean implements Comparable<Stat> {
 	*/
 	private static final long serialVersionUID = 1L;
 
-	public static final BeanDAO<Long, Stat> dao = BeanDAO.create(Stat.class);
-
 	private static Language lang = Language.getLanguage();
 
 	public static enum SIZE {
-		min, hour, day, week, month, season, year
+		min, m10, m15, m30, hour, day, week, month, season, year
 	};
 
 	public static enum TYPE {
@@ -56,12 +55,18 @@ public class Stat extends Bean implements Comparable<Stat> {
 	@Column(name = "date")
 	protected String date; // 日期
 
+	@Column(name = "time")
+	protected long time; // 时间
+
 	@Column(name = "size")
-	protected String size;
-	// min, hour, day, week,month, year
+	protected String size;// size of the stat data
 
 	public String getDate() {
 		return date;
+	}
+
+	private static String table(String module) {
+		return "gi_stat_" + (module.replaceAll("\\.delta", "").replaceAll("\\.snapshot", "").replaceAll("\\.", "_"));
 	}
 
 	public String getModule() {
@@ -77,11 +82,15 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 *            the date
 	 * @param size
 	 *            the size
+	 * @param q0
+	 *            the query
+	 * @param v
+	 *            the value
 	 * @param n
 	 *            the n
 	 * @return the int
 	 */
-	public static int insertOrUpdate(String module, String date, SIZE size, V v, long... n) {
+	public static int insertOrUpdate(String module, String date, SIZE size, W q0, V v, long... n) {
 		if (v == null) {
 			v = V.create();
 		} else {
@@ -91,18 +100,25 @@ public class Stat extends Bean implements Comparable<Stat> {
 		try {
 			W q = W.create().copy(v).and("date", date).and("size", size.toString()).and("module", module);
 
-			if (!dao.exists(q)) {
+			String table = table(module);
 
-				long id = UID.next("stat.id");
-				while (dao.exists(id)) {
-					id = UID.next("stat.id");
-				}
-				v.append("date", date).force(X.ID, id).append("size", size.toString()).append("module", module);
-				for (int i = 0; i < n.length; i++) {
-					v.set("n" + i, n[i]);
-				}
+			if (!Helper.exists(q, table, Helper.DEFAULT)) {
 
-				return dao.insert(v);
+				long id = UID.hash(module + "_" + date + "_" + size + "_" + q0.toString());
+				if (Helper.exists(W.create(X.ID, id), table, Helper.DEFAULT)) {
+					// update
+					for (int i = 0; i < n.length; i++) {
+						v.set("n" + i, n[i]);
+					}
+					Helper.update(table, W.create(X.ID, id), v, Helper.DEFAULT);
+				} else {
+					v.append("date", date).force(X.ID, id).append("size", size.toString()).append("module", module);
+					for (int i = 0; i < n.length; i++) {
+						v.set("n" + i, n[i]);
+					}
+
+					return Helper.insert(v, table, Helper.DEFAULT);
+				}
 
 			} else {
 				/**
@@ -111,7 +127,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 				for (int i = 0; i < n.length; i++) {
 					v.set("n" + i, n[i]);
 				}
-				return dao.update(q, v);
+				return Helper.update(table, q, v);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -145,6 +161,22 @@ public class Stat extends Bean implements Comparable<Stat> {
 			long t = lang.parse(date, "yyyy-MM-dd/HH");
 			t = Stat.tohour(t);
 			return new long[] { t, t + X.AHOUR };
+
+		} else if (SIZE.m10 == size) {
+			long t = lang.parse(date, "yyyy-MM-dd/HH");
+			t = Stat.tohour(t);
+			return new long[] { t, t + X.AHOUR };
+
+		} else if (SIZE.m15 == size) {
+			long t = lang.parse(date, "yyyy-MM-dd/HH");
+			t = Stat.tohour(t);
+			return new long[] { t, t + X.AHOUR };
+
+		} else if (SIZE.m30 == size) {
+			long t = lang.parse(date, "yyyy-MM-dd/HH");
+			t = Stat.tohour(t);
+			return new long[] { t, t + X.AHOUR };
+
 		} else if (SIZE.hour == size) {
 			long t = lang.parse(date, "yyyy-MM-dd");
 			t = Stat.today(t);
@@ -168,15 +200,17 @@ public class Stat extends Bean implements Comparable<Stat> {
 	public static void delta(long time, String name, SIZE size, W q, V v, long... n) {
 
 		String date = format(time, size);
+		String table = table(name);
 
-		Stat s1 = dao.load(q.and("module", name + "." + Stat.TYPE.snapshot).and("size", size.toString())
-				.and("date", date, W.OP.neq).sort("created", -1));
+		Stat s1 = Helper.load(table, q.and("module", name + "." + Stat.TYPE.snapshot).and("size", size.toString())
+				.and("time", time, W.OP.lt).sort("time", -1), Stat.class);
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] + s1.getLong("n" + i);
 		}
-		Stat.insertOrUpdate(name + "." + Stat.TYPE.snapshot, date, size, v, d);
-		Stat.insertOrUpdate(name + "." + Stat.TYPE.delta, date, size, v, n);
+		v.append("time", time);
+		Stat.insertOrUpdate(name + "." + Stat.TYPE.snapshot, date, size, q, v, d);
+		Stat.insertOrUpdate(name + "." + Stat.TYPE.delta, date, size, q, v, n);
 
 	}
 
@@ -191,6 +225,15 @@ public class Stat extends Bean implements Comparable<Stat> {
 	public static String format(long time, SIZE size) {
 
 		if (SIZE.min == size) {
+			return lang.format(time, "yyyy-MM-dd/HH:mm");
+		} else if (SIZE.m10 == size) {
+			time = time / X.AMINUTE / 10 * X.AMINUTE * 10;
+			return lang.format(time, "yyyy-MM-dd/HH:mm");
+		} else if (SIZE.m15 == size) {
+			time = time / X.AMINUTE / 15 * X.AMINUTE * 15;
+			return lang.format(time, "yyyy-MM-dd/HH:mm");
+		} else if (SIZE.m30 == size) {
+			time = time / X.AMINUTE / 30 * X.AMINUTE * 30;
 			return lang.format(time, "yyyy-MM-dd/HH:mm");
 		} else if (SIZE.hour == size) {
 			return lang.format(time, "yyyy-MM-dd/HH");
@@ -214,6 +257,12 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		if (SIZE.min == size) {
 			return time / X.AMINUTE * X.AMINUTE;
+		} else if (SIZE.m10 == size) {
+			return time / X.AMINUTE / 10 * X.AMINUTE * 10;
+		} else if (SIZE.m15 == size) {
+			return time / X.AMINUTE / 15 * X.AMINUTE * 15;
+		} else if (SIZE.m30 == size) {
+			return time / X.AMINUTE / 30 * X.AMINUTE * 30;
 		} else if (SIZE.hour == size) {
 			return time / X.AHOUR * X.AHOUR;
 		} else if (SIZE.day == size) {
@@ -233,22 +282,31 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 	/**
 	 * 
+	 * @param time
+	 *            the long of the timestamp
 	 * @param name
+	 *            the string of the module name
 	 * @param size
+	 *            the SIZE
 	 * @param n
+	 *            the data
 	 */
 	public static void snapshot(long time, String name, SIZE size, W q, V v, long... n) {
 
 		String date = format(time, size);
+		String table = table(name);
 
-		Stat s1 = dao.load(q.and("module", name + "." + TYPE.snapshot).and("size", size.toString())
-				.and("date", date, W.OP.neq).sort("created", -1));
+		Stat s1 = Helper.load(table, q.and("module", name + "." + TYPE.snapshot).and("size", size.toString())
+				.and("time", time, W.OP.lt).sort("time", -1), Stat.class);
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] - s1.getLong("n" + i);
 		}
-		Stat.insertOrUpdate(name + "." + Stat.TYPE.snapshot, date, size, v, n);
-		Stat.insertOrUpdate(name + "." + Stat.TYPE.delta, date, size, v, d);
+
+		v.append("time", time);
+
+		Stat.insertOrUpdate(name + "." + Stat.TYPE.snapshot, date, size, q, v, n);
+		Stat.insertOrUpdate(name + "." + Stat.TYPE.delta, date, size, q, v, d);
 
 	}
 
@@ -258,7 +316,22 @@ public class Stat extends Bean implements Comparable<Stat> {
 		}
 		q.and("module", name + "." + type).and("size", size.toString());
 
-		return dao.load(q, s, n);
+		String table = table(name);
+		Beans<Stat> l1 = Helper.load(table, q, s, n, Stat.class);
+		if (l1 != null && !l1.isEmpty()) {
+			Set<String> dates = new HashSet<String>();
+			for (int i = l1.size() - 1; i >= 0; i--) {
+				Stat s1 = l1.get(i);
+				String date = s1.getDate();
+				if (dates.contains(date)) {
+					l1.remove(i);
+				} else {
+					dates.add(date);
+				}
+			}
+		}
+
+		return l1;
 	}
 
 	public static Stat load(String name, TYPE type, SIZE size, W q) {
@@ -267,7 +340,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		}
 		q.and("module", name + "." + type).and("size", size.toString());
 
-		return dao.load(q);
+		return Helper.load(table(name), q, Stat.class);
 	}
 
 	public static long max(String field, String name, SIZE size, W q) {
@@ -275,7 +348,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object) dao.max(field, q));
+		return X.toLong((Object) Helper.max(q, field, table(name), Helper.DEFAULT));
 	}
 
 	public static long sum(String field, String name, SIZE size, W q) {
@@ -283,7 +356,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object) dao.sum(field, q));
+		return X.toLong((Object) Helper.sum(q, field, table(name), Helper.DEFAULT));
 	}
 
 	public static long avg(String field, String name, SIZE size, W q) {
@@ -291,7 +364,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object) dao.avg(field, q));
+		return X.toLong((Object) Helper.avg(q, field, table(name), Helper.DEFAULT));
 	}
 
 	public static long min(String field, String name, SIZE size, W q) {
@@ -299,13 +372,16 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
-		return X.toLong((Object) dao.min(field, q));
+		return X.toLong((Object) Helper.min(q, field, table(name), Helper.DEFAULT));
 	}
 
 	/**
 	 * the start time of today
 	 * 
-	 * @return
+	 * @param time
+	 *            the long of the timestamp
+	 * 
+	 * @return the truncated timestamp
 	 */
 	public static long today(long time) {
 		return lang.parse(lang.format(time, "yyyy-MM-dd"), "yyyy-MM-dd");
@@ -388,29 +464,40 @@ public class Stat extends Bean implements Comparable<Stat> {
 	public void cleanup() {
 		// min, hour, day, week,month, year
 
-		int days = Global.getInt("glog.keep.days", 7);
-
-		int n = dao.delete(W.create("size", "min").and("created", System.currentTimeMillis() - X.ADAY, W.OP.lt));
-		n += dao.delete(W.create("size", "hour").and("created", System.currentTimeMillis() - days * X.ADAY, W.OP.lt));
-		n += dao.delete(W.create("size", "day").and("created", System.currentTimeMillis() - days * X.AMONTH, W.OP.lt));
-		n += dao.delete(W.create("size", "month").and("created", System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
-		n += dao.delete(
-				W.create("size", "season").and("created", System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
-		n += dao.delete(W.create("size", "year").and("created", System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
-
-		if (n > 0) {
-			GLog.applog.info("dao", "cleanup", dao.tableName() + " cleanup=" + n, null, null);
-		}
+		// int days = Global.getInt("glog.keep.days", 7);
+		//
+		// int n = dao.delete(W.create("size", "min").and("created",
+		// System.currentTimeMillis() - X.AWEEK * 2, W.OP.lt));
+		// n += dao.delete(W.create("size", "hour").and("created",
+		// System.currentTimeMillis() - days * X.ADAY, W.OP.lt));
+		// n += dao.delete(W.create("size", "day").and("created",
+		// System.currentTimeMillis() - days * X.AMONTH, W.OP.lt));
+		// n += dao.delete(W.create("size", "month").and("created",
+		// System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
+		// n += dao.delete(
+		// W.create("size", "season").and("created", System.currentTimeMillis() - days *
+		// X.AYEAR, W.OP.lt));
+		// n += dao.delete(W.create("size", "year").and("created",
+		// System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
+		//
+		// if (n > 0) {
+		// GLog.applog.info("dao", "cleanup", dao.tableName() + " cleanup=" + n, null,
+		// null);
+		// }
 
 	}
 
-	public static List<Stat> merge(W q, String groupby, MergeFunc func) {
+	public static List<Stat> merge(String module, W q, String groupby, MergeFunc func) {
 		// load from stat, and group
+
+		String table = table(module);
+
 		List<Stat> l1 = new ArrayList<Stat>();
-		List<?> l2 = dao.distinct(groupby, q.copy().and(groupby, null, W.OP.neq).and(groupby, X.EMPTY, W.OP.neq));
+		List<?> l2 = Helper.distinct(groupby, q.copy().and(groupby, null, W.OP.neq).and(groupby, X.EMPTY, W.OP.neq),
+				table, Helper.DEFAULT);
 		if (l2 != null) {
 			for (Object o : l2) {
-				Beans<Stat> bs = Stat.dao.load(q.copy().and(groupby, o), 0, 10000);
+				Beans<Stat> bs = Helper.load(table, q.copy().and(groupby, o), 0, 10000, Stat.class);
 				if (!bs.isEmpty()) {
 					Stat s = bs.get(0);
 
@@ -438,14 +525,78 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public static void main(String[] args) {
-		long t = System.currentTimeMillis();
+		long t = System.currentTimeMillis() + X.AMINUTE * 30;
 
-		SIZE s1 = SIZE.day;
+		System.out.println(Stat.format(t, Stat.SIZE.min));
+		System.out.println(Stat.format(t, Stat.SIZE.m10));
+		System.out.println(Stat.format(t, Stat.SIZE.m15));
+		System.out.println(Stat.format(t, Stat.SIZE.m30));
+
+		SIZE s1 = SIZE.m10;
 		String s2 = Stat.format(t, s1);
 		long[] ss = Stat.time(s1, s2);
 
 		System.out.println(s2 + ", " + Stat.format(ss[0], s1) + ", " + Stat.format(ss[1], s1));
 
+	}
+
+	public static List<?> distinct(String module, String field, W q) {
+		String table = table(module);
+		return Helper.distinct(field, q, table, Helper.DEFAULT);
+	}
+
+	public static long tom15() {
+		return tom15(System.currentTimeMillis());
+	}
+
+	public static long tom15(long ms) {
+		long hour = tohour(ms);
+
+		ms = ms - hour;
+		if (ms > X.AMINUTE * 45) {
+			hour += X.AMINUTE * 45;
+		} else if (ms > X.AMINUTE * 30) {
+			hour += X.AMINUTE * 30;
+		} else if (ms > X.AMINUTE * 15) {
+			hour += X.AMINUTE * 15;
+		}
+		return hour;
+	}
+
+	public static long tom30() {
+		return tom30(System.currentTimeMillis());
+	}
+
+	public static long tom30(long ms) {
+		long hour = tohour(ms);
+
+		ms = ms - hour;
+		if (ms > X.AMINUTE * 30) {
+			hour += X.AMINUTE * 30;
+		}
+		return hour;
+	}
+
+	public static long tom10() {
+		return tom10(System.currentTimeMillis());
+	}
+
+	public static long tom10(long ms) {
+		long hour = tohour(ms);
+
+		ms = ms - hour;
+		if (ms > X.AMINUTE * 50) {
+			hour += X.AMINUTE * 50;
+		} else if (ms > X.AMINUTE * 40) {
+			hour += X.AMINUTE * 40;
+		} else if (ms > X.AMINUTE * 30) {
+			hour += X.AMINUTE * 30;
+		} else if (ms > X.AMINUTE * 20) {
+			hour += X.AMINUTE * 20;
+		} else if (ms > X.AMINUTE * 10) {
+			hour += X.AMINUTE * 10;
+		}
+		return hour;
 	}
 
 }

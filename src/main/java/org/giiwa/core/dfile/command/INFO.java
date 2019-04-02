@@ -3,28 +3,31 @@ package org.giiwa.core.dfile.command;
 import java.io.File;
 
 import org.giiwa.core.dfile.ICommand;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.nio.IResponseHandler;
-import org.giiwa.core.nio.Request;
-import org.giiwa.core.nio.Response;
+import org.giiwa.core.dfile.IResponseHandler;
+import org.giiwa.core.dfile.Request;
+import org.giiwa.core.dfile.Response;
 
 public class INFO implements ICommand {
 
 	@Override
 	public void process(Request in, IResponseHandler handler) {
-		String path = in.readString();
-		String filename = in.readString();
-		File f = new File(path + "/" + filename);
+		String path = in.readString().replaceAll("[/\\\\]", File.separator);
+		String filename = in.readString().replaceAll("[/\\\\]", File.separator);
+		File f = new File(path + File.separator + filename);
 
-		JSON jo = JSON.create();
-		jo.append("e", f.exists() ? 1 : 0);
-		jo.append("f", f.isFile() ? 1 : 0);
-		jo.append("l", f.length());
-		jo.append("u", f.lastModified());
+		// JSON jo = JSON.create();
+		// jo.append("e", f.exists() ? 1 : 0);
+		// jo.append("f", f.isFile() ? 1 : 0);
+		// jo.append("l", f.length());
+		// jo.append("u", f.lastModified());
 
-		Response out = Response.create(in.seq);
+		Response out = Response.create(in.seq, Request.SMALL);
+		out.writeInt(f.exists() ? 1 : 0);
+		out.writeInt(f.isFile() ? 1 : 0);
+		out.writeLong(f.length());
+		out.writeLong(f.lastModified());
 
-		out.writeString(jo.toString());
+		// out.writeString(jo.toString());
 		handler.send(out);
 
 	}

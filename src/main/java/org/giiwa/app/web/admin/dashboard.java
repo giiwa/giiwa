@@ -55,8 +55,7 @@ public class dashboard extends Model {
 		this.set("pid", X.split(name, "[@]")[0]);
 		this.set("uptime", Model.UPTIME);
 
-		if (login != null
-				&& login.hasAccess("access.config.admin")) {
+		if (login != null && login.hasAccess("access.config.admin")) {
 
 			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
 
@@ -68,6 +67,26 @@ public class dashboard extends Model {
 			this.redirect(HOME);
 		}
 
+	}
+
+	@Path(login = true, path = "info")
+	public void info() {
+
+		String name = ManagementFactory.getRuntimeMXBean().getName();
+		this.set("pid", X.split(name, "[@]")[0]);
+		this.set("uptime", Model.UPTIME);
+
+		if (login != null && login.hasAccess("access.config.admin")) {
+
+			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
+
+			this.show("/admin/dashboard.html");
+
+		} else if (X.isSame("/admin/dashboard", HOME)) {
+			this.show("/admin/dashboard.html");
+		} else {
+			this.redirect(HOME);
+		}
 	}
 
 	public static void add(String url) {

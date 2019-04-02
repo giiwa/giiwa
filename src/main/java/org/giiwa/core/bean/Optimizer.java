@@ -11,7 +11,7 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 
-public class Optimizer implements Helper.IOptimizer {
+class Optimizer implements Helper.IOptimizer {
 
 	private static Log log = LogFactory.getLog(Optimizer.class);
 
@@ -72,6 +72,8 @@ public class Optimizer implements Helper.IOptimizer {
 
 		List<Map<String, Object>> l1 = Helper.getIndexes(table, db);
 
+		GLog.applog.info("db", "get", "db.index, table=" + table + ", get.index.1=" + l1, null, null);
+
 		if (l1 != null && !l1.isEmpty()) {
 			for (Map<String, Object> d : l1) {
 				Map<String, Object> keys = (Map<String, Object>) d.get("key");
@@ -83,10 +85,15 @@ public class Optimizer implements Helper.IOptimizer {
 						sb.append(s).append(":").append(X.toInt(keys.get(s)));
 					}
 
+					// GLog.applog.info("db", "get", "db.index, table=" + table + ", get.index=" +
+					// sb.toString(), null,
+					// null);
+
 					log.debug("db.index, table=" + table + ", get.index=" + sb.toString());
 
 					String id = UID.id(db, table, sb.toString());
 					exists.add(id);
+
 				}
 			}
 		}

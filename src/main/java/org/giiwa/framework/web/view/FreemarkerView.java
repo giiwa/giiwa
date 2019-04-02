@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 import freemarker.template.Template;
@@ -59,7 +60,7 @@ public class FreemarkerView extends View {
 
 			Template t1 = cfg.getTemplate(View.getCanonicalPath(f).substring(Model.HOME.length()), "UTF-8");
 			t = T.create(t1, View.lastModified(f));
-			
+
 			if (Local.getInt("web.debug", 0) == 0) {
 				// not debug
 				cache.put(fullname, t);
@@ -83,5 +84,10 @@ public class FreemarkerView extends View {
 	private static Map<String, T> cache = new HashMap<String, T>();
 	private static freemarker.template.Configuration cfg = new freemarker.template.Configuration(
 			freemarker.template.Configuration.VERSION_2_3_24);
+	@Override
+	public String parse(Object file, JSON params) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

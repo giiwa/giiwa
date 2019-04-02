@@ -29,7 +29,6 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.noti.Email;
 import org.giiwa.framework.bean.App;
@@ -41,7 +40,7 @@ import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Path;
-import org.giiwa.framework.web.view.VelocityView;
+import org.giiwa.framework.web.view.View;
 
 /**
  * web api： /user <br>
@@ -120,7 +119,7 @@ public class user extends Model {
 
 			Captcha.Result r1 = Captcha.Result.ok;
 
-			if (Global.getInt("user.captcha", 1) == 1) {
+			if (Global.getInt("user.captcha", 0) == 1) {
 				String code = this.getString("code");
 				if (code != null) {
 					code = code.toLowerCase();
@@ -230,10 +229,13 @@ public class user extends Model {
 	public void info() {
 		if (this.getUser() != null) {
 			User u = User.dao.load(login.getId());
-			this.response(JSON.create().append(X.STATE, 200).append("data", u.getJSON()));
-		} else {
-			this.response(JSON.create().append(X.STATE, 401).append(X.MESSAGE, "login required"));
+			if (u != null) {
+				this.response(JSON.create().append(X.STATE, 200).append("data", u.getJSON()));
+				return;
+			}
 		}
+
+		this.response(JSON.create().append(X.STATE, 401).append(X.MESSAGE, "login required"));
 	}
 
 	@Path(login = true, path = "get")
@@ -262,8 +264,8 @@ public class user extends Model {
 	@Path(path = "login", log = Model.METHOD_POST)
 	public void login() {
 
-		if (new File(Model.GIIWA_HOME + "/admin.pwd").exists()) {
-			this.set(X.MESSAGE, lang.get("admin.pwd"));
+		if (new File(Model.GIIWA_HOME + "/root.pwd").exists()) {
+			this.set(X.MESSAGE, lang.get("root.pwd"));
 		}
 
 		if (method.isPost()) {
@@ -506,11 +508,16 @@ public class user extends Model {
 		 */
 		if (isAjax() || method.isPost()) {
 			JSON jo = JSON.create();
-			jo.put(X.STATE, HttpServletResponse.SC_OK);
+			jo.put(X.STATE, 200);
 			jo.put(X.MESSAGE, "ok");
+			jo.put("path", "/");
+			// this.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
+			this.setHeader("Location", "/");
 			this.response(jo);
+			return;
 		} else {
 			this.redirect("/");
+			return;
 		}
 
 	}
@@ -672,7 +679,7 @@ public class user extends Model {
 								j1.put("account", sb.toString());
 								j1.put("code", code);
 
-								VelocityView v1 = new VelocityView();
+								View v1 = View.getVelocity();
 								String body = v1.parse(f, j1);
 								if (body != null) {
 									if (Email.send(lang.get("mail.validation.code"), body, email)) {

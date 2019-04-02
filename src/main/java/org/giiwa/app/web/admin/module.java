@@ -32,6 +32,7 @@ import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.RSA;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
@@ -96,7 +97,7 @@ public class module extends Model {
 
 		String fid = UID.id(login == null ? UID.random() : login.getId(), System.currentTimeMillis());
 
-		File f = Temp.get(fid, name + ".zip");
+		DFile f = Temp.get(fid, name + ".zip");
 		if (f.exists()) {
 			f.delete();
 		} else {
@@ -106,7 +107,7 @@ public class module extends Model {
 		ZipOutputStream out = null;
 
 		try {
-			out = new ZipOutputStream(new FileOutputStream(f));
+			out = new ZipOutputStream(f.getOutputStream());
 
 			RSA.Key key = RSA.generate(1024);
 
@@ -162,18 +163,18 @@ public class module extends Model {
 			}
 			out.closeEntry();
 
-			create(out, name + "/README.md");
+			create(out, name + "/pubkey.txt");
+			out.write(key.pub_key.getBytes());
+			out.closeEntry();
+
+			create(out, name + "/src/").closeEntry();
+			create(out, name + "/src/README.md");
 			f1 = module.getFile("/admin/demo/README.md");
 			if (f1 != null) {
 				copy(out, f1);
 			}
 			out.closeEntry();
 
-			create(out, name + "/pubkey.txt");
-			out.write(key.pub_key.getBytes());
-			out.closeEntry();
-
-			create(out, name + "/src/").closeEntry();
 			create(out, name + "/src/module.xml");
 
 			Document doc = DocumentHelper.createDocument();
@@ -327,7 +328,7 @@ public class module extends Model {
 			}
 
 			/**
-			 * create model info
+			 * create bean info
 			 */
 			create(out, name + "/src/model/").closeEntry();
 			create(out, name + "/src/model/java/").closeEntry();
@@ -351,6 +352,17 @@ public class module extends Model {
 			if (f1 != null) {
 				copy(out, f1, new String[] { "org.giiwa.demo.bean",
 						(p1.substring(0, p1.lastIndexOf("/")) + "/bean").replaceAll("/", ".") });
+			}
+			out.closeEntry();
+
+			// create tast
+			create(out, name + "/src/model/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/task/").closeEntry();
+
+			create(out, name + "/src/model/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/task/TestTask.java");
+			f1 = module.getFile("/admin/demo/src/model/task/TestTask.java");
+			if (f1 != null) {
+				copy(out, f1, new String[] { "org.giiwa.demo.task",
+						(p1.substring(0, p1.lastIndexOf("/")) + "/task").replaceAll("/", ".") });
 			}
 			out.closeEntry();
 

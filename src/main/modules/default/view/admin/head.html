@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/vnd.microsoft.icon" />
+<title>$lang.get('browser.title')</title>
+
+<link href='/css/tablesorter.css' rel='stylesheet' />
+<link href='/css/hint.min.css' rel='stylesheet' />
+<link href='/css/datepicker.min.css' rel='stylesheet' />
+<link href='/css/giiwa.min.css?${module.module("default").build}' rel='stylesheet' />
+
+<script type="text/javascript" src="/js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src='/js/giiwa.min.js?${module.module("default").build}'></script>
+
+</head>
+<body class="wfull">
+<div id='head'>
+	<div class='center'>
+		<div class='left'>
+			<div class='logo'><a href="/"><img src="$lang.get('site.logo')"></a></div>
+			<div class='title'>$lang.get('site.title')</div>
+		</div>
+		#if($me.hasAccess('access.config.admin'))
+		<a href="javascript:;" onclick="giiwa.load('/admin/syslog?type=0&level=1&__node=$!__node');" style="position: absolute;right: 125px;top: 20px;"><i class='icon-bell'></i></a>
+		<a href="javascript:;" onclick="giiwa.load('/admin/user?__node=$!__node');" style="position: absolute;right: 80px;top: 20px;"><i class='icon-users'></i></a>
+		#end
+		<div style="z-index:100;position:absolute;right:20px;top:10px;">
+			<img src="$!me.photo" style="cursor:pointer;width: 32px;border-radius: 50%;" onclick="_mymenu();"/>
+			<div class='mymenu'>
+				<div class='arrawup'></div>
+				<div class='item' style="padding-left: 12px;">#if($me.nickname)$me.nickname #else $!me.name #end</div>
+				<div class='item'><a href='javascript:;' onclick='giiwa.load("/admin/profile/my?__node=$!__node");_mymenu();'><i class='icon-cogs'></i>&nbsp;&nbsp;$lang.get('a.profile')</a></div>
+				<div class='item'><a href='javascript:;' onclick='giiwa.load("/admin/dashboard/info?__node=$!__node");_mymenu();'><i class='icon-notification'></i>&nbsp;&nbsp;$lang.get('a.about')</a></div>
+				<div class='item'><a href='javascript:;' onclick='giiwa.open("https://www.giisoo.com/book/giiwa/");_mymenu();'><i class='icon-question'></i>&nbsp;&nbsp;$lang.get('a.help')</a></div>
+				
+				#if($me.hasAccess('access.config.admin'))
+				<div class='item'><a href="javascript:;" onclick="giiwa.open('/docs/icomoon/demo.html');_mymenu();"><i class='icon-image'></i>&nbsp;&nbsp;Icons</a></div>
+				#end
+				<div class='item'><a href="javascript:;" onclick="giiwa.load('/user/logout?__node=$!__node');_mymenu();" ><i class='icon-switch'></i>&nbsp;&nbsp;$lang.get("a.logout")</a></div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+function _mymenu(){
+	var m = $("#head .mymenu");
+	if(m.attr('data-show') != '1') {
+		m.show();
+		m.attr('data-show', '1');
+	}else {
+		m.fadeOut();
+		m.attr('data-show', '0');
+	}
+}
+</script>
+	

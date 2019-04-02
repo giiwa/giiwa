@@ -19,9 +19,17 @@ import java.util.Map;
 
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.cache.Cache;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.SysTask;
+import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.Node;
+import org.giiwa.framework.web.Module;
+import org.giiwa.mq.IStub;
+import org.giiwa.mq.MQ;
+import org.giiwa.mq.MQ.Request;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -236,6 +244,40 @@ public final class Local extends Bean {
 	}
 
 	public static void init() {
+		// start listen
+		try {
+			new IStub("giiwa.state") {
+
+				@Override
+				public void onRequest(long seq, Request req) {
+					JSON j = req.get();
+
+					log.debug("got message, j=" + j + ", local=" + Local.id());
+
+					if (j != null && X.isSame(Local.id(), j.getString("node"))) {
+						int power = j.getInt("power");
+						synchronized (Task.class) {
+							if (Task.powerstate != power) {
+								Task.powerstate = power;
+								if (Task.powerstate == 1) {
+									// start
+									Module.startAll();
+								} else {
+									// stop
+									Module.stopAll();
+								}
+							}
+						}
+					}
+				}
+
+			}.bind(MQ.Mode.TOPIC);
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		// start heartbeat
 		new SysTask() {
 
 			/**
@@ -246,17 +288,37 @@ public final class Local extends Bean {
 
 			@Override
 			public void onExecute() {
+				// checking node load
 				if (System.currentTimeMillis() - t > 10 * X.AMINUTE) {
 					Node.touch(true);
 					t = System.currentTimeMillis();
 				} else {
 					Node.touch(false);
 				}
+
+				// check node disk
+				W q = W.create().and("node", Local.id()).sort("created", 1);
+				Beans<Disk> l1 = Disk.dao.load(q, 0, 10);
+				if (l1 != null && !l1.isEmpty()) {
+					for (Disk d : l1) {
+
+						if (d.isLocal()) {
+							Disk.dao.update(d.getId(),
+									V.create("bad", 0).append("lasttime", System.currentTimeMillis()));
+
+							if (System.currentTimeMillis() - d.getLong("checktime") > X.AMINUTE) {
+								d.check();
+							}
+						}
+
+					}
+				}
+
 			}
 
 			@Override
 			public String getName() {
-				return "local.node.hb";
+				return "node.hb";
 			}
 
 			@Override

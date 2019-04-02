@@ -1,0 +1,199 @@
+
+<div id='cpu_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('cpu_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.usage")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+        legend: {
+            enabled: false
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}%</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('cpu.usage')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$lang.format($!c.n0, '%.1f')},#end]}
+	    			], 
+	});
+
+})
+</script>
+
+
+<div id='t1_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('t1_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.tasks.global")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.tasks.global')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n1')},#end]}
+	    			], 
+	});
+
+})
+</script>
+
+<div id='t2_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('t2_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.tasks.local.threads")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.tasks.local.threads')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n2')},#end]}
+	    			], 
+	});
+
+})
+</script>
+
+
+<div id='t3_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('t3_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.tasks.local.running")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.tasks.local.running')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n3')},#end]}
+	    			], 
+	});
+
+})
+</script>
+
+
+<div id='t4_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('t4_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.tasks.local.pending")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.tasks.local.pending')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n4')},#end]}
+	    			], 
+	});
+
+})
+</script>
+

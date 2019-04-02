@@ -27,6 +27,9 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -37,230 +40,248 @@ import org.giiwa.core.json.JSON;
  */
 public class Zip {
 
-  /**
-   * Zip.
-   * 
-   * @param b
-   *          the b
-   * @return the byte[]
-   * @throws Exception
-   *           the exception
-   */
-  public static byte[] zip(byte[] b) throws Exception {
+	private static Log log = LogFactory.getLog(Zip.class);
 
-    Deflater def = new Deflater();
-    def.setInput(b);
-    def.finish();
+	/**
+	 * Zip.
+	 * 
+	 * @param b
+	 *            the b
+	 * @return the byte[]
+	 * @throws Exception
+	 *             the exception
+	 */
+	public static byte[] zip(byte[] b) throws Exception {
 
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    byte[] buf = new byte[1024];
+		Deflater def = new Deflater();
+		def.setInput(b);
+		def.finish();
 
-    while (!def.finished()) {
-      int l = def.deflate(buf);
-      out.write(buf, 0, l);
-    }
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] buf = new byte[1024];
 
-    out.flush();
+		while (!def.finished()) {
+			int l = def.deflate(buf);
+			out.write(buf, 0, l);
+		}
 
-    out.close();
+		out.flush();
 
-    return out.toByteArray();
-  }
+		out.close();
 
-  /**
-   * Unzip.
-   * 
-   * @param b
-   *          the b
-   * @return the byte[]
-   * @throws Exception
-   *           the exception
-   */
-  public static byte[] unzip(byte[] b) throws Exception {
-    Inflater in = new Inflater();
-    in.setInput(b);
+		return out.toByteArray();
+	}
 
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    byte[] buf = new byte[1024];
-    while (!in.finished()) {
-      int l = in.inflate(buf);
-      out.write(buf, 0, l);
-    }
+	/**
+	 * Unzip.
+	 * 
+	 * @param b
+	 *            the b
+	 * @return the byte[]
+	 * @throws Exception
+	 *             the exception
+	 */
+	public static byte[] unzip(byte[] b) throws Exception {
+		Inflater in = new Inflater();
+		in.setInput(b);
 
-    in.end();
-    out.flush();
-    out.close();
-    return out.toByteArray();
-  }
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] buf = new byte[1024];
+		while (!in.finished()) {
+			int l = in.inflate(buf);
+			out.write(buf, 0, l);
+		}
 
-  /**
-   * find the filename in zip file.
-   *
-   * @param filename
-   *          the filename
-   * @param zip
-   *          the zip
-   * @return InputStream
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   */
-  public static InputStream find(String filename, ZipFile zip) throws IOException {
+		in.end();
+		out.flush();
+		out.close();
+		return out.toByteArray();
+	}
 
-    ZipEntry e = zip.getEntry(filename);
-    if (e != null) {
-      return zip.getInputStream(e);
-    }
-    return null;
+	/**
+	 * find the filename in zip file.
+	 *
+	 * @param filename
+	 *            the filename
+	 * @param zip
+	 *            the zip
+	 * @return InputStream
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static InputStream find(String filename, ZipFile zip) throws IOException {
 
-  }
+		ZipEntry e = zip.getEntry(filename);
+		if (e != null) {
+			return zip.getInputStream(e);
+		}
+		return null;
 
-  /**
-   * get json object from the filename in zip file.
-   *
-   * @param filename
-   *          the filename
-   * @param zip
-   *          the zip
-   * @return JSONObject
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   */
-  public static JSON getJSON(String filename, ZipFile zip) throws IOException {
-    InputStream in = find(filename, zip);
-    if (in != null) {
-      ByteArrayOutputStream out = null;
-      try {
-        out = new ByteArrayOutputStream();
-        byte[] bb = new byte[16 * 1024];
-        int len = in.read(bb);
-        while (len > 0) {
-          out.write(bb, 0, len);
-          len = in.read(bb);
-        }
-        bb = null;
+	}
 
-        out.flush();
+	/**
+	 * get json object from the filename in zip file.
+	 *
+	 * @param filename
+	 *            the filename
+	 * @param zip
+	 *            the zip
+	 * @return JSONObject
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static JSON getJSON(String filename, ZipFile zip) throws IOException {
+		InputStream in = find(filename, zip);
+		if (in != null) {
+			ByteArrayOutputStream out = null;
+			try {
+				out = new ByteArrayOutputStream();
+				byte[] bb = new byte[16 * 1024];
+				int len = in.read(bb);
+				while (len > 0) {
+					out.write(bb, 0, len);
+					len = in.read(bb);
+				}
+				bb = null;
 
-        return JSON.fromObject(out.toByteArray());
-      } finally {
-        if (in != null) {
-          in.close();
-        }
-        if (out != null) {
-          out.close();
-        }
-      }
-    }
+				out.flush();
 
-    return null;
-  }
+				return JSON.fromObject(out.toByteArray());
+			} finally {
+				if (in != null) {
+					in.close();
+				}
+				if (out != null) {
+					out.close();
+				}
+			}
+		}
 
-  /**
-   * Unzip the src file to output place.
-   *
-   * @param zipfile
-   *          the src zip file
-   * @param out
-   *          the out
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   */
-  public static void unzip(File zipfile, File out) throws IOException {
-    out.mkdirs();
-    ZipInputStream zip = new ZipInputStream(new FileInputStream(zipfile));
-    try {
+		return null;
+	}
 
-      ZipEntry e = zip.getNextEntry();
-      while (e != null) {
+	/**
+	 * Unzip the src file to output place.
+	 *
+	 * @param zipfile
+	 *            the src zip file
+	 * @param out
+	 *            the out
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static void unzip(File zipfile, File out) throws IOException {
+		out.mkdirs();
+		ZipInputStream zip = new ZipInputStream(new FileInputStream(zipfile));
+		try {
 
-        String name = e.getName();
-        if (e.isDirectory()) {
-          new File(out.getCanonicalPath() + "/" + name).mkdirs();
-        } else {
-          File f = new File(out.getCanonicalPath() + "/" + name);
-          f.getParentFile().mkdirs();
-          FileOutputStream o = new FileOutputStream(f);
-          try {
-            IOUtil.copy(zip, o, false);
-          } finally {
-            o.close();
-          }
-        }
-        e = zip.getNextEntry();
-      }
-    } finally {
-      zip.close();
-    }
-  }
+			ZipEntry e = zip.getNextEntry();
+			while (e != null) {
 
-  /**
-   * Zip the src to out file.
-   *
-   * @param zipfile
-   *          the out zip file
-   * @param src
-   *          the src file or directory
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   */
-  public static void zip(File zipfile, File src) throws IOException {
-    zipfile.getParentFile().mkdirs();
-    ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(zipfile));
-    try {
-      if (src.exists()) {
-        _zip(zip, src, src.getCanonicalPath());
-      }
-    } finally {
-      zip.close();
-    }
-  }
+				String name = e.getName();
+				if (e.isDirectory()) {
+					new File(out.getCanonicalPath() + "/" + name).mkdirs();
+				} else {
+					File f = new File(out.getCanonicalPath() + "/" + name);
+					f.getParentFile().mkdirs();
+					FileOutputStream o = new FileOutputStream(f);
+					try {
+						IOUtil.copy(zip, o, false);
+					} finally {
+						o.close();
+					}
+				}
+				e = zip.getNextEntry();
+			}
+		} finally {
+			zip.close();
+		}
+	}
 
-  private static void _zip(ZipOutputStream out, File f, String working) throws IOException {
-    if (f.isFile()) {
-      String name = f.getCanonicalPath().replace(working, "");
-      ZipEntry e = new ZipEntry(name);
-      out.putNextEntry(e);
+	/**
+	 * Zip the src to out file.
+	 *
+	 * @param zipfile
+	 *            the out zip file
+	 * @param src
+	 *            the src file or directory
+	 * @throws IOException
+	 *             Signals that an I/O exception has occurred.
+	 */
+	public static void zip(File zipfile, File src) throws IOException {
+		zipfile.getParentFile().mkdirs();
+		ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(zipfile));
+		try {
+			if (src.exists()) {
+				_zip(zip, src, src.getCanonicalPath());
+			}
+		} finally {
+			zip.close();
+		}
+	}
 
-      InputStream in = new FileInputStream(f);
-      try {
-        IOUtil.copy(in, out, false);
-      } finally {
-        out.closeEntry();
-        in.close();
-      }
-    } else if (f.isDirectory()) {
-      String name = f.getCanonicalPath().replace(working, "") + "/";
-      ZipEntry e = new ZipEntry(name);
-      out.putNextEntry(e);
-      out.closeEntry();
+	public static void zip(DFile zipfile, File src) throws IOException {
+		zipfile.getParentFile().mkdirs();
+		ZipOutputStream zip = new ZipOutputStream(zipfile.getOutputStream());
+		try {
+			if (src.exists()) {
+				_zip(zip, src, src.getCanonicalPath());
+			}
+		} finally {
+			zip.close();
+		}
+	}
 
-      File[] ff = f.listFiles();
-      if (ff != null) {
-        for (File f1 : ff) {
-          _zip(out, f1, working);
-        }
-      }
-    }
-  }
+	private static void _zip(ZipOutputStream out, File f, String working) throws IOException {
+		if (f.isFile()) {
+			String name = f.getCanonicalPath().replace(working, "");
 
-  /**
-   * The main method.
-   *
-   * @param args
-   *          the arguments
-   */
-  public static void main(String[] args) {
-    try {
-      zip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/logs"));
+			log.debug("name=" + name);
 
-      unzip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/aa"));
+			ZipEntry e = new ZipEntry(name);
+			out.putNextEntry(e);
 
-      System.out.println("done");
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
+			InputStream in = new FileInputStream(f);
+			try {
+				IOUtil.copy(in, out, false);
+			} finally {
+				out.closeEntry();
+				in.close();
+			}
+		} else if (f.isDirectory()) {
+			String name = f.getCanonicalPath().replace(working, "") + "/";
+			log.debug("name=" + name);
+			ZipEntry e = new ZipEntry(name);
+			out.putNextEntry(e);
+			out.closeEntry();
 
-  }
+			File[] ff = f.listFiles();
+			if (ff != null) {
+				for (File f1 : ff) {
+					_zip(out, f1, working);
+				}
+			}
+		}
+	}
+
+	/**
+	 * The main method.
+	 *
+	 * @param args
+	 *            the arguments
+	 */
+	public static void main(String[] args) {
+		try {
+			zip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/logs"));
+
+			unzip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/aa"));
+
+			System.out.println("done");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 
 }

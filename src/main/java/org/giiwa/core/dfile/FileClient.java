@@ -1,13 +1,11 @@
 package org.giiwa.core.dfile;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -23,16 +21,9 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.bean.X;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.nio.Client;
-import org.giiwa.core.nio.IRequestHandler;
-import org.giiwa.core.nio.IResponseHandler;
-import org.giiwa.core.nio.Request;
-import org.giiwa.core.nio.Response;
-import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Model;
 import org.giiwa.framework.web.Model.HTTPMethod;
 
@@ -66,7 +57,7 @@ public class FileClient implements IRequestHandler {
 
 	private static FileClient create(String url) throws IOException {
 		FileClient c = new FileClient();
-		c.client = Client.connect(url, c);
+		c.client = Client.connect(url, new FileServer.RequestHandler(url, c));
 		return c;
 	}
 
@@ -74,7 +65,7 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return false;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
 		try {
 
 			r.writeByte(ICommand.CMD_DELETE);
@@ -85,7 +76,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -110,11 +101,16 @@ public class FileClient implements IRequestHandler {
 	}
 
 	/**
+	 * Get the bytes from the filename
 	 * 
 	 * @param path
+	 *            the path
 	 * @param filename
+	 *            the filename
 	 * @param offset
+	 *            the offset
 	 * @param len
+	 *            the length
 	 * @return the bytes, or null{@code null} if the client not ready
 	 */
 	public byte[] get(String path, String filename, long offset, int len) {
@@ -122,7 +118,7 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return null;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
 
 		try {
 			r.writeByte(ICommand.CMD_GET);
@@ -134,7 +130,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -158,7 +154,7 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return -1;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.BIG);
 
 		try {
 			r.writeByte(ICommand.CMD_PUT);
@@ -170,7 +166,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -204,7 +200,7 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return false;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
 
 		try {
 
@@ -215,7 +211,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -234,12 +230,12 @@ public class FileClient implements IRequestHandler {
 
 	}
 
-	public JSON list(String path, String filename) {
+	public List<FileInfo> list(String path, String filename) {
 
 		if (client == null)
 			return null;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.MID);
 
 		try {
 			r.writeByte(ICommand.CMD_LIST);
@@ -249,7 +245,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -257,7 +253,21 @@ public class FileClient implements IRequestHandler {
 
 			if (aa[0] != null) {
 				Request a = aa[0];
-				return JSON.fromObject(a.readString());
+
+				List<FileInfo> l1 = new ArrayList<FileInfo>();
+
+				while (a.hasRemaining()) {
+					// JSON j1 = JSON.create();
+					FileInfo info = new FileInfo();
+					info.name = a.readString();
+					info.exists = a.readInt() == 1;
+					info.isfile = a.readInt() == 1;
+					info.length = a.readLong();
+					info.lastmodified = a.readLong();
+					l1.add(info);
+				}
+
+				return l1;
 			}
 
 		} catch (Exception e) {
@@ -269,12 +279,12 @@ public class FileClient implements IRequestHandler {
 
 	}
 
-	public JSON info(String path, String filename) {
+	public FileInfo info(String path, String filename) {
 
 		if (client == null)
 			return null;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
 
 		try {
 
@@ -285,7 +295,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -293,7 +303,14 @@ public class FileClient implements IRequestHandler {
 
 			if (aa[0] != null) {
 				Request a = aa[0];
-				return JSON.fromObject(a.readString());
+
+				FileInfo info = new FileInfo();
+				info.exists = a.readInt() == 1;
+				info.isfile = a.readInt() == 1;
+				info.length = a.readLong();
+				info.lastmodified = a.readLong();
+
+				return info;
 			}
 
 		} catch (Exception e) {
@@ -307,8 +324,11 @@ public class FileClient implements IRequestHandler {
 
 	@Override
 	public void closed(String name) {
-
-		cached.remove(name);
+		FileClient c = cached.remove(name);
+		if (c != null && c.client != null) {
+			c.client.close();
+			c.client = null;
+		}
 	}
 
 	public boolean move(String path, String filename, String path2, String filename2) {
@@ -316,7 +336,7 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return false;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
 
 		try {
 
@@ -329,7 +349,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -353,7 +373,7 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return;
 
-		Response r = Response.create(seq.incrementAndGet());
+		Response r = Response.create(seq.incrementAndGet(), Request.MID);
 
 		try {
 
@@ -379,7 +399,7 @@ public class FileClient implements IRequestHandler {
 			Request[] aa = new Request[1];
 			pending.put(r.seq, aa);
 			synchronized (aa) {
-				client.send(r);
+				_send(r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
@@ -530,49 +550,16 @@ public class FileClient implements IRequestHandler {
 		System.out.println("ok");
 	}
 
-	public static void notify(String name, Serializable data) {
+	private void _send(Response resp) {
+		resp.out.flip();
+		IoBuffer b = IoBuffer.allocate(resp.out.remaining() + 4);
+		b.putInt(resp.out.remaining());
+		b.put(resp.out);
+		b.flip();
+		client.write(b);
 
-		Response r = Response.create(0L);
-		ByteArrayOutputStream out = null;
-		try {
-			r.writeByte(ICommand.CMD_NOTIFY);
-			r.writeString(name);
-
-			out = new ByteArrayOutputStream();
-			ObjectOutputStream oo = new ObjectOutputStream(out);
-			oo.writeObject(data);
-			r.writeBytes(out.toByteArray());
-
-			byte[] bb = new byte[r.out.remaining()];
-			r.out.get(bb);
-
-			int s = 0;
-			W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("id", 1);
-			Beans<Node> bs = Node.dao.load(q, s, 100);
-			while (bs != null && !bs.isEmpty()) {
-
-				for (Node e : bs) {
-					if (!X.isEmpty(e.getUrl())) {
-						try {
-							FileClient f = get(e.getUrl());
-							if (f != null) {
-								Response r1 = Response.create(0L);
-								r1.writeBytes(bb);
-								f.client.send(r1);
-							}
-						} catch (Exception e1) {
-							log.error(e.getUrl(), e1);
-						}
-					}
-				}
-				s += bs.size();
-				bs = Node.dao.load(q, s, 100);
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		} finally {
-			X.close(out);
-		}
+		b.free();
+		resp.out.free();
 
 	}
 

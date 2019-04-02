@@ -1,40 +1,45 @@
 package org.giiwa.core.dfile.command;
 
 import java.io.File;
-import java.util.List;
 
 import org.giiwa.core.dfile.ICommand;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.nio.IResponseHandler;
-import org.giiwa.core.nio.Request;
-import org.giiwa.core.nio.Response;
+import org.giiwa.core.dfile.IResponseHandler;
+import org.giiwa.core.dfile.Request;
+import org.giiwa.core.dfile.Response;
 
 public class LIST implements ICommand {
 
 	@Override
 	public void process(Request in, IResponseHandler handler) {
-		String path = in.readString();
-		String filename = in.readString();
+		String path = in.readString().replaceAll("[/\\\\]", File.separator);
+		String filename = in.readString().replaceAll("[/\\\\]", File.separator);
 
-		File f = new File(path + "/" + filename);
-		List<JSON> l1 = JSON.createList();
+		File f = new File(path + File.separator + filename);
+		// List<JSON> l1 = JSON.createList();
+
+		Response out = Response.create(in.seq, Request.MID);
 
 		File[] ff = f.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
-				JSON jo = JSON.create();
-				jo.append("name", f1.getName());
-				jo.append("e", f1.exists() ? 1 : 0);
-				jo.append("f", f1.isFile() ? 1 : 0);
-				jo.append("l", f1.length());
-				jo.append("u", f1.lastModified());
-				l1.add(jo);
+				out.writeString(f1.getName());
+				out.writeInt(f1.exists() ? 1 : 0);
+				out.writeInt(f1.isFile() ? 1 : 0);
+				out.writeLong(f1.length());
+				out.writeLong(f1.lastModified());
+
+				// JSON jo = JSON.create();
+				// jo.append("name", f1.getName());
+				// jo.append("e", f1.exists() ? 1 : 0);
+				// jo.append("f", f1.isFile() ? 1 : 0);
+				// jo.append("l", f1.length());
+				// jo.append("u", f1.lastModified());
+				// l1.add(jo);
 			}
 		}
-		JSON jo = JSON.create().append("list", l1);
+		// JSON jo = JSON.create().append("list", l1);
 
-		Response out = Response.create(in.seq);
-		out.writeString(jo.toString());
+		// out.writeString(jo.toString());
 		handler.send(out);
 
 	}

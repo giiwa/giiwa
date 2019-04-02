@@ -3,7 +3,6 @@ package org.giiwa.core.dfile;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.giiwa.core.nio.Request;
 import org.giiwa.framework.bean.Disk;
 
 public class DFileInputStream extends InputStream {
@@ -108,8 +107,8 @@ public class DFileInputStream extends InputStream {
 			return;
 
 		if (bb == null || pos >= bb.length) {
-			bb = FileClient.get(url).get(path, filename, offset, Request.BUFFER_SIZE);
-			if (bb == null || bb.length < Request.BUFFER_SIZE) {
+			bb = FileClient.get(url).get(path, filename, offset, Request.BIG);
+			if (bb == null || bb.length < Request.BIG) {
 				// log.debug("last packet, bb=" + bb.length);
 				last = true;
 			}

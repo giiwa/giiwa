@@ -64,7 +64,7 @@ public class AccessLog extends Bean {
 	private long created;
 
 	public static boolean isOn() {
-		return Global.getInt("accesslog.on", 1) == 1;
+		return Global.getInt("accesslog.on", 0) == 1;
 	}
 
 	/**

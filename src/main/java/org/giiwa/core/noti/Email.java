@@ -67,6 +67,10 @@ public class Email {
 	 */
 	public static boolean send(String subject, String body, String to, InputStream[] attachments, String[] names,
 			String[] contents) {
+
+		if (X.isEmpty(to))
+			return false;
+
 		Properties props = new Properties();
 
 		props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp").toLowerCase());
@@ -151,6 +155,9 @@ public class Email {
 	 * @return true, if successful
 	 */
 	public static boolean send(String subject, String body, String to, String from, String displayname) {
+		if (X.isEmpty(to))
+			return false;
+
 		Properties props = new Properties();
 
 		props.setProperty("mail.transport.protocol", Global.getString("mail.protocol", "smtp"));

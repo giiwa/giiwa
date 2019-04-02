@@ -50,12 +50,17 @@ public class Bean implements Serializable {
 
 	private long _expired = -1;
 
+	/**
+	 * the row number
+	 */
 	public long _rowid;
 
-	public long _rowid() {
-		return _rowid;
-	}
-
+	/**
+	 * set expired time before using in cache
+	 * 
+	 * @param expired
+	 *            the expired
+	 */
 	public void expired(long expired) {
 		this._expired = expired;
 	}
@@ -645,11 +650,21 @@ public class Bean implements Serializable {
 		return true;
 	}
 
+	/**
+	 * cleanup, do nothing in default
+	 */
 	public void cleanup() {
 		// TODO Auto-generated method stub
 
 	}
 
+	/**
+	 * refine the bean and output as a json object
+	 * 
+	 * @param e
+	 *            the refine function
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Bean> JSON refine(ReduceFunction<JSON, T> e) {
 		return e.call((T) this);

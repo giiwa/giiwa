@@ -23,7 +23,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 public abstract class View {
@@ -44,6 +46,15 @@ public abstract class View {
 	 *             if occur error
 	 */
 	protected abstract boolean parse(Object file, Model m, String viewname) throws Exception;
+
+	/**
+	 * parse the file with the params
+	 * 
+	 * @param file
+	 * @param params
+	 * @return
+	 */
+	public abstract String parse(Object file, JSON params);
 
 	/**
 	 * init the views by config
@@ -123,9 +134,9 @@ public abstract class View {
 
 	public static String getName(Object file) {
 		if (file instanceof DFile) {
-			return ((DFile) file).getName();
+			return ((DFile) file).getFilename();
 		} else {
-			return ((File) file).getName();
+			return X.getCanonicalPath(((File) file).getAbsolutePath());
 		}
 	}
 
@@ -152,4 +163,14 @@ public abstract class View {
 			return ((File) file).getCanonicalPath();
 		}
 	}
+
+	/**
+	 * get velocity view parser
+	 * 
+	 * @return
+	 */
+	public static View getVelocity() {
+		return new VelocityView();
+	}
+
 }

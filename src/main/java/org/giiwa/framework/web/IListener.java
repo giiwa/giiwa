@@ -36,43 +36,54 @@ import org.apache.commons.configuration.Configuration;
  */
 public interface IListener {
 
-  /**
-   * Upgrade.
-   * 
-   * @param conf
-   *          the conf
-   * @param module
-   *          the module
-   */
-  default void upgrade(Configuration conf, Module module) {
-  };
+	/**
+	 * Upgrade.
+	 * 
+	 * @param conf
+	 *            the conf
+	 * @param module
+	 *            the module
+	 */
+	default void upgrade(Configuration conf, Module module) {
+	};
 
-  /**
-   * Uninstall.
-   * 
-   * @param conf
-   *          the conf
-   * @param module
-   *          the module
-   */
-  default void uninstall(Configuration conf, Module module) {
-  };
+	/**
+	 * Uninstall.
+	 * 
+	 * @param conf
+	 *            the conf
+	 * @param module
+	 *            the module
+	 */
+	default void uninstall(Configuration conf, Module module) {
+	};
 
-  /**
-   * On start.
-   * 
-   * @param conf
-   *          the conf
-   * @param module
-   *          the module
-   */
-  default void onStart(Configuration conf, Module module) {
-  };
+	/**
+	 * On Init.
+	 * 
+	 * @param conf
+	 *            the conf
+	 * @param module
+	 *            the module
+	 */
+	default void onInit(Configuration conf, Module module) {
+	};
 
-  /**
-   * On stop.
-   */
-  default void onStop() {
-  };
+	/**
+	 * On start.
+	 * 
+	 * @param conf
+	 *            the conf
+	 * @param module
+	 *            the module
+	 */
+	default void onStart(Configuration conf, Module module) {
+	};
+
+	/**
+	 * On stop.
+	 */
+	default void onStop() {
+	};
 
 }

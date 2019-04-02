@@ -15,15 +15,19 @@
 package org.giiwa.app.web.admin;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.net.ftp.FTPClient;
 import org.giiwa.app.task.CleanupTask;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.base.Url;
 import org.giiwa.core.base.Zip;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
@@ -36,6 +40,7 @@ import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.net.FTP;
 import org.giiwa.core.task.Monitor;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
@@ -114,8 +119,8 @@ public class backup extends Model {
 			File f = new File(root + "/" + name);
 
 			Temp t = Temp.create(name);
-			File f1 = t.getFile();
-			IOUtil.copy(f, f1);
+			t.copy(new FileInputStream(f));
+
 			jo.put(X.STATE, 200);
 			jo.put("url", t.getUri());
 		} catch (Exception e) {
@@ -296,6 +301,7 @@ public class backup extends Model {
 		if (method.isPost()) {
 			Local.setConfig("backup.auto", X.isSame("on", this.getString("backup.auto")) ? 1 : 0);
 			Local.setConfig("backup.point", this.getString("backup.point"));
+			Local.setConfig("backup.url", this.getString("backup.url"));
 
 			Global.setConfig("backup.clean", X.isSame("on", this.getString("backup.clean")) ? 1 : 0);
 			Global.setConfig("backup.keep.days", this.getInt("backup.keep.days"));
@@ -395,11 +401,10 @@ public class backup extends Model {
 				Global.setConfig("backup/" + name, 1); // starting backup
 
 				Temp t = Temp.create(name);
-				File f = t.getFile();
-				f.mkdirs();
-				String out = f.getCanonicalPath();
 
-				// new File(path() + "/" + name).mkdirs();
+				String out = Model.GIIWA_HOME + t.getFile().getFilename();
+
+				new File(path() + "/" + name).mkdirs();
 
 				/**
 				 * 1, backup db
@@ -417,25 +422,41 @@ public class backup extends Model {
 				 * 2, backup repo
 				 */
 				// File f = m.getFile("/admin/clone/backup_tar.sh");
-//				String url = Config.getConf().getString("repo.path", null);
-//				if (!X.isEmpty(url)) {
-//					Global.setConfig("backup/" + name, 3); // backup repo
-//
-//					IOUtil.copyDir(new File(url), new File(out + "/repo"));
-//
-//					// Shell.run("chmod ugo+x " + f.getCanonicalPath());
-//					// Shell.run(f.getCanonicalPath() + " " + out + "/repo.tar.gz " +
-//					// url);
-//				}
+				// String url = Config.getConf().getString("repo.path", null);
+				// if (!X.isEmpty(url)) {
+				// Global.setConfig("backup/" + name, 3); // backup repo
+				//
+				// IOUtil.copyDir(new File(url), new File(out + "/repo"));
+				//
+				// // Shell.run("chmod ugo+x " + f.getCanonicalPath());
+				// // Shell.run(f.getCanonicalPath() + " " + out + "/repo.tar.gz " +
+				// // url);
+				// }
 
-				log.debug("zipping, dir=" + f.getCanonicalPath());
+				log.debug("zipping, dir=" + out);
 
-				Zip.zip(new File(path() + "/" + name + ".zip"), f);
+				Zip.zip(new File(path() + "/" + name + ".zip"), new File(out));
 
-				IOUtil.delete(f);
+				IOUtil.delete(new File(out));
 
 				Global.setConfig("backup/" + name, 100); // done
 
+				String url = Global.getString("backup.url", null);
+				if (!X.isEmpty(url)) {
+					// store in other
+					Url u = Url.create(url);
+					FTPClient f1 = FTP.login(u);
+					if (f1 != null) {
+						InputStream in = new FileInputStream(new File(path() + "/" + name + ".zip"));
+						try {
+							f1.appendFile(u.get("path") + "/" + name + ".zip", in);
+
+							GLog.applog.info("backup", "auto", "backup success, name=" + name + ".zip", null, null);
+						} finally {
+							X.close(in);
+						}
+					}
+				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				GLog.oplog.error(backup.class, "backup", e.getMessage(), e, null, null);
@@ -505,7 +526,7 @@ public class backup extends Model {
 				String source = root + "/" + name;
 
 				Temp t = Temp.create("backup");
-				File f = t.getFile();
+				File f = new File(t.getFile().getFilename());
 				f.mkdirs();
 				Zip.unzip(new File(source), f);
 

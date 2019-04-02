@@ -81,7 +81,7 @@ public class Model {
 	/**
 	 * language map
 	 */
-	public Language lang;
+	public Language lang = Language.getLanguage();
 
 	/**
 	 * the request method(POST, GET)
@@ -484,6 +484,10 @@ public class Model {
 
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	private boolean staticfile() {
 		String uri = this.uri;
 		if (!X.isEmpty(path) && !X.isSame(path, X.NONE)) {
@@ -516,6 +520,40 @@ public class Model {
 		return false;
 	}
 
+	final public void init(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method) {
+		try {
+			this.uri = uri;
+			this.req = req;
+			this.resp = resp;
+			this.method = method;
+
+			this._multipart = ServletFileUpload.isMultipartContent(req);
+
+			req.setCharacterEncoding(ENCODING);
+
+			/**
+			 * set default data in model
+			 */
+			this.lang = Language.getLanguage(getLocale());
+
+			this.put("lang", lang);
+			this.put(X.URI, uri);
+			this.put("module", Module.home);
+			this.put("path", this.path);
+			this.put("request", req);
+			this.put("response", resp);
+			this.put("this", this);
+			this.put("session", this.getSession());
+			this.put("global", Global.getInstance());
+			this.set("conf", Config.getConf());
+			this.set("local", Local.getInstance());
+			this.set("requestid", UID.random(20));
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
 	/**
 	 * Dispatch.
 	 * 
@@ -539,35 +577,7 @@ public class Model {
 
 			_currentmodule.set(module);
 
-			this.req = req;
-			this.resp = resp;
-			this.method = method;
-			this.uri = uri;
-
-			this._multipart = ServletFileUpload.isMultipartContent(req);
-
-			req.setCharacterEncoding(ENCODING);
-
-			/**
-			 * set default data in model
-			 */
-			this.lang = Language.getLanguage(getLocale());
-
-			// if path exists, then using pathmapping instead
-			// log.debug("pathmapping=" + pathmapping);
-
-			this.put("lang", lang);
-			this.put(X.URI, uri);
-			this.put("module", Module.home);
-			this.put("path", this.path);
-			this.put("request", req);
-			this.put("response", resp);
-			this.put("this", this);
-			this.put("session", this.getSession());
-			this.put("global", Global.getInstance());
-			this.set("conf", Config.getConf());
-			this.set("local", Local.getInstance());
-			this.set("requestid", UID.random(20));
+			init(uri, req, resp, method);
 
 			if (!Module.home.before(this)) {
 				log.debug("handled by filter, and stop to dispatch");
@@ -615,7 +625,9 @@ public class Model {
 			JSON jo = JSON.create();
 
 			jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
-			this.setHeader(X.STATUS, Integer.toString(HttpServletResponse.SC_UNAUTHORIZED));
+
+			this.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
+			this.setHeader("Location", "/");
 
 			jo.put(X.MESSAGE, lang.get("login.required"));
 			jo.put(X.ERROR, lang.get("not.login"));
@@ -1350,7 +1362,6 @@ public class Model {
 					if (v1 != null) {
 						return v1.toString().trim();
 					}
-					return null;
 				}
 			}
 
@@ -2290,19 +2301,8 @@ public class Model {
 	 */
 	final public void copy(Model m) {
 
-		this.req = m.req;
-		this.resp = m.resp;
-		this.contentType = m.contentType;
-		this.context = m.context;
-		this.lang = m.lang;
-		this.locale = m.locale;
+		this.init(m.uri, m.req, m.resp, m.method);
 		this.login = m.login;
-		this.method = m.method;
-		this.path = m.path;
-		this.query = m.query;
-		this.sid = m.sid;
-		this.uri = m.uri;
-		this._multipart = ServletFileUpload.isMultipartContent(req);
 
 		if (this._multipart) {
 			this.uploads = m.getFiles();

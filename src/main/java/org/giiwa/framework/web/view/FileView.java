@@ -26,6 +26,7 @@ import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Model;
 
@@ -136,6 +137,12 @@ public class FileView extends View {
 		} finally {
 			X.close(in);
 		}
+	}
+
+	@Override
+	public String parse(Object file, JSON params) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

@@ -29,13 +29,15 @@ public class NtpTask extends Task {
 	 * The Constant serialVersionUID.
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * The owner.
 	 */
 	public static NtpTask owner = new NtpTask();
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task#getName()
 	 */
 	@Override
@@ -49,23 +51,29 @@ public class NtpTask extends Task {
 	private NtpTask() {
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task#onExecute()
 	 */
 	@Override
 	public void onExecute() {
-		String ntp = Global.getString("ntp.server", "cn.ntp.org.cn");
-		if (!X.isEmpty(ntp)) {
-			try {
-				String r = Shell.run("ntpdate -u " + ntp, X.AMINUTE);
-				GLog.applog.info("ntp", "sync", "NTP syncing: " + r, null, ntp);
-			} catch (Exception e) {
-				GLog.applog.error("ntp", "sync", "NTP syncing failed ", e, null, ntp);
+		if (Shell.isLinux() || Shell.isMac()) {
+			String ntp = Global.getString("ntp.server", "cn.ntp.org.cn");
+			if (!X.isEmpty(ntp)) {
+				try {
+					String r = Shell.run("ntpdate -u " + ntp, X.AMINUTE);
+					GLog.applog.info("ntp", "sync", "NTP syncing: " + r, null, ntp);
+				} catch (Exception e) {
+					GLog.applog.error("ntp", "sync", "NTP syncing failed ", e, null, ntp);
+				}
 			}
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task#onFinish()
 	 */
 	@Override

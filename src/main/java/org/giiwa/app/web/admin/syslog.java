@@ -19,11 +19,11 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.User;
+import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.*;
 
 /**
- * web api: /admin/log <br>
+ * web api: /admin/syslog <br>
  * used to manage oplog,<br>
  * required "access.logs.admin"
  * 
@@ -52,25 +52,9 @@ public class syslog extends Model {
 			q.and("op", jo.get("op"));
 		}
 		if (!X.isEmpty(jo.get("ip"))) {
-			q.and("ip", jo.getString("ip"), W.OP.like);
+			q.and("ip", jo.getString("ip"));
 		}
-		if (!X.isEmpty(jo.get("user"))) {
 
-			String name = this.getString("user");
-			W q1 = W.create().and(W.create().and("nickname", name, W.OP.like).or("name", name, W.OP.like)).sort("name",
-					1);
-			Beans<User> bs = User.load(q1, 0, 100);
-			if (bs != null && !bs.isEmpty()) {
-				W q2 = W.create();
-				for (User u : bs) {
-					q2.or("uid", u.getId());
-				}
-				q.and(q2);
-			} else {
-				// user not found
-				q.and("uid", -2);
-			}
-		}
 		if (!X.isEmpty(jo.get("type"))) {
 			q.and("type1", X.toInt(jo.get("type")));
 		}
@@ -79,12 +63,17 @@ public class syslog extends Model {
 			q.and("level", X.toInt(jo.get("level")));
 		}
 
-		if (!X.isEmpty(jo.getString("model"))) {
-			q.and("model", jo.getString("model"));
+		if (!X.isEmpty(jo.getString("node"))) {
+			Node n = Node.dao.load(W.create("label", jo.getString("node")));
+			if (n != null) {
+				q.and("node", n.getId());
+			} else {
+				q.and("node", "-1");
+			}
 		}
 
-		if (!X.isEmpty(jo.getString("node"))) {
-			q.and("node", jo.getString("node"));
+		if (!X.isEmpty(jo.getString("model"))) {
+			q.and("model", jo.getString("model"));
 		}
 
 		if (!X.isEmpty(jo.getString("starttime"))) {
@@ -100,8 +89,6 @@ public class syslog extends Model {
 			q.and(X.CREATED, lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.lte);
 		}
 
-		int sortby_type = this.getInt("sortby_type", -1);
-		q.sort(X.CREATED, sortby_type);
 		this.set(jo);
 
 		return q;
@@ -123,7 +110,7 @@ public class syslog extends Model {
 		JSON jo = this.getJSON();
 		W w = getW(jo);
 
-		Beans<GLog> bs = GLog.dao.load(w, s, n);
+		Beans<GLog> bs = GLog.dao.load(w.sort("created", -1), s, n);
 		this.set(bs, s, n);
 
 		this.query.path("/admin/syslog");
@@ -141,14 +128,14 @@ public class syslog extends Model {
 		} else {
 			long prev = this.getLong("prev");
 			if (prev > 0) {
-				GLog d = GLog.dao.load(W.create().and("created", prev, W.OP.gt));
+				GLog d = GLog.dao.load(W.create().and("created", prev, W.OP.lt).sort("created", -1));
 				if (d != null) {
 					this.set("b", d);
 					this.set("id", d.get(X.ID));
 				}
 			} else {
 				long next = this.getLong("next");
-				GLog d = GLog.dao.load(W.create().and("created", next, W.OP.lt));
+				GLog d = GLog.dao.load(W.create().and("created", next, W.OP.gt).sort("created", 1));
 				if (d != null) {
 					this.set("b", d);
 					this.set("id", d.get(X.ID));

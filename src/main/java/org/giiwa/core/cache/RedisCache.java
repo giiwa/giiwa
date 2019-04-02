@@ -33,7 +33,7 @@ import redis.clients.jedis.ShardedJedisPool;
  * The Class RedisCache is used to redis cache <br>
  * url: redis://host:port
  */
-public class RedisCache implements ICacheSystem {
+class RedisCache implements ICacheSystem {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(RedisCache.class);
@@ -173,7 +173,8 @@ public class RedisCache implements ICacheSystem {
 
 	@Override
 	public synchronized boolean unlock(String name, String value) {
-		return jedis.del(name) > 0;
+		jedis.del(name);
+		return true;
 	}
 
 	// public static void main(String[] args) {

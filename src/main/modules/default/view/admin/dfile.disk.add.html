@@ -1,0 +1,22 @@
+<div class='tabs'>
+	<a href='javascript:;' class="selected">$lang.get('a.disk.add')</a>
+</div>
+
+<form action='/admin/dfile/disk/add?__node=$!__node'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
+
+	<div><label><h3>$lang.get('disk.node')(<r>*</r>):</h3>
+		<select name="node1">
+			#foreach($p in $nodes)
+			<option value="$p.id">$p.url</option>
+			#end
+		</select>
+		<g>$lang.get('disk.node.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.path')(<r>*</r>):</h3><input type='text' name='s' value=""/><g>$lang.get('disk.path.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.priority')(<r>*</r>):</h3><input type='number' name='priority' value="1"/><g>$lang.get('disk.priority.hint')</g></label></div>
+	
+	<div class='btns'>
+		<button type='submit'>$lang.get('btn.ok')</button>
+	</div>
+	
+</form>
+

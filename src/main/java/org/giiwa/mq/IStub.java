@@ -80,9 +80,7 @@ public abstract class IStub {
 	 *
 	 * @param to
 	 *            the destination queue
-	 * @param type
-	 *            the message type
-	 * @param message
+	 * @param req
 	 *            the message
 	 * @throws Exception
 	 *             the exception

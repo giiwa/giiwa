@@ -16,6 +16,7 @@ package org.giiwa.framework.web.view;
 
 import javax.servlet.RequestDispatcher;
 
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Model;
 
 public class JspView extends View {
@@ -45,6 +46,12 @@ public class JspView extends View {
 		rd.include(m.req, m.resp);
 
 		return true;
+	}
+
+	@Override
+	public String parse(Object file, JSON params) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

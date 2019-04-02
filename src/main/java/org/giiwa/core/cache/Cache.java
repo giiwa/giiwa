@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Global;
 
 /**
  * The {@code Cache} Class Cache used for cache object, the cache was grouped by
@@ -42,8 +43,8 @@ public final class Cache {
 	/** The log. */
 	private static Log log = LogFactory.getLog(Cache.class);
 
-	public final static String MEMCACHED = "memcached://";
-	public final static String REDIS = "redis://";
+	final static String MEMCACHED = "memcached://";
+	final static String REDIS = "redis://";
 	private static String GROUP = "g://";
 
 	private static ICacheSystem cacheSystem;
@@ -54,16 +55,17 @@ public final class Cache {
 	 * @param conf
 	 *            the configuration that includes cache configure ("cache.url")
 	 */
-	public static synchronized void init(String url, String group) {
+	public static synchronized void init(String url) {
 		/**
 		 * comment it, let's re-conf in running-time
 		 */
 		// if (_conf != null)
 		// return;
+		String group = Global.getString("site.group", "demo");
 
-		if (url.startsWith(MEMCACHED)) {
+		if (url != null && url.startsWith(MEMCACHED)) {
 			cacheSystem = MemCache.create(url);
-		} else if (url.startsWith(REDIS)) {
+		} else if (url != null && url.startsWith(REDIS)) {
 			cacheSystem = RedisCache.create(url);
 		} else {
 			log.debug("not configured cache system, using file cache!");
@@ -227,6 +229,14 @@ public final class Cache {
 		return null;
 	}
 
+	/**
+	 * trying lock the name with the value, will expired by expire
+	 * 
+	 * @param name
+	 * @param value
+	 * @param expire
+	 * @return
+	 */
 	public static boolean trylock(String name, String value, long expire) {
 		if (cacheSystem != null) {
 			return cacheSystem.trylock(name, value, expire);
@@ -234,16 +244,32 @@ public final class Cache {
 		return false;
 	}
 
+	/**
+	 * set the expire time which locked
+	 * 
+	 * @param name
+	 * @param value
+	 * @param ms
+	 */
 	public static void expire(String name, String value, long ms) {
 		if (cacheSystem != null) {
 			cacheSystem.expire(name, value, ms);
 		}
 	}
 
+	/**
+	 * unlock the name
+	 * 
+	 * @param name
+	 * @param value
+	 * @return
+	 */
 	public static boolean unlock(String name, String value) {
 		if (cacheSystem != null) {
 			return cacheSystem.unlock(name, value);
 		}
+
+		log.warn("no cache system!");
 		return false;
 	}
 

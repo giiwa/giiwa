@@ -35,8 +35,10 @@ import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.RSA;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Access;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.License;
@@ -204,8 +206,20 @@ public class Module {
 
 		boolean changed = false;
 
+		// check default/WEB-INF/lib
+		File u1 = new File(Model.HOME + "/modules/default/WEB-INF/lib");
+		if (!u1.exists()) {
+			u1.mkdirs();
+			// copy all
+			try {
+				IOUtil.copyDir(new File(Model.HOME + "/WEB-INF/lib/"), u1);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+
 		// upgrade
-		File u1 = new File(Model.HOME + "/upgrade/");
+		u1 = new File(Model.HOME + "/upgrade/");
 		File[] ff = u1.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
@@ -350,7 +364,7 @@ public class Module {
 
 		} finally {
 
-			e.delete();
+			// e.delete();
 
 		}
 
@@ -1170,8 +1184,13 @@ public class Module {
 
 						if (_listener != null) {
 							log.info("initializing: " + name);
+							_listener.onInit(conf, this);
 							_listener.upgrade(conf, this);
-							_listener.onStart(conf, this);
+
+							if (Task.powerstate == 1) {
+								_listener.onStart(conf, this);
+							}
+
 						}
 					} catch (Throwable e) {
 						log.error(this.name + ", listener=" + name, e);
@@ -2143,4 +2162,18 @@ public class Module {
 			}
 		}
 	}
+
+	public static void startAll() {
+		Configuration conf = Config.getConf();
+		for (Module m : modules.values()) {
+			m._listener.onStart(conf, m);
+		}
+	}
+
+	public static void stopAll() {
+		for (Module m : modules.values()) {
+			m._listener.onStop();
+		}
+	}
+
 }

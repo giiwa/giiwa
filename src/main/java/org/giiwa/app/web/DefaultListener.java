@@ -29,25 +29,28 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.task.BackupTask;
 import org.giiwa.app.task.CleanupTask;
-import org.giiwa.app.task.DiskStatTask;
+import org.giiwa.app.task.NodeLoadStatTask;
 import org.giiwa.app.task.NtpTask;
 import org.giiwa.app.task.RecycleTask;
-import org.giiwa.app.task.StateTask;
+import org.giiwa.app.task.PerfMoniterTask;
 import org.giiwa.app.web.admin.dashboard;
 import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.profile;
 import org.giiwa.app.web.admin.setting;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.Optimizer;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.helper.RDB;
 import org.giiwa.core.bean.helper.RDSHelper;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.FileServer;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.SysTask;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Menu;
+import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.License;
 import org.giiwa.framework.bean.User;
@@ -68,25 +71,18 @@ public class DefaultListener implements IListener {
 
 	static Log log = LogFactory.getLog(DefaultListener.class);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.giiwa.framework.web.IListener#onStart(org.apache.commons.
-	 * configuration.Configuration, org.giiwa.framework.web.Module)
-	 */
-	public void onStart(Configuration conf, Module module) {
-		log.info("giiwa is starting...");
+	public void onInit(Configuration conf, Module module) {
+
+		log.info("giiwa is initing...");
 
 		try {
-
-			// start dfile, very important
-			Local.init();
-			DiskStatTask.init();
-			FileServer.inst.start();
 
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
 					// stop all task
+
+					log.info("giiwa is stopping");
+
 					Task.stopAll(true);
 
 					// stop all modules
@@ -96,26 +92,33 @@ public class DefaultListener implements IListener {
 							m.stop();
 						}
 					}
-					log.warn("giiwa is stopped");
 				}
 			});
 
-			Task.schedule(() -> {
-				MQ.init();
+			new SysTask() {
 
-				NtpTask.owner.schedule(X.AMINUTE);
-				new CleanupTask(conf).schedule(X.AMINUTE);
-				RecycleTask.owner.schedule(X.AMINUTE);
-				StateTask.owner.schedule(X.AMINUTE);
-				BackupTask.init();
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
 
-			}, 10);
+				@Override
+				public void onExecute() {
+					MQ.init();
+					Local.init();
+				}
+
+			}.schedule(0);
+
+			Disk.repair();
+
+			FileServer.inst.start();
 
 			/**
 			 * start the optimizer
 			 */
 			if (Global.getInt("db.optimizer", 1) == 1) {
-				Helper.setOptmizer(new Optimizer());
+				Helper.enableOptmizer();
 			}
 
 			module.setLicense(License.LICENSE.licensed,
@@ -135,6 +138,8 @@ public class DefaultListener implements IListener {
 			 */
 			User.checkAndInit();
 
+			User.repair();
+
 			/**
 			 * cleanup html
 			 */
@@ -143,9 +148,39 @@ public class DefaultListener implements IListener {
 				delete(f);
 			}
 
+			f = new File(Model.GIIWA_HOME + "/temp/");
+			IOUtil.delete(f);
+			f.mkdirs();
+
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
+
+		log.info("giiwa is inited");
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.IListener#onStart(org.apache.commons.
+	 * configuration.Configuration, org.giiwa.framework.web.Module)
+	 */
+	public void onStart(Configuration conf, Module module) {
+		
+		log.info("giiwa is starting...");
+
+		Task.schedule(() -> {
+
+			NtpTask.owner.schedule(X.AMINUTE);
+			new CleanupTask(Config.getConf()).schedule(X.AMINUTE);
+			RecycleTask.owner.schedule(X.AMINUTE);
+			PerfMoniterTask.owner.schedule(X.AMINUTE);
+			BackupTask.init();
+
+			NodeLoadStatTask.init();
+
+		});
 
 		log.info("giiwa is started");
 
@@ -153,7 +188,7 @@ public class DefaultListener implements IListener {
 
 	@Override
 	public void onStop() {
-		FileServer.inst.shutdown();
+		log.info("giiwa is stopped");
 	}
 
 	private void delete(File f) {

@@ -29,7 +29,7 @@ import org.giiwa.framework.bean.Disk;
  * @author yjiang
  * 
  */
-public class DefaultModel extends Model {
+class DefaultModel extends Model {
 
 	/*
 	 * (non-Javadoc)

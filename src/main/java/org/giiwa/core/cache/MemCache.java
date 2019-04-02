@@ -25,7 +25,7 @@ import com.whalin.MemCached.SockIOPool;
  * The Class MemCache is used to memcached cache <br>
  * url: memcached://host:port
  */
-public class MemCache implements ICacheSystem {
+class MemCache implements ICacheSystem {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(MemCache.class);
@@ -124,7 +124,8 @@ public class MemCache implements ICacheSystem {
 
 	@Override
 	public boolean unlock(String name, String value) {
-		return memCachedClient.delete(name);
+		memCachedClient.delete(name);
+		return true;
 	}
 
 }

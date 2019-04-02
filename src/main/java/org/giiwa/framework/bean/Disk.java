@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.giiwa.app.task.DiskHeartbeat;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
@@ -24,6 +23,7 @@ import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Model;
 import org.giiwa.core.bean.Column;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 
@@ -55,8 +55,8 @@ public class Disk extends Bean {
 	@Column(name = "priority")
 	int priority;
 
-	@Column(name = "lasttime")
-	long lasttime;
+	@Column(name = "checktime")
+	long checktime;
 
 	@Column(name = "bad")
 	int bad; // 0:ok, 1: bad
@@ -75,7 +75,8 @@ public class Disk extends Bean {
 	}
 
 	public boolean getLive() {
-		return bad != 1 && System.currentTimeMillis() - lasttime < 5000;
+		return (bad != 1) && (this.getNode_obj() != null) && (this.getNode_obj().getState() == 1)
+				&& (System.currentTimeMillis() - this.getNode_obj().getUpdated() < Node.LOST);
 	}
 
 	public long getId() {
@@ -179,21 +180,25 @@ public class Disk extends Bean {
 
 	public static DFile seek(String filename) {
 
-		filename = X.getCanonicalPath(filename);
+		if (Helper.isConfigured()) {
+			filename = X.getCanonicalPath(filename);
 
-		Beans<Disk> bs = disks(true);
+			Beans<Disk> bs = disks(true);
 
-		for (Disk e : bs) {
-			DFile d = DFile.create(e, filename);
-			if (d.exists()) {
-				return d;
+			for (Disk e : bs) {
+				DFile d = DFile.create(e, filename);
+				if (d.exists()) {
+					return d;
+				}
 			}
+
+			// log.debug("seek, not found, filename=" + filename, new Exception());
+			DFile f = DFile.create(Disk.get(), filename);
+
+			return f;
 		}
 
-		// log.debug("seek, not found, filename=" + filename, new Exception());
-		DFile f = DFile.create(Disk.get(), filename);
-
-		return f;
+		return null;
 
 	}
 
@@ -311,7 +316,6 @@ public class Disk extends Bean {
 	/**
 	 * sum local disk
 	 * 
-	 * @return
 	 */
 	public static void stat() {
 
@@ -358,21 +362,24 @@ public class Disk extends Bean {
 	}
 
 	public static void repair() {
-		int s = 0;
-		W q = W.create().sort("created", 1);
-		Beans<Disk> bs = dao.load(q, s, 10);
-		if (bs == null || bs.isEmpty()) {
-			// add a default
-			try {
-				File f = new File(Model.GIIWA_HOME + "/data");
-				if (!f.exists()) {
-					f.mkdirs();
-				}
-				Disk.create(V.create("path", f.getCanonicalPath()).append("priority", 1).append("node", Local.id()));
-				DiskHeartbeat.inst.schedule(0);
 
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+		if (Helper.isConfigured()) {
+			int s = 0;
+			W q = W.create().sort("created", 1);
+			Beans<Disk> bs = dao.load(q, s, 10);
+			if (bs == null || bs.isEmpty()) {
+				// add a default
+				try {
+					File f = new File(Model.GIIWA_HOME + "/data");
+					if (!f.exists()) {
+						f.mkdirs();
+					}
+					Disk.create(
+							V.create("path", f.getCanonicalPath()).append("priority", 1).append("node", Local.id()));
+
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
 			}
 		}
 	}

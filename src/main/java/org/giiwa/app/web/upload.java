@@ -21,6 +21,7 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.*;
 
@@ -47,6 +48,13 @@ public class upload extends Model {
 
 		// String access = Module.home.get("upload.require.access");
 
+		if (Task.powerstate == 0) {
+			this.response(JSON.create().append(X.STATE, HttpServletResponse.SC_BAD_REQUEST)
+					.append(X.ERROR, HttpServletResponse.SC_BAD_REQUEST)
+					.append(X.MESSAGE, lang.get("upload.node.state_0")));
+			return;
+		}
+
 		FileItem file = this.getFile("file");
 		if (file != null) {
 			String filename = this.getString("filename");
@@ -55,7 +63,8 @@ public class upload extends Model {
 			}
 			store(file, filename, jo);
 		} else {
-			jo.append(X.STATE, 201).append(X.MESSAGE, lang.get("not [file]"));
+			jo.append(X.STATE, HttpServletResponse.SC_BAD_REQUEST).append(X.ERROR, HttpServletResponse.SC_BAD_REQUEST)
+					.append(X.MESSAGE, lang.get("upload.notfound"));
 		}
 
 		// /**

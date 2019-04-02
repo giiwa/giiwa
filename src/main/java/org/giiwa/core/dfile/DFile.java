@@ -7,16 +7,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.app.web.admin.dfile;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Disk;
-import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Node;
 
 /**
@@ -39,7 +36,7 @@ public class DFile {
 	private transient String path;
 	private transient Node node_obj;
 	private transient Disk disk_obj;
-	private transient JSON info;
+	private transient FileInfo info;
 
 	public String getFilename() {
 		return filename;
@@ -83,7 +80,7 @@ public class DFile {
 		check();
 
 		getInfo();
-		return info == null ? false : info.getInt("e") == 1;
+		return info != null && info.exists;
 	}
 
 	public String getAbsolutePath() {
@@ -124,9 +121,9 @@ public class DFile {
 
 		check();
 
-		if (offset == 0) {
-			GLog.applog.info(dfile.class, "put", filename, null, null);
-		}
+		// if (offset == 0) {
+		// GLog.applog.info(dfile.class, "put", filename, null, null);
+		// }
 
 		return DFileOutputStream.create(this.getDisk_obj(), filename, offset);
 	}
@@ -151,7 +148,7 @@ public class DFile {
 		}
 	}
 
-	private JSON getInfo() {
+	private FileInfo getInfo() {
 		if (info == null) {
 			try {
 				info = FileClient.get(url).info(path, filename);
@@ -166,14 +163,14 @@ public class DFile {
 		check();
 
 		getInfo();
-		return info == null ? false : info.getInt("f") != 1;
+		return info != null && !info.isfile;
 	}
 
 	public boolean isFile() {
 		check();
 
 		getInfo();
-		return info == null ? false : info.getInt("f") == 1;
+		return info != null && info.isfile;
 	}
 
 	public String getName() {
@@ -187,14 +184,13 @@ public class DFile {
 	public DFile[] listFiles() throws Exception {
 		check();
 
-		JSON jo = FileClient.get(url).list(path, filename);
-		Collection<JSON> l1 = jo.getList("list");
+		List<FileInfo> l1 = FileClient.get(url).list(path, filename);
 
 		DFile[] l2 = new DFile[l1.size()];
 		int i = 0;
 
-		for (JSON j1 : l1) {
-			DFile d1 = DFile.create(disk_obj, X.getCanonicalPath("/" + filename + "/" + j1.getString("name")), j1);
+		for (FileInfo j1 : l1) {
+			DFile d1 = DFile.create(disk_obj, X.getCanonicalPath("/" + filename + "/" + j1.name), j1);
 			l2[i++] = d1;
 		}
 
@@ -206,7 +202,7 @@ public class DFile {
 		check();
 
 		getInfo();
-		return info == null ? 0 : info.getLong("u");
+		return info == null ? 0 : info.lastmodified;
 	}
 
 	public String getCanonicalPath() {
@@ -218,7 +214,7 @@ public class DFile {
 
 		getInfo();
 
-		return info == null ? 0 : info.getLong("l");
+		return info == null ? 0 : info.length;
 	}
 
 	public boolean renameTo(DFile file) {
@@ -235,17 +231,22 @@ public class DFile {
 		return create(d, filename, null);
 	}
 
-	public static DFile create(Disk d, String filename, JSON info) {
+	public static DFile create(Disk d, String filename, FileInfo info) {
+
 		DFile e = new DFile();
 
-		e.disk = d.getId();
 		e.filename = filename;
-
-		e.disk_obj = d;
-		e.node_obj = d.getNode_obj();
-		e.url = d.getNode_obj().getUrl();
-		e.path = d.getPath();
 		e.info = info;
+
+		if (d != null) {
+			e.disk = d.getId();
+			e.disk_obj = d;
+			e.node_obj = d.getNode_obj();
+			if (d.getNode_obj() != null) {
+				e.url = d.getNode_obj().getUrl();
+			}
+			e.path = d.getPath();
+		}
 
 		return e;
 
@@ -260,7 +261,8 @@ public class DFile {
 	 * copy the file and upload to disk
 	 * 
 	 * @param f
-	 * @return
+	 *            the File
+	 * @return the actually length
 	 */
 	public long upload(File f) {
 		try {

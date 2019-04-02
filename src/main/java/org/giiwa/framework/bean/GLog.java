@@ -78,6 +78,15 @@ public class GLog extends Bean {
 		return this.getString("node");
 	}
 
+	transient Node node_obj;
+
+	public Node getNode_obj() {
+		if (node_obj == null) {
+			node_obj = Node.dao.load(this.getNode());
+		}
+		return node_obj;
+	}
+
 	/**
 	 * get the model name
 	 * 
@@ -147,8 +156,19 @@ public class GLog extends Bean {
 		return user_obj;
 	}
 
+	/**
+	 * operation logger
+	 */
 	public static ILog oplog = new OpLog();
+
+	/**
+	 * application/module logger
+	 */
 	public static ILog applog = new AppLog();
+
+	/**
+	 * security logger
+	 */
 	public static ILog securitylog = new SecurityLog();
 
 	// --------------API
@@ -270,16 +290,32 @@ public class GLog extends Bean {
 				}
 
 				long t = System.currentTimeMillis();
-				String id = UID.id(t, op, message);
+				String id = Local.id() + "_" + t;
 				V v = V.create("id", id).set(X.CREATED, t).set("node", node).set("model", model).set("op", op)
 						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type1", type).append("level", level);
 				v.set("message", message);
 				v.set("trace", trace);
 
+				v.append("logger", _logger());
 				dao.insert(v);
 				return id;
 			}
 			return null;
+		}
+
+		private String _logger() {
+			Exception e = new Exception();
+			StackTraceElement[] ss = e.getStackTrace();
+			if (ss != null) {
+				for (StackTraceElement s : ss) {
+					if (!s.getClassName().startsWith(GLog.class.getName())) {
+						return (s.getClassName() + "." + s.getMethodName() + "(" + s.getFileName() + ":"
+								+ s.getLineNumber() + ")");
+					}
+				}
+			}
+
+			return X.EMPTY;
 		}
 
 		/**
@@ -565,6 +601,10 @@ public class GLog extends Bean {
 			_log(GLog.TYPE_APP, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 
+	}
+
+	public static void main(String[] aa) {
+		oplog._logger();
 	}
 
 }

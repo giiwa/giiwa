@@ -29,6 +29,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.giiwa.core.bean.X;
 
 import com.drew.imaging.jpeg.JpegMetadataReader;
 import com.drew.metadata.Directory;
@@ -1245,14 +1246,6 @@ public class GImage {
 	/** The Constant EMPTY. */
 	static final String EMPTY = "";
 
-	public static void main(String[] args) {
-		String s1 = "/Users/joe/Downloads/t1.png";
-		String s2 = "/Users/joe/Downloads/t2.png";
-
-		scale3(s1, s2, 1176, 100);
-
-	}
-
 	public static void cut(String source, int w, int h, String target) {
 		try {
 
@@ -1278,6 +1271,47 @@ public class GImage {
 		} catch (Exception e) {
 			log.error(source, e);
 		}
+	}
+
+	public static void cover(int w, String s, Color color, OutputStream output) {
+
+		try {
+			BufferedImage out = new BufferedImage(w, w, BufferedImage.TYPE_3BYTE_BGR);// TYPE_4BYTE_BGR);
+
+			Graphics2D g = (Graphics2D) out.getGraphics();
+			g.setColor(color);
+			g.fillRect(0, 0, w, w);
+
+			g.setFont(new Font("宋体", Font.BOLD, w / 2));
+			int x = (w - g.getFontMetrics().stringWidth(s)) / 2;
+
+			g.setColor(Color.WHITE);
+
+			g.drawString(s, x, w - x);
+
+			ImageIO.write(out, "png", output);
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			X.close(output);
+		}
+
+	}
+
+	public static void main(String[] args) {
+		String s1 = "/Users/joe/Downloads/t1.png";
+		// String s2 = "/Users/joe/Downloads/t2.png";
+
+		try {
+			GImage.cover(145, "A",
+					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
+					new FileOutputStream(s1));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		// scale3(s1, s2, 1176, 100);
+
 	}
 
 }

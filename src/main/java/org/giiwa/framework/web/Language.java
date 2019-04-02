@@ -272,6 +272,15 @@ public class Language {
 		return get(name, name);
 	}
 
+	public String random(String name) {
+		String s = Global.getString(name, "");
+		String[] ss = X.split(s, "[\\$\\$]");
+		if (ss != null && ss.length > 0) {
+			return ss[(int) (Math.random() * ss.length)];
+		}
+		return name;
+	}
+
 	public String get(String name, String defaultString) {
 		if (X.isEmpty(name)) {
 			return defaultString;
