@@ -1,5 +1,5 @@
 ### 轻量级分布式应用框架 
-[https://www.giiwa.org](https://www.giiwa.org){:target='_blank'}
+[https://www.giiwa.org](https://www.giiwa.org)
 
 
 #### 模块化
