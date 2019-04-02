@@ -41,4 +41,4 @@
 
 
 #### License
-Giiwa 以 Apache License V2 发布和许可授权，也即你可以任意使用代码， [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
+giiwa 支持 [Apache V2](LICENSE-2.0.html) 许可协议。
