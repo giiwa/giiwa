@@ -22,7 +22,7 @@
 
 
 #### 软件包下载
-最新giiwa软件包包 [giiwa-1.6.tgz](https://www.giiwa.org/archive/giiwa-1.6.tgz)，或者[giiwa-1.6.zip](https://www.giiwa.org/archive/giiwa-1.6.zip)。
+最新giiwa软件包 [giiwa-1.6.tgz](https://www.giiwa.org/archive/giiwa-1.6.tgz)，或者[giiwa-1.6.zip](https://www.giiwa.org/archive/giiwa-1.6.zip)。
 
 
 
