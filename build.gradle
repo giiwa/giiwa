@@ -111,20 +111,32 @@ task zip(type: Zip,dependsOn:prepare) {
 	from 'build/giiwa'
 	destinationDir file('build')
 	archiveName 'giiwa-1.6.zip'
+	
+	doLast {
+		println 'zip success, archived build/' + archiveName
+	}
 }
 
-task tar(type: Tar,dependsOn:prepare) {
+task tgz(type: Tar,dependsOn:prepare) {
 	from 'build/giiwa'
 	compression 'gzip'
 	destinationDir file('build')
 	archiveName 'giiwa-1.6.tgz'
+
+	doLast {
+		println 'tgz success, archived build/' + archiveName
+	}
 }
 
 task upgrade(type: Zip,dependsOn:prepare) {
 	from 'build/upgrade'
 	destinationDir file('build')
 	archiveName 'giiwa-1.6.' + buildno + '-upgrade.zip'
+
+	doLast {
+		println 'zip success, archived build/' + archiveName
+	}
 }
 
-task release(dependsOn: [upgrade, zip, tar]);
+task release(dependsOn: [upgrade, zip, tgz]);
 
