@@ -1,6 +1,7 @@
 ### 轻量级分布式应用框架 
 [https://www.giiwa.org](https://www.giiwa.org)
-
+* [快速安装](doc/install.md)
+* [入门教程](doc/first.md)
 
 
 #### 模块化
