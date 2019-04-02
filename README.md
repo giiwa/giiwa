@@ -1,7 +1,5 @@
 ### 轻量级分布式应用框架 
 [https://www.giiwa.org](https://www.giiwa.org)
-* [快速安装](doc/install.md)
-* [入门教程](doc/first.md)
 
 
 #### 模块化
@@ -22,10 +20,10 @@
 * 支持 MapReduce， 支持分布式锁， 分布式文件系统。
 
 
-
-#### 软件包下载
-最新giiwa软件包 [giiwa-1.6.tgz](https://www.giiwa.org/archive/giiwa-1.6.tgz)，或者[giiwa-1.6.zip](https://www.giiwa.org/archive/giiwa-1.6.zip)。
-
+#### 安装使用
+* 软件包下载 [giiwa-1.6.tgz](https://www.giiwa.org/archive/giiwa-1.6.tgz)，或者[giiwa-1.6.zip](https://www.giiwa.org/archive/giiwa-1.6.zip)
+* [快速安装](doc/install.md)
+* [入门教程](doc/first.md)
 
 
 #### 获取代码
