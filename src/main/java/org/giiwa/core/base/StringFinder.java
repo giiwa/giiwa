@@ -18,11 +18,16 @@ import java.util.Stack;
 
 import org.giiwa.core.bean.X;
 
+/**
+ * @deprecated
+ * @author joe
+ *
+ */
 public class StringFinder {
 
 	/**
 	 * Creates the.
-	 *
+	 * 
 	 * @param s
 	 *            the s
 	 * @return the g string
