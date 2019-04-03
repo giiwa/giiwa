@@ -76,7 +76,7 @@ task prepare(dependsOn: build) {
 		def line = xml1.readLine()
 		while( line != null ){
 			if( line.indexOf('>0<')>-1 ){
-				line = line.replace('>0<', '>' + buildno + '<')
+				line = line.replace('<build>0</build>', '<build>' + buildno + '</build>')
 			}
 			xml2.println(line)
 			line = xml1.readLine();
