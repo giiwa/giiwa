@@ -179,7 +179,7 @@ public class User extends Bean {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.core.bean.Bean#toString()
+	 * @see org.giiwa.core.bean.Bean.toString()
 	 */
 	public String toString() {
 		return "User@{id=" + this.getId() + ",name=" + this.getString("name") + "}";

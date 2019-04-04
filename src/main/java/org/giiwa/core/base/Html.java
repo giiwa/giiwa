@@ -241,8 +241,8 @@ public final class Html {
 	 * .
 	 *
 	 * @param selector
-	 *            1, #id for id element<br>
-	 *            e.g: find("#aaa") <br>
+	 *            1, .id for id element<br>
+	 *            e.g: find(".aaa") <br>
 	 *            2, .class for class attribute <br>
 	 *            e.g: find(".aaa") <br>
 	 *            3, tagname for tag directly <br>
@@ -272,7 +272,7 @@ public final class Html {
 	 * @param list
 	 *            the original elements
 	 * @param selector
-	 *            the string of selector, #id, .class, tag
+	 *            the string of selector, .id, .class, tag
 	 * @return the list of element or null nothing found
 	 */
 	public static List<Element> find(List<Element> list, String selector) {
@@ -325,8 +325,8 @@ public final class Html {
 		System.out.println("2:" + e);
 		System.out.println("3:" + h.find("div.b"));
 		System.out.println("4:" + h.find("div.b span.a"));
-		System.out.println("5:" + h.find("#aaa .a"));
-		// System.out.println("5:" + h.find("#aaa .a(aaaa)"));
+		System.out.println("5:" + h.find(".aaa .a"));
+		// System.out.println("5:" + h.find(".aaa .a(aaaa)"));
 
 	}
 }

@@ -31,7 +31,7 @@ public class alive extends Model {
   /*
    * (non-Javadoc)
    * 
-   * @see org.giiwa.framework.web.Model#onGet()
+   * @see org.giiwa.framework.web.Model.onGet()
    */
   public void onGet() {
     JSON jo = new JSON();

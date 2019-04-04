@@ -29,7 +29,7 @@ public class browserinfo extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Override
 	@Path()

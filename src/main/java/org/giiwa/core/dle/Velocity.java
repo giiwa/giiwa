@@ -125,7 +125,7 @@ public class Velocity {
 
   }
 
-  private final static String M = "#set($result.bool=(sss))";
+  private final static String M = ".set($result.bool=(sss))";
 
   /**
    * Parses the string with the model

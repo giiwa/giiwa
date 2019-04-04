@@ -252,7 +252,7 @@ public abstract class Task implements Runnable, Serializable {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#hashCode()
+	 * @see java.lang.Object.hashCode()
 	 */
 	@Override
 	public int hashCode() {
@@ -262,7 +262,7 @@ public abstract class Task implements Runnable, Serializable {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @see java.lang.Object.equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -355,7 +355,7 @@ public abstract class Task implements Runnable, Serializable {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#toString()
+	 * @see java.lang.Object.toString()
 	 */
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -366,7 +366,7 @@ public abstract class Task implements Runnable, Serializable {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Runnable#run()
+	 * @see java.lang.Runnable.run()
 	 */
 	final public void run() {
 

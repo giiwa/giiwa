@@ -123,7 +123,7 @@ public class Bean implements Serializable {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#toString()
+	 * @see java.lang.Object.toString()
 	 */
 	public String toString() {
 		return this.getClass().getSimpleName() + "@" + this.getJSON();
@@ -326,7 +326,7 @@ public class Bean implements Serializable {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.util.Map#containsKey(java.lang.Object)
+	 * @see java.util.Map.containsKey(java.lang.Object)
 	 */
 	public final boolean containsKey(Object key) {
 		return getAll().containsKey(key);
@@ -335,7 +335,7 @@ public class Bean implements Serializable {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.util.Map#containsValue(java.lang.Object)
+	 * @see java.util.Map.containsValue(java.lang.Object)
 	 */
 	public final boolean containsValue(Object value) {
 		return getAll().containsValue(value);

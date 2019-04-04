@@ -126,7 +126,7 @@ public class profile extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Path(login = true)
 	public final void onGet() {
@@ -147,7 +147,7 @@ public class profile extends Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.giiwa.app.web.admin.setting#set()
+		 * @see org.giiwa.app.web.admin.setting.set()
 		 */
 		@Override
 		public void set() {
@@ -203,7 +203,7 @@ public class profile extends Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.giiwa.app.web.admin.setting#get()
+		 * @see org.giiwa.app.web.admin.setting.get()
 		 */
 		@Override
 		public void get() {

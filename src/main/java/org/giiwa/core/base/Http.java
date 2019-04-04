@@ -497,7 +497,7 @@ public final class Http {
 		} else if (!url.startsWith("http")) {
 			url = Http.path(referer) + url;
 		}
-		int i = url.indexOf("#");
+		int i = url.indexOf(".");
 		if (i > 0) {
 			url = url.substring(0, i);
 		}
@@ -1121,8 +1121,8 @@ public final class Http {
 		String s = "//aaa.com/";
 		s = "http://aaa.com?aaa";
 		s = "http://aaa.com&aaa";
-		s = "http://aaa.com#aaa";
-		s = "https://aaa.com#aaa";
+		s = "http://aaa.com.aaa";
+		s = "https://aaa.com.aaa";
 		System.out.println(format(s));
 		// Http h = Http.create();
 		// System.out.println("response=" + h.get("http://giiwa.org").body);
@@ -1489,10 +1489,10 @@ public final class Http {
 
 	public static String host(String url) {
 		if (url.startsWith("http")) {
-			String[] ss = X.split(url, "[/:?&#]");
+			String[] ss = X.split(url, "[/:?&.]");
 			return ss != null && ss.length > 1 ? ss[1] : null;
 		} else {
-			String[] ss = X.split(url, "[/:?&#]");
+			String[] ss = X.split(url, "[/:?&.]");
 			return ss != null && ss.length > 0 ? ss[0] : null;
 		}
 	}
@@ -1542,7 +1542,7 @@ public final class Http {
 	}
 
 	public static String uri(String url) {
-		return X.split(url, "[#?&]")[0];
+		return X.split(url, "[.?&]")[0];
 	}
 
 	public static boolean inSite(String href, String[] domains) {
@@ -1564,7 +1564,7 @@ public final class Http {
 
 	public static String getQuery(String url, String name) {
 
-		String[] ss = X.split(url, "[#?&]");
+		String[] ss = X.split(url, "[.?&]");
 		if (ss != null) {
 			for (int i = 1; i < ss.length; i++) {
 				StringFinder f = StringFinder.create(ss[i]);

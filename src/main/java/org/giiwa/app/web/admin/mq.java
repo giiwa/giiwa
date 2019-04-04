@@ -27,7 +27,7 @@ public class mq extends setting {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Path(path = "log", login = true, access = "access.config.admin")
 	public void log() {

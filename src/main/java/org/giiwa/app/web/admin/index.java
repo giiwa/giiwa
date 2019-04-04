@@ -29,7 +29,7 @@ public class index extends Model {
   /*
    * (non-Javadoc)
    * 
-   * @see org.giiwa.framework.web.Model#onGet()
+   * @see org.giiwa.framework.web.Model.onGet()
    */
   @Override
   @Path(login = true, method = Model.METHOD_GET)
@@ -43,7 +43,7 @@ public class index extends Model {
   /*
    * (non-Javadoc)
    * 
-   * @see org.giiwa.framework.web.Model#onPost()
+   * @see org.giiwa.framework.web.Model.onPost()
    */
   @Path(login = true, method = Model.METHOD_POST)
   public void onPost() {

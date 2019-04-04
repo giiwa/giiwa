@@ -551,7 +551,7 @@ public class GImage {
 	 */
 	private static String formatUrl(String uri, String charset) throws UnsupportedEncodingException {
 
-		int i = uri.indexOf("#");
+		int i = uri.indexOf(".");
 		if (i > -1) {
 			uri = uri.substring(0, i);
 		}

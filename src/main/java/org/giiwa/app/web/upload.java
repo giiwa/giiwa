@@ -38,7 +38,7 @@ public class upload extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onPost()
+	 * @see org.giiwa.framework.web.Model.onPost()
 	 */
 	@Override
 	@Path(login = true)

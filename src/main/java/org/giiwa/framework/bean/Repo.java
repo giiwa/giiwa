@@ -347,7 +347,7 @@ public class Repo extends Bean {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#finalize()
+		 * @see java.lang.Object.finalize()
 		 */
 		@Override
 		protected void finalize() throws Throwable {

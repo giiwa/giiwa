@@ -475,7 +475,7 @@ public class Helper implements Serializable {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#toString()
+		 * @see java.lang.Object.toString()
 		 */
 		@Override
 		public String toString() {
@@ -1035,7 +1035,7 @@ public class Helper implements Serializable {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#toString()
+		 * @see java.lang.Object.toString()
 		 */
 		public String toString() {
 			return elist == null ? X.EMPTY : "{" + where() + "}=>" + Helper.toString(args()) + ", sort=" + order;
@@ -1680,7 +1680,7 @@ public class Helper implements Serializable {
 			/*
 			 * (non-Javadoc)
 			 * 
-			 * @see java.lang.Object#toString()
+			 * @see java.lang.Object.toString()
 			 */
 			public String toString() {
 				if (tostring == null) {
@@ -2759,7 +2759,7 @@ public class Helper implements Serializable {
 		System.out.println(q1);
 		System.out.println(q1.query());
 
-		System.out.println("#################");
+		System.out.println(".................");
 		W sql = W.create();
 		sql.and("a", "B").and("c", "d").or("e", "f").and("f", "g");
 		System.out.println(sql.query());

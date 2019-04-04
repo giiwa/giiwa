@@ -37,7 +37,7 @@ public class menu extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Override
 	public void onGet() {
@@ -47,7 +47,7 @@ public class menu extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onPost()
+	 * @see org.giiwa.framework.web.Model.onPost()
 	 */
 	public void onPost() {
 		User me = this.getUser();

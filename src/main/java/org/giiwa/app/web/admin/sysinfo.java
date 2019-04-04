@@ -30,7 +30,7 @@ public class sysinfo extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {

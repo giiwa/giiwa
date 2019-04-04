@@ -27,7 +27,7 @@ public class PageLink implements Comparable<PageLink> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @see java.lang.Object.equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
@@ -37,7 +37,7 @@ public class PageLink implements Comparable<PageLink> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#hashCode()
+	 * @see java.lang.Object.hashCode()
 	 */
 	@Override
 	public int hashCode() {
@@ -89,7 +89,7 @@ public class PageLink implements Comparable<PageLink> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#toString()
+	 * @see java.lang.Object.toString()
 	 */
 	public String toString() {
 		if (link == null) {
@@ -102,7 +102,7 @@ public class PageLink implements Comparable<PageLink> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 * @see java.lang.Comparable.compareTo(java.lang.Object)
 	 */
 	public int compareTo(PageLink another) {
 		return page - another.page;

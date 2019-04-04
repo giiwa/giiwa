@@ -163,7 +163,7 @@ public class DefaultListener implements IListener {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.IListener#onStart(org.apache.commons.
+	 * @see org.giiwa.framework.web.IListener.onStart(org.apache.commons.
 	 * configuration.Configuration, org.giiwa.framework.web.Module)
 	 */
 	public void onStart(Configuration conf, Module module) {
@@ -238,7 +238,7 @@ public class DefaultListener implements IListener {
 					String line = in.readLine();
 					while (line != null) {
 						line = line.trim();
-						if (!"".equals(line) && !line.startsWith("#")) {
+						if (!"".equals(line) && !line.startsWith(".")) {
 
 							sb.append(line).append("\r\n");
 
@@ -306,7 +306,7 @@ public class DefaultListener implements IListener {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.IListener#upgrade(org.apache.commons.
+	 * @see org.giiwa.framework.web.IListener.upgrade(org.apache.commons.
 	 * configuration.Configuration, org.giiwa.framework.web.Module)
 	 */
 	public void upgrade(Configuration conf, Module module) {
@@ -458,7 +458,7 @@ public class DefaultListener implements IListener {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.IListener#uninstall(org.apache.commons.
+	 * @see org.giiwa.framework.web.IListener.uninstall(org.apache.commons.
 	 * configuration.Configuration, org.giiwa.framework.web.Module)
 	 */
 	public void uninstall(Configuration conf, Module module) {

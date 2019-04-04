@@ -38,7 +38,7 @@ public class NtpTask extends Task {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.core.task.Task#getName()
+	 * @see org.giiwa.core.task.Task.getName()
 	 */
 	@Override
 	public String getName() {
@@ -54,7 +54,7 @@ public class NtpTask extends Task {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.core.task.Task#onExecute()
+	 * @see org.giiwa.core.task.Task.onExecute()
 	 */
 	@Override
 	public void onExecute() {
@@ -74,7 +74,7 @@ public class NtpTask extends Task {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.core.task.Task#onFinish()
+	 * @see org.giiwa.core.task.Task.onFinish()
 	 */
 	@Override
 	public void onFinish() {

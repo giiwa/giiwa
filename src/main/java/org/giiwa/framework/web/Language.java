@@ -129,9 +129,9 @@ public class Language {
 			for (int i = sb.length(); i < bits; i++) {
 				sb.append("0");
 			}
-			return "#" + sb.toString();
+			return "." + sb.toString();
 		} else {
-			return "#" + sb.substring(0, bits);
+			return "." + sb.substring(0, bits);
 		}
 	}
 

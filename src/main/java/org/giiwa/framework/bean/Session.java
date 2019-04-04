@@ -46,7 +46,7 @@ public class Session implements Serializable {
   /*
    * (non-Javadoc)
    * 
-   * @see java.lang.Object#toString()
+   * @see java.lang.Object.toString()
    */
   public String toString() {
     return new StringBuilder("Session@{sid=").append(sid).append(",data=").append(a).append("}").toString();

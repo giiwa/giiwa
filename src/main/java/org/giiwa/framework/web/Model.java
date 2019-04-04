@@ -2387,7 +2387,7 @@ public class Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#toString()
+		 * @see java.lang.Object.toString()
 		 */
 		@Override
 		public String toString() {
@@ -2430,7 +2430,7 @@ public class Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#hashCode()
+		 * @see java.lang.Object.hashCode()
 		 */
 		@Override
 		public int hashCode() {
@@ -2440,7 +2440,7 @@ public class Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#equals(java.lang.Object)
+		 * @see java.lang.Object.equals(java.lang.Object)
 		 */
 		@Override
 		public boolean equals(Object obj) {
@@ -2463,7 +2463,7 @@ public class Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#toString()
+	 * @see java.lang.Object.toString()
 	 */
 	@Override
 	final public String toString() {
@@ -2544,7 +2544,7 @@ public class Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#toString()
+		 * @see java.lang.Object.toString()
 		 */
 		public String toString() {
 			return new StringBuilder(name).append("=").append(value).toString();

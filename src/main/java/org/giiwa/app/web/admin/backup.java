@@ -64,7 +64,7 @@ public class backup extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Path(login = true, access = "access.config.admin")
 	@Override
@@ -389,7 +389,7 @@ public class backup extends Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.giiwa.core.task.Task#onExecute()
+		 * @see org.giiwa.core.task.Task.onExecute()
 		 */
 		@Override
 		public void onExecute() {
@@ -513,7 +513,7 @@ public class backup extends Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.giiwa.core.task.Task#onExecute()
+		 * @see org.giiwa.core.task.Task.onExecute()
 		 */
 		@Override
 		public void onExecute() {
@@ -584,7 +584,7 @@ public class backup extends Model {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see org.giiwa.core.task.Task#onFinish()
+		 * @see org.giiwa.core.task.Task.onFinish()
 		 */
 		@Override
 		public void onFinish() {

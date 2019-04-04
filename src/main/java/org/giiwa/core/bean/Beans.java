@@ -103,7 +103,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#toString()
+	 * @see java.lang.Object.toString()
 	 */
 	public String toString() {
 		return "Beans[total=" + total + ", size=" + size() + "]";

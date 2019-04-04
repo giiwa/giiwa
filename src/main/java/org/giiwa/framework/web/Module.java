@@ -418,7 +418,7 @@ public class Module {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Object#toString()
+	 * @see java.lang.Object.toString()
 	 */
 	@Override
 	public String toString() {
@@ -1488,7 +1488,7 @@ public class Module {
 				try {
 					String line = reader.readLine();
 					while (line != null) {
-						if (!line.startsWith("#")) {
+						if (!line.startsWith(".")) {
 							int i = line.indexOf("=");
 							if (i > 0) {
 								String name = line.substring(0, i).trim();
@@ -1551,7 +1551,7 @@ public class Module {
 				String line = reader.readLine();
 				while (line != null) {
 					line = line.trim();
-					if (!line.startsWith("#")) {
+					if (!line.startsWith(".")) {
 						int i = line.indexOf("=");
 						if (i > 0) {
 							String s1 = line.substring(0, i);
@@ -2019,7 +2019,7 @@ public class Module {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see java.lang.Object#toString()
+		 * @see java.lang.Object.toString()
 		 */
 		public String toString() {
 			return "{" + module.getName() + "//" + model.getName() + "}";

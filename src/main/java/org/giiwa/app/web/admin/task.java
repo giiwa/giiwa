@@ -40,7 +40,7 @@ public class task extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
@@ -81,7 +81,7 @@ public class task extends Model {
 							.append("), Thread: ").append(t1.getName()).append(", State: <i style='color:green'>")
 							.append(t1.getState()).append("</i>, Task:").append(t.getClass().getName()).append("<br/>");
 
-					sb.append("<div style='color: #888;'>")
+					sb.append("<div style='color: .888;'>")
 							.append(t.onDump(new StringBuilder()).toString().replaceAll("\r\n", "<br/>"))
 							.append("</div>");
 

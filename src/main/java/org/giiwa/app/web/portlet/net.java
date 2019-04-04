@@ -44,15 +44,15 @@ public class net extends portlet {
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			// {name: "$lang.get('net.rxbytes.speed')", color:'#0dad76', data: [#foreach($c
+			// {name: "$lang.get('net.rxbytes.speed')", color:'.0dad76', data: [.foreach($c
 			// in $list) {x:$this.time($c), y:$c.rxbytes,
-			// hint:"$!lang.size($c.rxbytes)"},#end]},
-			// {name: "$lang.get('net.txbytes.speed')", color:'#0a5ea0', data: [#foreach($c
+			// hint:"$!lang.size($c.rxbytes)"},.end]},
+			// {name: "$lang.get('net.txbytes.speed')", color:'.0a5ea0', data: [.foreach($c
 			// in $list) {x:$this.time($c), y:$c.txbytes,
-			// hint:"$!lang.size($c.txbytes)"},#end]}
+			// hint:"$!lang.size($c.txbytes)"},.end]}
 
-			JSON p1 = JSON.create().append("name", lang.get("net.rxbytes.speed")).append("color", "#0dad76");
-			JSON p2 = JSON.create().append("name", lang.get("net.txbytes.speed")).append("color", "#0a5ea0");
+			JSON p1 = JSON.create().append("name", lang.get("net.rxbytes.speed")).append("color", ".0dad76");
+			JSON p2 = JSON.create().append("name", lang.get("net.txbytes.speed")).append("color", ".0a5ea0");
 
 			List<JSON> l1 = JSON.createList();
 			List<JSON> l2 = JSON.createList();

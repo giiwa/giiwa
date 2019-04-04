@@ -80,7 +80,7 @@ public class CleanupTask extends Task {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.core.task.Task#getName()
+	 * @see org.giiwa.core.task.Task.getName()
 	 */
 	@Override
 	public String getName() {
@@ -90,7 +90,7 @@ public class CleanupTask extends Task {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.worker.WorkerTask#onExecute()
+	 * @see org.giiwa.worker.WorkerTask.onExecute()
 	 */
 	@Override
 	public void onExecute() {
@@ -188,7 +188,7 @@ public class CleanupTask extends Task {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.worker.WorkerTask#onFinish()
+	 * @see org.giiwa.worker.WorkerTask.onFinish()
 	 */
 	@Override
 	public void onFinish() {

@@ -36,7 +36,7 @@ public class cpu extends portlet {
 			this.set("list", bs);
 
 			JSON p = JSON.create();
-			p.append("name", lang.get("cpu.usage")).append("color", "#860606");
+			p.append("name", lang.get("cpu.usage")).append("color", ".860606");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y",

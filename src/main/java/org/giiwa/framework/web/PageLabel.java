@@ -107,7 +107,7 @@ public class PageLabel implements Comparable<PageLabel> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 * @see java.lang.Comparable.compareTo(java.lang.Object)
 	 */
 	public int compareTo(PageLabel o) {
 		if (seq < o.seq) {

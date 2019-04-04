@@ -102,7 +102,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
+	 * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader.
 	 * getLastModified(org.apache.velocity.runtime.resource.Resource)
 	 */
 	@Override
@@ -117,7 +117,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader#
+	 * @see org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader.
 	 * isSourceModified(org.apache.velocity.runtime.resource.Resource)
 	 */
 	@Override
@@ -134,7 +134,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.apache.velocity.runtime.resource.loader.ResourceLoader#resourceExists
+	 * org.apache.velocity.runtime.resource.loader.ResourceLoader.resourceExists
 	 * (java.lang.String)
 	 */
 	@Override

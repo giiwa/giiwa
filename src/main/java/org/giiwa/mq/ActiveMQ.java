@@ -149,7 +149,7 @@ class ActiveMQ extends MQ {
 		/*
 		 * (non-Javadoc)
 		 * 
-		 * @see javax.jms.MessageListener#onMessage(javax.jms.Message)
+		 * @see javax.jms.MessageListener.onMessage(javax.jms.Message)
 		 */
 		@Override
 		public void onMessage(Message m) {

@@ -48,7 +48,7 @@ public class accesslog extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see org.giiwa.framework.web.Model#onGet()
+	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
 	public void onGet() {

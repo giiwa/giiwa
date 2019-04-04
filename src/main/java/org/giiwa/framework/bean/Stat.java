@@ -138,7 +138,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 * @see java.lang.Comparable.compareTo(java.lang.Object)
 	 */
 	public int compareTo(Stat o) {
 		if (this == o)

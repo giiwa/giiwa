@@ -73,9 +73,9 @@ public class Shell {
 	 * @param message
 	 *            the message
 	 */
-	// 192.168.1.1#系统名称#2014-10-31#ERROR#日志消息#程序名称
+	// 192.168.1.1.系统名称.2014-10-31.ERROR.日志消息.程序名称
 	public static void log(String ip, Logger level, String module, String message) {
-		String deli = Global.getString("log_deli", "#");
+		String deli = Global.getString("log_deli", ".");
 		StringBuilder sb = new StringBuilder();
 		sb.append(ip).append(deli);
 		sb.append("support").append(deli);

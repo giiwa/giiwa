@@ -42,7 +42,7 @@ public class GiiwaContextListener implements ServletContextListener {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see javax.servlet.ServletContextListener#contextDestroyed(javax.servlet.
+	 * @see javax.servlet.ServletContextListener.contextDestroyed(javax.servlet.
 	 * ServletContextEvent)
 	 */
 	public void contextDestroyed(ServletContextEvent arg) {
@@ -52,7 +52,7 @@ public class GiiwaContextListener implements ServletContextListener {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see javax.servlet.ServletContextListener#contextInitialized(javax.servlet
+	 * @see javax.servlet.ServletContextListener.contextInitialized(javax.servlet
 	 * .ServletContextEvent)
 	 */
 	public void contextInitialized(ServletContextEvent event) {

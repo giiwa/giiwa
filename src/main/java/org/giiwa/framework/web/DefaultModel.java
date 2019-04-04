@@ -34,7 +34,7 @@ class DefaultModel extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.giiwa.framework.web.Model#onGet()
+	 * @see com.giiwa.framework.web.Model.onGet()
 	 */
 	@Override
 	public void onGet() {
@@ -44,7 +44,7 @@ class DefaultModel extends Model {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see com.giiwa.framework.web.Model#onPost()
+	 * @see com.giiwa.framework.web.Model.onPost()
 	 */
 	@Override
 	public void onPost() {
