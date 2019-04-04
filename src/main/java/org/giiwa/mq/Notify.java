@@ -29,7 +29,8 @@ class Notify extends IStub {
 		Object d = req.get();
 		List<Object[]> l1 = waiter.get(name);
 		if (l1 != null) {
-			for (Object[] a : l1) {
+			Object[][] l2 = l1.toArray(new Object[l1.size()][]);
+			for (Object[] a : l2) {
 				synchronized (a) {
 					a[0] = d;
 					a.notifyAll();
