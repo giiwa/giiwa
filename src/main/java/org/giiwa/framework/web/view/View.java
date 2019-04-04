@@ -18,7 +18,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -26,11 +28,28 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.web.Model;
 
 public abstract class View {
 
 	static Log log = LogFactory.getLog(View.class);
+
+	private static List<String> ignore = new ArrayList<String>();
+
+	/**
+	 * add ignore url which will NOT be parse by any parser
+	 * 
+	 * @param urlregular
+	 */
+	public static void ignore(String urlregular) {
+		if (!ignore.contains(urlregular)) {
+			ignore.add(urlregular);
+		}
+
+		log.debug("ignore=" + ignore);
+		GLog.applog.info("view", "ignore", "ignore=" + ignore, X.toString(new Exception()), null, null);
+	}
 
 	/**
 	 * parse the file with the model
@@ -96,6 +115,15 @@ public abstract class View {
 	 */
 	public static void merge(File file, Model m, String viewname) throws Exception {
 
+		for (String s : ignore) {
+			if (viewname.matches(s)) {
+				// ignore
+				log.debug("ignore the view=" + viewname);
+				fileview.parse(file, m, viewname);
+				return;
+			}
+		}
+
 		String name = file.getName();
 		for (String suffix : views.keySet()) {
 			if (name.endsWith(suffix)) {
@@ -109,6 +137,15 @@ public abstract class View {
 	}
 
 	public static void merge(DFile f, Model m, String viewname) throws Exception {
+
+		for (String s : ignore) {
+			if (viewname.matches(s)) {
+				// ignore
+				log.debug("ignore the view=" + viewname);
+				fileview.parse(f, m, viewname);
+				return;
+			}
+		}
 
 		for (String suffix : views.keySet()) {
 			if (viewname.endsWith(suffix)) {
