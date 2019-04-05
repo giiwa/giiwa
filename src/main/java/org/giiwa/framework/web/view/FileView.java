@@ -67,6 +67,7 @@ public class FileView extends View {
 
 			String filetype = Model.getMimeType(View.getName(file));
 			m.setContentType(filetype);
+			
 			boolean media = (filetype != null && (filetype.startsWith("video") || filetype.startsWith("audio"))) ? true
 					: false;
 
