@@ -66,6 +66,14 @@ task prepare(dependsOn: build) {
 		    from('tomcat')
 		    into('build/giiwa')
 		}
+
+		copy{
+		    from('tomcat/bin/')
+		    into('build/giiwa/bin/')
+		    include '*.sh'
+		    fileMode 0755
+		}
+		
 		copy{
 		    from('src/main/modules')
 		    into('build/giiwa/giiwa/modules')
@@ -117,7 +125,7 @@ task zip(type: Zip,dependsOn:prepare) {
 	}
 }
 
-task tgz(type: Tar,dependsOn:prepare) {
+task tgz(type: Tar, dependsOn:prepare) {
 	from 'build/giiwa'
 	compression 'gzip'
 	destinationDir file('build')

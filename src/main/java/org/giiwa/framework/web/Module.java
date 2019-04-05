@@ -207,7 +207,7 @@ public class Module {
 		boolean changed = false;
 
 		// check default/WEB-INF/lib
-		File u1 = new File(Model.HOME + "/modules/default/WEB-INF/lib");
+		File u1 = new File(Model.HOME + "/modules/default/WEB-INF/");
 		if (!u1.exists()) {
 			u1.mkdirs();
 			// copy all
