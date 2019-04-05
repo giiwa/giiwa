@@ -10,7 +10,7 @@
 * 安装 [Monogo](https://www.mongodb.com/download-center/community) 数据库 *(可选)*
 
 #### 安装 giiwa
-* [下载giiwa](https://www.giiwa.org/home/)
+* [下载giiwa](https://www.giiwa.org/home/), 或使用安装[giiwa的docker影像](https://hub.docker.com/r/s20000/giiwa)
 * 直接解压 giiwa
 > tar xzf giiwa-1.6.tgz -C giiwa
 * 启动 giiwa
