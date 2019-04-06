@@ -18,6 +18,7 @@
 
 import re, os, sys, time, socket, threading, subprocess, ConfigParser, smtplib, httplib,urllib
 from email.mime.text import MIMEText
+from setuptools.command.install import _install
 
 global running,logfile,conf,sock,shutdown
 running=True
@@ -418,10 +419,11 @@ def _shutdown():
 		sock.close() 
 	except:
 		print "not running"
-	
+		
 def _usage():
 	print "Help: \nappdog [start|stop|shutdown]"
 	print "\tstop: stop the appdog, but the apps still running"
+	print "\trestart: stop the appdog, and restart the appdog"
 	print "\tshutdown: stop the appdog and all the apps"
 
 def _console():
@@ -436,6 +438,9 @@ if __name__=="__main__":
 		_start()
 	elif a=="stop":
 		_stop()
+	elif a=="restart":
+		_stop()
+		_start()
 	elif a=="shutdown":
 		_shutdown()
 	else:

@@ -95,9 +95,9 @@ public class module extends Model {
 		String lifelistener = package1 + "." + name.substring(0, 1).toUpperCase() + name.substring(1) + "Listener";
 		String readme = this.getString("readme");
 
-		String fid = UID.id(login == null ? UID.random() : login.getId(), System.currentTimeMillis());
+		Temp t = Temp.create(name + ".zip");
+		File f = t.getLocalFile();
 
-		DFile f = Temp.get(fid, name + ".zip");
 		if (f.exists()) {
 			f.delete();
 		} else {
@@ -107,7 +107,7 @@ public class module extends Model {
 		ZipOutputStream out = null;
 
 		try {
-			out = new ZipOutputStream(f.getOutputStream());
+			out = new ZipOutputStream(new FileOutputStream(f));
 
 			RSA.Key key = RSA.generate(1024);
 
@@ -203,9 +203,10 @@ public class module extends Model {
 			e = e.addElement("class");
 			e.setText(lifelistener);
 
-			e = root.addElement("filter");
-			e.addComment(
-					"TODO, please refer web.IFilter, eg. <pattern>/user/login</pattern>,<class>org.giiwa.demo.web.UserFiler</class>");
+			// e = root.addElement("filter");
+			// e.addComment(
+			// "TODO, please refer web.IFilter, eg.
+			// <pattern>/user/login</pattern>,<class>org.giiwa.demo.web.UserFiler</class>");
 
 			e = root.addElement("required");
 			e.addComment("add all required modules here");
@@ -495,13 +496,15 @@ public class module extends Model {
 				Global.setConfig("module.id.next", id + 1);
 			}
 
+			t.save(t.getFile());
+
 		} finally {
 			if (out != null) {
 				out.close();
 			}
 		}
 
-		return "/temp/" + fid + "/" + name + ".zip";
+		return t.getUri();
 	}
 
 	private ZipOutputStream copy(ZipOutputStream out, File f) throws Exception {

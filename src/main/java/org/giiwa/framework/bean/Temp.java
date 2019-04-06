@@ -16,6 +16,7 @@ package org.giiwa.framework.bean;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +62,7 @@ public class Temp {
 	private String id = null;
 	private String name = null;
 	private DFile file = null;
+	private File localfile = null;
 
 	private Temp() {
 
@@ -105,7 +107,10 @@ public class Temp {
 	}
 
 	public File getLocalFile() {
-		return new File(Model.GIIWA_HOME + path(id, name));
+		if (localfile == null) {
+			localfile = new File(Model.GIIWA_HOME + path(id, name));
+		}
+		return localfile;
 	}
 
 	/**
@@ -309,6 +314,13 @@ public class Temp {
 
 		}
 
+	}
+
+	public long save(DFile file) throws Exception {
+		if (localfile != null) {
+			return IOUtil.copy(new FileInputStream(localfile), file.getOutputStream());
+		}
+		return 0;
 	}
 
 }

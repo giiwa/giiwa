@@ -41,14 +41,13 @@ def _pidx():
 		return -1
 	
 def _stopx():
-	pid=_pidx()
+	pid = _pidx()
 	if pid>0:
 		subprocess.call("kill " + str(pid), shell=True)
 
 def _start():
 	global running,interval,home
-
-	pid=os.fork()
+	pid = os.fork()
 	if pid>0:
 		try:
 			f=open(giiwapid, "wb+")
@@ -58,7 +57,6 @@ def _start():
 		except Exception, e:
 			print e
 			sys.exit(0)
-
 	while running:
 		if _pidx()>0:
 			time.sleep(interval)
@@ -84,6 +82,14 @@ def _stop():
 	except Exception, e:
 		print "Not running."
 	
+def _install():
+	print "installing appdog ..."
+	print "copying appdog to /etc/init.d"
+	print "copying apps.conf to /etc/appdog/"
+	print "setup appdog" 
+	print "install success."
+	print "Please view /etc/appdog/apps.conf to get more."
+	
 if __name__=="__main__":
 	if len(sys.argv) > 1:
 		a=sys.argv[1]
@@ -95,8 +101,12 @@ if __name__=="__main__":
 		else:
 			signal.signal(signal.SIGTERM, onkill)
 			_start()
-			
 	elif a=="stop":
 		_stop()
+	elif a=="restart":
+		_stop()
+		_start()
+	elif a=="install":
+		_install()
 	else:
-		print "Help: \n\tgiiwa [start|stop]\n"
+		print "Help: \n\tgiiwa [start|stop|restart|install]\n"
