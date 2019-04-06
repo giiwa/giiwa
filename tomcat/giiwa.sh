@@ -78,22 +78,19 @@ def _stop():
 		f.close()
 		os.popen("ps -p " + pid).readlines()[1]
 		subprocess.call("kill " + pid, shell=True)
-		print "Stopped."
+		print "giiwa is stopped."
 	except Exception, e:
-		print "Not running."
+		print "Not found giiwa."
 	
 def _install():
 		print "installing appdog ..."
-		print "copying appdog to /etc/init.d"
 		os.system("cp appdog/appdog /etc/init.d/")
 		os.system("chmod ugo+x /etc/init.d/appdog");
 		os.system("chkconfig appdog on")
-		print "copying apps.conf to /etc/appdog/"
 		os.system("mkdir /etc/appdog");
 		os.system("cp appdog/apps.conf /etc/appdog");
-		print "setup appdog"
+		print "setup appdog ..."
 		s1 = os.getcwd()
-		print s1
 		f1 = open('/etc/appdog/apps.conf', 'r+')
 		ss = f1.readlines();
 		f1.seek(0,0)
@@ -110,7 +107,7 @@ if __name__=="__main__":
 		a=""
 	if a=="start":
 		if _pidx()>0:
-			print "Already running."
+			print "giiwa is running."
 		else:
 			signal.signal(signal.SIGTERM, onkill)
 			_start()
