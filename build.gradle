@@ -70,7 +70,7 @@ task prepare(dependsOn: build) {
 		copy{
 		    from('tomcat/')
 		    into('build/giiwa/')
-		    include '*.sh'
+		    include 'giiwa'
 		    fileMode 0755
 		}
 		
