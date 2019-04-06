@@ -83,13 +83,26 @@ def _stop():
 		print "Not running."
 	
 def _install():
-	print "installing appdog ..."
-	print "copying appdog to /etc/init.d"
-	print "copying apps.conf to /etc/appdog/"
-	print "setup appdog" 
-	print "install success."
-	print "Please view /etc/appdog/apps.conf to get more."
-	
+		print "installing appdog ..."
+		print "copying appdog to /etc/init.d"
+		os.system("cp appdog/appdog /etc/init.d/")
+		os.system("chmod ugo+x /etc/init.d/appdog");
+		os.system("chkconfig appdog on")
+		print "copying apps.conf to /etc/appdog/"
+		os.system("mkdir /etc/appdog");
+		os.system("cp appdog/apps.conf /etc/appdog");
+		print "setup appdog"
+		s1 = os.getcwd()
+		print s1
+		f1 = open('/etc/appdog/apps.conf', 'r+')
+		ss = f1.readlines();
+		f1.seek(0,0)
+		for s in ss:
+				s2 = s.replace('/opt/giiwa', s1)
+				f1.write(s2)
+		f1.close()
+		print "install success."
+		print "Please view /etc/appdog/apps.conf to get more."	
 if __name__=="__main__":
 	if len(sys.argv) > 1:
 		a=sys.argv[1]
