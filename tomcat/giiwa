@@ -32,8 +32,8 @@ def _startx():
 		
 def _pidx():
 	try:
-		f = open(catalinapid, 'r');
-		pid = f.readline().strip();
+		f = open(catalinapid, 'r')
+		pid = f.readline().strip()
 		f.close()
 		os.popen("ps -p " + pid).readlines()[1]
 		return pid
@@ -44,7 +44,7 @@ def _stopx():
 	pid = _pidx()
 	if pid>0:
 		subprocess.call("kill " + str(pid), shell=True)
-
+	
 def _start():
 	global running,interval,home
 	pid = os.fork()
