@@ -85,7 +85,7 @@ public class Controller {
 		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
 				+ System.getProperty("os.arch");
 
-		Model.HOME = Model.GIIWA_HOME + "/giiwa";
+		Model.HOME = Model.GIIWA_HOME + "/modules";
 
 		/**
 		 * initialize the module

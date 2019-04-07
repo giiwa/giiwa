@@ -22,7 +22,7 @@
 			<Host name="localhost"  appBase="webapps"
 				unpackWARs="true" autoDeploy="true">
 
-				<Context path="" docBase="${catalina.home}/giiwa" reloadable="false" useHttpOnly="true"/>
+				<Context path="" docBase="${catalina.home}/modules" reloadable="false" useHttpOnly="true"/>
 
 			</Host>
 		</Engine>

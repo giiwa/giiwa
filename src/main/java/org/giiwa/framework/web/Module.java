@@ -155,7 +155,7 @@ public class Module {
 	 */
 	public static boolean checkAndMerge() {
 
-		if (!new File(Model.HOME + "/modules/default/WEB-INF/lib/").exists()) {
+		if (!new File(Model.HOME + "/default/WEB-INF/lib/").exists()) {
 			return false;
 		}
 
@@ -207,7 +207,7 @@ public class Module {
 		boolean changed = false;
 
 		// check default/WEB-INF/lib
-		File u1 = new File(Model.HOME + "/modules/default/WEB-INF/");
+		File u1 = new File(Model.HOME + "/default/WEB-INF/");
 		if (!u1.exists()) {
 			u1.mkdirs();
 			// copy all
@@ -226,12 +226,12 @@ public class Module {
 				try {
 					String name = f1.getName();
 					if (new File(f1.getCanonicalPath() + "/ok").exists()) {
-						File f2 = new File(Model.HOME + "/modules/" + name);
+						File f2 = new File(Model.HOME + name);
 						if (f2.exists()) {
 							IOUtil.delete(f2);
 						}
 
-						IOUtil.copyDir(f1, new File(Model.HOME + "/modules/"));
+						IOUtil.copyDir(f1, new File(Model.HOME));
 						// f1.renameTo(f2);
 						new File(f2.getCanonicalPath() + "/ok").delete();
 						IOUtil.delete(f1);
@@ -485,8 +485,7 @@ public class Module {
 	 * Store.
 	 */
 	public void store() {
-		File f = new File(
-				Model.HOME + File.separator + "modules" + File.separator + name + File.separator + "module.xml");
+		File f = new File(Model.HOME + File.separator + name + File.separator + "module.xml");
 		try {
 
 			Document doc = DocumentHelper.createDocument();
@@ -868,7 +867,7 @@ public class Module {
 			}
 
 			// load modules
-			File f = new File(Model.HOME + "/modules/");
+			File f = new File(Model.HOME);
 
 			if (f.exists()) {
 				File[] list = f.listFiles();
@@ -1025,7 +1024,7 @@ public class Module {
 			}
 
 			Module t = new Module();
-			File f = new File(Model.HOME + "/modules/" + name + "/module.xml");
+			File f = new File(Model.HOME + File.separator + name + "/module.xml");
 			if (f.exists()) {
 				/**
 				 * initialize the module
@@ -1040,7 +1039,8 @@ public class Module {
 
 				return t;
 			} else {
-				log.warn("the module.xml doesnt exists, file=" + f.getCanonicalPath(), new Exception());
+				// log.warn("the module.xml doesnt exists, file=" + f.getCanonicalPath(), new
+				// Exception());
 			}
 
 		} catch (Exception e) {
@@ -1220,7 +1220,7 @@ public class Module {
 			return new ArrayList<Module>(modules.values());
 		} else {
 			String home = Model.HOME;
-			File troot = new File(home + "/modules/");
+			File troot = new File(home);
 			File[] files = troot.listFiles();
 
 			List<Module> list = new ArrayList<Module>();
@@ -1852,8 +1852,10 @@ public class Module {
 				 * possible the original has been moved to ..., always using the package to
 				 * initialize
 				 */
-				m.path = new File(Model.HOME + "/modules/" + m.name).getCanonicalPath();
+				m.path = new File(Model.HOME + File.separator + m.name).getCanonicalPath();
 				m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
+
+				log.debug("path=" + m.path);
 
 				/**
 				 * loading the models

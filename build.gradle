@@ -90,11 +90,11 @@ task prepare(dependsOn: build) {
 		
 		copy{
 		    from('src/main/modules')
-		    into('build/giiwa/giiwa/modules')
+		    into('build/giiwa/modules')
 		}
 		
 		def xml1 = new BufferedReader(new FileReader(new File('src/main/modules/default/module.xml')))
-		def xml2 = new PrintStream(new File('build/giiwa/giiwa/modules/default/module.xml'))
+		def xml2 = new PrintStream(new File('build/giiwa/modules/default/module.xml'))
 		def line = xml1.readLine()
 		while( line != null ){
 			if( line.indexOf('>0<')>-1 ){
@@ -108,22 +108,22 @@ task prepare(dependsOn: build) {
 		
 		copy{
 		    from('src/main/WEB-INF')
-		    into('build/giiwa/giiwa/WEB-INF')
+		    into('build/giiwa/modules/WEB-INF')
 		}
 		copy{
 		    from configurations.runtime
-		    into('build/giiwa/giiwa/WEB-INF/lib')
+		    into('build/giiwa/modules/WEB-INF/lib')
 		}
 		copy {
 		    from('build/libs')
-		    into('build/giiwa/giiwa/WEB-INF/lib')
+		    into('build/giiwa/modules/WEB-INF/lib')
 		}
 		copy {
-		    from('build/giiwa/giiwa/modules')
-		    into('build/upgrade/')
+		    from('build/giiwa/modules/default')
+		    into('build/upgrade/default')
 		}
 		copy {
-		    from('build/giiwa/giiwa/WEB-INF')
+		    from('build/giiwa/modules/WEB-INF')
 		    into('build/upgrade/default/WEB-INF')
 		}
 	}
