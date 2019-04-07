@@ -880,10 +880,11 @@ public class Module {
 								/**
 								 * the module is invalid
 								 */
-								log.info("[" + f1.getName() + "] is not a valid module");
+								log.info("[" + f1.getName() + "] is not a module");
 
-								GLog.applog.warn("syslog", "init", "[" + f1.getName() + "] is not a valid module", null,
-										null);
+								// GLog.applog.warn("syslog", "init", "[" + f1.getName() + "] is not a valid
+								// module", null,
+								// null);
 
 							} else if (!m.enabled) {
 								/**
