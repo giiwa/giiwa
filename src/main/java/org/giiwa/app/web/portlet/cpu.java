@@ -17,7 +17,8 @@ public class cpu extends portlet {
 	@Override
 	public void get() {
 
-		Beans<_CPU.Record> bs = _CPU.Record.dao.load(W.create("node", Local.id()).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_CPU.Record> bs = _CPU.Record.dao.load(W.create("node", Local.id())
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -29,14 +30,15 @@ public class cpu extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_CPU.Record> bs = _CPU.Record.dao.load(W.create("node", Local.id()).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_CPU.Record> bs = _CPU.Record.dao.load(W.create("node", Local.id())
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("list", bs);
 
 			JSON p = JSON.create();
-			p.append("name", lang.get("cpu.usage")).append("color", ".860606");
+			p.append("name", lang.get("cpu.usage")).append("color", "#860606");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y",

@@ -45,8 +45,8 @@ public class mem extends portlet {
 			// {name: "$lang.get('mem.free')", color:'.0dad76', data: [.foreach($c in $list)
 			// {x:$this.time($c), y:$c.free, hint:"$lang.size($c.free)"},.end]}
 
-			JSON p1 = JSON.create().append("name", lang.get("mem.used")).append("color", ".860606");
-			JSON p2 = JSON.create().append("name", lang.get("mem.free")).append("color", ".0dad76");
+			JSON p1 = JSON.create().append("name", lang.get("mem.used")).append("color", "#860606");
+			JSON p2 = JSON.create().append("name", lang.get("mem.free")).append("color", "#0dad76");
 
 			List<JSON> l1 = JSON.createList();
 			List<JSON> l2 = JSON.createList();

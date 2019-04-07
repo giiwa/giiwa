@@ -51,8 +51,8 @@ public class net extends portlet {
 			// in $list) {x:$this.time($c), y:$c.txbytes,
 			// hint:"$!lang.size($c.txbytes)"},.end]}
 
-			JSON p1 = JSON.create().append("name", lang.get("net.rxbytes.speed")).append("color", ".0dad76");
-			JSON p2 = JSON.create().append("name", lang.get("net.txbytes.speed")).append("color", ".0a5ea0");
+			JSON p1 = JSON.create().append("name", lang.get("net.rxbytes.speed")).append("color", "#0dad76");
+			JSON p2 = JSON.create().append("name", lang.get("net.txbytes.speed")).append("color", "#0a5ea0");
 
 			List<JSON> l1 = JSON.createList();
 			List<JSON> l2 = JSON.createList();
