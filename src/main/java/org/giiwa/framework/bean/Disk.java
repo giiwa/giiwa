@@ -22,6 +22,7 @@ import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Model;
+import org.giiwa.mq.MQ;
 import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.UID;
@@ -42,6 +43,8 @@ public class Disk extends Bean {
 	private static final long serialVersionUID = 1L;
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
+
+	private final static String RESETNAME = "disk.reset";
 
 	@Column(name = X.ID)
 	long id;
@@ -306,9 +309,13 @@ public class Disk extends Bean {
 				q.and("node", Local.id());
 			}
 			_disks = dao.load(q, 0, 100);
-			_disks.setExpired(X.AHOUR + System.currentTimeMillis());
+			_disks.setExpired(X.AMINUTE + System.currentTimeMillis());
 		}
 		return _disks;
+	}
+
+	public static void reset() {
+		_disks = null;
 	}
 
 	private static Beans<Disk> _disks = null;

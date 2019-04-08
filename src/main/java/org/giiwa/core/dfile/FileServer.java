@@ -22,6 +22,9 @@ import org.giiwa.core.dfile.command.MOVE;
 import org.giiwa.core.nio.IoProtocol;
 import org.giiwa.core.nio.Server;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.Disk;
+import org.giiwa.mq.IStub;
+import org.giiwa.mq.MQ;
 
 public class FileServer implements IRequestHandler {
 
@@ -64,6 +67,37 @@ public class FileServer implements IRequestHandler {
 					start();
 				}, 3000);
 			}
+
+			_bind();
+
+		}
+	}
+
+	private void _bind() {
+		try {
+			// listen the reset
+			new IStub("disk.reset") {
+
+				@Override
+				public void onRequest(long seq, org.giiwa.mq.MQ.Request req) {
+					Disk.reset();
+				}
+
+			}.bind(MQ.Mode.TOPIC);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			Task.schedule(() -> {
+				_bind();
+			}, 3000);
+		}
+	}
+
+	public static void reset() {
+		// listen the reset
+		try {
+			MQ.topic("disk.reset", MQ.Request.create().put("reset"));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -85,15 +119,6 @@ public class FileServer implements IRequestHandler {
 		});
 
 	}
-
-	// public static void main(String[] args) {
-	// try {
-	// new FileServer().start();
-	// } catch (Exception e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// }
 
 	@Override
 	public void closed(String name) {

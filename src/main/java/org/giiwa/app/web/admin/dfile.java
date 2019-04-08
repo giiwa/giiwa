@@ -10,6 +10,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.dfile.DFile;
+import org.giiwa.core.dfile.FileServer;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Disk;
@@ -83,6 +84,9 @@ public class dfile extends Model {
 				Disk.create(v);
 				this.response(JSON.create().append(X.STATE, 200));
 
+				FileServer.reset();
+				Disk.reset();
+
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
@@ -133,6 +137,8 @@ public class dfile extends Model {
 			v.append("priority", this.getInt("priority"));
 
 			Disk.dao.update(id, v);
+			FileServer.reset();
+			Disk.reset();
 			this.response(JSON.create().append(X.STATE, 200));
 
 			return;
@@ -148,6 +154,7 @@ public class dfile extends Model {
 	public void disk_delete() {
 
 		final long id = this.getLong("id");
+		int f = this.getInt("f");
 
 		final Disk d = Disk.dao.load(id);
 
@@ -169,15 +176,18 @@ public class dfile extends Model {
 
 					try {
 						Disk.dao.delete(id);
+						FileServer.reset();
+						Disk.reset();
 
-						DFile f = DFile.create(d, "/");
-						DFile[] ff = f.listFiles();
-						if (ff != null) {
-							for (DFile f1 : ff) {
-								copy(d.getPath(), f1);
+						if (f == 0) {
+							DFile f = DFile.create(d, "/");
+							DFile[] ff = f.listFiles();
+							if (ff != null) {
+								for (DFile f1 : ff) {
+									copy(d.getPath(), f1);
+								}
 							}
 						}
-
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
 					}

@@ -52,7 +52,8 @@
 		<td class="a">
 			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.edit')" onclick="_edit('$f1.id')"><i class="icon-pencil"></i></a>
 			#if($list.size()>1)
-			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.unmount')" onclick="_delete('$f1.id')"><i class="icon-cancel-circle"></i></a>
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.unmount')" onclick="_delete('$f1.id', 0)"><i class="icon-blocked"></i></a>
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.force.unmount')" onclick="_delete('$f1.id', 1)"><i class="icon-cancel-circle"></i></a>
 			#end
 		</td>
 	</tr>
@@ -89,9 +90,9 @@ function _add(){
 		}
 	});
 }
-function _delete(id) {
-	if(confirm("$lang.get('title.are_u_sure_delete')")) {
-		$.post("/admin/dfile/disk/delete?__node=$!__node", {id:id}, function(d){
+function _delete(id, f) {
+	if(confirm("$lang.get('title.are_u_sure_delete_fdisk')")) {
+		$.post("/admin/dfile/disk/delete?__node=$!__node", {id:id, f:f}, function(d){
 			giiwa.reload();
 		})
 	}
