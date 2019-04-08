@@ -42,7 +42,7 @@ public class running extends portlet {
 			this.set("list", bs);
 
 			JSON p = JSON.create();
-			p.append("name", lang.get("cpu.usage")).append("color", ".666");
+			p.append("name", lang.get("cpu.usage")).append("color", "#666");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getLong("time"), "m")).append("y", e.getLong("n3")));
