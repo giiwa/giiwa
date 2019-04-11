@@ -13,7 +13,6 @@
 	<classpathentry kind="lib" path="depends/activation-1.1.jar"/>
 	<classpathentry kind="lib" path="depends/commons-configuration-1.6.jar"/>
 	<classpathentry kind="lib" path="depends/commons-beanutils-1.7.0.jar"/>
-	<classpathentry kind="lib" path="depends/commons-logging-1.1.1.jar"/>
 	<classpathentry kind="lib" path="depends/geronimo-jms_1.1_spec-1.1.1.jar"/>
 	<classpathentry kind="lib" path="depends/attoparser-2.0.2.RELEASE.jar"/>
 	<classpathentry kind="lib" path="depends/json-path-2.2.0.jar"/>
@@ -27,7 +26,6 @@
 	<classpathentry kind="lib" path="depends/ognl-3.1.12.jar"/>
 	<classpathentry kind="lib" path="depends/commons-pool2-2.3.jar"/>
 	<classpathentry kind="lib" path="depends/commons-dbcp-1.4.jar"/>
-	<classpathentry kind="lib" path="depends/commons-fileupload-1.3.1.jar"/>
 	<classpathentry kind="lib" path="depends/postgresql-9.0-801.jdbc4.jar"/>
 	<classpathentry kind="lib" path="depends/javassist-3.20.0-GA.jar"/>
 	<classpathentry kind="lib" path="depends/mail-1.4.jar"/>
@@ -41,7 +39,6 @@
 	<classpathentry kind="lib" path="depends/xmpcore-5.1.2.jar"/>
 	<classpathentry kind="lib" path="depends/commons-collections-3.2.1.jar"/>
 	<classpathentry kind="lib" path="depends/json-smart-2.2.1.jar"/>
-	<classpathentry kind="lib" path="depends/activemq-client-5.14.3.jar"/>
 	<classpathentry kind="lib" path="depends/commons-lang-2.4.jar"/>
 	<classpathentry kind="lib" path="depends/sigar-1.6.4.jar"/>
 	<classpathentry kind="lib" path="depends/lz4-1.3.0.jar"/>
@@ -49,7 +46,6 @@
 	<classpathentry kind="lib" path="depends/accessors-smart-1.1.jar"/>
 	<classpathentry kind="lib" path="depends/snappy-java-1.1.2.6.jar"/>
 	<classpathentry kind="lib" path="depends/bcprov-jdk16-1.46.jar"/>
-	<classpathentry kind="lib" path="depends/commons-pool-1.5.4.jar"/>
 	<classpathentry kind="lib" path="depends/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
 	<classpathentry kind="lib" path="depends/hawtbuf-1.11.jar"/>
 	<classpathentry kind="lib" path="depends/thymeleaf-3.0.3.RELEASE.jar"/>
