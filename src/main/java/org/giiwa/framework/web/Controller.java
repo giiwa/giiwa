@@ -158,7 +158,9 @@ public class Controller {
 			}
 		}
 
-		uri = Url.decode(uri);
+		if (!uri.endsWith(".js") && !uri.endsWith(".css")) {
+			uri = Url.decode(uri);
+		}
 
 		/**
 		 * test and load from cache first
