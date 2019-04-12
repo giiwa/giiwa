@@ -41,6 +41,7 @@ public class GLog extends Bean {
 	public static final int TYPE_SECURITY = 0;
 	public static final int TYPE_APP = 1;
 	public static final int TYPE_OPLOG = 2;
+	public static final int TYPE_DB = 3;
 
 	private static final int LEVEL_INFO = 0;
 	private static final int LEVEL_WARN = 1;
@@ -171,6 +172,11 @@ public class GLog extends Bean {
 	 */
 	public static ILog securitylog = new SecurityLog();
 
+	/**
+	 * db logger
+	 */
+	public static ILog dblog = new DbLog();
+
 	// --------------API
 
 	public static abstract class ILog {
@@ -189,7 +195,22 @@ public class GLog extends Bean {
 		 *            the ip address
 		 */
 		public void info(String model, String op, String message, User u, String ip) {
-			info(model, op, message, null, u, ip);
+			info(model, op, message, (String) null, u, ip);
+		}
+
+		/**
+		 * record the log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 * @param trace
+		 * @param u
+		 * @param ip
+		 */
+		public void info(String model, String op, String message, Throwable trace, User u, String ip) {
+			info(Local.id(), model, op, message, X.toString(trace).replaceAll(System.lineSeparator(), "<br/>")
+					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);
 		}
 
 		/**
@@ -333,7 +354,7 @@ public class GLog extends Bean {
 		 *            the ip address
 		 */
 		public void warn(String model, String op, String message, User u, String ip) {
-			warn(model, op, message, null, u, ip);
+			warn(model, op, message, (String) null, u, ip);
 		}
 
 		/**
@@ -354,6 +375,21 @@ public class GLog extends Bean {
 		 */
 		public void warn(String model, String op, String message, String trace, User u, String ip) {
 			warn(Local.id(), model, op, message, trace, u, ip);
+		}
+
+		/**
+		 * record the log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 * @param trace
+		 * @param u
+		 * @param ip
+		 */
+		public void warn(String model, String op, String message, Throwable trace, User u, String ip) {
+			warn(Local.id(), model, op, message, X.toString(trace).replaceAll(System.lineSeparator(), "<br/>")
+					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);
 		}
 
 		/**
@@ -567,6 +603,29 @@ public class GLog extends Bean {
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+		}
+
+	}
+
+	private static class DbLog extends ILog {
+
+		private boolean isEnabled(String model) {
+			return !X.isSame(model, "gi_glog");
+		}
+
+		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
+			if (isEnabled(model))
+				_log(GLog.TYPE_DB, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
+		}
+
+		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+			if (isEnabled(model))
+				_log(GLog.TYPE_DB, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
+		}
+
+		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
+			if (isEnabled(model))
+				_log(GLog.TYPE_DB, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 
 	}

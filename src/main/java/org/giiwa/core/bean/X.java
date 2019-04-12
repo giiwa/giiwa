@@ -477,6 +477,8 @@ public final class X {
 	 * @return the string
 	 */
 	public static String toString(Throwable e) {
+		if (e == null)
+			return X.EMPTY;
 		StringWriter sw = new StringWriter();
 		PrintWriter out = new PrintWriter(sw);
 		e.printStackTrace(out);
