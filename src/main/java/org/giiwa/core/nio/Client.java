@@ -31,6 +31,10 @@ public class Client implements Closeable {
 	public static Client connect(String server, IoProtocol handler) throws IOException {
 
 		Url u = Url.create(server);
+		if (u == null) {
+			throw new IOException("bad url, server=" + server);
+		}
+
 		Client c = new Client();
 
 		if (u.isProtocol("tcp")) {

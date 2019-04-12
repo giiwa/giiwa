@@ -88,20 +88,21 @@ public abstract class StatTask extends Task {
 					Global.setConfig("last.stat." + name, System.currentTimeMillis());
 
 					List<?> l1 = getCategories();
+					if (l1 != null) {
+						for (Object o : l1) {
 
-					for (Object o : l1) {
+							Stat.SIZE[] ss = this.getSizes();
+							for (Stat.SIZE s : ss) {
+								long[] time = time(s);
+								log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
+										+ ", cat=" + o);
+								onStat(s, time[0], time[1], o);
 
-						Stat.SIZE[] ss = this.getSizes();
-						for (Stat.SIZE s : ss) {
-							long[] time = time(s);
-							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
-									+ ", cat=" + o);
-							onStat(s, time[0], time[1], o);
-
-							time = time1(s);
-							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
-									+ ", cat=" + o);
-							onStat(s, time[0], time[1], o);
+								time = time1(s);
+								log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
+										+ ", cat=" + o);
+								onStat(s, time[0], time[1], o);
+							}
 						}
 					}
 
