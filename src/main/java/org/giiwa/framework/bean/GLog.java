@@ -183,16 +183,11 @@ public class GLog extends Bean {
 		/**
 		 * record info log
 		 * 
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void info(String model, String op, String message, User u, String ip) {
 			info(model, op, message, (String) null, u, ip);
@@ -216,18 +211,12 @@ public class GLog extends Bean {
 		/**
 		 * record info log
 		 * 
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void info(String model, String op, String message, String trace, User u, String ip) {
 			info(Local.id(), model, op, message, trace, u, ip);
@@ -236,16 +225,11 @@ public class GLog extends Bean {
 		/**
 		 * record info log
 		 * 
-		 * @param model
-		 *            the subclass of Model
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the subclass of Model
+		 * @param op      the operation
+		 * @param message the message
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void info(Class<? extends Model> model, String op, String message, User u, String ip) {
 			info(model, op, message, null, u, ip);
@@ -254,18 +238,12 @@ public class GLog extends Bean {
 		/**
 		 * record info log
 		 * 
-		 * @param model
-		 *            the subclass of Model
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the subclass of Model
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
 			info(Module.shortName(model), op, message, trace, u, ip);
@@ -274,20 +252,13 @@ public class GLog extends Bean {
 		/**
 		 * record info log
 		 * 
-		 * @param node
-		 *            the node or subsystem node
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param node    the node or subsystem node
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		protected abstract void info(String node, String model, String op, String message, String trace, User u,
 				String ip);
@@ -342,16 +313,11 @@ public class GLog extends Bean {
 		/**
 		 * record warn log
 		 * 
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void warn(String model, String op, String message, User u, String ip) {
 			warn(model, op, message, (String) null, u, ip);
@@ -360,18 +326,12 @@ public class GLog extends Bean {
 		/**
 		 * record warn log
 		 * 
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void warn(String model, String op, String message, String trace, User u, String ip) {
 			warn(Local.id(), model, op, message, trace, u, ip);
@@ -395,16 +355,11 @@ public class GLog extends Bean {
 		/**
 		 * record warn log
 		 * 
-		 * @param model
-		 *            the subclass of Model
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the subclass of Model
+		 * @param op      the operation
+		 * @param message the message
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void warn(Class<? extends Model> model, String op, String message, User u, String ip) {
 			warn(model, op, message, null, u, ip);
@@ -413,18 +368,12 @@ public class GLog extends Bean {
 		/**
 		 * record warn log
 		 * 
-		 * @param model
-		 *            the subclass of Model
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the subclass of Model
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
 			warn(Module.shortName(model), op, message, trace, u, ip);
@@ -433,20 +382,13 @@ public class GLog extends Bean {
 		/**
 		 * record warn log
 		 * 
-		 * @param node
-		 *            the node or subsystem name
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param node    the node or subsystem name
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		protected abstract void warn(String node, String model, String op, String message, String trace, User u,
 				String ip);
@@ -454,16 +396,11 @@ public class GLog extends Bean {
 		/**
 		 * record error log
 		 * 
-		 * @param model
-		 *            the subclass
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the subclass
+		 * @param op      the operation
+		 * @param message the message
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void error(Class<? extends Model> model, String op, String message, User u, String ip) {
 			error(model, op, message, (String) null, u, ip);
@@ -472,18 +409,12 @@ public class GLog extends Bean {
 		/**
 		 * record error log
 		 * 
-		 * @param model
-		 *            the subclass of Model
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param e
-		 *            the Exception
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the subclass of Model
+		 * @param op      the operation
+		 * @param message the message
+		 * @param e       the Exception
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
 			error(Module.shortName(model), op, message, e, u, ip);
@@ -492,18 +423,12 @@ public class GLog extends Bean {
 		/**
 		 * record error log
 		 * 
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param e
-		 *            the Exception
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param e       the Exception
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void error(String model, String op, String message, Exception e, User u, String ip) {
 			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
@@ -513,18 +438,12 @@ public class GLog extends Bean {
 		/**
 		 * record error log
 		 * 
-		 * @param model
-		 *            the subclass of Model
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the subclass of Model
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
 			error(Module.shortName(model), op, message, trace, u, ip);
@@ -533,16 +452,11 @@ public class GLog extends Bean {
 		/**
 		 * record error log
 		 * 
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void error(String model, String op, String message, User u, String ip) {
 			error(model, op, message, (String) null, u, ip);
@@ -551,18 +465,12 @@ public class GLog extends Bean {
 		/**
 		 * record error log
 		 * 
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		public void error(String model, String op, String message, String trace, User u, String ip) {
 			error(Local.id(), model, op, message, trace, u, ip);
@@ -571,20 +479,13 @@ public class GLog extends Bean {
 		/**
 		 * record error log
 		 * 
-		 * @param node
-		 *            the node or subsystem name
-		 * @param model
-		 *            the model name
-		 * @param op
-		 *            the operation
-		 * @param message
-		 *            the message
-		 * @param trace
-		 *            the trace info
-		 * @param u
-		 *            the user object
-		 * @param ip
-		 *            the ip address
+		 * @param node    the node or subsystem name
+		 * @param model   the model name
+		 * @param op      the operation
+		 * @param message the message
+		 * @param trace   the trace info
+		 * @param u       the user object
+		 * @param ip      the ip address
 		 */
 		protected abstract void error(String node, String model, String op, String message, String trace, User u,
 				String ip);

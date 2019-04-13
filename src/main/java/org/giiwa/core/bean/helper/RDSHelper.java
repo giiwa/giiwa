@@ -43,6 +43,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp.SQLNestedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
@@ -120,14 +121,10 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Sets the parameter.
 	 * 
-	 * @param p
-	 *            the p
-	 * @param i
-	 *            the i
-	 * @param o
-	 *            the o
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @param p the p
+	 * @param i the i
+	 * @param o the o
+	 * @throws SQLException the SQL exception
 	 */
 	private static void setParameter(PreparedStatement p, int i, Object o) throws SQLException {
 		if (o == null) {
@@ -156,12 +153,9 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Delete the data in table.
 	 *
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query object
-	 * @param db
-	 *            the db
+	 * @param table the table name
+	 * @param q     the query object
+	 * @param db    the db
 	 * @return int
 	 */
 	public int delete(String table, W q, String db) {
@@ -214,7 +208,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "delete", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "delete", "q=" + q, e, null, db);
 
 		} finally {
 			close(p, c);
@@ -227,8 +222,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * Gets the connection.
 	 * 
 	 * @return Connection
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @throws SQLException the SQL exception
 	 */
 	public Connection getConnection() throws SQLException {
 		try {
@@ -250,11 +244,9 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Gets the SQL connection by name.
 	 *
-	 * @param name
-	 *            the name of the connection pool
+	 * @param name the name of the connection pool
 	 * @return the connection
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @throws SQLException the SQL exception
 	 */
 	public Connection getConnection(String name) throws SQLException {
 		if (conn != null)
@@ -269,8 +261,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * if the connection was required twice in same thread, then the reference "-1",
 	 * if "=0", then close it.
 	 *
-	 * @param objs
-	 *            the objects of "ResultSet, Statement, Connection"
+	 * @param objs the objects of "ResultSet, Statement, Connection"
 	 */
 	public void close(Object... objs) {
 		for (Object o : objs) {
@@ -324,12 +315,9 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * test exists.
 	 *
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query object
-	 * @param db
-	 *            the db
+	 * @param table the table name
+	 * @param q     the query object
+	 * @param db    the db
 	 * @return boolean
 	 */
 	public boolean exists(String table, W q, String db) {
@@ -393,7 +381,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "exists", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "exists", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -408,14 +397,10 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Update the data.
 	 *
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query object
-	 * @param v
-	 *            the values
-	 * @param db
-	 *            the db
+	 * @param table the table name
+	 * @param q     the query object
+	 * @param v     the values
+	 * @param db    the db
 	 * @return int
 	 */
 	public int updateTable(String table, W q, V v, String db) {
@@ -493,7 +478,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q + ",values=" + v.toString(), e);
 
-			GLog.dblog.error(table, "update", "v=" + v + ", q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "update", "v=" + v + ", q=" + q, e, null, db);
 
 		} finally {
 			close(p, c);
@@ -506,12 +492,9 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * load the Bean.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param q
-	 *            the query object
-	 * @param t
-	 *            the Class of Bean
+	 * @param <T> the generic type
+	 * @param q   the query object
+	 * @param t   the Class of Bean
 	 * @return the Bean
 	 */
 	// public static <T extends Bean> T load(W q, Class<T> t) {
@@ -532,16 +515,11 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Load the data, the data will be load(ResultSet r) method.
 	 *
-	 * @param cols
-	 *            the cols, * if null
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query object
-	 * @param b
-	 *            the Bean
-	 * @param db
-	 *            the db
+	 * @param cols  the cols, * if null
+	 * @param table the table name
+	 * @param q     the query object
+	 * @param b     the Bean
+	 * @param db    the db
 	 * @return boolean
 	 */
 	public boolean load(String table, String[] fields, W q, Bean b, String db) {
@@ -615,7 +593,9 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(sql, e);
 
-			GLog.dblog.error(table, "load", "q=" + sql, null, db);
+			if (!(e instanceof SQLNestedException)) {
+				GLog.dblog.error(table, "load", "q=" + sql, e, null, db);
+			}
 
 		} finally {
 			close(r, p, c);
@@ -630,16 +610,11 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Load the data from the RDBMS table, by the where and.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param table
-	 *            the table
-	 * @param cols
-	 *            the cols
-	 * @param q
-	 *            the query object
-	 * @param clazz
-	 *            the Class Bean
+	 * @param <T>   the generic type
+	 * @param table the table
+	 * @param cols  the cols
+	 * @param q     the query object
+	 * @param clazz the Class Bean
 	 * @return the list
 	 */
 	public final <T extends Bean> Beans<T> load(String table, String[] cols, W q, Class<T> clazz) {
@@ -649,14 +624,10 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * load the data from RDBMS table which associated with Bean.
 	 * 
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param cols
-	 *            the column name array
-	 * @param q
-	 *            the query object
-	 * @param clazz
-	 *            the Bean Class
+	 * @param <T>   the generic Bean Class
+	 * @param cols  the column name array
+	 * @param q     the query object
+	 * @param clazz the Bean Class
 	 * @return List
 	 */
 	public final <T extends Bean> Beans<T> load(String[] cols, W q, Class<T> clazz) {
@@ -666,18 +637,12 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * load the list of beans, by the where.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param cols
-	 *            the column name array
-	 * @param q
-	 *            the query object
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @param t
-	 *            the Bean Class
+	 * @param <T>    the generic Bean Class
+	 * @param cols   the column name array
+	 * @param q      the query object
+	 * @param offset the offset
+	 * @param limit  the limit
+	 * @param t      the Bean Class
 	 * @return List
 	 */
 	public final <T extends Bean> Beans<T> load(String[] cols, W q, int offset, int limit, Class<T> t) {
@@ -697,20 +662,13 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Load the list data from the RDBMS table.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param table
-	 *            the table name
-	 * @param cols
-	 *            the column name array
-	 * @param q
-	 *            the query object
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @param clazz
-	 *            the Bean Class
+	 * @param <T>    the generic type
+	 * @param table  the table name
+	 * @param cols   the column name array
+	 * @param q      the query object
+	 * @param offset the offset
+	 * @param limit  the limit
+	 * @param clazz  the Bean Class
 	 * @return List
 	 */
 	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz,
@@ -813,7 +771,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "load", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "load", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -827,19 +786,13 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * advance load API.
 	 *
-	 * @param <T>
-	 *            the base object
-	 * @param select
-	 *            the select section, etc: "select a.* from tbluser a, tblrole b
-	 *            where a.uid=b.uid"
-	 * @param q
-	 *            the additional query condition;
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @param clazz
-	 *            the Class Bean
+	 * @param <T>    the base object
+	 * @param select the select section, etc: "select a.* from tbluser a, tblrole b
+	 *               where a.uid=b.uid"
+	 * @param q      the additional query condition;
+	 * @param offset the offset
+	 * @param limit  the limit
+	 * @param clazz  the Class Bean
 	 * @return List the list of Bean
 	 */
 	public <T extends Bean> Beans<T> loadBy(String select, W q, int offset, int limit, Class<T> clazz) {
@@ -924,7 +877,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q.toString(), e);
 
-			GLog.dblog.error(select, "load", "q=" + q, null, Helper.DEFAULT);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(select, "load", "q=" + q, e, null, Helper.DEFAULT);
 
 		} finally {
 			close(r, p, c);
@@ -938,20 +892,13 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Load the list data from the RDBMS table.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query object
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @param clazz
-	 *            the Bean Class
-	 * @param db
-	 *            the db
+	 * @param <T>    the generic Bean Class
+	 * @param table  the table name
+	 * @param q      the query object
+	 * @param offset the offset
+	 * @param limit  the limit
+	 * @param clazz  the Bean Class
+	 * @param db     the db
 	 * @return Beans
 	 */
 	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz) {
@@ -961,12 +908,9 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Insert values into the table.
 	 *
-	 * @param table
-	 *            the table name
-	 * @param sets
-	 *            the values
-	 * @param db
-	 *            the db
+	 * @param table the table name
+	 * @param sets  the values
+	 * @param db    the db
 	 * @return int
 	 */
 	public int insertTable(String table, V sets, String db) {
@@ -991,7 +935,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(sets.toString(), e);
 
-			GLog.dblog.error(table, "insert", "v=" + sets, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "insert", "v=" + sets, e, null, db);
 
 		} finally {
 			close(c);
@@ -1056,7 +1001,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(sets.toString(), e);
 
-			GLog.dblog.error(table, "insert", "v=" + sets, null, Helper.DEFAULT);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "insert", "v=" + sets, e, null, Helper.DEFAULT);
 
 		} finally {
 			close(p);
@@ -1067,14 +1013,10 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * get a string value from a col from the table.
 	 * 
-	 * @param table
-	 *            the table name
-	 * @param col
-	 *            the column name
-	 * @param q
-	 *            the query object
-	 * @param db
-	 *            the db name
+	 * @param table the table name
+	 * @param col   the column name
+	 * @param q     the query object
+	 * @param db    the db name
 	 * @return String
 	 */
 	public String getString(String table, String col, W q, String db) {
@@ -1139,7 +1081,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "getString", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "getString", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -1151,18 +1094,12 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * get the list of the column.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param col
-	 *            the column name
-	 * @param q
-	 *            the query object
-	 * @param s
-	 *            the offset
-	 * @param n
-	 *            the limit
-	 * @param t
-	 *            the Bean class
+	 * @param <T> the generic Bean Class
+	 * @param col the column name
+	 * @param q   the query object
+	 * @param s   the offset
+	 * @param n   the limit
+	 * @param t   the Bean class
 	 * @return List
 	 * @deprecated
 	 */
@@ -1183,16 +1120,11 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * get one field.
 	 * 
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param col
-	 *            the column name
-	 * @param q
-	 *            the query object
-	 * @param position
-	 *            the offset
-	 * @param t
-	 *            the Bean class
+	 * @param <T>      the generic Bean Class
+	 * @param col      the column name
+	 * @param q        the query object
+	 * @param position the offset
+	 * @param t        the Bean class
 	 * @return T
 	 */
 	public final <T> T getOne(String col, W q, int position, Class<? extends Bean> t) {
@@ -1212,16 +1144,11 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * getOne by the query.
 	 * 
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param table
-	 *            the table name
-	 * @param col
-	 *            the column anme
-	 * @param q
-	 *            the query object
-	 * @param position
-	 *            the offset
+	 * @param <T>      the generic Bean Class
+	 * @param table    the table name
+	 * @param col      the column anme
+	 * @param q        the query object
+	 * @param position the offset
 	 * @return T
 	 */
 	@SuppressWarnings("unchecked")
@@ -1295,7 +1222,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "getOne", "q=" + q, null, Helper.DEFAULT);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "getOne", "q=" + q, e, null, Helper.DEFAULT);
 
 		} finally {
 			close(r, p, c);
@@ -1307,18 +1235,12 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * get the list of the col.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param table
-	 *            the table name
-	 * @param col
-	 *            the column name
-	 * @param q
-	 *            the query object
-	 * @param s
-	 *            the offset
-	 * @param n
-	 *            the limit
+	 * @param <T>   the generic Bean Class
+	 * @param table the table name
+	 * @param col   the column name
+	 * @param q     the query object
+	 * @param s     the offset
+	 * @param n     the limit
 	 * @return List
 	 * @deprecated
 	 */
@@ -1396,7 +1318,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "getList", "q=" + q, null, Helper.DEFAULT);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "getList", "q=" + q, e, null, Helper.DEFAULT);
 
 		} finally {
 			close(r, p, c);
@@ -1408,8 +1331,7 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * convert the array objects to string.
 	 * 
-	 * @param arr
-	 *            the array objects
+	 * @param arr the array objects
 	 * @return the string
 	 */
 	public static String toString(Object[] arr) {
@@ -1449,16 +1371,11 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * load record in database.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query object
-	 * @param clazz
-	 *            the Bean class
-	 * @param db
-	 *            the db
+	 * @param <T>   the generic Bean Class
+	 * @param table the table name
+	 * @param q     the query object
+	 * @param clazz the Bean class
+	 * @param db    the db
 	 * @return Bean
 	 */
 	public <T extends Bean> T load(String table, String[] fields, W q, Class<T> clazz, String db) {
@@ -1472,7 +1389,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(e.getMessage(), e);
 
-			GLog.dblog.error(table, "load", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "load", "q=" + q, e, null, db);
 
 		}
 		return null;
@@ -1490,12 +1408,9 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * count the data.
 	 *
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query object
-	 * @param db
-	 *            the db
+	 * @param table the table name
+	 * @param q     the query object
+	 * @param db    the db
 	 * @return the number of data
 	 */
 	public long count(String table, W q, String db) {
@@ -1550,7 +1465,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "count", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "count", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -1565,14 +1481,10 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * get distinct data list.
 	 *
-	 * @param table
-	 *            the table name
-	 * @param name
-	 *            the column name
-	 * @param q
-	 *            the query object
-	 * @param db
-	 *            the db
+	 * @param table the table name
+	 * @param name  the column name
+	 * @param q     the query object
+	 * @param db    the db
 	 * @return the list of Object
 	 */
 	public List<?> distinct(String table, String name, W q, String db) {
@@ -1637,7 +1549,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "distinct", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "distinct", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -1648,8 +1561,7 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * backup the data to file.
 	 *
-	 * @param filename
-	 *            the filename
+	 * @param filename the filename
 	 */
 	public void backup(String filename, String[] cc) {
 
@@ -1724,8 +1636,7 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * recover the data from the file.
 	 *
-	 * @param file
-	 *            the file
+	 * @param file the file
 	 */
 	public void recover(File file) {
 
@@ -1777,16 +1688,11 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * inc.
 	 *
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the q
-	 * @param name
-	 *            the name
-	 * @param n
-	 *            the n
-	 * @param db
-	 *            the db
+	 * @param table the table
+	 * @param q     the q
+	 * @param name  the name
+	 * @param n     the n
+	 * @param db    the db
 	 * @return the int
 	 */
 	public int inc(String table, W q, String name, int n, V sets, String db) {
@@ -1867,7 +1773,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "inc", "name=" + name + ", q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "inc", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(c, p, r);
@@ -1910,7 +1817,8 @@ public class RDSHelper implements Helper.DBHelper {
 			// log.error(sb.toString(), e);
 			log.warn("indexes=" + getIndexes(table, db));
 
-			GLog.dblog.error(table, "index", "ss=" + ss, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "index", "ss=" + ss, e, null, db);
 
 		} finally {
 			close(stat, c);
@@ -2042,7 +1950,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(values.toString(), e);
 
-			GLog.dblog.error(table, "insert", "v=" + values, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "insert", "v=" + values, e, null, db);
 
 		} finally {
 			close(p);
@@ -2173,7 +2082,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "query", "q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "query", "q=" + q, e, null, db);
 
 		}
 		return null;
@@ -2295,7 +2205,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "sum", "name=" + name + ", q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "sum", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -2366,7 +2277,8 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			GLog.dblog.error(table, "max", "name=" + name + ", q=" + q, null, db);
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "max", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -2431,7 +2343,9 @@ public class RDSHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error(q, e);
-			GLog.dblog.error(table, "min", "name=" + name + ", q=" + q, null, db);
+
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "min", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -2495,7 +2409,9 @@ public class RDSHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error(q, e);
-			GLog.dblog.error(table, "avg", "name=" + name + ", q=" + q, null, db);
+
+			if (!(e instanceof SQLNestedException))
+				GLog.dblog.error(table, "avg", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);

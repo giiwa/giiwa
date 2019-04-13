@@ -303,6 +303,7 @@ create table gi_node
 	os varchar(100),
 	mem bigint,
 	usage int,
+	tasks int,
 	globaltasks int,
 	localthreads int,
 	localpending int,

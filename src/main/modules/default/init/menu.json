@@ -98,11 +98,11 @@
 								"classes": "icon-database"
 							},
 							{
-								"name": 'menu.i18n',
-								"load": '/admin/i18n',
+								"name": "menu.i18n",
+								"load": "/admin/i18n",
 								"seq": 70,
 								"access": "access.config.admin|access.config.module.admin",
-								"classes": 'icon-magic-wand'
+								"classes": "icon-agicand"
 							}
 						]
 					}
@@ -134,7 +134,7 @@
 						"seq": 30,
 						"access": "access.config.admin",
 						"classes": "icon-link"
-					},
+					}
 				]
 			}
 		]
