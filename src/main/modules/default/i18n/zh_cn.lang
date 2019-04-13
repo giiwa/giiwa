@@ -187,6 +187,7 @@ log.type=类型
 log.type_0=安全日志
 log.type_1=应用日志
 log.type_2=操作日志
+log.type_3=数据库
 log.level=级别
 log.level_0=信息
 log.level_1=警告
