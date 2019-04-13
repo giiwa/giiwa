@@ -254,6 +254,7 @@ create index gi_oplog_index_op on gi_oplog(op);
 #drop table if exists gi_userlock;
 create table gi_userlock
 (
+	id varchar(50),
 	uid bigint,
 	host varchar(20),
 	useragent varchar(255),
@@ -343,6 +344,19 @@ create index gi_glog_index_op on gi_glog(op);
 create index gi_glog_index_uid on gi_glog(uid);
 create index gi_glog_index_type on gi_glog(type1);
 create index gi_glog_index_level on gi_glog(level);
+
+create table gi_footprint
+(
+	id varchar(50),
+	_table varchar(100),
+	dataid varchar(100),
+	field varchar(100),
+	uid bigint,
+	data varchar(200),
+	updated bigint,
+	created bigint
+);
+create index gi_footprint_index_id on gi_footprint(id);
 
 create table gi_m_net
 (

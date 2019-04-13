@@ -104,10 +104,8 @@ public final class X {
 	/**
 	 * test whether equals the two objects.
 	 *
-	 * @param s1
-	 *            the object s1
-	 * @param s2
-	 *            the object s2
+	 * @param s1 the object s1
+	 * @param s2 the object s2
 	 * @return boolean
 	 */
 	public static boolean isSame(Object s1, Object s2) {
@@ -145,10 +143,8 @@ public final class X {
 	/**
 	 * safely parse the object to long, if failed return default value.
 	 *
-	 * @param v
-	 *            the object
-	 * @param defaultValue
-	 *            the default value
+	 * @param v            the object
+	 * @param defaultValue the default value
 	 * @return long
 	 */
 	public static long toLong(Object v, long defaultValue) {
@@ -186,8 +182,7 @@ public final class X {
 	/**
 	 * safely parse the object to integer, if failed return 0.
 	 *
-	 * @param v
-	 *            the object
+	 * @param v the object
 	 * @return int
 	 */
 	public static int toInt(Object v) {
@@ -197,10 +192,8 @@ public final class X {
 	/**
 	 * safely parse the object to integer. if failed return the default value
 	 * 
-	 * @param v
-	 *            the object
-	 * @param defaultValue
-	 *            the default value
+	 * @param v            the object
+	 * @param defaultValue the default value
 	 * @return int
 	 */
 	public static int toInt(Object v, int defaultValue) {
@@ -238,8 +231,7 @@ public final class X {
 	/**
 	 * test the object is empty? null , empty string, empty collection, empty map.
 	 *
-	 * @param s
-	 *            the object, may string, list, map
+	 * @param s the object, may string, list, map
 	 * @return boolean, return true if null, or empty
 	 */
 	@SuppressWarnings("rawtypes")
@@ -260,8 +252,7 @@ public final class X {
 	/**
 	 * safely parse the object to float, if failed return 0.
 	 * 
-	 * @param v
-	 *            the object
+	 * @param v the object
 	 * @return float
 	 */
 	public static float toFloat(Object v) {
@@ -271,10 +262,8 @@ public final class X {
 	/**
 	 * safely parse a object to a float, if failed return default value.
 	 * 
-	 * @param v
-	 *            the v
-	 * @param defaultValue
-	 *            the default value
+	 * @param v            the v
+	 * @param defaultValue the default value
 	 * @return float
 	 */
 	public static float toFloat(Object v, float defaultValue) {
@@ -321,8 +310,7 @@ public final class X {
 	/**
 	 * test the "s" and return a number, that convert Chinese number to real number.
 	 *
-	 * @param s
-	 *            the s
+	 * @param s the s
 	 * @return char
 	 */
 	public static char getNumber(char s) {
@@ -343,8 +331,7 @@ public final class X {
 	/**
 	 * safely parse the object to double, if failed return 0.
 	 * 
-	 * @param v
-	 *            the object
+	 * @param v the object
 	 * @return the double result
 	 */
 	public static double toDouble(Object v) {
@@ -354,10 +341,8 @@ public final class X {
 	/**
 	 * safely parse the object to double, if failed return default value.
 	 * 
-	 * @param v
-	 *            the object
-	 * @param defaultValue
-	 *            the default value when the v is null or parse error
+	 * @param v            the object
+	 * @param defaultValue the default value when the v is null or parse error
 	 * @return the double
 	 */
 	public static double toDouble(Object v, double defaultValue) {
@@ -399,8 +384,7 @@ public final class X {
 	/**
 	 * test the "s" is number.
 	 *
-	 * @param s
-	 *            the s
+	 * @param s the s
 	 * @return boolean
 	 */
 	public static boolean isNumber(Object s) {
@@ -437,8 +421,7 @@ public final class X {
 	/**
 	 * safely parse the object to long, if failed return 0.
 	 *
-	 * @param v
-	 *            the object
+	 * @param v the object
 	 * @return the long
 	 */
 	public static long toLong(Object v) {
@@ -448,10 +431,8 @@ public final class X {
 	/**
 	 * split the src string by the regex, and filter the empty.
 	 *
-	 * @param src
-	 *            the source string
-	 * @param regex
-	 *            the split regex
+	 * @param src   the source string
+	 * @param regex the split regex
 	 * @return the String
 	 */
 	public static String[] split(String src, String regex) {
@@ -472,8 +453,7 @@ public final class X {
 	/**
 	 * printstacktrace
 	 * 
-	 * @param e
-	 *            the throwable
+	 * @param e the throwable
 	 * @return the string
 	 */
 	public static String toString(Throwable e) {
@@ -488,8 +468,7 @@ public final class X {
 	/**
 	 * close all
 	 * 
-	 * @param ss
-	 *            the cloeable object
+	 * @param ss the cloeable object
 	 */
 	public static void close(Closeable... ss) {
 		if (ss == null || ss.length == 0)
@@ -708,10 +687,8 @@ public final class X {
 	/**
 	 * Descartes list
 	 * 
-	 * @param l1
-	 *            the list
-	 * @param l2
-	 *            the list
+	 * @param l1 the list
+	 * @param l2 the list
 	 * @return the list
 	 */
 	public static <T> List<List<T>> descartes(List<List<T>> l1, List<List<T>> l2) {
@@ -820,8 +797,26 @@ public final class X {
 	}
 
 	public static void main(String[] aa) {
-		String s = "001";
-		System.out.println(add(s, 1));
+		Exception s = new Exception(
+				"Table \"ROAD_POINT_WING\" not found; SQL statement:\r\ninsert into road_point_wing (created,name,id,updated,point,_node) values( ?, ?, ?, ?, ?, ?) [42102-197]");
+		System.out.println(isCauseBy(s, ".*Table.*not found.*"));
+	}
+
+	public static boolean isCauseBy(Throwable e, String regex) {
+		if (e == null)
+			return false;
+
+		String s = e.getMessage();
+		if (!X.isEmpty(s)) {
+			s = s.replaceAll("\r\n", X.EMPTY);
+//			log.debug("s=" + s + ", matches?" + s.matches(regex));
+//			System.out.println("s=" + s + ", matches?" + s.matches(regex));
+
+			if (s.matches(regex))
+				return true;
+		}
+
+		return isCauseBy(e.getCause(), regex);
 	}
 
 }

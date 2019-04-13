@@ -20,7 +20,7 @@ public class Footprint extends Bean {
 
 	public static BeanDAO<String, Footprint> dao = BeanDAO.create(Footprint.class);
 
-	@Column(name = "table")
+	@Column(name = "_table")
 	String table;
 
 	@Column(name = "dataid")
@@ -84,7 +84,7 @@ public class Footprint extends Bean {
 			Object v0 = p == null ? null : p.get(name);
 			Object v1 = v.value(name);
 			if (!X.isSame(v0, v1)) {
-				dao.insert(V.create("table", table).append("dataid", dataid).append("field", name).append("data", v1)
+				dao.insert(V.create("_table", table).append("dataid", dataid).append("field", name).append("data", v1)
 						.append("uid", uid));
 			}
 		}
@@ -107,7 +107,7 @@ public class Footprint extends Bean {
 			if (X.isIn(name, "updated", "created", "_id", "id"))
 				continue;
 			Object v1 = v.value(name);
-			dao.insert(V.create("table", table).append("dataid", dataid).append("field", name).append("data", v1)
+			dao.insert(V.create("_table", table).append("dataid", dataid).append("field", name).append("data", v1)
 					.append("uid", uid));
 		}
 
@@ -130,7 +130,7 @@ public class Footprint extends Bean {
 			if (X.isIn(name, "updated", "created", "_id", "id"))
 				continue;
 			Object v1 = v.value(name);
-			dao.insert(V.create("table", table).append("dataid", dataid).append("field", name).append("data", v1)
+			dao.insert(V.create("_table", table).append("dataid", dataid).append("field", name).append("data", v1)
 					.append("uid", uid));
 		}
 
@@ -138,14 +138,14 @@ public class Footprint extends Bean {
 	}
 
 	public static Beans<Footprint> load(String table, String dataid, String field, int s, int n) {
-		return dao.load(W.create().and("table", table).and("dataid", dataid).and("field", field).sort("created", -1), s,
-				n);
+		return dao.load(W.create().and("_table", table).and("dataid", dataid).and("field", field).sort("created", -1),
+				s, n);
 	}
 
 	public static Beans<Footprint> load(BeanDAO<?, ? extends Bean> b, String dataid, String field, int s, int n) {
 		return dao.load(
-				W.create().and("table", b.tableName()).and("dataid", dataid).and("field", field).sort("created", -1), s,
-				n);
+				W.create().and("_table", b.tableName()).and("dataid", dataid).and("field", field).sort("created", -1),
+				s, n);
 	}
 
 }

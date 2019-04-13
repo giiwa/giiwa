@@ -927,8 +927,6 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(sets.toString(), e);
 
-			GLog.dblog.error(table, "insert", "v=" + sets, e, null, db);
-
 		} finally {
 			close(c);
 		}
@@ -994,14 +992,144 @@ public class RDSHelper implements Helper.DBHelper {
 
 			GLog.dblog.error(table, "insert", "v=" + sets, e, null, Helper.DEFAULT);
 
-			// TODO, if the table not exists, create it ?
-			GLog.dblog.error(table, "insert", e.getMessage(), e, null, Helper.DEFAULT);
-			
+			// if the table not exists, create it
+			if (X.isCauseBy(e, ".*Table.*not found.*")) {
+				// table missed
+
+				if (_createTable(table, sets, c)) {
+					return insertTable(table, sets, c);
+				}
+			} else if (X.isCauseBy(e, ".*Column.*not found.*")) {
+
+				// column missed
+				if (_alertTable(table, sets, c)) {
+					return insertTable(table, sets, c);
+				}
+
+			}
 
 		} finally {
 			close(p);
 		}
 		return 0;
+	}
+
+	private static String _name(String name, Connection c) {
+		// the col need to be transfer ? in oracle
+		try {
+			if (isOracle(c)) {
+				if (oracle.containsKey(name)) {
+					return oracle.get(name);
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return name;
+	}
+
+	private boolean _alertTable(String table, V v, Connection c) {
+
+		Statement stat = null;
+
+		try {
+
+			stat = c.createStatement();
+
+			Map<String, String> cols = _columns(table, c);
+
+			for (String name : v.names()) {
+				if (!cols.containsKey(name)) {
+
+					StringBuilder sql = new StringBuilder("alert table ").append(table).append(" add ");
+
+					sql.append(_name(name, c)).append(" ").append(_type(v.value(name)));
+
+					stat.execute(sql.toString());
+
+					GLog.dblog.info(table, "alter", sql.toString(), null, Helper.DEFAULT);
+				}
+			}
+
+			return true;
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+
+			GLog.dblog.error(table, "alter", e.getMessage(), e, null, Helper.DEFAULT);
+
+		} finally {
+			close(stat);
+		}
+
+		return false;
+	}
+
+	private Map<String, String> _columns(String table, Connection c) {
+		ResultSet r = null;
+		Statement stat = null;
+		Map<String, String> l1 = new HashMap<String, String>();
+
+		try {
+			stat = c.createStatement();
+
+			r = stat.executeQuery("select * from " + table + " where 2=1");
+
+			ResultSetMetaData md = r.getMetaData();
+			for (int i = 0; i < md.getColumnCount(); i++) {
+				String name = md.getColumnName(i + 1);
+				l1.put(name, md.getColumnTypeName(i + 1));
+			}
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			close(r, stat);
+		}
+		return l1;
+	}
+
+	private boolean _createTable(String table, V v, Connection c) {
+
+		Statement stat = null;
+
+		try {
+			stat = c.createStatement();
+
+			StringBuilder sql = new StringBuilder("create table ").append(table).append(" ( ");
+			int i = 0;
+			for (String name : v.names()) {
+				if (i > 0) {
+					sql.append(", ");
+				}
+
+				sql.append(_name(name, c)).append(" ").append(_type(v.value(name)));
+			}
+			sql.append(" ) ");
+			stat.execute(sql.toString());
+
+			GLog.dblog.info(table, "create", sql.toString(), null, Helper.DEFAULT);
+
+			return true;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+
+			GLog.dblog.error(table, "create", e.getMessage(), e, null, Helper.DEFAULT);
+
+		} finally {
+			close(stat);
+		}
+		return false;
+	}
+
+	private String _type(Object v) {
+		if (v instanceof Long) {
+			return "bigint";
+		} else if (v instanceof Integer) {
+			return "int";
+		} else {
+			return "varchar(" + v.toString().length() * 2 + ")";
+		}
 	}
 
 	/**
@@ -1035,8 +1163,9 @@ public class RDSHelper implements Helper.DBHelper {
 			 * create the sql statement
 			 */
 			StringBuilder sql = new StringBuilder();
-			// TODO, the col need to be transfer ? in oracle
-			sql.append("select ").append(col).append(" from ").append(table);
+
+			sql.append("select ").append(_name(col, c)).append(" from ").append(table);
+
 			String where = _where(q, c);
 			Object[] args = q.args();
 
@@ -1499,8 +1628,8 @@ public class RDSHelper implements Helper.DBHelper {
 				return null;
 
 			StringBuilder sql = new StringBuilder();
-			// TODO, the name need to be transfer? in oracle
-			sql.append("select distinct(").append(name).append(") from ").append(table);
+
+			sql.append("select distinct(").append(_name(name, c)).append(") from ").append(table);
 			String where = _where(q, c);
 			Object[] args = q.args();
 
@@ -2405,7 +2534,7 @@ public class RDSHelper implements Helper.DBHelper {
 
 	@Override
 	public void repair() {
-		// TODO not support
+		// not support
 
 	}
 

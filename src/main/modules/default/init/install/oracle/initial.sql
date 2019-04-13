@@ -249,9 +249,24 @@ create index gi_oplog_index_node on gi_oplog(node);
 create index gi_oplog_index_model on gi_oplog(model);
 create index gi_oplog_index_op on gi_oplog(op);
 
+#drop table if exists gi_footprint;
+create table gi_footprint
+(
+	id varchar2(50),
+	_table varchar2(100),
+	dataid varchar2(100),
+	field varchar2(100),
+	"uid" NUMBER(20,0),
+	data varchar2(200),
+	updated NUMBER(20,0),
+	created NUMBER(20,0)
+);
+create index gi_footprint_index_id on gi_footprint(id);
+
 #drop table if exists gi_userlock;
 create table gi_userlock
 (
+	id varcahr2(50),
 	"uid" NUMBER(20,0),
 	host varchar2(20),
 	useragent varchar2(255),

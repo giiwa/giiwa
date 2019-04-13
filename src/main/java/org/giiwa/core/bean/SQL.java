@@ -30,6 +30,7 @@ public class SQL {
 	 *            10";
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public static List<Bean> query(DBHelper h, String sql) {
 
 		try {
