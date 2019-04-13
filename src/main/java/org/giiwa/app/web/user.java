@@ -461,7 +461,9 @@ public class user extends Model {
 			}
 		} else {
 			String sid = this.getString("sid");
-			AuthToken.dao.delete(W.create("sid", sid));
+			if (!X.isEmpty(sid)) {
+				AuthToken.dao.delete(W.create("sid", sid));
+			}
 		}
 
 		String refer = this.getString("refer");

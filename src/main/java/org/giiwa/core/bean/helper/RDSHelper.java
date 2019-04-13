@@ -43,7 +43,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.dbcp.SQLNestedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
@@ -208,8 +207,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "delete", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "delete", "q=" + q, e, null, db);
 
 		} finally {
 			close(p, c);
@@ -381,8 +379,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "exists", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "exists", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -448,7 +445,7 @@ public class RDSHelper implements Helper.DBHelper {
 			String where = _where(q, c);
 			Object[] args = q.args();
 
-			if (where != null) {
+			if (!X.isEmpty(where)) {
 				sql.append(" where ").append(where);
 			}
 
@@ -478,8 +475,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q + ",values=" + v.toString(), e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "update", "v=" + v + ", q=" + q, e, null, db);
+			GLog.dblog.error(table, "update", "v=" + v + ", q=" + q, e, null, db);
 
 		} finally {
 			close(p, c);
@@ -593,9 +589,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(sql, e);
 
-			if (!(e instanceof SQLNestedException)) {
-				GLog.dblog.error(table, "load", "q=" + sql, e, null, db);
-			}
+			GLog.dblog.error(table, "load", "q=" + sql, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -771,8 +765,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "load", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "load", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -877,8 +870,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q.toString(), e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(select, "load", "q=" + q, e, null, Helper.DEFAULT);
+			GLog.dblog.error(select, "load", "q=" + q, e, null, Helper.DEFAULT);
 
 		} finally {
 			close(r, p, c);
@@ -935,8 +927,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(sets.toString(), e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "insert", "v=" + sets, e, null, db);
+			GLog.dblog.error(table, "insert", "v=" + sets, e, null, db);
 
 		} finally {
 			close(c);
@@ -1001,8 +992,11 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(sets.toString(), e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "insert", "v=" + sets, e, null, Helper.DEFAULT);
+			GLog.dblog.error(table, "insert", "v=" + sets, e, null, Helper.DEFAULT);
+
+			// TODO, if the table not exists, create it ?
+			GLog.dblog.error(table, "insert", e.getMessage(), e, null, Helper.DEFAULT);
+			
 
 		} finally {
 			close(p);
@@ -1081,8 +1075,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "getString", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "getString", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -1222,8 +1215,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "getOne", "q=" + q, e, null, Helper.DEFAULT);
+			GLog.dblog.error(table, "getOne", "q=" + q, e, null, Helper.DEFAULT);
 
 		} finally {
 			close(r, p, c);
@@ -1318,8 +1310,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "getList", "q=" + q, e, null, Helper.DEFAULT);
+			GLog.dblog.error(table, "getList", "q=" + q, e, null, Helper.DEFAULT);
 
 		} finally {
 			close(r, p, c);
@@ -1389,8 +1380,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(e.getMessage(), e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "load", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "load", "q=" + q, e, null, db);
 
 		}
 		return null;
@@ -1465,8 +1455,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "count", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "count", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -1515,7 +1504,7 @@ public class RDSHelper implements Helper.DBHelper {
 			String where = _where(q, c);
 			Object[] args = q.args();
 
-			if (where != null) {
+			if (!X.isEmpty(where)) {
 				sql.append(" where ").append(where);
 			}
 
@@ -1549,8 +1538,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "distinct", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "distinct", "q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -1739,7 +1727,7 @@ public class RDSHelper implements Helper.DBHelper {
 			String where = _where(q, c);
 			Object[] args = q.args();
 
-			if (where != null) {
+			if (!X.isEmpty(where)) {
 				sql.append(" where ").append(where);
 			}
 
@@ -1773,8 +1761,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "inc", "name=" + name + ", q=" + q, e, null, db);
+			GLog.dblog.error(table, "inc", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(c, p, r);
@@ -1817,8 +1804,7 @@ public class RDSHelper implements Helper.DBHelper {
 			// log.error(sb.toString(), e);
 			log.warn("indexes=" + getIndexes(table, db));
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "index", "ss=" + ss, e, null, db);
+			GLog.dblog.error(table, "index", "ss=" + ss, e, null, db);
 
 		} finally {
 			close(stat, c);
@@ -1950,8 +1936,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(values.toString(), e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "insert", "v=" + values, e, null, db);
+			GLog.dblog.error(table, "insert", "v=" + values, e, null, db);
 
 		} finally {
 			close(p);
@@ -2082,8 +2067,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "query", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "query", "q=" + q, e, null, db);
 
 		}
 		return null;
@@ -2205,8 +2189,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "sum", "name=" + name + ", q=" + q, e, null, db);
+			GLog.dblog.error(table, "sum", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -2277,8 +2260,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "max", "name=" + name + ", q=" + q, e, null, db);
+			GLog.dblog.error(table, "max", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -2344,8 +2326,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "min", "name=" + name + ", q=" + q, e, null, db);
+			GLog.dblog.error(table, "min", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);
@@ -2410,8 +2391,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isErrorEnabled())
 				log.error(q, e);
 
-			if (!(e instanceof SQLNestedException))
-				GLog.dblog.error(table, "avg", "name=" + name + ", q=" + q, e, null, db);
+			GLog.dblog.error(table, "avg", "name=" + name + ", q=" + q, e, null, db);
 
 		} finally {
 			close(r, p, c);

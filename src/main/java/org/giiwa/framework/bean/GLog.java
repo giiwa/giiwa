@@ -431,6 +431,9 @@ public class GLog extends Bean {
 		 * @param ip      the ip address
 		 */
 		public void error(String model, String op, String message, Exception e, User u, String ip) {
+			if (!isEnabled(model))
+				return;
+
 			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
 					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);
 		}
@@ -473,6 +476,9 @@ public class GLog extends Bean {
 		 * @param ip      the ip address
 		 */
 		public void error(String model, String op, String message, String trace, User u, String ip) {
+			if (!isEnabled(model))
+				return;
+
 			error(Local.id(), model, op, message, trace, u, ip);
 		}
 
@@ -489,6 +495,10 @@ public class GLog extends Bean {
 		 */
 		protected abstract void error(String node, String model, String op, String message, String trace, User u,
 				String ip);
+
+		protected boolean isEnabled(String model) {
+			return true;
+		}
 
 	}
 
@@ -510,23 +520,20 @@ public class GLog extends Bean {
 
 	private static class DbLog extends ILog {
 
-		private boolean isEnabled(String model) {
-			return !X.isSame(model, "gi_glog");
+		protected boolean isEnabled(String model) {
+			return !X.isIn(model, "gi_glog", "gi_config");
 		}
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-			if (isEnabled(model))
-				_log(GLog.TYPE_DB, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
+			_log(GLog.TYPE_DB, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-			if (isEnabled(model))
-				_log(GLog.TYPE_DB, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
+			_log(GLog.TYPE_DB, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-			if (isEnabled(model))
-				_log(GLog.TYPE_DB, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+			_log(GLog.TYPE_DB, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 
 	}

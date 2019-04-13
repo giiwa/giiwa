@@ -328,7 +328,7 @@ create table gi_glog
 	model varchar(100),
 	op varchar(100),
 	message varchar(2048),
-	trace varchar(4098),
+	trace varchar(9186),
 	uid bigint,
 	ip varchar(50),
 	type1 int,

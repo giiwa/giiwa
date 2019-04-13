@@ -66,7 +66,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	private static String table(String module) {
-		return "gi_stat_" + (module.replaceAll("\\.delta", "").replaceAll("\\.snapshot", "").replaceAll("\\.", "_"));
+		return "gi_stat_"
+				+ (module.replaceAll("\\.delta", "").replaceAll("\\.snapshot", "").replaceAll("[\\.-+]", "_"));
 	}
 
 	public String getModule() {
@@ -76,18 +77,12 @@ public class Stat extends Bean implements Comparable<Stat> {
 	/**
 	 * Insert or update.
 	 *
-	 * @param module
-	 *            the module
-	 * @param date
-	 *            the date
-	 * @param size
-	 *            the size
-	 * @param q0
-	 *            the query
-	 * @param v
-	 *            the value
-	 * @param n
-	 *            the n
+	 * @param module the module
+	 * @param date   the date
+	 * @param size   the size
+	 * @param q0     the query
+	 * @param v      the value
+	 * @param n      the n
 	 * @return the int
 	 */
 	public static int insertOrUpdate(String module, String date, SIZE size, W q0, V v, long... n) {
@@ -282,14 +277,10 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 	/**
 	 * 
-	 * @param time
-	 *            the long of the timestamp
-	 * @param name
-	 *            the string of the module name
-	 * @param size
-	 *            the SIZE
-	 * @param n
-	 *            the data
+	 * @param time the long of the timestamp
+	 * @param name the string of the module name
+	 * @param size the SIZE
+	 * @param n    the data
 	 */
 	public static void snapshot(long time, String name, SIZE size, W q, V v, long... n) {
 
@@ -378,8 +369,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	/**
 	 * the start time of today
 	 * 
-	 * @param time
-	 *            the long of the timestamp
+	 * @param time the long of the timestamp
 	 * 
 	 * @return the truncated timestamp
 	 */
