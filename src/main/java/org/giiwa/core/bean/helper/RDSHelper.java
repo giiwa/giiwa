@@ -773,7 +773,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isDebugEnabled())
 				log.debug("cost:" + t.pastms() + "ms, sql=" + q);
 		}
-		return null;
+		return Beans.create();
 	}
 
 	/**
@@ -878,7 +878,7 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isDebugEnabled())
 				log.debug("cost:" + t.pastms() + "ms, sql=" + q);
 		}
-		return null;
+		return Beans.create();
 	}
 
 	/**
