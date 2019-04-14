@@ -40,8 +40,7 @@ import org.giiwa.core.bean.Helper.Cursor;
  * The {@code BeanStream} Class used to contains the Bean as cursor. <br>
  * MUSt close it after get data
  * 
- * @param <T>
- *            the generic type
+ * @param <T> the generic type
  */
 public final class BeanStream<E extends Bean> implements Stream<E> {
 
@@ -199,7 +198,7 @@ public final class BeanStream<E extends Bean> implements Stream<E> {
 
 	@Override
 	public Optional<E> reduce(BinaryOperator<E> accumulator) {
-		return null;
+		return Optional.empty();
 	}
 
 	@Override
@@ -219,12 +218,12 @@ public final class BeanStream<E extends Bean> implements Stream<E> {
 
 	@Override
 	public Optional<E> min(Comparator<? super E> comparator) {
-		return null;
+		return Optional.empty();
 	}
 
 	@Override
 	public Optional<E> max(Comparator<? super E> comparator) {
-		return null;
+		return Optional.empty();
 	}
 
 	@Override
@@ -249,12 +248,12 @@ public final class BeanStream<E extends Bean> implements Stream<E> {
 
 	@Override
 	public Optional<E> findFirst() {
-		return null;
+		return Optional.empty();
 	}
 
 	@Override
 	public Optional<E> findAny() {
-		return null;
+		return Optional.empty();
 	}
 
 }

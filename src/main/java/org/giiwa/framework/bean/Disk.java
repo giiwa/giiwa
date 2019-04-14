@@ -43,7 +43,7 @@ public class Disk extends Bean {
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 
-//	private final static String RESETNAME = "disk.reset";
+	//	private final static String RESETNAME = "disk.reset";
 
 	@Column(name = X.ID)
 	long id;
