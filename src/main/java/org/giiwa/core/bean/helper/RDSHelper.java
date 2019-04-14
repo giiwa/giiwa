@@ -1043,7 +1043,7 @@ public class RDSHelper implements Helper.DBHelper {
 
 					StringBuilder sql = new StringBuilder("alter table ").append(table).append(" add ");
 
-					sql.append(_name(name, c)).append(" ").append(_type(v.value(name)));
+					sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 
 					stat.execute(sql.toString());
 
@@ -1103,7 +1103,7 @@ public class RDSHelper implements Helper.DBHelper {
 					sql.append(", ");
 				}
 
-				sql.append(_name(name, c)).append(" ").append(_type(v.value(name)));
+				sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 				i++;
 			}
 			sql.append(" ) ");
@@ -1123,14 +1123,21 @@ public class RDSHelper implements Helper.DBHelper {
 		return false;
 	}
 
-	private String _type(Object v) {
+	private String _type(Object v, Connection c) {
 		if (v instanceof Long) {
 			return "bigint";
 		} else if (v instanceof Integer) {
 			return "int";
 		} else {
+			try {
+				if (isOracle(c)) {
+					return "varchar2(" + Math.max(v.toString().length() * 2, 100) + ")";
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+			return "varchar(" + Math.max(v.toString().length() * 2, 100) + ")";
 
-			return "varchar(" + Math.max(v.toString().length() * 2, 50) + ")";
 		}
 	}
 
