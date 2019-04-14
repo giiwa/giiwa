@@ -1039,9 +1039,9 @@ public class RDSHelper implements Helper.DBHelper {
 			Map<String, String> cols = _columns(table, c);
 
 			for (String name : v.names()) {
-				if (!cols.containsKey(name)) {
+				if (!cols.containsKey(name.toLowerCase())) {
 
-					StringBuilder sql = new StringBuilder("alert table ").append(table).append(" add ");
+					StringBuilder sql = new StringBuilder("alter table ").append(table).append(" add ");
 
 					sql.append(_name(name, c)).append(" ").append(_type(v.value(name)));
 
@@ -1078,7 +1078,7 @@ public class RDSHelper implements Helper.DBHelper {
 			ResultSetMetaData md = r.getMetaData();
 			for (int i = 0; i < md.getColumnCount(); i++) {
 				String name = md.getColumnName(i + 1);
-				l1.put(name, md.getColumnTypeName(i + 1));
+				l1.put(name.toLowerCase(), md.getColumnTypeName(i + 1));
 			}
 
 		} catch (Exception e) {

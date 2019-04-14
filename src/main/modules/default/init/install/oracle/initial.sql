@@ -314,6 +314,7 @@ create table gi_node
 	uptime number(20,0),
 	cores number(10,0),
 	os varchar2(100),
+	label varchar2(100),
 	mem number(20,0),
 	usage number(10,0),
 	globaltasks number(10,0),

@@ -49,7 +49,7 @@ create unique index gi_user_indexid on gi_user(id);
 create unique index gi_user_index_name on gi_user(name);
 create index gi_user_index_deleted on gi_user(deleted);
 create index gi_user_index_locked on gi_user(locked);
-alert table gi_user add createdip varchar(50);
+alter table gi_user add createdip varchar(50);
 
 #drop table if exists gi_userrole;
 create table gi_userrole
@@ -302,6 +302,7 @@ create table gi_node
 	uptime bigint,
 	cores int,
 	os varchar(100),
+	label varchar(100),
 	mem bigint,
 	usage int,
 	tasks int,

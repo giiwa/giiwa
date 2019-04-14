@@ -110,7 +110,7 @@ public class syslog extends Model {
 		JSON jo = this.getJSON();
 		W w = getW(jo);
 
-		Beans<GLog> bs = GLog.dao.load(w.sort("created", -1), s, n);
+		Beans<GLog> bs = GLog.dao.load(w.sort("created", -1).sort("level", -1), s, n);
 		this.set(bs, s, n);
 
 		this.query.path("/admin/syslog");
