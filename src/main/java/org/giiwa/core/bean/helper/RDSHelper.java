@@ -987,10 +987,8 @@ public class RDSHelper implements Helper.DBHelper {
 			return p.executeUpdate();
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(sets.toString(), e);
 
-			GLog.dblog.error(table, "insert", "v=" + sets, e, null, Helper.DEFAULT);
+//			GLog.dblog.error(table, "insert", "v=" + sets, e, null, Helper.DEFAULT);
 
 			// if the table not exists, create it
 			if (X.isCauseBy(e, ".*Table.*not found.*")) {
@@ -1006,6 +1004,8 @@ public class RDSHelper implements Helper.DBHelper {
 					return insertTable(table, sets, c);
 				}
 
+			} else {
+				log.error(sets.toString(), e);
 			}
 
 		} finally {
@@ -1104,6 +1104,7 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 
 				sql.append(_name(name, c)).append(" ").append(_type(v.value(name)));
+				i++;
 			}
 			sql.append(" ) ");
 			stat.execute(sql.toString());
@@ -1128,7 +1129,8 @@ public class RDSHelper implements Helper.DBHelper {
 		} else if (v instanceof Integer) {
 			return "int";
 		} else {
-			return "varchar(" + v.toString().length() * 2 + ")";
+
+			return "varchar(" + Math.max(v.toString().length() * 2, 50) + ")";
 		}
 	}
 

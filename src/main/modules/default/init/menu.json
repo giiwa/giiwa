@@ -102,7 +102,7 @@
 								"load": "/admin/i18n",
 								"seq": 70,
 								"access": "access.config.admin|access.config.module.admin",
-								"classes": "icon-agicand"
+								"classes": "icon-magic-wand"
 							}
 						]
 					}
