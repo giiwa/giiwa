@@ -928,3 +928,5 @@ system.restart.node.state_0=系统已经停止，无法重启
 upload.notfound=读取文件错误
 upload.node.state_0=系统已经停止，无法上传文件
 a.about=关于
+a.delete.table=清除数据
+a.drop.table=删除表

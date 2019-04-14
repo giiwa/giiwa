@@ -78,6 +78,15 @@ public class database extends Model {
 		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
+	@Path(path = "drop", login = true, access = "access.config.admin")
+	public void drop() {
+
+		String table = this.getString("table");
+		Helper.drop(table, Helper.DEFAULT);
+		GLog.oplog.warn(database.class, "drop", "table=" + table, login, this.getRemoteHost());
+		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
+	}
+
 	@Path(path = "er", login = true, access = "access.config.admin")
 	public void er() {
 

@@ -32,7 +32,8 @@
 				<td>$!t.table</td>
 				<td class="a">
 					$!t.size
-					<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$t.table')"><i class='icon-cancel-circle'></i></a>
+					<a class="hint hint--bottom" data-hint="$lang.get('a.delete.table')" href="javascript:;" onclick="_delete('$t.table')"><i class='icon-bin2'></i></a>
+					<a class="hint hint--bottom" data-hint="$lang.get('a.drop.table')" href="javascript:;" onclick="_drop('$t.table')"><i class='icon-cancel-circle'></i></a>
 				</td>
 			</tr>
 		#end
@@ -54,7 +55,14 @@ function _delete(table) {
 		})
 	}
 }
-
+function _drop(table) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post('/admin/database/drop?__node=$!__node', {table: table}, function(d){
+			giiwa.hint(d.message);
+			giiwa.reload();
+		})
+	}
+}
 function _submit(){
 	giiwa.submit($("#E$!requestid")[0], {
 		success : function(d){

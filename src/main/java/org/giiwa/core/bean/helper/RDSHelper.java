@@ -2566,4 +2566,19 @@ public class RDSHelper implements Helper.DBHelper {
 			e.printStackTrace();
 		}
 	}
+
+	@Override
+	public void drop(String table, String db) {
+		Connection c = null;
+		Statement stat = null;
+		try {
+			c = RDB.getConnection(db);
+			stat = c.createStatement();
+			stat.executeUpdate("drop index " + table);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			close(stat, c);
+		}
+	}
 }

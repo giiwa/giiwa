@@ -88,12 +88,9 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * Delete the data in mongo by the query.
 	 *
-	 * @param collection
-	 *            the collection
-	 * @param q
-	 *            the q
-	 * @param db
-	 *            the db
+	 * @param collection the collection
+	 * @param q          the q
+	 * @param db         the db
 	 * @return the long
 	 */
 	public int delete(String collection, W q, String db) {
@@ -142,8 +139,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * mongo[database].password=(null)
 	 * </pre>
 	 * 
-	 * @param database
-	 *            the name of database, if "" or null, then "default"
+	 * @param database the name of database, if "" or null, then "default"
 	 * @return DB
 	 */
 	public MongoDatabase getDB(String database) {
@@ -212,10 +208,8 @@ public class MongoHelper implements Helper.DBHelper {
 	 * mongo[database].password=(null)
 	 * </pre>
 	 * 
-	 * @param database
-	 *            the database
-	 * @param collection
-	 *            the collection
+	 * @param database   the database
+	 * @param collection the collection
 	 * @return DBCollection
 	 */
 	public MongoCollection<Document> getCollection(String database, String collection) {
@@ -248,8 +242,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * mongo[default].password=(null)
 	 * </pre>
 	 * 
-	 * @param name
-	 *            the name of the collection
+	 * @param name the name of the collection
 	 * @return DBCollection
 	 */
 	public MongoCollection<Document> getCollection(String name) {
@@ -259,14 +252,10 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * Load the data by the query.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param collection
-	 *            the collection
-	 * @param query
-	 *            the query
-	 * @param clazz
-	 *            the clazz
+	 * @param <T>        the generic type
+	 * @param collection the collection
+	 * @param query      the query
+	 * @param clazz      the clazz
 	 * @return the Bean
 	 */
 	public <T extends Bean> T load(String collection, Bson query, Class<T> clazz) {
@@ -285,14 +274,10 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * load the data by the query.
 	 *
-	 * @param <T>
-	 *            the subclass of Bean
-	 * @param collection
-	 *            the collection name
-	 * @param query
-	 *            the query
-	 * @param b
-	 *            the Bean
+	 * @param <T>        the subclass of Bean
+	 * @param collection the collection name
+	 * @param query      the query
+	 * @param b          the Bean
 	 * @return the Bean
 	 */
 	public <T extends Bean> T load(String collection, Bson query, T b) {
@@ -322,18 +307,12 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * load the data by the query.
 	 *
-	 * @param <T>
-	 *            the subclass of Bean
-	 * @param collection
-	 *            the collection name
-	 * @param query
-	 *            the query
-	 * @param order
-	 *            the order
-	 * @param b
-	 *            the Bean
-	 * @param db
-	 *            the db
+	 * @param <T>        the subclass of Bean
+	 * @param collection the collection name
+	 * @param query      the query
+	 * @param order      the order
+	 * @param b          the Bean
+	 * @param db         the db
 	 * @return the Bean
 	 */
 	public <T extends Bean> T load(String collection, String[] fields, Bson query, Bson order, T b, String db) {
@@ -385,14 +364,10 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * get the data from the collection.
 	 * 
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param query
-	 *            the query
-	 * @param order
-	 *            the order query
-	 * @param obj
-	 *            the Bean Class
+	 * @param <T>   the generic Bean Class
+	 * @param query the query
+	 * @param order the order query
+	 * @param obj   the Bean Class
 	 * @return T
 	 */
 	public <T extends Bean> T load(Bson query, Bson order, T obj) {
@@ -407,20 +382,13 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * load the data list.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param collection
-	 *            the collection name
-	 * @param q
-	 *            the query
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
-	 * @param clazz
-	 *            the Bean Class
-	 * @param db
-	 *            the db
+	 * @param <T>        the generic Bean Class
+	 * @param collection the collection name
+	 * @param q          the query
+	 * @param offset     the offset
+	 * @param limit      the limit
+	 * @param clazz      the Bean Class
+	 * @param db         the db
 	 * @return Beans
 	 */
 	public <T extends Bean> Beans<T> load(String collection, String[] fields, W q, int offset, int limit,
@@ -496,12 +464,9 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * load the data full into the t.
 	 * 
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param query
-	 *            the query
-	 * @param t
-	 *            the Bean Class
+	 * @param <T>   the generic Bean Class
+	 * @param query the query
+	 * @param t     the Bean Class
 	 * @return Bean if failed, return null
 	 */
 	public <T extends Bean> T load(Bson query, T t) {
@@ -520,12 +485,9 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * load the data by the query.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param query
-	 *            the query
-	 * @param t
-	 *            the Bean Class
+	 * @param <T>   the generic Bean Class
+	 * @param query the query
+	 * @param t     the Bean Class
 	 * @return Bean the instance of the Class
 	 */
 	public <T extends Bean> T load(Bson query, Class<T> t) {
@@ -546,14 +508,10 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * load the Bean by the query, and order.
 	 *
-	 * @param <T>
-	 *            the generic Bean Class
-	 * @param query
-	 *            the query
-	 * @param order
-	 *            the orderby
-	 * @param t
-	 *            the Class Bean
+	 * @param <T>   the generic Bean Class
+	 * @param query the query
+	 * @param order the orderby
+	 * @param t     the Class Bean
 	 * @return Bean
 	 */
 	public <T extends Bean> T load(Bson query, Bson order, Class<T> t) {
@@ -573,16 +531,11 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * Load.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param collection
-	 *            the collection
-	 * @param q
-	 *            the q
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param <T>        the generic type
+	 * @param collection the collection
+	 * @param q          the q
+	 * @param t          the t
+	 * @param db         the db
 	 * @return the t
 	 */
 	public <T extends Bean> T load(String collection, String[] fields, W q, Class<T> t, String db) {
@@ -602,12 +555,9 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * Load the data, and return the DBObject.
 	 *
-	 * @param db
-	 *            the db
-	 * @param collection
-	 *            the collection
-	 * @param query
-	 *            the query
+	 * @param db         the db
+	 * @param collection the collection
+	 * @param query      the query
 	 * @return the DB object
 	 */
 	public Document load(String db, String collection, Bson query) {
@@ -633,8 +583,7 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * get the collection name that associated with the Bean.
 	 * 
-	 * @param clazz
-	 *            the Bean Class
+	 * @param clazz the Bean Class
 	 * @return String
 	 */
 	final public String getCollection(Class<? extends Bean> clazz) {
@@ -654,12 +603,9 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * insert into the collection.
 	 *
-	 * @param collection
-	 *            the collection name
-	 * @param v
-	 *            the values
-	 * @param db
-	 *            the db
+	 * @param collection the collection name
+	 * @param v          the values
+	 * @param db         the db
 	 * @return int
 	 */
 	public int insertTable(String collection, V v, String db) {
@@ -698,14 +644,10 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * update mongo collection.
 	 *
-	 * @param collection
-	 *            the collection name
-	 * @param q
-	 *            the update query
-	 * @param v
-	 *            the value
-	 * @param db
-	 *            the db
+	 * @param collection the collection name
+	 * @param q          the update query
+	 * @param v          the value
+	 * @param db         the db
 	 * @return int of updated
 	 */
 	final public int updateTable(String collection, W q, V v, String db) {
@@ -755,12 +697,9 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * test the data exists ?.
 	 *
-	 * @param collection
-	 *            the collection name
-	 * @param q
-	 *            the q
-	 * @param db
-	 *            the db
+	 * @param collection the collection name
+	 * @param q          the q
+	 * @param db         the db
 	 * @return true: if exists, false: not exists
 	 */
 	public boolean exists(String collection, W q, String db) {
@@ -782,8 +721,7 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * run the command of Mongo.
 	 *
-	 * @param cmd
-	 *            the command
+	 * @param cmd the command
 	 * @return boolean, return true if "ok"
 	 */
 	public Document run(Bson cmd) {
@@ -821,8 +759,7 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * remove all the data from the collection.
 	 *
-	 * @param collection
-	 *            the collection
+	 * @param collection the collection
 	 */
 	public void clear(String collection) {
 		try {
@@ -876,12 +813,9 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * count the number by the query.
 	 *
-	 * @param collection
-	 *            the collection name
-	 * @param q
-	 *            the query and order
-	 * @param db
-	 *            the db
+	 * @param collection the collection name
+	 * @param q          the query and order
+	 * @param db         the db
 	 * @return long
 	 */
 	public long count(String collection, W q, String db) {
@@ -907,8 +841,7 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * backup the whole data from file.
 	 *
-	 * @param filename
-	 *            the file name
+	 * @param filename the file name
 	 */
 	public void backup(String filename, String[] cc) {
 		File f = new File(filename);
@@ -959,8 +892,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * recover the database from the file, the old data will be erased, index will
 	 * be keep.
 	 *
-	 * @param file
-	 *            the mongo.dmp file
+	 * @param file the mongo.dmp file
 	 */
 	public void recover(File file) {
 
@@ -998,16 +930,11 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * inc.
 	 *
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the q
-	 * @param name
-	 *            the name
-	 * @param n
-	 *            the n
-	 * @param db
-	 *            the db
+	 * @param table the table
+	 * @param q     the q
+	 * @param name  the name
+	 * @param n     the n
+	 * @param db    the db
 	 * @return the int
 	 */
 	public int inc(String table, W q, String name, int n, V v, String db) {
@@ -1234,8 +1161,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	/**
 	 * 
-	 * @param url,
-	 *            "mongodb://host:port/dbname"
+	 * @param url, "mongodb://host:port/dbname"
 	 * @return
 	 */
 	public static MongoHelper create(String url) {
@@ -1418,6 +1344,12 @@ public class MongoHelper implements Helper.DBHelper {
 		MongoDatabase g = getDB();
 		g.runCommand(new BasicDBObject().append("repairDatabase", 1));
 
+	}
+
+	@Override
+	public void drop(String table, String db) {
+		MongoCollection<Document> c = getCollection(db, table);
+		c.drop();
 	}
 
 }

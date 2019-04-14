@@ -76,8 +76,7 @@ public class Helper implements Serializable {
 	/**
 	 * initialize the Bean with the configuration.
 	 * 
-	 * @param conf
-	 *            the conf
+	 * @param conf the conf
 	 */
 	public static void init(Configuration conf) {
 
@@ -118,12 +117,9 @@ public class Helper implements Serializable {
 	/**
 	 * add a trigger on a db and table
 	 * 
-	 * @param db
-	 *            the db
-	 * @param table
-	 *            the table
-	 * @param t
-	 *            the trigger
+	 * @param db    the db
+	 * @param table the table
+	 * @param t     the trigger
 	 */
 	public static void addTrigger(String db, String table, ITrigger t) {
 		String name = db + "_" + table;
@@ -141,10 +137,8 @@ public class Helper implements Serializable {
 	/**
 	 * add trigger on "default" and the Bean
 	 * 
-	 * @param bean
-	 *            the bean
-	 * @param t
-	 *            the trigger
+	 * @param bean the bean
+	 * @param t    the trigger
 	 */
 	public static void addTrigger(Class<? extends Bean> bean, ITrigger t) {
 		addTrigger(getDB(bean), bean, t);
@@ -153,12 +147,9 @@ public class Helper implements Serializable {
 	/**
 	 * add trigger on db and the Bean
 	 * 
-	 * @param db
-	 *            the db name
-	 * @param bean
-	 *            the Bean
-	 * @param t
-	 *            the Trigger
+	 * @param db   the db name
+	 * @param bean the Bean
+	 * @param t    the Trigger
 	 */
 	public static void addTrigger(String db, Class<? extends Bean> bean, ITrigger t) {
 		String table = getTable(bean);
@@ -168,8 +159,7 @@ public class Helper implements Serializable {
 	/**
 	 * remove a trigger from all db and table
 	 * 
-	 * @param t
-	 *            the trigger
+	 * @param t the trigger
 	 */
 	public static void removeTrigger(ITrigger t) {
 		for (List<ITrigger> l1 : triggers.values()) {
@@ -213,10 +203,8 @@ public class Helper implements Serializable {
 	/**
 	 * delete a data from database.
 	 *
-	 * @param id
-	 *            the value of "id"
-	 * @param t
-	 *            the subclass of Bean
+	 * @param id the value of "id"
+	 * @param t  the subclass of Bean
 	 * @return the number was deleted
 	 */
 	public static int delete(Object id, Class<? extends Bean> t) {
@@ -226,10 +214,8 @@ public class Helper implements Serializable {
 	/**
 	 * delete the data , return the number that was deleted.
 	 *
-	 * @param q
-	 *            the query
-	 * @param t
-	 *            the subclass of the Bean
+	 * @param q the query
+	 * @param t the subclass of the Bean
 	 * @return the number was deleted
 	 */
 	public static int delete(W q, Class<? extends Bean> t) {
@@ -239,12 +225,9 @@ public class Helper implements Serializable {
 	/**
 	 * Delete.
 	 *
-	 * @param q
-	 *            the q
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param q  the q
+	 * @param t  the t
+	 * @param db the db
 	 * @return the int
 	 */
 	public static int delete(W q, Class<? extends Bean> t, String db) {
@@ -255,12 +238,9 @@ public class Helper implements Serializable {
 	/**
 	 * delete the data in table
 	 * 
-	 * @param q
-	 *            the query
-	 * @param table
-	 *            the table name
-	 * @param db
-	 *            the db name
+	 * @param q     the query
+	 * @param table the table name
+	 * @param db    the db name
 	 * @return the items was deleted
 	 */
 	public static int delete(W q, String table, String db) {
@@ -289,13 +269,10 @@ public class Helper implements Serializable {
 	/**
 	 * test if exists for the object.
 	 *
-	 * @param id
-	 *            the value of "id"
-	 * @param t
-	 *            the subclass of Bean
+	 * @param id the value of "id"
+	 * @param t  the subclass of Bean
 	 * @return true: exist
-	 * @throws SQLException
-	 *             throw exception if occur database error
+	 * @throws SQLException throw exception if occur database error
 	 */
 	public static boolean exists(Object id, Class<? extends Bean> t) throws SQLException {
 		return exists(W.create(X.ID, id), t);
@@ -304,14 +281,11 @@ public class Helper implements Serializable {
 	/**
 	 * test exists.
 	 *
-	 * @param q
-	 *            the query and order
-	 * @param t
-	 *            the class of Bean
+	 * @param q the query and order
+	 * @param t the class of Bean
 	 * @return true: exists, false: not exists
-	 * @throws SQLException
-	 *             throw Exception if the class declaration error or not db
-	 *             configured
+	 * @throws SQLException throw Exception if the class declaration error or not db
+	 *                      configured
 	 */
 	public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
 		return exists(q, t, getDB(t));
@@ -320,15 +294,11 @@ public class Helper implements Serializable {
 	/**
 	 * Exists.
 	 *
-	 * @param q
-	 *            the q
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param q  the q
+	 * @param t  the t
+	 * @param db the db
 	 * @return true, if successful
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @throws SQLException the SQL exception
 	 */
 	public static boolean exists(W q, Class<? extends Bean> t, String db) throws SQLException {
 		String table = getTable(t);
@@ -338,12 +308,9 @@ public class Helper implements Serializable {
 	/**
 	 * exists testing
 	 * 
-	 * @param q
-	 *            the query
-	 * @param table
-	 *            the table name
-	 * @param db
-	 *            the db name
+	 * @param q     the query
+	 * @param table the table name
+	 * @param db    the db name
 	 * @return the boolean
 	 * @throws SQLException
 	 */
@@ -431,8 +398,7 @@ public class Helper implements Serializable {
 		/**
 		 * From json.
 		 *
-		 * @param j
-		 *            the j
+		 * @param j the j
 		 * @return the v
 		 */
 		public static V fromJSON(JSON j) {
@@ -488,10 +454,8 @@ public class Helper implements Serializable {
 		/**
 		 * Creates a V and set the init name=value.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the value
+		 * @param name the name
+		 * @param v    the value
 		 * @return the v
 		 */
 		public static V create(String name, Object v) {
@@ -505,10 +469,8 @@ public class Helper implements Serializable {
 		/**
 		 * Sets the value if not exists, ignored if name exists.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the value
+		 * @param name the name
+		 * @param v    the value
 		 * @return the v
 		 */
 		public V set(String name, Object v) {
@@ -525,10 +487,8 @@ public class Helper implements Serializable {
 		 * same as set(String name, Object v) <br>
 		 * Sets the value if not exists, ignored if name exists.
 		 * 
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the value object
+		 * @param name the name
+		 * @param v    the value object
 		 * @return the V
 		 */
 		public V put(String name, Object v) {
@@ -539,10 +499,8 @@ public class Helper implements Serializable {
 		 * same as set(String name, Object v) <br>
 		 * Sets the value if not exists, ignored if name exists.
 		 * 
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the value object
+		 * @param name the name
+		 * @param v    the value object
 		 * @return the V
 		 */
 		public V append(String name, Object v) {
@@ -562,8 +520,7 @@ public class Helper implements Serializable {
 		/**
 		 * Ignore the fields.
 		 *
-		 * @param name
-		 *            the name
+		 * @param name the name
 		 * @return the v
 		 */
 		public V ignore(String... name) {
@@ -576,10 +533,8 @@ public class Helper implements Serializable {
 		/**
 		 * force set the name=value whatever the name exists or not.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the value object
+		 * @param name the name
+		 * @param v    the value object
 		 * @return the V
 		 */
 		public V force(String name, Object v) {
@@ -592,8 +547,7 @@ public class Helper implements Serializable {
 		/**
 		 * copy all key-value in json to this.
 		 *
-		 * @param jo
-		 *            the json
+		 * @param jo the json
 		 * @return V
 		 */
 		public V copy(Map<String, Object> jo) {
@@ -622,10 +576,8 @@ public class Helper implements Serializable {
 		/**
 		 * copy all in json to this, if names is null, then nothing to copy.
 		 *
-		 * @param jo
-		 *            the json
-		 * @param names
-		 *            the name string
+		 * @param jo    the json
+		 * @param names the name string
 		 * @return V
 		 */
 		public V copy(Map<String, Object> jo, String... names) {
@@ -647,10 +599,8 @@ public class Helper implements Serializable {
 		/**
 		 * copy the object to this, if names is null, then copy all in v.
 		 *
-		 * @param v
-		 *            the original V
-		 * @param names
-		 *            the names to copy, if null, then copy all
+		 * @param v     the original V
+		 * @param names the names to copy, if null, then copy all
 		 * @return V
 		 */
 		public V copy(V v, String... names) {
@@ -683,8 +633,7 @@ public class Helper implements Serializable {
 		/**
 		 * get the value by name, return null if not presented.
 		 *
-		 * @param name
-		 *            the string of name
+		 * @param name the string of name
 		 * @return Object, return null if not presented
 		 */
 		public Object value(String name) {
@@ -703,8 +652,7 @@ public class Helper implements Serializable {
 		/**
 		 * Removes the.
 		 *
-		 * @param name
-		 *            the name
+		 * @param name the name
 		 * @return the v
 		 */
 		public V remove(String... name) {
@@ -719,8 +667,7 @@ public class Helper implements Serializable {
 		/**
 		 * create and copy a new Value.
 		 *
-		 * @param v
-		 *            the Value object
+		 * @param v the Value object
 		 * @return V the new Value object
 		 */
 		public static V create(V v) {
@@ -743,8 +690,7 @@ public class Helper implements Serializable {
 	/**
 	 * convert the array objects to string.
 	 * 
-	 * @param arr
-	 *            the array objects
+	 * @param arr the array objects
 	 * @return the string
 	 */
 	public static String toString(Object[] arr) {
@@ -886,8 +832,7 @@ public class Helper implements Serializable {
 		/**
 		 * From json.
 		 *
-		 * @param jo
-		 *            the jo
+		 * @param jo the jo
 		 * @return the w
 		 */
 		public static W fromJSON(JSON jo) {
@@ -927,8 +872,7 @@ public class Helper implements Serializable {
 		/**
 		 * remove the conditions from the query.
 		 *
-		 * @param names
-		 *            the names
+		 * @param names the names
 		 * @return the W
 		 */
 		public W remove(String... names) {
@@ -1053,8 +997,7 @@ public class Helper implements Serializable {
 		/**
 		 * create the SQL "where" with the tansfers.
 		 *
-		 * @param tansfers
-		 *            the words pair should be transfered
+		 * @param tansfers the words pair should be transfered
 		 * @return the SQL string
 		 */
 		public String where(Map<String, String> tansfers) {
@@ -1108,8 +1051,7 @@ public class Helper implements Serializable {
 		/**
 		 * create order string with the transfers.
 		 *
-		 * @param transfers
-		 *            the words pair that need transfer according database
+		 * @param transfers the words pair that need transfer according database
 		 * @return the SQL order string
 		 */
 		public String orderby(Map<String, String> transfers) {
@@ -1138,10 +1080,8 @@ public class Helper implements Serializable {
 		/**
 		 * set the name and parameter with "and" and "EQ" conditions.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the v
+		 * @param name the name
+		 * @param v    the v
 		 * @return W
 		 */
 		public W and(String name, Object v) {
@@ -1151,8 +1091,7 @@ public class Helper implements Serializable {
 		/**
 		 * set and "and (...)" conditions
 		 *
-		 * @param w
-		 *            the w
+		 * @param w the w
 		 * @return W
 		 */
 		public W and(W w) {
@@ -1165,8 +1104,7 @@ public class Helper implements Serializable {
 		/**
 		 * set a "or (...)" conditions
 		 *
-		 * @param w
-		 *            the w
+		 * @param w the w
 		 * @return W
 		 */
 		public W or(W w) {
@@ -1283,12 +1221,9 @@ public class Helper implements Serializable {
 		/**
 		 * set the namd and parameter with "op" conditions.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the value object
-		 * @param op
-		 *            the operation
+		 * @param name the name
+		 * @param v    the value object
+		 * @param op   the operation
 		 * @return the W
 		 */
 		@SuppressWarnings("rawtypes")
@@ -1335,12 +1270,9 @@ public class Helper implements Serializable {
 		/**
 		 * same as and(String name, Object v, OP op).
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the value object
-		 * @param op
-		 *            the operation
+		 * @param name the name
+		 * @param v    the value object
+		 * @param op   the operation
 		 * @return the W
 		 */
 		public W append(String name, Object v, OP op) {
@@ -1361,10 +1293,8 @@ public class Helper implements Serializable {
 		/**
 		 * set name and parameter with "or" and "EQ" conditions.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the v
+		 * @param name the name
+		 * @param v    the v
 		 * @return W
 		 */
 		public W or(String name, Object v) {
@@ -1374,12 +1304,9 @@ public class Helper implements Serializable {
 		/**
 		 * set the name and parameter with "or" and "op" conditions.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the v
-		 * @param op
-		 *            the op
+		 * @param name the name
+		 * @param v    the v
+		 * @param op   the op
 		 * @return W
 		 */
 		@SuppressWarnings("rawtypes")
@@ -1426,12 +1353,9 @@ public class Helper implements Serializable {
 		/**
 		 * copy the name and parameter from a JSON, with "and" and "op" conditions.
 		 *
-		 * @param jo
-		 *            the json
-		 * @param op
-		 *            the op
-		 * @param names
-		 *            the names
+		 * @param jo    the json
+		 * @param op    the op
+		 * @param names the names
 		 * @return W
 		 */
 		public W copy(JSON jo, OP op, String... names) {
@@ -1452,12 +1376,9 @@ public class Helper implements Serializable {
 		/**
 		 * copy the value in jo, the format of name is: ["name", "table field name" ].
 		 *
-		 * @param jo
-		 *            the json
-		 * @param op
-		 *            the op
-		 * @param names
-		 *            the names
+		 * @param jo    the json
+		 * @param op    the op
+		 * @param names the names
 		 * @return W
 		 */
 		public W copy(JSON jo, OP op, String[]... names) {
@@ -1485,10 +1406,8 @@ public class Helper implements Serializable {
 		/**
 		 * create a new W with name and parameter, "and" and "EQ" conditions.
 		 *
-		 * @param name
-		 *            the name
-		 * @param v
-		 *            the v
+		 * @param name the name
+		 * @param v    the v
 		 * @return W
 		 */
 		public static W create(String name, Object v) {
@@ -1498,12 +1417,9 @@ public class Helper implements Serializable {
 		/**
 		 * create the W object with the parameters.
 		 *
-		 * @param name
-		 *            the field name
-		 * @param v
-		 *            the value object
-		 * @param op
-		 *            the operation
+		 * @param name the field name
+		 * @param v    the value object
+		 * @param op   the operation
 		 * @return the W
 		 */
 		public static W create(String name, Object v, OP op) {
@@ -1515,8 +1431,7 @@ public class Helper implements Serializable {
 		/**
 		 * create the W by single sql, this sql is only for RDS
 		 * 
-		 * @param connectsql
-		 *            the sql without parameter
+		 * @param connectsql the sql without parameter
 		 * @return the W
 		 */
 		public static W create(String connectsql) {
@@ -1569,8 +1484,7 @@ public class Helper implements Serializable {
 			/**
 			 * From json.
 			 *
-			 * @param j1
-			 *            the j1
+			 * @param j1 the j1
 			 * @return the entity
 			 */
 			public static Entity fromJSON(JSON j1) {
@@ -1783,10 +1697,8 @@ public class Helper implements Serializable {
 		/**
 		 * Sort.
 		 *
-		 * @param name
-		 *            the name
-		 * @param i
-		 *            the i
+		 * @param name the name
+		 * @param i    the i
 		 * @return the w
 		 */
 		public W sort(String name, int i) {
@@ -1810,12 +1722,9 @@ public class Helper implements Serializable {
 		/**
 		 * Query.
 		 * 
-		 * @param db
-		 *            the db name
-		 * @param table
-		 *            the table
-		 * @param q
-		 *            the W
+		 * @param db    the db name
+		 * @param table the table
+		 * @param q     the W
 		 */
 		public void query(String db, String table, W q);
 
@@ -1824,12 +1733,9 @@ public class Helper implements Serializable {
 	/**
 	 * load the data by id of X.ID
 	 * 
-	 * @param <T>
-	 *            the subclass of Bean
-	 * @param id
-	 *            the id
-	 * @param t
-	 *            the Class of Bean
+	 * @param <T> the subclass of Bean
+	 * @param id  the id
+	 * @param t   the Class of Bean
 	 * @return the Bean
 	 */
 	public static <T extends Bean> T load(Object id, Class<T> t) {
@@ -1839,12 +1745,9 @@ public class Helper implements Serializable {
 	/**
 	 * load the data by the query.
 	 *
-	 * @param <T>
-	 *            the subclass of Bean
-	 * @param q
-	 *            the query
-	 * @param t
-	 *            the Class of Bean
+	 * @param <T> the subclass of Bean
+	 * @param q   the query
+	 * @param t   the Class of Bean
 	 * @return the Bean
 	 */
 	public static <T extends Bean> T load(W q, Class<T> t) {
@@ -1858,14 +1761,10 @@ public class Helper implements Serializable {
 	/**
 	 * Load.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param q
-	 *            the q
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param <T> the generic type
+	 * @param q   the q
+	 * @param t   the t
+	 * @param db  the db
 	 * @return the t
 	 */
 	public static <T extends Bean> T load(W q, Class<T> t, String db) {
@@ -1881,14 +1780,10 @@ public class Helper implements Serializable {
 	/**
 	 * load data from the table.
 	 *
-	 * @param <T>
-	 *            the subclass of Bean
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query and order
-	 * @param t
-	 *            the subclass of Bean
+	 * @param <T>   the subclass of Bean
+	 * @param table the table name
+	 * @param q     the query and order
+	 * @param t     the subclass of Bean
 	 * @return the bean
 	 */
 	public static <T extends Bean> T load(String table, W q, Class<T> t) {
@@ -1898,16 +1793,11 @@ public class Helper implements Serializable {
 	/**
 	 * Load.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the q
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param <T>   the generic type
+	 * @param table the table
+	 * @param q     the q
+	 * @param t     the t
+	 * @param db    the db
 	 * @return the t
 	 */
 	public static <T extends Bean> T load(String table, String[] fields, W q, Class<T> t, String db) {
@@ -1936,10 +1826,8 @@ public class Helper implements Serializable {
 	/**
 	 * insert into the values by the Class of T.
 	 *
-	 * @param value
-	 *            the value
-	 * @param t
-	 *            the Class of Bean
+	 * @param value the value
+	 * @param t     the Class of Bean
 	 * @return the number of inserted, 0: failed
 	 */
 	public static int insert(V value, Class<? extends Bean> t) {
@@ -1953,10 +1841,8 @@ public class Helper implements Serializable {
 	/**
 	 * batch insert
 	 * 
-	 * @param values
-	 *            the values
-	 * @param t
-	 *            the Class of Bean
+	 * @param values the values
+	 * @param t      the Class of Bean
 	 * @return the number of inserted
 	 */
 	public static int insert(List<V> values, Class<? extends Bean> t) {
@@ -1966,12 +1852,9 @@ public class Helper implements Serializable {
 	/**
 	 * batch insert
 	 * 
-	 * @param values
-	 *            the values
-	 * @param t
-	 *            the Class of Bean
-	 * @param db
-	 *            the DB name
+	 * @param values the values
+	 * @param t      the Class of Bean
+	 * @param db     the DB name
 	 * @return the number is inserted
 	 */
 	public static int insert(List<V> values, Class<? extends Bean> t, String db) {
@@ -1983,12 +1866,9 @@ public class Helper implements Serializable {
 	/**
 	 * batch insert
 	 * 
-	 * @param values
-	 *            the values
-	 * @param table
-	 *            the table name
-	 * @param db
-	 *            the db name
+	 * @param values the values
+	 * @param table  the table name
+	 * @param db     the db name
 	 * @return the number inserted
 	 */
 	public static int insert(List<V> values, String table, String db) {
@@ -2024,12 +1904,9 @@ public class Helper implements Serializable {
 	/**
 	 * Insert.
 	 *
-	 * @param values
-	 *            the values
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param values the values
+	 * @param t      the t
+	 * @param db     the db
 	 * @return the int
 	 */
 	public static int insert(V value, Class<? extends Bean> t, String db) {
@@ -2040,12 +1917,9 @@ public class Helper implements Serializable {
 	/**
 	 * insert
 	 * 
-	 * @param value
-	 *            the value
-	 * @param table
-	 *            the table
-	 * @param db
-	 *            the db name
+	 * @param value the value
+	 * @param table the table
+	 * @param db    the db name
 	 * @return the number inserted
 	 */
 	public static int insert(V value, String table, String db) {
@@ -2079,12 +1953,9 @@ public class Helper implements Serializable {
 	/**
 	 * update the values by the id, for the Class of Bean.
 	 *
-	 * @param id
-	 *            the id of the X.ID
-	 * @param values
-	 *            the values to update
-	 * @param t
-	 *            the Class of Bean
+	 * @param id     the id of the X.ID
+	 * @param values the values to update
+	 * @param t      the Class of Bean
 	 * @return the number of updated
 	 */
 	public static int update(Object id, V values, Class<? extends Bean> t) {
@@ -2094,12 +1965,9 @@ public class Helper implements Serializable {
 	/**
 	 * update the values by the W for the Class of Bean.
 	 *
-	 * @param q
-	 *            the query
-	 * @param values
-	 *            the values to update
-	 * @param t
-	 *            the Class of Ban
+	 * @param q      the query
+	 * @param values the values to update
+	 * @param t      the Class of Ban
 	 * @return the number of updated
 	 */
 	public static int update(W q, V values, Class<? extends Bean> t) {
@@ -2109,14 +1977,10 @@ public class Helper implements Serializable {
 	/**
 	 * update the values by the Q for the Class of Bean in the "db".
 	 *
-	 * @param q
-	 *            the query
-	 * @param values
-	 *            the values
-	 * @param t
-	 *            the Class of Bean
-	 * @param db
-	 *            the database pool name
+	 * @param q      the query
+	 * @param values the values
+	 * @param t      the Class of Bean
+	 * @param db     the database pool name
 	 * @return the number of updated
 	 */
 	public static int update(W q, V values, Class<? extends Bean> t, String db) {
@@ -2127,12 +1991,9 @@ public class Helper implements Serializable {
 	/**
 	 * update the table by the query with the values.
 	 *
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the query
-	 * @param values
-	 *            the values
+	 * @param table  the table
+	 * @param q      the query
+	 * @param values the values
 	 * @return the number of updated
 	 */
 	public static int update(String table, W q, V values) {
@@ -2142,14 +2003,10 @@ public class Helper implements Serializable {
 	/**
 	 * update the table by the query with the values.
 	 *
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the query
-	 * @param values
-	 *            the values
-	 * @param db
-	 *            the database pool
+	 * @param table  the table
+	 * @param q      the query
+	 * @param values the values
+	 * @param db     the database pool
 	 * @return the number of updated
 	 */
 	public static int update(String table, W q, V values, String db) {
@@ -2190,14 +2047,10 @@ public class Helper implements Serializable {
 	/**
 	 * Inc.
 	 *
-	 * @param q
-	 *            the q
-	 * @param name
-	 *            the name
-	 * @param n
-	 *            the n
-	 * @param t
-	 *            the t
+	 * @param q    the q
+	 * @param name the name
+	 * @param n    the n
+	 * @param t    the t
 	 * @return the int
 	 */
 	public static int inc(W q, String name, int n, V v, Class<? extends Bean> t) {
@@ -2208,14 +2061,10 @@ public class Helper implements Serializable {
 	/**
 	 * Inc.
 	 *
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the q
-	 * @param name
-	 *            the name
-	 * @param n
-	 *            the n
+	 * @param table the table
+	 * @param q     the q
+	 * @param name  the name
+	 * @param n     the n
 	 * @return the int
 	 */
 	public static int inc(String table, W q, String name, int n, V v) {
@@ -2225,16 +2074,11 @@ public class Helper implements Serializable {
 	/**
 	 * increase the value
 	 * 
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the query
-	 * @param name
-	 *            the name
-	 * @param n
-	 *            the number
-	 * @param db
-	 *            the db name
+	 * @param table the table
+	 * @param q     the query
+	 * @param name  the name
+	 * @param n     the number
+	 * @param db    the db name
 	 * @return the new value
 	 */
 	public static int inc(String table, W q, String name, int n, V v, String db) {
@@ -2275,18 +2119,12 @@ public class Helper implements Serializable {
 	 * load the data from the table by query, ignore the table definition for the
 	 * Class.
 	 *
-	 * @param <T>
-	 *            the subclass of Bean
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query
-	 * @param s
-	 *            the start
-	 * @param n
-	 *            the number
-	 * @param t
-	 *            the Class of Bean
+	 * @param <T>   the subclass of Bean
+	 * @param table the table name
+	 * @param q     the query
+	 * @param s     the start
+	 * @param n     the number
+	 * @param t     the Class of Bean
 	 * @return Beans of the T, the "total=-1" always
 	 */
 	public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) {
@@ -2300,20 +2138,13 @@ public class Helper implements Serializable {
 	/**
 	 * Load.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the q
-	 * @param s
-	 *            the s
-	 * @param n
-	 *            the n
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param <T>   the generic type
+	 * @param table the table
+	 * @param q     the q
+	 * @param s     the s
+	 * @param n     the n
+	 * @param t     the t
+	 * @param db    the db
 	 * @return the beans
 	 */
 	public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db) {
@@ -2367,16 +2198,11 @@ public class Helper implements Serializable {
 	/**
 	 * load the data by query.
 	 *
-	 * @param <T>
-	 *            the subclass of Bean
-	 * @param q
-	 *            the query
-	 * @param s
-	 *            the start
-	 * @param n
-	 *            the number
-	 * @param t
-	 *            the Class of Bean
+	 * @param <T> the subclass of Bean
+	 * @param q   the query
+	 * @param s   the start
+	 * @param n   the number
+	 * @param t   the Class of Bean
 	 * @return Beans of Class
 	 */
 	public static <T extends Bean> Beans<T> load(W q, int s, int n, Class<T> t) {
@@ -2415,8 +2241,7 @@ public class Helper implements Serializable {
 	/**
 	 * get the table name from the Class of Bean.
 	 *
-	 * @param t
-	 *            the Class of Bean
+	 * @param t the Class of Bean
 	 * @return the String of the table name
 	 */
 	public static String getTable(Class<? extends Bean> t) {
@@ -2432,8 +2257,7 @@ public class Helper implements Serializable {
 	/**
 	 * get the db name
 	 * 
-	 * @param t
-	 *            the Bean class
+	 * @param t the Bean class
 	 * @return the db name
 	 */
 	public static String getDB(Class<? extends Bean> t) {
@@ -2448,10 +2272,8 @@ public class Helper implements Serializable {
 	/**
 	 * count the data by the query.
 	 *
-	 * @param q
-	 *            the query
-	 * @param t
-	 *            the Class of Bean
+	 * @param q the query
+	 * @param t the Class of Bean
 	 * @return the long of data number
 	 */
 	public static long count(W q, Class<? extends Bean> t) {
@@ -2477,12 +2299,9 @@ public class Helper implements Serializable {
 	/**
 	 * count the items in the db.
 	 *
-	 * @param q
-	 *            the query
-	 * @param t
-	 *            the Class of Bean
-	 * @param db
-	 *            the name of db pool
+	 * @param q  the query
+	 * @param t  the Class of Bean
+	 * @param db the name of db pool
 	 * @return the number
 	 */
 	public static long count(W q, Class<? extends Bean> t, String db) {
@@ -2513,12 +2332,9 @@ public class Helper implements Serializable {
 	/**
 	 * count the items in table, db
 	 * 
-	 * @param q
-	 *            the query
-	 * @param table
-	 *            the table name
-	 * @param db
-	 *            the db name
+	 * @param q     the query
+	 * @param table the table name
+	 * @param db    the db name
 	 * @return long
 	 */
 	public static long count(W q, String table, String db) {
@@ -2634,16 +2450,11 @@ public class Helper implements Serializable {
 	/**
 	 * get the distinct list for the name, by the query.
 	 * 
-	 * @param <T>
-	 *            the base object
-	 * @param name
-	 *            the column name
-	 * @param q
-	 *            the query
-	 * @param b
-	 *            the Bean class
-	 * @param t
-	 *            the Class of T
+	 * @param <T>  the base object
+	 * @param name the column name
+	 * @param q    the query
+	 * @param b    the Bean class
+	 * @param t    the Class of T
 	 * @return the List of objects
 	 */
 	public static List<?> distinct(String name, W q, Class<? extends Bean> b) {
@@ -2653,18 +2464,12 @@ public class Helper implements Serializable {
 	/**
 	 * Distinct.
 	 *
-	 * @param <T>
-	 *            the generic type
-	 * @param name
-	 *            the name
-	 * @param q
-	 *            the q
-	 * @param b
-	 *            the b
-	 * @param t
-	 *            the t
-	 * @param db
-	 *            the db
+	 * @param <T>  the generic type
+	 * @param name the name
+	 * @param q    the q
+	 * @param b    the b
+	 * @param t    the t
+	 * @param db   the db
 	 * @return the list
 	 */
 	public static List<?> distinct(String name, W q, Class<? extends Bean> b, String db) {
@@ -2675,16 +2480,11 @@ public class Helper implements Serializable {
 	/**
 	 * get the distinct data
 	 * 
-	 * @param name
-	 *            the column name
-	 * @param q
-	 *            the query
-	 * @param table
-	 *            the table name
-	 * @param t
-	 *            the result type
-	 * @param db
-	 *            the db name
+	 * @param name  the column name
+	 * @param q     the query
+	 * @param table the table name
+	 * @param t     the result type
+	 * @param db    the db name
 	 * @return the list
 	 */
 	public static List<?> distinct(String name, W q, String table, String db) {
@@ -2714,8 +2514,7 @@ public class Helper implements Serializable {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
+	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
 
@@ -2815,13 +2614,12 @@ public class Helper implements Serializable {
 
 	/**
 	 * 
-	 * @param m
-	 *            the optimizer
+	 * @param m the optimizer
 	 */
 	public static void enableOptmizer() {
 		monitor = new Optimizer();
 	}
-	
+
 	public static void disableOptmizer() {
 		monitor = null;
 	}
@@ -2829,12 +2627,9 @@ public class Helper implements Serializable {
 	/**
 	 * create index on table
 	 * 
-	 * @param db
-	 *            the db
-	 * @param table
-	 *            the table
-	 * @param ss
-	 *            the index info
+	 * @param db    the db
+	 * @param table the table
+	 * @param ss    the index info
 	 */
 	public static void createIndex(String db, String table, LinkedHashMap<String, Integer> ss) {
 
@@ -2854,10 +2649,8 @@ public class Helper implements Serializable {
 	/**
 	 * get indexes on table
 	 * 
-	 * @param table
-	 *            the table
-	 * @param db
-	 *            the db
+	 * @param table the table
+	 * @param db    the db
 	 * @return the list of indexes
 	 */
 	public static List<Map<String, Object>> getIndexes(String table, String db) {
@@ -2879,12 +2672,9 @@ public class Helper implements Serializable {
 	/**
 	 * drop indexes
 	 * 
-	 * @param table
-	 *            the table
-	 * @param name
-	 *            the index name
-	 * @param db
-	 *            the db
+	 * @param table the table
+	 * @param name  the index name
+	 * @param db    the db
 	 */
 	public static void dropIndex(String table, String name, String db) {
 
@@ -2902,8 +2692,7 @@ public class Helper implements Serializable {
 	/**
 	 * set primary db helper
 	 * 
-	 * @param helper
-	 *            the db helper
+	 * @param helper the db helper
 	 */
 	public static void setPrimary(DBHelper helper) {
 		primary = helper;
@@ -2914,8 +2703,7 @@ public class Helper implements Serializable {
 	/**
 	 * add a custom db helper which works if primary has not that db
 	 * 
-	 * @param helper
-	 *            the db helper
+	 * @param helper the db helper
 	 */
 	public static void addCustomHelper(DBHelper helper) {
 		if (customs == null) {
@@ -2949,6 +2737,8 @@ public class Helper implements Serializable {
 		<T extends Bean> T load(String table, String[] fields, W q, Class<T> clazz, String db);
 
 		int delete(String table, W q, String db);
+
+		void drop(String table, String db);
 
 		Object getDB(String db);
 
@@ -2990,6 +2780,20 @@ public class Helper implements Serializable {
 	public interface Cursor<E> extends Iterator<E> {
 
 		void close();
+	}
+
+	public static void drop(String table, String db) {
+
+		if (primary != null && primary.getDB(db) != null) {
+			primary.drop(table, db);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(db) != null) {
+					h.drop(table, db);
+				}
+			}
+		}
+
 	}
 
 }
