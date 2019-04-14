@@ -14,13 +14,13 @@ public class INFO implements ICommand {
 
 		String path = in.readString();
 		try {
-			path = path.replaceAll("[/\\\\]", File.separator);
+			path = path.replaceAll("[/\\\\]", "/");
 		} catch (Exception e) {
 			log.error(path, e);
 		}
 		String filename = in.readString();
 		try {
-			filename = filename.replaceAll("[/\\\\]", File.separator);
+			filename = filename.replaceAll("[/\\\\]", "/");
 		} catch (Exception e) {
 			log.error(filename, e);
 		}

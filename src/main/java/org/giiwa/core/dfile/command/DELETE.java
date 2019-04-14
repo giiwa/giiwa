@@ -13,8 +13,8 @@ public class DELETE implements ICommand {
 	@Override
 	public void process(Request in, IResponseHandler handler) {
 
-		String path = in.readString().replaceAll("[/\\\\]", File.separator);
-		String filename = in.readString().replaceAll("[/\\\\]", File.separator);
+		String path = in.readString().replaceAll("[/\\\\]", "/");
+		String filename = in.readString().replaceAll("[/\\\\]", "/");
 		long age = in.readLong();
 
 		File f = new File(path + File.separator + filename);
