@@ -982,7 +982,9 @@ public class User extends Bean {
 					V v = V.create();
 					v.append("name", u.getName());
 					v.append("nickname", u.getNickname());
+					
 					_checkphoto(v);
+					
 					dao.update(u.getId(), v);
 				}
 			}

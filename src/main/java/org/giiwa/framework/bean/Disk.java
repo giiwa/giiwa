@@ -22,7 +22,6 @@ import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Model;
-import org.giiwa.mq.MQ;
 import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.UID;
@@ -44,7 +43,7 @@ public class Disk extends Bean {
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 
-	private final static String RESETNAME = "disk.reset";
+//	private final static String RESETNAME = "disk.reset";
 
 	@Column(name = X.ID)
 	long id;
