@@ -20,7 +20,7 @@
 	<tbody>
 #foreach($f in $list)
 	<tr>
-		<td>$!f.name <a class="icon-folder-download" href='javascript:;' onclick="_download('$!f.name')"></a></td>
+		<td class="a">$!f.name <a class="icon-folder-download" href='javascript:;' onclick="_download('$!f.name')"></a></td>
 		<td>$lang.format($f.lastModified(), 'yyyy-MM-dd HH:m')</td>
 		#set($s=$global.getInt("backup/$f.name", 0))
 		<td>$!lang.size($f.length())</td>
