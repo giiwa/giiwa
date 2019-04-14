@@ -58,5 +58,24 @@
 	<classpathentry kind="lib" path="depends/httpcore-4.4.9.jar"/>
 	<classpathentry kind="lib" path="depends/httpmime-4.5.4.jar"/>
 	<classpathentry kind="lib" path="depends/velocity-engine-core-2.0.jar"/>
+	<classpathentry kind="lib" path="depends/activemq-client-5.15.9.jar"/>
+	<classpathentry kind="lib" path="depends/animal-sniffer-annotations-1.14.jar"/>
+	<classpathentry kind="lib" path="depends/checker-qual-2.0.0.jar"/>
+	<classpathentry kind="lib" path="depends/commons-codec-1.10.jar"/>
+	<classpathentry kind="lib" path="depends/commons-fileupload-1.4.jar"/>
+	<classpathentry kind="lib" path="depends/commons-lang3-3.5.jar"/>
+	<classpathentry kind="lib" path="depends/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="depends/commons-net-3.6.jar"/>
+	<classpathentry kind="lib" path="depends/commons-pool-1.5.6.jar"/>
+	<classpathentry kind="lib" path="depends/error_prone_annotations-2.1.3.jar"/>
+	<classpathentry kind="lib" path="depends/flexmark-0.35.0.jar"/>
+	<classpathentry kind="lib" path="depends/flexmark-util-0.35.0.jar"/>
+	<classpathentry kind="lib" path="depends/guava-25.1-jre.jar"/>
+	<classpathentry kind="lib" path="depends/h2-1.4.197.jar"/>
+	<classpathentry kind="lib" path="depends/j2objc-annotations-1.1.jar"/>
+	<classpathentry kind="lib" path="depends/jsch-0.1.55.jar"/>
+	<classpathentry kind="lib" path="depends/jsr305-3.0.2.jar"/>
+	<classpathentry kind="lib" path="depends/mina-core-2.0.19.jar"/>
+	<classpathentry kind="lib" path="depends/utils-1.07.00.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
