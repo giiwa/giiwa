@@ -16,6 +16,7 @@
 				<th>$lang.get('table.bean')</th>
 				<th>$lang.get('table.name')</th>
 				<th>$lang.get('table.size')</th>
+				<th></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -30,8 +31,8 @@
 				</td>
 				<td>$!t.name</td>
 				<td>$!t.table</td>
+				<td>$!t.size</td>
 				<td class="a">
-					$!t.size
 					<a class="hint hint--bottom" data-hint="$lang.get('a.delete.table')" href="javascript:;" onclick="_delete('$t.table')"><i class='icon-bin2'></i></a>
 					<a class="hint hint--bottom" data-hint="$lang.get('a.drop.table')" href="javascript:;" onclick="_drop('$t.table')"><i class='icon-cancel-circle'></i></a>
 				</td>
