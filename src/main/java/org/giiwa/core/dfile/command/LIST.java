@@ -11,8 +11,19 @@ public class LIST implements ICommand {
 
 	@Override
 	public void process(Request in, IResponseHandler handler) {
-		String path = in.readString().replaceAll("[/\\\\]", File.separator);
-		String filename = in.readString().replaceAll("[/\\\\]", File.separator);
+
+		String path = in.readString();
+		try {
+			path = path.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(path, e);
+		}
+		String filename = in.readString();
+		try {
+			filename = filename.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(filename, e);
+		}
 
 		File f = new File(path + File.separator + filename);
 		// List<JSON> l1 = JSON.createList();

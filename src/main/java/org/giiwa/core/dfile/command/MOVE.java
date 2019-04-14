@@ -10,10 +10,31 @@ public class MOVE implements ICommand {
 
 	@Override
 	public void process(Request in, IResponseHandler handler) {
-		String path = in.readString().replaceAll("[/\\\\]", File.separator);
-		String filename = in.readString().replaceAll("[/\\\\]", File.separator);
-		String path2 = in.readString().replaceAll("[/\\\\]", File.separator);
-		String filename2 = in.readString().replaceAll("[/\\\\]", File.separator);
+		String path = in.readString();
+		try {
+			path = path.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(path, e);
+		}
+
+		String filename = in.readString();
+		try {
+			filename = filename.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(filename, e);
+		}
+		String path2 = in.readString();
+		try {
+			path2 = path2.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(path2, e);
+		}
+		String filename2 = in.readString();
+		try {
+			filename2 = filename2.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(filename2, e);
+		}
 
 		File f1 = new File(path, filename);
 		File f2 = new File(path2, filename2);

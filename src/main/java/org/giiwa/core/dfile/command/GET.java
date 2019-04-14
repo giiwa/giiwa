@@ -14,8 +14,19 @@ public class GET implements ICommand {
 	@Override
 	public void process(Request in, IResponseHandler handler) {
 
-		String path = in.readString().replaceAll("[/\\\\]", File.separator);
-		String filename = in.readString().replaceAll("[/\\\\]", File.separator);
+		String path = in.readString();
+		try {
+			path = path.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(path, e);
+		}
+		String filename = in.readString();
+		try {
+			filename = filename.replaceAll("[/\\\\]", File.separator);
+		} catch (Exception e) {
+			log.error(filename, e);
+		}
+
 		long offset = in.readLong();
 		int len = in.readInt();
 
