@@ -50,8 +50,7 @@ public class Temp {
 	/**
 	 * Initialize the Temp object, this will be invoke in giiwa startup.
 	 *
-	 * @param conf
-	 *            the conf
+	 * @param conf the conf
 	 */
 	public static void init(Configuration conf) {
 
@@ -71,8 +70,7 @@ public class Temp {
 	/**
 	 * get the Temp file for name.
 	 *
-	 * @param name
-	 *            the file name
+	 * @param name the file name
 	 * @return the Temp
 	 */
 	public static Temp create(String name) {
@@ -125,10 +123,8 @@ public class Temp {
 	/**
 	 * Gets the.
 	 * 
-	 * @param id
-	 *            the id
-	 * @param name
-	 *            the name
+	 * @param id   the id
+	 * @param name the name
 	 * @return the file
 	 */
 	public static DFile get(String id, String name) {
@@ -156,11 +152,9 @@ public class Temp {
 	/**
 	 * Copy the inputstream and close it
 	 *
-	 * @param in
-	 *            the in
+	 * @param in the in
 	 * @return the int
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public int copy(InputStream in) throws IOException {
 		return IOUtil.copy(in, file.getOutputStream());
@@ -169,13 +163,10 @@ public class Temp {
 	/**
 	 * Zipcopy.
 	 *
-	 * @param name
-	 *            the name
-	 * @param in
-	 *            the in
+	 * @param name the name
+	 * @param in   the in
 	 * @return the int
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public int zipcopy(String name, InputStream in) throws IOException {
 		ZipOutputStream out = new ZipOutputStream(file.getOutputStream());
@@ -189,7 +180,13 @@ public class Temp {
 	}
 
 	public <V extends Bean> Exporter<V> export(String charset, Exporter.FORMAT format) {
-		return export(this.getLocalFile(), charset, format);
+		File f = this.getLocalFile();
+		if (f.exists()) {
+			f.delete();
+		} else {
+			f.getParentFile().mkdirs();
+		}
+		return export(f, charset, format);
 	}
 
 	@SuppressWarnings("unchecked")
