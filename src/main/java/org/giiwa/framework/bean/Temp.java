@@ -189,7 +189,7 @@ public class Temp {
 	}
 
 	public <V extends Bean> Exporter<V> export(String charset, Exporter.FORMAT format) {
-		return export(this.getFile(), charset, format);
+		return export(this.getLocalFile(), charset, format);
 	}
 
 	@SuppressWarnings("unchecked")
