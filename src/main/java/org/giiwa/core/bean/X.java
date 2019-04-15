@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -450,6 +451,43 @@ public final class X {
 		return l1.toArray(new String[l1.size()]);
 	}
 
+	public static String[] csv(String src) {
+
+		List<String> l1 = new ArrayList<String>();
+		if (src != null) {
+			StringBuilder sb = null;
+			for (int i = 0; i < src.length(); i++) {
+				char c = src.charAt(i);
+				if (c == '"') {
+					if (sb != null) {
+						l1.add(sb.toString());
+						sb = null;
+						i++;
+						while (i < src.length() && src.charAt(i) != '"') {
+							i++;
+						}
+					}
+
+					continue;
+				} else if (c == '\\') {
+					if (sb == null)
+						sb = new StringBuilder();
+					sb.append(c);
+					i++;
+					c = src.charAt(i);
+				}
+				if (sb == null)
+					sb = new StringBuilder();
+				sb.append(c);
+			}
+			if (sb != null) {
+				l1.add(sb.toString());
+			}
+		}
+
+		return l1.toArray(new String[l1.size()]);
+	}
+
 	/**
 	 * printstacktrace
 	 * 
@@ -680,10 +718,6 @@ public final class X {
 		return sb.append(n1).toString();
 	}
 
-	// public static void main(String[] args) {
-	// System.out.println(X.fill("0", 1, 900));
-	// }
-
 	/**
 	 * Descartes list
 	 * 
@@ -797,9 +831,10 @@ public final class X {
 	}
 
 	public static void main(String[] aa) {
-		Exception s = new Exception(
-				"Table \"ROAD_POINT_WING\" not found; SQL statement:\r\ninsert into road_point_wing (created,name,id,updated,point,_node) values( ?, ?, ?, ?, ?, ?) [42102-197]");
-		System.out.println(isCauseBy(s, ".*Table.*not found.*"));
+		String s = "\"12345\",\"1234\",asdad\"123\"";
+		String[] ss = X.csv(s);
+
+		System.out.println(Arrays.toString(ss));
 	}
 
 	public static boolean isCauseBy(Throwable e, String regex) {
