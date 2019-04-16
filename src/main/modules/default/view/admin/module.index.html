@@ -66,7 +66,7 @@ div.limited, div.trial, div.issue{
 			</td>
 			<td class="a">
 				#if($f.id > 0)
-				<a class="hint hint--bottom" data-hint="$lang.get('a.disable')" href="/admin/module/disable?__node=$!__node&name=$f.name"><i class="icon-blocked"></i></a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.disable')" href="/admin/module/disable?__node=$!__node&name=$f.name"><i class="icon-switch"></i></a>
 				#end
 			</td>
 		</tr>
@@ -101,7 +101,7 @@ div.limited, div.trial, div.issue{
 			<td>$!f.build</td>
 			<td>$!f.readme</td>
 			<td class="a">
-				<a class="hint hint--bottom" data-hint="$lang.get('a.enable')" href="/admin/module/enable?__node=$!__node&name=$f.name"><i class="icon-plus"></i></a>
+				<a class="hint hint--bottom" data-hint="$lang.get('a.enable')" href="/admin/module/enable?__node=$!__node&name=$f.name"><i class="icon-switch"></i></a>
 				<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/delete?__node=$!__node&name=$f.name"><i class="icon-cancel-circle"></i></a>
 			</td>
 		</tr>
