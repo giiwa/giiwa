@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,8 +59,7 @@ public class Bean implements Serializable {
 	/**
 	 * set expired time before using in cache
 	 * 
-	 * @param expired
-	 *            the expired
+	 * @param expired the expired
 	 */
 	public void expired(long expired) {
 		this._expired = expired;
@@ -95,8 +95,7 @@ public class Bean implements Serializable {
 	/**
 	 * refill the bean from json.
 	 *
-	 * @param jo
-	 *            the JSON object
+	 * @param jo the JSON object
 	 * @return true if all successful
 	 */
 	public boolean fromJSON(JSON jo) {
@@ -109,8 +108,7 @@ public class Bean implements Serializable {
 	/**
 	 * get the key-value in the bean to json.<br>
 	 *
-	 * @param jo
-	 *            the JSON object
+	 * @param jo the JSON object
 	 */
 	public void toJSON(JSON jo) {
 		/**
@@ -132,10 +130,8 @@ public class Bean implements Serializable {
 	/**
 	 * set the value to extra data, or the field annotation by @Column.
 	 *
-	 * @param name
-	 *            the name of the data or the column
-	 * @param value
-	 *            the value, if the value=null, then remove the name from the data
+	 * @param name  the name of the data or the column
+	 * @param value the value, if the value=null, then remove the name from the data
 	 * @return Object of the old value
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -205,7 +201,12 @@ public class Bean implements Serializable {
 			if (value == null) {
 				data.remove(name);
 			} else {
-				data.put(name, value);
+				if (value instanceof Timestamp) {
+					data.put(name, ((Timestamp) value).getTime());
+				} else {
+					data.put(name, value);
+				}
+
 			}
 		}
 		return old;
@@ -214,8 +215,7 @@ public class Bean implements Serializable {
 	/**
 	 * get the Field by the colname
 	 * 
-	 * @param columnname
-	 *            the colname
+	 * @param columnname the colname
 	 * @return the Field
 	 */
 	public Field getField(String columnname) {
@@ -275,8 +275,7 @@ public class Bean implements Serializable {
 	 * get the value by name from bean <br>
 	 * .
 	 *
-	 * @param name
-	 *            the name of the data or the column
+	 * @param name the name of the data or the column
 	 * @return Object the value of the name, return null if the name not exists
 	 */
 	@SuppressWarnings("unchecked")
@@ -344,10 +343,8 @@ public class Bean implements Serializable {
 	/**
 	 * put the key-value in bean.
 	 *
-	 * @param key
-	 *            the key
-	 * @param value
-	 *            the value
+	 * @param key   the key
+	 * @param value the value
 	 * @return the object of old data
 	 */
 	public final Object put(String key, Object value) {
@@ -357,8 +354,7 @@ public class Bean implements Serializable {
 	/**
 	 * remove the key from the bean.
 	 *
-	 * @param key
-	 *            the name
+	 * @param key the name
 	 * @return the object of old value
 	 */
 	public final Object remove(Object key) {
@@ -368,8 +364,7 @@ public class Bean implements Serializable {
 	/**
 	 * put all the data in the map to Bean.
 	 *
-	 * @param m
-	 *            the data map
+	 * @param m the data map
 	 */
 	public final void putAll(Map<? extends String, ? extends Object> m) {
 		for (String s : m.keySet()) {
@@ -428,8 +423,7 @@ public class Bean implements Serializable {
 	/**
 	 * by default, get integer from the map.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the int of value, default 0
 	 */
 	public final int getInt(String name) {
@@ -439,8 +433,7 @@ public class Bean implements Serializable {
 	/**
 	 * by default, get long from the map.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return long of the value, default 0
 	 */
 	public long getLong(String name) {
@@ -450,8 +443,7 @@ public class Bean implements Serializable {
 	/**
 	 * by default, get the string from the map.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return String of the value, null if the name not exists
 	 */
 	public final String getString(String name) {
@@ -468,8 +460,7 @@ public class Bean implements Serializable {
 	/**
 	 * by default, get the float from the map.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return float of the value, default 0
 	 */
 	public final float getFloat(String name) {
@@ -479,8 +470,7 @@ public class Bean implements Serializable {
 	/**
 	 * by default, get the double from the map.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return double of the value, default 0
 	 */
 	public final double getDouble(String name) {
@@ -529,8 +519,7 @@ public class Bean implements Serializable {
 	/**
 	 * remove value by names.
 	 *
-	 * @param names
-	 *            the names
+	 * @param names the names
 	 */
 	public final void remove(String... names) {
 		if (data != null && names != null) {
@@ -564,8 +553,7 @@ public class Bean implements Serializable {
 	 * it will invoked when load data from the MongoDB<br>
 	 * by default, will load all data in Bean Map.
 	 * 
-	 * @param d
-	 *            the Document
+	 * @param d the Document
 	 */
 	public void load(Document d, String[] fields) {
 		if (fields == null || fields.length == 0) {
@@ -586,10 +574,8 @@ public class Bean implements Serializable {
 	 * it will be invoked when load data from RDBS DB <br>
 	 * By default, it will load all data in Bean Map.
 	 * 
-	 * @param r
-	 *            the ResultSet of RDBS
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @param r the ResultSet of RDBS
+	 * @throws SQLException the SQL exception
 	 */
 	public void load(ResultSet r, String[] fields) throws SQLException {
 		if (fields == null || fields.length == 0) {
@@ -661,8 +647,7 @@ public class Bean implements Serializable {
 	/**
 	 * refine the bean and output as a json object
 	 * 
-	 * @param e
-	 *            the refine function
+	 * @param e the refine function
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")

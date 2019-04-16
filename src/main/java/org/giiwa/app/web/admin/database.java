@@ -53,10 +53,12 @@ public class database extends Model {
 		Map<String, JSON> l2 = new TreeMap<String, JSON>();
 		for (Class<? extends Bean> c : l1) {
 			String table = Helper.getTable(c);
-			if (!X.isEmpty(table) && !l2.containsKey(table)) {
+
+			String name = table;
+			if (!X.isEmpty(name) && !l2.containsKey(name)) {
 				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
 						Helper.count(W.create(), c));
-				l2.put(table, j);
+				l2.put(name, j);
 			}
 		}
 		this.set("list", l2.values());

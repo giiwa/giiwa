@@ -66,8 +66,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	private static String table(String module) {
-		return "gi_stat_"
-				+ (module.replaceAll("\\.delta", "").replaceAll("\\.snapshot", "").replaceAll("[\\.-]", "_"));
+		return "gi_stat_" + (module.replaceAll("\\.delta", "").replaceAll("\\.snapshot", "").replaceAll("[\\.-]", "_"));
 	}
 
 	public String getModule() {
@@ -93,9 +92,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 		}
 
 		try {
-			W q = W.create().copy(v).and("date", date).and("size", size.toString()).and("module", module);
-
 			String table = table(module);
+			W q = W.create().copy(v).and("date", date).and("size", size.toString()).and("module", module);
 
 			if (!Helper.exists(q, table, Helper.DEFAULT)) {
 
@@ -126,8 +124,53 @@ public class Stat extends Bean implements Comparable<Stat> {
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			cleanup(module, size);
 		}
+
 		return -1;
+	}
+
+	public static void cleanup(String module, SIZE size) {
+		// delete old data
+		String table = table(module);
+		W q1 = W.create().and("size", size.toString());
+
+		switch (size) {
+		case min:
+			q1.and("time", System.currentTimeMillis() - X.ADAY, W.OP.lt);
+			break;
+		case m10:
+			q1.and("time", System.currentTimeMillis() - 10 * X.ADAY, W.OP.lt);
+			break;
+		case m15:
+			q1.and("time", System.currentTimeMillis() - 15 * X.ADAY, W.OP.lt);
+			break;
+		case m30:
+			q1.and("time", System.currentTimeMillis() - 30 * X.ADAY, W.OP.lt);
+			break;
+		case hour:
+			q1.and("time", System.currentTimeMillis() - 60 * X.ADAY, W.OP.lt);
+			break;
+		case day:
+			q1.and("time", System.currentTimeMillis() - 24 * X.ADAY, W.OP.lt);
+			break;
+		case week:
+			q1.and("time", System.currentTimeMillis() - 7 * 24 * X.ADAY, W.OP.lt);
+			break;
+		case month:
+			q1.and("time", System.currentTimeMillis() - 30 * 24 * X.ADAY, W.OP.lt);
+			break;
+		case season:
+			q1.and("time", System.currentTimeMillis() - 3 * 30 * 24 * X.ADAY, W.OP.lt);
+			break;
+		case year:
+			q1.and("time", System.currentTimeMillis() - 12 * 30 * 24 * X.ADAY, W.OP.lt);
+			break;
+		}
+
+		Helper.delete(q1, table, Helper.DEFAULT);
+
 	}
 
 	/*
