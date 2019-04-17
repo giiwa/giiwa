@@ -14,7 +14,7 @@
 * 直接解压 giiwa
 > tar xzf giiwa-1.6.tgz -C giiwa
 * 启动 giiwa
-> giiwa.sh start
+> giiwa start
 
 #### 配置 giiwa
 * 使用浏览器访问 http://[ip]:8080/, 能看到正常界面说明已经安装成功，点击“控制面板”进行配置，按照步骤配置数据库（只需一个，其他可以忽略）。
