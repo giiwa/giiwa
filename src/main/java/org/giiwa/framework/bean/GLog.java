@@ -430,7 +430,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void error(String model, String op, String message, Exception e, User u, String ip) {
+		public void error(String model, String op, String message, Throwable e, User u, String ip) {
 			if (!isEnabled(model))
 				return;
 

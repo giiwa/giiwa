@@ -113,8 +113,7 @@ public class Module {
 	/**
 	 * handle by filter ad invoke the before
 	 * 
-	 * @param m
-	 *            the model
+	 * @param m the model
 	 * @return boolean
 	 */
 	public boolean before(Model m) {
@@ -260,11 +259,9 @@ public class Module {
 	/**
 	 * prepare a module by Entity for upgrading
 	 * 
-	 * @param e
-	 *            the entity of module file
+	 * @param e the entity of module file
 	 * @return true required restart, false not need
-	 * @throws Exception
-	 *             throw Exception if failed
+	 * @throws Exception throw Exception if failed
 	 */
 	public static boolean prepare(Entity e) throws Exception {
 		if (e == null) {
@@ -373,8 +370,7 @@ public class Module {
 	/**
 	 * handle by filter and invoke the after
 	 * 
-	 * @param m
-	 *            the model
+	 * @param m the model
 	 * @return boolean
 	 */
 	public boolean after(Model m) {
@@ -460,8 +456,7 @@ public class Module {
 	/**
 	 * get the module by name.
 	 *
-	 * @param module
-	 *            the module
+	 * @param module the module
 	 * @return Module
 	 */
 	static public Module module(String module) {
@@ -570,8 +565,7 @@ public class Module {
 	/**
 	 * Gets the.
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the string
 	 */
 	public String get(String name) {
@@ -586,10 +580,8 @@ public class Module {
 	/**
 	 * Gets the.
 	 * 
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the string
 	 */
 	public String get(String name, String defaultValue) {
@@ -658,8 +650,7 @@ public class Module {
 	/**
 	 * Gets the file.
 	 * 
-	 * @param resource
-	 *            the resource
+	 * @param resource the resource
 	 * @return the file
 	 */
 	public File getFile(String resource) {
@@ -669,10 +660,8 @@ public class Module {
 	/**
 	 * Gets the file.
 	 * 
-	 * @param resource
-	 *            the resource
-	 * @param inFloor
-	 *            the in floor
+	 * @param resource the resource
+	 * @param inFloor  the in floor
 	 * @return the file
 	 */
 	public File getFile(String resource, boolean inFloor) {
@@ -682,12 +671,9 @@ public class Module {
 	/**
 	 * get the file in the module box
 	 * 
-	 * @param resource
-	 *            the resource name
-	 * @param inFloor
-	 *            search the resource in floor
-	 * @param inbox
-	 *            get the resource in sanbox
+	 * @param resource the resource name
+	 * @param inFloor  search the resource in floor
+	 * @param inbox    get the resource in sanbox
 	 * @return the File if exists, otherwise null
 	 */
 	public File getFile(String resource, boolean inFloor, boolean inbox) {
@@ -730,8 +716,7 @@ public class Module {
 	/**
 	 * Gets the all langs.
 	 * 
-	 * @param locale
-	 *            the locale
+	 * @param locale the locale
 	 * @return the all langs
 	 */
 	public File[] getAllLangs(String locale) {
@@ -746,10 +731,8 @@ public class Module {
 	/**
 	 * Gets the all langs.
 	 * 
-	 * @param locale
-	 *            the locale
-	 * @param lang
-	 *            the lang
+	 * @param locale the locale
+	 * @param lang   the lang
 	 * @return the all langs
 	 */
 	public String getAllLangs(String locale, String lang) {
@@ -850,8 +833,7 @@ public class Module {
 	/**
 	 * Inits the.
 	 * 
-	 * @param conf
-	 *            the conf
+	 * @param conf the conf
 	 */
 	public static void init(Configuration conf) {
 
@@ -1001,8 +983,7 @@ public class Module {
 	/**
 	 * load the module by id
 	 * 
-	 * @param id
-	 *            the module id
+	 * @param id the module id
 	 * @return the Module
 	 */
 	public static Module load(int id) {
@@ -1012,8 +993,7 @@ public class Module {
 	/**
 	 * Load.
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the module
 	 */
 	public static Module load(String name) {
@@ -1185,16 +1165,28 @@ public class Module {
 
 						if (_listener != null) {
 							log.info("initializing: " + name);
-							_listener.onInit(conf, this);
-							_listener.upgrade(conf, this);
+							try {
+
+								_listener.onInit(conf, this);
+								_listener.upgrade(conf, this);
+
+							} catch (Throwable e) {
+								GLog.applog.error(name, "init", e.getMessage(), e, null, null);
+							}
 
 							if (Task.powerstate == 1) {
-								_listener.onStart(conf, this);
+								try {
+									_listener.onStart(conf, this);
+								} catch (Throwable e) {
+									GLog.applog.error(name, "start", e.getMessage(), e, null, null);
+								}
 							}
 
 						}
 					} catch (Throwable e) {
 						log.error(this.name + ", listener=" + name, e);
+						GLog.applog.error(name, "init", e.getMessage(), e, null, null);
+
 						return false;
 					}
 				}
@@ -1212,8 +1204,7 @@ public class Module {
 	/**
 	 * get all modules
 	 * 
-	 * @param enabled
-	 *            the enabled or not
+	 * @param enabled the enabled or not
 	 * @return List the list of module
 	 */
 	public static List<Module> getAll(boolean enabled) {
@@ -1244,10 +1235,8 @@ public class Module {
 	/**
 	 * Load model from cache.
 	 *
-	 * @param method
-	 *            the method
-	 * @param uri
-	 *            the uri
+	 * @param method the method
+	 * @param uri    the uri
 	 * @return Model
 	 */
 	public Model loadModelFromCache(int method, String uri) {
@@ -1285,10 +1274,8 @@ public class Module {
 	/**
 	 * Load model.
 	 *
-	 * @param method
-	 *            the method
-	 * @param uri
-	 *            the uri
+	 * @param method the method
+	 * @param uri    the uri
 	 * @return the model
 	 */
 	@SuppressWarnings("unchecked")
@@ -1460,10 +1447,8 @@ public class Module {
 	/**
 	 * Load lang.
 	 * 
-	 * @param data
-	 *            the data
-	 * @param locale
-	 *            the locale
+	 * @param data   the data
+	 * @param locale the locale
 	 */
 	public void loadLang(Map<String, String[]> data, String locale) {
 
@@ -1528,10 +1513,8 @@ public class Module {
 	/**
 	 * Put lang.
 	 * 
-	 * @param locale
-	 *            the locale
-	 * @param name
-	 *            the name
+	 * @param locale the locale
+	 * @param name   the name
 	 */
 	public void putLang(String locale, String name) {
 
@@ -1704,8 +1687,7 @@ public class Module {
 	/**
 	 * Zip to.
 	 * 
-	 * @param file
-	 *            the file
+	 * @param file the file
 	 * @return the file
 	 */
 	public File zipTo(String file) {
@@ -1790,12 +1772,9 @@ public class Module {
 	/**
 	 * Update lang.
 	 * 
-	 * @param locale
-	 *            the locale
-	 * @param langname
-	 *            the langname
-	 * @param text
-	 *            the text
+	 * @param locale   the locale
+	 * @param langname the langname
+	 * @param text     the text
 	 */
 	public void updateLang(String locale, String langname, String text) {
 		File f = new File(path + "/i18n/" + locale + "/" + langname);
@@ -1820,8 +1799,7 @@ public class Module {
 	/**
 	 * Support locale.
 	 * 
-	 * @param locale
-	 *            the locale
+	 * @param locale the locale
 	 * @return true, if successful
 	 */
 	public boolean supportLocale(String locale) {
@@ -1831,8 +1809,7 @@ public class Module {
 	/**
 	 * Inits the.
 	 * 
-	 * @param m
-	 *            the m
+	 * @param m the m
 	 * @return true, if successful
 	 */
 	public static boolean init(Module m) {
@@ -1960,10 +1937,8 @@ public class Module {
 	/**
 	 * Load menu.
 	 * 
-	 * @param me
-	 *            the me
-	 * @param name
-	 *            the name
+	 * @param me   the me
+	 * @param name the name
 	 * @return the list
 	 */
 	public List<Menu> loadMenu(User me, String name) {
@@ -1973,12 +1948,9 @@ public class Module {
 	/**
 	 * Load menu.
 	 * 
-	 * @param me
-	 *            the me
-	 * @param id
-	 *            the id
-	 * @param name
-	 *            the name
+	 * @param me   the me
+	 * @param id   the id
+	 * @param name the name
 	 * @return the list
 	 */
 	public List<Menu> loadMenu(User me, int id, String name) {
@@ -2031,12 +2003,9 @@ public class Module {
 		/**
 		 * Creates the.
 		 *
-		 * @param model
-		 *            the model
-		 * @param pathmapping
-		 *            the pathmapping
-		 * @param module
-		 *            the module
+		 * @param model       the model
+		 * @param pathmapping the pathmapping
+		 * @param module      the module
 		 * @return the cached model
 		 */
 		static CachedModel create(Class<? extends Model> model, Map<Integer, Map<String, PathMapping>> pathmapping,
@@ -2051,11 +2020,9 @@ public class Module {
 		/**
 		 * Creates the.
 		 *
-		 * @param uri
-		 *            the uri
+		 * @param uri the uri
 		 * @return the model
-		 * @throws Exception
-		 *             the exception
+		 * @throws Exception the exception
 		 */
 		public Model create(String uri) throws Exception {
 			Model m = model.newInstance();
@@ -2101,8 +2068,7 @@ public class Module {
 	/**
 	 * return the shortname of the class, cut the prefix by module package
 	 * 
-	 * @param model
-	 *            the subclass of model
+	 * @param model the subclass of model
 	 * @return the shortname of the subclass
 	 */
 	public static String shortName(Class<? extends Model> model) {

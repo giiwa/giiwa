@@ -72,7 +72,7 @@ class Optimizer implements Helper.IOptimizer {
 
 		List<Map<String, Object>> l1 = Helper.getIndexes(table, db);
 
-		GLog.applog.info("db", "get", "db.index, table=" + table + ", get.index.1=" + l1, null, null);
+//		GLog.applog.info("db", "get", "db.index, table=" + table + ", get.index.1=" + l1, null, null);
 
 		if (l1 != null && !l1.isEmpty()) {
 			for (Map<String, Object> d : l1) {
