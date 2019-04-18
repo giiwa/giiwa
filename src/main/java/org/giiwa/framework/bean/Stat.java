@@ -125,7 +125,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
-			cleanup(module, size);
+			// cleanup(module, size);
 		}
 
 		return -1;

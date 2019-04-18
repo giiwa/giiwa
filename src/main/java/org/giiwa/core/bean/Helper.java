@@ -982,7 +982,7 @@ public class Helper implements Serializable {
 		 * @see java.lang.Object.toString()
 		 */
 		public String toString() {
-			return elist == null ? X.EMPTY : "{" + where() + "}=>" + Helper.toString(args()) + ", sort=" + order;
+			return elist == null ? X.EMPTY : ("{" + where() + "}=>" + Helper.toString(args()) + ", sort=" + order);
 		}
 
 		/**

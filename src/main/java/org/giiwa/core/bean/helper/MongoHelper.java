@@ -828,7 +828,7 @@ public class MongoHelper implements Helper.DBHelper {
 				n = c.count(q.query());
 			}
 		} catch (Exception e) {
-			GLog.dblog.error(collection, "count", "q=" + q, null, db);
+			GLog.dblog.error(collection, "count", "q=" + q.query(), e, null, db);
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
