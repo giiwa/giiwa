@@ -18,7 +18,7 @@
 
 import re, os, sys, time, socket, threading, subprocess, ConfigParser, smtplib, httplib,urllib
 from email.mime.text import MIMEText
-from setuptools.command.install import _install
+# from setuptools.command.install import _install
 
 global running,logfile,conf,sock,shutdown
 running=True
