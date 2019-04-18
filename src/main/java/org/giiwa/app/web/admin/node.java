@@ -119,8 +119,7 @@ public class node extends Model {
 	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
-				1);
+		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
@@ -227,8 +226,7 @@ public class node extends Model {
 		this.query.path("/admin/node/threads");
 		this.show("/admin/node.threads.html");
 	}
-	
-	
+
 	@Path(login = true, path = "running", access = "access.config.admin")
 	public void running() {
 

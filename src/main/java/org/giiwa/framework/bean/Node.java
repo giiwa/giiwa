@@ -96,7 +96,13 @@ public class Node extends Bean {
 	private String giiwa;
 
 	public int getState() {
-		return Task.powerstate;
+		if (Task.powerstate == 0)
+			return 0;
+
+		if (System.currentTimeMillis() - this.getUpdated() > LOST)
+			return 0;
+
+		return 1;
 	}
 
 	public int getUsage() {
