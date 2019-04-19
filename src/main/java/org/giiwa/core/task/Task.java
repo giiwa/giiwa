@@ -338,8 +338,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * On stop.
 	 * 
-	 * @param fast
-	 *            the fast
+	 * @param fast the fast
 	 */
 	final public void onStop(boolean fast) {
 
@@ -455,8 +454,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * initialize the workertask.
 	 *
-	 * @param threadNum
-	 *            the thread num
+	 * @param threadNum the thread num
 	 */
 	public static void init(int usernum) {
 		LocalRunner.init(8, usernum);
@@ -467,8 +465,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * Stop all tasks.
 	 *
-	 * @param fast
-	 *            the fast
+	 * @param fast the fast
 	 */
 	final public void stop(boolean fast) {
 		stop = true;
@@ -500,8 +497,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * 
 	 * .
 	 *
-	 * @param time
-	 *            , hh:mm
+	 * @param time , hh:mm
 	 * @return WorkerTask
 	 */
 	final public Task schedule(String time) {
@@ -547,8 +543,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * Schedule the worker task.
 	 *
-	 * @param msec
-	 *            the milliseconds
+	 * @param msec the milliseconds
 	 * @return the worker task
 	 */
 	final public Task schedule(long msec) {
@@ -668,8 +663,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * the runnable object
 	 * 
 	 * @deprecated
-	 * @param r
-	 *            the runnable
+	 * @param r the runnable
 	 * @return Task
 	 */
 	public static Task create(final Runnable r) {
@@ -747,8 +741,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * get the Task by name
 	 * 
-	 * @param name
-	 *            the name, return null if not find
+	 * @param name the name, return null if not find
 	 * @return Task
 	 */
 	public static Task get(String name) {
@@ -1081,8 +1074,8 @@ public abstract class Task implements Runnable, Serializable {
 
 		public synchronized static void init() {
 
-			if (!MQ.isConfigured())
-				return;
+//			if (!MQ.isConfigured())
+//				return;
 
 			if (slot == null) {
 				slot = new Slot();
@@ -1099,28 +1092,31 @@ public abstract class Task implements Runnable, Serializable {
 				log.debug("globalrunner is binded. init pending=" + inst.pending + ", cpu=" + mycpu);
 
 				if (inst.pending != null) {
+
 					for (Task t : inst.pending) {
 						schedule(t, t.scheduledtime - System.currentTimeMillis());
 					}
-
 					inst.pending = null;
+
 				}
 
-				Request r1 = Request.create();
-				r1.type = TYPE_START;
-
-				try {
-					MQ.topic(NAME, r1);
-				} catch (Exception e) {
-					log.error(e.getMessage());
-				}
+//				Request r1 = Request.create();
+//				r1.type = TYPE_START;
+//
+//				try {
+//					MQ.topic(NAME, r1);
+//				} catch (Exception e) {
+//					log.error(e.getMessage());
+//				}
 
 			} catch (Exception e) {
-				log.error(e.getMessage());
+
+				log.error(e.getMessage(), e);
 
 				Task.schedule(() -> {
 					init();
 				}, 3000);
+
 			}
 		}
 
@@ -1150,17 +1146,17 @@ public abstract class Task implements Runnable, Serializable {
 			try {
 				switch (req.type) {
 				case TYPE_START: {
-					for (Task t : pendingqueue) {
-						Request r1 = Request.create();
-						r1.put(t);
-						r1.type = TYPE_SCHEDULE;
-
-						try {
-							MQ.topic(NAME, r1);
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-						}
-					}
+//					for (Task t : pendingqueue) {
+//						Request r1 = Request.create();
+//						r1.put(t);
+//						r1.type = TYPE_SCHEDULE;
+//
+//						try {
+//							MQ.topic(NAME, r1);
+//						} catch (Exception e) {
+//							log.error(e.getMessage(), e);
+//						}
+//					}
 					break;
 				}
 				case TYPE_SCHEDULE: {
