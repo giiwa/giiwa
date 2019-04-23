@@ -874,4 +874,28 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		return this;
 	}
 
+	/**
+	 * create a json, and append
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public JSON create(String name) {
+		JSON j = JSON.create();
+		this.append(name, j);
+		return j;
+	}
+
+	/**
+	 * create a list and append
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public List<JSON> createList(String name) {
+		List<JSON> l1 = JSON.createList();
+		this.append(name, l1);
+		return l1;
+	}
+
 }
