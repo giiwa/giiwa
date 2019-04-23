@@ -21,8 +21,11 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +62,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * parse the json object to JSON
 	 * 
-	 * @param json
-	 *            the json object
+	 * @param json the json object
 	 * @return JSON, null if failed
 	 */
 	public static JSON fromObject(Object json) {
@@ -70,10 +72,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * parse the object to JSON object
 	 *
-	 * @param json
-	 *            the json
-	 * @param lenient
-	 *            the boolean of JsonReader.setLenient(lenient)
+	 * @param json    the json
+	 * @param lenient the boolean of JsonReader.setLenient(lenient)
 	 * @return the json
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -102,6 +102,15 @@ public final class JSON extends LinkedHashMap<String, Object> {
 				JsonReader reader = new JsonReader(new InputStreamReader(new ByteArrayInputStream(b1)));
 				reader.setLenient(lenient);
 				j = g.fromJson(reader, JSON.class);
+			} else if (json instanceof ResultSet) {
+
+				ResultSet r = (ResultSet) json;
+				ResultSetMetaData rmd = r.getMetaData();
+				j = JSON.create();
+				for (int i = 0; i < rmd.getColumnCount(); i++) {
+					j.append(rmd.getColumnName(i + 1), r.getObject(i + 1));
+				}
+
 			} else if (json != null) {
 				// from a object
 				Field[] ff = json.getClass().getDeclaredFields();
@@ -144,15 +153,17 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * parse the jsons to array of JSON.
 	 *
-	 * @param jsons
-	 *            the jsons
+	 * @param jsons the jsons
 	 * @return the list
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static List<JSON> fromObjects(Object jsons) {
 		List list = null;
-		if (jsons instanceof List) {
-			list = (List) jsons;
+		if (jsons instanceof Collection) {
+
+			list = new ArrayList();
+			list.addAll((Collection) jsons);
+
 		} else if (jsons instanceof String) {
 			Gson g = new Gson();
 			list = g.fromJson((String) jsons, List.class);
@@ -167,6 +178,21 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			Gson g = new Gson();
 			byte[] b1 = (byte[]) jsons;
 			list = g.fromJson(new String(b1), List.class);
+		} else if (jsons instanceof ResultSet) {
+
+			try {
+				ResultSet r = (ResultSet) jsons;
+				ResultSetMetaData rmd = r.getMetaData();
+				list = JSON.createList();
+				while (r.next()) {
+					JSON j = JSON.create();
+					for (int i = 0; i < rmd.getColumnCount(); i++) {
+						j.append(rmd.getColumnName(i + 1), r.getObject(i + 1));
+					}
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 
 		if (list != null) {
@@ -191,12 +217,9 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * parse the json object to Class object
 	 * 
-	 * @param <T>
-	 *            the Class
-	 * @param json
-	 *            the json object or string
-	 * @param t
-	 *            the Class
+	 * @param <T>  the Class
+	 * @param json the json object or string
+	 * @param t    the Class
 	 * @return the object of Class
 	 */
 	@SuppressWarnings("rawtypes")
@@ -248,8 +271,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * create the JSON from the args
 	 * 
-	 * @param args
-	 *            the object pair, eg,: new Object[]{"aa", 1}
+	 * @param args the object pair, eg,: new Object[]{"aa", 1}
 	 * @return the JSON
 	 */
 	public static JSON create(Object[]... args) {
@@ -351,8 +373,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Creates a JSON from the map
 	 *
-	 * @param m
-	 *            the map
+	 * @param m the map
 	 * @return the json
 	 */
 	public static JSON create(Map<String, Object> m) {
@@ -364,8 +385,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Checks for exists of name
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return true, if exists
 	 */
 	public boolean has(String name) {
@@ -375,8 +395,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the string.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the string
 	 */
 	public String getString(String name) {
@@ -386,10 +405,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the string.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the string
 	 */
 	public String getString(String name, String defaultValue) {
@@ -403,8 +420,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the int.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the int
 	 */
 	public int getInt(String name) {
@@ -414,10 +430,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the int.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the int
 	 */
 	public int getInt(String name, int defaultValue) {
@@ -427,8 +441,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the long，return 0 if the name not presented
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the long
 	 */
 	public long getLong(String name) {
@@ -438,10 +451,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the long,return defaultValue if the name not presented
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the long
 	 */
 	public long getLong(String name, long defaultValue) {
@@ -451,8 +462,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the float，return 0 if the name not presented
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the float
 	 */
 	public float getFloat(String name) {
@@ -462,10 +472,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the float，return defaultValue if the name not presented
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the float
 	 */
 	public float getFloat(String name, float defaultValue) {
@@ -475,8 +483,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the double，return 0 if the name not presented
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the double
 	 */
 	public double getDouble(String name) {
@@ -486,10 +493,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the double，return defaultValue if the name not presented
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the double
 	 */
 	public double getDouble(String name, double defaultValue) {
@@ -499,8 +504,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the list，return null if the name not presented
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the list, or null if not exists
 	 */
 	@SuppressWarnings({ "unchecked" })
@@ -515,8 +519,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * Gets the objects，return null if the name not presented
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the objects, or null if not exists
 	 */
 	@SuppressWarnings({ "rawtypes" })
@@ -531,8 +534,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
+	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
 		String ss = "{a:'a',b:1}";
@@ -561,16 +563,14 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * find the object by the xpath
 	 * 
-	 * @param <T>
-	 *            the object
-	 * @param xpath
-	 *            the xpath expressions can use the dot–notation
+	 * @param <T>   the object
+	 * @param xpath the xpath expressions can use the dot–notation
 	 * 
-	 *            <pre>
+	 *              <pre>
 	$.store.book[0].title
 	or the bracket–notation
 	$['store']['book'][0]['title']
-	 *            </pre>
+	 *              </pre>
 	 * 
 	 * @return the object, or null if not exists
 	 */
@@ -581,18 +581,15 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * find the object by the xpath in json
 	 * 
-	 * @param <T>
-	 *            the object returned
-	 * @param json
-	 *            the json object
-	 * @param xpath
-	 *            the xpath expressions can use the dot–notation
+	 * @param <T>   the object returned
+	 * @param json  the json object
+	 * @param xpath the xpath expressions can use the dot–notation
 	 * 
-	 *            <pre>
+	 *              <pre>
 	$.store.book[0].title
 	or the bracket–notation
 	$['store']['book'][0]['title']
-	 *            </pre>
+	 *              </pre>
 	 * 
 	 * @return the object, or null if not exists
 	 */
@@ -603,17 +600,15 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * set the value by xpath
 	 * 
-	 * @param xpath
-	 *            the xpath expressions can use the dot–notation
+	 * @param xpath the xpath expressions can use the dot–notation
 	 * 
-	 *            <pre>
+	 *              <pre>
 	$.store.book[0].title
 	or the bracket–notation
 	$['store']['book'][0]['title']
-	 *            </pre>
+	 *              </pre>
 	 * 
-	 * @param value
-	 *            the object
+	 * @param value the object
 	 * @return JSON the new JSON object
 	 */
 	public JSON set(String xpath, Object value) {
@@ -624,10 +619,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * put the value
 	 * 
-	 * @param name
-	 *            the name
-	 * @param value
-	 *            the value
+	 * @param name  the name
+	 * @param value the value
 	 * @return the JSON
 	 */
 	public JSON append(String name, Object value) {
@@ -668,20 +661,17 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	/**
 	 * set the value by xpath
 	 * 
-	 * @param json
-	 *            the source json object
-	 * @param xpath
-	 *            the xpath string <br>
-	 *            xpath expressions can use the dot–notation
+	 * @param json  the source json object
+	 * @param xpath the xpath string <br>
+	 *              xpath expressions can use the dot–notation
 	 * 
-	 *            <pre>
+	 *              <pre>
 	$.store.book[0].title
 	or the bracket–notation
 	$['store']['book'][0]['title']
-	 *            </pre>
+	 *              </pre>
 	 * 
-	 * @param value
-	 *            the object
+	 * @param value the object
 	 */
 	public static void set(Object json, String xpath, Object value) {
 		JsonPath.parse(json).set(xpath, value);
