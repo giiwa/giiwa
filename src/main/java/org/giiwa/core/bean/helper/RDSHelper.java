@@ -477,6 +477,13 @@ public class RDSHelper implements Helper.DBHelper {
 
 			GLog.dblog.error(table, "update", "v=" + v + ", q=" + q, e, null, db);
 
+			if (X.isCauseBy(e, ".*Column.*not found.*")) {
+
+				// column missed
+				if (_alertTable(table, v, c)) {
+					return updateTable(table, q, v, db);
+				}
+			}
 		} finally {
 			close(p, c);
 		}
