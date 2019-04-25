@@ -1048,14 +1048,15 @@ public class RDSHelper implements Helper.DBHelper {
 			for (String name : v.names()) {
 				if (!cols.containsKey(name.toLowerCase())) {
 
-					StringBuilder sql = new StringBuilder("alter table ").append(table).append(" add ");
+					if (v.value(name) != null) {
+						StringBuilder sql = new StringBuilder("alter table ").append(table).append(" add ");
 
-					if (v.value(name) != null)
 						sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 
-					stat.execute(sql.toString());
+						stat.execute(sql.toString());
 
-					GLog.dblog.info(table, "alter", sql.toString(), null, Helper.DEFAULT);
+						GLog.dblog.info(table, "alter", sql.toString(), null, Helper.DEFAULT);
+					}
 				}
 			}
 
@@ -1107,11 +1108,12 @@ public class RDSHelper implements Helper.DBHelper {
 			StringBuilder sql = new StringBuilder("create table ").append(table).append(" ( ");
 			int i = 0;
 			for (String name : v.names()) {
-				if (i > 0) {
-					sql.append(", ");
-				}
-				if (v.value(name) != null)
+				if (v.value(name) != null) {
+					if (i > 0) {
+						sql.append(", ");
+					}
 					sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
+				}
 
 				i++;
 			}
