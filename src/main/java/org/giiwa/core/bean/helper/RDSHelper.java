@@ -1048,15 +1048,13 @@ public class RDSHelper implements Helper.DBHelper {
 			for (String name : v.names()) {
 				if (!cols.containsKey(name.toLowerCase())) {
 
-					if (v.value(name) != null) {
-						StringBuilder sql = new StringBuilder("alter table ").append(table).append(" add ");
+					StringBuilder sql = new StringBuilder("alter table ").append(table).append(" add ");
 
-						sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
+					sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 
-						stat.execute(sql.toString());
+					stat.execute(sql.toString());
 
-						GLog.dblog.info(table, "alter", sql.toString(), null, Helper.DEFAULT);
-					}
+					GLog.dblog.info(table, "alter", sql.toString(), null, Helper.DEFAULT);
 				}
 			}
 
@@ -1108,12 +1106,10 @@ public class RDSHelper implements Helper.DBHelper {
 			StringBuilder sql = new StringBuilder("create table ").append(table).append(" ( ");
 			int i = 0;
 			for (String name : v.names()) {
-				if (v.value(name) != null) {
-					if (i > 0) {
-						sql.append(", ");
-					}
-					sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
+				if (i > 0) {
+					sql.append(", ");
 				}
+				sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 
 				i++;
 			}
@@ -1142,12 +1138,12 @@ public class RDSHelper implements Helper.DBHelper {
 		} else {
 			try {
 				if (isOracle(c)) {
-					return "varchar2(" + Math.max(v.toString().length() * 2, 100) + ")";
+					return "varchar2(" + Math.max(v == null ? 0 : (v.toString().length() * 2), 100) + ")";
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
-			return "varchar(" + Math.max(v.toString().length() * 2, 100) + ")";
+			return "varchar(" + Math.max(v == null ? 0 : (v.toString().length() * 2), 100) + ")";
 
 		}
 	}
