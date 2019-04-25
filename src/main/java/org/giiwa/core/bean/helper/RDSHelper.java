@@ -1050,7 +1050,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 					StringBuilder sql = new StringBuilder("alter table ").append(table).append(" add ");
 
-					sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
+					if (v.value(name) != null)
+						sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 
 					stat.execute(sql.toString());
 
@@ -1109,8 +1110,9 @@ public class RDSHelper implements Helper.DBHelper {
 				if (i > 0) {
 					sql.append(", ");
 				}
+				if (v.value(name) != null)
+					sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 
-				sql.append(_name(name, c)).append(" ").append(_type(v.value(name), c));
 				i++;
 			}
 			sql.append(" ) ");
