@@ -43,7 +43,7 @@ public class Disk extends Bean {
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 
-	//	private final static String RESETNAME = "disk.reset";
+	// private final static String RESETNAME = "disk.reset";
 
 	@Column(name = X.ID)
 	long id;
@@ -448,6 +448,42 @@ public class Disk extends Bean {
 			return null;
 		}
 
+	}
+
+	public static long getTotalSpace() {
+		long total = 0;
+		if (Helper.isConfigured()) {
+			int s = 0;
+			W q = W.create().sort("created", 1);
+			Beans<Disk> bs = dao.load(q, s, 10);
+			while (bs == null || bs.isEmpty()) {
+				// add a default
+				for (Disk e : bs) {
+					total += e.total;
+				}
+				s += bs.size();
+				bs = dao.load(q, s, 10);
+			}
+		}
+		return total;
+	}
+
+	public static long getFreeSpace() {
+		long total = 0;
+		if (Helper.isConfigured()) {
+			int s = 0;
+			W q = W.create().sort("created", 1);
+			Beans<Disk> bs = dao.load(q, s, 10);
+			while (bs == null || bs.isEmpty()) {
+				// add a default
+				for (Disk e : bs) {
+					total += e.free;
+				}
+				s += bs.size();
+				bs = dao.load(q, s, 10);
+			}
+		}
+		return total;
 	}
 
 }
