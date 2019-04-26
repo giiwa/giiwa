@@ -131,6 +131,10 @@ public class Temp {
 		return Disk.seek(path(id, name));
 	}
 
+	public static File getLocalFile(String id, String name) {
+		return new File(Model.GIIWA_HOME + path(id, name));
+	}
+
 	public static String path(String path, String name) {
 		long id = Math.abs(UID.hash(path));
 		char p1 = (char) (id % 23 + 'a');

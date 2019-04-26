@@ -14,6 +14,10 @@
 */
 package org.giiwa.app.web;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
@@ -50,14 +54,23 @@ public class temp extends Model {
 			return;
 		}
 
-		String name = ss[1];
-		DFile f1 = Temp.get(ss[0], name);
-		if (!f1.exists()) {
-			this.notfound();
-			return;
-		}
-
 		try {
+
+			InputStream in = null;
+
+			String name = ss[1];
+			DFile f1 = Temp.get(ss[0], name);
+			if (!f1.exists()) {
+
+				File f = Temp.getLocalFile(ss[0], name);
+				if (!f.exists()) {
+					this.notfound();
+					return;
+				}
+				in = new FileInputStream(f);
+			} else {
+				in = f1.getInputStream();
+			}
 
 			String range = this.getHeader("Range");
 			long total = f1.length();
@@ -96,12 +109,12 @@ public class temp extends Model {
 				this.setStatus(206);
 			}
 
-			IOUtil.copy(f1.getInputStream(), this.getOutputStream(), start, end, true);
+			IOUtil.copy(in, this.getOutputStream(), start, end, true);
 
 			return;
 
 		} catch (Exception e) {
-			log.error(f1.getAbsolutePath(), e);
+			log.error(path, e);
 			GLog.oplog.error(temp.class, "", e.getMessage(), e, login, this.getRemoteHost());
 		}
 
