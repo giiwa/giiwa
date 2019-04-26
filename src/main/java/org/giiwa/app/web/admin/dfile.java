@@ -198,7 +198,7 @@ public class dfile extends Model {
 						if (f.isFile()) {
 							try {
 								String filename = f.getCanonicalPath().replace(pre, "");
-								Disk.copy(f, filename);
+								Disk.copy(f, Disk.seek(filename));
 							} catch (Exception e) {
 								log.error(e.getMessage(), e);
 							}

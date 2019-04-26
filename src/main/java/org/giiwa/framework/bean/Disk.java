@@ -3,6 +3,7 @@ package org.giiwa.framework.bean;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -305,13 +306,25 @@ public class Disk extends Bean {
 		return len;
 	}
 
-	public static long copy(DFile src, String filename) throws IOException {
-		return copy(src.getInputStream(), filename);
+	public static long copy(DFile src, DFile dest) throws IOException {
+		long len = 0;
+		if (src.isDirectory()) {
+			dest.mkdirs();
+
+			DFile[] ff = src.listFiles();
+			if (ff != null) {
+				for (DFile f : ff) {
+					len += copy(f, Disk.seek(dest.getFilename() + "/" + f.getName()));
+				}
+			}
+		} else {
+			len = copy(src.getInputStream(), dest.getOutputStream());
+		}
+		return len;
 	}
 
-	public static long copy(InputStream in, String filename) throws IOException {
-		DFile d = seek(filename);
-		return IOUtil.copy(in, d.getOutputStream());
+	public static long copy(InputStream in, OutputStream out) throws IOException {
+		return IOUtil.copy(in, out);
 	}
 
 	private static Beans<Disk> disks(boolean global) {
