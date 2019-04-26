@@ -456,8 +456,8 @@ public class Disk extends Bean {
 			int s = 0;
 			W q = W.create().sort("created", 1);
 			Beans<Disk> bs = dao.load(q, s, 10);
-			while (bs == null || bs.isEmpty()) {
-				// add a default
+			while (bs != null && !bs.isEmpty()) {
+
 				for (Disk e : bs) {
 					total += e.total;
 				}
@@ -474,8 +474,8 @@ public class Disk extends Bean {
 			int s = 0;
 			W q = W.create().sort("created", 1);
 			Beans<Disk> bs = dao.load(q, s, 10);
-			while (bs == null || bs.isEmpty()) {
-				// add a default
+			while (bs != null && !bs.isEmpty()) {
+
 				for (Disk e : bs) {
 					total += e.free;
 				}
