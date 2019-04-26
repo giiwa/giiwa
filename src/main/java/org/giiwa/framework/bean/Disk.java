@@ -290,12 +290,14 @@ public class Disk extends Bean {
 		long len = 0;
 		if (src.isDirectory()) {
 			// for
+			dest.mkdirs();
 			DFile[] ff = src.listFiles();
 			if (ff != null) {
 				for (DFile f : ff) {
 					len += move(f, Disk.seek(dest.getFilename() + "/" + f.getName()));
 				}
 			}
+			src.delete();
 		} else {
 			len = IOUtil.copy(src.getInputStream(), dest.getOutputStream());
 			src.delete();
