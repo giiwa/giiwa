@@ -181,7 +181,7 @@ public class DFile {
 		return X.EMPTY;
 	}
 
-	public DFile[] listFiles() throws Exception {
+	public DFile[] listFiles() throws IOException {
 		check();
 
 		List<FileInfo> l1 = FileClient.get(url).list(path, filename);

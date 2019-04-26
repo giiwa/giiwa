@@ -287,8 +287,19 @@ public class Disk extends Bean {
 	}
 
 	public static long move(DFile src, DFile dest) throws IOException {
-		long len = IOUtil.copy(src.getInputStream(), dest.getOutputStream());
-		src.delete();
+		long len = 0;
+		if (src.isDirectory()) {
+			// for
+			DFile[] ff = src.listFiles();
+			if (ff != null) {
+				for (DFile f : ff) {
+					len += move(f, Disk.seek(dest.getFilename() + "/" + f.getName()));
+				}
+			}
+		} else {
+			len = IOUtil.copy(src.getInputStream(), dest.getOutputStream());
+			src.delete();
+		}
 		return len;
 	}
 
