@@ -40,7 +40,6 @@ import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class GImage is image utility, convert image, create QRCode image
  */
@@ -56,16 +55,11 @@ public class GImage {
 	/**
 	 * create QRCode image, and ouput to the file.
 	 *
-	 * @param out
-	 *            the output image file
-	 * @param text
-	 *            the content of the qrcode
-	 * @param width
-	 *            width of image
-	 * @param height
-	 *            height of image
-	 * @throws Exception
-	 *             the exception
+	 * @param out    the output image file
+	 * @param text   the content of the qrcode
+	 * @param width  width of image
+	 * @param height height of image
+	 * @throws Exception the exception
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void QRCode(File out, String text, int width, int height) throws Exception {
@@ -95,26 +89,16 @@ public class GImage {
 	/**
 	 * Scale the source image file to destination image file.
 	 * 
-	 * @param source
-	 *            the source image file
-	 * @param x
-	 *            the x of source image
-	 * @param y
-	 *            the y of the source image
-	 * @param w0
-	 *            the width of the source image
-	 * @param h0
-	 *            the height of the source image
-	 * @param file
-	 *            the destination image file
-	 * @param pw
-	 *            the width of the destination image
-	 * @param ph
-	 *            the height of the destination image
-	 * @param w
-	 *            the width of the destination image
-	 * @param h
-	 *            the height of the destination image
+	 * @param source the source image file
+	 * @param x      the x of source image
+	 * @param y      the y of the source image
+	 * @param w0     the width of the source image
+	 * @param h0     the height of the source image
+	 * @param file   the destination image file
+	 * @param pw     the width of the destination image
+	 * @param ph     the height of the destination image
+	 * @param w      the width of the destination image
+	 * @param h      the height of the destination image
 	 * @deprecated
 	 */
 	public static void scale(String source, int x, int y, int w0, int h0, String file, int pw, int ph, int w, int h) {
@@ -150,26 +134,16 @@ public class GImage {
 	/**
 	 * Scale the source image to destination image file.
 	 *
-	 * @param source
-	 *            the source image file
-	 * @param x
-	 *            the x of source image
-	 * @param y
-	 *            the y of source image
-	 * @param w0
-	 *            the width of source image
-	 * @param h0
-	 *            the height of source image
-	 * @param w1
-	 *            the width of source image
-	 * @param h1
-	 *            the height of source image
-	 * @param file
-	 *            the destination image file
-	 * @param w
-	 *            the width of destination image
-	 * @param h
-	 *            the height of destination image
+	 * @param source the source image file
+	 * @param x      the x of source image
+	 * @param y      the y of source image
+	 * @param w0     the width of source image
+	 * @param h0     the height of source image
+	 * @param w1     the width of source image
+	 * @param h1     the height of source image
+	 * @param file   the destination image file
+	 * @param w      the width of destination image
+	 * @param h      the height of destination image
 	 */
 	public static void scale(String source, int x, int y, int w0, int h0, int w1, int h1, String file, int w, int h) {
 		try {
@@ -207,14 +181,10 @@ public class GImage {
 	/**
 	 * Scale2.
 	 *
-	 * @param source
-	 *            the source
-	 * @param file
-	 *            the file
-	 * @param w
-	 *            the w
-	 * @param h
-	 *            the h
+	 * @param source the source
+	 * @param file   the file
+	 * @param w      the w
+	 * @param h      the h
 	 */
 	public static void scale2(String source, String file, int w, int h) {
 		try {
@@ -261,8 +231,7 @@ public class GImage {
 	/**
 	 * get the size of image in inputstream.
 	 *
-	 * @param in
-	 *            the inputstream of image
+	 * @param in the inputstream of image
 	 * @return Point of size
 	 */
 	public static Point size(InputStream in) {
@@ -317,8 +286,7 @@ public class GImage {
 	/**
 	 * get the size of image by url.
 	 *
-	 * @param url
-	 *            the url
+	 * @param url the url
 	 * @return Point of size
 	 */
 	public static Point size(URL url) {
@@ -336,14 +304,10 @@ public class GImage {
 	/**
 	 * scale the whole source image to destination image.
 	 *
-	 * @param source
-	 *            the source image file
-	 * @param file
-	 *            the destination image file
-	 * @param w
-	 *            the width of the destination image
-	 * @param h
-	 *            the height of the destination image
+	 * @param source the source image file
+	 * @param file   the destination image file
+	 * @param w      the width of the destination image
+	 * @param h      the height of the destination image
 	 * @return the int
 	 */
 	public static int scale3(String source, String file, final int w, final int h) {
@@ -404,16 +368,77 @@ public class GImage {
 	}
 
 	/**
+	 * scale the dest w/h with center meet the min
+	 * 
+	 * @param source
+	 * @param file
+	 * @param w
+	 * @param h
+	 * @return
+	 */
+	public static int scale(InputStream source, File file, final int w, final int h) {
+		try {
+
+			BufferedImage img = ImageIO.read(source);
+			if (img == null || w < 0 || h < 0)
+				return -1;
+
+			int h1 = img.getHeight();
+			int w1 = img.getWidth();
+
+			// if (w > w1 || h > h1)
+			// return -1;
+
+			int w0 = w;
+			int h0 = h;
+
+			if (h <= 0)
+				h0 = h1;
+			if (w <= 0)
+				w0 = w1;
+
+			float fh = ((float) h1) / h;
+			float fw = ((float) w1) / w;
+
+			if (fh < fw) {
+				int w2 = (int) (w1 / fh);
+				w0 = w2;
+			} else {
+				int h2 = (int) (h1 / fw);
+				h0 = h2;
+			}
+
+			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
+																						// TYPE_4BYTE_BGR);
+			Graphics g = out.getGraphics();
+
+			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+
+			int ox = (w - w0) / 2;
+			int oy = (h - h0) / 2;
+
+			g.drawImage(tmp, ox, oy, w0, h0, null);
+			if (file.exists()) {
+				file.delete();
+			} else {
+				file.getParentFile().mkdirs();
+			}
+			ImageIO.write(out, "png", file);
+
+			return 1;
+		} catch (Exception e) {
+			log.error(source, e);
+		}
+		return -1;
+	}
+
+	/**
 	 * Scale the source image file to destination image file.
 	 *
-	 * @param source
-	 *            the source image file
-	 * @param file
-	 *            the destination image file
-	 * @param w
-	 *            the width of destination image
-	 * @param h
-	 *            the height of destination image
+	 * @param source the source image file
+	 * @param file   the destination image file
+	 * @param w      the width of destination image
+	 * @param h      the height of destination image
 	 * @return the int
 	 */
 	public static int scale(String source, String file, int w, int h) {
@@ -468,16 +493,11 @@ public class GImage {
 	/**
 	 * Scale the source image in "url" with "referer" to destination image.
 	 *
-	 * @param url
-	 *            the source image url
-	 * @param referer
-	 *            the referer which maybe required when "get" the source image
-	 * @param file
-	 *            the destination image file
-	 * @param w
-	 *            the width of destination image
-	 * @param h
-	 *            the height of destination image
+	 * @param url     the source image url
+	 * @param referer the referer which maybe required when "get" the source image
+	 * @param file    the destination image file
+	 * @param w       the width of destination image
+	 * @param h       the height of destination image
 	 */
 	public static void scale(String url, String referer, String file, int w, int h) {
 		HttpGet get = null;
@@ -541,13 +561,10 @@ public class GImage {
 	/**
 	 * Format url.
 	 * 
-	 * @param uri
-	 *            the uri
-	 * @param charset
-	 *            the charset
+	 * @param uri     the uri
+	 * @param charset the charset
 	 * @return the string
-	 * @throws UnsupportedEncodingException
-	 *             the unsupported encoding exception
+	 * @throws UnsupportedEncodingException the unsupported encoding exception
 	 */
 	private static String formatUrl(String uri, String charset) throws UnsupportedEncodingException {
 
@@ -573,16 +590,11 @@ public class GImage {
 	/**
 	 * make a Cover by source images.
 	 *
-	 * @param dest
-	 *            the destination cover image file
-	 * @param w
-	 *            the width of destination image
-	 * @param h
-	 *            the height of destination image
-	 * @param sources
-	 *            the source image files, should be 4, or 9
-	 * @throws Exception
-	 *             the exception
+	 * @param dest    the destination cover image file
+	 * @param w       the width of destination image
+	 * @param h       the height of destination image
+	 * @param sources the source image files, should be 4, or 9
+	 * @throws Exception the exception
 	 * @deprecated
 	 */
 	public static void cover(String dest, int w, int h, List<String> sources) throws Exception {
@@ -647,19 +659,13 @@ public class GImage {
 	/**
 	 * make a cover by source images.
 	 *
-	 * @param dest
-	 *            the destination of cover image
-	 * @param type
-	 *            the type of cover image
-	 * @param w
-	 *            the width of cover image
-	 * @param h
-	 *            the height of cover image
-	 * @param sources
-	 *            the source images files
+	 * @param dest    the destination of cover image
+	 * @param type    the type of cover image
+	 * @param w       the width of cover image
+	 * @param h       the height of cover image
+	 * @param sources the source images files
 	 * @return true, if successful
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public static boolean cover(String dest, int type, int w, int h, List<String> sources) throws Exception {
 		if (sources == null) {
@@ -690,17 +696,12 @@ public class GImage {
 	 * +---+---+ <br>
 	 * .
 	 * 
-	 * @param dest
-	 *            the dest
-	 * @param w
-	 *            the w
-	 * @param h
-	 *            the h
-	 * @param sources
-	 *            the sources
+	 * @param dest    the dest
+	 * @param w       the w
+	 * @param h       the h
+	 * @param sources the sources
 	 * @return true, if successful
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	private static boolean _cover1(String dest, int w, int h, List<String> sources) throws Exception {
 
@@ -778,17 +779,12 @@ public class GImage {
 	 * +---+---+ <br>
 	 * .
 	 * 
-	 * @param dest
-	 *            the dest
-	 * @param w
-	 *            the w
-	 * @param h
-	 *            the h
-	 * @param sources
-	 *            the sources
+	 * @param dest    the dest
+	 * @param w       the w
+	 * @param h       the h
+	 * @param sources the sources
 	 * @return true, if successful
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	private static boolean _cover2(String dest, int w, int h, List<String> sources) throws Exception {
 
@@ -894,17 +890,12 @@ public class GImage {
 	 * +-+-+-+ <br>
 	 * .
 	 * 
-	 * @param dest
-	 *            the dest
-	 * @param w
-	 *            the w
-	 * @param h
-	 *            the h
-	 * @param sources
-	 *            the sources
+	 * @param dest    the dest
+	 * @param w       the w
+	 * @param h       the h
+	 * @param sources the sources
 	 * @return true, if successful
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	private static boolean _cover3(String dest, int w, int h, List<String> sources) throws Exception {
 
@@ -1010,17 +1001,12 @@ public class GImage {
 	 * +-+-+-+ <br>
 	 * .
 	 * 
-	 * @param dest
-	 *            the dest
-	 * @param w
-	 *            the w
-	 * @param h
-	 *            the h
-	 * @param sources
-	 *            the sources
+	 * @param dest    the dest
+	 * @param w       the w
+	 * @param h       the h
+	 * @param sources the sources
 	 * @return true, if successful
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	private static boolean _cover4(String dest, int w, int h, List<String> sources) throws Exception {
 
@@ -1130,17 +1116,12 @@ public class GImage {
 	 * +-+-+-+ <br>
 	 * .
 	 * 
-	 * @param dest
-	 *            the dest
-	 * @param w
-	 *            the w
-	 * @param h
-	 *            the h
-	 * @param sources
-	 *            the sources
+	 * @param dest    the dest
+	 * @param w       the w
+	 * @param h       the h
+	 * @param sources the sources
 	 * @return true, if successful
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	private static boolean _cover5(String dest, int w, int h, List<String> sources) throws Exception {
 
@@ -1212,16 +1193,11 @@ public class GImage {
 	/**
 	 * Draw rect.
 	 * 
-	 * @param g
-	 *            the g
-	 * @param x
-	 *            the x
-	 * @param y
-	 *            the y
-	 * @param w1
-	 *            the w1
-	 * @param h1
-	 *            the h1
+	 * @param g  the g
+	 * @param x  the x
+	 * @param y  the y
+	 * @param w1 the w1
+	 * @param h1 the h1
 	 */
 	private static void drawRect(Graphics2D g, int x, int y, int w1, int h1) {
 		g.setColor(linecolor);
@@ -1300,18 +1276,16 @@ public class GImage {
 	}
 
 	public static void main(String[] args) {
-		String s1 = "/Users/joe/Downloads/t1.png";
-		// String s2 = "/Users/joe/Downloads/t2.png";
+		String s1 = "/Users/joe/Downloads/aaa.jpg";
+		String s2 = "/Users/joe/Downloads/t2.png";
 
 		try {
-			GImage.cover(145, "A",
-					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
-					new FileOutputStream(s1));
+			scale(new FileInputStream(s1), new File(s2), 300, 300);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		// scale3(s1, s2, 1176, 100);
 
+		System.out.println("done");
 	}
 
 }
