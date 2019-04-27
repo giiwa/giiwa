@@ -195,8 +195,7 @@ public class User extends Bean {
 	/**
 	 * Checks if is role.
 	 * 
-	 * @param r
-	 *            the r
+	 * @param r the r
 	 * @return true, if is role
 	 */
 	public boolean isRole(Role r) {
@@ -233,11 +232,9 @@ public class User extends Bean {
 	 * if the values contains "password" field, it will auto encrypt the password
 	 * field.
 	 *
-	 * @param v
-	 *            the values
+	 * @param v the values
 	 * @return long of the user id, if failed, return -1
-	 * @throws Exception
-	 *             throw Exception if name or password not matches the setting
+	 * @throws Exception throw Exception if name or password not matches the setting
 	 */
 	public static long create(V v) throws Exception {
 
@@ -265,7 +262,7 @@ public class User extends Bean {
 			log.debug("v=" + v);
 
 		// check photo
-		_checkphoto(v);
+		_checkphoto(-1, v);
 
 		dao.insert(
 				v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()));
@@ -273,37 +270,43 @@ public class User extends Bean {
 		return id;
 	}
 
-	private static void _checkphoto(V v) {
+	private static void _checkphoto(long id, V v) {
+
 		Object nickname = v.value("nickname");
+
 		if (X.isEmpty(nickname)) {
-			nickname = v.value("name");
+			return;
 		}
 
-		if (!X.isEmpty(nickname)) {
-			char c = nickname.toString().charAt(0);
-			Language lang = Language.getLanguage();
-			DFile f = Disk.seek("/user/photo/" + lang.format(System.currentTimeMillis(), "yyyyMMdd") + "/"
-					+ System.currentTimeMillis() + ".png");
-
-			if (f != null) {
-				try {
-					GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
-							(int) (156 * Math.random()), (int) (156 * Math.random())), f.getOutputStream());
-					v.append("photo", f.getFilename());
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
+		User u = dao.load(id);
+		if (u != null && !X.isEmpty(u.photo)) {
+			if (X.isSame(nickname, u.nickname) || !u.photo.startsWith("/user/photo/auto/")) {
+				return;
 			}
 		}
+
+		char c = nickname.toString().charAt(0);
+		Language lang = Language.getLanguage();
+		DFile f = Disk.seek("/user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
+				+ System.currentTimeMillis() + ".png");
+
+		if (f != null) {
+			try {
+				GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
+						(int) (156 * Math.random()), (int) (156 * Math.random())), f.getOutputStream());
+				v.append("photo", f.getFilename());
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+
 	}
 
 	/**
 	 * Load user by name and password.
 	 *
-	 * @param name
-	 *            the name of the user
-	 * @param password
-	 *            the password
+	 * @param name     the name of the user
+	 * @param password the password
 	 * @return User, if not match anyoone, return null
 	 */
 	public static User load(String name, String password) {
@@ -324,8 +327,7 @@ public class User extends Bean {
 	/**
 	 * Load user by name.
 	 *
-	 * @param name
-	 *            the name of the name
+	 * @param name the name of the name
 	 * @return User
 	 */
 	public static User load(String name) {
@@ -335,8 +337,7 @@ public class User extends Bean {
 	/**
 	 * Load users by access token name.
 	 *
-	 * @param access
-	 *            the access token name
+	 * @param access the access token name
 	 * @return list of user who has the access token
 	 */
 	public static List<User> loadByAccess(String access) {
@@ -372,8 +373,7 @@ public class User extends Bean {
 	/**
 	 * Validate the user with the password.
 	 *
-	 * @param password
-	 *            the password
+	 * @param password the password
 	 * @return true, if the password was match
 	 */
 	public boolean validate(String password) {
@@ -400,8 +400,7 @@ public class User extends Bean {
 	/**
 	 * Checks whether has the access token.
 	 * 
-	 * @param name
-	 *            the name of the access token
+	 * @param name the name of the access token
 	 * @return true, if has anyone
 	 */
 	public boolean hasAccess(String... name) {
@@ -450,8 +449,7 @@ public class User extends Bean {
 	/**
 	 * set a role to a user with role id
 	 * 
-	 * @param rid
-	 *            the role id
+	 * @param rid the role id
 	 */
 	public void setRole(long rid) {
 		try {
@@ -466,8 +464,7 @@ public class User extends Bean {
 	/**
 	 * Removes the role.
 	 * 
-	 * @param rid
-	 *            the rid
+	 * @param rid the rid
 	 */
 	public void removeRole(long rid) {
 		UserRole.dao.delete(W.create("uid", this.getId()).and("rid", rid));
@@ -484,8 +481,7 @@ public class User extends Bean {
 	/**
 	 * encrypt the password
 	 * 
-	 * @param passwd
-	 *            the password
+	 * @param passwd the password
 	 * @return the string
 	 */
 	public static String encrypt(String passwd) {
@@ -564,12 +560,9 @@ public class User extends Bean {
 	/**
 	 * Load the users by the query.
 	 *
-	 * @param q
-	 *            the query of the condition
-	 * @param offset
-	 *            the start number
-	 * @param limit
-	 *            the number
+	 * @param q      the query of the condition
+	 * @param offset the start number
+	 * @param limit  the number
 	 * @return Beans
 	 */
 	public static Beans<User> load(W q, int offset, int limit) {
@@ -579,8 +572,7 @@ public class User extends Bean {
 	/**
 	 * Update the user with the V.
 	 *
-	 * @param v
-	 *            the values
+	 * @param v the values
 	 * @return int
 	 * @throws Exception
 	 */
@@ -596,10 +588,8 @@ public class User extends Bean {
 	 * if the values contains "password" field, it will auto encrypt the password
 	 * field.
 	 *
-	 * @param id
-	 *            the user id
-	 * @param v
-	 *            the values
+	 * @param id the user id
+	 * @param v  the values
 	 * @return int, 0 no user updated
 	 * @throws Exception
 	 */
@@ -618,17 +608,15 @@ public class User extends Bean {
 			v.remove("password");
 		}
 
-		_checkphoto(v);
+		_checkphoto(id, v);
 		return dao.update(id, v);
 	}
 
 	/**
 	 * update the user by query
 	 * 
-	 * @param q
-	 *            the query
-	 * @param v
-	 *            the value
+	 * @param q the query
+	 * @param v the value
 	 * @return the number of updated
 	 * @throws Exception
 	 */
@@ -653,8 +641,7 @@ public class User extends Bean {
 	/***
 	 * replace all the roles for the user
 	 * 
-	 * @param roles
-	 *            the list of role id
+	 * @param roles the list of role id
 	 */
 	public void setRoles(List<Long> roles) {
 		this.removeAllRoles();
@@ -666,12 +653,9 @@ public class User extends Bean {
 	/**
 	 * record the login failure, and record the user lock info.
 	 *
-	 * @param ip
-	 *            the ip that login come from
-	 * @param sid
-	 *            the session id
-	 * @param useragent
-	 *            the browser agent
+	 * @param ip        the ip that login come from
+	 * @param sid       the session id
+	 * @param useragent the browser agent
 	 * @return int of the locked times
 	 */
 	public int failed(String ip, String sid, String useragent) {
@@ -692,12 +676,9 @@ public class User extends Bean {
 	/**
 	 * record login info in database for the user.
 	 *
-	 * @param sid
-	 *            the session id
-	 * @param ip
-	 *            the ip that the user come from
-	 * @param v
-	 *            the V object
+	 * @param sid the session id
+	 * @param ip  the ip that the user come from
+	 * @param v   the V object
 	 * 
 	 * @return the int
 	 */
@@ -758,14 +739,10 @@ public class User extends Bean {
 		/**
 		 * Locked.
 		 *
-		 * @param uid
-		 *            the uid
-		 * @param sid
-		 *            the sid
-		 * @param host
-		 *            the host
-		 * @param useragent
-		 *            the useragent
+		 * @param uid       the uid
+		 * @param sid       the sid
+		 * @param host      the host
+		 * @param useragent the useragent
 		 * @return the int
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
@@ -777,8 +754,7 @@ public class User extends Bean {
 		/**
 		 * Removed.
 		 *
-		 * @param uid
-		 *            the uid
+		 * @param uid the uid
 		 * @return the int
 		 */
 		public static int removed(long uid) {
@@ -788,10 +764,8 @@ public class User extends Bean {
 		/**
 		 * Removed.
 		 *
-		 * @param uid
-		 *            the uid
-		 * @param sid
-		 *            the sid
+		 * @param uid the uid
+		 * @param sid the sid
 		 * @return the int
 		 */
 		public static int removed(long uid, String sid) {
@@ -801,10 +775,8 @@ public class User extends Bean {
 		/**
 		 * Load.
 		 *
-		 * @param uid
-		 *            the uid
-		 * @param time
-		 *            the time
+		 * @param uid  the uid
+		 * @param time the time
 		 * @return the list
 		 */
 		public static List<Lock> load(long uid, long time) {
@@ -816,12 +788,9 @@ public class User extends Bean {
 		/**
 		 * Load by sid.
 		 *
-		 * @param uid
-		 *            the uid
-		 * @param time
-		 *            the time
-		 * @param sid
-		 *            the sid
+		 * @param uid  the uid
+		 * @param time the time
+		 * @param sid  the sid
 		 * @return the list
 		 */
 		public static List<Lock> loadBySid(long uid, long time, String sid) {
@@ -834,12 +803,9 @@ public class User extends Bean {
 		/**
 		 * Load by host.
 		 *
-		 * @param uid
-		 *            the uid
-		 * @param time
-		 *            the time
-		 * @param host
-		 *            the host
+		 * @param uid  the uid
+		 * @param time the time
+		 * @param host the host
 		 * @return the list
 		 */
 		public static List<Lock> loadByHost(long uid, long time, String host) {
@@ -852,8 +818,7 @@ public class User extends Bean {
 		/**
 		 * delete all user lock info for the user id
 		 * 
-		 * @param uid
-		 *            the user id
+		 * @param uid the user id
 		 * @return the number deleted
 		 */
 		public static int cleanup(long uid) {
@@ -885,8 +850,7 @@ public class User extends Bean {
 	/**
 	 * Delete the user by ID.
 	 *
-	 * @param id
-	 *            the id of the user
+	 * @param id the id of the user
 	 * @return int how many was deleted
 	 */
 	public static int delete(long id) {
@@ -927,8 +891,8 @@ public class User extends Bean {
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
-						User.create(V.create("id", 0L).set("name", "root").set("password", passwd).set("nickname",
-								"root"));
+						User.create(
+								V.create("id", 0L).set("name", "root").set("password", passwd).set("nickname", "root"));
 					}
 				}
 			} catch (Exception e) {
@@ -982,9 +946,9 @@ public class User extends Bean {
 					V v = V.create();
 					v.append("name", u.getName());
 					v.append("nickname", u.getNickname());
-					
-					_checkphoto(v);
-					
+
+					_checkphoto(u.getId(), v);
+
 					dao.update(u.getId(), v);
 				}
 			}
