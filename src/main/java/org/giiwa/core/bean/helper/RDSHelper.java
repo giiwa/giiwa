@@ -1908,6 +1908,14 @@ public class RDSHelper implements Helper.DBHelper {
 
 			GLog.dblog.error(table, "inc", "name=" + name + ", q=" + q, e, null, db);
 
+			if (X.isCauseBy(e, ".*Column.*not found.*")) {
+
+				// column missed
+				if (_alertTable(table, V.create().append(name, n), c)) {
+					return inc(table, q, name, n, sets, db);
+				}
+			}
+
 		} finally {
 			close(c, p, r);
 		}
