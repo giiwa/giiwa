@@ -60,6 +60,7 @@ public class temp extends Model {
 
 			String name = ss[1];
 			DFile f1 = Temp.get(ss[0], name);
+			long total = 0;
 			if (!f1.exists()) {
 
 				File f = Temp.getLocalFile(ss[0], name);
@@ -67,13 +68,16 @@ public class temp extends Model {
 					this.notfound();
 					return;
 				}
+				log.debug("filename=" + f.getCanonicalPath());
+				total = f.length();
 				in = new FileInputStream(f);
 			} else {
+				log.debug("filename=" + f1.getFilename());
 				in = f1.getInputStream();
+				total = f1.length();
 			}
 
 			String range = this.getHeader("Range");
-			long total = f1.length();
 			long start = 0;
 			long end = total;
 			if (!X.isEmpty(range)) {
@@ -100,7 +104,6 @@ public class temp extends Model {
 			this.setContentType("application/octet");
 			this.setHeader("Content-Disposition", "attachment; filename=\"" + Url.encode(name) + "\"");
 			this.setHeader("Content-Length", Long.toString(length));
-			this.setHeader("Last-Modified", lang.format(f1.lastModified(), "yyyy-MM-dd HH:mm:ss z"));
 			this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
 			if (start == 0) {
 				this.setHeader("Accept-Ranges", "bytes");
