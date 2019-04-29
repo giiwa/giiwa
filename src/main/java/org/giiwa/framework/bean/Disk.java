@@ -309,6 +309,11 @@ public class Disk extends Bean {
 
 	public static long copy(DFile src, DFile dest, Callable<Void, String> moni) throws IOException {
 		long len = 0;
+
+		if (moni != null) {
+			moni.call((int) len, src.getFilename());
+		}
+
 		if (src.isDirectory()) {
 			dest.mkdirs();
 
@@ -319,9 +324,6 @@ public class Disk extends Bean {
 				}
 			}
 		} else {
-			if (moni != null) {
-				moni.call((int) len, src.getName());
-			}
 			len = copy(src.getInputStream(), dest.getOutputStream());
 		}
 		return len;

@@ -13,6 +13,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.task.Callable;
 import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.Node;
 
@@ -260,8 +261,7 @@ public class DFile {
 	/**
 	 * copy the file and upload to disk
 	 * 
-	 * @param f
-	 *            the File
+	 * @param f the File
 	 * @return the actually length
 	 */
 	public long upload(File f) {
@@ -306,6 +306,50 @@ public class DFile {
 			log.error(e.getMessage(), e);
 		}
 		return -1;
+	}
+
+	public long count(Callable<Void, String> moni) {
+		long n = 0;
+		if (this.isDirectory()) {
+			try {
+				DFile[] ff = this.listFiles();
+				if (ff != null) {
+					for (DFile f : ff) {
+						n += f.count(moni);
+					}
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		} else {
+			n++;
+		}
+
+		moni.call(200, this.getFilename());
+
+		return n;
+	}
+
+	public long sum(Callable<Void, String> moni) {
+		long n = 0;
+		if (this.isDirectory()) {
+			try {
+				DFile[] ff = this.listFiles();
+				if (ff != null) {
+					for (DFile f : ff) {
+						n += f.sum(moni);
+					}
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+
+		n += this.length();
+		
+		moni.call(200, this.getFilename());
+
+		return n;
 	}
 
 }
