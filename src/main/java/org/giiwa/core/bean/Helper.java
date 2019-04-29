@@ -1239,7 +1239,7 @@ public class Helper implements Serializable {
 					if (op.equals(OP.eq)) {
 						q.or(name, o);
 					} else if (op.equals(OP.neq)) {
-						q.and(name, o, OP.neq);
+						q.or(name, o, OP.neq);
 					}
 				}
 				this.and(q);
@@ -1253,7 +1253,7 @@ public class Helper implements Serializable {
 					if (op.equals(OP.eq)) {
 						q.or(name, o);
 					} else if (op.equals(OP.neq)) {
-						q.and(name, o, OP.neq);
+						q.or(name, o, OP.neq);
 					}
 				}
 				this.and(q);
