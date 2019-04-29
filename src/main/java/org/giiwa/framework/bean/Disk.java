@@ -21,6 +21,7 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.DFile;
+import org.giiwa.core.task.Callable;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Model;
 import org.giiwa.core.bean.Column;
@@ -306,7 +307,7 @@ public class Disk extends Bean {
 		return len;
 	}
 
-	public static long copy(DFile src, DFile dest) throws IOException {
+	public static long copy(DFile src, DFile dest, Callable<Void, String> moni) throws IOException {
 		long len = 0;
 		if (src.isDirectory()) {
 			dest.mkdirs();
@@ -314,10 +315,13 @@ public class Disk extends Bean {
 			DFile[] ff = src.listFiles();
 			if (ff != null) {
 				for (DFile f : ff) {
-					len += copy(f, Disk.seek(dest.getFilename() + "/" + f.getName()));
+					len += copy(f, Disk.seek(dest.getFilename() + "/" + f.getName()), moni);
 				}
 			}
 		} else {
+			if (moni != null) {
+				moni.call((int) len, src.getName());
+			}
 			len = copy(src.getInputStream(), dest.getOutputStream());
 		}
 		return len;
