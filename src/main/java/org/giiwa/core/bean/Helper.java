@@ -1232,6 +1232,7 @@ public class Helper implements Serializable {
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
 				Collection l1 = (Collection) v;
+
 				for (Object o : l1) {
 					if (o instanceof W) {
 						o = ((W) o).query();
@@ -1239,7 +1240,7 @@ public class Helper implements Serializable {
 					if (op.equals(OP.eq)) {
 						q.or(name, o);
 					} else if (op.equals(OP.neq)) {
-						q.or(name, o, OP.neq);
+						q.and(name, o, OP.neq);
 					}
 				}
 				this.and(q);
@@ -1253,7 +1254,7 @@ public class Helper implements Serializable {
 					if (op.equals(OP.eq)) {
 						q.or(name, o);
 					} else if (op.equals(OP.neq)) {
-						q.or(name, o, OP.neq);
+						q.and(name, o, OP.neq);
 					}
 				}
 				this.and(q);
