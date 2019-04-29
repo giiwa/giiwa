@@ -19,10 +19,10 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,12 +201,11 @@ public class Bean implements Serializable {
 			if (value == null) {
 				data.remove(name);
 			} else {
-				if (value instanceof Timestamp) {
-					data.put(name, ((Timestamp) value).getTime());
+				if (value instanceof Date) {
+					data.put(name, ((Date) value).getTime());
 				} else {
 					data.put(name, value);
 				}
-
 			}
 		}
 		return old;

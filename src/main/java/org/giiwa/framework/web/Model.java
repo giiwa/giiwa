@@ -155,8 +155,7 @@ public class Model {
 	 * get the request as inputstream.
 	 * 
 	 * @return InputStream
-	 * @throws IOException
-	 *             occur error when get the inputstream from request
+	 * @throws IOException occur error when get the inputstream from request
 	 */
 	final public InputStream getInputStream() throws IOException {
 		return req.getInputStream();
@@ -166,8 +165,7 @@ public class Model {
 	 * get the response as outputstream.
 	 * 
 	 * @return OutputStream
-	 * @throws IOException
-	 *             occur error when get the outputstream from the reqponse.
+	 * @throws IOException occur error when get the outputstream from the reqponse.
 	 */
 	final public OutputStream getOutputStream() throws IOException {
 		return resp.getOutputStream();
@@ -557,14 +555,10 @@ public class Model {
 	/**
 	 * Dispatch.
 	 * 
-	 * @param uri
-	 *            the uri
-	 * @param req
-	 *            the req
-	 * @param resp
-	 *            the resp
-	 * @param method
-	 *            the method
+	 * @param uri    the uri
+	 * @param req    the req
+	 * @param resp   the resp
+	 * @param method the method
 	 * @return Path
 	 */
 	final public Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method) {
@@ -665,8 +659,8 @@ public class Model {
 	 * 
 	 * .
 	 *
-	 * @param newSession
-	 *            if true and not presented, create a new one, otherwise return null
+	 * @param newSession if true and not presented, create a new one, otherwise
+	 *                   return null
 	 * @return the string
 	 */
 	final public String sid(boolean newSession) {
@@ -720,8 +714,7 @@ public class Model {
 	/**
 	 * response and redirect to the url
 	 * 
-	 * @param url
-	 *            the url
+	 * @param url the url
 	 */
 	final public void redirect(String url) {
 		resp.setHeader("Location", url);
@@ -731,8 +724,7 @@ public class Model {
 	/**
 	 * forward or lets the clazz to handle the request
 	 * 
-	 * @param clazz
-	 *            the class name
+	 * @param clazz the class name
 	 * @return the Path
 	 */
 	final public Path forward(Class<? extends Model> clazz) {
@@ -751,8 +743,7 @@ public class Model {
 	/**
 	 * Forward to the model(url), do not response yet
 	 * 
-	 * @param url
-	 *            the url
+	 * @param url the url
 	 */
 	final public void forward(String url) {
 		req.setAttribute("sid", sid());
@@ -762,10 +753,8 @@ public class Model {
 	/**
 	 * Put the name=object to the model.
 	 *
-	 * @param name
-	 *            the name
-	 * @param o
-	 *            the object
+	 * @param name the name
+	 * @param o    the object
 	 */
 	final public void put(String name, Object o) {
 		// System.out.println("put:" + name + "=>" + o);
@@ -792,8 +781,7 @@ public class Model {
 	/**
 	 * remove the name from the model
 	 * 
-	 * @param name
-	 *            the name of data setted in model
+	 * @param name the name of data setted in model
 	 */
 	final public void remove(String name) {
 		if (context != null) {
@@ -804,10 +792,8 @@ public class Model {
 	/**
 	 * Sets name=object back to model which accessed by view.
 	 * 
-	 * @param name
-	 *            the name of data in model
-	 * @param o
-	 *            the value object
+	 * @param name the name of data in model
+	 * @param o    the value object
 	 */
 	final public void set(String name, Object o) {
 		put(name, o);
@@ -816,10 +802,8 @@ public class Model {
 	/**
 	 * get the value from the context
 	 * 
-	 * @param name
-	 *            the name in model which using in view
-	 * @param defaultValue
-	 *            the default value if the name not presented in model
+	 * @param name         the name in model which using in view
+	 * @param defaultValue the default value if the name not presented in model
 	 * @return Object
 	 */
 	final public Object get(String name, Object defaultValue) {
@@ -832,10 +816,8 @@ public class Model {
 	/**
 	 * Sets response the header name=value.
 	 * 
-	 * @param name
-	 *            the name of header to response
-	 * @param value
-	 *            the String value
+	 * @param name  the name of header to response
+	 * @param value the String value
 	 */
 	final public void setHeader(String name, String value) {
 		if (resp.containsHeader(name)) {
@@ -848,10 +830,8 @@ public class Model {
 	/**
 	 * set response the date header name=value
 	 * 
-	 * @param name
-	 *            the name of header to response
-	 * @param date
-	 *            the data value in header to response
+	 * @param name the name of header to response
+	 * @param date the data value in header to response
 	 */
 	final public void setDateHeader(String name, long date) {
 		resp.setDateHeader(name, date);
@@ -861,12 +841,9 @@ public class Model {
 	 * Sets Beans back to Model which accessed by view, it will auto paging
 	 * according the start and number per page.
 	 *
-	 * @param bs
-	 *            the Beans
-	 * @param s
-	 *            the start position
-	 * @param n
-	 *            the number per page
+	 * @param bs the Beans
+	 * @param s  the start position
+	 * @param n  the number per page
 	 */
 	final public void set(Beans<? extends Bean> bs, int s, int n) {
 		if (bs != null) {
@@ -894,10 +871,8 @@ public class Model {
 	/**
 	 * Sets Map back to the Model which accessed by view.
 	 * 
-	 * @param jo
-	 *            the map of data
-	 * @param names
-	 *            the names that will be set back to model, if null, will set all
+	 * @param jo    the map of data
+	 * @param names the names that will be set back to model, if null, will set all
 	 */
 	final public void set(JSON jo, String... names) {
 		if (jo == null) {
@@ -922,8 +897,7 @@ public class Model {
 	/**
 	 * Checks if has the name in the model for response
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return true, if has
 	 */
 	final public boolean has(String name) {
@@ -933,8 +907,7 @@ public class Model {
 	/**
 	 * Gets the request header.
 	 * 
-	 * @param tag
-	 *            the header tag
+	 * @param tag the header tag
 	 * @return String of the header
 	 */
 	final public String getHeader(String tag) {
@@ -948,10 +921,8 @@ public class Model {
 	/**
 	 * Adds the header.
 	 * 
-	 * @param tag
-	 *            the tag
-	 * @param v
-	 *            the v
+	 * @param tag the tag
+	 * @param v   the v
 	 */
 	final public void addHeader(String tag, String v) {
 		try {
@@ -963,8 +934,7 @@ public class Model {
 	/**
 	 * Gets the int parameter from request
 	 * 
-	 * @param tag
-	 *            the tag
+	 * @param tag the tag
 	 * @return the int
 	 */
 	final public int getInt(String tag) {
@@ -976,12 +946,9 @@ public class Model {
 	 * get the value from the session, if the value less than minvalue, then get the
 	 * minvalue, and store the value in session
 	 * 
-	 * @param tag
-	 *            the tag
-	 * @param defaultValue
-	 *            the default value
-	 * @param tagInSession
-	 *            the tag in session
+	 * @param tag          the tag
+	 * @param defaultValue the default value
+	 * @param tagInSession the tag in session
 	 * @return the int
 	 */
 	final public int getInt(String tag, int defaultValue, String tagInSession) {
@@ -1008,12 +975,9 @@ public class Model {
 	 * @deprecated get the parameter from the request, if not presented, then get
 	 *             from session
 	 * 
-	 * @param tag
-	 *            the name of the parameter in request.
-	 * @param tagInSession
-	 *            associated with the name in session.
-	 * @param defaultValue
-	 *            the default value if not presented in both.
+	 * @param tag          the name of the parameter in request.
+	 * @param tagInSession associated with the name in session.
+	 * @param defaultValue the default value if not presented in both.
 	 * @return String of the value
 	 */
 	final public String getString(String tag, String tagInSession, String defaultValue) {
@@ -1050,10 +1014,8 @@ public class Model {
 	/**
 	 * Gets the int in request parameter, if not presented, return the defaultvalue
 	 * 
-	 * @param tag
-	 *            the tag
-	 * @param defaultValue
-	 *            the default value
+	 * @param tag          the tag
+	 * @param defaultValue the default value
 	 * @return the int
 	 */
 	final public int getInt(String tag, int defaultValue) {
@@ -1064,10 +1026,8 @@ public class Model {
 	/**
 	 * Gets the long request parameter, if not presented, return the defaultvalue
 	 * 
-	 * @param tag
-	 *            the name of parameter
-	 * @param defaultvalue
-	 *            the default value when the name not presented.
+	 * @param tag          the name of parameter
+	 * @param defaultvalue the default value when the name not presented.
 	 * @return long
 	 */
 	final public long getLong(String tag, long defaultvalue) {
@@ -1078,8 +1038,7 @@ public class Model {
 	/**
 	 * get the long request value, if not presented, return 0;
 	 * 
-	 * @param tag
-	 *            the name of parameter in request.
+	 * @param tag the name of parameter in request.
 	 * @return long
 	 */
 	final public long getLong(String tag) {
@@ -1098,8 +1057,7 @@ public class Model {
 	/**
 	 * Gets the cookie.
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the cookie
 	 */
 	final public String getCookie(String name) {
@@ -1146,12 +1104,9 @@ public class Model {
 	/**
 	 * set the cookie back to the response.
 	 * 
-	 * @param key
-	 *            the name of cookie
-	 * @param value
-	 *            the value of the cookie
-	 * @param expireseconds
-	 *            the expire time of seconds.
+	 * @param key           the name of cookie
+	 * @param value         the value of the cookie
+	 * @param expireseconds the expire time of seconds.
 	 */
 	final public void addCookie(String key, String value, int expireseconds) {
 		if (key == null) {
@@ -1181,8 +1136,7 @@ public class Model {
 	/**
 	 * Adds the cookie.
 	 * 
-	 * @param c
-	 *            the c
+	 * @param c the c
 	 */
 	final public void addCookie(Cookie c) {
 		if (c != null) {
@@ -1328,8 +1282,7 @@ public class Model {
 	 * Gets the value of request string parameter. it auto handle multiple-part, and
 	 * convert "&lt;" or "&gt;" to html char and normal request
 	 * 
-	 * @param name
-	 *            the name of parameter
+	 * @param name the name of parameter
 	 * @return string of requested value
 	 */
 	final public String getString(String name) {
@@ -1397,10 +1350,8 @@ public class Model {
 	/**
 	 * Gets the request value by name, and limited length.
 	 * 
-	 * @param name
-	 *            the parameter name
-	 * @param maxlength
-	 *            the maxlength
+	 * @param name      the parameter name
+	 * @param maxlength the maxlength
 	 * @return string of value
 	 */
 	final public String getString(String name, int maxlength) {
@@ -1418,12 +1369,9 @@ public class Model {
 	 * Gets the request value by name, and limited length, if not presented, using
 	 * the default value.
 	 * 
-	 * @param name
-	 *            the parameter name
-	 * @param maxlength
-	 *            the maxlength
-	 * @param defaultvalue
-	 *            the defaultvalue
+	 * @param name         the parameter name
+	 * @param maxlength    the maxlength
+	 * @param defaultvalue the defaultvalue
 	 * @return string of value
 	 */
 	final public String getString(String name, int maxlength, String defaultvalue) {
@@ -1443,8 +1391,7 @@ public class Model {
 	 * get the request value as html (original string), it maybe includes html
 	 * format
 	 * 
-	 * @param name
-	 *            the parameter name
+	 * @param name the parameter name
 	 * @return String of value
 	 */
 	final public String getHtml(String name) {
@@ -1454,10 +1401,8 @@ public class Model {
 	/**
 	 * Gets the html.
 	 * 
-	 * @param name
-	 *            the name of the parameter
-	 * @param all
-	 *            whether get all data
+	 * @param name the name of the parameter
+	 * @param all  whether get all data
 	 * @return String
 	 */
 	final public String getHtml(String name, boolean all) {
@@ -1519,10 +1464,8 @@ public class Model {
 	/**
 	 * Gets the html from the request, and cut by the maxlength
 	 * 
-	 * @param name
-	 *            the name
-	 * @param maxlength
-	 *            the maxlength
+	 * @param name      the name
+	 * @param maxlength the maxlength
 	 * @return the html
 	 */
 	final public String getHtml(String name, int maxlength) {
@@ -1538,12 +1481,9 @@ public class Model {
 	/**
 	 * Gets the html from the request, it will not convert anything for the html
 	 * 
-	 * @param name
-	 *            the name of request parameter
-	 * @param maxlength
-	 *            the maxlength
-	 * @param defaultvalue
-	 *            the defaultvalue
+	 * @param name         the name of request parameter
+	 * @param maxlength    the maxlength
+	 * @param defaultvalue the defaultvalue
 	 * @return String of the html
 	 */
 	final public String getHtml(String name, int maxlength, String defaultvalue) {
@@ -1562,8 +1502,7 @@ public class Model {
 	 * Gets the strings from the request, <br>
 	 * and will convert the "&lt;" to "&amp;lt;", "&gt;" to "&amp;gt;"
 	 * 
-	 * @param name
-	 *            the name of the request parameter
+	 * @param name the name of the request parameter
 	 * @return String[] of request
 	 */
 	@SuppressWarnings("unchecked")
@@ -1646,8 +1585,7 @@ public class Model {
 	/**
 	 * Gets the http session.
 	 * 
-	 * @param bfCreate
-	 *            the bf create
+	 * @param bfCreate the bf create
 	 * @return the http session
 	 */
 	final public HttpSession getHttpSession(boolean bfCreate) {
@@ -1749,8 +1687,7 @@ public class Model {
 	/**
 	 * set the user associated with the session
 	 * 
-	 * @param u
-	 *            the user object associated with the session
+	 * @param u the user object associated with the session
 	 */
 	final public void setUser(User u, LoginType logintype) {
 
@@ -1848,8 +1785,7 @@ public class Model {
 	/**
 	 * Gets the request file by name.
 	 * 
-	 * @param name
-	 *            the parameter name
+	 * @param name the parameter name
 	 * @return file of value, null if not presented
 	 */
 	@SuppressWarnings("unchecked")
@@ -1881,8 +1817,7 @@ public class Model {
 	/**
 	 * set the response contenttype
 	 * 
-	 * @param contentType
-	 *            the content type in response
+	 * @param contentType the content type in response
 	 */
 	final public void setContentType(String contentType) {
 		this.contentType = contentType;
@@ -1905,8 +1840,7 @@ public class Model {
 	/**
 	 * output the json as "application/json" to end-user
 	 * 
-	 * @param jo
-	 *            the json that will be output
+	 * @param jo the json that will be output
 	 */
 	final public void response(JSON jo) {
 		if (jo == null) {
@@ -1919,10 +1853,8 @@ public class Model {
 	/**
 	 * response "json" to end-user directly
 	 * 
-	 * @param state
-	 *            the status to response
-	 * @param message
-	 *            the message to response
+	 * @param state   the status to response
+	 * @param message the message to response
 	 */
 	final public void response(int state, String message) {
 		JSON jo = JSON.create();
@@ -1934,8 +1866,7 @@ public class Model {
 	/**
 	 * output the jsonarr as "application/json" to end-user
 	 * 
-	 * @param arr
-	 *            the array of json
+	 * @param arr the array of json
 	 */
 	final public void response(List<JSON> arr) {
 		if (arr == null) {
@@ -1948,8 +1879,7 @@ public class Model {
 	/**
 	 * output the string as "application/json" to end-userr.
 	 * 
-	 * @param jsonstr
-	 *            the jsonstr string
+	 * @param jsonstr the jsonstr string
 	 */
 	private void responseJson(String jsonstr) {
 		this.setContentType(Model.MIME_JSON);
@@ -1974,8 +1904,7 @@ public class Model {
 	 * using current model to render the template, and show the result html page to
 	 * end-user.
 	 * 
-	 * @param viewname
-	 *            the viewname template
+	 * @param viewname the viewname template
 	 * @return boolean
 	 */
 	final public boolean show(String viewname) {
@@ -2061,8 +1990,7 @@ public class Model {
 	 * set current path.
 	 * 
 	 * @deprecated
-	 * @param path
-	 *            rewrite the path
+	 * @param path rewrite the path
 	 */
 	final public void setPath(String path) {
 		this.path = path;
@@ -2071,20 +1999,25 @@ public class Model {
 	/**
 	 * Get the mime type.
 	 * 
-	 * @param uri
-	 *            the type of uri
+	 * @param uri the type of uri
 	 * @return String of mime type
 	 */
 	public static String getMimeType(String uri) {
-		return s️ervletContext.getMimeType(uri);
+		String mime = s️ervletContext.getMimeType(uri);
+		if (mime == null) {
+			if (uri.endsWith(".tgz")) {
+				mime = "application/x-gzip";
+			}
+		}
+		log.debug("mimetype=" + mime + ", uri=" + uri);
+		return mime;
 	}
 
 	/**
 	 * Show error page to end user.<br>
 	 * if the request is AJAX, then response a json with error back to front
 	 * 
-	 * @param e
-	 *            the throwable
+	 * @param e the throwable
 	 */
 	final public void error(Throwable e) {
 		if (log.isErrorEnabled())
@@ -2201,8 +2134,7 @@ public class Model {
 	/**
 	 * set the sponse status code.
 	 * 
-	 * @param statuscode
-	 *            the status code to response
+	 * @param statuscode the status code to response
 	 */
 	final public void setStatus(int statuscode) {
 		resp.setStatus(statuscode);
@@ -2222,10 +2154,8 @@ public class Model {
 	/**
 	 * show deny page with error info to end-user
 	 * 
-	 * @param url
-	 *            the url will be responsed
-	 * @param error
-	 *            the error that will be displaied
+	 * @param url   the url will be responsed
+	 * @param error the error that will be displaied
 	 */
 	final public void deny(String url, String error) {
 		if (log.isDebugEnabled())
@@ -2296,8 +2226,7 @@ public class Model {
 	/**
 	 * Copy all request params from the model.
 	 *
-	 * @param m
-	 *            the model of source
+	 * @param m the model of source
 	 */
 	final public void copy(Model m) {
 
@@ -2318,8 +2247,7 @@ public class Model {
 	/**
 	 * println the object to end-user
 	 * 
-	 * @param o
-	 *            the object of printing
+	 * @param o the object of printing
 	 */
 	final public void println(Object o) {
 		print(o + "<br>");
@@ -2328,8 +2256,7 @@ public class Model {
 	/**
 	 * Print the object to end-user
 	 * 
-	 * @param o
-	 *            the object of printing
+	 * @param o the object of printing
 	 */
 	final public void print(Object o) {
 		try {
@@ -2357,12 +2284,9 @@ public class Model {
 		/**
 		 * Creates the Pathmapping
 		 * 
-		 * @param pattern
-		 *            the pattern
-		 * @param path
-		 *            the path
-		 * @param method
-		 *            the method
+		 * @param pattern the pattern
+		 * @param path    the path
+		 * @param method  the method
 		 * @return the path mapping
 		 */
 		public static PathMapping create(Pattern pattern, Path path, Method method) {
@@ -2408,8 +2332,7 @@ public class Model {
 		/**
 		 * Instantiates a new HTTP method.
 		 * 
-		 * @param m
-		 *            the m
+		 * @param m the m
 		 */
 		public HTTPMethod(int m) {
 			this.method = m;
@@ -2528,10 +2451,8 @@ public class Model {
 		/**
 		 * Creates the.
 		 * 
-		 * @param name
-		 *            the name
-		 * @param value
-		 *            the value
+		 * @param name  the name
+		 * @param value the value
 		 * @return the name value
 		 */
 		public static NameValue create(String name, String value) {
@@ -2554,11 +2475,15 @@ public class Model {
 	/**
 	 * set the current module
 	 * 
-	 * @param e
-	 *            the module
+	 * @param e the module
 	 */
 	public static void setCurrentModule(Module e) {
 		_currentmodule.set(e);
+	}
+
+	public static void main(String[] args) {
+		String s = "aaa.tgz";
+		System.out.println(Model.getMimeType(s));
 	}
 
 }

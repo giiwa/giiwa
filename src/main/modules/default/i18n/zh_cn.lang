@@ -723,6 +723,7 @@ text/html=icon-html-five
 text/plain=icon-file-text2
 text/csv=icon-file-excel
 application/zip=icon-file-zip
+application/x-gzip=icon-file-zip
 application/java-archive=icon-file-zip
 image/jpeg=icon-image
 application/msword=icon-file-word
