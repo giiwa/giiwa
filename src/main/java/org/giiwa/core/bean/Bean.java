@@ -583,17 +583,15 @@ public class Bean implements Serializable {
 			for (int i = 1; i <= cols; i++) {
 				try {
 					Object o = r.getObject(i);
-					if (o instanceof java.sql.Date) {
-						o = ((java.sql.Date) o).getTime();// .toString();
-					} else if (o instanceof java.sql.Time) {
-						o = ((java.sql.Time) o).getTime();// .toString();
-					} else if (o instanceof java.sql.Timestamp) {
-						o = ((java.sql.Timestamp) o).getTime();// .toString();
-						// } else if (o instanceof java.math.BigDecimal) {
-						// o = o.toString();
+					if (o instanceof Date) {
+						o = ((Date) o).getTime();
+					} else if (o instanceof oracle.sql.TIMESTAMP) {
+						o = ((oracle.sql.TIMESTAMP) o).dateValue().getTime();
 					}
 
 					String name = m.getColumnName(i);
+					log.debug("name=" + name + ", o=" + o.getClass());
+
 					this.set(name, o);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
@@ -603,17 +601,16 @@ public class Bean implements Serializable {
 			for (String name : fields) {
 				try {
 					Object o = r.getObject(name);
-					if (o instanceof java.sql.Date) {
-						o = ((java.sql.Date) o).getTime();// .toString();
-					} else if (o instanceof java.sql.Time) {
-						o = ((java.sql.Time) o).getTime();// .toString();
-					} else if (o instanceof java.sql.Timestamp) {
-						o = ((java.sql.Timestamp) o).getTime();// .toString();
-						// } else if (o instanceof java.math.BigDecimal) {
-						// o = o.toString();
+					if (o instanceof Date) {
+						o = ((Date) o).getTime();
+					} else if (o instanceof oracle.sql.TIMESTAMP) {
+						o = ((oracle.sql.TIMESTAMP) o).dateValue().getTime();
 					}
 
+					log.debug("name=" + name + ", o=" + o.getClass());
+
 					this.set(name, o);
+
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
