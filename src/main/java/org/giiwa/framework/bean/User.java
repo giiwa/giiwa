@@ -236,7 +236,7 @@ public class User extends Bean {
 	 * @return long of the user id, if failed, return -1
 	 * @throws Exception throw Exception if name or password not matches the setting
 	 */
-	public static long create(V v) throws Exception {
+	public synchronized static long create(V v) throws Exception {
 
 		// check name and password
 		_check(v, "name", "password");
