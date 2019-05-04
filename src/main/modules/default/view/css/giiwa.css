@@ -2331,7 +2331,8 @@ overflow: auto;
     padding-left: 12px;
     height: 32px;
     overflow: hidden;
-    display: inline-block;    
+    display: inline-block;  
+    width: 60px;  
 }
 
 #head .mymenu a:hover{
