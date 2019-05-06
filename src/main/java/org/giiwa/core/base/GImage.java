@@ -408,7 +408,7 @@ public class GImage {
 				h0 = h2;
 			}
 
-			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
+			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);// .TYPE_3BYTE_BGR);//
 																						// TYPE_4BYTE_BGR);
 			Graphics g = out.getGraphics();
 
@@ -423,7 +423,7 @@ public class GImage {
 			} else {
 				file.getParentFile().mkdirs();
 			}
-			ImageIO.write(out, "png", file);
+			ImageIO.write(out, "jpeg", file);
 
 			return 1;
 		} catch (Exception e) {
