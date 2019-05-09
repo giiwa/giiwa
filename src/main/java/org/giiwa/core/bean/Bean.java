@@ -590,7 +590,8 @@ public class Bean implements Serializable {
 					}
 
 					String name = m.getColumnName(i);
-					log.debug("name=" + name + ", o=" + o.getClass());
+
+					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
 
 					this.set(name, o);
 				} catch (Exception e) {
@@ -607,7 +608,7 @@ public class Bean implements Serializable {
 						o = ((oracle.sql.TIMESTAMP) o).dateValue().getTime();
 					}
 
-					log.debug("name=" + name + ", o=" + o.getClass());
+					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
 
 					this.set(name, o);
 
