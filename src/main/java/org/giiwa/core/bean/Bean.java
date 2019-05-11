@@ -586,7 +586,7 @@ public class Bean implements Serializable {
 					if (o instanceof Date) {
 						o = ((Date) o).getTime();
 					} else if (o instanceof oracle.sql.TIMESTAMP) {
-						o = ((oracle.sql.TIMESTAMP) o).dateValue().getTime();
+						o = ((oracle.sql.TIMESTAMP) o).toString();
 					}
 
 					String name = m.getColumnName(i);
@@ -605,7 +605,7 @@ public class Bean implements Serializable {
 					if (o instanceof Date) {
 						o = ((Date) o).getTime();
 					} else if (o instanceof oracle.sql.TIMESTAMP) {
-						o = ((oracle.sql.TIMESTAMP) o).dateValue().getTime();
+						o = ((oracle.sql.TIMESTAMP) o).toString();
 					}
 
 					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));

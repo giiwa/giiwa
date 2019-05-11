@@ -8,6 +8,7 @@ import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
+import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 
 @Table(name = "gi_footprint")
@@ -19,6 +20,9 @@ public class Footprint extends Bean {
 	private static final long serialVersionUID = 1L;
 
 	public static BeanDAO<String, Footprint> dao = BeanDAO.create(Footprint.class);
+
+	@Column(name = "id")
+	String id;
 
 	@Column(name = "_table")
 	String table;
@@ -84,8 +88,8 @@ public class Footprint extends Bean {
 			Object v0 = p == null ? null : p.get(name);
 			Object v1 = v.value(name);
 			if (!X.isSame(v0, v1)) {
-				dao.insert(V.create("_table", table).append("dataid", dataid).append("field", name).append("data", v1)
-						.append("uid", uid));
+				dao.insert(V.create("_table", table).append(X.ID, UID.uuid()).append("dataid", dataid)
+						.append("field", name).append("data", v1).append("uid", uid));
 			}
 		}
 
