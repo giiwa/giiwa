@@ -281,9 +281,8 @@ public class GLog extends Bean {
 					message = message + "...";
 				}
 
-				long t = System.currentTimeMillis();
-				String id = Local.id() + "_" + t;
-				V v = V.create("id", id).set(X.CREATED, t).set("node", node).set("model", model).set("op", op)
+				String id = UID.uuid();
+				V v = V.create("id", id).set("node", node).set("model", model).set("op", op)
 						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type1", type).append("level", level);
 				v.set("message", message);
 				v.set("trace", trace);
