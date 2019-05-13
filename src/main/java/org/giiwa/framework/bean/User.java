@@ -746,6 +746,9 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
+
+			User.dao.update(uid, V.create("locked", 1));
+
 			return Lock.dao.insert(
 					V.create("uid", uid).append(X.ID, UID.id(uid, sid, System.currentTimeMillis())).set("sid", sid)
 							.set("host", host).set("useragent", useragent).set(X.CREATED, System.currentTimeMillis()));
