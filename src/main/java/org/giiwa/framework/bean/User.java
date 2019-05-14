@@ -661,6 +661,10 @@ public class User extends Bean {
 	public int failed(String ip, String sid, String useragent) {
 		set("failtimes", getInt("failtimes") + 1);
 
+		if (this.getInt("failtimes") >= 3) {
+			User.dao.update(getId(), V.create("locked", 1));
+		}
+
 		return Lock.locked(getId(), sid, ip, useragent);
 	}
 
@@ -746,8 +750,6 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
-
-			User.dao.update(uid, V.create("locked", 1));
 
 			return Lock.dao.insert(
 					V.create("uid", uid).append(X.ID, UID.id(uid, sid, System.currentTimeMillis())).set("sid", sid)
