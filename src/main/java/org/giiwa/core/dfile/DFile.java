@@ -218,7 +218,7 @@ public class DFile {
 		return info == null ? 0 : info.length;
 	}
 
-	public boolean renameTo(DFile file) {
+	public boolean move(DFile file) {
 
 		try {
 			return FileClient.get(url).move(path, filename, file.path, file.filename);
