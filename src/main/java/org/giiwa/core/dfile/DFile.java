@@ -325,7 +325,9 @@ public class DFile {
 			n++;
 		}
 
-		moni.call(200, this.getFilename());
+		if (moni != null) {
+			moni.call(200, this.getFilename());
+		}
 
 		return n;
 	}
@@ -346,8 +348,10 @@ public class DFile {
 		}
 
 		n += this.length();
-		
-		moni.call(200, this.getFilename());
+
+		if (moni != null) {
+			moni.call(200, this.getFilename());
+		}
 
 		return n;
 	}
