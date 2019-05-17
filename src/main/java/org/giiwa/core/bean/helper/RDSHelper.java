@@ -696,42 +696,74 @@ public class RDSHelper implements Helper.DBHelper {
 
 			StringBuilder sql = new StringBuilder();
 			sql.append("select ");
-			if (fields != null) {
-				for (int i = 0; i < fields.length - 1; i++) {
-					sql.append(fields[i]).append(", ");
-				}
-
-				sql.append(fields[fields.length - 1]);
-
-			} else {
-				sql.append("*");
-			}
 
 			String where = _where(q, c);
 			Object[] args = q.args();
 			String orderby = _orderby(q, c);
 
-			sql.append(" from ").append(table);
-			if (!X.isEmpty(where)) {
-				sql.append(" where ").append(where);
-			}
-
 			if (isOracle(c)) {
+
 				if (limit > 0) {
-					if (X.isEmpty(where)) {
-						sql.append(" where ");
-					} else {
-						sql.append(" and ");
+					// select * from (select rownum rn,a.* from table_name a where rownum < limit)
+					// where rn >= offset;
+					sql.append(" * from (select rownum rn,a.* from ").append(table).append(" a ");
+
+					sql.append(" where ");
+					if (!X.isEmpty(where)) {
+						sql.append("(").append(where).append(") and ");
 					}
+					sql.append(" rownum < ").append(limit);
+
+					if (!X.isEmpty(orderby)) {
+						sql.append(" ").append(orderby);
+					}
+
 					if (offset < 0) {
-						offset = MAXROWS;
+						offset = 0;
 					}
-					sql.append(" rownum>").append(offset).append(" and rownum<=").append(offset + limit);
+					sql.append(") where rn>=").append(offset);
+
+				} else {
+
+					if (fields != null) {
+						for (int i = 0; i < fields.length - 1; i++) {
+							sql.append(fields[i]).append(", ");
+						}
+
+						sql.append(fields[fields.length - 1]);
+
+					} else {
+						sql.append("*");
+					}
+
+					sql.append(" from ").append(table);
+					if (!X.isEmpty(where)) {
+						sql.append(" where ").append(where);
+					}
+
+					if (!X.isEmpty(orderby)) {
+						sql.append(" ").append(orderby);
+					}
 				}
-				if (!X.isEmpty(orderby)) {
-					sql.append(" ").append(orderby);
-				}
+
 			} else {
+
+				if (fields != null) {
+					for (int i = 0; i < fields.length - 1; i++) {
+						sql.append(fields[i]).append(", ");
+					}
+
+					sql.append(fields[fields.length - 1]);
+
+				} else {
+					sql.append("*");
+				}
+
+				sql.append(" from ").append(table);
+				if (!X.isEmpty(where)) {
+					sql.append(" where ").append(where);
+				}
+
 				if (!X.isEmpty(orderby)) {
 					sql.append(" ").append(orderby);
 				}
@@ -741,6 +773,7 @@ public class RDSHelper implements Helper.DBHelper {
 				if (offset > 0) {
 					sql.append(" offset ").append(offset);
 				}
+
 			}
 
 			log.debug("sql=" + sql.toString());
