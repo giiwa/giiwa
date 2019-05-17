@@ -73,10 +73,8 @@ public class Controller {
 	/**
 	 * Inits the.
 	 * 
-	 * @param conf
-	 *            the conf
-	 * @param path
-	 *            the path
+	 * @param conf the conf
+	 * @param path the path
 	 */
 	public static void init(Configuration conf, String path) {
 
@@ -119,10 +117,8 @@ public class Controller {
 	/**
 	 * Gets the model.
 	 *
-	 * @param method
-	 *            the method
-	 * @param uri
-	 *            the uri
+	 * @param method the method
+	 * @param uri    the uri
 	 * @return the model
 	 */
 	public static Model getModel(int method, String uri) {
@@ -132,14 +128,10 @@ public class Controller {
 	/**
 	 * Dispatch.
 	 * 
-	 * @param uri
-	 *            the uri
-	 * @param req
-	 *            the req
-	 * @param resp
-	 *            the resp
-	 * @param method
-	 *            the method
+	 * @param uri    the uri
+	 * @param req    the req
+	 * @param resp   the resp
+	 * @param method the method
 	 */
 	@SuppressWarnings("deprecation")
 	public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, Model.HTTPMethod method) {
@@ -194,6 +186,7 @@ public class Controller {
 		}
 
 		try {
+			// directly file
 			File f = Module.home.getFile(uri);
 			if (f != null && f.exists() && f.isFile()) {
 				Model m = new DefaultModel();
@@ -218,6 +211,7 @@ public class Controller {
 				return;
 			}
 
+			// file in file.repo
 			DFile f1 = Disk.seek(uri);
 			if (f1 != null && f1.exists() && f1.isFile()) {
 				Model m = new DefaultModel();
@@ -246,6 +240,7 @@ public class Controller {
 			log.error(e.getMessage(), e);
 		}
 
+		// dispatch to model
 		if (X.isSame("/", uri) || !_dispatch(uri, req, resp, method, t)) {
 
 			for (String suffix : welcomes) {

@@ -318,10 +318,20 @@ public class Temp {
 	}
 
 	public long save(DFile file) throws Exception {
-		if (localfile != null) {
+		if (localfile != null && localfile.exists()) {
 			return IOUtil.copy(new FileInputStream(localfile), file.getOutputStream());
 		}
 		return 0;
+	}
+
+	public void delete() throws IOException {
+		
+		this.getFile().delete();
+		
+		if (localfile != null) {
+			IOUtil.delete(localfile);
+		}
+		
 	}
 
 }
