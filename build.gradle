@@ -65,37 +65,37 @@ task prepare(dependsOn: build) {
 	doLast {
 		copy{
 		    from('tomcat')
-		    into('build/giiwa')
+		    into('build/giiwa/giiwa/')
 		}
 
 		copy{
 		    from('tomcat/')
-		    into('build/giiwa/')
+		    into('build/giiwa/giiwa/')
 		    include 'giiwa'
 		    fileMode 0755
 		}
 		
 		copy{
 		    from('tomcat/bin/')
-		    into('build/giiwa/bin/')
+		    into('build/giiwa/giiwa/bin/')
 		    include '*.sh'
 		    fileMode 0755
 		}
 
 		copy{
 		    from('tomcat/appdog')
-		    into('build/giiwa/appdog')
+		    into('build/giiwa/giiwa/appdog')
 		    include 'appdog'
 		    fileMode 0755
 		}
 		
 		copy{
 		    from('src/main/modules')
-		    into('build/giiwa/modules')
+		    into('build/giiwa/giiwa/modules')
 		}
 		
 		def xml1 = new BufferedReader(new FileReader(new File('src/main/modules/default/module.xml')))
-		def xml2 = new PrintStream(new File('build/giiwa/modules/default/module.xml'))
+		def xml2 = new PrintStream(new File('build/giiwa/giiwa/modules/default/module.xml'))
 		def line = xml1.readLine()
 		while( line != null ){
 			if( line.indexOf('>0<')>-1 ){
@@ -109,22 +109,22 @@ task prepare(dependsOn: build) {
 		
 		copy{
 		    from('src/main/WEB-INF')
-		    into('build/giiwa/modules/WEB-INF')
+		    into('build/giiwa/giiwa/modules/WEB-INF')
 		}
 		copy{
 		    from configurations.runtime
-		    into('build/giiwa/modules/WEB-INF/lib')
+		    into('build/giiwa/giiwa/modules/WEB-INF/lib')
 		}
 		copy {
 		    from('build/libs')
-		    into('build/giiwa/modules/WEB-INF/lib')
+		    into('build/giiwa/giiwa/modules/WEB-INF/lib')
 		}
 		copy {
-		    from('build/giiwa/modules/default')
+		    from('build/giiwa/giiwa/modules/default')
 		    into('build/upgrade/default')
 		}
 		copy {
-		    from('build/giiwa/modules/WEB-INF')
+		    from('build/giiwa/giiwa/modules/WEB-INF')
 		    into('build/upgrade/default/WEB-INF')
 		}
 	}
