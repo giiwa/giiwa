@@ -101,7 +101,7 @@ def _install():
 		f1.close()
 		
 		if os.path.isdir("../mongodb"):
-			os.system("cp m.sh ../mongodb/bin/")
+			os.system("cp ./appdog/m.sh ../mongodb/bin/")
 			os.system("chmod ugo+x ../mongodb/bin/m.sh");
 			os.chdir('../mongodb')
 			s1 = os.getcwd()
