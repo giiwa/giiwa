@@ -64,6 +64,7 @@ import org.giiwa.framework.web.view.View;
  * 
  */
 public class Model {
+
 	public static Log log = LogFactory.getLog(Model.class);
 
 	public static String ENCODING = "UTF-8";
@@ -2358,7 +2359,7 @@ public class Model {
 		}
 
 		private HttpMethod(String s) {
-			this.name = s;
+			this.name = s.toUpperCase();
 		}
 
 		public boolean isGet() {
