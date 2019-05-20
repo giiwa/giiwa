@@ -1239,7 +1239,7 @@ public class Module {
 	 * @param uri    the uri
 	 * @return Model
 	 */
-	public Model loadModelFromCache(int method, String uri) {
+	public Model loadModelFromCache(String method, String uri) {
 		try {
 			// log.debug("looking for model for <" + method + "|" + uri + ">,
 			// mapping=" + modelMap);
@@ -1279,9 +1279,11 @@ public class Module {
 	 * @return the model
 	 */
 	@SuppressWarnings("unchecked")
-	public Model getModel(int method, String uri) {
+	public Model getModel(String method, String uri) {
 
 		try {
+
+			method = method.toUpperCase();
 
 			// log.debug("looking for model for <" + method + "|" + uri + ">");
 
@@ -1300,13 +1302,13 @@ public class Module {
 					/**
 					 * cache it and cache all the path
 					 */
-					Map<Integer, Map<String, Model.PathMapping>> path = _loadPath(c1);
+					Map<String, Map<String, Model.PathMapping>> path = _loadPath(c1);
 					if (path != null && path.size() > 0) {
 						String u = uri;
 						// if (!u.endsWith("/")) {
 						// u += "/";
 						// }
-						for (int m1 : path.keySet()) {
+						for (String m1 : path.keySet()) {
 							Map<String, Model.PathMapping> p = path.get(m1);
 							for (String s : p.keySet()) {
 								c = CachedModel.create(c1, path, this);
@@ -1349,14 +1351,14 @@ public class Module {
 		return null;
 	}
 
-	public Model getModel(int method, Class<? extends Model> clazz) {
+	public Model getModel(String method, Class<? extends Model> clazz) {
 
 		try {
 
 			/**
 			 * cache it and cache all the path
 			 */
-			Map<Integer, Map<String, Model.PathMapping>> path = _loadPath(clazz);
+			Map<String, Map<String, Model.PathMapping>> path = _loadPath(clazz);
 			CachedModel c = CachedModel.create(clazz, path, this);
 
 			return c.create(null);
@@ -1385,11 +1387,11 @@ public class Module {
 		modelMap.put(uri, c);
 	}
 
-	private Map<Integer, Map<String, Model.PathMapping>> _loadPath(Class<? extends Model> c) {
+	private Map<String, Map<String, Model.PathMapping>> _loadPath(Class<? extends Model> c) {
 		Method[] list = c.getMethods();
 		if (list != null && list.length > 0) {
 
-			Map<Integer, Map<String, Model.PathMapping>> map = new HashMap<Integer, Map<String, Model.PathMapping>>();
+			Map<String, Map<String, Model.PathMapping>> map = new HashMap<String, Map<String, Model.PathMapping>>();
 			for (Method m : list) {
 				Path p = m.getAnnotation(Path.class);
 				if (p != null) {
@@ -1407,7 +1409,7 @@ public class Module {
 						}
 					}
 
-					int method = p.method();
+					String method = p.method();
 					String path = p.path();
 
 					Model.PathMapping oo = Model.PathMapping.create(Pattern.compile(path), p, m);
@@ -1415,23 +1417,17 @@ public class Module {
 					/**
 					 * set the method mapping info
 					 */
-					if ((method & Model.METHOD_GET) > 0) {
-						Map<String, Model.PathMapping> mm = map.get(Model.METHOD_GET);
+					String[] ss = X.split(method, "[,]");
+					for (String s : ss) {
+						s = s.toUpperCase();
+						Map<String, Model.PathMapping> mm = map.get(s);
 						if (mm == null) {
 							mm = new HashMap<String, Model.PathMapping>();
-							map.put(Model.METHOD_GET, mm);
+							map.put(s, mm);
 						}
 						mm.put(path, oo);
 					}
 
-					if ((method & Model.METHOD_POST) > 0) {
-						Map<String, Model.PathMapping> mm = map.get(Model.METHOD_POST);
-						if (mm == null) {
-							mm = new HashMap<String, Model.PathMapping>();
-							map.put(Model.METHOD_POST, mm);
-						}
-						mm.put(path, oo);
-					}
 				}
 			}
 
@@ -1988,7 +1984,7 @@ public class Module {
 
 	static class CachedModel {
 		Class<? extends Model> model;
-		Map<Integer, Map<String, Model.PathMapping>> pathmapping;
+		Map<String, Map<String, Model.PathMapping>> pathmapping;
 		Module module;
 
 		/*
@@ -2008,7 +2004,7 @@ public class Module {
 		 * @param module      the module
 		 * @return the cached model
 		 */
-		static CachedModel create(Class<? extends Model> model, Map<Integer, Map<String, PathMapping>> pathmapping,
+		static CachedModel create(Class<? extends Model> model, Map<String, Map<String, PathMapping>> pathmapping,
 				Module module) {
 			CachedModel m = new CachedModel();
 			m.model = model;

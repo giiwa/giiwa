@@ -9,14 +9,13 @@ import org.giiwa.core.dfile.Request;
 import org.giiwa.core.dfile.Response;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Model;
 
 public class HTTP implements ICommand {
 
 	@Override
 	public void process(Request in, IResponseHandler handler) {
 
-		int m = in.readInt();
+		String m = in.readString();
 		String uri = in.readString();
 		JSON head = JSON.fromObject(in.readString());
 		JSON body = JSON.fromObject(in.readString());
@@ -25,7 +24,7 @@ public class HTTP implements ICommand {
 		// log.debug("body=" + body.toString());
 
 		MockResponse resp = MockResponse.create();
-		Controller.dispatch(uri, MockRequest.create(uri, head, body), resp, new Model.HTTPMethod(m));
+		Controller.dispatch(uri, MockRequest.create(uri, head, body), resp, m);
 
 		Response out = Response.create(in.seq, Request.BIG);
 		out.writeInt(resp.status);

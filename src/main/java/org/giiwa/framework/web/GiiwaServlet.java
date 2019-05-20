@@ -6,18 +6,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.catalina.servlets.WebdavServlet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.License;
-import org.giiwa.framework.web.Model.HTTPMethod;
 import org.giiwa.framework.web.view.View;
 
-public class GiiwaServlet extends HttpServlet {
+public class GiiwaServlet extends WebdavServlet {
 	private Map<String, String> config = new ConcurrentHashMap<String, String>();
 
 	/**
@@ -62,7 +62,8 @@ public class GiiwaServlet extends HttpServlet {
 
 			// log.info("method=" + req.getMethod());
 
-			Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
+			req.getMethod();
+			Controller.dispatch(uri, r1, r2, "GET");
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
@@ -88,7 +89,7 @@ public class GiiwaServlet extends HttpServlet {
 				r2.addHeader("Access-Control-Allow-Origin", domain);
 			}
 
-			Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
+			Controller.dispatch(uri, r1, r2, "POST");
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}

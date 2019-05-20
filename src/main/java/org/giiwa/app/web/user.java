@@ -261,7 +261,7 @@ public class user extends Model {
 	/**
 	 * Login.
 	 */
-	@Path(path = "login", log = Model.METHOD_POST)
+	@Path(path = "login")
 	public void login() {
 
 		if (new File(Model.GIIWA_HOME + "/root.pwd").exists()) {
@@ -483,7 +483,7 @@ public class user extends Model {
 	/**
 	 * Logout.
 	 */
-	@Path(path = "logout", method = Model.METHOD_GET | Model.METHOD_POST)
+	@Path(path = "logout")
 	public void logout() {
 
 		User u = this.getUser();

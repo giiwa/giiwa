@@ -54,7 +54,7 @@ public @interface Path {
 	 *
 	 * @return int
 	 */
-	int method() default Model.METHOD_GET | Model.METHOD_POST;
+	String method() default "GET,POST";
 
 	/**
 	 * login required, default is "false".
@@ -69,13 +69,6 @@ public @interface Path {
 	 * @return String
 	 */
 	String access() default X.NONE;
-
-	/**
-	 * Log the data of request and response in oplog, default is 0 -$gt; none.
-	 *
-	 * @return int
-	 */
-	int log() default 0;
 
 	/**
 	 * log the access of client info, default is true.

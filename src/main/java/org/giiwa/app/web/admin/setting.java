@@ -47,10 +47,8 @@ public class setting extends Model {
 	/**
 	 * Register.
 	 *
-	 * @param name
-	 *            the name
-	 * @param m
-	 *            the m
+	 * @param name the name
+	 * @param m    the m
 	 */
 	final public static void register(int seq, String name, Class<? extends setting> m) {
 		if (seq < 0 || seq >= names.size()) {
@@ -68,8 +66,7 @@ public class setting extends Model {
 	/**
 	 * Reset.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the object
 	 */
 	@Path(path = "reset/(.*)", login = true, access = "access.config.admin")
@@ -106,8 +103,7 @@ public class setting extends Model {
 	/**
 	 * Gets the.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the object
 	 */
 	@Path(path = "get/(.*)", login = true, access = "access.config.admin")
@@ -140,10 +136,9 @@ public class setting extends Model {
 	/**
 	 * Sets the.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 */
-	@Path(path = "set/(.*)", login = true, access = "access.config.admin", log = Model.METHOD_POST)
+	@Path(path = "set/(.*)", login = true, access = "access.config.admin")
 	final public void set(String name) {
 		Class<? extends setting> c = settings.get(name);
 		log.debug("/set/" + c);

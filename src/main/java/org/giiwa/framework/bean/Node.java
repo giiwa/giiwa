@@ -30,7 +30,6 @@ import org.giiwa.core.dfile.FileClient;
 import org.giiwa.core.dfile.FileServer;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Model;
-import org.giiwa.framework.web.Model.HTTPMethod;
 import org.giiwa.framework.web.Module;
 import org.hyperic.sigar.CpuInfo;
 import org.hyperic.sigar.CpuPerc;
@@ -218,7 +217,7 @@ public class Node extends Bean {
 		return v;
 	}
 
-	public void forward(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method) {
+	public void forward(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 		try {
 			FileClient.get(url).http(uri, req, resp, method, id);
 		} catch (Exception e) {

@@ -52,7 +52,7 @@ public class module extends Model {
 	/**
 	 * create a new module.
 	 */
-	@Path(path = "create", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "create")
 	public void create() {
 		if (method.isPost()) {
 			/**
@@ -83,8 +83,7 @@ public class module extends Model {
 	 * Createmodule.
 	 *
 	 * @return the string
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public String createmodule() throws Exception {
 		int id = this.getInt("id");
@@ -623,8 +622,7 @@ public class module extends Model {
 	/**
 	 * Adds the.
 	 */
-	@Path(path = "add", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "add", login = true, access = "access.config.admin|access.config.module.admin")
 	public void add() {
 
 		String url = this.getString(X.URL);
@@ -734,8 +732,7 @@ public class module extends Model {
 	/**
 	 * Disable.
 	 */
-	@Path(path = "disable", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "disable", login = true, access = "access.config.admin|access.config.module.admin")
 	public void disable() {
 		String name = this.getString("name");
 
@@ -772,8 +769,7 @@ public class module extends Model {
 	/**
 	 * Enable.
 	 */
-	@Path(path = "enable", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "enable", login = true, access = "access.config.admin|access.config.module.admin")
 	public void enable() {
 		String name = this.getString("name");
 
@@ -797,8 +793,7 @@ public class module extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.module.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.module.admin")
 	public void delete() {
 		String name = this.getString("name");
 		Module m = Module.load(name);

@@ -74,10 +74,9 @@ public class profile extends Model {
 	/**
 	 * Sets the.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 */
-	@Path(path = "set/(.*)", login = true, log = Model.METHOD_POST)
+	@Path(path = "set/(.*)", login = true)
 	final public void set(String name) {
 
 		// this.query.path("/admin/profile/get/" + name);

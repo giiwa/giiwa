@@ -39,7 +39,7 @@ public class node extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "delete", login = true, access = "access.config.admin")
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -52,7 +52,7 @@ public class node extends Model {
 
 	}
 
-	@Path(path = "power", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "power", login = true, access = "access.config.admin")
 	public void power() {
 
 		JSON jo = new JSON();
@@ -99,7 +99,7 @@ public class node extends Model {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin", log = Model.METHOD_POST | Model.METHOD_GET)
+	@Path(path = "clean", login = true, access = "access.config.admin")
 	public void clean() {
 		JSON jo = JSON.create();
 

@@ -26,39 +26,39 @@ import org.giiwa.framework.web.*;
  */
 public class index extends Model {
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model.onGet()
-   */
-  @Override
-  @Path(login = true, method = Model.METHOD_GET)
-  public void onGet() {
-    /**
-     * let's post method to handle it
-     */
-    onPost();
-  }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model.onGet()
+	 */
+	@Override
+	@Path(login = true, method = "GET")
+	public void onGet() {
+		/**
+		 * let's post method to handle it
+		 */
+		onPost();
+	}
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.giiwa.framework.web.Model.onPost()
-   */
-  @Path(login = true, method = Model.METHOD_POST)
-  public void onPost() {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.giiwa.framework.web.Model.onPost()
+	 */
+	@Path(login = true, method = "POST")
+	public void onPost() {
 
-    User me = this.getUser();
-    /**
-     * put the user in mode
-     */
-    this.put("me", me);
+		User me = this.getUser();
+		/**
+		 * put the user in mode
+		 */
+		this.put("me", me);
 
-    /**
-     * show view ...
-     */
-    this.show("/admin/index.html");
+		/**
+		 * show view ...
+		 */
+		this.show("/admin/index.html");
 
-  }
+	}
 
 }

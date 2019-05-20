@@ -44,7 +44,7 @@ public class system extends Model {
 	/**
 	 * Restart.
 	 */
-	@Path(path = "restart", login = true, access = "access.config.admin|access.config.restart.host", log = Model.METHOD_POST)
+	@Path(path = "restart", login = true, access = "access.config.admin|access.config.restart.host")
 	public void restart() {
 
 		JSON jo = new JSON();

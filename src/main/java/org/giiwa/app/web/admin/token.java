@@ -36,8 +36,7 @@ public class token extends Model {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin")
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -50,8 +49,7 @@ public class token extends Model {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin|access.config.user.admin", log = Model.METHOD_POST
-			| Model.METHOD_GET)
+	@Path(path = "clean", login = true, access = "access.config.admin|access.config.user.admin")
 	public void clean() {
 		JSON jo = JSON.create();
 

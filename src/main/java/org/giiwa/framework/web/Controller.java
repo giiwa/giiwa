@@ -40,7 +40,6 @@ import org.giiwa.framework.bean.AccessLog;
 import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.Model.HTTPMethod;
 import org.giiwa.framework.web.view.View;
 
 /**
@@ -121,7 +120,7 @@ public class Controller {
 	 * @param uri    the uri
 	 * @return the model
 	 */
-	public static Model getModel(int method, String uri) {
+	public static Model getModel(String method, String uri) {
 		return Module.home.getModel(method, uri);
 	}
 
@@ -134,7 +133,7 @@ public class Controller {
 	 * @param method the method
 	 */
 	@SuppressWarnings("deprecation")
-	public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, Model.HTTPMethod method) {
+	public static void dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 
 		// log.debug("uri=" + uri);
 
@@ -157,7 +156,7 @@ public class Controller {
 		/**
 		 * test and load from cache first
 		 */
-		Model mo = Module.home.loadModelFromCache(method.method, uri);
+		Model mo = Module.home.loadModelFromCache(method, uri);
 		if (mo != null) {
 			mo.set("__node", node);
 
@@ -257,7 +256,7 @@ public class Controller {
 			while (i > 0) {
 				String path = uri.substring(i + 1);
 				String u = uri.substring(0, i);
-				mo = getModel(method.method, u);
+				mo = getModel(method, u);
 				if (mo != null) {
 
 					mo.set("__node", node);
@@ -324,7 +323,7 @@ public class Controller {
 
 	}
 
-	private static boolean _dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method,
+	private static boolean _dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method,
 			TimeStamp t) {
 		/**
 		 * load model from the modules
@@ -334,7 +333,7 @@ public class Controller {
 		}
 		// log.debug("dispatch, uri=" + uri);
 
-		Model mo = getModel(method.method, uri);
+		Model mo = getModel(method, uri);
 		if (mo != null) {
 			mo.set("__node", req.getParameter("__node"));
 

@@ -86,7 +86,7 @@ public class Model {
 	/**
 	 * the request method(POST, GET)
 	 */
-	public HTTPMethod method;
+	public HttpMethod method;
 
 	/**
 	 * the response context, includes all the response key-value, used by view(html)
@@ -210,7 +210,7 @@ public class Model {
 
 	private Path process() throws Exception {
 
-		if (method.isGet()) {
+		if (X.isSame("GET", method)) {
 			try {
 				String non = Global.getString("site.browser.nonredirect", null);
 				String ignore = Global.getString("site.browser.ignoreurl", null);
@@ -239,7 +239,7 @@ public class Model {
 				path = X.NONE;
 			}
 
-			Map<String, PathMapping> methods = pathmapping.get(this.method.method);
+			Map<String, PathMapping> methods = pathmapping.get(this.method.name);
 
 			// log.debug(this.method + "=>" + methods);
 
@@ -321,15 +321,8 @@ public class Model {
 								/**
 								 * set the "global" attribute for the model
 								 */
-								switch (this.method.method) {
-								case METHOD_POST:
-								case METHOD_GET:
-								case METHOD_PUT:
 
-									createQuery();
-
-									break;
-								}
+								createQuery();
 
 								/**
 								 * invoke the method
@@ -338,28 +331,9 @@ public class Model {
 								// log.debug("invoking: " + m.getName());
 
 								try {
+
 									m.invoke(this, params);
 
-									if ((pp.log() & method.method) > 0) {
-
-										/**
-										 * clone a new one
-										 */
-										JSON jo = JSON.fromObject(this.getJSON());
-										if (jo.has("password")) {
-											jo.put("password", "******");
-										}
-										if (jo.has("pwd")) {
-											jo.put("pwd", "******");
-										}
-										if (jo.has("passwd")) {
-											jo.put("passwd", "******");
-										}
-
-										GLog.oplog.info(this.getClass(), pp.path(), jo.toString(), getUser(),
-												this.getRemoteHost());
-
-									}
 								} catch (Exception e) {
 									if (log.isErrorEnabled())
 										log.error(e.getMessage(), e);
@@ -392,9 +366,7 @@ public class Model {
 
 		this.createQuery();
 
-		switch (method.method) {
-		case METHOD_GET: {
-
+		if (X.isSame("GET", method)) {
 			Method m = this.getClass().getMethod("onGet");
 			// log.debug("m=" + m);
 			if (m != null) {
@@ -419,10 +391,7 @@ public class Model {
 			}
 
 			onGet();
-
-			break;
-		}
-		case METHOD_POST: {
+		} else if (X.isSame("POST", method)) {
 
 			Method m = this.getClass().getMethod("onPost");
 			if (m != null) {
@@ -446,10 +415,7 @@ public class Model {
 				}
 			}
 			onPost();
-
-			break;
-		}
-		case METHOD_PUT: {
+		} else if (X.isSame("PUT", method)) {
 
 			Method m = this.getClass().getMethod("onPut");
 			if (m != null) {
@@ -473,11 +439,8 @@ public class Model {
 				}
 			}
 			onPut();
-
-			break;
 		}
 
-		} // end default handler
 		return null;
 
 	}
@@ -518,12 +481,12 @@ public class Model {
 		return false;
 	}
 
-	final public void init(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method) {
+	final public void init(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 		try {
 			this.uri = uri;
 			this.req = req;
 			this.resp = resp;
-			this.method = method;
+			this.method = HttpMethod.create(method);
 
 			this._multipart = ServletFileUpload.isMultipartContent(req);
 
@@ -561,7 +524,7 @@ public class Model {
 	 * @param method the method
 	 * @return Path
 	 */
-	final public Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method) {
+	final public Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 
 		// created = System.currentTimeMillis();
 
@@ -729,7 +692,7 @@ public class Model {
 	 */
 	final public Path forward(Class<? extends Model> clazz) {
 		try {
-			Model m = module.getModel(method.method, clazz);
+			Model m = module.getModel(method.name, clazz);
 
 			m.copy(this);
 
@@ -747,7 +710,7 @@ public class Model {
 	 */
 	final public void forward(String url) {
 		req.setAttribute("sid", sid());
-		Controller.dispatch(url, req, resp, method);
+		Controller.dispatch(url, req, resp, method.name);
 	}
 
 	/**
@@ -2062,7 +2025,7 @@ public class Model {
 		if (log.isWarnEnabled())
 			log.warn(this.getClass().getName() + "[" + this.getURI() + "]");
 
-		Model m = Module.home.getModel(method.method, "/notfound");
+		Model m = Module.home.getModel(method.name, "/notfound");
 
 		if (m != null) {
 			log.debug("m.class=" + m.getClass() + ", this.class=" + this.getClass());
@@ -2074,7 +2037,7 @@ public class Model {
 
 				m.copy(this);
 
-				if (method.isGet()) {
+				if (X.isSame("GET", method)) {
 					m.onGet();
 				} else {
 					m.onPost();
@@ -2187,26 +2150,9 @@ public class Model {
 	 * 
 	 * @return int
 	 */
-	final public int getMethod() {
-		return method.method;
+	final public String getMethod() {
+		return method.name;
 	}
-
-	/**
-	 * HTTP GET
-	 */
-	final public static int METHOD_GET = 1;
-
-	/**
-	 * HTTP POST
-	 */
-	final public static int METHOD_POST = 2;
-
-	/**
-	 * HTTP PUT
-	 */
-	final public static int METHOD_PUT = 4;
-
-	final public static int METHOD_HEAD = 8;
 
 	/**
 	 * MIME TYPE of JSON
@@ -2230,7 +2176,7 @@ public class Model {
 	 */
 	final public void copy(Model m) {
 
-		this.init(m.uri, m.req, m.resp, m.method);
+		this.init(m.uri, m.req, m.resp, m.method.name);
 		this.login = m.login;
 
 		if (this._multipart) {
@@ -2242,7 +2188,7 @@ public class Model {
 	/**
 	 * pathmapping structure: {"method", {"path", Path|Method}}
 	 */
-	public Map<Integer, Map<String, PathMapping>> pathmapping;
+	public Map<String, Map<String, PathMapping>> pathmapping;
 
 	/**
 	 * println the object to end-user
@@ -2295,88 +2241,6 @@ public class Model {
 			e.path = path;
 			e.method = method;
 			return e;
-		}
-
-	}
-
-	/**
-	 * the {@code HTTPMethod} is request method class, GET, POST
-	 * 
-	 * @author joe
-	 *
-	 */
-	public static class HTTPMethod {
-		public int method = Model.METHOD_GET;
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.lang.Object.toString()
-		 */
-		@Override
-		public String toString() {
-			switch (method) {
-			case Model.METHOD_GET: {
-				return "GET";
-			}
-			case Model.METHOD_POST: {
-				return "POST";
-			}
-			case Model.METHOD_PUT: {
-				return "PUT";
-			}
-			}
-			return "Unknown";
-		}
-
-		/**
-		 * Instantiates a new HTTP method.
-		 * 
-		 * @param m the m
-		 */
-		public HTTPMethod(int m) {
-			this.method = m;
-		}
-
-		public boolean isGet() {
-			return method == Model.METHOD_GET;
-		}
-
-		public boolean isPost() {
-			return method == Model.METHOD_POST;
-		}
-
-		public boolean isPut() {
-			return method == Model.METHOD_PUT;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.lang.Object.hashCode()
-		 */
-		@Override
-		public int hashCode() {
-			return method;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see java.lang.Object.equals(java.lang.Object)
-		 */
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			HTTPMethod other = (HTTPMethod) obj;
-			if (method != other.method)
-				return false;
-			return true;
 		}
 
 	}
@@ -2484,6 +2348,27 @@ public class Model {
 	public static void main(String[] args) {
 		String s = "aaa.tgz";
 		System.out.println(Model.getMimeType(s));
+	}
+
+	public static class HttpMethod {
+		String name;
+
+		public static HttpMethod create(String s) {
+			return new HttpMethod(s);
+		}
+
+		private HttpMethod(String s) {
+			this.name = s;
+		}
+
+		public boolean isGet() {
+			return X.isSame("GET", name);
+		}
+
+		public boolean isPost() {
+			return X.isSame("POST", name);
+		}
+
 	}
 
 }

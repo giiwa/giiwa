@@ -25,7 +25,6 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.nio.Client;
 import org.giiwa.framework.web.Model;
-import org.giiwa.framework.web.Model.HTTPMethod;
 
 public class FileClient implements IRequestHandler {
 
@@ -103,14 +102,10 @@ public class FileClient implements IRequestHandler {
 	/**
 	 * Get the bytes from the filename
 	 * 
-	 * @param path
-	 *            the path
-	 * @param filename
-	 *            the filename
-	 * @param offset
-	 *            the offset
-	 * @param len
-	 *            the length
+	 * @param path     the path
+	 * @param filename the filename
+	 * @param offset   the offset
+	 * @param len      the length
 	 * @return the bytes, or null{@code null} if the client not ready
 	 */
 	public byte[] get(String path, String filename, long offset, int len) {
@@ -368,7 +363,7 @@ public class FileClient implements IRequestHandler {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void http(String uri, HttpServletRequest req, HttpServletResponse resp, HTTPMethod method, String node) {
+	public void http(String uri, HttpServletRequest req, HttpServletResponse resp, String method, String node) {
 
 		if (client == null)
 			return;
@@ -378,7 +373,7 @@ public class FileClient implements IRequestHandler {
 		try {
 
 			r.writeByte(ICommand.CMD_HTTP);
-			r.writeInt(method.method);
+			r.writeString(method);
 			r.writeString(uri);
 			JSON head = JSON.create();
 			Enumeration<String> h1 = req.getHeaderNames();
@@ -543,7 +538,7 @@ public class FileClient implements IRequestHandler {
 		MockRequest req = new MockRequest();
 		MockResponse resp = new MockResponse();
 
-		c.http("/admin/device", req, resp, new Model.HTTPMethod(Model.METHOD_GET), "");
+		c.http("/admin/device", req, resp, "get", "");
 
 		System.out.println(resp);
 

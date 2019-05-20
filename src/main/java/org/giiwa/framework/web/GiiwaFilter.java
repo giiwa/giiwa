@@ -33,7 +33,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.License;
-import org.giiwa.framework.web.Model.HTTPMethod;
 import org.giiwa.framework.web.view.View;
 
 public class GiiwaFilter implements Filter {
@@ -64,7 +63,7 @@ public class GiiwaFilter implements Filter {
 			uri = URL.rewrite(uri);
 
 			String method = r1.getMethod();
-			
+
 			log.info("method=" + method);
 
 			String domain = Global.getString("cross.domain", "");
@@ -73,14 +72,14 @@ public class GiiwaFilter implements Filter {
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
-				Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_GET));
+				Controller.dispatch(uri, r1, r2, "GET");
 
 			} else if ("POST".equalsIgnoreCase(method)) {
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
 
-				Controller.dispatch(uri, r1, r2, new HTTPMethod(Model.METHOD_POST));
+				Controller.dispatch(uri, r1, r2, "POST");
 
 			} else if ("OPTIONS".equals(method)) {
 				r2.setStatus(200);
