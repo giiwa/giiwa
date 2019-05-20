@@ -113,12 +113,12 @@ def _pidx(x):
 		return pid
 	except:
 		return -1
-def _stopx(x):
+def _stopx(x, name):
 	x=x.strip()
 	pid=_pidx(x)
 	if pid>0:
 		subprocess.call("kill -9 " + str(pid), shell=True)
-		s="[" + x +"] was stoped !"		
+		s="[" + name +"] was stoped !"		
 		print s
 		_log(s)
 
@@ -325,7 +325,7 @@ def _app_main(x):
 					time.sleep(10)
 		else:
 			if shutdown:
-				_stopx(pattern)
+				_stopx(pattern, x)
 
 def _mon_start(x):
 	if x=="mon:cpu":
