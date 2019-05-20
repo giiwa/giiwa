@@ -133,11 +133,11 @@ def _reset():
 		f1.seek(0,0)
 		for s in ss:
 			f1.write(s)
-		f1.write('reset=1')
+		f1.write('reset=1\r\n')
 		f1.close()
 		
 		print "Reset success."
-		_stop()
+		_stopx()
 		
 if __name__=="__main__":
 	if len(sys.argv) > 1:
