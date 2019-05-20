@@ -138,7 +138,6 @@ def _reset():
 		
 		print "Reset success."
 		_stop()
-		_start()
 		
 if __name__=="__main__":
 	if len(sys.argv) > 1:
