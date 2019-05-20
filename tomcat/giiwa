@@ -83,7 +83,7 @@ def _stop():
 		print "Not found giiwa."
 	
 def _install():
-		print "installing appdog ..."
+		print "Installing appdog ..."
 
 		os.system("cp appdog/appdog /etc/init.d/")
 		os.system("chmod ugo+x /etc/init.d/appdog");
@@ -122,21 +122,21 @@ def _install():
 				f1.write(s2)
 			f1.close()
 			
-		print "install success."
+		print "Install success."
 		print "Please vi /etc/appdog/apps.conf to get more."
 			
 def _reset():
-		print "reset the root password ..."
+		print "Reset the root password ..."
 		
 		f1 = open('giiwa.properties', 'r+')
 		ss = f1.readlines();
 		f1.seek(0,0)
 		for s in ss:
-			f1.write(s2)
+			f1.write(s)
 		f1.write('reset=1')
 		f1.close()
 		
-		print "init success."
+		print "Reset success."
 		_stop()
 		_start()
 		
