@@ -23,11 +23,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.configuration.Configuration;
 import org.bouncycastle.jce.provider.JDKMessageDigest.MD4;
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
@@ -885,6 +887,15 @@ public class User extends Bean {
 	public static void checkAndInit() {
 		if (Helper.isConfigured()) {
 			try {
+
+				Configuration conf = Config.getConf();
+				if (conf.getInt("reset", 0) == 1) {
+					// remove root
+					dao.delete(0L);
+					conf.clearProperty("reset");
+					Config.save();
+				}
+
 				if (!dao.exists(0L)) {
 					List<User> list = User.loadByAccess("access.config.admin");
 					if (list == null || list.size() == 0) {
