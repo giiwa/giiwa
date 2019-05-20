@@ -70,11 +70,4 @@ public @interface Path {
 	 */
 	String access() default X.NONE;
 
-	/**
-	 * log the access of client info, default is true.
-	 *
-	 * @return boolean
-	 */
-	boolean accesslog() default true;
-
 }

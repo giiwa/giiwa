@@ -211,7 +211,7 @@ public class Model {
 
 	private Path process() throws Exception {
 
-		if (X.isSame("GET", method)) {
+		if (method.isGet()) {
 			try {
 				String non = Global.getString("site.browser.nonredirect", null);
 				String ignore = Global.getString("site.browser.ignoreurl", null);
@@ -367,7 +367,7 @@ public class Model {
 
 		this.createQuery();
 
-		if (X.isSame("GET", method)) {
+		if (method.isGet()) {
 			Method m = this.getClass().getMethod("onGet");
 			// log.debug("m=" + m);
 			if (m != null) {
@@ -392,7 +392,7 @@ public class Model {
 			}
 
 			onGet();
-		} else if (X.isSame("POST", method)) {
+		} else if (method.isPost()) {
 
 			Method m = this.getClass().getMethod("onPost");
 			if (m != null) {
@@ -416,7 +416,7 @@ public class Model {
 				}
 			}
 			onPost();
-		} else if (X.isSame("PUT", method)) {
+		} else if (method.isPut()) {
 
 			Method m = this.getClass().getMethod("onPut");
 			if (m != null) {
@@ -2368,6 +2368,10 @@ public class Model {
 
 		public boolean isPost() {
 			return X.isSame("POST", name);
+		}
+
+		public boolean isPut() {
+			return X.isSame("PUT", name);
 		}
 
 	}

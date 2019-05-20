@@ -892,7 +892,7 @@ public class User extends Bean {
 				if (conf.getInt("reset", 0) == 1) {
 					// remove root
 					dao.delete(0L);
-					conf.clearProperty("reset");
+					conf.setProperty("reset", 0);
 					Config.save();
 				}
 

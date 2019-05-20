@@ -162,7 +162,7 @@ public class Controller {
 
 			Path p = mo.dispatch(uri, req, resp, method);
 
-			if (p == null || p.accesslog()) {
+			if (p == null) {
 				if (log.isInfoEnabled())
 					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
 							+ " " + mo);
@@ -264,7 +264,7 @@ public class Controller {
 					mo.setPath(path);
 					Path p = mo.dispatch(u, req, resp, method);
 
-					if (p == null || p.accesslog()) {
+					if (p == null) {
 						if (log.isInfoEnabled())
 							log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -"
 									+ mo.getRemoteHost() + " " + mo);
@@ -339,7 +339,7 @@ public class Controller {
 
 			Path p = mo.dispatch(uri, req, resp, method);
 
-			if (p == null || p.accesslog()) {
+			if (p == null) {
 				if (log.isInfoEnabled())
 					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.pastms() + "ms -"
 							+ mo.getRemoteHost() + " " + mo);
