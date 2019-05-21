@@ -720,25 +720,23 @@ public class user extends Model {
 						jo.put(X.MESSAGE, lang.get("email.code.expired"));
 					} else {
 						Code.delete(code, email);
-						jo.put(X.STATE, HttpServletResponse.SC_OK);
-						jo.put(X.MESSAGE, lang.get("email.code.ok"));
-					}
-				} else if (phase == 2) {
-					// change the password
-					String passwd = this.getString("passwd");
-					String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
-					if (!X.isEmpty(rule) && !passwd.matches(rule)) {
-						jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
-						jo.put(X.MESSAGE, "user.passwd.format.error");
-					} else {
-						try {
-							User.update(W.create("email", email), V.create("password", passwd));
-							jo.put(X.STATE, HttpServletResponse.SC_OK);
-							jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
-						} catch (Exception e) {
+						
+						String passwd = this.getString("passwd");
+						String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
+						if (!X.isEmpty(rule) && !passwd.matches(rule)) {
 							jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
-							jo.put(X.MESSAGE, lang.get("save.failed") + ":" + e.getMessage());
+							jo.put(X.MESSAGE, "user.passwd.format.error");
+						} else {
+							try {
+								User.update(W.create("email", email), V.create("password", passwd));
+								jo.put(X.STATE, HttpServletResponse.SC_OK);
+								jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
+							} catch (Exception e) {
+								jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
+								jo.put(X.MESSAGE, lang.get("save.failed") + ":" + e.getMessage());
+							}
 						}
+						
 					}
 				}
 			} else if (!X.isEmpty(phone)) {

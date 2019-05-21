@@ -328,9 +328,6 @@ public class Controller {
 		/**
 		 * load model from the modules
 		 */
-		while (uri.indexOf("//") > -1) {
-			uri = uri.replaceAll("//", "/");
-		}
 		// log.debug("dispatch, uri=" + uri);
 
 		Model mo = getModel(method, uri);
