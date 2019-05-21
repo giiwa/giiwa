@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.catalina.servlets.WebdavServlet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
@@ -17,7 +17,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.License;
 import org.giiwa.framework.web.view.View;
 
-public class GiiwaServlet extends WebdavServlet {
+public class GiiwaServlet extends HttpServlet {
 	private Map<String, String> config = new ConcurrentHashMap<String, String>();
 
 	/**
