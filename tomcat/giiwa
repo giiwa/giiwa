@@ -125,7 +125,7 @@ def _install():
 		print "Install success."
 		print "Please vi /etc/appdog/apps.conf to get more."
 			
-def _reset():
+def _reset_root():
 		print "Reset the root password ..."
 		
 		f1 = open('giiwa.properties', 'r+')
@@ -158,6 +158,19 @@ if __name__=="__main__":
 	elif a=="install":
 		_install()
 	elif a=="reset":
-		_reset()
+		if len(sys.argv) > 2:
+			b = sys.argv[2]
+		else:
+			b = ""
+		
+		if b == "root":			
+			_reset_root()
+		elif b == "giiwa":
+			_reset_giiwa()
+		else:
+			print "Help: \n\tgiiwa reset [root|giiwa]\n"
+			print "\treset root: reset the root password\n"
+			print "\treset giiwa: repair the giiwa libs\n"
+		
 	else:
-		print "Help: \n\tgiiwa [start|stop|restart|install|reset]\n"
+		print "Help: \n\tgiiwa [start|stop|restart|install|reset root|reset giiwa]\n"
