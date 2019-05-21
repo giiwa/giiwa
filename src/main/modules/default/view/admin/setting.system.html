@@ -105,6 +105,10 @@
 		<input type='number' name='session_alive' value="$global.getLong('session.alive',168)"/>
 		<g>$lang.get('session.alive.hint')</g></label></div>
 
+	<div><label><h3>$lang.get('user.passwd'):</h3>
+		<input type='checkbox' name='user.passwd' #if($global.getInt('user.passwd',1) ==1) checked="checked" #end/>
+		<g>$lang.get('user.passwd.hint')</g></label></div>
+		
 	<div><label><h3>$lang.get('user.system'):</h3>
 		<select name='user_system'>
 			<option value='open' #if($user_system == 'open') selected #end>$lang.get('user.system.open')</option>
@@ -115,6 +119,7 @@
 		
 	<div style="margin-left: 20px;"><label><h3>$lang.get('user.role'):</h3>
 		<select name='user_role'>
+			<option value=''></option>
 			#foreach($r in $roles)
 			<option value='$r.name' #if($user_role == "$r.name") selected #end>$r.name</option>
 			#end

@@ -923,3 +923,5 @@ upload.node.state_0=系统已经停止，无法上传文件
 a.about=关于
 a.delete.table=清除数据
 a.drop.table=删除表
+user.passwd=修改密码
+user.passwd.hint=勾选，用户可以自己修改密码，否则不能修改密码
