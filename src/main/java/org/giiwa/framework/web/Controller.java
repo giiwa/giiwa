@@ -103,6 +103,9 @@ public class Controller {
 			Element root = document.getRootElement();
 			Element e1 = root.element("welcome-file-list");
 			List<Element> l1 = e1.elements("welcome-file");
+
+			welcomes.add("index");
+
 			for (Element e2 : l1) {
 				welcomes.add(e2.getText().trim());
 			}
@@ -188,6 +191,9 @@ public class Controller {
 			// directly file
 			File f = Module.home.getFile(uri);
 			if (f != null && f.exists() && f.isFile()) {
+
+				log.debug("handled by module, uri=" + uri);
+
 				Model m = new DefaultModel();
 				m.req = req;
 				m.resp = resp;
@@ -213,6 +219,9 @@ public class Controller {
 			// file in file.repo
 			DFile f1 = Disk.seek(uri);
 			if (f1 != null && f1.exists() && f1.isFile()) {
+
+				log.debug("handled by dfile, uri=" + uri);
+
 				Model m = new DefaultModel();
 				m.req = req;
 				m.resp = resp;
@@ -328,10 +337,15 @@ public class Controller {
 		/**
 		 * load model from the modules
 		 */
-		// log.debug("dispatch, uri=" + uri);
+
+		while (uri.indexOf("//") > -1) {
+			uri = uri.replaceAll("//", "/");
+		}
+//		log.debug("_dispatch, uri=" + uri);
 
 		Model mo = getModel(method, uri);
 		if (mo != null) {
+
 			mo.set("__node", req.getParameter("__node"));
 
 			Path p = mo.dispatch(uri, req, resp, method);

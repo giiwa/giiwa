@@ -242,7 +242,7 @@ public class Model {
 
 			Map<String, PathMapping> methods = pathmapping.get(this.method.name);
 
-			// log.debug(this.method + "=>" + methods);
+			log.debug(this.method + "=>" + methods);
 
 			if (methods != null) {
 				for (String s : methods.keySet()) {
@@ -542,7 +542,7 @@ public class Model {
 				return null;
 			}
 
-			process();
+			return process();
 
 		} catch (Exception e) {
 			error(e);
@@ -2372,6 +2372,11 @@ public class Model {
 
 		public boolean isPut() {
 			return X.isSame("PUT", name);
+		}
+
+		@Override
+		public String toString() {
+			return name;
 		}
 
 	}

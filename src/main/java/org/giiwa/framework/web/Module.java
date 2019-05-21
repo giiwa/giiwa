@@ -1420,6 +1420,9 @@ public class Module {
 					String[] ss = X.split(method, "[,]");
 					for (String s : ss) {
 						s = s.toUpperCase();
+
+						log.debug(s + "=" + oo + ", c=" + c);
+
 						Map<String, Model.PathMapping> mm = map.get(s);
 						if (mm == null) {
 							mm = new HashMap<String, Model.PathMapping>();
@@ -2026,7 +2029,7 @@ public class Module {
 			m.pathmapping = pathmapping;
 			if (!X.isEmpty(uri)) {
 				m.path = getPath(uri);
-			}
+			}	
 			return m;
 		}
 

@@ -10,6 +10,7 @@ public class index extends Model {
 
 	@Path()
 	public void onGet() {
+		
 		String h1 = Local.getString("home.uri.1", null);
 		if (X.isEmpty(h1)) {
 			h1 = Global.getString("home.uri", X.EMPTY);

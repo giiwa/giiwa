@@ -52,7 +52,7 @@ class DefaultModel extends Model {
 		 * if the file exists, and the extension is not .html and htm then get back
 		 * directly, and set contenttype
 		 */
-		log.debug("uri=" + uri + ", remote=" + this.getRemoteHost());
+//		log.debug("uri=" + uri + ", remote=" + this.getRemoteHost(), new Exception());
 
 		if (!_onPost(uri)) {
 			for (String suffix : Controller.welcomes) {
@@ -98,7 +98,7 @@ class DefaultModel extends Model {
 
 		// check dfile
 		DFile d = Disk.seek(uri);
-		if (d.exists()) {
+		if (d.exists() && d.isFile()) {
 			// show it
 			this.set(this.getJSON());
 
