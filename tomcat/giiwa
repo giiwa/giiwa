@@ -128,6 +128,7 @@ def _install():
 def _reset_root():
 		print "Reset the root password ..."
 		
+		os.chdir(home)
 		f1 = open('giiwa.properties', 'r+')
 		ss = f1.readlines();
 		f1.seek(0,0)
@@ -136,6 +137,15 @@ def _reset_root():
 		f1.write('reset=1\r\n')
 		f1.close()
 		
+		print "Reset success."
+		_stopx()
+
+def _reset_giiwa():
+		print "Reset the giiwa ..."
+		
+		os.chdir(home)
+		os.system("cp -rnf modules/default/WEB-INF/ modules/WEB-INF/")
+
 		print "Reset success."
 		_stopx()
 		
@@ -168,8 +178,8 @@ if __name__=="__main__":
 		elif b == "giiwa":
 			_reset_giiwa()
 		else:
-			print "Help: \n\tgiiwa reset [root|giiwa]\n"
-			print "\treset root: reset the root password\n"
+			print "Help: \n\tgiiwa reset [root|giiwa]"
+			print "\treset root: reset the root password"
 			print "\treset giiwa: repair the giiwa libs\n"
 		
 	else:
