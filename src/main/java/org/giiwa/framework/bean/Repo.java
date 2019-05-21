@@ -221,15 +221,19 @@ public class Repo {
 		}
 
 		private void getFile() throws IOException {
+
+			String path = path(id);
 			if (X.isEmpty(name)) {
-				DFile f = Disk.seek(path(id));
+				DFile f = Disk.seek(path);
 				DFile[] ff = f.listFiles();
 				if (ff != null && ff.length > 0) {
 					file = ff[0];
 				}
 			} else {
-				file = Disk.seek(path(id) + name);
+				file = Disk.seek(path + name);
 			}
+
+			log.debug("id=" + id + ", path=" + path(id) + ", name=" + name + ", file=" + file);
 		}
 
 		private long store(long position, InputStream in, long total) throws IOException {
