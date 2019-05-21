@@ -73,7 +73,5 @@
 	<classpathentry kind="var" path="M2_REPO/org/bouncycastle/bcprov-jdk16/1.46/bcprov-jdk16-1.46.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/vladsch/flexmark/flexmark/0.35.0/flexmark-0.35.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/vladsch/flexmark/flexmark-util/0.35.0/flexmark-util-0.35.0.jar"/>
-	<classpathentry kind="lib" path="lib/catalina.jar"/>
-	<classpathentry kind="lib" path="lib/ojdbc8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
