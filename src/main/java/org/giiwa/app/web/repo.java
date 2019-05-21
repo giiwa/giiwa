@@ -116,7 +116,7 @@ public class repo extends Model {
 						OutputStream out = this.getOutputStream();
 						InputStream in = e.getInputStream();
 
-						long total = e.getTotal() <= 0 ? in.available() : e.getTotal();
+						long total = e.length() <= 0 ? in.available() : e.length();
 						long start = 0;
 						long end = total;
 						if (range != null) {
@@ -351,7 +351,7 @@ public class repo extends Model {
 						OutputStream out = this.getOutputStream();
 						InputStream in = e.getInputStream();
 
-						long total = e.getTotal() <= 0 ? in.available() : e.getTotal();
+						long total = e.length() <= 0 ? in.available() : e.length();
 						long start = 0;
 						long end = total;
 						if (!X.isEmpty(range)) {
