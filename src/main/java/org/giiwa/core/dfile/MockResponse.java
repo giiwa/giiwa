@@ -4,9 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 
@@ -61,6 +63,17 @@ public class MockResponse implements HttpServletResponse, Closeable {
 			@Override
 			public void write(int b) throws IOException {
 				out.write(b);
+			}
+
+			@Override
+			public boolean isReady() {
+				return true;
+			}
+
+			@Override
+			public void setWriteListener(WriteListener arg0) {
+				// TODO Auto-generated method stub
+
 			}
 
 		};
@@ -206,4 +219,35 @@ public class MockResponse implements HttpServletResponse, Closeable {
 	public void close() throws IOException {
 		out.close();
 	}
+
+	@Override
+	public void setContentLengthLong(long arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public String getHeader(String arg0) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Collection<String> getHeaderNames() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Collection<String> getHeaders(String arg0) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getStatus() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

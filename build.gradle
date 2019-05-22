@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'eclipse'
 
 group = 'org.giiwa'
 version = '1.6'
@@ -41,7 +42,6 @@ dependencies {
     compile group: 'com.h2database', name: 'h2', version:'1.4.197'
     compile group: 'org.freemarker', name: 'freemarker', version:'2.3.24-incubating'
     compile group: 'com.whalin', name: 'Memcached-Java-Client', version:'3.0.2'
-    compile group: 'javax.servlet', name: 'servlet-api', version:'2.5'
     compile group: 'javax.mail', name: 'mail', version:'1.4'
     compile group: 'commons-fileupload', name: 'commons-fileupload', version:'1.4'
     compile group: 'postgresql', name: 'postgresql', version:'9.0-801.jdbc4'
@@ -59,7 +59,7 @@ dependencies {
     compile group: 'org.bouncycastle', name: 'bcprov-jdk16', version:'1.46'
     compile group: 'com.vladsch.flexmark', name: 'flexmark', version:'0.35.0'
     compile files('lib/ojdbc8.jar')
-    compile files('lib/catalina.jar')
+    compile files('tomcat/lib/servlet-api.jar')
 }
 
 task prepare(dependsOn: build) {
