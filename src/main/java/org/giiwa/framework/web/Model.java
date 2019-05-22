@@ -242,7 +242,7 @@ public class Model {
 
 			Map<String, PathMapping> methods = pathmapping.get(this.method.name);
 
-			log.debug(this.method + "=>" + methods);
+//			log.debug(this.method + "=>" + methods);
 
 			if (methods != null) {
 				for (String s : methods.keySet()) {

@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.configuration.Configuration;
 import org.bouncycastle.jce.provider.JDKMessageDigest.MD4;
 import org.giiwa.core.base.GImage;
+import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -82,8 +83,8 @@ public class User extends Bean {
 	@Column(name = "password")
 	private String password;
 
-	@Column(name = "md4passwd")
-	private String md4passwd;
+	@Column(name = "md5passwd")
+	private String md5passwd;
 
 	@Column(name = "createdip")
 	private String createdip;
@@ -108,20 +109,6 @@ public class User extends Bean {
 
 	public String getPhoto() {
 		return photo;
-	}
-
-	/**
-	 * get the MD4 passwd
-	 * 
-	 * @return byte[]
-	 */
-	public byte[] getMD4passwd() {
-		try {
-			return md4decrypt(md4passwd);
-		} catch (Exception e) {
-
-		}
-		return null;
 	}
 
 	/**
@@ -245,7 +232,7 @@ public class User extends Bean {
 
 		String s = (String) v.value("password");
 		if (s != null) {
-			v.force("md4passwd", User.md4encrypt(s));
+			v.force("md5passwd", User.md5encrypt(s));
 			v.force("password", encrypt(s));
 		}
 
@@ -493,50 +480,17 @@ public class User extends Bean {
 		return UID.id(passwd);
 	}
 
-	public static byte[] md4decrypt(String passwd) {
-		String[] ss = X.split(passwd, ":");
-		if (ss == null || ss.length == 0)
-			return null;
-
-		byte[] bb = new byte[ss.length];
-
-		for (int i = 0; i < ss.length; i++) {
-			char[] b1 = ss[i].toCharArray();
-			if (b1.length > 1) {
-				bb[i] = (byte) (X.hexToInt(b1[0]) * 16 + X.hexToInt(b1[1]));
-			} else {
-				bb[i] = (byte) (X.hexToInt(b1[0]));
-			}
-		}
-		return bb;
-	}
-
-	public static String md4encrypt(String passwd) {
+	public static String md5encrypt(String passwd) {
 		if (X.isEmpty(passwd)) {
 			return X.EMPTY;
 		}
-		try {
-			MessageDigest md4 = MD4.getInstance("MD4");
-			byte[] bb = md4.digest(passwd.getBytes("UnicodeLittleUnmarked"));
-			StringBuilder sb = new StringBuilder();
-			for (byte b : bb) {
-				if (sb.length() > 0)
-					sb.append(":");
-				sb.append(X.toHex(b));
-			}
-			return sb.toString();
-		} catch (Exception e) {
-			// ignore
-			// log.error(e.getMessage(), e);
-		}
-		return X.EMPTY;
+		return MD5.md5(passwd);
 	}
 
 	public static void main(String[] args) {
 		String s = "123123";
-		String s1 = md4encrypt(s);
+		String s1 = md5encrypt(s);
 		System.out.println(s1);
-		System.out.println(Arrays.toString(md4decrypt(s1)));
 
 		byte[] bb = null;
 		try {
@@ -603,7 +557,7 @@ public class User extends Bean {
 		if (!X.isEmpty(passwd)) {
 
 			_check(v, "password");
-			v.force("md4passwd", md4encrypt(passwd));
+			v.force("md5passwd", md5encrypt(passwd));
 			passwd = encrypt(passwd);
 			v.force("password", passwd);
 		} else {
@@ -631,7 +585,7 @@ public class User extends Bean {
 
 			_check(v, "password");
 
-			v.force("md4passwd", md4encrypt(passwd));
+			v.force("md5passwd", md5encrypt(passwd));
 			passwd = encrypt(passwd);
 			v.force("password", passwd);
 		} else {

@@ -1421,7 +1421,7 @@ public class Module {
 					for (String s : ss) {
 						s = s.toUpperCase();
 
-						log.debug(s + "=" + oo + ", c=" + c);
+//						log.debug(s + "=" + oo + ", c=" + c);
 
 						Map<String, Model.PathMapping> mm = map.get(s);
 						if (mm == null) {
