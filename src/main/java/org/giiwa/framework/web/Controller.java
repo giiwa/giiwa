@@ -197,7 +197,7 @@ public class Controller {
 				Model m = new DefaultModel();
 				m.req = req;
 				m.resp = resp;
-				m.set(m.getJSON());
+				m.set(m);
 
 				m.set("me", m.getUser());
 				m.put("lang", m.lang);
@@ -225,7 +225,7 @@ public class Controller {
 				Model m = new DefaultModel();
 				m.req = req;
 				m.resp = resp;
-				m.set(m.getJSON());
+				m.set(m);
 
 				m.set("me", m.getUser());
 				m.put("lang", m.lang);

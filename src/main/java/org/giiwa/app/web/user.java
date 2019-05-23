@@ -170,7 +170,11 @@ public class user extends Model {
 						return;
 					} else {
 						this.set(X.MESSAGE, e.getMessage());
-						this.set(this.getJSON());
+						this.set("name", this.getHtml("name"));
+						this.set("nickname", this.getHtml("nickname"));
+						this.set("email", this.getHtml("email"));
+						this.set("phone", this.getHtml("nickname"));
+						this.set("password", this.getHtml("password"));
 					}
 				}
 			}
@@ -465,8 +469,9 @@ public class user extends Model {
 			} else if (login != null) {
 				this.redirect("/user/go");
 			} else {
-				this.set(this.getJSON());
-				this.set(jo);
+				this.set(this);
+				this.set(X.STATE, jo.getInt(X.STATE));
+				this.set(X.MESSAGE, jo.getString(X.MESSAGE));
 			}
 		} else {
 			String sid = this.getString("sid");

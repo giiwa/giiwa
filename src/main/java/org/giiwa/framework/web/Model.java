@@ -460,7 +460,7 @@ public class Model {
 
 		File f = Module.home.getFile(uri);
 		if (f != null && f.exists() && f.isFile()) {
-			this.set(this.getJSON());
+			this.set(this);
 
 			this.set("me", this.getUser());
 			this.put("lang", lang);
@@ -1184,7 +1184,6 @@ public class Model {
 	 * 
 	 * @return Enumeration
 	 */
-	@SuppressWarnings("unchecked")
 	final public Enumeration<String> getParameterNames() {
 		try {
 			return req.getParameterNames();
@@ -2186,6 +2185,12 @@ public class Model {
 
 	}
 
+	final public void set(Model m) {
+		for (String name : m.getNames()) {
+			this.set(name, m.getHtml(name));
+		}
+	}
+
 	/**
 	 * pathmapping structure: {"method", {"path", Path|Method}}
 	 */
@@ -2267,7 +2272,6 @@ public class Model {
 	 * 
 	 * @return NameValue[]
 	 */
-	@SuppressWarnings("unchecked")
 	final public NameValue[] getQueries() {
 		Enumeration<String> e = req.getParameterNames();
 		if (e != null) {
@@ -2287,7 +2291,6 @@ public class Model {
 	 * 
 	 * @return NameValue[]
 	 */
-	@SuppressWarnings("unchecked")
 	final public NameValue[] getHeaders() {
 		Enumeration<String> e = req.getHeaderNames();
 		if (e != null) {

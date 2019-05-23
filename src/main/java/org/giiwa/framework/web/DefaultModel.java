@@ -75,7 +75,7 @@ class DefaultModel extends Model {
 		uri = uri.replaceAll("//", "/");
 		File f = Module.home.getFile(uri);
 		if (f != null && f.exists() && f.isFile()) {
-			this.set(this.getJSON());
+			this.set(this);
 
 			this.set("me", this.getUser());
 			this.put("lang", lang);
@@ -100,7 +100,7 @@ class DefaultModel extends Model {
 		DFile d = Disk.seek(uri);
 		if (d.exists() && d.isFile()) {
 			// show it
-			this.set(this.getJSON());
+			this.set(this);
 
 			this.set("me", this.getUser());
 			this.put("lang", lang);
