@@ -218,9 +218,14 @@ public class profile extends Model {
 		if (!X.isEmpty(email)) {
 			String code = UID.random(10);
 			Code.create(email, code, V.create("expired", System.currentTimeMillis() + X.AMINUTE * 10));
-			if (Email.send(lang.get("email.verify.subject"), code, email)) {
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
-				return;
+			try {
+				if (Email.send(lang.get("email.verify.subject"), code, email)) {
+					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
+					return;
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				GLog.applog.error(profile.class, "verify1", e.getMessage(), e, login, this.getRemoteHost());
 			}
 		}
 		this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.sent.error")));

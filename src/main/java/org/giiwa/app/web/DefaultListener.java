@@ -129,7 +129,7 @@ public class DefaultListener implements IListener {
 
 			setting.register(0, "system", setting.system.class);
 			setting.register(1, "mq", mq.class);
-			setting.register(10, "smtp", setting.mail.class);
+			setting.register(10, "smtp", setting.smtp.class);
 			// setting.register(11, "counter", setting.counter.class);
 			profile.register(0, "my", profile.my.class);
 

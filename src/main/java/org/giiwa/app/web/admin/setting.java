@@ -292,7 +292,7 @@ public class setting extends Model {
 
 	}
 
-	public static class mail extends setting {
+	public static class smtp extends setting {
 
 		/*
 		 * (non-Javadoc)
@@ -301,12 +301,13 @@ public class setting extends Model {
 		 */
 		@Override
 		public void set() {
-			Global.setConfig("mail.protocol", this.getString("protocol"));
-			Global.setConfig("mail.host", this.getString("host"));
-			Global.setConfig("mail.email", this.getString("email"));
-			Global.setConfig("mail.title", this.getString("title"));
-			Global.setConfig("mail.user", this.getString("user"));
-			Global.setConfig("mail.passwd", this.getString("passwd"));
+			
+			Global.setConfig("mail.protocol", this.getString("mail.protocol"));
+			Global.setConfig("mail.host", this.getString("mail.host"));
+			Global.setConfig("mail.email", this.getString("mail.email"));
+			Global.setConfig("mail.title", this.getString("mail.title"));
+			Global.setConfig("mail.user", this.getString("mail.user"));
+			Global.setConfig("mail.passwd", this.getString("mail.passwd"));
 
 			this.response(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
@@ -318,14 +319,8 @@ public class setting extends Model {
 		 */
 		@Override
 		public void get() {
-			this.set("protocol", Global.getString("mail.protocol", "smtp"));
-			this.set("host", Global.getString("mail.host", X.EMPTY));
-			this.set("email", Global.getString("mail.email", X.EMPTY));
-			this.set("title", Global.getString("mail.title", X.EMPTY));
-			this.set("user", Global.getString("mail.user", X.EMPTY));
-			this.set("passwd", Global.getString("mail.passwd", X.EMPTY));
 
-			this.set("page", "/admin/setting.mail.html");
+			this.set("page", "/admin/setting.smtp.html");
 		}
 
 	}

@@ -693,14 +693,23 @@ public class user extends Model {
 								View v1 = View.getVelocity();
 								String body = v1.parse(f, j1);
 								if (body != null) {
-									if (Email.send(lang.get("mail.validation.code"), body, email)) {
-										jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
-										jo.put(X.STATE, HttpServletResponse.SC_OK);
-										Code.dao.update(W.create("s1", code).and("s2", email),
-												V.create(X.UPDATED, System.currentTimeMillis()));
+									try {
+										if (Email.send(lang.get("mail.validation.code"), body, email)) {
+											jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
+											jo.put(X.STATE, HttpServletResponse.SC_OK);
+											Code.dao.update(W.create("s1", code).and("s2", email),
+													V.create(X.UPDATED, System.currentTimeMillis()));
 
-									} else {
-										jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
+										} else {
+											jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
+											jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+										}
+									} catch (Exception e) {
+										log.error(e.getMessage(), e);
+										GLog.applog.error(user.class, "forget", e.getMessage(), e, login,
+												this.getRemoteHost());
+										jo.put(X.MESSAGE,
+												lang.get("user.forget.email.sent.failed") + ": " + e.getMessage());
 										jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 									}
 								} else {

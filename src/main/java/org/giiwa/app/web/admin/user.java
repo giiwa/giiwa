@@ -117,7 +117,13 @@ public class user extends Model {
 										View v1 = View.getVelocity();
 										String body = v1.parse(f, j1);
 										if (body != null) {
-											Email.send(lang.get("mail.creation.noti"), body, email);
+											try {
+												Email.send(lang.get("mail.creation.noti"), body, email);
+											} catch (Exception e) {
+												log.error(e.getMessage(), e);
+												GLog.applog.error(user.class, "create", e.getMessage(), e, login,
+														this.getRemoteHost());
+											}
 										}
 									}
 

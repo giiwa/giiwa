@@ -51,22 +51,16 @@ public class Email {
 	/**
 	 * Send.
 	 *
-	 * @param subject
-	 *            the subject
-	 * @param body
-	 *            the body
-	 * @param to
-	 *            the to
-	 * @param attachments
-	 *            the attachments
-	 * @param names
-	 *            the names
-	 * @param contents
-	 *            the contents
+	 * @param subject     the subject
+	 * @param body        the body
+	 * @param to          the to
+	 * @param attachments the attachments
+	 * @param names       the names
+	 * @param contents    the contents
 	 * @return true, if successful
 	 */
 	public static boolean send(String subject, String body, String to, InputStream[] attachments, String[] names,
-			String[] contents) {
+			String[] contents) throws Exception {
 
 		if (X.isEmpty(to))
 			return false;
@@ -78,80 +72,63 @@ public class Email {
 		props.setProperty("mail.smtp.auth", "true");
 		props.setProperty("mail.smtps.auth", "true");
 
-		try {
+		Session mailSession = Session.getDefaultInstance(props, new auth());
+		Transport transport = mailSession.getTransport();
 
-			Session mailSession = Session.getDefaultInstance(props, new auth());
-			Transport transport = mailSession.getTransport();
+		MimeMessage message = new MimeMessage(mailSession);
+		message.setSubject(subject, "utf-8");
 
-			MimeMessage message = new MimeMessage(mailSession);
-			message.setSubject(subject, "utf-8");
+		BodyPart messageBodyPart = new MimeBodyPart();
+		body = body.replaceAll("\r", "<br/>").replaceAll(" ", "&nbsp;");
+		messageBodyPart.setContent(body, "text/html; charset=utf-8");
+		Multipart multipart = new MimeMultipart();
+		multipart.addBodyPart(messageBodyPart);
 
-			BodyPart messageBodyPart = new MimeBodyPart();
-			body = body.replaceAll("\r", "<br/>").replaceAll(" ", "&nbsp;");
-			messageBodyPart.setContent(body, "text/html; charset=utf-8");
-			Multipart multipart = new MimeMultipart();
-			multipart.addBodyPart(messageBodyPart);
+		if (attachments != null) {
 
-			if (attachments != null) {
-
-				for (int i = 0; i < attachments.length; i++) {
-					InputStream in = attachments[i];
-					BodyPart attachmentPart = new MimeBodyPart();
-					DataSource source = new ByteArrayDataSource(in, contents[i]);
-					attachmentPart.setDataHandler(new DataHandler(source));
-					attachmentPart.setFileName(names[i]);
-					multipart.addBodyPart(attachmentPart);
-				}
+			for (int i = 0; i < attachments.length; i++) {
+				InputStream in = attachments[i];
+				BodyPart attachmentPart = new MimeBodyPart();
+				DataSource source = new ByteArrayDataSource(in, contents[i]);
+				attachmentPart.setDataHandler(new DataHandler(source));
+				attachmentPart.setFileName(names[i]);
+				multipart.addBodyPart(attachmentPart);
 			}
-
-			message.setContent(multipart);
-			message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-			InternetAddress f = new InternetAddress(Global.getString("mail.email", "service@giiwa.com"));
-			f.setPersonal(Global.getString("mail.email", X.EMPTY));
-			message.setFrom(f);
-
-			transport.connect();
-			transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
-			transport.close();
-
-			return true;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-
-			GLog.applog.error("email", "send", e.getMessage(), e, null, null);
 		}
 
-		return false;
+		message.setContent(multipart);
+		message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
+		InternetAddress f = new InternetAddress(Global.getString("mail.email", "service@giiwa.com"));
+		f.setPersonal(Global.getString("mail.email", X.EMPTY));
+		message.setFrom(f);
+
+		transport.connect();
+		transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO));
+		transport.close();
+
+		return true;
 	}
 
 	/**
 	 * Send.
 	 *
-	 * @param subject
-	 *            the subject
-	 * @param body
-	 *            the body
-	 * @param to
-	 *            the to
+	 * @param subject the subject
+	 * @param body    the body
+	 * @param to      the to
 	 * @return true, if successful
 	 */
-	public static boolean send(String subject, String body, String to) {
+	public static boolean send(String subject, String body, String to) throws Exception {
 		return send(subject, body, to, null, null, null);
 	}
 
 	/**
 	 * Send.
 	 *
-	 * @param subject
-	 *            the subject
-	 * @param body
-	 *            the body
-	 * @param to
-	 *            the to
-	 * @param from
-	 *            the from
-	 * @param displayname
-	 *            the displayname
+	 * @param subject     the subject
+	 * @param body        the body
+	 * @param to          the to
+	 * @param from        the from
+	 * @param displayname the displayname
 	 * @return true, if successful
 	 */
 	public static boolean send(String subject, String body, String to, String from, String displayname) {
