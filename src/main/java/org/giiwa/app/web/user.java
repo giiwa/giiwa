@@ -168,7 +168,7 @@ public class user extends Model {
 			}
 		}
 
-		show("/user/user.register.html");
+		this.show("/user/user.register.html");
 
 	}
 

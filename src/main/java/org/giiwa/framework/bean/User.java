@@ -209,7 +209,7 @@ public class User extends Bean {
 				}
 			} else if (X.isSame("password", s)) {
 				String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
-				if (!X.isEmpty(rule) && !o.matches(rule)) {
+				if (X.isEmpty(o) || (!X.isEmpty(rule) && !o.matches(rule))) {
 					throw new Exception(Language.getLanguage().get("user.bad.passwd"));
 				}
 			}
