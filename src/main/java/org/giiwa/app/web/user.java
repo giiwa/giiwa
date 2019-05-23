@@ -136,7 +136,7 @@ public class user extends Model {
 
 				try {
 					V v = V.create("name", name).copy(this, "password", "nickname", "email", "phone");
-					long id = User.create(v);
+					long id = User.create(name, v);
 
 					String role = Global.getString("user.role", "N/A");
 					Role r = Role.loadByName(role);
@@ -148,22 +148,30 @@ public class user extends Model {
 					GLog.securitylog.info(user.class, "register",
 							lang.get("create.success") + ":" + name + ", uid=" + id, login, this.getRemoteHost());
 
-					Session s = this.getSession();
-					if (s.has("uri")) {
-						this.redirect((String) s.get("uri"));
+					if (this.isAjax()) {
+						this.response(JSON.create().append(X.STATE, 200).append("id", u.getId()).append(X.MESSAGE,
+								lang.get("create.success")));
 						return;
 					} else {
-						this.set(X.MESSAGE, lang.get("user.register.success"));
-						this.set("success", 1);
+						Session s = this.getSession();
+						if (s.has("uri")) {
+							this.redirect((String) s.get("uri"));
+							return;
+						} else {
+							this.redirect("/user/go");
+						}
 					}
-
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 					GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
 
-					this.set(X.MESSAGE, e.getMessage());
-
-					this.set(this.getJSON());
+					if (this.isAjax()) {
+						this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+						return;
+					} else {
+						this.set(X.MESSAGE, e.getMessage());
+						this.set(this.getJSON());
+					}
 				}
 			}
 		}
@@ -720,7 +728,7 @@ public class user extends Model {
 						jo.put(X.MESSAGE, lang.get("email.code.expired"));
 					} else {
 						Code.delete(code, email);
-						
+
 						String passwd = this.getString("passwd");
 						String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
 						if (!X.isEmpty(rule) && !passwd.matches(rule)) {
@@ -736,7 +744,7 @@ public class user extends Model {
 								jo.put(X.MESSAGE, lang.get("save.failed") + ":" + e.getMessage());
 							}
 						}
-						
+
 					}
 				}
 			} else if (!X.isEmpty(phone)) {

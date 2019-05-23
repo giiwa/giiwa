@@ -71,7 +71,7 @@ public class user extends Model {
 					v.append("createdip", this.getRemoteHost()).append("createdua", this.browser()).append("createdby",
 							login.getId());
 
-					long id = User.create(v);
+					long id = User.create(name, v);
 
 					/**
 					 * set the role

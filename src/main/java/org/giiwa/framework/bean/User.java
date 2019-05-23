@@ -225,8 +225,13 @@ public class User extends Bean {
 	 * @return long of the user id, if failed, return -1
 	 * @throws Exception throw Exception if name or password not matches the setting
 	 */
-	public synchronized static long create(V v) throws Exception {
+	public synchronized static long create(String name, V v) throws Exception {
 
+		if (dao.exists(W.create("name", name))) {
+			throw new Exception(Language.getLanguage().get("user.name.exists"));
+		}
+
+		v.append("name", name);
 		// check name and password
 		_check(v, "name", "password");
 
@@ -863,7 +868,7 @@ public class User extends Bean {
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
-						User.create(
+						User.create("root",
 								V.create("id", 0L).set("name", "root").set("password", passwd).set("nickname", "root"));
 					}
 				}
