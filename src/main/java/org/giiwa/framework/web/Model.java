@@ -1295,11 +1295,12 @@ public class Model {
 				}
 
 			} else {
-				String[] ss = req.getParameterValues(name);
-				if (ss != null && ss.length > 0) {
-					String s = ss[ss.length - 1];
-					return s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
-				}
+				String s = req.getParameter(name);
+				if (s == null)
+					return null;
+				s = new String(s.getBytes("ISO-8859-1"), ENCODING).replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+						.trim();
+				return s;
 			}
 
 			return null;
@@ -1395,6 +1396,7 @@ public class Model {
 				}
 				return null;
 			} else if (this._multipart) {
+
 				getFiles();
 
 				FileItem i = this.getFile(name);
@@ -1404,18 +1406,19 @@ public class Model {
 					byte[] bb = new byte[in.available()];
 					in.read(bb);
 					in.close();
-					return new String(bb, "UTF8");
+					return new String(bb, ENCODING);
 				}
 				return null;
+
 			} else {
 
-				String[] ss = req.getParameterValues(name);
-				if (ss != null && ss.length > 0) {
-					String s = ss[ss.length - 1];
-					return s;
-				}
+				String s = req.getParameter(name);
+				if (s == null)
+					return null;
 
-				return null;
+				s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+				return s;
+
 			}
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
@@ -1496,7 +1499,10 @@ public class Model {
 				String[] ss = req.getParameterValues(name);
 				if (ss != null && ss.length > 0) {
 					for (int i = 0; i < ss.length; i++) {
-						ss[i] = ss[i].replaceAll("<", "&lt").replaceAll(">", "&gt");
+						if (ss[i] == null)
+							continue;
+						ss[i] = new String(ss[i].getBytes("ISO-8859-1"), ENCODING).replaceAll("<", "&lt")
+								.replaceAll(">", "&gt").trim();
 					}
 				}
 				return ss;

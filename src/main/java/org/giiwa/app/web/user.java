@@ -170,11 +170,7 @@ public class user extends Model {
 						return;
 					} else {
 						this.set(X.MESSAGE, e.getMessage());
-						this.set("name", this.getHtml("name"));
-						this.set("nickname", this.getHtml("nickname"));
-						this.set("email", this.getHtml("email"));
-						this.set("phone", this.getHtml("nickname"));
-						this.set("password", this.getHtml("password"));
+						this.set(this);
 					}
 				}
 			}
