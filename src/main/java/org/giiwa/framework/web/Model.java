@@ -87,7 +87,7 @@ public class Model {
 	/**
 	 * the request method(POST, GET)
 	 */
-	public HttpMethod method;
+	public HttpMethod method = HttpMethod.GET;
 
 	/**
 	 * the response context, includes all the response key-value, used by view(html)
@@ -2368,6 +2368,10 @@ public class Model {
 	}
 
 	public static class HttpMethod {
+
+		public static final HttpMethod GET = HttpMethod.create("GET");
+		public static final HttpMethod POST = HttpMethod.create("POST");
+
 		String name;
 
 		public static HttpMethod create(String s) {
