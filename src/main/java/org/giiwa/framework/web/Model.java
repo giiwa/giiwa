@@ -1298,8 +1298,10 @@ public class Model {
 				String s = req.getParameter(name);
 				if (s == null)
 					return null;
-				s = new String(s.getBytes("ISO-8859-1"), ENCODING).replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-						.trim();
+				if (method.isPost()) {
+					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+				}
+				s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
 				return s;
 			}
 
@@ -1416,7 +1418,10 @@ public class Model {
 				if (s == null)
 					return null;
 
-				s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+				if (method.isPost()) {
+					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+				}
+
 				return s;
 
 			}
@@ -1501,8 +1506,10 @@ public class Model {
 					for (int i = 0; i < ss.length; i++) {
 						if (ss[i] == null)
 							continue;
-						ss[i] = new String(ss[i].getBytes("ISO-8859-1"), ENCODING).replaceAll("<", "&lt")
-								.replaceAll(">", "&gt").trim();
+						if (method.isPost()) {
+							ss[i] = new String(ss[i].getBytes("ISO-8859-1"), ENCODING);
+						}
+						ss[i] = ss[i].replaceAll("<", "&lt").replaceAll(">", "&gt").trim();
 					}
 				}
 				return ss;
