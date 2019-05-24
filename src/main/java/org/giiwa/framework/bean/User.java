@@ -217,6 +217,17 @@ public class User extends Bean {
 	}
 
 	/**
+	 * @deprecated
+	 * @param v
+	 * @return
+	 * @throws Exception
+	 */
+	public synchronized static long create(V v) throws Exception {
+		String name = v.value("name").toString();
+		return create(name, v);
+	}
+
+	/**
 	 * Creates a user with the values, <br>
 	 * if the values contains "password" field, it will auto encrypt the password
 	 * field.
