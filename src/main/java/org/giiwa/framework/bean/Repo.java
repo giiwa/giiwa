@@ -162,7 +162,9 @@ public class Repo {
 		 * delete the file in the repo
 		 */
 		Entity e = load(id);
-		e.delete();
+		if (e != null) {
+			e.delete();
+		}
 
 		return 1;
 	}
@@ -211,7 +213,9 @@ public class Repo {
 		 * Delete.
 		 */
 		public void delete() {
-			file.delete();
+			if (file != null) {
+				file.delete();
+			}
 		}
 
 		private Entity(String id, String name) throws IOException {
