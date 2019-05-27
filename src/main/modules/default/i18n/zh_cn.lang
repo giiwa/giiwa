@@ -428,7 +428,7 @@ home.uri.hint=缺省首页重定向到, 比如：'/forum',[home.uri]
 home.uri.1=节点首页URI
 home.uri.1.hint=如果节点首页为空，则使用全局首页URI，[home.uri.1]
 session.alive=会话过期时间（小时）
-session.alive.hint=小时, 缺省1周,-1=永不过期
+session.alive.hint=小时, 缺省1周,-1=会话级cookie，关闭浏览器失效
 title.data_will_be_replaced=恢复数据，现在的数据将被覆盖?
 backup.status_0=未知
 backup.status_1=开始备份

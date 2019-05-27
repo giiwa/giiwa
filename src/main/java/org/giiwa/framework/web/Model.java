@@ -649,7 +649,7 @@ public class Model {
 				 */
 				long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
 				if (expired <= 0) {
-					addCookie("sid", sid, -1);
+					addCookie("sid", sid, (int) expired);
 				} else {
 					addCookie("sid", sid, (int) (expired / 1000));
 				}
@@ -1078,7 +1078,7 @@ public class Model {
 		}
 
 		Cookie c = new Cookie(key, value);
-		if (value == null) {
+		if (expireseconds == 0) {
 			c.setMaxAge(0);
 		} else if (expireseconds > 0) {
 			c.setMaxAge(expireseconds);

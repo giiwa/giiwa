@@ -232,7 +232,7 @@ public class setting extends Model {
 			Global.setConfig("user.role", this.getString("user_role"));
 			Global.setConfig("cross.domain", this.getString("cross_domain"));
 			Global.setConfig("cross.header", this.getString("cross_header"));
-			Global.setConfig("session.alive", this.getLong("session_alive"));
+			Global.setConfig("session.alive", this.getLong("session.alive"));
 			Global.setConfig("ntp.server", this.getString("ntpserver"));
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
