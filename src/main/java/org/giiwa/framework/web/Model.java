@@ -2084,6 +2084,7 @@ public class Model {
 	 * @return true: yes
 	 */
 	public boolean isAjax() {
+
 		String request = this.getHeader("X-Requested-With");
 		if (X.isSame(request, "XMLHttpRequest")) {
 			return true;
@@ -2101,6 +2102,11 @@ public class Model {
 
 		output = this.getHeader("output");
 		if (X.isSame("json", output)) {
+			return true;
+		}
+
+		String accept = this.getHeader("Accept");
+		if (accept.contains("application/json") && !accept.contains("text/html")) {
 			return true;
 		}
 
