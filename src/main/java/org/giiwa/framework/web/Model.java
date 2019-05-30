@@ -584,8 +584,8 @@ public class Model {
 
 			jo.put(X.STATE, HttpServletResponse.SC_UNAUTHORIZED);
 
-			this.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
-			this.setHeader("Location", "/");
+//			this.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
+//			this.setHeader("Location", "/");
 
 			jo.put(X.MESSAGE, lang.get("login.required"));
 			jo.put(X.ERROR, lang.get("not.login"));
@@ -2106,7 +2106,7 @@ public class Model {
 		}
 
 		String accept = this.getHeader("Accept");
-		if (accept.contains("application/json") && !accept.contains("text/html")) {
+		if (accept.indexOf("application/json") > -1 && accept.indexOf("text/html") == -1) {
 			return true;
 		}
 
