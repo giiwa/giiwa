@@ -95,7 +95,7 @@ public class PerfMoniterTask extends Task {
 				}
 				jo.append("user", user * 100 / cc.length);
 				jo.append("sys", sys * 100 / cc.length);
-				jo.append("usage", jo.getDouble("user") + jo.getDouble("sys"));
+				jo.append("usage", (int) (jo.getDouble("user") + jo.getDouble("sys")));
 				// log.debug("cpu=" + jo);
 
 				jo.append("name", "cpu").append("cores", cc.length);
@@ -110,6 +110,7 @@ public class PerfMoniterTask extends Task {
 				jo.append("total", m.getTotal());
 				jo.append("used", m.getUsed());
 				jo.append("free", m.getFree());
+				jo.append("usage", (int) (m.getUsed() * 100 / m.getTotal()));
 
 				_Memory.update(Local.id(), jo);
 			}
