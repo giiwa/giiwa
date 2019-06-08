@@ -33,7 +33,7 @@ public class NtpTask extends Task {
 	/**
 	 * The owner.
 	 */
-	public static NtpTask owner = new NtpTask();
+	public static NtpTask inst = new NtpTask();
 
 	/*
 	 * (non-Javadoc)
@@ -43,12 +43,6 @@ public class NtpTask extends Task {
 	@Override
 	public String getName() {
 		return "ntp.task";
-	}
-
-	/**
-	 * Instantiates a new ntp task.
-	 */
-	private NtpTask() {
 	}
 
 	/*
@@ -78,9 +72,11 @@ public class NtpTask extends Task {
 	 */
 	@Override
 	public void onFinish() {
+
 		if (Shell.isLinux() || Shell.isMac()) {
 			this.schedule(X.AHOUR);
 		}
+
 	}
 
 }

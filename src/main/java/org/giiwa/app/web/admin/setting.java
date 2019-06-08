@@ -241,7 +241,7 @@ public class setting extends Model {
 			Global.setConfig("glog.keep.days", this.getInt("glog.keep.days"));
 			Global.setConfig("web.cache", this.getString("web.cache"));
 
-			NtpTask.owner.schedule(0);
+			NtpTask.inst.schedule(0);
 
 			String url = this.getString("site_url").trim();
 			while (url.endsWith("/")) {
@@ -301,7 +301,7 @@ public class setting extends Model {
 		 */
 		@Override
 		public void set() {
-			
+
 			Global.setConfig("mail.protocol", this.getString("mail.protocol"));
 			Global.setConfig("mail.host", this.getString("mail.host"));
 			Global.setConfig("mail.email", this.getString("mail.email"));

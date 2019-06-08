@@ -167,12 +167,12 @@ public class DefaultListener implements IListener {
 	 * configuration.Configuration, org.giiwa.framework.web.Module)
 	 */
 	public void onStart(Configuration conf, Module module) {
-		
+
 		log.info("giiwa is starting...");
 
 		Task.schedule(() -> {
 
-			NtpTask.owner.schedule(X.AMINUTE);
+			NtpTask.inst.schedule(X.AMINUTE);
 			new CleanupTask(Config.getConf()).schedule(X.AMINUTE);
 			RecycleTask.owner.schedule(X.AMINUTE);
 			PerfMoniterTask.owner.schedule(X.AMINUTE);
@@ -213,14 +213,10 @@ public class DefaultListener implements IListener {
 	/**
 	 * Run db script.
 	 *
-	 * @param f
-	 *            the file
-	 * @param m
-	 *            the module
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @param f the file
+	 * @param m the module
+	 * @throws IOException  Signals that an I/O exception has occurred.
+	 * @throws SQLException the SQL exception
 	 */
 	public static void runDBScript(File f, Module m) throws IOException, SQLException {
 
