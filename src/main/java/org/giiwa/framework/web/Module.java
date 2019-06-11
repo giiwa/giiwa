@@ -210,6 +210,9 @@ public class Module {
 		if (!u1.exists()) {
 			u1.mkdirs();
 			// copy all
+
+			log.debug("checkAndUpgrade, copy WEB-INF/lib to " + u1.getAbsolutePath());
+
 			try {
 				IOUtil.copyDir(new File(Model.HOME + "/WEB-INF/lib/"), u1);
 			} catch (Exception e) {
@@ -225,14 +228,21 @@ public class Module {
 				try {
 					String name = f1.getName();
 					if (new File(f1.getCanonicalPath() + "/ok").exists()) {
-						File f2 = new File(Model.HOME + name);
+						File f2 = new File(Model.HOME + "/" + name);
+//						log.debug("checkAndUpgrade, checking " + f2.getAbsolutePath());
 						if (f2.exists()) {
+//							log.debug("checkAndUpgrade, delete " + f2.getAbsolutePath());
 							IOUtil.delete(f2);
 						}
 
+//						log.debug("checkAndUpgrade, copy upgrade/" + name + " to " + Model.HOME);
+
 						IOUtil.copyDir(f1, new File(Model.HOME));
+
 						// f1.renameTo(f2);
+//						log.debug("checkAndUpgrade, delete " + f2.getCanonicalPath() + "/ok");
 						new File(f2.getCanonicalPath() + "/ok").delete();
+
 						IOUtil.delete(f1);
 
 						// merge WEB-INF/lib
@@ -2029,7 +2039,7 @@ public class Module {
 			m.pathmapping = pathmapping;
 			if (!X.isEmpty(uri)) {
 				m.path = getPath(uri);
-			}	
+			}
 			return m;
 		}
 
