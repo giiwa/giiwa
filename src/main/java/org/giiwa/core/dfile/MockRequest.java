@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Vector;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;

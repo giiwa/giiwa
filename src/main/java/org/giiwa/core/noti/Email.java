@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
-import org.giiwa.framework.bean.GLog;
 
 /**
  * send the email

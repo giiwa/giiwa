@@ -362,7 +362,6 @@ public class FileClient implements IRequestHandler {
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
 	public void http(String uri, HttpServletRequest req, HttpServletResponse resp, String method, String node) {
 
 		if (client == null)
