@@ -28,6 +28,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
+import redis.clients.jedis.params.SetParams;
 
 /**
  * The Class RedisCache is used to redis cache <br>
@@ -45,8 +46,7 @@ class RedisCache implements ICacheSystem {
 	/**
 	 * Inits the.
 	 *
-	 * @param conf
-	 *            the conf
+	 * @param conf the conf
 	 * @return the i cache system
 	 */
 	public static ICacheSystem create(String server) {
@@ -79,8 +79,7 @@ class RedisCache implements ICacheSystem {
 	/**
 	 * get object.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return the object
 	 */
 	public synchronized Object get(String name) {
@@ -94,10 +93,8 @@ class RedisCache implements ICacheSystem {
 	/**
 	 * Sets the.
 	 *
-	 * @param id
-	 *            the id
-	 * @param o
-	 *            the o
+	 * @param id the id
+	 * @param o  the o
 	 * @return true, if successful
 	 */
 	public synchronized boolean set(String name, Object o) {
@@ -116,8 +113,7 @@ class RedisCache implements ICacheSystem {
 	/**
 	 * Delete.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return true, if successful
 	 */
 	public synchronized boolean delete(String name) {
@@ -162,7 +158,12 @@ class RedisCache implements ICacheSystem {
 	}
 
 	public synchronized boolean trylock(String name, String value, long ms) {
-		String n = jedis.set(name, value, "NX", "PX", 12);
+
+		SetParams p = new SetParams();
+		p.ex(12);
+		p.nx();
+
+		String n = jedis.set(name, value, p);
 		return X.isSame("OK", n);
 	}
 

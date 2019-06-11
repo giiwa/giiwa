@@ -37,8 +37,7 @@ public final class Config {
 	/**
 	 * Initializes the conf file
 	 * 
-	 * @param confFile
-	 *            the conf name
+	 * @param confFile the conf name
 	 */
 	public static void init(String confFile) {
 		init(new File(confFile));
@@ -47,10 +46,9 @@ public final class Config {
 	/**
 	 * initialize the conf with the file
 	 * 
-	 * @param file
-	 *            the conf file
+	 * @param file the conf file
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	public static void init(File file) {
 
 		try {
@@ -92,9 +90,9 @@ public final class Config {
 
 			// conf.addProperty("home", home);
 
-			List<String> list = conf.getList("@include");
+			List<?> list = conf.getList("@include");
 			Set<String> ss = new HashSet<String>();
-			ss.addAll(list);
+			ss.addAll(X.toString(list));
 			// System.out.println("include:" + ss);
 
 			for (String s : ss) {
@@ -162,8 +160,7 @@ public final class Config {
 	/**
 	 * initialize the conf with the prop
 	 * 
-	 * @param prop
-	 *            the properties
+	 * @param prop the properties
 	 */
 	public static void init(Properties prop) {
 		init();
