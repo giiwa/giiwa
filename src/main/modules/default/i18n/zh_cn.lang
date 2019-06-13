@@ -926,4 +926,5 @@ a.drop.table=删除表
 user.passwd=修改密码
 user.passwd.hint=勾选，用户可以自己修改密码，否则不能修改密码
 a.user.list=用户列表
-save.failed=保存错误
+save.failed=保存错误!
+request.error=请求错误!

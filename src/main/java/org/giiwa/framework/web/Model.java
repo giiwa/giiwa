@@ -1298,9 +1298,11 @@ public class Model {
 				String s = req.getParameter(name);
 				if (s == null)
 					return null;
+
 				if (method.isPost()) {
 					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
 				}
+
 				s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
 				return s;
 			}
@@ -2006,8 +2008,15 @@ public class Model {
 
 		if (isAjax()) {
 			JSON jo = JSON.create();
-			jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			jo.put(X.MESSAGE, s);
+			jo.append(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			String s1 = e.getMessage();
+			if (X.isEmpty(s1)) {
+				jo.append(X.MESSAGE, lang.get("request.error"));
+			} else {
+				jo.append(X.MESSAGE, s1);
+			}
+
+			jo.append(X.TRACE, s);
 			this.response(jo);
 		} else {
 			this.set("me", this.getUser());
