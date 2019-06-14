@@ -1299,8 +1299,13 @@ public class Model {
 				if (s == null)
 					return null;
 
-				if (method.isPost()) {
-					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+				String t = this.getHeader("Content-Type");
+				if (t != null && t.indexOf("urlencoded") > -1) {
+					// do nothing
+				} else if (t != null && t.indexOf("application/json") > -1) {
+					if (method.isPost()) {
+						s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+					}
 				}
 
 				s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
@@ -1420,8 +1425,13 @@ public class Model {
 				if (s == null)
 					return null;
 
-				if (method.isPost()) {
-					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+				String t = this.getHeader("Content-Type");
+				if (t != null && t.indexOf("urlencoded") > -1) {
+					// do nothing
+				} else if (t != null && t.indexOf("application/json") > -1) {
+					if (method.isPost()) {
+						s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+					}
 				}
 
 				return s;
@@ -1508,9 +1518,16 @@ public class Model {
 					for (int i = 0; i < ss.length; i++) {
 						if (ss[i] == null)
 							continue;
-						if (method.isPost()) {
-							ss[i] = new String(ss[i].getBytes("ISO-8859-1"), ENCODING);
+
+						String t = this.getHeader("Content-Type");
+						if (t != null && t.indexOf("urlencoded") > -1) {
+							// do nothing
+						} else if (t != null && t.indexOf("application/json") > -1) {
+							if (method.isPost()) {
+								ss[i] = new String(ss[i].getBytes("ISO-8859-1"), ENCODING);
+							}
 						}
+
 						ss[i] = ss[i].replaceAll("<", "&lt").replaceAll(">", "&gt").trim();
 					}
 				}
