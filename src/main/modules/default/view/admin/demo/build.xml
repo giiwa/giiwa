@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="module" default="build" basedir=".">
+<project name="module" default="zip" basedir=".">
 	<!-- Project Properties -->
 
 	<xmlproperty file="src/module.xml" />
@@ -22,7 +22,8 @@
 			<include name="*.jar" />
 		</fileset>
 	</path>
-	<target name="build" description="build sever all" depends="compile">
+	
+	<target name="zip" description="zip the module" depends="compile">
 		<delete file="target" />
 		<zip destfile="target/${module.name}_${module.version}_${BUILDNO}.zip" encoding="UTF-8">
 			<fileset dir="target/${module.name}">
@@ -34,7 +35,9 @@
 		<copy todir="../archives">
 			<fileset file="target/${module.name}_${module.version}_${BUILDNO}.zip" />
 		</copy>
-
+	</target>
+	
+	<target name="src" description="zip the source" depends="compile">
 		<zip destfile="target/${module.name}_${module.version}_src.zip" encoding="UTF-8">
 			<fileset dir=".">
 				<exclude name="build/**" />
@@ -45,6 +48,7 @@
 		</zip>
 
 	</target>
+	
 	<target name="compile" description="compile Java source">
 		<delete dir="target" quiet="false" />
 		<mkdir dir="target/classes" />
