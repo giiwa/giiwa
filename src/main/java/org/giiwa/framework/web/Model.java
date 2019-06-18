@@ -1251,7 +1251,7 @@ public class Model {
 	final public String getString(String name) {
 		try {
 			String c1 = req.getContentType();
-			// log.debug("contenttype=" + c1);
+			log.debug("getContentType=" + c1);
 
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 				if (uploads == null) {
@@ -1291,18 +1291,25 @@ public class Model {
 					byte[] bb = new byte[in.available()];
 					in.read(bb);
 					in.close();
-					return new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
+					String s = new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
+
+					log.debug(name + "=" + s);
+
+					return s;
 				}
 
 			} else {
+
 				String s = req.getParameter(name);
 				if (s == null)
 					return null;
 
-				String t = this.getHeader("Content-Type");
-				if (t != null && t.indexOf("urlencoded") > -1) {
+//				String t = this.getHeader("Content-Type");
+				log.debug("Content-Type=" + c1 + ", " + name + "=" + s);
+
+				if (c1 != null && c1.indexOf("urlencoded") > -1) {
 					// do nothing
-				} else if (t != null && t.indexOf("application/json") > -1) {
+				} else if (c1 != null && c1.indexOf("application/json") > -1) {
 					if (method.isPost()) {
 						s = new String(s.getBytes("ISO-8859-1"), ENCODING);
 					}

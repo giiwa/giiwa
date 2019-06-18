@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.core.bean.helper;
+package org.giiwa.core.bean;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -45,12 +45,6 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.Table;
-import org.giiwa.core.bean.TimeStamp;
-import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.Cursor;
 import org.giiwa.core.bean.Helper.DBHelper;
 import org.giiwa.core.bean.Helper.V;
