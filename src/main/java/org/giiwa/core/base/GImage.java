@@ -380,8 +380,10 @@ public class GImage {
 		try {
 
 			BufferedImage img = ImageIO.read(source);
-			if (img == null || w < 0 || h < 0)
+			if (img == null || w < 0 || h < 0) {
+				log.debug("img = " + img);
 				return -1;
+			}
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
@@ -426,7 +428,7 @@ public class GImage {
 			ImageIO.write(out, "jpeg", file);
 
 			return 1;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error(source, e);
 		}
 		return -1;

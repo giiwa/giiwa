@@ -1251,7 +1251,7 @@ public class Model {
 	final public String getString(String name) {
 		try {
 			String c1 = req.getContentType();
-			log.debug("getContentType=" + c1);
+			log.debug("getContentType=" + c1 + ", name=" + name);
 
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 				if (uploads == null) {
@@ -1264,7 +1264,7 @@ public class Model {
 						sb.append(buff, 0, len);
 					}
 
-					log.debug("params=" + sb.toString());
+//					log.debug("params=" + sb.toString());
 
 					JSON jo = JSON.fromObject(sb.toString());
 					if (jo != null) {
@@ -1305,7 +1305,7 @@ public class Model {
 					return null;
 
 //				String t = this.getHeader("Content-Type");
-				log.debug("Content-Type=" + c1 + ", " + name + "=" + s);
+//				log.debug("Content-Type=" + c1 + ", " + name + "=" + s);
 
 				if (c1 != null && c1.indexOf("urlencoded") > -1) {
 					// do nothing
@@ -1399,7 +1399,7 @@ public class Model {
 						sb.append(buff, 0, len);
 					}
 
-					log.debug("params=" + sb.toString());
+//					log.debug("params=" + sb.toString());
 
 					JSON jo = JSON.fromObject(sb.toString());
 					uploads = new HashMap<String, Object>();
@@ -2139,7 +2139,7 @@ public class Model {
 		}
 
 		String accept = this.getHeader("Accept");
-		if (accept.indexOf("application/json") > -1 && accept.indexOf("text/html") == -1) {
+		if (!X.isEmpty(accept) && accept.indexOf("application/json") > -1 && accept.indexOf("text/html") == -1) {
 			return true;
 		}
 
@@ -2365,8 +2365,8 @@ public class Model {
 	 *
 	 */
 	public static class NameValue {
-		String name;
-		String value;
+		public String name;
+		public String value;
 
 		/**
 		 * Creates the.
