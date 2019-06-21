@@ -402,7 +402,7 @@ public final class Http {
 
 	}
 
-	public static HttpURLConnection open(String url, String method, JSON head, JSON param, long timeout) {
+	public static InputStream open(String url, String method, JSON head, JSON param, long timeout) {
 
 //		log.debug("url=\"" + url + "\"");
 
@@ -497,7 +497,7 @@ public final class Http {
 				out.flush();
 			}
 
-			return c;
+			return c.getInputStream();
 
 		} catch (Exception e) {
 			log.error(url, e);
