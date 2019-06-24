@@ -1251,7 +1251,7 @@ public class Model {
 	final public String getString(String name) {
 		try {
 			String c1 = req.getContentType();
-			log.debug("getContentType=" + c1 + ", name=" + name);
+//			log.debug("getContentType=" + c1 + ", name=" + name);
 
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 				if (uploads == null) {
@@ -1293,7 +1293,7 @@ public class Model {
 					in.close();
 					String s = new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
 
-					log.debug(name + "=" + s);
+//					log.debug(name + "=" + s);
 
 					return s;
 				}
