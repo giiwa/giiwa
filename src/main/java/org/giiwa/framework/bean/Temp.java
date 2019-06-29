@@ -154,14 +154,31 @@ public class Temp {
 	}
 
 	/**
-	 * Copy the inputstream and close it
+	 * Copy the inputstream to dfile and close it
 	 *
 	 * @param in the in
 	 * @return the int
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public int copy(InputStream in) throws IOException {
+	public int upload(InputStream in) throws IOException {
 		return IOUtil.copy(in, file.getOutputStream());
+	}
+
+	/**
+	 * Copy the inputstream to loclfile and close it
+	 *
+	 * @param in the in
+	 * @return the int
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
+	public int download(InputStream in) throws IOException {
+		File f1 = this.getLocalFile();
+		if (f1.exists()) {
+			f1.delete();
+		} else {
+			f1.getParentFile().mkdirs();
+		}
+		return IOUtil.copy(in, new FileOutputStream(f1));
 	}
 
 	/**
@@ -325,13 +342,13 @@ public class Temp {
 	}
 
 	public void delete() throws IOException {
-		
+
 		this.getFile().delete();
-		
+
 		if (localfile != null) {
 			IOUtil.delete(localfile);
 		}
-		
+
 	}
 
 }
