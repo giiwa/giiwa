@@ -119,7 +119,7 @@ public class backup extends Model {
 			File f = new File(root + "/" + name);
 
 			Temp t = Temp.create(name);
-			t.copy(new FileInputStream(f));
+			t.upload(new FileInputStream(f));
 
 			jo.put(X.STATE, 200);
 			jo.put("url", t.getUri());
