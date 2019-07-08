@@ -250,6 +250,10 @@ public class Repo {
 
 		}
 
+		public boolean exists() throws IOException {
+			return file.exists();
+		}
+
 		/**
 		 * get the inputstream of the repo Entity.
 		 * 
