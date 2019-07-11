@@ -33,7 +33,7 @@ public class Repo {
 
 	private static Log log = LogFactory.getLog(Repo.class);
 
-	private static String ROOT = "/_repo";
+	private static String ROOT = "/_temp";
 
 	/**
 	 * Initialize the Repo, this will be invoke when giiwa startup
@@ -318,8 +318,29 @@ public class Repo {
 	}
 
 	public static void cleanup(long expired) {
-		// TODO
+		DFile f = Disk.seek(ROOT);
+		cleanup(f, expired);
+	}
 
+	private static void cleanup(DFile f, long expired) {
+		try {
+			if (f.isFile() && System.currentTimeMillis() - f.lastModified() > expired) {
+				f.delete();
+			} else {
+				DFile[] ff = f.listFiles();
+				if (ff != null) {
+					for (DFile f1 : ff) {
+						cleanup(f1, expired);
+					}
+					ff = f.listFiles();
+					if (ff == null || ff.length == 0) {
+						f.delete();
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 
 }

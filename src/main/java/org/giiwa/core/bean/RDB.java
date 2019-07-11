@@ -12,17 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.core.bean.helper;
+package org.giiwa.core.bean;
 
 import java.sql.*;
 import java.util.*;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 
 /**
@@ -48,8 +46,7 @@ public class RDB {
 	 * drop all tables for the "db", the "db" name was configured in
 	 * "giiwa.properties", such as: db[ttt].url=....
 	 *
-	 * @param db
-	 *            the db
+	 * @param db the db
 	 * @return int of how many table was dropped
 	 */
 	public static int dropAll(String db) {
@@ -144,8 +141,7 @@ public class RDB {
 	/**
 	 * Gets the driver by the db name.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the driver
 	 */
 	public static String getDriver(String name) {
@@ -169,8 +165,7 @@ public class RDB {
 	 * Gets the connection.
 	 * 
 	 * @return the connection
-	 * @throws SQLException
-	 *             the sQL exception
+	 * @throws SQLException the sQL exception
 	 */
 	public static Connection getConnection() throws SQLException {
 		BasicDataSource ds = getDataSource(Helper.DEFAULT);
@@ -189,17 +184,12 @@ public class RDB {
 	 * Gets the connection by url, and create the datasource also if the name is not
 	 * empty
 	 *
-	 * @param name
-	 *            the dbname
-	 * @param url
-	 *            the url
-	 * @param username
-	 *            the user name
-	 * @param passwd
-	 *            the password
+	 * @param name     the dbname
+	 * @param url      the url
+	 * @param username the user name
+	 * @param passwd   the password
 	 * @return the connection by url
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @throws SQLException the SQL exception
 	 */
 	public static Connection getConnectionByUrl(String name, String url, String username, String passwd)
 			throws SQLException {
@@ -244,11 +234,9 @@ public class RDB {
 	/**
 	 * Gets the connection.
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the connection
-	 * @throws SQLException
-	 *             the SQL exception
+	 * @throws SQLException the SQL exception
 	 */
 	public static Connection getConnection(String name) throws SQLException {
 		name = name.trim();
@@ -305,10 +293,12 @@ public class RDB {
 
 		external.setUrl(url.trim());
 
-		external.setMaxActive(N);
+//		external.setMaxActive(N);
+		external.setMaxTotal(N);
 		external.setDefaultAutoCommit(true);
 		external.setMaxIdle(N);
-		external.setMaxWait(MAX_WAIT_TIME);
+//		external.setMaxWait(MAX_WAIT_TIME);
+		external.setMaxWaitMillis(MAX_WAIT_TIME);
 		external.setDefaultAutoCommit(true);
 		external.setDefaultReadOnly(false);
 		external.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);

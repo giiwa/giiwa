@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
 */
-package org.giiwa.core.bean.helper;
+package org.giiwa.core.bean;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,12 +39,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.Table;
-import org.giiwa.core.bean.TimeStamp;
-import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.Cursor;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -81,8 +75,10 @@ public class MongoHelper implements Helper.DBHelper {
 	public static MongoHelper inst = new MongoHelper();
 
 	public boolean isConfigured() {
+		
 		getDB();
 		return mongo.size() > 0;
+		
 	}
 
 	/**
@@ -616,7 +612,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 			Object id = v.value(X.ID);
 			if (!X.isEmpty(id)) {
-				v.set("_id", v.value(X.ID));
+				v.append("_id", v.value(X.ID));
 			}
 			for (String name : v.names()) {
 				Object v1 = v.value(name);
@@ -722,7 +718,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * run the command of Mongo.
 	 *
 	 * @param cmd the command
-	 * @return boolean, return true if "ok"
+	 * @return Document, return true if "ok"
 	 */
 	public Document run(Bson cmd) {
 		MongoDatabase d = getDB();
@@ -1031,7 +1027,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 				Object id = v.value(X.ID);
 				if (!X.isEmpty(id)) {
-					v.set("_id", v.value(X.ID));
+					v.append("_id", v.value(X.ID));
 				}
 				for (String name : v.names()) {
 					Object v1 = v.value(name);
@@ -1060,6 +1056,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	@Override
 	public List<JSON> listTables(String db) {
+		
 		MongoDatabase g = getDB(db);
 
 		List<JSON> list = new ArrayList<JSON>();
@@ -1082,14 +1079,18 @@ public class MongoHelper implements Helper.DBHelper {
 
 		});
 		return list;
+		
 	}
 
 	@Override
 	public void close() {
+		
 		// forget this, the client may used in other helper
-		// if (client != null && this != Helper.primary) {
-		// client.close();
-		// }
+		if (client != null && this != Helper.primary) {
+			client.close();
+			client = null;
+		}
+		
 	}
 
 	@Override

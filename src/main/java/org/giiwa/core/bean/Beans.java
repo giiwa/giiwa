@@ -28,8 +28,7 @@ import org.giiwa.core.task.ReduceFunction;
  * The {@code Beans} Class used to contains the Bean in query. <br>
  * it's includes the total count for the query
  * 
- * @param <T>
- *            the generic type
+ * @param <T> the generic type
  */
 public final class Beans<E extends Bean> extends ArrayList<E> implements Serializable {
 
@@ -49,6 +48,8 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	public List<String> columns = null;
 
 	transient W q;
+	transient String table;
+	transient String db;
 	transient BeanDAO<?, ?> dao;
 
 	private String id = UID.random(20);
@@ -64,6 +65,8 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	public long count() {
 		if (dao != null && total < 0) {
 			total = dao.count(q);
+		} else if (total < 0) {
+			total = Helper.count(q, table, db);
 		}
 		return total;
 	}

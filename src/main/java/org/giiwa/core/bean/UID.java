@@ -46,8 +46,7 @@ public final class UID {
 	 * increase and get the unique sequence number by key, <br>
 	 * the number=[cluster.code] + seq
 	 *
-	 * @param key
-	 *            the key
+	 * @param key the key
 	 * @return long of the unique sequence
 	 */
 	public static long next(String key) {
@@ -86,7 +85,7 @@ public final class UID {
 		if (f == null) {
 			String linkid = UID.random();
 
-			Helper.insert(V.create(X.ID, key).set("l", v).set("linkid", linkid), Global.class);
+			Helper.insert(V.create(X.ID, key).append("l", v).append("linkid", linkid), Global.class);
 			f = Helper.load(key, Global.class);
 			if (f == null) {
 				log.error("occur error when create unique id, name=" + key);
@@ -141,10 +140,8 @@ public final class UID {
 	/**
 	 * return string with the length
 	 * 
-	 * @param key
-	 *            the key
-	 * @param len
-	 *            the length
+	 * @param key the key
+	 * @param len the length
 	 * @return the string
 	 */
 	public static String next(String key, int len) {
@@ -169,8 +166,7 @@ public final class UID {
 	/**
 	 * convert the long data to a BASE32 string.
 	 *
-	 * @param hash
-	 *            the hash
+	 * @param hash the hash
 	 * @return the string
 	 */
 	public static String id(long hash) {
@@ -182,8 +178,7 @@ public final class UID {
 	 * if the parameter are same, the id will be same, the "id" is H32 of
 	 * hash(64bit) of parameters.
 	 *
-	 * @param ss
-	 *            the parameters
+	 * @param ss the parameters
 	 * @return string
 	 */
 	public static String id(Object... ss) {
@@ -208,8 +203,7 @@ public final class UID {
 	/**
 	 * Hash (64bits) of string.
 	 *
-	 * @param s
-	 *            the parameter string
+	 * @param s the parameter string
 	 * @return the long
 	 */
 	public static long hash(String s) {
@@ -231,8 +225,7 @@ public final class UID {
 	/**
 	 * generate a random string with the length.
 	 *
-	 * @param length
-	 *            the length of the random string
+	 * @param length the length of the random string
 	 * @return the string
 	 */
 	public static String random(int length) {
@@ -249,10 +242,8 @@ public final class UID {
 	/**
 	 * Random.
 	 *
-	 * @param length
-	 *            the length
-	 * @param sources
-	 *            the sources
+	 * @param length  the length
+	 * @param sources the sources
 	 * @return the string
 	 */
 	public static String random(int length, String sources) {
@@ -271,13 +262,10 @@ public final class UID {
 	/**
 	 * generate a firm random by the code.
 	 *
-	 * @param code
-	 *            the code
-	 * @param len
-	 *            the len
+	 * @param code the code
+	 * @param len  the len
 	 * @return the int[]
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public static int[] random1(String code, int len) throws Exception {
 		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
@@ -319,8 +307,7 @@ public final class UID {
 	/**
 	 * generate a digital string with the length.
 	 *
-	 * @param length
-	 *            the length of the digital string
+	 * @param length the length of the digital string
 	 * @return the string
 	 */
 	public static String digital(int length) {
@@ -338,10 +325,8 @@ public final class UID {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
-	 * @throws Exception
-	 *             the exception
+	 * @param args the arguments
+	 * @throws Exception the exception
 	 */
 	public static void main(String[] args) throws Exception {
 		// int[] ii = UID.random("12131", 10000);

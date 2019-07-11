@@ -83,6 +83,8 @@ public final class X {
 	/** The Constant "message". */
 	public static final String MESSAGE = "message";
 
+	public static final String TRACE = "trace";
+
 	/** The Constant "warn". */
 	public static final String WARN = "warn";
 
@@ -651,6 +653,9 @@ public final class X {
 	}
 
 	public static <T, E> List<T> toArray(List<E> l1, ReduceFunction<T, E> cb) {
+		if (l1 == null) {
+			return new ArrayList<T>();
+		}
 		List<T> l2 = new ArrayList<T>(l1.size());
 		for (E e : l1) {
 			T t = cb.call(e);
@@ -662,6 +667,10 @@ public final class X {
 	}
 
 	public static <T, E> List<T> toArray(E[] l1, ReduceFunction<T, E> cb) {
+		if (l1 == null) {
+			return new ArrayList<T>();
+		}
+
 		List<T> l2 = new ArrayList<T>(l1.length);
 		for (E e : l1) {
 			T t = cb.call(e);

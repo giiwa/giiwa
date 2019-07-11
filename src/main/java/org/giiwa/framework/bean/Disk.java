@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
@@ -180,6 +181,10 @@ public class Disk extends Bean {
 			return (int) ((this.total - this.free) * 100 / this.total);
 		}
 		return 0;
+	}
+
+	public static DFile seek(Path filename) {
+		return seek(filename.toString());
 	}
 
 	public static DFile seek(String filename) {

@@ -13,11 +13,11 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.DBHelper;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
 
+@SuppressWarnings("deprecation")
 public class SQL {
 
 	static Log log = LogFactory.getLog(SQL.class);
@@ -30,7 +30,6 @@ public class SQL {
 	 *            10";
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	public static List<Bean> query(DBHelper h, String sql) {
 
 		try {

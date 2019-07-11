@@ -36,10 +36,8 @@ import org.giiwa.framework.bean.User;
  * 
  * @author joe
  *
- * @param <I>
- *            the type of primary key
- * @param <T>
- *            the Bean
+ * @param <I> the type of primary key
+ * @param <T> the Bean
  */
 public class BeanDAO<I, T extends Bean> {
 
@@ -65,8 +63,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load a Bean from the database
 	 * 
-	 * @param q
-	 *            the condition
+	 * @param q the condition
 	 * @return
 	 */
 	public T load(W q) {
@@ -85,10 +82,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load a Bean only fields
 	 * 
-	 * @param fields
-	 *            the fields
-	 * @param q
-	 *            the condition
+	 * @param fields the fields
+	 * @param q      the condition
 	 * @return
 	 */
 	public T load(String[] fields, W q) {
@@ -101,8 +96,7 @@ public class BeanDAO<I, T extends Bean> {
 	 * load a Bean by key, it will load from cache first, if not exists then get
 	 * from database
 	 * 
-	 * @param id
-	 *            the key of the Bean
+	 * @param id the key of the Bean
 	 * @return
 	 */
 	public T load(I id) {
@@ -113,14 +107,10 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load Beans only the fields
 	 * 
-	 * @param fields
-	 *            the fields
-	 * @param q
-	 *            the conditions
-	 * @param s
-	 *            the offset
-	 * @param n
-	 *            the limit
+	 * @param fields the fields
+	 * @param q      the conditions
+	 * @param s      the offset
+	 * @param n      the limit
 	 * @return
 	 */
 	public Beans<T> load(String[] fields, W q, int s, int n) {
@@ -135,12 +125,9 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load Beans from database
 	 * 
-	 * @param q
-	 *            the conditions
-	 * @param s
-	 *            the offset
-	 * @param n
-	 *            the limit
+	 * @param q the conditions
+	 * @param s the offset
+	 * @param n the limit
 	 * @return
 	 */
 	public Beans<T> load(W q, int s, int n) {
@@ -155,12 +142,9 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load Beans as stream, MUST close the stream after use
 	 * 
-	 * @param q
-	 *            conditions
-	 * @param s
-	 *            the offset
-	 * @param n
-	 *            the limit
+	 * @param q conditions
+	 * @param s the offset
+	 * @param n the limit
 	 * @return
 	 */
 	public BeanStream<T> stream(W q, int s, int n) {
@@ -171,8 +155,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * check exists the data?
 	 * 
-	 * @param q
-	 *            the condition
+	 * @param q the condition
 	 * @return true if exists, otherwise false
 	 * @throws SQLException
 	 */
@@ -190,10 +173,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * update the data in database, and remove all data in cache
 	 * 
-	 * @param q
-	 *            the conditions
-	 * @param v
-	 *            the value
+	 * @param q the conditions
+	 * @param v the value
 	 * @return
 	 */
 	public int update(W q, V v) {
@@ -204,10 +185,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * update the data in database, and remove all data in cache
 	 * 
-	 * @param id
-	 *            the key
-	 * @param v
-	 *            the value
+	 * @param id the key
+	 * @param v  the value
 	 * @return
 	 */
 	public int update(I id, V v) {
@@ -218,8 +197,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * insert a data into database
 	 * 
-	 * @param v
-	 *            the value
+	 * @param v the value
 	 * @return
 	 */
 	public int insert(V v) {
@@ -233,8 +211,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * delete a data in database, and remove all data in cache
 	 * 
-	 * @param id
-	 *            the key
+	 * @param id the key
 	 * @return
 	 */
 	public int delete(I id) {
@@ -245,8 +222,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * delete data in database, and remove all data in cache
 	 * 
-	 * @param q
-	 *            the condition
+	 * @param q the condition
 	 * @return
 	 */
 	public int delete(W q) {
@@ -257,8 +233,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * count the matches row
 	 * 
-	 * @param q
-	 *            the condition
+	 * @param q the condition
 	 * @return
 	 */
 	public long count(W q) {
@@ -268,10 +243,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * summary the field
 	 * 
-	 * @param name
-	 *            the field name
-	 * @param q
-	 *            the condition
+	 * @param name the field name
+	 * @param q    the condition
 	 * @return
 	 */
 	public <E> E sum(String name, W q) {
@@ -281,10 +254,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * get the max data
 	 * 
-	 * @param name
-	 *            the field name
-	 * @param q
-	 *            the condition
+	 * @param name the field name
+	 * @param q    the condition
 	 * @return
 	 */
 	public <E> E max(String name, W q) {
@@ -294,10 +265,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * get the min data
 	 * 
-	 * @param name
-	 *            the field name
-	 * @param q
-	 *            the condition
+	 * @param name the field name
+	 * @param q    the condition
 	 * @return
 	 */
 	public <E> E min(String name, W q) {
@@ -307,10 +276,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * average the field
 	 * 
-	 * @param name
-	 *            the field name
-	 * @param q
-	 *            the condition
+	 * @param name the field name
+	 * @param q    the condition
 	 * @return
 	 */
 	public <E> E avg(String name, W q) {
@@ -320,10 +287,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * get the distinct name
 	 * 
-	 * @param name
-	 *            the field name
-	 * @param q
-	 *            the condition
+	 * @param name the field name
+	 * @param q    the condition
 	 * @return
 	 */
 	public List<?> distinct(String name, W q) {
@@ -333,14 +298,10 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * increase the filed and update the data
 	 * 
-	 * @param q
-	 *            the condition
-	 * @param name
-	 *            the field name
-	 * @param n
-	 *            the number
-	 * @param v
-	 *            the value
+	 * @param q    the condition
+	 * @param name the field name
+	 * @param n    the number
+	 * @param v    the value
 	 * @return
 	 */
 	public int inc(W q, String name, int n, V v) {
@@ -351,8 +312,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * copy the source Bean and create a new one, no store in database
 	 * 
-	 * @param src
-	 *            the source Bean
+	 * @param src the source Bean
 	 * @return
 	 */
 	public T copy(Bean src) {
@@ -376,8 +336,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * create a DAO object
 	 * 
-	 * @param t
-	 *            the Class of Bean
+	 * @param t the Class of Bean
 	 * @return
 	 */
 	public static <D, E extends Bean> BeanDAO<D, E> create(Class<E> t) {
@@ -477,8 +436,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * cleanup the data by setting and invoke the func by each
 	 * 
-	 * @param func
-	 *            the consumer func
+	 * @param func the consumer func
 	 */
 	public void cleanup(Consumer<T> func) {
 
@@ -506,6 +464,13 @@ public class BeanDAO<I, T extends Bean> {
 		if (n > 0) {
 			GLog.applog.info("dao", "cleanup", tableName() + " cleanup=" + n, null, null);
 		}
+	}
+
+	public W query() {
+		W q = W.create();
+		q.dao(this);
+
+		return q;
 	}
 
 }

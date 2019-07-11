@@ -31,11 +31,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.helper.MongoHelper;
-import org.giiwa.core.bean.helper.RDB;
-import org.giiwa.core.bean.helper.RDSHelper;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
+import org.giiwa.framework.bean.Data;
 import org.giiwa.framework.web.Model;
 
 import com.mongodb.BasicDBList;
@@ -467,20 +465,14 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * Sets the value if not exists, ignored if name exists.
-		 *
+		 * Sets the value if not exists, ignored if name exists. <br/>
+		 * 
 		 * @param name the name
 		 * @param v    the value
 		 * @return the v
 		 */
 		public V set(String name, Object v) {
-			if (name != null) {
-				if (m.containsKey(name)) {
-					return this;
-				}
-				m.put(name, v);
-			}
-			return this;
+			return append(name, v);
 		}
 
 		/**
@@ -504,7 +496,13 @@ public class Helper implements Serializable {
 		 * @return the V
 		 */
 		public V append(String name, Object v) {
-			return set(name, v);
+			if (name != null) {
+				if (m.containsKey(name)) {
+					return this;
+				}
+				m.put(name, v);
+			}
+			return this;
 		}
 
 		/**
@@ -727,25 +725,13 @@ public class Helper implements Serializable {
 		return sb.append("]").toString();
 	}
 
-	private interface IClause {
-		int getCondition();
-
-		String where();
-
-		String where(Map<String, String> tansfers);
-
-		BasicDBObject query();
-
-		IClause copy();
-	}
-
 	/**
 	 * the {@code W} Class used to create SQL "where" conditions<br>
 	 * this is for RDS and Mongo Query.
 	 *
 	 * @author joe
 	 */
-	public final static class W implements Serializable, IClause {
+	public static class W implements Serializable {
 
 		/**
 		 * 
@@ -769,34 +755,46 @@ public class Helper implements Serializable {
 		private String connectsql;
 		private List<W> wlist = new ArrayList<W>();
 		private List<Entity> elist = new ArrayList<Entity>();
-		private List<IClause> queryList = new ArrayList<IClause>();
+		private List<W> queryList = new ArrayList<W>();
 		private List<Entity> order = new ArrayList<Entity>();
 		private String groupby;
 
 		private int cond = AND;
 
-		public W groupby(String groupby) {
+		private BeanDAO<?, ?> dao = null;
+		private String table = null;
+		private DBHelper helper = Helper.primary;
+
+		@SuppressWarnings("rawtypes")
+		private Class t = Data.class;
+
+		public W helper(DBHelper h) {
+			this.helper = h;
+			return this;
+		}
+
+		W groupby(String groupby) {
 			this.groupby = groupby;
 			return this;
 		}
 
-		public String groupby() {
+		String groupby() {
 			return this.groupby;
 		}
 
-		public int getCondition() {
+		int getCondition() {
 			return cond;
 		}
 
-		public List<Entity> getList() {
+		List<Entity> getList() {
 			return elist;
 		}
 
-		public List<W> getW() {
+		List<W> getW() {
 			return wlist;
 		}
 
-		public List<Entity> getOrder() {
+		List<Entity> getOrder() {
 			return order;
 		}
 
@@ -889,7 +887,7 @@ public class Helper implements Serializable {
 			if (names != null) {
 				for (String name : names) {
 					for (int i = queryList.size() - 1; i >= 0; i--) {
-						IClause c = queryList.get(i);
+						W c = queryList.get(i);
 						if (c instanceof Entity) {
 							Entity e = (Entity) c;
 							if (X.isSame(name, e.name)) {
@@ -920,7 +918,7 @@ public class Helper implements Serializable {
 				w.elist.add(e.copy());
 			}
 
-			for (IClause e : queryList) {
+			for (W e : queryList) {
 				w.queryList.add(e.copy());
 			}
 			return w;
@@ -954,7 +952,7 @@ public class Helper implements Serializable {
 		 *
 		 * @return Object[]
 		 */
-		public Object[] args() {
+		Object[] args() {
 			if (elist.size() > 0 || wlist.size() > 0) {
 				List<Object> l1 = new ArrayList<Object>();
 
@@ -990,7 +988,7 @@ public class Helper implements Serializable {
 		 *
 		 * @return String
 		 */
-		public String where() {
+		String where() {
 			return where(null);
 		}
 
@@ -1000,12 +998,12 @@ public class Helper implements Serializable {
 		 * @param tansfers the words pair should be transfered
 		 * @return the SQL string
 		 */
-		public String where(Map<String, String> tansfers) {
+		String where(Map<String, String> tansfers) {
 			StringBuilder sb = new StringBuilder();
 			if (!X.isEmpty(connectsql)) {
 				sb.append(connectsql);
 			}
-			for (IClause clause : queryList) {
+			for (W clause : queryList) {
 				if (sb.length() > 0) {
 					if (clause.getCondition() == AND) {
 						sb.append(" and ");
@@ -1044,7 +1042,7 @@ public class Helper implements Serializable {
 		 *
 		 * @return String
 		 */
-		public String orderby() {
+		String orderby() {
 			return orderby(null);
 		}
 
@@ -1054,7 +1052,7 @@ public class Helper implements Serializable {
 		 * @param transfers the words pair that need transfer according database
 		 * @return the SQL order string
 		 */
-		public String orderby(Map<String, String> transfers) {
+		String orderby(Map<String, String> transfers) {
 
 			if (order.size() > 0) {
 				StringBuilder sb = new StringBuilder("order by ");
@@ -1159,7 +1157,7 @@ public class Helper implements Serializable {
 		 *
 		 * @return List keys
 		 */
-		public List<LinkedHashMap<String, Integer>> sortkeys() {
+		List<LinkedHashMap<String, Integer>> sortkeys() {
 			List<LinkedHashMap<String, Integer>> l1 = new ArrayList<LinkedHashMap<String, Integer>>();
 
 			if (!X.isEmpty(elist))
@@ -1270,7 +1268,8 @@ public class Helper implements Serializable {
 
 		/**
 		 * same as and(String name, Object v, OP op).
-		 *
+		 * 
+		 * @deprecated
 		 * @param name the name
 		 * @param v    the value object
 		 * @param op   the operation
@@ -1450,7 +1449,7 @@ public class Helper implements Serializable {
 			return elist;
 		}
 
-		public static class Entity implements Serializable, IClause {
+		static class Entity extends W {
 
 			/**
 			 * 
@@ -1638,12 +1637,12 @@ public class Helper implements Serializable {
 			}
 		}
 
-		public BasicDBObject query() {
+		BasicDBObject query() {
 
 			BasicDBList list = new BasicDBList();
 
 			int cond = -1;
-			for (IClause clause : queryList) {
+			for (W clause : queryList) {
 				if (!list.isEmpty() && cond != clause.getCondition()) {
 					if (cond == AND) {
 						BasicDBObject q = new BasicDBObject("$and", list.clone());
@@ -1656,8 +1655,8 @@ public class Helper implements Serializable {
 					}
 				}
 
-				if (clause instanceof IClause) {
-					list.add(((IClause) clause).query());
+				if (clause instanceof W) {
+					list.add(((W) clause).query());
 				} else {
 					list.add(clause);
 				}
@@ -1684,7 +1683,7 @@ public class Helper implements Serializable {
 		 *
 		 * @return the basic db object
 		 */
-		public BasicDBObject order() {
+		BasicDBObject order() {
 			BasicDBObject q = new BasicDBObject();
 			if (order != null && order.size() > 0) {
 				for (Entity e : order) {
@@ -1712,6 +1711,74 @@ public class Helper implements Serializable {
 				for (String name : v.m.keySet()) {
 					and(name, v.m.get(name));
 				}
+			}
+			return this;
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T> T load() {
+			if (dao != null) {
+				return (T) dao.load(this);
+			} else {
+				return (T) helper.load(table, null, this, t, Helper.DEFAULT);
+			}
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T> T load(int offset) {
+			Beans<?> l1 = load(offset, 1);
+			return (T) (l1 == null || l1.isEmpty() ? null : l1.get(0));
+		}
+
+		/**
+		 * get the value of the field
+		 * 
+		 * @param <T>
+		 * @param name the field name
+		 * @return
+		 */
+		public <T> T get(String name) {
+			Bean b = load();
+			return b == null ? null : b.get(name);
+		}
+
+		/**
+		 * get the value of the field, offset the row
+		 * 
+		 * @param <T>
+		 * @param offset the row offset
+		 * @param name   the field name
+		 * @return
+		 */
+		public <T> T get(int offset, String name) {
+			Bean b = load(offset);
+			return b == null ? null : b.get(name);
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T extends Bean> Beans<T> load(int s, int n) {
+			if (dao != null) {
+				return (Beans<T>) dao.load(this, s, n);
+			} else {
+				return helper.load(table, null, this, s, n, t, Helper.DEFAULT);
+			}
+		}
+
+		W dao(BeanDAO<?, ?> dao) {
+			this.dao = dao;
+			return this;
+		}
+
+		public W query(String table) {
+			this.table = table;
+			return this;
+		}
+
+		public <T extends Bean> W bean(Class<T> clazz) {
+			this.t = clazz;
+			String table = Helper.getTable(clazz);
+			if (!X.isEmpty(table)) {
+				this.table = table;
 			}
 			return this;
 		}
@@ -2176,6 +2243,10 @@ public class Helper implements Serializable {
 			}
 		}
 
+		bs.q = q;
+		bs.table = table;
+		bs.db = db;
+
 		// TODO, comment this.
 		// if (n > 0 && bs != null && !bs.isEmpty()) {
 		// if (refer > 0 && bs != null && !X.isEmpty(bs) && bs.size() >= n && (s % n %
@@ -2610,6 +2681,8 @@ public class Helper implements Serializable {
 
 		q = W.create("a", 1).sort("b", -1);
 		System.out.println(q.sortkeys());
+
+//		Beans<User> l1 = User.dao.query().and("a", 1).sort("a", 1).load(0, 10);
 
 	}
 
