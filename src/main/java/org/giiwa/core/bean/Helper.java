@@ -2243,26 +2243,12 @@ public class Helper implements Serializable {
 			}
 		}
 
-		bs.q = q;
-		bs.table = table;
-		bs.db = db;
+		if (bs != null) {
+			bs.q = q;
+			bs.table = table;
+			bs.db = db;
+		}
 
-		// TODO, comment this.
-		// if (n > 0 && bs != null && !bs.isEmpty()) {
-		// if (refer > 0 && bs != null && !X.isEmpty(bs) && bs.size() >= n && (s % n %
-		// 10 == 0)) {
-		// // not loop; has data; s % n % 10 == 0
-		// Task.create(new Runnable() {
-		//
-		// @Override
-		// public void run() {
-		// // Cause the DB to load the more data in memory
-		// _load(table, fields, q, s + n * 10, n, t, db, 0);
-		// }
-		//
-		// }).schedule(1000);
-		// }
-		// }
 		return bs;
 
 	}
