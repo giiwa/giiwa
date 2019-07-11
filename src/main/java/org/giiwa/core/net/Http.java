@@ -474,19 +474,22 @@ public final class Http {
 				} };
 				SSLContext ctx = null;
 				try {
+
 					ctx = SSLContext.getInstance("TLS");
 					ctx.init(null, tm, null);
+
+					((HttpsURLConnection) c).setSSLSocketFactory(ctx.getSocketFactory());
+					((HttpsURLConnection) c).setHostnameVerifier(new HostnameVerifier() {
+						@Override
+						public boolean verify(String arg0, SSLSession arg1) {
+							return true;
+						}
+					});
+
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error(e.getMessage(), e);
 				}
 
-				((HttpsURLConnection) c).setSSLSocketFactory(ctx.getSocketFactory());
-				((HttpsURLConnection) c).setHostnameVerifier(new HostnameVerifier() {
-					@Override
-					public boolean verify(String arg0, SSLSession arg1) {
-						return true;
-					}
-				});
 			}
 
 			c.connect();

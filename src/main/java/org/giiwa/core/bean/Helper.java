@@ -761,9 +761,9 @@ public class Helper implements Serializable {
 
 		private int cond = AND;
 
-		private BeanDAO<?, ?> dao = null;
-		private String table = null;
-		private DBHelper helper = Helper.primary;
+		private transient BeanDAO<?, ?> dao = null;
+		private transient String table = null;
+		private transient DBHelper helper = Helper.primary;
 
 		@SuppressWarnings("rawtypes")
 		private Class t = Data.class;
