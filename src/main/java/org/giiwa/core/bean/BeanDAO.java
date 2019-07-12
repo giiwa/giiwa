@@ -80,6 +80,15 @@ public class BeanDAO<I, T extends Bean> {
 	}
 
 	/**
+	 * get the db name
+	 * 
+	 * @return
+	 */
+	public String dbName() {
+		return Helper.getDB(t);
+	}
+
+	/**
 	 * load a Bean only fields
 	 * 
 	 * @param fields the fields
