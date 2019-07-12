@@ -778,23 +778,23 @@ public class Helper implements Serializable {
 			return this;
 		}
 
-		String groupby() {
+		public String groupby() {
 			return this.groupby;
 		}
 
-		int getCondition() {
+		public int getCondition() {
 			return cond;
 		}
 
-		List<Entity> getList() {
+		public List<Entity> getList() {
 			return elist;
 		}
 
-		List<W> getW() {
+		public List<W> getW() {
 			return wlist;
 		}
 
-		List<Entity> getOrder() {
+		public List<Entity> getOrder() {
 			return order;
 		}
 
@@ -1449,7 +1449,7 @@ public class Helper implements Serializable {
 			return elist;
 		}
 
-		static class Entity extends W {
+		public static class Entity extends W {
 
 			/**
 			 * 
