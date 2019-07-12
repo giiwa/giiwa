@@ -216,7 +216,14 @@ public final class Http {
 		return post(url, params, X.AMINUTE);
 	}
 
-	public Response json(String url, JSON params) {
+	/**
+	 * post body string
+	 * 
+	 * @param url
+	 * @param body
+	 * @return
+	 */
+	public Response post(String url, String body) {
 
 		log.debug("url=" + url);
 
@@ -238,11 +245,11 @@ public final class Http {
 			CloseableHttpResponse resp = null;
 			try {
 
-				post.addHeader("content-type", "application/json");
+				post.addHeader("Content-Type", "application/json");
 
 				log.debug("post url=" + url);
 
-				StringEntity e = new StringEntity(params.toString(), "UTF8");
+				StringEntity e = new StringEntity(body, "UTF8");
 				post.setEntity(e);
 
 				resp = client.execute(post, localContext);
@@ -273,6 +280,22 @@ public final class Http {
 		return r;
 	}
 
+	/**
+	 * put body string
+	 * @param url
+	 * @param body
+	 * @return
+	 */
+	public Response put(String url, String body) {
+		return put(url, JSON.create().append("Content-Type", "text/plain"), body, X.AMINUTE);
+	}
+
+	/**
+	 * put the params map
+	 * @param url
+	 * @param params
+	 * @return
+	 */
 	public Response put(String url, JSON params) {
 		return put(url, params, X.AMINUTE);
 	}
@@ -778,6 +801,76 @@ public final class Http {
 						resp.close();
 					} catch (IOException e) {
 					}
+			}
+
+		} else {
+			r.status = 600;
+			r.body = "error: can not init a client";
+		}
+
+		return r;
+	}
+
+	/**
+	 * put body string
+	 * 
+	 * @param url
+	 * @param headers
+	 * @param body
+	 * @param timeout
+	 * @return
+	 */
+	public Response put(String url, JSON headers, String body, long timeout) {
+		log.debug("url=" + url);
+		Response r = new Response();
+
+		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+
+		if (client == null) {
+			client = getClient(url, ua, timeout);
+		}
+
+		if (localContext == null) {
+			localContext = HttpClientContext.create();
+			localContext.setCookieStore(cookies);
+		}
+		if (client != null) {
+			TimeStamp t = TimeStamp.create();
+
+			HttpPut put = new HttpPut(url);
+			CloseableHttpResponse resp = null;
+			try {
+
+				if (headers != null && headers.size() > 0) {
+					log.debug("header: " + headers);
+					for (String s : headers.keySet()) {
+						put.addHeader(s, headers.getString(s));
+					}
+				}
+
+				log.debug("put url=" + url);
+
+				StringEntity e = new StringEntity(body, "UTF-8");
+				put.setEntity(e);
+
+				resp = client.execute(put, localContext);
+				r.status = resp.getStatusLine().getStatusCode();
+				r.body = getContext(resp, null);
+				r.headers = resp.getAllHeaders();
+
+				log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+			} catch (Throwable e) {
+				log.error("cost=" + t.past() + ", " + url, e);
+				r.status = 600;
+				r.body = "error: " + e.getMessage();
+			} finally {
+				if (resp != null)
+					try {
+						resp.close();
+					} catch (IOException e) {
+					}
+
 			}
 
 		} else {
@@ -1615,7 +1708,16 @@ public final class Http {
 		return null;
 	}
 
-	public Response json(String url, JSON headers, String body, long timeout) {
+	/**
+	 * post body string
+	 * 
+	 * @param url
+	 * @param headers
+	 * @param body
+	 * @param timeout
+	 * @return
+	 */
+	public Response post(String url, JSON headers, String body, long timeout) {
 
 		log.debug("url=" + url);
 
