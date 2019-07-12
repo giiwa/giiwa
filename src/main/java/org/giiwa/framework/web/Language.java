@@ -69,10 +69,8 @@ public class Language {
 	/**
 	 * Prints the.
 	 * 
-	 * @param format
-	 *            the format
-	 * @param args
-	 *            the args
+	 * @param format the format
+	 * @param args   the args
 	 * @return the string
 	 */
 	public String print(String format, Object... args) {
@@ -89,10 +87,8 @@ public class Language {
 	/**
 	 * Truncate.
 	 *
-	 * @param s
-	 *            the s
-	 * @param length
-	 *            the length
+	 * @param s      the s
+	 * @param length the length
 	 * @return the object
 	 */
 	public Object truncate(Object s, int length) {
@@ -113,10 +109,8 @@ public class Language {
 	/**
 	 * Color.
 	 * 
-	 * @param d
-	 *            the d
-	 * @param bits
-	 *            the bits
+	 * @param d    the d
+	 * @param bits the bits
 	 * @return the string
 	 */
 	public String color(long d, int bits) {
@@ -138,8 +132,7 @@ public class Language {
 	/**
 	 * Now.
 	 * 
-	 * @param format
-	 *            the format
+	 * @param format the format
 	 * @return the string
 	 */
 	public String now(String format) {
@@ -149,8 +142,7 @@ public class Language {
 	/**
 	 * Bitmaps.
 	 * 
-	 * @param f
-	 *            the f
+	 * @param f the f
 	 * @return the list
 	 */
 	public List<Integer> bitmaps(int f) {
@@ -168,12 +160,9 @@ public class Language {
 	/**
 	 * Bits.
 	 * 
-	 * @param f
-	 *            the f
-	 * @param s
-	 *            the s
-	 * @param n
-	 *            the n
+	 * @param f the f
+	 * @param s the s
+	 * @param n the n
 	 * @return the int
 	 */
 	public int bits(int f, int s, int n) {
@@ -184,8 +173,7 @@ public class Language {
 	/**
 	 * Gets the language.
 	 * 
-	 * @param locale
-	 *            the locale
+	 * @param locale the locale
 	 * @return the language
 	 */
 	protected static Language getLanguage(String locale) {
@@ -212,8 +200,7 @@ public class Language {
 	/**
 	 * Checks for.
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return true, if successful
 	 */
 	public boolean has(String name) {
@@ -243,10 +230,8 @@ public class Language {
 	/**
 	 * Parses the string with the model using velocity engine
 	 *
-	 * @param str
-	 *            the string
-	 * @param m
-	 *            the model
+	 * @param str the string
+	 * @param m   the model
 	 * @return the string
 	 */
 	public String parse(String str, Model m) {
@@ -262,10 +247,7 @@ public class Language {
 	/**
 	 * Gets the.
 	 * 
-	 * @param name
-	 *            the name
-	 * @param args
-	 *            the args which used to format the string
+	 * @param name the name
 	 * @return the string
 	 */
 	public String get(String name) {
@@ -323,10 +305,8 @@ public class Language {
 	/**
 	 * Format.
 	 * 
-	 * @param t
-	 *            the t
-	 * @param format
-	 *            the format
+	 * @param t      the t
+	 * @param format the format
 	 * @return the string
 	 */
 	public String format(String t, String format) {
@@ -408,10 +388,8 @@ public class Language {
 	/**
 	 * Format.
 	 * 
-	 * @param t
-	 *            the t
-	 * @param format
-	 *            the format
+	 * @param t      the t
+	 * @param format the format
 	 * @return the string
 	 */
 	public String format(long t, String format) {
@@ -450,12 +428,9 @@ public class Language {
 	/**
 	 * Convert.
 	 * 
-	 * @param date
-	 *            the date
-	 * @param from
-	 *            the from
-	 * @param format
-	 *            the format
+	 * @param date   the date
+	 * @param from   the from
+	 * @param format the format
 	 * @return the string
 	 */
 	public String convert(int date, String from, String format) {
@@ -472,12 +447,9 @@ public class Language {
 	/**
 	 * Convert.
 	 * 
-	 * @param date
-	 *            the date
-	 * @param from
-	 *            the from
-	 * @param format
-	 *            the format
+	 * @param date   the date
+	 * @param from   the from
+	 * @param format the format
 	 * @return the string
 	 */
 	public String convert(String date, String from, String format) {
@@ -495,10 +467,8 @@ public class Language {
 	/**
 	 * Parses the.
 	 * 
-	 * @param t
-	 *            the t
-	 * @param format
-	 *            the format
+	 * @param t      the t
+	 * @param format the format
 	 * @return the long
 	 */
 	public long parse(String t, String format) {
@@ -525,8 +495,7 @@ public class Language {
 	/**
 	 * Format.
 	 * 
-	 * @param t
-	 *            the t
+	 * @param t the t
 	 * @return the string
 	 */
 	public String format(long t) {
@@ -556,8 +525,7 @@ public class Language {
 	/**
 	 * Size.
 	 * 
-	 * @param length
-	 *            the length
+	 * @param length the length
 	 * @return the string
 	 */
 	public String size(double length, int step) {
@@ -596,8 +564,7 @@ public class Language {
 	/**
 	 * Past.
 	 * 
-	 * @param base
-	 *            the base
+	 * @param base the base
 	 * @return the string
 	 */
 	public String past(long base) {
@@ -689,8 +656,7 @@ public class Language {
 	/**
 	 * Parses the.
 	 * 
-	 * @param body
-	 *            the body
+	 * @param body the body
 	 * @return the html
 	 */
 	public Html parse(String body) {

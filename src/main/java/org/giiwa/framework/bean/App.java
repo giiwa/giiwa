@@ -75,7 +75,7 @@ public class App extends Bean {
 	/**
 	 * get the id
 	 * 
-	 * @return
+	 * @return the id
 	 */
 	public long getId() {
 		return id;
@@ -84,7 +84,7 @@ public class App extends Bean {
 	/**
 	 * get the memo
 	 * 
-	 * @return
+	 * @return the String
 	 */
 	public String getMemo() {
 		return memo;
@@ -93,8 +93,8 @@ public class App extends Bean {
 	/**
 	 * check has the access name
 	 * 
-	 * @param name
-	 * @return
+	 * @param name the name string...
+	 * @return the boolean, true if has this access
 	 */
 	public boolean hasAccess(String... name) {
 		Role r = getRole_obj();
@@ -112,7 +112,7 @@ public class App extends Bean {
 	/**
 	 * get the role object attach with this appid
 	 * 
-	 * @return
+	 * @return the Role
 	 */
 	public Role getRole_obj() {
 		if (role_obj == null) {
@@ -133,7 +133,7 @@ public class App extends Bean {
 	/**
 	 * get the appid
 	 * 
-	 * @return
+	 * @return the String
 	 */
 	public String getAppid() {
 		return appid;
@@ -151,7 +151,7 @@ public class App extends Bean {
 	/**
 	 * get the ip who used the appid
 	 * 
-	 * @return
+	 * @return the IP String
 	 */
 	public String getIp() {
 		return ip;
@@ -169,7 +169,7 @@ public class App extends Bean {
 	/**
 	 * get the expire time
 	 * 
-	 * @return
+	 * @return the long of expired
 	 */
 	public long getExpired() {
 		return expired;
@@ -179,10 +179,8 @@ public class App extends Bean {
 	 * data = Base64(AES(params)) <br>
 	 * decode, params=AES(Base64(data));
 	 * 
-	 * @param data
-	 *            the string of data
-	 * @param secret
-	 *            the string of secret
+	 * @param data   the string of data
+	 * @param secret the string of secret
 	 * @return JSON
 	 */
 	public static JSON parseParameters(String data, String secret) {
@@ -202,10 +200,8 @@ public class App extends Bean {
 	 * data = Base64(AES(params)) <br>
 	 * decode, params=AES(Base64(data));
 	 * 
-	 * @param jo
-	 *            the json data
-	 * @param secret
-	 *            the secret
+	 * @param jo     the json data
+	 * @param secret the secret
 	 * @return the string
 	 */
 	public static String generateParameter(JSON jo, String secret) {
@@ -222,8 +218,7 @@ public class App extends Bean {
 	/**
 	 * Creates the.
 	 *
-	 * @param v
-	 *            the v
+	 * @param v the v
 	 * @return the int
 	 */
 	public static int create(V v) {
@@ -242,8 +237,7 @@ public class App extends Bean {
 	/**
 	 * Delete.
 	 *
-	 * @param appid
-	 *            the appid
+	 * @param appid the appid
 	 */
 	public static void delete(String appid) {
 		Cache.remove("app/" + appid);
@@ -253,8 +247,7 @@ public class App extends Bean {
 	/**
 	 * Load.
 	 *
-	 * @param appid
-	 *            the appid
+	 * @param appid the appid
 	 * @return the app
 	 */
 	public static App load(String appid) {
@@ -272,10 +265,8 @@ public class App extends Bean {
 	/**
 	 * Update.
 	 *
-	 * @param appid
-	 *            the appid
-	 * @param v
-	 *            the values
+	 * @param appid the appid
+	 * @param v     the values
 	 * @return the int
 	 */
 	public static int update(String appid, V v) {
@@ -313,8 +304,7 @@ public class App extends Bean {
 		/**
 		 * set the appid
 		 *
-		 * @param appid
-		 *            the appid
+		 * @param appid the appid
 		 * @return the param
 		 */
 		public Param appid(String appid) {
@@ -325,8 +315,7 @@ public class App extends Bean {
 		/**
 		 * set the secret
 		 *
-		 * @param secret
-		 *            the secret
+		 * @param secret the secret
 		 * @return the param
 		 */
 		public Param secret(String secret) {
@@ -337,8 +326,7 @@ public class App extends Bean {
 		/**
 		 * set the Expired.
 		 *
-		 * @param expired
-		 *            the expired
+		 * @param expired the expired
 		 * @return the param
 		 */
 		public Param expired(long expired) {
@@ -349,8 +337,7 @@ public class App extends Bean {
 		/**
 		 * set the Lastime.
 		 *
-		 * @param lastime
-		 *            the lastime
+		 * @param lastime the lastime
 		 * @return the param
 		 */
 		public Param lastime(long lastime) {
@@ -361,8 +348,7 @@ public class App extends Bean {
 		/**
 		 * set the Ip.
 		 *
-		 * @param ip
-		 *            the ip
+		 * @param ip the ip
 		 * @return the param
 		 */
 		public Param ip(String ip) {
@@ -373,8 +359,7 @@ public class App extends Bean {
 		/**
 		 * set the Memo.
 		 *
-		 * @param memo
-		 *            the memo
+		 * @param memo the memo
 		 * @return the param
 		 */
 		public Param memo(String memo) {

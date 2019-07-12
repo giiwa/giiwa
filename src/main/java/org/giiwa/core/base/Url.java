@@ -116,9 +116,8 @@ public class Url {
 
 	/**
 	 * 
-	 * @param url,
-	 *            protocol://ip:port?user=&passwd=
-	 * @return
+	 * @param url, protocol://ip:port?user=&passwd=
+	 * @return the Url
 	 */
 	public static Url create(String url) {
 		if (!X.isEmpty(url)) {
@@ -139,8 +138,7 @@ public class Url {
 	/**
 	 * parse more parameter from original url according to the refer
 	 * 
-	 * @param refer
-	 *            e.g. "http://{ip}:{port}/{path}?
+	 * @param refer e.g. "http://{ip}:{port}/{path}?
 	 * @return
 	 */
 	public boolean parse(String refer) {

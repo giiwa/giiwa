@@ -16,11 +16,8 @@ public class NTP {
 
 	/**
 	 * 
-	 * @param url
-	 *            ntp://g01:123
+	 * @param url ntp://g01:123
 	 * 
-	 * @param command
-	 * @return
 	 */
 	public static void run(Url url) {
 		try {

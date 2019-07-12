@@ -283,8 +283,9 @@ public class DFile {
 	/**
 	 * upload the inputsteam to the file
 	 * 
-	 * @param in
-	 * @return
+	 * @param pos the position
+	 * @param in  the inputstream
+	 * @return the size
 	 */
 	public long upload(long pos, InputStream in) {
 		try {
@@ -298,8 +299,8 @@ public class DFile {
 	/**
 	 * download the file to local file
 	 * 
-	 * @param f
-	 * @return
+	 * @param f the local file
+	 * @return the size
 	 */
 	public long download(File f) {
 		try {

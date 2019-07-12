@@ -133,8 +133,7 @@ public final class Http {
 	/**
 	 * Gets the.
 	 *
-	 * @param url
-	 *            the url
+	 * @param url the url
 	 * @return the response
 	 */
 	public Response get(String url) {
@@ -144,10 +143,8 @@ public final class Http {
 	/**
 	 * Gets the.
 	 *
-	 * @param url
-	 *            the url
-	 * @param timeout
-	 *            the milliseconds of timeout
+	 * @param url     the url
+	 * @param timeout the milliseconds of timeout
 	 * @return the response
 	 */
 	public Response get(String url, long timeout) {
@@ -157,12 +154,9 @@ public final class Http {
 	/**
 	 * GET response from a url.
 	 *
-	 * @param url
-	 *            the url
-	 * @param charset
-	 *            the charset
-	 * @param timeout
-	 *            the timeout
+	 * @param url     the url
+	 * @param charset the charset
+	 * @param timeout the timeout
 	 * @return Response
 	 */
 	public Response get(String url, String charset, long timeout) {
@@ -172,11 +166,9 @@ public final class Http {
 	/**
 	 * ping the url, throw exception if occur error.
 	 *
-	 * @param url
-	 *            the url
+	 * @param url the url
 	 * @return int of response status
-	 * @throws Exception
-	 *             throw exception when failed
+	 * @throws Exception throw exception when failed
 	 */
 	public int ping(String url) throws Exception {
 
@@ -205,10 +197,8 @@ public final class Http {
 	/**
 	 * Post.
 	 *
-	 * @param url
-	 *            the url
-	 * @param params
-	 *            the params
+	 * @param url    the url
+	 * @param params the params
 	 * @return the response
 	 */
 	public Response post(String url, JSON params) {
@@ -287,12 +277,9 @@ public final class Http {
 	/**
 	 * POST response from a url.
 	 *
-	 * @param url
-	 *            the url
-	 * @param params
-	 *            the params
-	 * @param timeout
-	 *            the timeout
+	 * @param url     the url
+	 * @param params  the params
+	 * @param timeout the timeout
 	 * @return Response
 	 */
 	public Response post(String url, JSON params, long timeout) {
@@ -318,10 +305,8 @@ public final class Http {
 	/**
 	 * Gets the.
 	 *
-	 * @param url
-	 *            the url
-	 * @param headers
-	 *            the headers
+	 * @param url     the url
+	 * @param headers the headers
 	 * @return the response
 	 */
 	public Response get(String url, JSON headers) {
@@ -331,13 +316,10 @@ public final class Http {
 	/**
 	 * connect to the url and return the HttpResponse directly.
 	 *
-	 * @param url
-	 *            the url
-	 * @param timeout
-	 *            the timeout milliseconds
+	 * @param url     the url
+	 * @param timeout the timeout milliseconds
 	 * @return the HttpURLConnection
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public HttpURLConnection connect(String url, long timeout) throws Exception {
 
@@ -352,14 +334,10 @@ public final class Http {
 	/**
 	 * GET method.
 	 *
-	 * @param url
-	 *            the url
-	 * @param charset
-	 *            the charset
-	 * @param headers
-	 *            the headers
-	 * @param timeout
-	 *            the timeout
+	 * @param url     the url
+	 * @param charset the charset
+	 * @param headers the headers
+	 * @param timeout the timeout
 	 * @return Response
 	 */
 	public Response get(String url, String charset, JSON headers, long timeout) {
@@ -507,10 +485,8 @@ public final class Http {
 	/**
 	 * download the file in the url to f.
 	 *
-	 * @param url
-	 *            the file url
-	 * @param localfile
-	 *            the destination file
+	 * @param url       the file url
+	 * @param localfile the destination file
 	 * @return the length
 	 */
 	public int download(String url, File localfile) {
@@ -520,12 +496,9 @@ public final class Http {
 	/**
 	 * download the remote url to local file with the header.
 	 *
-	 * @param url
-	 *            the remote resource url
-	 * @param header
-	 *            the header
-	 * @param localfile
-	 *            the localfile
+	 * @param url       the remote resource url
+	 * @param header    the header
+	 * @param localfile the localfile
 	 * @return the length of bytes
 	 */
 	public int download(String url, JSON header, File localfile) {
@@ -598,16 +571,10 @@ public final class Http {
 	/**
 	 * POST method.
 	 *
-	 * @param url
-	 *            the url
-	 * @param contenttype
-	 *            the contenttype
-	 * @param headers
-	 *            the headers
-	 * @param params
-	 *            the params
-	 * @param timeout
-	 *            the timeout
+	 * @param url     the url
+	 * @param headers the headers
+	 * @param params  the params
+	 * @param timeout the timeout
 	 * @return Response
 	 */
 	public Response post(String url, JSON headers, JSON params, long timeout) {
@@ -617,18 +584,12 @@ public final class Http {
 	/**
 	 * POST.
 	 *
-	 * @param url
-	 *            the url
-	 * @param contenttype
-	 *            the contenttype
-	 * @param headers
-	 *            the headers
-	 * @param body
-	 *            the body
-	 * @param attachments
-	 *            the attachments
-	 * @param timeout
-	 *            the timeout
+	 * @param url         the url
+	 * @param contenttype the contenttype
+	 * @param headers     the headers
+	 * @param body        the body
+	 * @param stream      the attachments
+	 * @param timeout     the timeout
 	 * @return Response
 	 */
 	public Response post(String url, JSON headers, JSON body, InputStream stream, long timeout) {
@@ -1070,8 +1031,7 @@ public final class Http {
 		/**
 		 * get the response header.
 		 *
-		 * @param name
-		 *            the name
+		 * @param name the name
 		 * @return String[]
 		 */
 		public String[] getHeaders(String name) {
@@ -1092,8 +1052,7 @@ public final class Http {
 		/**
 		 * get the response header.
 		 *
-		 * @param name
-		 *            the name
+		 * @param name the name
 		 * @return String
 		 */
 		public String getHeader(String name) {
@@ -1112,8 +1071,7 @@ public final class Http {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
+	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
 		Http.DEBUG = true;
@@ -1187,16 +1145,11 @@ public final class Http {
 	/**
 	 * add a cookie in Http. or replace the old one by (name, domain, path)
 	 *
-	 * @param name
-	 *            the name
-	 * @param value
-	 *            the value
-	 * @param domain
-	 *            the domain
-	 * @param path
-	 *            the path
-	 * @param expired
-	 *            the expired date
+	 * @param name    the name
+	 * @param value   the value
+	 * @param domain  the domain
+	 * @param path    the path
+	 * @param expired the expired date
 	 */
 	public synchronized void addCookie(String name, String value, String domain, String path, Date expired) {
 		BasicClientCookie c = new BasicClientCookie(name, value);
@@ -1209,14 +1162,10 @@ public final class Http {
 	/**
 	 * batchCookies
 	 * 
-	 * @param cookiestring
-	 *            the cookie string, eg.:"a=b;c=a"
-	 * @param domain
-	 *            the domain
-	 * @param path
-	 *            the path
-	 * @param expired
-	 *            the expired date
+	 * @param cookiestring the cookie string, eg.:"a=b;c=a"
+	 * @param domain       the domain
+	 * @param path         the path
+	 * @param expired      the expired date
 	 */
 	public synchronized void batchCookie(String cookiestring, String domain, String path, Date expired) {
 		String[] ss = X.split(cookiestring, ";");
@@ -1239,12 +1188,9 @@ public final class Http {
 	/**
 	 * Removes the cookie.
 	 *
-	 * @param name
-	 *            the name
-	 * @param domain
-	 *            the domain
-	 * @param path
-	 *            the path
+	 * @param name   the name
+	 * @param domain the domain
+	 * @param path   the path
 	 */
 	public synchronized void removeCookie(String name, String domain, String path) {
 		boolean found = false;
@@ -1278,8 +1224,7 @@ public final class Http {
 	/**
 	 * Clear.
 	 *
-	 * @param expired
-	 *            the expired
+	 * @param expired the expired
 	 */
 	public void clear(Date expired) {
 		cookies.clearExpired(expired);
@@ -1288,8 +1233,7 @@ public final class Http {
 	/**
 	 * Gets the cookies.
 	 *
-	 * @param domain
-	 *            the domain
+	 * @param domain the domain
 	 * @return the cookies
 	 */
 	public List<Cookie> getCookies(String domain) {
@@ -1307,12 +1251,9 @@ public final class Http {
 	/**
 	 * Gets the cookie.
 	 *
-	 * @param name
-	 *            the name
-	 * @param domain
-	 *            the domain
-	 * @param path
-	 *            the path
+	 * @param name   the name
+	 * @param domain the domain
+	 * @param path   the path
 	 * @return the cookie
 	 */
 	public Cookie getCookie(String name, String domain, String path) {
@@ -1330,10 +1271,8 @@ public final class Http {
 	/**
 	 * Gets the cookie.
 	 *
-	 * @param name
-	 *            the name
-	 * @param domain
-	 *            the domain
+	 * @param name   the name
+	 * @param domain the domain
 	 * @return the cookie
 	 */
 	public Cookie getCookie(String name, String domain) {

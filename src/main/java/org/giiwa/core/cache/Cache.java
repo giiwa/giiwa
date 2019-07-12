@@ -52,8 +52,7 @@ public final class Cache {
 	/**
 	 * initialize the cache with configuration.
 	 *
-	 * @param conf
-	 *            the configuration that includes cache configure ("cache.url")
+	 * @param url the configuration that includes cache configure ("cache.url")
 	 */
 	public static synchronized void init(String url) {
 		/**
@@ -78,10 +77,8 @@ public final class Cache {
 	/**
 	 * Gets the object by id, if the object was expired, null return.
 	 * 
-	 * @param <T>
-	 *            the class
-	 * @param id
-	 *            the id of object in cache system
+	 * @param <T> the class
+	 * @param id  the id of object in cache system
 	 * @return Object if the object not presented or expired, will return null
 	 */
 	@SuppressWarnings({ "unchecked" })
@@ -111,8 +108,7 @@ public final class Cache {
 	/**
 	 * Removes the cached object by id.
 	 *
-	 * @param id
-	 *            the object id in cache
+	 * @param id the object id in cache
 	 * @return true, if successful
 	 */
 	public static boolean remove(String id) {
@@ -127,10 +123,8 @@ public final class Cache {
 	 * cache the object with the id, if exists, then update it, otherwise create new
 	 * in cache.
 	 *
-	 * @param id
-	 *            the id of the object
-	 * @param data
-	 *            the object
+	 * @param id   the id of the object
+	 * @param data the object
 	 * @return true, if successful
 	 */
 	public static boolean set(String id, Object data) {

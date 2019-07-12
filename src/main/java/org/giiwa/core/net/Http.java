@@ -282,6 +282,7 @@ public final class Http {
 
 	/**
 	 * put body string
+	 * 
 	 * @param url
 	 * @param body
 	 * @return
@@ -292,6 +293,7 @@ public final class Http {
 
 	/**
 	 * put the params map
+	 * 
 	 * @param url
 	 * @param params
 	 * @return
@@ -716,11 +718,10 @@ public final class Http {
 	/**
 	 * POST method.
 	 *
-	 * @param url         the url
-	 * @param contenttype the contenttype
-	 * @param headers     the headers
-	 * @param params      the params
-	 * @param timeout     the timeout
+	 * @param url     the url
+	 * @param headers the headers
+	 * @param params  the params
+	 * @param timeout the timeout
 	 * @return Response
 	 */
 	public Response post(String url, JSON headers, JSON params, long timeout) {

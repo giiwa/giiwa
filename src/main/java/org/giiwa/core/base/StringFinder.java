@@ -28,8 +28,7 @@ public class StringFinder {
 	/**
 	 * Creates the.
 	 * 
-	 * @param s
-	 *            the s
+	 * @param s the s
 	 * @return the g string
 	 */
 	public static StringFinder create(String s) {
@@ -61,8 +60,7 @@ public class StringFinder {
 	/**
 	 * find a substring.
 	 *
-	 * @param sub
-	 *            the sub
+	 * @param sub the sub
 	 * @return int the position
 	 */
 	public int find(String sub) {
@@ -76,8 +74,7 @@ public class StringFinder {
 	/**
 	 * Next to the deli, and return the substring.
 	 *
-	 * @param deli
-	 *            the deli
+	 * @param deli the deli
 	 * @return the string
 	 */
 	public String nextTo(String deli) {
@@ -127,8 +124,7 @@ public class StringFinder {
 	/**
 	 * next string until the str
 	 * 
-	 * @param schars
-	 *            the special chars
+	 * @param str the special chars
 	 * @return the String
 	 */
 	public String next(String str) {
@@ -182,8 +178,7 @@ public class StringFinder {
 	/**
 	 * get the char by offset refer the current position.
 	 *
-	 * @param offset
-	 *            the offset
+	 * @param offset the offset
 	 * @return the char
 	 */
 	public char charOf(int offset) {
@@ -193,8 +188,7 @@ public class StringFinder {
 	/**
 	 * get the char by the absolute position.
 	 *
-	 * @param position
-	 *            the position
+	 * @param position the position
 	 * @return the char
 	 */
 	public char charAt(int position) {
@@ -207,8 +201,7 @@ public class StringFinder {
 	/**
 	 * skip a length.
 	 *
-	 * @param len
-	 *            the len
+	 * @param len the len
 	 * @return int the new position
 	 */
 	public int skip(int len) {
@@ -219,10 +212,8 @@ public class StringFinder {
 	/**
 	 * Bracket.
 	 *
-	 * @param begin
-	 *            the begin
-	 * @param end
-	 *            the end
+	 * @param begin the begin
+	 * @param end   the end
 	 * @return the string
 	 */
 	public String bracket(char begin, char end) {
@@ -293,8 +284,7 @@ public class StringFinder {
 	/**
 	 * Skip.
 	 *
-	 * @param c0
-	 *            the c0
+	 * @param c0 the c0
 	 * @return the int
 	 */
 	public int skip(char c0) {
@@ -316,10 +306,8 @@ public class StringFinder {
 	/**
 	 * get the sub string begin to end.
 	 *
-	 * @param begin
-	 *            the begin
-	 * @param end
-	 *            the end
+	 * @param begin the begin
+	 * @param end   the end
 	 * @return String
 	 */
 	public String get(String begin, String end) {
@@ -339,10 +327,8 @@ public class StringFinder {
 	/**
 	 * Substring.
 	 *
-	 * @param begin
-	 *            the begin
-	 * @param end
-	 *            the end
+	 * @param begin the begin
+	 * @param end   the end
 	 * @return String
 	 * @deprecated
 	 */
@@ -353,10 +339,8 @@ public class StringFinder {
 	/**
 	 * merge two string to as a pattern string.
 	 *
-	 * @param s1
-	 *            the s1
-	 * @param s2
-	 *            the s2
+	 * @param s1 the s1
+	 * @param s2 the s2
 	 * @return String the min pattern string
 	 */
 	public static String merge(String s1, String s2) {
@@ -449,8 +433,7 @@ public class StringFinder {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
+	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
 		// System.out.println(merge("aaaaaa", "aabbaabaab"));

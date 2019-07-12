@@ -74,8 +74,8 @@ public abstract class Task implements Runnable, Serializable {
 	public static Log log = LogFactory.getLog(Task.class);
 
 	/**
-	 * power state <br/>
-	 * 1: power on <br/>
+	 * power state <br>
+	 * 1: power on <br>
 	 * 0: power off
 	 */
 	public static int powerstate = 1;
@@ -148,9 +148,11 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * run the prepare and wait the result
 	 * 
-	 * @param prepare
-	 * @return
+	 * @param <T>     the SubClass of Task
+	 * @param prepare the pre-task
+	 * @return the Object
 	 */
+
 	@SuppressWarnings("unchecked")
 	public <T> T wait(Runnable prepare) {
 
@@ -454,7 +456,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * initialize the workertask.
 	 *
-	 * @param threadNum the thread num
+	 * @param usernum the thread num
 	 */
 	public static void init(int usernum) {
 		LocalRunner.init(8, usernum);
@@ -572,21 +574,21 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * create a task and schedule it now
 	 * 
-	 * @param cc
-	 * @return
+	 * @param cc the function
+	 * @return The Task
 	 */
-	final public static <T> Task schedule(TaskFunction cc) {
+	final public static Task schedule(TaskFunction cc) {
 		return schedule(cc, 0);
 	}
 
 	/**
 	 * create a task and schedule in ms
 	 * 
-	 * @param cc
-	 * @param ms
-	 * @return
+	 * @param cc the function
+	 * @param ms the delay time
+	 * @return the Task
 	 */
-	final public static <T> Task schedule(TaskFunction cc, long ms) {
+	final public static Task schedule(TaskFunction cc, long ms) {
 		Task t = new Task() {
 
 			/**
@@ -642,7 +644,7 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * default is local task
 	 * 
-	 * @return
+	 * @return the boolean, default false
 	 */
 	public boolean getGlobal() {
 		return false;
@@ -782,6 +784,8 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * run the task and wait the task complete
 	 * 
+	 * @param <T> the SubClass of Task
+	 * @return The Task
 	 */
 	public <T> T join() {
 		return wait(new Runnable() {
@@ -826,14 +830,15 @@ public abstract class Task implements Runnable, Serializable {
 	}
 
 	/**
-	 * reduce the task to more and run the func width the spited list<br/>
-	 * the sub task's global is same as this <br/>
+	 * reduce the task to more and run the func width the spited list<br>
+	 * the sub task's global is same as this <br>
 	 * @deprecated, please refer reduce(Stream, ReduceFunction, CollectionFunction)
 	 * 
-	 * @param l1
-	 * @param reducefunc
-	 * @return
-	 * @throws Exception
+	 * @param <T>        The Result Class
+	 * @param <V>        The Value Class
+	 * @param l1         the stream
+	 * @param reducefunc the reduce function
+	 * @return the List of result
 	 */
 	public static <T, V> List<T> mapreduce(Stream<V> l1, ReduceFunction<T, V> reducefunc) {
 		List<T> l2 = new ArrayList<T>();
@@ -853,13 +858,15 @@ public abstract class Task implements Runnable, Serializable {
 	}
 
 	/**
-	 * reduce the task to more and run the func width the spited list<br/>
-	 * the sub task's global is same as this <br/>
+	 * reduce the task to more and run the func width the spited list<br>
+	 * the sub task's global is same as this <br>
 	 * 
-	 * @param l1
-	 * @param reducefunc
-	 * @param cofunc
-	 * @return
+	 * @param <T>        The Result Class
+	 * @param <V>        The Value Class
+	 * @param l1         the Stream
+	 * @param reducefunc the Function
+	 * @param cofunc     the collection function
+	 * @return the Result
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T, V> Result<Integer> mapreduce(Stream<V> l1, ReduceFunction<T, V> reducefunc,

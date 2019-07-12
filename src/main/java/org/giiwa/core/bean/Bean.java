@@ -272,8 +272,8 @@ public class Bean implements Serializable {
 
 	/**
 	 * get the value by name from bean <br>
-	 * .
-	 *
+	 * 
+	 * @param <T>  the Object
 	 * @param name the name of the data or the column
 	 * @return Object the value of the name, return null if the name not exists
 	 */
@@ -316,6 +316,8 @@ public class Bean implements Serializable {
 
 	/**
 	 * test is empty bean
+	 * 
+	 * @return the boolean, true if empty
 	 */
 	public final boolean isEmpty() {
 		return getAll().isEmpty();
@@ -552,7 +554,8 @@ public class Bean implements Serializable {
 	 * it will invoked when load data from the MongoDB<br>
 	 * by default, will load all data in Bean Map.
 	 * 
-	 * @param d the Document
+	 * @param d      the Document
+	 * @param fields the String[]
 	 */
 	public void load(Document d, String[] fields) {
 		if (fields == null || fields.length == 0) {
@@ -573,7 +576,8 @@ public class Bean implements Serializable {
 	 * it will be invoked when load data from RDBS DB <br>
 	 * By default, it will load all data in Bean Map.
 	 * 
-	 * @param r the ResultSet of RDBS
+	 * @param r      the ResultSet of RDBS
+	 * @param fields the String[] of fields
 	 * @throws SQLException the SQL exception
 	 */
 	public void load(ResultSet r, String[] fields) throws SQLException {
@@ -644,8 +648,9 @@ public class Bean implements Serializable {
 	/**
 	 * refine the bean and output as a json object
 	 * 
-	 * @param e the refine function
-	 * @return
+	 * @param <T>
+	 * @param e   the refine function
+	 * @return the JSON
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends Bean> JSON refine(ReduceFunction<JSON, T> e) {

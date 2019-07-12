@@ -17,11 +17,10 @@ public class Telnet {
 
 	/**
 	 * 
-	 * @param url
-	 *            telnet://g01:22?username=&passwd=
+	 * @param url     telnet://g01:22?username=&passwd=
 	 * 
-	 * @param command
-	 * @return
+	 * @param command the command
+	 * @return the String
 	 */
 	public static String run(Url url, String command) {
 
