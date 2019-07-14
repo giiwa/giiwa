@@ -64,7 +64,6 @@ public class GLog extends Bean {
 	/**
 	 * Removes all the oplog.
 	 * 
-	 * @return the number was deleted
 	 */
 	public void cleanup() {
 		dao.cleanup();
@@ -196,12 +195,12 @@ public class GLog extends Bean {
 		/**
 		 * record the log
 		 * 
-		 * @param model
-		 * @param op
-		 * @param message
-		 * @param trace
-		 * @param u
-		 * @param ip
+		 * @param model   the model name
+		 * @param op      the op name
+		 * @param message the message
+		 * @param trace   the Throwable
+		 * @param u       the user object
+		 * @param ip      the remote ip
 		 */
 		public void info(String model, String op, String message, Throwable trace, User u, String ip) {
 			info(Local.id(), model, op, message, X.toString(trace).replaceAll(System.lineSeparator(), "<br/>")

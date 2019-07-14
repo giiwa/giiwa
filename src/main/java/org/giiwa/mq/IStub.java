@@ -37,8 +37,7 @@ public abstract class IStub {
 	/**
 	 * Instantiates a new i stub.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 */
 	public IStub(String name) {
 		this.name = name;
@@ -47,8 +46,7 @@ public abstract class IStub {
 	/**
 	 * Bind the stub on the MQ as Queue
 	 *
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	final public void bind() throws Exception {
 		bind(Mode.QUEUE);
@@ -57,10 +55,8 @@ public abstract class IStub {
 	/**
 	 * Bind the stub on the ActiveMQ with the mode
 	 *
-	 * @param m
-	 *            the mode
-	 * @throws Exception
-	 *             the exception
+	 * @param m the mode
+	 * @throws Exception the exception
 	 */
 	final public void bind(Mode m) throws Exception {
 		MQ.bind(name, this, m);
@@ -69,7 +65,7 @@ public abstract class IStub {
 	/**
 	 * unbind the stub
 	 * 
-	 * @throws Exception
+	 * @throws Exception throw Exception if unbind failed
 	 */
 	final public void unbind() throws Exception {
 		MQ.unbind(this);
@@ -78,12 +74,9 @@ public abstract class IStub {
 	/**
 	 * Send message to destination
 	 *
-	 * @param to
-	 *            the destination queue
-	 * @param req
-	 *            the message
-	 * @throws Exception
-	 *             the exception
+	 * @param to  the destination queue
+	 * @param req the message
+	 * @throws Exception the exception
 	 */
 	public void send(String to, Request req) throws Exception {
 		req.from = name;
@@ -93,14 +86,9 @@ public abstract class IStub {
 	/**
 	 * send a topic to the destination
 	 * 
-	 * @param to
-	 *            the destination topic
-	 * @param type
-	 *            the message type
-	 * @param message
-	 *            the message
-	 * @throws Exception
-	 *             the exception
+	 * @param to  the destination topic
+	 * @param req the message
+	 * @throws Exception the exception
 	 */
 	public void topic(String to, Request req) throws Exception {
 		req.from = name;
@@ -110,14 +98,8 @@ public abstract class IStub {
 	/**
 	 * On request triggered when message arrive
 	 *
-	 * @param seq
-	 *            the sequence
-	 * @param from
-	 *            the source destination queue
-	 * @param type
-	 *            the message type
-	 * @param message
-	 *            the message
+	 * @param seq the sequence
+	 * @param req the message
 	 */
 	public abstract void onRequest(long seq, Request req);
 

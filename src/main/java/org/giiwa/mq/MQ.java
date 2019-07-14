@@ -83,7 +83,7 @@ public abstract class MQ {
 	/**
 	 * test configured MQ
 	 * 
-	 * @return
+	 * @return true if configured
 	 */
 	public static boolean isConfigured() {
 		return mq != null;
@@ -92,10 +92,9 @@ public abstract class MQ {
 	/**
 	 * initialize the MQ with the node and url, the default is using ActiveMQ
 	 * 
-	 * @param node
-	 *            the local node name, MUST unique
-	 * @param url
-	 *            the activemq URL
+	 * @param node  the local node name, MUST unique
+	 * @param group the group name
+	 * @param url   the activemq URL
 	 * @return true if success or false if failed.
 	 */
 	public static boolean init(String node, String group, String url) {
@@ -115,14 +114,10 @@ public abstract class MQ {
 	/**
 	 * listen on the name
 	 * 
-	 * @param name
-	 *            the service name
-	 * @param stub
-	 *            the Stub object
-	 * @param mode
-	 *            the bind mode (topic, queue)
-	 * @throws JMSException
-	 *             the Exception
+	 * @param name the service name
+	 * @param stub the Stub object
+	 * @param mode the bind mode (topic, queue)
+	 * @throws JMSException the Exception
 	 */
 	public static void bind(String name, IStub stub, Mode mode) throws Exception {
 		if (mq == null) {
@@ -209,13 +204,10 @@ public abstract class MQ {
 	/**
 	 * broadcast the message as "topic" to all "dest:to", and return immediately
 	 * 
-	 * @param to
-	 *            the destination topic
-	 * @param req
-	 *            the message
+	 * @param to  the destination topic
+	 * @param req the message
 	 * @return the sequence of the message
-	 * @throws Exception
-	 *             the Exception
+	 * @throws Exception the Exception
 	 */
 
 	public static long topic(String to, Request req) throws Exception {
@@ -240,17 +232,10 @@ public abstract class MQ {
 	/**
 	 * send the message and return immediately
 	 * 
-	 * @param to
-	 *            the destination queue name
-	 * @param from
-	 *            the source queue
-	 * @param type
-	 *            the message type
-	 * @param message
-	 *            the message
+	 * @param to  the destination queue name
+	 * @param req the message
 	 * @return the sequence of the payload
-	 * @throws Exception
-	 *             the Exception
+	 * @throws Exception the Exception
 	 */
 	public static long send(String to, Request req) throws Exception {
 		if (req.seq <= 0) {

@@ -75,10 +75,10 @@ public class MongoHelper implements Helper.DBHelper {
 	public static MongoHelper inst = new MongoHelper();
 
 	public boolean isConfigured() {
-		
+
 		getDB();
 		return mongo.size() > 0;
-		
+
 	}
 
 	/**
@@ -838,6 +838,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * backup the whole data from file.
 	 *
 	 * @param filename the file name
+	 * @param cc       the tables
 	 */
 	public void backup(String filename, String[] cc) {
 		File f = new File(filename);
@@ -1056,7 +1057,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	@Override
 	public List<JSON> listTables(String db) {
-		
+
 		MongoDatabase g = getDB(db);
 
 		List<JSON> list = new ArrayList<JSON>();
@@ -1079,18 +1080,18 @@ public class MongoHelper implements Helper.DBHelper {
 
 		});
 		return list;
-		
+
 	}
 
 	@Override
 	public void close() {
-		
+
 		// forget this, the client may used in other helper
 		if (client != null && this != Helper.primary) {
 			client.close();
 			client = null;
 		}
-		
+
 	}
 
 	@Override
@@ -1163,7 +1164,7 @@ public class MongoHelper implements Helper.DBHelper {
 	/**
 	 * 
 	 * @param url, "mongodb://host:port/dbname"
-	 * @return
+	 * @return the MongoHelper
 	 */
 	public static MongoHelper create(String url) {
 		//

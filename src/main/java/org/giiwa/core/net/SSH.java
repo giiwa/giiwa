@@ -20,7 +20,7 @@ public class SSH {
 
 	/**
 	 * 
-	 * @param url     ssh://g01:22?username=&passwd=
+	 * @param url     ssh://g01:22?username=,passwd=
 	 * 
 	 * @param command the command
 	 * @return the String

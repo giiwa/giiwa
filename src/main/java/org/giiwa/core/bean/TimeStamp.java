@@ -51,8 +51,7 @@ public class TimeStamp implements Serializable {
 	/**
 	 * Sets the.
 	 *
-	 * @param s
-	 *            the s
+	 * @param s the s
 	 * @return the time stamp
 	 */
 	public TimeStamp set(long s) {
@@ -86,7 +85,7 @@ public class TimeStamp implements Serializable {
 	/**
 	 * past ms
 	 * 
-	 * @return
+	 * @return the ms of past
 	 */
 	public long pastms() {
 		return (System.nanoTime() - start) / 1000000;

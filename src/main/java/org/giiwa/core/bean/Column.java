@@ -41,7 +41,7 @@ public @interface Column {
 	/**
 	 * the length of the column
 	 * 
-	 * @return
+	 * @return the length of the column, default -1
 	 */
 	int length() default -1;
 
@@ -55,7 +55,7 @@ public @interface Column {
 	/**
 	 * full text index, the number is the weight
 	 * 
-	 * @return
+	 * @return 1 text field
 	 */
 	int text() default 0;
 

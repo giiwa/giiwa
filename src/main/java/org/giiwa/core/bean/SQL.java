@@ -24,11 +24,10 @@ public class SQL {
 
 	/**
 	 * 
-	 * @param h
-	 * @param sql
-	 *            "select * from [table] where a=1 orderby b [desc] offset 1 limit
+	 * @param h   the db helper
+	 * @param sql "select * from [table] where a=1 orderby b [desc] offset 1 limit
 	 *            10";
-	 * @return
+	 * @return the list of Bean
 	 */
 	public static List<Bean> query(DBHelper h, String sql) {
 
@@ -291,9 +290,9 @@ public class SQL {
 	}
 
 	/**
-	 * 
-	 * @param sql
-	 * @return
+	 * @param h   the db helper
+	 * @param sql the sql
+	 * @return the Bean
 	 * @throws SQLException
 	 */
 	public static Bean get(DBHelper h, String sql) throws SQLException {

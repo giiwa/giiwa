@@ -78,7 +78,7 @@ public class _CPU extends Bean {
 
 	/**
 	 * @deprecated
-	 * @param c1
+	 * @param c1 the CPU
 	 */
 	public void plus(_CPU c1) {
 		user += c1.sys;

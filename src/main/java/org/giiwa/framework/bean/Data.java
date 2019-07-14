@@ -37,14 +37,10 @@ public class Data extends Bean {
 	/**
 	 * Load data from any table
 	 *
-	 * @param table
-	 *            the table
-	 * @param q
-	 *            the query and order
-	 * @param s
-	 *            the start of number
-	 * @param n
-	 *            the number of items
+	 * @param table the table
+	 * @param q     the query and order
+	 * @param s     the start of number
+	 * @param n     the number of items
 	 * @return the beans
 	 */
 	public static Beans<Data> load(String table, W q, int s, int n) {
@@ -54,10 +50,8 @@ public class Data extends Bean {
 	/**
 	 * load the data from the table
 	 * 
-	 * @param table
-	 *            the table name
-	 * @param q
-	 *            the query and order
+	 * @param table the table name
+	 * @param q     the query and order
 	 * @return the Data object
 	 */
 	public static Data load(String table, W q) {
@@ -67,12 +61,9 @@ public class Data extends Bean {
 	/**
 	 * update the data
 	 * 
-	 * @param table
-	 *            the tablename
-	 * @param q
-	 *            the query condition
-	 * @param data
-	 *            the json data
+	 * @param table the tablename
+	 * @param q     the query condition
+	 * @param data  the json data
 	 * @return the number of updated
 	 */
 	public static int update(String table, W q, JSON data) {
@@ -82,10 +73,8 @@ public class Data extends Bean {
 	/**
 	 * insert the json data to database
 	 * 
-	 * @param table
-	 *            the string of tablename
-	 * @param data
-	 *            the json data
+	 * @param table the string of tablename
+	 * @param data  the json data
 	 * @return the number of inserted
 	 */
 	public static int insert(String table, JSON data) {
@@ -95,9 +84,9 @@ public class Data extends Bean {
 	/**
 	 * delete data by q
 	 * 
-	 * @param table
-	 * @param q
-	 * @return
+	 * @param table the table
+	 * @param q     the query
+	 * @return the number impacted
 	 */
 	public static int remove(String table, W q) {
 		return Helper.delete(q, table, Helper.DEFAULT);

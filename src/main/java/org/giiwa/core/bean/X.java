@@ -684,9 +684,9 @@ public final class X {
 	/**
 	 * count the char number in the string
 	 * 
-	 * @param s
-	 * @param c
-	 * @return
+	 * @param s the string
+	 * @param c the char
+	 * @return the number
 	 */
 	public static int count(String s, char c) {
 		if (s == null)
@@ -703,9 +703,9 @@ public final class X {
 	/**
 	 * fill a new string with the s
 	 * 
-	 * @param s
-	 * @param n
-	 * @return
+	 * @param s the string
+	 * @param n the number
+	 * @return the String
 	 */
 	public static String fill(String s, int n) {
 		StringBuilder sb = new StringBuilder();
@@ -732,7 +732,7 @@ public final class X {
 	 * 
 	 * @param l1 the list
 	 * @param l2 the list
-	 * @return the list
+	 * @return the list of list of T
 	 */
 	public static <T> List<List<T>> descartes(List<List<T>> l1, List<List<T>> l2) {
 		if (l2 == null || l2.isEmpty())

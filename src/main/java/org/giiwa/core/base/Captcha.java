@@ -57,21 +57,14 @@ public class Captcha {
 	/**
 	 * output the "code image" to the file.
 	 *
-	 * @param sid
-	 *            the session id
-	 * @param expired
-	 *            the expired timestamp
-	 * @param w
-	 *            the width of the image
-	 * @param h
-	 *            the height of the image
-	 * @param outputFile
-	 *            the output file
-	 * @param len
-	 *            the length of the code
+	 * @param sid     the session id
+	 * @param expired the expired timestamp
+	 * @param w       the width of the image
+	 * @param h       the height of the image
+	 * @param output  the output file
+	 * @param len     the length of the code
 	 * @return String of the code
-	 * @throws IOException
-	 *             throw exception when write image to the file
+	 * @throws IOException throw exception when write image to the file
 	 */
 	public static boolean create(String sid, long expired, int w, int h, OutputStream output, int len)
 			throws IOException {
@@ -91,10 +84,8 @@ public class Captcha {
 	/**
 	 * verify the code associated.
 	 *
-	 * @param sid
-	 *            the session id
-	 * @param code
-	 *            the code
+	 * @param sid  the session id
+	 * @param code the code
 	 * @return Result <br>
 	 */
 	public static Result verify(String sid, String code) {
@@ -116,8 +107,7 @@ public class Captcha {
 	/**
 	 * remove the captcha code for sid.
 	 *
-	 * @param sid
-	 *            the session id
+	 * @param sid the session id
 	 */
 	public static void remove(String sid) {
 		String id = "//captcha/" + sid;
@@ -272,10 +262,8 @@ public class Captcha {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @param args the arguments
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static void main(String[] args) throws IOException {
 		File dir = new File("/tmp/verifies");
@@ -299,10 +287,8 @@ public class Captcha {
 		/**
 		 * Creates the.
 		 *
-		 * @param code
-		 *            the code
-		 * @param expired
-		 *            the expired
+		 * @param code    the code
+		 * @param expired the expired
 		 * @return the code
 		 */
 		static Code create(String code, long expired) {

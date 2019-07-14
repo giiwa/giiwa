@@ -648,7 +648,7 @@ public class Bean implements Serializable {
 	/**
 	 * refine the bean and output as a json object
 	 * 
-	 * @param <T>
+	 * @param <T> the subclass of Bean
 	 * @param e   the refine function
 	 * @return the JSON
 	 */

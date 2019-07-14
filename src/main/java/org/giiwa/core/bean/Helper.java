@@ -310,7 +310,7 @@ public class Helper implements Serializable {
 	 * @param table the table name
 	 * @param db    the db name
 	 * @return the boolean
-	 * @throws SQLException
+	 * @throws SQLException throw SQLException if happen error
 	 */
 	public static boolean exists(W q, String table, String db) throws SQLException {
 
@@ -361,8 +361,9 @@ public class Helper implements Serializable {
 		/**
 		 * copy the request parameters to V
 		 * 
-		 * @param m
-		 * @param names
+		 * @param m     the model
+		 * @param names the names string
+		 * @return the V
 		 */
 		public V copy(Model m, String... names) {
 			if (X.isEmpty(names)) {
@@ -381,8 +382,8 @@ public class Helper implements Serializable {
 		/**
 		 * copy the request parameters to V
 		 * 
-		 * @param m
-		 * @param names
+		 * @param m     the model
+		 * @param names the names string
 		 */
 		public V copyInt(Model m, String... names) {
 			if (!X.isEmpty(names)) {
@@ -465,7 +466,7 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * Sets the value if not exists, ignored if name exists. <br/>
+		 * Sets the value if not exists, ignored if name exists. <br>
 		 * 
 		 * @param name the name
 		 * @param v    the value
@@ -508,8 +509,8 @@ public class Helper implements Serializable {
 		/**
 		 * same as copy(v);
 		 * 
-		 * @param v
-		 * @return
+		 * @param v the value object
+		 * @return the V
 		 */
 		public V append(V v) {
 			return this.copy(v);
@@ -1030,7 +1031,7 @@ public class Helper implements Serializable {
 		/**
 		 * create a empty q, only query the data of this node in clusters envir
 		 * 
-		 * @return
+		 * @return the W
 		 */
 		public static W createLocal() {
 			W q = create().and("_node", Global.id());
@@ -1735,7 +1736,7 @@ public class Helper implements Serializable {
 		 * 
 		 * @param <T>
 		 * @param name the field name
-		 * @return
+		 * @return the T
 		 */
 		public <T> T get(String name) {
 			Bean b = load();
@@ -1748,7 +1749,7 @@ public class Helper implements Serializable {
 		 * @param <T>
 		 * @param offset the row offset
 		 * @param name   the field name
-		 * @return
+		 * @return the Object
 		 */
 		public <T> T get(int offset, String name) {
 			Bean b = load(offset);
@@ -1861,12 +1862,13 @@ public class Helper implements Serializable {
 	/**
 	 * Load.
 	 *
-	 * @param <T>   the generic type
-	 * @param table the table
-	 * @param q     the q
-	 * @param t     the t
-	 * @param db    the db
-	 * @return the t
+	 * @param <T>    the generic type
+	 * @param table  the table
+	 * @param fields the fields
+	 * @param q      the query
+	 * @param t      the Bean Class
+	 * @param db     the db
+	 * @return the T
 	 */
 	public static <T extends Bean> T load(String table, String[] fields, W q, Class<T> t, String db) {
 
@@ -1972,9 +1974,9 @@ public class Helper implements Serializable {
 	/**
 	 * Insert.
 	 *
-	 * @param values the values
-	 * @param t      the t
-	 * @param db     the db
+	 * @param value the values
+	 * @param t     the t
+	 * @param db    the db
 	 * @return the int
 	 */
 	public static int insert(V value, Class<? extends Bean> t, String db) {
@@ -2115,10 +2117,10 @@ public class Helper implements Serializable {
 	/**
 	 * Inc.
 	 *
-	 * @param q    the q
+	 * @param q    the query
 	 * @param name the name
-	 * @param n    the n
-	 * @param t    the t
+	 * @param n    the number
+	 * @param t    the Bean Class
 	 * @return the int
 	 */
 	public static int inc(W q, String name, int n, V v, Class<? extends Bean> t) {
@@ -2146,6 +2148,7 @@ public class Helper implements Serializable {
 	 * @param q     the query
 	 * @param name  the name
 	 * @param n     the number
+	 * @param v     the value object
 	 * @param db    the db name
 	 * @return the new value
 	 */
@@ -2508,11 +2511,9 @@ public class Helper implements Serializable {
 	/**
 	 * get the distinct list for the name, by the query.
 	 * 
-	 * @param <T>  the base object
 	 * @param name the column name
 	 * @param q    the query
 	 * @param b    the Bean class
-	 * @param t    the Class of T
 	 * @return the List of objects
 	 */
 	public static List<?> distinct(String name, W q, Class<? extends Bean> b) {
@@ -2522,11 +2523,9 @@ public class Helper implements Serializable {
 	/**
 	 * Distinct.
 	 *
-	 * @param <T>  the generic type
 	 * @param name the name
-	 * @param q    the q
-	 * @param b    the b
-	 * @param t    the t
+	 * @param q    the query
+	 * @param b    the bean
 	 * @param db   the db
 	 * @return the list
 	 */
@@ -2541,7 +2540,6 @@ public class Helper implements Serializable {
 	 * @param name  the column name
 	 * @param q     the query
 	 * @param table the table name
-	 * @param t     the result type
 	 * @param db    the db name
 	 * @return the list
 	 */
@@ -2674,7 +2672,6 @@ public class Helper implements Serializable {
 
 	/**
 	 * 
-	 * @param m the optimizer
 	 */
 	public static void enableOptmizer() {
 		monitor = new Optimizer();

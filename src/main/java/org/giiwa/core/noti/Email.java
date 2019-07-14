@@ -57,6 +57,7 @@ public class Email {
 	 * @param names       the names
 	 * @param contents    the contents
 	 * @return true, if successful
+	 * @throws Exception the Exception
 	 */
 	public static boolean send(String subject, String body, String to, InputStream[] attachments, String[] names,
 			String[] contents) throws Exception {

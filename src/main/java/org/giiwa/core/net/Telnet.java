@@ -17,7 +17,7 @@ public class Telnet {
 
 	/**
 	 * 
-	 * @param url     telnet://g01:22?username=&passwd=
+	 * @param url     telnet://g01:22?username=,passwd=
 	 * 
 	 * @param command the command
 	 * @return the String

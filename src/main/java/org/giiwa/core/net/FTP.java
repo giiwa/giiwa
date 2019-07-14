@@ -16,9 +16,9 @@ public class FTP {
 
 	/**
 	 * 
-	 * @param url     ftp://g01:21?username=&passwd=
+	 * @param url ftp://g01:21?username=，passwd=
 	 * 
-	 * @param command the command
+	 * @param url the command
 	 * @return the FTPClient
 	 */
 	public static FTPClient login(Url url) {

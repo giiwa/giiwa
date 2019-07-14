@@ -50,10 +50,10 @@ public class Repo {
 	/**
 	 * store the input data into the repo with a random id
 	 * 
-	 * @param filename
-	 * @param in
-	 * @return
-	 * @throws IOException
+	 * @param filename the filename
+	 * @param in       the inputstream
+	 * @return the repo id
+	 * @throws IOException the ioexception
 	 */
 	public static String append(String filename, InputStream in) throws IOException {
 		try {
@@ -72,11 +72,12 @@ public class Repo {
 	 * Store the input data to associated id
 	 * 
 	 * @param id       the id
-	 * @param name     the name
+	 * @param filename the filename
 	 * @param position the position
 	 * @param total    the total
-	 * @param in       the in
+	 * @param in       the inputstream
 	 * @param uid      the uid
+	 * @param ip       the report ip
 	 * @return the long
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
@@ -137,7 +138,6 @@ public class Repo {
 	/**
 	 * Load.
 	 * 
-	 * @param folder the folder
 	 * @param id     the id
 	 * @return the entity
 	 */

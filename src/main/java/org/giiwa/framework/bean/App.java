@@ -124,7 +124,7 @@ public class App extends Bean {
 	/**
 	 * get tht role id
 	 * 
-	 * @return
+	 * @return the role if
 	 */
 	public long getRole() {
 		return role;
@@ -142,7 +142,7 @@ public class App extends Bean {
 	/**
 	 * get the secret
 	 * 
-	 * @return
+	 * @return the string of secret
 	 */
 	public String getSecret() {
 		return secret;
@@ -160,7 +160,7 @@ public class App extends Bean {
 	/**
 	 * the the last access time
 	 * 
-	 * @return
+	 * @return the last time
 	 */
 	public long getLastime() {
 		return lastime;
@@ -371,7 +371,7 @@ public class App extends Bean {
 		 * set the role
 		 * 
 		 * @param role
-		 * @return
+		 * @return the Param object
 		 */
 		public Param role(long role) {
 			v.set("role", role);

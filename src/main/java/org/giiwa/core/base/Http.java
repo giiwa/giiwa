@@ -584,12 +584,11 @@ public final class Http {
 	/**
 	 * POST.
 	 *
-	 * @param url         the url
-	 * @param contenttype the contenttype
-	 * @param headers     the headers
-	 * @param body        the body
-	 * @param stream      the attachments
-	 * @param timeout     the timeout
+	 * @param url     the url
+	 * @param headers the headers
+	 * @param body    the body
+	 * @param stream  the attachments
+	 * @param timeout the timeout
 	 * @return Response
 	 */
 	public Response post(String url, JSON headers, JSON body, InputStream stream, long timeout) {

@@ -345,8 +345,10 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * create a DAO object
 	 * 
-	 * @param t the Class of Bean
-	 * @return
+	 * @param <D> the Object
+	 * @param <E> the subclass of bean
+	 * @param t   the Class of Bean
+	 * @return the BeanDAO
 	 */
 	public static <D, E extends Bean> BeanDAO<D, E> create(Class<E> t) {
 		return new BeanDAO<D, E>(t);
@@ -420,7 +422,7 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * create a new object
 	 * 
-	 * @return
+	 * @return the T
 	 */
 	public T newInstance() {
 		try {

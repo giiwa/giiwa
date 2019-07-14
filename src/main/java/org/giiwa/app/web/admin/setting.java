@@ -47,6 +47,7 @@ public class setting extends Model {
 	/**
 	 * Register.
 	 *
+	 * @param seq  the seq
 	 * @param name the name
 	 * @param m    the m
 	 */

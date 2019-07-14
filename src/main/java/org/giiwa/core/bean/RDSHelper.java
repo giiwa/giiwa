@@ -512,11 +512,11 @@ public class RDSHelper implements Helper.DBHelper {
 	/**
 	 * Load the data, the data will be load(ResultSet r) method.
 	 *
-	 * @param cols  the cols, * if null
-	 * @param table the table name
-	 * @param q     the query object
-	 * @param b     the Bean
-	 * @param db    the db
+	 * @param fields the fields, * if null
+	 * @param table  the table name
+	 * @param q      the query object
+	 * @param b      the Bean
+	 * @param db     the db
 	 * @return boolean
 	 */
 	public boolean load(String table, String[] fields, W q, Bean b, String db) {
@@ -659,7 +659,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 *
 	 * @param <T>    the generic type
 	 * @param table  the table name
-	 * @param cols   the column name array
+	 * @param fields the column name array
 	 * @param q      the query object
 	 * @param offset the offset
 	 * @param limit  the limit
@@ -920,11 +920,11 @@ public class RDSHelper implements Helper.DBHelper {
 	 *
 	 * @param <T>    the generic Bean Class
 	 * @param table  the table name
+	 * @param fields the fields to load
 	 * @param q      the query object
 	 * @param offset the offset
 	 * @param limit  the limit
 	 * @param clazz  the Bean Class
-	 * @param db     the db
 	 * @return Beans
 	 */
 	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz) {
@@ -1722,6 +1722,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * backup the data to file.
 	 *
 	 * @param filename the filename
+	 * @param cc       the table
 	 */
 	public void backup(String filename, String[] cc) {
 

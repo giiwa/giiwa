@@ -40,7 +40,6 @@ import org.giiwa.core.bean.Helper.Cursor;
  * The {@code BeanStream} Class used to contains the Bean as cursor. <br>
  * MUSt close it after get data
  * 
- * @param <T> the generic type
  */
 public final class BeanStream<E extends Bean> implements Stream<E> {
 

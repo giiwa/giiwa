@@ -28,7 +28,6 @@ import org.giiwa.core.task.ReduceFunction;
  * The {@code Beans} Class used to contains the Bean in query. <br>
  * it's includes the total count for the query
  * 
- * @param <T> the generic type
  */
 public final class Beans<E extends Bean> extends ArrayList<E> implements Serializable {
 

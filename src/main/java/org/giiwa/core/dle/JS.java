@@ -53,10 +53,9 @@ public class JS {
 
 	/**
 	 * 
-	 * @param f
-	 *            such as: 10*20
-	 * @return
-	 * @throws Exception
+	 * @param f the string such as: 10*20
+	 * @return the Object
+	 * @throws Exception the Exception
 	 */
 	public static Object calculate(String f) throws Exception {
 		Object o = run(f, null);

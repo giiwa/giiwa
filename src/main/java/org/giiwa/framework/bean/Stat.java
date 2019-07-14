@@ -323,6 +323,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param time the long of the timestamp
 	 * @param name the string of the module name
 	 * @param size the SIZE
+	 * @param q    the query
+	 * @param v    the value
 	 * @param n    the data
 	 */
 	public static void snapshot(long time, String name, SIZE size, W q, V v, long... n) {

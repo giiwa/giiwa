@@ -370,11 +370,11 @@ public class GImage {
 	/**
 	 * scale the dest w/h with center meet the min
 	 * 
-	 * @param source
-	 * @param file
-	 * @param w
-	 * @param h
-	 * @return
+	 * @param source the InputStream
+	 * @param file   the file object
+	 * @param w      the width
+	 * @param h      the height
+	 * @return 1 success, -1 failed
 	 */
 	public static int scale(InputStream source, File file, final int w, final int h) {
 		try {

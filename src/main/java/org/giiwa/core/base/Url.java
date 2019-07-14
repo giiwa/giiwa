@@ -116,7 +116,7 @@ public class Url {
 
 	/**
 	 * 
-	 * @param url, protocol://ip:port?user=&passwd=
+	 * @param url, protocol://ip:port?user=，passwd=
 	 * @return the Url
 	 */
 	public static Url create(String url) {
