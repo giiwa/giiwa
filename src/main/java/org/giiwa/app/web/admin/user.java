@@ -235,12 +235,7 @@ public class user extends Model {
 					v.set("roles", list);
 				}
 
-				List<String> list = AuthToken.delete(id);
-				if (list != null && list.size() > 0) {
-					for (String s : list) {
-						Session.delete(s);
-					}
-				}
+				Session.expired(id);
 
 				GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login,
 						this.getRemoteHost());
