@@ -454,40 +454,47 @@ public final class X {
 	}
 
 	public static String[] csv(String src) {
+		if (X.isEmpty(src))
+			return null;
+		src = src.trim();
 
-		List<String> l1 = new ArrayList<String>();
-		if (src != null) {
-			StringBuilder sb = null;
-			for (int i = 0; i < src.length(); i++) {
-				char c = src.charAt(i);
-				if (c == '"') {
-					if (sb != null) {
-						l1.add(sb.toString());
-						sb = null;
-						i++;
-						while (i < src.length() && src.charAt(i) != '"') {
+		if (src.charAt(0) == '"') {
+			List<String> l1 = new ArrayList<String>();
+			if (src != null) {
+				StringBuilder sb = null;
+				for (int i = 0; i < src.length(); i++) {
+					char c = src.charAt(i);
+					if (c == '"') {
+						if (sb != null) {
+							l1.add(sb.toString());
+							sb = null;
 							i++;
+							while (i < src.length() && src.charAt(i) != '"') {
+								i++;
+							}
 						}
-					}
 
-					continue;
-				} else if (c == '\\') {
+						continue;
+					} else if (c == '\\') {
+						if (sb == null)
+							sb = new StringBuilder();
+						sb.append(c);
+						i++;
+						c = src.charAt(i);
+					}
 					if (sb == null)
 						sb = new StringBuilder();
 					sb.append(c);
-					i++;
-					c = src.charAt(i);
 				}
-				if (sb == null)
-					sb = new StringBuilder();
-				sb.append(c);
+				if (sb != null) {
+					l1.add(sb.toString());
+				}
 			}
-			if (sb != null) {
-				l1.add(sb.toString());
-			}
-		}
 
-		return l1.toArray(new String[l1.size()]);
+			return l1.toArray(new String[l1.size()]);
+		} else {
+			return X.split(src, "[,]");
+		}
 	}
 
 	/**
