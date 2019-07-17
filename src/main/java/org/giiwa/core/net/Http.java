@@ -1751,11 +1751,11 @@ public final class Http {
 
 				log.debug("post url=" + url);
 
-				StringEntity e = new StringEntity(body);
+				StringEntity e = new StringEntity(body, "UTF-8");
 				post.setEntity(e);
 
-				System.out.println("json");
-				System.out.println(post);
+//				System.out.println("json");
+//				System.out.println(post);
 
 				resp = client.execute(post, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
