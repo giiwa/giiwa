@@ -1217,6 +1217,40 @@ public class Helper implements Serializable {
 			return and(q);
 		}
 
+		public W and(String name, Object v, String op) {
+			if (X.isSame(">", op) || X.isSame("gt", op)) {
+				return and(name, v, W.OP.gt);
+			} else if (X.isSame(">=", op) || X.isSame("gte", op)) {
+				return and(name, v, W.OP.gte);
+			} else if (X.isSame("<", op) || X.isSame("lt", op)) {
+				return and(name, v, W.OP.lt);
+			} else if (X.isSame("<=", op) || X.isSame("lte", op)) {
+				return and(name, v, W.OP.lte);
+			} else if (X.isSame("!=", op) || X.isSame("neq", op)) {
+				return and(name, v, W.OP.neq);
+			} else if (X.isSame("like", op)) {
+				return and(name, v, W.OP.like);
+			}
+			return this;
+		}
+
+		public W or(String name, Object v, String op) {
+			if (X.isSame(">", op) || X.isSame("gt", op)) {
+				return or(name, v, W.OP.gt);
+			} else if (X.isSame(">=", op) || X.isSame("gte", op)) {
+				return or(name, v, W.OP.gte);
+			} else if (X.isSame("<", op) || X.isSame("lt", op)) {
+				return or(name, v, W.OP.lt);
+			} else if (X.isSame("<=", op) || X.isSame("lte", op)) {
+				return or(name, v, W.OP.lte);
+			} else if (X.isSame("!=", op) || X.isSame("neq", op)) {
+				return or(name, v, W.OP.neq);
+			} else if (X.isSame("like", op)) {
+				return or(name, v, W.OP.like);
+			}
+			return this;
+		}
+
 		/**
 		 * set the namd and parameter with "op" conditions.
 		 *
