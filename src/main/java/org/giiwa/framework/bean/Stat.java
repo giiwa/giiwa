@@ -65,7 +65,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return date;
 	}
 
-	private static String table(String module) {
+	public static String table(String module) {
 		return "gi_stat_" + (module.replaceAll("\\.delta", "").replaceAll("\\.snapshot", "").replaceAll("[\\.-]", "_"));
 	}
 
