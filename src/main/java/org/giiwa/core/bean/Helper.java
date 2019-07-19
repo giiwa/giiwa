@@ -908,7 +908,13 @@ public class Helper implements Serializable {
 		 * @return W
 		 */
 		public W copy() {
+
 			W w = new W();
+			w.dao = this.dao;
+			w.table = this.table;
+			w.helper = this.helper;
+			w.groupby = groupby;
+
 			w.cond = cond;
 
 			for (W w1 : wlist) {
