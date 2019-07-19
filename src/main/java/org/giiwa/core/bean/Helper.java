@@ -1799,6 +1799,62 @@ public class Helper implements Serializable {
 			}
 		}
 
+		public long count() {
+			if (dao != null) {
+				return dao.count(this);
+			} else {
+				return helper.count(table, this, Helper.DEFAULT);
+			}
+		}
+
+		public long sum(String name) {
+			if (dao != null) {
+				return dao.sum(name, this);
+			} else {
+				return helper.sum(table, this, name, Helper.DEFAULT);
+			}
+		}
+
+		public long avg(String name) {
+			if (dao != null) {
+				return dao.avg(name, this);
+			} else {
+				return helper.avg(table, this, name, Helper.DEFAULT);
+			}
+		}
+
+		public long min(String name) {
+			if (dao != null) {
+				return dao.min(name, this);
+			} else {
+				return helper.min(table, this, name, Helper.DEFAULT);
+			}
+		}
+
+		public long max(String name) {
+			if (dao != null) {
+				return dao.max(name, this);
+			} else {
+				return helper.max(table, this, name, Helper.DEFAULT);
+			}
+		}
+
+		public int delete() {
+			if (dao != null) {
+				return dao.delete(this);
+			} else {
+				return helper.delete(table, this, Helper.DEFAULT);
+			}
+		}
+
+		public List<?> distinct(String name) {
+			if (dao != null) {
+				return dao.distinct(name, this);
+			} else {
+				return helper.distinct(table, name, this, Helper.DEFAULT);
+			}
+		}
+
 		W dao(BeanDAO<?, ?> dao) {
 			this.dao = dao;
 			return this;
