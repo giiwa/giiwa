@@ -50,6 +50,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListCollectionsIterable;
 import com.mongodb.client.MongoCollection;
@@ -1191,8 +1192,16 @@ public class MongoHelper implements Helper.DBHelper {
 
 	public static void main(String[] args) {
 		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/demo");
-		int t = h.sum("gi_user", W.create(), "logintimes", "default");
-		System.out.println("t=" + t);
+		long i = h.count("gi_user", W.create(), Helper.DEFAULT);
+		System.out.println("count=" + i);
+
+		List<JSON> l1 = h.count("gi_user", W.create().sort("count", -1), new String[] { "password" }, Helper.DEFAULT);
+		System.out.println("count=" + l1);
+		
+		l1 = h.max("gi_user", W.create().sort("max", -1), "created", new String[] { "password" }, Helper.DEFAULT);
+		System.out.println("count=" + l1);
+		
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1352,6 +1361,318 @@ public class MongoHelper implements Helper.DBHelper {
 	public void drop(String table, String db) {
 		MongoCollection<Document> c = getCollection(db, table);
 		c.drop();
+	}
+
+	/**
+	 * group by name and count
+	 * 
+	 * @param collection
+	 * @param name
+	 * @param q
+	 * @param db
+	 * @return
+	 */
+	@Override
+	public List<JSON> count(String collection, W q, String[] name, String db) {
+
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(collection)) {
+				log.error("bad collection=" + collection, new Exception("bad collection=" + collection));
+				return null;
+			}
+
+			if (name == null || name.length == 0) {
+				log.error("bad name=" + name, new Exception("bad name=" + name));
+				return null;
+			}
+
+			db1 = getCollection(db, collection);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				BasicDBObject group = new BasicDBObject();
+				for (String s : name) {
+					group.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", group).append("count",
+						new BasicDBObject().append("$sum", 1))));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				List<JSON> l2 = JSON.createList();
+				for (Document d : a1) {
+					l2.add(JSON.fromObject(d));
+				}
+
+				log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+			GLog.dblog.error(collection, "group", "q=" + q, e, null, db);
+
+		}
+
+		return null;
+
+	}
+
+	@Override
+	public List<JSON> sum(String table, W q, String name, String[] group, String db) {
+
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad table=" + table, new Exception("bad table=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad group=" + group, new Exception("bad group=" + group));
+				return null;
+			}
+
+			db1 = getCollection(db, table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				BasicDBObject g1 = new BasicDBObject();
+				for (String s : group) {
+					g1.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", g1).append("sum",
+						new BasicDBObject().append("$sum", "$" + name))));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				List<JSON> l2 = JSON.createList();
+				for (Document d : a1) {
+					l2.add(JSON.fromObject(d));
+				}
+
+				log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
+
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<JSON> max(String table, W q, String name, String[] group, String db) {
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad table=" + table, new Exception("bad table=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad group=" + group, new Exception("bad group=" + group));
+				return null;
+			}
+
+			db1 = getCollection(db, table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				BasicDBObject g1 = new BasicDBObject();
+				for (String s : group) {
+					g1.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", g1).append("max",
+						new BasicDBObject().append("$max", "$" + name))));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				List<JSON> l2 = JSON.createList();
+				for (Document d : a1) {
+					l2.add(JSON.fromObject(d));
+				}
+
+				log.debug("max, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
+
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<JSON> min(String table, W q, String name, String[] group, String db) {
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad table=" + table, new Exception("bad table=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad group=" + group, new Exception("bad group=" + group));
+				return null;
+			}
+
+			db1 = getCollection(db, table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				BasicDBObject g1 = new BasicDBObject();
+				for (String s : group) {
+					g1.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", g1).append("min",
+						new BasicDBObject().append("$min", "$" + name))));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				List<JSON> l2 = JSON.createList();
+				for (Document d : a1) {
+					l2.add(JSON.fromObject(d));
+				}
+
+				log.debug("min, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
+
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<JSON> avg(String table, W q, String name, String[] group, String db) {
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad table=" + table, new Exception("bad table=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad group=" + group, new Exception("bad group=" + group));
+				return null;
+			}
+
+			db1 = getCollection(db, table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				BasicDBObject g1 = new BasicDBObject();
+				for (String s : group) {
+					g1.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", g1).append("avg",
+						new BasicDBObject().append("$avg", "$" + name))));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				List<JSON> l2 = JSON.createList();
+				for (Document d : a1) {
+					l2.add(JSON.fromObject(d));
+				}
+
+				log.debug("avg, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
+
+		}
+
+		return null;
 	}
 
 }

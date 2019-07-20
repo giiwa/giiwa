@@ -1861,6 +1861,46 @@ public class Helper implements Serializable {
 			}
 		}
 
+		public List<JSON> count(String... group) {
+			if (dao != null) {
+				return dao.count(this, group);
+			} else {
+				return helper.count(table, this, group, Helper.DEFAULT);
+			}
+		}
+
+		public List<JSON> sum(String name, String... group) {
+			if (dao != null) {
+				return dao.sum(this, name, group);
+			} else {
+				return helper.sum(table, this, name, group, Helper.DEFAULT);
+			}
+		}
+
+		public List<JSON> min(String name, String... group) {
+			if (dao != null) {
+				return dao.min(this, name, group);
+			} else {
+				return helper.min(table, this, name, group, Helper.DEFAULT);
+			}
+		}
+
+		public List<JSON> max(String name, String... group) {
+			if (dao != null) {
+				return dao.max(this, name, group);
+			} else {
+				return helper.max(table, this, name, group, Helper.DEFAULT);
+			}
+		}
+
+		public List<JSON> avg(String name, String... group) {
+			if (dao != null) {
+				return dao.avg(this, name, group);
+			} else {
+				return helper.avg(table, this, name, group, Helper.DEFAULT);
+			}
+		}
+
 		W dao(BeanDAO<?, ?> dao) {
 			this.dao = dao;
 			return this;
@@ -2907,13 +2947,23 @@ public class Helper implements Serializable {
 
 		long count(String table, W q, String db);
 
+		List<JSON> count(String table, W q, String[] group, String db);
+
 		<T> T sum(String table, W q, String name, String db);
+
+		List<JSON> sum(String table, W q, String name, String[] group, String db);
 
 		<T> T max(String table, W q, String name, String db);
 
+		List<JSON> max(String table, W q, String name, String[] group, String db);
+
 		<T> T min(String table, W q, String name, String db);
 
+		List<JSON> min(String table, W q, String name, String[] group, String db);
+
 		<T> T avg(String table, W q, String name, String db);
+
+		List<JSON> avg(String table, W q, String name, String[] group, String db);
 
 		List<?> distinct(String table, String name, W q, String db);
 
@@ -2947,6 +2997,71 @@ public class Helper implements Serializable {
 			}
 		}
 
+	}
+
+	public static List<JSON> count(String tableName, W q, String[] name, String dbName) {
+		if (primary != null && primary.getDB(dbName) != null) {
+			return primary.count(tableName, q, name, dbName);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(dbName) != null) {
+					return h.count(tableName, q, name, dbName);
+				}
+			}
+		}
+		return null;
+	}
+
+	public static List<JSON> sum(String tableName, W q, String name, String[] group, String dbName) {
+		if (primary != null && primary.getDB(dbName) != null) {
+			return primary.sum(tableName, q, name, group, dbName);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(dbName) != null) {
+					return h.sum(tableName, q, name, group, dbName);
+				}
+			}
+		}
+		return null;
+	}
+
+	public static List<JSON> min(String tableName, W q, String name, String[] group, String dbName) {
+		if (primary != null && primary.getDB(dbName) != null) {
+			return primary.min(tableName, q, name, group, dbName);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(dbName) != null) {
+					return h.min(tableName, q, name, group, dbName);
+				}
+			}
+		}
+		return null;
+	}
+
+	public static List<JSON> max(String tableName, W q, String name, String[] group, String dbName) {
+		if (primary != null && primary.getDB(dbName) != null) {
+			return primary.max(tableName, q, name, group, dbName);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(dbName) != null) {
+					return h.max(tableName, q, name, group, dbName);
+				}
+			}
+		}
+		return null;
+	}
+
+	public static List<JSON> avg(String tableName, W q, String name, String[] group, String dbName) {
+		if (primary != null && primary.getDB(dbName) != null) {
+			return primary.avg(tableName, q, name, group, dbName);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(dbName) != null) {
+					return h.avg(tableName, q, name, group, dbName);
+				}
+			}
+		}
+		return null;
 	}
 
 }

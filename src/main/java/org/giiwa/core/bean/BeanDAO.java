@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.User;
@@ -482,6 +483,26 @@ public class BeanDAO<I, T extends Bean> {
 		q.dao(this);
 
 		return q;
+	}
+
+	public List<JSON> count(W q, String[] group) {
+		return Helper.count(this.tableName(), q, group, this.dbName());
+	}
+
+	public List<JSON> sum(W q, String name, String[] group) {
+		return Helper.sum(this.tableName(), q, name, group, this.dbName());
+	}
+
+	public List<JSON> min(W q, String name, String[] group) {
+		return Helper.min(this.tableName(), q, name, group, this.dbName());
+	}
+
+	public List<JSON> max(W q, String name, String[] group) {
+		return Helper.max(this.tableName(), q, name, group, this.dbName());
+	}
+
+	public List<JSON> avg(W q, String name, String[] group) {
+		return Helper.avg(this.tableName(), q, name, group, this.dbName());
 	}
 
 }
