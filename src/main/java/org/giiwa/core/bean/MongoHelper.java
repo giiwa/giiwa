@@ -1192,15 +1192,16 @@ public class MongoHelper implements Helper.DBHelper {
 
 	public static void main(String[] args) {
 		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/demo");
-		long i = h.count("gi_user", W.create(), Helper.DEFAULT);
+		long i = h.count("gi_user", W.create().and("password", "fm3p0ya5bocee"), Helper.DEFAULT);
 		System.out.println("count=" + i);
 
-		List<JSON> l1 = h.count("gi_user", W.create().sort("count", -1), new String[] { "password" }, Helper.DEFAULT);
+		List<JSON> l1 = h.count("gi_user", W.create().and("id", 1, W.OP.gt).sort("count", -1),
+				new String[] { "password" }, Helper.DEFAULT);
 		System.out.println("count=" + l1);
-		
-		l1 = h.max("gi_user", W.create().sort("max", -1), "created", new String[] { "password" }, Helper.DEFAULT);
+
+		l1 = h.max("gi_user", W.create().and("password", "fm3p0ya5bocee").sort("max", -1), "created",
+				new String[] { "password" }, Helper.DEFAULT);
 		System.out.println("count=" + l1);
-		
 
 	}
 
@@ -1397,6 +1398,10 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<Bson> l1 = new ArrayList<Bson>();
 
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
 				BasicDBObject group = new BasicDBObject();
 				for (String s : name) {
 					group.append(s, "$" + s);
@@ -1408,10 +1413,6 @@ public class MongoHelper implements Helper.DBHelper {
 					l1.add(new BasicDBObject().append("$sort", order));
 				}
 
-				if (!query.isEmpty()) {
-					l1.add(new BasicDBObject().append("$match", query));
-				}
-
 				AggregateIterable<Document> a1 = db1.aggregate(l1);
 
 				List<JSON> l2 = JSON.createList();
@@ -1420,6 +1421,7 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 
 				log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+//				System.out.println("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
 			}
@@ -1459,6 +1461,10 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<Bson> l1 = new ArrayList<Bson>();
 
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
 				BasicDBObject g1 = new BasicDBObject();
 				for (String s : group) {
 					g1.append(s, "$" + s);
@@ -1468,10 +1474,6 @@ public class MongoHelper implements Helper.DBHelper {
 
 				if (!order.isEmpty()) {
 					l1.add(new BasicDBObject().append("$sort", order));
-				}
-
-				if (!query.isEmpty()) {
-					l1.add(new BasicDBObject().append("$match", query));
 				}
 
 				AggregateIterable<Document> a1 = db1.aggregate(l1);
@@ -1519,6 +1521,10 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<Bson> l1 = new ArrayList<Bson>();
 
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
 				BasicDBObject g1 = new BasicDBObject();
 				for (String s : group) {
 					g1.append(s, "$" + s);
@@ -1530,10 +1536,6 @@ public class MongoHelper implements Helper.DBHelper {
 					l1.add(new BasicDBObject().append("$sort", order));
 				}
 
-				if (!query.isEmpty()) {
-					l1.add(new BasicDBObject().append("$match", query));
-				}
-
 				AggregateIterable<Document> a1 = db1.aggregate(l1);
 
 				List<JSON> l2 = JSON.createList();
@@ -1542,6 +1544,7 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 
 				log.debug("max, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+//				System.out.println("max, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
 			}
@@ -1579,6 +1582,10 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<Bson> l1 = new ArrayList<Bson>();
 
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
 				BasicDBObject g1 = new BasicDBObject();
 				for (String s : group) {
 					g1.append(s, "$" + s);
@@ -1588,10 +1595,6 @@ public class MongoHelper implements Helper.DBHelper {
 
 				if (!order.isEmpty()) {
 					l1.add(new BasicDBObject().append("$sort", order));
-				}
-
-				if (!query.isEmpty()) {
-					l1.add(new BasicDBObject().append("$match", query));
 				}
 
 				AggregateIterable<Document> a1 = db1.aggregate(l1);
@@ -1639,6 +1642,10 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<Bson> l1 = new ArrayList<Bson>();
 
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
 				BasicDBObject g1 = new BasicDBObject();
 				for (String s : group) {
 					g1.append(s, "$" + s);
@@ -1648,10 +1655,6 @@ public class MongoHelper implements Helper.DBHelper {
 
 				if (!order.isEmpty()) {
 					l1.add(new BasicDBObject().append("$sort", order));
-				}
-
-				if (!query.isEmpty()) {
-					l1.add(new BasicDBObject().append("$match", query));
 				}
 
 				AggregateIterable<Document> a1 = db1.aggregate(l1);
