@@ -17,6 +17,7 @@ package org.giiwa.core.bean;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -1861,43 +1862,43 @@ public class Helper implements Serializable {
 			}
 		}
 
-		public List<JSON> count(String... group) {
+		public List<JSON> count(String group) {
 			if (dao != null) {
-				return dao.count(this, group);
+				return dao.count(this, X.split(group, "[,]"));
 			} else {
-				return helper.count(table, this, group, Helper.DEFAULT);
+				return helper.count(table, this, X.split(group, "[,]"), Helper.DEFAULT);
 			}
 		}
 
-		public List<JSON> sum(String name, String... group) {
+		public List<JSON> sum(String name, String group) {
 			if (dao != null) {
-				return dao.sum(this, name, group);
+				return dao.sum(this, name, X.split(group, "[,]"));
 			} else {
-				return helper.sum(table, this, name, group, Helper.DEFAULT);
+				return helper.sum(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
 		}
 
-		public List<JSON> min(String name, String... group) {
+		public List<JSON> min(String name, String group) {
 			if (dao != null) {
-				return dao.min(this, name, group);
+				return dao.min(this, name, X.split(group, "[,]"));
 			} else {
-				return helper.min(table, this, name, group, Helper.DEFAULT);
+				return helper.min(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
 		}
 
-		public List<JSON> max(String name, String... group) {
+		public List<JSON> max(String name, String group) {
 			if (dao != null) {
-				return dao.max(this, name, group);
+				return dao.max(this, name, X.split(group, "[,]"));
 			} else {
-				return helper.max(table, this, name, group, Helper.DEFAULT);
+				return helper.max(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
 		}
 
-		public List<JSON> avg(String name, String... group) {
+		public List<JSON> avg(String name, String group) {
 			if (dao != null) {
-				return dao.avg(this, name, group);
+				return dao.avg(this, name, X.split(group, "[,]"));
 			} else {
-				return helper.avg(table, this, name, group, Helper.DEFAULT);
+				return helper.avg(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
 		}
 
