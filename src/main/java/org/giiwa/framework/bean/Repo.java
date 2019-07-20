@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.logging.*;
+import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.dfile.DFile;
 
@@ -138,7 +139,7 @@ public class Repo {
 	/**
 	 * Load.
 	 * 
-	 * @param id     the id
+	 * @param id the id
 	 * @return the entity
 	 */
 	public static Entity load(String id) {
@@ -317,25 +318,15 @@ public class Repo {
 		return 0;
 	}
 
-	public static void cleanup(long expired) {
-		DFile f = Disk.seek(ROOT);
-		cleanup(f, expired);
-	}
+	public static void cleanup(long age) {
 
-	private static void cleanup(DFile f, long expired) {
 		try {
-			if (f.isFile() && System.currentTimeMillis() - f.lastModified() > expired) {
-				f.delete();
-			} else {
-				DFile[] ff = f.listFiles();
-				if (ff != null) {
-					for (DFile f1 : ff) {
-						cleanup(f1, expired);
-					}
-					ff = f.listFiles();
-					if (ff == null || ff.length == 0) {
-						f.delete();
-					}
+			DFile f = Disk.seek(ROOT);
+
+			DFile[] ff = f.listFiles();
+			if (ff != null) {
+				for (DFile f1 : ff) {
+					IOUtil.delete(f1, age);
 				}
 			}
 		} catch (Exception e) {

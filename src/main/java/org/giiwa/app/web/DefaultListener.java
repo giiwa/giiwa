@@ -173,7 +173,7 @@ public class DefaultListener implements IListener {
 		Task.schedule(() -> {
 
 			NtpTask.inst.schedule(X.AMINUTE);
-			new CleanupTask(Config.getConf()).schedule(X.AMINUTE);
+			CleanupTask.init(Config.getConf());
 			RecycleTask.owner.schedule(X.AMINUTE);
 			PerfMoniterTask.owner.schedule(X.AMINUTE);
 			BackupTask.init();

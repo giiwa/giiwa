@@ -44,13 +44,10 @@ public final class IOUtil {
 	 * the utility api of copying all data in "inputstream" to "outputstream".
 	 * please refers copy(in, out, boolean)
 	 *
-	 * @param in
-	 *            the inputstream
-	 * @param out
-	 *            the outputstream
+	 * @param in  the inputstream
+	 * @param out the outputstream
 	 * @return int the size of copied
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static int copy(InputStream in, OutputStream out) throws IOException {
 		return copy(in, out, true);
@@ -63,11 +60,9 @@ public final class IOUtil {
 	/**
 	 * delete the file or the path.
 	 *
-	 * @param f
-	 *            the file or the path
+	 * @param f the file or the path
 	 * @return the number deleted
-	 * @throws IOException
-	 *             throw exception when delete the file or directory error
+	 * @throws IOException throw exception when delete the file or directory error
 	 */
 	public static int delete(File f, long age) throws IOException {
 		int count = 0;
@@ -75,9 +70,9 @@ public final class IOUtil {
 		if ((f.isFile() || isLink(f)) && (age < 0 || System.currentTimeMillis() - f.lastModified() > age)) {
 			f.delete();
 
-			// if (log.isInfoEnabled()) {
-			// log.info("delete file: " + f.getCanonicalPath());
-			// }
+			if (log.isInfoEnabled()) {
+				log.info("delete file: " + f.getCanonicalPath());
+			}
 
 			count++;
 		} else if (f.isDirectory()) {
@@ -90,10 +85,41 @@ public final class IOUtil {
 			ff = f.listFiles();
 			if (ff == null || ff.length == 0) {
 				f.delete();
+				if (log.isInfoEnabled()) {
+					log.info("delete folder: " + f.getCanonicalPath());
+				}
 			}
-			// if (log.isInfoEnabled()) {
-			// log.info("delete folder: " + f.getCanonicalPath());
-			// }
+
+			count++;
+		}
+		return count;
+	}
+
+	public static int delete(DFile f, long age) throws IOException {
+		int count = 0;
+
+		if (f.isFile() && (age < 0 || System.currentTimeMillis() - f.lastModified() > age)) {
+			f.delete();
+
+			if (log.isInfoEnabled()) {
+				log.info("delete file: " + f.getCanonicalPath());
+			}
+
+			count++;
+		} else if (f.isDirectory()) {
+			DFile[] ff = f.listFiles();
+			if (ff != null && ff.length > 0) {
+				for (DFile f1 : ff) {
+					count += delete(f1, age);
+				}
+			}
+			ff = f.listFiles();
+			if (ff == null || ff.length == 0) {
+				f.delete();
+				if (log.isInfoEnabled()) {
+					log.info("delete folder: " + f.getCanonicalPath());
+				}
+			}
 
 			count++;
 		}
@@ -135,13 +161,10 @@ public final class IOUtil {
 	/**
 	 * copy files.
 	 *
-	 * @param src
-	 *            the source file
-	 * @param dest
-	 *            the destination file
+	 * @param src  the source file
+	 * @param dest the destination file
 	 * @return the number copied
-	 * @throws IOException
-	 *             throw exception when copy failed
+	 * @throws IOException throw exception when copy failed
 	 */
 	public static int copyDir(File src, File dest) throws IOException {
 		dest.mkdirs();
@@ -168,15 +191,11 @@ public final class IOUtil {
 	/**
 	 * copy all the files except.
 	 *
-	 * @param src
-	 *            the source dir
-	 * @param dest
-	 *            the destination dir
-	 * @param except
-	 *            the files
+	 * @param src    the source dir
+	 * @param dest   the destination dir
+	 * @param except the files
 	 * @return the number files copied
-	 * @throws IOException
-	 *             throw IOException if error
+	 * @throws IOException throw IOException if error
 	 */
 	public static int copyDir(File src, File dest, String[] except) throws IOException {
 
@@ -210,13 +229,10 @@ public final class IOUtil {
 	/**
 	 * copy file src to file destination.
 	 *
-	 * @param src
-	 *            the source file
-	 * @param dest
-	 *            the destination file
+	 * @param src  the source file
+	 * @param dest the destination file
 	 * @return int of copied
-	 * @throws IOException
-	 *             throw exception when copy file failed
+	 * @throws IOException throw exception when copy file failed
 	 */
 	public static int copy(File src, File dest) throws IOException {
 		dest.getParentFile().mkdirs();
@@ -230,19 +246,13 @@ public final class IOUtil {
 	/**
 	 * copy the data in "inputstream" to "outputstream", from start to end.
 	 *
-	 * @param in
-	 *            the inputstream
-	 * @param out
-	 *            the outputstream
-	 * @param start
-	 *            the start position of started
-	 * @param end
-	 *            the end position of ended
-	 * @param closeAfterDone
-	 *            close after done, true: close if done, false: not close
+	 * @param in             the inputstream
+	 * @param out            the outputstream
+	 * @param start          the start position of started
+	 * @param end            the end position of ended
+	 * @param closeAfterDone close after done, true: close if done, false: not close
 	 * @return int the size of copied
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static int copy(InputStream in, OutputStream out, long start, long end, boolean closeAfterDone)
 			throws IOException {
@@ -287,15 +297,11 @@ public final class IOUtil {
 	/**
 	 * Copy data in "inputstream" to "outputstream".
 	 *
-	 * @param in
-	 *            the inputstream
-	 * @param out
-	 *            the outputstream
-	 * @param closeAfterDone
-	 *            close after done, true: close if done, false: not close
+	 * @param in             the inputstream
+	 * @param out            the outputstream
+	 * @param closeAfterDone close after done, true: close if done, false: not close
 	 * @return int the size of copied
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static int copy(InputStream in, OutputStream out, boolean closeAfterDone) throws IOException {
 

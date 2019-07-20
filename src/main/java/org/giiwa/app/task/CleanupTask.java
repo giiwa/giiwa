@@ -30,6 +30,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
+import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
 
 /**
@@ -47,6 +48,8 @@ public class CleanupTask extends Task {
 	 */
 	private static Log log = LogFactory.getLog(CleanupTask.class);
 
+	public static CleanupTask inst = null;// new CleanupTask();
+
 	/**
 	 * The home.
 	 */
@@ -62,13 +65,18 @@ public class CleanupTask extends Task {
 	 */
 	String file;
 
+	public static void init(Configuration conf) {
+		inst = new CleanupTask(conf);
+		inst.schedule((long) (X.AMINUTE * Math.random()));
+	}
+
 	/**
 	 * Instantiates a new cleanup task.
 	 * 
-	 * @param conf
-	 *            the conf
+	 * @param conf the conf
 	 */
-	public CleanupTask(Configuration conf) {
+	private CleanupTask(Configuration conf) {
+
 		home = Model.GIIWA_HOME;
 
 		add("org.giiwa.framework.bean");
@@ -108,6 +116,7 @@ public class CleanupTask extends Task {
 			 * clean up repo
 			 */
 			Repo.cleanup(X.ADAY);
+			Temp.cleanup(X.ADAY);
 
 			/**
 			 * clean temp files in tomcat
@@ -140,12 +149,9 @@ public class CleanupTask extends Task {
 	/**
 	 * Cleanup.
 	 *
-	 * @param path
-	 *            the path
-	 * @param expired
-	 *            the expired
-	 * @param deletefolder
-	 *            the deletefolder
+	 * @param path         the path
+	 * @param expired      the expired
+	 * @param deletefolder the deletefolder
 	 * @return the long
 	 */
 	private long cleanup(String path, long expired, boolean deletefolder) {
@@ -208,8 +214,7 @@ public class CleanupTask extends Task {
 	/**
 	 * Adds the.
 	 *
-	 * @param packname
-	 *            the packname
+	 * @param packname the packname
 	 */
 	public static void add(String packname) {
 

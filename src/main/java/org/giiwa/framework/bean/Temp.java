@@ -351,4 +351,34 @@ public class Temp {
 
 	}
 
+	public static void cleanup(long expired) {
+		{
+			try {
+				DFile f = Disk.seek("/_temp/");
+				DFile[] ff = f.listFiles();
+				if (ff != null) {
+					for (DFile f1 : ff) {
+						IOUtil.delete(f1, System.currentTimeMillis() - expired);
+					}
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+
+		{
+			try {
+				File f1 = new File(Model.GIIWA_HOME + "/_temp/");
+				File[] ff = f1.listFiles();
+				if (ff != null) {
+					for (File f2 : ff) {
+						IOUtil.delete(f2, System.currentTimeMillis() - expired);
+					}
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+	}
+
 }
