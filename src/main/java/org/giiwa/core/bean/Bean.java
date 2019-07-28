@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -191,7 +192,13 @@ public class Bean implements Serializable {
 					}
 					f1.set(this, l1);
 				} else {
-					f1.set(this, value);
+					if (value instanceof Date) {
+						f1.set(this, ((Date) value).getTime());
+					} else if (value instanceof Timestamp) {
+						f1.set(this, ((Timestamp) value).getTime());
+					} else {
+						f1.set(this, value);
+					}
 				}
 			} catch (Exception e) {
 				log.error(name + "=" + value, e);
@@ -203,6 +210,8 @@ public class Bean implements Serializable {
 			} else {
 				if (value instanceof Date) {
 					data.put(name, ((Date) value).getTime());
+				} else if (value instanceof Timestamp) {
+					data.put(name, ((Timestamp) value).getTime());
 				} else {
 					data.put(name, value);
 				}
