@@ -94,6 +94,18 @@ public class Node extends Bean {
 	@Column(name = "giiwa")
 	private String giiwa;
 
+	@Column(name = "dfiletimes")
+	private long dfiletimes;
+
+	@Column(name = "dfileavgcost")
+	private long dfileavgcost;
+
+	@Column(name = "dfilemaxcost")
+	private long dfilemaxcost;
+
+	@Column(name = "dfilemincost")
+	private long dfilemincost;
+
 	public int getState() {
 		if (Task.powerstate == 0)
 			return 0;
@@ -145,6 +157,16 @@ public class Node extends Bean {
 				v.append("localthreads", Task.activeThread());
 				v.append("localrunning", Task.tasksInRunning());
 				v.append("localpending", Task.tasksInQueue());
+
+				v.append("dfiletimes", FileServer.times.get());
+				if (FileServer.times.get() > 0) {
+					v.append("dfileavgcost", FileServer.costs.get() / FileServer.times.get());
+				} else {
+					v.append("dfileavgcost", 0);
+				}
+				v.append("dfilemaxcost", FileServer.maxcost);
+				v.append("dfilemincost", FileServer.mincost);
+
 				// v.append("lasttime", System.currentTimeMillis());
 
 				if (force) {

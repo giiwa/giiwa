@@ -3,12 +3,14 @@ package org.giiwa.core.dfile;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.dfile.command.DELETE;
@@ -33,6 +35,26 @@ public class FileServer implements IRequestHandler {
 	public static FileServer inst = new FileServer();
 
 	public static String URL = "tcp://127.0.0.1:9091";
+
+	/**
+	 * the number of call times
+	 */
+	public static AtomicLong times = new AtomicLong(0);
+
+	/**
+	 * the total cost of calling
+	 */
+	public static AtomicLong costs = new AtomicLong(0);
+
+	/**
+	 * the max cost
+	 */
+	public static long maxcost = Long.MIN_VALUE;
+
+	/**
+	 * the min cost
+	 */
+	public static long mincost = Long.MAX_VALUE;
 
 	private static Map<Byte, ICommand> commands = new HashMap<Byte, ICommand>();
 
@@ -103,6 +125,7 @@ public class FileServer implements IRequestHandler {
 
 	public void process(Request in, IResponseHandler handler) {
 
+		TimeStamp t = TimeStamp.create();
 		Task.schedule(() -> {
 			byte cmd = in.readByte();
 			// System.out.println("cmd=" + cmd);
@@ -111,6 +134,17 @@ public class FileServer implements IRequestHandler {
 			if (c != null) {
 				// ICommand.log.debug("cmd=" + cmd + ", processor=" + c);
 				c.process(in, handler);
+
+				costs.addAndGet(t.pastms());
+				times.incrementAndGet();
+				if (maxcost < t.pastms()) {
+					maxcost = t.pastms();
+				}
+				if (mincost > t.pastms()) {
+					mincost = t.pastms();
+				}
+
+				log.debug("process, cmd=" + cmd + ", cost=" + t.past());
 			} else {
 				Response out = Response.create(in.seq, Request.SMALL);
 				out.writeString("unknown cmd");

@@ -34,6 +34,9 @@
 			<th>$lang.get('node.tasks.local.threads')</th>
 			<th>$lang.get('node.tasks.local.running')</th>
 			<th>$lang.get('node.tasks.local.pending')</th>
+			<th>$lang.get('node.dfiletimes')</th>
+			<th>$lang.get('node.dfilemmcost')</th>
+			<th>$lang.get('node.dfileavgcost')</th>
 			<th>$lang.get('node.state')</th>
 			<th></th>
 		</tr>
@@ -56,6 +59,9 @@
 		<td>$!f.localthreads</td>
 		<td>$!f.localrunning</td>
 		<td>$!f.localpending</td>
+		<td>#if($f.dfiletimes > 0) $f.dfiletimes #end</td>
+		<td>#if($f.dfiletimes > 0) ${f.dfilemincost}/${f.dfilemaxcost} #end</td>
+		<td>#if($f.dfiletimes > 0) $f.dfileavgcost #end</td>
 		<td>
 			#if($f.state == 1)
 			<i class='icon-radio-checked' style="color: green"></i>

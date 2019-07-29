@@ -15,6 +15,8 @@ public class LIST implements ICommand {
 		String path = in.readString().replaceAll("[/\\\\]", "/");
 		String filename = in.readString().replaceAll("[/\\\\]", "/");
 
+		log.debug("list, file=" + filename + ", path=" + path);
+
 		File f = new File(path + File.separator + filename);
 		// List<JSON> l1 = JSON.createList();
 

@@ -17,9 +17,12 @@ public class PUT implements ICommand {
 		String path = in.readString().replaceAll("[/\\\\]", "/");
 		String filename = in.readString().replaceAll("[/\\\\]", "/");
 
-		File f = new File(path + File.separator + filename);
 		long offset = in.readLong();
 		byte[] bb = in.readBytes();
+
+		log.debug("put, file=" + filename + ", offset=" + offset + ", len=" + bb.length + ", path=" + path);
+
+		File f = new File(path + File.separator + filename);
 
 		RandomAccessFile a = null;
 
