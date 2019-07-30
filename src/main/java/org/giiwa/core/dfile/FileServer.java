@@ -273,11 +273,6 @@ public class FileServer implements IRequestHandler {
 			v.append("dfilemincost", 0);
 		}
 
-		FileServer.times.set(0);
-		FileServer.costs.set(0);
-		FileServer.maxcost = Long.MIN_VALUE;
-		FileServer.mincost = Long.MAX_VALUE;
-
 	}
 
 	public static void resetm() {
