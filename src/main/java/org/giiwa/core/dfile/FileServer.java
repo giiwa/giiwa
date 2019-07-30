@@ -260,7 +260,7 @@ public class FileServer implements IRequestHandler {
 
 	}
 
-	public static void reset(V v) {
+	public static void measures(V v) {
 		v.append("dfiletimes", FileServer.times.get());
 
 		if (FileServer.times.get() > 0) {
@@ -272,6 +272,15 @@ public class FileServer implements IRequestHandler {
 			v.append("dfilemaxcost", 0);
 			v.append("dfilemincost", 0);
 		}
+
+		FileServer.times.set(0);
+		FileServer.costs.set(0);
+		FileServer.maxcost = Long.MIN_VALUE;
+		FileServer.mincost = Long.MAX_VALUE;
+
+	}
+
+	public static void resetm() {
 
 		FileServer.times.set(0);
 		FileServer.costs.set(0);
