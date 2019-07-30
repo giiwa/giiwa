@@ -65,7 +65,8 @@
 		<td>$!f.localrunning</td>
 		<td>$!f.localpending</td>
 		<td>#if($f.dfiletimes > 0) $f.dfiletimes #end</td>
-		<td>#if($f.dfiletimes > 0) ${f.dfilemincost}/${f.dfilemaxcost} #end</td>
+		<td>#if($f.dfiletimes > 0) ${f.dfilemaxcost} #end</td>
+		<td>#if($f.dfiletimes > 0) ${f.dfilemincost} #end</td>
 		<td>#if($f.dfiletimes > 0) $f.dfileavgcost #end</td>
 		<td>
 			#if($f.state == 1)
