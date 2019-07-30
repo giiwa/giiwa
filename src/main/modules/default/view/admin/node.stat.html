@@ -4,41 +4,50 @@
 
 <script>
 $(function(){
-	Highcharts.chart('cpu_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: '$lang.get("node.usage")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-       plotOptions: {
-           series: {
-        		turboThreshold: 0
-           }
-       },
-        legend: {
-            enabled: false
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}%</b><br>{point.x:%H:%M}'
-	    },
+	Highcharts.stockChart('cpu_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: '$lang.get("node.usage")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}%</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('cpu.usage')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$lang.format($!c.n0, '%.1f')},#end]}
+					{name: "$lang.get('cpu.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$lang.format($!c.n0, '%.1f')},#end]}
 	    			], 
 	});
-
+	
 })
 </script>
 
@@ -48,38 +57,47 @@ $(function(){
 
 <script>
 $(function(){
-	Highcharts.chart('t1_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: '$lang.get("node.tasks.global")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+	Highcharts.stockChart('t1_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: '$lang.get("node.tasks.global")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.tasks.global')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n1')},#end]}
+					{name: "$lang.get('node.tasks.global')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n1')},#end]}
 	    			], 
 	});
 
@@ -91,38 +109,48 @@ $(function(){
 
 <script>
 $(function(){
-	Highcharts.chart('t2_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: '$lang.get("node.tasks.local.threads")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+	
+	Highcharts.stockChart('t2_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: '$lang.get("node.tasks.local.threads")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.tasks.local.threads')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n2')},#end]}
+					{name: "$lang.get('node.tasks.local.threads')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n2')},#end]}
 	    			], 
 	});
 
@@ -135,41 +163,51 @@ $(function(){
 
 <script>
 $(function(){
-	Highcharts.chart('t3_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: '$lang.get("node.tasks.local.running")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+	
+	Highcharts.stockChart('t3_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: '$lang.get("node.tasks.local.running")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.tasks.local.running')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n3')},#end]}
+					{name: "$lang.get('node.tasks.local.running')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n3')},#end]}
 	    			], 
 	});
-
+	
 })
 </script>
 
@@ -179,38 +217,48 @@ $(function(){
 
 <script>
 $(function(){
-	Highcharts.chart('t4_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: '$lang.get("node.tasks.local.pending")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+
+	Highcharts.stockChart('t4_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: '$lang.get("node.tasks.local.pending")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.tasks.local.pending')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n4')},#end]}
+					{name: "$lang.get('node.tasks.local.pending')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n4')},#end]}
 	    			], 
 	});
 
@@ -218,174 +266,214 @@ $(function(){
 </script>
 
 
-<div id='dftimes_$!requestid'
+<div id='t5_$!requestid'
 	style="height: 200px; float: left; width: 100%; border: 0;"></div>
 
 <script>
 $(function(){
-	Highcharts.chart('dftimes_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: 'DFILE $lang.get("node.dfile.times")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+	
+	Highcharts.stockChart('t5_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: 'DFILE $lang.get("node.dfile.times")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.dfile.times')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n5')},#end]}
+					{name: '$lang.get("node.dfile.times")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n5')},#end]}
 	    			], 
 	});
-
+	
 })
 </script>
 
-<div id='dfmax_$!requestid'
+<div id='t6_$!requestid'
 	style="height: 200px; float: left; width: 100%; border: 0;"></div>
 
 <script>
 $(function(){
-	Highcharts.chart('dfmax_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: 'DFILE $lang.get("node.dfile.max")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+	
+	Highcharts.stockChart('t6_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: 'DFILE $lang.get("node.dfile.max")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.dfile.max')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n6')},#end]}
+					{name: '$lang.get("node.dfile.max")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n6')},#end]}
 	    			], 
 	});
-
+	
 })
 </script>
 
-<div id='dfmin_$!requestid'
+<div id='t7_$!requestid'
 	style="height: 200px; float: left; width: 100%; border: 0;"></div>
 
 <script>
 $(function(){
-	Highcharts.chart('dfmin_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: 'DFILE $lang.get("node.dfile.min")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+	
+	Highcharts.stockChart('t7_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: 'DFILE $lang.get("node.dfile.min")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.dfile.min')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n7')},#end]}
+					{name: '$lang.get("node.dfile.min")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n7')},#end]}
 	    			], 
 	});
-
+	
 })
 </script>
 
-<div id='dfavg_$!requestid'
+<div id='t8_$!requestid'
 	style="height: 200px; float: left; width: 100%; border: 0;"></div>
 
 <script>
 $(function(){
-	Highcharts.chart('dfavg_$!requestid', {
-	    chart: {
-	        type: 'spline'
-	    },
-	    title: {
-	        text: 'DFILE $lang.get("node.dfile.avgcost")'
-	    },
-	    xAxis: {
-	    		type: 'datetime'
-	    },
-	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
-	    },
-        legend: {
-            enabled: false
-        },
-        plotOptions: {
-            series: {
-         		turboThreshold: 0
-            }
-        },
-       credits: {
-			enabled: false
-    	   },
-   	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
-	    },
+	
+	Highcharts.stockChart('t8_$!requestid', {
+		rangeSelector: {
+			allButtonsEnabled: true,
+			selected :0,
+			enabled: true,
+			inputEnabled: false,
+			buttons: [{
+	               type: 'hour',
+	               count: 1,
+	               text: '小时'
+	           }]
+	       },
+		    title: {
+		        text: 'DFILE $lang.get("node.dfile.avgcost")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>',
+	           dateTimeLabelFormats:{
+		        	   millisecond:"%Y-%m-%e %H:%M:%S",
+		        	   second:"%Y-%m-%e %H:%M:%S",
+		        	   minute:"%Y-%m-%e %H:%M",
+		        	   hour:"%Y-%m-%e %H",
+		        	   day:"%Y-%m-%e",
+		        	   week:"%Y-%m-%e",
+		        	   month:"%Y-%m",
+		        	   year:"%Y"
+	           }
+	       },
 	    series: [
-					{name: "$lang.get('node.dfile.avgcost')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n8')},#end]}
+					{name: '$lang.get("node.dfile.avgcost")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n8')},#end]}
 	    			], 
 	});
-
+	
 })
 </script>

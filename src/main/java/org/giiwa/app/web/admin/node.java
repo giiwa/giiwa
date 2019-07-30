@@ -92,7 +92,7 @@ public class node extends Model {
 		String id = this.getString("id");
 
 		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", System.currentTimeMillis() - X.ADAY, W.OP.gte).sort("time", 1), 0, 24 * 60);
+				W.create().and("time", System.currentTimeMillis() - X.AWEEK, W.OP.gte).sort("time", 1), 0, 24 * 60 * 7);
 
 		this.set("list", bs);
 		this.show("/admin/node.stat.html");
