@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
@@ -256,6 +257,26 @@ public class FileServer implements IRequestHandler {
 		public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
 			log.info("idle, session=" + session.getRemoteAddress());
 		}
+
+	}
+
+	public static void reset(V v) {
+		v.append("dfiletimes", FileServer.times.get());
+
+		if (FileServer.times.get() > 0) {
+			v.append("dfileavgcost", FileServer.costs.get() / FileServer.times.get());
+			v.append("dfilemaxcost", FileServer.maxcost);
+			v.append("dfilemincost", FileServer.mincost);
+		} else {
+			v.append("dfileavgcost", 0);
+			v.append("dfilemaxcost", 0);
+			v.append("dfilemincost", 0);
+		}
+
+		FileServer.times.set(0);
+		FileServer.costs.set(0);
+		FileServer.maxcost = Long.MIN_VALUE;
+		FileServer.mincost = Long.MAX_VALUE;
 
 	}
 

@@ -217,3 +217,175 @@ $(function(){
 })
 </script>
 
+
+<div id='dftimes_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('dftimes_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.dfile.times")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            series: {
+         		turboThreshold: 0
+            }
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.dfile.times')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n5')},#end]}
+	    			], 
+	});
+
+})
+</script>
+
+<div id='dfmax_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('dfmax_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.dfile.max")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            series: {
+         		turboThreshold: 0
+            }
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.dfile.max')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n6')},#end]}
+	    			], 
+	});
+
+})
+</script>
+
+<div id='dfmax_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('dfmin_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.dfile.min")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            series: {
+         		turboThreshold: 0
+            }
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.dfile.min')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n7')},#end]}
+	    			], 
+	});
+
+})
+</script>
+
+<div id='dfavg_$!requestid'
+	style="height: 200px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.chart('dfavg_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("node.dfile.avg")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+        legend: {
+            enabled: false
+        },
+        plotOptions: {
+            series: {
+         		turboThreshold: 0
+            }
+        },
+       credits: {
+			enabled: false
+    	   },
+   	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+	    series: [
+					{name: "$lang.get('node.dfile.avg')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n8')},#end]}
+	    			], 
+	});
+
+})
+</script>

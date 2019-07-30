@@ -158,14 +158,7 @@ public class Node extends Bean {
 				v.append("localrunning", Task.tasksInRunning());
 				v.append("localpending", Task.tasksInQueue());
 
-				v.append("dfiletimes", FileServer.times.get());
-				if (FileServer.times.get() > 0) {
-					v.append("dfileavgcost", FileServer.costs.get() / FileServer.times.get());
-				} else {
-					v.append("dfileavgcost", 0);
-				}
-				v.append("dfilemaxcost", FileServer.maxcost);
-				v.append("dfilemincost", FileServer.mincost);
+				FileServer.reset(v);
 
 				// v.append("lasttime", System.currentTimeMillis());
 
