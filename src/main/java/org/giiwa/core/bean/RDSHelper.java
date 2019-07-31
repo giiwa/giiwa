@@ -246,7 +246,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 */
 	public Connection getConnection(String name) throws SQLException {
 
-		log.debug("name=" + name + ", conn=" + conn);
+		log.debug("name=" + name + ", conn=" + conn + ", closed=" + conn.isClosed());
 
 		if (conn != null && !conn.isClosed())
 			return conn;
@@ -713,7 +713,7 @@ public class RDSHelper implements Helper.DBHelper {
 					if (!X.isEmpty(where)) {
 						sql.append("(").append(where).append(") and ");
 					}
-					sql.append(" rownum < ").append(limit);
+					sql.append(" rownum < ").append(limit + offset);
 
 					if (!X.isEmpty(orderby)) {
 						sql.append(" ").append(orderby);
