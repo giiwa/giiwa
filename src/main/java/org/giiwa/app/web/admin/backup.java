@@ -378,7 +378,7 @@ public class backup extends Model {
 		 * @return the string
 		 */
 		public static String path() {
-			return Global.getString("backup.path", "/opt/nfs/backup");
+			return Global.getString("backup.path", "/home/nfs/backup");
 		}
 
 		@Override
