@@ -256,7 +256,7 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void info(String model, String op, String message) {
-			info(Local.id(), model, op, message, null, null);
+			info(model, op, message, null, null);
 		}
 
 		/**
@@ -267,7 +267,7 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void info(Class<? extends Model> model, String op, String message) {
-			info(Local.id(), Module.shortName(model), op, message, null, null);
+			info(Module.shortName(model), op, message, null, null);
 		}
 
 		/**
@@ -278,7 +278,7 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void warn(String model, String op, String message) {
-			warn(Local.id(), model, op, message, null, null);
+			warn(model, op, message, null, null);
 		}
 
 		/**
@@ -289,7 +289,7 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void warn(Class<? extends Model> model, String op, String message) {
-			warn(Local.id(), Module.shortName(model), op, message, null, null);
+			warn(Module.shortName(model), op, message, null, null);
 		}
 
 		/**
@@ -300,7 +300,7 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void error(String model, String op, String message, Throwable e) {
-			error(Local.id(), model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
+			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
 					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), null, null);
 		}
 
@@ -312,7 +312,7 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void error(Class<? extends Model> model, String op, String message, Throwable e) {
-			error(Local.id(), Module.shortName(model), op, message,
+			error(Module.shortName(model), op, message,
 					X.toString(e).replaceAll(System.lineSeparator(), "<br/>").replaceAll(" ", "&nbsp;").replaceAll("\t",
 							"&nbsp;&nbsp;&nbsp;&nbsp;"),
 					null, null);
