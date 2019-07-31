@@ -159,11 +159,13 @@ public class Node extends Bean {
 				v.append("localpending", Task.tasksInQueue());
 
 				FileServer.measures(v);
+				FileClient.measures(v);
 
 				// v.append("lasttime", System.currentTimeMillis());
 
 				if (force) {
 					FileServer.resetm();
+					FileClient.resetm();
 
 					String process = ManagementFactory.getRuntimeMXBean().getName();
 					dao.update(Local.id(),

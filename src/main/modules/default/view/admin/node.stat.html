@@ -205,7 +205,7 @@ $(function(){
     	   		range: 3600 * 1000
 	       },
 		    title: {
-		        text: 'DFILE $lang.get("node.dfile.times")'
+		        text: 'DFILE Server $lang.get("node.dfile.times")'
 		    },
 	       plotOptions: {
 	           series: {
@@ -243,7 +243,7 @@ $(function(){
     	   		range: 3600 * 1000
 	       },
 		    title: {
-		        text: 'DFILE $lang.get("node.dfile.max")'
+		        text: 'DFILE Server $lang.get("node.dfile.max")'
 		    },
 	       plotOptions: {
 	           series: {
@@ -281,7 +281,7 @@ $(function(){
     	   		range: 3600 * 1000
 	       },
 		    title: {
-		        text: 'DFILE $lang.get("node.dfile.min")'
+		        text: 'DFILE Server $lang.get("node.dfile.min")'
 		    },
 	       plotOptions: {
 	           series: {
@@ -319,7 +319,7 @@ $(function(){
     	   		range: 3600 * 1000
 	       },
 		    title: {
-		        text: 'DFILE $lang.get("node.dfile.avgcost")'
+		        text: 'DFILE Server $lang.get("node.dfile.avgcost")'
 		    },
 	       plotOptions: {
 	           series: {
@@ -337,6 +337,158 @@ $(function(){
 	       },
 	    series: [
 					{name: '$lang.get("node.dfile.avgcost")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n8')},#end]}
+	    			], 
+	});
+	
+})
+</script>
+
+<div id='t9_$!requestid'
+	style="height: 400px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	
+	Highcharts.stockChart('t9_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: 'DFILE Client $lang.get("node.dfile.times_c")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>'
+	       },
+	    series: [
+					{name: '$lang.get("node.dfile.times_c")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n9')},#end]}
+	    			], 
+	});
+	
+})
+</script>
+
+<div id='t10_$!requestid'
+	style="height: 400px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	
+	Highcharts.stockChart('t10_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: 'DFILE Client $lang.get("node.dfile.max_c")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>'
+	       },
+	    series: [
+					{name: '$lang.get("node.dfile.max_c")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n10')},#end]}
+	    			], 
+	});
+	
+})
+</script>
+
+<div id='t11_$!requestid'
+	style="height: 400px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	
+	Highcharts.stockChart('t11_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: 'DFILE Client $lang.get("node.dfile.min_c")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>'
+	       },
+	    series: [
+					{name: '$lang.get("node.dfile.min_c")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n11')},#end]}
+	    			], 
+	});
+	
+})
+</script>
+
+<div id='t12_$!requestid'
+	style="height: 400px; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	
+	Highcharts.stockChart('t12_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: 'DFILE Client $lang.get("node.dfile.avgcost_c")'
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>'
+	       },
+	    series: [
+					{name: '$lang.get("node.dfile.avgcost_c")', color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.getLong('n12')},#end]}
 	    			], 
 	});
 	

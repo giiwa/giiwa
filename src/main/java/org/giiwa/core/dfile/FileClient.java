@@ -22,6 +22,8 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.core.buffer.IoBuffer;
+import org.giiwa.core.bean.TimeStamp;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.nio.Client;
 import org.giiwa.framework.web.Model;
@@ -31,6 +33,26 @@ public class FileClient implements IRequestHandler {
 	private static Log log = LogFactory.getLog(FileClient.class);
 
 	private static final long TIMEOUT = 10000;
+
+	/**
+	 * the number of call times
+	 */
+	public static AtomicLong times = new AtomicLong(0);
+
+	/**
+	 * the total cost of calling
+	 */
+	public static AtomicLong costs = new AtomicLong(0);
+
+	/**
+	 * the max cost
+	 */
+	public static long maxcost = Long.MIN_VALUE;
+
+	/**
+	 * the min cost
+	 */
+	public static long mincost = Long.MAX_VALUE;
 
 	private Map<Long, Request[]> pending = new HashMap<Long, Request[]>();
 
@@ -65,6 +87,9 @@ public class FileClient implements IRequestHandler {
 			return false;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
+
 		try {
 
 			r.writeByte(ICommand.CMD_DELETE);
@@ -90,6 +115,15 @@ public class FileClient implements IRequestHandler {
 			close();
 		} finally {
 			pending.remove(r.seq);
+
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return false;
 
@@ -114,8 +148,11 @@ public class FileClient implements IRequestHandler {
 			return null;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
 
 		try {
+
 			r.writeByte(ICommand.CMD_GET);
 			r.writeString(path);
 			r.writeString(filename);
@@ -140,6 +177,15 @@ public class FileClient implements IRequestHandler {
 			close();
 		} finally {
 			pending.remove(r.seq);
+
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return null;
 	}
@@ -150,8 +196,11 @@ public class FileClient implements IRequestHandler {
 			return -1;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.BIG);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
 
 		try {
+
 			r.writeByte(ICommand.CMD_PUT);
 			r.writeString(path);
 			r.writeString(filename);
@@ -176,6 +225,15 @@ public class FileClient implements IRequestHandler {
 			close();
 		} finally {
 			pending.remove(r.seq);
+
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return 0;
 	}
@@ -196,6 +254,8 @@ public class FileClient implements IRequestHandler {
 			return false;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
 
 		try {
 
@@ -220,6 +280,15 @@ public class FileClient implements IRequestHandler {
 			close();
 		} finally {
 			pending.remove(r.seq);
+
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return false;
 
@@ -231,8 +300,11 @@ public class FileClient implements IRequestHandler {
 			return null;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.MID);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
 
 		try {
+
 			r.writeByte(ICommand.CMD_LIST);
 			r.writeString(path);
 			r.writeString(filename);
@@ -269,6 +341,15 @@ public class FileClient implements IRequestHandler {
 			close();
 		} finally {
 			pending.remove(r.seq);
+
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return null;
 
@@ -280,6 +361,8 @@ public class FileClient implements IRequestHandler {
 			return null;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
 
 		try {
 
@@ -313,6 +396,14 @@ public class FileClient implements IRequestHandler {
 		} finally {
 			pending.remove(r.seq);
 
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return null;
 	}
@@ -332,6 +423,8 @@ public class FileClient implements IRequestHandler {
 			return false;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
 
 		try {
 
@@ -358,6 +451,15 @@ public class FileClient implements IRequestHandler {
 			close();
 		} finally {
 			pending.remove(r.seq);
+
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return false;
 	}
@@ -368,6 +470,8 @@ public class FileClient implements IRequestHandler {
 			return;
 
 		Response r = Response.create(seq.incrementAndGet(), Request.MID);
+		TimeStamp t = TimeStamp.create();
+		times.incrementAndGet();
 
 		try {
 
@@ -421,6 +525,15 @@ public class FileClient implements IRequestHandler {
 		} finally {
 			close();
 			pending.remove(r.seq);
+
+			costs.addAndGet(t.pastms());
+			if (maxcost < t.pastms()) {
+				maxcost = t.pastms();
+			}
+			if (mincost > t.pastms()) {
+				mincost = t.pastms();
+			}
+
 		}
 		return;
 	}
@@ -554,6 +667,30 @@ public class FileClient implements IRequestHandler {
 
 		b.free();
 		resp.out.free();
+
+	}
+
+	public static void measures(V v) {
+		v.append("dfiletimes_c", FileClient.times.get());
+
+		if (FileClient.times.get() > 0) {
+			v.append("dfileavgcost_c", FileClient.costs.get() / FileClient.times.get());
+			v.append("dfilemaxcost_c", FileClient.maxcost);
+			v.append("dfilemincost_c", FileClient.mincost);
+		} else {
+			v.append("dfileavgcost_c", 0);
+			v.append("dfilemaxcost_c", 0);
+			v.append("dfilemincost_c", 0);
+		}
+
+	}
+
+	public static void resetm() {
+
+		FileClient.times.set(0);
+		FileClient.costs.set(0);
+		FileClient.maxcost = Long.MIN_VALUE;
+		FileClient.mincost = Long.MAX_VALUE;
 
 	}
 

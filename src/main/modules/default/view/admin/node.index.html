@@ -33,6 +33,7 @@
 			<th rowspan="2">$lang.get('node.tasks.local.threads')</th>
 			<th colspan="2">$lang.get('node.tasks.local')</th>
 			<th colspan="4">$lang.get('node.dfile')</th>
+			<th colspan="4">$lang.get('node.dfile_c')</th>
 			<th rowspan="2">$lang.get('node.state')</th>
 			<th  rowspan="2" style="width: 84px;"></th>
 		</tr>
@@ -45,6 +46,10 @@
 			<th>$lang.get('node.dfile.max')</th>
 			<th>$lang.get('node.dfile.min')</th>
 			<th>$lang.get('node.dfile.avgcost')</th>
+			<th>$lang.get('node.dfile.times_c')</th>
+			<th>$lang.get('node.dfile.max_c')</th>
+			<th>$lang.get('node.dfile.min_c')</th>
+			<th>$lang.get('node.dfile.avgcost_c')</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -66,9 +71,13 @@
 		<td>$!f.localrunning</td>
 		<td>$!f.localpending</td>
 		<td>#if($f.dfiletimes > 0) $f.dfiletimes #end</td>
-		<td>#if($f.dfiletimes > 0) ${f.dfilemaxcost} #end</td>
-		<td>#if($f.dfiletimes > 0) ${f.dfilemincost} #end</td>
+		<td>#if($f.dfiletimes > 0) $f.dfilemaxcost #end</td>
+		<td>#if($f.dfiletimes > 0) $f.dfilemincost #end</td>
 		<td>#if($f.dfiletimes > 0) $f.dfileavgcost #end</td>
+		<td>#if($f.dfiletimes_c > 0) $f.dfiletimes_c #end</td>
+		<td>#if($f.dfiletimes_c > 0) $f.dfilemaxcost_c #end</td>
+		<td>#if($f.dfiletimes_c > 0) $f.dfilemincost_c #end</td>
+		<td>#if($f.dfiletimes_c > 0) $f.dfileavgcost_c #end</td>
 		<td>
 			#if($f.state == 1)
 			<i class='icon-radio-checked' style="color: green"></i>
