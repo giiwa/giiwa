@@ -83,9 +83,11 @@ public class RDSHelper implements Helper.DBHelper {
 		if (conn != null && this != Helper.primary) {
 			try {
 				conn.close();
+				conn = null;
 			} catch (SQLException e) {
 				log.error(e.getMessage(), e);
 			}
+
 		}
 	}
 
@@ -243,7 +245,10 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @throws SQLException the SQL exception
 	 */
 	public Connection getConnection(String name) throws SQLException {
-		if (conn != null)
+
+		log.debug("name=" + name + ", conn=" + conn);
+
+		if (conn != null && !conn.isClosed())
 			return conn;
 
 		return RDB.getConnection(name);
@@ -1052,15 +1057,15 @@ public class RDSHelper implements Helper.DBHelper {
 
 	private static String _name(String name, Connection c) {
 		// the col need to be transfer ? in oracle
-		try {
-			if (isOracle(c)) {
-				if (oracle.containsKey(name)) {
-					return oracle.get(name);
-				}
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
+//		try {
+//			if (isOracle(c)) {
+//				if (oracle.containsKey(name)) {
+//					return oracle.get(name);
+//				}
+//			}
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//		}
 		return name;
 	}
 
@@ -1846,6 +1851,7 @@ public class RDSHelper implements Helper.DBHelper {
 		String s = c.getMetaData().getDatabaseProductName();
 		String[] ss = X.split(s, "[ /]");
 		return X.isSame(ss[0], "oracle");
+//		return true;
 	}
 
 	/**

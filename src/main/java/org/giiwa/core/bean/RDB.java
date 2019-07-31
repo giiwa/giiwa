@@ -251,6 +251,7 @@ public class RDB {
 				c.setAutoCommit(true);
 			} catch (Exception e) {
 				// possible not support
+				log.error(name, e);
 			}
 		}
 		return c;
