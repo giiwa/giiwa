@@ -5,15 +5,10 @@
 $(function(){
 	Highcharts.stockChart('disk_$!requestid', {
 		rangeSelector: {
-			allButtonsEnabled: true,
-			selected :0,
-			enabled: true,
-			inputEnabled: false,
-			buttons: [{
-	               type: 'hour',
-	               count: 1,
-	               text: '小时'
-	           }]
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
 	       },
 	       plotOptions: {
 	           series: {
@@ -27,17 +22,7 @@ $(function(){
                enabled: true
            },
 	       tooltip: {
-	           pointFormat: '{series.name}: <b>{point.hint}</b>',
-	           dateTimeLabelFormats:{
-		        	   millisecond:"%Y-%m-%e %H:%M:%S",
-		        	   second:"%Y-%m-%e %H:%M:%S",
-		        	   minute:"%Y-%m-%e %H:%M",
-		        	   hour:"%Y-%m-%e %H",
-		        	   day:"%Y-%m-%e",
-		        	   week:"%Y-%m-%e",
-		        	   month:"%Y-%m",
-		        	   year:"%Y"
-	           }
+	           pointFormat: '{series.name}: <b>{point.hint}</b>'
 	       },
 	    series: [
 			{name: "$lang.get('disk.used')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.used, hint:"$lang.size($c.used)"},#end]},

@@ -5,39 +5,27 @@
 $(function(){
 	Highcharts.stockChart('cpu_$!requestid', {
 		rangeSelector: {
-			allButtonsEnabled: true,
-			selected :0,
-			enabled: true,
-			inputEnabled: false,
-			buttons: [{
-	               type: 'hour',
-	               count: 1,
-	               text: '小时'
-	           }]
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
 	       },
 	       plotOptions: {
 	           series: {
 	        		turboThreshold: 0
 	           }
 	       },
+		    title: {
+		        text: '$lang.get("portlet.cpu.title")(%)'
+		    },
 	       credits: {
 				enabled: false
 	    	   },
            legend: {
-               enabled: true
+               enabled: false
            },
 	       tooltip: {
-	           pointFormat: '{series.name}: <b>{point.y}%</b>',
-	           dateTimeLabelFormats:{
-		        	   millisecond:"%Y-%m-%e %H:%M:%S",
-		        	   second:"%Y-%m-%e %H:%M:%S",
-		        	   minute:"%Y-%m-%e %H:%M",
-		        	   hour:"%Y-%m-%e %H",
-		        	   day:"%Y-%m-%e",
-		        	   week:"%Y-%m-%e",
-		        	   month:"%Y-%m",
-		        	   year:"%Y"
-	           }
+	           pointFormat: '{series.name}: <b>{point.y}%</b>'
 	       },
 	    series: [
 					{name: "$lang.get('cpu.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$lang.format($!c.usage, '%.1f')},#end]}

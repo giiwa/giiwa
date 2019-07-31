@@ -4,16 +4,14 @@
 $(function(){
 	Highcharts.stockChart('net_$!requestid', {
 		rangeSelector: {
-			allButtonsEnabled: true,
-			selected :0,
-			enabled: true,
-			inputEnabled: false,
-			buttons: [{
-	               type: 'hour',
-	               count: 1,
-	               text: '小时'
-	           }]
+			enabled: false,
 	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: "$!{name}(B/s)"
+		    },
 	       plotOptions: {
 	           series: {
 	        		turboThreshold: 0
@@ -26,17 +24,7 @@ $(function(){
                enabled: true
            },
 	       tooltip: {
-	           pointFormat: '{series.name}: <b>{point.hint}</b>',
-	           dateTimeLabelFormats:{
-		        	   millisecond:"%Y-%m-%e %H:%M:%S",
-		        	   second:"%Y-%m-%e %H:%M:%S",
-		        	   minute:"%Y-%m-%e %H:%M",
-		        	   hour:"%Y-%m-%e %H",
-		        	   day:"%Y-%m-%e",
-		        	   week:"%Y-%m-%e",
-		        	   month:"%Y-%m",
-		        	   year:"%Y"
-	           }
+	           pointFormat: '{series.name}: <b>{point.hint}</b>'
 	       },
 	    series: [
 	    				{name: "$lang.get('net.rxbytes.speed')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.rxbytes, hint:"$lang.size($c.rxbytes)"},#end]},
