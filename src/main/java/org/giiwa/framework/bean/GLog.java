@@ -251,6 +251,76 @@ public class GLog extends Bean {
 		/**
 		 * record info log
 		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void info(String model, String op, String message) {
+			info(Local.id(), model, op, message, null, null);
+		}
+
+		/**
+		 * record the info log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void info(Class<? extends Model> model, String op, String message) {
+			info(Local.id(), Module.shortName(model), op, message, null, null);
+		}
+
+		/**
+		 * record warn log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void warn(String model, String op, String message) {
+			warn(Local.id(), model, op, message, null, null);
+		}
+
+		/**
+		 * record the warn log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void warn(Class<? extends Model> model, String op, String message) {
+			warn(Local.id(), Module.shortName(model), op, message, null, null);
+		}
+
+		/**
+		 * record error log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void error(String model, String op, String message, Throwable e) {
+			error(Local.id(), model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
+					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), null, null);
+		}
+
+		/**
+		 * record the error log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void error(Class<? extends Model> model, String op, String message, Throwable e) {
+			error(Local.id(), Module.shortName(model), op, message,
+					X.toString(e).replaceAll(System.lineSeparator(), "<br/>").replaceAll(" ", "&nbsp;").replaceAll("\t",
+							"&nbsp;&nbsp;&nbsp;&nbsp;"),
+					null, null);
+		}
+
+		/**
+		 * record info log
+		 * 
 		 * @param node    the node or subsystem node
 		 * @param model   the model name
 		 * @param op      the operation
