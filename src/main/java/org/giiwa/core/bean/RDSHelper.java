@@ -91,7 +91,7 @@ public class RDSHelper implements Helper.DBHelper {
 		}
 	}
 
-	private static String _where(W q, Connection c) throws SQLException {
+	private String _where(W q, Connection c) throws SQLException {
 		if (q == null || c == null) {
 			return null;
 		}
@@ -103,7 +103,7 @@ public class RDSHelper implements Helper.DBHelper {
 		return q.where();
 	}
 
-	private static String _orderby(W q, Connection c) throws SQLException {
+	private String _orderby(W q, Connection c) throws SQLException {
 		if (q == null || c == null) {
 			return null;
 		}
@@ -123,7 +123,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @param o the o
 	 * @throws SQLException the SQL exception
 	 */
-	private static void setParameter(PreparedStatement p, int i, Object o) throws SQLException {
+	private static void setParameter(PreparedStatement p, int i, Object o, boolean isoracle) throws SQLException {
 		if (o == null) {
 			p.setObject(i, null);
 		} else if (o instanceof Integer) {
@@ -190,7 +190,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 
 				}
 			}
@@ -366,7 +366,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 					try {
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					} catch (Exception e) {
 						log.error("i=" + i + ", o=" + o, e);
 					}
@@ -456,7 +456,7 @@ public class RDSHelper implements Helper.DBHelper {
 			for (String name : v.names()) {
 				Object v1 = v.value(name);
 				try {
-					setParameter(p, order++, v1);
+					setParameter(p, order++, v1, isOracle(c));
 				} catch (Exception e) {
 					log.error(name + "=" + v1, e);
 				}
@@ -466,7 +466,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -582,7 +582,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -786,7 +786,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -894,7 +894,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -1022,7 +1022,7 @@ public class RDSHelper implements Helper.DBHelper {
 			int order = 1;
 			for (String name : sets.names()) {
 				Object v = sets.value(name);
-				setParameter(p, order++, v);
+				setParameter(p, order++, v, isOracle(c));
 			}
 
 			return p.executeUpdate();
@@ -1241,7 +1241,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -1381,7 +1381,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -1474,7 +1474,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -1621,7 +1621,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -1694,7 +1694,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -1847,11 +1847,15 @@ public class RDSHelper implements Helper.DBHelper {
 		}
 	}
 
-	private static boolean isOracle(Connection c) throws SQLException {
-		String s = c.getMetaData().getDatabaseProductName();
-		String[] ss = X.split(s, "[ /]");
-		return X.isSame(ss[0], "oracle");
-//		return true;
+	transient Boolean _oracle = null;
+
+	private boolean isOracle(Connection c) throws SQLException {
+		if (_oracle == null) {
+			String s = c.getMetaData().getDatabaseProductName();
+			String[] ss = X.split(s, "[ /]");
+			_oracle = X.isSame(ss[0], "oracle");
+		}
+		return _oracle;
 	}
 
 	/**
@@ -1915,13 +1919,13 @@ public class RDSHelper implements Helper.DBHelper {
 			p = c.prepareStatement(sql.toString());
 
 			int order = 1;
-			setParameter(p, order++, n);
+			setParameter(p, order++, n, isOracle(c));
 
 			if (sets != null) {
 				for (String s1 : sets.names()) {
 					Object v = sets.value(s1);
 					try {
-						setParameter(p, order++, v);
+						setParameter(p, order++, v, isOracle(c));
 					} catch (Exception e) {
 						log.error(s1 + "=" + v, e);
 					}
@@ -1932,7 +1936,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -2113,7 +2117,7 @@ public class RDSHelper implements Helper.DBHelper {
 			for (V sets : values) {
 				for (String name : sets.names()) {
 					Object v = sets.value(name);
-					setParameter(p, order++, v);
+					setParameter(p, order++, v, isOracle(c));
 				}
 
 				p.addBatch();
@@ -2243,7 +2247,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
 
-					setParameter(p, order++, o);
+					setParameter(p, order++, o, isOracle(c));
 				}
 			}
 
@@ -2365,7 +2369,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -2436,7 +2440,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -2502,7 +2506,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -2567,7 +2571,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -2702,7 +2706,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -2806,7 +2810,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -2910,7 +2914,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -3014,7 +3018,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 
@@ -3118,7 +3122,7 @@ public class RDSHelper implements Helper.DBHelper {
 					for (int i = 0; i < args.length; i++) {
 						Object o = args[i];
 
-						setParameter(p, order++, o);
+						setParameter(p, order++, o, isOracle(c));
 					}
 				}
 

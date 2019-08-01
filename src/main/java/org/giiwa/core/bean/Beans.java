@@ -64,8 +64,10 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 	public long count() {
 		if (dao != null && total < 0) {
 			total = dao.count(q);
+//			log.debug("count, total=" + total + ", q=" + q);
 		} else if (total < 0) {
 			total = Helper.count(q, table, db);
+//			log.debug("count, total=" + total + ", q=" + q + ", table=" + table);
 		}
 		return total;
 	}
