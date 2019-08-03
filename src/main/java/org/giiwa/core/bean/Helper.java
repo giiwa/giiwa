@@ -1783,6 +1783,16 @@ public class Helper implements Serializable {
 			return b == null ? null : b.get(name);
 		}
 
+		public long getLong(String name) {
+			Bean b = load();
+			return b == null ? 0 : b.getLong(name);
+		}
+
+		public double getDouble(String name) {
+			Bean b = load();
+			return b == null ? 0 : b.getDouble(name);
+		}
+
 		/**
 		 * get the value of the field, offset the row
 		 * 
@@ -2444,7 +2454,7 @@ public class Helper implements Serializable {
 	public static String getTable(Class<? extends Bean> t) {
 		Table table = (Table) t.getAnnotation(Table.class);
 		if (table == null || X.isEmpty(table.name())) {
-			log.error("table missed/error in [" + t + "] declaretion");
+			// log.error("table missed/error in [" + t + "] declaretion", new Exception());
 			return null;
 		}
 
