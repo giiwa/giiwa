@@ -604,7 +604,7 @@ public class Bean implements Serializable {
 
 					String name = m.getColumnName(i);
 
-					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
+//					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
 
 					this.set(name, o);
 				} catch (Exception e) {

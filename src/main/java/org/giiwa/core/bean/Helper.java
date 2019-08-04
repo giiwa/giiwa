@@ -53,7 +53,7 @@ public class Helper implements Serializable {
 	/** The log utility. */
 	protected static Log log = LogFactory.getLog(Helper.class);
 
-	private static IOptimizer monitor = null;
+	public static IOptimizer monitor = null;
 
 	/**
 	 * map<db_table, list>
