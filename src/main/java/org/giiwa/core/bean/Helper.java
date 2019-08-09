@@ -901,6 +901,13 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		public void close() {
+			if (helper != null) {
+				helper.close();
+				helper = null;
+			}
+		}
+
 		/**
 		 * clone a new W <br>
 		 * return a new W.
@@ -1756,6 +1763,12 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		/**
+		 * load a data
+		 * 
+		 * @param <T>
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
 		public <T> T load() {
 			if (dao != null) {
@@ -1765,6 +1778,13 @@ public class Helper implements Serializable {
 			}
 		}
 
+		/**
+		 * load a data by skip offset
+		 * 
+		 * @param <T>
+		 * @param offset
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
 		public <T> T load(int offset) {
 			Beans<?> l1 = load(offset, 1);
@@ -1788,8 +1808,18 @@ public class Helper implements Serializable {
 			return b == null ? 0 : b.getLong(name);
 		}
 
+		public long getLong(int offset, String name) {
+			Bean b = load(offset);
+			return b == null ? 0 : b.getLong(name);
+		}
+
 		public double getDouble(String name) {
 			Bean b = load();
+			return b == null ? 0 : b.getDouble(name);
+		}
+
+		public double getDouble(int offset, String name) {
+			Bean b = load(offset);
 			return b == null ? 0 : b.getDouble(name);
 		}
 
@@ -1806,6 +1836,14 @@ public class Helper implements Serializable {
 			return b == null ? null : b.get(name);
 		}
 
+		/**
+		 * load data list
+		 * 
+		 * @param <T>
+		 * @param s
+		 * @param n
+		 * @return
+		 */
 		@SuppressWarnings("unchecked")
 		public <T extends Bean> Beans<T> load(int s, int n) {
 			if (dao != null) {

@@ -77,21 +77,27 @@ public class LiveHand implements Serializable {
 	}
 
 	public boolean hold() throws InterruptedException {
-		while (isLive()) {
-			long waittime = X.AMINUTE;
-			if (timeout > 0) {
-				waittime = timeout - created.pastms();
-			}
-			if (waittime > 0) {
-				if (door.tryAcquire(waittime, TimeUnit.MILLISECONDS)) {
-					log.debug("hold, door=" + door.availablePermits() + ", " + this);
-					return true;
+
+		TimeStamp t = TimeStamp.create();
+		try {
+			while (isLive()) {
+				long waittime = X.AMINUTE;
+				if (timeout > 0) {
+					waittime = timeout - created.pastms();
 				}
-			} else {
-				throw new InterruptedException("timeout for hold the hand");
+				if (waittime > 0) {
+					if (door.tryAcquire(waittime, TimeUnit.MILLISECONDS)) {
+						log.debug("hold, door=" + door.availablePermits() + ", " + this);
+						return true;
+					}
+				} else {
+					throw new InterruptedException("timeout for hold the hand");
+				}
 			}
+			return false;
+		} finally {
+			log.debug("holding, cost=" + t.past() + ", door=" + door.availablePermits());
 		}
-		return false;
 	}
 
 	public synchronized void drop() {
@@ -134,8 +140,8 @@ public class LiveHand implements Serializable {
 
 	@Override
 	public String toString() {
-		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", live=" + live + ", available="
-				+ door.availablePermits() + ", max=" + max + ", timeout=" + timeout + ", past=" + created.pastms()
+		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", alive=" + live + ", available="
+				+ door.availablePermits() + ", max=" + max + ", timeout=" + timeout + ", age=" + created.pastms()
 				+ "ms, attachs=" + attachs + "]";
 	}
 

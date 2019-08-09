@@ -571,6 +571,16 @@ public abstract class Task implements Runnable, Serializable {
 		return this;
 	}
 
+	final public boolean isScheduled() {
+
+		if (this.getGlobal()) {
+			return GlobalRunner.isScheduled(this);
+		} else {
+			return LocalRunner.isScheduled(this);
+		}
+
+	}
+
 	/**
 	 * create a task and schedule it now
 	 * 
@@ -1069,6 +1079,14 @@ public abstract class Task implements Runnable, Serializable {
 			super(NAME);
 		}
 
+		public static boolean isScheduled(Task task) {
+			if (pendingqueue.contains(task)) {
+				return true;
+			}
+
+			return LocalRunner.isScheduled(task);
+		}
+
 		private static Comparator<Task> sorter = new Comparator<Task>() {
 			@Override
 			public int compare(Task o1, Task o2) {
@@ -1429,6 +1447,25 @@ public abstract class Task implements Runnable, Serializable {
 			} finally {
 				lock.unlock();
 			}
+		}
+
+		public static boolean isScheduled(Task t) {
+			try {
+				lock.lock();
+
+				if (runningQueue.contains(t)) {
+					return true;
+				}
+
+				if (pendingQueue.contains(t)) {
+					return true;
+				}
+
+			} finally {
+				lock.unlock();
+			}
+
+			return false;
 		}
 
 		private static boolean add(Task task) {
