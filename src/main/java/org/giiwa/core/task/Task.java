@@ -301,6 +301,15 @@ public abstract class Task implements Runnable, Serializable {
 	}
 
 	/**
+	 * the description of this task
+	 * 
+	 * @return
+	 */
+	public String getDescription() {
+		return this.getName();
+	}
+
+	/**
 	 * Interrupt able.
 	 * 
 	 * @return true, if successful

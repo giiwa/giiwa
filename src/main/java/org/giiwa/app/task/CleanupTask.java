@@ -204,7 +204,8 @@ public class CleanupTask extends Task {
 	/**
 	 * The folders.
 	 */
-	static String[] folders = { "/temp/_cache", "/temp/_raw" };
+	static String[] folders = { "/temp/_raw" };
+//	static String[] folders = { "/temp/_cache", "/temp/_raw" };
 
 	/**
 	 * The beans.

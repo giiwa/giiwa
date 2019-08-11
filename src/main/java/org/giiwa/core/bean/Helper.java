@@ -1114,6 +1114,55 @@ public class Helper implements Serializable {
 		}
 
 		/**
+		 * filter="addr:S北京|上海,publisher:S人民出版社,price:L10-20"
+		 * 
+		 * @param filter
+		 * @return
+		 */
+		public W and(String filter) {
+			W q = W.create();
+			String[] ss = X.split(filter, "[,;]");
+			for (String s : ss) {
+				String[] s1 = X.split(s, "[:]");
+				String name = s1[0];
+
+				char t = s1[1].charAt(0);
+				String s2 = s1[1].substring(1);
+				if (t == 'S' || t == 's') {
+					String[] s3 = X.split(s2, "[\\|]");
+					if (s3.length > 0) {
+						q.and(name, s3);
+					} else {
+						q.and(name, s2);
+					}
+				} else if (t == 'L' || t == 'l') {
+					int i = s2.indexOf("-");
+					if (i < 0) {
+						q.and(name, X.toLong(s2));
+					} else {
+						String s21 = s2.substring(0, i);
+						String s22 = s2.substring(i + 1);
+						if (X.isSame(s21, s22)) {
+							q.and(name, X.toLong(s21));
+						} else {
+							if (!X.isEmpty(s21)) {
+								// <
+								q.and(name, X.toLong(s21), W.OP.gte);
+							}
+							if (!X.isEmpty(s22)) {
+								q.and(name, X.toLong(s22), W.OP.lte);
+							}
+						}
+					}
+				}
+			}
+			if (!q.isEmpty()) {
+				this.and(q);
+			}
+			return this;
+		}
+
+		/**
 		 * set a "or (...)" conditions
 		 *
 		 * @param w the w
