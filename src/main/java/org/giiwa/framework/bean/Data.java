@@ -14,6 +14,8 @@
 */
 package org.giiwa.framework.bean;
 
+import java.sql.SQLException;
+
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
@@ -59,6 +61,18 @@ public class Data extends Bean {
 	}
 
 	/**
+	 * check the data exists or not
+	 * 
+	 * @param table the table name
+	 * @param q     the query
+	 * @return true if exists, else false
+	 * @throws SQLException
+	 */
+	public static boolean exists(String table, W q) throws SQLException {
+		return Helper.exists(q, table, Helper.DEFAULT);
+	}
+
+	/**
 	 * update the data
 	 * 
 	 * @param table the tablename
@@ -67,7 +81,19 @@ public class Data extends Bean {
 	 * @return the number of updated
 	 */
 	public static int update(String table, W q, JSON data) {
-		return Helper.update(table, q, V.create().copy(data));
+		return Data.update(table, q, V.create().copy(data));
+	}
+
+	/**
+	 * update the data
+	 * 
+	 * @param table the table name
+	 * @param q     the query
+	 * @param data  the data
+	 * @return the num which updated
+	 */
+	public static int update(String table, W q, V data) {
+		return Helper.update(table, q, data);
 	}
 
 	/**
@@ -78,7 +104,18 @@ public class Data extends Bean {
 	 * @return the number of inserted
 	 */
 	public static int insert(String table, JSON data) {
-		return Helper.insert(table, V.create().copy(data));
+		return Data.insert(table, V.create().copy(data));
+	}
+
+	/**
+	 * insert a data
+	 * 
+	 * @param table the table name
+	 * @param data  the data
+	 * @return the num which inserted
+	 */
+	public static int insert(String table, V data) {
+		return Helper.insert(table, data);
 	}
 
 	/**
