@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -457,44 +456,62 @@ public final class X {
 		if (X.isEmpty(src))
 			return null;
 		src = src.trim();
+		if (src.length() == 0)
+			return null;
 
-		if (src.charAt(0) == '"') {
-			List<String> l1 = new ArrayList<String>();
-			if (src != null) {
-				StringBuilder sb = null;
-				for (int i = 0; i < src.length(); i++) {
-					char c = src.charAt(i);
-					if (c == '"') {
-						if (sb != null) {
-							l1.add(sb.toString());
-							sb = null;
-							i++;
-							while (i < src.length() && src.charAt(i) != '"') {
-								i++;
-							}
-						}
+		List<String> l1 = new ArrayList<String>();
 
-						continue;
-					} else if (c == '\\') {
-						if (sb == null)
-							sb = new StringBuilder();
+		StringBuilder sb = null;
+		int p = 0;
+		boolean quota = false;
+		while (p < src.length()) {
+			char c = src.charAt(p);
+			if (c == '"') {
+				// goto next "
+				if (sb == null) {
+					// this is start ", must find the end "
+					quota = true;
+				} else {
+					if (quota) {
+						quota = false;
+					} else {
 						sb.append(c);
-						i++;
-						c = src.charAt(i);
 					}
-					if (sb == null)
+				}
+			} else if (c == ',') {
+				if (!quota) {
+					if (sb == null) {
+						l1.add(X.EMPTY);
+					} else {
+						l1.add(sb.toString());
+					}
+					sb = null;
+				} else {
+					if (sb == null) {
 						sb = new StringBuilder();
+					}
 					sb.append(c);
 				}
-				if (sb != null) {
-					l1.add(sb.toString());
+			} else if (c == '\\') {
+				p++;
+				c = src.charAt(p);
+				if (sb == null) {
+					sb = new StringBuilder();
 				}
+				sb.append(c);
+			} else {
+				if (sb == null) {
+					sb = new StringBuilder();
+				}
+				sb.append(c);
 			}
-
-			return l1.toArray(new String[l1.size()]);
-		} else {
-			return X.split(src, "[,]");
+			p++;
 		}
+		if (sb != null) {
+			l1.add(sb.toString());
+		}
+
+		return l1.toArray(new String[l1.size()]);
 	}
 
 	/**
@@ -844,13 +861,6 @@ public final class X {
 		}
 
 		return number.substring(0, number.length() - s.length()) + s;
-	}
-
-	public static void main(String[] aa) {
-		String s = "\"12345\",\"1234\",asdad\"123\"";
-		String[] ss = X.csv(s);
-
-		System.out.println(Arrays.toString(ss));
 	}
 
 	public static boolean isCauseBy(Throwable e, String regex) {

@@ -35,13 +35,13 @@ import org.jsoup.select.Elements;
 public final class Html {
 
 	/** The delegator. */
-	ParserDelegator delegator = new ParserDelegator();
+	transient ParserDelegator delegator = new ParserDelegator();
 
 	/** The log. */
-	static Log log = LogFactory.getLog(Html.class);
+	private static Log log = LogFactory.getLog(Html.class);
 
 	/** The d. */
-	Document d = null;
+	transient Document d = null;
 
 	private Html(String html) {
 		if (html != null) {
