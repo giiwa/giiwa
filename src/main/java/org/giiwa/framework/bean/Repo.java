@@ -34,7 +34,7 @@ public class Repo {
 
 	private static Log log = LogFactory.getLog(Repo.class);
 
-	private static String ROOT = "/_temp";
+	private static String ROOT = "/temp";
 
 	/**
 	 * Initialize the Repo, this will be invoke when giiwa startup

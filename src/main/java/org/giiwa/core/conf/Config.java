@@ -91,33 +91,35 @@ public final class Config {
 			// conf.addProperty("home", home);
 
 			List<?> list = conf.getList("@include");
-			Set<String> ss = new HashSet<String>();
-			ss.addAll(X.toString(list));
-			// System.out.println("include:" + ss);
+			if (list != null && !list.isEmpty()) {
+				Set<String> ss = new HashSet<String>();
+				ss.addAll(X.toString(list));
+				// System.out.println("include:" + ss);
 
-			for (String s : ss) {
-				if (s.startsWith(File.separator)) {
-					if (new File(s).exists()) {
-						PropertiesConfiguration c = new PropertiesConfiguration(s);
-						c.setEncoding("utf-8");
-						// reloader.add(s);
+				for (String s : ss) {
+					if (s.startsWith(File.separator)) {
+						if (new File(s).exists()) {
+							PropertiesConfiguration c = new PropertiesConfiguration(s);
+							c.setEncoding("utf-8");
+							// reloader.add(s);
 
-						conf.append(c);
+							conf.append(c);
+						} else {
+							System.out.println("Can't find the configuration file, file=" + s);
+						}
 					} else {
-						System.out.println("Can't find the configuration file, file=" + s);
-					}
-				} else {
-					String s1 = file.getParent() + "/conf/" + s;
-					if (new File(s1).exists()) {
-						PropertiesConfiguration c = new PropertiesConfiguration(s1);
-						c.setEncoding("utf-8");
-						// reloader.add(s1);
+						String s1 = file.getParent() + "/conf/" + s;
+						if (new File(s1).exists()) {
+							PropertiesConfiguration c = new PropertiesConfiguration(s1);
+							c.setEncoding("utf-8");
+							// reloader.add(s1);
 
-						conf.append(c);
-					} else {
-						System.out.println("Can't find the configuration file, file=" + s1);
-					}
+							conf.append(c);
+						} else {
+							System.out.println("Can't find the configuration file, file=" + s1);
+						}
 
+					}
 				}
 			}
 

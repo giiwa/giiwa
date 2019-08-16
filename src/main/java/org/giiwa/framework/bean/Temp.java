@@ -47,6 +47,8 @@ public class Temp {
 
 	static Log log = LogFactory.getLog(Temp.class);
 
+	private static String ROOT = "/temp";
+
 	/**
 	 * Initialize the Temp object, this will be invoke in giiwa startup.
 	 *
@@ -117,7 +119,7 @@ public class Temp {
 	 * @return String of uri
 	 */
 	public String getUri() {
-		return "/temp/" + id + "/" + name + "?" + ((file == null || !file.exists()) ? 0 : file.lastModified());
+		return ROOT + "/" + id + "/" + name + "?" + ((file == null || !file.exists()) ? 0 : file.lastModified());
 	}
 
 	/**
@@ -142,7 +144,7 @@ public class Temp {
 		char p3 = (char) (id % 17 + 'a');
 		char p4 = (char) (id % 13 + 'A');
 
-		StringBuilder sb = new StringBuilder("/_temp");
+		StringBuilder sb = new StringBuilder(ROOT);
 
 		sb.append("/").append(p1).append("/").append(p2).append("/").append(p3).append("/").append(p4).append("/")
 				.append(id);
@@ -341,7 +343,7 @@ public class Temp {
 		return 0;
 	}
 
-	public void delete() throws IOException {
+	public void cleanup() throws IOException {
 
 		this.getFile().delete();
 
@@ -351,14 +353,24 @@ public class Temp {
 
 	}
 
-	public static void cleanup(long expired) {
+	/**
+	 * @deprecated
+	 * @throws IOException
+	 */
+	public void delete() throws IOException {
+
+		cleanup();
+
+	}
+
+	public static void cleanup(long age) {
 		{
 			try {
-				DFile f = Disk.seek("/_temp/");
+				DFile f = Disk.seek(ROOT);
 				DFile[] ff = f.listFiles();
 				if (ff != null) {
 					for (DFile f1 : ff) {
-						IOUtil.delete(f1, System.currentTimeMillis() - expired);
+						IOUtil.delete(f1, age);
 					}
 				}
 			} catch (Exception e) {
@@ -368,11 +380,11 @@ public class Temp {
 
 		{
 			try {
-				File f1 = new File(Model.GIIWA_HOME + "/_temp/");
+				File f1 = new File(Model.GIIWA_HOME + ROOT);
 				File[] ff = f1.listFiles();
 				if (ff != null) {
 					for (File f2 : ff) {
-						IOUtil.delete(f2, System.currentTimeMillis() - expired);
+						IOUtil.delete(f2, age);
 					}
 				}
 			} catch (Exception e) {

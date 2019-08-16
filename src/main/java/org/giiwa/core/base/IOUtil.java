@@ -98,7 +98,8 @@ public final class IOUtil {
 	public static int delete(DFile f, long age) throws IOException {
 		int count = 0;
 
-		if (f.isFile() && (age < 0 || System.currentTimeMillis() - f.lastModified() > age)) {
+		if (f.isFile() && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+
 			f.delete();
 
 			if (log.isInfoEnabled()) {
@@ -107,12 +108,14 @@ public final class IOUtil {
 
 			count++;
 		} else if (f.isDirectory()) {
+			
 			DFile[] ff = f.listFiles();
 			if (ff != null && ff.length > 0) {
 				for (DFile f1 : ff) {
 					count += delete(f1, age);
 				}
 			}
+			
 			ff = f.listFiles();
 			if (ff == null || ff.length == 0) {
 				f.delete();

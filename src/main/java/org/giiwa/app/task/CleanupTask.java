@@ -107,10 +107,10 @@ public class CleanupTask extends Task {
 			 * clean up the local temp files
 			 */
 			count = 0;
-			for (String f : folders) {
-				String path = home + f;
-				cleanup(path, X.ADAY, true);
-			}
+//			for (String f : folders) {
+//				String path = home + f;
+//				cleanup(path, X.ADAY, true);
+//			}
 
 			/**
 			 * clean up repo
@@ -205,7 +205,7 @@ public class CleanupTask extends Task {
 	 * The folders.
 	 */
 //	static String[] folders = { "/temp/_raw" };
-	static String[] folders = { "/temp/_cache", "/temp/_raw" };
+//	static String[] folders = { "/temp/_cache", "/temp/_raw" };
 
 	/**
 	 * The beans.
