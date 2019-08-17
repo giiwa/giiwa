@@ -68,10 +68,8 @@ public class GiiwaContextListener implements ServletContextListener {
 	/**
 	 * Inits the.
 	 * 
-	 * @param home
-	 *            the home
-	 * @param contextPath
-	 *            the context path
+	 * @param home        the home
+	 * @param contextPath the context path
 	 */
 	private static void init(String home, String contextPath) {
 		try {
@@ -135,6 +133,11 @@ public class GiiwaContextListener implements ServletContextListener {
 			 * initialize the temp
 			 */
 			Temp.init(conf);
+
+			/**
+			 * 
+			 */
+			Config.initLog();
 
 		} catch (Exception e) {
 			e.printStackTrace();

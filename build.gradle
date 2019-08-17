@@ -54,8 +54,7 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version:'2.8.0'
     compile group: 'com.jayway.jsonpath', name: 'json-path', version:'2.2.0'
     compile group: 'org.apache.commons', name: 'commons-exec', version:'1.3'
-    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.25'
-    compile group: 'org.bouncycastle', name: 'bcprov-jdk16', version:'1.46'
+    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.28'
     compile group: 'com.vladsch.flexmark', name: 'flexmark', version:'0.35.0'
     compile files('lib/ojdbc8.jar')
     compile files('tomcat/lib/servlet-api.jar')

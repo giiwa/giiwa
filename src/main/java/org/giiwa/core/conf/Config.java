@@ -43,6 +43,23 @@ public final class Config {
 		init(new File(confFile));
 	}
 
+	public static void initLog() {
+
+		if (confFile != null && new File(confFile.getParent() + File.separator + "log4j.properties").exists()) {
+			PropertyConfigurator.configure(confFile.getParent() + File.separator + "log4j.properties");
+		} else {
+			Properties prop = new Properties();
+			prop.setProperty("log4j.rootLogger", "error, stdout");
+			prop.setProperty("log4j.appender.stdout", "org.apache.log4j.ConsoleAppender");
+			prop.setProperty("log4j.appender.stdout.layout", "org.apache.log4j.PatternLayout");
+			prop.setProperty("log4j.appender.stdout.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
+			prop.setProperty("log4j.logger.org.giiwa", "debug");
+
+			PropertyConfigurator.configure(prop);
+		}
+
+	}
+
 	/**
 	 * initialize the conf with the file
 	 * 
@@ -54,18 +71,7 @@ public final class Config {
 		try {
 			confFile = file;
 
-			if (file != null && new File(file.getParent() + File.separator + "log4j.properties").exists()) {
-				PropertyConfigurator.configure(file.getParent() + File.separator + "log4j.properties");
-			} else {
-				Properties prop = new Properties();
-				prop.setProperty("log4j.rootLogger", "error, stdout");
-				prop.setProperty("log4j.appender.stdout", "org.apache.log4j.ConsoleAppender");
-				prop.setProperty("log4j.appender.stdout.layout", "org.apache.log4j.PatternLayout");
-				prop.setProperty("log4j.appender.stdout.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
-				prop.setProperty("log4j.logger.org.giiwa", "debug");
-
-				PropertyConfigurator.configure(prop);
-			}
+			initLog();
 
 			PropertiesConfiguration c1 = null;
 
@@ -154,6 +160,7 @@ public final class Config {
 
 			// check and upgrade
 			checkAndUpgrade();
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -165,6 +172,7 @@ public final class Config {
 	 * @param prop the properties
 	 */
 	public static void init(Properties prop) {
+
 		init();
 
 		for (Object k : prop.keySet()) {

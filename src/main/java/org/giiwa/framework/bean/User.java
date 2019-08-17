@@ -16,15 +16,12 @@ package org.giiwa.framework.bean;
 
 import java.awt.Color;
 import java.io.PrintStream;
-import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.configuration.Configuration;
-import org.bouncycastle.jce.provider.JDKMessageDigest.MD4;
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.*;
@@ -501,32 +498,6 @@ public class User extends Bean {
 			return X.EMPTY;
 		}
 		return MD5.md5(passwd);
-	}
-
-	public static void main(String[] args) {
-		String s = "123123";
-		String s1 = md5encrypt(s);
-		System.out.println(s1);
-
-		byte[] bb = null;
-		try {
-			MessageDigest md4 = MD4.getInstance("MD4");
-			bb = md4.digest(s.getBytes("UnicodeLittleUnmarked"));
-			System.out.println(Arrays.toString(bb));
-
-			md4 = MD4.getInstance("MD4");
-			bb = s.getBytes("UnicodeLittleUnmarked");
-			md4.update(bb);
-			byte[] p21 = new byte[21];
-			bb = md4.digest();
-			System.arraycopy(bb, 0, p21, 0, 16);
-
-			System.out.println(Arrays.toString(bb));
-			System.out.println(Arrays.toString(p21));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
 	}
 
 	/**
