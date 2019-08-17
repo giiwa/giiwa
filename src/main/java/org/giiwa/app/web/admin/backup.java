@@ -100,7 +100,8 @@ public class backup extends Model {
 			File f = new File(root + "/" + name);
 
 			if (f.getCanonicalPath().startsWith(root)) {
-				log.debug("delete: " + f.getCanonicalPath());
+				if (log.isDebugEnabled())
+					log.debug("delete: " + f.getCanonicalPath());
 				IOUtil.delete(f);
 			}
 		} catch (Exception e) {
@@ -433,7 +434,8 @@ public class backup extends Model {
 				// // url);
 				// }
 
-				log.debug("zipping, dir=" + out);
+				if (log.isDebugEnabled())
+					log.debug("zipping, dir=" + out);
 
 				Zip.zip(new File(path() + "/" + name + ".zip"), new File(out));
 

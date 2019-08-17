@@ -32,7 +32,8 @@ public class FTP {
 			int reply;
 
 			ftp.connect(url.getIp(), url.getPort(21));
-			log.debug("replaystring=" + ftp.getReplyString());
+			if (log.isDebugEnabled())
+				log.debug("replaystring=" + ftp.getReplyString());
 
 			// After connection attempt, you should check the reply code to verify
 			// success.

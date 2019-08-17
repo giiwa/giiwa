@@ -381,7 +381,8 @@ public class GImage {
 
 			BufferedImage img = ImageIO.read(source);
 			if (img == null || w < 0 || h < 0) {
-				log.debug("img = " + img);
+				if (log.isDebugEnabled())
+					log.debug("img = " + img);
 				return -1;
 			}
 

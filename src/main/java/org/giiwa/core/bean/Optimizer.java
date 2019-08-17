@@ -51,7 +51,8 @@ class Optimizer implements Helper.IOptimizer {
 									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + sb.toString(),
 											null, null);
 
-									log.debug("db.index, table=" + table + ", create.index=" + sb.toString());
+									if (log.isDebugEnabled())
+										log.debug("db.index, table=" + table + ", create.index=" + sb.toString());
 
 									Helper.createIndex(db, table, keys);
 								}
@@ -89,7 +90,8 @@ class Optimizer implements Helper.IOptimizer {
 					// sb.toString(), null,
 					// null);
 
-					log.debug("db.index, table=" + table + ", get.index=" + sb.toString());
+					if (log.isDebugEnabled())
+						log.debug("db.index, table=" + table + ", get.index=" + sb.toString());
 
 					String id = UID.id(db, table, sb.toString());
 					exists.add(id);

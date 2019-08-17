@@ -941,7 +941,8 @@ public abstract class Task implements Runnable, Serializable {
 						Object[] e = q.readObject(X.AMINUTE);
 
 						String s1 = (String) e[0];
-						log.debug("reduce.s=" + s1);
+						if (log.isDebugEnabled())
+							log.debug("reduce.s=" + s1);
 
 						Serializable t = (Serializable) e[1];
 
@@ -964,10 +965,11 @@ public abstract class Task implements Runnable, Serializable {
 
 											Reduce.create(queueName, t1).schedule(10);
 										} else {
-											log.debug("the task is locked, tast=" + t1);
+											log.warn("the task is locked, tast=" + t1);
 										}
 									} else {
-										log.debug("the task is pending, tast=" + t1);
+										if (log.isDebugEnabled())
+											log.debug("the task is pending, tast=" + t1);
 									}
 								}
 							} finally {
@@ -1123,7 +1125,8 @@ public abstract class Task implements Runnable, Serializable {
 
 				inst.inited = true;
 
-				log.debug("globalrunner is binded. init pending=" + inst.pending + ", cpu=" + mycpu);
+				if (log.isDebugEnabled())
+					log.debug("globalrunner is binded. init pending=" + inst.pending + ", cpu=" + mycpu);
 
 				if (inst.pending != null) {
 
@@ -1197,10 +1200,11 @@ public abstract class Task implements Runnable, Serializable {
 					Task t = req.get();
 
 					if (!LocalRunner.isShutingdown) {
-						log.debug("got a schedule task=" + t);
+						if (log.isDebugEnabled())
+							log.debug("got a schedule task=" + t);
 
 						if (t == null) {
-							log.debug("bad task=" + t);
+							log.warn("bad task=" + t);
 						} else {
 
 							// runningqueue.remove(t);
@@ -1226,7 +1230,8 @@ public abstract class Task implements Runnable, Serializable {
 				case TYPE_RUNNING: {
 					Task t = req.get();
 
-					log.debug("got a running task " + t);
+					if (log.isDebugEnabled())
+						log.debug("got a running task " + t);
 					if (t != null) {
 						int i = pendingqueue.indexOf(t);
 						if (i > -1) {
@@ -1244,7 +1249,8 @@ public abstract class Task implements Runnable, Serializable {
 				case TYPE_DONE: {
 					Task t = req.get();
 
-					log.debug("got a done task " + t);
+					if (log.isDebugEnabled())
+						log.debug("got a done task " + t);
 
 					int i = pendingqueue.indexOf(t);
 					if (i > -1) {
@@ -1298,11 +1304,13 @@ public abstract class Task implements Runnable, Serializable {
 					inst.pending = new ArrayList<Task>();
 				}
 				inst.pending.add(task);
-				log.debug("adding to pending, task=" + task.getName() + ", pending=" + inst.pending);
+				if (log.isDebugEnabled())
+					log.debug("adding to pending, task=" + task.getName() + ", pending=" + inst.pending);
 				return;
 			}
 
-			log.debug("schedule global task=" + task.getName());
+			if (log.isDebugEnabled())
+				log.debug("schedule global task=" + task.getName());
 
 			Request req = Request.create();
 			req.put(task);
@@ -1389,7 +1397,8 @@ public abstract class Task implements Runnable, Serializable {
 
 								MQ.topic(NAME, Request.create().type(TYPE_RUNNING).put(t));
 
-								log.debug("run the global task= " + t);
+								if (log.isDebugEnabled())
+									log.debug("run the global task= " + t);
 
 							} else {
 								t.unlock();
@@ -1397,7 +1406,8 @@ public abstract class Task implements Runnable, Serializable {
 							}
 						} else {
 							// else running by others, ignore
-							log.debug("locked, ignore the global task= " + t);
+							if (log.isDebugEnabled())
+								log.debug("locked, ignore the global task= " + t);
 						}
 					} else {
 						// checking running task
@@ -1653,7 +1663,7 @@ public abstract class Task implements Runnable, Serializable {
 				}
 
 			} catch (Exception e) {
-				log.debug("running list=" + runningQueue);
+				log.error("running list=" + runningQueue);
 				log.error(e.getMessage(), e);
 			}
 		}

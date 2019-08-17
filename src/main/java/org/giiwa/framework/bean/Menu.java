@@ -50,10 +50,8 @@ public class Menu extends Bean {
 	/**
 	 * Insert or update.
 	 * 
-	 * @param arr
-	 *            the arr
-	 * @param tag
-	 *            the tag
+	 * @param arr the arr
+	 * @param tag the tag
 	 */
 	public static void insertOrUpdate(List<JSON> arr, String tag) {
 		if (arr == null) {
@@ -124,10 +122,8 @@ public class Menu extends Bean {
 	/**
 	 * Insert or update.
 	 * 
-	 * @param jo
-	 *            the jo
-	 * @param parent
-	 *            the parent
+	 * @param jo     the jo
+	 * @param parent the parent
 	 */
 	public static void insertOrUpdate(JSON jo, long parent) {
 		try {
@@ -259,7 +255,8 @@ public class Menu extends Bean {
 				while (dao.exists(id)) {
 					id = UID.next("menu.id");
 
-					log.debug("id=" + id);
+					if (log.isDebugEnabled())
+						log.debug("id=" + id);
 				}
 
 				dao.insert(v.set(X.ID, id).set("id", id).set("parent", parent).set("name", name).set("node", node));
@@ -282,8 +279,7 @@ public class Menu extends Bean {
 	/**
 	 * Submenu.
 	 * 
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return the beans
 	 */
 	public static Beans<Menu> submenu(long id) {
@@ -295,10 +291,8 @@ public class Menu extends Bean {
 	/**
 	 * Load.
 	 * 
-	 * @param parent
-	 *            the parent
-	 * @param name
-	 *            the name
+	 * @param parent the parent
+	 * @param name   the name
 	 * @return the menu
 	 */
 	public static Menu load(long parent, String name) {
@@ -319,8 +313,7 @@ public class Menu extends Bean {
 	/**
 	 * Removes the.
 	 * 
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 */
 	public static void remove(long id) {
 		dao.delete(id);
@@ -341,10 +334,8 @@ public class Menu extends Bean {
 	/**
 	 * Filter access.
 	 * 
-	 * @param list
-	 *            the list
-	 * @param me
-	 *            the me
+	 * @param list the list
+	 * @param me   the me
 	 * @return the collection
 	 */
 	public static Collection<Menu> filterAccess(List<Menu> list, User me) {
@@ -410,8 +401,7 @@ public class Menu extends Bean {
 	/**
 	 * Removes the.
 	 * 
-	 * @param tag
-	 *            the tag
+	 * @param tag the tag
 	 */
 	public static void remove(String tag) {
 		String node = Local.id();

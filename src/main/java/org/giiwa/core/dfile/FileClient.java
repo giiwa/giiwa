@@ -554,7 +554,8 @@ public class FileClient implements IRequestHandler {
 					sb.append(buff, 0, len);
 				}
 
-				log.debug("params=" + sb.toString());
+				if (log.isDebugEnabled())
+					log.debug("params=" + sb.toString());
 
 				JSON jo = JSON.fromObject(sb.toString());
 				if (jo != null) {

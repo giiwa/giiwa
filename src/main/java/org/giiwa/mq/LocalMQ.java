@@ -105,7 +105,8 @@ class LocalMQ extends MQ {
 				l1.add(m);
 				process(name, l1, cb);
 
-				log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
+				if (log.isDebugEnabled())
+					log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -254,7 +255,8 @@ class LocalMQ extends MQ {
 		@Override
 		public void onFinish() {
 			if (last < System.currentTimeMillis() - X.AMINUTE) {
-				log.debug("sender." + name + " is stopped.");
+				if (log.isDebugEnabled())
+					log.debug("sender." + name + " is stopped.");
 			} else {
 				this.schedule(0);
 			}

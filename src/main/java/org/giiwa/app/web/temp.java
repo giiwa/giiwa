@@ -42,7 +42,8 @@ public class temp extends Model {
 	 */
 	public void onGet() {
 
-		log.debug("temp: " + this.path);
+		if (log.isDebugEnabled())
+			log.debug("temp: " + this.path);
 		if (this.path == null) {
 			this.notfound();
 			return;
@@ -68,11 +69,13 @@ public class temp extends Model {
 					this.notfound();
 					return;
 				}
-				log.debug("filename=" + f.getCanonicalPath());
+				if (log.isDebugEnabled())
+					log.debug("filename=" + f.getCanonicalPath());
 				total = f.length();
 				in = new FileInputStream(f);
 			} else {
-				log.debug("filename=" + f1.getFilename());
+				if (log.isDebugEnabled())
+					log.debug("filename=" + f1.getFilename());
 				in = f1.getInputStream();
 				total = f1.length();
 			}

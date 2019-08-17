@@ -87,7 +87,8 @@ public class LiveHand implements Serializable {
 				}
 				if (waittime > 0) {
 					if (door.tryAcquire(waittime, TimeUnit.MILLISECONDS)) {
-						log.debug("hold, door=" + door.availablePermits() + ", " + this);
+						if (log.isDebugEnabled())
+							log.debug("hold, door=" + door.availablePermits() + ", " + this);
 						return true;
 					}
 				} else {
@@ -96,14 +97,16 @@ public class LiveHand implements Serializable {
 			}
 			return false;
 		} finally {
-			log.debug("holding, cost=" + t.past() + ", door=" + door.availablePermits());
+			if (log.isDebugEnabled())
+				log.debug("holding, cost=" + t.past() + ", door=" + door.availablePermits());
 		}
 	}
 
 	public synchronized void drop() {
 		door.release();
 
-		log.debug("drop, door=" + door.availablePermits() + ", " + this);
+		if (log.isDebugEnabled())
+			log.debug("drop, door=" + door.availablePermits() + ", " + this);
 
 		this.notifyAll();
 	}
@@ -122,7 +125,8 @@ public class LiveHand implements Serializable {
 		long t1 = timeout - t.pastms();
 		while (t1 > 0 && isLive()) {
 			if ((door.availablePermits() >= max)) {
-				log.debug("await, door=" + door.availablePermits() + ", " + this);
+				if (log.isDebugEnabled())
+					log.debug("await, door=" + door.availablePermits() + ", " + this);
 				return true;
 			}
 
@@ -133,7 +137,8 @@ public class LiveHand implements Serializable {
 			t1 = timeout - t.pastms();
 		}
 
-		log.debug("await, door=" + door.availablePermits() + ", " + this.toString());
+		if (log.isDebugEnabled())
+			log.debug("await, door=" + door.availablePermits() + ", " + this.toString());
 
 		return isLive();
 	}

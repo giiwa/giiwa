@@ -67,7 +67,7 @@ public class FileView extends View {
 
 			String filetype = Model.getMimeType(View.getName(file));
 			m.setContentType(filetype);
-			
+
 			boolean media = (filetype != null && (filetype.startsWith("video") || filetype.startsWith("audio"))) ? true
 					: false;
 
@@ -129,7 +129,8 @@ public class FileView extends View {
 			TimeStamp t = TimeStamp.create();
 			try {
 				IOUtil.copy(in, m.getOutputStream(), start, end, true);
-				log.debug("cost t=" + t.past() + ", file=" + file + ", start=" + start + ",end=" + end);
+				if (log.isDebugEnabled())
+					log.debug("cost t=" + t.past() + ", file=" + file + ", start=" + start + ",end=" + end);
 			} catch (Exception e) {
 				log.error("cost t=" + t.past() + ", file=" + file + ", start=" + start + ", end=" + end, e);
 			}

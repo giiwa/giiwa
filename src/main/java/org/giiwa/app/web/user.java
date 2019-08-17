@@ -192,7 +192,8 @@ public class user extends Model {
 		if (s.has("uri")) {
 			String uri = (String) s.get("uri");
 
-			log.debug("redirecting:" + uri);
+			if (log.isDebugEnabled())
+				log.debug("redirecting:" + uri);
 
 			if (uri.endsWith("/index")) {
 				uri = uri.substring(0, uri.length() - 6);
@@ -330,7 +331,8 @@ public class user extends Model {
 				} else {
 
 					User me = User.load(name, pwd);
-					log.debug("login: " + sid() + "-" + me);
+					if (log.isDebugEnabled())
+						log.debug("login: " + sid() + "-" + me);
 					if (me != null) {
 
 						long uid = me.getId();
@@ -368,7 +370,8 @@ public class user extends Model {
 								if (X.isSame("json", this.getString("type")) || this.isAjax()) {
 
 									this.setUser(me, LoginType.ajax);
-									log.debug("isAjax login");
+									if (log.isDebugEnabled())
+										log.debug("isAjax login");
 
 									login.logined(sid(), this.getRemoteHost(),
 											V.create("ajaxlogined", System.currentTimeMillis()));

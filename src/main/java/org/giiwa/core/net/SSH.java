@@ -32,7 +32,8 @@ public class SSH {
 
 			String s = run(session, command);
 
-			log.debug("ssh.run, url=" + url + ", command=" + command + ", result=" + s);
+			if (log.isDebugEnabled())
+				log.debug("ssh.run, url=" + url + ", command=" + command + ", result=" + s);
 
 			return s;
 		} catch (Exception e) {
@@ -57,11 +58,13 @@ public class SSH {
 
 		UserInfo ui = new MyUserInfo() {
 			public void showMessage(String message) {
-				log.debug("showMessage:" + message);
+				if (log.isDebugEnabled())
+					log.debug("showMessage:" + message);
 			}
 
 			public boolean promptYesNo(String message) {
-				log.debug("promptYesNo:" + message);
+				if (log.isDebugEnabled())
+					log.debug("promptYesNo:" + message);
 				return true;
 			}
 
@@ -75,37 +78,44 @@ public class SSH {
 
 	private static abstract class MyUserInfo implements UserInfo, UIKeyboardInteractive {
 		public String getPassword() {
-			log.debug("getPassword");
+			if (log.isDebugEnabled())
+				log.debug("getPassword");
 			return null;
 		}
 
 		public boolean promptYesNo(String str) {
-			log.debug("promptYesNo:" + str);
+			if (log.isDebugEnabled())
+				log.debug("promptYesNo:" + str);
 			return false;
 		}
 
 		public String getPassphrase() {
-			log.debug("getPassphrase");
+			if (log.isDebugEnabled())
+				log.debug("getPassphrase");
 			return null;
 		}
 
 		public boolean promptPassphrase(String message) {
-			log.debug("promptPassphrase:" + message);
+			if (log.isDebugEnabled())
+				log.debug("promptPassphrase:" + message);
 			return false;
 		}
 
 		public boolean promptPassword(String message) {
-			log.debug("promptPassword:" + message);
+			if (log.isDebugEnabled())
+				log.debug("promptPassword:" + message);
 			return false;
 		}
 
 		public void showMessage(String message) {
-			log.debug("showMessage:" + message);
+			if (log.isDebugEnabled())
+				log.debug("showMessage:" + message);
 		}
 
 		public String[] promptKeyboardInteractive(String destination, String name, String instruction, String[] prompt,
 				boolean[] echo) {
-			log.debug("promptKeyboardInteractive:" + name);
+			if (log.isDebugEnabled())
+				log.debug("promptKeyboardInteractive:" + name);
 			return null;
 		}
 	}

@@ -259,7 +259,8 @@ public class Disk extends Bean {
 							}
 						}
 					}
-					log.debug("l1=" + l1);
+					if (log.isDebugEnabled())
+						log.debug("l1=" + l1);
 				} else {
 					log.info("exists? " + f.exists() + ", filename=" + f.getCanonicalPath() + ", path=" + e.path);
 				}

@@ -111,8 +111,9 @@ public class upload extends Model {
 
 			String id = UID.id(login.getId(), tag, filename, total, lastModified);
 
-			log.debug("storing, id=" + id + ", name=" + filename + ", tag=" + tag + ", total=" + total + ", last="
-					+ lastModified);
+			if (log.isDebugEnabled())
+				log.debug("storing, id=" + id + ", name=" + filename + ", tag=" + tag + ", total=" + total + ", last="
+						+ lastModified);
 
 			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(),
 					this.getRemoteHost());

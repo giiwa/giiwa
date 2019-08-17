@@ -42,6 +42,7 @@ public class Telnet {
 
 			// System.out.println(s);
 
+			if (log.isDebugEnabled())
 			log.debug("ssh.run, url=" + url + ", command=" + command + ", result=" + s);
 
 			return s;

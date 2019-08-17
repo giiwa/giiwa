@@ -84,8 +84,9 @@ public class menu extends Model {
 		 */
 		Collection<Menu> ll = Menu.filterAccess(list, me);
 
-		log.debug("load menu: id=" + id + ", size=" + (list == null ? 0 : list.size()) + ", filtered="
-				+ (ll == null ? 0 : ll.size()));
+		if (log.isDebugEnabled())
+			log.debug("load menu: id=" + id + ", size=" + (list == null ? 0 : list.size()) + ", filtered="
+					+ (ll == null ? 0 : ll.size()));
 
 		/**
 		 * convert the list to json array

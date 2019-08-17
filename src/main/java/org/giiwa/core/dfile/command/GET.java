@@ -20,7 +20,8 @@ public class GET implements ICommand {
 		long offset = in.readLong();
 		int len = in.readInt();
 
-		log.debug("get, file=" + filename + ", offset=" + offset + ", len=" + len + ", path=" + path);
+		if (log.isDebugEnabled())
+			log.debug("get, file=" + filename + ", offset=" + offset + ", len=" + len + ", path=" + path);
 
 		File f = new File(path + File.separator + filename);
 		Response out = Response.create(in.seq, Request.BIG);

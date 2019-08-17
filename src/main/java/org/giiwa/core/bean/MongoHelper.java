@@ -861,13 +861,14 @@ public class MongoHelper implements Helper.DBHelper {
 			zip.close();
 
 		} catch (Exception e) {
-			log.debug(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 
 		}
 	}
 
 	private void _backup(PrintStream out, String tablename) {
-		log.debug("backuping " + tablename);
+		if (log.isDebugEnabled())
+			log.debug("backuping " + tablename);
 		MongoCollection<Document> d1 = getCollection(Helper.DEFAULT, tablename);
 		MongoCursor<Document> c1 = d1.find().iterator();
 		int rows = 0;
@@ -881,8 +882,10 @@ public class MongoHelper implements Helper.DBHelper {
 				jo.put(name, d2.get(name));
 			}
 			out.println(jo.toString());
-			if (rows % 1000 == 0)
-				log.debug("backup " + tablename + ", rows=" + rows);
+			if (rows % 1000 == 0) {
+				if (log.isDebugEnabled())
+					log.debug("backup " + tablename + ", rows=" + rows);
+			}
 		}
 	}
 
@@ -1186,7 +1189,6 @@ public class MongoHelper implements Helper.DBHelper {
 		MongoCollection<Document> c = getCollection(tablename);
 		List<JSON> list = new ArrayList<JSON>();
 		list.add(JSON.create().append("name", tablename).append("size", c.count()));
-		log.debug("");
 		return list;
 	}
 
@@ -1222,7 +1224,8 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<BasicDBObject> l1 = Arrays.asList(match, group);
 
-				log.debug("l1=" + l1);
+				if (log.isDebugEnabled())
+					log.debug("l1=" + l1);
 
 				MongoCursor<Document> it = c.aggregate(l1).iterator();
 				if (it != null && it.hasNext()) {
@@ -1420,7 +1423,8 @@ public class MongoHelper implements Helper.DBHelper {
 					l2.add(JSON.fromObject(d));
 				}
 
-				log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+				if (log.isDebugEnabled())
+					log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 //				System.out.println("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
@@ -1483,7 +1487,8 @@ public class MongoHelper implements Helper.DBHelper {
 					l2.add(JSON.fromObject(d));
 				}
 
-				log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+				if (log.isDebugEnabled())
+					log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
 			}
@@ -1543,7 +1548,8 @@ public class MongoHelper implements Helper.DBHelper {
 					l2.add(JSON.fromObject(d));
 				}
 
-				log.debug("max, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+				if (log.isDebugEnabled())
+					log.debug("max, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 //				System.out.println("max, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
@@ -1604,7 +1610,8 @@ public class MongoHelper implements Helper.DBHelper {
 					l2.add(JSON.fromObject(d));
 				}
 
-				log.debug("min, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+				if (log.isDebugEnabled())
+					log.debug("min, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
 			}
@@ -1664,7 +1671,8 @@ public class MongoHelper implements Helper.DBHelper {
 					l2.add(JSON.fromObject(d));
 				}
 
-				log.debug("avg, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+				if (log.isDebugEnabled())
+					log.debug("avg, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
 			}

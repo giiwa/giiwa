@@ -45,11 +45,9 @@ public class Zip {
 	/**
 	 * Zip.
 	 * 
-	 * @param b
-	 *            the b
+	 * @param b the b
 	 * @return the byte[]
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public static byte[] zip(byte[] b) throws Exception {
 
@@ -75,11 +73,9 @@ public class Zip {
 	/**
 	 * Unzip.
 	 * 
-	 * @param b
-	 *            the b
+	 * @param b the b
 	 * @return the byte[]
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public static byte[] unzip(byte[] b) throws Exception {
 		Inflater in = new Inflater();
@@ -101,13 +97,10 @@ public class Zip {
 	/**
 	 * find the filename in zip file.
 	 *
-	 * @param filename
-	 *            the filename
-	 * @param zip
-	 *            the zip
+	 * @param filename the filename
+	 * @param zip      the zip
 	 * @return InputStream
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static InputStream find(String filename, ZipFile zip) throws IOException {
 
@@ -122,13 +115,10 @@ public class Zip {
 	/**
 	 * get json object from the filename in zip file.
 	 *
-	 * @param filename
-	 *            the filename
-	 * @param zip
-	 *            the zip
+	 * @param filename the filename
+	 * @param zip      the zip
 	 * @return JSONObject
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static JSON getJSON(String filename, ZipFile zip) throws IOException {
 		InputStream in = find(filename, zip);
@@ -163,12 +153,9 @@ public class Zip {
 	/**
 	 * Unzip the src file to output place.
 	 *
-	 * @param zipfile
-	 *            the src zip file
-	 * @param out
-	 *            the out
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @param zipfile the src zip file
+	 * @param out     the out
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static void unzip(File zipfile, File out) throws IOException {
 		out.mkdirs();
@@ -201,12 +188,9 @@ public class Zip {
 	/**
 	 * Zip the src to out file.
 	 *
-	 * @param zipfile
-	 *            the out zip file
-	 * @param src
-	 *            the src file or directory
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @param zipfile the out zip file
+	 * @param src     the src file or directory
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static void zip(File zipfile, File src) throws IOException {
 		zipfile.getParentFile().mkdirs();
@@ -236,7 +220,8 @@ public class Zip {
 		if (f.isFile()) {
 			String name = f.getCanonicalPath().replace(working, "");
 
-			log.debug("name=" + name);
+			if (log.isDebugEnabled())
+				log.debug("name=" + name);
 
 			ZipEntry e = new ZipEntry(name);
 			out.putNextEntry(e);
@@ -250,7 +235,8 @@ public class Zip {
 			}
 		} else if (f.isDirectory()) {
 			String name = f.getCanonicalPath().replace(working, "") + "/";
-			log.debug("name=" + name);
+			if (log.isDebugEnabled())
+				log.debug("name=" + name);
 			ZipEntry e = new ZipEntry(name);
 			out.putNextEntry(e);
 			out.closeEntry();
@@ -267,8 +253,7 @@ public class Zip {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
+	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
 		try {

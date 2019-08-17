@@ -46,7 +46,8 @@ public class profile extends Model {
 		this.query.path("/admin/profile/get/" + name);
 
 		Class<? extends profile> c = settings.get(name);
-		log.debug("/get/" + c);
+		if (log.isDebugEnabled())
+			log.debug("/get/" + c);
 		if (c != null) {
 			try {
 				profile s = c.newInstance();
@@ -83,7 +84,8 @@ public class profile extends Model {
 		// this.set("query", this.query);
 
 		Class<? extends profile> c = settings.get(name);
-		log.debug("/set/" + c);
+		if (log.isDebugEnabled())
+			log.debug("/set/" + c);
 		if (c != null) {
 			try {
 				profile s = c.newInstance();

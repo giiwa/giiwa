@@ -201,7 +201,8 @@ public class RDB {
 
 		String D = _getDiver(url);
 
-		log.debug("driver=" + D + ", url=" + url + ", user=" + username + ", password=" + passwd);
+		if (log.isDebugEnabled())
+			log.debug("driver=" + D + ", url=" + url + ", user=" + username + ", password=" + passwd);
 
 		if (!X.isEmpty(D)) {
 			Locale oldlocale = Locale.getDefault();
@@ -214,7 +215,8 @@ public class RDB {
 					}
 					// Locale.setDefault(new Locale(locale));
 				}
-				log.debug("locale， default=" + oldlocale + ", set=" + Locale.getDefault());
+				if (log.isDebugEnabled())
+					log.debug("locale， default=" + oldlocale + ", set=" + Locale.getDefault());
 
 				Class.forName(D);
 				DriverManager.setLoginTimeout(10);

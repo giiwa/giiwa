@@ -16,7 +16,8 @@ public class MOVE implements ICommand {
 		String path2 = in.readString().replaceAll("[/\\\\]", "/");
 		String filename2 = in.readString().replaceAll("[/\\\\]", "/");
 
-		log.debug("move, file1=" + filename + ", path1=" + path + ", file2=" + filename2 + ", path2=" + path2);
+		if (log.isDebugEnabled())
+			log.debug("move, file1=" + filename + ", path1=" + path + ", file2=" + filename2 + ", path2=" + path2);
 
 		File f1 = new File(path, filename);
 		File f2 = new File(path2, filename2);

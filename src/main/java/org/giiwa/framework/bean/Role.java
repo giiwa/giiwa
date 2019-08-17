@@ -51,13 +51,13 @@ public class Role extends Bean {
 	/**
 	 * Checks for.
 	 * 
-	 * @param a
-	 *            the a
+	 * @param a the a
 	 * @return true, if successful
 	 */
 	public boolean has(String a) {
 		List<?> list = getAccesses();
-		log.debug("list=" + list + ", a=" + a);
+		if (log.isDebugEnabled())
+			log.debug("list=" + list + ", a=" + a);
 		return list == null ? false : list.contains(a);
 	}
 
@@ -68,10 +68,8 @@ public class Role extends Bean {
 	/**
 	 * Creates the.
 	 * 
-	 * @param name
-	 *            the name
-	 * @param memo
-	 *            the memo
+	 * @param name the name
+	 * @param memo the memo
 	 * @return the int
 	 */
 	public static long create(String name, String memo) {
@@ -117,10 +115,8 @@ public class Role extends Bean {
 	/**
 	 * Sets the access.
 	 * 
-	 * @param rid
-	 *            the rid
-	 * @param name
-	 *            the name
+	 * @param rid  the rid
+	 * @param name the name
 	 */
 	public static void setAccess(long rid, String name) {
 
@@ -139,10 +135,8 @@ public class Role extends Bean {
 	/**
 	 * Removes the access.
 	 * 
-	 * @param rid
-	 *            the rid
-	 * @param name
-	 *            the name
+	 * @param rid  the rid
+	 * @param name the name
 	 */
 	public static void removeAccess(long rid, String name) {
 		dao.delete(W.create("rid", rid).and("name", name));
@@ -154,8 +148,7 @@ public class Role extends Bean {
 	/**
 	 * Load all.
 	 * 
-	 * @param roles
-	 *            the roles
+	 * @param roles the roles
 	 * @return the list
 	 */
 	public static List<Role> loadAll(List<Long> roles) {
@@ -189,8 +182,7 @@ public class Role extends Bean {
 	/**
 	 * Load by name.
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the role
 	 */
 	public static Role loadByName(String name) {
@@ -208,10 +200,8 @@ public class Role extends Bean {
 	/**
 	 * Load.
 	 * 
-	 * @param offset
-	 *            the offset
-	 * @param limit
-	 *            the limit
+	 * @param offset the offset
+	 * @param limit  the limit
 	 * @return the beans
 	 */
 	public static Beans<Role> load(int offset, int limit) {
@@ -243,12 +233,9 @@ public class Role extends Bean {
 	/**
 	 * Load by access.
 	 *
-	 * @param access
-	 *            the access
-	 * @param s
-	 *            the s
-	 * @param n
-	 *            the n
+	 * @param access the access
+	 * @param s      the s
+	 * @param n      the n
 	 * @return the beans
 	 */
 	public static Beans<Role> loadByAccess(String access, int s, int n) {

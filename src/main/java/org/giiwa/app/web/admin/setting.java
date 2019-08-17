@@ -73,7 +73,8 @@ public class setting extends Model {
 	@Path(path = "reset/(.*)", login = true, access = "access.config.admin")
 	final public Object reset(String name) {
 		Class<? extends setting> c = settings.get(name);
-		log.debug("/reset/" + c);
+		if (log.isDebugEnabled())
+			log.debug("/reset/" + c);
 		if (c != null) {
 			try {
 				setting s = c.newInstance();
@@ -110,7 +111,8 @@ public class setting extends Model {
 	@Path(path = "get/(.*)", login = true, access = "access.config.admin")
 	final public Object get(String name) {
 		Class<? extends setting> c = settings.get(name);
-		log.debug("/get/" + c);
+		if (log.isDebugEnabled())
+			log.debug("/get/" + c);
 		if (c != null) {
 			try {
 				setting s = c.newInstance();
@@ -142,7 +144,8 @@ public class setting extends Model {
 	@Path(path = "set/(.*)", login = true, access = "access.config.admin")
 	final public void set(String name) {
 		Class<? extends setting> c = settings.get(name);
-		log.debug("/set/" + c);
+		if (log.isDebugEnabled())
+			log.debug("/set/" + c);
 		if (c != null) {
 			try {
 				setting s = c.newInstance();

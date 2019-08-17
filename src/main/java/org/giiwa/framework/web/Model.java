@@ -538,7 +538,8 @@ public class Model {
 			init(uri, req, resp, method);
 
 			if (!Module.home.before(this)) {
-				log.debug("handled by filter, and stop to dispatch");
+				if (log.isDebugEnabled())
+					log.debug("handled by filter, and stop to dispatch");
 				return null;
 			}
 
@@ -1729,7 +1730,8 @@ public class Model {
 		}
 		s.store();
 
-		log.debug("store session: session=" + s + ", getSession=" + getSession());
+		if (log.isDebugEnabled())
+			log.debug("store session: session=" + s + ", getSession=" + getSession());
 
 		login = u;
 	}
@@ -2011,7 +2013,8 @@ public class Model {
 				mime = "application/x-gzip";
 			}
 		}
-		log.debug("mimetype=" + mime + ", uri=" + uri);
+		if (log.isDebugEnabled())
+			log.debug("mimetype=" + mime + ", uri=" + uri);
 		return mime;
 	}
 
@@ -2074,7 +2077,8 @@ public class Model {
 		Model m = Module.home.getModel(method.name, "/notfound");
 
 		if (m != null) {
-			log.debug("m.class=" + m.getClass() + ", this.class=" + this.getClass());
+			if (log.isDebugEnabled())
+				log.debug("m.class=" + m.getClass() + ", this.class=" + this.getClass());
 		}
 
 		if (m != null && !m.getClass().equals(this.getClass())) {

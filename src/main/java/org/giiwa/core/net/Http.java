@@ -187,7 +187,8 @@ public final class Http {
 		HttpURLConnection c = (HttpURLConnection) u.openConnection();
 		c.connect();
 		int code = c.getResponseCode();
-		log.debug("ping=" + url + ", response.code=" + code);
+		if (log.isDebugEnabled())
+			log.debug("ping=" + url + ", response.code=" + code);
 		c.disconnect();
 		return code;
 	}
@@ -225,7 +226,8 @@ public final class Http {
 	 */
 	public Response post(String url, String body) {
 
-		log.debug("url=" + url);
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
 
 		Response r = new Response();
 
@@ -247,7 +249,8 @@ public final class Http {
 
 				post.addHeader("Content-Type", "application/json");
 
-				log.debug("post url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("post url=" + url);
 
 				StringEntity e = new StringEntity(body, "UTF8");
 				post.setEntity(e);
@@ -257,7 +260,8 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+				if (log.isDebugEnabled())
+					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);
@@ -381,7 +385,8 @@ public final class Http {
 
 		TimeStamp t = TimeStamp.create();
 
-		log.debug("url=\"" + url + "\"");
+		if (log.isDebugEnabled())
+			log.debug("url=\"" + url + "\"");
 
 		String[] ss = url.split(" ");
 		url = ss[ss.length - 1];
@@ -408,7 +413,8 @@ public final class Http {
 					}
 				}
 
-				log.debug("get url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("get url=" + url);
 
 				return _get(client, localContext, get, charset, timeout - t.pastms());
 
@@ -594,7 +600,8 @@ public final class Http {
 
 					url = format(get.getURI().toString(), url);
 
-					log.debug("redirecting, url=" + url);
+					if (log.isDebugEnabled())
+						log.debug("redirecting, url=" + url);
 
 					HttpGet get1 = new HttpGet(url);
 
@@ -650,7 +657,8 @@ public final class Http {
 	 */
 	public int download(String url, JSON header, File localfile) {
 
-		log.debug("url=\"" + url + "\"");
+		if (log.isDebugEnabled())
+			log.debug("url=\"" + url + "\"");
 
 		String[] ss = url.split(" ");
 		url = ss[ss.length - 1];
@@ -675,7 +683,8 @@ public final class Http {
 					}
 				}
 
-				log.debug("get url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("get url=" + url);
 
 				resp = client.execute(get, localContext);
 				int status = resp.getStatusLine().getStatusCode();
@@ -684,10 +693,12 @@ public final class Http {
 					Header[] hh = resp.getAllHeaders();
 					if (hh != null) {
 						for (Header h : hh) {
-							System.out.println(h.getName() + ":" + h.getValue());
+							if (log.isDebugEnabled())
+								log.debug(h.getName() + ":" + h.getValue());
 						}
 					}
-					System.out.println("status:" + status);
+					if (log.isDebugEnabled())
+						log.debug("status:" + status);
 				}
 
 				if (status == 200 || status == 206) {
@@ -740,7 +751,8 @@ public final class Http {
 	 */
 	public Response post(String url, JSON headers, JSON body, String name, InputStream in, long timeout) {
 
-		log.debug("url=" + url);
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
 
 		Response r = new Response();
 
@@ -763,17 +775,20 @@ public final class Http {
 			try {
 
 				if (headers != null && headers.size() > 0) {
-					log.debug("header: " + headers);
+					if (log.isDebugEnabled())
+						log.debug("header: " + headers);
 					for (String s : headers.keySet()) {
 						post.addHeader(s, headers.getString(s));
 					}
 				}
 
-				log.debug("post url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("post url=" + url);
 
 				MultipartEntityBuilder b = MultipartEntityBuilder.create();
 				if (body != null) {
-					log.debug("body: " + body);
+					if (log.isDebugEnabled())
+						log.debug("body: " + body);
 
 					for (String s : body.keySet()) {
 						b.addTextBody(s, body.getString(s));
@@ -790,7 +805,8 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+				if (log.isDebugEnabled())
+					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);
@@ -822,7 +838,8 @@ public final class Http {
 	 * @return
 	 */
 	public Response put(String url, JSON headers, String body, long timeout) {
-		log.debug("url=" + url);
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
 		Response r = new Response();
 
 		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
@@ -843,13 +860,15 @@ public final class Http {
 			try {
 
 				if (headers != null && headers.size() > 0) {
-					log.debug("header: " + headers);
+					if (log.isDebugEnabled())
+						log.debug("header: " + headers);
 					for (String s : headers.keySet()) {
 						put.addHeader(s, headers.getString(s));
 					}
 				}
 
-				log.debug("put url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("put url=" + url);
 
 				StringEntity e = new StringEntity(body, "UTF-8");
 				put.setEntity(e);
@@ -859,7 +878,8 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+				if (log.isDebugEnabled())
+					log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);
@@ -884,7 +904,8 @@ public final class Http {
 
 	public Response put(String url, String contenttype, JSON headers, JSON body, long timeout) {
 
-		log.debug("url=" + url);
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
 		Response r = new Response();
 
 		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
@@ -905,13 +926,15 @@ public final class Http {
 			try {
 
 				if (headers != null && headers.size() > 0) {
-					log.debug("header: " + headers);
+					if (log.isDebugEnabled())
+						log.debug("header: " + headers);
 					for (String s : headers.keySet()) {
 						put.addHeader(s, headers.getString(s));
 					}
 				}
 
-				log.debug("put url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("put url=" + url);
 
 				if (body != null && body.size() > 0) {
 					StringEntity e = new StringEntity(body.toString(), "UTF-8");
@@ -923,7 +946,8 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+				if (log.isDebugEnabled())
+					log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);
@@ -948,7 +972,8 @@ public final class Http {
 
 	public Response delete(String url, String contenttype, JSON headers, long timeout) {
 
-		log.debug("url=" + url);
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
 		Response r = new Response();
 
 		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
@@ -968,20 +993,23 @@ public final class Http {
 			try {
 
 				if (headers != null && headers.size() > 0) {
-					log.debug("header: " + headers);
+					if (log.isDebugEnabled())
+						log.debug("header: " + headers);
 					for (String s : headers.keySet()) {
 						delete.addHeader(s, headers.getString(s));
 					}
 				}
 
-				log.debug("delete url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("delete url=" + url);
 
 				resp = client.execute(delete, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("delete: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+				if (log.isDebugEnabled())
+					log.debug("delete: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);
@@ -1006,7 +1034,8 @@ public final class Http {
 
 	public Response head(String url, String contenttype, JSON headers, long timeout) {
 
-		log.debug("url=" + url);
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
 		Response r = new Response();
 
 		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
@@ -1028,20 +1057,23 @@ public final class Http {
 			try {
 
 				if (headers != null && headers.size() > 0) {
-					log.debug("header: " + headers);
+					if (log.isDebugEnabled())
+						log.debug("header: " + headers);
 					for (String s : headers.keySet()) {
 						head.addHeader(s, headers.getString(s));
 					}
 				}
 
-				log.debug("head url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("head url=" + url);
 
 				resp = client.execute(head, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("head: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+				if (log.isDebugEnabled())
+					log.debug("head: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);
@@ -1720,7 +1752,8 @@ public final class Http {
 	 */
 	public Response post(String url, JSON headers, String body, long timeout) {
 
-		log.debug("url=" + url);
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
 
 		Response r = new Response();
 
@@ -1743,13 +1776,15 @@ public final class Http {
 			try {
 
 				if (headers != null && headers.size() > 0) {
-					log.debug("header: " + headers);
+					if (log.isDebugEnabled())
+						log.debug("header: " + headers);
 					for (String s : headers.keySet()) {
 						post.addHeader(s, headers.getString(s));
 					}
 				}
 
-				log.debug("post url=" + url);
+				if (log.isDebugEnabled())
+					log.debug("post url=" + url);
 
 				StringEntity e = new StringEntity(body, "UTF-8");
 				post.setEntity(e);
@@ -1762,7 +1797,8 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+				if (log.isDebugEnabled())
+					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);

@@ -110,7 +110,8 @@ public class Controller {
 				welcomes.add(e2.getText().trim());
 			}
 
-			log.debug("welcome=" + welcomes);
+			if (log.isInfoEnabled())
+				log.info("welcome=" + welcomes);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -192,7 +193,8 @@ public class Controller {
 			File f = Module.home.getFile(uri);
 			if (f != null && f.exists() && f.isFile()) {
 
-				log.debug("handled by module, uri=" + uri);
+				if (log.isDebugEnabled())
+					log.debug("handled by module, uri=" + uri);
 
 				Model m = new DefaultModel();
 				m.req = req;
@@ -220,7 +222,8 @@ public class Controller {
 			DFile f1 = Disk.seek(uri);
 			if (f1 != null && f1.exists() && f1.isFile()) {
 
-				log.debug("handled by dfile, uri=" + uri);
+				if (log.isDebugEnabled())
+					log.debug("handled by dfile, uri=" + uri);
 
 				Model m = new DefaultModel();
 				m.req = req;

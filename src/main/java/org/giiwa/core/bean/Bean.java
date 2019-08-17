@@ -244,7 +244,8 @@ public class Bean implements Serializable {
 			int i = 0;
 			for (; c1 != null;) {
 				i++;
-				log.debug("c1=" + c1);
+				if (log.isDebugEnabled())
+					log.debug("c1=" + c1);
 
 				Field[] ff = c1.getDeclaredFields();
 				for (Field f : ff) {
@@ -621,7 +622,8 @@ public class Bean implements Serializable {
 						o = ((oracle.sql.TIMESTAMP) o).toString();
 					}
 
-					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
+					if (log.isDebugEnabled())
+						log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
 
 					this.set(name, o);
 

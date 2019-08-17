@@ -31,7 +31,8 @@ public class GiiwaServlet extends HttpServlet {
 		try {
 			Model.s️ervletContext = getServletContext();
 
-			log.debug("init view ...");
+			if (log.isDebugEnabled())
+				log.debug("init view ...");
 			Enumeration<?> e = getInitParameterNames();
 			while (e.hasMoreElements()) {
 				String name = e.nextElement().toString();
@@ -71,7 +72,8 @@ public class GiiwaServlet extends HttpServlet {
 				r2.addHeader("Access-Control-Allow-Origin", domain);
 			}
 
-			log.debug(req.getMethod() + ", uri=" + uri);
+			if (log.isDebugEnabled())
+				log.debug(req.getMethod() + ", uri=" + uri);
 
 			Controller.dispatch(uri, r1, r2, req.getMethod());
 		} catch (Throwable e) {

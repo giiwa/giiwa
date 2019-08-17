@@ -20,7 +20,8 @@ public class PUT implements ICommand {
 		long offset = in.readLong();
 		byte[] bb = in.readBytes();
 
-		log.debug("put, file=" + filename + ", offset=" + offset + ", len=" + bb.length + ", path=" + path);
+		if (log.isDebugEnabled())
+			log.debug("put, file=" + filename + ", offset=" + offset + ", len=" + bb.length + ", path=" + path);
 
 		File f = new File(path + File.separator + filename);
 

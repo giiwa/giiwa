@@ -199,7 +199,8 @@ class KafkaMQ extends MQ {
 
 				MQ.process(name, l1, cb);
 
-				log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
+				if (log.isDebugEnabled())
+					log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -384,7 +385,8 @@ class KafkaMQ extends MQ {
 		@Override
 		public void onFinish() {
 			if (last < System.currentTimeMillis() - X.AMINUTE) {
-				log.debug("sender." + name + " is stopped.");
+				if (log.isDebugEnabled())
+					log.debug("sender." + name + " is stopped.");
 			} else {
 				this.schedule(0);
 			}

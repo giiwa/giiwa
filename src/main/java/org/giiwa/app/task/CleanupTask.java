@@ -130,7 +130,8 @@ public class CleanupTask extends Task {
 				log.info("cleanup temp files: " + count);
 			}
 
-			log.debug("cleanup, beans=" + beans);
+			if (log.isDebugEnabled())
+				log.debug("cleanup, beans=" + beans);
 
 			// for (Class<? extends Bean> c : beans) {
 			// try {

@@ -49,10 +49,8 @@ public class Monitor {
 	/**
 	 * Start.
 	 *
-	 * @param t
-	 *            the t
-	 * @param ms
-	 *            the ms
+	 * @param t  the t
+	 * @param ms the ms
 	 * @return the long
 	 */
 	public static long start(Task t, long ms) {
@@ -65,8 +63,7 @@ public class Monitor {
 	/**
 	 * Stop.
 	 *
-	 * @param tid
-	 *            the tid
+	 * @param tid the tid
 	 */
 	public static void stop(long tid) {
 		Object t = cache.remove(tid);
@@ -78,8 +75,7 @@ public class Monitor {
 	/**
 	 * Gets the.
 	 *
-	 * @param tid
-	 *            the tid
+	 * @param tid the tid
 	 * @return the json
 	 */
 	public synchronized static JSON get(long tid) {
@@ -99,7 +95,8 @@ public class Monitor {
 						continue;
 
 					try {
-						log.debug(f.getName() + "=" + f.getType());
+						if (log.isDebugEnabled())
+							log.debug(f.getName() + "=" + f.getType());
 						f.setAccessible(true);
 						jo.put(f.getName(), f.get(t));
 					} catch (Exception e) {

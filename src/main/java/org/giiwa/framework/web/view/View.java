@@ -35,15 +35,11 @@ public abstract class View {
 	/**
 	 * parse the file with the model
 	 * 
-	 * @param file
-	 *            the file
-	 * @param m
-	 *            the model
-	 * @param viewname
-	 *            the template name
+	 * @param file     the file
+	 * @param m        the model
+	 * @param viewname the template name
 	 * @return true: successful,
-	 * @throws Exception
-	 *             if occur error
+	 * @throws Exception if occur error
 	 */
 	protected abstract boolean parse(Object file, Model m, String viewname) throws Exception;
 
@@ -59,8 +55,7 @@ public abstract class View {
 	/**
 	 * init the views by config
 	 * 
-	 * @param config
-	 *            the config
+	 * @param config the config
 	 */
 	public static void init(Map<String, String> config) {
 
@@ -76,23 +71,21 @@ public abstract class View {
 			}
 		}
 
-		log.debug("View Parser: ");
-		for (String name : views.keySet()) {
-			log.debug("\t" + name + "=" + views.get(name).getClass().getName());
+		if (log.isDebugEnabled()) {
+			log.debug("View Parser: ");
+			for (String name : views.keySet()) {
+				log.debug("\t" + name + "=" + views.get(name).getClass().getName());
+			}
 		}
 	}
 
 	/**
 	 * parse the file with the model
 	 * 
-	 * @param file
-	 *            the file
-	 * @param m
-	 *            the model
-	 * @param viewname
-	 *            the template name
-	 * @throws Exception
-	 *             if occur error
+	 * @param file     the file
+	 * @param m        the model
+	 * @param viewname the template name
+	 * @throws Exception if occur error
 	 */
 	public static void merge(File file, Model m, String viewname) throws Exception {
 

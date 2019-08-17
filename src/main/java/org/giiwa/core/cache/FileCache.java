@@ -37,8 +37,7 @@ class FileCache implements ICacheSystem {
 	/**
 	 * Inits the.
 	 *
-	 * @param conf
-	 *            the conf
+	 * @param conf the conf
 	 * @return the i cache system
 	 */
 	public static ICacheSystem create() {
@@ -51,8 +50,7 @@ class FileCache implements ICacheSystem {
 	/**
 	 * get object.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return the object
 	 */
 	public synchronized Object get(String id) {
@@ -93,10 +91,8 @@ class FileCache implements ICacheSystem {
 	/**
 	 * Sets the.
 	 *
-	 * @param id
-	 *            the id
-	 * @param o
-	 *            the o
+	 * @param id the id
+	 * @param o  the o
 	 * @return true, if successful
 	 */
 	public synchronized boolean set(String id, Object o) {
@@ -137,11 +133,9 @@ class FileCache implements ICacheSystem {
 	/**
 	 * To bytes.
 	 *
-	 * @param o
-	 *            the o
+	 * @param o the o
 	 * @return the byte[]
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	private static byte[] toBytes(Object o) throws IOException {
 		ByteArrayOutputStream out = null;
@@ -167,13 +161,10 @@ class FileCache implements ICacheSystem {
 	/**
 	 * From bytes.
 	 *
-	 * @param b
-	 *            the b
+	 * @param b the b
 	 * @return the object
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
-	 * @throws ClassNotFoundException
-	 *             the class not found exception
+	 * @throws IOException            Signals that an I/O exception has occurred.
+	 * @throws ClassNotFoundException the class not found exception
 	 */
 	private static Object fromBytes(byte[] b) throws IOException, ClassNotFoundException {
 		ByteArrayInputStream in = null;
@@ -195,8 +186,7 @@ class FileCache implements ICacheSystem {
 	/**
 	 * Delete.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return true, if successful
 	 */
 	public synchronized boolean delete(String id) {
@@ -210,8 +200,7 @@ class FileCache implements ICacheSystem {
 	/**
 	 * Path.
 	 *
-	 * @param path
-	 *            the path
+	 * @param path the path
 	 * @return the string
 	 */
 	private String path(String path) {
@@ -228,8 +217,7 @@ class FileCache implements ICacheSystem {
 	/**
 	 * Read.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return the byte[]
 	 */
 	private byte[] read(String id) {
@@ -246,10 +234,8 @@ class FileCache implements ICacheSystem {
 	/**
 	 * Save.
 	 *
-	 * @param id
-	 *            the id
-	 * @param b
-	 *            the b
+	 * @param id the id
+	 * @param b  the b
 	 */
 	private void save(String id, byte[] b) {
 		cache.put(id, b);
@@ -313,7 +299,7 @@ class FileCache implements ICacheSystem {
 			}
 		} catch (Exception e) {
 			// eat it
-			log.debug("unlock error, name=" + name, e);
+			log.error("unlock error, name=" + name, e);
 		}
 
 		return true;

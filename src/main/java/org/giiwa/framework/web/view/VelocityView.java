@@ -66,7 +66,8 @@ public class VelocityView extends View {
 			template.merge(new VelocityContext(m.context), writer);
 			writer.flush();
 
-			log.debug("cost t=" + t.past() + ", file=" + file);
+			if (log.isDebugEnabled())
+				log.debug("cost t=" + t.past() + ", file=" + file);
 
 			return true;
 		}
@@ -76,10 +77,8 @@ public class VelocityView extends View {
 	/**
 	 * parse the file to string with the json
 	 * 
-	 * @param file
-	 *            the file of the template
-	 * @param m
-	 *            the json
+	 * @param file the file of the template
+	 * @param m    the json
 	 * @return the string of the results
 	 */
 	public String parse(Object file, JSON m) {
@@ -106,10 +105,8 @@ public class VelocityView extends View {
 	/**
 	 * Gets the template by viewname, the viewname is relative path
 	 * 
-	 * @param viewname
-	 *            the relative view path name
-	 * @param allowEmpty
-	 *            if not presented, allow using a empty
+	 * @param viewname   the relative view path name
+	 * @param allowEmpty if not presented, allow using a empty
 	 * @return Template
 	 * @throws IOException
 	 */

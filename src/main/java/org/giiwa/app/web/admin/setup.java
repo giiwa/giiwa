@@ -69,7 +69,7 @@ public class setup extends Model {
 			this.show("/admin/setup.html");
 
 		} catch (Exception e1) {
-			log.debug(e1.getMessage(), e1);
+			log.error(e1.getMessage(), e1);
 			this.error(e1);
 		}
 
@@ -186,7 +186,8 @@ public class setup extends Model {
 			String dbname = this.getString("db").trim();
 
 			if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
-				log.debug("url=" + url + ", db=" + dbname);
+				if (log.isDebugEnabled())
+					log.debug("url=" + url + ", db=" + dbname);
 
 				try {
 					MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(5000)

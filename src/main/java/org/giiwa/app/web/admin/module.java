@@ -134,7 +134,8 @@ public class module extends Model {
 						// if (includes || none || Jar.dao.exists(W.create("module",
 						// "default").and("name", f2.getName()))) {
 						if (f2.isFile()) {
-							log.debug("name=" + f2.getName());
+							if (log.isDebugEnabled())
+								log.debug("name=" + f2.getName());
 
 							list.add(f2.getName());
 							create(out, name + "/depends/" + f2.getName());

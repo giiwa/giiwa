@@ -30,131 +30,126 @@ import org.giiwa.core.bean.X;
  */
 public class Velocity {
 
-  static Log log = LogFactory.getLog(Velocity.class);
+	static Log log = LogFactory.getLog(Velocity.class);
 
-  /**
-   * The main method.
-   *
-   * @param args
-   *          the arguments
-   */
-  public static void main(String[] args) {
+	/**
+	 * The main method.
+	 *
+	 * @param args the arguments
+	 */
+	public static void main(String[] args) {
 
-    String s = "${age}>10";
+		String s = "${age}>10";
 
-    TimeStamp t = TimeStamp.create();
-    for (int i = 0; i < 1; i++) {
-      Map<String, Object> m = new HashMap<String, Object>();
-      m.put("age", i);
-      try {
-        System.out.println(Velocity.test(s, m));
-      } catch (Exception e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
-      // System.out.println(i);
-    }
-    System.out.println(t.pastms() + "ms");
-  }
+		TimeStamp t = TimeStamp.create();
+		for (int i = 0; i < 1; i++) {
+			Map<String, Object> m = new HashMap<String, Object>();
+			m.put("age", i);
+			try {
+				System.out.println(Velocity.test(s, m));
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// System.out.println(i);
+		}
+		System.out.println(t.pastms() + "ms");
+	}
 
-  /**
-   * test the velocity sentence is true or false by the data model.
-   * 
-   * @param s
-   *          the sentence of the velocity, e.g. $age &lt; 10
-   * @param m
-   *          the data model
-   * @return boolean of the test
-   * @exception Exception
-   *              throw exception when occur error
-   */
-  public static boolean test(String s, Map<String, Object> m) throws Exception {
-    log.debug("vengine.test ...");
-    if (X.isEmpty(s)) {
-      return true;
-    }
+	/**
+	 * test the velocity sentence is true or false by the data model.
+	 * 
+	 * @param s the sentence of the velocity, e.g. $age &lt; 10
+	 * @param m the data model
+	 * @return boolean of the test
+	 * @exception Exception throw exception when occur error
+	 */
+	public static boolean test(String s, Map<String, Object> m) throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("vengine.test ...");
+		if (X.isEmpty(s)) {
+			return true;
+		}
 //    System.out.println(s);
-    s = s.replaceAll("\\$", "\\\\\\$");
+		s = s.replaceAll("\\$", "\\\\\\$");
 //    System.out.println(s);
-    s = M.replaceAll("sss", s);
+		s = M.replaceAll("sss", s);
 
-    Map<String, Object> b = new HashMap<String, Object>();
-    m.put("result", b);
-    try {
-      execute(s, m);
-    } catch (Exception e) {
-      throw new Exception("expression error, e.g ${age}>10", e);
-    }
-    m.remove("result");
+		Map<String, Object> b = new HashMap<String, Object>();
+		m.put("result", b);
+		try {
+			execute(s, m);
+		} catch (Exception e) {
+			throw new Exception("expression error, e.g ${age}>10", e);
+		}
+		m.remove("result");
 
-    if (b.containsKey("bool")) {
-      Object o = b.get("bool");
-      if (o instanceof Boolean) {
-        return (Boolean) o;
-      }
-      return !X.isEmpty(o);
-    }
-    return false;
-  }
+		if (b.containsKey("bool")) {
+			Object o = b.get("bool");
+			if (o instanceof Boolean) {
+				return (Boolean) o;
+			}
+			return !X.isEmpty(o);
+		}
+		return false;
+	}
 
-  /**
-   * execute the velocity sentence.
-   * 
-   * @param s
-   *          the sentence of velocity, it can be a template file.
-   * @param m
-   *          the data model transfer to the sentence
-   * @return boolean true it success executed, or throw the exception
-   * @exception Exception
-   *              throw exception when occur error
-   */
-  public static boolean execute(String s, Map<String, Object> m) throws Exception {
-    log.debug("vengine.execute ...");
+	/**
+	 * execute the velocity sentence.
+	 * 
+	 * @param s the sentence of velocity, it can be a template file.
+	 * @param m the data model transfer to the sentence
+	 * @return boolean true it success executed, or throw the exception
+	 * @exception Exception throw exception when occur error
+	 */
+	public static boolean execute(String s, Map<String, Object> m) throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("vengine.execute ...");
 
-    try {
-      VelocityContext context = new VelocityContext(m);
-      StringWriter out = new StringWriter();
-      // log.debug("s=\r\n" + s);
-      org.apache.velocity.app.Velocity.evaluate(context, out, "ve", s);
-      log.debug("s=" + s + ", out=" + out);
-      return true;
-    } catch (Exception e) {
-      log.error(s, e);
-      throw e;
-    }
+		try {
+			VelocityContext context = new VelocityContext(m);
+			StringWriter out = new StringWriter();
+			// log.debug("s=\r\n" + s);
+			org.apache.velocity.app.Velocity.evaluate(context, out, "ve", s);
+			if (log.isDebugEnabled())
+				log.debug("s=" + s + ", out=" + out);
+			return true;
+		} catch (Exception e) {
+			log.error(s, e);
+			throw e;
+		}
 
-  }
+	}
 
-  private final static String M = ".set($result.bool=(sss))";
+	private final static String M = ".set($result.bool=(sss))";
 
-  /**
-   * Parses the string with the model
-   *
-   * @param s
-   *          the string
-   * @param m
-   *          the model
-   * @return the string
-   * @throws Exception
-   *           the exception
-   */
-  public static String parse(String s, Map<String, Object> m) throws Exception {
-    log.debug("vengine.parse ...");
+	/**
+	 * Parses the string with the model
+	 *
+	 * @param s the string
+	 * @param m the model
+	 * @return the string
+	 * @throws Exception the exception
+	 */
+	public static String parse(String s, Map<String, Object> m) throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("vengine.parse ...");
 
-    if (X.isEmpty(s)) {
-      return s;
-    }
+		if (X.isEmpty(s)) {
+			return s;
+		}
 
-    try {
-      VelocityContext context = new VelocityContext(m);
-      StringWriter out = new StringWriter();
-      org.apache.velocity.app.Velocity.evaluate(context, out, "ve", s);
-      log.debug("s=" + s + ", out=" + out);
-      return out.toString();
-    } catch (Exception e) {
-      log.error(s, e);
-      throw e;
-    }
-  }
+		try {
+			VelocityContext context = new VelocityContext(m);
+			StringWriter out = new StringWriter();
+			org.apache.velocity.app.Velocity.evaluate(context, out, "ve", s);
+			if (log.isDebugEnabled())
+				log.debug("s=" + s + ", out=" + out);
+			return out.toString();
+		} catch (Exception e) {
+			log.error(s, e);
+			throw e;
+		}
+	}
 
 }

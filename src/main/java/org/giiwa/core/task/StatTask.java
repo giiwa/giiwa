@@ -94,13 +94,15 @@ public abstract class StatTask extends Task {
 							Stat.SIZE[] ss = this.getSizes();
 							for (Stat.SIZE s : ss) {
 								long[] time = time(s);
-								log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
-										+ ", cat=" + o);
+								if (log.isDebugEnabled())
+									log.debug("stat - " + this.getName() + ", size=" + s + ", time="
+											+ Arrays.toString(time) + ", cat=" + o);
 								onStat(s, time[0], time[1], o);
 
 								time = time1(s);
-								log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
-										+ ", cat=" + o);
+								if (log.isDebugEnabled())
+									log.debug("stat - " + this.getName() + ", size=" + s + ", time="
+											+ Arrays.toString(time) + ", cat=" + o);
 								onStat(s, time[0], time[1], o);
 							}
 						}

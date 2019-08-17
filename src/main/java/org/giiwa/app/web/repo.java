@@ -226,7 +226,8 @@ public class repo extends Model {
 					String cType = Model.getMimeType(e.getName());
 					this.setContentType(cType);
 
-					log.debug("setcontent=" + cType);
+					if (log.isDebugEnabled())
+						log.debug("setcontent=" + cType);
 
 					String date2 = lang.format(e.getCreated(), "yyyy-MM-dd HH:mm:ss z");
 
@@ -265,11 +266,13 @@ public class repo extends Model {
 										log.warn("scale3 image failed");
 									}
 								} else {
-									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
+									if (log.isDebugEnabled())
+										log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
 								}
 
 								if (f.exists() && !failed) {
-									log.debug("load the scaled image from " + f.getCanonicalPath());
+									if (log.isDebugEnabled())
+										log.debug("load the scaled image from " + f.getCanonicalPath());
 
 									InputStream in = f.getInputStream();
 									OutputStream out = this.getOutputStream();
@@ -312,11 +315,13 @@ public class repo extends Model {
 										failed = true;
 									}
 								} else {
-									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
+									if (log.isDebugEnabled())
+										log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
 								}
 
 								if (f.exists() && !failed) {
-									log.debug("load scaled image from " + f.getCanonicalPath());
+									if (log.isDebugEnabled())
+										log.debug("load scaled image from " + f.getCanonicalPath());
 
 									InputStream in = f.getInputStream();
 									OutputStream out = this.getOutputStream();
@@ -329,7 +334,8 @@ public class repo extends Model {
 						}
 
 						String range = this.getHeader("Range");
-						log.debug("range=" + range);
+						if (log.isDebugEnabled())
+							log.debug("range=" + range);
 
 						if (X.isEmpty(range)) {
 							String date = this.getHeader("if-modified-since");
@@ -342,8 +348,9 @@ public class repo extends Model {
 							}
 						}
 
-						log.debug("remote=" + this.getRequest().getRemoteAddr() + ","
-								+ this.getRequest().getRemotePort());
+						if (log.isDebugEnabled())
+							log.debug("remote=" + this.getRequest().getRemoteAddr() + ","
+									+ this.getRequest().getRemotePort());
 
 						/**
 						 * else get all repo output to response

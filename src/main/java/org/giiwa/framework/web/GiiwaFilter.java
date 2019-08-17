@@ -100,10 +100,12 @@ public class GiiwaFilter implements Filter {
 	@Override
 	public synchronized void init(FilterConfig c1) throws ServletException {
 		try {
-			log.debug("initing model ...");
+			if (log.isDebugEnabled())
+				log.debug("initing model ...");
 			Model.s️ervletContext = c1.getServletContext();
 
-			log.debug("initing view ...");
+			if (log.isDebugEnabled())
+				log.debug("initing view ...");
 			Enumeration e = c1.getInitParameterNames();
 			while (e.hasMoreElements()) {
 				String name = e.nextElement().toString();

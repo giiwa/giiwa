@@ -15,7 +15,8 @@ public class INFO implements ICommand {
 		String path = in.readString().replaceAll("[/\\\\]", "/");
 		String filename = in.readString().replaceAll("[/\\\\]", "/");
 
-		log.debug("info, file=" + filename + ", path=" + path);
+		if (log.isDebugEnabled())
+			log.debug("info, file=" + filename + ", path=" + path);
 
 		File f = new File(path + File.separator + filename);
 

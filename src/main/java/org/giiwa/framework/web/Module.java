@@ -211,7 +211,8 @@ public class Module {
 			u1.mkdirs();
 			// copy all
 
-			log.debug("checkAndUpgrade, copy WEB-INF/lib to " + u1.getAbsolutePath());
+			if (log.isDebugEnabled())
+				log.debug("checkAndUpgrade, copy WEB-INF/lib to " + u1.getAbsolutePath());
 
 			try {
 				IOUtil.copyDir(new File(Model.HOME + "/WEB-INF/lib/"), u1);
@@ -809,7 +810,8 @@ public class Module {
 				}
 			}
 
-			log.debug(s + ", code=" + code, new Exception());
+			if (log.isDebugEnabled())
+				log.debug(s + ", code=" + code, new Exception());
 			license = LICENSE.issue;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -924,9 +926,11 @@ public class Module {
 				home = modules.lastEntry().getValue();
 			}
 
-			log.debug("modules=" + modules);
+			if (log.isDebugEnabled())
+				log.debug("modules=" + modules);
 
-			log.debug("init menu ...");
+			if (log.isDebugEnabled())
+				log.debug("init menu ...");
 			Menu.reset();
 			// log.debug("1 ...");
 
@@ -966,7 +970,8 @@ public class Module {
 				Locale.setDefault(new Locale(locale));
 			}
 
-			log.debug("menu inited. checking unused jar ... changed=" + changed);
+			if (log.isDebugEnabled())
+				log.debug("menu inited. checking unused jar ... changed=" + changed);
 
 			/**
 			 * check is there any jar file not used by any module
@@ -984,7 +989,8 @@ public class Module {
 				log.warn("jar files changed, restarting again...");
 				System.exit(0);
 			} else {
-				log.debug("jar is ok.");
+				if (log.isDebugEnabled())
+					log.debug("jar is ok.");
 			}
 		}
 
@@ -1411,7 +1417,8 @@ public class Module {
 					String access = p.access();
 					if (!X.isEmpty(access) && !X.NONE.equals(access)) {
 						if (access.startsWith("access.")) {
-							log.debug("access[" + access + "] at " + c.getCanonicalName() + "." + m.getName());
+							if (log.isDebugEnabled())
+								log.debug("access[" + access + "] at " + c.getCanonicalName() + "." + m.getName());
 
 							Access.set(access);
 						} else if (!X.isEmpty(access)) {
@@ -1842,7 +1849,8 @@ public class Module {
 				m.path = new File(Model.HOME + File.separator + m.name).getCanonicalPath();
 				m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
 
-				log.debug("path=" + m.path);
+				if (log.isDebugEnabled())
+					log.debug("path=" + m.path);
 
 				/**
 				 * loading the models

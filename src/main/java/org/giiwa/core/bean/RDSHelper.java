@@ -246,7 +246,8 @@ public class RDSHelper implements Helper.DBHelper {
 	 */
 	public Connection getConnection(String name) throws SQLException {
 
-		log.debug("name=" + name + ", conn=" + conn + ", closed=" + conn.isClosed());
+		if (log.isDebugEnabled())
+			log.debug("name=" + name + ", conn=" + conn + ", closed=" + conn.isClosed());
 
 		if (conn != null && !conn.isClosed())
 			return conn;
@@ -777,7 +778,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 			}
 
-			log.debug("sql=" + sql.toString());
+			if (log.isDebugEnabled())
+				log.debug("sql=" + sql.toString());
 
 			p = c.prepareStatement(sql.toString());
 
@@ -1767,7 +1769,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 	private void _backup(PrintStream out, Connection c, String tablename) {
 
-		log.debug("backuping " + tablename);
+		if (log.isDebugEnabled())
+			log.debug("backuping " + tablename);
 
 		Statement stat = null;
 		ResultSet r = null;
@@ -1792,7 +1795,8 @@ public class RDSHelper implements Helper.DBHelper {
 				out.println(jo.toString());
 			}
 
-			log.debug("backup " + tablename + ", rows=" + rows);
+			if (log.isDebugEnabled())
+				log.debug("backup " + tablename + ", rows=" + rows);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);

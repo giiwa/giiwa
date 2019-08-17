@@ -52,8 +52,7 @@ public class Shell {
 		/**
 		 * Instantiates a new logger.
 		 *
-		 * @param s
-		 *            the s
+		 * @param s the s
 		 */
 		Logger(String s) {
 			this.level = s;
@@ -64,14 +63,10 @@ public class Shell {
 	/**
 	 * Log.
 	 *
-	 * @param ip
-	 *            the ip
-	 * @param level
-	 *            the level
-	 * @param module
-	 *            the module
-	 * @param message
-	 *            the message
+	 * @param ip      the ip
+	 * @param level   the level
+	 * @param module  the module
+	 * @param message the message
 	 */
 	// 192.168.1.1.系统名称.2014-10-31.ERROR.日志消息.程序名称
 	public static void log(String ip, Logger level, String module, String message) {
@@ -99,7 +94,8 @@ public class Shell {
 			try {
 				if (OS.isFamilyUnix()) {
 					String uname = Shell.run("uname -a", 5 * 1000);
-					log.debug("uname -a=" + uname);
+					if (log.isDebugEnabled())
+						log.debug("uname -a=" + uname);
 					_linux = uname.indexOf("Linux") > -1 ? 1 : 0;
 				} else {
 					_linux = 0;
@@ -142,19 +138,13 @@ public class Shell {
 	/**
 	 * run a command with the out, err and in.
 	 *
-	 * @param cmd
-	 *            the command line
-	 * @param out
-	 *            the console outputstream
-	 * @param err
-	 *            the error outputstream
-	 * @param in
-	 *            the inputstream
-	 * @param workdir
-	 *            the working dir
+	 * @param cmd     the command line
+	 * @param out     the console outputstream
+	 * @param err     the error outputstream
+	 * @param in      the inputstream
+	 * @param workdir the working dir
 	 * @return the result
-	 * @throws IOException
-	 *             throw IOException if error
+	 * @throws IOException throw IOException if error
 	 */
 	public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir, long timeout)
 			throws IOException {
@@ -220,19 +210,13 @@ public class Shell {
 	/**
 	 * using bash to execute the lines.
 	 *
-	 * @param lines
-	 *            the command lines
-	 * @param out
-	 *            the output stream
-	 * @param err
-	 *            the error stream
-	 * @param in
-	 *            the input stream
-	 * @param workdir
-	 *            the workdir
+	 * @param lines   the command lines
+	 * @param out     the output stream
+	 * @param err     the error stream
+	 * @param in      the input stream
+	 * @param workdir the workdir
 	 * @return the int
-	 * @throws IOException
-	 *             throw IOException if error
+	 * @throws IOException throw IOException if error
 	 */
 	public static int bash(String lines, OutputStream out, OutputStream err, InputStream in, String workdir)
 			throws IOException {
@@ -276,11 +260,9 @@ public class Shell {
 	/**
 	 * run command, and return the console output.
 	 *
-	 * @param cmd
-	 *            the command line
+	 * @param cmd the command line
 	 * @return the output of console and error
-	 * @throws IOException
-	 *             throw IOException if error
+	 * @throws IOException throw IOException if error
 	 */
 	public static String run(String cmd, long timeout) throws IOException {
 		return run(cmd, (String) null, timeout);
@@ -289,11 +271,9 @@ public class Shell {
 	/**
 	 * using bash to execute the command.
 	 *
-	 * @param cmd
-	 *            the command
+	 * @param cmd the command
 	 * @return the console output
-	 * @throws IOException
-	 *             throw IOException if error
+	 * @throws IOException throw IOException if error
 	 */
 	public static String bash(String cmd) throws IOException {
 		return bash(cmd, null);
@@ -302,13 +282,10 @@ public class Shell {
 	/**
 	 * run the command in workdir.
 	 *
-	 * @param cmd
-	 *            the command
-	 * @param workdir
-	 *            the path
+	 * @param cmd     the command
+	 * @param workdir the path
 	 * @return the output of console and error
-	 * @throws IOException
-	 *             throw IOException if error
+	 * @throws IOException throw IOException if error
 	 */
 	public static String run(String cmd, String workdir, long timeout) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -324,13 +301,10 @@ public class Shell {
 	/**
 	 * using bash to execute the cmd.
 	 *
-	 * @param cmd
-	 *            the command
-	 * @param workdir
-	 *            the workdir
+	 * @param cmd     the command
+	 * @param workdir the workdir
 	 * @return the output string
-	 * @throws IOException
-	 *             throw IOException if error
+	 * @throws IOException throw IOException if error
 	 */
 	public static String bash(String cmd, String workdir) throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -342,11 +316,9 @@ public class Shell {
 	/**
 	 * get the status of the processname.
 	 *
-	 * @param processname
-	 *            the process name
+	 * @param processname the process name
 	 * @return the status of the process
-	 * @throws IOException
-	 *             throw IOException if occur error
+	 * @throws IOException throw IOException if occur error
 	 */
 	public static String getProcessStatus(String processname) throws IOException {
 		if (isLinux() || OS.isFamilyMac()) {
@@ -378,10 +350,8 @@ public class Shell {
 	/**
 	 * Kill.
 	 *
-	 * @param processname
-	 *            the processname
-	 * @throws IOException
-	 *             Signals that an I/O exception has occurred.
+	 * @param processname the processname
+	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static void kill(String processname) throws IOException {
 		if (isLinux() || OS.isFamilyMac()) {
@@ -415,8 +385,7 @@ public class Shell {
 	/**
 	 * The main method.
 	 *
-	 * @param args
-	 *            the arguments
+	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
 		try {

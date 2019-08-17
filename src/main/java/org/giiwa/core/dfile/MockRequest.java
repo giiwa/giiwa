@@ -112,7 +112,8 @@ public class MockRequest implements HttpServletRequest {
 	@Override
 	public String[] getParameterValues(String name) {
 
-		log.debug("name=" + body.getString(name));
+		if (log.isDebugEnabled())
+			log.debug("name=" + body.getString(name));
 
 		return new String[] { body.getString(name) };
 	}
@@ -405,13 +406,13 @@ public class MockRequest implements HttpServletRequest {
 	@Override
 	public void login(String arg0, String arg1) throws ServletException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void logout() throws ServletException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -455,7 +456,4 @@ public class MockRequest implements HttpServletRequest {
 		return null;
 	}
 
-	
-	
-	
 }

@@ -315,7 +315,8 @@ public class User extends Bean {
 
 		password = encrypt(password);
 
-		log.debug("name=" + name + ", passwd=" + password);
+		if (log.isDebugEnabled())
+			log.debug("name=" + name + ", passwd=" + password);
 		// System.out.println("name=" + name + ", passwd=" + password);
 
 		return dao.load(W.create("name", name).and("password", password).and("deleted", 1, W.OP.neq));

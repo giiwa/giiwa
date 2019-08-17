@@ -686,7 +686,8 @@ public class Language {
 		}
 
 		String mime = Model.getMimeType(file);
-		log.debug("mime=" + mime + ", file=" + file);
+		if (log.isDebugEnabled())
+			log.debug("mime=" + mime + ", file=" + file);
 
 		// image/png
 		String icon = get(mime);
@@ -716,7 +717,8 @@ public class Language {
 
 	public boolean isImage(String file) {
 		String mime = Model.getMimeType(file);
-		log.debug("mime=" + mime);
+		if (log.isDebugEnabled())
+			log.debug("mime=" + mime);
 
 		return mime != null && mime.startsWith("image/");
 	}
@@ -756,7 +758,8 @@ public class Language {
 			}
 		}
 
-		log.debug("theme=" + j);
+		if (log.isDebugEnabled())
+			log.debug("theme=" + j);
 
 		return j.getString("image");
 	}

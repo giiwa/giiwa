@@ -80,7 +80,8 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 
 				if (f != null) {
 
-					log.debug("got resource=" + resource);
+					if (log.isDebugEnabled())
+						log.debug("got resource=" + resource);
 
 					if (Local.getInt("web.debug", 0) == 0) {
 						// not debug
@@ -164,7 +165,8 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 
 	@Override
 	public void init(ExtProperties configuration) {
-		log.debug("VelocityTemplateLoader init..." + this.getClassName());
+		if (log.isDebugEnabled())
+			log.debug("VelocityTemplateLoader init..." + this.getClassName());
 		try {
 			super.init(configuration);
 		} catch (Exception e) {

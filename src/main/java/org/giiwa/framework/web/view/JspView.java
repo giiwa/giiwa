@@ -24,7 +24,8 @@ public class JspView extends View {
 	@Override
 	protected boolean parse(Object file, Model m, String viewname) throws Exception {
 		String name = View.getCanonicalPath(file).substring(Model.HOME.length());
-		log.debug("viewname=" + name);
+		if (log.isDebugEnabled())
+			log.debug("viewname=" + name);
 
 		name = name.replaceAll("\\\\", "/");
 		if (m.context != null) {
@@ -40,7 +41,8 @@ public class JspView extends View {
 			log.warn("Not a valid resource path:" + name);
 			return false;
 		} else {
-			log.debug("including jsp page, name=" + name);
+			if (log.isDebugEnabled())
+				log.debug("including jsp page, name=" + name);
 		}
 
 		rd.include(m.req, m.resp);

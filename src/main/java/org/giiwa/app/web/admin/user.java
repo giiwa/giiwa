@@ -77,7 +77,8 @@ public class user extends Model {
 					 * set the role
 					 */
 					String[] roles = this.getStrings("role");
-					log.debug("roles=" + Helper.toString(roles));
+					if (log.isDebugEnabled())
+						log.debug("roles=" + Helper.toString(roles));
 
 					if (roles != null) {
 						User u = User.dao.load(id);

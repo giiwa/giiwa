@@ -66,10 +66,8 @@ public final class Local extends Bean {
 	/**
 	 * get the int value.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the int
 	 */
 	public static int getInt(String name, int defaultValue) {
@@ -102,10 +100,8 @@ public final class Local extends Bean {
 	/**
 	 * get the string value.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the string
 	 */
 	public static String getString(String name, String defaultValue) {
@@ -142,10 +138,8 @@ public final class Local extends Bean {
 	/**
 	 * get the long value.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the long
 	 */
 	public static long getLong(String name, long defaultValue) {
@@ -179,10 +173,8 @@ public final class Local extends Bean {
 	 * Sets the value of the name in database, it will remove the configuration
 	 * value if value is null.
 	 *
-	 * @param name
-	 *            the name
-	 * @param o
-	 *            the value
+	 * @param name the name
+	 * @param o    the value
 	 */
 	public synchronized static void setConfig(String name, Object o) {
 
@@ -226,8 +218,7 @@ public final class Local extends Bean {
 	/**
 	 * Gets the string value
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the string
 	 */
 	public String get(String name) {
@@ -252,7 +243,8 @@ public final class Local extends Bean {
 				public void onRequest(long seq, Request req) {
 					JSON j = req.get();
 
-					log.debug("got message, j=" + j + ", local=" + Local.id());
+					if (log.isDebugEnabled())
+						log.debug("got message, j=" + j + ", local=" + Local.id());
 
 					if (j != null && X.isSame(Local.id(), j.getString("node"))) {
 						int power = j.getInt("power");

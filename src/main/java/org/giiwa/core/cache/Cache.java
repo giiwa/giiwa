@@ -67,7 +67,7 @@ public final class Cache {
 		} else if (url != null && url.startsWith(REDIS)) {
 			cacheSystem = RedisCache.create(url);
 		} else {
-			log.debug("not configured cache system, using file cache!");
+			log.warn("not configured cache system, using file cache!");
 			cacheSystem = FileCache.create();
 		}
 

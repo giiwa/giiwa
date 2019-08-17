@@ -870,7 +870,8 @@ public final class X {
 		String s = e.getMessage();
 		if (!X.isEmpty(s)) {
 			s = s.replaceAll("\r", X.EMPTY).replaceAll("\n", X.EMPTY);
-			log.debug("s=" + s + ", matches?" + s.matches(regex));
+			if (log.isDebugEnabled())
+				log.debug("s=" + s + ", matches?" + s.matches(regex));
 //			System.out.println("s=" + s + ", matches?" + s.matches(regex));
 
 			if (s.matches(regex))

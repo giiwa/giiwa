@@ -200,7 +200,8 @@ class ActiveMQ extends MQ {
 
 					process(name, l1, cb);
 
-					log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
+					if (log.isDebugEnabled())
+						log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
 				} else {
 					log.warn("unknown message=" + m);
@@ -328,7 +329,8 @@ class ActiveMQ extends MQ {
 
 		public void send(Request r) throws JMSException {
 
-			log.debug("sending, r=" + r);
+			if (log.isDebugEnabled())
+				log.debug("sending, r=" + r);
 
 			last = System.currentTimeMillis();
 			synchronized (p) {
@@ -426,7 +428,8 @@ class ActiveMQ extends MQ {
 		@Override
 		public void onFinish() {
 			if (last < System.currentTimeMillis() - X.AMINUTE) {
-				log.debug("sender." + name + " is stopped.");
+				if (log.isDebugEnabled())
+					log.debug("sender." + name + " is stopped.");
 			} else {
 				this.schedule(0);
 			}

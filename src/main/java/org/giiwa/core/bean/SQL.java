@@ -34,7 +34,8 @@ public class SQL {
 		try {
 			JSON q = _sql(StringFinder.create(sql));
 
-			log.debug("q=" + q);
+			if (log.isDebugEnabled())
+				log.debug("q=" + q);
 
 			String cols = q.getString("cols");
 
@@ -78,7 +79,8 @@ public class SQL {
 
 	private static JSON _sql(StringFinder sf) throws SQLException {
 
-		log.debug("select ...");
+		if (log.isDebugEnabled())
+			log.debug("select ...");
 		sf.next(" ");
 		sf.trim();
 		String cols = sf.nextTo("from");

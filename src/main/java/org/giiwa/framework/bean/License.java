@@ -59,7 +59,8 @@ public class License extends Bean {
 
 	public static void init() {
 
-		log.debug("init license ...");
+		if (log.isDebugEnabled())
+			log.debug("init license ...");
 
 		new Task() {
 
