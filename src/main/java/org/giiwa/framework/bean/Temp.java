@@ -343,24 +343,117 @@ public class Temp {
 		return 0;
 	}
 
-	public void cleanup() throws IOException {
+	/**
+	 * delete the sub folder if empty or delete parent if empty
+	 * 
+	 * @param f
+	 * @throws IOException 
+	 */
+	private static void cleanup(DFile f) throws IOException {
+		if (f.isFile())
+			return;
 
-		this.getFile().delete();
+		String root = ROOT;
+		if (root.startsWith(f.getCanonicalPath()) || X.isSame(root, f.getCanonicalPath())) {
+			return;
+		}
 
-		if (localfile != null) {
-			IOUtil.delete(localfile);
+		DFile[] ff = f.listFiles();
+		if (ff == null || ff.length == 0) {
+			f.delete();
+			cleanup(f.getParentFile());
+		} else {
+			for (DFile f1 : ff) {
+				if (f1.isFile()) {
+					return;
+				} else {
+					IOUtil.cleanup(f1);
+				}
+			}
+
+			ff = f.listFiles();
+			if (ff == null || ff.length == 0) {
+				f.delete();
+				cleanup(f.getParentFile());
+			}
 		}
 
 	}
 
 	/**
-	 * @deprecated
+	 * delete the file or files in sub folder, and cleanup parent
+	 * 
+	 * @param f
 	 * @throws IOException
 	 */
+	private void delete(DFile f) throws IOException {
+		if (f.isFile()) {
+			f.delete();
+		} else if (f.isDirectory()) {
+			DFile[] ff = f.listFiles();
+			if (ff == null || ff.length == 0) {
+				f.delete();
+				// check parent
+				cleanup(f.getParentFile());
+			} else {
+				for (DFile f1 : ff) {
+					delete(f1);
+				}
+				ff = f.listFiles();
+				if (ff == null || ff.length == 0) {
+					f.delete();
+
+					cleanup(f.getParentFile());
+				}
+			}
+		}
+	}
+
 	public void delete() throws IOException {
 
-		cleanup();
+		DFile f = this.getFile();
+		delete(f);
 
+		if (localfile != null) {
+			delete(localfile);
+		}
+
+	}
+
+	private void delete(File f) throws IOException {
+		IOUtil.delete(localfile);
+		cleanup(f.getParentFile());
+	}
+
+	private static void cleanup(File f) throws IOException {
+
+		if (f.isFile())
+			return;
+
+		String root = X.getCanonicalPath(Model.GIIWA_HOME + ROOT);
+		if (root.startsWith(f.getCanonicalPath()) || X.isSame(root, f.getCanonicalPath())) {
+			return;
+		}
+
+		File[] ff = f.listFiles();
+		if (ff == null || ff.length == 0) {
+			f.delete();
+			cleanup(f.getParentFile());
+		} else {
+			for (File f1 : ff) {
+				if (f1.isFile()) {
+					return;
+				} else {
+					IOUtil.cleanup(f1);
+				}
+			}
+
+			ff = f.listFiles();
+			if (ff == null || ff.length == 0) {
+				f.delete();
+				cleanup(f.getParentFile());
+			}
+		}
 	}
 
 	public static void cleanup(long age) {
@@ -368,9 +461,17 @@ public class Temp {
 			try {
 				DFile f = Disk.seek(ROOT);
 				DFile[] ff = f.listFiles();
-				if (ff != null) {
+				if (ff == null || ff.length == 0) {
+					f.delete();
+					cleanup(f.getParentFile());
+				} else {
 					for (DFile f1 : ff) {
 						IOUtil.delete(f1, age);
+					}
+					ff = f.listFiles();
+					if (ff == null || ff.length == 0) {
+						f.delete();
+						cleanup(f.getParentFile());
 					}
 				}
 			} catch (Exception e) {
@@ -382,10 +483,20 @@ public class Temp {
 			try {
 				File f1 = new File(Model.GIIWA_HOME + ROOT);
 				File[] ff = f1.listFiles();
-				if (ff != null) {
+				if (ff == null || ff.length == 0) {
+					f1.delete();
+					cleanup(f1);
+				} else {
 					for (File f2 : ff) {
 						IOUtil.delete(f2, age);
 					}
+
+					ff = f1.listFiles();
+					if (ff == null || ff.length == 0) {
+						f1.delete();
+						cleanup(f1.getParentFile());
+					}
+
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);

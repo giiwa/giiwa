@@ -258,7 +258,6 @@ public final class Config {
 	/**
 	 * set the configuration back to the file.
 	 */
-	@SuppressWarnings("unchecked")
 	public static void save() {
 
 		if (conf != null && confFile != null) {

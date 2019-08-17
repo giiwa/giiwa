@@ -108,14 +108,14 @@ public final class IOUtil {
 
 			count++;
 		} else if (f.isDirectory()) {
-			
+
 			DFile[] ff = f.listFiles();
 			if (ff != null && ff.length > 0) {
 				for (DFile f1 : ff) {
 					count += delete(f1, age);
 				}
 			}
-			
+
 			ff = f.listFiles();
 			if (ff == null || ff.length == 0) {
 				f.delete();
@@ -368,5 +368,65 @@ public final class IOUtil {
 			}
 		}
 		return n;
+	}
+
+	/**
+	 * delete the file if length=0, or empty folder
+	 * 
+	 * @param f
+	 */
+	public static void cleanup(File f) {
+		if (f.isFile()) {
+			if (f.length() == 0) {
+				f.delete();
+			}
+			return;
+		}
+
+		if (f.isDirectory()) {
+			File[] ff = f.listFiles();
+			if (ff == null || ff.length == 0) {
+				f.delete();
+			} else {
+				for (File f1 : ff) {
+					cleanup(f1);
+				}
+				ff = f.listFiles();
+				if (ff == null || ff.length == 0) {
+					f.delete();
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * delete the file if length=0 or folder if empty
+	 * 
+	 * @param f
+	 * @throws IOException
+	 */
+	public static void cleanup(DFile f) throws IOException {
+		if (f.isFile()) {
+			if (f.length() == 0) {
+				f.delete();
+			}
+			return;
+		}
+
+		if (f.isDirectory()) {
+			DFile[] ff = f.listFiles();
+			if (ff == null || ff.length == 0) {
+				f.delete();
+			} else {
+				for (DFile f1 : ff) {
+					cleanup(f1);
+				}
+				ff = f.listFiles();
+				if (ff == null || ff.length == 0) {
+					f.delete();
+				}
+			}
+		}
 	}
 }
