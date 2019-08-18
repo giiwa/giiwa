@@ -100,7 +100,8 @@ public final class Cache {
 			if (cacheSystem != null) {
 				cacheSystem.delete(id);
 			}
-			log.warn("nothing get from memcache by " + id + ", remove it!");
+
+			log.error("nothing get from memcache by " + id + ", remove it!", e);
 		}
 		return null;
 	}
