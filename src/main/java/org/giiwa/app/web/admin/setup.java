@@ -96,11 +96,16 @@ public class setup extends Model {
 		if (!X.isEmpty(dbdriver)) {
 			conf.setProperty("db[default].driver", dbdriver);
 		}
+		
 		if (!X.isEmpty(dburl)) {
 			conf.setProperty("db[default].url", dburl);
+			String user = this.getString("db.user");
+			conf.setProperty("db[default].user", user);
+			conf.setProperty("db[default].passwd", this.getString("db.passwd"));
+
+			conf.setProperty("site.group", UID.id(dburl, user));
+
 		}
-		conf.setProperty("db[default].user", this.getString("db.user"));
-		conf.setProperty("db[default].passwd", this.getString("db.passwd"));
 
 		String mongourl = this.getHtml("mongo.url");
 		String mongodb = this.getString("mongo.db");
@@ -111,6 +116,7 @@ public class setup extends Model {
 
 		if (!X.isEmpty(mongodb)) {
 			conf.setProperty("mongo[default].db", mongodb);
+			conf.setProperty("site.group", mongodb);
 		}
 
 		conf.setProperty("cache.url", this.getString("cache.url"));
@@ -128,7 +134,7 @@ public class setup extends Model {
 
 		Task.schedule(() -> {
 			System.exit(0);
-		}, 10);
+		}, 100);
 	}
 
 	/**

@@ -271,7 +271,7 @@ sort.by=排序
 sortby.type_=升序
 sortby.type_desc=降序
 cluster.code=集群编码
-cluster.code.hint=集群编码，<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a>中会添加该编码为前导序号,使不同集群产生不同的唯一序号，以便于不同集群之间可以同步/区分数据, [cluster.code]
+cluster.code.hint=不同集群，有全局序列号, 参见<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a>. [cluster.code]
 system.setting.title=基本设置
 cross.domain=跨域访问
 cross.domain.hint=域名表达式，"*"全部，请参考 "Access-Control-Allow-Origin". [cross.domain]
@@ -677,8 +677,8 @@ a.node.globaltask=全局任务状态
 a.node.threads=线程状态
 a.node.running=运行任务状态
 a.node.pending=排队任务状态
-site.group.hint=用于区分多个系统在同一个Cache、MQ等
-site.group=组
+site.group.hint=用于区分多个系统在同一个Cache、MQ等[site.group]
+site.group=系统组
 log.trace=异常
 access.config.user.admin=用户管理
 access.config.user.query=用户查询
@@ -895,8 +895,8 @@ user.createdip=创建IP
 user.createdua=创建UA
 user.createdby=创建者
 access.deny=禁止访问，请联系管理员
-backup.url=异地存储
-backup.url.hint=异地存储URL，支持FTP, ftp://127.0.0.1:21?username=aaaa&password=123123&path=/backup
+backup.url=异地存储URL
+backup.url.hint=支持FTP/SFTP, ftp://127.0.0.1:21?username=aaaa&password=123123&path=/backup
 log.logger=代码
 base.setting.web=Web相关
 footprint.field=字段

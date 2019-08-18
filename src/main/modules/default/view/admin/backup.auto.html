@@ -11,7 +11,7 @@
 
 	<div><label><h3>$lang.get('backup.auto'):</h3><input type='checkbox' name='backup.auto' #if($local.getInt('backup.auto', 0) ==1) checked="checked" #end/></label></div>
 	<div style="margin-left:20px;"><label><h3>$lang.get('backup.point'):</h3><input type='text' name='backup.point' value="$local.getString('backup.point', '2:00')"/><g>$lang.get('backup.point.hint')</g></label></div>
-	<div style="margin-left:20px;"><label><h3>$lang.get('backup.url'):</h3><input type='text' name='backup.url' value="$local.getString('backup.url', '')"/><g>$lang.get('backup.url.hint')</g></label></div>
+	<div style="margin-left:20px;"><label><h3>$lang.get('backup.url'):</h3><input type='text' name='backup.url' value="$local.getString('backup.url', '')" class="width-60"/><g>$lang.get('backup.url.hint')</g></label></div>
 
 	<div><label><h3>$lang.get('backup.clean'):</h3><input type='checkbox' name='backup.clean' #if($global.getInt('backup.clean', 0) ==1) checked="checked" #end/></label></div>
 	<div style="margin-left:20px;"><label><h3>$lang.get('backup.keep.days'):</h3><input type='number' name='backup.keep.days' value="$global.getInt('backup.keep.days', 7)"/><g>$lang.get('backup.keep.days.hint')</g></label></div>
