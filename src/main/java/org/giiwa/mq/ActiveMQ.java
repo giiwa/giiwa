@@ -194,7 +194,7 @@ class ActiveMQ extends MQ {
 						l1.add(r);
 
 						if (count % 10000 == 0) {
-							System.out.println("process the 10000 messages, cost " + t.reset() + "ms");
+							log.debug("process the 10000 messages, cost " + t.reset() + "ms");
 						}
 					}
 

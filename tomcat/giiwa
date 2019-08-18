@@ -144,7 +144,8 @@ def _reset_giiwa():
 		print "Reset the giiwa ..."
 		
 		os.chdir(home)
-		os.system("cp -rnf modules/default/WEB-INF/ modules/WEB-INF/")
+		os.system("rm -rf modules/WEB-INF/")
+		os.system("cp -rnf modules/default/WEB-INF/ modules/")
 
 		print "Reset success."
 		_stopx()

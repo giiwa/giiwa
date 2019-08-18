@@ -144,13 +144,14 @@ public class DefaultListener implements IListener {
 			 * cleanup html
 			 */
 			File f = new File(Model.GIIWA_HOME + "/html/");
-			if (f.exists()) {
-				delete(f);
-			}
+			IOUtil.delete(f);
 
 			f = new File(Model.GIIWA_HOME + "/temp/");
-			IOUtil.delete(f);
-			f.mkdirs();
+			if (!f.exists()) {
+				f.mkdirs();
+			}
+
+			IOUtil.cleanup(f);
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
@@ -189,25 +190,6 @@ public class DefaultListener implements IListener {
 	@Override
 	public void onStop() {
 		log.info("giiwa is stopped");
-	}
-
-	private void delete(File f) {
-		if (!f.exists()) {
-			return;
-		}
-		if (f.isFile()) {
-			f.delete();
-		}
-
-		if (f.isDirectory()) {
-			File[] list = f.listFiles();
-			if (list != null && list.length > 0) {
-				for (File f1 : list) {
-					delete(f1);
-				}
-			}
-			f.delete();
-		}
 	}
 
 	/**
@@ -427,19 +409,12 @@ public class DefaultListener implements IListener {
 
 					module.setError(e.getMessage());
 				} finally {
-					if (reader != null) {
-						try {
-							reader.close();
-						} catch (IOException e) {
-							if (log.isErrorEnabled()) {
-								log.error(e);
-							}
-						}
-					}
+					X.close(reader);
 				}
 			} else {
 				module.setStatus("no menu.json");
 			}
+
 		} else {
 			if (log.isErrorEnabled()) {
 				log.error("DB is miss configured, please congiure it in [" + Model.GIIWA_HOME
@@ -449,6 +424,7 @@ public class DefaultListener implements IListener {
 			module.setError("DB is miss configured");
 			return;
 		}
+
 	}
 
 	/*

@@ -81,7 +81,7 @@ public class GlobalLock implements Lock {
 				MQ.wait("lock." + name, Math.min(1000, expire - t.pastms()));
 			}
 		} catch (Exception e) {
-			log.warn("lock failed, global lock=" + name, e);
+			log.error("lock failed, global lock=" + name, e);
 		}
 
 		return false;

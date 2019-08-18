@@ -281,7 +281,7 @@ public final class UID {
 			}
 			i++;
 		}
-		System.out.println(i);
+//		System.out.println(i);
 		return ii;
 	}
 
@@ -300,7 +300,7 @@ public final class UID {
 			i++;
 			len--;
 		}
-		System.out.println(i);
+//		System.out.println(i);
 		return ii;
 	}
 

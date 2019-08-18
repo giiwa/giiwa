@@ -100,6 +100,7 @@ public class GiiwaContextListener implements ServletContextListener {
 			/**
 			 * initialize the configuration
 			 */
+//			System.out.println("init configuration");
 			Config.init(new File(Model.GIIWA_HOME + "/giiwa.properties"));
 
 			Configuration conf = Config.getConf();
@@ -110,34 +111,37 @@ public class GiiwaContextListener implements ServletContextListener {
 			/**
 			 * initialize the helper, including RDB and Mongo
 			 */
+			System.out.println("init db helper");
 			Helper.init(conf);
 
 			/**
 			 * initialize the cache
 			 */
+//			System.out.println("init cache");
 			Cache.init(conf.getString("cache.url", X.EMPTY));
 
+//			System.out.println("init task");
 			Task.init(conf.getInt("thread.number", 20));
 
 			/**
 			 * initialize the controller, this MUST place in the end !:-)
 			 */
+//			System.out.println("init web controller");
 			Controller.init(conf, contextPath);
 
 			/**
 			 * initialize the repo
 			 */
+//			System.out.println("init file repository");
 			Repo.init(conf);
 
 			/**
 			 * initialize the temp
 			 */
+//			System.out.println("init temp");
 			Temp.init(conf);
 
-			/**
-			 * 
-			 */
-			Config.initLog();
+//			System.out.println("init finished");
 
 		} catch (Exception e) {
 			e.printStackTrace();

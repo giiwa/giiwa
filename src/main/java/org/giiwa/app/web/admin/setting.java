@@ -75,6 +75,7 @@ public class setting extends Model {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/reset/" + c);
+		
 		if (c != null) {
 			try {
 				setting s = c.newInstance();
@@ -113,6 +114,7 @@ public class setting extends Model {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/get/" + c);
+		
 		if (c != null) {
 			try {
 				setting s = c.newInstance();
@@ -146,6 +148,7 @@ public class setting extends Model {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/set/" + c);
+		
 		if (c != null) {
 			try {
 				setting s = c.newInstance();

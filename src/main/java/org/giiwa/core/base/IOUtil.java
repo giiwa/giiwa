@@ -376,6 +376,7 @@ public final class IOUtil {
 	 * @param f
 	 */
 	public static void cleanup(File f) {
+		
 		if (f.isFile()) {
 			if (f.length() == 0) {
 				f.delete();

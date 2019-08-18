@@ -79,7 +79,7 @@ public final class Config {
 				c1 = new PropertiesConfiguration(file);
 				c1.setEncoding("utf-8");
 
-				System.out.println("load config: " + file);
+//				System.out.println("load config: " + file);
 			}
 
 			if (c1 != null) {
@@ -100,7 +100,7 @@ public final class Config {
 			if (list != null && !list.isEmpty()) {
 				Set<String> ss = new HashSet<String>();
 				ss.addAll(X.toString(list));
-				// System.out.println("include:" + ss);
+//				System.out.println("include:" + ss);
 
 				for (String s : ss) {
 					if (s.startsWith(File.separator)) {
@@ -135,6 +135,8 @@ public final class Config {
 			if (!conf.containsKey("site.name")) {
 				conf.setProperty("site.name", "default");
 			}
+
+//			System.out.println("conf=" + conf);
 
 			Iterator it = conf.getKeys();
 			while (it.hasNext()) {
@@ -189,6 +191,9 @@ public final class Config {
 	}
 
 	private static void checkAndUpgrade() {
+
+//		System.out.println("check and update");
+
 		boolean c = false;
 
 		String s = conf.getString("db[default].url", X.EMPTY);

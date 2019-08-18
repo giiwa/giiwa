@@ -347,10 +347,10 @@ public class Temp {
 	 * delete the sub folder if empty or delete parent if empty
 	 * 
 	 * @param f
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	private static void cleanup(DFile f) throws IOException {
-		if (f.isFile())
+		if (f == null || f.isFile())
 			return;
 
 		String root = ROOT;
@@ -387,6 +387,9 @@ public class Temp {
 	 * @throws IOException
 	 */
 	private void delete(DFile f) throws IOException {
+		if (f == null)
+			return;
+
 		if (f.isFile()) {
 			f.delete();
 		} else if (f.isDirectory()) {
@@ -421,13 +424,13 @@ public class Temp {
 	}
 
 	private void delete(File f) throws IOException {
-		IOUtil.delete(localfile);
+		IOUtil.delete(f);
 		cleanup(f.getParentFile());
 	}
 
 	private static void cleanup(File f) throws IOException {
 
-		if (f.isFile())
+		if (f == null || f.isFile())
 			return;
 
 		String root = X.getCanonicalPath(Model.GIIWA_HOME + ROOT);

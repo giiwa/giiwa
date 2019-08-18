@@ -59,8 +59,13 @@ public class Menu extends Bean {
 		}
 
 		int len = arr.size();
+
+//		System.out.println("menu insertorupdate, len=" + len);
+
 		for (int i = 0; i < len; i++) {
 			JSON jo = arr.get(i);
+
+//			System.out.println("menu insertorupdate, jo=" + jo);
 
 			/**
 			 * test and create from the "root"
@@ -129,6 +134,8 @@ public class Menu extends Bean {
 		try {
 			// log.info(jo);
 
+//			System.out.println("parent=" + parent + ", jo=" + jo);
+
 			String name = jo.has("name") ? jo.getString("name") : null;
 			if (!X.isEmpty(name)) {
 				/**
@@ -178,8 +185,14 @@ public class Menu extends Bean {
 				if (jo.containsKey("childs")) {
 					Collection<JSON> arr = jo.getList("childs");
 					if (arr != null) {
+
+//						System.out.println("has childs, arr=" + arr.size());
+
 						for (JSON j : arr) {
 							if (j != null) {
+
+//								System.out.println("has childs, j=" + j);
+
 								if (jo.containsKey("tag")) {
 									j.put("tag", jo.get("tag"));
 								}
@@ -191,6 +204,8 @@ public class Menu extends Bean {
 			} else {
 				// is role ?
 				String role = jo.getString("role");
+//				System.out.println("isrole, role=" + role);
+
 				String access = jo.getString("access");
 				if (!X.isEmpty(role)) {
 					String memo = jo.getString("memo");
@@ -254,6 +269,8 @@ public class Menu extends Bean {
 				long id = UID.next("menu.id");
 				while (dao.exists(id)) {
 					id = UID.next("menu.id");
+
+//					System.out.println("menu.id=" + id);
 
 					if (log.isDebugEnabled())
 						log.debug("id=" + id);

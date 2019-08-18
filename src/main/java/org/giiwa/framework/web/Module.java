@@ -854,12 +854,15 @@ public class Module {
 		try {
 			_conf = conf;
 
+			System.out.println("check and upgrade");
 			// check upgrade
 			if (checkAndUpgrade()) {
-				log.info("has been merged, restart it now");
+				log.warn("has been merged, restart it now");
+//				System.out.println("merged libs, restart it now");
 				System.exit(0);
 			}
 
+//			System.out.println("load modules");
 			// load modules
 			File f = new File(Model.HOME);
 
@@ -868,6 +871,9 @@ public class Module {
 				if (list != null) {
 					for (File f1 : list) {
 						if (f1.isDirectory()) {
+
+//							System.out.println("load module=" + f1.getName());
+
 							Module m = load(f1.getName());
 
 							if (m == null) {
@@ -931,6 +937,8 @@ public class Module {
 
 			if (log.isDebugEnabled())
 				log.debug("init menu ...");
+
+//			System.out.println("reset menu");
 			Menu.reset();
 			// log.debug("1 ...");
 
@@ -947,6 +955,7 @@ public class Module {
 					/**
 					 * initialize the life listener
 					 */
+//					System.out.println("init module=" + m.name);
 					if (!m._init(_conf)) {
 						log.error("module init failed, name=" + m.getName());
 					}
@@ -955,17 +964,23 @@ public class Module {
 				}
 
 			}
+
 			// log.debug("3 ...");
 			Menu.deleteall();
 
+//			System.out.println("find the default locale");
 			// log.debug("4 ...");
 			// the the default locale
 			String locale = null;
 			Module f1 = home;
 			while (locale == null && f1 != null) {
 				locale = Global.getString("default.locale", "zh_cn");
+
+//				System.out.println("f1=" + f1);
+
 				f1 = f1.floor();
 			}
+
 			if (locale != null) {
 				Locale.setDefault(new Locale(locale));
 			}
@@ -978,6 +993,7 @@ public class Module {
 			 */
 
 			// merge jars
+//			System.out.println("check and merge");
 			if (checkAndMerge()) {
 				changed = true;
 			}
@@ -1183,7 +1199,10 @@ public class Module {
 							log.info("initializing: " + name);
 							try {
 
+//								System.out.println("call onInit, " + name);
 								_listener.onInit(conf, this);
+
+//								System.out.println("call upgrade, " + name);
 								_listener.upgrade(conf, this);
 
 							} catch (Throwable e) {
@@ -1192,6 +1211,7 @@ public class Module {
 
 							if (Task.powerstate == 1) {
 								try {
+//									System.out.println("call onStart, " + name);
 									_listener.onStart(conf, this);
 								} catch (Throwable e) {
 									GLog.applog.error(name, "start", e.getMessage(), e, null, null);
@@ -1213,6 +1233,8 @@ public class Module {
 			GLog.applog.error("syslog", "init", "module [" + name + "] init failed", e, null, null);
 
 			return false;
+		} finally {
+//			System.out.println("init ok! module=" + name);
 		}
 		return true;
 	}

@@ -87,8 +87,10 @@ public class Controller {
 		/**
 		 * initialize the module
 		 */
+//		System.out.println("init modules");
 		Module.init(conf);
 
+//		System.out.println("init welcome page");
 		// get welcome list
 		init_welcome();
 

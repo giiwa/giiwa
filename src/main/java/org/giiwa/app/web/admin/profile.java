@@ -48,6 +48,7 @@ public class profile extends Model {
 		Class<? extends profile> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/get/" + c);
+		
 		if (c != null) {
 			try {
 				profile s = c.newInstance();
@@ -86,6 +87,7 @@ public class profile extends Model {
 		Class<? extends profile> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/set/" + c);
+		
 		if (c != null) {
 			try {
 				profile s = c.newInstance();
