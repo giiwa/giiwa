@@ -935,6 +935,11 @@ public class Helper implements Serializable {
 			for (W e : queryList) {
 				w.queryList.add(e.copy());
 			}
+
+			for (Entity e : order) {
+				w.order.add(e.copy());
+			}
+
 			return w;
 		}
 
