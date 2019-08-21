@@ -111,6 +111,8 @@ public abstract class Task implements Runnable, Serializable {
 
 	private long scheduledtime = 0;
 
+	private String parent;
+
 	public enum State {
 		running, pending, finished
 	};
@@ -122,6 +124,10 @@ public abstract class Task implements Runnable, Serializable {
 
 	public void status(String name, Object value) {
 		_params.put(name, value);
+	}
+
+	public String getParent() {
+		return parent;
 	}
 
 	/**
@@ -567,6 +573,8 @@ public abstract class Task implements Runnable, Serializable {
 				if (powerstate != 1 && !this.getSys()) {
 					return this;
 				}
+
+				this.parent = Thread.currentThread().getName();
 
 				if (this.getGlobal()) {
 					GlobalRunner.schedule(this, msec);
