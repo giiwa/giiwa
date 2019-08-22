@@ -21,7 +21,7 @@
 
 
 #### 安装使用
-* 下载 [giiwa-1.6.tgz](https://www.giiwa.org/archive/release/giiwa-1.6.tgz)，或者[giiwa-1.6.zip](https://www.giiwa.org/archive/release/giiwa-1.6.zip)
+* 下载 [giiwa-2.0.tgz](https://www.giiwa.org/archive/release/giiwa-2.0.tgz)，或者[giiwa-2.0.zip](https://www.giiwa.org/archive/release/giiwa-2.0.zip)
 * [快速安装](doc/INSTALL.md)
 * [入门教程](doc/FIRST.md)
 
