@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Column;
@@ -35,6 +37,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Stat.class);
 
 	private static Language lang = Language.getLanguage();
 

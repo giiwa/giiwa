@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -34,6 +36,8 @@ public final class Global extends Bean {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Global.class);
 
 	public static final BeanDAO<String, Global> dao = BeanDAO.create(Global.class);
 

@@ -48,7 +48,7 @@ public class Bean implements Serializable {
 	private static final long serialVersionUID = 4L;
 
 	/** The log utility */
-	protected static Log log = LogFactory.getLog(Bean.class);
+	private static Log log = LogFactory.getLog(Bean.class);
 
 	private long _expired = -1;
 

@@ -16,6 +16,8 @@ package org.giiwa.framework.bean;
 
 import java.util.*;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -36,6 +38,8 @@ public class Role extends Bean {
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Role.class);
 
 	public static final BeanDAO<Long, Role> dao = BeanDAO.create(Role.class);
 

@@ -68,7 +68,7 @@ import com.mongodb.client.result.UpdateResult;
  */
 public class MongoHelper implements Helper.DBHelper {
 
-	static Log log = LogFactory.getLog(MongoHelper.class);
+	private static Log log = LogFactory.getLog(MongoHelper.class);
 
 	/** The mongo. */
 	private static volatile Map<String, MongoDatabase> mongo = new HashMap<String, MongoDatabase>();

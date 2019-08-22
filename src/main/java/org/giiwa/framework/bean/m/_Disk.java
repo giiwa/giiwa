@@ -2,6 +2,8 @@ package org.giiwa.framework.bean.m;
 
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
@@ -19,6 +21,8 @@ public class _Disk extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(_Disk.class);
 
 	public static BeanDAO<String, _Disk> dao = BeanDAO.create(_Disk.class);
 

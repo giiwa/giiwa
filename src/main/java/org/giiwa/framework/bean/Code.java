@@ -14,6 +14,8 @@
 */
 package org.giiwa.framework.bean;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
@@ -36,6 +38,8 @@ public class Code extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Code.class);
 
 	public static final BeanDAO<String, Code> dao = BeanDAO.create(Code.class);
 

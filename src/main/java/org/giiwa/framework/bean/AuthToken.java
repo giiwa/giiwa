@@ -17,6 +17,8 @@ package org.giiwa.framework.bean;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Beans;
@@ -42,6 +44,8 @@ public class AuthToken extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(AuthToken.class);
 
 	public static final BeanDAO<String, AuthToken> dao = BeanDAO.create(AuthToken.class);
 

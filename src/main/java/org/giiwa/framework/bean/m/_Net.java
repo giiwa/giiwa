@@ -2,6 +2,8 @@ package org.giiwa.framework.bean.m;
 
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
@@ -19,6 +21,8 @@ public class _Net extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(_Net.class);
 
 	public static BeanDAO<String, _Net> dao = BeanDAO.create(_Net.class);
 
@@ -93,8 +97,8 @@ public class _Net extends Bean {
 					v = V.create("name", name).append("_type", "snapshot").append("snapshot", jo.toString());
 					v.append("inet", inet).append("inet6", jo.getString("inet6"));
 
-					Record r = Record.dao
-							.load(W.create("node", node).and("name", name).and("_type", "snapshot").sort("created", -1));
+					Record r = Record.dao.load(
+							W.create("node", node).and("name", name).and("_type", "snapshot").sort("created", -1));
 					if (r != null) {
 						JSON p = JSON.fromObject(r.get("snapshot"));
 						if (p != null) {

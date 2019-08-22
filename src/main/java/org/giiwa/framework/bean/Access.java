@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -40,6 +42,8 @@ public class Access extends Bean {
 	*/
 	private static final long serialVersionUID = 1L;
 
+	private static Log log = LogFactory.getLog(Access.class);
+	
 	public final static BeanDAO<String, Access> dao = BeanDAO.create(Access.class);
 
 	@Column(name = X.ID, index = true, unique = true)

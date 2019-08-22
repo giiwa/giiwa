@@ -94,6 +94,16 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-log4j12/1.6.6/497bfac9a678118e7ff75d1f3b8c3bcc06dc9c8c/slf4j-log4j12-1.6.6-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-log4j12/1.6.6/5cd9b4fbc3ff6a97beaade3206137d76f65df805/slf4j-log4j12-1.6.6.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.17/677abe279b68c5e7490d6d50c6951376238d7d3e/log4j-1.2.17-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.17/5af35056b4d257e4b64b9e8069c0746e8b08629f/log4j-1.2.17.jar">
+		<attributes>
+			<attribute name="gradle_used_by_scope" value="main,test"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.velocity/velocity-engine-core/2.1/27f1bba304bb4a0b423d5b2c86e0aa0d40bee246/velocity-engine-core-2.1-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.velocity/velocity-engine-core/2.1/af23c9cc6eafd771a75ef19c4bcaf89337401c10/velocity-engine-core-2.1.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
@@ -179,22 +189,12 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.28/6444f3c8fce32e20f621e264807256c5e65f11c9/slf4j-api-1.7.28-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.28/2cd9b264f76e3d087ee21bfc99305928e1bdb443/slf4j-api-1.7.28.jar">
-		<attributes>
-			<attribute name="gradle_used_by_scope" value="main,test"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j-impl/2.12.0/428316adc5e470af7032beeb53d84b3b879254ed/log4j-slf4j-impl-2.12.0-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j-impl/2.12.0/7f44f5201f79d6f7010a1515699a5f6c40e49cb/log4j-slf4j-impl-2.12.0.jar">
+	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.6.6/bcd0e21b1572960cefd449f8a16efab5b6b8e644/slf4j-api-1.6.6-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.6.6/ce53b0a0e2cfbb27e8a59d38f79a18a5c6a8d2b0/slf4j-api-1.6.6.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/com.vladsch.flexmark/flexmark/0.35.0/62048b481d0f6db8fde38c279b389820bcd9f3f6/flexmark-0.35.0-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/com.vladsch.flexmark/flexmark/0.35.0/4c536ade2294be9cb03340f19645d9cdbc77862f/flexmark-0.35.0.jar">
-		<attributes>
-			<attribute name="gradle_used_by_scope" value="main,test"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.15/adb444f39d8885f2d26f1d8f87dce9da1ecda049/log4j-1.2.15-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.15/f0a0d2e29ed910808c33135a3a5a51bba6358f7b/log4j-1.2.15.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
@@ -319,11 +319,6 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.12.0/b52dca271c11244ac235fc56e5f59f5cd22b7876/log4j-api-2.12.0-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.12.0/8b50b487ac0c0bff1af79d56c6454ea68f40c150/log4j-api-2.12.0.jar">
-		<attributes>
-			<attribute name="gradle_used_by_scope" value="main,test"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/com.vladsch.flexmark/flexmark-util/0.35.0/c70551b06b5f388b4e2bff51cb603f52d0f23665/flexmark-util-0.35.0-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/com.vladsch.flexmark/flexmark-util/0.35.0/20d006b3c261055559a432803cea5dfa74687ac4/flexmark-util-0.35.0.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
@@ -340,11 +335,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/5.0.3/f0f24f6666c1a15c7e202e91610476bd4ce59368/asm-5.0.3-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/5.0.3/dcc2193db20e19e1feca8b1240dbbc4e190824fa/asm-5.0.3.jar">
-		<attributes>
-			<attribute name="gradle_used_by_scope" value="main,test"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.12.0/259b7766eec03263c1c1a1f40484b624108b01c9/log4j-core-2.12.0-sources.jar" kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.12.0/1723837573e4c5dbc8840f9f6e8f79b245b94bb/log4j-core-2.12.0.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>

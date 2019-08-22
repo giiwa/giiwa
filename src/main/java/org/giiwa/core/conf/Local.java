@@ -17,6 +17,8 @@ package org.giiwa.core.conf;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -42,6 +44,8 @@ public final class Local extends Bean {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Local.class);
 
 	public static final BeanDAO<String, Local> dao = BeanDAO.create(Local.class);
 

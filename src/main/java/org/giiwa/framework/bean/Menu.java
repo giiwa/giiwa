@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -42,6 +44,8 @@ public class Menu extends Bean {
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Menu.class);
 
 	public static final BeanDAO<Long, Menu> dao = BeanDAO.create(Menu.class);
 

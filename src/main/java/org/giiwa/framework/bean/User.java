@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.*;
@@ -62,6 +64,8 @@ public class User extends Bean {
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(User.class);
 
 	public static final BeanDAO<Long, User> dao = BeanDAO.create(User.class);
 

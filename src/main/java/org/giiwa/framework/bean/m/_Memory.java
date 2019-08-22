@@ -1,5 +1,7 @@
 package org.giiwa.framework.bean.m;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
@@ -17,6 +19,8 @@ public class _Memory extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(_Memory.class);
 
 	public static BeanDAO<String, _Memory> dao = BeanDAO.create(_Memory.class);
 

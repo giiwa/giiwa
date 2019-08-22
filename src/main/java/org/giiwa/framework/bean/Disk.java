@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
@@ -43,6 +45,8 @@ public class Disk extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Disk.class);
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 

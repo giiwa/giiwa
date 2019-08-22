@@ -19,6 +19,8 @@ import java.lang.management.ManagementFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
@@ -50,6 +52,8 @@ public class Node extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Node.class);
 
 	public static final BeanDAO<String, Node> dao = BeanDAO.create(Node.class);
 

@@ -18,6 +18,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Digest;
 import org.giiwa.core.base.RSA;
 import org.giiwa.core.bean.*;
@@ -41,6 +43,8 @@ public class License extends Bean {
 	* 
 	*/
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(License.class);
 
 	public final static BeanDAO<String, License> dao = BeanDAO.create(License.class);
 
