@@ -329,7 +329,7 @@ public class BeanDAO<I, T extends Bean> {
 		try {
 			T b = t.newInstance();
 			Map<String, Object> m = src.getAll();
-			for (String name : m.keySet()) {
+			for (String name : m.keySet().toArray(new String[m.size()])) {
 				b.set(name, m.get(name));
 			}
 			return b;

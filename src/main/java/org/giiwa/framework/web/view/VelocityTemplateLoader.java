@@ -29,6 +29,7 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.util.ExtProperties;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.web.Module;
 
@@ -65,7 +66,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 		Object f = cache.get(resource);
 		try {
 			if (f == null) {
-				if (X.isSame("VM_global_library.vm", resource)) {
+				if (X.isIn(resource, "VM_global_library.vm", "velocimacros.vtl")) {
 					f = Module.home.getFile("/notfound.html");
 				} else {
 					f = new File(resource);
@@ -75,7 +76,10 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 				}
 
 				if (f == null || !((File) f).exists()) {
-					f = Disk.seek(resource);
+					DFile f1 = Disk.seek(resource);
+					if (f1.exists()) {
+						f = f1;
+					}
 				}
 
 				if (f != null) {

@@ -298,9 +298,9 @@ public abstract class Task implements Runnable, Serializable {
 	public String getName() {
 		if (_name == null) {
 			if (this.getGlobal()) {
-				_name = "task." + UID.uuid();
+				_name = parent + "." + UID.uuid();
 			} else {
-				_name = "task." + seq.incrementAndGet();
+				_name = parent + "." + seq.incrementAndGet();
 			}
 		}
 		return _name;
@@ -1156,7 +1156,7 @@ public abstract class Task implements Runnable, Serializable {
 
 			} catch (Exception e) {
 
-				log.error(e.getMessage(), e);
+//				log.error(e.getMessage(), e);
 
 				Task.schedule(() -> {
 					init();

@@ -19,9 +19,8 @@
 	<thead>
 		<tr>
 			<th style="width: 30px;"></th>
-			<th style="width: 20%;">$lang.get('task.parent')</th>
 			<th style="width: 20%;">$lang.get('task.name')</th>
-			<!-- th>$lang.get('task.class')</th-->
+			<th>$lang.get('task.class')</th>
 			<th>$lang.get('task.global')</th>
 			<th style="width: 105px;">$lang.get('task.state')</th>
 			<th>$lang.get('task.remain')</th>
@@ -37,9 +36,8 @@
 		<tr>
 			#set($i=$i+1)
 			<td>$i</td>
-			<td>$!f.parent</td>
-			<td><span class="hint hint--bottom" data-hint="$!f.class.name">$!f.name</span></td>
-			<!-- td>$!f.class.name</td--> 
+			<td>$!f.name</td>
+			<td>$!f.class.name</td> 
 			<td>#if($f.global) Y #end</td>
 			#if($f.state == 'running')
 			<td style='color: green' class="a">
