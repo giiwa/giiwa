@@ -17,7 +17,7 @@ package org.giiwa.framework.bean;
 import java.io.*;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.*;

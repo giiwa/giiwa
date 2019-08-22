@@ -21,7 +21,7 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.zip.*;
 
-import org.apache.commons.configuration.*;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;

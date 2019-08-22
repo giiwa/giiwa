@@ -17,7 +17,7 @@ package org.giiwa.core.bean;
 import java.sql.*;
 import java.util.*;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

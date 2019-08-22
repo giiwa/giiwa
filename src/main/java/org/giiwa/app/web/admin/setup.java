@@ -18,7 +18,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.bson.Document;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.bean.Helper;

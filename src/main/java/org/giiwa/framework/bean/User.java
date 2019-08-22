@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.base.MD5;
 import org.giiwa.core.bean.*;

@@ -15,9 +15,15 @@
 package org.giiwa.core.conf;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.*;
 
-import org.apache.commons.configuration.*;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.log4j.PropertyConfigurator;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
@@ -68,6 +74,7 @@ public final class Config {
 	@SuppressWarnings({ "rawtypes" })
 	public static void init(File file) {
 
+		Reader re = null;
 		try {
 			confFile = file;
 
@@ -76,9 +83,12 @@ public final class Config {
 			PropertiesConfiguration c1 = null;
 
 			if (file != null && file.exists()) {
-				c1 = new PropertiesConfiguration(file);
-				c1.setEncoding("utf-8");
-
+				c1 = new PropertiesConfiguration();
+				re = new InputStreamReader(new FileInputStream(file), "UTF-8");
+				c1.read(re);
+				re.close();
+				re = null;
+//				c1.setEncoding("utf-8");
 //				System.out.println("load config: " + file);
 			}
 
@@ -105,22 +115,30 @@ public final class Config {
 				for (String s : ss) {
 					if (s.startsWith(File.separator)) {
 						if (new File(s).exists()) {
-							PropertiesConfiguration c = new PropertiesConfiguration(s);
-							c.setEncoding("utf-8");
+							PropertiesConfiguration c2 = new PropertiesConfiguration();
+							Reader r2 = new InputStreamReader(new FileInputStream(file), "UTF-8");
+							c2.read(r2);
+//							PropertiesConfiguration c = new PropertiesConfiguration(s);
+//							c.setEncoding("utf-8");
 							// reloader.add(s);
 
-							conf.append(c);
+							conf.append(c2);
 						} else {
 							System.out.println("Can't find the configuration file, file=" + s);
 						}
 					} else {
 						String s1 = file.getParent() + "/conf/" + s;
 						if (new File(s1).exists()) {
-							PropertiesConfiguration c = new PropertiesConfiguration(s1);
-							c.setEncoding("utf-8");
+
+							PropertiesConfiguration c2 = new PropertiesConfiguration();
+							Reader r2 = new InputStreamReader(new FileInputStream(s1), "UTF-8");
+							c2.read(r2);
+//
+//							PropertiesConfiguration c = new PropertiesConfiguration(s1);
+//							c.setEncoding("utf-8");
 							// reloader.add(s1);
 
-							conf.append(c);
+							conf.append(c2);
 						} else {
 							System.out.println("Can't find the configuration file, file=" + s1);
 						}
@@ -165,6 +183,8 @@ public final class Config {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			X.close(re);
 		}
 	}
 
@@ -269,8 +289,9 @@ public final class Config {
 			conf.setProperty("home", null);
 
 			try {
-				PropertiesConfiguration c1 = new PropertiesConfiguration(confFile);
-				c1.setEncoding("utf-8");
+				PropertiesConfiguration c1 = new PropertiesConfiguration();
+//				PropertiesConfiguration c1 = new PropertiesConfiguration(confFile);
+//				c1.setEncoding("utf-8");
 
 				Iterator<String> it = conf.getKeys();
 				while (it.hasNext()) {
@@ -282,7 +303,10 @@ public final class Config {
 					}
 				}
 
-				c1.save(confFile);
+				Writer out = new FileWriter(confFile);
+				c1.getLayout().save(c1, out);
+				out.close();
+//				c1.save(confFile);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

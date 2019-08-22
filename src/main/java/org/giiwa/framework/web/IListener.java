@@ -14,7 +14,7 @@
 */
 package org.giiwa.framework.web;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 
 /**
  * the life listener which will be invoked when the system "start", "stop" <br>
