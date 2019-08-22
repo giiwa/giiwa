@@ -487,6 +487,7 @@ task.cost=Cost
 task.delay=Delay
 task.runtime=Running
 task.index.title=任务状态
+task.parent=Parent
 task.name=Name
 task.state=State
 task.class=Class
