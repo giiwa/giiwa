@@ -1825,6 +1825,9 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("unchecked")
 		public <T> T load() {
+			if (log.isDebugEnabled())
+				log.debug("w=" + this);
+
 			if (dao != null) {
 				return (T) dao.load(this);
 			} else {
@@ -1900,6 +1903,9 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("unchecked")
 		public <T extends Bean> Beans<T> load(int s, int n) {
+			if (log.isDebugEnabled())
+				log.debug("w=" + this);
+
 			if (dao != null) {
 				return (Beans<T>) dao.load(this, s, n);
 			} else {
