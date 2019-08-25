@@ -38,6 +38,7 @@ import org.dom4j.io.SAXReader;
 import org.giiwa.core.base.Base32;
 import org.giiwa.core.base.Digest;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.dle.JS;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -76,13 +77,22 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * @param lenient the boolean of JsonReader.setLenient(lenient)
 	 * @return the json
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked", "rawtypes", "restriction" })
 	public static JSON fromObject(Object json, boolean lenient) {
 
 		JSON j = null;
 		try {
 			if (json instanceof JSON) {
 				j = (JSON) json;
+			} else if (json instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+
+				jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) json;
+
+				j = JSON.create();
+				for (String key : m.keySet()) {
+					j.put(key, m.get(key));
+				}
+
 			} else if (json instanceof Map) {
 				j = JSON.create((Map) json);
 			} else if (json instanceof String) {
@@ -137,6 +147,13 @@ public final class JSON extends LinkedHashMap<String, Object> {
 					Object o = j.get(name);
 					if (o == null) {
 						j.remove(name);
+					} else if (o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+						jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
+						if (m.isArray()) {
+							j.put(name, JSON.fromObjects(m));
+						} else {
+							j.put(name, JSON.fromObject(m));
+						}
 					} else if (o instanceof List) {
 						j.put(name, fromObjects(o));
 					} else if (o instanceof Map) {
@@ -156,7 +173,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * @param jsons the jsons
 	 * @return the list
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked", "restriction" })
 	public static List<JSON> fromObjects(Object jsons) {
 		List list = null;
 		if (jsons instanceof Collection) {
@@ -166,7 +183,12 @@ public final class JSON extends LinkedHashMap<String, Object> {
 
 		} else if (jsons instanceof String) {
 			Gson g = new Gson();
-			list = g.fromJson((String) jsons, List.class);
+			if (((String) jsons).startsWith("{")) {
+				list = JSON.createList();
+				list.add(JSON.fromObject(jsons));
+			} else {
+				list = g.fromJson((String) jsons, List.class);
+			}
 		} else if (jsons instanceof InputStream) {
 			Gson g = new Gson();
 			JsonReader reader = new JsonReader(new InputStreamReader((InputStream) jsons));
@@ -193,6 +215,33 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
+		} else if (jsons instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+			jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) jsons;
+			list = JSON.createList();
+			if (m.isArray()) {
+//				JSON j1 = JSON.fromObject(m);
+				for (Object o : m.values()) {
+					if (o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+						jdk.nashorn.api.scripting.ScriptObjectMirror m1 = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
+						if (m1.isArray()) {
+							List<?> l1 = JSON.fromObjects(m1);
+							list.add(l1);
+						} else {
+							list.add(JSON.fromObject(m1));
+						}
+					} else {
+						list.add(o);
+					}
+				}
+			} else {
+				list.add(JSON.fromObject(jsons));
+			}
+		} else if (jsons instanceof JSON) {
+			list = JSON.createList();
+			list.add(jsons);
+		} else if (jsons instanceof Map) {
+			list = JSON.createList();
+			list.add(JSON.create((Map) jsons));
 		}
 
 		if (list != null) {
@@ -558,6 +607,28 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		j = JSON.fromObject(ss);
 		System.out.println(j.getObjects("list").iterator().next().getClass());
 		System.out.println(j.getObjects("list").iterator().next().getClass());
+
+		ss = "{a:1}";
+		System.out.println(JSON.fromObjects(ss));
+
+		String code = "d.test([{a:1, b:[{a:2}, {b:2}]}, {c:[1,2,3]}])";
+		JSON d = JSON.create();
+		try {
+			JS.run(code, JSON.create().append("d", d));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+//		System.out.println(d);
+
+	}
+
+	public void test(Object o) {
+//		System.out.println(o.getClass());
+//		jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
+//		System.out.println(m.isArray());
+//		System.out.println(m.get("0").getClass());
+
+		System.out.println(JSON.fromObjects(o));
 	}
 
 	/**
