@@ -658,6 +658,8 @@ public class module extends Model {
 			}
 
 		} catch (Exception e1) {
+
+			e.delete();
 			log.error(url, e1);
 
 			GLog.applog.error(module.class, "add", "entity not found in repo for [" + url + "]", e1, login,

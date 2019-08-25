@@ -1299,28 +1299,26 @@ public class Model {
 					return s;
 				}
 
-			} else {
+			}
 
-				String s = req.getParameter(name);
-				if (s == null)
-					return null;
+			String s = req.getParameter(name);
+			if (s == null)
+				return null;
 
 //				String t = this.getHeader("Content-Type");
 //				log.debug("Content-Type=" + c1 + ", " + name + "=" + s);
 
-				if (c1 != null && c1.indexOf("urlencoded") > -1) {
-					// do nothing
-				} else if (c1 != null && c1.indexOf("application/json") > -1) {
-					if (method.isPost()) {
-						s = new String(s.getBytes("ISO-8859-1"), ENCODING);
-					}
+			if (c1 != null && c1.indexOf("urlencoded") > -1) {
+				// do nothing
+			} else if (c1 != null && c1.indexOf("application/json") > -1) {
+				if (method.isPost()) {
+					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
 				}
-
-				s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
-				return s;
 			}
 
-			return null;
+			s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
+			return s;
+
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error("get request parameter " + name + " get exception.", e);
