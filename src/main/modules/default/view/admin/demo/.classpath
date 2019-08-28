@@ -29,12 +29,10 @@
 	<classpathentry kind="lib" path="depends/jsoup-1.10.2.jar"/>
 	<classpathentry kind="lib" path="depends/accessors-smart-1.1.jar"/>
 	<classpathentry kind="lib" path="depends/snappy-java-1.1.2.6.jar"/>
-	<classpathentry kind="lib" path="depends/bcprov-jdk16-1.46.jar"/>
 	<classpathentry kind="lib" path="depends/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
 	<classpathentry kind="lib" path="depends/hawtbuf-1.11.jar"/>
 	<classpathentry kind="lib" path="depends/mongo-java-driver-3.4.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="depends/giiwa-1.6.jar"/>
 	<classpathentry kind="lib" path="depends/activemq-client-5.15.9.jar"/>
 	<classpathentry kind="lib" path="depends/commons-fileupload-1.4.jar"/>
 	<classpathentry kind="lib" path="depends/commons-logging-1.2.jar"/>
@@ -50,11 +48,7 @@
 	<classpathentry kind="lib" path="depends/attoparser-2.0.5.RELEASE.jar"/>
 	<classpathentry kind="lib" path="depends/checker-qual-2.5.2.jar"/>
 	<classpathentry kind="lib" path="depends/commons-codec-1.11.jar"/>
-	<classpathentry kind="lib" path="depends/commons-configuration-1.10.jar"/>
 	<classpathentry kind="lib" path="depends/commons-dbcp2-2.6.0.jar"/>
-	<classpathentry kind="lib" path="depends/commons-lang-2.6.jar"/>
-	<classpathentry kind="lib" path="depends/commons-lang3-3.8.1.jar"/>
-	<classpathentry kind="lib" path="depends/commons-pool2-2.6.1.jar"/>
 	<classpathentry kind="lib" path="depends/core-3.4.0.jar"/>
 	<classpathentry kind="lib" path="depends/error_prone_annotations-2.2.0.jar"/>
 	<classpathentry kind="lib" path="depends/failureaccess-1.0.1.jar"/>
@@ -64,7 +58,6 @@
 	<classpathentry kind="lib" path="depends/httpclient-4.5.8.jar"/>
 	<classpathentry kind="lib" path="depends/httpcore-4.4.11.jar"/>
 	<classpathentry kind="lib" path="depends/httpmime-4.5.8.jar"/>
-	<classpathentry kind="lib" path="depends/jedis-3.0.1.jar"/>
 	<classpathentry kind="lib" path="depends/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar"/>
 	<classpathentry kind="lib" path="depends/log4j-1.2.17.jar"/>
 	<classpathentry kind="lib" path="depends/mina-core-2.1.3.jar"/>
@@ -73,9 +66,16 @@
 	<classpathentry kind="lib" path="depends/postgresql-9.1-901-1.jdbc4.jar"/>
 	<classpathentry kind="lib" path="depends/protobuf-java-3.6.1.jar"/>
 	<classpathentry kind="lib" path="depends/servlet-api.jar"/>
-	<classpathentry kind="lib" path="depends/slf4j-api-1.7.26.jar"/>
 	<classpathentry kind="lib" path="depends/thymeleaf-3.0.11.RELEASE.jar"/>
 	<classpathentry kind="lib" path="depends/unbescape-1.1.6.RELEASE.jar"/>
 	<classpathentry kind="lib" path="depends/velocity-engine-core-2.1.jar"/>
+	<classpathentry kind="lib" path="depends/commons-configuration2-2.5.jar"/>
+	<classpathentry kind="lib" path="depends/commons-lang3-3.9.jar"/>
+	<classpathentry kind="lib" path="depends/commons-pool2-2.6.2.jar"/>
+	<classpathentry kind="lib" path="depends/commons-text-1.6.jar"/>
+	<classpathentry kind="lib" path="depends/giiwa-2.0.jar"/>
+	<classpathentry kind="lib" path="depends/jedis-3.1.0.jar"/>
+	<classpathentry kind="lib" path="depends/slf4j-api-1.6.6.jar"/>
+	<classpathentry kind="lib" path="depends/slf4j-log4j12-1.6.6.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
