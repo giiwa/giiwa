@@ -1921,7 +1921,7 @@ public class Helper implements Serializable {
 			}
 		}
 
-		public long sum(String name) {
+		public <T> T sum(String name) {
 			if (dao != null) {
 				return dao.sum(name, this);
 			} else {
@@ -1929,7 +1929,7 @@ public class Helper implements Serializable {
 			}
 		}
 
-		public long avg(String name) {
+		public <T> T avg(String name) {
 			if (dao != null) {
 				return dao.avg(name, this);
 			} else {
@@ -1937,7 +1937,7 @@ public class Helper implements Serializable {
 			}
 		}
 
-		public long min(String name) {
+		public <T> T min(String name) {
 			if (dao != null) {
 				return dao.min(name, this);
 			} else {
@@ -1945,7 +1945,7 @@ public class Helper implements Serializable {
 			}
 		}
 
-		public long max(String name) {
+		public <T> T max(String name) {
 			if (dao != null) {
 				return dao.max(name, this);
 			} else {

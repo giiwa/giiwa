@@ -96,6 +96,19 @@ public class Footprint extends Bean {
 		return true;
 	}
 
+	public static boolean changed(Bean p, V v) {
+		for (String name : v.names()) {
+			if (X.isIn(name, "updated", "created", "_id", "id"))
+				continue;
+			Object v0 = p == null ? null : p.get(name);
+			Object v1 = v.value(name);
+			if (!X.isSame(v0, v1)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static boolean create(String table, V v, long uid) {
 		/**
 		 * compare each data in V
