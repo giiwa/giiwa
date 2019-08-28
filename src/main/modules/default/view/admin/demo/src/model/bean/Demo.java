@@ -1,6 +1,8 @@
 //begin of the Demo Bean
 package org.giiwa.demo.bean;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Table;
@@ -23,6 +25,8 @@ public class Demo extends Bean {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	private static Log log = LogFactory.getLog(Demo.class);
 
 	// define a DAO for each Bean
 	public static final BeanDAO<Long, Demo> dao = BeanDAO.create(Demo.class);
