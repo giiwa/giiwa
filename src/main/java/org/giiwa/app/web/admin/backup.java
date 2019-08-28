@@ -120,7 +120,7 @@ public class backup extends Model {
 			File f = new File(root + "/" + name);
 
 			Temp t = Temp.create(name);
-			t.upload(new FileInputStream(f));
+			t.copy(new FileInputStream(f));
 
 			jo.put(X.STATE, 200);
 			jo.put("url", t.getUri());
@@ -403,7 +403,7 @@ public class backup extends Model {
 
 				Temp t = Temp.create(name);
 
-				String out = Model.GIIWA_HOME + t.getFile().getFilename();
+				String out = t.getFile().getCanonicalPath();
 
 				new File(path() + "/" + name).mkdirs();
 
@@ -528,7 +528,7 @@ public class backup extends Model {
 				String source = root + "/" + name;
 
 				Temp t = Temp.create("backup");
-				File f = new File(t.getFile().getFilename());
+				File f = t.getFile();
 				f.mkdirs();
 				Zip.unzip(new File(source), f);
 

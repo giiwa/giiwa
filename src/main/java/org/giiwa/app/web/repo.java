@@ -21,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.bean.Repo.Entity;
@@ -88,11 +87,11 @@ public class repo extends Model {
 
 							if (ss.length == 2) {
 								boolean failed = false;
-								DFile f = Temp.get(id, size);
+								File f = Temp.get(id, size);
 								if (!f.exists()) {
 
-									DFile src = Temp.get(id, null);
-									OutputStream out = src.getOutputStream();
+									File src = Temp.get(id, null);
+									OutputStream out = new FileOutputStream(src);
 									IOUtil.copy(e.getInputStream(), out, false);
 									out.close();
 
@@ -103,7 +102,7 @@ public class repo extends Model {
 								}
 
 								if (f.exists() && !failed) {
-									InputStream in = f.getInputStream();
+									InputStream in = new FileInputStream(f);
 									OutputStream out = this.getOutputStream();
 
 									IOUtil.copy(in, out, false);
@@ -244,16 +243,16 @@ public class repo extends Model {
 							String[] ss = size.split("x");
 
 							if (ss.length == 2) {
-								DFile f = Temp.get(id, "s_" + size);
+								File f = Temp.get(id, "s_" + size);
 								boolean failed = false;
 
 								if (!f.exists()) {
 
-									DFile src = Temp.get(id, null);
+									File src = Temp.get(id, null);
 									if (src.exists()) {
 										src.delete();
 									}
-									OutputStream out = src.getOutputStream();
+									OutputStream out = new FileOutputStream(src);
 									IOUtil.copy(e.getInputStream(), out, false);
 									out.close();
 
@@ -274,7 +273,7 @@ public class repo extends Model {
 									if (log.isDebugEnabled())
 										log.debug("load the scaled image from " + f.getCanonicalPath());
 
-									InputStream in = f.getInputStream();
+									InputStream in = new FileInputStream(f);
 									OutputStream out = this.getOutputStream();
 
 									IOUtil.copy(in, out, false);
@@ -295,14 +294,14 @@ public class repo extends Model {
 
 							if (ss.length == 2) {
 								boolean failed = false;
-								DFile f = Temp.get(id, "s1_" + size);
+								File f = Temp.get(id, "s1_" + size);
 								if (!f.exists()) {
 
-									DFile src = Temp.get(id, null);
+									File src = Temp.get(id, null);
 									if (src.exists()) {
 										src.delete();
 									}
-									OutputStream out = src.getOutputStream();
+									OutputStream out = new FileOutputStream(src);
 									IOUtil.copy(e.getInputStream(), out, false);
 									out.close();
 
@@ -323,7 +322,7 @@ public class repo extends Model {
 									if (log.isDebugEnabled())
 										log.debug("load scaled image from " + f.getCanonicalPath());
 
-									InputStream in = f.getInputStream();
+									InputStream in = new FileInputStream(f);
 									OutputStream out = this.getOutputStream();
 
 									IOUtil.copy(in, out, false);

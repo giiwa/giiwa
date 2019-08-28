@@ -21,7 +21,6 @@ import java.io.InputStream;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Model;
@@ -60,11 +59,11 @@ public class temp extends Model {
 			InputStream in = null;
 
 			String name = ss[1];
-			DFile f1 = Temp.get(ss[0], name);
+			File f1 = Temp.get(ss[0], name);
 			long total = 0;
 			if (!f1.exists()) {
 
-				File f = Temp.getLocalFile(ss[0], name);
+				File f = Temp.get(ss[0], name);
 				if (!f.exists()) {
 					this.notfound();
 					return;
@@ -75,8 +74,8 @@ public class temp extends Model {
 				in = new FileInputStream(f);
 			} else {
 				if (log.isDebugEnabled())
-					log.debug("filename=" + f1.getFilename());
-				in = f1.getInputStream();
+					log.debug("filename=" + f1.getCanonicalPath());
+				in = new FileInputStream(f1);
 				total = f1.length();
 			}
 

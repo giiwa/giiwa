@@ -35,6 +35,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.task.Callable;
 import org.giiwa.framework.web.Model;
+import org.h2.util.IOUtils;
 
 /**
  * Create Temporary file, which can be accessed by web api, please refer
@@ -62,8 +63,7 @@ public class Temp {
 
 	private String id = null;
 	private String name = null;
-	private DFile file = null;
-	private File localfile = null;
+	private File file = null;
 
 	private Temp() {
 
@@ -79,12 +79,6 @@ public class Temp {
 		Temp t = new Temp();
 		t.name = name;
 		t.id = UID.id(System.currentTimeMillis(), UID.random());
-		t.file = get(t.id, name);
-		if (t.file.exists()) {
-			t.file.delete();
-		} else {
-			t.file.getParentFile().mkdirs();
-		}
 		return t;
 	}
 
@@ -102,15 +96,15 @@ public class Temp {
 	 * 
 	 * @return File the file
 	 */
-	public DFile getFile() {
+	public File getFile() {
+		if (file == null) {
+			file = new File(Model.GIIWA_HOME + path(id, name));
+		}
 		return file;
 	}
 
 	public File getLocalFile() {
-		if (localfile == null) {
-			localfile = new File(Model.GIIWA_HOME + path(id, name));
-		}
-		return localfile;
+		return getFile();
 	}
 
 	/**
@@ -122,18 +116,7 @@ public class Temp {
 		return ROOT + "/" + id + "/" + name + "?" + ((file == null || !file.exists()) ? 0 : file.lastModified());
 	}
 
-	/**
-	 * Gets the.
-	 * 
-	 * @param id   the id
-	 * @param name the name
-	 * @return the file
-	 */
-	public static DFile get(String id, String name) {
-		return Disk.seek(path(id, name));
-	}
-
-	public static File getLocalFile(String id, String name) {
+	public static File get(String id, String name) {
 		return new File(Model.GIIWA_HOME + path(id, name));
 	}
 
@@ -155,53 +138,6 @@ public class Temp {
 		return sb.toString();
 	}
 
-	/**
-	 * Copy the inputstream to dfile and close it
-	 *
-	 * @param in the in
-	 * @return the int
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
-	public int upload(InputStream in) throws IOException {
-		return IOUtil.copy(in, file.getOutputStream());
-	}
-
-	/**
-	 * Copy the inputstream to loclfile and close it
-	 *
-	 * @param in the in
-	 * @return the int
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
-	public int download(InputStream in) throws IOException {
-		File f1 = this.getLocalFile();
-		if (f1.exists()) {
-			f1.delete();
-		} else {
-			f1.getParentFile().mkdirs();
-		}
-		return IOUtil.copy(in, new FileOutputStream(f1));
-	}
-
-	/**
-	 * Zipcopy.
-	 *
-	 * @param name the name
-	 * @param in   the in
-	 * @return the int
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
-	public int zipcopy(String name, InputStream in) throws IOException {
-		ZipOutputStream out = new ZipOutputStream(file.getOutputStream());
-		ZipEntry e = new ZipEntry(name);
-		out.putNextEntry(e);
-		int i = IOUtil.copy(in, out, false);
-		out.closeEntry();
-		out.close();
-		in.close();
-		return i;
-	}
-
 	public <V extends Bean> Exporter<V> export(String charset, Exporter.FORMAT format) {
 		File f = this.getLocalFile();
 		if (f.exists()) {
@@ -210,12 +146,6 @@ public class Temp {
 			f.getParentFile().mkdirs();
 		}
 		return export(f, charset, format);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <V extends Bean> Exporter<V> export(DFile f, String charset, Exporter.FORMAT format) {
-		Exporter<V> e = Exporter.create(f, charset, format);
-		return e;
 	}
 
 	public <V extends Bean> Exporter<V> export(File f, String charset, Exporter.FORMAT format) {
@@ -231,20 +161,6 @@ public class Temp {
 		BufferedWriter out = null;
 		FORMAT format;
 		Callable<Object[], V> cols = null;
-
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		private static Exporter create(DFile file, String charset, FORMAT format) {
-			try {
-				Exporter s = new Exporter();
-				s.out = new BufferedWriter(new OutputStreamWriter(file.getOutputStream(), charset));
-				s.format = format;
-
-				return s;
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-			return null;
-		}
 
 		private static <V extends Bean> Exporter<V> create(File file, String charset, FORMAT format) {
 			try {
@@ -336,90 +252,18 @@ public class Temp {
 
 	}
 
-	public long save(DFile file) throws Exception {
-		if (localfile != null && localfile.exists()) {
-			return IOUtil.copy(new FileInputStream(localfile), file.getOutputStream());
+	public long save(DFile f) throws Exception {
+		File file = getFile();
+		if (file != null && file.exists()) {
+			return IOUtil.copy(new FileInputStream(file), f.getOutputStream());
 		}
 		return 0;
 	}
 
-	/**
-	 * delete the sub folder if empty or delete parent if empty
-	 * 
-	 * @param f
-	 * @throws IOException
-	 */
-	private static void cleanup(DFile f) throws IOException {
-		if (f == null || f.isFile())
-			return;
-
-		String root = ROOT;
-		if (root.startsWith(f.getCanonicalPath()) || X.isSame(root, f.getCanonicalPath())) {
-			return;
-		}
-
-		DFile[] ff = f.listFiles();
-		if (ff == null || ff.length == 0) {
-			f.delete();
-			cleanup(f.getParentFile());
-		} else {
-			for (DFile f1 : ff) {
-				if (f1.isFile()) {
-					return;
-				} else {
-					IOUtil.cleanup(f1);
-				}
-			}
-
-			ff = f.listFiles();
-			if (ff == null || ff.length == 0) {
-				f.delete();
-				cleanup(f.getParentFile());
-			}
-		}
-
-	}
-
-	/**
-	 * delete the file or files in sub folder, and cleanup parent
-	 * 
-	 * @param f
-	 * @throws IOException
-	 */
-	private void delete(DFile f) throws IOException {
-		if (f == null)
-			return;
-
-		if (f.isFile()) {
-			f.delete();
-		} else if (f.isDirectory()) {
-			DFile[] ff = f.listFiles();
-			if (ff == null || ff.length == 0) {
-				f.delete();
-				// check parent
-				cleanup(f.getParentFile());
-			} else {
-				for (DFile f1 : ff) {
-					delete(f1);
-				}
-				ff = f.listFiles();
-				if (ff == null || ff.length == 0) {
-					f.delete();
-
-					cleanup(f.getParentFile());
-				}
-			}
-		}
-	}
-
 	public void delete() throws IOException {
 
-		DFile f = this.getFile();
+		File f = this.getFile();
 		delete(f);
-
-		if (localfile != null) {
-			delete(localfile);
-		}
 
 	}
 
@@ -460,27 +304,6 @@ public class Temp {
 	}
 
 	public static void cleanup(long age) {
-		{
-			try {
-				DFile f = Disk.seek(ROOT);
-				DFile[] ff = f.listFiles();
-				if (ff == null || ff.length == 0) {
-					f.delete();
-					cleanup(f.getParentFile());
-				} else {
-					for (DFile f1 : ff) {
-						IOUtil.delete(f1, age);
-					}
-					ff = f.listFiles();
-					if (ff == null || ff.length == 0) {
-						f.delete();
-						cleanup(f.getParentFile());
-					}
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
 
 		{
 			try {
@@ -505,6 +328,36 @@ public class Temp {
 				log.error(e.getMessage(), e);
 			}
 		}
+	}
+
+	public long copy(InputStream in) throws IOException {
+		File f = getFile();
+		if (f.exists()) {
+			f.delete();
+		} else {
+			f.getParentFile().mkdirs();
+		}
+		return IOUtils.copy(in, new FileOutputStream(f));
+	}
+
+	public long zipcopy(String name, InputStream in) throws IOException {
+
+		File f = getFile();
+		if (f.exists()) {
+			f.delete();
+		} else {
+			f.getParentFile().mkdirs();
+		}
+		ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+		try {
+			ZipEntry e = new ZipEntry(name);
+			out.putNextEntry(e);
+			return IOUtil.copy(in, out, false);
+		} finally {
+			out.closeEntry();
+			X.close(in, out);
+		}
+
 	}
 
 }

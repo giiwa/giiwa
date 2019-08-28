@@ -14,6 +14,8 @@
 */
 package org.giiwa.app.web;
 
+import java.io.FileOutputStream;
+
 import org.giiwa.core.base.Captcha;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
@@ -43,7 +45,7 @@ public class captcha extends Model {
 		try {
 
 			Captcha.create(this.sid(), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
-					t.getFile().getOutputStream(), 4);
+					new FileOutputStream(t.getFile()), 4);
 
 			jo.put(X.STATE, 200);
 			jo.put("sid", sid());

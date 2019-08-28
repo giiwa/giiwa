@@ -494,7 +494,7 @@ public class module extends Model {
 				Global.setConfig("module.id.next", id + 1);
 			}
 
-			t.save(t.getFile());
+//			t.save(t.getFile());
 
 		} finally {
 			if (out != null) {
