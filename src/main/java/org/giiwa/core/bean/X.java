@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -118,6 +119,11 @@ public final class X {
 
 		if (s1 instanceof String && s2 instanceof String) {
 			return ((String) s1).equalsIgnoreCase((String) s2);
+		}
+
+		if (s1.getClass().isArray() && s2.getClass().isArray()) {
+			s1 = Arrays.asList((Object[]) (s1));
+			s2 = Arrays.asList((Object[]) s2);
 		}
 
 		if (s1 instanceof Collection && s2 instanceof Collection) {
