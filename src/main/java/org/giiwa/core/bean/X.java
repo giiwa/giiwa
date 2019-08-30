@@ -114,8 +114,13 @@ public final class X {
 	public static boolean isSame(Object s1, Object s2) {
 		if (s1 == s2)
 			return true;
+
 		if (X.isEmpty(s1) && X.isEmpty(s2))
 			return true;
+
+		if (X.isEmpty(s1) || X.isEmpty(s2)) {
+			return false;
+		}
 
 		if (s1 instanceof String && s2 instanceof String) {
 			return ((String) s1).equalsIgnoreCase((String) s2);

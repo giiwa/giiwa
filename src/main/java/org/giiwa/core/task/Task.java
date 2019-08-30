@@ -239,11 +239,10 @@ public abstract class Task implements Runnable, Serializable {
 	}
 
 	public long getRemain() {
-		if (State.running.equals(state)) {
-			return 0;
-		} else {
+		if (State.pending.equals(state)) {
 			return scheduledtime - System.currentTimeMillis();
 		}
+		return 0;
 	}
 
 	public long getRuntime() {

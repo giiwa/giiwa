@@ -253,6 +253,10 @@ public class Temp {
 	}
 
 	public long save(DFile f) throws Exception {
+		if (f.exists()) {
+			f.delete();
+		}
+
 		File file = getFile();
 		if (file != null && file.exists()) {
 			return IOUtil.copy(new FileInputStream(file), f.getOutputStream());
