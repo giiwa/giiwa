@@ -72,7 +72,10 @@ public class GiiwaContextListener implements ServletContextListener {
 	 * @param contextPath the context path
 	 */
 	private static void init(String home, String contextPath) {
+
 		try {
+
+			Thread.currentThread().setName("main");
 
 			Model.GIIWA_HOME = System.getenv("GIIWA_HOME");
 

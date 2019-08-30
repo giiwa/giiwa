@@ -33,6 +33,7 @@ public class GiiwaServlet extends HttpServlet {
 
 			if (log.isDebugEnabled())
 				log.debug("init view ...");
+			
 			Enumeration<?> e = getInitParameterNames();
 			while (e.hasMoreElements()) {
 				String name = e.nextElement().toString();
