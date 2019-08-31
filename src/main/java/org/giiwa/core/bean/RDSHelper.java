@@ -247,7 +247,7 @@ public class RDSHelper implements Helper.DBHelper {
 	public Connection getConnection(String name) throws SQLException {
 
 		if (log.isDebugEnabled())
-			log.debug("name=" + name + ", conn=" + conn + ", closed=" + conn.isClosed());
+			log.debug("name=" + name + ", conn=" + conn);
 
 		if (conn != null && !conn.isClosed())
 			return conn;
