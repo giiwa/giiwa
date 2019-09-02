@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Data;
@@ -2909,6 +2910,18 @@ public class Helper implements Serializable {
 
 		q = W.create("a", 1).sort("b", -1);
 		System.out.println(q.sortkeys());
+
+		String s = "(updated>10) and (created>10)";
+
+		try {
+			q = SQL.where2W(StringFinder.create(s));
+
+			System.out.println(q.query());
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 //		Beans<User> l1 = User.dao.query().and("a", 1).sort("a", 1).load(0, 10);
 

@@ -17,7 +17,6 @@ import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
 
-@SuppressWarnings("deprecation")
 public class SQL {
 
 	static Log log = LogFactory.getLog(SQL.class);
@@ -112,7 +111,7 @@ public class SQL {
 
 		if (X.isSame(s, "where")) {
 			sf.trim();
-			String w = sf.nextTo("(group|order|offset|limit)");
+			String w = sf.nextTo("group|order|offset|limit");
 			if (!X.isEmpty(w)) {
 				r.put("where", w);
 				return _condition(sf, r);
@@ -121,7 +120,7 @@ public class SQL {
 			}
 		} else if (X.isSame(s, "groupby")) {
 			sf.trim();
-			String g = sf.nextTo("(order|offset|limit)");
+			String g = sf.nextTo("order|offset|limit");
 			if (!X.isEmpty(g)) {
 				r.put("groupby", g);
 				return _condition(sf, r);
@@ -132,7 +131,7 @@ public class SQL {
 			sf.trim();
 			String by = sf.next(" ");
 			if (X.isSame("by", by)) {
-				String o = sf.nextTo("(offset|limit)");
+				String o = sf.nextTo("offset|limit");
 				if (!X.isEmpty(o)) {
 					r.put("orderby", o);
 					return _condition(sf, r);
@@ -144,7 +143,7 @@ public class SQL {
 			}
 		} else if (X.isSame(s, "offset")) {
 			sf.trim();
-			String o = sf.nextTo("(limit)");
+			String o = sf.nextTo("limit");
 			if (!X.isEmpty(o)) {
 				r.put("offset", X.toInt(o));
 				return _condition(sf, r);
@@ -192,14 +191,14 @@ public class SQL {
 			} else {
 				s.skip(-1);
 
-				StringFinder s1 = StringFinder.create(s.nextTo("(\\)|and|or)"));
+				StringFinder s1 = StringFinder.create(s.nextTo("(|)|and|or"));
 				s.trim();
 
 				// if (!s.hasMore())
 				// throw new Exception("expect [op] more after [" + s1.toString() +
 				// "]");
 
-				String name = s1.nextTo("( |=|>|<|like)");
+				String name = s1.nextTo(" |=|>|<|like");
 
 				s1.trim();
 				c = s1.next();
@@ -230,6 +229,9 @@ public class SQL {
 					s1.skip(-1);
 
 					String s2 = s1.remain();
+
+					System.out.println("s2=" + s2);
+
 					value = JS.calculate(s2);
 				}
 

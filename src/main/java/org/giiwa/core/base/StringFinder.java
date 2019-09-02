@@ -19,7 +19,7 @@ import java.util.Stack;
 import org.giiwa.core.bean.X;
 
 /**
- * @deprecated
+ * 
  * @author joe
  *
  */
@@ -85,7 +85,7 @@ public class StringFinder {
 		String s1 = null;
 
 		int min = Integer.MAX_VALUE;
-		String[] ss = X.split(deli, "[\\(\\|\\)]");
+		String[] ss = X.split(deli, "[|]");
 		for (String s2 : ss) {
 			int i = s.indexOf(s2, pos);
 			if (i > -1 && i < min) {
