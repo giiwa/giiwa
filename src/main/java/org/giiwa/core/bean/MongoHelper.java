@@ -1206,7 +1206,7 @@ public class MongoHelper implements Helper.DBHelper {
 		l1 = h.max("gi_user", W.create().sort("max", -1), "b", new String[] { "a" }, Helper.DEFAULT);
 		System.out.println("count=" + l1);
 
-		l1 = h.aggregate("gi_user", new String[] { "sum(b)", "min(a)" }, W.create(), new String[] { "a" },
+		l1 = h.aggregate("gi_user", new String[] { "count(b)", "min(a)" }, W.create(), new String[] { "a" },
 				Helper.DEFAULT);
 		System.out.println("count=" + l1);
 
@@ -1502,8 +1502,11 @@ public class MongoHelper implements Helper.DBHelper {
 					sf.skip(1);
 					sf.trim();
 					String name = sf.nextTo(")");
-
-					g2.append(f1, new BasicDBObject().append("$" + fc, "$" + name));
+					if (X.isSame(fc, "count")) {
+						g2.append(f1, new BasicDBObject().append("$sum", 1));
+					} else {
+						g2.append(f1, new BasicDBObject().append("$" + fc, "$" + name));
+					}
 				}
 
 				l1.add(new BasicDBObject().append("$group", g2));
