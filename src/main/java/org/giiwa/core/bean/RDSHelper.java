@@ -2878,7 +2878,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < group.length; i++) {
 					sum.append(group[i]);
 				}
-				sum.append(",max(*) t from ").append(table);
+				sum.append(",max(" + name + ") t from ").append(table);
 				String where = _where(q, c);
 				Object[] args = q.args();
 
@@ -2982,7 +2982,7 @@ public class RDSHelper implements Helper.DBHelper {
 				for (int i = 0; i < group.length; i++) {
 					sum.append(group[i]);
 				}
-				sum.append(",min(*) t from ").append(table);
+				sum.append(",min(").append(name).append(") t from ").append(table);
 				String where = _where(q, c);
 				Object[] args = q.args();
 
@@ -3060,6 +3060,110 @@ public class RDSHelper implements Helper.DBHelper {
 
 	@Override
 	public List<JSON> avg(String table, W q, String name, String[] group, String db) {
+		/**
+		 * create the sql statement
+		 */
+		TimeStamp t = TimeStamp.create();
+
+		// log.debug("sql:" + sql.toString());
+
+		/**
+		 * search it in database
+		 */
+		Connection c = null;
+		PreparedStatement p = null;
+		ResultSet r = null;
+		long n = 0;
+		try {
+
+			c = getConnection(db);
+
+			if (c == null) {
+				n = 0;
+			} else {
+				StringBuilder sum = new StringBuilder();
+				sum.append("select");
+				for (int i = 0; i < group.length; i++) {
+					sum.append(group[i]);
+				}
+				sum.append(",avg(").append(name).append(") t from ").append(table);
+				String where = _where(q, c);
+				Object[] args = q.args();
+
+				if (!X.isEmpty(where)) {
+					sum.append(" where ").append(where);
+				}
+
+				sum.append(" groug by ");
+				for (int i = 0; i < group.length; i++) {
+					sum.append(group[i]).append(",");
+				}
+
+				BasicDBObject sort = q.order();
+				if (sort != null && !sort.isEmpty()) {
+					sum.append("order by ");
+					int i = 0;
+					for (String s : sort.keySet()) {
+						if (i > 0)
+							sum.append(",");
+
+						if (X.isSame(s, "avg")) {
+							sum.append("t");
+						} else {
+							sum.append(s.replaceAll("_id.", X.EMPTY));
+						}
+
+						if (sort.getInt(s) == -1) {
+							sum.append(" desc");
+						}
+					}
+				}
+
+				p = c.prepareStatement(sum.toString());
+
+				int order = 1;
+				if (args != null) {
+					for (int i = 0; i < args.length; i++) {
+						Object o = args[i];
+
+						setParameter(p, order++, o, isOracle(c));
+					}
+				}
+
+				r = p.executeQuery();
+				List<JSON> l1 = JSON.createList();
+				while (r.next()) {
+
+					JSON j1 = JSON.create();
+					for (String s : group) {
+						j1.append(s, r.getObject(s));
+					}
+
+					JSON j = JSON.create();
+					j.append("_id", j1).append("avg", r.getLong("t"));
+
+					l1.add(j);
+				}
+				return l1;
+			}
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(q, e);
+
+			GLog.dblog.error(table, "avg", "q=" + q, e, null, db);
+
+		} finally {
+			close(r, p, c);
+
+			if (log.isDebugEnabled())
+				log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<JSON> aggregate(String table, String[] func, W q, String[] group, String db) {
 		/**
 		 * create the sql statement
 		 */

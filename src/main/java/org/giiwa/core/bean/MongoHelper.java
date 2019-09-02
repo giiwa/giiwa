@@ -39,6 +39,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.bean.Helper.Cursor;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
@@ -1193,16 +1194,20 @@ public class MongoHelper implements Helper.DBHelper {
 	}
 
 	public static void main(String[] args) {
+
 		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/demo");
-		long i = h.count("gi_user", W.create().and("password", "fm3p0ya5bocee"), Helper.DEFAULT);
+		long i = h.count("gi_user", W.create(), Helper.DEFAULT);
 		System.out.println("count=" + i);
 
-		List<JSON> l1 = h.count("gi_user", W.create().and("id", 1, W.OP.gt).sort("count", -1),
-				new String[] { "password" }, Helper.DEFAULT);
+		List<JSON> l1 = h.count("gi_user", W.create().and("id", 1, W.OP.gt).sort("count", -1), new String[] { "a" },
+				Helper.DEFAULT);
 		System.out.println("count=" + l1);
 
-		l1 = h.max("gi_user", W.create().and("password", "fm3p0ya5bocee").sort("max", -1), "created",
-				new String[] { "password" }, Helper.DEFAULT);
+		l1 = h.max("gi_user", W.create().sort("max", -1), "b", new String[] { "a" }, Helper.DEFAULT);
+		System.out.println("count=" + l1);
+
+		l1 = h.aggregate("gi_user", new String[] { "sum(b)", "min(a)" }, W.create(), new String[] { "a" },
+				Helper.DEFAULT);
 		System.out.println("count=" + l1);
 
 	}
@@ -1438,6 +1443,88 @@ public class MongoHelper implements Helper.DBHelper {
 
 		return null;
 
+	}
+
+	/**
+	 * 
+	 * @param table the table name
+	 * @param func  the func list, sum(n), count(a), min(b)
+	 * @param q     the query
+	 * @param group the group
+	 * @param db    the db name
+	 * @return
+	 */
+	public List<JSON> aggregate(String table, String[] func, W q, String[] group, String db) {
+
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad table=" + table, new Exception("bad table=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad group=" + group, new Exception("bad group=" + group));
+				return null;
+			}
+
+			db1 = getCollection(db, table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				BasicDBObject g1 = new BasicDBObject();
+				for (String s : group) {
+					g1.append(s, "$" + s);
+				}
+
+				BasicDBObject g2 = new BasicDBObject().append("_id", g1);
+				for (String f1 : func) {
+					StringFinder sf = StringFinder.create(f1);
+					sf.trim();
+					String fc = sf.nextTo("(");
+					sf.skip(1);
+					sf.trim();
+					String name = sf.nextTo(")");
+
+					g2.append(f1, new BasicDBObject().append("$" + fc, "$" + name));
+				}
+
+				l1.add(new BasicDBObject().append("$group", g2));
+
+				if (!order.isEmpty()) {
+					l1.add(new BasicDBObject().append("$sort", order));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				List<JSON> l2 = JSON.createList();
+				for (Document d : a1) {
+					l2.add(JSON.fromObject(d));
+				}
+
+				if (log.isDebugEnabled())
+					log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
+
+		}
+
+		return null;
 	}
 
 	@Override

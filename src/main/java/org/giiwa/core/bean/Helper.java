@@ -1986,6 +1986,14 @@ public class Helper implements Serializable {
 			}
 		}
 
+		public List<JSON> aggregate(String name, String group) {
+			if (dao != null) {
+				return dao.aggregate(this, X.split(name, "[,]"), X.split(group, "[,]"));
+			} else {
+				return helper.aggregate(table, X.split(name, "[,]"), this, X.split(group, "[,]"), Helper.DEFAULT);
+			}
+		}
+
 		public List<JSON> min(String name, String group) {
 			if (dao != null) {
 				return dao.min(this, name, X.split(group, "[,]"));
@@ -3088,6 +3096,8 @@ public class Helper implements Serializable {
 
 		List<?> distinct(String table, String name, W q, String db);
 
+		List<JSON> aggregate(String table, String[] func, W q, String[] group, String db);
+
 		List<JSON> listTables(String db);
 
 		void close();
@@ -3140,6 +3150,19 @@ public class Helper implements Serializable {
 			for (DBHelper h : customs) {
 				if (h.getDB(dbName) != null) {
 					return h.sum(tableName, q, name, group, dbName);
+				}
+			}
+		}
+		return null;
+	}
+
+	public static List<JSON> aggregate(String tableName, W q, String[] func, String[] group, String dbName) {
+		if (primary != null && primary.getDB(dbName) != null) {
+			return primary.aggregate(tableName, func, q, group, dbName);
+		} else if (!X.isEmpty(customs)) {
+			for (DBHelper h : customs) {
+				if (h.getDB(dbName) != null) {
+					return h.aggregate(tableName, func, q, group, dbName);
 				}
 			}
 		}

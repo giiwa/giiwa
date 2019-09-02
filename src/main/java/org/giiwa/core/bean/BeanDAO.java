@@ -493,6 +493,10 @@ public class BeanDAO<I, T extends Bean> {
 		return Helper.sum(this.tableName(), q, name, group, this.dbName());
 	}
 
+	public List<JSON> aggregate(W q, String[] name, String[] group) {
+		return Helper.aggregate(this.tableName(), q, name, group, this.dbName());
+	}
+
 	public List<JSON> min(W q, String name, String[] group) {
 		return Helper.min(this.tableName(), q, name, group, this.dbName());
 	}
