@@ -1381,6 +1381,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param db
 	 * @return
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<JSON> count(String collection, W q, String[] name, String db) {
 
@@ -1425,7 +1426,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<JSON> l2 = JSON.createList();
 				for (Document d : a1) {
-					l2.add(JSON.fromObject(d));
+					JSON j1 = JSON.fromObject(d);
+					Object o = j1.remove("_id");
+					if (o instanceof Map) {
+						j1.putAll((Map) o);
+						l2.add(j1);
+					}
 				}
 
 				if (log.isDebugEnabled())
@@ -1445,6 +1451,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	/**
 	 * 
 	 * @param table the table name
@@ -1509,7 +1516,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<JSON> l2 = JSON.createList();
 				for (Document d : a1) {
-					l2.add(JSON.fromObject(d));
+					JSON j1 = JSON.fromObject(d);
+					Object o = j1.remove("_id");
+					if (o instanceof Map) {
+						j1.putAll((Map) o);
+						l2.add(j1);
+					}
 				}
 
 				if (log.isDebugEnabled())
@@ -1527,6 +1539,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<JSON> sum(String table, W q, String name, String[] group, String db) {
 
@@ -1571,7 +1584,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<JSON> l2 = JSON.createList();
 				for (Document d : a1) {
-					l2.add(JSON.fromObject(d));
+					JSON j1 = JSON.fromObject(d);
+					Object o = j1.remove("_id");
+					if (o instanceof Map) {
+						j1.putAll((Map) o);
+						l2.add(j1);
+					}
 				}
 
 				if (log.isDebugEnabled())
@@ -1589,6 +1607,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<JSON> max(String table, W q, String name, String[] group, String db) {
 		TimeStamp t = TimeStamp.create();
@@ -1632,7 +1651,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<JSON> l2 = JSON.createList();
 				for (Document d : a1) {
-					l2.add(JSON.fromObject(d));
+					JSON j1 = JSON.fromObject(d);
+					Object o = j1.remove("_id");
+					if (o instanceof Map) {
+						j1.putAll((Map) o);
+						l2.add(j1);
+					}
 				}
 
 				if (log.isDebugEnabled())
@@ -1651,6 +1675,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<JSON> min(String table, W q, String name, String[] group, String db) {
 		TimeStamp t = TimeStamp.create();
@@ -1694,7 +1719,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<JSON> l2 = JSON.createList();
 				for (Document d : a1) {
-					l2.add(JSON.fromObject(d));
+					JSON j1 = JSON.fromObject(d);
+					Object o = j1.remove("_id");
+					if (o instanceof Map) {
+						j1.putAll((Map) o);
+						l2.add(j1);
+					}
 				}
 
 				if (log.isDebugEnabled())
@@ -1712,6 +1742,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<JSON> avg(String table, W q, String name, String[] group, String db) {
 		TimeStamp t = TimeStamp.create();
@@ -1755,7 +1786,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 				List<JSON> l2 = JSON.createList();
 				for (Document d : a1) {
-					l2.add(JSON.fromObject(d));
+					JSON j1 = JSON.fromObject(d);
+					Object o = j1.remove("_id");
+					if (o instanceof Map) {
+						j1.putAll((Map) o);
+						l2.add(j1);
+					}
 				}
 
 				if (log.isDebugEnabled())
