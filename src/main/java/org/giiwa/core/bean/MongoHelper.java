@@ -163,10 +163,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 				String url = conf.getString("mongo[" + database + "].url", X.EMPTY);
 				String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
-
+				int conns = conf.getInt("mongo[" + database + "].conns", 50);
+				int timeout = conf.getInt("mongo[" + database + "].timeout", 30000);
+				
 				if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
 
-					g = getDB(url, dbname, conf.getInt("mongo[" + database + "].conns", 50));
+					g = getDB(url, dbname, conns, timeout);
 
 					mongo.put(database, g);
 				}
@@ -178,7 +180,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	private MongoClient client = null;
 
-	private MongoDatabase getDB(String url, String db, int conns) {
+	private MongoDatabase getDB(String url, String db, int conns, int timeout) {
 		url = url.trim();
 		db = db.trim();
 
@@ -186,10 +188,11 @@ public class MongoHelper implements Helper.DBHelper {
 			url = "mongodb://" + url;
 		}
 
-		MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(30000)
-				.serverSelectionTimeout(30000).maxConnectionIdleTime(30000).connectionsPerHost(conns);
+		MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(timeout)
+				.serverSelectionTimeout(timeout).maxConnectionIdleTime(10000).connectionsPerHost(conns);
 		client = new MongoClient(new MongoClientURI(url, opts));
 		return client.getDatabase(db);
+		
 	}
 
 	/**
@@ -1180,7 +1183,7 @@ public class MongoHelper implements Helper.DBHelper {
 		String dbname = url.substring(i + 1);
 		url = url.substring(0, i);
 		MongoHelper h = new MongoHelper();
-		MongoDatabase g = h.getDB(url, dbname, 10);
+		MongoDatabase g = h.getDB(url, dbname, 10, 30000);
 		h.gdb = g;
 		return h;
 	}
@@ -1469,6 +1472,8 @@ public class MongoHelper implements Helper.DBHelper {
 		BasicDBObject query = q.query();
 		BasicDBObject order = q.order();
 
+		List<Bson> l1 = new ArrayList<Bson>();
+
 		try {
 			if (X.isEmpty(table)) {
 				log.error("bad table=" + table, new Exception("bad table=" + table));
@@ -1482,8 +1487,6 @@ public class MongoHelper implements Helper.DBHelper {
 
 			db1 = getCollection(db, table);
 			if (db1 != null) {
-
-				List<Bson> l1 = new ArrayList<Bson>();
 
 				if (!query.isEmpty()) {
 					l1.add(new BasicDBObject().append("$match", query));
@@ -1533,9 +1536,9 @@ public class MongoHelper implements Helper.DBHelper {
 				return l2;
 			}
 		} catch (Exception e) {
-			log.error("query=" + query + ", order=" + order, e);
+			log.error("l1=" + l1 + ", query=" + query, e);
 
-			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
+			GLog.dblog.error(table, "group", "l1=" + l1, e, null, db);
 
 		}
 
