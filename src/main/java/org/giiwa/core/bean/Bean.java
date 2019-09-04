@@ -636,11 +636,10 @@ public class Bean implements Serializable {
 
 	public boolean contains(V v) {
 		for (String name : v.names()) {
-			if (X.isSame("updated", name) || X.isSame("created", name))
-				continue;
 			Object v0 = get(name);
 			Object v1 = v.value(name);
 			if (!X.isSame(v0, v1)) {
+				log.debug("name=" + name + ", v0=" + v0 + ", v1=" + v1);
 				return false;
 			}
 		}

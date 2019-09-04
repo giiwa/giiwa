@@ -892,4 +892,17 @@ public final class X {
 		return isCauseBy(e.getCause(), regex);
 	}
 
+	public static String join(List<?> l1, String deli) {
+		if (X.isEmpty(l1))
+			return X.EMPTY;
+
+		StringBuilder sb = new StringBuilder();
+		for (Object o : l1) {
+			if (sb.length() > 0)
+				sb.append(deli);
+			sb.append(X.isEmpty(o) ? X.EMPTY : o);
+		}
+		return sb.toString();
+	}
+
 }
