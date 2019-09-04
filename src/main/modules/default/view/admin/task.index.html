@@ -50,10 +50,10 @@
 			<td style="color: #999"><i class='icon-clock'></i>$!f.state</td> 
 			#end
 			<td>$f.remain</td>
-			<td>$f.delay</td>
-			<td>$f.runtime</td>
-			<td>$f.costing</td>
-			<td>$f.duration</td>
+			<td>#if($f.delay>-1)$f.delay#end</td>
+			<td>#if($f.runtime>0)$f.runtime#end</td>
+			<td>#if($f.costing>0)$f.costing#end</td>
+			<td>#if($f.duration>0)$f.duration#end</td>
 			<td>$!f.runtimes</td>
 		</tr>
 		#end
