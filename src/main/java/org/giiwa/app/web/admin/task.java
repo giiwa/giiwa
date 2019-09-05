@@ -87,7 +87,7 @@ public class task extends Model {
 
 					if (ss != null && ss.length > 0) {
 						for (StackTraceElement e : ss) {
-							
+
 							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("<br/>");
 						}
 					}
