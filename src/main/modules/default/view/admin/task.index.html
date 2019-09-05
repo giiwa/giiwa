@@ -47,7 +47,13 @@
 				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill"><i class='icon-cancel-circle'></i></a>
 			</td> 
 			#else
-			<td style="color: #999"><i class='icon-clock'></i>$!f.state</td> 
+			<td style="color: #999" class="a">
+				<i class='icon-clock'></i>
+				$!f.state
+				#if($f.state == 'pending')
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill"><i class='icon-cancel-circle'></i></a>
+				#end
+			</td> 
 			#end
 			<td>$f.remain</td>
 			<td>#if($f.delay>-1)$f.delay#end</td>

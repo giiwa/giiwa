@@ -1555,6 +1555,13 @@ public abstract class Task implements Runnable, Serializable {
 			if (user == null)
 				return false;
 
+			String name = task.getName();
+			String forbidden = Config.getConf().getString("task.forbidden", X.EMPTY);
+			if (!X.isEmpty(forbidden) && name.matches(forbidden)) {
+				log.info("the task[" + name + "] is forbidden in this node");
+				return false;
+			}
+
 			if (Task.tasksInQueue() > user.getCorePoolSize()) {
 				log.error("too many task less threads, pending=" + Task.tasksInQueue() + ", poolsize="
 						+ user.getCorePoolSize(), new Exception("the task will not be scheduled"));
