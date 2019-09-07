@@ -28,6 +28,7 @@ class Optimizer implements Helper.IOptimizer {
 					List<LinkedHashMap<String, Integer>> l1 = w.sortkeys();
 
 					if (l1 != null) {
+						
 						for (LinkedHashMap<String, Integer> keys : l1) {
 							StringBuilder sb = new StringBuilder();
 							for (String s : keys.keySet()) {

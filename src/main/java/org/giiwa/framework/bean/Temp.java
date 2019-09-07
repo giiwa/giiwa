@@ -29,7 +29,6 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
@@ -138,7 +137,7 @@ public class Temp {
 		return sb.toString();
 	}
 
-	public <V extends Bean> Exporter<V> export(String charset, Exporter.FORMAT format) {
+	public <V> Exporter<V> export(String charset, Exporter.FORMAT format) {
 		File f = this.getLocalFile();
 		if (f.exists()) {
 			f.delete();
@@ -148,12 +147,12 @@ public class Temp {
 		return export(f, charset, format);
 	}
 
-	public <V extends Bean> Exporter<V> export(File f, String charset, Exporter.FORMAT format) {
+	public <V> Exporter<V> export(File f, String charset, Exporter.FORMAT format) {
 		Exporter<V> e = Exporter.create(f, charset, format);
 		return e;
 	}
 
-	public static class Exporter<V extends Bean> {
+	public static class Exporter<V> {
 		public enum FORMAT {
 			csv
 		}
@@ -162,7 +161,7 @@ public class Temp {
 		FORMAT format;
 		Callable<Object[], V> cols = null;
 
-		private static <V extends Bean> Exporter<V> create(File file, String charset, FORMAT format) {
+		private static <V> Exporter<V> create(File file, String charset, FORMAT format) {
 			try {
 				Exporter<V> s = new Exporter<V>();
 				s.out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset));
@@ -186,19 +185,23 @@ public class Temp {
 		}
 
 		public void print(String... cols) throws IOException {
+			print((Object[])cols);
+		}
+
+		public void print(Object... cols) throws IOException {
 			if (out == null) {
 				throw new IOException("out is null?");
 			}
 
 			for (int i = 0; i < cols.length; i++) {
-				String s = cols[i];
+				Object s = cols[i];
 				if (i > 0) {
 					out.write(",");
 				}
 				out.write("\"");
 				if (s != null) {
-					s = s.replaceAll("\"", "\\\"").replaceAll("\r\n", "");
-					out.write(s);
+					s = s.toString().replaceAll("\"", "\\\"").replaceAll("\r\n", "");
+					out.write(s.toString());
 				}
 				out.write("\"");
 			}

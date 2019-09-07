@@ -775,7 +775,7 @@ public class Helper implements Serializable {
 			return this;
 		}
 
-		W groupby(String groupby) {
+		public W groupby(String groupby) {
 			this.groupby = groupby;
 			return this;
 		}
@@ -1000,7 +1000,19 @@ public class Helper implements Serializable {
 		 * @see java.lang.Object.toString()
 		 */
 		public String toString() {
-			return elist == null ? X.EMPTY : ("{" + where() + "}=>" + Helper.toString(args()) + ", sort=" + order);
+			if (elist == null)
+				return X.EMPTY;
+
+			StringBuilder sb = new StringBuilder();
+			sb.append("{" + where() + "}=>" + Helper.toString(args()));
+			if (!X.isEmpty(order)) {
+				sb.append(", sort=" + order);
+			}
+			if (!X.isEmpty(groupby)) {
+				sb.append(", groupby=" + groupby);
+			}
+
+			return sb.toString();
 		}
 
 		/**
@@ -1227,6 +1239,7 @@ public class Helper implements Serializable {
 		 * @return List keys
 		 */
 		List<LinkedHashMap<String, Integer>> sortkeys() {
+
 			List<LinkedHashMap<String, Integer>> l1 = new ArrayList<LinkedHashMap<String, Integer>>();
 
 			if (!X.isEmpty(elist))

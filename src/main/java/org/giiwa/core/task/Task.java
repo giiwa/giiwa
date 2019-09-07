@@ -492,6 +492,8 @@ public abstract class Task implements Runnable, Serializable {
 				result(null); // killed
 
 				// interrupt the thread which may wait a resource or timer;
+				log.warn("stop task=" + this.getName());
+
 				who.interrupt();
 
 				// schedule the run a time to clear the resource
