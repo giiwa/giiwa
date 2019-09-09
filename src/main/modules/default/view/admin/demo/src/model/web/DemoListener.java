@@ -12,7 +12,7 @@ public class DemoListener implements IListener {
 	static Log log = LogFactory.getLog(DemoListener.class);
 
 	public void onInit(Configuration conf, Module m) {
-		log.info("webdemo is initing...");
+		log.warn("webdemo is initing...");
 
 		m.setLicense(License.LICENSE.free, "modulecode");
 
@@ -21,14 +21,14 @@ public class DemoListener implements IListener {
 	@Override
 	public void onStart(Configuration conf, Module m) {
 		// TODO Auto-generated method stub
-		log.info("webdemo is starting ...");
+		log.warn("webdemo is starting ...");
 
 	}
 
 	@Override
 	public void onStop() {
 		// TODO Auto-generated method stub
-		log.info("webdemo is stopping ...");
+		log.warn("webdemo is stopping ...");
 
 	}
 

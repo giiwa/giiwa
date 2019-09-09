@@ -1591,6 +1591,9 @@ public abstract class Task implements Runnable, Serializable {
 					// schedule this task, possible this task is in running
 					// queue, if so, while drop one when start this one in
 					// thread
+					
+					log.info("reschedule the task:" + task);
+					
 					pendingQueue.remove(task);
 					if (task.sf != null) {
 						if (!task.sf.cancel(false)) {
@@ -1598,7 +1601,6 @@ public abstract class Task implements Runnable, Serializable {
 						}
 						task.sf = null;
 					}
-					log.warn("reschedule the task:" + task);
 				}
 
 				task.node = Local.id();

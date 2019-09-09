@@ -73,7 +73,7 @@ public class DefaultListener implements IListener {
 
 	public void onInit(Configuration conf, Module module) {
 
-		log.info("giiwa is initing...");
+		log.warn("giiwa is initing...");
 
 		try {
 
@@ -81,7 +81,7 @@ public class DefaultListener implements IListener {
 				public void run() {
 					// stop all task
 
-					log.info("giiwa is stopping");
+					log.warn("giiwa is stopping");
 
 					Task.stopAll(true);
 
@@ -157,7 +157,7 @@ public class DefaultListener implements IListener {
 			log.error(e.getMessage(), e);
 		}
 
-		log.info("giiwa is inited");
+		log.warn("giiwa is inited");
 
 	}
 
@@ -169,7 +169,7 @@ public class DefaultListener implements IListener {
 	 */
 	public void onStart(Configuration conf, Module module) {
 
-		log.info("giiwa is starting...");
+		log.warn("giiwa is starting...");
 
 		Task.schedule(() -> {
 
@@ -183,13 +183,13 @@ public class DefaultListener implements IListener {
 
 		});
 
-		log.info("giiwa is started");
+		log.warn("giiwa is started");
 
 	}
 
 	@Override
 	public void onStop() {
-		log.info("giiwa is stopped");
+		log.warn("giiwa is stopped");
 	}
 
 	/**
