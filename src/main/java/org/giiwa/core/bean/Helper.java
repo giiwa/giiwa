@@ -1110,12 +1110,17 @@ public class Helper implements Serializable {
 		/**
 		 * set the name and parameter with "and" and "EQ" conditions.
 		 *
-		 * @param name the name
-		 * @param v    the v
+		 * @param name   the name
+		 * @param v      the v
+		 * @param boost, the weight of the
 		 * @return W
 		 */
 		public W and(String name, Object v) {
-			return and(name, v, OP.eq);
+			return and(name, v, 1);
+		}
+
+		public W and(String name, Object v, int boost) {
+			return and(name, v, OP.eq, boost);
 		}
 
 		/**
@@ -1291,9 +1296,13 @@ public class Helper implements Serializable {
 		}
 
 		public W and(String[] name, Object v, OP op) {
+			return and(name, v, op, 1);
+		}
+
+		public W and(String[] name, Object v, OP op, int boost) {
 			W q = W.create();
 			for (String s : name) {
-				q.or(s, v, op);
+				q.or(s, v, op, boost);
 			}
 			return and(q);
 		}
@@ -1316,18 +1325,22 @@ public class Helper implements Serializable {
 		}
 
 		public W or(String name, Object v, String op) {
+			return or(name, v, op);
+		}
+
+		public W or(String name, Object v, String op, int boost) {
 			if (X.isSame(">", op) || X.isSame("gt", op)) {
-				return or(name, v, W.OP.gt);
+				return or(name, v, W.OP.gt, boost);
 			} else if (X.isSame(">=", op) || X.isSame("gte", op)) {
-				return or(name, v, W.OP.gte);
+				return or(name, v, W.OP.gte, boost);
 			} else if (X.isSame("<", op) || X.isSame("lt", op)) {
-				return or(name, v, W.OP.lt);
+				return or(name, v, W.OP.lt, boost);
 			} else if (X.isSame("<=", op) || X.isSame("lte", op)) {
-				return or(name, v, W.OP.lte);
+				return or(name, v, W.OP.lte, boost);
 			} else if (X.isSame("!=", op) || X.isSame("neq", op)) {
-				return or(name, v, W.OP.neq);
+				return or(name, v, W.OP.neq, boost);
 			} else if (X.isSame("like", op)) {
-				return or(name, v, W.OP.like);
+				return or(name, v, W.OP.like, boost);
 			}
 			return this;
 		}
@@ -1340,8 +1353,12 @@ public class Helper implements Serializable {
 		 * @param op   the operation
 		 * @return the W
 		 */
-		@SuppressWarnings("rawtypes")
 		public W and(String name, Object v, OP op) {
+			return and(name, v, op, 1);
+		}
+
+		@SuppressWarnings("rawtypes")
+		public W and(String name, Object v, OP op, int boost) {
 
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
@@ -1376,8 +1393,8 @@ public class Helper implements Serializable {
 				if (v instanceof W) {
 					v = ((W) v).query();
 				}
-				elist.add(new Entity(name, v, op, AND));
-				queryList.add(new Entity(name, v, op, AND));
+				elist.add(new Entity(name, v, op, AND, boost));
+				queryList.add(new Entity(name, v, op, AND, boost));
 			}
 			return this;
 		}
@@ -1400,8 +1417,12 @@ public class Helper implements Serializable {
 		}
 
 		public W or(String[] name, Object v, OP op) {
+			return or(name, v, op, 1);
+		}
+
+		public W or(String[] name, Object v, OP op, int boost) {
 			for (String s : name) {
-				this.or(s, v, op);
+				this.or(s, v, op, boost);
 			}
 			return this;
 		}
@@ -1414,7 +1435,11 @@ public class Helper implements Serializable {
 		 * @return W
 		 */
 		public W or(String name, Object v) {
-			return or(name, v, OP.eq);
+			return or(name, v, 1);
+		}
+
+		public W or(String name, Object v, int boost) {
+			return or(name, v, OP.eq, boost);
 		}
 
 		/**
@@ -1425,8 +1450,12 @@ public class Helper implements Serializable {
 		 * @param op   the op
 		 * @return W
 		 */
-		@SuppressWarnings("rawtypes")
 		public W or(String name, Object v, OP op) {
+			return or(name, v, op, 1);
+		}
+
+		@SuppressWarnings("rawtypes")
+		public W or(String name, Object v, OP op, int boost) {
 
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
@@ -1460,8 +1489,8 @@ public class Helper implements Serializable {
 				if (v instanceof W) {
 					v = ((W) v).query();
 				}
-				elist.add(new Entity(name, v, op, OR));
-				queryList.add(new Entity(name, v, op, OR));
+				elist.add(new Entity(name, v, op, OR, boost));
+				queryList.add(new Entity(name, v, op, OR, boost));
 			}
 			return this;
 		}
@@ -1576,6 +1605,7 @@ public class Helper implements Serializable {
 			public Object value;
 			public OP op; // operation EQ, GT, ...
 			public int cond; // condition AND, OR
+			public int boost = 1;//
 
 			public int getCondition() {
 				return cond;
@@ -1605,7 +1635,7 @@ public class Helper implements Serializable {
 			 */
 			public static Entity fromJSON(JSON j1) {
 				return new Entity(j1.getString("name"), j1.get("value"), OP.valueOf(j1.getString("op")),
-						j1.getInt("cond"));
+						j1.getInt("cond"), j1.getInt("boost", 1));
 			}
 
 			public BasicDBObject query() {
@@ -1672,7 +1702,7 @@ public class Helper implements Serializable {
 			 * @return the entity
 			 */
 			public Entity copy() {
-				return new Entity(name, value, op, cond);
+				return new Entity(name, value, op, cond, boost);
 			}
 
 			public String where(Map<String, String> tansfers) {
@@ -1739,11 +1769,12 @@ public class Helper implements Serializable {
 				return tostring;
 			}
 
-			private Entity(String name, Object v, OP op, int cond) {
+			private Entity(String name, Object v, OP op, int cond, int boost) {
 				this.name = name;
 				this.op = op;
 				this.cond = cond;
 				this.value = v;
+				this.boost = boost;
 			}
 
 			@Override
@@ -1818,7 +1849,7 @@ public class Helper implements Serializable {
 		 * @return the w
 		 */
 		public W sort(String name, int i) {
-			order.add(new Entity(name, i, OP.eq, AND));
+			order.add(new Entity(name, i, OP.eq, AND, 0));
 			return this;
 		}
 
