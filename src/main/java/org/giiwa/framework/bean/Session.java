@@ -223,14 +223,13 @@ public class Session implements Serializable {
 	}
 
 	public static void expired(long uid) {
-		int s = 0;
 		W q = W.create().and("uid", uid).sort("sid", 1);
-		Beans<SID> l1 = SID.dao.load(q, s, 100);
+		Beans<SID> l1 = SID.dao.load(q, 0, 100);
 		while (l1 != null && !l1.isEmpty()) {
 			for (SID e : l1) {
 				Session.delete(e.sid);
 			}
-			l1 = SID.dao.load(q, s, 100);
+			l1 = SID.dao.load(q, 0, 100);
 		}
 
 	}

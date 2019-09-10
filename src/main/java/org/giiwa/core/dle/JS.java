@@ -4,12 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.script.Bindings;
-import javax.script.ScriptContext;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.UID;
+import org.giiwa.core.task.Task;
 
 public class JS {
 
@@ -21,27 +25,66 @@ public class JS {
 
 	public static Object run(String js, Map<String, Object> params) throws Exception {
 
-		ScriptEngineManager manager = new ScriptEngineManager();
-		ScriptEngine engine = manager.getEngineByName("JavaScript");
-
-		Bindings bs = engine.createBindings();
+		_E e = compile(js);
+		Bindings bs = e.engine.createBindings();
 		if (params != null) {
 			bs.putAll(params);
 		}
-		bs.put("log", log);
 
-		engine.setBindings(bs, ScriptContext.ENGINE_SCOPE);
-
-		return engine.eval(js);
+		return e.compiled.eval(bs);
 
 	}
 
+	private synchronized static _E compile(String code) throws ScriptException {
+		String id = UID.id(code);
+		_E e = cached.get(id);
+		if (e == null) {
+			ScriptEngineManager manager = new ScriptEngineManager();
+			ScriptEngine engine = manager.getEngineByName("JavaScript");
+			e = new _E();
+			e.compiled = ((Compilable) engine).compile(code);
+			e.engine = engine;
+			cached.put(id, e);
+		}
+		return e;
+	}
+
+	private static Map<String, _E> cached = new HashMap<String, _E>();
+
+	static class _E {
+		ScriptEngine engine;
+		CompiledScript compiled;
+	}
+
 	public static void main(String[] args) {
-		String s = "log.debug(\"aaaaaa\");a = b + 1";
-		Map<String, Object> p = new HashMap<String, Object>();
+
+		Task.init(10);
+
+		String s = "a = 0;for(i=0;i<10000;i++) {a+=b;}";
 		try {
-			p.put("b", 10);
-			System.out.println(run(s, p));
+			Map<String, Object> p1 = new HashMap<String, Object>();
+			p1.put("b", 10);
+
+			Map<String, Object> p2 = new HashMap<String, Object>();
+			p2.put("b", 5);
+
+			Task.schedule(() -> {
+				try {
+					System.out.println(run(s, p1));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			});
+
+			Task.schedule(() -> {
+				try {
+					System.out.println(run(s, p2));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			});
 
 			Object r = calculate("2+1.0");
 			System.out.println(r + ", " + r.getClass());

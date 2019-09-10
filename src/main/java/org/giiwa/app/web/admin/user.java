@@ -199,6 +199,7 @@ public class user extends Model {
 			try {
 				String password = this.getString("password");
 				if (!X.isEmpty(password)) {
+
 					User.update(id, V.create("password", password));
 
 					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login,
