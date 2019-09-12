@@ -37,6 +37,7 @@ import org.giiwa.core.conf.Local;
 import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
+import org.giiwa.framework.web.Language;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
 import org.giiwa.mq.MQ.Mode;
@@ -575,7 +576,7 @@ public abstract class Task implements Runnable, Serializable {
 					return this;
 				}
 
-				this.parent = Thread.currentThread().getName();
+				this.parent = (String) Language.getLanguage().truncate(Thread.currentThread().getName(), 30);
 
 				if (this.getGlobal()) {
 					GlobalRunner.schedule(this, msec);
@@ -1591,9 +1592,9 @@ public abstract class Task implements Runnable, Serializable {
 					// schedule this task, possible this task is in running
 					// queue, if so, while drop one when start this one in
 					// thread
-					
+
 					log.info("reschedule the task:" + task);
-					
+
 					pendingQueue.remove(task);
 					if (task.sf != null) {
 						if (!task.sf.cancel(false)) {

@@ -58,8 +58,13 @@ public class Language {
 	 */
 	private static Map<String, Language> locales = new HashMap<String, Language>();
 
+	public static Language inst = null;
+
 	public static Language getLanguage() {
-		return getLanguage(Module.home == null ? X.EMPTY : Global.getString("language", "zh_cn"));
+		if (inst == null)
+			inst = getLanguage(Module.home == null ? X.EMPTY : Global.getString("language", "zh_cn"));
+
+		return inst;
 	}
 
 	public String getLocale() {

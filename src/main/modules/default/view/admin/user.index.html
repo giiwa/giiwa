@@ -72,13 +72,13 @@
 </div>
 
 <script>
-function _delete(id, o) {
+function _delete(id) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
 		$.post('/admin/user/delete?__node=$!__node', {id:id}, function(d){
 			giiwa.processing.hide();
 			if(d.state == 200) {
-				$(o).parent().parent().remove();
+				giiwa.reload();
 			} else if(d.message){
 				giiwa.error(d.message);
 			}

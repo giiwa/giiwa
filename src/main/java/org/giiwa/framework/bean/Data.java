@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
+import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
@@ -86,6 +87,10 @@ public class Data extends Bean {
 	 */
 	public static int update(String table, W q, JSON data) {
 		return Data.update(table, q, V.create().copy(data));
+	}
+
+	public static int update(String table, Object id, V data) {
+		return update(table, W.create(X.ID, id), data);
 	}
 
 	/**

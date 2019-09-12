@@ -710,7 +710,7 @@ public class Model {
 	 * 
 	 * @param url the url
 	 */
-	final public void forward(String url) {
+	public void forward(String url) {
 		req.setAttribute("sid", sid());
 		Controller.dispatch(url, req, resp, method.name);
 	}
