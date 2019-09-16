@@ -756,7 +756,7 @@ name.org.giiwa.framework.bean.User=GI-用户
 name.org.giiwa.framework.bean.License=GI-许可证
 name.org.giiwa.framework.bean.AccessLog=GI-访问日志
 name.org.giiwa.framework.bean.m._Memory=GI-内存监测
-name.org.giiwa.framework.bean.Session$SID==GI-用户登录信息
+name.org.giiwa.framework.bean.Session$SID=GI-用户登录信息
 table.name=表名
 name.org.giiwa.framework.bean.Node=GI-集群节点
 name.org.giiwa.framework.bean.Portlet=GI-小窗口

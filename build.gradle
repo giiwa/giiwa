@@ -52,6 +52,9 @@ dependencies {
     compile group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5.8'
     compile group: 'org.apache.httpcomponents', name: 'httpmime', version:'4.5.8'
     compile group: 'org.apache.httpcomponents', name: 'httpcore', version:'4.4.11'
+//    compile ('org.ehcache:ehcache:3.8.0'){
+//    	exclude group: 'org.slf4j',module: 'slf4j-api'
+//    }
     compile ('org.apache.activemq:activemq-client:5.15.9') {
     	exclude group: 'org.slf4j',module: 'slf4j-api'
     }
