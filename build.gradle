@@ -74,6 +74,7 @@ dependencies {
     compile ('com.whalin:Memcached-Java-Client:3.0.2'){
     	exclude group: 'org.slf4j',module: 'slf4j-api'
     }
+    compile group: 'org.rosuda.REngine', name: 'Rserve', version:'1.8.1'
     compile group: 'javax.mail', name: 'mail', version:'1.4'
     compile group: 'commons-fileupload', name: 'commons-fileupload', version:'1.4'
     compile group: 'postgresql', name: 'postgresql', version:'9.1-901-1.jdbc4'

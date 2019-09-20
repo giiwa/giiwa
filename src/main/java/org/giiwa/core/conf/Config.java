@@ -156,25 +156,30 @@ public final class Config {
 
 //			System.out.println("conf=" + conf);
 
-			Iterator it = conf.getKeys();
+			Iterator<String> it = conf.getKeys();
 			while (it.hasNext()) {
-				Object name = it.next();
-				Object v = conf.getProperty(name.toString());
+				String name = it.next();
+				Object v = conf.getProperty(name);
 				if (v != null && v instanceof String) {
 					String s = (String) v;
 
 					int i = s.indexOf("${");
-					while (i > -1) {
-						int j = s.indexOf("}", i + 2);
-						String n = s.substring(i + 2, j);
-						String s1 = System.getProperty(n);
+					if (i > -1) {
+						while (i > -1) {
+							int j = s.indexOf("}", i + 2);
+							String n = s.substring(i + 2, j);
+							String s1 = System.getProperty(n);
 
-						if (s1 != null) {
-							s = s.substring(0, i) + s1 + s.substring(j + 1);
-							i = s.indexOf("${");
+							if (s1 != null) {
+								s = s.substring(0, i) + s1 + s.substring(j + 1);
+								i = s.indexOf("${");
+							}
+						}
+						if (s.indexOf("$") == -1) {
+							conf.setProperty(name, s);
+							it = conf.getKeys();
 						}
 					}
-					conf.setProperty(name.toString(), s);
 				}
 			}
 

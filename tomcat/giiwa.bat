@@ -1,5 +1,4 @@
 @echo off
-echo off
 echo "Starting giiwa ..."
 
 title Giiwa Daemon
@@ -14,7 +13,7 @@ if ERRORLEVEL 0 goto sleep
 goto sleep
 
 :starting
-call %~dp0\bin\startup.bat
+start /b %~dp0\bin\startup.bat
 ping 0.0.0.0 -n 6 >NUL
 
 :sleep

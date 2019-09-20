@@ -185,7 +185,7 @@ public class Temp {
 		}
 
 		public void print(String... cols) throws IOException {
-			print((Object[])cols);
+			print((Object[]) cols);
 		}
 
 		public void print(Object... cols) throws IOException {

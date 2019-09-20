@@ -92,15 +92,21 @@
 								"classes": "icon-drawer"
 							},
 							{
+								"name": "menu.counter",
+								"load": "/admin/counter",
+								"seq": 60,
+								"classes": "icon-trending-up"
+							},
+							{
 								"name": "menu.database",
 								"load": "/admin/database",
-								"seq": 60,
+								"seq": 70,
 								"classes": "icon-database"
 							},
 							{
 								"name": "menu.i18n",
 								"load": "/admin/i18n",
-								"seq": 70,
+								"seq": 80,
 								"access": "access.config.admin|access.config.module.admin",
 								"classes": "icon-magic-wand"
 							}
