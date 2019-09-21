@@ -47,14 +47,10 @@ public class Pool<E> {
 	/**
 	 * create a pool by initial, max and factory.
 	 *
-	 * @param <E>
-	 *            the element type
-	 * @param initial
-	 *            the initial
-	 * @param max
-	 *            the max
-	 * @param factory
-	 *            the factory
+	 * @param <E>     the element type
+	 * @param initial the initial
+	 * @param max     the max
+	 * @param factory the factory
 	 * @return the pool
 	 */
 	public static <E> Pool<E> create(int initial, int max, IPoolFactory<E> factory) {
@@ -88,17 +84,21 @@ public class Pool<E> {
 	/**
 	 * release a object to the pool.
 	 *
-	 * @param t
-	 *            the t
+	 * @param t the t
 	 */
 	public void release(E t) {
 		if (t == null) {
 			created--;
 		} else {
-			factory.cleanup(t);
 			try {
 				lock.lock();
-				list.add(t);
+				if (factory.cleanup(t)) {
+					list.add(t);
+				} else {
+					// the t is bad
+					factory.destroy(t);
+					created--;
+				}
 				door.signal();
 			} finally {
 				lock.unlock();
@@ -121,8 +121,7 @@ public class Pool<E> {
 	/**
 	 * get a object from the pool, if meet the max, then wait till timeout.
 	 *
-	 * @param timeout
-	 *            the timeout
+	 * @param timeout the timeout
 	 * @return the e
 	 */
 	public E get(long timeout) {
@@ -173,8 +172,7 @@ public class Pool<E> {
 	 * 
 	 * @author wujun
 	 *
-	 * @param <E>
-	 *            the Object
+	 * @param <E> the Object
 	 */
 	public interface IPoolFactory<E> {
 
@@ -188,16 +186,14 @@ public class Pool<E> {
 		/**
 		 * clean up a object after used.
 		 *
-		 * @param t
-		 *            the t
+		 * @param t the t
 		 */
-		public void cleanup(E t);
+		public boolean cleanup(E t);
 
 		/**
 		 * destroy a object.
 		 *
-		 * @param t
-		 *            the t
+		 * @param t the t
 		 */
 		public void destroy(E t);
 	}

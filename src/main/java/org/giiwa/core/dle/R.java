@@ -11,6 +11,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Pool;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Temp;
 import org.rosuda.REngine.REXP;
@@ -20,53 +21,126 @@ public class R {
 
 	static Log log = LogFactory.getLog(R.class);
 
-	public static Object run(String code) throws Exception {
-		return run(code, null);
+	private static int TIMEOUT = 10000;
+
+	public static R inst = new R();
+
+	public String run(String code) throws Exception {
+		return run(code, (List) null);
+	}
+
+//	public String run(String code, Object...vars ) throws Exception {
+//		jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) json;
+//	}
+
+	public String run(String code, String var, Object[] data) throws Exception {
+
+		RConnection c = pool.get(TIMEOUT);
+
+		if (c != null) {
+
+			try {
+				StringBuilder sb = new StringBuilder();
+				String func = "f" + c.hashCode();
+				sb.append(func + "<-function(){");
+				sb.append(var + " <- c(" + X.join(Arrays.asList(data), ",") + ");");
+
+				sb.append(code).append("};" + func + "();");
+
+				if (log.isDebugEnabled())
+					log.debug("R.run, code=" + sb);
+
+				REXP x = c.eval(sb.toString());
+
+				// remove the file
+				return x.asString();
+			} finally {
+				pool.release(c);
+			}
+		}
+		throw new Exception("timeout wait=" + TIMEOUT);
+
+	}
+
+	public String run(String code, String[] cols, List<JSON> data) throws Exception {
+
+		RConnection c = pool.get(TIMEOUT);
+
+		if (c != null) {
+
+			try {
+				StringBuilder sb = new StringBuilder();
+
+				String func = "f" + c.hashCode();
+
+				sb.append(func + "<-function(){");
+
+				for (String name : cols) {
+					List<Object> l1 = X.toArray(data, e -> {
+						return e.get(name);
+					});
+					sb.append(name + " <- c(" + X.join(l1, ",") + ");");
+				}
+
+				sb.append(code).append("};" + func + "();");
+				if (log.isDebugEnabled())
+					log.debug("R.run, code=" + sb);
+
+				REXP x = c.eval(sb.toString());
+
+				// remove the file
+				return x.asString();
+			} finally {
+				pool.release(c);
+			}
+		}
+
+		throw new Exception("timeout wait=" + TIMEOUT);
+
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static String run(String code, Map<String, List<Object[]>> params) throws Exception {
+	public String run(String code, List<Object[]> data) throws Exception {
 
 		RConnection c = pool.get(10000);
 
 		if (c != null) {
 
-			StringBuilder sb = new StringBuilder();
-//			sb.append("setwd('/')\r\n");
-
 			// save to file
 			List<Temp> l1 = new ArrayList<Temp>();
 			try {
-				if (!X.isEmpty(params)) {
-					for (String name : params.keySet()) {
-						Temp t = Temp.create(name + ".csv");
-						Temp.Exporter<Object> ex = t.export("UTF-8", Temp.Exporter.FORMAT.csv).createSheet((s, e) -> {
-							return (Object[]) e;
-						});
-						List l2 = params.get(name);
-						ex.print(l2);
-						ex.close();
+				StringBuilder sb = new StringBuilder();
+				String func = "f" + c.hashCode();
+//				sb.append("setwd('/')\r\n");
+				sb.append(func + "<-function(){");
+				if (!X.isEmpty(data)) {
+					Temp t = Temp.create(data + ".csv");
+					Temp.Exporter<Object> ex = t.export("UTF-8", Temp.Exporter.FORMAT.csv).createSheet((s, e) -> {
+						return (Object[]) e;
+					});
+					ex.print((List) data);
+					ex.close();
 
-						l1.add(t);
+					l1.add(t);
 
-						sb.append(name + " <- read.csv('" + t.getFile().getCanonicalPath() + "', header=T)\r\n");
+					sb.append("data <- read.csv('" + t.getFile().getCanonicalPath() + "', header=T);");
 
-					}
 				}
 
-				sb.append(code);
+				sb.append(code).append("};" + func + "();");
+
 				if (log.isDebugEnabled())
 					log.debug("R.run, code=" + sb);
-
-//				System.out.println(sb);
 
 				REXP x = c.eval(sb.toString());
 
 				// remove the file
-//				System.out.println(x);
 				return x.asString();
 
 			} finally {
+
+				pool.release(c);
+
 				if (l1 != null) {
 					for (Temp t : l1)
 						t.delete();
@@ -99,8 +173,8 @@ public class R {
 				}
 
 				@Override
-				public void cleanup(RConnection t) {
-
+				public boolean cleanup(RConnection t) {
+					return t.isConnected();
 				}
 
 				@Override
@@ -114,18 +188,22 @@ public class R {
 
 		Task.init(10);
 
-		String s = "mean(b)";
+//		String s = "mean(b)";
 		try {
 			Map<String, List<Object[]>> p1 = new HashMap<String, List<Object[]>>();
 			p1.put("b", Arrays.asList(X.split("10, 20, 30", "[, ]"), X.split("10, 20, 30", "[, ]"),
 					X.split("10, 20, 30", "[, ]")));
 
-			System.out.println(run("mean(1,2,4)", null));
+			System.out.println(inst.run("d<-c(1,2,3,4);mean(d)"));
 
 //			System.out.println(run(s, p1));
 
-			Object r = calculate("2*10");
+			Object r = inst.calculate("2*10;3+5");
 			System.out.println(r);
+
+			r = inst.run("mean(a)", "a", new Object[] { 1, 2, 3 });
+			System.out.println(r);
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -138,7 +216,7 @@ public class R {
 	 * @return the Object
 	 * @throws Exception the Exception
 	 */
-	public static String calculate(String f) throws Exception {
-		return run(f, null);
+	public String calculate(String f) throws Exception {
+		return run(f);
 	}
 }

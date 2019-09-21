@@ -87,7 +87,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			} else if (json instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
 
 				jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) json;
-
+				
 				j = JSON.create();
 				for (String key : m.keySet()) {
 					j.put(key, m.get(key));
