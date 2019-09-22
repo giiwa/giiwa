@@ -25,7 +25,7 @@ public class R {
 
 	public static R inst = new R();
 
-	public String run(String code) throws Exception {
+	public JSON run(String code) throws Exception {
 		return run(code, (List) null);
 	}
 
@@ -33,7 +33,7 @@ public class R {
 //		jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) json;
 //	}
 
-	public String run(String code, String var, Object[] data) throws Exception {
+	public JSON run(String code, String var, Object[] data) throws Exception {
 
 		RConnection c = pool.get(TIMEOUT);
 
@@ -52,8 +52,17 @@ public class R {
 
 				REXP x = c.eval(sb.toString());
 
+				String[] ss = x.asStrings();
+				if (ss == null || ss.length == 0) {
+					return JSON.create();
+				} else if (ss.length == 1) {
+					return JSON.create().append("data", ss[0]);
+				} else {
+					return JSON.create().append("data", ss);
+				}
+
 				// remove the file
-				return x.asString();
+//				return x.asStrings();
 			} finally {
 				pool.release(c);
 			}
@@ -62,7 +71,7 @@ public class R {
 
 	}
 
-	public String run(String code, String[] cols, List<JSON> data) throws Exception {
+	public JSON run(String code, String[] cols, List<JSON> data) throws Exception {
 
 		RConnection c = pool.get(TIMEOUT);
 
@@ -88,8 +97,16 @@ public class R {
 
 				REXP x = c.eval(sb.toString());
 
+				String[] ss = x.asStrings();
+				if (ss == null || ss.length == 0) {
+					return JSON.create();
+				} else if (ss.length == 1) {
+					return JSON.create().append("data", ss[0]);
+				} else {
+					return JSON.create().append("data", ss);
+				}
 				// remove the file
-				return x.asString();
+//				return x.asString();
 			} finally {
 				pool.release(c);
 			}
@@ -100,7 +117,7 @@ public class R {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String run(String code, List<Object[]> data) throws Exception {
+	public JSON run(String code, List<Object[]> data) throws Exception {
 
 		RConnection c = pool.get(10000);
 
@@ -134,8 +151,15 @@ public class R {
 
 				REXP x = c.eval(sb.toString());
 
-				// remove the file
-				return x.asString();
+				String[] ss = x.asStrings();
+				if (ss == null || ss.length == 0) {
+					return JSON.create();
+				} else if (ss.length == 1) {
+					return JSON.create().append("data", ss[0]);
+				} else {
+					return JSON.create().append("data", ss);
+				}
+//				return x.asString();
 
 			} finally {
 
@@ -194,15 +218,16 @@ public class R {
 			p1.put("b", Arrays.asList(X.split("10, 20, 30", "[, ]"), X.split("10, 20, 30", "[, ]"),
 					X.split("10, 20, 30", "[, ]")));
 
-			System.out.println(inst.run("d<-c(1,2,3,4);mean(d)"));
+			System.out.println(inst.run("d<-c(1,2,3,4);mean(d);"));
 
 //			System.out.println(run(s, p1));
 
-			Object r = inst.calculate("2*10;3+5");
+			JSON r = inst.run("mean(a)", "a", new Object[] { 1, 2, 3 });
 			System.out.println(r);
 
-			r = inst.run("mean(a)", "a", new Object[] { 1, 2, 3 });
-			System.out.println(r);
+			JSON j1 = inst.run(
+					"f509376766<-function(){x <- c(214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,90,93,90,106,214,214,214,214,214,214);fivenum(x)};f509376766();");
+			System.out.println(j1);
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -210,13 +235,4 @@ public class R {
 		}
 	}
 
-	/**
-	 * 
-	 * @param f the string such as: 10*20
-	 * @return the Object
-	 * @throws Exception the Exception
-	 */
-	public String calculate(String f) throws Exception {
-		return run(f);
-	}
 }
