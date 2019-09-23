@@ -51,7 +51,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.GLog;
 
 import com.mongodb.BasicDBObject;
 
@@ -202,10 +201,7 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "delete", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(p, c);
@@ -378,10 +374,8 @@ public class RDSHelper implements Helper.DBHelper {
 			return r.next();
 
 		} catch (SQLException e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "exists", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -474,10 +468,8 @@ public class RDSHelper implements Helper.DBHelper {
 			updated = p.executeUpdate();
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q + ",values=" + v.toString(), e);
 
-			GLog.dblog.error(table, "update", "v=" + v + ", q=" + q, e, null, db);
+			log.error(q + ",values=" + v.toString(), e);
 
 			if (X.isCauseBy(e, ".*Column.*not found.*")) {
 
@@ -595,10 +587,8 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(sql, e);
 
-			GLog.dblog.error(table, "load", "q=" + sql, e, null, db);
+			log.error(sql, e);
 
 		} finally {
 			close(r, p, c);
@@ -805,10 +795,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 			return list;
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "load", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -910,10 +898,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 			return list;
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q.toString(), e);
 
-			GLog.dblog.error(select, "load", "q=" + q, e, null, Helper.DEFAULT);
+			log.error(q.toString(), e);
 
 		} finally {
 			close(r, p, c);
@@ -1090,16 +1076,14 @@ public class RDSHelper implements Helper.DBHelper {
 
 					stat.execute(sql.toString());
 
-					GLog.dblog.info(table, "alter", sql.toString(), null, Helper.DEFAULT);
 				}
 			}
 
 			return true;
 
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 
-			GLog.dblog.error(table, "alter", e.getMessage(), e, null, Helper.DEFAULT);
+			log.error(e.getMessage(), e);
 
 		} finally {
 			close(stat);
@@ -1152,13 +1136,9 @@ public class RDSHelper implements Helper.DBHelper {
 			sql.append(" ) ");
 			stat.execute(sql.toString());
 
-			GLog.dblog.info(table, "create", sql.toString(), null, Helper.DEFAULT);
-
 			return true;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-
-			GLog.dblog.error(table, "create", e.getMessage(), e, null, Helper.DEFAULT);
 
 		} finally {
 			close(stat);
@@ -1253,10 +1233,8 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "getString", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -1393,10 +1371,8 @@ public class RDSHelper implements Helper.DBHelper {
 			}
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "getOne", "q=" + q, e, null, Helper.DEFAULT);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -1488,10 +1464,8 @@ public class RDSHelper implements Helper.DBHelper {
 			return list;
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "getList", "q=" + q, e, null, Helper.DEFAULT);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -1558,10 +1532,8 @@ public class RDSHelper implements Helper.DBHelper {
 				return b;
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
 
-			GLog.dblog.error(table, "load", "q=" + q, e, null, db);
+			log.error(e.getMessage(), e);
 
 		}
 		return null;
@@ -1633,10 +1605,8 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "count", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -1716,10 +1686,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 			return list;
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "distinct", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -1947,10 +1915,8 @@ public class RDSHelper implements Helper.DBHelper {
 			return p.executeUpdate();
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
 
-			GLog.dblog.error(table, "inc", "name=" + name + ", q=" + q, e, null, db);
+			log.error(q, e);
 
 			if (X.isCauseBy(e, ".*Column.*not found.*")) {
 
@@ -2000,8 +1966,6 @@ public class RDSHelper implements Helper.DBHelper {
 
 			// log.error(sb.toString(), e);
 			log.warn("indexes=" + getIndexes(table, db));
-
-			GLog.dblog.error(table, "index", "ss=" + ss, e, null, db);
 
 		} finally {
 			close(stat, c);
@@ -2130,10 +2094,8 @@ public class RDSHelper implements Helper.DBHelper {
 			return X.sum(p.executeBatch());
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(values.toString(), e);
 
-			GLog.dblog.error(table, "insert", "v=" + values, e, null, db);
+			log.error(values.toString(), e);
 
 		} finally {
 			close(p);
@@ -2261,10 +2223,7 @@ public class RDSHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			close(r, p, c);
 
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "query", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		}
 		return null;
@@ -2383,10 +2342,7 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "sum", "name=" + name + ", q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -2454,10 +2410,7 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "max", "name=" + name + ", q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -2520,10 +2473,7 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "min", "name=" + name + ", q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -2585,10 +2535,7 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "avg", "name=" + name + ", q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -2731,10 +2678,7 @@ public class RDSHelper implements Helper.DBHelper {
 				return l1;
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "count", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -2835,10 +2779,7 @@ public class RDSHelper implements Helper.DBHelper {
 				return l1;
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "sum", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -2939,10 +2880,7 @@ public class RDSHelper implements Helper.DBHelper {
 				return l1;
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "max", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -3043,10 +2981,7 @@ public class RDSHelper implements Helper.DBHelper {
 				return l1;
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "min", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -3147,10 +3082,7 @@ public class RDSHelper implements Helper.DBHelper {
 				return l1;
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "avg", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);
@@ -3251,10 +3183,7 @@ public class RDSHelper implements Helper.DBHelper {
 				return l1;
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q, e);
-
-			GLog.dblog.error(table, "avg", "q=" + q, e, null, db);
+			log.error(q, e);
 
 		} finally {
 			close(r, p, c);

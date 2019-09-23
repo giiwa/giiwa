@@ -573,10 +573,12 @@ public class GLog extends Bean {
 	private static class SecurityLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("error.security");
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("warn.security");
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 
@@ -609,10 +611,12 @@ public class GLog extends Bean {
 	private static class OpLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("error.op");
 			_log(GLog.TYPE_OPLOG, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("warn.op");
 			_log(GLog.TYPE_OPLOG, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 
@@ -625,10 +629,12 @@ public class GLog extends Bean {
 	private static class AppLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("error.app");
 			_log(GLog.TYPE_APP, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("warn.app");
 			_log(GLog.TYPE_APP, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 

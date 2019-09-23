@@ -45,7 +45,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.GLog;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
@@ -105,10 +104,8 @@ public class MongoHelper implements Helper.DBHelper {
 				log.debug("delete, collection=" + collection + ", q=" + q + ", deleted=" + n);
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 
-			GLog.dblog.error(collection, "delete", "q=" + q, e, null, db);
 		}
 
 		return n;
@@ -165,7 +162,7 @@ public class MongoHelper implements Helper.DBHelper {
 				String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
 				int conns = conf.getInt("mongo[" + database + "].conns", 50);
 				int timeout = conf.getInt("mongo[" + database + "].timeout", 30000);
-				
+
 				if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
 
 					g = getDB(url, dbname, conns, timeout);
@@ -192,7 +189,7 @@ public class MongoHelper implements Helper.DBHelper {
 				.serverSelectionTimeout(timeout).maxConnectionIdleTime(10000).connectionsPerHost(conns);
 		client = new MongoClient(new MongoClientURI(url, opts));
 		return client.getDatabase(db);
-		
+
 	}
 
 	/**
@@ -263,10 +260,8 @@ public class MongoHelper implements Helper.DBHelper {
 		try {
 			return load(collection, query, clazz.newInstance());
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 
-			GLog.dblog.error(collection, "load", "q=" + query, e, null, null);
 		}
 
 		return null;
@@ -295,10 +290,7 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
-
-			GLog.dblog.error(collection, "load", "q=" + query, e, null, null);
+			log.error(e.getMessage(), e);
 
 		}
 
@@ -352,11 +344,9 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error("query=" + query + ", order=" + order, e);
+			log.error("query=" + query + ", order=" + order, e);
 
 			// bad connection ? close the it ?
-			GLog.dblog.error(collection, "load", "q=" + query, e, null, db);
 		}
 
 		return null;
@@ -455,8 +445,6 @@ public class MongoHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + orderBy, e);
 
-			GLog.dblog.error(collection, "load", "q=" + q, e, null, db);
-
 		}
 
 		return null;
@@ -544,10 +532,7 @@ public class MongoHelper implements Helper.DBHelper {
 			T obj = t.newInstance();
 			return load(collection, fields, q.query(), q.order(), obj, db);
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
-
-			GLog.dblog.error(collection, "load", "q=" + q, e, null, db);
+			log.error(e.getMessage(), e);
 
 		}
 		return null;
@@ -572,10 +557,7 @@ public class MongoHelper implements Helper.DBHelper {
 				return c.find(query).first();
 			}
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(query, e);
-
-			GLog.dblog.error(collection, "load", "q=" + query, e, null, db);
+			log.error(query, e);
 
 		}
 		return null;
@@ -632,10 +614,7 @@ public class MongoHelper implements Helper.DBHelper {
 					log.debug("inserted collection=" + collection + ", d=" + d);
 				return 1;
 			} catch (Exception e) {
-				if (log.isErrorEnabled())
-					log.error(d.toString(), e);
-
-				GLog.dblog.error(collection, "insert", "v=" + v, e, null, db);
+				log.error(d.toString(), e);
 
 			}
 		}
@@ -686,10 +665,7 @@ public class MongoHelper implements Helper.DBHelper {
 			// r.getField("nModified");
 			return (int) r.getModifiedCount();
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
-
-			GLog.dblog.error(collection, "update", "q=" + q + ", v=" + v, e, null, db);
+			log.error(e.getMessage(), e);
 
 		}
 		return 0;
@@ -709,7 +685,6 @@ public class MongoHelper implements Helper.DBHelper {
 		try {
 			b = load(db, collection, q.query()) != null;
 		} catch (Exception e) {
-			GLog.dblog.error(collection, "exists", "q=" + q, e, null, db);
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
@@ -769,15 +744,10 @@ public class MongoHelper implements Helper.DBHelper {
 				TimeStamp t = TimeStamp.create();
 				DeleteResult d = c.deleteMany(new BasicDBObject());
 
-				GLog.dblog.warn(collection, "clear", "n=" + d.getDeletedCount() + ", cost=" + t.past(), null,
-						Helper.DEFAULT);
 			}
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
-
-			GLog.dblog.error(collection, "clear", null, e, null, Helper.DEFAULT);
+			log.error(e.getMessage(), e);
 
 		}
 	}
@@ -798,10 +768,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(q.query(), e);
-
-			GLog.dblog.error(collection, "distinct", "key=" + key + ", q=" + q, null, db);
+			log.error(q.query(), e);
 
 		} finally {
 			if (log.isDebugEnabled())
@@ -829,7 +796,6 @@ public class MongoHelper implements Helper.DBHelper {
 				n = c.count(q.query());
 			}
 		} catch (Exception e) {
-			GLog.dblog.error(collection, "count", "q=" + q.query(), e, null, db);
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
@@ -968,10 +934,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 			return (int) r.getModifiedCount();
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
-
-			GLog.dblog.error(table, "inc", "name=" + name + ", q=" + q, null, db);
+			log.error(e.getMessage(), e);
 
 		}
 		return 0;
@@ -992,8 +955,6 @@ public class MongoHelper implements Helper.DBHelper {
 			c.createIndex(q);
 		} catch (Exception e) {
 			log.error(q, e);
-
-			GLog.dblog.error(table, "index", "ss=" + ss + ", q=" + q, null, db);
 
 		}
 	}
@@ -1053,10 +1014,7 @@ public class MongoHelper implements Helper.DBHelper {
 					log.debug("inserted collection=" + collection + ", cost=" + t.pastms() + ", size=" + l1.size());
 				return l1.size();
 			} catch (Exception e) {
-				if (log.isErrorEnabled())
-					log.error("cost=" + t.pastms() + "ms", e);
-
-				GLog.dblog.error(collection, "insert", "v=" + values, null, db);
+				log.error("cost=" + t.pastms() + "ms", e);
 
 			}
 		}
@@ -1132,8 +1090,6 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + orderBy, e);
-
-			GLog.dblog.error(table, "query", "q=" + q, null, db);
 
 		}
 
@@ -1244,7 +1200,6 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			GLog.dblog.error(collection, "sum", "name=" + name + ", q=" + q, null, db);
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
@@ -1280,7 +1235,6 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			GLog.dblog.error(collection, "max", "name=" + name + ", q=" + q, null, db);
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
@@ -1316,7 +1270,6 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 			}
 		} catch (Exception e) {
-			GLog.dblog.error(collection, "min", "name=" + name + ", q=" + q, null, db);
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
@@ -1352,7 +1305,6 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 		} catch (Exception e) {
-			GLog.dblog.error(collection, "avg", "name=" + name + ", q=" + q, null, db);
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
@@ -1446,8 +1398,6 @@ public class MongoHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + order, e);
 
-			GLog.dblog.error(collection, "group", "q=" + q, e, null, db);
-
 		}
 
 		return null;
@@ -1538,8 +1488,6 @@ public class MongoHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			log.error("l1=" + l1 + ", query=" + query, e);
 
-			GLog.dblog.error(table, "group", "l1=" + l1, e, null, db);
-
 		}
 
 		return null;
@@ -1605,8 +1553,6 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + order, e);
-
-			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
 
 		}
 
@@ -1674,8 +1620,6 @@ public class MongoHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + order, e);
 
-			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
-
 		}
 
 		return null;
@@ -1741,8 +1685,6 @@ public class MongoHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + order, e);
 
-			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
-
 		}
 
 		return null;
@@ -1807,8 +1749,6 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + order, e);
-
-			GLog.dblog.error(table, "group", "q=" + q, e, null, db);
 
 		}
 
