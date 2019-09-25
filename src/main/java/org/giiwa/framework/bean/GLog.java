@@ -18,7 +18,7 @@ import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Module;
 
 /**
@@ -230,7 +230,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void info(Class<? extends Model> model, String op, String message, User u, String ip) {
+		public void info(Class<? extends Controller> model, String op, String message, User u, String ip) {
 			info(model, op, message, null, u, ip);
 		}
 
@@ -244,7 +244,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void info(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+		public void info(Class<? extends Controller> model, String op, String message, String trace, User u, String ip) {
 			info(Module.shortName(model), op, message, trace, u, ip);
 		}
 
@@ -266,7 +266,7 @@ public class GLog extends Bean {
 		 * @param op
 		 * @param message
 		 */
-		public void info(Class<? extends Model> model, String op, String message) {
+		public void info(Class<? extends Controller> model, String op, String message) {
 			info(Module.shortName(model), op, message, null, null);
 		}
 
@@ -288,7 +288,7 @@ public class GLog extends Bean {
 		 * @param op
 		 * @param message
 		 */
-		public void warn(Class<? extends Model> model, String op, String message) {
+		public void warn(Class<? extends Controller> model, String op, String message) {
 			warn(Module.shortName(model), op, message, null, null);
 		}
 
@@ -311,7 +311,7 @@ public class GLog extends Bean {
 		 * @param op
 		 * @param message
 		 */
-		public void error(Class<? extends Model> model, String op, String message, Throwable e) {
+		public void error(Class<? extends Controller> model, String op, String message, Throwable e) {
 			error(Module.shortName(model), op, message,
 					X.toString(e).replaceAll(System.lineSeparator(), "<br/>").replaceAll(" ", "&nbsp;").replaceAll("\t",
 							"&nbsp;&nbsp;&nbsp;&nbsp;"),
@@ -429,7 +429,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void warn(Class<? extends Model> model, String op, String message, User u, String ip) {
+		public void warn(Class<? extends Controller> model, String op, String message, User u, String ip) {
 			warn(model, op, message, null, u, ip);
 		}
 
@@ -443,7 +443,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void warn(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+		public void warn(Class<? extends Controller> model, String op, String message, String trace, User u, String ip) {
 			warn(Module.shortName(model), op, message, trace, u, ip);
 		}
 
@@ -470,7 +470,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void error(Class<? extends Model> model, String op, String message, User u, String ip) {
+		public void error(Class<? extends Controller> model, String op, String message, User u, String ip) {
 			error(model, op, message, (String) null, u, ip);
 		}
 
@@ -484,7 +484,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void error(Class<? extends Model> model, String op, String message, Exception e, User u, String ip) {
+		public void error(Class<? extends Controller> model, String op, String message, Exception e, User u, String ip) {
 			error(Module.shortName(model), op, message, e, u, ip);
 		}
 
@@ -516,7 +516,7 @@ public class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void error(Class<? extends Model> model, String op, String message, String trace, User u, String ip) {
+		public void error(Class<? extends Controller> model, String op, String message, String trace, User u, String ip) {
 			error(Module.shortName(model), op, message, trace, u, ip);
 		}
 
@@ -646,6 +646,17 @@ public class GLog extends Bean {
 
 	public static void main(String[] aa) {
 		oplog._logger();
+	}
+	
+	static {
+		Counter.set("error.app", 0);
+		Counter.set("warn.app", 0);
+		
+		Counter.set("error.op", 0);
+		Counter.set("warn.op", 0);
+		
+		Counter.set("error.security", 0);
+		Counter.set("warn.security", 0);
 	}
 
 }

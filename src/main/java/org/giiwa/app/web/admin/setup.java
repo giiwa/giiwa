@@ -31,7 +31,7 @@ import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Module;
 import org.giiwa.framework.web.Path;
 
@@ -50,7 +50,7 @@ import com.mongodb.client.MongoDatabase;
  * @author joe
  *
  */
-public class setup extends Model {
+public class setup extends Controller {
 
 	/**
 	 * the default GET handler. <br>
@@ -65,7 +65,7 @@ public class setup extends Model {
 				return;
 			}
 
-			this.set("home", Model.GIIWA_HOME);
+			this.set("home", Controller.GIIWA_HOME);
 			this.show("/admin/setup.html");
 
 		} catch (Exception e1) {

@@ -28,7 +28,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 public class FileView extends View {
 
@@ -38,7 +38,7 @@ public class FileView extends View {
 	 * copy the file to front-end, and {giiwa}/html/ too
 	 */
 	@Override
-	public boolean parse(Object file, Model m, String viewname) throws IOException {
+	public boolean parse(Object file, Controller m, String viewname) throws IOException {
 
 		InputStream in = null;
 		try {
@@ -55,7 +55,7 @@ public class FileView extends View {
 				// not debug
 				if (!X.isEmpty(caching) && viewname.matches(caching)) {
 
-					File f1 = new File(Model.GIIWA_HOME + "/html/" + viewname);
+					File f1 = new File(Controller.GIIWA_HOME + "/html/" + viewname);
 					if (!f1.exists()) {
 						f1.getParentFile().mkdirs();
 						FileOutputStream out1 = new FileOutputStream(f1);
@@ -65,7 +65,7 @@ public class FileView extends View {
 				}
 			}
 
-			String filetype = Model.getMimeType(View.getName(file));
+			String filetype = Controller.getMimeType(View.getName(file));
 			m.setContentType(filetype);
 
 			boolean media = (filetype != null && (filetype.startsWith("video") || filetype.startsWith("audio"))) ? true

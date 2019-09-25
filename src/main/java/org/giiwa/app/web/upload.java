@@ -33,7 +33,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  * 
  */
-public class upload extends Model {
+public class upload extends Controller {
 
 	/*
 	 * (non-Javadoc)

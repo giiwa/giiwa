@@ -1,9 +1,9 @@
 package org.giiwa.app.web;
 
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
-public class helo extends Model {
+public class helo extends Controller {
 
 	@Path(path = "test")
 	public void test() {

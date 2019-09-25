@@ -23,14 +23,14 @@ import java.util.Map;
 
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 import freemarker.template.Template;
 
 public class FreemarkerView extends View {
 
 	@Override
-	public boolean parse(Object file, Model m, String viewname) {
+	public boolean parse(Object file, Controller m, String viewname) {
 		// load
 		try {
 
@@ -55,10 +55,10 @@ public class FreemarkerView extends View {
 		T t = cache.get(fullname);
 		if (t == null || t.last != View.lastModified(f)) {
 			if (cache.size() == 0) {
-				cfg.setDirectoryForTemplateLoading(new File(Model.HOME));
+				cfg.setDirectoryForTemplateLoading(new File(Controller.HOME));
 			}
 
-			Template t1 = cfg.getTemplate(View.getCanonicalPath(f).substring(Model.HOME.length()), "UTF-8");
+			Template t1 = cfg.getTemplate(View.getCanonicalPath(f).substring(Controller.HOME.length()), "UTF-8");
 			t = T.create(t1, View.lastModified(f));
 
 			if (Local.getInt("web.debug", 0) == 0) {

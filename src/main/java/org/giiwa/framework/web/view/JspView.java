@@ -17,13 +17,13 @@ package org.giiwa.framework.web.view;
 import javax.servlet.RequestDispatcher;
 
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 public class JspView extends View {
 
 	@Override
-	protected boolean parse(Object file, Model m, String viewname) throws Exception {
-		String name = View.getCanonicalPath(file).substring(Model.HOME.length());
+	protected boolean parse(Object file, Controller m, String viewname) throws Exception {
+		String name = View.getCanonicalPath(file).substring(Controller.HOME.length());
 		if (log.isDebugEnabled())
 			log.debug("viewname=" + name);
 

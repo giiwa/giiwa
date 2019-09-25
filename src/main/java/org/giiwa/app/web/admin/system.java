@@ -32,12 +32,12 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class system extends Model {
+public class system extends Controller {
 
 	@Path(path = "info")
 	public void info() {
 		String name = ManagementFactory.getRuntimeMXBean().getName();
-		this.response(JSON.create().append(X.STATE, 200).append("uptime", Model.UPTIME).append("local", Local.id())
+		this.response(JSON.create().append(X.STATE, 200).append("uptime", Controller.UPTIME).append("local", Local.id())
 				.append("global", Global.id()).append("pid", X.split(name, "[@]")[0]));
 	}
 

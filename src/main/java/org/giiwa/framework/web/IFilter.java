@@ -43,7 +43,7 @@ public interface IFilter {
 	 * @return boolean, true = pass to the model, pass to the next "filter"; false =
 	 *         stop pass to the model, and stop pass to the next "filter"
 	 */
-	default boolean before(Model m) {
+	default boolean before(Controller m) {
 		return true;
 	};
 
@@ -55,7 +55,7 @@ public interface IFilter {
 	 * @return boolean, true = pass to the next "filter", false = stop the pass to
 	 *         the next "filter"
 	 */
-	default boolean after(Model m) {
+	default boolean after(Controller m) {
 		return true;
 	};
 

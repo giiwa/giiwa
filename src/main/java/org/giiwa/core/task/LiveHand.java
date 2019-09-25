@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,8 +29,7 @@ public class LiveHand implements Serializable {
 	private boolean live = true;
 	private long timeout = 0;
 	private int max = 0;
-
-	private Semaphore door;
+	private int door = 0;
 
 	private TimeStamp created = TimeStamp.create();
 
@@ -59,54 +56,87 @@ public class LiveHand implements Serializable {
 		return timeout;
 	}
 
+	public static LiveHand create(int max) {
+		return create(max, max);
+	}
+
+	public static LiveHand create(int max, int init) {
+		return new LiveHand(-1L, max, init);
+	}
+
+	public static LiveHand create(long timeout, int max, int init) {
+		return new LiveHand(timeout, max, init);
+	}
+
+	public static LiveHand create(long timeout, int max) {
+		return new LiveHand(timeout, max);
+	}
+
 	public LiveHand(long timeout, int max) {
+		this(timeout, max, max);
+	}
+
+	public LiveHand(long timeout, int max, int init) {
 		this.timeout = timeout;
 		if (max < 0)
 			max = Integer.MAX_VALUE;
 		this.max = max;
-		this.door = new Semaphore(max);
+		this.door = init;
 	}
 
 	public boolean isLive() {
 		return live && (timeout <= 0 || created.pastms() < timeout);
 	}
 
-	public void stop() {
+	public synchronized void stop() {
 		live = false;
-		door.release(Integer.MAX_VALUE);
+		door = max;
+		this.notifyAll();
 	}
 
-	public boolean hold() throws InterruptedException {
+	public synchronized boolean tryHold() {
+		if (door > 0) {
+			door--;
+			return true;
+		}
+		return false;
+	}
+
+	public synchronized boolean hold() throws InterruptedException {
 
 		TimeStamp t = TimeStamp.create();
 		try {
 			while (isLive()) {
+				if (door > 0) {
+					door--;
+					return true;
+				}
+
 				long waittime = X.AMINUTE;
 				if (timeout > 0) {
 					waittime = timeout - created.pastms();
 				}
+
 				if (waittime > 0) {
-					if (door.tryAcquire(waittime, TimeUnit.MILLISECONDS)) {
-						if (log.isDebugEnabled())
-							log.debug("hold, door=" + door.availablePermits() + ", " + this);
-						return true;
-					}
+					this.wait(waittime);
 				} else {
-					throw new InterruptedException("timeout for hold the hand");
+					throw new InterruptedException("timeout for holding the hand");
 				}
 			}
 			return false;
 		} finally {
 			if (log.isDebugEnabled())
-				log.debug("holding, cost=" + t.past() + ", door=" + door.availablePermits());
+				log.debug("hold, cost=" + t.past() + ", door=" + door + ", " + this);
 		}
 	}
 
 	public synchronized void drop() {
-		door.release();
+		door++;
+		if (door > max)
+			door = max;
 
 		if (log.isDebugEnabled())
-			log.debug("drop, door=" + door.availablePermits() + ", " + this);
+			log.debug("drop, door=" + door + ", " + this);
 
 		this.notifyAll();
 	}
@@ -118,36 +148,34 @@ public class LiveHand implements Serializable {
 		return await(timeout - created.pastms());
 	}
 
-	public boolean await(long timeout) throws InterruptedException {
+	public synchronized boolean await(long timeout) throws InterruptedException {
 
 		TimeStamp t = TimeStamp.create();
 
 		long t1 = timeout - t.pastms();
 		while (t1 > 0 && isLive()) {
-			if ((door.availablePermits() >= max)) {
+			if (door >= max) {
 				if (log.isDebugEnabled())
-					log.debug("await, door=" + door.availablePermits() + ", " + this);
+					log.debug("await, cost=" + t.past() + ", " + this);
 				return true;
 			}
 
-			synchronized (this) {
-				this.wait(t1);
-			}
+			this.wait(t1);
 
 			t1 = timeout - t.pastms();
 		}
 
 		if (log.isDebugEnabled())
-			log.debug("await, door=" + door.availablePermits() + ", " + this.toString());
+			log.debug("await timeout, door=" + t.past() + ", " + this);
 
 		return isLive();
 	}
 
 	@Override
 	public String toString() {
-		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", alive=" + live + ", available="
-				+ door.availablePermits() + ", max=" + max + ", timeout=" + timeout + ", age=" + created.pastms()
-				+ "ms, attachs=" + attachs + "]";
+		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", alive=" + live + ", available=" + door
+				+ ", max=" + max + ", timeout=" + timeout + ", age=" + created.pastms() + "ms, attachs=" + attachs
+				+ "]";
 	}
 
 	public static void main(String[] args) {

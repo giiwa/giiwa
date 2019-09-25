@@ -15,7 +15,7 @@
 
 	<Service name="Catalina">
 
-		<Connector host="localhost" 
+		<Connector 
 			port="8080"
 			protocol="org.apache.coyote.http11.Http11Nio2Protocol"
 			connectionTimeout="20000" 
@@ -25,7 +25,7 @@
 			compressableMimeType="text/html,text/xml,text/javascript,text/css,text/plain,image/svg+xml,application/x-font-ttf"
 			redirectPort="443" />
 
-		<!-- Connector host="localhost"
+		<!-- Connector
 			port="443"
 			protocol="HTTP/1.1"
 			SSLEnabled="true"

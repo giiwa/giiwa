@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 public abstract class View {
 
@@ -41,7 +41,7 @@ public abstract class View {
 	 * @return true: successful,
 	 * @throws Exception if occur error
 	 */
-	protected abstract boolean parse(Object file, Model m, String viewname) throws Exception;
+	protected abstract boolean parse(Object file, Controller m, String viewname) throws Exception;
 
 	/**
 	 * parse the file with the params
@@ -87,7 +87,7 @@ public abstract class View {
 	 * @param viewname the template name
 	 * @throws Exception if occur error
 	 */
-	public static void merge(File file, Model m, String viewname) throws Exception {
+	public static void merge(File file, Controller m, String viewname) throws Exception {
 
 		String name = file.getName();
 		for (String suffix : views.keySet()) {
@@ -101,7 +101,7 @@ public abstract class View {
 		fileview.parse(file, m, viewname);
 	}
 
-	public static void merge(DFile f, Model m, String viewname) throws Exception {
+	public static void merge(DFile f, Controller m, String viewname) throws Exception {
 
 		for (String suffix : views.keySet()) {
 			if (viewname.endsWith(suffix)) {

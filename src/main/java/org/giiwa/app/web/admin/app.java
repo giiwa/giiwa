@@ -29,7 +29,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class app extends Model {
+public class app extends Controller {
 
 	/**
 	 * Adds the.

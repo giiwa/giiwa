@@ -26,7 +26,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class sysstat extends Model {
+public class sysstat extends Controller {
 
 	/*
 	 * (non-Javadoc)

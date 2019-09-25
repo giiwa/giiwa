@@ -25,7 +25,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class sysinfo extends Model {
+public class sysinfo extends Controller {
 
 	/*
 	 * (non-Javadoc)

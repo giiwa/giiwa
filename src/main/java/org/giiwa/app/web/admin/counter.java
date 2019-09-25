@@ -30,7 +30,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class counter extends Model {
+public class counter extends Controller {
 
 	/**
 	 * Deleteall.

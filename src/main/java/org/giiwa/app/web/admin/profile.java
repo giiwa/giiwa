@@ -14,10 +14,10 @@ import org.giiwa.framework.bean.AuthToken;
 import org.giiwa.framework.bean.Code;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
-public class profile extends Model {
+public class profile extends Controller {
 
 	private static List<String> names = new ArrayList<String>();
 	private static Map<String, Class<? extends profile>> settings = new HashMap<String, Class<? extends profile>>();
@@ -48,7 +48,7 @@ public class profile extends Model {
 		Class<? extends profile> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/get/" + c);
-		
+
 		if (c != null) {
 			try {
 				profile s = c.newInstance();
@@ -87,7 +87,7 @@ public class profile extends Model {
 		Class<? extends profile> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/set/" + c);
-		
+
 		if (c != null) {
 			try {
 				profile s = c.newInstance();
@@ -166,6 +166,7 @@ public class profile extends Model {
 
 					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
+
 				} else {
 					V v = V.create();
 
@@ -195,8 +196,11 @@ public class profile extends Model {
 					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
+
 			} catch (Exception e) {
+
 				log.error(e.getMessage(), e);
+
 				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
 						lang.get("save.failed") + ":" + e.getMessage()));
 				return;

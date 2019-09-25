@@ -29,7 +29,7 @@ import org.apache.velocity.app.Velocity;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 public class VelocityView extends View {
 
@@ -52,7 +52,7 @@ public class VelocityView extends View {
 	}
 
 	@Override
-	public boolean parse(Object file, Model m, String viewname) throws IOException {
+	public boolean parse(Object file, Controller m, String viewname) throws IOException {
 
 		TimeStamp t = TimeStamp.create();
 		Template template = getTemplate(viewname, file);

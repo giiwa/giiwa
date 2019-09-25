@@ -33,7 +33,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class role extends Model {
+public class role extends Controller {
 
 	/**
 	 * Adds the.

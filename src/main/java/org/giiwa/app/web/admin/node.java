@@ -34,7 +34,7 @@ import org.giiwa.mq.MQ;
  * @author joe
  *
  */
-public class node extends Model {
+public class node extends Controller {
 
 	/**
 	 * Delete.

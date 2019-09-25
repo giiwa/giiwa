@@ -30,7 +30,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class syslog extends Model {
+public class syslog extends Controller {
 
 	/**
 	 * Deleteall.

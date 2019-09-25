@@ -38,7 +38,7 @@ import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 import org.giiwa.framework.web.view.View;
 
@@ -49,7 +49,7 @@ import org.giiwa.framework.web.view.View;
  * @author joe
  * 
  */
-public class user extends Model {
+public class user extends Controller {
 
 	/**
 	 * Index.
@@ -273,7 +273,7 @@ public class user extends Model {
 	@Path(path = "login")
 	public void login() {
 
-		if (new File(Model.GIIWA_HOME + "/root.pwd").exists()) {
+		if (new File(Controller.GIIWA_HOME + "/root.pwd").exists()) {
 			this.set(X.MESSAGE, lang.get("root.pwd"));
 		}
 

@@ -31,7 +31,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class token extends Model {
+public class token extends Controller {
 
 	/**
 	 * Delete.

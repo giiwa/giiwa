@@ -24,7 +24,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class index extends Model {
+public class index extends Controller {
 
 	/*
 	 * (non-Javadoc)

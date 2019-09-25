@@ -23,7 +23,7 @@ import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 /**
  * web api： /temp <br>
@@ -32,7 +32,7 @@ import org.giiwa.framework.web.Model;
  * @author joe
  * 
  */
-public class temp extends Model {
+public class temp extends Controller {
 
 	/*
 	 * (non-Javadoc)

@@ -30,7 +30,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class footprint extends Model {
+public class footprint extends Controller {
 
 	/**
 	 * Deleteall.

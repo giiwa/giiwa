@@ -108,7 +108,7 @@ public abstract class Task implements Runnable, Serializable {
 	private transient ScheduledFuture<?> sf;
 
 	private Serializable result;
-	private transient Semaphore finished;
+	private transient LiveHand finished;
 
 	private long scheduledtime = 0;
 
@@ -146,7 +146,7 @@ public abstract class Task implements Runnable, Serializable {
 		} else {
 			result = t;
 			if (finished != null) {
-				finished.release();
+				finished.drop();
 			}
 		}
 
@@ -164,11 +164,11 @@ public abstract class Task implements Runnable, Serializable {
 	public <T> T wait(Runnable prepare) {
 
 		try {
-			if (finished.tryAcquire(0, TimeUnit.MILLISECONDS)) {
+			if (finished.tryHold()) {
 				try {
 					return (T) result;
 				} finally {
-					finished.release();
+					finished.drop();
 				}
 			}
 
@@ -176,15 +176,15 @@ public abstract class Task implements Runnable, Serializable {
 				// status("mq.wait", "task.result." + this.getName());
 				result = MQ.wait("task.result." + this.getName(), Integer.MAX_VALUE, prepare);
 				if (finished != null) {
-					finished.release();
+					finished.drop();
 				}
 			} else if (prepare != null) {
 				prepare.run();
 			}
 
 			if (finished != null) {
-				if (finished.tryAcquire(Integer.MAX_VALUE, TimeUnit.MILLISECONDS)) {
-					finished.release();
+				if (finished.hold()) {
+					finished.drop();
 					return (T) result;
 				}
 			}
@@ -347,7 +347,7 @@ public abstract class Task implements Runnable, Serializable {
 			GlobalRunner.schedule(this, 0);
 
 		} else if (finished != null) {
-			finished.release();
+			finished.drop();
 		}
 
 	}
@@ -446,7 +446,7 @@ public abstract class Task implements Runnable, Serializable {
 						MQ.notify("task.result." + this.getName(), result);
 
 					} else if (finished != null) {
-						finished.release();
+						finished.drop();
 					}
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
@@ -1606,7 +1606,7 @@ public abstract class Task implements Runnable, Serializable {
 
 				task.node = Local.id();
 				task.result = null;
-				task.finished = new Semaphore(0);
+				task.finished = LiveHand.create(-1, 1, 0);
 				task.state = State.pending;
 
 				if (task.scheduledtime <= 0)

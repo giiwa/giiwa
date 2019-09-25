@@ -46,7 +46,7 @@ import org.giiwa.framework.bean.License.LICENSE;
 import org.giiwa.framework.bean.Menu;
 import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.Model.PathMapping;
+import org.giiwa.framework.web.Controller.PathMapping;
 
 /**
  * module includes: a module.xml, a group of model/view/images/css/js/language,
@@ -116,7 +116,7 @@ public class Module {
 	 * @param m the model
 	 * @return boolean
 	 */
-	public boolean before(Model m) {
+	public boolean before(Controller m) {
 		String uri = m.getURI();
 
 		for (String name : filters.keySet()) {
@@ -154,7 +154,7 @@ public class Module {
 	 */
 	public static boolean checkAndMerge() {
 
-		if (!new File(Model.HOME + "/default/WEB-INF/lib/").exists()) {
+		if (!new File(Controller.HOME + "/default/WEB-INF/lib/").exists()) {
 			return false;
 		}
 
@@ -178,7 +178,7 @@ public class Module {
 			}
 		}
 
-		File f = new File(Model.HOME + "/WEB-INF/lib/");
+		File f = new File(Controller.HOME + "/WEB-INF/lib/");
 		File[] ff = f.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
@@ -206,7 +206,7 @@ public class Module {
 		boolean changed = false;
 
 		// check default/WEB-INF/lib
-		File u1 = new File(Model.HOME + "/default/WEB-INF/");
+		File u1 = new File(Controller.HOME + "/default/WEB-INF/");
 		if (!u1.exists()) {
 			u1.mkdirs();
 			// copy all
@@ -215,21 +215,21 @@ public class Module {
 				log.debug("checkAndUpgrade, copy WEB-INF/lib to " + u1.getAbsolutePath());
 
 			try {
-				IOUtil.copyDir(new File(Model.HOME + "/WEB-INF/lib/"), u1);
+				IOUtil.copyDir(new File(Controller.HOME + "/WEB-INF/lib/"), u1);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		}
 
 		// upgrade
-		u1 = new File(Model.HOME + "/upgrade/");
+		u1 = new File(Controller.HOME + "/upgrade/");
 		File[] ff = u1.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
 				try {
 					String name = f1.getName();
 					if (new File(f1.getCanonicalPath() + "/ok").exists()) {
-						File f2 = new File(Model.HOME + "/" + name);
+						File f2 = new File(Controller.HOME + "/" + name);
 //						log.debug("checkAndUpgrade, checking " + f2.getAbsolutePath());
 						if (f2.exists()) {
 //							log.debug("checkAndUpgrade, delete " + f2.getAbsolutePath());
@@ -238,7 +238,7 @@ public class Module {
 
 //						log.debug("checkAndUpgrade, copy upgrade/" + name + " to " + Model.HOME);
 
-						IOUtil.copyDir(f1, new File(Model.HOME));
+						IOUtil.copyDir(f1, new File(Controller.HOME));
 
 						// f1.renameTo(f2);
 //						log.debug("checkAndUpgrade, delete " + f2.getCanonicalPath() + "/ok");
@@ -250,7 +250,7 @@ public class Module {
 						File f3 = new File(f2.getCanonicalPath() + "/WEB-INF");
 						if (f3.exists()) {
 							// merge all
-							if (move(name, f3, Model.HOME)) {
+							if (move(name, f3, Controller.HOME)) {
 								changed = true;
 							}
 						}
@@ -287,7 +287,7 @@ public class Module {
 			in = new ZipInputStream(e.getInputStream());
 
 			String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
-			String root = Model.HOME + "/upgrade/" + temp + "/";
+			String root = Controller.HOME + "/upgrade/" + temp + "/";
 
 			File f0 = new File(root);
 			if (f0.exists()) {
@@ -336,7 +336,7 @@ public class Module {
 				Element r1 = document.getRootElement();
 				Module t = new Module();
 				t._load(r1);
-				String dest = Model.HOME + "/upgrade/" + t.getName();
+				String dest = Controller.HOME + "/upgrade/" + t.getName();
 				File d1 = new File(dest);
 				if (d1.exists()) {
 					IOUtil.delete(d1);
@@ -357,8 +357,8 @@ public class Module {
 						if (f1.isDirectory()) {
 							if (new File(f1.getCanonicalPath() + "/module.xml").exists()) {
 								String name = f1.getName();
-								f1.renameTo(new File(Model.HOME + "/upgrade/" + name));
-								new File(Model.HOME + "/upgrade/" + name + "/ok").createNewFile();
+								f1.renameTo(new File(Controller.HOME + "/upgrade/" + name));
+								new File(Controller.HOME + "/upgrade/" + name + "/ok").createNewFile();
 								r = true;
 							}
 						}
@@ -384,7 +384,7 @@ public class Module {
 	 * @param m the model
 	 * @return boolean
 	 */
-	public boolean after(Model m) {
+	public boolean after(Controller m) {
 		String uri = m.getURI();
 
 		// log.debug("after//" + name + "//uri=" + uri + ", filter=" +
@@ -491,7 +491,7 @@ public class Module {
 	 * Store.
 	 */
 	public void store() {
-		File f = new File(Model.HOME + File.separator + name + File.separator + "module.xml");
+		File f = new File(Controller.HOME + File.separator + name + File.separator + "module.xml");
 		try {
 
 			Document doc = DocumentHelper.createDocument();
@@ -639,7 +639,7 @@ public class Module {
 			if (list != null) {
 				for (File f : list) {
 					if (f.getName().endsWith(".jar")) {
-						File f1 = new File(Model.HOME + "/WEB-INF/lib/" + f.getName());
+						File f1 = new File(Controller.HOME + "/WEB-INF/lib/" + f.getName());
 						if (!f1.exists() || f1.length() < f.length() || f1.lastModified() < f.lastModified()) {
 							// copy to
 							try {
@@ -854,17 +854,18 @@ public class Module {
 		try {
 			_conf = conf;
 
-			System.out.println("check and upgrade");
+//			System.out.println("check and upgrade");
 			// check upgrade
 			if (checkAndUpgrade()) {
 				log.warn("has been merged, restart it now");
+				Config.getLogger().info("has been merged, restart it now");
 //				System.out.println("merged libs, restart it now");
 				System.exit(0);
 			}
 
 //			System.out.println("load modules");
 			// load modules
-			File f = new File(Model.HOME);
+			File f = new File(Controller.HOME);
 
 			if (f.exists()) {
 				File[] list = f.listFiles();
@@ -1037,7 +1038,7 @@ public class Module {
 			}
 
 			Module t = new Module();
-			File f = new File(Model.HOME + File.separator + name + "/module.xml");
+			File f = new File(Controller.HOME + File.separator + name + "/module.xml");
 			if (f.exists()) {
 				/**
 				 * initialize the module
@@ -1249,7 +1250,7 @@ public class Module {
 		if (enabled) {
 			return new ArrayList<Module>(modules.values());
 		} else {
-			String home = Model.HOME;
+			String home = Controller.HOME;
 			File troot = new File(home);
 			File[] files = troot.listFiles();
 
@@ -1277,7 +1278,7 @@ public class Module {
 	 * @param uri    the uri
 	 * @return Model
 	 */
-	public Model loadModelFromCache(String method, String uri) {
+	public Controller loadModelFromCache(String method, String uri) {
 		try {
 			// log.debug("looking for model for <" + method + "|" + uri + ">,
 			// mapping=" + modelMap);
@@ -1285,14 +1286,14 @@ public class Module {
 			CachedModel c = modelMap.get(method + "|" + uri);
 
 			if (c != null) {
-				Model m = c.create(uri);
+				Controller m = c.create(uri);
 
 				return m;
 			}
 
 			c = modelMap.get(method + "|" + uri + "/" + X.NONE);
 			if (c != null) {
-				Model m = c.create(uri);
+				Controller m = c.create(uri);
 
 				return m;
 			}
@@ -1317,7 +1318,7 @@ public class Module {
 	 * @return the model
 	 */
 	@SuppressWarnings("unchecked")
-	public Model getModel(String method, String uri) {
+	public Controller getModel(String method, String uri) {
 
 		try {
 
@@ -1335,19 +1336,19 @@ public class Module {
 					 */
 					String name = (pack + "." + uri).replace("/", ".").replace("..", ".");
 
-					Class<Model> c1 = (Class<Model>) Class.forName(name);
+					Class<Controller> c1 = (Class<Controller>) Class.forName(name);
 
 					/**
 					 * cache it and cache all the path
 					 */
-					Map<String, Map<String, Model.PathMapping>> path = _loadPath(c1);
+					Map<String, Map<String, Controller.PathMapping>> path = _loadPath(c1);
 					if (path != null && path.size() > 0) {
 						String u = uri;
 						// if (!u.endsWith("/")) {
 						// u += "/";
 						// }
 						for (String m1 : path.keySet()) {
-							Map<String, Model.PathMapping> p = path.get(m1);
+							Map<String, Controller.PathMapping> p = path.get(m1);
 							for (String s : p.keySet()) {
 								c = CachedModel.create(c1, path, this);
 								_cache(m1 + "|" + u + "/" + s, c);
@@ -1368,7 +1369,7 @@ public class Module {
 			}
 
 			if (c != null) {
-				Model m = c.create(uri);
+				Controller m = c.create(uri);
 
 				return m;
 			}
@@ -1389,14 +1390,14 @@ public class Module {
 		return null;
 	}
 
-	public Model getModel(String method, Class<? extends Model> clazz) {
+	public Controller getModel(String method, Class<? extends Controller> clazz) {
 
 		try {
 
 			/**
 			 * cache it and cache all the path
 			 */
-			Map<String, Map<String, Model.PathMapping>> path = _loadPath(clazz);
+			Map<String, Map<String, Controller.PathMapping>> path = _loadPath(clazz);
 			CachedModel c = CachedModel.create(clazz, path, this);
 
 			return c.create(null);
@@ -1425,11 +1426,11 @@ public class Module {
 		modelMap.put(uri, c);
 	}
 
-	private Map<String, Map<String, Model.PathMapping>> _loadPath(Class<? extends Model> c) {
+	private Map<String, Map<String, Controller.PathMapping>> _loadPath(Class<? extends Controller> c) {
 		Method[] list = c.getMethods();
 		if (list != null && list.length > 0) {
 
-			Map<String, Map<String, Model.PathMapping>> map = new HashMap<String, Map<String, Model.PathMapping>>();
+			Map<String, Map<String, Controller.PathMapping>> map = new HashMap<String, Map<String, Controller.PathMapping>>();
 			for (Method m : list) {
 				Path p = m.getAnnotation(Path.class);
 				if (p != null) {
@@ -1451,7 +1452,7 @@ public class Module {
 					String method = p.method();
 					String path = p.path();
 
-					Model.PathMapping oo = Model.PathMapping.create(Pattern.compile(path), p, m);
+					Controller.PathMapping oo = Controller.PathMapping.create(Pattern.compile(path), p, m);
 
 					/**
 					 * set the method mapping info
@@ -1462,9 +1463,9 @@ public class Module {
 
 //						log.debug(s + "=" + oo + ", c=" + c);
 
-						Map<String, Model.PathMapping> mm = map.get(s);
+						Map<String, Controller.PathMapping> mm = map.get(s);
 						if (mm == null) {
-							mm = new HashMap<String, Model.PathMapping>();
+							mm = new HashMap<String, Controller.PathMapping>();
 							map.put(s, mm);
 						}
 						mm.put(path, oo);
@@ -1868,7 +1869,7 @@ public class Module {
 				 * possible the original has been moved to ..., always using the package to
 				 * initialize
 				 */
-				m.path = new File(Model.HOME + File.separator + m.name).getCanonicalPath();
+				m.path = new File(Controller.HOME + File.separator + m.name).getCanonicalPath();
 				m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
 
 				if (log.isDebugEnabled())
@@ -2026,8 +2027,8 @@ public class Module {
 	}
 
 	static class CachedModel {
-		Class<? extends Model> model;
-		Map<String, Map<String, Model.PathMapping>> pathmapping;
+		Class<? extends Controller> model;
+		Map<String, Map<String, Controller.PathMapping>> pathmapping;
 		Module module;
 
 		/*
@@ -2047,7 +2048,7 @@ public class Module {
 		 * @param module      the module
 		 * @return the cached model
 		 */
-		static CachedModel create(Class<? extends Model> model, Map<String, Map<String, PathMapping>> pathmapping,
+		static CachedModel create(Class<? extends Controller> model, Map<String, Map<String, PathMapping>> pathmapping,
 				Module module) {
 			CachedModel m = new CachedModel();
 			m.model = model;
@@ -2063,8 +2064,8 @@ public class Module {
 		 * @return the model
 		 * @throws Exception the exception
 		 */
-		public Model create(String uri) throws Exception {
-			Model m = model.newInstance();
+		public Controller create(String uri) throws Exception {
+			Controller m = model.newInstance();
 			m.module = module;
 			m.pathmapping = pathmapping;
 			if (!X.isEmpty(uri)) {
@@ -2110,14 +2111,14 @@ public class Module {
 	 * @param model the subclass of model
 	 * @return the shortname of the subclass
 	 */
-	public static String shortName(Class<? extends Model> model) {
+	public static String shortName(Class<? extends Controller> model) {
 		if (model == null || home == null) {
 			return X.EMPTY;
 		}
 		return home._shortName(model);
 	}
 
-	private String _shortName(Class<? extends Model> model) {
+	private String _shortName(Class<? extends Controller> model) {
 		if (model == null) {
 			return X.EMPTY;
 		}

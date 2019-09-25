@@ -49,6 +49,10 @@ public final class Config {
 		init(new File(confFile));
 	}
 
+	public static java.util.logging.Logger getLogger() {
+		return java.util.logging.Logger.getLogger("giiwa");
+	}
+
 	public static void initLog() {
 
 		if (confFile != null && new File(confFile.getParent() + File.separator + "log4j.properties").exists()) {
@@ -124,7 +128,7 @@ public final class Config {
 
 							conf.append(c2);
 						} else {
-							System.out.println("Can't find the configuration file, file=" + s);
+							Config.getLogger().warning("Can't find the configuration file, file=" + s);
 						}
 					} else {
 						String s1 = file.getParent() + "/conf/" + s;
@@ -140,7 +144,7 @@ public final class Config {
 
 							conf.append(c2);
 						} else {
-							System.out.println("Can't find the configuration file, file=" + s1);
+							Config.getLogger().warning("Can't find the configuration file, file=" + s1);
 						}
 
 					}
@@ -188,6 +192,7 @@ public final class Config {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+
 		} finally {
 			X.close(re);
 		}

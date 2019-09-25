@@ -26,7 +26,7 @@ import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.nio.Client;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 public class FileClient implements IRequestHandler {
 
@@ -568,7 +568,7 @@ public class FileClient implements IRequestHandler {
 				DiskFileItemFactory factory = new DiskFileItemFactory();
 
 				// Configure a repository (to ensure a secure temp location is used)
-				File repository = (File) Model.s️ervletContext.getAttribute("javax.servlet.context.tempdir");
+				File repository = (File) Controller.s️ervletContext.getAttribute("javax.servlet.context.tempdir");
 				factory.setRepository(repository);
 
 				// Create a new file upload handler

@@ -55,7 +55,7 @@ import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.License;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.IListener;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Module;
 import org.giiwa.mq.MQ;
 
@@ -143,10 +143,10 @@ public class DefaultListener implements IListener {
 			/**
 			 * cleanup html
 			 */
-			File f = new File(Model.GIIWA_HOME + "/html/");
+			File f = new File(Controller.GIIWA_HOME + "/html/");
 			IOUtil.delete(f);
 
-			f = new File(Model.GIIWA_HOME + "/temp/");
+			f = new File(Controller.GIIWA_HOME + "/temp/");
 			if (!f.exists()) {
 				f.mkdirs();
 			}
@@ -417,7 +417,7 @@ public class DefaultListener implements IListener {
 
 		} else {
 			if (log.isErrorEnabled()) {
-				log.error("DB is miss configured, please congiure it in [" + Model.GIIWA_HOME
+				log.error("DB is miss configured, please congiure it in [" + Controller.GIIWA_HOME
 						+ "/giiwa/giiwa.properties]");
 			}
 

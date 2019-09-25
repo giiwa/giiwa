@@ -32,7 +32,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  * 
  */
-public class menu extends Model {
+public class menu extends Controller {
 
 	/*
 	 * (non-Javadoc)

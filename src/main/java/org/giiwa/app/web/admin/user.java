@@ -40,7 +40,7 @@ import org.giiwa.framework.web.view.View;
  * @author joe
  *
  */
-public class user extends Model {
+public class user extends Controller {
 
 	/**
 	 * Adds the.

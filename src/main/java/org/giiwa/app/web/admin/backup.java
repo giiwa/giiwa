@@ -49,7 +49,7 @@ import org.giiwa.framework.bean.Repo.Entity;
 import org.giiwa.framework.bean.Temp.Exporter;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Language;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
 /**
@@ -59,7 +59,7 @@ import org.giiwa.framework.web.Path;
  * @author joe
  *
  */
-public class backup extends Model {
+public class backup extends Controller {
 
 	/*
 	 * (non-Javadoc)

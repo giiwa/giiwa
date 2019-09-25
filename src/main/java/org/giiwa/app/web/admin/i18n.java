@@ -2,7 +2,7 @@ package org.giiwa.app.web.admin;
 
 import java.util.Map;
 
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
 /**
@@ -11,7 +11,7 @@ import org.giiwa.framework.web.Path;
  * @author joe
  *
  */
-public class i18n extends Model {
+public class i18n extends Controller {
 
 	@Path(login = true, access = "access.config.admin|access.config.module.admin")
 	public void onGet() {

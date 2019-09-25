@@ -8,7 +8,7 @@ import org.giiwa.core.dfile.MockResponse;
 import org.giiwa.core.dfile.Request;
 import org.giiwa.core.dfile.Response;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.web.Controller;
+import org.giiwa.framework.web.GiiwaController;
 
 public class HTTP implements ICommand {
 
@@ -24,7 +24,7 @@ public class HTTP implements ICommand {
 		// log.debug("body=" + body.toString());
 
 		MockResponse resp = MockResponse.create();
-		Controller.dispatch(uri, MockRequest.create(uri, head, body), resp, m);
+		GiiwaController.dispatch(uri, MockRequest.create(uri, head, body), resp, m);
 
 		Response out = Response.create(in.seq, Request.BIG);
 		out.writeInt(resp.status);

@@ -632,6 +632,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 */
 	final public int updateTable(String collection, W q, V v, String db) {
 
+		TimeStamp t = TimeStamp.create();
 		Document set = new Document();
 		Document unset = new Document();
 
@@ -658,8 +659,8 @@ public class MongoHelper implements Helper.DBHelper {
 			UpdateResult r = c.updateMany(q.query(), d);
 
 			if (log.isDebugEnabled())
-				log.debug("updated collection=" + collection + ", query=" + q + ", d=" + set + ", n="
-						+ r.getModifiedCount() + ",result=" + r);
+				log.debug("updated, cost=" + t.past() + ", collection=" + collection + ", query=" + q + ", d=" + set
+						+ ", n=" + r.getModifiedCount() + ",result=" + r);
 
 			// r.getN();
 			// r.getField("nModified");

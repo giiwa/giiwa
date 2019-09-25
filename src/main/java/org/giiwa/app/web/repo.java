@@ -33,7 +33,7 @@ import org.giiwa.framework.web.*;
  * @author yjiang
  * 
  */
-public class repo extends Model {
+public class repo extends Controller {
 
 	/**
 	 * Download.
@@ -161,7 +161,7 @@ public class repo extends Model {
 	@Path(path = "delete", login = true)
 	public void delete() {
 
-		this.setContentType(Model.MIME_JSON);
+		this.setContentType(Controller.MIME_JSON);
 		JSON jo = new JSON();
 
 		String repo = this.getString("repo");
@@ -222,7 +222,7 @@ public class repo extends Model {
 				 */
 				if (e != null) {
 
-					String cType = Model.getMimeType(e.getName());
+					String cType = Controller.getMimeType(e.getName());
 					this.setContentType(cType);
 
 					if (log.isDebugEnabled())

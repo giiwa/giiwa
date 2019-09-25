@@ -24,7 +24,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class browserinfo extends Model {
+public class browserinfo extends Controller {
 
 	/*
 	 * (non-Javadoc)

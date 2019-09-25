@@ -22,7 +22,7 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.AccessLog;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
 /**
@@ -33,7 +33,7 @@ import org.giiwa.framework.web.Path;
  * @author joe
  *
  */
-public class accesslog extends Model {
+public class accesslog extends Controller {
 
 	@Path(path = "open", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void open() {

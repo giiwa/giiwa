@@ -29,7 +29,7 @@ import org.giiwa.framework.bean.Disk;
  * @author yjiang
  * 
  */
-class DefaultModel extends Model {
+class DefaultController extends Controller {
 
 	/*
 	 * (non-Javadoc)
@@ -55,7 +55,7 @@ class DefaultModel extends Model {
 //		log.debug("uri=" + uri + ", remote=" + this.getRemoteHost(), new Exception());
 
 		if (!_onPost(uri)) {
-			for (String suffix : Controller.welcomes) {
+			for (String suffix : GiiwaController.welcomes) {
 				if (_onPost(uri + "/" + suffix)) {
 					return;
 				}

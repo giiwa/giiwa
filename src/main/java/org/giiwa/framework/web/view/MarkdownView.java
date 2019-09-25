@@ -31,7 +31,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Disk;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 import com.google.common.base.Joiner;
 import com.vladsch.flexmark.Extension;
@@ -53,7 +53,7 @@ public class MarkdownView extends View {
 	 * copy the file to front-end, and {giiwa}/html/ too
 	 */
 	@Override
-	public boolean parse(Object file, Model m, String viewname) throws IOException {
+	public boolean parse(Object file, Controller m, String viewname) throws IOException {
 
 		InputStream in = null;
 		try {

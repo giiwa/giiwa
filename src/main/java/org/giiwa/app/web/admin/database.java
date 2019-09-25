@@ -28,7 +28,7 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Temp.Exporter;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
 /**
@@ -38,7 +38,7 @@ import org.giiwa.framework.web.Path;
  * @author joe
  *
  */
-public class database extends Model {
+public class database extends Controller {
 
 	/*
 	 * (non-Javadoc)

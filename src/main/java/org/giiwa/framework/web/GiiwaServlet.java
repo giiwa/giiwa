@@ -18,6 +18,7 @@ import org.giiwa.framework.bean.License;
 import org.giiwa.framework.web.view.View;
 
 public class GiiwaServlet extends HttpServlet {
+
 	private Map<String, String> config = new ConcurrentHashMap<String, String>();
 
 	/**
@@ -29,11 +30,11 @@ public class GiiwaServlet extends HttpServlet {
 	@Override
 	public synchronized void init() {
 		try {
-			Model.s️ervletContext = getServletContext();
+			Controller.s️ervletContext = getServletContext();
 
 			if (log.isDebugEnabled())
 				log.debug("init view ...");
-			
+
 			Enumeration<?> e = getInitParameterNames();
 			while (e.hasMoreElements()) {
 				String name = e.nextElement().toString();
@@ -76,7 +77,7 @@ public class GiiwaServlet extends HttpServlet {
 			if (log.isDebugEnabled())
 				log.debug(req.getMethod() + ", uri=" + uri);
 
-			Controller.dispatch(uri, r1, r2, req.getMethod());
+			GiiwaController.dispatch(uri, r1, r2, req.getMethod());
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}

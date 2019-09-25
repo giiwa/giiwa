@@ -3,10 +3,10 @@ package org.giiwa.app.web.portlet;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.X;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
-public class portlet extends Model {
+public class portlet extends Controller {
 
 	@Path()
 	public final void onGet() {

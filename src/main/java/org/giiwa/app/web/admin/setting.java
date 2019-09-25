@@ -39,7 +39,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class setting extends Model {
+public class setting extends Controller {
 
 	private static List<String> names = new ArrayList<String>();
 	private static Map<String, Class<? extends setting>> settings = new HashMap<String, Class<? extends setting>>();

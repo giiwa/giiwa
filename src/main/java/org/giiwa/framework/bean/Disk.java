@@ -26,7 +26,7 @@ import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.task.Callable;
 import org.giiwa.framework.bean.Node;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.UID;
@@ -418,7 +418,7 @@ public class Disk extends Bean {
 			if (bs == null || bs.isEmpty()) {
 				// add a default
 				try {
-					File f = new File(Model.GIIWA_HOME + "/data");
+					File f = new File(Controller.GIIWA_HOME + "/data");
 					if (!f.exists()) {
 						f.mkdirs();
 					}

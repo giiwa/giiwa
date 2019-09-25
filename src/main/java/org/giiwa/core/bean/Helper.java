@@ -32,10 +32,11 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.StringFinder;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Data;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -366,7 +367,7 @@ public class Helper implements Serializable {
 		 * @param names the names string
 		 * @return the V
 		 */
-		public V copy(Model m, String... names) {
+		public V copy(Controller m, String... names) {
 			if (X.isEmpty(names)) {
 				// copy all
 				for (String name : m.getNames()) {
@@ -386,7 +387,7 @@ public class Helper implements Serializable {
 		 * @param m     the model
 		 * @param names the names string
 		 */
-		public V copyInt(Model m, String... names) {
+		public V copyInt(Controller m, String... names) {
 			if (!X.isEmpty(names)) {
 				for (String name : names) {
 					this.set(name, m.getInt(name));
@@ -2870,111 +2871,84 @@ public class Helper implements Serializable {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-
-		W w = W.create("name", 1).sort("name", 1).sort("nickname", -1).sort("ddd", 1);
-		w.and("aaa", 2);
-		W w1 = W.create("a", 1).or("b", 2);
-		w.and(w1);
-
-		System.out.println(w.where());
-		System.out.println(Helper.toString(w.args()));
-		System.out.println(w.orderby());
-
-		System.out.println("-----------");
-		System.out.println(w.query());
-		System.out.println(w.order());
-
-		w = W.create("a", 1);
-		w.and("b", new BasicDBObject("$exists", true));
-		System.out.println("-----------");
-		System.out.println(w.query());
-		System.out.println(w.order());
-
-		W q = W.create("a", 1).or("a", 2).or(W.create("c", 1, W.OP.gt).and("c", 3, W.OP.lt));
-		System.out.println(q);
+		/*
+		 * W w = W.create("name", 1).sort("name", 1).sort("nickname", -1).sort("ddd",
+		 * 1); w.and("aaa", 2); W w1 = W.create("a", 1).or("b", 2); w.and(w1);
+		 * 
+		 * System.out.println(w.where()); System.out.println(Helper.toString(w.args()));
+		 * System.out.println(w.orderby());
+		 * 
+		 * System.out.println("-----------"); System.out.println(w.query());
+		 * System.out.println(w.order());
+		 * 
+		 * w = W.create("a", 1); w.and("b", new BasicDBObject("$exists", true));
+		 * System.out.println("-----------"); System.out.println(w.query());
+		 * System.out.println(w.order());
+		 * 
+		 * W q = W.create("a", 1).or("a", 2).or(W.create("c", 1, W.OP.gt).and("c", 3,
+		 * W.OP.lt)); System.out.println(q); System.out.println(q.query());
+		 * 
+		 * W q1 = W.create("pid", 1).and("state", 1, W.OP.neq).and("cno",
+		 * 1).and(W.create("role", 1).or("role", 2)); System.out.println(q1);
+		 * System.out.println(q1.query());
+		 * 
+		 * W q2 = W.create("state", 1) .or(W.create("state", 2).and("enddate",
+		 * System.currentTimeMillis() - X.AHOUR, W.OP.lt)); System.out.println(q2);
+		 * System.out.println(q2.query());
+		 * 
+		 * q1 = W.create("a", 1).and("b", 2).or("c", 1).and("d", 1);
+		 * System.out.println(q1); System.out.println(q1.query());
+		 * 
+		 * q1 = W.create("a", 1).and("b", 2).or(W.create("c", 1).and("d", 1));
+		 * System.out.println(q1); System.out.println(q1.query());
+		 * 
+		 * System.out.println("................."); W sql = W.create(); sql.and("a",
+		 * "B").and("c", "d").or("e", "f").and("f", "g");
+		 * System.out.println(sql.query()); System.out.println(sql.where()); sql =
+		 * W.create(); sql.and("a", "c", W.OP.gt); sql.and(W.create().and("a", "b",
+		 * W.OP.lt).and("d", "4")); sql.or("c", "d"); System.out.println(sql.query());
+		 * System.out.println(sql.where());
+		 * 
+		 * sql = W.create(); sql.and("eventType", "1"); sql.and("msgType",
+		 * "NOTIFICATION", W.OP.neq); if (true) { sql.and("convType", "PERSON");
+		 * sql.and(W.create().or(W.create().and("fromAccount", "to").and("to", "from"))
+		 * .or(W.create().and("fromAccount", "from").and("to", "to"))); } long time =
+		 * System.currentTimeMillis(); if (time > 0) { sql.and("msgTimestamp", time,
+		 * W.OP.lt); } System.out.println(sql.query()); System.out.println(sql.where());
+		 * sql = W.create(); sql.and("eventType", "1"); sql.and("msgType",
+		 * "NOTIFICATION", W.OP.neq); if (true) { sql.and("convType", "PERSON");
+		 * sql.or(W.create().and("fromAccount", "from").and("to", "to"));
+		 * sql.or(W.create().and("fromAccount", "to").and("to", "from")); } if (time >
+		 * 0) { sql.append("msgTimestamp", time, W.OP.lt); }
+		 * System.out.println(sql.query()); System.out.println(sql.where());
+		 * System.out.println(sql.sortkeys());
+		 * 
+		 * sql = W.create(); sql.and("a", "b"); sql.or("c", "1"); sql.and(W.create("b",
+		 * "x")); System.out.println(sql.query()); System.out.println(sql.where());
+		 * System.out.println(sql.sortkeys());
+		 * 
+		 * q = W.create("a", 1).sort("b", -1); System.out.println(q.sortkeys());
+		 * 
+		 * String s = "(updated>10) and (created>10)";
+		 * 
+		 * try { q = SQL.where2W(StringFinder.create(s));
+		 * 
+		 * System.out.println(q.query());
+		 * 
+		 * } catch (Exception e) { // TODO Auto-generated catch block
+		 * e.printStackTrace(); }
+		 */
+		W q = W.create();
+		q.and("cip_firstauthor", "\\(法\\)", W.OP.like);
 		System.out.println(q.query());
 
-		W q1 = W.create("pid", 1).and("state", 1, W.OP.neq).and("cno", 1).and(W.create("role", 1).or("role", 2));
-		System.out.println(q1);
-		System.out.println(q1.query());
-
-		W q2 = W.create("state", 1)
-				.or(W.create("state", 2).and("enddate", System.currentTimeMillis() - X.AHOUR, W.OP.lt));
-		System.out.println(q2);
-		System.out.println(q2.query());
-
-		q1 = W.create("a", 1).and("b", 2).or("c", 1).and("d", 1);
-		System.out.println(q1);
-		System.out.println(q1.query());
-
-		q1 = W.create("a", 1).and("b", 2).or(W.create("c", 1).and("d", 1));
-		System.out.println(q1);
-		System.out.println(q1.query());
-
-		System.out.println(".................");
-		W sql = W.create();
-		sql.and("a", "B").and("c", "d").or("e", "f").and("f", "g");
-		System.out.println(sql.query());
-		System.out.println(sql.where());
-		sql = W.create();
-		sql.and("a", "c", W.OP.gt);
-		sql.and(W.create().and("a", "b", W.OP.lt).and("d", "4"));
-		sql.or("c", "d");
-		System.out.println(sql.query());
-		System.out.println(sql.where());
-
-		sql = W.create();
-		sql.and("eventType", "1");
-		sql.and("msgType", "NOTIFICATION", W.OP.neq);
-		if (true) {
-			sql.and("convType", "PERSON");
-			sql.and(W.create().or(W.create().and("fromAccount", "to").and("to", "from"))
-					.or(W.create().and("fromAccount", "from").and("to", "to")));
-		}
-		long time = System.currentTimeMillis();
-		if (time > 0) {
-			sql.and("msgTimestamp", time, W.OP.lt);
-		}
-		System.out.println(sql.query());
-		System.out.println(sql.where());
-		sql = W.create();
-		sql.and("eventType", "1");
-		sql.and("msgType", "NOTIFICATION", W.OP.neq);
-		if (true) {
-			sql.and("convType", "PERSON");
-			sql.or(W.create().and("fromAccount", "from").and("to", "to"));
-			sql.or(W.create().and("fromAccount", "to").and("to", "from"));
-		}
-		if (time > 0) {
-			sql.append("msgTimestamp", time, W.OP.lt);
-		}
-		System.out.println(sql.query());
-		System.out.println(sql.where());
-		System.out.println(sql.sortkeys());
-
-		sql = W.create();
-		sql.and("a", "b");
-		sql.or("c", "1");
-		sql.and(W.create("b", "x"));
-		System.out.println(sql.query());
-		System.out.println(sql.where());
-		System.out.println(sql.sortkeys());
-
-		q = W.create("a", 1).sort("b", -1);
-		System.out.println(q.sortkeys());
-
-		String s = "(updated>10) and (created>10)";
-
 		try {
-			q = SQL.where2W(StringFinder.create(s));
-
+			StringFinder s = StringFinder.create("cip_firstauthor like '\\(法\\)'");
+			q = SQL.where2W(s);
 			System.out.println(q.query());
-
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 //		Beans<User> l1 = User.dao.query().and("a", 1).sort("a", 1).load(0, 10);
 
 	}

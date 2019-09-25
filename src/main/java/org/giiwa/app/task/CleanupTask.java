@@ -31,7 +31,7 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 /**
  * The Class CleanupTask.
@@ -77,7 +77,7 @@ public class CleanupTask extends Task {
 	 */
 	private CleanupTask(Configuration conf) {
 
-		home = Model.GIIWA_HOME;
+		home = Controller.GIIWA_HOME;
 
 		add("org.giiwa.framework.bean");
 		add("org.giiwa.framework.bean.m");
@@ -121,10 +121,10 @@ public class CleanupTask extends Task {
 			/**
 			 * clean temp files in tomcat
 			 */
-			if (!X.isEmpty(Model.GIIWA_HOME)) {
+			if (!X.isEmpty(Controller.GIIWA_HOME)) {
 				// do it
-				cleanup(Model.GIIWA_HOME + "/work", X.ADAY, false);
-				cleanup(Model.GIIWA_HOME + "/logs", X.ADAY * 3, false);
+				cleanup(Controller.GIIWA_HOME + "/work", X.ADAY, false);
+				cleanup(Controller.GIIWA_HOME + "/logs", X.ADAY * 3, false);
 			}
 			if (log.isInfoEnabled()) {
 				log.info("cleanup temp files: " + count);

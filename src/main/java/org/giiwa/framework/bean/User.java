@@ -34,7 +34,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 
 /**
  * 
@@ -552,6 +552,7 @@ public class User extends Bean {
 			v.force("md5passwd", md5encrypt(passwd));
 			passwd = encrypt(passwd);
 			v.force("password", passwd);
+			
 		} else {
 			v.remove("password");
 		}
@@ -849,7 +850,7 @@ public class User extends Bean {
 					if (list == null || list.size() == 0) {
 						String passwd = UID.random(16);
 						try {
-							PrintStream out = new PrintStream(Model.GIIWA_HOME + "/root.pwd");
+							PrintStream out = new PrintStream(Controller.GIIWA_HOME + "/root.pwd");
 							out.print(passwd);
 							out.close();
 						} catch (Exception e) {

@@ -16,10 +16,10 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.bean.Repo;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
-public class dfile extends Model {
+public class dfile extends Controller {
 
 	@Path(path = "file/delete", login = true, access = "access.config.admin")
 	public void file_delete() {

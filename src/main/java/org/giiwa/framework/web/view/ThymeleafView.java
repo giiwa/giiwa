@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.templateresolver.FileTemplateResolver;
@@ -31,7 +31,7 @@ public class ThymeleafView extends View {
 	private static TemplateEngine _engine;
 
 	@Override
-	public synchronized boolean parse(Object file, Model m, String viewname) {
+	public synchronized boolean parse(Object file, Controller m, String viewname) {
 		// load
 		try {
 

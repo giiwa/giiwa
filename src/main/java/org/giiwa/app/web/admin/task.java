@@ -35,7 +35,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class task extends Model {
+public class task extends Controller {
 
 	/*
 	 * (non-Javadoc)

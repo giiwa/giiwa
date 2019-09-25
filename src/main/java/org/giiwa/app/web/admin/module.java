@@ -45,7 +45,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class module extends Model {
+public class module extends Controller {
 
 	private static String ROOT = "/tmp/modules/";
 
@@ -696,7 +696,7 @@ public class module extends Model {
 
 		String name = ManagementFactory.getRuntimeMXBean().getName();
 		this.set("pid", X.split(name, "[@]")[0]);
-		this.set("uptime", Model.UPTIME);
+		this.set("uptime", Controller.UPTIME);
 
 		this.set("list", Module.getAll(false));
 
@@ -718,7 +718,7 @@ public class module extends Model {
 		 */
 		Module m = Module.load(name);
 		String file = ROOT + name + ".zip";
-		File f = m.zipTo(Model.HOME + file);
+		File f = m.zipTo(Controller.HOME + file);
 		if (f != null && f.exists()) {
 
 			this.set("f", f);

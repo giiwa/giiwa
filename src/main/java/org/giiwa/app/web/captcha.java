@@ -21,7 +21,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
 /**
@@ -32,7 +32,7 @@ import org.giiwa.framework.web.Path;
  * @author wujun
  *
  */
-public class captcha extends Model {
+public class captcha extends Controller {
 
 	/**
 	 * response the json with uri=[code.jpg]

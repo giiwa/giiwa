@@ -77,17 +77,18 @@ public class GiiwaContextListener implements ServletContextListener {
 
 			Thread.currentThread().setName("main");
 
-			Model.GIIWA_HOME = System.getenv("GIIWA_HOME");
+			Controller.GIIWA_HOME = System.getenv("GIIWA_HOME");
 
-			if (X.isEmpty(Model.GIIWA_HOME)) {
-				System.out.println("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
+			if (X.isEmpty(Controller.GIIWA_HOME)) {
+				Config.getLogger()
+						.severe("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
 				System.exit(-1);
 			}
 
-			System.out.println("giiwa is starting ...");
-			System.out.println("giiwa.home=" + Model.GIIWA_HOME);
+			Config.getLogger().info("giiwa is starting ...");
+			Config.getLogger().info("giiwa.home=" + Controller.GIIWA_HOME);
 
-			System.setProperty("home", Model.GIIWA_HOME);
+			System.setProperty("home", Controller.GIIWA_HOME);
 
 			// TODO, remove it later, the old driver will cause can not startup
 			// File f = new File(Model.GIIWA_HOME +
@@ -104,17 +105,17 @@ public class GiiwaContextListener implements ServletContextListener {
 			 * initialize the configuration
 			 */
 //			System.out.println("init configuration");
-			Config.init(new File(Model.GIIWA_HOME + "/giiwa.properties"));
+			Config.init(new File(Controller.GIIWA_HOME + "/giiwa.properties"));
 
 			Configuration conf = Config.getConf();
 
 			// TO fix a bug, giiwa.properties may store the "home"
-			conf.setProperty("home", Model.GIIWA_HOME);
+			conf.setProperty("home", Controller.GIIWA_HOME);
 
 			/**
 			 * initialize the helper, including RDB and Mongo
 			 */
-			System.out.println("init db helper");
+//			System.out.println("init db helper");
 			Helper.init(conf);
 
 			/**
@@ -130,7 +131,7 @@ public class GiiwaContextListener implements ServletContextListener {
 			 * initialize the controller, this MUST place in the end !:-)
 			 */
 //			System.out.println("init web controller");
-			Controller.init(conf, contextPath);
+			GiiwaController.init(conf, contextPath);
 
 			/**
 			 * initialize the repo
@@ -147,6 +148,7 @@ public class GiiwaContextListener implements ServletContextListener {
 //			System.out.println("init finished");
 
 		} catch (Exception e) {
+			java.util.logging.Logger.getLogger("giiwa").severe(e.getMessage());
 			e.printStackTrace();
 		}
 

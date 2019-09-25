@@ -3,10 +3,10 @@ package org.giiwa.app.web;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
-public class index extends Model {
+public class index extends Controller {
 
 	@Path()
 	public void onGet() {

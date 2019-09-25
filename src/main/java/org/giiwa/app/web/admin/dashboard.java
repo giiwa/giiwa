@@ -31,7 +31,7 @@ import org.giiwa.framework.web.*;
  * @author yjiang
  * 
  */
-public class dashboard extends Model {
+public class dashboard extends Controller {
 
 	/*
 	 * (non-Javadoc)
@@ -53,7 +53,7 @@ public class dashboard extends Model {
 
 		String name = ManagementFactory.getRuntimeMXBean().getName();
 		this.set("pid", X.split(name, "[@]")[0]);
-		this.set("uptime", Model.UPTIME);
+		this.set("uptime", Controller.UPTIME);
 
 		if (login != null && login.hasAccess("access.config.admin")) {
 
@@ -74,7 +74,7 @@ public class dashboard extends Model {
 
 		String name = ManagementFactory.getRuntimeMXBean().getName();
 		this.set("pid", X.split(name, "[@]")[0]);
-		this.set("uptime", Model.UPTIME);
+		this.set("uptime", Controller.UPTIME);
 
 		if (login != null && login.hasAccess("access.config.admin")) {
 

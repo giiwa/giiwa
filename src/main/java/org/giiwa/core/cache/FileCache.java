@@ -16,11 +16,11 @@ package org.giiwa.core.cache;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.Semaphore;
 
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.UID;
-import org.giiwa.framework.web.Model;
+import org.giiwa.core.task.LiveHand;
+import org.giiwa.framework.web.Controller;
 
 /**
  * The Class FileCache is used to simple cache when no cache configured in
@@ -42,7 +42,7 @@ class FileCache implements ICacheSystem {
 	 */
 	public static ICacheSystem create() {
 		FileCache f = new FileCache();
-		f.root = Model.GIIWA_HOME + "/temp/_cache/";
+		f.root = Controller.GIIWA_HOME + "/temp/_cache/";
 		f.cache_size = 10000;
 		return f;
 	}
@@ -264,17 +264,18 @@ class FileCache implements ICacheSystem {
 	/** The queue. */
 	List<String> queue = new ArrayList<String>();
 
-	private static Map<String, Semaphore> _local = new HashMap<String, Semaphore>();
+	private static Map<String, LiveHand> _local = new HashMap<String, LiveHand>();
 
 	@Override
 	public boolean trylock(String name, String value, long ms) {
 		synchronized (_local) {
-			Semaphore d = _local.get(name);
+			LiveHand d = _local.get(name);
 			if (d == null) {
-				d = new Semaphore(1);
+				d = LiveHand.create(-1, 1);
 				_local.put(name, d);
 			}
-			if (d.tryAcquire()) {
+
+			if (d.tryHold()) {
 				return true;
 			}
 		}
@@ -291,9 +292,9 @@ class FileCache implements ICacheSystem {
 	public boolean unlock(String name, String value) {
 		try {
 			synchronized (_local) {
-				Semaphore d = _local.remove(name);
-				if (d != null && d.availablePermits() == 0) {
-					d.release();
+				LiveHand d = _local.remove(name);
+				if (d != null) {
+					d.drop();
 					return true;
 				}
 			}

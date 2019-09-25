@@ -31,7 +31,7 @@ import org.giiwa.framework.web.*;
  * @author joe
  *
  */
-public class logs extends Model {
+public class logs extends Controller {
 
 	@Path(path = "download", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void download() {
@@ -39,8 +39,8 @@ public class logs extends Model {
 		JSON jo = JSON.create();
 		String f = this.getString("f");
 
-		File f0 = new File(Model.GIIWA_HOME + "/logs/");
-		File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
+		File f0 = new File(Controller.GIIWA_HOME + "/logs/");
+		File f1 = new File(Controller.GIIWA_HOME + "/logs/" + f);
 		try {
 			if (f1.getCanonicalPath().startsWith(f0.getCanonicalPath())) {
 
@@ -70,9 +70,9 @@ public class logs extends Model {
 		JSON jo = new JSON();
 		String f = this.getString("f");
 
-		File f1 = new File(Model.GIIWA_HOME + "/logs/" + f);
+		File f1 = new File(Controller.GIIWA_HOME + "/logs/" + f);
 		try {
-			if (f1.getCanonicalPath().startsWith(new File(Model.GIIWA_HOME + "/logs/").getCanonicalPath())
+			if (f1.getCanonicalPath().startsWith(new File(Controller.GIIWA_HOME + "/logs/").getCanonicalPath())
 					&& f1.delete()) {
 				GLog.oplog.warn(logs.class, "delete", "deleted=" + f, login, this.getRemoteHost());
 				jo.put(X.STATE, 200);
@@ -95,7 +95,7 @@ public class logs extends Model {
 	 */
 	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
 	public void onGet() {
-		File f = new File(Model.GIIWA_HOME + "/logs");
+		File f = new File(Controller.GIIWA_HOME + "/logs");
 		File[] ff = f.listFiles();
 		this.set("list", ff);
 

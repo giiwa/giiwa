@@ -239,7 +239,7 @@ public class Language {
 	 * @param m   the model
 	 * @return the string
 	 */
-	public String parse(String str, Model m) {
+	public String parse(String str, Controller m) {
 
 		try {
 			str = Velocity.parse(str, m.context);
@@ -690,7 +690,7 @@ public class Language {
 			return "icon-file-empty";
 		}
 
-		String mime = Model.getMimeType(file);
+		String mime = Controller.getMimeType(file);
 		if (log.isDebugEnabled())
 			log.debug("mime=" + mime + ", file=" + file);
 
@@ -721,7 +721,7 @@ public class Language {
 	}
 
 	public boolean isImage(String file) {
-		String mime = Model.getMimeType(file);
+		String mime = Controller.getMimeType(file);
 		if (log.isDebugEnabled())
 			log.debug("mime=" + mime);
 

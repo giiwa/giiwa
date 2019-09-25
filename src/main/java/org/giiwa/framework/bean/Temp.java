@@ -33,7 +33,7 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.task.Callable;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.h2.util.IOUtils;
 
 /**
@@ -97,7 +97,7 @@ public class Temp {
 	 */
 	public File getFile() {
 		if (file == null) {
-			file = new File(Model.GIIWA_HOME + path(id, name));
+			file = new File(Controller.GIIWA_HOME + path(id, name));
 		}
 		return file;
 	}
@@ -116,7 +116,7 @@ public class Temp {
 	}
 
 	public static File get(String id, String name) {
-		return new File(Model.GIIWA_HOME + path(id, name));
+		return new File(Controller.GIIWA_HOME + path(id, name));
 	}
 
 	public static String path(String path, String name) {
@@ -284,7 +284,7 @@ public class Temp {
 		if (f == null || f.isFile())
 			return;
 
-		String root = X.getCanonicalPath(Model.GIIWA_HOME + ROOT);
+		String root = X.getCanonicalPath(Controller.GIIWA_HOME + ROOT);
 		if (root.startsWith(f.getCanonicalPath()) || X.isSame(root, f.getCanonicalPath())) {
 			return;
 		}
@@ -314,7 +314,7 @@ public class Temp {
 
 		{
 			try {
-				File f1 = new File(Model.GIIWA_HOME + ROOT);
+				File f1 = new File(Controller.GIIWA_HOME + ROOT);
 				File[] ff = f1.listFiles();
 				if (ff == null || ff.length == 0) {
 					f1.delete();
