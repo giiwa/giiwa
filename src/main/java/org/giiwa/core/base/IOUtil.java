@@ -238,8 +238,13 @@ public final class IOUtil {
 	 * @throws IOException throw exception when copy file failed
 	 */
 	public static int copy(File src, File dest) throws IOException {
-		dest.getParentFile().mkdirs();
-		return copy(new FileInputStream(src), new FileOutputStream(dest), true);
+		if (src.isDirectory()) {
+			return IOUtil.copyDir(src, dest);
+		} else if (src.isFile()) {
+			dest.getParentFile().mkdirs();
+			return copy(new FileInputStream(src), new FileOutputStream(dest), true);
+		}
+		return 0;
 	}
 
 	public static int copy(DFile src, DFile dest) throws IOException {
@@ -376,7 +381,7 @@ public final class IOUtil {
 	 * @param f
 	 */
 	public static void cleanup(File f) {
-		
+
 		if (f.isFile()) {
 			if (f.length() == 0) {
 				f.delete();

@@ -61,8 +61,9 @@ public class Language {
 	public static Language inst = null;
 
 	public static Language getLanguage() {
-		if (inst == null)
-			inst = getLanguage(Module.home == null ? X.EMPTY : Global.getString("language", "zh_cn"));
+
+		if (inst == null && Module.home != null)
+			inst = getLanguage(Global.getString("language", "zh_cn"));
 
 		return inst;
 	}
@@ -527,6 +528,8 @@ public class Language {
 		return size(length, 1024);
 	}
 
+	private static String[] UNITS = new String[] { "", "k", "M", "G", "T", "P" };
+
 	/**
 	 * Size.
 	 * 
@@ -538,31 +541,25 @@ public class Language {
 			return X.EMPTY;
 		}
 
-		String unit = X.EMPTY;
 		double d = Math.abs(length);
-		if (d < 1024) {
-		} else if (d < step * step) {
-			unit = "k";
-			d /= 1024f;
-		} else if (d < step * step * step) {
-			unit = "M";
-			d /= step * step;
-		} else {
-			unit = "G";
-			d /= step * step * step;
+
+		int i = 0;
+		while (d > step && i < UNITS.length) {
+			d /= step;
+			i++;
 		}
 
+		long l = (long) (d * 10);
 		if (length > 0) {
-			long l = (long) (d * 10);
 			if (l % 10 == 0)
-				return l / 10 + unit;
-			return l / 10f + unit;
-		} else {
-			long l = (long) (d * 10);
-			if (l % 10 == 0)
-				return -l / 10 + unit;
+				return l / 10 + UNITS[i];
 
-			return -((long) (d * 10)) / 10f + unit;
+			return l / 10f + UNITS[i];
+		} else {
+			if (l % 10 == 0)
+				return -l / 10 + UNITS[i];
+
+			return -l / 10f + UNITS[i];
 		}
 	}
 

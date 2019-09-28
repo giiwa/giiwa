@@ -2005,15 +2005,18 @@ public class Controller {
 	 * @return String of mime type
 	 */
 	public static String getMimeType(String uri) {
-		String mime = s️ervletContext.getMimeType(uri);
-		if (mime == null) {
-			if (uri.endsWith(".tgz")) {
-				mime = "application/x-gzip";
+		if (s️ervletContext != null) {
+			String mime = s️ervletContext.getMimeType(uri);
+			if (mime == null) {
+				if (uri.endsWith(".tgz")) {
+					mime = "application/x-gzip";
+				}
 			}
+			if (log.isDebugEnabled())
+				log.debug("mimetype=" + mime + ", uri=" + uri);
+			return mime;
 		}
-		if (log.isDebugEnabled())
-			log.debug("mimetype=" + mime + ", uri=" + uri);
-		return mime;
+		return null;
 	}
 
 	/**

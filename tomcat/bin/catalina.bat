@@ -293,7 +293,7 @@ goto execCmd
 :doStart
 shift
 if "%TITLE%" == "" set TITLE=Giiwa
-set _EXECJAVA=start "%TITLE%" %_RUNJAVA%
+set _EXECJAVA=%_RUNJAVA%
 if not ""%1"" == ""-security"" goto execCmd
 shift
 echo Using Security Manager

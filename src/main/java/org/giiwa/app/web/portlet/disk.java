@@ -29,11 +29,11 @@ public class disk extends portlet {
 		String name = this.getString("name");
 		this.set("name", name);
 
-		long time = System.currentTimeMillis() - X.AMONTH;
+		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_Disk.Record> bs = _Disk.Record.dao.load(
 				W.create("node", Local.id()).and("name", name).and("created", time, W.OP.gte).sort("created", 1), 0,
-				24 * 60 * 30);
+				24 * 60 * 7);
 
 		if (bs != null && !bs.isEmpty()) {
 			this.set("list", bs);

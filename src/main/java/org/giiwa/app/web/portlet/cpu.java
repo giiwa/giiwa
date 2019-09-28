@@ -54,10 +54,10 @@ public class cpu extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		long time = System.currentTimeMillis() - X.AMONTH;
+		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_CPU.Record> bs = _CPU.Record.dao
-				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", 1), 0, 24 * 60 * 30);
+				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", 1), 0, 24 * 60 * 7);
 		if (bs != null && !bs.isEmpty()) {
 			this.set("list", bs);
 		}

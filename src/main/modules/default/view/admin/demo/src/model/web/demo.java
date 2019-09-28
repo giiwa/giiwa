@@ -1,6 +1,6 @@
 package org.giiwa.demo.web;
 
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
 /**
@@ -9,7 +9,7 @@ import org.giiwa.framework.web.Path;
  * @author joe
  * 
  */
-public class demo extends Model {
+public class demo extends Controller {
 
 	@Path()
 	public void onGet() {

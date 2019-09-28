@@ -7,10 +7,10 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.demo.bean.Demo;
-import org.giiwa.framework.web.Model;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
-public class demo extends Model {
+public class demo extends Controller {
 
 	@Path(login = true, access = "access.demo.admin")
 	public void onGet() {

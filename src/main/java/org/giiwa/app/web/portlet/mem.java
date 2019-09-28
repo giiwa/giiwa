@@ -72,10 +72,10 @@ public class mem extends portlet {
 		long id = this.getLong("id");
 		this.set("id", id);
 
-		long time = System.currentTimeMillis() - X.AMONTH;
+		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_Memory.Record> bs = _Memory.Record.dao
-				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", 1), 0, 30 * 24 * 60);
+				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", 1), 0, 30 * 24 * 7);
 
 		if (bs != null && !bs.isEmpty()) {
 			this.set("list", bs);
