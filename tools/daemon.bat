@@ -14,7 +14,7 @@ if ERRORLEVEL 0 goto sleep
 goto sleep
 
 :starting
-start /b %~dp0\bin\catalina.bat start
+call %~dp0\bin\catalina.bat start
 ping 0.0.0.0 -n 6 >NUL
 
 :sleep
