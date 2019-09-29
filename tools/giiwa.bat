@@ -7,7 +7,7 @@ goto end
 :doStart
 echo %JAVA_HOME%
 java -version
-call %~dp0\daemon.exe
+start %~dp0\daemon.exe
 echo giiwa is started.
 
 :end
