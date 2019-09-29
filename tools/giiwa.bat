@@ -1,4 +1,4 @@
 @echo off
 
-start /b %~dp0\daemon.exe
+call %~dp0\daemon.exe
 echo giiwa is started.
