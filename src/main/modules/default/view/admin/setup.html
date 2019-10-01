@@ -61,9 +61,6 @@
 					<g class='mysql' style='display:none' dd=''>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
 					<g class='oracle' style='display:none' dd=''>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
 				</label></div>
-				<input type="password" name="passwd" style="display:none">
-				<div class='username'><label><h3>$lang.get('setup.label.username')：</h3><input type='text' name='username' value="$!global.getString('db.username', '')"/></label></div>
-				<div class='passwd'><label><h3>$lang.get('setup.label.passwd')：</h3><input type='password' name='passwd' value="$!global.getString('db.passwd', '')"/></label></div>
 				
 				<div class='btns'>
 					<a class='prev btn btn-info'>$lang.get('a.prev')</a>
@@ -112,14 +109,6 @@ function _ondriver(){
 	var tips = $('#db select option[value="' + driver + '"]').attr('tips');
 	$('#db .url g.' + tips).show();
 	
-	var user = $('#db select option[value="' + driver + '"]').attr('user');
-	if(user == '1') {
-		$('#db .username').show();
-		$('#db .passwd').show();
-	} else {
-		$('#db .username').hide();
-		$('#db .passwd').hide();
-	}
 	if(tips == 'h2') {
 		$('#db input[name=url]').hide();
 	} else {
@@ -184,17 +173,11 @@ $(function(){
 		var p = {};
 		p["db.driver"] = $('#db select[name=driver]').val();
 		p["db.url"] = $('#db input[name=url]').val();
-		p["db.user"] = $('#db input[name=username]').val();
-		p["db.passwd"] = $('#db input[name=passwd]').val();
 		p["mongo.url"] = $('#mongo input[name=url]').val();
 		p["mongo.db"] = $('#mongo input[name=db]').val();
 		p["code"] = $('#system input[name=code]').val();
 		p["cache.url"] = $('#cache input[name=url]').val();
 		p["cache.group"] = $('#cache input[name=group]').val();
-		p["admin"] = $('#admin input[name=admin]').val();
-		p["password"] = $('#admin input[name=password]').val();
-		p["email"] = $('#admin input[name=email]').val();
-		p["phone"] = $('#admin input[name=phone]').val();
 		
 		giiwa.processing.show();
 		$.post('/admin/setup/save?__node=$!__node', p, function(d){
@@ -219,8 +202,6 @@ function check_db(f){
 	var  p = {op:'db'};
 	p.driver = $('#db select[name=driver]').val();
 	p.url = $('#db input[name=url]').val();
-	p.username = $('#db input[name=username]').val();
-	p.passwd = $('#db input[name=passwd]').val();
 	$.post('/admin/setup/check?__node=$!__node', p).done(function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {

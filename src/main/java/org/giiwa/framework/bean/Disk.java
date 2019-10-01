@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,7 +25,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.DFile;
-import org.giiwa.core.task.Callable;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Controller;
 import org.giiwa.core.bean.Column;
@@ -317,11 +317,11 @@ public class Disk extends Bean {
 		return len;
 	}
 
-	public static long copy(DFile src, DFile dest, Callable<Void, String> moni) throws IOException {
+	public static long copy(DFile src, DFile dest, Consumer<String> moni) throws IOException {
 		long len = 0;
 
 		if (moni != null) {
-			moni.call((int) len, src.getFilename());
+			moni.accept(src.getFilename());
 		}
 
 		if (src.isDirectory()) {

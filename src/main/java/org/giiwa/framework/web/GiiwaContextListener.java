@@ -90,17 +90,6 @@ public class GiiwaContextListener implements ServletContextListener {
 
 			System.setProperty("home", Controller.GIIWA_HOME);
 
-			// TODO, remove it later, the old driver will cause can not startup
-			// File f = new File(Model.GIIWA_HOME +
-			// "/giiwa/WEB-INF/lib/mongo-java-driver-2.10.0.jar");
-			// if (f.exists()) {
-			// f.delete();
-			// System.out.println("Deleteing mongo-java-driver-2.10.0.jar, it will cause
-			// startup failed.");
-			// System.out.println("Restart the giiwa.");
-			// System.exit(0);
-			// }
-
 			/**
 			 * initialize the configuration
 			 */

@@ -28,13 +28,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.ReduceFunction;
 
 /**
  * The {@code Bean} Class is entity class that mapping to a table,<br>
@@ -663,8 +663,8 @@ public class Bean implements Serializable {
 	 * @return the JSON
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends Bean> JSON refine(ReduceFunction<JSON, T> e) {
-		return e.call((T) this);
+	public <T extends Bean> JSON refine(Function<T, JSON> e) {
+		return e.apply((T) this);
 	}
 
 }

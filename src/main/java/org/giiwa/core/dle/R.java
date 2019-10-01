@@ -25,6 +25,7 @@ public class R {
 
 	public static R inst = new R();
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JSON run(String code) throws Exception {
 		return run(code, (List) null);
 	}
@@ -132,7 +133,7 @@ public class R {
 				sb.append(func + "<-function(){");
 				if (!X.isEmpty(data)) {
 					Temp t = Temp.create(data + ".csv");
-					Temp.Exporter<Object> ex = t.export("UTF-8", Temp.Exporter.FORMAT.csv).createSheet((s, e) -> {
+					Temp.Exporter<Object> ex = t.export("UTF-8", Temp.Exporter.FORMAT.csv).createSheet((e) -> {
 						return (Object[]) e;
 					});
 					ex.print((List) data);

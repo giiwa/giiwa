@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -32,7 +33,6 @@ import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
-import org.giiwa.core.task.Callable;
 import org.giiwa.framework.web.Controller;
 import org.h2.util.IOUtils;
 
@@ -159,7 +159,8 @@ public class Temp {
 
 		BufferedWriter out = null;
 		FORMAT format;
-		Callable<Object[], V> cols = null;
+
+		Function<V, Object[]> cols = null;
 
 		private static <V> Exporter<V> create(File file, String charset, FORMAT format) {
 			try {
@@ -174,7 +175,7 @@ public class Temp {
 			return null;
 		}
 
-		public Exporter<V> createSheet(Callable<Object[], V> cols) {
+		public Exporter<V> createSheet(Function<V, Object[]> cols) {
 			this.cols = cols;
 			return this;
 		}
@@ -225,7 +226,7 @@ public class Temp {
 				throw new IOException("out is null? ");
 			}
 
-			Object[] ss = cols.call(200, b);
+			Object[] ss = cols.apply(b);
 			if (ss != null) {
 
 				for (int i = 0; i < ss.length; i++) {

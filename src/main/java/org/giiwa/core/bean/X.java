@@ -23,10 +23,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.task.ReduceFunction;
 
 /**
  * The {@code X} Class used to define contains.
@@ -687,13 +687,13 @@ public final class X {
 		return l2;
 	}
 
-	public static <T, E> List<T> toArray(List<E> l1, ReduceFunction<T, E> cb) {
+	public static <T, E> List<T> toArray(List<E> l1, Function<E, T> cb) {
 		if (l1 == null) {
 			return new ArrayList<T>();
 		}
 		List<T> l2 = new ArrayList<T>(l1.size());
 		for (E e : l1) {
-			T t = cb.call(e);
+			T t = cb.apply(e);
 			if (t != null) {
 				l2.add(t);
 			}
@@ -701,14 +701,14 @@ public final class X {
 		return l2;
 	}
 
-	public static <T, E> List<T> toArray(E[] l1, ReduceFunction<T, E> cb) {
+	public static <T, E> List<T> toArray(E[] l1, Function<E, T> cb) {
 		if (l1 == null) {
 			return new ArrayList<T>();
 		}
 
 		List<T> l2 = new ArrayList<T>(l1.length);
 		for (E e : l1) {
-			T t = cb.call(e);
+			T t = cb.apply(e);
 			if (t != null) {
 				l2.add(t);
 			}

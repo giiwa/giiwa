@@ -16,13 +16,12 @@ package org.giiwa.core.bean;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Callable;
-import org.giiwa.core.task.ReduceFunction;
 
 /**
  * The {@code Beans} Class used to contains the Bean in query. <br>
@@ -128,12 +127,12 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return expired > 0 && System.currentTimeMillis() > expired;
 	}
 
-	public List<JSON> toJSON(Callable<JSON, E> cb) {
+	public List<JSON> toJSON(Function<E, JSON> cb) {
 		List<JSON> l1 = JSON.createList();
 		for (E e : this) {
 			JSON j = null;
 			if (cb != null) {
-				j = cb.call(200, e);
+				j = cb.apply(e);
 			} else {
 				j = e.getJSON();
 
@@ -145,22 +144,10 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return l1;
 	}
 
-	public <K> List<K> toArray(Callable<K, E> cb) {
-		List<K> l1 = new ArrayList<K>();
-		int i = 0;
-		for (E e : this) {
-			K k = cb.call(i++, e);
-			if (k != null) {
-				l1.add(k);
-			}
-		}
-		return l1;
-	}
-
-	public <K> List<K> toArray(ReduceFunction<K, E> cb) {
+	public <K> List<K> toArray(Function<E, K> cb) {
 		List<K> l1 = new ArrayList<K>();
 		for (E e : this) {
-			K k = cb.call(e);
+			K k = cb.apply(e);
 			if (k != null) {
 				l1.add(k);
 			}

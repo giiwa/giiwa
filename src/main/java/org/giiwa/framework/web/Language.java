@@ -18,6 +18,7 @@ import java.io.File;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 
 import org.apache.commons.logging.*;
 import org.giiwa.core.base.Html;
@@ -25,7 +26,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.dle.Velocity;
 import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Callable;
 import org.giiwa.framework.bean.Repo;
 
 /**
@@ -736,7 +736,7 @@ public class Language {
 	public synchronized String theme(int min, String name) {
 
 		if (themeplugin != null) {
-			String s = themeplugin.call(min, name);
+			String s = themeplugin.apply(name);
 			if (!X.isEmpty(s)) {
 				return s;
 			}
@@ -767,9 +767,9 @@ public class Language {
 	}
 
 	private JSON theme = null;
-	private Callable<String, String> themeplugin;
+	private Function<String, String> themeplugin;
 
-	public void setTheme(Callable<String, String> m) {
+	public void setTheme(Function<String, String> m) {
 		themeplugin = m;
 	}
 

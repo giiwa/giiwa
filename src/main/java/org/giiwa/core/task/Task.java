@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.commons.logging.*;
@@ -42,6 +44,7 @@ import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
 import org.giiwa.mq.MQ.Mode;
 import org.giiwa.mq.MQ.Request;
+
 import org.giiwa.mq.Result;
 
 /**
@@ -610,6 +613,14 @@ public abstract class Task implements Runnable, Serializable {
 		return schedule(cc, 0);
 	}
 
+	final public static Task schedule(String name, TaskFunction cc) {
+		return schedule(name, cc, 0);
+	}
+
+	final public static Task schedule(TaskFunction cc, long ms) {
+		return schedule(null, cc, ms);
+	}
+
 	/**
 	 * create a task and schedule in ms
 	 * 
@@ -617,7 +628,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @param ms the delay time
 	 * @return the Task
 	 */
-	final public static Task schedule(TaskFunction cc, long ms) {
+	final public static Task schedule(String name, TaskFunction cc, long ms) {
 		Task t = new Task() {
 
 			/**
@@ -626,8 +637,24 @@ public abstract class Task implements Runnable, Serializable {
 			private static final long serialVersionUID = 1L;
 
 			@Override
+			public String getName() {
+				if (X.isEmpty(name)) {
+					return super.getName();
+				} else {
+					return name;
+				}
+			}
+
+			@Override
 			public void onExecute() {
-				cc.call();
+				if (this.tryLock()) {
+					try {
+						cc.call();
+					} finally {
+						this.unlock();
+					}
+				}
+
 			}
 
 		};
@@ -853,8 +880,8 @@ public abstract class Task implements Runnable, Serializable {
 		});
 	}
 
-	public static <T, V> Result<Integer> mapreduce(List<V> l1, ReduceFunction<T, V> reducefunc,
-			CollectionFunction<T> cofunc) throws Exception {
+	public static <T, V> Result<Integer> mapreduce(List<V> l1, Function<V, T> reducefunc, Consumer<T> cofunc)
+			throws Exception {
 		return mapreduce(l1.stream(), reducefunc, cofunc);
 	}
 
@@ -869,7 +896,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @param reducefunc the reduce function
 	 * @return the List of result
 	 */
-	public static <T, V> List<T> mapreduce(Stream<V> l1, ReduceFunction<T, V> reducefunc) {
+	public static <T, V> List<T> mapreduce(Stream<V> l1, Function<V, T> reducefunc) {
 		List<T> l2 = new ArrayList<T>();
 
 		try {
@@ -898,8 +925,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the Result
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T, V> Result<Integer> mapreduce(Stream<V> l1, ReduceFunction<T, V> reducefunc,
-			CollectionFunction<T> cofunc) {
+	public static <T, V> Result<Integer> mapreduce(Stream<V> l1, Function<V, T> reducefunc, Consumer<T> cofunc) {
 
 		try {
 			// if (this.getGlobal()) {
@@ -924,7 +950,7 @@ public abstract class Task implements Runnable, Serializable {
 
 					@Override
 					public void onExecute() {
-						T o = reducefunc.call(e);
+						T o = reducefunc.apply(e);
 						result((Serializable) o);
 					}
 
@@ -958,7 +984,7 @@ public abstract class Task implements Runnable, Serializable {
 
 						slices.remove(s1);
 
-						cofunc.call((T) t);
+						cofunc.accept((T) t);
 
 					} catch (Exception e) {
 						// looking for the task exists ?

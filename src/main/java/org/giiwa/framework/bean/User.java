@@ -109,7 +109,7 @@ public class User extends Bean {
 	}
 
 	public String getPhoto() {
-		return photo;
+		return X.isEmpty(photo) ? "/images/user.png" : photo;
 	}
 
 	/**
@@ -552,7 +552,7 @@ public class User extends Bean {
 			v.force("md5passwd", md5encrypt(passwd));
 			passwd = encrypt(passwd);
 			v.force("password", passwd);
-			
+
 		} else {
 			v.remove("password");
 		}

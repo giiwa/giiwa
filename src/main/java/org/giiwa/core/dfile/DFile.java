@@ -11,12 +11,12 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.task.Callable;
 import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.Node;
 
@@ -312,7 +312,7 @@ public class DFile {
 		return -1;
 	}
 
-	public long count(Callable<Void, String> moni) {
+	public long count(Consumer<String> moni) {
 		long n = 0;
 		if (this.isDirectory()) {
 			try {
@@ -330,13 +330,13 @@ public class DFile {
 		}
 
 		if (moni != null) {
-			moni.call(200, this.getFilename());
+			moni.accept(this.getFilename());
 		}
 
 		return n;
 	}
 
-	public long sum(Callable<Void, String> moni) {
+	public long sum(Consumer<String> moni) {
 		long n = 0;
 		if (this.isDirectory()) {
 			try {
@@ -354,7 +354,7 @@ public class DFile {
 		n += this.length();
 
 		if (moni != null) {
-			moni.call(200, this.getFilename());
+			moni.accept(this.getFilename());
 		}
 
 		return n;
