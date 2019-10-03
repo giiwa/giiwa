@@ -28,7 +28,9 @@
 		<a href="javascript:;" onclick="giiwa.load('/admin/user?__node=$!__node');" style="position: absolute;right: 80px;top: 20px;"><i class='icon-users'></i></a>
 		#end
 		<div style="z-index:100;position:absolute;right:20px;top:10px;">
-			<img src="$!me.photo" style="cursor:pointer;width: 32px;border-radius: 50%;" onclick="_mymenu();"/>
+			<div style="cursor:pointer;width: 32px;height:32px;border: 1px solid #aaa;overflow:hidden;display: inline-block;border-radius: 50%;" onclick="_mymenu();">
+				<img src="$!me.photo" style="width: 32px;"/>
+			</div>
 			<div class='mymenu'>
 				<div class='arrawup'></div>
 				<div class='item' style="padding-left: 12px;">#if($me.nickname)$me.nickname #else $!me.name #end</div>
