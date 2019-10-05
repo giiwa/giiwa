@@ -815,15 +815,10 @@ giiwa
 
 			processing : {
 				show : function() {
-					var p = $('#processing');
-					if (p.length == 0) {
-						p = $('<div id="processing" style="display: none;"><div class="bg"></div><div class="img"><img src="/images/loading2.gif"></div></div>');
-						$('body').append(p);
-					}
-					p.show();
+					$('#panel').css('filter', 'blur(1px)')
 				},
 				hide : function() {
-					$('#processing').hide();
+					$('#panel').css('filter', '')
 				}
 			},
 
