@@ -74,6 +74,8 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private static final String MQNAME = "task";
+
 	/** The log. */
 	public static Log log = LogFactory.getLog(Task.class);
 
@@ -479,7 +481,46 @@ public abstract class Task implements Runnable, Serializable {
 	public static void init(int usernum) {
 		LocalRunner.init(8, usernum);
 		GlobalRunner.init();
+
 		powerstate = Global.getInt("node." + Local.id(), 1);
+
+		_initMQ();
+
+	}
+
+	private static void _initMQ() {
+
+		try {
+			IStub st = new IStub(Task.MQNAME) {
+
+				@Override
+				public void onRequest(long seq, Request req) {
+
+					JSON jo = req.get();
+					String node = jo.getString("node");
+					if (X.isSame(node, Local.id())) {
+						// ignore
+						return;
+					}
+
+					String name = jo.getString("name");
+					Task t = Task.get(name);
+					if (t != null) {
+						long ms = jo.getLong("ms");
+						LocalRunner.schedule(t, ms);
+					}
+				}
+
+			};
+
+			st.bind(Mode.TOPIC);
+
+		} catch (Exception e) {
+			Task.schedule(() -> {
+				_initMQ();
+			}, 3000);
+		}
+
 	}
 
 	/**
@@ -580,6 +621,9 @@ public abstract class Task implements Runnable, Serializable {
 				}
 
 				this.parent = (String) Language.getLanguage().truncate(Thread.currentThread().getName(), 30);
+
+				MQ.topic(Task.MQNAME, MQ.Request.create().put(
+						JSON.create().append("from", Local.id()).append("name", this.getName()).append("ms", msec)));
 
 				if (this.getGlobal()) {
 					GlobalRunner.schedule(this, msec);
@@ -1145,9 +1189,6 @@ public abstract class Task implements Runnable, Serializable {
 		};
 
 		public synchronized static void init() {
-
-//			if (!MQ.isConfigured())
-//				return;
 
 			if (slot == null) {
 				slot = new Slot();
