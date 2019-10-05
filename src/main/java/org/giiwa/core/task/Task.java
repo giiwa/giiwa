@@ -424,9 +424,7 @@ public abstract class Task implements Runnable, Serializable {
 			 * ensure onExecute be executed
 			 */
 			try {
-
 				onExecute();
-
 			} finally {
 
 				duration = System.currentTimeMillis() - startedtime;
@@ -604,12 +602,23 @@ public abstract class Task implements Runnable, Serializable {
 	}
 
 	/**
-	 * Schedule the worker task.
+	 * Schedule the local/global task.
 	 *
 	 * @param msec the milliseconds
 	 * @return the worker task
 	 */
 	final public Task schedule(long msec) {
+		return this.schedule(msec, false);
+	}
+
+	/**
+	 * schedule a task
+	 * 
+	 * @param msec
+	 * @param global true: global task, false: localtask
+	 * @return
+	 */
+	final public Task schedule(long msec, boolean global) {
 
 		try {
 			if (stop) {
@@ -622,8 +631,14 @@ public abstract class Task implements Runnable, Serializable {
 
 				this.parent = (String) Language.getLanguage().truncate(Thread.currentThread().getName(), 30);
 
-				MQ.topic(Task.MQNAME, MQ.Request.create().put(
-						JSON.create().append("from", Local.id()).append("name", this.getName()).append("ms", msec)));
+				if (global) {
+					try {
+						MQ.topic(Task.MQNAME, MQ.Request.create().put(JSON.create().append("from", Local.id())
+								.append("name", this.getName()).append("ms", msec)));
+					} catch (Throwable e) {
+						log.error(e.getMessage(), e);
+					}
+				}
 
 				if (this.getGlobal()) {
 					GlobalRunner.schedule(this, msec);
