@@ -96,7 +96,7 @@ public class setup extends Controller {
 		if (!X.isEmpty(dbdriver)) {
 			conf.setProperty("db[default].driver", dbdriver);
 		}
-		
+
 		if (!X.isEmpty(dburl)) {
 			conf.setProperty("db[default].url", dburl);
 			String user = this.getString("db.user");
@@ -151,8 +151,14 @@ public class setup extends Controller {
 		if ("db".equals(op)) {
 
 			String url = this.getHtml(X.URL).trim();
-			String username = this.getString("username").trim();
-			String passwd = this.getString("passwd").trim();
+			String username = this.getString("username");
+			if (!X.isEmpty(username)) {
+				username = username.trim();
+			}
+			String passwd = this.getString("passwd");
+			if (!X.isEmpty(passwd)) {
+				passwd = passwd.trim();
+			}
 
 			// String driver = this.getHtml("driver");
 			// conf.setProperty("db.url", url);
