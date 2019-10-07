@@ -629,7 +629,9 @@ public abstract class Task implements Runnable, Serializable {
 					return this;
 				}
 
-				this.parent = (String) Language.getLanguage().truncate(Thread.currentThread().getName(), 30);
+				this.parent = Thread.currentThread().getName();
+				if (!X.isEmpty(this.parent))
+					this.parent = (String) Language.getLanguage().truncate(this.parent, 30);
 
 				if (global) {
 					try {

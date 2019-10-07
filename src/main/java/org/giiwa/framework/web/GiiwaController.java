@@ -166,25 +166,26 @@ public class GiiwaController {
 		if (mo != null) {
 			mo.set("__node", node);
 
-			Path p = mo.dispatch(uri, req, resp, method);
+//			Path p = 
+			mo.dispatch(uri, req, resp, method);
 
-			if (p == null) {
-				if (log.isInfoEnabled())
-					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
-							+ " " + mo);
+//			if (p == null) {
+			if (log.isInfoEnabled())
+				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
+						+ " " + mo);
 
-				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-				User u1 = mo.getUser();
-				if (u1 != null) {
-					v.set("uid", u1.getId()).set("username", u1.get("name"));
-				}
-				if (AccessLog.isOn())
-					AccessLog.create(mo.getRemoteHost(), uri,
-							v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-									.set("client", mo.browser())
-									.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-									.set("model", mo.getClass().getName()));
+			V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+			User u1 = mo.getUser();
+			if (u1 != null) {
+				v.set("uid", u1.getId()).set("username", u1.get("name"));
 			}
+			if (AccessLog.isOn())
+				AccessLog.create(mo.getRemoteHost(), uri,
+						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
+								.set("client", mo.browser())
+								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+								.set("model", mo.getClass().getName()));
+//			}
 
 			// Counter.max("web.request.max", t.past(), uri);
 			return;
@@ -276,25 +277,26 @@ public class GiiwaController {
 					mo.set("__node", node);
 
 					mo.setPath(path);
-					Path p = mo.dispatch(u, req, resp, method);
+//					Path p = 
+					mo.dispatch(u, req, resp, method);
 
-					if (p == null) {
-						if (log.isInfoEnabled())
-							log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -"
-									+ mo.getRemoteHost() + " " + mo);
+//					if (p == null) {
+					if (log.isInfoEnabled())
+						log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -"
+								+ mo.getRemoteHost() + " " + mo);
 
-						V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-						User u1 = mo.getUser();
-						if (u1 != null) {
-							v.set("uid", u1.getId()).set("username", u1.get("name"));
-						}
-						if (AccessLog.isOn())
-							AccessLog.create(mo.getRemoteHost(), uri,
-									v.set("status", mo.getStatus()).set("client", mo.browser())
-											.set("header", Arrays.toString(mo.getHeaders()))
-											.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-											.set("model", mo.getClass().getName()));
+					V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+					User u1 = mo.getUser();
+					if (u1 != null) {
+						v.set("uid", u1.getId()).set("username", u1.get("name"));
 					}
+					if (AccessLog.isOn())
+						AccessLog.create(mo.getRemoteHost(), uri,
+								v.set("status", mo.getStatus()).set("client", mo.browser())
+										.set("header", Arrays.toString(mo.getHeaders()))
+										.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+										.set("model", mo.getClass().getName()));
+//					}
 
 					// Counter.max("web.request.max", t.past(), uri);
 					return;
@@ -353,25 +355,26 @@ public class GiiwaController {
 
 			mo.set("__node", req.getParameter("__node"));
 
-			Path p = mo.dispatch(uri, req, resp, method);
+//			Path p = 
+			mo.dispatch(uri, req, resp, method);
 
-			if (p == null) {
-				if (log.isInfoEnabled())
-					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.pastms() + "ms -"
-							+ mo.getRemoteHost() + " " + mo);
+//			if (p == null) {
+			if (log.isInfoEnabled())
+				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.pastms() + "ms -" + mo.getRemoteHost()
+						+ " " + mo);
 
-				V v = V.create("method", method.toString()).set("cost", t.pastms()).set("sid", mo.sid());
-				User u1 = mo.getUser();
-				if (u1 != null) {
-					v.set("uid", u1.getId()).set("username", u1.get("name"));
-				}
-				if (AccessLog.isOn())
-					AccessLog.create(mo.getRemoteHost(), uri,
-							v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-									.set("client", mo.browser())
-									.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-									.set("model", mo.getClass().getName()));
+			V v = V.create("method", method.toString()).set("cost", t.pastms()).set("sid", mo.sid());
+			User u1 = mo.getUser();
+			if (u1 != null) {
+				v.set("uid", u1.getId()).set("username", u1.get("name"));
 			}
+			if (AccessLog.isOn())
+				AccessLog.create(mo.getRemoteHost(), uri,
+						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
+								.set("client", mo.browser())
+								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+								.set("model", mo.getClass().getName()));
+//			}
 
 			// Counter.max("web.request.max", t.past(), uri);
 			return true;
