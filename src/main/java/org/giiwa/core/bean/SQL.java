@@ -230,7 +230,7 @@ public class SQL {
 
 					String s2 = s1.remain();
 
-					System.out.println("s2=" + s2);
+//					System.out.println("s2=" + s2);
 
 					value = JS.calculate(s2);
 				}

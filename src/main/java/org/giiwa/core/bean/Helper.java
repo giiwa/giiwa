@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.dle.Velocity;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Data;
 import org.giiwa.framework.web.Controller;
@@ -798,6 +799,25 @@ public class Helper implements Serializable {
 
 		public List<Entity> getOrder() {
 			return order;
+		}
+
+		public void parse(JSON data) throws Exception {
+
+			for (W w : wlist) {
+				w.parse(data);
+			}
+
+			for (Entity e : elist) {
+				if (e.value instanceof String) {
+					e.value = Velocity.parse((String) e.value, data);
+				}
+			}
+
+			for (Entity e : order) {
+				if (e.value instanceof String) {
+					e.value = Velocity.parse((String) e.value, data);
+				}
+			}
 		}
 
 		/**
