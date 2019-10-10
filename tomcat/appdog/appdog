@@ -117,7 +117,7 @@ def _pidx(x, max):
 #check cpu		
 		if max>0 and cpu>=max:
 			subprocess.call("kill -9 " + str(pid), shell=True)
-			s="[" + name +"] was killed for high cpu=" + cpu + "!"		
+			s="[" + x +"] was killed for high cpu=" + str(cpu) + "!"		
 			print s
 			_log(s)
 			pid = -1				
