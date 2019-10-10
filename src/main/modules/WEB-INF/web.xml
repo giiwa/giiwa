@@ -19,10 +19,6 @@
 			<param-value>org.giiwa.framework.web.view.VelocityView</param-value>
 		</init-param>
 		<init-param>
-			<param-name>.md</param-name>
-			<param-value>org.giiwa.framework.web.view.MarkdownView</param-value>
-		</init-param>
-		<init-param>
 			<param-name>.jsp</param-name>
 			<param-value>org.giiwa.framework.web.view.JspView</param-value>
 		</init-param>
