@@ -3,6 +3,7 @@ package org.giiwa.app.web.portlet;
 import java.util.Properties;
 
 import org.giiwa.core.base.Host;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Module;
@@ -16,6 +17,7 @@ public class sysinfo extends portlet {
 		this.set("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
 		this.set("past", lang.past(Controller.UPTIME));
 		this.set("node", Local.id());
+		this.set("gnode", Global.id());
 		this.set("release", Module.load("default").getVersion());
 		this.set("build", Module.load("default").getBuild());
 		this.set("free", lang.size(Runtime.getRuntime().freeMemory()));
