@@ -708,14 +708,17 @@ public abstract class Task implements Runnable, Serializable {
 
 			@Override
 			public void onExecute() {
-				if (this.tryLock()) {
-					try {
-						cc.call();
-					} finally {
-						this.unlock();
+				if (X.isEmpty(name)) {
+					cc.call();
+				} else {
+					if (this.tryLock()) {
+						try {
+							cc.call();
+						} finally {
+							this.unlock();
+						}
 					}
 				}
-
 			}
 
 		};

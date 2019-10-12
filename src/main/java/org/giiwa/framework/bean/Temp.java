@@ -63,9 +63,18 @@ public class Temp {
 	private String id = null;
 	private String name = null;
 	private File file = null;
+	private String root = null;
 
 	private Temp() {
 
+	}
+
+	public static Temp create(String root, String name) {
+		Temp t = new Temp();
+		t.name = name;
+		t.id = UID.id(System.currentTimeMillis(), UID.random());
+		t.root = root;
+		return t;
 	}
 
 	/**
@@ -75,10 +84,7 @@ public class Temp {
 	 * @return the Temp
 	 */
 	public static Temp create(String name) {
-		Temp t = new Temp();
-		t.name = name;
-		t.id = UID.id(System.currentTimeMillis(), UID.random());
-		return t;
+		return create(Controller.GIIWA_HOME, name);
 	}
 
 	/**
@@ -97,7 +103,7 @@ public class Temp {
 	 */
 	public File getFile() {
 		if (file == null) {
-			file = new File(Controller.GIIWA_HOME + path(id, name));
+			file = new File(root + path(id, name));
 		}
 		return file;
 	}
@@ -284,11 +290,6 @@ public class Temp {
 
 		if (f == null || f.isFile())
 			return;
-
-		String root = X.getCanonicalPath(Controller.GIIWA_HOME + ROOT);
-		if (root.startsWith(f.getCanonicalPath()) || X.isSame(root, f.getCanonicalPath())) {
-			return;
-		}
 
 		File[] ff = f.listFiles();
 		if (ff == null || ff.length == 0) {

@@ -78,7 +78,7 @@ public class FileServer implements IRequestHandler {
 				commands.put(ICommand.CMD_MOVE, new MOVE());
 				commands.put(ICommand.CMD_HTTP, new HTTP());
 
-				URL = Config.getConf().getString("dfile.url", "tcp://127.0.0.1:9091");
+				URL = Config.getConf().getString("dfile.bind", "tcp://127.0.0.1:9091");
 
 				serv = Server.bind(URL, new RequestHandler(URL, this));
 

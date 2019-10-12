@@ -75,7 +75,6 @@ public final class Config {
 	 * 
 	 * @param file the conf file
 	 */
-	@SuppressWarnings({ "rawtypes" })
 	public static void init(File file) {
 
 		Reader re = null;

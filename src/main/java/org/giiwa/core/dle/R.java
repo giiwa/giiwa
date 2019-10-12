@@ -1,5 +1,7 @@
 package org.giiwa.core.dle;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,6 +11,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Pool;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
@@ -30,97 +33,10 @@ public class R {
 		return run(code, (List) null);
 	}
 
-//	public String run(String code, Object...vars ) throws Exception {
-//		jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) json;
-//	}
-
-	public JSON run(String code, String var, Object[] data) throws Exception {
-
-		RConnection c = pool.get(TIMEOUT);
-
-		if (c != null) {
-
-			try {
-				StringBuilder sb = new StringBuilder();
-				String func = "f" + c.hashCode();
-				sb.append(func + "<-function(){");
-				sb.append(var + " <- c(" + X.join(Arrays.asList(data), ",") + ");");
-
-				sb.append(code).append("};" + func + "();");
-
-				if (log.isDebugEnabled())
-					log.debug("R.run, code=" + sb);
-
-				REXP x = c.eval(sb.toString());
-
-				String[] ss = x.asStrings();
-				if (ss == null || ss.length == 0) {
-					return JSON.create();
-				} else if (ss.length == 1) {
-					return JSON.create().append("data", ss[0]);
-				} else {
-					return JSON.create().append("data", ss);
-				}
-
-				// remove the file
-//				return x.asStrings();
-			} finally {
-				pool.release(c);
-			}
-		}
-		throw new Exception("timeout wait=" + TIMEOUT);
-
-	}
-
-	public JSON run(String code, String[] cols, List<JSON> data) throws Exception {
-
-		RConnection c = pool.get(TIMEOUT);
-
-		if (c != null) {
-
-			try {
-				StringBuilder sb = new StringBuilder();
-
-				String func = "f" + c.hashCode();
-
-				sb.append(func + "<-function(){");
-
-				for (String name : cols) {
-					List<Object> l1 = X.toArray(data, e -> {
-						return e.get(name);
-					});
-					sb.append(name + " <- c(" + X.join(l1, ",") + ");");
-				}
-
-				sb.append(code).append("};" + func + "();");
-				if (log.isDebugEnabled())
-					log.debug("R.run, code=" + sb);
-
-				REXP x = c.eval(sb.toString());
-
-				String[] ss = x.asStrings();
-				if (ss == null || ss.length == 0) {
-					return JSON.create();
-				} else if (ss.length == 1) {
-					return JSON.create().append("data", ss[0]);
-				} else {
-					return JSON.create().append("data", ss);
-				}
-				// remove the file
-//				return x.asString();
-			} finally {
-				pool.release(c);
-			}
-		}
-
-		throw new Exception("timeout wait=" + TIMEOUT);
-
-	}
-
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public JSON run(String code, List<Object[]> data) throws Exception {
 
-		RConnection c = pool.get(10000);
+		RConnection c = pool.get(TIMEOUT);
 
 		if (c != null) {
 
@@ -129,10 +45,9 @@ public class R {
 			try {
 				StringBuilder sb = new StringBuilder();
 				String func = "f" + c.hashCode();
-//				sb.append("setwd('/')\r\n");
 				sb.append(func + "<-function(){");
 				if (!X.isEmpty(data)) {
-					Temp t = Temp.create(data + ".csv");
+					Temp t = Temp.create("data");
 					Temp.Exporter<Object> ex = t.export("UTF-8", Temp.Exporter.FORMAT.csv).createSheet((e) -> {
 						return (Object[]) e;
 					});
@@ -160,7 +75,6 @@ public class R {
 				} else {
 					return JSON.create().append("data", ss);
 				}
-//				return x.asString();
 
 			} finally {
 
@@ -176,13 +90,14 @@ public class R {
 
 	}
 
-	static Pool<RConnection> pool = Pool.create(Config.getConf().getInt("r.min", 1),
+	private static Pool<RConnection> pool = Pool.create(Config.getConf().getInt("r.min", 1),
 			Config.getConf().getInt("r.max", 2), new Pool.IPoolFactory<RConnection>() {
 
 				@Override
 				public RConnection create() {
 					RConnection c = null;
 					try {
+
 						String host = Config.getConf().getString("r.host", X.EMPTY);
 						int port = Config.getConf().getInt("r.port", 6311);
 
@@ -191,6 +106,7 @@ public class R {
 						} else {
 							c = new RConnection(host, port);
 						}
+
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
 					}
@@ -221,19 +137,90 @@ public class R {
 
 			System.out.println(inst.run("d<-c(1,2,3,4);mean(d);"));
 
-//			System.out.println(run(s, p1));
-
-			JSON r = inst.run("mean(a)", "a", new Object[] { 1, 2, 3 });
-			System.out.println(r);
-
 			JSON j1 = inst.run(
 					"f509376766<-function(){x <- c(214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,90,93,90,106,214,214,214,214,214,214);fivenum(x)};f509376766();");
 			System.out.println(j1);
+
+			TimeStamp t = TimeStamp.create();
+
+			Object[] ll = new Object[10000000];
+			for (int i = 0; i < ll.length; i++) {
+				ll[i] = i;
+			}
+
+			t.reset();
+			JSON r = inst.run("mean(data)", ll);
+
+			System.out.println(r + ", cost=" + t.past());
+
+			for (int i = 0; i < ll.length; i++) {
+				ll[i] = i + 1;
+			}
+			t.reset();
+			double d1 = Arrays.asList(ll).stream().mapToInt(e -> {
+				return X.toInt(e);
+			}).average().getAsDouble();
+			System.out.println(d1 + ", cost=" + t.past());
+
+			t.reset();
+			r = inst.run("mean(data)", ll);
+			System.out.println(r + ", cost=" + t.past());
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public JSON run(String code, Object[] data) throws Exception {
+
+		RConnection c = pool.get(TIMEOUT);
+
+		if (c != null) {
+
+			// save to file
+			Temp t = Temp.create("data");
+			try {
+				StringBuilder sb = new StringBuilder();
+				String func = "f" + c.hashCode();
+				sb.append(func + "<-function(){");
+				if (!X.isEmpty(data)) {
+					File f = t.getFile();
+					f.getParentFile().mkdirs();
+					FileWriter f1 = new FileWriter(f);
+					for (Object o : data) {
+						f1.write(o + " ");
+					}
+					f1.close();
+					sb.append("data <- scan('" + f.getAbsolutePath() + "');");
+				}
+
+				sb.append(code).append("};" + func + "();");
+
+				if (log.isDebugEnabled())
+					log.debug("R.run, code=" + sb);
+
+				REXP x = c.eval(sb.toString());
+
+				String[] ss = x.asStrings();
+				if (ss == null || ss.length == 0) {
+					return JSON.create();
+				} else if (ss.length == 1) {
+					return JSON.create().append("data", ss[0]);
+				} else {
+					return JSON.create().append("data", ss);
+				}
+
+			} finally {
+
+				pool.release(c);
+
+				t.delete();
+			}
+		}
+
+		return null;
+
 	}
 
 }
