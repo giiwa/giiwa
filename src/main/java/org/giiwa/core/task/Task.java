@@ -864,7 +864,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return Task
 	 */
 	public static Task get(String name) {
-		List<Task> tt = X.copy(LocalRunner.runningQueue);
+		HashSet<Task> tt = (HashSet<Task>) LocalRunner.runningQueue.clone();
 		if (tt != null) {
 			for (Task t : tt) {
 				if (t == null)
@@ -875,7 +875,7 @@ public abstract class Task implements Runnable, Serializable {
 			}
 		}
 
-		tt = X.copy(LocalRunner.pendingQueue);
+		tt = (HashSet<Task>) LocalRunner.pendingQueue.clone();
 		if (tt != null) {
 			for (Task t : tt) {
 				if (t == null)

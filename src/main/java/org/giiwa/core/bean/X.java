@@ -906,10 +906,4 @@ public final class X {
 		return sb.toString();
 	}
 
-	public static <T> List<T> copy(Set<T> l1) {
-		List<T> l2 = new ArrayList<T>(l1.size());
-		l2.addAll(l1);
-		return l2;
-	}
-
 }
