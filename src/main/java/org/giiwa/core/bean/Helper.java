@@ -1150,6 +1150,9 @@ public class Helper implements Serializable {
 		 * @return W
 		 */
 		public W and(W w) {
+			if (w.isEmpty())
+				return this;
+
 			w.cond = AND;
 			wlist.add(w);
 			queryList.add(w);
@@ -1212,6 +1215,9 @@ public class Helper implements Serializable {
 		 * @return W
 		 */
 		public W or(W w) {
+			if (w.isEmpty())
+				return this;
+
 			w.cond = OR;
 			wlist.add(w);
 			queryList.add(w);
@@ -1379,6 +1385,8 @@ public class Helper implements Serializable {
 
 		@SuppressWarnings("rawtypes")
 		public W and(String name, Object v, OP op, int boost) {
+			if (X.isEmpty(name))
+				return this;
 
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
@@ -1476,6 +1484,9 @@ public class Helper implements Serializable {
 
 		@SuppressWarnings("rawtypes")
 		public W or(String name, Object v, OP op, int boost) {
+
+			if (X.isEmpty(name))
+				return this;
 
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
@@ -1869,6 +1880,8 @@ public class Helper implements Serializable {
 		 * @return the w
 		 */
 		public W sort(String name, int i) {
+			if (X.isEmpty(name))
+				return this;
 			order.add(new Entity(name, i, OP.eq, AND, 0));
 			return this;
 		}
