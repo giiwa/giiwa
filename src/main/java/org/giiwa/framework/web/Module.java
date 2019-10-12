@@ -110,6 +110,10 @@ public class Module {
 	 */
 	String readme;
 
+	private Module() {
+
+	}
+
 	/**
 	 * handle by filter ad invoke the before
 	 * 

@@ -1845,6 +1845,18 @@ public class Controller {
 	 * @param jo the json that will be output
 	 */
 	final public void response(JSON jo) {
+		if (outputed > 0) {
+			Exception e = new Exception("response twice!");
+			GLog.applog.error(this.getClass(), "response", e.getMessage(), e);
+			log.error(jo.toString(), e);
+
+			error(e);
+
+			return;
+		}
+
+		outputed++;
+
 		if (jo == null) {
 			responseJson("{}");
 		} else {
@@ -1902,6 +1914,8 @@ public class Controller {
 
 	}
 
+	private int outputed = 0;
+
 	/**
 	 * using current model to render the template, and show the result html page to
 	 * end-user.
@@ -1912,6 +1926,12 @@ public class Controller {
 	final public boolean show(String viewname) {
 
 		try {
+			if (outputed > 0) {
+				throw new Exception("show twice!");
+			}
+
+			outputed++;
+
 			this.set("path", this.path);
 			this.set("query", this.query);
 
@@ -1936,6 +1956,8 @@ public class Controller {
 				log.error(viewname, e);
 
 			GLog.applog.error(this.getClass(), "show", e.getMessage(), e, login, this.getRemoteHost());
+
+			error(e);
 		}
 
 		return false;
@@ -2028,6 +2050,8 @@ public class Controller {
 	final public void error(Throwable e) {
 		if (log.isErrorEnabled())
 			log.error(e.getMessage(), e);
+
+		outputed = 0;
 
 		StringWriter sw = new StringWriter();
 		PrintWriter out = new PrintWriter(sw);
