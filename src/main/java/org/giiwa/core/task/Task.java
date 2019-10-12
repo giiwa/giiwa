@@ -826,14 +826,13 @@ public abstract class Task implements Runnable, Serializable {
 		HashSet<Task> l1 = new HashSet<Task>();
 
 		try {
+			LocalRunner.lock.lock();
 			l1.addAll(LocalRunner.pendingQueue);
-		} catch (Exception e) {
-
-		}
-		try {
 			l1.addAll(LocalRunner.runningQueue);
 		} catch (Exception e) {
 
+		} finally {
+			LocalRunner.lock.unlock();
 		}
 
 		try {
@@ -864,28 +863,28 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return Task
 	 */
 	public static Task get(String name) {
-		HashSet<Task> tt = (HashSet<Task>) LocalRunner.runningQueue.clone();
-		if (tt != null) {
-			for (Task t : tt) {
+		try {
+			LocalRunner.lock.lock();
+
+			for (Task t : LocalRunner.runningQueue) {
 				if (t == null)
 					continue;
 				if (X.isSame(name, t.getName())) {
 					return t;
 				}
 			}
-		}
 
-		tt = (HashSet<Task>) LocalRunner.pendingQueue.clone();
-		if (tt != null) {
-			for (Task t : tt) {
+			for (Task t : LocalRunner.pendingQueue) {
 				if (t == null)
 					continue;
 				if (X.isSame(name, t.getName())) {
 					return t;
 				}
 			}
-		}
 
+		} finally {
+			LocalRunner.lock.unlock();
+		}
 		return null;
 	}
 
