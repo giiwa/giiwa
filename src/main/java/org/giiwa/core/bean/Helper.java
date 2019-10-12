@@ -499,7 +499,7 @@ public class Helper implements Serializable {
 		 * @return the V
 		 */
 		public V append(String name, Object v) {
-			if (name != null) {
+			if (!X.isEmpty(name)) {
 				if (m.containsKey(name)) {
 					return this;
 				}

@@ -827,8 +827,8 @@ public abstract class Task implements Runnable, Serializable {
 
 		try {
 			LocalRunner.lock.lock();
-			l1.addAll(LocalRunner.pendingQueue);
-			l1.addAll(LocalRunner.runningQueue);
+			l1.addAll(LocalRunner.pendingQueue.values());
+			l1.addAll(LocalRunner.runningQueue.values());
 		} catch (Exception e) {
 
 		} finally {
@@ -866,26 +866,15 @@ public abstract class Task implements Runnable, Serializable {
 		try {
 			LocalRunner.lock.lock();
 
-			for (Task t : LocalRunner.runningQueue) {
-				if (t == null)
-					continue;
-				if (X.isSame(name, t.getName())) {
-					return t;
-				}
-			}
+			Task t = LocalRunner.runningQueue.get(name);
+			if (t != null)
+				return t;
 
-			for (Task t : LocalRunner.pendingQueue) {
-				if (t == null)
-					continue;
-				if (X.isSame(name, t.getName())) {
-					return t;
-				}
-			}
+			return LocalRunner.pendingQueue.get(name);
 
 		} finally {
 			LocalRunner.lock.unlock();
 		}
-		return null;
 	}
 
 	/**
@@ -1546,16 +1535,16 @@ public abstract class Task implements Runnable, Serializable {
 		private static Lock lock = new ReentrantLock();
 
 		/** The pending queue. */
-		static HashSet<Task> pendingQueue = new HashSet<Task>();
+		private static HashMap<String, Task> pendingQueue = new HashMap<String, Task>();
 
 		/** The running queue. */
-		static HashSet<Task> runningQueue = new HashSet<Task>();
+		private static HashMap<String, Task> runningQueue = new HashMap<String, Task>();
 
 		public static void remove(Task task) {
 			try {
 				lock.lock();
-				pendingQueue.remove(task);
-				runningQueue.remove(task);
+				pendingQueue.remove(task.getName());
+				runningQueue.remove(task.getName());
 			} finally {
 				lock.unlock();
 			}
@@ -1565,11 +1554,11 @@ public abstract class Task implements Runnable, Serializable {
 			try {
 				lock.lock();
 
-				if (runningQueue.contains(t)) {
+				if (runningQueue.containsKey(t.getName())) {
 					return true;
 				}
 
-				if (pendingQueue.contains(t)) {
+				if (pendingQueue.containsKey(t.getName())) {
 					return true;
 				}
 
@@ -1587,15 +1576,15 @@ public abstract class Task implements Runnable, Serializable {
 			try {
 				lock.lock();
 
-				pendingQueue.remove(task);
+				pendingQueue.remove(task.getName());
 
-				if (runningQueue.contains(task)) {
+				if (runningQueue.containsKey(task.getName())) {
 					// there is a copy is running
 					log.warn("run duplicated task:" + task.getName());
 					return false;
 				}
 
-				runningQueue.add(task);
+				runningQueue.put(task.getName(), task);
 				// log.debug(getName() + " is running");
 				return true;
 			} finally {
@@ -1664,21 +1653,21 @@ public abstract class Task implements Runnable, Serializable {
 				lock.lock();
 				// scheduled
 
-				if (runningQueue.contains(task)) {
+				if (runningQueue.containsKey(task.getName())) {
 					if (log.isDebugEnabled())
 						log.warn("the task is running, ignored: " + task.getName());
 
 					return false;
 				}
 
-				if (pendingQueue.contains(task)) {
+				if (pendingQueue.containsKey(task.getName())) {
 					// schedule this task, possible this task is in running
 					// queue, if so, while drop one when start this one in
 					// thread
 
 					log.info("reschedule the task:" + task);
 
-					pendingQueue.remove(task);
+					pendingQueue.remove(task.getName());
 					if (task.sf != null) {
 						if (!task.sf.cancel(false)) {
 							return false;
@@ -1718,7 +1707,7 @@ public abstract class Task implements Runnable, Serializable {
 					}
 				}
 
-				pendingQueue.add(task);
+				pendingQueue.put(task.getName(), task);
 
 				return true;
 			} finally {
@@ -1736,11 +1725,11 @@ public abstract class Task implements Runnable, Serializable {
 
 				try {
 					lock.lock();
-					for (Task t : pendingQueue.toArray(new Task[pendingQueue.size()])) {
+					for (Task t : pendingQueue.values().toArray(new Task[pendingQueue.size()])) {
 						t.stop(fast);
 					}
 
-					for (Task t : runningQueue.toArray(new Task[runningQueue.size()])) {
+					for (Task t : runningQueue.values().toArray(new Task[runningQueue.size()])) {
 						t.stop(fast);
 					}
 				} finally {
@@ -1753,7 +1742,7 @@ public abstract class Task implements Runnable, Serializable {
 						lock.lock();
 						log.info("stoping, size=" + runningQueue.size() + ", running task=" + runningQueue);
 
-						for (Task t : runningQueue.toArray(new Task[runningQueue.size()])) {
+						for (Task t : runningQueue.values().toArray(new Task[runningQueue.size()])) {
 							t.stop(fast);
 						}
 
