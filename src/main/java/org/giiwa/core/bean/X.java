@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
@@ -903,6 +904,12 @@ public final class X {
 			sb.append(X.isEmpty(o) ? X.EMPTY : o);
 		}
 		return sb.toString();
+	}
+
+	public static <T> List<T> copy(Set<T> l1) {
+		List<T> l2 = new ArrayList<T>(l1.size());
+		l2.addAll(l1);
+		return l2;
 	}
 
 }

@@ -864,7 +864,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return Task
 	 */
 	public static Task get(String name) {
-		Task[] tt = LocalRunner.runningQueue.toArray(new Task[LocalRunner.runningQueue.size()]);
+		List<Task> tt = X.copy(LocalRunner.runningQueue);
 		if (tt != null) {
 			for (Task t : tt) {
 				if (t == null)
@@ -875,7 +875,7 @@ public abstract class Task implements Runnable, Serializable {
 			}
 		}
 
-		tt = LocalRunner.pendingQueue.toArray(new Task[LocalRunner.runningQueue.size()]);
+		tt = X.copy(LocalRunner.pendingQueue);
 		if (tt != null) {
 			for (Task t : tt) {
 				if (t == null)
