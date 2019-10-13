@@ -177,18 +177,25 @@ public class R {
 
 	public JSON run(String code, Object[] data) throws Exception {
 
-		if (X.isSame("mean(data)", code)) {
+		if (X.isIn(code, "mean(data)", "avg(data)", "mean", "avg")) {
 			return mean(data);
-		} else if (X.isSame("sum(data)", code)) {
+		} else if (X.isIn(code, "sum(data)", "sum")) {
 			return sum(data);
-		} else if (X.isSame("max(data)", code)) {
+		} else if (X.isIn(code, "max(data)", "max")) {
 			return max(data);
-		} else if (X.isSame("min(data)", code)) {
+		} else if (X.isIn(code, "min(data)", "min")) {
 			return min(data);
-		} else if (X.isSame("count(data)", code)) {
+		} else if (X.isIn(code, "count(data)", "count", "length(data)", "length")) {
 			return count(data);
-		} else if (X.isSame("value_count(data)", code)) {
+		} else if (X.isIn(code, "value_count(data)", "value_count")) {
 			return value_count(data);
+		} else if (X.isIn(code, "cv", "cv(data)")) {
+			JSON sd = run("sd(data)", data);
+			JSON mean = run("mean(data)", data);
+			if (X.isEmpty(sd) || X.isEmpty(mean) || mean.getDouble("data") != 0)
+				return null;
+
+			return JSON.create().append("data", sd.getDouble("data") / mean.getDouble("data"));
 		}
 
 		RConnection c = pool.get(TIMEOUT);
