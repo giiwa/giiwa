@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.DoubleStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -143,14 +144,16 @@ public class R {
 
 			TimeStamp t = TimeStamp.create();
 
-			Object[] ll = new Object[10000000];
+			Object[] ll = new Object[10];
 			for (int i = 0; i < ll.length; i++) {
-				ll[i] = i;
+				ll[i] = (long) (ll.length * Math.random());
 			}
 
 			t.reset();
-			JSON r = inst.run("mean(data)", ll);
+			JSON r = inst.run("count(data)", ll);
+			System.out.println(r + ", cost=" + t.past());
 
+			r = inst.run("median(data)", ll);
 			System.out.println(r + ", cost=" + t.past());
 
 			for (int i = 0; i < ll.length; i++) {
@@ -173,6 +176,20 @@ public class R {
 	}
 
 	public JSON run(String code, Object[] data) throws Exception {
+
+		if (X.isSame("mean(data)", code)) {
+			return mean(data);
+		} else if (X.isSame("sum(data)", code)) {
+			return sum(data);
+		} else if (X.isSame("max(data)", code)) {
+			return max(data);
+		} else if (X.isSame("min(data)", code)) {
+			return min(data);
+		} else if (X.isSame("count(data)", code)) {
+			return count(data);
+		} else if (X.isSame("value_count(data)", code)) {
+			return value_count(data);
+		}
 
 		RConnection c = pool.get(TIMEOUT);
 
@@ -221,6 +238,50 @@ public class R {
 
 		return null;
 
+	}
+
+	public JSON mean(Object[] data) throws Exception {
+		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
+			return X.toDouble(e);
+		}).average().getAsDouble();
+		return JSON.create().append("data", d);
+	}
+
+	public JSON sum(Object[] data) throws Exception {
+		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
+			return X.toDouble(e);
+		}).sum();
+		return JSON.create().append("data", d);
+	}
+
+	public JSON count(Object[] data) throws Exception {
+		return JSON.create().append("data", data.length);
+	}
+
+	public JSON value_count(Object[] data) throws Exception {
+		long d = Arrays.asList(data).parallelStream().distinct().count();
+		return JSON.create().append("data", d);
+	}
+
+	public JSON range(Object[] data) throws Exception {
+		DoubleStream d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
+			return X.toDouble(e);
+		});
+		return JSON.create().append("data", d.max().getAsDouble() - d.min().getAsDouble());
+	}
+
+	public JSON max(Object[] data) throws Exception {
+		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
+			return X.toDouble(e);
+		}).max().getAsDouble();
+		return JSON.create().append("data", d);
+	}
+
+	public JSON min(Object[] data) throws Exception {
+		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
+			return X.toDouble(e);
+		}).min().getAsDouble();
+		return JSON.create().append("data", d);
 	}
 
 }
