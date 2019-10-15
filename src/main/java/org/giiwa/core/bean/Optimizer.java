@@ -65,7 +65,7 @@ class Optimizer implements Helper.IOptimizer {
 					log.error(e.getMessage(), e);
 				}
 
-			}, 0);
+			});
 		}
 	}
 

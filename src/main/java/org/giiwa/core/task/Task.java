@@ -169,6 +169,7 @@ public abstract class Task implements Runnable, Serializable {
 	public <T> T wait(Runnable prepare) {
 
 		try {
+			finished = LiveHand.create(X.AMINUTE, 1, -1);
 			if (finished.tryHold()) {
 				try {
 					return (T) result;
@@ -1681,7 +1682,6 @@ public abstract class Task implements Runnable, Serializable {
 
 				task.node = Local.id();
 				task.result = null;
-				task.finished = LiveHand.create(-1, 1, 0);
 				task.state = State.pending;
 
 				if (task.scheduledtime <= 0)

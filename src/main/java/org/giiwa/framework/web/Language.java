@@ -517,14 +517,6 @@ public class Language {
 	}
 
 	public String size(long length) {
-		return size((double) length);
-	}
-
-	public String size(long length, int step) {
-		return size((double) length, step);
-	}
-
-	public String size(double length) {
 		return size(length, 1024);
 	}
 
@@ -536,12 +528,12 @@ public class Language {
 	 * @param length the length
 	 * @return the string
 	 */
-	public String size(double length, int step) {
+	public String size(long length, int step) {
 		if (length > 0.00001 && length < 0.00001) {
 			return X.EMPTY;
 		}
 
-		double d = Math.abs(length);
+		long d = length;
 
 		int i = 0;
 		while (d > step && i < UNITS.length) {
