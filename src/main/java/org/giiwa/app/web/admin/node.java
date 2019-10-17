@@ -146,8 +146,7 @@ public class node extends Controller {
 	@Path(login = true, path = "usage", access = "access.config.admin")
 	public void usage() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
-				1);
+		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
@@ -174,8 +173,7 @@ public class node extends Controller {
 	@Path(login = true, path = "globaltask", access = "access.config.admin")
 	public void globaltask() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
-				1);
+		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
@@ -202,8 +200,7 @@ public class node extends Controller {
 	@Path(login = true, path = "threads", access = "access.config.admin")
 	public void threads() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
-				1);
+		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
@@ -230,8 +227,7 @@ public class node extends Controller {
 	@Path(login = true, path = "running", access = "access.config.admin")
 	public void running() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
-				1);
+		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
@@ -258,8 +254,7 @@ public class node extends Controller {
 	@Path(login = true, path = "pending", access = "access.config.admin")
 	public void pending() {
 
-		W q = W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).sort("label", 1).sort("ip",
-				1);
+		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
