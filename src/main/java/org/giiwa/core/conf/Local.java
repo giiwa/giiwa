@@ -314,7 +314,7 @@ public final class Local extends Bean {
 
 			@Override
 			public String getName() {
-				return "node.hb";
+				return "gi.node.hb";
 			}
 
 			@Override
