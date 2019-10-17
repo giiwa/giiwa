@@ -1154,7 +1154,7 @@ public abstract class Task implements Runnable, Serializable {
 
 		private static Log log = LogFactory.getLog(GlobalRunner.class);
 
-		static final String NAME = "global.runner";
+		static final String NAME = "gi.global.runner";
 
 		static final Lock door = GlobalLock.create(NAME);
 
