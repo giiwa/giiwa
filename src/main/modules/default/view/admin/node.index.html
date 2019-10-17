@@ -24,7 +24,6 @@
 	<thead>
 		<tr>
 			<th rowspan="2">$lang.get('node.label')</th>
-			<th rowspan="2">$lang.get('node.url')</th>
 			<th colspan="2">$lang.get('node.cpu')</th>
 			<th rowspan="2">$lang.get('node.mem')</th>
 			<th rowspan="2">$lang.get('node.os')</th>
@@ -57,10 +56,8 @@
 	<tr #if($lang.pastms($f.updated) < 3000) class="blink" #end>
 		<td class="a">
 			$!f.label
-			<a class="hint hint--bottom" data-hint="Go" href="/admin?__node=$!f.id" target="_blank"><i class='icon-sphere'></i></a>
 			<a class="hint hint--bottom" data-hint="Edit" href="javascript:;" onclick="_showlabel('$f.id', '$!f.label')"><i class='icon-pencil'></i></a>
 		</td>
-		<td>$!f.url</td>
 		<td>$!f.cores</td>
 		<td>$!f.usage</td>
 		<td>$!lang.size($!f.mem)</td>
