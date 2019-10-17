@@ -333,6 +333,9 @@ public class Temp {
 					}
 
 				}
+
+				f1.mkdirs();
+
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}

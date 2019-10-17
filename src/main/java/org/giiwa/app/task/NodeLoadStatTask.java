@@ -51,7 +51,7 @@ public class NodeLoadStatTask extends StatTask {
 
 	@Override
 	public String getName() {
-		return "node.load.stat.task";
+		return "gi.load";
 	}
 
 	@Override

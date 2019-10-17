@@ -34,15 +34,19 @@ public class BackupTask extends Task {
 	 */
 	public static BackupTask owner = new BackupTask();
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task.getName()
 	 */
 	@Override
 	public String getName() {
-		return "backup.auto.task";
+		return "gi.backup";
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task.onExecute()
 	 */
 	@Override
@@ -59,7 +63,9 @@ public class BackupTask extends Task {
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task.onFinish()
 	 */
 	@Override

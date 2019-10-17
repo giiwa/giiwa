@@ -42,7 +42,7 @@ public class NtpTask extends Task {
 	 */
 	@Override
 	public String getName() {
-		return "ntp.task";
+		return "gi.ntp";
 	}
 
 	/*

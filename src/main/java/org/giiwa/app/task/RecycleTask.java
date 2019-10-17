@@ -43,13 +43,20 @@ public class RecycleTask extends Task {
 	 */
 	public static RecycleTask owner = new RecycleTask();
 
+	@Override
+	public String getName() {
+		return "gi.recycle";
+	}
+
 	/**
 	 * Instantiates a new recycle task.
 	 */
 	private RecycleTask() {
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task.onExecute()
 	 */
 	@Override
@@ -96,7 +103,9 @@ public class RecycleTask extends Task {
 		}.schedule(t);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.giiwa.core.task.Task.onFinish()
 	 */
 	@Override

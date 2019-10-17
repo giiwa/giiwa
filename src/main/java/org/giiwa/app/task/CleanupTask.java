@@ -48,7 +48,7 @@ public class CleanupTask extends Task {
 	 */
 	private static Log log = LogFactory.getLog(CleanupTask.class);
 
-	public static CleanupTask inst = null;// new CleanupTask();
+	public static CleanupTask inst = null;
 
 	/**
 	 * The home.
@@ -92,7 +92,7 @@ public class CleanupTask extends Task {
 	 */
 	@Override
 	public String getName() {
-		return "cleanup.task";
+		return "gi.cleanup";
 	}
 
 	/*
@@ -107,10 +107,6 @@ public class CleanupTask extends Task {
 			 * clean up the local temp files
 			 */
 			count = 0;
-//			for (String f : folders) {
-//				String path = home + f;
-//				cleanup(path, X.ADAY, true);
-//			}
 
 			/**
 			 * clean up repo
@@ -132,15 +128,6 @@ public class CleanupTask extends Task {
 
 			if (log.isDebugEnabled())
 				log.debug("cleanup, beans=" + beans);
-
-			// for (Class<? extends Bean> c : beans) {
-			// try {
-			// Bean b = c.newInstance();
-			// b.cleanup();
-			// } catch (Exception e) {
-			// log.error(e.getMessage(), e);
-			// }
-			// }
 
 		} catch (Exception e) {
 			// eat the exception
@@ -182,6 +169,8 @@ public class CleanupTask extends Task {
 					}
 				}
 			}
+
+			f.mkdirs();
 		} catch (Exception e) {
 			if (log.isErrorEnabled()) {
 				log.error(e.getMessage(), e);
@@ -201,12 +190,6 @@ public class CleanupTask extends Task {
 	public void onFinish() {
 		this.schedule(X.AHOUR);
 	}
-
-	/**
-	 * The folders.
-	 */
-//	static String[] folders = { "/temp/_raw" };
-//	static String[] folders = { "/temp/_cache", "/temp/_raw" };
 
 	/**
 	 * The beans.

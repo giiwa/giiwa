@@ -60,7 +60,7 @@ public class PerfMoniterTask extends Task {
 	 */
 	@Override
 	public String getName() {
-		return "perf.moniter.task";
+		return "gi.perf.moniter";
 	}
 
 	/*
