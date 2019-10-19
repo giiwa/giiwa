@@ -33,7 +33,6 @@ import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
@@ -457,19 +456,18 @@ public abstract class Task implements Runnable, Serializable {
 				@Override
 				public void onRequest(long seq, Request req) {
 
-					JSON jo = req.get();
-					String node = jo.getString("node");
+					Task t = req.get();
+					if (t == null)
+						return;
+
+					String node = (String) t._params.get("node");
 					if (X.isSame(node, Local.id())) {
 						// ignore
 						return;
 					}
 
-					String name = jo.getString("name");
-					Task t = Task.get(name);
-					if (t != null) {
-						long ms = jo.getLong("ms");
-						LocalRunner.schedule(t, ms, true);
-					}
+					long ms = (Long) t._params.get("ms");
+					LocalRunner.schedule(t, ms, true);
 				}
 
 			};
@@ -599,8 +597,10 @@ public abstract class Task implements Runnable, Serializable {
 
 				if (global) {
 					try {
-						MQ.topic(Task.MQNAME, MQ.Request.create().put(JSON.create().append("from", Local.id())
-								.append("name", this.getName()).append("ms", msec)));
+						this._params.put("node", Local.id());
+						this._params.put("ms", msec);
+						MQ.Request r = MQ.Request.create().put(this);
+						MQ.topic(Task.MQNAME, r);
 					} catch (Throwable e) {
 						log.error(e.getMessage(), e);
 					}
@@ -618,12 +618,12 @@ public abstract class Task implements Runnable, Serializable {
 		return LocalRunner.isScheduled(this);
 	}
 
-	public static Task[] schedule(Task[] tt, long ms) {
+	public static Task[] schedule(Task[] tt, long ms, boolean global) {
 		if (tt == null)
 			return null;
 
 		for (Task t : tt) {
-			t.schedule(ms);
+			t.schedule(ms, global);
 		}
 		return tt;
 	}
@@ -1042,7 +1042,7 @@ public abstract class Task implements Runnable, Serializable {
 						}
 						t.sf = null;
 					}
-					task.runtimes = t.runtimes;
+//					task.runtimes = t.runtimes;
 				}
 
 				task.node = Local.id();

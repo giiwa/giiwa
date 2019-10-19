@@ -11,7 +11,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.GLog;
 
 class Optimizer implements Helper.IOptimizer {
 
@@ -84,8 +83,8 @@ class Optimizer implements Helper.IOptimizer {
 								LinkedHashMap<String, Integer> keys = (LinkedHashMap<String, Integer>) o[2];
 
 								if (!keys.isEmpty()) {
-									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + keys.toString(),
-											null, null);
+//									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + keys.toString(),
+//											null, null);
 
 									if (log.isDebugEnabled())
 										log.debug("db.index, table=" + table + ", create.index=" + keys.toString());
@@ -93,7 +92,7 @@ class Optimizer implements Helper.IOptimizer {
 									Helper.createIndex(db, table, keys);
 								}
 
-								o = queue.peek();
+								o = queue.remove();
 							}
 						} catch (Throwable e) {
 							// ignore
