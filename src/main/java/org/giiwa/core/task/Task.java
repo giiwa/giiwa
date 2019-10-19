@@ -99,6 +99,7 @@ public abstract class Task implements Runnable, Serializable {
 	private long duration = -1;
 	private int runtimes = 0;
 
+	private String _t;
 	private long startedtime = 0;
 	private String node;
 	private transient Lock _door;
@@ -128,6 +129,10 @@ public abstract class Task implements Runnable, Serializable {
 
 	public void status(String name, Object value) {
 		_params.put(name, value);
+	}
+
+	public String get_t() {
+		return _t;
 	}
 
 	public String getParent() {
@@ -463,7 +468,7 @@ public abstract class Task implements Runnable, Serializable {
 					Task t = Task.get(name);
 					if (t != null) {
 						long ms = jo.getLong("ms");
-						LocalRunner.schedule(t, ms);
+						LocalRunner.schedule(t, ms, true);
 					}
 				}
 
@@ -601,7 +606,7 @@ public abstract class Task implements Runnable, Serializable {
 					}
 				}
 
-				LocalRunner.schedule(this, msec);
+				LocalRunner.schedule(this, msec, global);
 			}
 		} catch (Throwable e) {
 			log.error(this, e);
@@ -872,6 +877,9 @@ public abstract class Task implements Runnable, Serializable {
 		/** The executor. */
 		static ScheduledThreadPoolExecutor local;
 
+		/** The executor. */
+		static ScheduledThreadPoolExecutor global;
+
 		private static Lock lock = new ReentrantLock();
 
 		/** The pending queue. */
@@ -969,9 +977,23 @@ public abstract class Task implements Runnable, Serializable {
 
 			});
 
+			global = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+
+				AtomicInteger i = new AtomicInteger(1);
+
+				@Override
+				public Thread newThread(Runnable r) {
+					Thread th = new Thread(r);
+					th.setContextClassLoader(Thread.currentThread().getContextClassLoader());
+					th.setName("gi-global-" + i.incrementAndGet());
+					return th;
+				}
+
+			});
+
 		}
 
-		public static boolean schedule(Task task, long ms) {
+		public static boolean schedule(Task task, long ms, boolean global) {
 			if (isShutingdown)
 				return false;
 
@@ -1042,8 +1064,13 @@ public abstract class Task implements Runnable, Serializable {
 					}
 					task.startedtime = 0;
 					if (task.isSys()) {
+						task._t = "S";
 						sys.execute(task);
+					} else if (global) {
+						task._t = "G";
+						LocalRunner.global.execute(task);
 					} else {
+						task._t = "";
 						local.execute(task);
 					}
 				} else {
@@ -1051,8 +1078,13 @@ public abstract class Task implements Runnable, Serializable {
 					task.scheduledtime = System.currentTimeMillis() + ms;
 
 					if (task.isSys()) {
+						task._t = "S";
 						task.sf = sys.schedule(task, ms, TimeUnit.MILLISECONDS);
+					} else if (global) {
+						task._t = "G";
+						task.sf = LocalRunner.global.schedule(task, ms, TimeUnit.MILLISECONDS);
 					} else {
+						task._t = "";
 						task.sf = local.schedule(task, ms, TimeUnit.MILLISECONDS);
 					}
 				}

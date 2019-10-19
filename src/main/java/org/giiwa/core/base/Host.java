@@ -68,8 +68,7 @@ public class Host {
 	/**
 	 * The main method.
 	 * 
-	 * @param args
-	 *            the arguments
+	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
 
@@ -82,7 +81,7 @@ public class Host {
 	public static String getLocalip() {
 		try {
 			Enumeration<NetworkInterface> l1 = NetworkInterface.getNetworkInterfaces();
-			if (l1 != null) {
+			if (l1 != null && l1.hasMoreElements()) {
 				StringBuilder sb = new StringBuilder();
 				while (l1.hasMoreElements()) {
 					NetworkInterface e = l1.nextElement();
@@ -101,12 +100,14 @@ public class Host {
 						}
 					}
 				}
-				return sb.toString();
+
+				if (sb.length() > 0)
+					return sb.toString();
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		return X.EMPTY;
+		return "127.0.0.1";
 	}
 
 	public static CpuInfo[] getCpuInfo() throws SigarException {

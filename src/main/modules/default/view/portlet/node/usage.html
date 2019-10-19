@@ -35,7 +35,7 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-	    				{name: "$lang.get('cpu.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$!c.n0},#end]}
+	    				{name: "$lang.get('cpu.usage')", color:'#25840a', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$!c.n0},#end]}
 	    			], 
 	});
 

@@ -35,7 +35,7 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-	    				{name: "$lang.get('node.tasks.local.threads')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$!c.n2},#end]}
+	    				{name: "$lang.get('node.tasks.local.threads')", color:'#25840a', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$!c.n2},#end]}
 	    			], 
 	});
 

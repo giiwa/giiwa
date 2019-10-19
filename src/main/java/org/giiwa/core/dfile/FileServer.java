@@ -35,7 +35,7 @@ public class FileServer implements IRequestHandler {
 
 	public static FileServer inst = new FileServer();
 
-	public static String URL = "udp://0.0.0.0:9091";
+	public static String URL = "tcp://0.0.0.0:9091";
 
 	/**
 	 * the number of call times
@@ -78,7 +78,7 @@ public class FileServer implements IRequestHandler {
 				commands.put(ICommand.CMD_MOVE, new MOVE());
 				commands.put(ICommand.CMD_HTTP, new HTTP());
 
-				URL = Config.getConf().getString("dfile.bind", "tcp://127.0.0.1:9091");
+				URL = Config.getConf().getString("dfile.bind", URL);
 
 				serv = Server.bind(URL, new RequestHandler(URL, this));
 

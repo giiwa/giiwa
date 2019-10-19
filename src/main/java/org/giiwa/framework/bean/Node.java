@@ -211,7 +211,8 @@ public class Node extends Bean {
 			v.append("giiwa", Module.load("default").getVersion() + "." + Module.load("default").getBuild());
 			v.append("os", Host.getOS().getName());
 			v.append("mem", Host.getMem().getTotal());
-			v.append("url", FileServer.URL);
+
+			v.append("url", FileServer.URL.replace("0.0.0.0", Host.getLocalip()));
 
 			if (cc != null) {
 				double user = 0;

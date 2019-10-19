@@ -19,16 +19,16 @@
 	<thead>
 		<tr>
 			<th style="width: 30px;"></th>
-			<th style="width: 20%;">$lang.get('task.name')</th>
-			<th>$lang.get('task.class')</th>
-			<th>$lang.get('task.global')</th>
-			<th style="width: 105px;">$lang.get('task.state')</th>
-			<th>$lang.get('task.remain')</th>
-			<th>$lang.get('task.delay')</th>
-			<th>$lang.get('task.runtime')</th>
-			<th>$lang.get('task.costing')</th>
-			<th>$lang.get('task.duration')</th>
-			<th>$lang.get('task.runtimes')</th>
+			<th style="width: 20%;">Name</th>
+			<th>CLASS</th>
+			<th>POOL</th>
+			<th style="width: 105px;">STATE</th>
+			<th>SCHEDULED</th>
+			<th>DELAY</th>
+			<th>RT</th>
+			<th>CT</th>
+			<th>DU</th>
+			<th>TIMES</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -41,7 +41,7 @@
 				<a class="hint hint--bottom" href="javascript:;" onclick='_trace("$f.name")' data-hint="Trace"><i class='icon-download'></i></a>
 			</td>
 			<td>$!f.class.name</td> 
-			<td>#if($f.global) Y #end</td>
+			<td>$!f._t</td>
 			#if($f.state == 'running')
 			<td style='color: green' class="a">
 				<i class='icon-radio-checked'></i>
