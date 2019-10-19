@@ -1351,7 +1351,7 @@ public class Helper implements Serializable {
 		}
 
 		public W or(String name, Object v, String op) {
-			return or(name, v, op);
+			return or(name, v, op, 1);
 		}
 
 		public W or(String name, Object v, String op, int boost) {

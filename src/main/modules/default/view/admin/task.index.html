@@ -36,7 +36,10 @@
 		<tr>
 			#set($i=$i+1)
 			<td>$i</td>
-			<td>$!f.name</td>
+			<td class="a">
+				$!f.name
+				<a class="hint hint--bottom" href="javascript:;" onclick='_trace("$f.name")' data-hint="Trace"><i class='icon-download'></i></a>
+			</td>
 			<td>$!f.class.name</td> 
 			<td>#if($f.global) Y #end</td>
 			#if($f.state == 'running')
@@ -113,6 +116,21 @@
 	function _dump(name) {
 		giiwa.processing.show();
 		$.post("/admin/task/dump?__node=$!__node", {
+			name : name
+		}, function(d) {
+			giiwa.processing.hide();
+			if (d.state == 200) {
+				$("#dump div").html(d.message);
+				$("#dump").show();
+				$.scrollTo("#dump", 500);
+			} else {
+				giiwa.error(d.error);
+			}
+		});
+	}
+	function _trace(name) {
+		giiwa.processing.show();
+		$.post("/admin/task/trace?__node=$!__node", {
 			name : name
 		}, function(d) {
 			giiwa.processing.hide();

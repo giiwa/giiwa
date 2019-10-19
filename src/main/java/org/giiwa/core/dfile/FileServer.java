@@ -35,7 +35,7 @@ public class FileServer implements IRequestHandler {
 
 	public static FileServer inst = new FileServer();
 
-	public static String URL = "tcp://127.0.0.1:9091";
+	public static String URL = "udp://0.0.0.0:9091";
 
 	/**
 	 * the number of call times

@@ -104,6 +104,8 @@ public class DefaultListener implements IListener {
 
 				@Override
 				public void onExecute() {
+					log.debug("initing mq");
+
 					MQ.init();
 					Local.init();
 				}

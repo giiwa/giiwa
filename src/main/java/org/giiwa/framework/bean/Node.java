@@ -74,9 +74,6 @@ public class Node extends Bean {
 	@Column(name = "url")
 	private String url;
 
-	@Column(name = "globaltasks")
-	private int globaltasks;
-
 	@Column(name = "localthreads")
 	private int localthreads;
 
@@ -157,7 +154,6 @@ public class Node extends Bean {
 			if (dao.exists(Local.id())) {
 				// update
 				V v = V.create();
-				v.append("globaltasks", Task.globaltask.get());
 				v.append("localthreads", Task.activeThread());
 				v.append("localrunning", Task.tasksInRunning());
 				v.append("localpending", Task.tasksInQueue());
@@ -196,7 +192,7 @@ public class Node extends Bean {
 				}
 			} else {
 				// create
-				dao.insert(getNodeInfo().append(X.ID, Local.id()).append("tasks", Task.globaltask.get()));
+				dao.insert(getNodeInfo().append(X.ID, Local.id()));
 			}
 
 		} catch (Exception e) {

@@ -37,8 +37,7 @@ class MemCache implements ICacheSystem {
 	/**
 	 * Inits the.
 	 *
-	 * @param conf
-	 *            the conf
+	 * @param conf the conf
 	 * @return the i cache system
 	 */
 	public static ICacheSystem create(String server) {
@@ -67,8 +66,7 @@ class MemCache implements ICacheSystem {
 	/**
 	 * get object.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return the object
 	 */
 	public synchronized Object get(String name) {
@@ -78,10 +76,8 @@ class MemCache implements ICacheSystem {
 	/**
 	 * Sets the data linked the id, the maximum size of data 1M
 	 *
-	 * @param id
-	 *            the id
-	 * @param o
-	 *            the o
+	 * @param id the id
+	 * @param o  the o
 	 * @return true, if successful
 	 */
 	public synchronized boolean set(String name, Object o) {
@@ -101,8 +97,7 @@ class MemCache implements ICacheSystem {
 	/**
 	 * Delete.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return true, if successful
 	 */
 	public synchronized boolean delete(String name) {
@@ -115,11 +110,14 @@ class MemCache implements ICacheSystem {
 	}
 
 	public boolean trylock(String name, String value, long ms) {
-		return memCachedClient.add(name, value, new Date(System.currentTimeMillis() + 12000));
+
+		return memCachedClient.add(name, value, new Date(12000));
+
 	}
 
 	public void expire(String name, String value, long ms) {
-		memCachedClient.set(name, value, new Date(System.currentTimeMillis() + ms));
+		memCachedClient.set(name, value, new Date(ms));
+		log.debug("memcached expire, name=" + name + ", value=" + memCachedClient.get(name));
 	}
 
 	@Override

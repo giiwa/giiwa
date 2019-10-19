@@ -60,6 +60,7 @@ public abstract class MQ {
 	 */
 	public synchronized static boolean init() {
 		if (mq == null) {
+
 			_node = Local.id();
 
 			String type = Global.getString("mq.type", X.EMPTY);
@@ -76,6 +77,8 @@ public abstract class MQ {
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
+
+			log.debug("MQ.inited, mq=" + mq);
 		}
 		return mq != null;
 	}

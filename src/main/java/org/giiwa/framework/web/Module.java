@@ -1636,7 +1636,7 @@ public class Module {
 		return null;
 	}
 
-	public void setEnabled(boolean b) {
+	public synchronized void setEnabled(boolean b) {
 		if (id == 0 && !b) {
 			return;
 		}
@@ -1683,7 +1683,7 @@ public class Module {
 		}
 
 		if (modules.size() > 0) {
-			home = modules.lastEntry().getValue();
+			Module.home = modules.lastEntry().getValue();
 		}
 
 		store();

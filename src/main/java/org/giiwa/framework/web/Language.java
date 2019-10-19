@@ -60,7 +60,7 @@ public class Language {
 
 	public static Language inst = null;
 
-	public static Language getLanguage() {
+	public synchronized static Language getLanguage() {
 
 		if (inst == null && Module.home != null)
 			inst = getLanguage(Global.getString("language", "zh_cn"));

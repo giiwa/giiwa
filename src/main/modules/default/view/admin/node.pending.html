@@ -3,21 +3,9 @@
 <div class='tabs'>
 	<a href='/admin/node?__node=$!__node'>$lang.get('a.node.list')</a>
 	<a href='/admin/node/usage?__node=$!__node'>$lang.get('a.node.usage')</a>
-	<a href='/admin/node/globaltask?__node=$!__node' >$lang.get('a.node.globaltask')</a>
 	<a href='/admin/node/threads?__node=$!__node' >$lang.get('a.node.threads')</a>
 	<a href='/admin/node/running?__node=$!__node' >$lang.get('a.node.running')</a>
 	<a href='/admin/node/pending?__node=$!__node' class='selected'>$lang.get('a.node.pending')</a>
-</div>
-
-<div class='search'>
-	<form action='/admin/node/pending?__node=$!__node' method='get' #if($s>0) style='display:none' #end >
-		<span><label><h3>$lang.get('node.label'):</h3><input type='text' name='name' value="$!name" /></label></span>
-		<button type='submit' class='btns1 icon icon-search'></button>
-	</form>
-	
-	<div class='s1tab #if($s>0) down #else up #end'>
-		<div class='arrow'></div>
-	</div>
 </div>
 
 #foreach($f in $list)

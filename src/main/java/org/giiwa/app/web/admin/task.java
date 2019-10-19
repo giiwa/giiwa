@@ -110,6 +110,33 @@ public class task extends Controller {
 
 	}
 
+	@Path(path = "trace", login = true, access = "access.config.admin")
+	public void trace() {
+		String name = this.getString("name");
+		Task t = Task.get(name);
+		JSON j = JSON.create();
+		StringBuilder sb = new StringBuilder();
+		try {
+			if (t != null) {
+				sb.append("<pre>" + t.getTrace() + "</pre>");
+			}
+			if (sb.length() > 0) {
+				j.put(X.STATE, 200);
+				j.put(X.MESSAGE, sb.toString());
+			} else {
+				j.put(X.STATE, 201);
+				j.put(X.ERROR, lang.get("task.notfound"));
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			j.put(X.STATE, 201);
+			j.put(X.ERROR, lang.get("task.notfound"));
+		}
+
+		this.response(j);
+
+	}
+
 	@Path(path = "dumpall", login = true, access = "access.config.admin")
 	public void dumpall() {
 		JSON j = JSON.create();

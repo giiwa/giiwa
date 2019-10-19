@@ -35,9 +35,7 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.AccessLog;
-import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.bean.User;
 import org.giiwa.framework.web.view.View;
@@ -222,34 +220,34 @@ public class GiiwaController {
 			}
 
 			// file in file.repo
-			DFile f1 = Disk.seek(uri);
-			if (f1 != null && f1.exists() && f1.isFile()) {
-
-				if (log.isDebugEnabled())
-					log.debug("handled by dfile, uri=" + uri);
-
-				Controller m = new DefaultController();
-				m.req = req;
-				m.resp = resp;
-				m.set(m);
-
-				m.set("me", m.getUser());
-				m.put("lang", m.lang);
-				m.put(X.URI, uri);
-				m.put("module", Module.home);
-				m.put("request", req);
-				m.put("this", m);
-				m.put("response", resp);
-				m.set("session", m.getSession());
-				m.set("global", Global.getInstance());
-				m.set("conf", Config.getConf());
-				m.set("local", Local.getInstance());
-				m.set("requestid", UID.random(20));
-
-				View.merge(f1, m, uri);
-
-				return;
-			}
+//			DFile f1 = Disk.seek(uri);
+//			if (f1 != null && f1.exists() && f1.isFile()) {
+//
+//				if (log.isDebugEnabled())
+//					log.debug("handled by dfile, uri=" + uri);
+//
+//				Controller m = new DefaultController();
+//				m.req = req;
+//				m.resp = resp;
+//				m.set(m);
+//
+//				m.set("me", m.getUser());
+//				m.put("lang", m.lang);
+//				m.put(X.URI, uri);
+//				m.put("module", Module.home);
+//				m.put("request", req);
+//				m.put("this", m);
+//				m.put("response", resp);
+//				m.set("session", m.getSession());
+//				m.set("global", Global.getInstance());
+//				m.set("conf", Config.getConf());
+//				m.set("local", Local.getInstance());
+//				m.set("requestid", UID.random(20));
+//
+//				View.merge(f1, m, uri);
+//
+//				return;
+//			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

@@ -28,7 +28,6 @@ import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.User;
 
@@ -456,9 +455,8 @@ public class BeanDAO<I, T extends Bean> {
 				.sort("created", 1);
 
 		if (func != null) {
-			Task.mapreduce(this.stream(q, -1, -1), t -> {
+			this.stream(q, -1, -1).parallel().forEach(t -> {
 				func.accept(t);
-				return null;
 			});
 		}
 

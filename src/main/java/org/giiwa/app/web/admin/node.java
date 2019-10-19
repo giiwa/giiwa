@@ -149,7 +149,7 @@ public class node extends Controller {
 		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int n = this.getInt("n", 50);
 
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {
@@ -170,40 +170,13 @@ public class node extends Controller {
 		this.show("/admin/node.usage.html");
 	}
 
-	@Path(login = true, path = "globaltask", access = "access.config.admin")
-	public void globaltask() {
-
-		W q = W.create().sort("label", 1).sort("ip", 1);
-
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
-
-		String name = this.getString("name");
-		if (!X.isEmpty(name)) {
-			W q1 = W.create();
-			q1.or("label", name, W.OP.like);
-			q1.or("ip", name, W.OP.like);
-			q1.or("id", name, W.OP.like);
-			q.and(q1);
-			this.set("name", name);
-		}
-
-		Beans<Node> bs = Node.dao.load(q, s, n);
-		bs.count();
-
-		this.set(bs, s, n);
-
-		this.query.path("/admin/node/globaltask");
-		this.show("/admin/node.globaltask.html");
-	}
-
 	@Path(login = true, path = "threads", access = "access.config.admin")
 	public void threads() {
 
 		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int n = this.getInt("n", 50);
 
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {
@@ -230,7 +203,7 @@ public class node extends Controller {
 		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int n = this.getInt("n", 50);
 
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {
@@ -257,7 +230,7 @@ public class node extends Controller {
 		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int n = this.getInt("n", 50);
 
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {

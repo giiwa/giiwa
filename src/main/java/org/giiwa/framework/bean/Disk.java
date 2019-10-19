@@ -122,6 +122,9 @@ public class Disk extends Bean {
 	public File getFile_obj() {
 		if (file_obj == null) {
 			file_obj = new File(path);
+			if (!file_obj.exists()) {
+				file_obj.mkdirs();
+			}
 		}
 		return file_obj;
 	}

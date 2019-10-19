@@ -3,7 +3,6 @@
 <div class='tabs'>
 	<a href='/admin/node?__node=$!__node' class='selected'>$lang.get('a.node.list')</a>
 	<a href='/admin/node/usage?__node=$!__node'>$lang.get('a.node.usage')</a>
-	<a href='/admin/node/globaltask?__node=$!__node'>$lang.get('a.node.globaltask')</a>
 	<a href='/admin/node/threads?__node=$!__node'>$lang.get('a.node.threads')</a>
 	<a href='/admin/node/running?__node=$!__node'>$lang.get('a.node.running')</a>
 	<a href='/admin/node/pending?__node=$!__node'>$lang.get('a.node.pending')</a>
@@ -28,7 +27,6 @@
 			<th rowspan="2">$lang.get('node.mem')</th>
 			<th rowspan="2">$lang.get('node.os')</th>
 			<th rowspan="2">$lang.get('node.giiwa')</th>
-			<th rowspan="2">$lang.get('node.tasks.global')</th>
 			<th rowspan="2">$lang.get('node.tasks.local.threads')</th>
 			<th colspan="2">$lang.get('node.tasks.local')</th>
 			<th colspan="4">$lang.get('node.dfile')</th>
@@ -63,7 +61,6 @@
 		<td>$!lang.size($!f.mem)</td>
 		<td>$!f.os</td>
 		<td>$!f.giiwa</td>
-		<td>$!f.globaltasks</td>
 		<td>$!f.localthreads</td>
 		<td>$!f.localrunning</td>
 		<td>$!f.localpending</td>

@@ -153,7 +153,7 @@ public class GlobalLock implements Lock {
 
 		@Override
 		public String getName() {
-			return "global.lock.heartbeat";
+			return "gi.global.lock.hb";
 		}
 
 		private void add(GlobalLock name) {

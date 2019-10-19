@@ -1354,7 +1354,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 			if (name == null || name.length == 0) {
-				log.error("bad name=" + name, new Exception("bad name=" + name));
+				log.error("bad name", new Exception("bad name"));
 				return null;
 			}
 
@@ -1432,7 +1432,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 			if (group == null || group.length == 0) {
-				log.error("bad group=" + group, new Exception("bad group=" + group));
+				log.error("bad group", new Exception("bad group"));
 				return null;
 			}
 
@@ -1511,7 +1511,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 			if (group == null || group.length == 0) {
-				log.error("bad group=" + group, new Exception("bad group=" + group));
+				log.error("bad group", new Exception("bad group"));
 				return null;
 			}
 
@@ -1576,7 +1576,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 			if (group == null || group.length == 0) {
-				log.error("bad group=" + group, new Exception("bad group=" + group));
+				log.error("bad group", new Exception("bad group"));
 				return null;
 			}
 
@@ -1642,7 +1642,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 			if (group == null || group.length == 0) {
-				log.error("bad group=" + group, new Exception("bad group=" + group));
+				log.error("bad group", new Exception("bad group"));
 				return null;
 			}
 
@@ -1707,7 +1707,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 			if (group == null || group.length == 0) {
-				log.error("bad group=" + group, new Exception("bad group=" + group));
+				log.error("bad group", new Exception("bad group"));
 				return null;
 			}
 
