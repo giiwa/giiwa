@@ -171,11 +171,6 @@ public class GLog extends Bean {
 	 */
 	public static ILog securitylog = new SecurityLog();
 
-	/**
-	 * db logger
-	 */
-	public static ILog dblog = new DbLog();
-
 	// --------------API
 
 	public static abstract class ILog {
@@ -577,7 +572,6 @@ public class GLog extends Bean {
 	private static class SecurityLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("error.security");
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
@@ -587,27 +581,8 @@ public class GLog extends Bean {
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("error.security");
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
-		}
-
-	}
-
-	private static class DbLog extends ILog {
-
-		protected boolean isEnabled(String model) {
-			return !X.isIn(model, "gi_glog", "gi_config");
-		}
-
-		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-			_log(GLog.TYPE_DB, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
-		}
-
-		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-			_log(GLog.TYPE_DB, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
-		}
-
-		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-			_log(GLog.TYPE_DB, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 
 	}
@@ -615,7 +590,6 @@ public class GLog extends Bean {
 	private static class OpLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("error.op");
 			_log(GLog.TYPE_OPLOG, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
@@ -625,6 +599,7 @@ public class GLog extends Bean {
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("error.op");
 			_log(GLog.TYPE_OPLOG, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 
@@ -633,7 +608,6 @@ public class GLog extends Bean {
 	private static class AppLog extends ILog {
 
 		protected void info(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("error.app");
 			_log(GLog.TYPE_APP, GLog.LEVEL_INFO, node, model, op, message, trace, u, ip);
 		}
 
@@ -643,6 +617,7 @@ public class GLog extends Bean {
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
+			Counter.increase("error.app");
 			_log(GLog.TYPE_APP, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 

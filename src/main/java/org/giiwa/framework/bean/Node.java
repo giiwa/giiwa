@@ -28,6 +28,7 @@ import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.FileClient;
 import org.giiwa.core.dfile.FileServer;
@@ -205,6 +206,9 @@ public class Node extends Bean {
 
 					dao.update(Local.id(), v);
 				}
+
+				// update the disk
+				Disk.dao.update(W.create("node", Local.id()), V.create("bad", 0));
 			} else {
 				// create
 				dao.insert(getNodeInfo().append(X.ID, Local.id()));

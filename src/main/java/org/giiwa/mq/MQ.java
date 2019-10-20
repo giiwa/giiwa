@@ -223,7 +223,7 @@ public abstract class MQ {
 
 		long s1 = seq.incrementAndGet();
 		if (log.isDebugEnabled())
-			log.debug("send topic to [" + to + "], seq=" + s1 + ", req=" + req);
+			log.debug("send topic to [" + to + "], seq=" + s1);
 
 		req.seq = s1;
 		mq._topic(to, req);

@@ -48,6 +48,7 @@ public class AccessLog extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	@SuppressWarnings("unused")
 	private static Log log = LogFactory.getLog(AccessLog.class);
 
 	public static final BeanDAO<String, AccessLog> dao = BeanDAO.create(AccessLog.class);

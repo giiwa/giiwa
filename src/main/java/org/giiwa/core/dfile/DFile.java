@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.Node;
@@ -104,6 +105,9 @@ public class DFile {
 
 		} catch (Exception e) {
 			log.error(url, e);
+
+			Disk.dao.update(this.disk, V.create("bad", 1));
+
 		} finally {
 			// dao.delete(W.create("disk", disk).and("filename", filename));
 		}
@@ -139,6 +143,7 @@ public class DFile {
 			return FileClient.get(url).mkdirs(path, this.filename);
 		} catch (Exception e) {
 			log.error(url, e);
+			Disk.dao.update(this.disk, V.create("bad", 1));
 		}
 		return true;
 	}
@@ -158,6 +163,8 @@ public class DFile {
 				info = FileClient.get(url).info(path, filename);
 			} catch (IOException e) {
 				log.error(url, e);
+				Disk.dao.update(this.disk, V.create("bad", 1));
+
 			}
 		}
 		return info;
@@ -227,6 +234,9 @@ public class DFile {
 			return FileClient.get(url).move(path, filename, file.path, file.filename);
 		} catch (Exception e) {
 			log.error(url, e);
+
+			Disk.dao.update(this.disk, V.create("bad", 1));
+
 		}
 		return false;
 	}
@@ -272,6 +282,8 @@ public class DFile {
 			return IOUtil.copy(new FileInputStream(f), this.getOutputStream());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			Disk.dao.update(this.disk, V.create("bad", 1));
+
 		}
 		return -1;
 	}
@@ -292,6 +304,8 @@ public class DFile {
 			return IOUtil.copy(in, this.getOutputStream(pos));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			Disk.dao.update(this.disk, V.create("bad", 1));
+
 		}
 		return -1;
 	}
@@ -308,6 +322,8 @@ public class DFile {
 			return IOUtil.copy(this.getInputStream(), new FileOutputStream(f));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			Disk.dao.update(this.disk, V.create("bad", 1));
+
 		}
 		return -1;
 	}

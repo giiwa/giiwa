@@ -84,7 +84,7 @@ public abstract class Task implements Runnable, Serializable {
 	/** The who. */
 	private transient Thread who;
 
-	private Map<String, Object> _params = new HashMap<String, Object>();
+	private Map<String, Object> _attached = new HashMap<String, Object>();
 
 	/** The fast. */
 	private boolean fast;
@@ -100,7 +100,6 @@ public abstract class Task implements Runnable, Serializable {
 
 	private String _t; // the type, "S": sys, "G": global, ""
 	private long startedtime = 0;
-	private Serializable result;
 	private long scheduledtime = 0;
 	private String parent;
 
@@ -123,12 +122,12 @@ public abstract class Task implements Runnable, Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> T status(String name) {
-		return (T) _params.get(name);
+	public <T> T attach(String name) {
+		return (T) _attached.get(name);
 	}
 
-	public void status(String name, Object value) {
-		_params.put(name, value);
+	public void attach(String name, Object value) {
+		_attached.put(name, value);
 	}
 
 	public String get_t() {
@@ -146,7 +145,7 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	protected void result(Serializable t) {
 
-		result = t;
+		attach("result", t);
 		if (finished != null) {
 			finished.drop();
 		}
@@ -161,14 +160,13 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the Object
 	 */
 
-	@SuppressWarnings("unchecked")
 	public <T> T wait(Runnable prepare) {
 
 		try {
 			finished = LiveHand.create(X.AMINUTE, 1, -1);
 			if (finished.tryHold()) {
 				try {
-					return (T) result;
+					return attach("result");
 				} finally {
 					finished.drop();
 				}
@@ -181,7 +179,7 @@ public abstract class Task implements Runnable, Serializable {
 			if (finished != null) {
 				if (finished.hold()) {
 					finished.drop();
-					return (T) result;
+					return attach("result");
 				}
 			}
 		} catch (Exception e) {
@@ -223,7 +221,7 @@ public abstract class Task implements Runnable, Serializable {
 				}
 			}
 
-			sb.append("_params=").append(_params);
+			sb.append("attached=").append(_attached);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -392,6 +390,8 @@ public abstract class Task implements Runnable, Serializable {
 			 * ensure onExecute be executed
 			 */
 			try {
+//				log.debug("running task " + this + ", token=" + attach("token"));
+
 				runtimes++;
 				onExecute();
 			} finally {
@@ -455,13 +455,16 @@ public abstract class Task implements Runnable, Serializable {
 					if (t == null)
 						return;
 
-					String node = (String) t._params.get("node");
+					String node = t.attach("node");
+					log.debug("schedule task, t=" + t);
+
 					if (X.isSame(node, Local.id())) {
 						// ignore
+						log.debug("local task[" + t.getName() + "], ignored");
 						return;
 					}
 
-					long ms = (Long) t._params.get("ms");
+					long ms = t.attach("ms");
 					LocalRunner.schedule(t, ms, true);
 				}
 
@@ -469,7 +472,13 @@ public abstract class Task implements Runnable, Serializable {
 
 			st.bind(Mode.TOPIC);
 
+			if (log.isInfoEnabled())
+				log.info("bind mq[" + st.getName() + "]");
+
 		} catch (Exception e) {
+
+			log.error(e.getMessage(), e);
+
 			Task.schedule(() -> {
 				_initMQ();
 			}, 3000);
@@ -594,8 +603,8 @@ public abstract class Task implements Runnable, Serializable {
 
 					try {
 
-						this._params.put("node", Local.id());
-						this._params.put("ms", msec);
+						this.attach("node", Local.id());
+						this.attach("ms", msec);
 						MQ.Request r = MQ.Request.create().put(this);
 						MQ.topic(Task.MQNAME, r);
 
@@ -1032,19 +1041,21 @@ public abstract class Task implements Runnable, Serializable {
 					// queue, if so, while drop one when start this one in
 					// thread
 
-					log.info("reschedule the task:" + task);
-
 					Task t = pendingQueue.remove(name);
+					log.info("reschedule the task:" + task + ", ms=" + ms + ", t=" + t + ", t.sf=" + t.sf);
+
 					if (t.sf != null) {
-						if (!t.sf.cancel(false)) {
+						if (!t.sf.cancel(true)) {
+							log.warn("the task can not be canceled, task=" + t);
 							return false;
 						}
 						t.sf = null;
 					}
 //					task.runtimes = t.runtimes;
+				} else {
+					log.info("schedule the task:" + task + ", ms=" + ms);
 				}
 
-				task.result = null;
 				task.state = State.pending;
 
 				if (task.scheduledtime <= 0)
@@ -1054,7 +1065,14 @@ public abstract class Task implements Runnable, Serializable {
 
 				task.e = new Exception("Trace");
 
-				pendingQueue.put(name, task);
+				Task t1 = pendingQueue.put(name, task);
+				if (t1 != null) {
+					log.warn("ERROR, why here is a task? task=" + t1);
+				}
+
+//				if (Language.getLanguage() != null)
+//					task.attach("token", Language.getLanguage().format(System.currentTimeMillis(), "HH:mm:ss"));
+//				log.debug("schedule the task:" + task + ", token=" + task.attach("token"));
 
 				if (ms <= 0) {
 					if (task.scheduledtime <= 0) {

@@ -199,7 +199,7 @@ public class Disk extends Bean {
 		if (Helper.isConfigured()) {
 			filename = X.getCanonicalPath(filename);
 
-			Beans<Disk> bs = disks(true);
+			Beans<Disk> bs = disks();
 
 			for (Disk e : bs) {
 				DFile d = DFile.create(e, filename);
@@ -220,7 +220,7 @@ public class Disk extends Bean {
 
 	public static boolean exists(String filename) {
 
-		Beans<Disk> bs = disks(true);
+		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
 			DFile d = DFile.create(e, filename);
@@ -234,7 +234,7 @@ public class Disk extends Bean {
 
 	public static Disk get() {
 
-		Beans<Disk> bs = disks(true);
+		Beans<Disk> bs = disks();
 
 		Selector s = Selector.creeate();
 		for (Disk e : bs) {
@@ -250,7 +250,7 @@ public class Disk extends Bean {
 	public static Collection<DFile> list(String filename) {
 		Map<String, DFile> l1 = new TreeMap<String, DFile>();
 
-		Beans<Disk> bs = disks(true);
+		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
 			DFile f = DFile.create(e, filename);
@@ -289,7 +289,7 @@ public class Disk extends Bean {
 
 	public static void delete(String filename, long age, boolean global) {
 
-		Beans<Disk> bs = disks(global);
+		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
 
@@ -346,12 +346,9 @@ public class Disk extends Bean {
 		return IOUtil.copy(in, out);
 	}
 
-	private static Beans<Disk> disks(boolean global) {
+	private static Beans<Disk> disks() {
 		if (_disks == null || _disks.expired()) {
-			W q = W.create().sort("priority", -1).sort("path", 1);
-			if (!global) {
-				q.and("node", Local.id());
-			}
+			W q = W.create().and("bad", 0).sort("priority", -1).sort("path", 1);
 			_disks = dao.load(q, 0, 100);
 			_disks.setExpired(X.AMINUTE + System.currentTimeMillis());
 		}
@@ -363,29 +360,6 @@ public class Disk extends Bean {
 	}
 
 	private static Beans<Disk> _disks = null;
-
-	/**
-	 * sum local disk
-	 * 
-	 */
-	public static void stat() {
-
-		int s = 0;
-		W q = W.create().and("node", Local.id()).sort("priority", -1).sort("path", 1);
-		Beans<Disk> bs = Disk.dao.load(q, s, 10);
-
-		while (bs != null && !bs.isEmpty()) {
-			for (Disk e : bs) {
-				V v = V.create().append("total", e.total);
-				v.append("free", e.free);
-				v.append("count", e.count);
-				Disk.dao.update(e.getId(), v);
-			}
-			s += bs.size();
-			bs = Disk.dao.load(q, s, 10);
-		}
-
-	}
 
 	public static void demo(String path) {
 		Disk d = new Disk();
