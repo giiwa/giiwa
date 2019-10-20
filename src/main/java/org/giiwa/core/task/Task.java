@@ -98,27 +98,28 @@ public abstract class Task implements Runnable, Serializable {
 	private long duration = -1;
 	private int runtimes = 0;
 
-	private String _t;
+	private String _t; // the type, "S": sys, "G": global, ""
 	private long startedtime = 0;
-	private String node;
+	private Serializable result;
+	private long scheduledtime = 0;
+	private String parent;
+
 	private transient Lock _door;
 	private transient ScheduledFuture<?> sf;
 
-	private Serializable result;
 	private transient LiveHand finished;
 
-	private long scheduledtime = 0;
-
 	private transient Exception e;
-
-	private String parent;
 
 	public enum State {
 		running, pending, finished
 	};
 
 	public String getTrace() {
-		return X.toString(e);
+		StringBuilder sb = new StringBuilder();
+		this.onDump(sb);
+		sb.append("\r\n").append(X.toString(e));
+		return sb.toString();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -193,10 +194,6 @@ public abstract class Task implements Runnable, Serializable {
 
 	public State getState() {
 		return state;
-	}
-
-	public String getNode() {
-		return node;
 	}
 
 	public long getDelay() {
@@ -375,7 +372,6 @@ public abstract class Task implements Runnable, Serializable {
 			}
 
 			// prepare
-			node = Local.id();
 
 			state = State.running;
 
@@ -402,7 +398,6 @@ public abstract class Task implements Runnable, Serializable {
 
 				duration = System.currentTimeMillis() - startedtime;
 
-				node = null;
 				state = State.finished;
 				LocalRunner.remove(this);
 
@@ -596,14 +591,18 @@ public abstract class Task implements Runnable, Serializable {
 					this.parent = (String) Language.getLanguage().truncate(this.parent, 30);
 
 				if (global) {
+
 					try {
+
 						this._params.put("node", Local.id());
 						this._params.put("ms", msec);
 						MQ.Request r = MQ.Request.create().put(this);
 						MQ.topic(Task.MQNAME, r);
+
 					} catch (Throwable e) {
 						log.error(e.getMessage(), e);
 					}
+
 				}
 
 				LocalRunner.schedule(this, msec, global);
@@ -1045,14 +1044,13 @@ public abstract class Task implements Runnable, Serializable {
 //					task.runtimes = t.runtimes;
 				}
 
-				task.node = Local.id();
 				task.result = null;
 				task.state = State.pending;
 
 				if (task.scheduledtime <= 0)
 					task.scheduledtime = System.currentTimeMillis();
-				if (!task._params.containsKey("parent"))
-					task.status("parent", Local.id() + "/" + Thread.currentThread().getName());
+//				if (!task._params.containsKey("parent"))
+//					task.status("parent", Local.id() + "/" + Thread.currentThread().getName());
 
 				task.e = new Exception("Trace");
 
