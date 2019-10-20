@@ -15,6 +15,7 @@
 package org.giiwa.framework.bean;
 
 import java.lang.management.ManagementFactory;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -95,6 +96,9 @@ public class Node extends Bean {
 	@Column(name = "giiwa")
 	private String giiwa;
 
+	@Column(name = "modules")
+	private List<String> modules;
+
 	@Column(name = "dfiletimes")
 	private long dfiletimes;
 
@@ -106,6 +110,10 @@ public class Node extends Bean {
 
 	@Column(name = "dfilemincost")
 	private long dfilemincost;
+
+	public List<String> getModules() {
+		return modules;
+	}
 
 	public int getState() {
 		if (Task.powerstate == 0)
@@ -166,6 +174,13 @@ public class Node extends Bean {
 				if (force) {
 					FileServer.resetm();
 					FileClient.resetm();
+
+					v.append("modules", X.toArray(Module.getAll(true), e -> {
+						if (X.isSame("default", e.getName())) {
+							return null;
+						}
+						return e.getName();
+					}));
 
 					String process = ManagementFactory.getRuntimeMXBean().getName();
 					dao.update(Local.id(),

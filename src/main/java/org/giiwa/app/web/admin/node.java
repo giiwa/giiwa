@@ -151,16 +151,6 @@ public class node extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 50);
 
-		String name = this.getString("name");
-		if (!X.isEmpty(name)) {
-			W q1 = W.create();
-			q1.or("label", name, W.OP.like);
-			q1.or("ip", name, W.OP.like);
-			q1.or("id", name, W.OP.like);
-			q.and(q1);
-			this.set("name", name);
-		}
-
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
@@ -177,16 +167,6 @@ public class node extends Controller {
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 50);
-
-		String name = this.getString("name");
-		if (!X.isEmpty(name)) {
-			W q1 = W.create();
-			q1.or("label", name, W.OP.like);
-			q1.or("ip", name, W.OP.like);
-			q1.or("id", name, W.OP.like);
-			q.and(q1);
-			this.set("name", name);
-		}
 
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
@@ -205,16 +185,6 @@ public class node extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 50);
 
-		String name = this.getString("name");
-		if (!X.isEmpty(name)) {
-			W q1 = W.create();
-			q1.or("label", name, W.OP.like);
-			q1.or("ip", name, W.OP.like);
-			q1.or("id", name, W.OP.like);
-			q.and(q1);
-			this.set("name", name);
-		}
-
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
@@ -231,16 +201,6 @@ public class node extends Controller {
 
 		int s = this.getInt("s");
 		int n = this.getInt("n", 50);
-
-		String name = this.getString("name");
-		if (!X.isEmpty(name)) {
-			W q1 = W.create();
-			q1.or("label", name, W.OP.like);
-			q1.or("ip", name, W.OP.like);
-			q1.or("id", name, W.OP.like);
-			q.and(q1);
-			this.set("name", name);
-		}
 
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();

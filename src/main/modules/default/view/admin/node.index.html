@@ -23,14 +23,14 @@
 	<thead>
 		<tr>
 			<th rowspan="2">$lang.get('node.label')</th>
-			<th colspan="2">$lang.get('node.cpu')</th>
-			<th rowspan="2">$lang.get('node.mem')</th>
 			<th rowspan="2">$lang.get('node.os')</th>
 			<th rowspan="2">$lang.get('node.giiwa')</th>
+			<th rowspan="2">$lang.get('node.modules')</th>
+			<th colspan="2">$lang.get('node.cpu')</th>
+			<th rowspan="2">$lang.get('node.mem')</th>
 			<th rowspan="2">$lang.get('node.tasks.local.threads')</th>
 			<th colspan="2">$lang.get('node.tasks.local')</th>
-			<th colspan="4">$lang.get('node.dfile')</th>
-			<th colspan="4">$lang.get('node.dfile_c')</th>
+			<th colspan="3">$lang.get('node.dfile')</th>
 			<th rowspan="2">$lang.get('node.state')</th>
 			<th  rowspan="2" style="width: 84px;"></th>
 		</tr>
@@ -39,14 +39,9 @@
 			<th>$lang.get('node.cpu.usage')</th>
 			<th>$lang.get('node.tasks.local.running')</th>
 			<th>$lang.get('node.tasks.local.pending')</th>
-			<th>$lang.get('node.dfile.times')</th>
 			<th>$lang.get('node.dfile.max')</th>
 			<th>$lang.get('node.dfile.min')</th>
 			<th>$lang.get('node.dfile.avgcost')</th>
-			<th>$lang.get('node.dfile.times_c')</th>
-			<th>$lang.get('node.dfile.max_c')</th>
-			<th>$lang.get('node.dfile.min_c')</th>
-			<th>$lang.get('node.dfile.avgcost_c')</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -56,22 +51,18 @@
 			$!f.label
 			<a class="hint hint--bottom" data-hint="Edit" href="javascript:;" onclick="_showlabel('$f.id', '$!f.label')"><i class='icon-pencil'></i></a>
 		</td>
+		<td>$!f.os</td>
+		<td>$!f.giiwa</td>
+		<td>$!f.modules</td>
 		<td>$!f.cores</td>
 		<td>$!f.usage</td>
 		<td>$!lang.size($!f.mem)</td>
-		<td>$!f.os</td>
-		<td>$!f.giiwa</td>
 		<td>$!f.localthreads</td>
 		<td>$!f.localrunning</td>
 		<td>$!f.localpending</td>
-		<td>#if($f.dfiletimes > 0) $f.dfiletimes #end</td>
-		<td>#if($f.dfiletimes > 0) $f.dfilemaxcost #end</td>
-		<td>#if($f.dfiletimes > 0) $f.dfilemincost #end</td>
-		<td>#if($f.dfiletimes > 0) $f.dfileavgcost #end</td>
-		<td>#if($f.dfiletimes_c > 0) $f.dfiletimes_c #end</td>
-		<td>#if($f.dfiletimes_c > 0) $f.dfilemaxcost_c #end</td>
-		<td>#if($f.dfiletimes_c > 0) $f.dfilemincost_c #end</td>
-		<td>#if($f.dfiletimes_c > 0) $f.dfileavgcost_c #end</td>
+		<td>#if($f.dfiletimes > 0)$f.dfilemaxcost#end/#if($f.dfiletimes_c > 0)$f.dfilemaxcost_c#end</td>
+		<td>#if($f.dfiletimes > 0)$f.dfilemincost#end/#if($f.dfiletimes_c > 0)$f.dfilemincost_c#end</td>
+		<td>#if($f.dfiletimes > 0)$f.dfileavgcost#end/#if($f.dfiletimes_c > 0)$f.dfileavgcost_c#end</td>
 		<td>
 			#if($f.state == 1)
 			<i class='icon-radio-checked' style="color: green"></i>
