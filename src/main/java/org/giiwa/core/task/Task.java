@@ -87,7 +87,7 @@ public abstract class Task implements Runnable, Serializable {
 	private Map<String, Object> _attached = new HashMap<String, Object>();
 
 	/** The fast. */
-	private boolean fast;
+	private transient boolean fast;
 
 	private static AtomicLong seq = new AtomicLong(0);
 
@@ -95,12 +95,12 @@ public abstract class Task implements Runnable, Serializable {
 
 	private transient long _cpuold = 0;
 
-	private long duration = -1;
+	private transient long duration = -1;
 	private int runtimes = 0;
 
-	private String _t; // the type, "S": sys, "G": global, ""
-	private long startedtime = 0;
-	private long scheduledtime = 0;
+	private transient String _t; // the type, "S": sys, "G": global, ""
+	private transient long startedtime = 0;
+	private transient long scheduledtime = 0;
 	private String parent;
 
 	private transient Lock _door;
@@ -390,10 +390,22 @@ public abstract class Task implements Runnable, Serializable {
 			 * ensure onExecute be executed
 			 */
 			try {
-//				log.debug("running task " + this + ", token=" + attach("token"));
+				log.debug("running task " + this + ", token=" + attach("token"));
 
-				runtimes++;
-				onExecute();
+				if (X.isSame(_t, "G")) {
+					// global
+					if (this.tryLock()) {
+						try {
+							runtimes++;
+							onExecute();
+						} finally {
+							this.unlock();
+						}
+					}
+				} else {
+					runtimes++;
+					onExecute();
+				}
 			} finally {
 
 				duration = System.currentTimeMillis() - startedtime;
@@ -789,19 +801,8 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return List of Tasks
 	 */
 	public static List<Task> getAll() {
-		HashSet<Task> l1 = new HashSet<Task>();
 
-		try {
-			LocalRunner.lock.lock();
-			l1.addAll(LocalRunner.pendingQueue.values());
-			l1.addAll(LocalRunner.runningQueue.values());
-		} catch (Exception e) {
-
-		} finally {
-			LocalRunner.lock.unlock();
-		}
-
-		List<Task> l2 = new ArrayList<Task>(l1);
+		List<Task> l2 = LocalRunner.getAll();
 		Collections.sort(l2, new Comparator<Task>() {
 
 			@Override
@@ -821,18 +822,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return Task
 	 */
 	public static Task get(String name) {
-		try {
-			LocalRunner.lock.lock();
-
-			Task t = LocalRunner.runningQueue.get(name);
-			if (t != null)
-				return t;
-
-			return LocalRunner.pendingQueue.get(name);
-
-		} finally {
-			LocalRunner.lock.unlock();
-		}
+		return LocalRunner.get(name);
 	}
 
 	/**
@@ -888,7 +878,7 @@ public abstract class Task implements Runnable, Serializable {
 		/** The executor. */
 		static ScheduledThreadPoolExecutor global;
 
-		private static Lock lock = new ReentrantLock();
+//		private static Lock lock = new ReentrantLock();
 
 		/** The pending queue. */
 		private static HashMap<String, Task> pendingQueue = new HashMap<String, Task>();
@@ -896,64 +886,64 @@ public abstract class Task implements Runnable, Serializable {
 		/** The running queue. */
 		private static HashMap<String, Task> runningQueue = new HashMap<String, Task>();
 
-		public static boolean remove(Task task) {
-			try {
-				lock.lock();
-				Task t = pendingQueue.remove(task.getName());
-				if (t != null) {
-					if (t.sf != null)
-						t.sf.cancel(true);
-					return true;
-				}
-
-				if (runningQueue.remove(task.getName()) != null)
-					return true;
-			} finally {
-				lock.unlock();
+		public synchronized static boolean remove(Task task) {
+			Task t = pendingQueue.remove(task.getName());
+			if (t != null) {
+				if (t.sf != null)
+					t.sf.cancel(true);
+				return true;
 			}
-			return false;
-		}
 
-		public static boolean isScheduled(Task t) {
-			try {
-				lock.lock();
-
-				if (runningQueue.containsKey(t.getName())) {
-					return true;
-				}
-
-				if (pendingQueue.containsKey(t.getName())) {
-					return true;
-				}
-
-			} finally {
-				lock.unlock();
-			}
+			if (runningQueue.remove(task.getName()) != null)
+				return true;
 
 			return false;
 		}
 
-		private static boolean _switch(Task task) {
+		public synchronized static List<Task> getAll() {
+			List<Task> l1 = new ArrayList<Task>();
+			l1.addAll(LocalRunner.pendingQueue.values());
+			l1.addAll(LocalRunner.runningQueue.values());
+			return l1;
+		}
+
+		public synchronized static Task get(String name) {
+			Task t = LocalRunner.runningQueue.get(name);
+			if (t != null)
+				return t;
+
+			return LocalRunner.pendingQueue.get(name);
+		}
+
+		public synchronized static boolean isScheduled(Task t) {
+
+			if (runningQueue.containsKey(t.getName())) {
+				return true;
+			}
+
+			if (pendingQueue.containsKey(t.getName())) {
+				return true;
+			}
+
+			return false;
+		}
+
+		private synchronized static boolean _switch(Task task) {
 			if (isShutingdown)
 				return false;
 
-			try {
-				lock.lock();
+			pendingQueue.remove(task.getName());
 
-				pendingQueue.remove(task.getName());
-
-				if (runningQueue.containsKey(task.getName())) {
-					// there is a copy is running
-					log.warn("run duplicated task:" + task.getName());
-					return false;
-				}
-
-				runningQueue.put(task.getName(), task);
-				// log.debug(getName() + " is running");
-				return true;
-			} finally {
-				lock.unlock();
+			if (runningQueue.containsKey(task.getName())) {
+				// there is a copy is running
+				log.warn("run duplicated task:" + task.getName());
+				return false;
 			}
+
+			runningQueue.put(task.getName(), task);
+			// log.debug(getName() + " is running");
+			return true;
+
 		}
 
 		public static void init(int sysnum, int usernum) {
@@ -1001,7 +991,7 @@ public abstract class Task implements Runnable, Serializable {
 
 		}
 
-		public static boolean schedule(Task task, long ms, boolean global) {
+		public static synchronized boolean schedule(Task task, long ms, boolean global) {
 			if (isShutingdown)
 				return false;
 
@@ -1025,127 +1015,113 @@ public abstract class Task implements Runnable, Serializable {
 				return false;
 			}
 
-			try {
-				lock.lock();
-				// scheduled
+			// scheduled
 
-				if (runningQueue.containsKey(name)) {
-					if (log.isDebugEnabled())
-						log.warn("the task is running, ignored: " + name);
+			if (runningQueue.containsKey(name)) {
+				if (log.isDebugEnabled())
+					log.warn("the task is running, ignored: " + name);
 
-					return false;
-				}
+				return false;
+			}
 
-				if (pendingQueue.containsKey(name)) {
-					// schedule this task, possible this task is in running
-					// queue, if so, while drop one when start this one in
-					// thread
+			if (pendingQueue.containsKey(name)) {
+				// schedule this task, possible this task is in running
+				// queue, if so, while drop one when start this one in
+				// thread
 
-					Task t = pendingQueue.remove(name);
-					log.info("reschedule the task:" + task + ", ms=" + ms + ", t=" + t + ", t.sf=" + t.sf);
+				Task t = pendingQueue.remove(name);
+				log.info("reschedule the task:" + task + ", ms=" + ms + ", t=" + t + ", t.sf=" + t.sf);
 
-					if (t.sf != null) {
-						if (!t.sf.cancel(true)) {
-							log.warn("the task can not be canceled, task=" + t);
-							return false;
-						}
-						t.sf = null;
+				if (t.sf != null) {
+					if (!t.sf.cancel(true)) {
+						log.warn("the task can not be canceled, task=" + t);
+						return false;
 					}
-//					task.runtimes = t.runtimes;
-				} else {
-					log.info("schedule the task:" + task + ", ms=" + ms);
+					t.sf = null;
 				}
+//					task.runtimes = t.runtimes;
+			} else {
+				log.info("schedule the task:" + task + ", ms=" + ms);
+			}
 
-				task.state = State.pending;
+			task.state = State.pending;
 
-				if (task.scheduledtime <= 0)
-					task.scheduledtime = System.currentTimeMillis();
+			if (task.scheduledtime <= 0)
+				task.scheduledtime = System.currentTimeMillis();
 //				if (!task._params.containsKey("parent"))
 //					task.status("parent", Local.id() + "/" + Thread.currentThread().getName());
 
-				task.e = new Exception("Trace");
+			task.e = new Exception("Trace");
 
-				Task t1 = pendingQueue.put(name, task);
-				if (t1 != null) {
-					log.warn("ERROR, why here is a task? task=" + t1);
-				}
-
-//				if (Language.getLanguage() != null)
-//					task.attach("token", Language.getLanguage().format(System.currentTimeMillis(), "HH:mm:ss"));
-//				log.debug("schedule the task:" + task + ", token=" + task.attach("token"));
-
-				if (ms <= 0) {
-					if (task.scheduledtime <= 0) {
-						task.scheduledtime = System.currentTimeMillis();
-					}
-					task.startedtime = 0;
-					if (task.isSys()) {
-						task._t = "S";
-						sys.execute(task);
-					} else if (global) {
-						task._t = "G";
-						LocalRunner.global.execute(task);
-					} else {
-						task._t = "";
-						local.execute(task);
-					}
-				} else {
-					task.startedtime = 0;
-					task.scheduledtime = System.currentTimeMillis() + ms;
-
-					if (task.isSys()) {
-						task._t = "S";
-						task.sf = sys.schedule(task, ms, TimeUnit.MILLISECONDS);
-					} else if (global) {
-						task._t = "G";
-						task.sf = LocalRunner.global.schedule(task, ms, TimeUnit.MILLISECONDS);
-					} else {
-						task._t = "";
-						task.sf = local.schedule(task, ms, TimeUnit.MILLISECONDS);
-					}
-				}
-
-				return true;
-			} finally {
-				lock.unlock();
+			Task t1 = pendingQueue.put(name, task);
+			if (t1 != null) {
+				log.warn("ERROR, why here is a task? task=" + t1);
 			}
+
+			if (Language.getLanguage() != null)
+				task.attach("token", Language.getLanguage().format(System.currentTimeMillis(), "HH:mm:ss"));
+			log.debug("schedule the task:" + task + ", token=" + task.attach("token"));
+
+			if (ms <= 0) {
+				if (task.scheduledtime <= 0) {
+					task.scheduledtime = System.currentTimeMillis();
+				}
+				task.startedtime = 0;
+				if (task.isSys()) {
+					task._t = "S";
+					sys.execute(task);
+				} else if (global) {
+					task._t = "G";
+					LocalRunner.global.execute(task);
+				} else {
+					task._t = "";
+					local.execute(task);
+				}
+			} else {
+				task.startedtime = 0;
+				task.scheduledtime = System.currentTimeMillis() + ms;
+
+				if (task.isSys()) {
+					task._t = "S";
+					task.sf = sys.schedule(task, ms, TimeUnit.MILLISECONDS);
+				} else if (global) {
+					task._t = "G";
+					task.sf = LocalRunner.global.schedule(task, ms, TimeUnit.MILLISECONDS);
+				} else {
+					task._t = "";
+					task.sf = local.schedule(task, ms, TimeUnit.MILLISECONDS);
+				}
+			}
+
+			return true;
 
 		}
 
-		public static void stopAll(boolean fast) {
+		public synchronized static void stopAll(boolean fast) {
 			isShutingdown = true;
 			/**
 			 * start another thread to terminate all the thread
 			 */
 			try {
 
-				try {
-					lock.lock();
-					for (Task t : pendingQueue.values().toArray(new Task[pendingQueue.size()])) {
-						t.stop(fast);
-					}
-
-					for (Task t : runningQueue.values().toArray(new Task[runningQueue.size()])) {
-						t.stop(fast);
-					}
-				} finally {
-					lock.unlock();
+				for (Task t : pendingQueue.values().toArray(new Task[pendingQueue.size()])) {
+					t.stop(fast);
 				}
 
-				Condition waiter = lock.newCondition();
+				for (Task t : runningQueue.values().toArray(new Task[runningQueue.size()])) {
+					t.stop(fast);
+				}
+
 				while (runningQueue.size() > 0) {
 					try {
-						lock.lock();
 						log.info("stoping, size=" + runningQueue.size() + ", running task=" + runningQueue);
 
 						for (Task t : runningQueue.values().toArray(new Task[runningQueue.size()])) {
 							t.stop(fast);
 						}
 
-						waiter.awaitNanos(TimeUnit.MILLISECONDS.toNanos(1000));
+						LocalRunner.class.wait(1000);
 					} catch (InterruptedException e) {
-					} finally {
-						lock.unlock();
 					}
 				}
 
@@ -1170,17 +1146,29 @@ public abstract class Task implements Runnable, Serializable {
 
 	}
 
+	private transient int _referdoor = 0;
+
 	/**
 	 * lock the task avoid it run in other node
 	 * 
 	 * @return true if lock success, otherwise false
 	 */
-	public final boolean tryLock() {
+	public synchronized final boolean tryLock() {
+
+		if (_referdoor > 0) {
+			_referdoor++;
+			return true;
+		}
+
 		try {
 			if (_door == null) {
 				_door = Global.getLock("global.door." + getName());
 			}
-			return _door.tryLock();
+			boolean b = _door.tryLock();
+			if (b) {
+				_referdoor++;
+			}
+			return b;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -1190,13 +1178,18 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * unlock the task
 	 */
-	public final void unlock() {
-		try {
-			if (_door != null) {
-				_door.unlock();
+	public synchronized final void unlock() {
+
+		_referdoor--;
+
+		if (_referdoor <= 0) {
+			try {
+				if (_door != null) {
+					_door.unlock();
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 		}
 	}
 
