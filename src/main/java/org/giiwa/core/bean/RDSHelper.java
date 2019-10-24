@@ -3195,4 +3195,16 @@ public class RDSHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@Override
+	public <T> T std_deviation(String table, W q, String name, String db) {
+		// TODO not support
+		return null;
+	}
+
+	@Override
+	public <T> T median(String table, W q, String name, String db) {
+		// TODO not support
+		return null;
+	}
+
 }

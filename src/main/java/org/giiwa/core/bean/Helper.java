@@ -2750,6 +2750,50 @@ public class Helper implements Serializable {
 		return 0;
 	}
 
+	public static <T> T median(W q, String name, String table, String db) {
+		if (table != null) {
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
+
+			if (primary != null && primary.getDB(db) != null) {
+				return primary.median(table, q, name, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						return h.median(table, q, name, db);
+					}
+				}
+			}
+
+			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+		}
+
+		return null;
+	}
+
+	public static <T> T std_deviation(W q, String name, String table, String db) {
+		if (table != null) {
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
+
+			if (primary != null && primary.getDB(db) != null) {
+				return primary.std_deviation(table, q, name, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						return h.std_deviation(table, q, name, db);
+					}
+				}
+			}
+
+			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+		}
+
+		return null;
+	}
+
 	public static <T> T sum(W q, String name, String table, String db) {
 		if (table != null) {
 			if (monitor != null) {
@@ -3141,6 +3185,10 @@ public class Helper implements Serializable {
 		List<JSON> min(String table, W q, String name, String[] group, String db);
 
 		<T> T avg(String table, W q, String name, String db);
+
+		<T> T std_deviation(String table, W q, String name, String db);
+
+		<T> T median(String table, W q, String name, String db);
 
 		List<JSON> avg(String table, W q, String name, String[] group, String db);
 

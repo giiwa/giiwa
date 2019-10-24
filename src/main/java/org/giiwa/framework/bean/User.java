@@ -24,11 +24,19 @@ import java.util.Set;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.web.user;
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.base.MD5;
-import org.giiwa.core.bean.*;
+import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.BeanDAO;
+import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Column;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.bean.Table;
+import org.giiwa.core.bean.UID;
+import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.dfile.DFile;
@@ -273,6 +281,9 @@ public class User extends Bean {
 		dao.insert(
 				v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()));
 
+		GLog.securitylog.info(user.class, "create", "name=" + name + ", nickname=" + v.value("nickname"), dao.load(id),
+				(String) v.value("createdip"));
+
 		return id;
 	}
 
@@ -474,7 +485,10 @@ public class User extends Bean {
 	 * @param rid the rid
 	 */
 	public void removeRole(long rid) {
+
 		UserRole.dao.delete(W.create("uid", this.getId()).and("rid", rid));
+
+		GLog.securitylog.info(user.class, "grant", "remove role", this, null);
 	}
 
 	/**
@@ -482,7 +496,7 @@ public class User extends Bean {
 	 */
 	public void removeAllRoles() {
 		UserRole.dao.delete(W.create("uid", this.getId()));
-
+		GLog.securitylog.info(user.class, "grant", "remove all role", this, null);
 	}
 
 	/**
@@ -558,6 +572,9 @@ public class User extends Bean {
 		}
 
 		_checkphoto(id, v);
+
+		GLog.securitylog.info(user.class, "update", "v=" + v, dao.load(id), null);
+
 		return dao.update(id, v);
 	}
 

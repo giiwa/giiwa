@@ -1375,7 +1375,15 @@ public class MongoHelper implements Helper.DBHelper {
 						new BasicDBObject().append("$sum", 1))));
 
 				if (!order.isEmpty()) {
-					l1.add(new BasicDBObject().append("$sort", order));
+					BasicDBObject ord = new BasicDBObject();
+					for (Map.Entry<String, Object> s : order.entrySet()) {
+						if (X.isSame(s.getKey(), "count")) {
+							ord.append(s.getKey(), s.getValue());
+						} else {
+							ord.append("_id." + s.getKey(), s.getValue());
+						}
+					}
+					l1.add(new BasicDBObject().append("$sort", ord));
 				}
 
 				AggregateIterable<Document> a1 = db1.aggregate(l1);
@@ -1753,6 +1761,80 @@ public class MongoHelper implements Helper.DBHelper {
 
 		}
 
+		return null;
+	}
+
+	@Override
+	public <T> T std_deviation(String collection, W q, String name, String db) {
+
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+
+		try {
+			if (X.isEmpty(collection)) {
+				log.error("bad collection=" + collection, new Exception("bad collection=" + collection));
+				return null;
+			}
+
+			db1 = getCollection(db, collection);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				BasicDBObject group = new BasicDBObject();
+				group.append(name, "$" + name);
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", "").append("e",
+						new BasicDBObject().append("$stdDevPop", "$" + name))));
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				if (log.isDebugEnabled())
+					log.debug("std_deviation, cost=" + t.past() + ", query=" + l1 + ", result=" + a1);
+
+				if (a1 != null) {
+					return (T) a1.first().get("e");
+				}
+
+			}
+		} catch (Exception e) {
+			log.error("query=" + query, e);
+
+		}
+
+		return null;
+
+	}
+
+	@Override
+	public <T> T median(String table, W q, String name, String db) {
+		long n = this.count(table, q, db);
+		if (n % 2 == 1) {
+			q.sort(name, 1);
+			Beans<Bean> b = this.load(table, new String[] { name }, q, (int) (n / 2), 1, Bean.class, db);
+			if (b != null && !b.isEmpty()) {
+				return b.get(0).get(name);
+			}
+		} else if (n > 0) {
+			q.sort(name, 1);
+			Beans<Bean> b = this.load(table, new String[] { name }, q, (int) (n / 2), 2, Bean.class, db);
+			if (b != null && !b.isEmpty()) {
+				Object o1 = b.get(0).get(name);
+				Object o2 = b.get(1).get(name);
+
+				if (o1 instanceof String) {
+					return (T) o1;
+				}
+
+				Double d = (X.toDouble(o1) + X.toDouble(o2)) / 2f;
+				return (T) d;
+			}
+		}
 		return null;
 	}
 
