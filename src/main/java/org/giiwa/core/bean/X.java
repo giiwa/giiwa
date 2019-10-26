@@ -533,7 +533,7 @@ public final class X {
 			}
 		}
 
-		return l1.toArray(new String[l1.size()]);
+		return l1.toArray();
 	}
 
 	/**
