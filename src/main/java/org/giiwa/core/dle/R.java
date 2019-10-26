@@ -19,6 +19,7 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Temp;
 import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPGenericVector;
 import org.rosuda.REngine.Rserve.RConnection;
 
 public class R {
@@ -31,42 +32,65 @@ public class R {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JSON run(String code) throws Exception {
-		return run(code, (List) null);
+		return run(code, (List) null, null);
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public JSON run(String code, List<Object[]> data) throws Exception {
+	public JSON run(String code, List<JSON> data, String[] header) throws Exception {
 
 		RConnection c = pool.get(TIMEOUT);
 
 		if (c != null) {
 
+			String func = "f" + c.hashCode();
+
 			// save to file
 			List<Temp> l1 = new ArrayList<Temp>();
 			try {
 				StringBuilder sb = new StringBuilder();
-				String func = "f" + c.hashCode();
 				sb.append(func + "<-function(){");
 				if (!X.isEmpty(data)) {
+
 					Temp t = Temp.create("data");
-					Temp.Exporter<Object> ex = t.export("UTF-8", Temp.Exporter.FORMAT.csv).createSheet((e) -> {
-						return (Object[]) e;
+
+					Temp.Exporter<JSON> ex = t.export("UTF-8", Temp.Exporter.FORMAT.plain);
+					ex.createSheet(e -> {
+						Object[] o = new Object[header.length];
+						for (int i = 0; i < header.length; i++) {
+							o[i] = e.get(header[i]);
+						}
+						return o;
 					});
-					ex.print((List) data);
+					ex.print(header);
+					ex.print(data);
 					ex.close();
 
-					l1.add(t);
+//					if (t.getFile().exists()) {
+//						System.out.println(t.getFile().getAbsolutePath() + ", size=" + t.getFile().length());
+//					}
 
-					sb.append("data <- read.csv('" + t.getFile().getCanonicalPath() + "', header=T);");
+					l1.add(t);
+					sb.append("data <- read.csv('" + t.getFile().getCanonicalPath()
+							+ "', header=T, stringsAsFactors=TRUE);");
 
 				}
 
 				sb.append(code).append("};" + func + "();");
 
+//				System.out.println(sb);
+
 				if (log.isDebugEnabled())
 					log.debug("R.run, code=" + sb);
 
 				REXP x = c.eval(sb.toString());
+
+				if (x == null || x.isNull()) {
+					return JSON.create();
+				}
+
+				if (x instanceof REXPGenericVector) {
+					REXPGenericVector x1 = (REXPGenericVector) x;
+					return JSON.create().append("data", x1.asList());
+				}
 
 				String[] ss = x.asStrings();
 				if (ss == null || ss.length == 0) {
@@ -78,6 +102,8 @@ public class R {
 				}
 
 			} finally {
+
+				c.eval("rm(" + func + ")");
 
 				pool.release(c);
 
@@ -168,6 +194,16 @@ public class R {
 			t.reset();
 			r = inst.run("mean(data)", ll);
 			System.out.println(r + ", cost=" + t.past());
+
+			List<JSON> l1 = JSON.createList();
+			l1.add(JSON.create().append("a", 1).append("b", 2).append("c", 3).append("d", 4));
+			l1.add(JSON.create().append("a", 1).append("b", 32).append("c", 3).append("d", 4));
+			l1.add(JSON.create().append("a", 10).append("b", 22).append("c", 39).append("d", 4));
+			l1.add(JSON.create().append("a", 1).append("b", 21).append("c", 3).append("d", 4));
+			l1.add(JSON.create().append("a", 1).append("b", 42).append("c", 3).append("d", 4));
+			j1 = inst.run("library(C50);d1<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));print(summary(d1))", l1,
+					new String[] { "a", "b", "c", "d" });
+			System.out.println(j1);
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

@@ -160,7 +160,7 @@ public class Temp {
 
 	public static class Exporter<V> {
 		public enum FORMAT {
-			csv
+			csv, plain
 		}
 
 		BufferedWriter out = null;
@@ -205,12 +205,15 @@ public class Temp {
 				if (i > 0) {
 					out.write(",");
 				}
-				out.write("\"");
+				if (format.equals(FORMAT.csv))
+					out.write("\"");
 				if (s != null) {
-					s = s.toString().replaceAll("\"", "\\\"").replaceAll("\r\n", "");
+					if (format.equals(FORMAT.csv))
+						s = s.toString().replaceAll("\"", "\\\"").replaceAll("\r\n", "");
 					out.write(s.toString());
 				}
-				out.write("\"");
+				if (format.equals(FORMAT.csv))
+					out.write("\"");
 			}
 			out.write("\r\n");
 		}
@@ -240,20 +243,23 @@ public class Temp {
 						out.write(",");
 					}
 
-					out.write("\"");
+					if (format.equals(FORMAT.csv))
+						out.write("\"");
 
 					Object o = ss[i];
 
 					String s = X.EMPTY;
 					if (o != null) {
 						if (o instanceof String) {
-							s = ((String) o).replaceAll("\"", "\\\"").replaceAll("\r\n", "");
+							if (format.equals(FORMAT.csv))
+								s = ((String) o).replaceAll("\"", "\\\"").replaceAll("\r\n", "");
 						} else {
 							s = o.toString();
 						}
 						out.write(s);
 					}
-					out.write("\"");
+					if (format.equals(FORMAT.csv))
+						out.write("\"");
 				}
 				out.write("\r\n");
 			}
