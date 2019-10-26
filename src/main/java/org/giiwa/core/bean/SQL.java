@@ -80,7 +80,7 @@ public class SQL {
 
 		if (log.isDebugEnabled())
 			log.debug("select ...");
-		sf.next(" ");
+		sf.nextTo(" ");
 		sf.trim();
 		String cols = sf.nextTo("from");
 		if (X.isEmpty(cols)) {
@@ -91,9 +91,9 @@ public class SQL {
 		r.put("cols", cols);
 
 		sf.trim();
-		sf.next(" ");
+		sf.nextTo(" ");
 		sf.trim();
-		String table = sf.next(" ");
+		String table = sf.nextTo(" ");
 		if (X.isEmpty(table)) {
 			throw new SQLException("unknow table [" + table + "]");
 		}
@@ -104,7 +104,7 @@ public class SQL {
 
 	private static JSON _condition(StringFinder sf, JSON r) throws SQLException {
 		sf.trim();
-		String s = sf.next(" ");
+		String s = sf.nextTo(" ");
 		if (X.isEmpty(s)) {
 			return r;
 		}
@@ -129,7 +129,7 @@ public class SQL {
 			}
 		} else if (X.isSame(s, "order")) {
 			sf.trim();
-			String by = sf.next(" ");
+			String by = sf.nextTo(" ");
 			if (X.isSame("by", by)) {
 				String o = sf.nextTo("offset|limit");
 				if (!X.isEmpty(o)) {
@@ -152,7 +152,7 @@ public class SQL {
 			}
 		} else if (X.isSame(s, "limit")) {
 			sf.trim();
-			String o = sf.next(" ");
+			String o = sf.nextTo(" ");
 			if (!X.isEmpty(o)) {
 				r.put("limit", X.toInt(o));
 				return _condition(sf, r);
@@ -216,7 +216,7 @@ public class SQL {
 				} else {
 					// like ?
 					s1.skip(-1);
-					op = s.next(" ");
+					op = s.nextTo(" ");
 				}
 
 				s1.trim();
@@ -284,7 +284,7 @@ public class SQL {
 				}
 
 				s.skip(-1);
-				String s1 = s.next(" ");
+				String s1 = s.nextTo(" ");
 				conn.push(s1);
 			}
 

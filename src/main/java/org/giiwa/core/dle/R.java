@@ -1,17 +1,21 @@
 package org.giiwa.core.dle;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.stream.DoubleStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Pool;
+import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
@@ -19,7 +23,16 @@ import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Temp;
 import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPDouble;
 import org.rosuda.REngine.REXPGenericVector;
+import org.rosuda.REngine.REXPInteger;
+import org.rosuda.REngine.REXPList;
+import org.rosuda.REngine.REXPLogical;
+import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REXPRaw;
+import org.rosuda.REngine.REXPString;
+import org.rosuda.REngine.REXPSymbol;
+import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 
 public class R {
@@ -87,19 +100,7 @@ public class R {
 					return JSON.create();
 				}
 
-				if (x instanceof REXPGenericVector) {
-					REXPGenericVector x1 = (REXPGenericVector) x;
-					return JSON.create().append("data", x1.asList());
-				}
-
-				String[] ss = x.asStrings();
-				if (ss == null || ss.length == 0) {
-					return JSON.create();
-				} else if (ss.length == 1) {
-					return JSON.create().append("data", ss[0]);
-				} else {
-					return JSON.create().append("data", ss);
-				}
+				return JSON.create().append("data", r2JSON(x));
 
 			} finally {
 
@@ -114,6 +115,79 @@ public class R {
 			}
 		}
 		return null;
+
+	}
+
+	private Object r2JSON(REXP x) throws REXPMismatchException {
+
+		if (x instanceof REXPDouble) {
+			REXPDouble d = (REXPDouble) x;
+			return d.asDouble();
+		}
+
+		if (x instanceof REXPInteger) {
+			REXPInteger d = (REXPInteger) x;
+			return d.asInteger();
+		}
+
+		if (x instanceof REXPLogical) {
+			REXPLogical d = (REXPLogical) x;
+			return d.asString();
+		}
+
+		if (x instanceof REXPRaw) {
+			REXPRaw d = (REXPRaw) x;
+			return d.asString();
+		}
+
+		if (x instanceof REXPString) {
+			REXPString d = (REXPString) x;
+			return d.asString();
+		}
+
+		if (x instanceof REXPSymbol) {
+			REXPSymbol d = (REXPSymbol) x;
+			return d.asString();
+		}
+
+		if (x instanceof REXPGenericVector) {
+			REXPGenericVector x1 = (REXPGenericVector) x;
+
+			RList r1 = x1.asList();
+			List<Object> l2 = new ArrayList<Object>();
+			for (int i = 0; i < r1.size(); i++) {
+				Object o = r1.get(i);
+//				System.out.println("o=" + o);
+				if (o instanceof REXP) {
+					l2.add(r2JSON((REXP) o));
+				}
+			}
+			return l2;
+		}
+
+		if (x instanceof REXPList) {
+			REXPList x1 = (REXPList) x;
+
+			RList r1 = x1.asList();
+			List<Object> l2 = new ArrayList<Object>();
+			for (int i = 0; i < r1.size(); i++) {
+				Object o = r1.get(i);
+//				System.out.println("o=" + o);
+				if (o instanceof REXP) {
+					l2.add(r2JSON((REXP) o));
+				}
+			}
+			return l2;
+		}
+
+		String[] ss = x.asStrings();
+		if (ss == null || ss.length == 0) {
+			return JSON.create();
+		} else if (ss.length == 1) {
+			return ss[0];
+		} else {
+			return ss;
+		}
 
 	}
 
@@ -204,6 +278,10 @@ public class R {
 			j1 = inst.run("library(C50);d1<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));print(summary(d1))", l1,
 					new String[] { "a", "b", "c", "d" });
 			System.out.println(j1);
+
+//			System.out.println(((List) j1.get("data")).get(0));
+
+//			System.out.println(t1.toPrettyString());
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

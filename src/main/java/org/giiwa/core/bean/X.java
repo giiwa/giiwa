@@ -463,18 +463,19 @@ public final class X {
 		return l1.toArray(new String[l1.size()]);
 	}
 
-	public static String[] csv(String src) {
+	public static Object[] csv(String src) {
 		if (X.isEmpty(src))
 			return null;
 		src = src.trim();
 		if (src.length() == 0)
 			return null;
 
-		List<String> l1 = new ArrayList<String>();
+		List<Object> l1 = new ArrayList<Object>();
 
 		StringBuilder sb = null;
 		int p = 0;
 		boolean quota = false;
+		boolean str = false;
 		while (p < src.length()) {
 			char c = src.charAt(p);
 			if (c == '"') {
@@ -482,6 +483,7 @@ public final class X {
 				if (sb == null) {
 					// this is start ", must find the end "
 					quota = true;
+					str = true;
 				} else {
 					if (quota) {
 						quota = false;
@@ -494,8 +496,13 @@ public final class X {
 					if (sb == null) {
 						l1.add(X.EMPTY);
 					} else {
-						l1.add(sb.toString());
+						if (str) {
+							l1.add(sb.toString());
+						} else {
+							l1.add(X.toDouble(sb.toString()));
+						}
 					}
+					str = false;
 					sb = null;
 				} else {
 					if (sb == null) {
@@ -519,7 +526,11 @@ public final class X {
 			p++;
 		}
 		if (sb != null) {
-			l1.add(sb.toString());
+			if (str) {
+				l1.add(sb.toString());
+			} else {
+				l1.add(X.toDouble(sb.toString()));
+			}
 		}
 
 		return l1.toArray(new String[l1.size()]);

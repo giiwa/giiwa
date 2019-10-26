@@ -78,14 +78,14 @@ public class StringFinder {
 	 * @return the string
 	 */
 	public String nextTo(String deli) {
-		if (s == null || pos >= s.length()) {
+		if (s == null || pos >= len) {
 			return null;
 		}
 
 		String s1 = null;
 
 		int min = Integer.MAX_VALUE;
-		String[] ss = X.split(deli, "[|]");
+		String[] ss = deli.split("\\|");
 		for (String s2 : ss) {
 			int i = s.indexOf(s2, pos);
 			if (i > -1 && i < min) {
@@ -97,7 +97,7 @@ public class StringFinder {
 			pos = min;
 		} else {
 			s1 = s.substring(pos);
-			pos = s.length();
+			pos = len;
 		}
 
 		return s1.trim();
@@ -119,25 +119,6 @@ public class StringFinder {
 
 	public boolean hasMore() {
 		return (s != null && pos < s.length());
-	}
-
-	/**
-	 * next string until the str
-	 * 
-	 * @param str the special chars
-	 * @return the String
-	 */
-	public String next(String str) {
-		int i = s.indexOf(str, pos);
-		if (i > pos) {
-			String s1 = s.substring(pos, i);
-			pos = i;
-			return s1;
-		} else {
-			String s1 = s.substring(pos);
-			pos = s.length();
-			return s1;
-		}
 	}
 
 	/**
