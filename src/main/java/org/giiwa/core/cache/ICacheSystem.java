@@ -19,8 +19,7 @@ interface ICacheSystem {
 	/**
 	 * Gets the.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return the object
 	 */
 	Object get(String name);
@@ -28,8 +27,7 @@ interface ICacheSystem {
 	/**
 	 * Delete.
 	 *
-	 * @param id
-	 *            the id
+	 * @param id the id
 	 * @return true, if successful
 	 */
 	boolean delete(String name);
@@ -37,13 +35,11 @@ interface ICacheSystem {
 	/**
 	 * Sets the.
 	 *
-	 * @param id
-	 *            the id
-	 * @param data
-	 *            the data
+	 * @param id   the id
+	 * @param data the data
 	 * @return true, if successful
 	 */
-	boolean set(String name, Object data);
+	boolean set(String name, Object data, int expired);
 
 	boolean trylock(String name, String value, long ms);
 

@@ -80,12 +80,12 @@ class MemCache implements ICacheSystem {
 	 * @param o  the o
 	 * @return true, if successful
 	 */
-	public synchronized boolean set(String name, Object o) {
+	public synchronized boolean set(String name, Object o, int expired) {
 		try {
 			if (o == null) {
 				return delete(name);
 			} else {
-				return memCachedClient.set(name, o);
+				return memCachedClient.set(name, o, new Date(expired));
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);

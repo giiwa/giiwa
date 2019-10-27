@@ -31,6 +31,7 @@ import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.cache.Cache;
 
 /**
  * Demo bean
@@ -347,30 +348,17 @@ public class Disk extends Bean {
 	}
 
 	private static Beans<Disk> disks() {
-		if (_disks == null || _disks.expired()) {
+		Beans<Disk> b1 = Cache.get("disk");
+		if (b1 == null) {
 			W q = W.create().and("bad", 0).sort("priority", -1).sort("path", 1);
-			_disks = dao.load(q, 0, 100);
-			_disks.setExpired(X.AMINUTE + System.currentTimeMillis());
+			b1 = dao.load(q, 0, 100);
+			Cache.set("disk", b1, X.AMINUTE);
 		}
-		return _disks;
+		return b1;
 	}
 
 	public static void reset() {
-		_disks = null;
-	}
-
-	private static Beans<Disk> _disks = null;
-
-	public static void demo(String path) {
-		Disk d = new Disk();
-		d.path = path;
-		d.priority = 1;
-		d.node_obj = new Node();
-		d.node_obj.set(X.ID, Local.id());
-		_disks = new Beans<Disk>();
-		_disks.add(d);
-		_disks.setExpired(X.AHOUR + System.currentTimeMillis());
-
+		Cache.remove("disk");
 	}
 
 	public String getNode() {

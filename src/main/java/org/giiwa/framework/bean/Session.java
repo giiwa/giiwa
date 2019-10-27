@@ -139,11 +139,6 @@ public class Session implements Serializable {
 	 */
 	public Session store() {
 		long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
-		if (expired > 0) {
-			expired = System.currentTimeMillis() + expired;
-		} else {
-			expired = -1;
-		}
 		return store(expired);
 	}
 
@@ -157,7 +152,7 @@ public class Session implements Serializable {
 
 		this.expired = expired;
 
-		if (!Cache.set("session/" + sid, this)) {
+		if (!Cache.set("session/" + sid, this, expired)) {
 			log.error("set session failed !", new Exception("store session failed"));
 		}
 

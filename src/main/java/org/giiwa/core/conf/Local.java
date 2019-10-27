@@ -83,14 +83,13 @@ public final class Local extends Bean {
 		}
 
 		Local c = Cache.get("local/" + s);
-		if (c == null || c.expired()) {
+		if (c == null) {
 			c = dao.load(s);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.expired(System.currentTimeMillis() + X.AMINUTE);
-				Cache.set("local/" + s, c);
+				Cache.set("local/" + s, c, X.AMINUTE);
 				return X.toInt(c.i, defaultValue);
 			} else {
 				return Config.getConf().getInt(name, defaultValue);
@@ -119,14 +118,13 @@ public final class Local extends Bean {
 		}
 
 		Local c = Cache.get("local/" + s);
-		if (c == null || c.expired()) {
+		if (c == null) {
 			c = dao.load(s);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.expired(System.currentTimeMillis() + X.AMINUTE);
-				Cache.set("local/" + s, c);
+				Cache.set("local/" + s, c, X.AMINUTE);
 				return c.s;
 			} else {
 				return Config.getConf().getString(name, defaultValue);
@@ -155,14 +153,13 @@ public final class Local extends Bean {
 		}
 
 		Local c = Cache.get("local/" + s);
-		if (c == null || c.expired()) {
+		if (c == null) {
 			c = dao.load(s);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.expired(System.currentTimeMillis() + X.AMINUTE);
-				Cache.set("local/" + s, c);
+				Cache.set("local/" + s, c, X.AMINUTE);
 
 				return X.toLong(c.l, defaultValue);
 			} else {

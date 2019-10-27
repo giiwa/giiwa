@@ -112,21 +112,6 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return "Beans[total=" + total + ", size=" + size() + "]";
 	}
 
-	private long expired = -1;
-
-	public void setExpired(long expired) {
-		this.expired = expired;
-	}
-
-	/**
-	 * Expired.
-	 *
-	 * @return true, if successful
-	 */
-	public boolean expired() {
-		return expired > 0 && System.currentTimeMillis() > expired;
-	}
-
 	public List<JSON> toJSON(Function<E, JSON> cb) {
 		List<JSON> l1 = JSON.createList();
 		for (E e : this) {

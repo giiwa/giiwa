@@ -95,7 +95,7 @@ class FileCache implements ICacheSystem {
 	 * @param o  the o
 	 * @return true, if successful
 	 */
-	public synchronized boolean set(String id, Object o) {
+	public synchronized boolean set(String id, Object o, int expired) {
 		try {
 			if (o == null) {
 				return delete(id);

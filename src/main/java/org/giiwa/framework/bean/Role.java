@@ -171,12 +171,11 @@ public class Role extends Bean {
 	private static Role load(long rid) {
 		Role r = Cache.get("role://" + rid);
 
-		if (r == null || r.expired()) {
+		if (r == null) {
 			r = dao.load(rid);
 
 			if (r != null) {
-				r.expired(60 * 1000 + System.currentTimeMillis());
-				Cache.set("role://" + rid, r);
+				Cache.set("role://" + rid, r, X.AMINUTE);
 			}
 		}
 

@@ -50,30 +50,10 @@ public class Bean implements Serializable {
 	/** The log utility */
 	private static Log log = LogFactory.getLog(Bean.class);
 
-	private long _expired = -1;
-
 	/**
 	 * the row number
 	 */
 	public long _rowid;
-
-	/**
-	 * set expired time before using in cache
-	 * 
-	 * @param expired the expired
-	 */
-	public void expired(long expired) {
-		this._expired = expired;
-	}
-
-	/**
-	 * Expired.
-	 *
-	 * @return true, if successful
-	 */
-	public boolean expired() {
-		return _expired > 0 && System.currentTimeMillis() > _expired;
-	}
 
 	/**
 	 * get the created timestamp of the data

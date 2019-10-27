@@ -256,11 +256,10 @@ public class App extends Bean {
 	 */
 	public static App load(String appid) {
 		App a = Cache.get("app/" + appid);
-		if (a == null || a.expired()) {
+		if (a == null) {
 			a = dao.load(W.create("appid", appid));
 			if (a != null) {
-				a.expired(System.currentTimeMillis() + X.AMINUTE);
-				Cache.set("app/" + appid, a);
+				Cache.set("app/" + appid, a, X.AMINUTE);
 			}
 		}
 		return a;

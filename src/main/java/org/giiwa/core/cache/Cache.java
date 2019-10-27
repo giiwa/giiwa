@@ -123,12 +123,26 @@ public final class Cache {
 	/**
 	 * cache the object with the id, if exists, then update it, otherwise create new
 	 * in cache.
-	 *
+	 * 
+	 * @deprecated
 	 * @param id   the id of the object
 	 * @param data the object
 	 * @return true, if successful
 	 */
 	public static boolean set(String id, Object data) {
+		return set(id, data, (int) X.ADAY);
+	}
+
+	/**
+	 * cache the object with the id, if exists, then update it, otherwise create new
+	 * in cache.
+	 * 
+	 * @param id       the id of the object
+	 * @param data     the object
+	 * @param expired, the expired time
+	 * @return true, if successful
+	 */
+	public static boolean set(String id, Object data, long expired) {
 
 		id = GROUP + id;
 
@@ -136,7 +150,7 @@ public final class Cache {
 			if (data == null) {
 				return cacheSystem.delete(id);
 			} else {
-				return cacheSystem.set(id, data);
+				return cacheSystem.set(id, data, (int) expired);
 			}
 		}
 		return false;

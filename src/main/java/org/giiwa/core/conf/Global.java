@@ -14,8 +14,6 @@
 */
 package org.giiwa.core.conf;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
@@ -23,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.cache.Cache;
 import org.giiwa.core.task.GlobalLock;
 
 /**
@@ -65,23 +64,20 @@ public final class Global extends Bean {
 	/**
 	 * get the int value.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the int
 	 */
 	public static int getInt(String name, int defaultValue) {
 
-		Global c = cached.get("global/" + name);
-		if (c == null || c.expired()) {
+		Global c = Cache.get("global/" + name);
+		if (c == null) {
 			c = dao.load(name);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.expired(System.currentTimeMillis() + X.AMINUTE);
-				cached.put("global/" + name, c);
+				Cache.set("global/" + name, c, X.AMINUTE);
 				return X.toInt(c.i, defaultValue);
 			}
 		}
@@ -90,28 +86,23 @@ public final class Global extends Bean {
 
 	}
 
-	private static Map<String, Global> cached = new HashMap<String, Global>();
-
 	/**
 	 * get the string value.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the string
 	 */
 	public static String getString(String name, String defaultValue) {
 
-		Global c = cached.get("global/" + name);
-		if (c == null || c.expired()) {
+		Global c = Cache.get("global/" + name);
+		if (c == null) {
 			c = dao.load(name);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.expired(System.currentTimeMillis() + X.AMINUTE);
-				cached.put("global/" + name, c);
+				Cache.set("global/" + name, c, X.AMINUTE);
 
 				// if (!X.isEmpty(c.memo))
 				// return c.memo;
@@ -128,15 +119,14 @@ public final class Global extends Bean {
 
 	public static String getMemo(String name, String defaultValue) {
 
-		Global c = cached.get("global/" + name);
-		if (c == null || c.expired()) {
+		Global c = Cache.get("global/" + name);
+		if (c == null) {
 			c = dao.load(name);
 			if (c != null) {
 				/**
 				 * avoid restarted, can not load new config
 				 */
-				c.expired(System.currentTimeMillis() + X.AMINUTE);
-				cached.put("global/" + name, c);
+				Cache.set("global/" + name, c, X.AMINUTE);
 
 				// if (!X.isEmpty(c.memo))
 				// return c.memo;
@@ -156,24 +146,21 @@ public final class Global extends Bean {
 	/**
 	 * get the long value.
 	 *
-	 * @param name
-	 *            the name
-	 * @param defaultValue
-	 *            the default value
+	 * @param name         the name
+	 * @param defaultValue the default value
 	 * @return the long
 	 */
 	public static long getLong(String name, long defaultValue) {
 
 		try {
-			Global c = cached.get("global/" + name);
-			if (c == null || c.expired()) {
+			Global c = Cache.get("global/" + name);
+			if (c == null) {
 				c = dao.load(name);
 				if (c != null) {
 					/**
 					 * avoid restarted, can not load new config
 					 */
-					c.expired(System.currentTimeMillis() + X.AMINUTE);
-					cached.put("global/" + name, c);
+					Cache.set("global/" + name, c, X.AMINUTE);
 
 					return X.toLong(c.l, defaultValue);
 				}
@@ -198,10 +185,8 @@ public final class Global extends Bean {
 	 * Sets the value of the name in database, it will remove the configuration
 	 * value if value is null.
 	 *
-	 * @param name
-	 *            the name
-	 * @param o
-	 *            the value
+	 * @param name the name
+	 * @param o    the value
 	 */
 	public synchronized static void setConfig(String name, Object o) {
 		if (X.isEmpty(name)) {
@@ -234,7 +219,7 @@ public final class Global extends Bean {
 				// }
 			}
 
-			cached.put("global/" + name, g);
+			Cache.set("global/" + name, g, X.AMINUTE);
 
 			if (Helper.isConfigured()) {
 				if (dao.exists(name)) {
@@ -259,7 +244,7 @@ public final class Global extends Bean {
 			v.append("memo", s);
 			g.memo = s;
 
-			cached.put("global/" + name, g);
+			Cache.set("global/" + name, g, X.AMINUTE);
 
 			if (Helper.isConfigured()) {
 				if (dao.exists(name)) {
@@ -276,8 +261,7 @@ public final class Global extends Bean {
 	/**
 	 * Gets the string value
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return the string
 	 */
 	public String get(String name) {
@@ -288,8 +272,7 @@ public final class Global extends Bean {
 	 * get a global lock in a cluster environment <br>
 	 * the lock will be coordinated in multiple-servers <br>
 	 * 
-	 * @param name
-	 *            the name of lock
+	 * @param name the name of lock
 	 * @return
 	 */
 	public static Lock getLock(String name) {

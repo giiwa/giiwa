@@ -97,12 +97,12 @@ class RedisCache implements ICacheSystem {
 	 * @param o  the o
 	 * @return true, if successful
 	 */
-	public synchronized boolean set(String name, Object o) {
+	public synchronized boolean set(String name, Object o, int expired) {
 		try {
 			if (o == null) {
 				return delete(name);
 			} else {
-				return jedis.set(name.getBytes(), serialize(o)) != null;
+				return jedis.setex(name.getBytes(), expired / 1000, serialize(o)) != null;
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -165,7 +165,7 @@ class RedisCache implements ICacheSystem {
 
 		String n = jedis.set(name, value, p);
 		return X.isSame("OK", n);
-		
+
 	}
 
 	public synchronized void expire(String name, String value, long ms) {
