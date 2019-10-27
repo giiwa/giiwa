@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -57,6 +58,15 @@ public class Exporter<V> {
 		return this;
 	}
 
+	public void flush() {
+		try {
+			if (out != null)
+				out.flush();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
 	public void close() {
 		X.close(out);
 		out = null;
@@ -70,6 +80,9 @@ public class Exporter<V> {
 		if (out == null) {
 			throw new IOException("out is null?");
 		}
+
+		if (log.isDebugEnabled())
+			log.debug("print, cols=" + Arrays.toString(cols) + ", out=" + out);
 
 		for (int i = 0; i < cols.length; i++) {
 			Object s = cols[i];
@@ -108,31 +121,7 @@ public class Exporter<V> {
 
 		Object[] ss = cols.apply(b);
 		if (ss != null) {
-
-			for (int i = 0; i < ss.length; i++) {
-				if (i > 0) {
-					out.write(",");
-				}
-
-				if (format.equals(FORMAT.csv))
-					out.write("\"");
-
-				Object o = ss[i];
-
-				String s = X.EMPTY;
-				if (o != null) {
-					if (o instanceof String) {
-						if (format.equals(FORMAT.csv))
-							s = ((String) o).replaceAll("\"", "\\\"").replaceAll("\r\n", "");
-					} else {
-						s = o.toString();
-					}
-					out.write(s);
-				}
-				if (format.equals(FORMAT.csv))
-					out.write("\"");
-			}
-			out.write("\r\n");
+			print(ss);
 		}
 
 	}
