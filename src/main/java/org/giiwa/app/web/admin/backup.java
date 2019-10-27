@@ -26,6 +26,7 @@ import java.util.TreeMap;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.giiwa.app.task.CleanupTask;
+import org.giiwa.core.base.Exporter;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Url;
 import org.giiwa.core.base.Zip;
@@ -46,7 +47,6 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Repo.Entity;
-import org.giiwa.framework.bean.Temp.Exporter;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Language;
 import org.giiwa.framework.web.Controller;
@@ -211,7 +211,7 @@ public class backup extends Controller {
 			if (ss != null && ss.length > 0) {
 				new BackupTask(ss).schedule(0);
 				Temp t = Temp.create("er.csv");
-				Exporter<Bean> e = t.export("GBK", Temp.Exporter.FORMAT.csv);
+				Exporter<Bean> e = t.export("GBK", Exporter.FORMAT.csv);
 
 				for (String s : ss) {
 

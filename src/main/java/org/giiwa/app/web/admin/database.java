@@ -19,13 +19,13 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.giiwa.app.task.CleanupTask;
+import org.giiwa.core.base.Exporter;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.Temp.Exporter;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Controller;
@@ -99,7 +99,7 @@ public class database extends Controller {
 			String[] ss = this.getStrings("name");
 			if (ss != null && ss.length > 0) {
 				Temp t = Temp.create("er.csv");
-				Exporter<Bean> e = t.export("GBK", Temp.Exporter.FORMAT.csv);
+				Exporter<Bean> e = t.export("GBK", Exporter.FORMAT.csv);
 
 				for (String s : ss) {
 

@@ -1,21 +1,18 @@
 package org.giiwa.core.dle;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.stream.DoubleStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.base.Exporter;
 import org.giiwa.core.base.Pool;
-import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
@@ -65,7 +62,7 @@ public class R {
 
 					Temp t = Temp.create("data");
 
-					Temp.Exporter<JSON> ex = t.export("UTF-8", Temp.Exporter.FORMAT.plain);
+					Exporter<JSON> ex = t.export("UTF-8", Exporter.FORMAT.plain);
 					ex.createSheet(e -> {
 						Object[] o = new Object[header.length];
 						for (int i = 0; i < header.length; i++) {
