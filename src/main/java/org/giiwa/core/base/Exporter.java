@@ -100,6 +100,8 @@ public class Exporter<V> {
 				out.write("\"");
 		}
 		out.write("\r\n");
+		out.flush();
+
 	}
 
 	public void print(List<V> bs) throws IOException {
