@@ -50,6 +50,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListCollectionsIterable;
@@ -160,12 +162,14 @@ public class MongoHelper implements Helper.DBHelper {
 
 				String url = conf.getString("mongo[" + database + "].url", X.EMPTY);
 				String dbname = conf.getString("mongo[" + database + "].db", X.EMPTY);
+				String user = conf.getString("mongo[" + database + "].user", X.EMPTY);
+				String passwd = conf.getString("mongo[" + database + "].passwd", X.EMPTY);
 				int conns = conf.getInt("mongo[" + database + "].conns", 50);
 				int timeout = conf.getInt("mongo[" + database + "].timeout", 30000);
 
 				if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
 
-					g = getDB(url, dbname, conns, timeout);
+					g = getDB(url, dbname, user, passwd, conns, timeout);
 
 					mongo.put(database, g);
 				}
@@ -177,7 +181,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	private MongoClient client = null;
 
-	private MongoDatabase getDB(String url, String db, int conns, int timeout) {
+	private MongoDatabase getDB(String url, String db, String user, String passwd, int conns, int timeout) {
 		url = url.trim();
 		db = db.trim();
 
@@ -187,9 +191,36 @@ public class MongoHelper implements Helper.DBHelper {
 
 		MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(timeout)
 				.serverSelectionTimeout(timeout).maxConnectionIdleTime(10000).connectionsPerHost(conns);
-		client = new MongoClient(new MongoClientURI(url, opts));
-		return client.getDatabase(db);
 
+		if (X.isEmpty(user)) {
+
+			client = new MongoClient(new MongoClientURI(url, opts));
+
+			return client.getDatabase(db);
+
+		} else {
+
+			// url=mongodb://host1:27017,host2:27017
+			List<ServerAddress> servers = new ArrayList<ServerAddress>();
+			String s = url.replaceFirst("mongodb://", X.EMPTY);
+			String[] ss = X.split(s, ",");
+			for (String s1 : ss) {
+				String[] s2 = X.split(s1, ":");
+				if (s2.length == 1) {
+					servers.add(new ServerAddress(s2[0], 27017));
+				} else if (s2.length > 1) {
+					servers.add(new ServerAddress(s2[0], X.toInt(s2[1])));
+				}
+			}
+			List<MongoCredential> users = Arrays
+					.asList(MongoCredential.createCredential(user, db, passwd.toCharArray()));
+
+			client = new MongoClient(servers, users, opts.build());
+
+			log.info("mongodb.user=" + user + ", client=" + client);
+
+			return client.getDatabase(db);
+		}
 	}
 
 	/**
@@ -738,6 +769,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 *
 	 * @param collection the collection
 	 */
+	@SuppressWarnings("unused")
 	public void clear(String collection) {
 		try {
 			MongoCollection<Document> c = getCollection(Helper.DEFAULT, collection);
@@ -1131,7 +1163,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param url, "mongodb://host:port/dbname"
 	 * @return the MongoHelper
 	 */
-	public static MongoHelper create(String url) {
+	public static MongoHelper create(String url, String user, String passwd) {
 		//
 		int i = url.lastIndexOf("/");
 		if (i < 0)
@@ -1140,7 +1172,7 @@ public class MongoHelper implements Helper.DBHelper {
 		String dbname = url.substring(i + 1);
 		url = url.substring(0, i);
 		MongoHelper h = new MongoHelper();
-		MongoDatabase g = h.getDB(url, dbname, 10, 30000);
+		MongoDatabase g = h.getDB(url, dbname, user, passwd, 10, 30000);
 		h.gdb = g;
 		return h;
 	}
@@ -1155,7 +1187,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	public static void main(String[] args) {
 
-		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/demo");
+		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/demo", "giiwa", "j123123");
 		long i = h.count("gi_user", W.create(), Helper.DEFAULT);
 		System.out.println("count=" + i);
 
@@ -1764,6 +1796,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T std_deviation(String collection, W q, String name, String db) {
 
@@ -1811,6 +1844,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T median(String table, W q, String name, String db) {
 		long n = this.count(table, q, db);

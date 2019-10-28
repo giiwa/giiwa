@@ -95,7 +95,7 @@ public final class Cache {
 				r = cacheSystem.get(id);
 			}
 
-			log.debug("get cache name=" + id + ", T=" + r);
+//			log.debug("get cache name=" + id + ", T=" + r);
 
 			return (T) r;
 		} catch (Throwable e) {
