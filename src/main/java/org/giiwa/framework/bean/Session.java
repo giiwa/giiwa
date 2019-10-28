@@ -48,8 +48,6 @@ public class Session implements Serializable {
 
 	Map<String, Object> a = new TreeMap<String, Object>();
 
-	long expired = -1;
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -67,7 +65,7 @@ public class Session implements Serializable {
 	 */
 	public static boolean exists(String sid) {
 		Session o = Cache.get("session/" + sid);
-		return o != null && !o.expired();
+		return o != null;
 	}
 
 	/**
@@ -90,7 +88,7 @@ public class Session implements Serializable {
 
 		Session o = (Session) Cache.get("session/" + sid);
 
-		if (o == null || o.expired()) {
+		if (o == null) {
 			o = new Session();
 
 			/**
@@ -101,14 +99,6 @@ public class Session implements Serializable {
 		}
 
 		return o;
-	}
-
-	/**
-	 * 
-	 * @return boolean
-	 */
-	public boolean expired() {
-		return expired > 0 && System.currentTimeMillis() > expired;
 	}
 
 	/**
@@ -149,8 +139,6 @@ public class Session implements Serializable {
 	 * @return Session
 	 */
 	public Session store(long expired) {
-
-		this.expired = expired;
 
 		if (!Cache.set("session/" + sid, this, expired)) {
 			log.error("set session failed !", new Exception("store session failed"));

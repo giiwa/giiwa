@@ -157,18 +157,18 @@ class RedisCache implements ICacheSystem {
 		return "RedisCache [url=" + url + "]";
 	}
 
-	public synchronized boolean trylock(String name, String value, long ms) {
+	public synchronized boolean trylock(String name) {
 
 		SetParams p = new SetParams();
 		p.ex(12);
 		p.nx();
 
-		String n = jedis.set(name, value, p);
+		String n = jedis.set(name, "1", p);
 		return X.isSame("OK", n);
 
 	}
 
-	public synchronized void expire(String name, String value, long ms) {
+	public synchronized void expire(String name, long ms) {
 		int sec = (int) (ms / 1000);
 		jedis.expire(name, sec);
 	}

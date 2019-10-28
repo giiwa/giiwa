@@ -41,9 +41,9 @@ interface ICacheSystem {
 	 */
 	boolean set(String name, Object data, int expired);
 
-	boolean trylock(String name, String value, long ms);
+	boolean trylock(String name);
 
-	void expire(String name, String value, long ms);
+	void expire(String name, long ms);
 
 	boolean unlock(String name, String value);
 

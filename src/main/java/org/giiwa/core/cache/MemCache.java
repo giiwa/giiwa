@@ -17,6 +17,7 @@ package org.giiwa.core.cache;
 import java.util.Date;
 
 import org.apache.commons.logging.*;
+import org.giiwa.core.conf.Global;
 
 import com.whalin.MemCached.MemCachedClient;
 import com.whalin.MemCached.SockIOPool;
@@ -70,6 +71,7 @@ class MemCache implements ICacheSystem {
 	 * @return the object
 	 */
 	public synchronized Object get(String name) {
+//		System.out.println("cache.get, name=" + name);
 		return memCachedClient.get(name);
 	}
 
@@ -85,7 +87,10 @@ class MemCache implements ICacheSystem {
 			if (o == null) {
 				return delete(name);
 			} else {
-				return memCachedClient.set(name, o, new Date(expired));
+//				System.out.println("cache.set, name=" + name + ", expired=" + expired);
+//				return memCachedClient.set(name, o, new Date(System.currentTimeMillis() + expired));
+				return memCachedClient.set(name, o, expired);
+//				return memCachedClient.set(name, o);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -109,14 +114,14 @@ class MemCache implements ICacheSystem {
 		return "MemCache [url=" + url + "]";
 	}
 
-	public boolean trylock(String name, String value, long ms) {
-
-		return memCachedClient.add(name, value, new Date(12000));
+	public boolean trylock(String name) {
+		System.out.println("trylock, name=" + name);
+		return memCachedClient.add(name, 1, new Date(12000));
 
 	}
 
-	public void expire(String name, String value, long ms) {
-		memCachedClient.set(name, value, new Date(ms));
+	public void expire(String name, long ms) {
+		memCachedClient.set(name, 1, (int) ms);
 //		log.debug("memcached expire, name=" + name + ", value=" + memCachedClient.get(name));
 	}
 
@@ -126,4 +131,28 @@ class MemCache implements ICacheSystem {
 		return true;
 	}
 
+	public static void main(String[] args) {
+
+		Global.setConfig("group", "demo");
+		Cache.init("memcached://127.0.0.1:11211");
+
+		String s = Cache.get("a");
+		System.out.println(s);
+
+		Cache.set("a", "Sssss");
+		s = Cache.get("a");
+//		Cache.remove("a");
+
+//		Cache.remove("aaa");
+
+		System.out.println(s);
+
+		if (Cache.trylock("aaa")) {
+			Object o = Cache.get("aaa");
+			System.out.println(o);
+		} else {
+			System.out.println("false");
+		}
+
+	}
 }

@@ -95,6 +95,8 @@ public final class Cache {
 				r = cacheSystem.get(id);
 			}
 
+			log.debug("get cache name=" + id + ", T=" + r);
+
 			return (T) r;
 		} catch (Throwable e) {
 			if (cacheSystem != null) {
@@ -246,9 +248,10 @@ public final class Cache {
 	 * @param expire
 	 * @return
 	 */
-	public static boolean trylock(String name, String value, long expire) {
+	public static boolean trylock(String name) {
 		if (cacheSystem != null) {
-			return cacheSystem.trylock(name, value, expire);
+			name = GROUP + name;
+			return cacheSystem.trylock(name);
 		}
 		return false;
 	}
@@ -260,9 +263,10 @@ public final class Cache {
 	 * @param value
 	 * @param ms
 	 */
-	public static void expire(String name, String value, long ms) {
+	public static void expire(String name, long ms) {
 		if (cacheSystem != null) {
-			cacheSystem.expire(name, value, ms);
+			name = GROUP + name;
+			cacheSystem.expire(name, ms);
 		}
 	}
 
@@ -275,6 +279,7 @@ public final class Cache {
 	 */
 	public static boolean unlock(String name, String value) {
 		if (cacheSystem != null) {
+			name = GROUP + name;
 			return cacheSystem.unlock(name, value);
 		}
 

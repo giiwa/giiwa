@@ -65,7 +65,7 @@ public class GlobalLock implements Lock {
 		try {
 			while (expire == 0 || expire > t.pastms()) {
 
-				if (Cache.trylock(name, value, expire)) {
+				if (Cache.trylock(name)) {
 					heartbeat.add(this);
 
 					if (log.isDebugEnabled())
@@ -94,7 +94,7 @@ public class GlobalLock implements Lock {
 	}
 
 	public void touch() {
-		Cache.expire(name, value, 12000);
+		Cache.expire(name, 12000);
 	}
 
 	@Override

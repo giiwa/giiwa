@@ -267,7 +267,7 @@ class FileCache implements ICacheSystem {
 	private static Map<String, LiveHand> _local = new HashMap<String, LiveHand>();
 
 	@Override
-	public boolean trylock(String name, String value, long ms) {
+	public boolean trylock(String name) {
 		synchronized (_local) {
 			LiveHand d = _local.get(name);
 			if (d == null) {
@@ -283,7 +283,7 @@ class FileCache implements ICacheSystem {
 	}
 
 	@Override
-	public void expire(String id, String value, long ms) {
+	public void expire(String id, long ms) {
 		// TODO Auto-generated method stub
 
 	}
