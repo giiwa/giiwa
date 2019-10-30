@@ -84,7 +84,7 @@ public class user extends Controller {
 			return;
 		}
 
-		JSON jo = App.parseParameters(data, a.getSecret());
+		JSON jo = JSON.fromObject(App.decode(data, a.getSecret()));
 		if (jo != null) {
 			long time = jo.getLong("time");
 			String name = jo.getString("name");

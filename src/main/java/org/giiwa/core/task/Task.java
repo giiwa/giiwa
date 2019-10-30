@@ -1144,28 +1144,18 @@ public abstract class Task implements Runnable, Serializable {
 
 	}
 
-	private transient int _referdoor = 0;
-
 	/**
 	 * lock the task avoid it run in other node
 	 * 
 	 * @return true if lock success, otherwise false
 	 */
-	public synchronized final boolean tryLock() {
-
-		if (_referdoor > 0) {
-			_referdoor++;
-			return true;
-		}
+	synchronized final boolean tryLock() {
 
 		try {
 			if (_door == null) {
 				_door = Global.getLock("global.door." + getName());
 			}
 			boolean b = _door.tryLock();
-			if (b) {
-				_referdoor++;
-			}
 			return b;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -1176,18 +1166,14 @@ public abstract class Task implements Runnable, Serializable {
 	/**
 	 * unlock the task
 	 */
-	public synchronized final void unlock() {
+	synchronized final void unlock() {
 
-		_referdoor--;
-
-		if (_referdoor <= 0) {
-			try {
-				if (_door != null) {
-					_door.unlock();
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+		try {
+			if (_door != null) {
+				_door.unlock();
 			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 

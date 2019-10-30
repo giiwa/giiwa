@@ -187,13 +187,11 @@ public class App extends Bean {
 	 * @param secret the string of secret
 	 * @return JSON
 	 */
-	public static JSON parseParameters(String data, String secret) {
+	public static String decode(String data, String secret) {
 		try {
 			byte[] bb = Base64.getDecoder().decode(data);
 
-			data = new String(Digest.aes_decrypt(bb, secret));
-			JSON jo = JSON.fromObject(data);
-			return jo;
+			return new String(Digest.aes_decrypt(bb, secret));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -208,11 +206,10 @@ public class App extends Bean {
 	 * @param secret the secret
 	 * @return the string
 	 */
-	public static String generateParameter(JSON jo, String secret) {
+	public static String encode(String data, String secret) {
 		try {
-			byte[] bb = Digest.aes_encrypt(jo.toString().getBytes(), secret);
-			String data = Base64.getEncoder().encodeToString(bb);
-			return data;
+			byte[] bb = Digest.aes_encrypt(data.getBytes(), secret);
+			return Base64.getEncoder().encodeToString(bb);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -393,9 +390,9 @@ public class App extends Bean {
 		j1.put("key", "122");
 
 		try {
-			String data = App.generateParameter(j1, a.secret);
+			String data = App.encode(j1.toPrettyString(), a.secret);
 			System.out.println("data=" + data);
-			JSON jo = App.parseParameters(data, a.secret);
+			String jo = App.decode(data, a.secret);
 			System.out.println("jo=" + jo);
 		} catch (Exception e) {
 			e.printStackTrace();

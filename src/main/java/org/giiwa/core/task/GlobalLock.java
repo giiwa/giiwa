@@ -18,6 +18,7 @@ public class GlobalLock implements Lock {
 
 	private static Log log = LogFactory.getLog(GlobalLock.class);
 
+	private boolean locked = false;
 	private String name;
 	private String value;
 
@@ -31,7 +32,9 @@ public class GlobalLock implements Lock {
 	@Override
 	public void lock() {
 		try {
-			tryLock(X.AHOUR, TimeUnit.MILLISECONDS);
+			if (tryLock(X.AHOUR, TimeUnit.MILLISECONDS)) {
+				locked = true;
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -71,10 +74,15 @@ public class GlobalLock implements Lock {
 					if (log.isDebugEnabled())
 						log.debug("global locked, name=" + name);
 
+					locked = true;
 					return true;
 				}
 
 				if (expire == 0 || expire < t.pastms()) {
+					if (log.isDebugEnabled())
+						log.debug("global lock failed, name=" + name);
+
+					locked = false;
 					return false;
 				}
 
@@ -84,6 +92,7 @@ public class GlobalLock implements Lock {
 			log.error("lock failed, global lock=" + name, e);
 		}
 
+		locked = false;
 		return false;
 
 	}
@@ -98,16 +107,21 @@ public class GlobalLock implements Lock {
 	}
 
 	@Override
-	public void unlock() {
-		heartbeat.remove(this);
+	public synchronized void unlock() {
+		if (locked) {
 
-		if (Cache.unlock(name, value)) {
-			MQ.notify("lock." + name, JSON.create());
-			if (log.isDebugEnabled())
-				log.debug("global unlocked, name=" + name);
-		} else {
-			if (log.isDebugEnabled())
-				log.debug("what's wrong with the lock=" + name);
+			locked = false;
+
+			heartbeat.remove(this);
+
+			if (Cache.unlock(name, value)) {
+				MQ.notify("lock." + name, JSON.create());
+				if (log.isDebugEnabled())
+					log.debug("global unlocked, name=" + name);
+			} else {
+				if (log.isDebugEnabled())
+					log.debug("what's wrong with the lock=" + name);
+			}
 		}
 	}
 
