@@ -17,7 +17,6 @@ package org.giiwa.core.cache;
 import java.util.Date;
 
 import org.apache.commons.logging.*;
-import org.giiwa.core.conf.Global;
 
 import com.whalin.MemCached.MemCachedClient;
 import com.whalin.MemCached.SockIOPool;
@@ -89,7 +88,7 @@ class MemCache implements ICacheSystem {
 			} else {
 //				System.out.println("cache.set, name=" + name + ", expired=" + expired);
 //				return memCachedClient.set(name, o, new Date(System.currentTimeMillis() + expired));
-				return memCachedClient.set(name, o, expired);
+				return memCachedClient.set(name, o, new Date(expired));
 //				return memCachedClient.set(name, o);
 			}
 		} catch (Exception e) {
@@ -131,28 +130,4 @@ class MemCache implements ICacheSystem {
 		return true;
 	}
 
-	public static void main(String[] args) {
-
-		Global.setConfig("group", "demo");
-		Cache.init("memcached://127.0.0.1:11211");
-
-		String s = Cache.get("a");
-		System.out.println(s);
-
-		Cache.set("a", "Sssss");
-		s = Cache.get("a");
-//		Cache.remove("a");
-
-//		Cache.remove("aaa");
-
-		System.out.println(s);
-
-		if (Cache.trylock("aaa")) {
-			Object o = Cache.get("aaa");
-			System.out.println(o);
-		} else {
-			System.out.println("false");
-		}
-
-	}
 }
