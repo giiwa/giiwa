@@ -119,8 +119,8 @@ class MemCache implements ICacheSystem {
 
 	}
 
-	public void expire(String name, long ms) {
-		memCachedClient.set(name, 1, (int) ms);
+	public void expire(String name, int ms) {
+		memCachedClient.set(name, 1, new Date(ms));
 //		log.debug("memcached expire, name=" + name + ", value=" + memCachedClient.get(name));
 	}
 

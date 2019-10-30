@@ -168,7 +168,7 @@ class RedisCache implements ICacheSystem {
 
 	}
 
-	public synchronized void expire(String name, long ms) {
+	public synchronized void expire(String name, int ms) {
 		int sec = (int) (ms / 1000);
 		jedis.expire(name, sec);
 	}

@@ -263,7 +263,7 @@ public final class Cache {
 	 * @param value
 	 * @param ms
 	 */
-	public static void expire(String name, long ms) {
+	public static void expire(String name, int ms) {
 		if (cacheSystem != null) {
 			name = GROUP + name;
 			cacheSystem.expire(name, ms);

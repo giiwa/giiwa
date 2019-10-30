@@ -43,7 +43,7 @@ interface ICacheSystem {
 
 	boolean trylock(String name);
 
-	void expire(String name, long ms);
+	void expire(String name, int ms);
 
 	boolean unlock(String name, String value);
 

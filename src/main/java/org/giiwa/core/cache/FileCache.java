@@ -283,7 +283,7 @@ class FileCache implements ICacheSystem {
 	}
 
 	@Override
-	public void expire(String id, long ms) {
+	public void expire(String id, int ms) {
 		// TODO Auto-generated method stub
 
 	}
