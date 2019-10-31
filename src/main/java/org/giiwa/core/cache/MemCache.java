@@ -114,7 +114,7 @@ class MemCache implements ICacheSystem {
 	}
 
 	public boolean trylock(String name) {
-		System.out.println("trylock, name=" + name);
+//		System.out.println("trylock, name=" + name);
 		return memCachedClient.add(name, 1, new Date(12000));
 
 	}
