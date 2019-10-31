@@ -68,8 +68,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Values.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the list
 	 */
 	public List<String> values(String k) {
@@ -88,10 +87,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Dec.
 	 * 
-	 * @param o
-	 *            the o
-	 * @param n
-	 *            the n
+	 * @param o the o
+	 * @param n the n
 	 * @return the query string
 	 */
 	public QueryString dec(String o, String n) {
@@ -106,10 +103,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Checks for.
 	 * 
-	 * @param o
-	 *            the o
-	 * @param n
-	 *            the n
+	 * @param o the o
+	 * @param n the n
 	 * @return true, if successful
 	 */
 	public boolean has(String o, String n) {
@@ -142,10 +137,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Link.
 	 * 
-	 * @param o
-	 *            the o
-	 * @param n
-	 *            the n
+	 * @param o the o
+	 * @param n the n
 	 * @return the query string
 	 */
 	public QueryString link(String o, String n) {
@@ -199,10 +192,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Adds the.
 	 * 
-	 * @param o
-	 *            the o
-	 * @param n
-	 *            the n
+	 * @param o the o
+	 * @param n the n
 	 * @return the query string
 	 */
 	public QueryString add(String o, String n) {
@@ -221,10 +212,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Append.
 	 * 
-	 * @param k
-	 *            the k
-	 * @param s
-	 *            the s
+	 * @param k the k
+	 * @param s the s
 	 * @return the query string
 	 */
 	public QueryString append(String k, String s) {
@@ -250,8 +239,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Instantiates a new query string.
 	 * 
-	 * @param path
-	 *            the path
+	 * @param path the path
 	 */
 	public QueryString(String path) {
 		q = null;
@@ -261,10 +249,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Copy.
 	 * 
-	 * @param jo
-	 *            the jo
-	 * @param names
-	 *            the names
+	 * @param jo    the jo
+	 * @param names the names
 	 * @return the query string
 	 */
 	public QueryString copy(JSON jo, String... names) {
@@ -289,8 +275,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Path.
 	 * 
-	 * @param path
-	 *            the path
+	 * @param path the path
 	 * @return the query string
 	 */
 	public QueryString path(String path) {
@@ -325,18 +310,20 @@ public class QueryString implements Cloneable {
 	/**
 	 * Copy.
 	 * 
-	 * @param m
-	 *            the m
+	 * @param m the m
 	 * @return the query string
 	 */
 	public QueryString copy(Controller m) {
 		Enumeration<String> it = m.getParameterNames();
-		while (it.hasMoreElements()) {
-			String name = it.nextElement();
-			this.set(name, m.getString(name));
+		if (it != null) {
+			while (it.hasMoreElements()) {
+				String name = it.nextElement();
+				this.set(name, m.getString(name));
+			}
+			q = null;
 		}
-		q = null;
 		return this;
+
 	}
 
 	/*
@@ -378,8 +365,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Sets the.
 	 * 
-	 * @param jo
-	 *            the jo
+	 * @param jo the jo
 	 * @return the query string
 	 */
 	public QueryString set(JSON jo) {
@@ -396,10 +382,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Sets the.
 	 * 
-	 * @param k
-	 *            the k
-	 * @param s
-	 *            the s
+	 * @param k the k
+	 * @param s the s
 	 * @return the query string
 	 */
 	public QueryString set(String k, String s) {
@@ -422,10 +406,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Sets the.
 	 * 
-	 * @param k
-	 *            the k
-	 * @param s
-	 *            the s
+	 * @param k the k
+	 * @param s the s
 	 * @return the query string
 	 */
 	public QueryString set(String k, int s) {
@@ -435,8 +417,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Removes the.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the query string
 	 */
 	public QueryString remove(String... k) {
@@ -451,8 +432,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Gets the.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the string
 	 */
 	public String get(String k) {
@@ -462,8 +442,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Encode.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the string
 	 */
 	public String encode(String k) {
@@ -481,10 +460,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Checks if is.
 	 * 
-	 * @param k
-	 *            the k
-	 * @param value
-	 *            the value
+	 * @param k     the k
+	 * @param value the value
 	 * @return true, if successful
 	 */
 	public boolean is(String k, String value) {
@@ -496,10 +473,8 @@ public class QueryString implements Cloneable {
 	/**
 	 * Gets the.
 	 * 
-	 * @param k
-	 *            the k
-	 * @param defaultValue
-	 *            the default value
+	 * @param k            the k
+	 * @param defaultValue the default value
 	 * @return the string
 	 */
 	public String get(String k, String defaultValue) {
@@ -514,8 +489,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Gets the int.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the int
 	 */
 	public int getInt(String k) {
@@ -535,8 +509,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Gets the long.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the long
 	 */
 	public long getLong(String k) {
@@ -556,8 +529,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Gets the float.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the float
 	 */
 	public float getFloat(String k) {
@@ -577,8 +549,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Gets the double.
 	 * 
-	 * @param k
-	 *            the k
+	 * @param k the k
 	 * @return the double
 	 */
 	public double getDouble(String k) {
@@ -598,8 +569,7 @@ public class QueryString implements Cloneable {
 	/**
 	 * Parses the.
 	 * 
-	 * @param s
-	 *            the s
+	 * @param s the s
 	 */
 	public void parse(String s) {
 		try {

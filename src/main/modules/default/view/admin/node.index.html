@@ -48,7 +48,7 @@
 #foreach($f in $list)
 	<tr #if($lang.pastms($f.updated) < 3000) class="blink" #end>
 		<td class="a">
-			$!f.label
+			<a href="/?__node=$!f.id" target="_blank">$!f.label</a>
 			<a class="hint hint--bottom" data-hint="Edit" href="javascript:;" onclick="_showlabel('$f.id', '$!f.label')"><i class='icon-pencil'></i></a>
 		</td>
 		<td>$!f.os</td>
