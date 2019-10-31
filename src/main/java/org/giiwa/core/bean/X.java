@@ -475,7 +475,6 @@ public final class X {
 		StringBuilder sb = null;
 		int p = 0;
 		boolean quota = false;
-		boolean str = false;
 		while (p < src.length()) {
 			char c = src.charAt(p);
 			if (c == '"') {
@@ -483,7 +482,6 @@ public final class X {
 				if (sb == null) {
 					// this is start ", must find the end "
 					quota = true;
-					str = true;
 				} else {
 					if (quota) {
 						quota = false;
@@ -496,13 +494,8 @@ public final class X {
 					if (sb == null) {
 						l1.add(X.EMPTY);
 					} else {
-						if (str) {
-							l1.add(sb.toString());
-						} else {
-							l1.add(X.toDouble(sb.toString()));
-						}
+						l1.add(_parse(sb.toString()));
 					}
-					str = false;
 					sb = null;
 				} else {
 					if (sb == null) {
@@ -526,14 +519,31 @@ public final class X {
 			p++;
 		}
 		if (sb != null) {
-			if (str) {
-				l1.add(sb.toString());
-			} else {
-				l1.add(X.toDouble(sb.toString()));
-			}
+			l1.add(_parse(sb.toString()));
 		}
 
 		return l1.toArray();
+	}
+
+	private static Object _parse(String s) {
+		boolean dot = false;
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '.') {
+				dot = true;
+			} else if (c >= '0' && c <= '9') {
+				continue;
+			} else if ((c == '+' || c == '-') && i == 0) {
+				continue;
+			} else {
+				return s;
+			}
+		}
+		if (dot) {
+			return X.toDouble(s);
+		} else {
+			return X.toLong(s);
+		}
 	}
 
 	/**
@@ -914,6 +924,11 @@ public final class X {
 			sb.append(X.isEmpty(o) ? X.EMPTY : o);
 		}
 		return sb.toString();
+	}
+
+	public static void main(String[] args) {
+		String s = "-1,+2,c,d,e,\"a\"";
+		System.out.println(Arrays.toString(X.csv(s)));
 	}
 
 }
