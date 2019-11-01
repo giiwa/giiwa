@@ -19,6 +19,7 @@ import java.util.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Digest;
+import org.giiwa.core.base.H32;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
