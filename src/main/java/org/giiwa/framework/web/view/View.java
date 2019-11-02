@@ -79,6 +79,11 @@ public abstract class View {
 		}
 	}
 
+	public static void add(String name, Class<? extends View> clazz) throws Exception {
+		View v = clazz.newInstance();
+		views.put(name, v);
+	}
+
 	/**
 	 * parse the file with the model
 	 * 
