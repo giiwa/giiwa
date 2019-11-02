@@ -1431,7 +1431,7 @@ public class MongoHelper implements Helper.DBHelper {
 				}
 
 				if (log.isDebugEnabled())
-					log.debug("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+					log.debug("count " + collection + ", cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 //				System.out.println("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
 
 				return l2;
