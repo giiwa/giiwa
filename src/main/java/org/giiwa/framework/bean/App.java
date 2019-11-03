@@ -194,7 +194,7 @@ public class App extends Bean {
 
 			return new String(Digest.aes_decrypt(bb, secret));
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error("data=" + data + ", secret=" + secret, e);
 		}
 		return null;
 	}
@@ -271,7 +271,7 @@ public class App extends Bean {
 	 * @return the int
 	 */
 	public static int update(String appid, V v) {
-		Cache.remove("node/" + appid);
+		Cache.remove("app/" + appid);
 		return dao.update(W.create("appid", appid), v);
 	}
 
