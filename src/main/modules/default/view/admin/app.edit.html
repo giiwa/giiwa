@@ -6,7 +6,7 @@
 	<a href='/admin/app/edit?id=$!a.id&__node=$!__node' class='selected'>$lang.get('a.edit')</a>
 </div>
 
-<form action='/admin/app/create?__node=$!__node'  method='post' class='form' >
+<form action='/admin/app/edit?__node=$!__node'  method='post' class='form' >
 	<input type='hidden' name="id" value="$!a.id"/>
 	<div><label><h3>$lang.get('app.appid')<r>*</r>:</h3><i>$a.appid</i></label></div>
 	<div><label><h3>$lang.get('app.expired'):</h3><input type='text' name='expired' value="#if($a.expired>0)$!lang.format($a.expired, 'yyyy-MM-dd HH:mm')#end"/><g>yyyy-MM-dd HH:mm</g></label></div>
