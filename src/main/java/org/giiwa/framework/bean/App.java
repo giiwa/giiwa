@@ -225,15 +225,6 @@ public class App extends Bean {
 	}
 
 	/**
-	 * Delete.
-	 *
-	 * @param appid the appid
-	 */
-	public static void delete(String appid) {
-		dao.delete(W.create("appid", appid));
-	}
-
-	/**
 	 * Load.
 	 *
 	 * @param appid the appid

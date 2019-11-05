@@ -114,13 +114,9 @@ public class app extends Controller {
 
 		JSON jo = new JSON();
 
-		String appid = this.getString("id");
-		if (!X.isEmpty(appid)) {
-			App.delete(appid);
-			jo.put(X.STATE, 200);
-		} else {
-			jo.put(X.MESSAGE, lang.get("delete.failed"));
-		}
+		long id = this.getLong("id");
+		App.dao.delete(id);
+		jo.put(X.STATE, 200);
 
 		this.response(jo);
 
