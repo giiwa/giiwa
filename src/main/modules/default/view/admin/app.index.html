@@ -38,8 +38,8 @@
 			<a class="hint hint--bottom" data-hint="$lang.get('a.reset')" href="javascript:;" onclick='_reset("$f.appid");'><i class="icon-spinner10"></i></a>
 		</td>
 		<td>$!lang.past($f.lastime)</td>
-		<td>#if($f.expired>0) $!lang.format($f.expired, 'yy-MM-dd HH:mm') #end</td>
-		<td>$!lang.format($f.created, 'yy-MM-dd HH:mm')</td>
+		<td>#if($f.expired>0) $!lang.format($f.expired, 'yyyy-MM-dd HH:mm') #end</td>
+		<td>$!lang.format($f.created, 'yyyy-MM-dd HH:mm')</td>
 		<td class='a'>
 			#if($me.hasAccess("access.config.debug","access.config.admin"))
 			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/app/edit?id=$f.id&__node=$!__node"><i class='icon-pencil'></i></a>

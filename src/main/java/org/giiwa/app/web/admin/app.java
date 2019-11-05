@@ -50,7 +50,10 @@ public class app extends Controller {
 					V v = V.create();
 					v.append("appid", appid);
 					v.append("secret", secret);
-					v.append("expired", System.currentTimeMillis() + this.getInt("expired") * X.ADAY);
+					String expired = this.getString("expired");
+					if (!X.isEmpty(expired)) {
+						v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
+					}
 					v.append("memo", this.getString("memo"));
 					v.append("access", Arrays.asList(X.split(this.getHtml("access"), "[,;\r\n]")));
 
