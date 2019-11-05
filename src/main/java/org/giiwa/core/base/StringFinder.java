@@ -41,6 +41,7 @@ public class StringFinder {
 
 	private StringFinder(String s) {
 		this.s = s;
+		pos = 0;
 		len = s == null ? 0 : s.length();
 	}
 
@@ -154,6 +155,10 @@ public class StringFinder {
 	 */
 	public char next() {
 		return s.charAt(pos++);
+	}
+
+	public void reset() {
+		pos = 0;
 	}
 
 	/**
