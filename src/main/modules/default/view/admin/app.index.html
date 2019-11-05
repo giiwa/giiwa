@@ -44,7 +44,7 @@
 			#if($me.hasAccess("access.config.debug","access.config.admin"))
 			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/app/edit?id=$f.id&__node=$!__node"><i class='icon-pencil'></i></a>
 			#end
-			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick='_delete("$f.appid", this);'><i class="icon-cancel-circle"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick='_delete("$f.id", this);'><i class="icon-cancel-circle"></i></a>
 		</td>
 	</tr>
 #end
@@ -65,7 +65,7 @@ function _delete(id, o) {
 		$.post('/admin/app/delete?__node=$!__node', {id:id}, function(d){
 			giiwa.processing.hide();
 			if(d.state == 200) {
-				$(o).parent().parent().remove();
+				giiwa.reload();
 			} else if(d.message){
 				giiwa.error(d.message);
 			}
