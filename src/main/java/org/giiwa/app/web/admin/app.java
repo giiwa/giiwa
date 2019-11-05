@@ -14,7 +14,10 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.util.Arrays;
+
 import org.giiwa.core.bean.Beans;
+import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
@@ -37,18 +40,28 @@ public class app extends Controller {
 	@Path(path = "create", login = true, access = "access.config.admin")
 	public void create() {
 		if (method.isPost()) {
+
 			String appid = this.getString("appid");
 			try {
+
 				if (!App.dao.exists(W.create("appid", appid))) {
+
 					String secret = UID.random(32);
-					App.create(App.Param.create().appid(appid).role(this.getLong("role")).secret(secret)
-							.memo(this.getString("memo")).build());
+					V v = V.create();
+					v.append("appid", appid);
+					v.append("secret", secret);
+					v.append("expired", System.currentTimeMillis() + this.getInt("expired") * X.ADAY);
+					v.append("memo", this.getString("memo"));
+					v.append("access", Arrays.asList(X.split(this.getHtml("access"), "[,;\r\n]")));
+
+					App.create(v);
 
 					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
 				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("appid.exists")));
 				return;
+
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 
@@ -58,10 +71,36 @@ public class app extends Controller {
 
 		}
 
-		Beans<Role> rs = Role.load(0, 1000);
-		this.set("roles", rs);
-
 		this.show("/admin/app.create.html");
+	}
+
+	@Path(path = "edit", login = true, access = "access.config.admin")
+	public void edit() {
+
+		long id = this.getLong("id");
+
+		if (method.isPost()) {
+
+			V v = V.create();
+			String expired = this.getString("expired");
+			if (!X.isEmpty(expired)) {
+				v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
+			}
+			v.append("memo", this.getString("memo"));
+			v.append("access", Arrays.asList(X.split(this.getHtml("access"), "[,;\r\n]")));
+
+			App.dao.update(id, v);
+
+			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			return;
+
+		}
+
+		App a = App.dao.load(id);
+		this.set("a", a);
+		this.query.path("/admin/app/edit");
+
+		this.show("/admin/app.edit.html");
 	}
 
 	/**
@@ -90,7 +129,7 @@ public class app extends Controller {
 		JSON jo = new JSON();
 
 		String id = this.getString("id");
-		App.update(id, App.Param.create().secret(UID.random(32)).build());
+		App.update(id, V.create("secret", UID.random(32)));
 		jo.put(X.STATE, 200);
 
 		this.response(jo);

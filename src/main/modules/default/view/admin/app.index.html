@@ -21,9 +21,7 @@
 		<tr>
 			<th>$lang.get('app.appid')</th>
 			<th>$lang.get('app.memo')</th>
-			<th>$lang.get('app.role')</th>
 			<th>$lang.get('app.secret')</th>
-			<th>$lang.get('app.ip')</th>
 			<th>$lang.get('app.lastime')</th>
 			<th>$lang.get('app.expired')</th>
 			<th>$lang.get('app.created')</th>
@@ -35,18 +33,16 @@
 	<tr>
 		<td>$!f.appid</td>
 		<td>$!f.memo</td>
-		<td>$!f.role_obj.name</td>
 		<td class='a'>
 			$!f.secret
 			<a class="hint hint--bottom" data-hint="$lang.get('a.reset')" href="javascript:;" onclick='_reset("$f.appid");'><i class="icon-spinner10"></i></a>
 		</td>
-		<td>$!f.ip</td>
 		<td>$!lang.past($f.lastime)</td>
 		<td>#if($f.expired>0) $!lang.format($f.expired, 'yy-MM-dd HH:mm') #end</td>
 		<td>$!lang.format($f.created, 'yy-MM-dd HH:mm')</td>
 		<td class='a'>
 			#if($me.hasAccess("access.config.debug","access.config.admin"))
-			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/app/detail?__node=$!__nodeid=$!f.id')"><i class='icon-file-text2'></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/app/edit?id=$f.id&__node=$!__node"><i class='icon-pencil'></i></a>
 			#end
 			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick='_delete("$f.appid", this);'><i class="icon-cancel-circle"></i></a>
 		</td>

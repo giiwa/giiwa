@@ -938,3 +938,5 @@ counter.name=名称
 counter.node=节点
 counter.count=值
 counter.updated=更新时间
+app.expired.hint=单位天
+app.access=权限

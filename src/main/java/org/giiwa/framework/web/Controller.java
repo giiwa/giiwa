@@ -1619,14 +1619,6 @@ public class Controller {
 			return s.get("roles");
 		}
 
-		String appid = this.getString("appid");
-		String secret = this.getString("secret");
-		App a = App.load(appid);
-		if (a != null && X.isSame(secret, a.getSecret())) {
-			Roles r = new Roles(Arrays.asList(a.getRole()));
-			s.set("roles", r).store();
-			return r;
-		}
 		return null;
 	}
 

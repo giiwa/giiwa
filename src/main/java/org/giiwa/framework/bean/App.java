@@ -14,12 +14,13 @@
 */
 package org.giiwa.framework.bean;
 
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Digest;
-import org.giiwa.core.base.H32;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Column;
@@ -28,7 +29,6 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
-import org.giiwa.core.cache.Cache;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -70,8 +70,8 @@ public class App extends Bean {
 	@Column(name = "expired")
 	private long expired;
 
-	@Column(name = "role")
-	private long role;
+	@Column(name = "access")
+	private List<String> access;
 
 	public void touch(String ip) {
 		update(appid, V.create("lastime", System.currentTimeMillis()).set("ip", ip));
@@ -102,37 +102,13 @@ public class App extends Bean {
 	 * @return the boolean, true if has this access
 	 */
 	public boolean hasAccess(String... name) {
-		Role r = getRole_obj();
-		if (r != null) {
+		if (!X.isEmpty(access)) {
 			for (String s : name) {
-				if (r.has(s))
+				if (access.contains(s))
 					return true;
 			}
 		}
 		return false;
-	}
-
-	transient Role role_obj;
-
-	/**
-	 * get the role object attach with this appid
-	 * 
-	 * @return the Role
-	 */
-	public Role getRole_obj() {
-		if (role_obj == null) {
-			role_obj = Role.dao.load(role);
-		}
-		return role_obj;
-	}
-
-	/**
-	 * get tht role id
-	 * 
-	 * @return the role if
-	 */
-	public long getRole() {
-		return role;
 	}
 
 	/**
@@ -178,6 +154,18 @@ public class App extends Bean {
 	 */
 	public long getExpired() {
 		return expired;
+	}
+
+	public void addAccess(String... name) {
+		if (access == null) {
+			access = new ArrayList<String>();
+		}
+		for (String s : name) {
+			if (!access.contains(s)) {
+				access.add(s);
+			}
+		}
+		dao.update(id, V.create("access", access));
 	}
 
 	/**
@@ -242,7 +230,6 @@ public class App extends Bean {
 	 * @param appid the appid
 	 */
 	public static void delete(String appid) {
-		Cache.remove("app/" + appid);
 		dao.delete(W.create("appid", appid));
 	}
 
@@ -253,14 +240,11 @@ public class App extends Bean {
 	 * @return the app
 	 */
 	public static App load(String appid) {
-		App a = Cache.get("app/" + appid);
-		if (a == null) {
-			a = dao.load(W.create("appid", appid));
-			if (a != null) {
-				Cache.set("app/" + appid, a, X.AMINUTE);
-			}
+		App a = dao.load(W.create("appid", appid));
+		if (a.expired <= 0 || a.expired > System.currentTimeMillis()) {
+			return a;
 		}
-		return a;
+		return null;
 	}
 
 	/**
@@ -271,114 +255,7 @@ public class App extends Bean {
 	 * @return the int
 	 */
 	public static int update(String appid, V v) {
-		Cache.remove("app/" + appid);
 		return dao.update(W.create("appid", appid), v);
-	}
-
-	/**
-	 * the parameter class of the App
-	 * 
-	 * @author joe
-	 *
-	 */
-	public static class Param {
-		V v = V.create();
-
-		/**
-		 * Creates the.
-		 *
-		 * @return the param
-		 */
-		public static Param create() {
-			return new Param();
-		}
-
-		/**
-		 * Builds the Value object
-		 *
-		 * @return the v
-		 */
-		public V build() {
-			return v;
-		}
-
-		/**
-		 * set the appid
-		 *
-		 * @param appid the appid
-		 * @return the param
-		 */
-		public Param appid(String appid) {
-			v.set("appid", appid);
-			return this;
-		}
-
-		/**
-		 * set the secret
-		 *
-		 * @param secret the secret
-		 * @return the param
-		 */
-		public Param secret(String secret) {
-			v.set("secret", secret);
-			return this;
-		}
-
-		/**
-		 * set the Expired.
-		 *
-		 * @param expired the expired
-		 * @return the param
-		 */
-		public Param expired(long expired) {
-			v.set("expired", expired);
-			return this;
-		}
-
-		/**
-		 * set the Lastime.
-		 *
-		 * @param lastime the lastime
-		 * @return the param
-		 */
-		public Param lastime(long lastime) {
-			v.set("lastime", lastime);
-			return this;
-		}
-
-		/**
-		 * set the Ip.
-		 *
-		 * @param ip the ip
-		 * @return the param
-		 */
-		public Param ip(String ip) {
-			v.set("ip", ip);
-			return this;
-		}
-
-		/**
-		 * set the Memo.
-		 *
-		 * @param memo the memo
-		 * @return the param
-		 */
-		public Param memo(String memo) {
-			v.set("memo", memo);
-			return this;
-		}
-
-		/**
-		 * set the role
-		 * 
-		 * @param role
-		 * @return the Param object
-		 */
-		public Param role(long role) {
-			v.set("role", role);
-			return this;
-		}
-
 	}
 
 	public static void main(String[] args) {
