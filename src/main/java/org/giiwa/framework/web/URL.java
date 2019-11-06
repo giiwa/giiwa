@@ -2,15 +2,18 @@ package org.giiwa.framework.web;
 
 import org.giiwa.core.conf.Global;
 
+/**
+ * @deprecated
+ * @author joe
+ *
+ */
 class URL {
 
 	/**
 	 * force rewrite some url to new
 	 * 
-	 * @param originalurl
-	 *            the original url
-	 * @param newurl
-	 *            the new url
+	 * @param originalurl the original url
+	 * @param newurl      the new url
 	 */
 	public static void rewrite(String originalurl, String newurl) {
 		Global.setConfig("rewrite/" + originalurl, newurl);

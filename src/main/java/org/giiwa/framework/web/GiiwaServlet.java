@@ -67,7 +67,7 @@ public class GiiwaServlet extends HttpServlet {
 			/**
 			 * rewrite uri
 			 */
-			uri = URL.rewrite(uri);
+//			uri = URL.rewrite(uri);
 			String domain = Global.getString("cross.domain", "");
 
 			if (!X.isEmpty(domain)) {
