@@ -63,6 +63,8 @@ public class Backup {
 					s1 = Base64.getEncoder().encodeToString(s1.getBytes()) + "\r\n";
 					out.write(s1.getBytes());
 				}
+				s += l1.size();
+				l1 = Helper.load(table, q, s, 100, Data.class, db);
 			}
 			return s;
 		} finally {
