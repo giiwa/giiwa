@@ -435,4 +435,30 @@ public final class IOUtil {
 			}
 		}
 	}
+
+	public static String readcvs(BufferedReader re) throws IOException {
+		String line = re.readLine();
+		while (line != null && count(line, "\"") % 2 == 1) {
+			String s1 = re.readLine();
+			if (s1 == null) {
+				return line;
+			}
+			line += "\r\n" + s1;
+		}
+		return line;
+	}
+
+	private static int count(String line, String substr) {
+		if (substr.length() == 0)
+			return 0;
+
+		int n = 0;
+		int i = line.indexOf(substr);
+		while (i >= 0) {
+			n++;
+			i = line.indexOf(substr, i + substr.length());
+		}
+		return n;
+	}
+
 }
