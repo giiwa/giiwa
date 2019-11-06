@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
@@ -87,7 +88,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			} else if (json instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
 
 				jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) json;
-				
+
 				j = JSON.create();
 				for (String key : m.keySet()) {
 					j.put(key, m.get(key));
@@ -901,10 +902,22 @@ public final class JSON extends LinkedHashMap<String, Object> {
 
 		List<Element> l1 = r1.elements();
 		if (l1 == null || l1.isEmpty()) {
-			return r1.getText();
+			JSON j1 = JSON.create();
+			for (int i = 0; i < r1.attributeCount(); i++) {
+				Attribute a = r1.attribute(i);
+				j1.append(a.getName(), a.getValue());
+			}
+			j1.append("body", r1.getText());
+			return j1;
 		} else {
 			JSON jo = JSON.create();
 			for (Element e : l1) {
+
+				for (int i = 0; i < e.attributeCount(); i++) {
+					Attribute a = e.attribute(i);
+					jo.append(a.getName(), a.getValue());
+				}
+
 				String name = e.getName();
 				Object o = jo.get(name);
 				if (o == null) {
