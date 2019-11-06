@@ -19,7 +19,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -56,11 +55,6 @@ public class Helper implements Serializable {
 	protected static Log log = LogFactory.getLog(Helper.class);
 
 	public static IOptimizer monitor = null;
-
-	/**
-	 * map<db_table, list>
-	 */
-	private static Map<String, List<ITrigger>> triggers = new HashMap<String, List<ITrigger>>();
 
 	/**
 	 * the primary database when there are multiple databases
@@ -115,92 +109,6 @@ public class Helper implements Serializable {
 	}
 
 	/**
-	 * add a trigger on a db and table
-	 * 
-	 * @param db    the db
-	 * @param table the table
-	 * @param t     the trigger
-	 */
-	public static void addTrigger(String db, String table, ITrigger t) {
-		String name = db + "_" + table;
-		List<ITrigger> l1 = triggers.get(name);
-		if (l1 == null) {
-			l1 = new ArrayList<ITrigger>();
-			triggers.put(name, l1);
-		}
-
-		if (!l1.contains(t)) {
-			l1.add(t);
-		}
-	}
-
-	/**
-	 * add trigger on "default" and the Bean
-	 * 
-	 * @param bean the bean
-	 * @param t    the trigger
-	 */
-	public static void addTrigger(Class<? extends Bean> bean, ITrigger t) {
-		addTrigger(getDB(bean), bean, t);
-	}
-
-	/**
-	 * add trigger on db and the Bean
-	 * 
-	 * @param db   the db name
-	 * @param bean the Bean
-	 * @param t    the Trigger
-	 */
-	public static void addTrigger(String db, Class<? extends Bean> bean, ITrigger t) {
-		String table = getTable(bean);
-		addTrigger(db, table, t);
-	}
-
-	/**
-	 * remove a trigger from all db and table
-	 * 
-	 * @param t the trigger
-	 */
-	public static void removeTrigger(ITrigger t) {
-		for (List<ITrigger> l1 : triggers.values()) {
-			l1.remove(t);
-		}
-	}
-
-	private static void beforeInsert(String db, String table, V v) {
-		String name = db + "_" + table;
-		List<ITrigger> l1 = triggers.get(name);
-		if (!X.isEmpty(l1)) {
-			ITrigger[] tt = l1.toArray(new ITrigger[l1.size()]);
-			for (ITrigger t : tt) {
-				t.beforeInsert(db, table, v);
-			}
-		}
-	}
-
-	private static void beforeUpdate(String db, String table, W q, V v) {
-		String name = db + "_" + table;
-		List<ITrigger> l1 = triggers.get(name);
-		if (!X.isEmpty(l1)) {
-			ITrigger[] tt = l1.toArray(new ITrigger[l1.size()]);
-			for (ITrigger t : tt) {
-				t.beforeUpdate(db, table, q, v);
-			}
-		}
-	}
-
-	private static void beforeDelete(String db, String table, W q) {
-		String name = db + "_" + table;
-		List<ITrigger> l1 = triggers.get(name);
-		if (!X.isEmpty(l1)) {
-			ITrigger[] tt = l1.toArray(new ITrigger[l1.size()]);
-			for (ITrigger t : tt) {
-				t.beforeDelete(db, table, q);
-			}
-		}
-	}
-
-	/**
 	 * delete a data from database.
 	 *
 	 * @param id the value of "id"
@@ -248,11 +156,6 @@ public class Helper implements Serializable {
 			if (monitor != null) {
 				monitor.query(db, table, q);
 			}
-
-			/**
-			 * trigger the listener
-			 */
-			beforeDelete(db, table, q);
 
 			if (primary != null && primary.getDB(db) != null) {
 				return primary.delete(table, q, db);
@@ -2278,10 +2181,6 @@ public class Helper implements Serializable {
 			for (V value : values) {
 				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
 
-				/**
-				 * trigger the insert
-				 */
-				beforeInsert(db, table, value);
 			}
 
 			if (primary != null && primary.getDB(db) != null) {
@@ -2327,11 +2226,6 @@ public class Helper implements Serializable {
 		if (table != null) {
 			value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
 			value.set("_node", Global.id());
-
-			/**
-			 * trigger the insert
-			 */
-			beforeInsert(db, table, value);
 
 			if (primary != null && primary.getDB(db) != null) {
 				return primary.insertTable(table, value, db);
@@ -2418,15 +2312,6 @@ public class Helper implements Serializable {
 			}
 
 			values.set(X.UPDATED, System.currentTimeMillis());
-
-			// log.debug("update 1 ...");
-
-			/**
-			 * trigger the update
-			 */
-			beforeUpdate(db, table, q, values);
-
-			// log.debug("update 2 ...");
 
 			if (primary != null && primary.getDB(db) != null) {
 				return primary.updateTable(table, q, values, db);
