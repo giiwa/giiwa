@@ -44,6 +44,8 @@ public class Backup {
 
 	public static long backup(String table, W q, String db, ZipOutputStream out) throws IOException {
 
+		log.debug("backup, table=" + table);
+
 		ZipEntry e = new ZipEntry(table + ".db");
 		try {
 			if (q == null) {
@@ -84,6 +86,9 @@ public class Backup {
 			}
 			return len;
 		} else if (f.isFile()) {
+
+			log.debug("backup, file=" + f.getFilename());
+
 			ZipEntry e = new ZipEntry("/.dfile/" + f.getFilename());
 			out.putNextEntry(e);
 			InputStream in = f.getInputStream();
@@ -106,6 +111,9 @@ public class Backup {
 		if (f.exists()) {
 			f.delete();
 		}
+
+		log.debug("recover, file=" + f.getFilename());
+
 		OutputStream out = f.getOutputStream();
 		try {
 			IOUtil.copy(in, out, false);
@@ -115,6 +123,8 @@ public class Backup {
 	}
 
 	public static void recover(String table, String db, ZipInputStream in) throws IOException {
+
+		log.debug("recover, table=" + table);
 
 		BufferedReader re = new BufferedReader(new InputStreamReader(in));
 
