@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.cache.Cache;
@@ -100,6 +101,7 @@ public abstract class Task implements Runnable, Serializable {
 	private transient long startedtime = 0;
 	private transient long scheduledtime = 0;
 	private String parent;
+	private static Configuration conf = null;
 
 	private transient Lock _door;
 	private transient ScheduledFuture<?> sf;
@@ -445,6 +447,9 @@ public abstract class Task implements Runnable, Serializable {
 	 * @param usernum the thread num
 	 */
 	public static void init(int usernum) {
+
+		conf = Config.getConf();
+
 		LocalRunner.init(8, usernum);
 
 		powerstate = Global.getInt("node." + Local.id(), 1);
@@ -1004,7 +1009,7 @@ public abstract class Task implements Runnable, Serializable {
 
 			String name = task.getName();
 
-			String forbidden = Config.getConf().getString("task.forbidden", X.EMPTY);
+			String forbidden = conf.getString("task.forbidden", X.EMPTY);
 
 			if (!X.isEmpty(forbidden) && name.matches(forbidden)) {
 				log.info("the task[" + name + "] is forbidden in this node");
