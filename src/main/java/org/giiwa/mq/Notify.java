@@ -29,10 +29,12 @@ class Notify extends IStub {
 		Object d = req.get();
 		List<Object[]> l1 = waiter.get(name);
 		if (l1 != null) {
-			for (Object[] a : l1) {
-				synchronized (a) {
-					a[0] = d;
-					a.notifyAll();
+			synchronized (l1) {
+				for (Object[] a : l1) {
+					synchronized (a) {
+						a[0] = d;
+						a.notifyAll();
+					}
 				}
 			}
 		}
@@ -49,7 +51,10 @@ class Notify extends IStub {
 					l1 = new ArrayList<Object[]>();
 					waiter.put(name, l1);
 				}
-				l1.add(a);
+				synchronized (l1) {
+					l1.add(a);
+				}
+
 				if (prepare != null) {
 					prepare.run();
 				}
@@ -60,9 +65,11 @@ class Notify extends IStub {
 		} finally {
 			List<Object[]> l1 = waiter.get(name);
 			if (l1 != null) {
-				l1.remove(a);
-				if (l1.isEmpty()) {
-					waiter.remove(name);
+				synchronized (l1) {
+					l1.remove(a);
+					if (l1.isEmpty()) {
+						waiter.remove(name);
+					}
 				}
 			}
 		}

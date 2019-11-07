@@ -144,8 +144,10 @@ public class FileServer implements IRequestHandler {
 				if (mincost > t.pastms()) {
 					mincost = t.pastms();
 				}
-				if (log.isDebugEnabled())
-					log.debug("process, cmd=" + cmd + ", cost=" + t.past());
+				
+//				if (log.isDebugEnabled())
+//					log.debug("process, cmd=" + cmd + ", cost=" + t.past());
+				
 			} else {
 				Response out = Response.create(in.seq, Request.SMALL);
 				out.writeString("unknown cmd");

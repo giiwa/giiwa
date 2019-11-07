@@ -55,6 +55,9 @@ class Optimizer implements Helper.IOptimizer {
 				// ignore
 			}
 
+			if (queue.isEmpty())
+				return;
+
 //			log.debug("open", new Exception());
 
 			if (checker == null) {

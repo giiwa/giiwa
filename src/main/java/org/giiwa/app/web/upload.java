@@ -76,7 +76,7 @@ public class upload extends Controller {
 	}
 
 	private boolean store(FileItem file, String filename, JSON jo) {
-		String tag = this.getString("tag");
+//		String tag = this.getString("tag");
 
 		try {
 			String range = this.getHeader("Content-Range");
@@ -109,11 +109,10 @@ public class upload extends Controller {
 				// log.debug(range + ", " + position + "/" + total);
 			}
 
-			String id = UID.id(login.getId(), tag, filename, total, lastModified);
+			String id = UID.id(login.getId(), filename, total, lastModified);
 
 			if (log.isDebugEnabled())
-				log.debug("storing, id=" + id + ", name=" + filename + ", tag=" + tag + ", total=" + total + ", last="
-						+ lastModified);
+				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
 
 			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(),
 					this.getRemoteHost());
