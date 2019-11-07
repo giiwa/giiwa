@@ -537,6 +537,10 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return WorkerTask
 	 */
 	final public Task schedule(String time) {
+		return schedule(time, false);
+	}
+
+	final public Task schedule(String time, boolean global) {
 		if (powerstate != 1 && !this.isSys()) {
 			return this;
 		}
@@ -554,7 +558,8 @@ public abstract class Task implements Runnable, Serializable {
 					// next hour
 					c.add(Calendar.HOUR_OF_DAY, 1);
 				}
-				return this.schedule(c.getTimeInMillis() - System.currentTimeMillis());
+				return this.schedule(c.getTimeInMillis() - System.currentTimeMillis(), global);
+
 			} else {
 				String[] ss = time.split(":");
 
@@ -568,8 +573,9 @@ public abstract class Task implements Runnable, Serializable {
 					// next hour
 					c.add(Calendar.DAY_OF_MONTH, 1);
 				}
-				return this.schedule(c.getTimeInMillis() - System.currentTimeMillis());
+				return this.schedule(c.getTimeInMillis() - System.currentTimeMillis(), global);
 			}
+
 		} catch (Throwable e) {
 			log.error(this, e);
 		}

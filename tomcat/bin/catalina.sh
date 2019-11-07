@@ -267,7 +267,7 @@ fi
 # Uncomment the following line to make the umask available when using the
 # org.apache.catalina.security.SecurityListener
 #JAVA_OPTS="$JAVA_OPTS -Dorg.apache.catalina.security.SecurityListener.UMASK=`umask`"
-JAVA_OPTS="$JAVA_OPTS -Dplatform.dependencies -Duser.timezone=Asia/Shanghai -Xms256m -Xmx2048m -XX:-UseParallelGC -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
+JAVA_OPTS="$JAVA_OPTS -Dplatform.dependencies -Duser.timezone=Asia/Shanghai -Xms2g -Xmx2g -XX:+UseConcMarkSweepGC -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
 
 if [ -z "$USE_NOHUP" ]; then
     if $hpux; then
