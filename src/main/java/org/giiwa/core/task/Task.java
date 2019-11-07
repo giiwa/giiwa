@@ -1039,7 +1039,7 @@ public abstract class Task implements Runnable, Serializable {
 				// thread
 
 				Task t = pendingQueue.remove(name);
-				log.info("reschedule the task:" + task + ", ms=" + ms + ", t=" + t + ", t.sf=" + t.sf);
+//				log.info("reschedule the task:" + task + ", ms=" + ms + ", t=" + t + ", t.sf=" + t.sf);
 
 				if (t.sf != null) {
 					if (!t.sf.cancel(true)) {
@@ -1067,9 +1067,9 @@ public abstract class Task implements Runnable, Serializable {
 				log.warn("ERROR, why here is a task? task=" + t1);
 			}
 
-			if (Language.getLanguage() != null)
-				task.attach("token", Language.getLanguage().format(System.currentTimeMillis(), "HH:mm:ss"));
-			log.debug("schedule the task:" + task + ", token=" + task.attach("token"));
+//			if (Language.getLanguage() != null)
+//				task.attach("token", Language.getLanguage().format(System.currentTimeMillis(), "HH:mm:ss"));
+//			log.debug("schedule the task:" + task + ", token=" + task.attach("token"));
 
 			if (ms <= 0) {
 				if (task.scheduledtime <= 0) {

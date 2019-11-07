@@ -1797,8 +1797,8 @@ public final class Http {
 				r.body = getContext(resp, null);
 				r.headers = resp.getAllHeaders();
 
-				if (log.isDebugEnabled())
-					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+//				if (log.isDebugEnabled())
+//					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
 
 			} catch (Throwable e) {
 				log.error("cost=" + t.past() + ", " + url, e);
