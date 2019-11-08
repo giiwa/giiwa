@@ -18,6 +18,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.web.Controller;
+import org.giiwa.framework.web.GiiwaController;
 
 /**
  * web api: <a href='/alive' target='_blnk'>/alive</a>, just simple response
@@ -36,7 +37,7 @@ public class alive extends Controller {
   public void onGet() {
     JSON jo = new JSON();
     jo.put(X.STATE, 200);
-    jo.put("uptime", System.currentTimeMillis() - Controller.UPTIME);
+    jo.put("uptime", System.currentTimeMillis() - GiiwaController.UPTIME);
     jo.put("idle", Task.idleThread());
     jo.put("tasks", Task.tasksInQueue());
     

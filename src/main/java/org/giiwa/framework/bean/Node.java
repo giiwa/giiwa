@@ -33,7 +33,7 @@ import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.FileClient;
 import org.giiwa.core.dfile.FileServer;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.web.Controller;
+import org.giiwa.framework.web.GiiwaController;
 import org.giiwa.framework.web.Module;
 import org.hyperic.sigar.CpuInfo;
 import org.hyperic.sigar.CpuPerc;
@@ -220,7 +220,7 @@ public class Node extends Bean {
 	}
 
 	private static V getNodeInfo() {
-		V v = V.create("uptime", Controller.UPTIME).append("ip", Host.getLocalip());
+		V v = V.create("uptime", GiiwaController.UPTIME).append("ip", Host.getLocalip());
 
 		try {
 			CpuInfo[] cc = Host.getCpuInfo();

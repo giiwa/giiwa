@@ -53,7 +53,7 @@ public class dashboard extends Controller {
 
 		String name = ManagementFactory.getRuntimeMXBean().getName();
 		this.set("pid", X.split(name, "[@]")[0]);
-		this.set("uptime", Controller.UPTIME);
+		this.set("uptime", GiiwaController.UPTIME);
 
 		if (login != null && login.hasAccess("access.config.admin")) {
 
@@ -74,7 +74,7 @@ public class dashboard extends Controller {
 
 		String name = ManagementFactory.getRuntimeMXBean().getName();
 		this.set("pid", X.split(name, "[@]")[0]);
-		this.set("uptime", Controller.UPTIME);
+		this.set("uptime", GiiwaController.UPTIME);
 
 		if (login != null && login.hasAccess("access.config.admin")) {
 

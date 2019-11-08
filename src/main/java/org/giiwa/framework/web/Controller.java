@@ -112,29 +112,24 @@ public class Controller {
 	/**
 	 * locale of user
 	 */
-	public String locale;
+	protected String locale;
 
 	/**
 	 * the uri of request
 	 */
-	public String uri;
+	protected String uri;
 
 	/**
 	 * the module of this model
 	 */
-	public Module module;
+	protected Module module;
 
 	/**
 	 * the query string of the request
 	 */
-	public QueryString query;
+	protected QueryString query;
 
 	public static ServletContext s️ervletContext;
-
-	/**
-	 * the uptime of the system
-	 */
-	public final static long UPTIME = System.currentTimeMillis();
 
 	/**
 	 * contentType of response
@@ -175,7 +170,7 @@ public class Controller {
 	/**
 	 * the response status
 	 */
-	public int status = HttpServletResponse.SC_OK;
+	protected int status = HttpServletResponse.SC_OK;
 
 	/**
 	 * get the response state code
@@ -1806,7 +1801,7 @@ public class Controller {
 	 * the path of the uri, http://[host:port]/[class]/[path], usually the
 	 * path=method name
 	 */
-	public String path;
+	protected String path;
 
 	/**
 	 * set the response contenttype
@@ -2267,7 +2262,7 @@ public class Controller {
 	/**
 	 * pathmapping structure: {"method", {"path", Path|Method}}
 	 */
-	public Map<String, Map<String, PathMapping>> pathmapping;
+	protected Map<String, Map<String, PathMapping>> pathmapping;
 
 	/**
 	 * println the object to end-user

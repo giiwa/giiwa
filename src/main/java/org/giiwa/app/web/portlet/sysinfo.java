@@ -5,7 +5,7 @@ import java.util.Properties;
 import org.giiwa.core.base.Host;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
-import org.giiwa.framework.web.Controller;
+import org.giiwa.framework.web.GiiwaController;
 import org.giiwa.framework.web.Module;
 
 public class sysinfo extends portlet {
@@ -13,9 +13,9 @@ public class sysinfo extends portlet {
 	@Override
 	public void get() {
 
-		this.set("uptime", lang.format(Controller.UPTIME, "yy-MM-dd HH:mm:ss"));
+		this.set("uptime", lang.format(GiiwaController.UPTIME, "yy-MM-dd HH:mm:ss"));
 		this.set("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
-		this.set("past", lang.past(Controller.UPTIME));
+		this.set("past", lang.past(GiiwaController.UPTIME));
 		this.set("node", Local.id());
 		this.set("gnode", Global.id());
 		this.set("release", Module.load("default").getVersion());

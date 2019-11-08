@@ -696,7 +696,7 @@ public class module extends Controller {
 
 		String name = ManagementFactory.getRuntimeMXBean().getName();
 		this.set("pid", X.split(name, "[@]")[0]);
-		this.set("uptime", Controller.UPTIME);
+		this.set("uptime", GiiwaController.UPTIME);
 
 		this.set("list", Module.getAll(false));
 
