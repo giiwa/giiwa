@@ -95,6 +95,10 @@ public class App extends Bean {
 		return memo;
 	}
 
+	public List<String> getAccess() {
+		return access;
+	}
+
 	/**
 	 * check has the access name
 	 * 
@@ -102,13 +106,18 @@ public class App extends Bean {
 	 * @return the boolean, true if has this access
 	 */
 	public boolean hasAccess(String... name) {
-		if (!X.isEmpty(access)) {
-			for (String s : name) {
-				if (access.contains(s))
-					return true;
-			}
+
+		if (X.isEmpty(access)) {
+			// access all
+			return true;
+		}
+
+		for (String s : name) {
+			if (access.contains(s))
+				return true;
 		}
 		return false;
+
 	}
 
 	/**
