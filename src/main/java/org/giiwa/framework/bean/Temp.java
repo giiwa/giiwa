@@ -167,11 +167,14 @@ public class Temp {
 		return 0;
 	}
 
-	public void delete() throws IOException {
+	public void delete() {
 
-		File f = this.getFile();
-		delete(f);
-
+		try {
+			File f = this.getFile();
+			delete(f);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 
 	private void delete(File f) throws IOException {

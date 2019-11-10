@@ -60,11 +60,6 @@ public class CleanupTask extends Task {
 	 */
 	long count = 0;
 
-	/**
-	 * The file.
-	 */
-	String file;
-
 	public static void init(Configuration conf) {
 		inst = new CleanupTask(conf);
 		inst.schedule((long) (X.AMINUTE * Math.random()));
@@ -142,33 +137,11 @@ public class CleanupTask extends Task {
 	 * @param deletefolder the deletefolder
 	 * @return the long
 	 */
-	private long cleanup(String path, long expired, boolean deletefolder) {
+	private long cleanup(String path, long age, boolean deletefolder) {
 		try {
 			File f = new File(path);
-			file = f.getCanonicalPath();
 
-			/**
-			 * test the file last modified exceed the cache time
-			 */
-			if (f.isFile()) {
-				if (System.currentTimeMillis() - f.lastModified() > expired) {
-					IOUtil.delete(f);
-				}
-			} else if (f.isDirectory()) {
-				File[] list = f.listFiles();
-				if (list == null || list.length == 0) {
-					if (deletefolder) {
-						IOUtil.delete(f);
-					}
-				} else if (list != null) {
-					/**
-					 * cleanup the sub folder
-					 */
-					for (File f1 : list) {
-						cleanup(f1.getAbsolutePath(), expired, deletefolder);
-					}
-				}
-			}
+			IOUtil.delete(f, age);
 
 			f.mkdirs();
 		} catch (Exception e) {

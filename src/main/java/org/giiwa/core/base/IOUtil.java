@@ -438,7 +438,7 @@ public final class IOUtil {
 
 	public static String readcvs(BufferedReader re) throws IOException {
 		String line = re.readLine();
-		while (line != null && count(line, "\"") % 2 == 1) {
+		while (line != null && ((count(line, "\"") & 1) == 1)) {
 			String s1 = re.readLine();
 			if (s1 == null) {
 				return line;

@@ -343,16 +343,6 @@ public class Bean implements Serializable {
 	}
 
 	/**
-	 * remove the key from the bean.
-	 *
-	 * @param key the name
-	 * @return the object of old value
-	 */
-	public final Object remove(Object key) {
-		return this.set(key.toString(), null);
-	}
-
-	/**
 	 * put all the data in the map to Bean.
 	 *
 	 * @param m the data map
@@ -515,7 +505,15 @@ public class Bean implements Serializable {
 	public final void remove(String... names) {
 		if (data != null && names != null) {
 			for (String name : names) {
-				remove(name);
+				if (name.indexOf("*") > -1) {
+					for (String k : this.getAll().keySet()) {
+						if (k.matches(name)) {
+							this.set(k, null);
+						}
+					}
+				} else {
+					this.set(name, null);
+				}
 			}
 		}
 	}

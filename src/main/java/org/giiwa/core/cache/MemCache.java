@@ -88,7 +88,7 @@ class MemCache implements ICacheSystem {
 			} else {
 //				System.out.println("cache.set, name=" + name + ", expired=" + expired);
 //				return memCachedClient.set(name, o, new Date(System.currentTimeMillis() + expired));
-				return memCachedClient.set(name, o, new Date(expired));
+				return memCachedClient.set(name, o, new Date((long) expired));
 //				return memCachedClient.set(name, o);
 			}
 		} catch (Exception e) {
@@ -120,7 +120,7 @@ class MemCache implements ICacheSystem {
 	}
 
 	public void expire(String name, int ms) {
-		memCachedClient.set(name, 1, new Date(ms));
+		memCachedClient.set(name, 1, new Date((long) ms));
 //		log.debug("memcached expire, name=" + name + ", value=" + memCachedClient.get(name));
 	}
 
