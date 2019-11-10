@@ -799,12 +799,22 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		return this;
 	}
 
-	public JSON remove(String... name) {
-		if (name != null && name.length > 0) {
-			for (String s : name) {
-				remove(s);
+	public JSON remove(String... names) {
+		if (names != null && names.length > 0) {
+			for (String name : names) {
+				if (name.indexOf("*") > -1) {
+					String[] ss = this.keySet().toArray(new String[this.size()]);
+					for (String k : ss) {
+						if (k.matches(name)) {
+							this.remove(k);
+						}
+					}
+				} else {
+					this.remove(name);
+				}
 			}
 		}
+
 		return this;
 	}
 
