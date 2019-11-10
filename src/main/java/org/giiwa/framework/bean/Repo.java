@@ -318,20 +318,22 @@ public class Repo {
 		return 0;
 	}
 
-	public static void cleanup(long age) {
+	public static int cleanup(long age) {
 
+		int count = 0;
 		try {
 			DFile f = Disk.seek(ROOT);
 
 			DFile[] ff = f.listFiles();
 			if (ff != null) {
 				for (DFile f1 : ff) {
-					IOUtil.delete(f1, age);
+					count += IOUtil.delete(f1, age);
 				}
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
+		return count;
 	}
 
 }

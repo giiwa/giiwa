@@ -106,23 +106,20 @@ public class CleanupTask extends Task {
 			/**
 			 * clean up repo
 			 */
-			Repo.cleanup(X.ADAY);
-			Temp.cleanup(X.ADAY);
+			count += Repo.cleanup(X.ADAY);
+			count += Temp.cleanup(X.ADAY);
 
 			/**
 			 * clean temp files in tomcat
 			 */
 			if (!X.isEmpty(Controller.GIIWA_HOME)) {
 				// do it
-				cleanup(Controller.GIIWA_HOME + "/work", X.ADAY, false);
-				cleanup(Controller.GIIWA_HOME + "/logs", X.ADAY * 3, false);
+				count += cleanup(Controller.GIIWA_HOME + "/work/Catalina/localhost/ROOT", X.ADAY, false);
+				count += cleanup(Controller.GIIWA_HOME + "/logs", X.ADAY * 3, false);
 			}
 			if (log.isInfoEnabled()) {
 				log.info("cleanup temp files: " + count);
 			}
-
-			if (log.isDebugEnabled())
-				log.debug("cleanup, beans=" + beans);
 
 		} catch (Exception e) {
 			// eat the exception
@@ -139,11 +136,18 @@ public class CleanupTask extends Task {
 	 */
 	private long cleanup(String path, long age, boolean deletefolder) {
 		try {
+
 			File f = new File(path);
 
-			IOUtil.delete(f, age);
+			File[] ff = f.listFiles();
+			if (ff != null) {
+				for (File f1 : ff) {
+					IOUtil.delete(f1, age);
+				}
+			}
 
 			f.mkdirs();
+
 		} catch (Exception e) {
 			if (log.isErrorEnabled()) {
 				log.error(e.getMessage(), e);

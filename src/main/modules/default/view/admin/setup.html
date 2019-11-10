@@ -72,7 +72,7 @@
 		<div id="cache" class='panel' data-prev="db">
 			<div class='head'>$lang.get('setup.title.cache')</div>	
 			<form method="post">
-				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!config.getString('cache.url', '')"/><g>memcached://host:port, redis://host:port</g></label></div>
+				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!config.getString('cache.url', '')"/><g>memcached://host:11211, redis://host:6379</g></label></div>
 				
 				<div class='btns'>
 						<a class='prev btn btn-info'>$lang.get('a.prev')</a>

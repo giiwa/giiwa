@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Stack;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -293,6 +294,118 @@ public class SQL {
 		return q;
 	}
 
+	public static W where2W(String name, StringFinder s) throws Exception {
+		// “’2’ and >10 or (‘1‘ and <20) ;
+		if (s == null || !s.hasMore()) {
+			return W.create();
+		}
+
+		Stack<String> conn = new Stack<String>();
+		W q = W.create();
+
+		while (s.hasMore()) {
+			s.trim();
+			char c = s.next();
+			if (c == '(') {
+				W q1 = where2W(name, s);
+				if (q1 != null) {
+					String o = conn.isEmpty() ? "and" : conn.pop();
+					if (X.isSame(o, "and")) {
+						q.and(q1);
+					} else {
+						q.or(q1);
+					}
+				}
+			} else if (c == ')') {
+				return q;
+			} else {
+				s.skip(-1);
+
+				String s1 = s.nextTo("(|)|and|or");
+				s.trim();
+
+				s1.trim();
+				c = s1.charAt(0);
+				String op = null;
+				if (c == '>' || c == '<') {
+					char c1 = s1.charAt(1);
+					if (c1 == '=') {
+						op = Character.toString(c) + c1;
+						s1 = s1.substring(2);
+					} else {
+						op = Character.toString(c);
+						s1 = s1.substring(1);
+					}
+				} else if (c == '!') {
+					op = "!=";
+					s1 = s1.substring(1);
+				} else {
+					// like ?
+					op = "=";
+				}
+
+				s1.trim();
+
+				Object value = s1;
+
+				String o = conn.isEmpty() ? "and" : conn.pop();
+				if (X.isSame(o, "and")) {
+					if (X.isSame(op, "=")) {
+						q.and(name, value);
+					} else if (X.isSame(op, "!=")) {
+						q.and(name, value, W.OP.neq);
+					} else if (X.isSame(op, ">")) {
+						q.and(name, value, W.OP.gt);
+					} else if (X.isSame(op, ">=")) {
+						q.and(name, value, W.OP.gte);
+					} else if (X.isSame(op, "<")) {
+						q.and(name, value, W.OP.lt);
+					} else if (X.isSame(op, "<=")) {
+						q.and(name, value, W.OP.lte);
+					} else if (X.isSame(op, "<")) {
+						q.and(name, value, W.OP.lt);
+					} else if (X.isSame(op, "like")) {
+						q.and(name, value, W.OP.like);
+					}
+				} else {
+					if (X.isSame(op, "=")) {
+						q.or(name, value);
+					} else if (X.isSame(op, "!=")) {
+						q.or(name, value, W.OP.neq);
+					} else if (X.isSame(op, ">")) {
+						q.or(name, value, W.OP.gt);
+					} else if (X.isSame(op, ">=")) {
+						q.or(name, value, W.OP.gte);
+					} else if (X.isSame(op, "<")) {
+						q.or(name, value, W.OP.lt);
+					} else if (X.isSame(op, "<=")) {
+						q.or(name, value, W.OP.lte);
+					} else if (X.isSame(op, "<")) {
+						q.or(name, value, W.OP.lt);
+					} else if (X.isSame(op, "like")) {
+						q.or(name, value, W.OP.like);
+					}
+				}
+			}
+
+			s.trim();
+			// get conn
+			if (s.hasMore()) {
+				c = s.next();
+				if (c == ')') {
+					return q;
+				}
+
+				s.skip(-1);
+				String s1 = s.nextTo(" ");
+				conn.push(s1);
+			}
+
+		}
+
+		return q;
+	}
+
 	/**
 	 * @param h   the db helper
 	 * @param sql the sql
@@ -357,7 +470,7 @@ public class SQL {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String s = "a>10/2*5 and b>11";
+		String s = "a>10/2*5 and b>11 and (c>1 or r>2)";
 		W q = SQL.where2W(StringFinder.create(s));
 		System.out.println(q);
 
@@ -366,6 +479,10 @@ public class SQL {
 		System.out.println(q1);
 
 		// SQL.query(h, sql);
+		s = "11 and (1 or 2) and !12";
+
+		q = SQL.where2W("a", StringFinder.create(s));
+		System.out.println(q);
 
 	}
 

@@ -72,7 +72,7 @@ public class Captcha {
 			String code = UID.random(len, VERIFY_CODES).toLowerCase();
 			outputImage(w, h, output, code.toUpperCase());
 
-			Cache.set("//captcha/" + sid, Code.create(code, expired));
+			Cache.set("//captcha/" + sid, Code.create(code, expired), X.AMINUTE);
 			return true;
 		} catch (IOException e) {
 			throw e;

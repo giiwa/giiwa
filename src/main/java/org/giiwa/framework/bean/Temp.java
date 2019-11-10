@@ -208,34 +208,23 @@ public class Temp {
 		}
 	}
 
-	public static void cleanup(long age) {
+	public static int cleanup(long age) {
 
-		{
-			try {
-				File f1 = new File(Controller.GIIWA_HOME + ROOT);
-				File[] ff = f1.listFiles();
-				if (ff == null || ff.length == 0) {
-					f1.delete();
-					cleanup(f1);
-				} else {
-					for (File f2 : ff) {
-						IOUtil.delete(f2, age);
-					}
-
-					ff = f1.listFiles();
-					if (ff == null || ff.length == 0) {
-						f1.delete();
-						cleanup(f1.getParentFile());
-					}
-
+		int count = 0;
+		try {
+			File f1 = new File(Controller.GIIWA_HOME + ROOT);
+			File[] ff = f1.listFiles();
+			if (ff != null) {
+				for (File f2 : ff) {
+					count += IOUtil.delete(f2, age);
 				}
 
-				f1.mkdirs();
-
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
 			}
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
+		return count;
 	}
 
 	public long copy(InputStream in) throws IOException {

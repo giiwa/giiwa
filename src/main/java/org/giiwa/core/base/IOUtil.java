@@ -86,7 +86,7 @@ public final class IOUtil {
 			if (ff == null || ff.length == 0) {
 				f.delete();
 				if (log.isInfoEnabled()) {
-					log.info("delete folder: " + f.getCanonicalPath());
+					log.info("delete file: " + f.getCanonicalPath());
 				}
 			}
 

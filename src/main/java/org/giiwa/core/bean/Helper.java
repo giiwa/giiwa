@@ -1220,14 +1220,35 @@ public class Helper implements Serializable {
 			return l1;
 		}
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param v
+		 * @return
+		 */
 		public W and(String[] name, Object v) {
 			return and(name, v, W.OP.eq);
 		}
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param v
+		 * @param op
+		 * @return
+		 */
 		public W and(String[] name, Object v, OP op) {
 			return and(name, v, op, 1);
 		}
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param v
+		 * @param op
+		 * @param boost
+		 * @return
+		 */
 		public W and(String[] name, Object v, OP op, int boost) {
 			W q = W.create();
 			for (String s : name) {

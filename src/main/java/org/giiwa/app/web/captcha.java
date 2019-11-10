@@ -44,6 +44,8 @@ public class captcha extends Controller {
 		Temp t = Temp.create("code.jpg");
 		try {
 
+			t.getFile().getParentFile().mkdirs();
+
 			Captcha.create(this.sid(), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
 					new FileOutputStream(t.getFile()), 4);
 
