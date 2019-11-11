@@ -1247,10 +1247,12 @@ public class Controller {
 	final public String getString(String name) {
 		try {
 			String c1 = req.getContentType();
-//			log.debug("getContentType=" + c1 + ", name=" + name);
+
+			log.debug("get s, name=" + name + ", c1=" + c1);
 
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 				if (uploads == null) {
+
 					BufferedReader in = req.getReader();
 
 					StringBuilder sb = new StringBuilder();
@@ -1259,8 +1261,6 @@ public class Controller {
 					while ((len = in.read(buff)) != -1) {
 						sb.append(buff, 0, len);
 					}
-
-//					log.debug("params=" + sb.toString());
 
 					JSON jo = JSON.fromObject(sb.toString());
 					if (jo != null) {
@@ -1271,6 +1271,9 @@ public class Controller {
 
 				if (uploads != null) {
 					Object v1 = uploads.get(name);
+
+					log.debug("get s=" + v1);
+
 					if (v1 != null) {
 						return v1.toString().trim();
 					}
@@ -1278,6 +1281,7 @@ public class Controller {
 			}
 
 			if (this._multipart) {
+
 				getFiles();
 
 				FileItem i = this.getFile(name);
@@ -1289,29 +1293,24 @@ public class Controller {
 					in.close();
 					String s = new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
 
-//					log.debug(name + "=" + s);
+					log.debug("get s=" + s);
 
 					return s;
 				}
 
 			}
 
-			String s = req.getParameter(name);
-			if (s == null)
+			String[] ss = req.getParameterValues(name);
+
+			if (ss == null || ss.length == 0) {
 				return null;
-
-//				String t = this.getHeader("Content-Type");
-//				log.debug("Content-Type=" + c1 + ", " + name + "=" + s);
-
-			if (c1 != null && c1.indexOf("urlencoded") > -1) {
-				// do nothing
-			} else if (c1 != null && c1.indexOf("application/json") > -1) {
-				if (method.isPost()) {
-					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
-				}
 			}
 
+			String s = ss[ss.length - 1];
+			s = _decode(s);
 			s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
+
+			log.debug("get s = " + s);
 			return s;
 
 		} catch (Exception e) {
@@ -1426,14 +1425,7 @@ public class Controller {
 				if (s == null)
 					return null;
 
-				String t = this.getHeader("Content-Type");
-				if (t != null && t.indexOf("urlencoded") > -1) {
-					// do nothing
-				} else if (t != null && t.indexOf("application/json") > -1) {
-					if (method.isPost()) {
-						s = new String(s.getBytes("ISO-8859-1"), ENCODING);
-					}
-				}
+				s = _decode(s);
 
 				return s;
 
@@ -1443,6 +1435,33 @@ public class Controller {
 				log.error("get request parameter " + name + " get exception.", e);
 			return null;
 		}
+	}
+
+	private String _decode(String s) {
+		try {
+			String t = this.getHeader("Content-Type");
+			if (t == null) {
+				// do nothing
+				// log.debug("get s=" + s);
+
+			} else if (t.indexOf("UTF-8") > -1) {
+				// log.debug("get s=" + s);
+
+			} else if (t.indexOf("urlencoded") > -1) {
+				// do nothing
+				s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+			} else if (t.indexOf("application/json") > -1) {
+//				log.debug("get s=" + s);
+				if (method.isPost()) {
+					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+				}
+			} else {
+//				log.debug("get s=" + s);
+			}
+		} catch (Exception e) {
+			log.error(s, e);
+		}
+		return s;
 	}
 
 	/**
@@ -1520,14 +1539,7 @@ public class Controller {
 						if (ss[i] == null)
 							continue;
 
-						String t = this.getHeader("Content-Type");
-						if (t != null && t.indexOf("urlencoded") > -1) {
-							// do nothing
-						} else if (t != null && t.indexOf("application/json") > -1) {
-							if (method.isPost()) {
-								ss[i] = new String(ss[i].getBytes("ISO-8859-1"), ENCODING);
-							}
-						}
+						ss[i] = _decode(ss[i]);
 
 						ss[i] = ss[i].replaceAll("<", "&lt").replaceAll(">", "&gt").trim();
 					}
