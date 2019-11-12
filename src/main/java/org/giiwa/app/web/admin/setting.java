@@ -75,7 +75,7 @@ public class setting extends Controller {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/reset/" + c);
-		
+
 		if (c != null) {
 			try {
 				setting s = c.newInstance();
@@ -114,7 +114,7 @@ public class setting extends Controller {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/get/" + c);
-		
+
 		if (c != null) {
 			try {
 				setting s = c.newInstance();
@@ -124,6 +124,7 @@ public class setting extends Controller {
 				s.set("lang", lang);
 				s.set("module", module);
 				s.set("name", name);
+				s.set("__node", this.getString("__node"));
 				s.set("settings", names);
 				s.show("/admin/setting.html");
 
@@ -148,13 +149,14 @@ public class setting extends Controller {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/set/" + c);
-		
+
 		if (c != null) {
 			try {
 				setting s = c.newInstance();
 				s.copy(this);
 				s.set("lang", lang);
 				s.set("module", module);
+				s.set("__node", this.getString("__node"));
 				s.set("name", name);
 				s.set("settings", names);
 				s.set();

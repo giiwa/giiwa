@@ -57,6 +57,7 @@ public class profile extends Controller {
 
 				s.set("lang", lang);
 				s.set("module", module);
+				s.set("__node", this.getString("__node"));
 				s.set("name", name);
 				s.set("settings", names);
 				s.set("me", this.getUser());
