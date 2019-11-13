@@ -19,6 +19,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -87,6 +89,16 @@ public class backup extends Controller {
 			log.error(e.getMessage(), e);
 		}
 
+		Collections.sort(list, new Comparator<DFile>() {
+
+			@Override
+			public int compare(DFile o1, DFile o2) {
+				String n1 = o1.getName();
+				String n2 = o2.getName();
+				return n2.compareToIgnoreCase(n1);
+			}
+
+		});
 		this.set("list", list);
 		this.query.path("/admin/backup");
 
