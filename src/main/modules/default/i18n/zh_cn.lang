@@ -894,7 +894,7 @@ user.createdua=创建UA
 user.createdby=创建者
 access.deny=禁止访问，请联系管理员
 backup.url=异地存储URL
-backup.url.hint=支持FTP/SFTP, ftp://127.0.0.1:21?username=aaaa&password=123123&path=/backup
+backup.url.hint=(s)ftp://127.0.0.1:21?username=aaaa&passwd=123123&path=/backup
 log.logger=代码
 base.setting.web=Web相关
 footprint.field=字段

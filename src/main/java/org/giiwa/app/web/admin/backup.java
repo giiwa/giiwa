@@ -17,19 +17,20 @@ package org.giiwa.app.web.admin;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.giiwa.app.task.CleanupTask;
 import org.giiwa.core.base.Exporter;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Url;
-import org.giiwa.core.base.Zip;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
@@ -37,13 +38,14 @@ import org.giiwa.core.bean.MongoHelper;
 import org.giiwa.core.bean.RDSHelper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.conf.Local;
+import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.net.FTP;
+import org.giiwa.core.net.SFTP;
 import org.giiwa.core.task.Monitor;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.Disk;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Repo.Entity;
@@ -69,16 +71,20 @@ public class backup extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	@Override
 	public void onGet() {
-		String path = BackupTask.path();
-		File root = new File(path);
-		File[] fs = root.listFiles();
-		List<File> list = new ArrayList<File>();
-		if (fs != null) {
-			for (File f : fs) {
-				if (f.isFile()) {
-					list.add(f);
+		DFile root = Disk.seek(BackupTask.ROOT);
+
+		List<DFile> list = new ArrayList<DFile>();
+		try {
+			DFile[] fs = root.listFiles();
+			if (fs != null) {
+				for (DFile f : fs) {
+					if (f.isFile()) {
+						list.add(f);
+					}
 				}
 			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 
 		this.set("list", list);
@@ -96,14 +102,12 @@ public class backup extends Controller {
 
 		try {
 			String name = this.getString("name");
-			String root = BackupTask.path();
-			File f = new File(root + "/" + name);
+			DFile f = Disk.seek(BackupTask.ROOT + "/" + name);
 
-			if (f.getCanonicalPath().startsWith(root)) {
-				if (log.isDebugEnabled())
-					log.debug("delete: " + f.getCanonicalPath());
-				IOUtil.delete(f);
-			}
+			if (log.isDebugEnabled())
+				log.debug("delete: " + f.getCanonicalPath());
+			f.delete();
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.getRemoteHost());
@@ -116,14 +120,10 @@ public class backup extends Controller {
 		JSON jo = JSON.create();
 		try {
 			String name = this.getString("name");
-			String root = BackupTask.path();
-			File f = new File(root + "/" + name);
-
-			Temp t = Temp.create(name);
-			t.copy(new FileInputStream(f));
+			DFile f = Disk.seek(BackupTask.ROOT + "/" + name);
 
 			jo.put(X.STATE, 200);
-			jo.put("url", t.getUri());
+			jo.put("url", f.getFilename());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.getRemoteHost());
@@ -142,15 +142,14 @@ public class backup extends Controller {
 
 		JSON jo = JSON.create();
 		try {
-			String root = BackupTask.path();
-			File f = new File(root + "/" + e.getName());
+			DFile f = Disk.seek(BackupTask.ROOT + "/" + e.getName());
 
 			if (f.exists()) {
 				f.delete();
 			} else {
 				f.getParentFile().mkdirs();
 			}
-			IOUtil.copy(e.getInputStream(), new FileOutputStream(f));
+			IOUtil.copy(e.getInputStream(), f.getOutputStream());
 
 			jo.put(X.STATE, 200);
 		} catch (Exception e1) {
@@ -175,7 +174,8 @@ public class backup extends Controller {
 		if (method.isPost()) {
 			String[] ss = this.getStrings("name");
 			if (ss != null && ss.length > 0) {
-				new BackupTask(ss).schedule(0);
+
+				new BackupTask(ss, Global.getString("backup.url", null)).schedule(0);
 				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("backup.started")));
 
 			} else {
@@ -209,7 +209,7 @@ public class backup extends Controller {
 		if (method.isPost()) {
 			String[] ss = this.getStrings("name");
 			if (ss != null && ss.length > 0) {
-				new BackupTask(ss).schedule(0);
+				new BackupTask(ss, null).schedule(0);
 				Temp t = Temp.create("er.csv");
 				Exporter<Bean> e = t.export("GBK", Exporter.FORMAT.csv);
 
@@ -300,9 +300,9 @@ public class backup extends Controller {
 	public void auto() {
 
 		if (method.isPost()) {
-			Local.setConfig("backup.auto", X.isSame("on", this.getString("backup.auto")) ? 1 : 0);
-			Local.setConfig("backup.point", this.getString("backup.point"));
-			Local.setConfig("backup.url", this.getString("backup.url"));
+			Global.setConfig("backup.auto", X.isSame("on", this.getString("backup.auto")) ? 1 : 0);
+			Global.setConfig("backup.point", this.getString("backup.point"));
+			Global.setConfig("backup.url", this.getString("backup.url"));
 
 			Global.setConfig("backup.clean", X.isSame("on", this.getString("backup.clean")) ? 1 : 0);
 			Global.setConfig("backup.keep.days", this.getInt("backup.keep.days"));
@@ -338,24 +338,6 @@ public class backup extends Controller {
 	}
 
 	/**
-	 * Restoring.
-	 */
-	@Path(path = "restoring", login = true, access = "access.config.admin")
-	public void restoring() {
-		long id = this.getLong("id");
-
-		JSON jo = Monitor.get(id);
-
-		if (jo == null) {
-			jo = JSON.create();
-			jo.put(X.STATE, 202);
-			jo.put(X.MESSAGE, "没有启动!");
-		}
-
-		this.response(jo);
-	}
-
-	/**
 	 * backup.
 	 * 
 	 * @author joe
@@ -367,19 +349,15 @@ public class backup extends Controller {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
+
+		public static String ROOT = "/_backup/";
+
 		String[] cc; // collections
+		String url;
 
-		public BackupTask(String[] l1) {
+		public BackupTask(String[] l1, String url) {
 			cc = l1;
-		}
-
-		/**
-		 * Path.
-		 *
-		 * @return the string
-		 */
-		public static String path() {
-			return Global.getString("backup.path", "/home/nfs/backup");
+			this.url = url;
 		}
 
 		@Override
@@ -395,7 +373,7 @@ public class backup extends Controller {
 		@Override
 		public void onExecute() {
 			// Module m = Module.home;
-			String name = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm");
+			String name = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm") + ".zip";
 
 			try {
 
@@ -403,60 +381,67 @@ public class backup extends Controller {
 
 				Temp t = Temp.create(name);
 
-				String out = t.getFile().getCanonicalPath();
+				File f = t.getFile();
+				f.getParentFile().mkdirs();
 
-				new File(path() + "/" + name).mkdirs();
+				ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
 
-				/**
-				 * 1, backup db
-				 */
-				if (MongoHelper.inst.isConfigured()) {
-					Global.setConfig("backup/" + name, 2); // backup mongo
-					MongoHelper.inst.backup(out + "/mongo.dmp", cc);
+				try {
+					/**
+					 * 1, backup db
+					 */
+					if (MongoHelper.inst.isConfigured()) {
+						Global.setConfig("backup/" + name, 2); // backup mongo
+						MongoHelper.inst.backup(out, cc);
+					}
+					if (RDSHelper.inst.isConfigured()) {
+						Global.setConfig("backup/" + name, 3); // backup RDS
+						RDSHelper.inst.backup(out, cc);
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("zipping, dir=" + out);
+
+					out.close();
+				} finally {
+					X.close(out);
 				}
-				if (RDSHelper.inst.isConfigured()) {
-					Global.setConfig("backup/" + name, 3); // backup RDS
-					RDSHelper.inst.backup(out + "/rds.dmp", cc);
-				}
 
-				/**
-				 * 2, backup repo
-				 */
-				// File f = m.getFile("/admin/clone/backup_tar.sh");
-				// String url = Config.getConf().getString("repo.path", null);
-				// if (!X.isEmpty(url)) {
-				// Global.setConfig("backup/" + name, 3); // backup repo
-				//
-				// IOUtil.copyDir(new File(url), new File(out + "/repo"));
-				//
-				// // Shell.run("chmod ugo+x " + f.getCanonicalPath());
-				// // Shell.run(f.getCanonicalPath() + " " + out + "/repo.tar.gz " +
-				// // url);
-				// }
-
-				if (log.isDebugEnabled())
-					log.debug("zipping, dir=" + out);
-
-				Zip.zip(new File(path() + "/" + name + ".zip"), new File(out));
-
-				IOUtil.delete(new File(out));
+				t.save(Disk.seek(ROOT + name));
 
 				Global.setConfig("backup/" + name, 100); // done
 
-				String url = Global.getString("backup.url", null);
 				if (!X.isEmpty(url)) {
 					// store in other
-					Url u = Url.create(url);
-					FTPClient f1 = FTP.login(u);
-					if (f1 != null) {
-						InputStream in = new FileInputStream(new File(path() + "/" + name + ".zip"));
-						try {
-							f1.appendFile(u.get("path") + "/" + name + ".zip", in);
+					if (url.startsWith("ftp://")) {
 
-							GLog.applog.info("backup", "auto", "backup success, name=" + name + ".zip", null, null);
+						Url u = Url.create(url);
+						FTPClient f1 = FTP.login(u);
+						if (f1 != null) {
+							InputStream in = new FileInputStream(t.getFile());
+							try {
+								log.debug("ftp put, filename=" + u.get("path") + "/" + name);
+
+								f1.appendFile(u.get("path") + "/" + name, in);
+
+								GLog.applog.info("backup", "auto", "backup success, name=" + name + ".zip", null, null);
+							} finally {
+								X.close(in);
+							}
+						}
+
+					} else if (url.startsWith("sftp://")) {
+
+						InputStream in = new FileInputStream(t.getFile());
+						try {
+							Url u = Url.create(url);
+							SFTP.put(u, u.get("path") + "/" + name, in);
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
 						} finally {
 							X.close(in);
 						}
+
 					}
 				}
 			} catch (Exception e) {
@@ -470,19 +455,19 @@ public class backup extends Controller {
 
 		public static void clean(int days) {
 
-			File f = new File(path());
+			DFile f = Disk.seek(BackupTask.ROOT);
 			if (f.exists()) {
-				File[] ff = f.listFiles();
-				if (ff != null && ff.length > 0) {
-					for (File f1 : ff) {
-						if (f1.lastModified() < System.currentTimeMillis() - days * X.ADAY) {
-							try {
-								IOUtil.delete(f1);
-							} catch (IOException e) {
-								log.error(e.getMessage(), e);
+				try {
+					DFile[] ff = f.listFiles();
+					if (ff != null && ff.length > 0) {
+						for (DFile f1 : ff) {
+							if (f1.lastModified() < System.currentTimeMillis() - days * X.ADAY) {
+								f1.delete();
 							}
 						}
 					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
@@ -519,65 +504,43 @@ public class backup extends Controller {
 		 */
 		@Override
 		public void onExecute() {
-			String root = BackupTask.path();
 			// Module m = Module.home;
 
 			try {
-				Global.setConfig("backup/" + name, 11); // recovering
+				Global.setConfig("backup/" + name, "正在恢复"); // recovering
 
-				String source = root + "/" + name;
+				DFile f = Disk.seek(BackupTask.ROOT + name);
 
-				Temp t = Temp.create("backup");
-				File f = t.getFile();
-				f.mkdirs();
-				Zip.unzip(new File(source), f);
+				ZipInputStream in = new ZipInputStream(f.getInputStream());
 
 				/**
 				 * 1, recover if configured
 				 */
-				File[] fs = f.listFiles();
-				if (fs != null) {
-					for (File f1 : fs) {
-						if (f1.isFile()) {
-							if (MongoHelper.inst.isConfigured() && X.isSame("mongo.dmp", f1.getName())) {
-
-								Global.setConfig("backup/" + name, 12); // recovering mongo
-
-								MongoHelper.inst.recover(f1.getCanonicalFile());
-							}
-
-							if (RDSHelper.inst.isConfigured() && X.isSame("rds.dmp", f1.getName())) {
-								Global.setConfig("backup/" + name, 13); // recovering RDS
-
-								RDSHelper.inst.recover(f1.getCanonicalFile());
-							}
-						}
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					String name = e.getName();
+					if (X.isSame(name, "mongo.db") && MongoHelper.inst.isConfigured()) {
+						Global.setConfig("backup/" + name, "正在恢复 mongo"); // recovering
+						MongoHelper.inst.recover(in);
+					} else if (X.isSame(name, "rds.db") && RDSHelper.inst.isConfigured()) {
+						Global.setConfig("backup/" + name, "正在恢复 rds"); // recovering
+						RDSHelper.inst.recover(in);
 					}
+					e = in.getNextEntry();
 				}
 
 				/**
-				 * 2, recover repo
+				 * 2, recover repo, TODO
 				 */
-				String url = Config.getConf().getString("repo.path", null);
-				if (!X.isEmpty(url)) {
-					Global.setConfig("backup/" + name, 14); // recovering Repo
 
-					IOUtil.copyDir(new File(f.getCanonicalPath() + "/repo"), new File(url));
-					// Shell.run("chmod ugo+x " + f.getCanonicalPath());
-					// Shell.run(f.getCanonicalPath() + " " + source + "/repo.tar.gz " +
-					// url);
-				}
-
-				IOUtil.delete(f);
-
-				Global.setConfig("backup/" + name, 200); // recovering done
+				Global.setConfig("backup/" + name, "完成恢复"); // recovering
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				message = e.getMessage();
 				GLog.oplog.error(backup.class, "recover", e.getMessage(), e, null, null);
 
-				Global.setConfig("backup/" + name, -2); // recovering Error
+				Global.setConfig("backup/" + name, "恢复错误，error=" + e.getMessage()); // recovering
 
 			}
 

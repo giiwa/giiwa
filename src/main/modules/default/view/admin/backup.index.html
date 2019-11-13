@@ -22,9 +22,8 @@
 	<tr>
 		<td class="a">$!f.name <a class="icon-folder-download" href='javascript:;' onclick="_download('$!f.name')"></a></td>
 		<td>$lang.format($f.lastModified(), 'yyyy-MM-dd HH:m')</td>
-		#set($s=$global.getInt("backup/$f.name", 0))
 		<td>$!lang.size($f.length())</td>
-		<td>$!lang.get("backup.status_$s")</td>
+		<td>$global.getString("backup/$f.name", '')</td>
 		<td class="a">
 			<a class="hint hint--bottom" data-hint="$lang.get('a.recover')" href="javascript:;" onclick="_recover('$f.name')"><i class="icon-undo"></i></a>
 			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f.name')"><i class="icon-cancel-circle"></i></a>

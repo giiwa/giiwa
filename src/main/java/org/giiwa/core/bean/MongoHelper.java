@@ -15,13 +15,12 @@
 package org.giiwa.core.bean;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.configuration2.Configuration;
@@ -844,13 +842,10 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param filename the file name
 	 * @param cc       the tables
 	 */
-	public void backup(String filename, String[] cc) {
-		File f = new File(filename);
-		f.getParentFile().mkdirs();
+	public void backup(ZipOutputStream zip, String[] cc) {
 
 		try {
-			ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(f));
-			zip.putNextEntry(new ZipEntry("db"));
+			zip.putNextEntry(new ZipEntry("mongo.db"));
 			PrintStream out = new PrintStream(zip);
 			if (cc == null) {
 				Set<String> ss = MongoHelper.getCollections();
@@ -861,7 +856,6 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 
 			zip.closeEntry();
-			zip.close();
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -884,7 +878,9 @@ public class MongoHelper implements Helper.DBHelper {
 			for (String name : d2.keySet()) {
 				jo.put(name, d2.get(name));
 			}
-			out.println(jo.toString());
+//			out.println(jo.toString());
+			out.println(Base64.getEncoder().encodeToString(jo.toString().getBytes()));
+
 			if (rows % 1000 == 0) {
 				if (log.isDebugEnabled())
 					log.debug("backup " + tablename + ", rows=" + rows);
@@ -898,11 +894,9 @@ public class MongoHelper implements Helper.DBHelper {
 	 *
 	 * @param file the mongo.dmp file
 	 */
-	public void recover(File file) {
+	public void recover(InputStream zip) {
 
 		try {
-			ZipInputStream zip = new ZipInputStream(new FileInputStream(file));
-			zip.getNextEntry();
 			BufferedReader in = new BufferedReader(new InputStreamReader(zip));
 
 			String line = in.readLine();
@@ -910,8 +904,6 @@ public class MongoHelper implements Helper.DBHelper {
 				_recover(line);
 				line = in.readLine();
 			}
-			zip.closeEntry();
-			in.close();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -920,7 +912,8 @@ public class MongoHelper implements Helper.DBHelper {
 
 	private void _recover(String json) {
 		try {
-			JSON jo = JSON.fromObject(json);
+//			JSON jo = JSON.fromObject(json);
+			JSON jo = JSON.fromObject(Base64.getDecoder().decode(json));
 			V v = V.create().copy(jo);
 			String tablename = jo.getString("_table");
 			v.remove("_table");

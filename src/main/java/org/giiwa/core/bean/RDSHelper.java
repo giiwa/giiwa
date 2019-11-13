@@ -15,9 +15,7 @@
 package org.giiwa.core.bean;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.sql.Connection;
@@ -29,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.configuration2.Configuration;
@@ -1701,16 +1699,13 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @param filename the filename
 	 * @param cc       the table
 	 */
-	public void backup(String filename, String[] cc) {
+	public void backup(ZipOutputStream zip, String[] cc) {
 
-		File f = new File(filename);
-		f.getParentFile().mkdirs();
 		Connection c = null;
 		ResultSet r1 = null;
 
 		try {
-			ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(f));
-			zip.putNextEntry(new ZipEntry("db"));
+			zip.putNextEntry(new ZipEntry("rds.db"));
 			PrintStream out = new PrintStream(zip);
 
 			c = getConnection();
@@ -1726,7 +1721,7 @@ public class RDSHelper implements Helper.DBHelper {
 				}
 			}
 			zip.closeEntry();
-			zip.close();
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
@@ -1760,7 +1755,8 @@ public class RDSHelper implements Helper.DBHelper {
 					}
 				}
 
-				out.println(jo.toString());
+//				out.println(jo.toString());
+				out.println(Base64.getEncoder().encodeToString(jo.toString().getBytes()));
 			}
 
 			if (log.isDebugEnabled())
@@ -1778,15 +1774,13 @@ public class RDSHelper implements Helper.DBHelper {
 	 *
 	 * @param file the file
 	 */
-	public void recover(File file) {
+	public void recover(InputStream zip) {
 
 		Connection c = null;
 		ResultSet r1 = null;
 		Statement stat = null;
 
 		try {
-			ZipInputStream zip = new ZipInputStream(new FileInputStream(file));
-			zip.getNextEntry();
 			BufferedReader in = new BufferedReader(new InputStreamReader(zip));
 
 			c = getConnection();
@@ -1796,8 +1790,6 @@ public class RDSHelper implements Helper.DBHelper {
 				_recover(line, c);
 				line = in.readLine();
 			}
-			zip.closeEntry();
-			in.close();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
@@ -1807,7 +1799,8 @@ public class RDSHelper implements Helper.DBHelper {
 
 	private void _recover(String json, Connection c) {
 		try {
-			JSON jo = JSON.fromObject(json);
+//			JSON jo = JSON.fromObject(json);
+			JSON jo = JSON.fromObject(Base64.getDecoder().decode(json));
 			V v = V.create().copy(jo);
 			String tablename = jo.getString("_table");
 			v.remove("_table");

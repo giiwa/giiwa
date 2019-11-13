@@ -57,8 +57,8 @@ public class BackupTask extends Task {
 			backup.BackupTask.clean(days);
 		}
 
-		if (Local.getInt("backup.auto", 0) == 1) {
-			new backup.BackupTask(null).schedule(0);
+		if (Global.getInt("backup.auto", 0) == 1) {
+			new backup.BackupTask(null, Global.getString("backup.url", null)).schedule(0);
 		}
 
 	}
@@ -70,8 +70,8 @@ public class BackupTask extends Task {
 	 */
 	@Override
 	public void onFinish() {
-		if (Local.getInt("backup.auto", 0) == 1) {
-			this.schedule(Local.getString("backup.point", "2:00"));
+		if (Global.getInt("backup.auto", 0) == 1) {
+			this.schedule(Global.getString("backup.point", "2:00"), true);
 		}
 	}
 
