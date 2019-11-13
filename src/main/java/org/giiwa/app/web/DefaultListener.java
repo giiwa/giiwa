@@ -69,6 +69,7 @@ public class DefaultListener implements IListener {
 
 	public static final DefaultListener owner = new DefaultListener();
 
+	
 	static Log log = LogFactory.getLog(DefaultListener.class);
 
 	public void onInit(Configuration conf, Module module) {
@@ -290,6 +291,7 @@ public class DefaultListener implements IListener {
 	 * configuration.Configuration, org.giiwa.framework.web.Module)
 	 */
 	public void upgrade(Configuration conf, Module module) {
+		
 		if (log.isDebugEnabled()) {
 			log.debug(module + " upgrading...");
 		}
