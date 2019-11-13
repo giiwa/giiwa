@@ -47,6 +47,9 @@
 	</div>
 </div>
 <script>
+$(document).on('contextmenu', function (e) {
+    return false;
+});	
 function _mymenu(){
 	var m = $("#head .mymenu");
 	if(m.attr('data-show') != '1') {
