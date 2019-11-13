@@ -1,12 +1,12 @@
 package org.giiwa.core.net;
 
+import java.io.Closeable;
 import java.io.InputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Url;
 
-import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -14,39 +14,35 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 
-public class SSH {
+public class SSH implements Closeable {
 
 	private static Log log = LogFactory.getLog(SSH.class);
 
-	/**
-	 * 
-	 * @param url     ssh://g01:22?username=,passwd=
-	 * 
-	 * @param command the command
-	 * @return the String
-	 */
-	public static String run(Url url, String command) {
-		Session session = null;
-		try {
-			session = getSession(url);
+	private Session session = null;
+	private ChannelExec exec = null;
 
-			String s = run(session, command);
+	public void close() {
 
-			if (log.isDebugEnabled())
-				log.debug("ssh.run, url=" + url + ", command=" + command + ", result=" + s);
-
-			return s;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-
-		} finally {
-
-			if (session != null) {
-				session.disconnect();
-			}
+		if (exec != null) {
+			exec.disconnect();
+			exec = null;
 		}
 
-		return null;
+		if (session != null) {
+			session.disconnect();
+			session = null;
+		}
+
+	}
+
+	private SSH() {
+
+	}
+
+	public static SSH create(Url url) throws JSchException {
+		SSH s = new SSH();
+		s.session = getSession(url);
+		return s;
 	}
 
 	private static Session getSession(Url url) throws JSchException {
@@ -120,19 +116,20 @@ public class SSH {
 		}
 	}
 
-	private static String run(Session session, String cmd) {
+	public String run(String cmd) {
 
-		Channel channel = null;
 		try {
-			channel = session.openChannel("exec");
 
-			channel.setInputStream(null);
+			exec = (ChannelExec) session.openChannel("exec");
+			exec.connect();
 
-			((ChannelExec) channel).setCommand(cmd);
+			exec.setInputStream(null);
 
-			InputStream in = channel.getInputStream();
-			InputStream ext = channel.getExtInputStream();
-			channel.connect(3 * 1000);
+			exec.setCommand(cmd);
+
+			InputStream in = exec.getInputStream();
+			InputStream ext = exec.getExtInputStream();
+			exec.connect(3 * 1000);
 
 			StringBuilder sb = new StringBuilder();
 			byte[] tmp = new byte[1024];
@@ -151,7 +148,7 @@ public class SSH {
 					sb.append(new String(tmp, 0, i));
 				}
 
-				if (channel.isClosed()) {
+				if (exec.isClosed()) {
 					if (in.available() > 0)
 						continue;
 					break;
@@ -166,8 +163,8 @@ public class SSH {
 			log.error(e.getMessage(), e);
 			e.printStackTrace();
 		} finally {
-			if (channel != null) {
-				channel.disconnect();
+			if (exec != null) {
+				exec.disconnect();
 			}
 		}
 		return null;

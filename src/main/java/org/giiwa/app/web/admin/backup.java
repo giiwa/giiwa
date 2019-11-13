@@ -445,13 +445,15 @@ public class backup extends Controller {
 					} else if (url.startsWith("sftp://")) {
 
 						InputStream in = new FileInputStream(t.getFile());
+						SFTP s1 = null;
 						try {
 							Url u = Url.create(url);
-							SFTP.put(u, u.get("path") + "/" + name, in);
+							s1 = SFTP.create(u);
+							s1.put(u.get("path") + "/" + name, in);
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						} finally {
-							X.close(in);
+							X.close(in, s1);
 						}
 
 					}

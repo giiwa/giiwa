@@ -1,64 +1,48 @@
 package org.giiwa.core.net;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.SocketException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.giiwa.core.base.Url;
+import org.giiwa.core.bean.X;
 
-public class Telnet {
+public class Telnet implements Closeable {
 
 	private static Log log = LogFactory.getLog(Telnet.class);
 
 	private static final long timeout = 30000;// 默认超时为30秒
 
-	/**
-	 * 
-	 * @param url     telnet://g01:22?username=,passwd=
-	 * 
-	 * @param command the command
-	 * @return the String
-	 */
-	public static String run(Url url, String command) {
+	private TelnetClient client = null;
+	private InputStream in = null;
+	private PrintStream out = null;
 
-		TelnetClient t = new TelnetClient();
-		InputStream in = null;
-		PrintStream out = null;
+	private Telnet() {
 
+	}
+
+	public static Telnet create(Url url) throws SocketException, IOException {
+
+		Telnet s = new Telnet();
 		try {
+			s.client = new TelnetClient();
+			s.client.connect(url.getIp(), url.getPort(23));
+			s.in = s.client.getInputStream();
+			s.out = new PrintStream(s.client.getOutputStream());
 
-			t.connect(url.getIp(), url.getPort(23));
-			in = t.getInputStream();
-			out = new PrintStream(t.getOutputStream());
-
-			if (!login(url.get("username"), url.get("passwd"), out, in)) {
+			if (!login(url.get("username"), url.get("passwd"), s.out, s.in)) {
 				return null;
 			}
-
-			String s = run(command, out, in);
-
-			// System.out.println(s);
-
-			if (log.isDebugEnabled())
-			log.debug("ssh.run, url=" + url + ", command=" + command + ", result=" + s);
-
-			return s;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-
 		} finally {
-			// X.close(in, out);
-			try {
-				t.disconnect();
-			} catch (IOException e) {
-				log.error(url, e);
-			}
+			s.close();
 		}
 
-		return null;
+		return s;
 	}
 
 	private static boolean login(String username, String passwd, PrintStream out, InputStream in) {
@@ -100,7 +84,7 @@ public class Telnet {
 		}
 	}
 
-	private static String run(String cmd, PrintStream out, InputStream in) {
+	public String run(String cmd) {
 
 		StringBuilder text = null;
 		try {
@@ -139,9 +123,15 @@ public class Telnet {
 		}
 	}
 
-	public static void main(String[] args) {
-		String s = Telnet.run(Url.create("telnet://172.20.10.5:23?username=joe&passwd=123123"), "ls -al /");
-		System.out.println(s);
+	@Override
+	public void close() throws IOException {
+		X.close(in, out);
+		in = null;
+		out = null;
+
+		if (client != null) {
+			client.disconnect();
+		}
 	}
 
 }

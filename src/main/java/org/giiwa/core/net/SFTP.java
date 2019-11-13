@@ -1,16 +1,18 @@
 package org.giiwa.core.net;
 
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
 
-import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -19,9 +21,37 @@ import com.jcraft.jsch.SftpException;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 
-public class SFTP {
+public class SFTP implements Closeable {
 
 	private static Log log = LogFactory.getLog(SFTP.class);
+
+	private Session session = null;
+	private ChannelSftp sftp = null;
+
+	public void close() {
+		if (sftp != null) {
+			sftp.disconnect();
+			sftp = null;
+		}
+
+		if (session != null) {
+			session.disconnect();
+			session = null;
+		}
+
+	}
+
+	private SFTP() {
+
+	}
+
+	public static SFTP create(Url url) throws JSchException {
+		SFTP s = new SFTP();
+		s.session = getSession(url);
+		s.sftp = (ChannelSftp) s.session.openChannel("sftp");
+		s.sftp.connect();
+		return s;
+	}
 
 	/**
 	 * 
@@ -29,34 +59,18 @@ public class SFTP {
 	 * 
 	 * @param filename
 	 * @param in
+	 * @throws SftpException
 	 */
-	public static void put(Url url, String filename, InputStream in) {
+	public void put(String filename, InputStream in) throws SftpException {
 
 		log.debug("sftp put, filename=" + filename);
 
-		Session session = null;
-		Channel channel = null;
-		try {
-			session = getSession(url);
+		File f = new File(filename);
+		String path = f.getParent();
+		log.debug("cd " + path);
 
-			channel = session.openChannel("sftp");
-			channel.connect();
-
-			_put((ChannelSftp) channel, filename, in);
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-
-		} finally {
-
-			if (channel != null) {
-				channel.disconnect();
-			}
-
-			if (session != null) {
-				session.disconnect();
-			}
-		}
+		sftp.cd(path);
+		sftp.put(in, f.getName());
 
 	}
 
@@ -65,56 +79,24 @@ public class SFTP {
 	 * @param url
 	 * @param src
 	 * @param dest
+	 * @throws SftpException
+	 * @throws FileNotFoundException
 	 */
-	public static void download(Url url, String src, String dest) {
-		Session session = null;
-		Channel channel = null;
-		try {
-			session = getSession(url);
-
-			channel = session.openChannel("sftp");
-			channel.connect();
-
-			_get((ChannelSftp) channel, src, dest);
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-
-		} finally {
-
-			if (channel != null) {
-				channel.disconnect();
-			}
-
-			if (session != null) {
-				session.disconnect();
-			}
-		}
-
-	}
-
-	private static void _get(ChannelSftp ch, String src, String dest) throws Exception {
+	public void get(String src, String dest) throws SftpException, FileNotFoundException {
 		OutputStream out = null;
 		try {
+			new File(dest).getParentFile().mkdirs();
 			out = new FileOutputStream(dest);
-			ch.get(src, out);
+			sftp.get(src, out);
 		} finally {
 			X.close(out);
 		}
 
 	}
 
-	private static void _put(ChannelSftp ch, String filename, InputStream in) throws SftpException {
-		try {
-			File f = new File(filename);
-			String path = f.getParent();
-			log.debug("cd " + path);
-
-			ch.cd(path);
-			ch.put(in, f.getName());
-		} finally {
-			X.close(in);
-		}
+	@SuppressWarnings("rawtypes")
+	public Vector list(String src) throws SftpException {
+		return sftp.ls(src);
 	}
 
 	private static Session getSession(Url url) throws JSchException {
