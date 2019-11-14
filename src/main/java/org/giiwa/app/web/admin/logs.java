@@ -48,7 +48,12 @@ public class logs extends Controller {
 				t.zipcopy(f1.getName(), new FileInputStream(f1));
 
 				jo.put(X.STATE, 200);
-				jo.put("src", t.getUri());
+				String node = this.getString("__node");
+				if (X.isEmpty(node)) {
+					node = X.EMPTY;
+				}
+
+				jo.put("src", t.getUri() + "&__node=" + node);
 			} else {
 				jo.put(X.MESSAGE, "not found, name=" + f);
 				jo.put(X.STATE, 201);
