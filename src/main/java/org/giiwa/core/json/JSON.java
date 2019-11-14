@@ -97,10 +97,25 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			} else if (json instanceof Map) {
 				j = JSON.create((Map) json);
 			} else if (json instanceof String) {
-				Gson g = new Gson();
-				JsonReader reader = new JsonReader(new StringReader((String) json));
-				reader.setLenient(lenient);
-				j = g.fromJson(reader, JSON.class);
+				String s1 = ((String) json).trim();
+				if (s1.charAt(0) == '{') {
+					Gson g = new Gson();
+					JsonReader reader = new JsonReader(new StringReader(s1));
+					reader.setLenient(lenient);
+					j = g.fromJson(reader, JSON.class);
+				} else {
+					// a=b&d=a
+					String[] ss = X.split(s1, "[&\r\n]");
+					if (ss != null && ss.length > 0) {
+						j = JSON.create();
+						for (String s : ss) {
+							String[] s2 = X.split(s, "=");
+							if (s2 != null && s2.length == 2) {
+								j.append(s2[0], s2[1]);
+							}
+						}
+					}
+				}
 			} else if (json instanceof InputStream) {
 				Gson g = new Gson();
 				j = g.fromJson(new InputStreamReader((InputStream) json), JSON.class);

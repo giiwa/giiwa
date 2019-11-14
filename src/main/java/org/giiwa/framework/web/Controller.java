@@ -1571,6 +1571,10 @@ public class Controller {
 		}
 
 		Enumeration<?> e = req.getParameterNames();
+		if (e == null) {
+			return Arrays.asList();
+		}
+
 		List<String> list = new ArrayList<String>();
 
 		while (e.hasMoreElements()) {
