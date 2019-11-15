@@ -179,33 +179,6 @@ public class Temp {
 
 	private void delete(File f) throws IOException {
 		IOUtil.delete(f);
-		cleanup(f.getParentFile());
-	}
-
-	private static void cleanup(File f) throws IOException {
-
-		if (f == null || f.isFile())
-			return;
-
-		File[] ff = f.listFiles();
-		if (ff == null || ff.length == 0) {
-			f.delete();
-			cleanup(f.getParentFile());
-		} else {
-			for (File f1 : ff) {
-				if (f1.isFile()) {
-					return;
-				} else {
-					IOUtil.cleanup(f1);
-				}
-			}
-
-			ff = f.listFiles();
-			if (ff == null || ff.length == 0) {
-				f.delete();
-				cleanup(f.getParentFile());
-			}
-		}
 	}
 
 	public static int cleanup(long age) {

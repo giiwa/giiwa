@@ -14,22 +14,13 @@
 */
 package org.giiwa.core.base;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.InputStreamReader;
 
-import org.apache.commons.exec.CommandLine;
-import org.apache.commons.exec.DefaultExecutor;
-import org.apache.commons.exec.ExecuteStreamHandler;
-import org.apache.commons.exec.ExecuteWatchdog;
-import org.apache.commons.exec.OS;
-import org.apache.commons.exec.PumpStreamHandler;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.UID;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.web.Language;
@@ -92,14 +83,10 @@ public class Shell {
 	public static boolean isLinux() {
 		if (_linux == -1) {
 			try {
-				if (OS.isFamilyUnix()) {
-					String uname = Shell.run("uname -a", 5 * 1000);
-					if (log.isDebugEnabled())
-						log.debug("uname -a=" + uname);
-					_linux = uname.indexOf("Linux") > -1 ? 1 : 0;
-				} else {
-					_linux = 0;
-				}
+				String uname = Shell.run("uname -a", 5 * 1000);
+				if (log.isDebugEnabled())
+					log.debug("uname -a=" + uname);
+				_linux = uname.indexOf("Linux") > -1 ? 1 : 0;
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -109,7 +96,14 @@ public class Shell {
 
 	public static boolean isMac() {
 		if (_mac == -1) {
-			_mac = OS.isFamilyMac() ? 1 : 0;
+			try {
+				String uname = Shell.run("uname -a", 5 * 1000);
+				if (log.isDebugEnabled())
+					log.debug("uname -a=" + uname);
+				_mac = uname.indexOf("Darwin") > -1 ? 1 : 0;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 		return _mac == 1;
 	}
@@ -137,180 +131,24 @@ public class Shell {
 
 	/**
 	 * run a command with the out, err and in.
-	 *
-	 * @param cmd     the command line
-	 * @param out     the console outputstream
-	 * @param err     the error outputstream
-	 * @param in      the inputstream
-	 * @param workdir the working dir
-	 * @return the result
-	 * @throws IOException throw IOException if error
-	 */
-	public static int run(String cmd, OutputStream out, OutputStream err, InputStream in, String workdir, long timeout)
-			throws IOException {
-
-		DefaultExecutor executor = new DefaultExecutor();
-		ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
-
-		try {
-
-			CommandLine cmdLine = CommandLine.parse(cmd);
-
-			int[] exit = new int[513];
-			for (int i = 0; i < 512; i++) {
-				exit[i] = i - 256;
-			}
-			// TODO, should ignore all
-			exit[512] = -559038737;
-
-			executor.setExitValues(exit);
-			executor.setStreamHandler(stream);
-			if (!X.isEmpty(workdir)) {
-				executor.setWorkingDirectory(new File(workdir));
-			}
-
-			// ExecuteWatchdog watchdog = new ExecuteWatchdog(timeout);
-			// executor.setWatchdog(watchdog);
-			// watchdog.destroyProcess();
-
-			return executor.execute(cmdLine);
-		} catch (IOException e) {
-			log.error("cmd=" + cmd, e);
-			throw e;
-		} finally {
-			stream.stop();
-		}
-	}
-
-	public static int run(String cmd, ExecuteWatchdog dog) throws IOException {
-
-		try {
-
-			CommandLine cmdLine = CommandLine.parse(cmd);
-
-			int[] exit = new int[513];
-			for (int i = 0; i < 512; i++) {
-				exit[i] = i - 256;
-			}
-			// TODO, should ignore all
-			exit[512] = -559038737;
-
-			DefaultExecutor executor = new DefaultExecutor();
-			executor.setExitValues(exit);
-
-			executor.setWatchdog(dog);
-
-			return executor.execute(cmdLine);
-		} catch (IOException e) {
-			log.error("cmd=" + cmd, e);
-			throw e;
-		}
-	}
-
-	/**
-	 * using bash to execute the lines.
-	 *
-	 * @param lines   the command lines
-	 * @param out     the output stream
-	 * @param err     the error stream
-	 * @param in      the input stream
-	 * @param workdir the workdir
-	 * @return the int
-	 * @throws IOException throw IOException if error
-	 */
-	public static int bash(String lines, OutputStream out, OutputStream err, InputStream in, String workdir)
-			throws IOException {
-
-		File f = new File(UID.id(lines).toLowerCase() + ".bash");
-
-		try {
-			if (!X.isEmpty(workdir)) {
-				lines = "cd " + workdir + ";" + lines;
-			}
-			FileUtils.writeStringToFile(f, lines);
-
-			// Execute the file we just creted. No flags are due if it is
-			// executed with bash directly
-			CommandLine commandLine = CommandLine.parse("bash " + f.getCanonicalPath());
-
-			ExecuteStreamHandler stream = new PumpStreamHandler(out, err, in);
-
-			DefaultExecutor executor = new DefaultExecutor();
-			int[] exit = new int[3];
-			for (int i = 0; i < exit.length; i++) {
-				exit[i] = i - 1;
-			}
-			executor.setExitValues(exit);
-
-			executor.setStreamHandler(stream);
-			if (!X.isEmpty(workdir)) {
-				executor.setWorkingDirectory(new File(workdir));
-			}
-
-			return executor.execute(commandLine);
-
-		} catch (IOException e) {
-			log.error("lines=" + lines, e);
-			throw e;
-		} finally {
-			f.delete();
-		}
-	}
-
-	/**
-	 * run command, and return the console output.
-	 *
-	 * @param cmd the command line
-	 * @return the output of console and error
-	 * @throws IOException throw IOException if error
 	 */
 	public static String run(String cmd, long timeout) throws IOException {
-		return run(cmd, (String) null, timeout);
-	}
 
-	/**
-	 * using bash to execute the command.
-	 *
-	 * @param cmd the command
-	 * @return the console output
-	 * @throws IOException throw IOException if error
-	 */
-	public static String bash(String cmd) throws IOException {
-		return bash(cmd, null);
-	}
-
-	/**
-	 * run the command in workdir.
-	 *
-	 * @param cmd     the command
-	 * @param workdir the path
-	 * @return the output of console and error
-	 * @throws IOException throw IOException if error
-	 */
-	public static String run(String cmd, String workdir, long timeout) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		TimeStamp t = TimeStamp.create();
+		BufferedReader re = null;
+		StringBuilder sb = new StringBuilder();
 		try {
-			run(cmd, out, out, null, workdir, timeout);
-			out.flush();
+			Process p = Runtime.getRuntime().exec(cmd);
+			re = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line = re.readLine();
+			while (line == null && t.pastms() < timeout) {
+				sb.append(line).append("\r\n");
+				line = re.readLine();
+			}
 		} finally {
-			X.close(out);
+			X.close(re);
 		}
-		return out.toString();
-	}
-
-	/**
-	 * using bash to execute the cmd.
-	 *
-	 * @param cmd     the command
-	 * @param workdir the workdir
-	 * @return the output string
-	 * @throws IOException throw IOException if error
-	 */
-	public static String bash(String cmd, String workdir) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		bash(cmd, out, out, null, workdir);
-		out.close();
-		return out.toString();
+		return sb.toString();
 	}
 
 	/**
@@ -321,7 +159,7 @@ public class Shell {
 	 * @throws IOException throw IOException if occur error
 	 */
 	public static String getProcessStatus(String processname) throws IOException {
-		if (isLinux() || OS.isFamilyMac()) {
+		if (isLinux() || isMac()) {
 
 			String line = "ps -ef";
 			String r = run(line, 5 * 1000);
@@ -336,13 +174,11 @@ public class Shell {
 			}
 
 			return sb.toString();
-		} else if (OS.isFamilyWindows()) {
+		} else {
 
 			String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
 			return run(cmd, 5 * 1000);
 
-		} else {
-			throw new IOException("not support");
 		}
 
 	}
@@ -354,21 +190,12 @@ public class Shell {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public static void kill(String processname) throws IOException {
-		if (isLinux() || OS.isFamilyMac()) {
+		if (isLinux() || isMac()) {
 			String line = "kill -9 `ps -ef | grep " + processname + " | awk '{print $2}'`;";
 
-			// Create a tmp file. Write permissions!?
-			File f = new File(UID.random(10) + ".bash");
-			FileUtils.writeStringToFile(f, line);
+			run(line, X.AMINUTE);
 
-			// Execute the file we just creted. No flags are due if it is
-			// executed with bash directly
-			CommandLine commandLine = CommandLine.parse("bash " + f.getName());
-
-			DefaultExecutor executor = new DefaultExecutor();
-			executor.execute(commandLine);
-			f.delete();
-		} else if (OS.isFamilyWindows()) {
+		} else {
 
 			String cmd = "tasklist /nh /FI \"IMAGENAME eq " + processname + "\"";
 
@@ -377,8 +204,6 @@ public class Shell {
 			String pid = lineArray[17].trim();
 			run("taskkill /F /PID " + pid, 5 * 1000);
 
-		} else {
-			throw new IOException("not support");
 		}
 	}
 
