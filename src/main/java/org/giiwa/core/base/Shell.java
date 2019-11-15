@@ -15,14 +15,18 @@
 package org.giiwa.core.base;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Language;
 
 /**
@@ -137,16 +141,76 @@ public class Shell {
 		TimeStamp t = TimeStamp.create();
 		BufferedReader re = null;
 		StringBuilder sb = new StringBuilder();
+		Process p = null;
 		try {
-			Process p = Runtime.getRuntime().exec(cmd);
+
+			p = Runtime.getRuntime().exec(cmd);
+
 			re = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line = re.readLine();
-			while (line == null && t.pastms() < timeout) {
+			while (line != null && t.pastms() < timeout) {
 				sb.append(line).append("\r\n");
 				line = re.readLine();
 			}
+			re.close();
+
+			re = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			line = re.readLine();
+			while (line != null && t.pastms() < timeout) {
+				sb.append(line).append("\r\n");
+				line = re.readLine();
+			}
+
 		} finally {
 			X.close(re);
+			if (p != null) {
+				p.destroy();
+			}
+		}
+		return sb.toString();
+	}
+
+	public static String bash(String cmd, long timeout) throws IOException {
+
+		TimeStamp t = TimeStamp.create();
+		BufferedReader re = null;
+		StringBuilder sb = new StringBuilder();
+		Process p = null;
+		Temp t1 = Temp.create("a");
+		try {
+
+			File f = t1.getFile();
+			f.getParentFile().mkdirs();
+			PrintStream out = new PrintStream(new FileOutputStream(f));
+			out.println("#!/bin/bash");
+			out.println(cmd);
+			out.close();
+
+			Runtime.getRuntime().exec("chmod ugo+x " + f.getAbsolutePath());
+
+			p = Runtime.getRuntime().exec(f.getAbsolutePath());
+
+			re = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line = re.readLine();
+			while (line != null && t.pastms() < timeout) {
+				sb.append(line).append("\r\n");
+				line = re.readLine();
+			}
+			re.close();
+
+			re = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			line = re.readLine();
+			while (line != null && t.pastms() < timeout) {
+				sb.append(line).append("\r\n");
+				line = re.readLine();
+			}
+
+		} finally {
+			t1.delete();
+			X.close(re);
+			if (p != null) {
+				p.destroy();
+			}
 		}
 		return sb.toString();
 	}
@@ -214,9 +278,11 @@ public class Shell {
 	 */
 	public static void main(String[] args) {
 		try {
-			System.out.println(run("uname -a", 5 * 1000));
-
-			System.out.println();
+//			String s1 = "/usr/local/bin/node /Users/joe/d/temp/zong.js http://dicom.giisoo.com:19999/ehrview/pageControlDC.action?disease=zyjl&eventId=320106466000838|C0002|01015210201807260000711&zjhm=320111111111111111&zjlx=01&zxwyh=01@320111111111111111@457 .ser_wrap /Users/joe/d/temp/a1.jpg";
+//			String s2 = "/usr/local/bin/node /Users/joe/d/temp/zong.js \"http://dicom.giisoo.com:19999/ehrview/pageControlDC.action?disease=mzjl&eventId=cs320116426061230|C0001|7627686&zjhm=320111111111111111&zjlx=01&zxwyh=01@320111111111111111@457\" \"tr:nth-child(2)\" /Users/joe/d/temp/a2.jpg";
+			String s2 = "/usr/local/bin/node /Users/joe/d/temp/zong.js \"http://dicom.giisoo.com:19999/ehrview/pageControlDC.action?disease=mzjl&eventId=cs320116426061230|C0001|7627686&zjhm=320111111111111111&zjlx=01&zxwyh=01@320111111111111111@457\" \"tr:nth-child(2)\" /Users/joe/d/temp/a3.jpg";
+//			System.out.println(run(s1, X.AMINUTE));
+			System.out.println(run(s2, X.AMINUTE));
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
