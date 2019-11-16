@@ -659,8 +659,8 @@ public class Helper implements Serializable {
 		public static final int OR = 10;
 
 		private String connectsql;
-		private List<W> wlist = new ArrayList<W>();
-		private List<Entity> elist = new ArrayList<Entity>();
+//		private List<W> wlist = new ArrayList<W>();
+//		private List<Entity> elist = new ArrayList<Entity>();
 		private List<W> queryList = new ArrayList<W>();
 		private List<Entity> order = new ArrayList<Entity>();
 		private String groupby;
@@ -692,36 +692,36 @@ public class Helper implements Serializable {
 			return cond;
 		}
 
-		public List<Entity> getList() {
-			return elist;
-		}
-
-		public List<W> getW() {
-			return wlist;
-		}
+//		public List<Entity> getList() {
+//			return elist;
+//		}
+//
+//		public List<W> getW() {
+//			return wlist;
+//		}
 
 		public List<Entity> getOrder() {
 			return order;
 		}
 
-		public void parse(JSON data) throws Exception {
-
-			for (W w : wlist) {
-				w.parse(data);
-			}
-
-			for (Entity e : elist) {
-				if (e.value instanceof String) {
-					e.value = Velocity.parse((String) e.value, data);
-				}
-			}
-
-			for (Entity e : order) {
-				if (e.value instanceof String) {
-					e.value = Velocity.parse((String) e.value, data);
-				}
-			}
-		}
+//		public void parse(JSON data) throws Exception {
+//
+//			for (W w : wlist) {
+//				w.parse(data);
+//			}
+//
+//			for (Entity e : elist) {
+//				if (e.value instanceof String) {
+//					e.value = Velocity.parse((String) e.value, data);
+//				}
+//			}
+//
+//			for (Entity e : order) {
+//				if (e.value instanceof String) {
+//					e.value = Velocity.parse((String) e.value, data);
+//				}
+//			}
+//		}
 
 		/**
 		 * To json.
@@ -732,22 +732,27 @@ public class Helper implements Serializable {
 			JSON jo = JSON.create();
 
 			List<JSON> l1 = new ArrayList<JSON>();
-			for (W w : wlist) {
-				JSON j1 = w.toJSON();
-				l1.add(j1);
+			for (W e : queryList) {
+				if (e instanceof Entity) {
+					JSON j1 = ((Entity) e).toJSON();
+					l1.add(j1);
+				} else {
+					JSON j1 = e.toJSON();
+					l1.add(j1);
+				}
 			}
 			jo.put("w", l1);
-			l1 = new ArrayList<JSON>();
-			for (Entity e : elist) {
-				JSON j1 = e.toJSON();
-				l1.add(j1);
-			}
-			jo.put("e", l1);
-			l1 = new ArrayList<JSON>();
-			for (Entity e : order) {
-				JSON j1 = e.toJSON();
-				l1.add(j1);
-			}
+//			l1 = new ArrayList<JSON>();
+//			for (Entity e : elist) {
+//				JSON j1 = e.toJSON();
+//				l1.add(j1);
+//			}
+//			jo.put("e", l1);
+//			l1 = new ArrayList<JSON>();
+//			for (Entity e : order) {
+//				JSON j1 = e.toJSON();
+//				l1.add(j1);
+//			}
 			jo.put("o", l1);
 			return jo;
 		}
@@ -764,7 +769,7 @@ public class Helper implements Serializable {
 			if (l1 != null && l1.size() > 0) {
 				for (JSON j1 : l1) {
 					W q1 = W.fromJSON(j1);
-					q.wlist.add(q1);
+//					q.wlist.add(q1);
 					q.queryList.add(q1);
 				}
 			}
@@ -773,7 +778,7 @@ public class Helper implements Serializable {
 			if (l1 != null && l1.size() > 0) {
 				for (JSON j1 : l1) {
 					Entity e = Entity.fromJSON(j1);
-					q.elist.add(e);
+//					q.elist.add(e);
 					q.queryList.add(e);
 				}
 			}
@@ -799,16 +804,16 @@ public class Helper implements Serializable {
 		 * @return the W
 		 */
 		public W remove(String... names) {
-			if (names != null) {
-				for (String name : names) {
-					for (int i = elist.size() - 1; i >= 0; i--) {
-						Entity e = elist.get(i);
-						if (X.isSame(name, e.name)) {
-							elist.remove(i);
-						}
-					}
-				}
-			}
+//			if (names != null) {
+//				for (String name : names) {
+//					for (int i = elist.size() - 1; i >= 0; i--) {
+//						Entity e = elist.get(i);
+//						if (X.isSame(name, e.name)) {
+//							elist.remove(i);
+//						}
+//					}
+//				}
+//			}
 			if (names != null) {
 				for (String name : names) {
 					for (int i = queryList.size() - 1; i >= 0; i--) {
@@ -848,14 +853,6 @@ public class Helper implements Serializable {
 
 			w.cond = cond;
 
-			for (W w1 : wlist) {
-				w.wlist.add(w1.copy());
-			}
-
-			for (Entity e : elist) {
-				w.elist.add(e.copy());
-			}
-
 			for (W e : queryList) {
 				w.queryList.add(e.copy());
 			}
@@ -873,9 +870,13 @@ public class Helper implements Serializable {
 		 * @return int
 		 */
 		public int size() {
-			int size = elist == null ? 0 : elist.size();
-			for (W w : wlist) {
-				size += w.size();
+			int size = 0;
+			for (W w : queryList) {
+				if (w instanceof Entity) {
+					size++;
+				} else {
+					size += w.size();
+				}
 			}
 			return size;
 		}
@@ -886,7 +887,7 @@ public class Helper implements Serializable {
 		 * @return true if empty
 		 */
 		public boolean isEmpty() {
-			return X.isEmpty(elist) && X.isEmpty(wlist) && X.isEmpty(order);
+			return X.isEmpty(queryList) && X.isEmpty(order);
 		}
 
 		/**
@@ -896,7 +897,7 @@ public class Helper implements Serializable {
 		 * @return Object[]
 		 */
 		Object[] args() {
-			if (elist.size() > 0 || wlist.size() > 0) {
+			if (!queryList.isEmpty()) {
 				List<Object> l1 = new ArrayList<Object>();
 
 				_args(l1);
@@ -908,12 +909,12 @@ public class Helper implements Serializable {
 		}
 
 		private void _args(List<Object> list) {
-			for (Entity e : elist) {
-				e.args(list);
-			}
-
-			for (W w1 : wlist) {
-				w1._args(list);
+			for (W e : queryList) {
+				if (e instanceof Entity) {
+					((Entity) e).args(list);
+				} else {
+					e._args(list);
+				}
 			}
 		}
 
@@ -923,8 +924,6 @@ public class Helper implements Serializable {
 		 * @see java.lang.Object.toString()
 		 */
 		public String toString() {
-			if (elist == null)
-				return X.EMPTY;
 
 			StringBuilder sb = new StringBuilder();
 			sb.append("{" + where() + "}=>" + Helper.toString(args()));
@@ -958,6 +957,7 @@ public class Helper implements Serializable {
 			if (!X.isEmpty(connectsql)) {
 				sb.append(connectsql);
 			}
+
 			for (W clause : queryList) {
 				if (sb.length() > 0) {
 					if (clause.getCondition() == AND) {
@@ -1057,57 +1057,55 @@ public class Helper implements Serializable {
 				return this;
 
 			w.cond = AND;
-			wlist.add(w);
+//			wlist.add(w);
 			queryList.add(w);
 			return this;
 		}
 
 		/**
-		 * filter="addr:S北京|上海,publisher:S人民出版社,price:L10-20"
+		 * filter=
 		 * 
 		 * @param filter
 		 * @return
 		 */
 		public W and(String filter) {
-			W q = W.create();
-			String[] ss = X.split(filter, "[,;]");
-			for (String s : ss) {
-				String[] s1 = X.split(s, "[:]");
-				String name = s1[0];
-
-				char t = s1[1].charAt(0);
-				String s2 = s1[1].substring(1);
-				if (t == 'S' || t == 's') {
-					String[] s3 = X.split(s2, "[\\|]");
-					if (s3.length > 0) {
-						q.and(name, s3);
+			try {
+				W q = SQL.where2W(StringFinder.create(filter));
+				if (!q.isEmpty()) {
+					if (this.isEmpty()) {
+						this.copy(q);
 					} else {
-						q.and(name, s2);
-					}
-				} else if (t == 'L' || t == 'l') {
-					int i = s2.indexOf("-");
-					if (i < 0) {
-						q.and(name, X.toLong(s2));
-					} else {
-						String s21 = s2.substring(0, i);
-						String s22 = s2.substring(i + 1);
-						if (X.isSame(s21, s22)) {
-							q.and(name, X.toLong(s21));
-						} else {
-							if (!X.isEmpty(s21)) {
-								// <
-								q.and(name, X.toLong(s21), W.OP.gte);
-							}
-							if (!X.isEmpty(s22)) {
-								q.and(name, X.toLong(s22), W.OP.lte);
-							}
-						}
+						this.and(q);
 					}
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
-			if (!q.isEmpty()) {
-				this.and(q);
+			return this;
+		}
+
+		public W copy(W q) {
+
+			this.groupby = q.groupby;
+
+			this.cond = q.cond;
+
+//			for (W w1 : q.wlist) {
+//				this.wlist.add(w1.copy());
+//			}
+//
+//			for (Entity e : q.elist) {
+//				this.elist.add(e.copy());
+//			}
+
+			for (W e : q.queryList) {
+				this.queryList.add(e.copy());
 			}
+
+			for (Entity e : q.order) {
+				this.order.add(e.copy());
+			}
+
 			return this;
 		}
 
@@ -1122,7 +1120,7 @@ public class Helper implements Serializable {
 				return this;
 
 			w.cond = OR;
-			wlist.add(w);
+//			wlist.add(w);
 			queryList.add(w);
 			return this;
 		}
@@ -1176,23 +1174,41 @@ public class Helper implements Serializable {
 
 			List<LinkedHashMap<String, Integer>> l1 = new ArrayList<LinkedHashMap<String, Integer>>();
 
-			if (!X.isEmpty(elist))
-				for (Entity e : elist) {
-					if (e.cond == AND) {
-						_and(l1, e);
-					} else {
-						_or(l1, e);
-					}
-				}
+//			if (!X.isEmpty(elist))
+//				for (Entity e : elist) {
+//					if (e.cond == AND) {
+//						_and(l1, e);
+//					} else {
+//						_or(l1, e);
+//					}
+//				}
+//
+//			if (!X.isEmpty(wlist))
+//				for (W w : wlist) {
+//					if (w.cond == AND) {
+//						_and(l1, w);
+//					} else {
+//						_or(l1, w);
+//					}
+//				}
 
-			if (!X.isEmpty(wlist))
-				for (W w : wlist) {
-					if (w.cond == AND) {
-						_and(l1, w);
+			if (!queryList.isEmpty()) {
+				for (W e : queryList) {
+					if (e instanceof Entity) {
+						if (e.cond == AND) {
+							_and(l1, (Entity) e);
+						} else {
+							_or(l1, (Entity) e);
+						}
 					} else {
-						_or(l1, w);
+						if (e.cond == AND) {
+							_and(l1, e);
+						} else {
+							_or(l1, e);
+						}
 					}
 				}
+			}
 
 			// index order too
 			if (!X.isEmpty(order)) {
@@ -1345,7 +1361,7 @@ public class Helper implements Serializable {
 				if (v instanceof W) {
 					v = ((W) v).query();
 				}
-				elist.add(new Entity(name, v, op, AND, boost));
+//				elist.add(new Entity(name, v, op, AND, boost));
 				queryList.add(new Entity(name, v, op, AND, boost));
 			}
 			return this;
@@ -1444,7 +1460,7 @@ public class Helper implements Serializable {
 				if (v instanceof W) {
 					v = ((W) v).query();
 				}
-				elist.add(new Entity(name, v, op, OR, boost));
+//				elist.add(new Entity(name, v, op, OR, boost));
 				queryList.add(new Entity(name, v, op, OR, boost));
 			}
 			return this;
@@ -1545,9 +1561,9 @@ public class Helper implements Serializable {
 		 * 
 		 * @return the all entity
 		 */
-		public List<Entity> getAll() {
-			return elist;
-		}
+//		public List<Entity> getAll() {
+//			return elist;
+//		}
 
 		public static class Entity extends W {
 
@@ -2920,18 +2936,26 @@ public class Helper implements Serializable {
 		 * } catch (Exception e) { // TODO Auto-generated catch block
 		 * e.printStackTrace(); }
 		 */
-		W q = W.create();
-		q.and("cip_firstauthor", "\\(法\\)", W.OP.like);
-		System.out.println(q.query());
-
-		try {
-			StringFinder s = StringFinder.create("cip_firstauthor like '\\(法\\)'");
-			q = SQL.where2W(s);
-			System.out.println(q.query());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		W q = W.create();
+//		q.and("cip_firstauthor", "\\(法\\)", W.OP.like);
+//		System.out.println(q.query());
+//
+//		try {
+//			StringFinder s = StringFinder.create("cip_firstauthor like '\\(法\\)'");
+//			q = SQL.where2W(s);
+//			System.out.println(q.query());
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 //		Beans<User> l1 = User.dao.query().and("a", 1).sort("a", 1).load(0, 10);
+
+		W q = W.create();
+//		q.and("a", 1);
+//		q.and("b = 2 and (c < 3 or c > 4) and d = '2'");
+//		q.and("b = 2 and (c < 3 or c > 4) and d = '2'");
+		q.and("a like 'a'");
+
+		System.out.println(q.toString());
 
 	}
 

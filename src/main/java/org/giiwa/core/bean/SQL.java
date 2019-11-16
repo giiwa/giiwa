@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Stack;
-import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -179,7 +178,7 @@ public class SQL {
 			char c = s.next();
 			if (c == '(') {
 				W q1 = where2W(s);
-				if (q1 != null) {
+				if (q1 != null && !q1.isEmpty()) {
 					String o = conn.isEmpty() ? "and" : conn.pop();
 					if (X.isSame(o, "and")) {
 						q.and(q1);
@@ -199,7 +198,7 @@ public class SQL {
 				// throw new Exception("expect [op] more after [" + s1.toString() +
 				// "]");
 
-				String name = s1.nextTo(" |=|>|<|like");
+				String name = s1.nextTo(" |!|=|>|<|like");
 
 				s1.trim();
 				c = s1.next();
@@ -217,7 +216,7 @@ public class SQL {
 				} else {
 					// like ?
 					s1.skip(-1);
-					op = s.nextTo(" ");
+					op = s1.nextTo(" ");
 				}
 
 				s1.trim();
