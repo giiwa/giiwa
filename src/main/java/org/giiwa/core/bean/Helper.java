@@ -2956,10 +2956,12 @@ public class Helper implements Serializable {
 		W q = W.create();
 //		q.and("a", 1);
 //		q.and("b = 2 and (c < 3 or c > 4) and d = '2'");
-//		q.and("b = 2 and (c < 3 or c > 4) and d = '2'");
-		q.and("a like 'a'");
+		q.and("b = 2 and (c < 3 or c > 4) and d = '2' or g = 1");
+		q.sort("f", -1);
+//		q.and("a like 'a'");
 
 		System.out.println(q.toString());
+		System.out.println(q.sortkeys());
 
 	}
 
