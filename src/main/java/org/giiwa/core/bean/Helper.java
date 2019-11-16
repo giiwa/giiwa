@@ -1898,6 +1898,10 @@ public class Helper implements Serializable {
 			return b == null ? 0 : b.getDouble(name);
 		}
 
+		public List<W> getQuery() {
+			return queryList;
+		}
+
 		/**
 		 * get the value of the field, offset the row
 		 * 
