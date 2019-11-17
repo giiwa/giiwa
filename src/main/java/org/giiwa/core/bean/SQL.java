@@ -191,7 +191,7 @@ public class SQL {
 			} else {
 				s.skip(-1);
 
-				StringFinder s1 = StringFinder.create(s.nextTo("(|)|and|or|not"));
+				StringFinder s1 = StringFinder.create(s.nextTo("(|)| and | or | not "));
 				s.trim();
 
 				// if (!s.hasMore())

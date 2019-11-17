@@ -39,7 +39,9 @@ import org.dom4j.io.SAXReader;
 import org.giiwa.core.base.Base32;
 import org.giiwa.core.base.Digest;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.dle.JS;
+import org.giiwa.core.net.Http;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -109,9 +111,9 @@ public final class JSON extends LinkedHashMap<String, Object> {
 					if (ss != null && ss.length > 0) {
 						j = JSON.create();
 						for (String s : ss) {
-							String[] s2 = X.split(s, "=");
-							if (s2 != null && s2.length == 2) {
-								j.append(s2[0], s2[1]);
+							int i = s.indexOf("=");
+							if (i > 0) {
+								j.append(s.substring(0, i), s.substring(i + 1));
 							}
 						}
 					}
@@ -634,7 +636,19 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-//		System.out.println(d);
+
+		String s = "n=1&filter=cip_orderno='2009087010230000'";
+		JSON j1 = JSON.fromObject(s);
+
+		System.out.println(j1);
+
+		W q = W.create();
+		String s1 = j1.getString("filter");
+		System.out.println(s1);
+
+		q.and(s1);
+
+		System.out.println(q.toString());
 
 	}
 
