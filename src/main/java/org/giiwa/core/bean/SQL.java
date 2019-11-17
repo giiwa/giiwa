@@ -191,7 +191,7 @@ public class SQL {
 			} else {
 				s.skip(-1);
 
-				StringFinder s1 = StringFinder.create(s.nextTo("(|)|and|or"));
+				StringFinder s1 = StringFinder.create(s.nextTo("(|)|and|or|not"));
 				s.trim();
 
 				// if (!s.hasMore())
@@ -224,15 +224,29 @@ public class SQL {
 
 				Object value = null;
 				if (c == '\'') {
-					value = s1.pair('\'');
+					String s2 = s1.pair('\'');
+					if (s2.indexOf("|") > -1) {
+						value = X.split(s2, "|");
+					} else {
+						value = s2;
+					}
 				} else {
 					s1.skip(-1);
 
 					String s2 = s1.remain();
 
-//					System.out.println("s2=" + s2);
-
-					value = JS.calculate(s2);
+					if (s2.indexOf("|") > -1) {
+						value = X.toArray(X.split(s2, "|"), e -> {
+							try {
+								return JS.calculate(e);
+							} catch (Exception e1) {
+								log.error(e1.getMessage(), e1);
+							}
+							return null;
+						});
+					} else {
+						value = JS.calculate(s2);
+					}
 				}
 
 				String o = conn.isEmpty() ? "and" : conn.pop();

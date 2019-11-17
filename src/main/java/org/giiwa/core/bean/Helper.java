@@ -32,7 +32,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.dle.Velocity;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Data;
 import org.giiwa.framework.web.Controller;
@@ -2956,7 +2955,7 @@ public class Helper implements Serializable {
 		W q = W.create();
 //		q.and("a", 1);
 //		q.and("b = 2 and (c < 3 or c > 4) and d = '2'");
-		q.and("b = 2 and (c < 3 or c > 4) and d = '2' or g = 1");
+		q.and("b = 2|3|4 and (c < 3 or c > 4) and d = '2' or g = 1");
 		q.sort("f", -1);
 //		q.and("a like 'a'");
 
