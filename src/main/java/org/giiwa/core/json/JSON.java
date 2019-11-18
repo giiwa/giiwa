@@ -648,6 +648,9 @@ public final class JSON extends LinkedHashMap<String, Object> {
 
 		q.and(s1);
 
+		q = W.create();
+		q.and("cip_firstbookname='or' and cip_firstbookname != 'and' and cip_seriesbookname='java'");
+		
 		System.out.println(q.toString());
 
 	}
