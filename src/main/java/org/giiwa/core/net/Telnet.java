@@ -14,6 +14,7 @@ import org.giiwa.core.bean.X;
 
 public class Telnet implements Closeable {
 
+	@SuppressWarnings("unused")
 	private static Log log = LogFactory.getLog(Telnet.class);
 
 	private static final long timeout = 30000;// 默认超时为30秒
