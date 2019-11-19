@@ -14,15 +14,14 @@
 */
 package org.giiwa.core.net;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.net.HttpURLConnection;
-import java.net.Socket;
 import java.net.URL;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -30,15 +29,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLEngine;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509ExtendedTrustManager;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -354,25 +348,6 @@ public final class Http {
 	}
 
 	/**
-	 * connect to the url and return the HttpResponse directly.
-	 *
-	 * @param url     the url
-	 * @param timeout the timeout milliseconds
-	 * @return the HttpURLConnection
-	 * @throws Exception the exception
-	 */
-	public static HttpURLConnection open(String url, long timeout) throws Exception {
-
-		URL u = new URL(url);
-		HttpURLConnection c = (HttpURLConnection) u.openConnection();
-		c.setConnectTimeout((int) timeout);
-		c.setReadTimeout((int) timeout);
-		c.connect();
-		return c;
-
-	}
-
-	/**
 	 * GET method.
 	 *
 	 * @param url     the url
@@ -431,116 +406,6 @@ public final class Http {
 
 		return null;
 
-	}
-
-	public static InputStream open(String url, String method, JSON head, JSON param, long timeout) {
-
-//		log.debug("url=\"" + url + "\"");
-
-		OutputStream out = null;
-		try {
-			URL u = new URL(url);
-			HttpURLConnection c = (HttpURLConnection) u.openConnection();
-			c.setConnectTimeout((int) timeout);
-			c.setRequestMethod(method);
-			c.setDoOutput(true);
-			c.setDoInput(true);
-			c.setReadTimeout((int) timeout);
-
-			if (head != null) {
-				for (String s : head.keySet()) {
-					c.setRequestProperty(s, head.getString(s));
-				}
-			}
-
-			if (url.substring(0, 5).equals("https")) {
-				TrustManager[] tm = { new X509ExtendedTrustManager() {
-
-					@Override
-					public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public X509Certificate[] getAcceptedIssuers() {
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-					@Override
-					public void checkClientTrusted(X509Certificate[] arg0, String arg1, Socket arg2)
-							throws CertificateException {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public void checkClientTrusted(X509Certificate[] arg0, String arg1, SSLEngine arg2)
-							throws CertificateException {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public void checkServerTrusted(X509Certificate[] arg0, String arg1, Socket arg2)
-							throws CertificateException {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public void checkServerTrusted(X509Certificate[] arg0, String arg1, SSLEngine arg2)
-							throws CertificateException {
-						// TODO Auto-generated method stub
-
-					}
-
-				} };
-				SSLContext ctx = null;
-				try {
-
-					ctx = SSLContext.getInstance("TLS");
-					ctx.init(null, tm, null);
-
-					((HttpsURLConnection) c).setSSLSocketFactory(ctx.getSocketFactory());
-					((HttpsURLConnection) c).setHostnameVerifier(new HostnameVerifier() {
-						@Override
-						public boolean verify(String arg0, SSLSession arg1) {
-							return true;
-						}
-					});
-
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-
-			}
-
-			c.connect();
-
-			if (param != null) {
-				out = c.getOutputStream();
-				out.write(param.toString().getBytes());
-				out.flush();
-			}
-
-			return c.getInputStream();
-
-		} catch (Exception e) {
-			log.error(url, e);
-
-//			e.printStackTrace();
-		} finally {
-			X.close(out);
-		}
-		return null;
 	}
 
 	private Response _get(CloseableHttpClient client, HttpClientContext context, HttpGet get, String charset,
@@ -737,6 +602,50 @@ public final class Http {
 	 */
 	public Response post(String url, JSON headers, JSON params, long timeout) {
 		return post(url, headers, params, null, null, timeout);
+	}
+
+	public Response open(String url, Consumer<HttpURLConnection> func) {
+
+		Response r = new Response();
+
+		BufferedReader re = null;
+
+		try {
+			URL u = new URL(url);
+
+			HttpURLConnection conn = (HttpURLConnection) u.openConnection();
+			conn.setDoOutput(true);
+			conn.setDoInput(true);
+			conn.setRequestMethod("POST");
+
+			func.accept(conn);
+
+			if (conn.getResponseCode() >= 300) {
+				throw new Exception("HTTP Request is not success, Response code is " + conn.getResponseCode());
+			}
+
+			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+				re = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+				StringBuilder sb = new StringBuilder();
+				String line = null;
+				while ((line = re.readLine()) != null) {
+					sb.append(line).append("\r\n");
+				}
+				r.status = 200;
+				r.body = sb.toString();
+			}
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			r.status = 500;
+			r.body = "ERR: " + e.getMessage();
+		} finally {
+			X.close(re);
+		}
+
+		return r;
+
 	}
 
 	/**
