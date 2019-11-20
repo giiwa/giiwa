@@ -23,8 +23,12 @@ $(function(){
 	          enabled: true
 	        },
 	    tooltip: {
-	        headerFormat: '',
-	        pointFormat: '<b>{series.name}: {point.y}</b><br>{point.x:%H:%M}'
+	    	   formatter:function(){
+	    		      return this.series.name+':<b>' 
+	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
+	    		      + '</b>' 
+	    		      + Highcharts.dateFormat('%H:%M', this.x);
+	    		}
 	    },
 		plotOptions : {
 	        series: {

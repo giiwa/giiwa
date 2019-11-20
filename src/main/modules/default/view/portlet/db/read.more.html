@@ -25,7 +25,12 @@ $(function(){
                enabled: false
            },
 	       tooltip: {
-	           pointFormat: '{series.name}: <b>{point.y}</b>'
+	    	   formatter:function(){
+	    		      return this.series.name+':<b>' 
+	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
+	    		      + '</b>' 
+	    		      + Highcharts.dateFormat('%H:%M', this.x);
+	    		}
 	       },
 	    series: [
 			{name: "$lang.get('db.read.max')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.max},#end]},
