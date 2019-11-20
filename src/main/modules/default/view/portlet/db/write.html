@@ -1,0 +1,64 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/db/write/more?__node=$!__node')"><i class='icon-menu'></i></a>
+
+<div id='db_write_$!requestid' style="height: 300px; float: left; width: 400px; border: 0;"></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('db_write_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$lang.get("portlet.db.write.title")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    		title: {
+	            text: ''
+	        }
+	    },
+	      legend: {
+	          enabled: true
+	        },
+	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.y}</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+    				{name: "$lang.get('db.write.max')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.max},#end]},
+    				{name: "$lang.get('db.write.avg')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.avg},#end]},
+    				{name: "$lang.get('db.write.min')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.min},#end]}
+    			], 
+	});
+
+	function reload() {
+		if($('#cpu_$!requestid').length > 0) {
+			$.post('/portlet/db/write/data?__node=$!__node', {}, function(d){
+				if(d.state == 200) {
+					var series=t.series; 
+			        while(series.length > 0){
+			          	series[0].remove(false); 
+			       	}
+			       	t.addSeries(d.data[0]);
+			       	t.redraw();			
+				}
+		    })
+			giiwa.call(reload, 60000);
+		}
+	}
+	
+	giiwa.call(reload, 60000);
+	
+})
+</script>
+

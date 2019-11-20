@@ -12,17 +12,17 @@ import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.json.JSON;
 
-@Table(name = "gi_m_mem")
-public class _Memory extends Bean {
+@Table(name = "gi_m_db")
+public class _DB extends Bean {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static Log log = LogFactory.getLog(_Memory.class);
+	private static Log log = LogFactory.getLog(_DB.class);
 
-	public static BeanDAO<String, _Memory> dao = BeanDAO.create(_Memory.class);
+	public static BeanDAO<String, _DB> dao = BeanDAO.create(_DB.class);
 
 	@Column(name = X.ID)
 	String id;
@@ -30,54 +30,45 @@ public class _Memory extends Bean {
 	@Column(name = "node")
 	String node;
 
-	@Column(name = "total")
-	long total;
+	@Column(name = "name")
+	String name;
 
-	@Column(name = "used")
-	long used;
+	@Column(name = "max")
+	long max;
 
-	@Column(name = "usage")
-	int usage;
+	@Column(name = "min")
+	long min;
 
-	@Column(name = "free")
-	long free;
+	@Column(name = "avg")
+	long avg;
 
-	@Column(name = "swaptotal")
-	long swaptotal;
-
-	@Column(name = "swapfree")
-	long swapfree;
-
-	public long getUsed() {
-		return used;
-	}
-
-	public long getFree() {
-		return free;
-	}
+	@Column(name = "times")
+	long times;
 
 	public synchronized static void update(String node, JSON jo) {
 		// insert or update
 		try {
-			V v = V.fromJSON(jo).remove("_id", X.ID);
+			String name = jo.getString("name");
 
-			String id = UID.id(node);
+			V v = V.fromJSON(jo);
+			v.append("node", node);
+
+			String id = UID.id(node, name);
 			if (dao.exists(id)) {
-				dao.update(id, v.copy().force("node", node));
+				dao.update(id, v.copy());
 			} else {
-				// insert
-				dao.insert(v.copy().force(X.ID, id).force("node", node));
+				dao.insert(v.copy().force(X.ID, id));
 			}
 
-			Record.dao.insert(v.force(X.ID, UID.id(node, System.currentTimeMillis())).force("node", node));
+			Record.dao.insert(v.force(X.ID, UID.id(node, name, System.currentTimeMillis())));
 
 		} catch (Exception e) {
 			log.error(jo, e);
 		}
 	}
 
-	@Table(name = "gi_m_mem_record")
-	public static class Record extends _Memory {
+	@Table(name = "gi_m_db_record")
+	public static class Record extends _DB {
 
 		/**
 		 * 

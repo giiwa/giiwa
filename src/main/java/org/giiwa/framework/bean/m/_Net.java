@@ -73,9 +73,7 @@ public class _Net extends Bean {
 		return rxbytes;
 	}
 
-	public static void update(String node, List<JSON> l1) {
-
-		dao.delete(W.create("node", node));
+	public synchronized static void update(String node, List<JSON> l1) {
 
 		for (JSON jo : l1) {
 			// insert or update
@@ -90,6 +88,7 @@ public class _Net extends Bean {
 			}
 
 			try {
+
 				String type = jo.getString("_type");
 
 				V v = V.fromJSON(jo);
@@ -122,10 +121,14 @@ public class _Net extends Bean {
 
 				String id = UID.id(node, name);
 
-				// insert
-				dao.insert(v.copy().force(X.ID, id).force("node", node));
+				if (dao.exists(id)) {
+					dao.update(id, v.copy().force("node", node));
+				} else {
+					// insert
+					dao.insert(v.copy().force(X.ID, id).force("node", node));
+				}
 
-				Record.dao.insert(v.copy().force(X.ID, UID.id(id, System.currentTimeMillis())).force("node", node));
+				Record.dao.insert(v.force(X.ID, UID.id(id, System.currentTimeMillis())).force("node", node));
 
 			} catch (Exception e) {
 				log.error(jo, e);

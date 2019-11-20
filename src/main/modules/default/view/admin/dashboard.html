@@ -15,6 +15,10 @@
 		#foreach($p in $nets)
 		<div class="portlet" data-url="/portlet/net?name=$!p.name&__node=$!__node"></div>
 		#end
+
+		<div class="portlet" data-url="/portlet/db/read?__node=$!__node"></div>
+		<div class="portlet" data-url="/portlet/db/write?__node=$!__node"></div>
+		<div class="portlet" data-url="/portlet/db/times?__node=$!__node"></div>
 		
 	#end
 #end

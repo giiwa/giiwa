@@ -55,9 +55,7 @@ public class _Disk extends Bean {
 		return free;
 	}
 
-	public static void update(String node, List<JSON> l1) {
-
-		dao.delete(W.create("node", node));
+	public synchronized static void update(String node, List<JSON> l1) {
 
 		for (JSON jo : l1) {
 			// insert or update
@@ -75,7 +73,11 @@ public class _Disk extends Bean {
 				V v = V.fromJSON(jo).append("node", node).force("name", name).remove("_id", X.ID);
 
 				// insert
-				dao.insert(v.copy().force(X.ID, id));
+				if (dao.exists(id)) {
+					dao.update(id, v.copy());
+				} else {
+					dao.insert(v.copy().force(X.ID, id));
+				}
 
 				if (!Record.dao.exists(W.create("node", node).and("path", path).and("created",
 						System.currentTimeMillis() - X.AHOUR, W.OP.gt))) {

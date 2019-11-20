@@ -151,21 +151,26 @@ public class Helper implements Serializable {
 	 * @return the items was deleted
 	 */
 	public static int delete(W q, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
-
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.delete(table, q, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					return h.delete(table, q, db);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
 				}
-			}
 
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.delete(table, q, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						return h.delete(table, q, db);
+					}
+				}
+
+			}
+			return 0;
+		} finally {
+			write.add(t1.pastms());
 		}
-		return 0;
 	}
 
 	/**
@@ -218,22 +223,26 @@ public class Helper implements Serializable {
 	 */
 	public static boolean exists(W q, String table, String db) throws SQLException {
 
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.exists(table, q, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.exists(table, q, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.exists(table, q, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.exists(table, q, db);
+						}
 					}
 				}
 			}
+		} finally {
+			read.add(t1.pastms());
 		}
-
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
 	}
 
@@ -2145,25 +2154,29 @@ public class Helper implements Serializable {
 	 */
 	public static <T extends Bean> T load(String table, String[] fields, W q, Class<T> t, String db) {
 
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.load(table, fields, q, t, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.load(table, fields, q, t, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.load(table, fields, q, t, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.load(table, fields, q, t, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
-
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-		return null;
-
 	}
 
 	/**
@@ -2216,28 +2229,33 @@ public class Helper implements Serializable {
 	 */
 	public static int insert(List<V> values, String table, String db) {
 
-		if (table != null) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
 
-			for (V value : values) {
-				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
+			if (table != null) {
 
-			}
+				for (V value : values) {
+					value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.insertTable(table, values, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.insertTable(table, values, db);
+				}
+
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.insertTable(table, values, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.insertTable(table, values, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return 0;
+		} finally {
+			write.add(t1.pastms());
 		}
-
-		return 0;
-
 	}
 
 	/**
@@ -2263,25 +2281,29 @@ public class Helper implements Serializable {
 	 */
 	public static int insert(V value, String table, String db) {
 
-		if (table != null) {
-			value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
-			value.set("_node", Global.id());
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
+				value.set("_node", Global.id());
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.insertTable(table, value, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.insertTable(table, value, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.insertTable(table, value, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.insertTable(table, value, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return 0;
+		} finally {
+			write.add(t1.pastms());
 		}
-
-		return 0;
-
 	}
 
 	/**
@@ -2345,28 +2367,33 @@ public class Helper implements Serializable {
 	 */
 	public static int update(String table, W q, V values, String db) {
 
-		if (table != null) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
 
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			values.set(X.UPDATED, System.currentTimeMillis());
+				values.set(X.UPDATED, System.currentTimeMillis());
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.updateTable(table, q, values, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.updateTable(table, q, values, db);
 
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.updateTable(table, q, values, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.updateTable(table, q, values, db);
+						}
 					}
 				}
-			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			}
+			return 0;
+		} finally {
+			write.add(t1.pastms());
 		}
-		return 0;
 	}
 
 	/**
@@ -2409,26 +2436,31 @@ public class Helper implements Serializable {
 	 */
 	public static int inc(String table, W q, String name, int n, V v, String db) {
 
-		if (table != null) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
 
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.inc(table, q, name, n, v, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.inc(table, q, name, n, v, db);
 
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.inc(table, q, name, n, v, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.inc(table, q, name, n, v, db);
+						}
 					}
 				}
-			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			}
+			return 0;
+		} finally {
+			write.add(t1.pastms());
 		}
-		return 0;
 	}
 
 	/**
@@ -2485,29 +2517,34 @@ public class Helper implements Serializable {
 	private static <T extends Bean> Beans<T> _load(final String table, final String[] fields, final W q, final int s,
 			final int n, final Class<T> t, final String db, int refer) {
 
-		if (monitor != null) {
-			monitor.query(db, table, q);
-		}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
 
-		Beans<T> bs = null;
-		if (primary != null && primary.getDB(db) != null) {
-			bs = primary.load(table, fields, q, s, n, t, db);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(db) != null) {
-					bs = h.load(table, fields, q, s, n, t, db);
-					break;
+			Beans<T> bs = null;
+			if (primary != null && primary.getDB(db) != null) {
+				bs = primary.load(table, fields, q, s, n, t, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						bs = h.load(table, fields, q, s, n, t, db);
+						break;
+					}
 				}
 			}
-		}
 
-		if (bs != null) {
-			bs.q = q;
-			bs.table = table;
-			bs.db = db;
-		}
+			if (bs != null) {
+				bs.q = q;
+				bs.table = table;
+				bs.db = db;
+			}
 
-		return bs;
+			return bs;
+		} finally {
+			read.add(t1.pastms());
+		}
 
 	}
 
@@ -2527,26 +2564,31 @@ public class Helper implements Serializable {
 	}
 
 	public static <T extends Bean> BeanStream<T> stream(W q, int s, int n, Class<T> t) {
-		String table = getTable(t);
-		String db = getDB(t);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			String table = getTable(t);
+			String db = getDB(t);
 
-		if (monitor != null) {
-			monitor.query(db, table, q);
-		}
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
 
-		Cursor<T> cur = null;
-		if (primary != null && primary.getDB(db) != null) {
-			cur = primary.query(table, q, s, n, t, db);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(db) != null) {
-					cur = h.query(table, q, s, n, t, db);
-					break;
+			Cursor<T> cur = null;
+			if (primary != null && primary.getDB(db) != null) {
+				cur = primary.query(table, q, s, n, t, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						cur = h.query(table, q, s, n, t, db);
+						break;
+					}
 				}
 			}
-		}
 
-		return BeanStream.create(cur);
+			return BeanStream.create(cur);
+		} finally {
+			read.add(t1.pastms());
+		}
 	}
 
 	public static <T extends Bean> Beans<T> load(String[] fields, W q, int s, int n, Class<T> t) {
@@ -2654,157 +2696,192 @@ public class Helper implements Serializable {
 	 * @return long
 	 */
 	public static long count(W q, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.count(table, q, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.count(table, q, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.count(table, q, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.count(table, q, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return 0;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return 0;
 	}
 
 	public static <T> T median(W q, String name, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.median(table, q, name, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.median(table, q, name, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.median(table, q, name, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.median(table, q, name, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return null;
 	}
 
 	public static <T> T std_deviation(W q, String name, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.std_deviation(table, q, name, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.std_deviation(table, q, name, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.std_deviation(table, q, name, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.std_deviation(table, q, name, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return null;
 	}
 
 	public static <T> T sum(W q, String name, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.sum(table, q, name, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.sum(table, q, name, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.sum(table, q, name, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.sum(table, q, name, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return null;
 	}
 
 	public static <T> T max(W q, String name, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.max(table, q, name, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.max(table, q, name, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.max(table, q, name, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.max(table, q, name, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return null;
 	}
 
 	public static <T> T min(W q, String name, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.min(table, q, name, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.min(table, q, name, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.min(table, q, name, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.min(table, q, name, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return null;
 	}
 
 	public static <T> T avg(W q, String name, String table, String db) {
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.avg(table, q, name, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.avg(table, q, name, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.avg(table, q, name, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.avg(table, q, name, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return null;
 	}
 
 	/**
@@ -2844,26 +2921,32 @@ public class Helper implements Serializable {
 	 */
 	public static List<?> distinct(String name, W q, String table, String db) {
 
-		if (table != null) {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
+		TimeStamp t1 = TimeStamp.create();
+		try {
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.distinct(table, name, q, db);
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
 
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.distinct(table, name, q, db);
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.distinct(table, name, q, db);
+
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.distinct(table, name, q, db);
+						}
 					}
 				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-
-		return null;
 	}
 
 	/**
@@ -2983,18 +3066,22 @@ public class Helper implements Serializable {
 	 * @param ss    the index info
 	 */
 	public static void createIndex(String db, String table, LinkedHashMap<String, Integer> ss) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
 
-		if (primary != null && primary.getDB(db) != null) {
-			primary.createIndex(table, ss, db);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(db) != null) {
-					h.createIndex(table, ss, db);
-					break;
+			if (primary != null && primary.getDB(db) != null) {
+				primary.createIndex(table, ss, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						h.createIndex(table, ss, db);
+						break;
+					}
 				}
 			}
+		} finally {
+			write.add(t1.pastms());
 		}
-
 	}
 
 	/**
@@ -3006,17 +3093,23 @@ public class Helper implements Serializable {
 	 */
 	public static List<Map<String, Object>> getIndexes(String table, String db) {
 
-		if (primary != null && primary.getDB(db) != null) {
-			return primary.getIndexes(table, db);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(db) != null) {
-					return h.getIndexes(table, db);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+
+			if (primary != null && primary.getDB(db) != null) {
+				return primary.getIndexes(table, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						return h.getIndexes(table, db);
+					}
 				}
 			}
-		}
 
-		return null;
+			return null;
+		} finally {
+			read.add(t1.pastms());
+		}
 
 	}
 
@@ -3029,15 +3122,19 @@ public class Helper implements Serializable {
 	 */
 	public static void dropIndex(String table, String name, String db) {
 
-		if (primary != null && primary.getDB(db) != null) {
-			primary.dropIndex(table, name, db);
-		} else if (customs != null) {
-			for (DBHelper h : customs) {
-				h.dropIndex(table, name, db);
-				break;
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(db) != null) {
+				primary.dropIndex(table, name, db);
+			} else if (customs != null) {
+				for (DBHelper h : customs) {
+					h.dropIndex(table, name, db);
+					break;
+				}
 			}
+		} finally {
+			write.add(t1.pastms());
 		}
-
 	}
 
 	/**
@@ -3151,94 +3248,181 @@ public class Helper implements Serializable {
 
 	public static void drop(String table, String db) {
 
-		if (primary != null && primary.getDB(db) != null) {
-			primary.drop(table, db);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(db) != null) {
-					h.drop(table, db);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(db) != null) {
+				primary.drop(table, db);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(db) != null) {
+						h.drop(table, db);
+					}
 				}
 			}
+		} finally {
+			write.add(t1.pastms());
 		}
-
 	}
 
 	public static List<JSON> count(String tableName, W q, String[] name, String dbName) {
-		if (primary != null && primary.getDB(dbName) != null) {
-			return primary.count(tableName, q, name, dbName);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(dbName) != null) {
-					return h.count(tableName, q, name, dbName);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(dbName) != null) {
+				return primary.count(tableName, q, name, dbName);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(dbName) != null) {
+						return h.count(tableName, q, name, dbName);
+					}
 				}
 			}
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-		return null;
 	}
 
 	public static List<JSON> sum(String tableName, W q, String name, String[] group, String dbName) {
-		if (primary != null && primary.getDB(dbName) != null) {
-			return primary.sum(tableName, q, name, group, dbName);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(dbName) != null) {
-					return h.sum(tableName, q, name, group, dbName);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(dbName) != null) {
+				return primary.sum(tableName, q, name, group, dbName);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(dbName) != null) {
+						return h.sum(tableName, q, name, group, dbName);
+					}
 				}
 			}
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-		return null;
 	}
 
 	public static List<JSON> aggregate(String tableName, W q, String[] func, String[] group, String dbName) {
-		if (primary != null && primary.getDB(dbName) != null) {
-			return primary.aggregate(tableName, func, q, group, dbName);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(dbName) != null) {
-					return h.aggregate(tableName, func, q, group, dbName);
+
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(dbName) != null) {
+				return primary.aggregate(tableName, func, q, group, dbName);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(dbName) != null) {
+						return h.aggregate(tableName, func, q, group, dbName);
+					}
 				}
 			}
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-		return null;
 	}
 
 	public static List<JSON> min(String tableName, W q, String name, String[] group, String dbName) {
-		if (primary != null && primary.getDB(dbName) != null) {
-			return primary.min(tableName, q, name, group, dbName);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(dbName) != null) {
-					return h.min(tableName, q, name, group, dbName);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+
+			if (primary != null && primary.getDB(dbName) != null) {
+				return primary.min(tableName, q, name, group, dbName);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(dbName) != null) {
+						return h.min(tableName, q, name, group, dbName);
+					}
 				}
 			}
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-		return null;
 	}
 
 	public static List<JSON> max(String tableName, W q, String name, String[] group, String dbName) {
-		if (primary != null && primary.getDB(dbName) != null) {
-			return primary.max(tableName, q, name, group, dbName);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(dbName) != null) {
-					return h.max(tableName, q, name, group, dbName);
+
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(dbName) != null) {
+				return primary.max(tableName, q, name, group, dbName);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(dbName) != null) {
+						return h.max(tableName, q, name, group, dbName);
+					}
 				}
 			}
+		} finally {
+			read.add(t1.pastms());
 		}
 		return null;
 	}
 
 	public static List<JSON> avg(String tableName, W q, String name, String[] group, String dbName) {
-		if (primary != null && primary.getDB(dbName) != null) {
-			return primary.avg(tableName, q, name, group, dbName);
-		} else if (!X.isEmpty(customs)) {
-			for (DBHelper h : customs) {
-				if (h.getDB(dbName) != null) {
-					return h.avg(tableName, q, name, group, dbName);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(dbName) != null) {
+				return primary.avg(tableName, q, name, group, dbName);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(dbName) != null) {
+						return h.avg(tableName, q, name, group, dbName);
+					}
 				}
 			}
+			return null;
+		} finally {
+			read.add(t1.pastms());
 		}
-		return null;
+	}
+
+	private static _C read = new _C();
+	private static _C write = new _C();
+
+	private static class _C {
+
+		long max = 0;
+		long min = -1;
+		long cost = -1;
+		long times = 0;
+
+		synchronized void add(long cost) {
+			if (cost > max) {
+				max = cost;
+			}
+			if (min == -1 || cost < min) {
+				min = cost;
+			}
+			this.cost += cost;
+			this.times++;
+		}
+
+		synchronized JSON get() {
+			JSON j = JSON.create();
+			j.append("max", max <= 0 ? 0 : max);
+			j.append("min", min <= 0 ? 0 : min);
+			j.append("times", times);
+			j.append("avg", times > 0 ? cost / times : 0);
+
+			reset();
+
+			return j;
+		}
+
+		synchronized void reset() {
+			cost = 0;
+			times = 0;
+			max = -1;
+			min = -1;
+		}
+
+	}
+
+	public static JSON statRead() {
+		return read.get();
+	}
+
+	public static JSON statWrite() {
+		return write.get();
 	}
 
 }

@@ -55,7 +55,7 @@ public class _CPU extends Bean {
 		return usage;
 	}
 
-	public static void update(String node, JSON jo) {
+	public synchronized static void update(String node, JSON jo) {
 		// insert or update
 		String name = jo.getString("name");
 		if (X.isEmpty(name)) {
@@ -69,9 +69,13 @@ public class _CPU extends Bean {
 			v.append("user1", v.value("user"));
 			v.remove("_id", X.ID, "user");
 
-			dao.delete(W.create("node", node));
-			// insert
-			dao.insert(v.copy().force(X.ID, UID.id(node, name)).force("node", node));
+			String id = UID.id(node, name);
+			if (dao.exists(id)) {
+				dao.update(id, v.copy().force("node", node));
+			} else {
+				// insert
+				dao.insert(v.copy().force(X.ID, id).force("node", node));
+			}
 
 			Record.dao.insert(v.copy().force(X.ID, UID.id(node, name, System.currentTimeMillis())).force("node", node));
 
