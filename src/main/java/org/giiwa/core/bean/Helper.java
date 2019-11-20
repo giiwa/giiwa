@@ -34,6 +34,7 @@ import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Data;
+import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.web.Controller;
 
 import com.mongodb.BasicDBList;
@@ -169,7 +170,7 @@ public class Helper implements Serializable {
 			}
 			return 0;
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -241,7 +242,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table, q);
 		}
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
 	}
@@ -2175,7 +2176,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2254,7 +2255,7 @@ public class Helper implements Serializable {
 
 			return 0;
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table, null);
 		}
 	}
 
@@ -2302,7 +2303,7 @@ public class Helper implements Serializable {
 
 			return 0;
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table, null);
 		}
 	}
 
@@ -2392,7 +2393,7 @@ public class Helper implements Serializable {
 			}
 			return 0;
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2459,7 +2460,7 @@ public class Helper implements Serializable {
 			}
 			return 0;
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2543,7 +2544,7 @@ public class Helper implements Serializable {
 
 			return bs;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table, q);
 		}
 
 	}
@@ -2565,9 +2566,9 @@ public class Helper implements Serializable {
 
 	public static <T extends Bean> BeanStream<T> stream(W q, int s, int n, Class<T> t) {
 		TimeStamp t1 = TimeStamp.create();
+		String table = getTable(t);
+		String db = getDB(t);
 		try {
-			String table = getTable(t);
-			String db = getDB(t);
 
 			if (monitor != null) {
 				monitor.query(db, table, q);
@@ -2587,7 +2588,7 @@ public class Helper implements Serializable {
 
 			return BeanStream.create(cur);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2718,7 +2719,7 @@ public class Helper implements Serializable {
 
 			return 0;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -2745,7 +2746,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -2772,7 +2773,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -2799,7 +2800,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -2826,7 +2827,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -2853,7 +2854,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -2880,7 +2881,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -2945,7 +2946,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
@@ -3080,7 +3081,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table , null);
 		}
 	}
 
@@ -3108,7 +3109,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , null);
 		}
 
 	}
@@ -3133,7 +3134,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table , null);
 		}
 	}
 
@@ -3260,134 +3261,146 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), table , null);
 		}
 	}
 
-	public static List<JSON> count(String tableName, W q, String[] name, String dbName) {
+	public static List<JSON> count(String table, W q, String[] name, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.count(tableName, q, name, dbName);
+				return primary.count(table, q, name, dbName);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.count(tableName, q, name, dbName);
+						return h.count(table, q, name, dbName);
 					}
 				}
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
-	public static List<JSON> sum(String tableName, W q, String name, String[] group, String dbName) {
+	public static List<JSON> sum(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.sum(tableName, q, name, group, dbName);
+				return primary.sum(table, q, name, group, dbName);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.sum(tableName, q, name, group, dbName);
+						return h.sum(table, q, name, group, dbName);
 					}
 				}
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
-	public static List<JSON> aggregate(String tableName, W q, String[] func, String[] group, String dbName) {
+	public static List<JSON> aggregate(String table, W q, String[] func, String[] group, String dbName) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.aggregate(tableName, func, q, group, dbName);
+				return primary.aggregate(table, func, q, group, dbName);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.aggregate(tableName, func, q, group, dbName);
+						return h.aggregate(table, func, q, group, dbName);
 					}
 				}
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
-	public static List<JSON> min(String tableName, W q, String name, String[] group, String dbName) {
+	public static List<JSON> min(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.min(tableName, q, name, group, dbName);
+				return primary.min(table, q, name, group, dbName);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.min(tableName, q, name, group, dbName);
+						return h.min(table, q, name, group, dbName);
 					}
 				}
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
-	public static List<JSON> max(String tableName, W q, String name, String[] group, String dbName) {
+	public static List<JSON> max(String table, W q, String name, String[] group, String dbName) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.max(tableName, q, name, group, dbName);
+				return primary.max(table, q, name, group, dbName);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.max(tableName, q, name, group, dbName);
+						return h.max(table, q, name, group, dbName);
 					}
 				}
 			}
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 		return null;
 	}
 
-	public static List<JSON> avg(String tableName, W q, String name, String[] group, String dbName) {
+	public static List<JSON> avg(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.avg(tableName, q, name, group, dbName);
+				return primary.avg(table, q, name, group, dbName);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.avg(tableName, q, name, group, dbName);
+						return h.avg(table, q, name, group, dbName);
 					}
 				}
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), table , q);
 		}
 	}
 
-	private static _C read = new _C();
-	private static _C write = new _C();
+	private static _C read = new _C("read");
+	private static _C write = new _C("write");
 
 	private static class _C {
 
+		String name;
 		long max = 0;
 		long min = -1;
 		long cost = -1;
 		long times = 0;
+		long loged = 0;
 
-		synchronized void add(long cost) {
+		_C(String name) {
+			this.name = name;
+		}
+
+		synchronized void add(long cost, String table, W q) {
 			if (cost > max) {
 				max = cost;
+				if (cost > 1000 && loged == 0) {
+					// log,
+					loged = 1;
+					GLog.applog.warn("db", name, "cost=" + cost + "ms, table=" + table + ", q=" + q, new Exception(),
+							null, null);
+				}
 			}
 			if (min == -1 || cost < min) {
 				min = cost;
@@ -3413,6 +3426,7 @@ public class Helper implements Serializable {
 			times = 0;
 			max = -1;
 			min = -1;
+			loged = 0;
 		}
 
 	}

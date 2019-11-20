@@ -69,7 +69,6 @@ public class DefaultListener implements IListener {
 
 	public static final DefaultListener owner = new DefaultListener();
 
-	
 	static Log log = LogFactory.getLog(DefaultListener.class);
 
 	public void onInit(Configuration conf, Module module) {
@@ -127,8 +126,11 @@ public class DefaultListener implements IListener {
 			module.setLicense(License.LICENSE.licensed,
 					"MFEjwN3hxRT8BD8dRGwTY+mod5O9m7gau0MXwwxx+gN7SI2NXKZYGBmyUD65fPmnPgrB3q8/7Y2TwOLsMa3gVVz9bx1OiKN02S9mQtoYvuiy1fD7OwdXJ4EWgilIn1/Rur4LsIu9JCCN5MSO3ucqxaI0Ccu94s+GsIAwWtCQ65M=");
 
-			dashboard.add("/admin/dashboard");
-			dashboard.add("/admin/home.html");
+			dashboard.desk("/admin/dashboard");
+			dashboard.desk("/admin/home.html");
+			dashboard.portlet("/portlet/db/read");
+			dashboard.portlet("/portlet/db/write");
+			dashboard.portlet("/portlet/db/times");
 
 			setting.register(0, "system", setting.system.class);
 			setting.register(1, "mq", mq.class);
@@ -291,7 +293,7 @@ public class DefaultListener implements IListener {
 	 * configuration.Configuration, org.giiwa.framework.web.Module)
 	 */
 	public void upgrade(Configuration conf, Module module) {
-		
+
 		if (log.isDebugEnabled()) {
 			log.debug(module + " upgrading...");
 		}

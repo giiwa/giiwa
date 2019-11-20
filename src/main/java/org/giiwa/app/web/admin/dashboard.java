@@ -59,9 +59,12 @@ public class dashboard extends Controller {
 
 			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
 
+			this.set("portlets", portlets);
+
 			this.show("/admin/dashboard.html");
 
 		} else if (X.isSame("/admin/dashboard", HOME)) {
+
 			this.show("/admin/dashboard.html");
 		} else {
 			this.redirect(HOME);
@@ -89,13 +92,31 @@ public class dashboard extends Controller {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 * @param url
+	 */
 	public static void add(String url) {
+		desk(url);
+	}
+
+	public static void desk(String url) {
 		if (!desks.contains(url)) {
 			desks.add(url);
 		}
 	}
 
-	public static String HOME = "/admin/dashboard";
+	public static void portlet(String url) {
+		if (url.indexOf("?") < 0) {
+			url = url + "?";
+		}
+		if (!portlets.contains(url)) {
+			portlets.add(url);
+		}
+	}
+
+	private static String HOME = "/admin/dashboard";
 	public static List<String> desks = new ArrayList<String>();
+	private static List<String> portlets = new ArrayList<String>();
 
 }
