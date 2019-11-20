@@ -1,28 +1,43 @@
 /**
- * @license Highcharts JS v6.0.4 (2017-12-15)
+ * @license Highcharts JS v7.2.1 (2019-10-31)
  *
- * (c) 2009-2017 Torstein Honsi
+ * (c) 2009-2019 Torstein Honsi
  *
  * License: www.highcharts.com/license
  */
 'use strict';
-(function(factory) {
+(function (factory) {
     if (typeof module === 'object' && module.exports) {
+        factory['default'] = factory;
         module.exports = factory;
+    } else if (typeof define === 'function' && define.amd) {
+        define('highcharts/themes/sand-signika', ['highcharts'], function (Highcharts) {
+            factory(Highcharts);
+            factory.Highcharts = Highcharts;
+            return factory;
+        });
     } else {
-        factory(Highcharts);
+        factory(typeof Highcharts !== 'undefined' ? Highcharts : undefined);
     }
-}(function(Highcharts) {
-    (function(Highcharts) {
-        /**
-         * (c) 2010-2017 Torstein Honsi
+}(function (Highcharts) {
+    var _modules = Highcharts ? Highcharts._modules : {};
+    function _registerModule(obj, path, args, fn) {
+        if (!obj.hasOwnProperty(path)) {
+            obj[path] = fn.apply(null, args);
+        }
+    }
+    _registerModule(_modules, 'themes/sand-signika.js', [_modules['parts/Globals.js']], function (Highcharts) {
+        /* *
          *
-         * License: www.highcharts.com/license
-         * 
-         * Sand-Signika theme for Highcharts JS
-         * @author Torstein Honsi
-         */
-
+         *  (c) 2010-2019 Torstein Honsi
+         *
+         *  License: www.highcharts.com/license
+         *
+         *  Sand-Signika theme for Highcharts JS
+         *
+         *  !!!!!!! SOURCE GETS TRANSPILED BY TYPESCRIPT. EDIT TS FILE ONLY. !!!!!!!
+         *
+         * */
         /* global document */
         // Load the fonts
         Highcharts.createElement('link', {
@@ -30,19 +45,15 @@
             rel: 'stylesheet',
             type: 'text/css'
         }, null, document.getElementsByTagName('head')[0]);
-
         // Add the background image to the container
-        Highcharts.wrap(Highcharts.Chart.prototype, 'getContainer', function(proceed) {
-            proceed.call(this);
+        Highcharts.addEvent(Highcharts.Chart, 'afterGetContainer', function () {
+            // eslint-disable-next-line no-invalid-this
             this.container.style.background =
-                'url(http://www.highcharts.com/samples/graphics/sand.png)';
+                'url(https://www.highcharts.com/samples/graphics/sand.png)';
         });
-
-
         Highcharts.theme = {
             colors: ['#f45b5b', '#8085e9', '#8d4654', '#7798BF', '#aaeeee',
-                '#ff0066', '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'
-            ],
+                '#ff0066', '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
             chart: {
                 backgroundColor: null,
                 style: {
@@ -64,7 +75,13 @@
             tooltip: {
                 borderWidth: 0
             },
+            labels: {
+                style: {
+                    color: '#6e6e70'
+                }
+            },
             legend: {
+                backgroundColor: '#E0E0E8',
                 itemStyle: {
                     fontWeight: 'bold',
                     fontSize: '13px'
@@ -95,7 +112,6 @@
                     shadow: false
                 }
             },
-
             // Highstock specific
             navigator: {
                 xAxis: {
@@ -116,15 +132,14 @@
             },
             scrollbar: {
                 trackBorderColor: '#C0C0C8'
-            },
-
-            // General
-            background2: '#E0E0E8'
-
+            }
         };
-
         // Apply the theme
         Highcharts.setOptions(Highcharts.theme);
 
-    }(Highcharts));
+    });
+    _registerModule(_modules, 'masters/themes/sand-signika.src.js', [], function () {
+
+
+    });
 }));
