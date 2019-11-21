@@ -41,15 +41,25 @@ public class times extends portlet {
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			this.set("list1", bs);
-
 			List<JSON> data = JSON.createList();
-			for (String[] s : new String[][] { { "max", "#860606" }, { "avg", "#0dad76" }, { "min", "#0a5ea0" } }) {
-				JSON p = JSON.create();
-				p.append("name", lang.get("db.read." + s[0] + ".usage")).append("color", s[1]);
-				List<JSON> l1 = JSON.createList();
+			JSON p = JSON.create();
+			p.append("name", lang.get("db.read.times")).append("color", "#0a5ea0");
+			List<JSON> l1 = JSON.createList();
+			bs.forEach(e -> {
+				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
+			});
+			p.append("data", l1);
+			data.add(p);
+
+			bs = _DB.Record.dao.load(W.create("node", Local.id()).and("name", "write")
+					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+			if (bs != null && !bs.isEmpty()) {
+				Collections.reverse(bs);
+				p = JSON.create();
+				p.append("name", lang.get("db.write.times")).append("color", "#0dad76");
+				List<JSON> l2 = JSON.createList();
 				bs.forEach(e -> {
-					l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get(s[0])));
+					l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
 				});
 				p.append("data", l1);
 				data.add(p);

@@ -39,8 +39,8 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-	   				{name: "$lang.get('db.write.times')", color:'#0dad76', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},
-	   				{name: "$lang.get('db.read.times')", color:'#0a5ea0', data: [#foreach($c in $list2) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]}
+					{name: "$lang.get('db.read.times')", color:'#0a5ea0', data: [#foreach($c in $list2) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},
+	   				{name: "$lang.get('db.write.times')", color:'#0dad76', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]}
     			], 
 	});
 
@@ -53,6 +53,7 @@ $(function(){
 			          	series[0].remove(false); 
 			       	}
 			       	t.addSeries(d.data[0]);
+			       	t.addSeries(d.data[1]);
 			       	t.redraw();			
 				}
 		    })
