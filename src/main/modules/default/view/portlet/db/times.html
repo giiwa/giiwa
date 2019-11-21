@@ -45,7 +45,7 @@ $(function(){
 	});
 
 	function reload() {
-		if($('#cpu_$!requestid').length > 0) {
+		if($('#db_times_$!requestid').length > 0) {
 			$.post('/portlet/db/times/data?__node=$!__node', {}, function(d){
 				if(d.state == 200) {
 					var series=t.series; 
