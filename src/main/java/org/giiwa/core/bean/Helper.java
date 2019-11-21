@@ -3398,8 +3398,8 @@ public class Helper implements Serializable {
 				if (cost > 1000 && loged == 0) {
 					// log,
 					loged = 1;
-					GLog.applog.warn("db", name, "cost=" + cost + "ms, table=" + table + ", q=" + q, new Exception(),
-							null, null);
+//					GLog.applog.warn("db", name, "cost=" + cost + "ms, table=" + table + ", q=" + q, new Exception(),
+//							null, null);
 				}
 			}
 			if (min == -1 || cost < min) {
