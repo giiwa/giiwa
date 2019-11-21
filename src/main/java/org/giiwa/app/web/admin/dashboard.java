@@ -41,6 +41,11 @@ public class dashboard extends Controller {
 	@Override
 	@Path(login = true)
 	public void onGet() {
+		String _node = this.getString("__node");
+		if (X.isEmpty(_node)) {
+			this.set("__node", _node);
+		}
+
 		login = this.getUser();
 		if (login != null && !X.isEmpty(login.getString("desktop"))) {
 			if (!X.isSame("/admin/dashboard", login.getString("desktop"))) {
