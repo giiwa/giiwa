@@ -61,7 +61,7 @@ public class times extends portlet {
 				bs.forEach(e -> {
 					l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
 				});
-				p.append("data", l1);
+				p.append("data", l2);
 				data.add(p);
 			}
 

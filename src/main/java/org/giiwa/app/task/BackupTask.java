@@ -16,7 +16,6 @@ package org.giiwa.app.task;
 
 import org.giiwa.app.web.admin.backup;
 import org.giiwa.core.conf.Global;
-import org.giiwa.core.conf.Local;
 import org.giiwa.core.task.Task;
 
 /**

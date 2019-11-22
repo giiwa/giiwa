@@ -191,14 +191,14 @@ public class SQL {
 			} else {
 				s.skip(-1);
 
-				StringFinder s1 = StringFinder.create(s.nextTo("(|)| and | or | not "));
+				StringFinder s1 = StringFinder.create(s.nextTo("(|)| and | or | not | AND | OR | NOT "));
 				s.trim();
 
 				// if (!s.hasMore())
 				// throw new Exception("expect [op] more after [" + s1.toString() +
 				// "]");
 
-				String name = s1.nextTo(" |!|=|>|<|like");
+				String name = s1.nextTo(" |!|=|>|<|like|LIKE");
 
 				s1.trim();
 				c = s1.next();

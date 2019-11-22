@@ -648,7 +648,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		q.and(s1);
 
 		q = W.create();
-		q.and("a='or' and b != 'and' and c='java'");
+		q.and(" a='or' and b != 'and' AND c='java'");
 
 		System.out.println(q.toString());
 
