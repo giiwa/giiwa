@@ -34,7 +34,6 @@ import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Data;
-import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.web.Controller;
 
 import com.mongodb.BasicDBList;
@@ -1072,19 +1071,41 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * filter=
+		 * and a SQL
 		 * 
-		 * @param filter
+		 * @param sql
 		 * @return
 		 */
-		public W and(String filter) {
+		public W and(String sql) {
 			try {
-				W q = SQL.where2W(StringFinder.create(filter));
+				W q = SQL.where2W(StringFinder.create(sql));
 				if (!q.isEmpty()) {
 					if (this.isEmpty()) {
 						this.copy(q);
 					} else {
 						this.and(q);
+					}
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+			return this;
+		}
+
+		/**
+		 * or a sql
+		 * 
+		 * @param sql
+		 * @return
+		 */
+		public W or(String sql) {
+			try {
+				W q = SQL.where2W(StringFinder.create(sql));
+				if (!q.isEmpty()) {
+					if (this.isEmpty()) {
+						this.copy(q);
+					} else {
+						this.or(q);
 					}
 				}
 			} catch (Exception e) {
@@ -1282,6 +1303,13 @@ public class Helper implements Serializable {
 			return and(q);
 		}
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param v
+		 * @param op
+		 * @return
+		 */
 		public W and(String name, Object v, String op) {
 			if (X.isSame(">", op) || X.isSame("gt", op)) {
 				return and(name, v, W.OP.gt);
@@ -1299,10 +1327,25 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param v
+		 * @param op
+		 * @return
+		 */
 		public W or(String name, Object v, String op) {
 			return or(name, v, op, 1);
 		}
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param v
+		 * @param op
+		 * @param boost
+		 * @return
+		 */
 		public W or(String name, Object v, String op, int boost) {
 			if (X.isSame(">", op) || X.isSame("gt", op)) {
 				return or(name, v, W.OP.gt, boost);
@@ -1374,19 +1417,6 @@ public class Helper implements Serializable {
 				queryList.add(new Entity(name, v, op, AND, boost));
 			}
 			return this;
-		}
-
-		/**
-		 * same as and(String name, Object v, OP op).
-		 * 
-		 * @deprecated
-		 * @param name the name
-		 * @param v    the value object
-		 * @param op   the operation
-		 * @return the W
-		 */
-		public W append(String name, Object v, OP op) {
-			return and(name, v, op);
 		}
 
 		public W or(String[] name, Object v) {
@@ -2719,7 +2749,7 @@ public class Helper implements Serializable {
 
 			return 0;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2746,7 +2776,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2773,7 +2803,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2800,7 +2830,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2827,7 +2857,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2854,7 +2884,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2881,7 +2911,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -2946,7 +2976,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -3081,7 +3111,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms(), table , null);
+			write.add(t1.pastms(), table, null);
 		}
 	}
 
@@ -3109,7 +3139,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , null);
+			read.add(t1.pastms(), table, null);
 		}
 
 	}
@@ -3134,7 +3164,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms(), table , null);
+			write.add(t1.pastms(), table, null);
 		}
 	}
 
@@ -3261,7 +3291,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms(), table , null);
+			write.add(t1.pastms(), table, null);
 		}
 	}
 
@@ -3279,7 +3309,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -3297,7 +3327,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -3316,7 +3346,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -3335,7 +3365,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -3353,7 +3383,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 		return null;
 	}
@@ -3372,7 +3402,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table , q);
+			read.add(t1.pastms(), table, q);
 		}
 	}
 
@@ -3398,8 +3428,7 @@ public class Helper implements Serializable {
 				if (cost > 1000 && loged == 0) {
 					// log,
 					loged = 1;
-//					GLog.applog.warn("db", name, "cost=" + cost + "ms, table=" + table + ", q=" + q, new Exception(),
-//							null, null);
+					log.warn("slow [" + name + "], cost=" + cost, new Exception());
 				}
 			}
 			if (min == -1 || cost < min) {
