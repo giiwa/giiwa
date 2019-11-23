@@ -463,6 +463,49 @@ public final class X {
 		return l1.toArray(new String[l1.size()]);
 	}
 
+	public static String[] range(String s, String deli) {
+
+		List<String> l1 = new ArrayList<String>();
+		String[] ss = X.split(s, "[,;]");
+		for (String s1 : ss) {
+			String[] s2 = X.split(s1, deli);
+			if (s2.length == 1) {
+				if (!l1.contains(s1)) {
+					l1.add(s1);
+				}
+			} else {
+				String p1 = s2[0];
+				String p2 = s2[1];
+
+				String prefix = X.EMPTY;
+				char c = p2.charAt(0);
+				if (c >= '0' && c <= '9') {
+					for (int i = p1.length() - 1; i >= 0; i--) {
+						c = p1.charAt(i);
+						if (c < '0' || c > '9') {
+							prefix = p1.substring(0, i + 1);
+							p1 = p1.substring(i + 1);
+						}
+					}
+				} else {
+					int i = p1.lastIndexOf(c);
+					prefix = p1.substring(0, i + 1);
+					p1 = p1.substring(i + 1);
+					p2 = p2.substring(1);
+				}
+
+				String p3 = p1;
+				while (p3.compareTo(p2) <= 0) {
+					if (!l1.contains(prefix + p3)) {
+						l1.add(prefix + p3);
+					}
+					p3 = X.add(p3, 1);
+				}
+			}
+		}
+		return l1.toArray(new String[l1.size()]);
+	}
+
 	public static Object[] csv(String src) {
 		if (X.isEmpty(src))
 			return null;
@@ -929,6 +972,10 @@ public final class X {
 	public static void main(String[] args) {
 		String s = "-1,+2,c,d,e,\"a\"";
 		System.out.println(Arrays.toString(X.csv(s)));
+
+		s = "K1/117, K299;199;P1-093/-097";
+		System.out.println(Arrays.toString(X.range(s, "/")));
+
 	}
 
 }

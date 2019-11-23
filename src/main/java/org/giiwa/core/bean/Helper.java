@@ -1852,6 +1852,16 @@ public class Helper implements Serializable {
 		}
 
 		/**
+		 * Sort as asc
+		 * 
+		 * @param name
+		 * @return
+		 */
+		public W sort(String name) {
+			return sort(name, 1);
+		}
+
+		/**
 		 * Sort.
 		 *
 		 * @param name the name

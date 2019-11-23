@@ -16,6 +16,7 @@ package org.giiwa.core.bean;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -260,31 +261,13 @@ public final class UID {
 	}
 
 	/**
-	 * generate a firm random by the code.
-	 *
-	 * @param code the code
-	 * @param len  the len
-	 * @return the int[]
-	 * @throws Exception the exception
+	 * generate a firm random by code, no duplicated
+	 * 
+	 * @param code
+	 * @param len
+	 * @return
+	 * @throws Exception
 	 */
-	public static int[] random1(String code, int len) throws Exception {
-		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-		random.setSeed(code.getBytes());
-		int[] ii = new int[len];
-		HashSet<Integer> ss = new HashSet<Integer>();
-		int i = 0;
-		while (ss.size() < len) {
-			int a = random.nextInt(len);
-			if (!ss.contains(a)) {
-				ii[ss.size()] = a;
-				ss.add(a);
-			}
-			i++;
-		}
-//		System.out.println(i);
-		return ii;
-	}
-
 	public static int[] random(String code, int len) throws Exception {
 		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
 		random.setSeed(code.getBytes());
@@ -329,11 +312,9 @@ public final class UID {
 	 * @throws Exception the exception
 	 */
 	public static void main(String[] args) throws Exception {
-		// int[] ii = UID.random("12131", 10000);
-		// System.out.println(Arrays.toString(ii));
-		//
-		// ii = UID.random1("12131", 10);
-		// System.out.println(Arrays.toString(ii));
+		TimeStamp t = TimeStamp.create();
+		int[] ii = UID.random("12131", 100);
+		System.out.println("cost=" + t.past() + ", " + Arrays.toString(ii));
 
 		tt(10);
 	}
