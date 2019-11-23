@@ -221,17 +221,24 @@ public class user extends Controller {
 	@Path(login = true, path = "set")
 	public void set() {
 
-		List<String> ss = this.getNames();
-		Session s = this.getSession();
-		if (ss != null && !ss.isEmpty()) {
-			for (String s1 : ss) {
-				s.set("ss//" + s1, this.getString(s1));
+		try {
+			List<String> ss = this.getNames();
+			Session s = this.getSession();
+			if (ss != null && !ss.isEmpty()) {
+				for (String s1 : ss) {
+					String content = this.getHtml(s1);
+					if (content.length() < 4096) {
+						s.set("ss//" + s1, content);
+					}
+				}
+				s.store();
 			}
-			s.store();
+
+			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("MAXSIZE", 4096));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()).append("MAXSIZE", 4096));
 		}
-
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
-
 	}
 
 	@Path(path = "info")

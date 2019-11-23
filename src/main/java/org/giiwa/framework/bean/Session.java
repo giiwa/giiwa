@@ -44,6 +44,8 @@ public class Session implements Serializable {
 
 	static Log log = LogFactory.getLog(Session.class);
 
+	private static int MAX = 128;
+
 	String sid;
 
 	Map<String, Object> a = new TreeMap<String, Object>();
@@ -154,12 +156,17 @@ public class Session implements Serializable {
 	 * @param o   the o
 	 * @return the session
 	 */
-	public Session set(String key, Object o) {
-		a.put(key, o);
-		if (o instanceof User) {
-			long uid = ((User) o).getId();
-			SID.update(sid, uid);
+	public Session set(String key, Object o) throws Exception {
+		if (a.size() < MAX) {
+			a.put(key, o);
+			if (o instanceof User) {
+				long uid = ((User) o).getId();
+				SID.update(sid, uid);
+			}
+		} else {
+			throw new Exception("exceed the MAX=" + MAX);
 		}
+
 		return this;
 	}
 

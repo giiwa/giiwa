@@ -570,8 +570,12 @@ public class Controller {
 				createQuery();
 			}
 			if (!isAjax()) {
-				Session.load(sid()).set(X.URI, this.query == null ? this.uri : this.query.path(this.uri).toString())
-						.store();
+				try {
+					Session.load(sid()).set(X.URI, this.query == null ? this.uri : this.query.path(this.uri).toString())
+							.store();
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
 			}
 		}
 
@@ -913,15 +917,19 @@ public class Controller {
 	 */
 	final public int getInt(String tag, int defaultValue, String tagInSession) {
 		int r = getInt(tag);
-		if (r < 1) {
-			Session s = this.getSession();
-			r = s.getInt(tagInSession);
+		try {
 			if (r < 1) {
-				r = defaultValue;
+				Session s = this.getSession();
+				r = s.getInt(tagInSession);
+				if (r < 1) {
+					r = defaultValue;
+				}
+			} else {
+				Session s = this.getSession();
+				s.set(tagInSession, r).store();
 			}
-		} else {
-			Session s = this.getSession();
-			s.set(tagInSession, r).store();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 
 		// if (r > 500) {
@@ -942,16 +950,20 @@ public class Controller {
 	 */
 	final public String getString(String tag, String tagInSession, String defaultValue) {
 		String r = getString(tag);
-		if (X.isEmpty(r)) {
-			Session s = this.getSession();
-			r = (String) s.get(tagInSession);
+		try {
 			if (X.isEmpty(r)) {
-				r = defaultValue;
+				Session s = this.getSession();
+				r = (String) s.get(tagInSession);
+				if (X.isEmpty(r)) {
+					r = defaultValue;
+					s.set(tagInSession, r).store();
+				}
+			} else {
+				Session s = this.getSession();
 				s.set(tagInSession, r).store();
 			}
-		} else {
-			Session s = this.getSession();
-			s.set(tagInSession, r).store();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 
 		return r;
@@ -959,14 +971,18 @@ public class Controller {
 
 	final public String getString(String tag, String tagInSession, boolean queryfirst) {
 		String r = null;
-		if (queryfirst) {
-			r = getString(tag);
-			Session s = this.getSession();
-			s.set(tagInSession, r).store();
-		} else {
-			Session s = this.getSession();
-			r = (String) s.get(tagInSession);
-			query.append(tag, r);
+		try {
+			if (queryfirst) {
+				r = getString(tag);
+				Session s = this.getSession();
+				s.set(tagInSession, r).store();
+			} else {
+				Session s = this.getSession();
+				r = (String) s.get(tagInSession);
+				query.append(tag, r);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 		return r;
 	}
@@ -1724,7 +1740,11 @@ public class Controller {
 				}
 			}
 
-			s.set("user", u);
+			try {
+				s.set("user", u);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		} else {
 			log.warn("clear the data in session");
 			s.clear();
