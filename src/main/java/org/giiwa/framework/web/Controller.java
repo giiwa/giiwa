@@ -640,6 +640,8 @@ public class Controller {
 							do {
 								sid = UID.random();
 							} while (Session.exists(sid));
+
+							log.debug("creeate new sid=" + sid);
 						}
 					}
 				}
@@ -1264,7 +1266,7 @@ public class Controller {
 		try {
 			String c1 = req.getContentType();
 
-			log.debug("get s, name=" + name + ", c1=" + c1);
+//			log.debug("get s, name=" + name + ", c1=" + c1);
 
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 				if (uploads == null) {
@@ -1288,7 +1290,7 @@ public class Controller {
 				if (uploads != null) {
 					Object v1 = uploads.get(name);
 
-					log.debug("get s=" + v1);
+//					log.debug("get s=" + v1);
 
 					if (v1 != null) {
 						return v1.toString().trim();
@@ -1309,7 +1311,7 @@ public class Controller {
 					in.close();
 					String s = new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
 
-					log.debug("get s=" + s);
+//					log.debug("get s=" + s);
 
 					return s;
 				}
@@ -1326,7 +1328,7 @@ public class Controller {
 			s = _decode(s);
 			s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
 
-			log.debug("get s = " + s);
+//			log.debug("get s = " + s);
 			return s;
 
 		} catch (Exception e) {

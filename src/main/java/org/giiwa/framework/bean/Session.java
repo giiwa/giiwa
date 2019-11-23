@@ -98,6 +98,8 @@ public class Session implements Serializable {
 			 */
 			o.sid = sid;
 
+			log.debug("new session, sid=" + sid);
+
 		}
 
 		return o;
@@ -131,6 +133,10 @@ public class Session implements Serializable {
 	 */
 	public Session store() {
 		long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+		if (expired < 0) {
+			expired = 7 * 24 * X.AHOUR;
+		}
+
 		return store(expired);
 	}
 
@@ -141,6 +147,8 @@ public class Session implements Serializable {
 	 * @return Session
 	 */
 	public Session store(long expired) {
+
+		log.debug("store session, sid=" + sid + ", expired=" + expired);
 
 		if (!Cache.set("session/" + sid, this, expired)) {
 			log.error("set session failed !", new Exception("store session failed"));

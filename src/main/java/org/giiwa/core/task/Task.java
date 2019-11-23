@@ -390,7 +390,7 @@ public abstract class Task implements Runnable, Serializable {
 			 * ensure onExecute be executed
 			 */
 			try {
-				log.debug("running task " + this + ", token=" + attach("token"));
+//				log.debug("running task " + this + ", token=" + attach("token"));
 
 				if (X.isSame(_t, "G")) {
 					// global
@@ -1050,7 +1050,7 @@ public abstract class Task implements Runnable, Serializable {
 				}
 //					task.runtimes = t.runtimes;
 			} else {
-				log.info("schedule the task:" + task + ", ms=" + ms);
+//				log.info("schedule the task:" + task + ", ms=" + ms);
 			}
 
 			task.state = State.pending;
