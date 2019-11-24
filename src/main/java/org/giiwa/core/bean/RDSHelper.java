@@ -663,7 +663,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @return List
 	 */
 	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz,
-			String db) {
+			String db) throws SQLException {
 		/**
 		 * create the sql statement
 		 */
@@ -795,6 +795,7 @@ public class RDSHelper implements Helper.DBHelper {
 		} catch (Exception e) {
 
 			log.error(q, e);
+			throw new SQLException(e);
 
 		} finally {
 			close(r, p, c);
@@ -802,7 +803,6 @@ public class RDSHelper implements Helper.DBHelper {
 			if (log.isDebugEnabled())
 				log.debug("cost:" + t.pastms() + "ms, sql=" + q);
 		}
-		return Beans.create();
 	}
 
 	/**
@@ -921,7 +921,12 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @return Beans
 	 */
 	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz) {
-		return load(table, fields, q, offset, limit, clazz, Helper.DEFAULT);
+		try {
+			return load(table, fields, q, offset, limit, clazz, Helper.DEFAULT);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**

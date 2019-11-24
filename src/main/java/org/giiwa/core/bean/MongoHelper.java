@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -412,7 +413,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @return Beans
 	 */
 	public <T extends Bean> Beans<T> load(String collection, String[] fields, W q, int offset, int limit,
-			final Class<T> clazz, String db) {
+			final Class<T> clazz, String db) throws SQLException {
 
 		TimeStamp t = TimeStamp.create();
 		MongoCollection<Document> db1 = null;
@@ -473,7 +474,7 @@ public class MongoHelper implements Helper.DBHelper {
 			}
 		} catch (Exception e) {
 			log.error("query=" + query + ", order=" + orderBy, e);
-
+			throw new SQLException(e);
 		}
 
 		return null;
@@ -1840,27 +1841,31 @@ public class MongoHelper implements Helper.DBHelper {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T median(String table, W q, String name, String db) {
-		long n = this.count(table, q, db);
-		if (n % 2 == 1) {
-			q.sort(name, 1);
-			Beans<Bean> b = this.load(table, new String[] { name }, q, (int) (n / 2), 1, Bean.class, db);
-			if (b != null && !b.isEmpty()) {
-				return b.get(0).get(name);
-			}
-		} else if (n > 0) {
-			q.sort(name, 1);
-			Beans<Bean> b = this.load(table, new String[] { name }, q, (int) (n / 2), 2, Bean.class, db);
-			if (b != null && !b.isEmpty()) {
-				Object o1 = b.get(0).get(name);
-				Object o2 = b.get(1).get(name);
-
-				if (o1 instanceof String) {
-					return (T) o1;
+		try {
+			long n = this.count(table, q, db);
+			if (n % 2 == 1) {
+				q.sort(name, 1);
+				Beans<Bean> b = this.load(table, new String[] { name }, q, (int) (n / 2), 1, Bean.class, db);
+				if (b != null && !b.isEmpty()) {
+					return b.get(0).get(name);
 				}
+			} else if (n > 0) {
+				q.sort(name, 1);
+				Beans<Bean> b = this.load(table, new String[] { name }, q, (int) (n / 2), 2, Bean.class, db);
+				if (b != null && !b.isEmpty()) {
+					Object o1 = b.get(0).get(name);
+					Object o2 = b.get(1).get(name);
 
-				Double d = (X.toDouble(o1) + X.toDouble(o2)) / 2f;
-				return (T) d;
+					if (o1 instanceof String) {
+						return (T) o1;
+					}
+
+					Double d = (X.toDouble(o1) + X.toDouble(o2)) / 2f;
+					return (T) d;
+				}
 			}
+		} catch (SQLException e) {
+			log.error(e.getMessage(), e);
 		}
 		return null;
 	}

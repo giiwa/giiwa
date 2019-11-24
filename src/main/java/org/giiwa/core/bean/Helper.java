@@ -1977,11 +1977,16 @@ public class Helper implements Serializable {
 			if (log.isDebugEnabled())
 				log.debug("w=" + this);
 
-			if (dao != null) {
-				return (Beans<T>) dao.load(this, s, n);
-			} else {
-				return helper.load(table, null, this, s, n, t, Helper.DEFAULT);
+			try {
+				if (dao != null) {
+					return (Beans<T>) dao.load(this, s, n);
+				} else {
+					return helper.load(table, null, this, s, n, t, Helper.DEFAULT);
+				}
+			} catch (SQLException e) {
+				log.error(e.getMessage(), e);
 			}
+			return null;
 		}
 
 		public long count() {
@@ -2559,12 +2564,12 @@ public class Helper implements Serializable {
 			final int n, final Class<T> t, final String db, int refer) {
 
 		TimeStamp t1 = TimeStamp.create();
+		Beans<T> bs = null;
 		try {
 			if (monitor != null) {
 				monitor.query(db, table, q);
 			}
 
-			Beans<T> bs = null;
 			if (primary != null && primary.getDB(db) != null) {
 				bs = primary.load(table, fields, q, s, n, t, db);
 			} else if (!X.isEmpty(customs)) {
@@ -2583,10 +2588,12 @@ public class Helper implements Serializable {
 			}
 
 			return bs;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		} finally {
 			read.add(t1.pastms(), table, q);
 		}
-
+		return bs;
 	}
 
 	/**
@@ -3219,7 +3226,8 @@ public class Helper implements Serializable {
 
 		void createIndex(String table, LinkedHashMap<String, Integer> ss, String db);
 
-		<T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t, String db);
+		<T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t, String db)
+				throws SQLException;
 
 		<T extends Bean> Cursor<T> query(String table, W q, int s, int n, Class<T> t, String db);
 
