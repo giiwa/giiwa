@@ -239,7 +239,7 @@ public class Repo {
 				file = Disk.seek(path + name);
 			}
 
-//			log.debug("id=" + id + ", path=" + path(id) + ", name=" + name + ", file=" + file);
+			log.debug("id=" + id + ", path=" + path(id) + ", name=" + name + ", file=" + file);
 		}
 
 		private long store(long position, InputStream in, long total) throws IOException {

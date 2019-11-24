@@ -19,10 +19,10 @@ public class DFileOutputStream extends OutputStream {
 	public static DFileOutputStream create(Disk disk, String filename, long offset) {
 		DFileOutputStream d = new DFileOutputStream();
 		d.disk = disk;
-		d.url = disk.getNode_obj().getUrl();
-		d.path = disk.getPath();
 		d.filename = filename;
 		d.offset = offset;
+		d.url = disk.getNode_obj().getUrl();
+		d.path = disk.getPath();
 		return d;
 	}
 

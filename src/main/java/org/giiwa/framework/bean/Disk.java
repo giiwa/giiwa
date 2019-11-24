@@ -17,14 +17,17 @@ import java.util.function.Consumer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.DFile;
+import org.giiwa.core.dfile.FileServer;
 import org.giiwa.framework.bean.Node;
 import org.giiwa.framework.web.Controller;
 import org.giiwa.core.bean.Column;
@@ -50,6 +53,8 @@ public class Disk extends Bean {
 	private static Log log = LogFactory.getLog(Disk.class);
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
+
+	public static Disk DEFAULT = new Disk();
 
 	// private final static String RESETNAME = "disk.reset";
 
@@ -376,6 +381,17 @@ public class Disk extends Bean {
 
 	public static void repair() {
 
+		{
+			DEFAULT = new Disk();
+			DEFAULT.path = Controller.GIIWA_HOME + "/data";
+			DEFAULT.node_obj = new Node();
+			Url u = Url.create(Config.getConf().getString("dfile.bind", FileServer.URL));
+			String s1 = u.getProtocol() + "://" + (X.isSame(u.getIp(), "0.0.0.0") ? "127.0.0.1" : u.getIp()) + ":"
+					+ u.getPort();
+
+			DEFAULT.node_obj.set("url", s1);
+		}
+
 		if (Helper.isConfigured()) {
 			int s = 0;
 			W q = W.create().sort("created", 1);
@@ -452,7 +468,7 @@ public class Disk extends Bean {
 					return d;
 				}
 			}
-			return null;
+			return DEFAULT;
 		}
 
 	}
