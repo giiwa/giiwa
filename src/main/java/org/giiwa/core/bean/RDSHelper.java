@@ -1942,19 +1942,22 @@ public class RDSHelper implements Helper.DBHelper {
 		try {
 			c = getConnection(db);
 			stat = c.createStatement();
-			sb.append("create index ").append(table).append("_index");
-			for (String s : ss.keySet()) {
-				sb.append("_").append(s);
-			}
+			String indexname = table + "_index_" + UID.id(ss.toString());
+			sb.append("create index ").append(indexname);
 			sb.append(" on ").append(table).append("(");
 
 			StringBuilder sb1 = new StringBuilder();
+			int n = 0;
 			for (String s : ss.keySet()) {
 				if (sb1.length() > 0)
 					sb1.append(",");
 				sb1.append(s);
 				if (X.toInt(ss.get(s)) < 1) {
 					sb1.append(" ").append("desc");
+				}
+				n++;
+				if (n > 4) {
+					break;
 				}
 			}
 			sb.append(sb1.toString()).append(")");

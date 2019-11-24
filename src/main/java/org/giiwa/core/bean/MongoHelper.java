@@ -970,12 +970,17 @@ public class MongoHelper implements Helper.DBHelper {
 	public void createIndex(String table, LinkedHashMap<String, Integer> ss, String db) {
 		MongoCollection<Document> c = getCollection(db, table);
 		BasicDBObject q = new BasicDBObject();
+		int n = 0;
 		for (String s : ss.keySet()) {
 			int i = ss.get(s);
 			if (i == 2) {
 				q.append(s, "2d");
 			} else {
 				q.append(s, ss.get(s));
+			}
+			n++;
+			if (n > 4) {
+				break;
 			}
 		}
 		try {
