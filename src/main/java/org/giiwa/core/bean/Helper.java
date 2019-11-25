@@ -1789,7 +1789,6 @@ public class Helper implements Serializable {
 
 			@Override
 			public String where() {
-				// TODO Auto-generated method stub
 				return where(null);
 			}
 		}
@@ -1891,15 +1890,17 @@ public class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		public <T> T load() {
+		public <T> T load() throws SQLException {
 			if (log.isDebugEnabled())
 				log.debug("w=" + this);
 
 			if (dao != null) {
 				return (T) dao.load(this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return (T) helper.load(table, null, this, t, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
 		/**
@@ -1910,7 +1911,7 @@ public class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		public <T> T load(int offset) {
+		public <T> T load(int offset) throws SQLException {
 			Beans<?> l1 = load(offset, 1);
 			return (T) (l1 == null || l1.isEmpty() ? null : l1.get(0));
 		}
@@ -1922,27 +1923,27 @@ public class Helper implements Serializable {
 		 * @param name the field name
 		 * @return the T
 		 */
-		public <T> T get(String name) {
+		public <T> T get(String name) throws SQLException {
 			Bean b = load();
 			return b == null ? null : b.get(name);
 		}
 
-		public long getLong(String name) {
+		public long getLong(String name) throws SQLException {
 			Bean b = load();
 			return b == null ? 0 : b.getLong(name);
 		}
 
-		public long getLong(int offset, String name) {
+		public long getLong(int offset, String name) throws SQLException {
 			Bean b = load(offset);
 			return b == null ? 0 : b.getLong(name);
 		}
 
-		public double getDouble(String name) {
+		public double getDouble(String name) throws SQLException {
 			Bean b = load();
 			return b == null ? 0 : b.getDouble(name);
 		}
 
-		public double getDouble(int offset, String name) {
+		public double getDouble(int offset, String name) throws SQLException {
 			Bean b = load(offset);
 			return b == null ? 0 : b.getDouble(name);
 		}
@@ -1959,7 +1960,7 @@ public class Helper implements Serializable {
 		 * @param name   the field name
 		 * @return the Object
 		 */
-		public <T> T get(int offset, String name) {
+		public <T> T get(int offset, String name) throws SQLException {
 			Bean b = load(offset);
 			return b == null ? null : b.get(name);
 		}
@@ -1971,126 +1972,175 @@ public class Helper implements Serializable {
 		 * @param s
 		 * @param n
 		 * @return
+		 * @throws SQLException
 		 */
 		@SuppressWarnings("unchecked")
-		public <T extends Bean> Beans<T> load(int s, int n) {
+		public <T extends Bean> Beans<T> load(int s, int n) throws SQLException {
 			if (log.isDebugEnabled())
 				log.debug("w=" + this);
 
-			try {
-				if (dao != null) {
-					return (Beans<T>) dao.load(this, s, n);
-				} else {
-					return helper.load(table, null, this, s, n, t, Helper.DEFAULT);
-				}
-			} catch (SQLException e) {
-				log.error(e.getMessage(), e);
+			if (dao != null) {
+				return (Beans<T>) dao.load(this, s, n);
+			} else if (!X.isEmpty(table)) {
+				return helper.load(table, null, this, s, n, t, Helper.DEFAULT);
 			}
-			return null;
+			throw new SQLException("not set table");
+
 		}
 
-		public long count() {
+		@SuppressWarnings("unchecked")
+		public List<?> load(String name, int s, int n) throws SQLException {
+			if (log.isDebugEnabled())
+				log.debug("w=" + this);
+
+			if (dao != null) {
+				return X.toArray(dao.load(this, s, n), e -> {
+					return e.get(name);
+				});
+			} else if (!X.isEmpty(table)) {
+				return X.toArray(helper.load(table, null, this, s, n, t, Helper.DEFAULT), e -> {
+					return ((Bean) e).get(name);
+				});
+			}
+			throw new SQLException("not set table");
+
+		}
+
+		public long count() throws SQLException {
 			if (dao != null) {
 				return dao.count(this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.count(table, this, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public <T> T sum(String name) {
+		public <T> T sum(String name) throws SQLException {
 			if (dao != null) {
 				return dao.sum(name, this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.sum(table, this, name, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public <T> T avg(String name) {
+		public <T> T avg(String name) throws SQLException {
 			if (dao != null) {
 				return dao.avg(name, this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.avg(table, this, name, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public <T> T min(String name) {
+		public <T> T min(String name) throws SQLException {
 			if (dao != null) {
 				return dao.min(name, this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.min(table, this, name, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public <T> T max(String name) {
+		public <T> T max(String name) throws SQLException {
 			if (dao != null) {
 				return dao.max(name, this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.max(table, this, name, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public int delete() {
+		public int delete() throws SQLException {
 			if (dao != null) {
 				return dao.delete(this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.delete(table, this, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
 		}
 
-		public List<?> distinct(String name) {
+		public int update(V v) throws SQLException {
+			if (dao != null) {
+				return dao.update(this, v);
+			} else if (!X.isEmpty(table)) {
+				return helper.updateTable(table, this, v, Helper.DEFAULT);
+			}
+			throw new SQLException("not set table");
+		}
+
+		public List<?> distinct(String name) throws SQLException {
 			if (dao != null) {
 				return dao.distinct(name, this);
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.distinct(table, name, this, Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
 		}
 
-		public List<JSON> count(String group) {
+		public List<JSON> count(String group) throws SQLException {
 			if (dao != null) {
 				return dao.count(this, X.split(group, "[,]"));
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.count(table, this, X.split(group, "[,]"), Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public List<JSON> sum(String name, String group) {
+		public List<JSON> sum(String name, String group) throws SQLException {
 			if (dao != null) {
 				return dao.sum(this, name, X.split(group, "[,]"));
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.sum(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public List<JSON> aggregate(String name, String group) {
+		public List<JSON> aggregate(String name, String group) throws SQLException {
 			if (dao != null) {
 				return dao.aggregate(this, X.split(name, "[,]"), X.split(group, "[,]"));
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.aggregate(table, X.split(name, "[,]"), this, X.split(group, "[,]"), Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public List<JSON> min(String name, String group) {
+		public List<JSON> min(String name, String group) throws SQLException {
 			if (dao != null) {
 				return dao.min(this, name, X.split(group, "[,]"));
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.min(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public List<JSON> max(String name, String group) {
+		public List<JSON> max(String name, String group) throws SQLException {
 			if (dao != null) {
 				return dao.max(this, name, X.split(group, "[,]"));
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.max(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
-		public List<JSON> avg(String name, String group) {
+		public List<JSON> avg(String name, String group) throws SQLException {
 			if (dao != null) {
 				return dao.avg(this, name, X.split(group, "[,]"));
-			} else {
+			} else if (!X.isEmpty(table)) {
 				return helper.avg(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
 			}
+			throw new SQLException("not set table");
+
 		}
 
 		W dao(BeanDAO<?, ?> dao) {
