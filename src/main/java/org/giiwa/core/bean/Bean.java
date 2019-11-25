@@ -628,10 +628,10 @@ public class Bean implements Serializable {
 	/**
 	 * cleanup, do nothing in default
 	 */
-	public void cleanup() {
-		// TODO Auto-generated method stub
-
-	}
+//	public void cleanup() {
+//		// TODO Auto-generated method stub
+//
+//	}
 
 	/**
 	 * refine the bean and output as a json object

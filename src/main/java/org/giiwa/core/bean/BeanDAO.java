@@ -436,12 +436,11 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * cleanup the data by setting global setting
 	 */
-	public void cleanup() {
+	public int cleanup() {
 		int n = this.delete(W.create("created",
 				System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt));
-		if (n > 0) {
-			GLog.applog.info("dao", "cleanup", tableName() + " cleanup=" + n, null, null);
-		}
+
+		return n;
 	}
 
 	/**

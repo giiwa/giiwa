@@ -80,9 +80,4 @@ public class Code extends Bean {
 		dao.delete(W.create("s1", s1).and("s2", s2));
 	}
 
-	@Override
-	public void cleanup() {
-		dao.cleanup();
-	}
-
 }

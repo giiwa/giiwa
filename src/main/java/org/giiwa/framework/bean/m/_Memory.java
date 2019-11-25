@@ -91,10 +91,4 @@ public class _Memory extends Bean {
 
 	}
 
-	@Override
-	public void cleanup() {
-		dao.cleanup();
-		Record.dao.cleanup();
-	}
-
 }

@@ -499,33 +499,6 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return lang.parse(lang.format(time, "yyyy"), "yyyy");
 	}
 
-	@Override
-	public void cleanup() {
-		// min, hour, day, week,month, year
-
-		// int days = Global.getInt("glog.keep.days", 7);
-		//
-		// int n = dao.delete(W.create("size", "min").and("created",
-		// System.currentTimeMillis() - X.AWEEK * 2, W.OP.lt));
-		// n += dao.delete(W.create("size", "hour").and("created",
-		// System.currentTimeMillis() - days * X.ADAY, W.OP.lt));
-		// n += dao.delete(W.create("size", "day").and("created",
-		// System.currentTimeMillis() - days * X.AMONTH, W.OP.lt));
-		// n += dao.delete(W.create("size", "month").and("created",
-		// System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
-		// n += dao.delete(
-		// W.create("size", "season").and("created", System.currentTimeMillis() - days *
-		// X.AYEAR, W.OP.lt));
-		// n += dao.delete(W.create("size", "year").and("created",
-		// System.currentTimeMillis() - days * X.AYEAR, W.OP.lt));
-		//
-		// if (n > 0) {
-		// GLog.applog.info("dao", "cleanup", dao.tableName() + " cleanup=" + n, null,
-		// null);
-		// }
-
-	}
-
 	public static List<Stat> merge(String module, W q, String groupby, MergeFunc func) {
 		// load from stat, and group
 

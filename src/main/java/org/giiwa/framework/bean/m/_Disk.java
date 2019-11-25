@@ -107,10 +107,4 @@ public class _Disk extends Bean {
 
 	}
 
-	@Override
-	public void cleanup() {
-		dao.cleanup();
-		Record.dao.cleanup();
-	}
-
 }

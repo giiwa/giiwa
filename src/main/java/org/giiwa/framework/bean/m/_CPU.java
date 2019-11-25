@@ -111,10 +111,4 @@ public class _CPU extends Bean {
 
 	}
 
-	@Override
-	public void cleanup() {
-		dao.cleanup();
-		Record.dao.cleanup();
-	}
-
 }

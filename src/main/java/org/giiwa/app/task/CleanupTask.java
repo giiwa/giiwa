@@ -26,11 +26,17 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.ClassUtil;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Bean;
+import org.giiwa.core.bean.BeanDAO;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Temp;
+import org.giiwa.framework.bean.m._CPU;
+import org.giiwa.framework.bean.m._DB;
+import org.giiwa.framework.bean.m._Disk;
+import org.giiwa.framework.bean.m._Memory;
+import org.giiwa.framework.bean.m._Net;
 import org.giiwa.framework.web.Controller;
 
 /**
@@ -117,9 +123,16 @@ public class CleanupTask extends Task {
 				count += cleanup(Controller.GIIWA_HOME + "/work/Catalina/localhost/ROOT", X.ADAY, false);
 				count += cleanup(Controller.GIIWA_HOME + "/logs", X.ADAY * 3, false);
 			}
-			if (log.isInfoEnabled()) {
-				log.info("cleanup temp files: " + count);
+
+			GLog.applog.info("sys", "cleanup", "cleanup temp files: " + count);
+
+			int n = 0;
+			for (BeanDAO d : new BeanDAO[] { GLog.dao, _CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao, _Disk.dao,
+					_Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao }) {
+				n += d.cleanup();
 			}
+
+			GLog.applog.info("sys", "cleanup", "cleanup data: " + n);
 
 		} catch (Exception e) {
 			// eat the exception

@@ -82,10 +82,4 @@ public class _DB extends Bean {
 
 	}
 
-	@Override
-	public void cleanup() {
-		dao.cleanup();
-		Record.dao.cleanup();
-	}
-
 }

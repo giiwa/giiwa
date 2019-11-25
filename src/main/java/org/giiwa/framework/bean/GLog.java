@@ -61,13 +61,13 @@ public class GLog extends Bean {
 		return type;
 	}
 
-	/**
-	 * Removes all the oplog.
-	 * 
-	 */
-	public void cleanup() {
-		dao.cleanup();
-	}
+//	/**
+//	 * Removes all the oplog.
+//	 * 
+//	 */
+//	public void cleanup() {
+//		dao.cleanup();
+//	}
 
 	/**
 	 * get the node or subsystem name

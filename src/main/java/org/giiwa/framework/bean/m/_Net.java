@@ -152,10 +152,4 @@ public class _Net extends Bean {
 
 	}
 
-	@Override
-	public void cleanup() {
-		dao.cleanup();
-		Record.dao.cleanup();
-	}
-
 }
