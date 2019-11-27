@@ -664,9 +664,9 @@ public class User extends Bean {
 		 */
 		dao.update(W.create("sid", sid), V.create("sid", X.EMPTY));
 
-		return dao.update(getId(),
-				v.append("logintimes", getInt("logintimes")).append("ip", ip).append("failtimes", 0).append("locked", 0)
-						.append("lockexpired", 0).append("sid", sid).append(X.UPDATED, System.currentTimeMillis()));
+		return dao.inc(W.create().and(X.ID, getId()), "logintimes", 1,
+				v.append("lastlogintime", System.currentTimeMillis()).append("ip", ip).append("locked", 0)
+						.append("lockexpired", 0).append("sid", sid));
 
 	}
 
