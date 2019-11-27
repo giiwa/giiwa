@@ -31,6 +31,7 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
+import org.giiwa.framework.bean.Stat;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.bean.m._CPU;
 import org.giiwa.framework.bean.m._DB;
@@ -131,6 +132,8 @@ public class CleanupTask extends Task {
 					_Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao }) {
 				n += d.cleanup();
 			}
+
+			n += Stat.cleanup();
 
 			GLog.applog.info("sys", "cleanup", "cleanup data: " + n);
 

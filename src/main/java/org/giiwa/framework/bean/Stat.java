@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
@@ -19,10 +20,12 @@ import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Config;
 import org.giiwa.framework.web.Language;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 
 /**
  * The Class Stat is used to stat utility and persistence.
@@ -610,5 +613,47 @@ public class Stat extends Bean implements Comparable<Stat> {
 		}
 		return hour;
 	}
+
+	public synchronized static int cleanup() {
+		if (rules == null) {
+			Configuration conf = Config.getConf();
+			rules = new Object[][] { new Object[] { SIZE.min, conf.getInt("stat.cleanup.min", 1) },
+					new Object[] { SIZE.m10, conf.getInt("stat.cleanup.m10", 7) },
+					new Object[] { SIZE.m15, conf.getInt("stat.cleanup.m15", 7) },
+					new Object[] { SIZE.m30, conf.getInt("stat.cleanup.m30", 30) },
+					new Object[] { SIZE.hour, conf.getInt("stat.cleanup.hour", 30) },
+					new Object[] { SIZE.day, conf.getInt("stat.cleanup.day", 365) },
+					new Object[] { SIZE.week, conf.getInt("stat.cleanup.week", 2 * 365) },
+					new Object[] { SIZE.month, conf.getInt("stat.cleanup.month", 5 * 365) },
+					new Object[] { SIZE.season, conf.getInt("stat.cleanup.season", 5 * 365) },
+					new Object[] { SIZE.year, conf.getInt("stat.cleanup.year", -1) } };
+		}
+
+		int n = 0;
+		List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
+		for (JSON j1 : l1) {
+			String name = j1.getString("table_name");
+			if (name.startsWith("gi_stat_")) {
+				for (Object[] p1 : rules) {
+					SIZE s1 = (SIZE) p1[0];
+					int day = (int) p1[1];
+					if (day > 0) {
+						W q = W.create();
+						q.and("size", s1.toString());
+						q.and("time", System.currentTimeMillis() - day * X.ADAY, W.OP.lt);
+						n += Helper.delete(q, name, Helper.DEFAULT);
+
+						long c1 = Helper.count(W.create(), name, Helper.DEFAULT);
+						if (c1 == 0) {
+							Helper.drop(name, Helper.DEFAULT);
+						}
+					}
+				}
+			}
+		}
+		return n;
+	}
+
+	private static Object[][] rules;
 
 }

@@ -169,7 +169,7 @@ public class Helper implements Serializable {
 			}
 			return 0;
 		} finally {
-			write.add(t1.pastms(), table, q);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -241,7 +241,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
 	}
@@ -2271,7 +2271,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2350,7 +2350,7 @@ public class Helper implements Serializable {
 
 			return 0;
 		} finally {
-			write.add(t1.pastms(), table, null);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -2398,7 +2398,7 @@ public class Helper implements Serializable {
 
 			return 0;
 		} finally {
-			write.add(t1.pastms(), table, null);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -2488,7 +2488,7 @@ public class Helper implements Serializable {
 			}
 			return 0;
 		} finally {
-			write.add(t1.pastms(), table, q);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -2555,7 +2555,7 @@ public class Helper implements Serializable {
 			}
 			return 0;
 		} finally {
-			write.add(t1.pastms(), table, q);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -2641,7 +2641,7 @@ public class Helper implements Serializable {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 		return bs;
 	}
@@ -2685,7 +2685,7 @@ public class Helper implements Serializable {
 
 			return BeanStream.create(cur);
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2816,7 +2816,7 @@ public class Helper implements Serializable {
 
 			return 0;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2843,7 +2843,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2870,7 +2870,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2897,7 +2897,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2924,7 +2924,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2951,7 +2951,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -2978,7 +2978,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -3043,7 +3043,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -3178,7 +3178,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms(), table, null);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -3206,7 +3206,7 @@ public class Helper implements Serializable {
 
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, null);
+			read.add(t1.pastms());
 		}
 
 	}
@@ -3231,7 +3231,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms(), table, null);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -3359,7 +3359,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			write.add(t1.pastms(), table, null);
+			write.add(t1.pastms());
 		}
 	}
 
@@ -3377,7 +3377,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -3395,7 +3395,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -3414,7 +3414,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -3433,7 +3433,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -3451,7 +3451,7 @@ public class Helper implements Serializable {
 				}
 			}
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 		return null;
 	}
@@ -3470,7 +3470,7 @@ public class Helper implements Serializable {
 			}
 			return null;
 		} finally {
-			read.add(t1.pastms(), table, q);
+			read.add(t1.pastms());
 		}
 	}
 
@@ -3490,7 +3490,7 @@ public class Helper implements Serializable {
 			this.name = name;
 		}
 
-		synchronized void add(long cost, String table, W q) {
+		synchronized void add(long cost) {
 			if (cost > max) {
 				max = cost;
 				if (cost > 1000 && loged == 0) {
@@ -3534,6 +3534,22 @@ public class Helper implements Serializable {
 
 	public static JSON statWrite() {
 		return write.get();
+	}
+
+	public static List<JSON> listTables(String dbname) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null) {
+				return primary.listTables(dbname);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					return h.listTables(dbname);
+				}
+			}
+		} finally {
+			read.add(t1.pastms());
+		}
+		return null;
 	}
 
 }
