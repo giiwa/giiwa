@@ -423,10 +423,6 @@ public class Language {
 		return Long.toString(t);
 	}
 
-	public String format(double t, String format) {
-		return String.format(format, t);
-	}
-
 	public String percent(double t, String format) {
 		return String.format(format, t * 100);
 	}
