@@ -241,11 +241,16 @@ public class SQL {
 								return JS.calculate(e);
 							} catch (Exception e1) {
 								log.error(e1.getMessage(), e1);
+								return e;
 							}
-							return null;
 						});
 					} else {
-						value = JS.calculate(s2);
+						try {
+							value = JS.calculate(s2);
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+							value = s2;
+						}
 					}
 				}
 
