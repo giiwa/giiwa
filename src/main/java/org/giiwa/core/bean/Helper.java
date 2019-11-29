@@ -411,6 +411,7 @@ public class Helper implements Serializable {
 		 */
 		public V append(String name, Object v) {
 			if (!X.isEmpty(name)) {
+				name = name.toLowerCase();
 				if (m.containsKey(name)) {
 					return this;
 				}
