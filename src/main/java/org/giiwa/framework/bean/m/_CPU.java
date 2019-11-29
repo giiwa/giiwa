@@ -51,8 +51,8 @@ public class _CPU extends Bean {
 	@Column(name = "idle")
 	double idle;
 
-	public double getUsage() {
-		return usage;
+	public int getUsage() {
+		return X.toInt(usage);
 	}
 
 	public synchronized static void update(String node, JSON jo) {
