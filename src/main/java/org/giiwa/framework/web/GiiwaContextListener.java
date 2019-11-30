@@ -120,7 +120,7 @@ public class GiiwaContextListener implements ServletContextListener {
 			 * initialize the controller, this MUST place in the end !:-)
 			 */
 //			System.out.println("init web controller");
-			GiiwaController.init(conf, contextPath);
+			Controller.init(conf, contextPath);
 
 			/**
 			 * initialize the repo

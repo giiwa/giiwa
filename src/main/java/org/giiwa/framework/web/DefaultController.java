@@ -55,7 +55,7 @@ class DefaultController extends Controller {
 //		log.debug("uri=" + uri + ", remote=" + this.getRemoteHost(), new Exception());
 
 		if (!_onPost(uri)) {
-			for (String suffix : GiiwaController.welcomes) {
+			for (String suffix : Controller.welcomes) {
 				if (_onPost(uri + "/" + suffix)) {
 					return;
 				}

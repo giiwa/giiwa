@@ -72,14 +72,14 @@ public class GiiwaFilter implements Filter {
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
-				GiiwaController.dispatch(uri, r1, r2, "GET");
+				Controller.process(uri, r1, r2, "GET");
 
 			} else if ("POST".equalsIgnoreCase(method)) {
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
 
-				GiiwaController.dispatch(uri, r1, r2, "POST");
+				Controller.process(uri, r1, r2, "POST");
 
 			} else if ("OPTIONS".equals(method)) {
 				r2.setStatus(200);

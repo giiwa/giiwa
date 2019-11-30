@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import org.apache.commons.configuration2.Configuration;
@@ -668,8 +669,6 @@ public class Helper implements Serializable {
 		public static final int OR = 10;
 
 		private String connectsql;
-//		private List<W> wlist = new ArrayList<W>();
-//		private List<Entity> elist = new ArrayList<Entity>();
 		private List<W> queryList = new ArrayList<W>();
 		private List<Entity> order = new ArrayList<Entity>();
 		private String groupby;
@@ -1066,8 +1065,11 @@ public class Helper implements Serializable {
 				return this;
 
 			w.cond = AND;
-//			wlist.add(w);
+			if (w instanceof Entity) {
+				((Entity) w).container = this;
+			}
 			queryList.add(w);
+
 			return this;
 		}
 
@@ -1121,20 +1123,18 @@ public class Helper implements Serializable {
 
 			this.cond = q.cond;
 
-//			for (W w1 : q.wlist) {
-//				this.wlist.add(w1.copy());
-//			}
-//
-//			for (Entity e : q.elist) {
-//				this.elist.add(e.copy());
-//			}
-
 			for (W e : q.queryList) {
-				this.queryList.add(e.copy());
+				W e1 = e.copy();
+				if (e1 instanceof Entity) {
+					((Entity) e1).container = this;
+				}
+				this.queryList.add(e1);
 			}
 
 			for (Entity e : q.order) {
-				this.order.add(e.copy());
+				Entity e1 = e.copy();
+				e1.container = this;
+				this.order.add(e1);
 			}
 
 			return this;
@@ -1151,7 +1151,9 @@ public class Helper implements Serializable {
 				return this;
 
 			w.cond = OR;
-//			wlist.add(w);
+			if (w instanceof Entity) {
+				((Entity) w).container = this;
+			}
 			queryList.add(w);
 			return this;
 		}
@@ -1376,6 +1378,24 @@ public class Helper implements Serializable {
 			return and(name, v, op, 1);
 		}
 
+		public W scan(Consumer<Entity> func) {
+
+			for (int i = queryList.size() - 1; i >= 0; i--) {
+				W e = queryList.get(i);
+				if (e instanceof Entity) {
+					func.accept((Entity) e);
+				} else {
+					e.scan(func);
+
+					if (e.isEmpty()) {
+						queryList.remove(i);
+					}
+				}
+
+			}
+			return this;
+		}
+
 		@SuppressWarnings("rawtypes")
 		public W and(String name, Object v, OP op, int boost) {
 			if (X.isEmpty(name))
@@ -1414,8 +1434,7 @@ public class Helper implements Serializable {
 				if (v instanceof W) {
 					v = ((W) v).query();
 				}
-//				elist.add(new Entity(name, v, op, AND, boost));
-				queryList.add(new Entity(name, v, op, AND, boost));
+				queryList.add(new Entity(this, name, v, op, AND, boost));
 			}
 			return this;
 		}
@@ -1501,7 +1520,7 @@ public class Helper implements Serializable {
 					v = ((W) v).query();
 				}
 //				elist.add(new Entity(name, v, op, OR, boost));
-				queryList.add(new Entity(name, v, op, OR, boost));
+				queryList.add(new Entity(this, name, v, op, OR, boost));
 			}
 			return this;
 		}
@@ -1612,11 +1631,21 @@ public class Helper implements Serializable {
 			 */
 			private static final long serialVersionUID = 1L;
 
+			private W container;
+
 			public String name;
 			public Object value;
 			public OP op; // operation EQ, GT, ...
 			public int cond; // condition AND, OR
 			public int boost = 1;//
+
+			public W container() {
+				return container;
+			}
+
+			public void remove() {
+				container.queryList.remove(this);
+			}
 
 			public int getCondition() {
 				return cond;
@@ -1645,7 +1674,7 @@ public class Helper implements Serializable {
 			 * @return the entity
 			 */
 			public static Entity fromJSON(JSON j1) {
-				return new Entity(j1.getString("name"), j1.get("value"), OP.valueOf(j1.getString("op")),
+				return new Entity(null, j1.getString("name"), j1.get("value"), OP.valueOf(j1.getString("op")),
 						j1.getInt("cond"), j1.getInt("boost", 1));
 			}
 
@@ -1713,7 +1742,7 @@ public class Helper implements Serializable {
 			 * @return the entity
 			 */
 			public Entity copy() {
-				return new Entity(name, value, op, cond, boost);
+				return new Entity(this, name, value, op, cond, boost);
 			}
 
 			public String where(Map<String, String> tansfers) {
@@ -1780,7 +1809,8 @@ public class Helper implements Serializable {
 				return tostring;
 			}
 
-			private Entity(String name, Object v, OP op, int cond, int boost) {
+			private Entity(W container, String name, Object v, OP op, int cond, int boost) {
+				this.container = container;
 				this.name = name;
 				this.op = op;
 				this.cond = cond;
@@ -1871,7 +1901,7 @@ public class Helper implements Serializable {
 		public W sort(String name, int i) {
 			if (X.isEmpty(name))
 				return this;
-			order.add(new Entity(name, i, OP.eq, AND, 0));
+			order.add(new Entity(this, name, i, OP.eq, AND, 0));
 			return this;
 		}
 
@@ -3140,10 +3170,21 @@ public class Helper implements Serializable {
 //		q.and("b = 2|3|4 and (c < 3 or c > 4) and d = '2' or g = 1");
 //		q.sort("f", -1);
 //		q.and("a like 'a'");
-		q.and("a=b");
+		q.and("a=b").and(W.create("b", "c"));
 
 		System.out.println(q.toString());
 		System.out.println(q.sortkeys());
+
+		q.scan(e -> {
+			if (X.isSame(e.name, "a")) {
+				System.out.println(e.name);
+				e.container().and(W.create("a", "1").or("a", "2"));
+				e.remove();
+			}
+
+		});
+
+		System.out.println(q.toString());
 
 	}
 

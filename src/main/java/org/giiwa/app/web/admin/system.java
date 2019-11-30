@@ -37,8 +37,8 @@ public class system extends Controller {
 	@Path(path = "info")
 	public void info() {
 		String name = ManagementFactory.getRuntimeMXBean().getName();
-		this.response(JSON.create().append(X.STATE, 200).append("uptime", GiiwaController.UPTIME)
-				.append("local", Local.id()).append("global", Global.id()).append("pid", X.split(name, "[@]")[0]));
+		this.response(JSON.create().append(X.STATE, 200).append("uptime", Controller.UPTIME).append("local", Local.id())
+				.append("global", Global.id()).append("pid", X.split(name, "[@]")[0]));
 	}
 
 	/**

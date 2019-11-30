@@ -21,7 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.task.Task;
-import org.giiwa.framework.web.GiiwaController;
+import org.giiwa.framework.web.Controller;
 
 /**
  * The Class RecycleTask.
@@ -62,7 +62,7 @@ public class RecycleTask extends Task {
 	@Override
 	public void onExecute() {
 		String s = Local.getString("recycle.task", "-1");
-		if ((!X.isSame(s, "-1")) && System.currentTimeMillis() - GiiwaController.UPTIME > X.AHOUR) {
+		if ((!X.isSame(s, "-1")) && System.currentTimeMillis() - Controller.UPTIME > X.AHOUR) {
 			/**
 			 * recycle.task="-1" or " ", and the server started after 1 hour
 			 */

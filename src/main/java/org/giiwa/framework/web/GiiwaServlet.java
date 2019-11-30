@@ -77,7 +77,7 @@ public class GiiwaServlet extends HttpServlet {
 			if (log.isDebugEnabled())
 				log.debug(req.getMethod() + ", uri=" + uri);
 
-			GiiwaController.dispatch(uri, r1, r2, req.getMethod());
+			Controller.process(uri, r1, r2, req.getMethod());
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
