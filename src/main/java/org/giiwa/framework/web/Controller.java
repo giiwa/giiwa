@@ -2520,7 +2520,7 @@ public class Controller {
 	}
 
 	public void response(String name, InputStream in, long total) {
-		
+
 		try {
 
 			this.setContentType("application/octet-stream");
@@ -2559,15 +2559,15 @@ public class Controller {
 				this.setHeader("Accept-Ranges", "bytes");
 			}
 			this.setHeader("Content-Length", Long.toString(length));
-			this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
+			this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
 
-			log.info(start + "-" + end + "/" + total);
-			OutputStream out = this.getOutputStream();
+			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
+			if (length > 0) {
+				OutputStream out = this.getOutputStream();
 
-			IOUtil.copy(in, out, start, end, false);
-			out.flush();
-			in.close();
-
+				IOUtil.copy(in, out, start, end, false);
+				out.flush();
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
