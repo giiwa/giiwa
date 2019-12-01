@@ -51,7 +51,7 @@ public final class X {
 	final static public long AWEEK = 7 * ADAY;
 
 	/** The Constant 30*ADAY. */
-	final static public long AMONTH = 30 * ADAY;
+	final static public long AMONTH = (long) (365 * ADAY / 12f);
 
 	/** The Constant 365*ADAY. */
 	final static public long AYEAR = 365 * ADAY;
