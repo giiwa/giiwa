@@ -19,7 +19,6 @@
 	<classpathentry kind="lib" path="depends/javassist-3.20.0-GA.jar"/>
 	<classpathentry kind="lib" path="depends/mail-1.4.jar"/>
 	<classpathentry kind="lib" path="depends/commons-io-2.2.jar"/>
-	<classpathentry kind="lib" path="depends/commons-exec-1.3.jar"/>
 	<classpathentry kind="lib" path="depends/dom4j-1.6.1.jar"/>
 	<classpathentry kind="lib" path="depends/asm-5.0.3.jar"/>
 	<classpathentry kind="lib" path="depends/xmpcore-5.1.2.jar"/>
@@ -31,7 +30,6 @@
 	<classpathentry kind="lib" path="depends/snappy-java-1.1.2.6.jar"/>
 	<classpathentry kind="lib" path="depends/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
 	<classpathentry kind="lib" path="depends/hawtbuf-1.11.jar"/>
-	<classpathentry kind="lib" path="depends/mongo-java-driver-3.4.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="depends/activemq-client-5.15.9.jar"/>
 	<classpathentry kind="lib" path="depends/commons-fileupload-1.4.jar"/>
@@ -68,5 +66,6 @@
 	<classpathentry kind="lib" path="depends/slf4j-log4j12-1.6.6.jar"/>
 	<classpathentry kind="lib" path="depends/REngine-2.1.0.jar"/>
 	<classpathentry kind="lib" path="depends/Rserve-1.8.1.jar"/>
+	<classpathentry kind="lib" path="depends/mongo-java-driver-3.11.1.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
