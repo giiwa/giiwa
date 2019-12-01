@@ -75,9 +75,6 @@ public class Controller {
 
 	public static Log log = LogFactory.getLog(Controller.class);
 
-	
-	
-	
 	/**
 	 * the configured context path
 	 */
@@ -95,7 +92,6 @@ public class Controller {
 	 */
 	public final static long UPTIME = System.currentTimeMillis();
 
-	
 	public static String ENCODING = "UTF-8";
 
 	/**
@@ -2524,19 +2520,13 @@ public class Controller {
 	}
 
 	public void response(String name, InputStream in, long total) {
+		
+		try {
 
-		if (total <= 0) {
-			this.setContentType(Controller.getMimeType(name));
-
-		} else {
 			this.setContentType("application/octet-stream");
 			this.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
-		}
 
-		String range = this.getHeader("range");
-
-		try {
-			OutputStream out = this.getOutputStream();
+			String range = this.getHeader("range");
 
 			long start = 0;
 			long end = total;
@@ -2555,18 +2545,37 @@ public class Controller {
 				end = start + 1024 * 1024;
 			}
 
+			if (end > total) {
+				end = total;
+			}
+
+			long length = end - start;
+
+			if (end < total) {
+				this.setStatus(206);
+			}
+
+			if (start == 0) {
+				this.setHeader("Accept-Ranges", "bytes");
+			}
+			this.setHeader("Content-Length", Long.toString(length));
 			this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
 
 			log.info(start + "-" + end + "/" + total);
-			IOUtil.copy(in, out, start, end, true);
+			OutputStream out = this.getOutputStream();
+
+			IOUtil.copy(in, out, start, end, false);
+			out.flush();
+			in.close();
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			X.close(in);
 		}
 
 	}
 
-	
 	/**
 	 * Inits the.
 	 * 
