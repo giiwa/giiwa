@@ -15,6 +15,8 @@
 package org.giiwa.core.json;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -120,6 +122,13 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			} else if (json instanceof InputStream) {
 				Gson g = new Gson();
 				j = g.fromJson(new InputStreamReader((InputStream) json), JSON.class);
+			} else if (json instanceof File) {
+				try {
+					Gson g = new Gson();
+					return g.fromJson(new FileReader((File) json), JSON.class);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
 			} else if (json instanceof Reader) {
 				Gson g = new Gson();
 				j = g.fromJson((Reader) json, JSON.class);
@@ -210,6 +219,13 @@ public final class JSON extends LinkedHashMap<String, Object> {
 			Gson g = new Gson();
 			JsonReader reader = new JsonReader(new InputStreamReader((InputStream) jsons));
 			list = g.fromJson(reader, List.class);
+		} else if (jsons instanceof File) {
+			try {
+				Gson g = new Gson();
+				return g.fromJson(new FileReader((File) jsons), List.class);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		} else if (jsons instanceof Reader) {
 			Gson g = new Gson();
 			list = g.fromJson((Reader) jsons, List.class);
@@ -293,6 +309,13 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		if (json instanceof String) {
 			Gson g = new Gson();
 			return g.fromJson((String) json, t);
+		} else if (json instanceof File) {
+			try {
+				Gson g = new Gson();
+				return g.fromJson(new FileReader((File) json), t);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		} else if (json instanceof Reader) {
 			Gson g = new Gson();
 			return g.fromJson((Reader) json, t);

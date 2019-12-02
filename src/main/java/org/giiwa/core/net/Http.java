@@ -51,6 +51,7 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.BufferedHttpEntity;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -700,7 +701,9 @@ public final class Http {
 						log.debug("body: " + body);
 
 					for (String s : body.keySet()) {
-						b.addTextBody(s, body.getString(s));
+//						b.addTextBody(name, body.getString(s),
+//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
+						b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
 					}
 
 				}
