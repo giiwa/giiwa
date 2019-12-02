@@ -339,13 +339,13 @@ public final class Html {
 
 				log.debug("href, url=" + href);
 
-				if (_match(href, hosts)) {
+				if (!l2.contains(href) && _match(href, hosts)) {
 					l2.add(href);
 				}
 			}
 		}
 
-		log.debug("href, l2=" + l2);
+//		log.debug("href, l2=" + l2);
 
 		return l2;
 	}
