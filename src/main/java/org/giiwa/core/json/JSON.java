@@ -775,11 +775,17 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * @return
 	 */
 	public JSON copy(Map<String, Object> m, String... name) {
-		if (m == null || name == null || name.length == 0)
+		if (m == null)
 			return this;
 
-		for (String s : name) {
-			this.append(s, m.get(s));
+		if (name == null || name.length == 0) {
+			for (String s : m.keySet()) {
+				this.append(s, m.get(s));
+			}
+		} else {
+			for (String s : name) {
+				this.append(s, m.get(s));
+			}
 		}
 		return this;
 	}

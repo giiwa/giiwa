@@ -6,7 +6,7 @@
 $(function(){
 	var t = Highcharts.chart('cpu_$!requestid', {
 	    chart: {
-	        type: 'spline'
+	        type: 'area'
 	    },
 	    title: {
 	        text: '$!n.label'
@@ -15,6 +15,8 @@ $(function(){
 	    		type: 'datetime'
 	    },
 	    yAxis: {
+	    	max: 100,
+	    	min: 0,
 	    		title: {
 	            text: ''
 	        }

@@ -6,7 +6,7 @@
 $(function(){
 	var t = Highcharts.chart('mem_$!requestid', {
 	    chart: {
-	        type: 'spline'
+	        type: 'line'
 	    },
 	    title: {
 	        text: "$lang.get('host.mem.title')($!lang.size($!total)B)"
@@ -15,6 +15,7 @@ $(function(){
 	    		type: 'datetime'
 	    },
 	    yAxis: {
+	    	min: 0,
 	    		title: {
 	            text: ''
 	        }
@@ -35,7 +36,7 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-	    				{name: "$lang.get('mem.used')", color:'#860606', data: [#foreach($c in $list) {x:$this.time($c), y:$c.used, hint:"$lang.size($c.used)"},#end]}
+	    				{name: "$lang.get('mem.used')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$this.time($c), y:$c.used, hint:"$lang.size($c.used)"},#end]}
 	    			], 
 	});
 	
