@@ -324,7 +324,8 @@ public final class Html {
 		if (l1 != null && l1.size() > 0) {
 			for (Element e1 : l1) {
 				String href = e1.attr("href").trim();
-				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")) {
+				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")
+						|| href.toLowerCase().startsWith("tel:") || href.toLowerCase().startsWith("mail:")) {
 					continue;
 				} else if (href.startsWith("/")) {
 					href = _server(url) + href;

@@ -682,6 +682,16 @@ public class Helper implements Serializable {
 		@SuppressWarnings("rawtypes")
 		private Class t = Data.class;
 
+		public String getTable() {
+			if (dao != null) {
+				String table = dao.tableName();
+				if (!X.isEmpty(table)) {
+					return table;
+				}
+			}
+			return table;
+		}
+
 		public W helper(DBHelper h) {
 			this.helper = h;
 			return this;
