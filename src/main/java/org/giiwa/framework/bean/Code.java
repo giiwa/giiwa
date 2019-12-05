@@ -22,6 +22,7 @@ import org.giiwa.core.bean.Column;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.Table;
+import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 
 /**
@@ -43,6 +44,9 @@ public class Code extends Bean {
 
 	public static final BeanDAO<String, Code> dao = BeanDAO.create(Code.class);
 
+	@Column(name = X.ID, index = true)
+	private String id;
+
 	@Column(name = "s1", index = true)
 	private String s1;
 
@@ -60,12 +64,17 @@ public class Code extends Bean {
 	}
 
 	public static int create(String s1, String s2, V v) {
-		W q = W.create("s1", s1).and("s2", s2);
+		if (v == null) {
+			v = V.create();
+
+		}
+
+		String id = UID.id(s1, s2);
 		try {
-			if (dao.exists(q)) {
-				dao.delete(q);
+			if (dao.exists(id)) {
+				dao.delete(id);
 			}
-			return dao.insert(v.set("s1", s1).set("s2", s2));
+			return dao.insert(v.force(X.ID, id).set("s1", s1).set("s2", s2));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

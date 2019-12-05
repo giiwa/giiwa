@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.StringFinder;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.Data;
 import org.giiwa.framework.web.Controller;
@@ -1404,6 +1405,13 @@ public class Helper implements Serializable {
 
 			}
 			return this;
+		}
+
+		@SuppressWarnings("restriction")
+		public W scan(jdk.nashorn.api.scripting.ScriptObjectMirror m) {
+			return this.scan(e -> {
+				m.call(e);
+			});
 		}
 
 		@SuppressWarnings("rawtypes")
@@ -3185,14 +3193,24 @@ public class Helper implements Serializable {
 		System.out.println(q.toString());
 		System.out.println(q.sortkeys());
 
-		q.scan(e -> {
-			if (X.isSame(e.name, "a")) {
-				System.out.println(e.name);
-				e.container().and(W.create("a", "1").or("a", "2"));
-				e.remove();
-			}
+//		q.scan(e -> {
+//			if (X.isSame(e.name, "a")) {
+//				System.out.println(e.name);
+//				e.container().and(W.create("a", "1").or("a", "2"));
+//				e.remove();
+//			}
+//
+//		});
 
-		});
+		JSON m = JSON.create();
+		m.append("q", q);
+		String js = "q.scan(function(e) {e.value=2;})";
+		try {
+			JS.run(js, m);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		System.out.println(q.toString());
 
