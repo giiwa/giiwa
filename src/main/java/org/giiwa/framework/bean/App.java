@@ -241,7 +241,7 @@ public class App extends Bean {
 	 */
 	public static App load(String appid) {
 		App a = dao.load(W.create("appid", appid));
-		if (a.expired <= 0 || a.expired > System.currentTimeMillis()) {
+		if (a != null && (a.expired <= 0 || a.expired > System.currentTimeMillis())) {
 			return a;
 		}
 		return null;

@@ -153,7 +153,7 @@ public class user extends Controller {
 								lang.get("create.success")));
 						return;
 					} else {
-						Session s = this.getSession();
+						Session s = this.getSession(true);
 						if (s.has("uri")) {
 							this.redirect((String) s.get("uri"));
 							return;
@@ -188,7 +188,7 @@ public class user extends Controller {
 	@Path(path = "go", login = true)
 	public boolean go() {
 
-		Session s = this.getSession();
+		Session s = this.getSession(false);
 		if (s.has("uri")) {
 			String uri = (String) s.get("uri");
 
@@ -223,7 +223,7 @@ public class user extends Controller {
 
 		try {
 			List<String> ss = this.getNames();
-			Session s = this.getSession();
+			Session s = this.getSession(false);
 			if (ss != null && !ss.isEmpty()) {
 				for (String s1 : ss) {
 					String content = this.getHtml(s1);
@@ -260,7 +260,7 @@ public class user extends Controller {
 		JSON jo = JSON.create();
 		String names = this.getString("names");
 		if (names != null) {
-			Session s = this.getSession();
+			Session s = this.getSession(false);
 			String[] ss = X.split(names, "[,;]");
 			if (ss != null && ss.length > 0) {
 				for (String s1 : ss) {
@@ -491,7 +491,7 @@ public class user extends Controller {
 		String refer = this.getString("refer");
 		if (!X.isEmpty(refer) && !isAjax()) {
 			try {
-				this.getSession().set("uri", URLDecoder.decode(refer, "UTF-8")).store();
+				this.getSession(true).set("uri", URLDecoder.decode(refer, "UTF-8")).store();
 			} catch (Exception e) {
 				log.error(refer, e);
 				GLog.securitylog.error(user.class, "login", e.getMessage(), e, login, this.getRemoteHost());

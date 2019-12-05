@@ -88,6 +88,11 @@ public class Session implements Serializable {
 	 */
 	public static Session load(String sid) {
 
+		if (X.isEmpty(sid))
+			return null;
+
+//		log.debug("new session", new Exception());
+
 		Session o = (Session) Cache.get("session/" + sid);
 
 		if (o == null) {

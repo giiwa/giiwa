@@ -240,7 +240,7 @@ public class SQL {
 							try {
 								return JS.calculate(e);
 							} catch (Exception e1) {
-								log.error(e1.getMessage(), e1);
+//								log.error(e1.getMessage(), e1);
 								return e;
 							}
 						});
@@ -248,7 +248,7 @@ public class SQL {
 						try {
 							value = JS.calculate(s2);
 						} catch (Exception e) {
-							log.error(e.getMessage(), e);
+//							log.error(e.getMessage(), e);
 							value = s2;
 						}
 					}

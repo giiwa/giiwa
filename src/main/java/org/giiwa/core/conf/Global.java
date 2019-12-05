@@ -79,6 +79,10 @@ public final class Global extends Bean {
 				 */
 				Cache.set("global/" + name, c, X.AMINUTE);
 				return X.toInt(c.i, defaultValue);
+			} else {
+				c = new Global();
+				c.i = Config.getConf().getInt(name, defaultValue);
+				Cache.set("global/" + name, c, X.AMINUTE);
 			}
 		}
 

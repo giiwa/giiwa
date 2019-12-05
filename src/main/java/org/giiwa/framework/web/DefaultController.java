@@ -85,7 +85,7 @@ class DefaultController extends Controller {
 			this.put("request", req);
 			this.put("this", this);
 			this.put("response", resp);
-			this.set("session", this.getSession());
+			this.set("session", this.getSession(false));
 			this.set("global", Global.getInstance());
 			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());
@@ -110,7 +110,7 @@ class DefaultController extends Controller {
 			this.put("request", req);
 			this.put("this", this);
 			this.put("response", resp);
-			this.set("session", this.getSession());
+			this.set("session", this.getSession(false));
 			this.set("global", Global.getInstance());
 			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());

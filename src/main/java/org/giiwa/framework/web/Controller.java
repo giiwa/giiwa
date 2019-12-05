@@ -490,7 +490,7 @@ public class Controller {
 			this.put("request", req);
 			this.put("this", this);
 			this.put("response", resp);
-			this.set("session", this.getSession());
+			this.set("session", this.getSession(false));
 			this.set("global", Global.getInstance());
 			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());
@@ -525,7 +525,7 @@ public class Controller {
 			this.put("request", req);
 			this.put("response", resp);
 			this.put("this", this);
-			this.put("session", this.getSession());
+			this.put("session", this.getSession(false));
 			this.put("global", Global.getInstance());
 			this.set("conf", Config.getConf());
 			this.set("local", Local.getInstance());
@@ -674,11 +674,13 @@ public class Controller {
 				/**
 				 * get session.expired in seconds
 				 */
-				long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
-				if (expired <= 0) {
-					addCookie("sid", sid, (int) expired);
-				} else {
-					addCookie("sid", sid, (int) (expired / 1000));
+				if (!X.isEmpty(sid)) {
+					long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+					if (expired <= 0) {
+						addCookie("sid", sid, (int) expired);
+					} else {
+						addCookie("sid", sid, (int) (expired / 1000));
+					}
 				}
 			}
 		}
@@ -937,6 +939,7 @@ public class Controller {
 	 * get the value from the session, if the value less than minvalue, then get the
 	 * minvalue, and store the value in session
 	 * 
+	 * @deprecated
 	 * @param tag          the tag
 	 * @param defaultValue the default value
 	 * @param tagInSession the tag in session
@@ -946,14 +949,16 @@ public class Controller {
 		int r = getInt(tag);
 		try {
 			if (r < 1) {
-				Session s = this.getSession();
-				r = s.getInt(tagInSession);
+				Session s = this.getSession(false);
+				r = s == null ? -1 : s.getInt(tagInSession);
 				if (r < 1) {
 					r = defaultValue;
 				}
 			} else {
-				Session s = this.getSession();
-				s.set(tagInSession, r).store();
+				Session s = this.getSession(false);
+				if (s != null) {
+					s.set(tagInSession, r).store();
+				}
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -979,15 +984,16 @@ public class Controller {
 		String r = getString(tag);
 		try {
 			if (X.isEmpty(r)) {
-				Session s = this.getSession();
-				r = (String) s.get(tagInSession);
+				Session s = this.getSession(false);
+				r = s == null ? null : (String) s.get(tagInSession);
 				if (X.isEmpty(r)) {
 					r = defaultValue;
 					s.set(tagInSession, r).store();
 				}
 			} else {
-				Session s = this.getSession();
-				s.set(tagInSession, r).store();
+				Session s = this.getSession(false);
+				if (s != null)
+					s.set(tagInSession, r).store();
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -996,16 +1002,24 @@ public class Controller {
 		return r;
 	}
 
+	/**
+	 * @deprecated
+	 * @param tag
+	 * @param tagInSession
+	 * @param queryfirst
+	 * @return
+	 */
 	final public String getString(String tag, String tagInSession, boolean queryfirst) {
 		String r = null;
 		try {
 			if (queryfirst) {
 				r = getString(tag);
-				Session s = this.getSession();
-				s.set(tagInSession, r).store();
+				Session s = this.getSession(false);
+				if (s != null)
+					s.set(tagInSession, r).store();
 			} else {
-				Session s = this.getSession();
-				r = (String) s.get(tagInSession);
+				Session s = this.getSession(false);
+				r = s == null ? null : (String) s.get(tagInSession);
 				query.append(tag, r);
 			}
 		} catch (Exception e) {
@@ -1633,8 +1647,8 @@ public class Controller {
 	 * 
 	 * @return Session
 	 */
-	final public Session getSession() {
-		return Session.load(sid());
+	final public Session getSession(boolean newsession) {
+		return Session.load(sid(newsession));
 	}
 
 	/**
@@ -1662,14 +1676,18 @@ public class Controller {
 		return _multipart;
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	final public Roles getRoles() {
 		User u = this.getUser();
 		if (u != null) {
 			return u.getRole();
 		}
 
-		Session s = this.getSession();
-		if (s.has("roles")) {
+		Session s = this.getSession(false);
+		if (s != null && s.has("roles")) {
 			return s.get("roles");
 		}
 
@@ -1685,8 +1703,8 @@ public class Controller {
 	 */
 	final public User getUser() {
 		if (login == null) {
-			Session s = getSession();
-			login = (User) s.get("user");
+			Session s = getSession(false);
+			login = s == null ? null : s.get("user");
 
 			if (login == null) {
 				if (Global.getInt("user.token", 1) == 1) {
@@ -1738,8 +1756,8 @@ public class Controller {
 	 */
 	final public void setUser(User u, LoginType logintype) {
 
-		Session s = getSession();
-		User u1 = (User) s.get("user");
+		Session s = getSession(true);
+		User u1 = s.get("user");
 		if (u != null && u1 != null && u1.getId() != u.getId()) {
 			log.warn("clear the data in session");
 			s.clear();
@@ -1779,7 +1797,7 @@ public class Controller {
 		s.store();
 
 		if (log.isDebugEnabled())
-			log.debug("store session: session=" + s + ", getSession=" + getSession());
+			log.debug("store session: session=" + s + ", getSession=" + getSession(false));
 
 		login = u;
 	}
@@ -2680,17 +2698,20 @@ public class Controller {
 				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
 						+ " " + mo);
 
-			V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-			User u1 = mo.getUser();
-			if (u1 != null) {
-				v.set("uid", u1.getId()).set("username", u1.get("name"));
-			}
-			if (AccessLog.isOn())
+			if (AccessLog.isOn()) {
+
+				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+				User u1 = mo.getUser();
+				if (u1 != null) {
+					v.set("uid", u1.getId()).set("username", u1.get("name"));
+				}
+
 				AccessLog.create(mo.getRemoteHost(), uri,
 						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
 								.set("client", mo.browser())
 								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
 								.set("model", mo.getClass().getName()));
+			}
 //			}
 
 			// Counter.max("web.request.max", t.past(), uri);
@@ -2717,7 +2738,7 @@ public class Controller {
 				m.put("request", req);
 				m.put("this", m);
 				m.put("response", resp);
-				m.set("session", m.getSession());
+				m.set("session", m.getSession(false));
 				m.set("global", Global.getInstance());
 				m.set("conf", Config.getConf());
 				m.set("local", Local.getInstance());
@@ -2746,7 +2767,7 @@ public class Controller {
 				m.put("request", req);
 				m.put("this", m);
 				m.put("response", resp);
-				m.set("session", m.getSession());
+				m.set("session", m.getSession(false));
 				m.set("global", Global.getInstance());
 				m.set("conf", Config.getConf());
 				m.set("local", Local.getInstance());
@@ -2791,17 +2812,20 @@ public class Controller {
 						log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -"
 								+ mo.getRemoteHost() + " " + mo);
 
-					V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-					User u1 = mo.getUser();
-					if (u1 != null) {
-						v.set("uid", u1.getId()).set("username", u1.get("name"));
-					}
-					if (AccessLog.isOn())
+					if (AccessLog.isOn()) {
+
+						V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+						User u1 = mo.getUser();
+						if (u1 != null) {
+							v.set("uid", u1.getId()).set("username", u1.get("name"));
+						}
+
 						AccessLog.create(mo.getRemoteHost(), uri,
 								v.set("status", mo.getStatus()).set("client", mo.browser())
 										.set("header", Arrays.toString(mo.getHeaders()))
 										.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
 										.set("model", mo.getClass().getName()));
+					}
 //					}
 
 					// Counter.max("web.request.max", t.past(), uri);
@@ -2828,17 +2852,20 @@ public class Controller {
 			if (log.isInfoEnabled())
 				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
 						+ " " + mo);
-			V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-			User u1 = mo.getUser();
-			if (u1 != null) {
-				v.set("uid", u1.getId()).set("username", u1.get("name"));
-			}
-			if (AccessLog.isOn())
+			if (AccessLog.isOn()) {
+
+				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+				User u1 = mo.getUser();
+				if (u1 != null) {
+					v.set("uid", u1.getId()).set("username", u1.get("name"));
+				}
+
 				AccessLog.create(mo.getRemoteHost(), uri,
 						v.set("status", mo.getStatus()).set("client", mo.browser())
 								.set("header", Arrays.toString(mo.getHeaders()))
 								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
 								.set("model", mo.getClass().getName()));
+			}
 
 			// Counter.max("web.request.max", t.past(), uri);
 		}
