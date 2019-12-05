@@ -72,7 +72,7 @@ public class GlobalLock implements Lock {
 					heartbeat.add(this);
 
 					if (log.isDebugEnabled())
-						log.debug("global locked, name=" + name);
+						log.debug("global locked, name=" + name + ", cost=" + t.past());
 
 					locked = true;
 					return true;
@@ -80,7 +80,7 @@ public class GlobalLock implements Lock {
 
 				if (expire == 0 || expire < t.pastms()) {
 					if (log.isDebugEnabled())
-						log.debug("global lock failed, name=" + name);
+						log.debug("global lock failed, name=" + name + ", cost=" + t.past());
 
 					locked = false;
 					return false;

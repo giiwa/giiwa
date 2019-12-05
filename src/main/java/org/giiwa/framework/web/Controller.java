@@ -2167,7 +2167,7 @@ public class Controller {
 		if (log.isWarnEnabled())
 			log.warn(this.getClass().getName() + "[" + this.getURI() + "]");
 
-		Controller m = Module.home.getModel(method.name, "/notfound");
+		Controller m = Module.home.getModel(method.name, "/notfound", null);
 
 		if (m != null) {
 			if (log.isDebugEnabled())
@@ -2651,8 +2651,8 @@ public class Controller {
 	 * @param uri    the uri
 	 * @return the model
 	 */
-	public static Controller getModel(String method, String uri) {
-		return Module.home.getModel(method, uri);
+	public static Controller getModel(String method, String uri, String original) {
+		return Module.home.getModel(method, uri, original);
 	}
 
 	/**
@@ -2690,6 +2690,9 @@ public class Controller {
 		if (mo != null) {
 			mo.set("__node", node);
 
+			if (log.isDebugEnabled())
+				log.debug("cost=" + t.past() + ", find model, uri=" + uri);
+
 //			Path p = 
 			mo.dispatch(uri, req, resp, method);
 
@@ -2718,13 +2721,16 @@ public class Controller {
 			return;
 		}
 
+		if (log.isDebugEnabled())
+			log.debug("cost=" + t.past() + ", no model for uri=" + uri);
+
 		try {
 			// directly file
 			File f = Module.home.getFile(uri);
 			if (f != null && f.exists() && f.isFile()) {
 
 				if (log.isDebugEnabled())
-					log.debug("handled by module, uri=" + uri);
+					log.debug("cost " + t.past() + ", find file, uri=" + uri);
 
 				Controller m = new DefaultController();
 				m.req = req;
@@ -2753,7 +2759,7 @@ public class Controller {
 			if (f1 != null && f1.exists() && f1.isFile()) {
 
 				if (log.isDebugEnabled())
-					log.debug("handled by dfile, uri=" + uri);
+					log.debug("cost " + t.past() + ", find dfile, uri=" + uri);
 
 				Controller m = new DefaultController();
 				m.req = req;
@@ -2798,8 +2804,11 @@ public class Controller {
 			while (i > 0) {
 				String path = uri.substring(i + 1);
 				String u = uri.substring(0, i);
-				mo = getModel(method, u);
+				mo = getModel(method, u, uri);
 				if (mo != null) {
+
+					if (log.isDebugEnabled())
+						log.debug("cost " + t.past() + ", find the model, uri=" + uri);
 
 					mo.set("__node", node);
 
@@ -2837,6 +2846,9 @@ public class Controller {
 			/**
 			 * not found, then using dummymodel instead, and cache it
 			 */
+			if (log.isDebugEnabled())
+				log.debug("cost " + t.past() + ", no model, using default, uri=" + uri);
+
 			mo = new DefaultController();
 			mo.module = Module.load(0);
 			mo.set("__node", node);
@@ -2883,7 +2895,7 @@ public class Controller {
 		}
 //		log.debug("_dispatch, uri=" + uri);
 
-		Controller mo = getModel(method, uri);
+		Controller mo = getModel(method, uri, uri);
 		if (mo != null) {
 
 			mo.set("__node", req.getParameter("__node"));

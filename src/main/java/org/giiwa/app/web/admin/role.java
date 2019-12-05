@@ -197,7 +197,7 @@ public class role extends Controller {
 	public void onGet() {
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		Beans<Role> bs = Role.load(s, n);
 		bs.count();

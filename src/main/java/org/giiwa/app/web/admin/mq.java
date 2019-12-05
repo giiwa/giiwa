@@ -32,7 +32,7 @@ public class mq extends setting {
 	@Path(path = "log", login = true, access = "access.config.admin")
 	public void log() {
 		int s = this.getInt("s");
-		int n = this.getInt("n", 10, "number.per.page");
+		int n = this.getInt("n", 10);
 
 		W q = W.create("model", "admin.mq").sort("created", -1);
 

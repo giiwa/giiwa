@@ -456,6 +456,8 @@ public class Module {
 	 */
 	private static Map<String, CachedModel> modelMap = new HashMap<String, CachedModel>();
 
+	private static int MAX_CACHE_SIZE = 2000;
+
 	/**
 	 * configuration
 	 */
@@ -1322,7 +1324,7 @@ public class Module {
 	 * @return the model
 	 */
 	@SuppressWarnings("unchecked")
-	public Controller getModel(String method, String uri) {
+	public Controller getModel(String method, String uri, String original) {
 
 		try {
 
@@ -1332,7 +1334,7 @@ public class Module {
 
 			CachedModel c = null;
 			synchronized (modelMap) {
-				c = modelMap.get(method + "|" + uri);
+				c = X.isEmpty(original) ? null : modelMap.get(method + "|" + original);
 				// log.debug("uri=" + (method + "|" + uri));
 				if (c == null) {
 					/**
@@ -1346,29 +1348,31 @@ public class Module {
 					 * cache it and cache all the path
 					 */
 					Map<String, Map<String, Controller.PathMapping>> path = _loadPath(c1);
-					if (path != null && path.size() > 0) {
-						String u = uri;
-						// if (!u.endsWith("/")) {
-						// u += "/";
-						// }
-						for (String m1 : path.keySet()) {
-							Map<String, Controller.PathMapping> p = path.get(m1);
-							for (String s : p.keySet()) {
-								c = CachedModel.create(c1, path, this);
-								_cache(m1 + "|" + u + "/" + s, c);
-								// log.debug("uri=" + (m1 + "|" + u + "/" + s));
-							}
-							// c = CachedModel.create(c1, path, this);
-							// _cache(m1 + "|" + u, c);
-							// log.debug("uri=" + (m1 + "|" + u));
+//					if (path != null && path.size() > 0) {
+//						
+//						String u = uri;
+//						// if (!u.endsWith("/")) {
+//						// u += "/";
+//						// }
+//						for (String m1 : path.keySet()) {
+//							Map<String, Controller.PathMapping> p = path.get(m1);
+//							for (String s : p.keySet()) {
+//								c = CachedModel.create(c1, path, this);
+//								_cache(m1 + "|" + u + "/" + s, c);
+//								// log.debug("uri=" + (m1 + "|" + u + "/" + s));
+//							}
+//							// c = CachedModel.create(c1, path, this);
+//							// _cache(m1 + "|" + u, c);
+//							// log.debug("uri=" + (m1 + "|" + u));
+//
+//						}
+//					} else {
+					c = CachedModel.create(c1, path, this);
+					if (!X.isEmpty(original))
+						_cache(method + "|" + original, c);
 
-						}
-					} else {
-						c = CachedModel.create(c1, path, this);
-						_cache(method + "|" + uri, c);
-
-						// log.debug("uri=" + (method + "|" + uri));
-					}
+//						 log.debug("uri=" + (method + "|" + uri));
+//					}
 				}
 			}
 
@@ -1388,7 +1392,7 @@ public class Module {
 
 		Module e = floor();
 		if (e != null && e.getId() != this.id) {
-			return e.getModel(method, uri);
+			return e.getModel(method, uri, original);
 		}
 
 		return null;
@@ -1427,7 +1431,45 @@ public class Module {
 			}
 		}
 
+		c.uri = uri;
 		modelMap.put(uri, c);
+
+		if (modelMap.size() > MAX_CACHE_SIZE) {
+			Task t = new Task() {
+
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public String getName() {
+					return "model.cleanup";
+				}
+
+				@Override
+				public void onExecute() {
+					String[] ss = modelMap.keySet().toArray(new String[modelMap.size()]);
+					TreeMap<Long, CachedModel> s1 = new TreeMap<Long, CachedModel>();
+					for (String s : ss) {
+						CachedModel c1 = modelMap.get(s);
+						s1.put(c1.age, c1);
+					}
+					int d = s1.size() / 5;
+					while (d > 0 && !s1.isEmpty()) {
+						long age = s1.firstKey();
+						CachedModel c1 = s1.remove(age);
+						modelMap.remove(c1.uri);
+						d--;
+					}
+				}
+
+			};
+			if (!t.isScheduled()) {
+				t.schedule(0);
+			}
+		}
+
 	}
 
 	private Map<String, Map<String, Controller.PathMapping>> _loadPath(Class<? extends Controller> c) {
@@ -2031,9 +2073,12 @@ public class Module {
 	}
 
 	static class CachedModel {
+
 		Class<? extends Controller> model;
 		Map<String, Map<String, Controller.PathMapping>> pathmapping;
 		Module module;
+		String uri;
+		long age = System.currentTimeMillis();
 
 		/*
 		 * (non-Javadoc)
@@ -2075,6 +2120,8 @@ public class Module {
 			if (!X.isEmpty(uri)) {
 				m.path = getPath(uri);
 			}
+			age = System.currentTimeMillis();
+
 			return m;
 		}
 

@@ -214,10 +214,14 @@ public class Disk extends Bean {
 				}
 			}
 
-			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = DFile.create(Disk.get(), filename);
+			try {
+				// log.debug("seek, not found, filename=" + filename, new Exception());
+				DFile f = DFile.create(Disk.get(), filename);
 
-			return f;
+				return f;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 
 		return null;
@@ -238,7 +242,7 @@ public class Disk extends Bean {
 		return false;
 	}
 
-	public static Disk get() {
+	public static Disk get() throws IOException {
 
 		Beans<Disk> bs = disks();
 
@@ -457,7 +461,7 @@ public class Disk extends Bean {
 			pos += rate;
 		}
 
-		Disk get() {
+		Disk get() throws IOException {
 			if (ss.size() == 1)
 				return ss.keySet().iterator().next();
 
@@ -468,7 +472,8 @@ public class Disk extends Bean {
 					return d;
 				}
 			}
-			return DEFAULT;
+//			return DEFAULT;
+			throw new IOException("no disk, ss=" + ss.size() + ", pos=" + pos);
 		}
 
 	}

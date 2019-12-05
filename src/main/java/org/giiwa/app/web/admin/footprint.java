@@ -55,8 +55,6 @@ public class footprint extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
-		this.set("currentpage", s);
-
 		W q = W.create();
 		String table = this.getString("table");
 		if (!X.isEmpty(table)) {

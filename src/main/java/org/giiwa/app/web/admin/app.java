@@ -161,7 +161,7 @@ public class app extends Controller {
 		}
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		Beans<App> bs = App.dao.load(q, s, n);
 		bs.count();

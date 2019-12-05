@@ -72,7 +72,7 @@ public class accesslog extends Controller {
 			this.set("gsid", gsid);
 		}
 		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		if (X.isEmpty(sortby)) {
 			sortby = X.CREATED;
