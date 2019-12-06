@@ -16,12 +16,12 @@ package org.giiwa.core.task;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.UID;
+import org.giiwa.core.bean.X;
+import org.giiwa.core.cache.Cache;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -34,18 +34,6 @@ public class Monitor {
 
 	static Log log = LogFactory.getLog(Monitor.class);
 
-	static private Map<Long, Object> cache = new HashMap<Long, Object>();
-
-	public synchronized static void finished(Task t) {
-		for (long tid : cache.keySet().toArray(new Long[cache.size()])) {
-			if (t == cache.get(tid)) {
-				JSON jo = get(tid);
-				cache.put(tid, jo);
-				return;
-			}
-		}
-	}
-
 	/**
 	 * Start.
 	 *
@@ -55,20 +43,41 @@ public class Monitor {
 	 */
 	public static long start(Task t, long ms) {
 		long tid = UID.next("monitor.id");
-		cache.put(tid, t);
+		t.attach("tid", tid);
+		flush(t);
+
 		t.schedule(ms);
 		return tid;
 	}
 
-	/**
-	 * Stop.
-	 *
-	 * @param tid the tid
-	 */
-	public static void stop(long tid) {
-		Object t = cache.remove(tid);
-		if (t != null && t instanceof Task) {
-			((Task) t).stop(true);
+	private static String _name(long tid) {
+		return "task/monitor/" + tid;
+	}
+
+	public static void flush(Task t) {
+
+		long tid = t.attach("tid");
+		String name = _name(tid);
+
+		Field[] fs = t.getClass().getDeclaredFields();
+		if (fs != null) {
+			JSON jo = JSON.create();
+			for (Field f : fs) {
+				int p = f.getModifiers();
+				if ((p & Modifier.TRANSIENT) != 0 || (p & Modifier.STATIC) != 0 || (p & Modifier.FINAL) != 0)
+					continue;
+
+				try {
+					if (log.isDebugEnabled())
+						log.debug(f.getName() + "=" + f.getType());
+					f.setAccessible(true);
+					jo.put(f.getName(), f.get(t));
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+
+			Cache.set(name, jo, X.AHOUR);
 		}
 	}
 
@@ -78,35 +87,18 @@ public class Monitor {
 	 * @param tid the tid
 	 * @return the json
 	 */
-	public synchronized static JSON get(long tid) {
-		Object t = cache.get(tid);
+	public static JSON get(long tid) {
+
+		String name = _name(tid);
+
+		Object t = Cache.get(name);
 		if (t != null) {
 			if (t instanceof JSON) {
-				cache.remove(tid);
+//				Cache.remove(name);
 				return (JSON) t;
 			}
-
-			Field[] fs = t.getClass().getDeclaredFields();
-			if (fs != null) {
-				JSON jo = JSON.create();
-				for (Field f : fs) {
-					int p = f.getModifiers();
-					if ((p & Modifier.TRANSIENT) != 0 || (p & Modifier.STATIC) != 0 || (p & Modifier.FINAL) != 0)
-						continue;
-
-					try {
-						if (log.isDebugEnabled())
-							log.debug(f.getName() + "=" + f.getType());
-						f.setAccessible(true);
-						jo.put(f.getName(), f.get(t));
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					}
-				}
-
-				return jo;
-			}
 		}
+
 		return null;
 	}
 

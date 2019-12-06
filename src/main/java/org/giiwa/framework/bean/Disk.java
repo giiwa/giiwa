@@ -244,17 +244,8 @@ public class Disk extends Bean {
 
 	public static Disk get() throws IOException {
 
-		Beans<Disk> bs = disks();
-
-		Selector s = Selector.creeate();
-		for (Disk e : bs) {
-			if (e.bad != 1) {
-				long f1 = e.free * e.priority;
-				s.add(e, f1);
-			}
-		}
-
-		return s.get();
+		Selector s = Selector.get();
+		return s.pick();
 	}
 
 	public static Collection<DFile> list(String filename) {
@@ -449,19 +440,34 @@ public class Disk extends Bean {
 
 	static class Selector {
 
+		private long age = System.currentTimeMillis();
+		private static Selector _inst;
+
 		long pos = 0;
 		Map<Disk, Long[]> ss = new HashMap<Disk, Long[]>();
 
-		static Selector creeate() {
-			return new Selector();
+		static synchronized Selector get() {
+
+			if (_inst == null || System.currentTimeMillis() - _inst.age > X.AMINUTE) {
+				_inst = new Selector();
+
+				W q = W.create().sort("priority", -1).sort("path", 1);
+				Beans<Disk> bs = dao.load(q, 0, 1000);
+				for (Disk e : bs) {
+					long f1 = e.free * e.priority;
+					_inst.add(e, f1);
+				}
+			}
+
+			return _inst;
 		}
 
-		void add(Disk d, long rate) {
+		private void add(Disk d, long rate) {
 			ss.put(d, new Long[] { pos, pos + rate });
 			pos += rate;
 		}
 
-		Disk get() throws IOException {
+		Disk pick() throws IOException {
 			if (ss.size() == 1)
 				return ss.keySet().iterator().next();
 

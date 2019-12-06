@@ -570,7 +570,7 @@ public class backup extends Controller {
 			done = true;
 			state = 200;
 			message = "已经恢复：" + name;
-			Monitor.finished(this);
+			Monitor.flush(this);
 			finished = true;
 		}
 
