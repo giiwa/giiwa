@@ -138,6 +138,12 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return -1;
 	}
 
+	public static void delete(String module, W q) {
+		// delete
+		String table = table(module);
+		Helper.delete(q, table, Helper.DEFAULT);
+	}
+
 	public static void cleanup(String module, SIZE size) {
 		// delete old data
 		String table = table(module);
