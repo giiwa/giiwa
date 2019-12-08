@@ -29,7 +29,6 @@ import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.User;
 
 /**
  * the DAO helper class, used to access database
@@ -228,6 +227,12 @@ public class BeanDAO<I, T extends Bean> {
 		return Helper.delete(id, t);
 	}
 
+	public long next() throws SQLException {
+		String name = "table." + this.tableName() + ".id";
+		return UID.next(name);
+
+	}
+
 	/**
 	 * delete data in database, and remove all data in cache
 	 * 
@@ -338,9 +343,9 @@ public class BeanDAO<I, T extends Bean> {
 		return null;
 	}
 
-	public static void main(String[] args) {
-		System.out.println(User.dao.t);
-	}
+//	public static void main(String[] args) {
+//		System.out.println();
+//	}
 
 	/**
 	 * create a DAO object

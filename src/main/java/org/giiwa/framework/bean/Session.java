@@ -44,7 +44,7 @@ public class Session implements Serializable {
 
 	static Log log = LogFactory.getLog(Session.class);
 
-	private static int MAX = 1024;
+	private static int MAX = 128;
 
 	String sid;
 

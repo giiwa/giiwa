@@ -38,6 +38,7 @@ import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Role;
 import org.giiwa.framework.bean.Session;
 import org.giiwa.framework.bean.User;
+import org.giiwa.framework.bean.UserConfig;
 import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 import org.giiwa.framework.web.view.View;
@@ -223,15 +224,13 @@ public class user extends Controller {
 
 		try {
 			List<String> ss = this.getNames();
-			Session s = this.getSession(false);
 			if (ss != null && !ss.isEmpty()) {
 				for (String s1 : ss) {
 					String content = this.getHtml(s1);
 					if (content.length() < 4096) {
-						s.set("ss//" + s1, content);
+						UserConfig.set(login.getId(), s1, content);
 					}
 				}
-				s.store();
 			}
 
 			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("MAXSIZE", 4096));
@@ -260,11 +259,10 @@ public class user extends Controller {
 		JSON jo = JSON.create();
 		String names = this.getString("names");
 		if (names != null) {
-			Session s = this.getSession(false);
 			String[] ss = X.split(names, "[,;]");
 			if (ss != null && ss.length > 0) {
 				for (String s1 : ss) {
-					String v = s.get("ss//" + s1);
+					String v = UserConfig.get(login.getId(), s1);
 					jo.put(s1, v);
 				}
 			}

@@ -77,7 +77,7 @@ public class Monitor {
 				}
 			}
 
-			Cache.set(name, jo, X.AHOUR);
+			Cache.set(name, jo, X.AMINUTE * 2);
 		}
 	}
 
