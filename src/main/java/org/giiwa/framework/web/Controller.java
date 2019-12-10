@@ -274,7 +274,7 @@ public class Controller {
 				methods = pathmapping.get("*");
 			}
 
-			log.debug(this.method + "|" + path + "=>" + methods);
+//			log.debug(this.method + "|" + path + "=>" + methods);
 
 			if (methods != null) {
 				for (String s : methods.keySet()) {
@@ -293,7 +293,7 @@ public class Controller {
 						/**
 						 * match test in outside first
 						 */
-						log.debug(s + "=>" + this.path);
+//						log.debug(s + "=>" + this.path);
 
 						/**
 						 * create the pattern
