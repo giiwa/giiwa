@@ -260,13 +260,29 @@ public class Controller {
 				path = X.NONE;
 			}
 
-			Map<String, PathMapping> methods = pathmapping.get(this.method.name);
+			X.getCanonicalPath(path);
 
-//			log.debug(this.method + "=>" + methods);
+			while (path.startsWith("/") && path.length() > 1) {
+				path = path.substring(1);
+			}
+			while (path.endsWith("/") && path.length() > 1) {
+				path = path.substring(0, path.length() - 1);
+			}
+
+			Map<String, PathMapping> methods = pathmapping.get(this.method.name);
+			if (methods == null) {
+				methods = pathmapping.get("*");
+			}
+
+			log.debug(this.method + "|" + path + "=>" + methods);
 
 			if (methods != null) {
 				for (String s : methods.keySet()) {
 					if (X.isEmpty(s)) {
+						continue;
+					}
+
+					if (path == null || !path.matches(s)) {
 						continue;
 					}
 
@@ -277,97 +293,95 @@ public class Controller {
 						/**
 						 * match test in outside first
 						 */
-						// log.debug(s + "=>" + this.path);
+						log.debug(s + "=>" + this.path);
 
-						if (path != null && path.matches(s)) {
+						/**
+						 * create the pattern
+						 */
+						PathMapping oo = methods.get(s);
+						if (oo != null) {
+							Pattern p = oo.pattern;
+							Matcher m1 = p.matcher(path);
 
 							/**
-							 * create the pattern
+							 * find
 							 */
-							PathMapping oo = methods.get(s);
-							if (oo != null) {
-								Pattern p = oo.pattern;
-								Matcher m1 = p.matcher(path);
-
+							Object[] params = null;
+							if (m1.find()) {
 								/**
-								 * find
+								 * get all the params
 								 */
-								Object[] params = null;
-								if (m1.find()) {
-									/**
-									 * get all the params
-									 */
-									params = new Object[m1.groupCount()];
-									for (int i = 0; i < params.length; i++) {
-										params[i] = m1.group(i + 1);
-									}
+								params = new Object[m1.groupCount()];
+								for (int i = 0; i < params.length; i++) {
+									params[i] = m1.group(i + 1);
 								}
-
-								Path pp = oo.path;
-								/**
-								 * check the access and login status
-								 */
-								if (pp.login()) {
-
-									// check the system has been initialized
-									// ?
-									if (!Helper.isConfigured()) {
-										this.redirect("/admin/setup");
-										return null;
-									}
-
-									login = this.getUser();
-									if (login == null) {
-										/**
-										 * login require
-										 */
-										gotoLogin();
-										return pp;
-									}
-
-									if (!X.NONE.equals(pp.access()) && !login.hasAccess(pp.access().split("\\|"))) {
-										/**
-										 * no access
-										 */
-										this.put("lang", lang);
-										this.deny();
-
-										GLog.securitylog.warn(this.getClass(), pp.path(),
-												"deny the access, requred: " + lang.get(pp.access()), getUser(),
-												this.getRemoteHost());
-										return pp;
-									}
-								}
-
-								/**
-								 * set the "global" attribute for the model
-								 */
-
-								createQuery();
-
-								/**
-								 * invoke the method
-								 */
-								Method m = oo.method;
-								// log.debug("invoking: " + m.getName());
-
-								try {
-
-									m.invoke(this, params);
-
-								} catch (Exception e) {
-									if (log.isErrorEnabled())
-										log.error(e.getMessage(), e);
-
-									GLog.oplog.error(this.getClass(), pp.path(), this.getJSON().toString(), e,
-											getUser(), this.getRemoteHost());
-
-									error(e);
-								}
-
-								return pp;
 							}
+
+							Path pp = oo.path;
+							/**
+							 * check the access and login status
+							 */
+							if (pp.login()) {
+
+								// check the system has been initialized
+								// ?
+								if (!Helper.isConfigured()) {
+									this.redirect("/admin/setup");
+									return null;
+								}
+
+								login = this.getUser();
+								if (login == null) {
+									/**
+									 * login require
+									 */
+									gotoLogin();
+									return pp;
+								}
+
+								if (!X.NONE.equals(pp.access()) && !login.hasAccess(pp.access().split("\\|"))) {
+									/**
+									 * no access
+									 */
+									this.put("lang", lang);
+									this.deny();
+
+									GLog.securitylog.warn(this.getClass(), pp.path(),
+											"deny the access, requred: " + lang.get(pp.access()), getUser(),
+											this.getRemoteHost());
+									return pp;
+								}
+							}
+
+							/**
+							 * set the "global" attribute for the model
+							 */
+
+							createQuery();
+
+							/**
+							 * invoke the method
+							 */
+							Method m = oo.method;
+							// log.debug("invoking: " + m.getName());
+
+							try {
+
+								m.invoke(this, params);
+
+							} catch (Exception e) {
+								if (log.isErrorEnabled())
+									log.error(e.getMessage(), e);
+
+								GLog.oplog.error(this.getClass(), pp.path(), this.getJSON().toString(), e, getUser(),
+										this.getRemoteHost());
+
+								error(e);
+							}
+
+							return pp;
 						}
+
 					} catch (Exception e) {
 						if (log.isErrorEnabled())
 							log.error(s, e);
@@ -460,6 +474,31 @@ public class Controller {
 				}
 			}
 			onPut();
+		} else if (method.isOptions()) {
+
+			Method m = this.getClass().getMethod("onOptions");
+			if (m != null) {
+				Path p = m.getAnnotation(Path.class);
+				if (p != null) {
+					// check ogin
+					if (p.login()) {
+						if (this.getUser() == null) {
+							gotoLogin();
+							return null;
+						}
+
+						// check access
+						if (!X.isEmpty(p.access())) {
+							if (!login.hasAccess(p.access())) {
+								deny();
+								return null;
+							}
+						}
+					}
+				}
+			}
+			onOptions();
+
 		}
 
 		return null;
@@ -2070,11 +2109,21 @@ public class Controller {
 	 */
 	public void onPut() {
 		if (this.isAjax()) {
-			JSON jo = new JSON();
-			jo.put(X.STATE, HttpServletResponse.SC_FORBIDDEN);
-			response(jo);
+			response(JSON.create().append(X.STATE, HttpServletResponse.SC_FORBIDDEN));
 		} else {
-			this.print("not support");
+			this.print("forbidden");
+		}
+	}
+
+	public ServletContext getServletContext() {
+		return Controller.s️ervletContext;
+	}
+
+	public void onOptions() {
+		if (this.isAjax()) {
+			response(JSON.create().append(X.STATE, HttpServletResponse.SC_FORBIDDEN));
+		} else {
+			this.print("forbidden");
 		}
 	}
 
@@ -2508,7 +2557,7 @@ public class Controller {
 		public static final HttpMethod GET = HttpMethod.create("GET");
 		public static final HttpMethod POST = HttpMethod.create("POST");
 
-		String name;
+		public String name;
 
 		public static HttpMethod create(String s) {
 			return new HttpMethod(s);
@@ -2518,16 +2567,24 @@ public class Controller {
 			this.name = s.toUpperCase();
 		}
 
+		public boolean is(String name) {
+			return X.isSame(name, this.name);
+		}
+
 		public boolean isGet() {
-			return X.isSame("GET", name);
+			return is("GET");
 		}
 
 		public boolean isPost() {
-			return X.isSame("POST", name);
+			return is("POST");
 		}
 
 		public boolean isPut() {
-			return X.isSame("PUT", name);
+			return is("PUT");
+		}
+
+		public boolean isOptions() {
+			return is("OPTIONS");
 		}
 
 		@Override
@@ -2691,7 +2748,7 @@ public class Controller {
 			mo.set("__node", node);
 
 			if (log.isDebugEnabled())
-				log.debug("cost=" + t.past() + ", find model, uri=" + uri);
+				log.debug("cost=" + t.past() + ", find model, uri=" + uri + ", model=" + mo);
 
 //			Path p = 
 			mo.dispatch(uri, req, resp, method);
@@ -2808,7 +2865,7 @@ public class Controller {
 				if (mo != null) {
 
 					if (log.isDebugEnabled())
-						log.debug("cost " + t.past() + ", find the model, uri=" + uri);
+						log.debug("cost " + t.past() + ", find the model, uri=" + uri + ", model=" + mo);
 
 					mo.set("__node", node);
 

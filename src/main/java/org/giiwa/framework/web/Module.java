@@ -1297,7 +1297,7 @@ public class Module {
 				return m;
 			}
 
-			c = modelMap.get(method + "|" + uri + "/" + X.NONE);
+			c = modelMap.get("*|" + uri);
 			if (c != null) {
 				Controller m = c.create(uri);
 

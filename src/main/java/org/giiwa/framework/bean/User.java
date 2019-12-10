@@ -358,7 +358,7 @@ public class User extends Bean {
 	 * @param access the access token name
 	 * @return list of user who has the access token
 	 */
-	public static List<User> loadByAccess(String access) {
+	public static Beans<User> loadByAccess(String access) {
 
 		Beans<Role> bs = Role.loadByAccess(access, 0, 1000);
 
