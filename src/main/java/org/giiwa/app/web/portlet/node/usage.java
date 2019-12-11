@@ -22,8 +22,8 @@ public class usage extends portlet {
 		Node n = Node.dao.load(id);
 		this.set("n", n);
 
-		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
+				.and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
 			this.set("list", bs);
@@ -35,8 +35,8 @@ public class usage extends portlet {
 	public void data() {
 
 		String id = this.getString("id");
-		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
+				.and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
 			this.set("list", bs);
@@ -63,8 +63,8 @@ public class usage extends portlet {
 
 		long time = System.currentTimeMillis() - X.AMONTH;
 
-		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", time, W.OP.gte).sort("time", 1), 0, 30 * 24 * 60);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("dataid", id).and("time", time, W.OP.gte).sort("time", 1), 0, 30 * 24 * 60);
 		if (bs != null && !bs.isEmpty()) {
 			this.set("list", bs);
 		}

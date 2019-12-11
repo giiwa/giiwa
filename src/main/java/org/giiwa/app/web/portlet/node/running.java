@@ -21,12 +21,16 @@ public class running extends portlet {
 		this.set("id", id);
 		Node n = Node.dao.load(id);
 		this.set("n", n);
-		
-		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
+
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
+				.and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
+			long max = Stat.max("n3", "node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+					W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte));
+
 			this.set("list", bs);
+			this.set("max", max);
 			this.show("/portlet/node/running.html");
 		}
 	}
@@ -35,11 +39,12 @@ public class running extends portlet {
 	public void data() {
 
 		String id = this.getString("id");
-		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
+				.and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
-			this.set("list", bs);
+			long max = Stat.max("n3", "node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+					W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte));
 
 			JSON p = JSON.create();
 			p.append("name", lang.get("cpu.usage")).append("color", "#25840a");
@@ -48,7 +53,7 @@ public class running extends portlet {
 				l1.add(JSON.create().append("x", lang.time(e.getLong("time"), "m")).append("y", e.getLong("n3")));
 			});
 			p.append("data", l1);
-			this.response(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p)));
+			this.response(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p)).append("max", max));
 			return;
 		}
 		this.response(JSON.create().append(X.STATE, 201));
@@ -63,8 +68,8 @@ public class running extends portlet {
 
 		long time = System.currentTimeMillis() - X.AMONTH;
 
-		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", time, W.OP.gte).sort("time", 1), 0, 30 * 24 * 60);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
+				W.create().and("dataid", id).and("time", time, W.OP.gte).sort("time", 1), 0, 30 * 24 * 60);
 		if (bs != null && !bs.isEmpty()) {
 			this.set("list", bs);
 		}

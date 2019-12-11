@@ -91,8 +91,8 @@ public class node extends Controller {
 
 		String id = this.getString("id");
 
-		Beans<Stat> bs = Stat.load("node.load." + id, Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", System.currentTimeMillis() - X.AWEEK, W.OP.gte).sort("time", 1), 0, 24 * 60 * 7);
+		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
+				.and("time", System.currentTimeMillis() - X.AWEEK, W.OP.gte).sort("time", 1), 0, 24 * 60 * 7);
 
 		this.set("list", bs);
 		this.show("/admin/node.stat.html");

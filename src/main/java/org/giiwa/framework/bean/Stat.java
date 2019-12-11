@@ -393,35 +393,35 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return Helper.load(table(name), q, Stat.class);
 	}
 
-	public static long max(String field, String name, SIZE size, W q) {
+	public static long max(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
-		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
+		q.and("module", name + "." + type.toString()).and("size", size.toString());
 		return X.toLong((Object) Helper.max(q, field, table(name), Helper.DEFAULT));
 	}
 
-	public static long sum(String field, String name, SIZE size, W q) {
+	public static long sum(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
-		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
+		q.and("module", name + "." + type.toString()).and("size", size.toString());
 		return X.toLong((Object) Helper.sum(q, field, table(name), Helper.DEFAULT));
 	}
 
-	public static long avg(String field, String name, SIZE size, W q) {
+	public static long avg(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
-		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
+		q.and("module", name + "." + type.toString()).and("size", size.toString());
 		return X.toLong((Object) Helper.avg(q, field, table(name), Helper.DEFAULT));
 	}
 
-	public static long min(String field, String name, SIZE size, W q) {
+	public static long min(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
-		q.and("module", name + "." + TYPE.delta).and("size", size.toString());
+		q.and("module", name + "." + type.toString()).and("size", size.toString());
 		return X.toLong((Object) Helper.min(q, field, table(name), Helper.DEFAULT));
 	}
 

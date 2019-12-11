@@ -36,7 +36,7 @@ public class NodeLoadStatTask extends StatTask {
 
 	public static void init() {
 		inst = new NodeLoadStatTask();
-		inst.schedule((long) (X.AMINUTE * Math.random()));
+		inst.schedule((long) (X.AMINUTE * Math.random()), true);
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class NodeLoadStatTask extends StatTask {
 
 	@Override
 	public void onFinish() {
-		this.schedule(X.AMINUTE);
+		this.schedule(X.AMINUTE, true);
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class NodeLoadStatTask extends StatTask {
 			ff[12] = e.getLong("dfileavgcost_c");
 		}
 
-		Stat.snapshot(start, "node.load." + id, size, W.create(), V.create(), ff);
+		Stat.snapshot(start, "node.load", size, W.create().and("dataid", id), V.create().append("dataid", id), ff);
 
 	}
 
