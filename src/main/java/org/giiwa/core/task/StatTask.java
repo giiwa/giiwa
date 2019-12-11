@@ -28,6 +28,7 @@ public abstract class StatTask extends Task {
 	public static StatTask inst = null;
 
 	protected long[] time(Stat.SIZE s) {
+
 		if (Stat.SIZE.day.equals(s)) {
 			return new long[] { Stat.today() - X.ADAY, Stat.today() };
 		} else if (Stat.SIZE.hour.equals(s)) {
@@ -49,10 +50,13 @@ public abstract class StatTask extends Task {
 		} else if (Stat.SIZE.year.equals(s)) {
 			return new long[] { Stat.toyear() - X.AYEAR, Stat.toyear() };
 		}
+
 		return null;
+
 	}
 
 	protected long[] time1(Stat.SIZE s) {
+
 		if (Stat.SIZE.day.equals(s)) {
 			return new long[] { Stat.today(), System.currentTimeMillis() };
 		} else if (Stat.SIZE.hour.equals(s)) {
@@ -75,6 +79,7 @@ public abstract class StatTask extends Task {
 			return new long[] { Stat.toyear(), System.currentTimeMillis() };
 		}
 		return null;
+
 	}
 
 	@Override

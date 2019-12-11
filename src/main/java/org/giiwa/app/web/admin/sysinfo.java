@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import org.giiwa.core.base.Host;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.framework.web.*;
 
 /**
@@ -70,6 +71,17 @@ public class sysinfo extends Controller {
 			log.error(e.getMessage(), e);
 		}
 		this.show("/admin/sysinfo.net.html");
+	}
+
+	@Path(path = "db", login = true, access = "access.config.admin")
+	public void db() {
+
+		try {
+			this.set("list", Helper.listDB());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysinfo.db.html");
 	}
 
 	@Path(path = "route", login = true, access = "access.config.admin")

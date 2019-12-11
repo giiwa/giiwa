@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import org.giiwa.core.base.Host;
+import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.UID;
 import org.giiwa.framework.web.*;
 
@@ -118,6 +119,17 @@ public class sysstat extends Controller {
 			log.error(e.getMessage(), e);
 		}
 		this.show("/admin/sysstat.netstat.html");
+	}
+
+	@Path(path = "dbop", login = true, access = "access.config.admin")
+	public void dbop() {
+
+		try {
+			this.set("list", Helper.listOp());
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		this.show("/admin/sysstat.dbop.html");
 	}
 
 }

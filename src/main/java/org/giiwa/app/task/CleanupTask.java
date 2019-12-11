@@ -15,19 +15,16 @@
 package org.giiwa.app.task;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.base.ClassUtil;
 import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.BeanDAO;
+import org.giiwa.core.bean.Schema;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
@@ -39,6 +36,7 @@ import org.giiwa.framework.bean.m._Disk;
 import org.giiwa.framework.bean.m._Memory;
 import org.giiwa.framework.bean.m._Net;
 import org.giiwa.framework.web.Controller;
+import org.giiwa.framework.web.Language;
 
 /**
  * The Class CleanupTask.
@@ -127,19 +125,34 @@ public class CleanupTask extends Task {
 
 			GLog.applog.info("sys", "cleanup", "cleanup temp files: " + count);
 
-			int n = 0;
-			for (BeanDAO d : new BeanDAO[] { GLog.dao, _CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao, _Disk.dao,
-					_Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao }) {
-				n += d.cleanup();
+			Lock door = Global.getLock("cleanup.glog");
+			if (door.tryLock()) {
+				try {
+					int n = 0;
+					for (BeanDAO d : new BeanDAO[] { GLog.dao, _CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao,
+							_Disk.dao, _Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao }) {
+						if (!inCleanupTime())
+							break;
+						n += d.cleanup();
+					}
+
+					n += Stat.cleanup();
+
+					GLog.applog.info("sys", "cleanup", "cleanup data: " + n);
+				} finally {
+					door.unlock();
+				}
 			}
-
-			n += Stat.cleanup();
-
-			GLog.applog.info("sys", "cleanup", "cleanup data: " + n);
-
 		} catch (Exception e) {
 			// eat the exception
 		}
+	}
+
+	public static boolean inCleanupTime() {
+		String time = Global.getString("gi.clean.time", "02:00-04:00");
+		String t = Language.getLanguage().format(System.currentTimeMillis(), "HH:mm");
+		String[] ss = X.split(time, "-");
+		return t.compareTo(ss[0]) >= 0 && t.compareTo(ss[1]) <= 0;
 	}
 
 	/**
@@ -185,35 +198,18 @@ public class CleanupTask extends Task {
 	}
 
 	/**
-	 * The beans.
-	 */
-	public static List<Class<? extends Bean>> beans = new ArrayList<Class<? extends Bean>>();
-
-	/**
-	 * Adds the.
+	 * Please refer Schema.add
 	 *
+	 * @deprecated
 	 * @param packname the packname
 	 */
 	public static void add(String packname) {
 
-		List<Class<Bean>> l1 = ClassUtil.listSubType(packname, Bean.class);
-		if (l1 != null) {
-			for (Class<Bean> t : l1) {
-				if (!beans.contains(t)) {
-					beans.add(t);
-				}
-			}
-
-			Collections.sort(beans, new Comparator<Class<? extends Bean>>() {
-
-				@Override
-				public int compare(Class<? extends Bean> o1, Class<? extends Bean> o2) {
-					return o1.getName().compareTo(o2.getName());
-				}
-
-			});
-		}
+		Schema.add(packname);
 
 	}
 
+	public static void main(String[] args) {
+		System.out.println(CleanupTask.inCleanupTime());
+	}
 }

@@ -3405,6 +3405,10 @@ public class Helper implements Serializable {
 		List<JSON> getMetaData(String tablename);
 
 		void repair();
+
+		List<JSON> listDB();
+
+		List<JSON> listOp();
 	}
 
 	public static DBHelper getPrimary() {
@@ -3615,6 +3619,38 @@ public class Helper implements Serializable {
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					return h.listTables(dbname);
+				}
+			}
+		} finally {
+			read.add(t1.pastms());
+		}
+		return null;
+	}
+
+	public static List<JSON> listDB() {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null) {
+				return primary.listDB();
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					return h.listDB();
+				}
+			}
+		} finally {
+			read.add(t1.pastms());
+		}
+		return null;
+	}
+
+	public static List<JSON> listOp() {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null) {
+				return primary.listOp();
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					return h.listOp();
 				}
 			}
 		} finally {

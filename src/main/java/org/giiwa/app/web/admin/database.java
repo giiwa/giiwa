@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.giiwa.app.task.CleanupTask;
 import org.giiwa.core.base.Exporter;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.bean.Schema;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Temp;
@@ -49,7 +49,7 @@ public class database extends Controller {
 	@Override
 	public void onGet() {
 
-		List<Class<? extends Bean>> l1 = CleanupTask.beans;
+		List<Class<? extends Bean>> l1 = Schema.beans;
 		Map<String, JSON> l2 = new TreeMap<String, JSON>();
 		for (Class<? extends Bean> c : l1) {
 			String table = Helper.getTable(c);
@@ -159,7 +159,7 @@ public class database extends Controller {
 			return;
 		}
 
-		List<Class<? extends Bean>> l1 = CleanupTask.beans;
+		List<Class<? extends Bean>> l1 = Schema.beans;
 		Map<String, JSON> l2 = new TreeMap<String, JSON>();
 		for (Class<? extends Bean> c : l1) {
 			String table = Helper.getTable(c);
@@ -175,7 +175,7 @@ public class database extends Controller {
 	}
 
 	private Class<? extends Bean> _getBean(String table) {
-		List<Class<? extends Bean>> l1 = CleanupTask.beans;
+		List<Class<? extends Bean>> l1 = Schema.beans;
 		for (Class<? extends Bean> c : l1) {
 			if (X.isSame(table, Helper.getTable(c))) {
 				return c;

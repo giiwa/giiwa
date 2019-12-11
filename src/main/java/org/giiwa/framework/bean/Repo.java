@@ -16,11 +16,13 @@ package org.giiwa.framework.bean;
 
 import java.io.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.*;
+import org.giiwa.core.conf.Global;
 import org.giiwa.core.dfile.DFile;
 
 /**
@@ -320,18 +322,24 @@ public class Repo {
 
 	public static int cleanup(long age) {
 
-		int count = 0;
-		try {
-			DFile f = Disk.seek(ROOT);
+		Lock door = Global.getLock("repo.clean");
 
-			DFile[] ff = f.listFiles();
-			if (ff != null) {
-				for (DFile f1 : ff) {
-					count += IOUtil.delete(f1, age);
+		int count = 0;
+		if (door.tryLock()) {
+			try {
+				DFile f = Disk.seek(ROOT);
+
+				DFile[] ff = f.listFiles();
+				if (ff != null) {
+					for (DFile f1 : ff) {
+						count += IOUtil.delete(f1, age);
+					}
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				door.unlock();
 			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 		}
 		return count;
 	}

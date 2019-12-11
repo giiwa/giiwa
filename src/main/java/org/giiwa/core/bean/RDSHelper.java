@@ -3208,4 +3208,14 @@ public class RDSHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@Override
+	public List<JSON> listDB() {
+		return null;
+	}
+
+	@Override
+	public List<JSON> listOp() {
+		return null;
+	}
+
 }

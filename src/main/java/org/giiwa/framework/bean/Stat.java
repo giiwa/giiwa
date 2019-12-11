@@ -14,6 +14,7 @@ import java.util.Set;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.task.CleanupTask;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Column;
@@ -623,12 +624,12 @@ public class Stat extends Bean implements Comparable<Stat> {
 	public synchronized static int cleanup() {
 		if (rules == null) {
 			Configuration conf = Config.getConf();
-			rules = new Object[][] { new Object[] { SIZE.min, conf.getInt("stat.cleanup.min", 1) },
-					new Object[] { SIZE.m10, conf.getInt("stat.cleanup.m10", 7) },
-					new Object[] { SIZE.m15, conf.getInt("stat.cleanup.m15", 7) },
-					new Object[] { SIZE.m30, conf.getInt("stat.cleanup.m30", 30) },
-					new Object[] { SIZE.hour, conf.getInt("stat.cleanup.hour", 30) },
-					new Object[] { SIZE.day, conf.getInt("stat.cleanup.day", 365) },
+			rules = new Object[][] { new Object[] { SIZE.min, conf.getInt("stat.cleanup.min", 7) },
+					new Object[] { SIZE.m10, conf.getInt("stat.cleanup.m10", 2 * 365) },
+					new Object[] { SIZE.m15, conf.getInt("stat.cleanup.m15", 2 * 365) },
+					new Object[] { SIZE.m30, conf.getInt("stat.cleanup.m30", 2 * 365) },
+					new Object[] { SIZE.hour, conf.getInt("stat.cleanup.hour", 2 * 365) },
+					new Object[] { SIZE.day, conf.getInt("stat.cleanup.day", 2 * 365) },
 					new Object[] { SIZE.week, conf.getInt("stat.cleanup.week", 2 * 365) },
 					new Object[] { SIZE.month, conf.getInt("stat.cleanup.month", 5 * 365) },
 					new Object[] { SIZE.season, conf.getInt("stat.cleanup.season", 5 * 365) },
@@ -638,9 +639,16 @@ public class Stat extends Bean implements Comparable<Stat> {
 		int n = 0;
 		List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
 		for (JSON j1 : l1) {
+			if (!CleanupTask.inCleanupTime())
+				break;
+
 			String name = j1.getString("table_name");
 			if (name.startsWith("gi_stat_")) {
 				for (Object[] p1 : rules) {
+
+					if (!CleanupTask.inCleanupTime())
+						break;
+
 					SIZE s1 = (SIZE) p1[0];
 					int day = (int) p1[1];
 					if (day > 0) {

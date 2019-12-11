@@ -1,0 +1,33 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysinfo/cpu?__node=$!__node'>$lang.get('a.sysinfo.cpu')</a>
+	<a href='/admin/sysinfo/process?__node=$!__node'>$lang.get('a.sysinfo.process')</a>
+	<a href='/admin/sysinfo/net?__node=$!__node'>$lang.get('a.sysinfo.net')</a>
+	<a href='/admin/sysinfo/route?__node=$!__node'>$lang.get('a.sysinfo.route')</a>
+	<a href='/admin/sysinfo/disk?__node=$!__node'>$lang.get('a.sysinfo.disk')</a>
+	<a href='/admin/sysinfo/db?__node=$!__node' class='selected'>$lang.get('a.sysinfo.db')</a>
+</div>
+
+<table id='task-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('db.name')</th>
+			<th>$lang.get('db.size')</th>
+		</tr>
+	</thead>
+	<tbody>
+#set($i=0)
+#foreach($f in $list)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$!f.name</td>
+		<td>$!f.size</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
