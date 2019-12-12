@@ -88,36 +88,31 @@ public abstract class StatTask extends Task {
 		String name = this.getName();
 		long last = Global.getLong("last.stat." + name, 0);
 		if (System.currentTimeMillis() - last >= X.AMINUTE) {
-			if (this.tryLock()) {
-				try {
-					Global.setConfig("last.stat." + name, System.currentTimeMillis());
+			Global.setConfig("last.stat." + name, System.currentTimeMillis());
 
-					List<?> l1 = getCategories();
-					if (l1 != null) {
-						for (Object o : l1) {
+			List<?> l1 = getCategories();
+			if (l1 != null) {
+				for (Object o : l1) {
 
-							Stat.SIZE[] ss = this.getSizes();
-							for (Stat.SIZE s : ss) {
-								long[] time = time(s);
-								if (log.isDebugEnabled())
-									log.debug("stat - " + this.getName() + ", size=" + s + ", time="
-											+ Arrays.toString(time) + ", cat=" + o);
-								onStat(s, time[0], time[1], o);
+					Stat.SIZE[] ss = this.getSizes();
+					for (Stat.SIZE s : ss) {
+						long[] time = time(s);
+						if (log.isDebugEnabled())
+							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
+									+ ", cat=" + o);
+						onStat(s, time[0], time[1], o);
 
-								time = time1(s);
-								if (log.isDebugEnabled())
-									log.debug("stat - " + this.getName() + ", size=" + s + ", time="
-											+ Arrays.toString(time) + ", cat=" + o);
-								onStat(s, time[0], time[1], o);
-							}
-						}
+						time = time1(s);
+						if (log.isDebugEnabled())
+							log.debug("stat - " + this.getName() + ", size=" + s + ", time=" + Arrays.toString(time)
+									+ ", cat=" + o);
+						onStat(s, time[0], time[1], o);
 					}
-
-				} finally {
-					this.unlock();
 				}
 			}
+
 		}
+
 	}
 
 	protected abstract void onStat(SIZE size, long start, long end, Object cat);
