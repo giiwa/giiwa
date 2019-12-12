@@ -100,6 +100,7 @@ public class CleanupTask extends Task {
 	 * 
 	 * @see org.giiwa.worker.WorkerTask.onExecute()
 	 */
+	@SuppressWarnings("rawtypes")
 	@Override
 	public void onExecute() {
 		try {

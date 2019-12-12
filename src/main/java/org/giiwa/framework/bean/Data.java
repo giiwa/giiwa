@@ -39,6 +39,7 @@ public class Data extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	@SuppressWarnings("unused")
 	private static Log log = LogFactory.getLog(Data.class);
 
 	/**

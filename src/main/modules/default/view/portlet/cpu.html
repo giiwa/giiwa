@@ -41,7 +41,7 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-	    				{name: "$lang.get('cpu.usage')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$lang.format($!c.usage, '%.1f')},#end]}
+	    				{name: "$lang.get('cpu.usage')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.usage},#end]}
 	    			], 
 	});
 

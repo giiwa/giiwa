@@ -299,7 +299,7 @@ public class user extends Controller {
 	public void oplog() {
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		W q = getW(this.getJSON());
 		Beans<GLog> bs = GLog.dao.load(q, s, n);
@@ -346,7 +346,7 @@ public class user extends Controller {
 		}
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE, "items.per.page");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt).sort("name", 1), s, n);
 		bs.count();

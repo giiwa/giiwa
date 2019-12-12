@@ -250,7 +250,7 @@ public class setup extends Controller {
 					Cache.init(url);
 
 					String s1 = "1";
-					Cache.set("test", s1);
+					Cache.set("test", s1, X.AMINUTE);
 					String s2 = Cache.get("test");
 					if (X.isSame(s1, s2)) {
 						jo.put(X.STATE, 200);
