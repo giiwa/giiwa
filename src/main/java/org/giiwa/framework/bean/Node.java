@@ -37,6 +37,7 @@ import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Module;
 import org.hyperic.sigar.CpuInfo;
 import org.hyperic.sigar.CpuPerc;
+import org.hyperic.sigar.NetStat;
 import org.giiwa.core.bean.Table;
 import org.giiwa.core.bean.X;
 
@@ -94,6 +95,12 @@ public class Node extends Bean {
 	@Column(name = "usage")
 	private int usage; // cpu usage
 
+	@Column(name = "tcp_established")
+	private int tcp_established; // sockets count
+
+	@Column(name = "tcp_closewait")
+	private int tcp_closewait; // sockets close wait
+
 	@Column(name = "giiwa")
 	private String giiwa;
 
@@ -114,6 +121,14 @@ public class Node extends Bean {
 
 	public List<String> getModules() {
 		return modules;
+	}
+
+	public int getTcp_established() {
+		return tcp_established;
+	}
+
+	public int getTcp_closewait() {
+		return tcp_closewait;
 	}
 
 	public int getState() {
@@ -166,6 +181,12 @@ public class Node extends Bean {
 				v.append("localthreads", Task.activeThread());
 				v.append("localrunning", Task.tasksInRunning());
 				v.append("localpending", Task.tasksInQueue());
+
+				NetStat ns = Host.getNetStat();
+				if (ns != null) {
+					v.append("tcp_established", ns.getTcpEstablished());
+					v.append("tcp_closewait", ns.getTcpCloseWait() + ns.getTcpTimeWait());
+				}
 
 				FileServer.measures(v);
 				FileClient.measures(v);

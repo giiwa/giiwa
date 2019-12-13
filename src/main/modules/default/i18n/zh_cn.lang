@@ -953,3 +953,7 @@ db.write.times=写
 db.write.avg=平均
 db.write.min=最小
 db.read.times=读
+tcp.closewait=关闭
+a.node.tcpestablished=网络链接
+a.node.tcpclosewait=链接关闭
+tcp.established=链接

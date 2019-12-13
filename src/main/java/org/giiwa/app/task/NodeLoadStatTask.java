@@ -61,7 +61,7 @@ public class NodeLoadStatTask extends StatTask {
 
 		String id = cat.toString();
 		Node e = Node.dao.load(id);
-		long[] ff = new long[13];
+		long[] ff = new long[15];
 
 		if (e.getUpdated() < System.currentTimeMillis() - Node.LOST) {
 			ff[0] = -1;
@@ -77,6 +77,9 @@ public class NodeLoadStatTask extends StatTask {
 			ff[10] = -1; // dfile.max_c
 			ff[11] = -1; // dfile.min_c
 			ff[12] = -1; // dfile.avg_c
+			ff[13] = -1; // tcp_established
+			ff[14] = -1; // tcp_closewait
+
 		} else {
 			ff[0] = e.getUsage();
 			ff[1] = e.getLong("globaltasks");
@@ -91,6 +94,8 @@ public class NodeLoadStatTask extends StatTask {
 			ff[10] = e.getLong("dfilemaxcost_c");
 			ff[11] = e.getLong("dfilemincost_c");
 			ff[12] = e.getLong("dfileavgcost_c");
+			ff[13] = e.getLong("tcp_established");
+			ff[14] = e.getLong("tcp_closewait");
 		}
 
 		Stat.snapshot(start, "node.load", size, W.create().and("dataid", id), V.create().append("dataid", id), ff);

@@ -177,6 +177,40 @@ public class node extends Controller {
 		this.show("/admin/node.threads.html");
 	}
 
+	@Path(login = true, path = "tcpestablished", access = "access.config.admin")
+	public void tcpestablished() {
+
+		W q = W.create().sort("label", 1).sort("ip", 1);
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", 50);
+
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/node/tcpestablished");
+		this.show("/admin/node.tcpestablished.html");
+	}
+
+	@Path(login = true, path = "tcpclosewait", access = "access.config.admin")
+	public void tcpclosewait() {
+
+		W q = W.create().sort("label", 1).sort("ip", 1);
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", 50);
+
+		Beans<Node> bs = Node.dao.load(q, s, n);
+		bs.count();
+
+		this.set(bs, s, n);
+
+		this.query.path("/admin/node/tcpclosewait");
+		this.show("/admin/node.tcpclosewait.html");
+	}
+
 	@Path(login = true, path = "running", access = "access.config.admin")
 	public void running() {
 

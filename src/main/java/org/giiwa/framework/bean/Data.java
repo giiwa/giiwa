@@ -16,8 +16,6 @@ package org.giiwa.framework.bean;
 
 import java.sql.SQLException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.Bean;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
@@ -39,8 +37,7 @@ public class Data extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@SuppressWarnings("unused")
-	private static Log log = LogFactory.getLog(Data.class);
+//	private static Log log = LogFactory.getLog(Data.class);
 
 	/**
 	 * Load data from any table

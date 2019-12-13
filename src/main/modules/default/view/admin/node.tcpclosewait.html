@@ -3,14 +3,14 @@
 <div class='tabs'>
 	<a href='/admin/node?__node=$!__node'>$lang.get('a.node.list')</a>
 	<a href='/admin/node/usage?__node=$!__node'>$lang.get('a.node.usage')</a>
-	<a href='/admin/node/running?__node=$!__node' >$lang.get('a.node.running')</a>
-	<a href='/admin/node/pending?__node=$!__node' class='selected'>$lang.get('a.node.pending')</a>
+	<a href='/admin/node/running?__node=$!__node'>$lang.get('a.node.running')</a>
+	<a href='/admin/node/pending?__node=$!__node'>$lang.get('a.node.pending')</a>
 	<a href='/admin/node/tcpestablished?__node=$!__node'>$lang.get('a.node.tcpestablished')</a>
-	<a href='/admin/node/tcpclosewait?__node=$!__node'>$lang.get('a.node.tcpclosewait')</a>
+	<a href='/admin/node/tcpclosewait?__node=$!__node' class='selected'>$lang.get('a.node.tcpclosewait')</a>
 </div>
 
 #foreach($f in $list)
-	<div class="portlet" data-url="/portlet/node/pending?__node=$!__node&id=$!f.id"></div>
+	<div class="portlet" data-url="/portlet/node/tcpclosewait?__node=$!__node&id=$!f.id"></div>
 #end
 
 #parse('/widget/goto.page.html')

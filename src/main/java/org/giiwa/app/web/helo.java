@@ -40,20 +40,21 @@ public class helo extends Controller {
 
 	@Path(path = "files", method = "*")
 	public void files() {
+
+		log.debug("method=" + method.name);
+
 		if (method.is("OPTIONS")) {
-			log.debug("OPTIONS");
 
 			resp.addHeader("DAV", "1,2");
 			resp.addHeader("Allow", determineMethodsAllowed(req));
 			resp.addHeader("MS-Author-Via", "DAV");
 
 		} else if (method.is("PROPFIND")) {
-			log.debug("OPTIONS");
 
 			propfind();
-		} else {
-			log.debug("method=" + method.name);
+
 		}
+
 	}
 
 	private final Hashtable<String, Vector<String>> lockNullResources = new Hashtable<>();
@@ -87,14 +88,24 @@ public class helo extends Controller {
 
 			Node propNode = null;
 
+			log.debug("req.length=" + req.getContentLengthLong());
+
 			if (req.getContentLengthLong() > 0) {
+
+				byte[] bb = new byte[req.getContentLength()];
+				req.getInputStream().read(bb);
+				log.debug("bb=" + new String(bb));
+
 				DocumentBuilder documentBuilder = getDocumentBuilder();
 
 				try {
-					Document document = documentBuilder.parse(new InputSource(req.getInputStream()));
+
+					Document doc = documentBuilder.parse(new String(bb));
+
+					log.debug("doc=" + doc.toString());
 
 					// Get the root element of the document
-					Element rootElement = document.getDocumentElement();
+					Element rootElement = doc.getDocumentElement();
 					NodeList childList = rootElement.getChildNodes();
 
 					for (int i = 0; i < childList.getLength(); i++) {
@@ -116,16 +127,15 @@ public class helo extends Controller {
 							break;
 						}
 					}
-				} catch (SAXException e) {
+				} catch (Exception e) {
 					// Something went wrong - bad request
 					resp.sendError(WebdavStatus.SC_BAD_REQUEST);
-					return;
-				} catch (IOException e) {
-					// Something went wrong - bad request
-					resp.sendError(WebdavStatus.SC_BAD_REQUEST);
+					log.error(e.getMessage(), e);
 					return;
 				}
 			}
+
+			log.debug("type=" + type);
 
 			if (type == FIND_BY_PROPERTY) {
 				properties = new Vector<>();
@@ -154,9 +164,11 @@ public class helo extends Controller {
 
 			}
 
-			File resource = new File(path);
+			File res = new File(path);
 
-			if (resource.exists()) {
+			log.debug("res=" + res);
+
+			if (res.exists()) {
 				int slash = path.lastIndexOf('/');
 				if (slash != -1) {
 					String parentPath = path.substring(0, slash);
@@ -175,6 +187,9 @@ public class helo extends Controller {
 								parseLockNullProperties(req, generatedXML, lockNullPath, type, properties);
 								generatedXML.writeElement("D", "multistatus", XMLWriter.CLOSING);
 								generatedXML.sendData();
+
+								log.debug(generatedXML.toString());
+
 								return;
 							}
 						}
@@ -182,13 +197,18 @@ public class helo extends Controller {
 				}
 			}
 
-			if (!resource.exists()) {
+			if (!res.exists()) {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND, path);
+				log.debug("resource not exists");
+
 				return;
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
+
+		log.debug("over");
+
 	}
 
 	protected DocumentBuilder getDocumentBuilder() throws ServletException {
@@ -242,11 +262,11 @@ public class helo extends Controller {
 
 		// Trace - assume disabled unless we can prove otherwise
 
-		methodsAllowed.append(", LOCK, UNLOCK, PROPPATCH, COPY, MOVE");
+		// methodsAllowed.append(", LOCK, UNLOCK, PROPPATCH, COPY, MOVE");
 
-		methodsAllowed.append(", PROPFIND");
+		// methodsAllowed.append(", PROPFIND");
 
-		methodsAllowed.append(", MKCOL"); // not exists
+		// methodsAllowed.append(", MKCOL"); // not exists
 
 		return methodsAllowed.toString();
 	}
