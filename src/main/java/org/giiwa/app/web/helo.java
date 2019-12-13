@@ -1,7 +1,6 @@
 package org.giiwa.app.web;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -24,7 +23,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 public class helo extends Controller {
 
@@ -94,13 +92,15 @@ public class helo extends Controller {
 
 				byte[] bb = new byte[req.getContentLength()];
 				req.getInputStream().read(bb);
-				log.debug("bb=" + new String(bb));
+				String ss = new String(bb);
+				
+				log.debug("bb=" + ss);
 
 				DocumentBuilder documentBuilder = getDocumentBuilder();
 
 				try {
 
-					Document doc = documentBuilder.parse(new String(bb));
+					Document doc = documentBuilder.parse(ss);
 
 					log.debug("doc=" + doc.toString());
 
