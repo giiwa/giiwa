@@ -968,7 +968,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static Object _fromXml(Element r1) {
+	private static JSON _fromXml(Element r1) {
 
 		List<Element> l1 = r1.elements();
 		if (l1 == null || l1.isEmpty()) {

@@ -2,8 +2,10 @@ package org.giiwa.app.web;
 
 import java.io.File;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
 
 import javax.servlet.ServletContext;
@@ -15,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.catalina.util.XMLWriter;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 import org.w3c.dom.Document;
@@ -93,40 +96,51 @@ public class helo extends Controller {
 				byte[] bb = new byte[req.getContentLength()];
 				req.getInputStream().read(bb);
 				String ss = new String(bb);
-				
+
 				log.debug("bb=" + ss);
 
 				DocumentBuilder documentBuilder = getDocumentBuilder();
 
 				try {
 
-					Document doc = documentBuilder.parse(ss);
+					JSON jo = JSON.fromXml(ss);
+//					Document doc = documentBuilder.parse(ss);
+//
+					log.debug(jo.toPrettyString());
 
-					log.debug("doc=" + doc.toString());
+					Object o = jo.get("propfind");
+					if (!o.getClass().isArray()) {
+						o = Arrays.asList(o);
+					}
+
+					List<JSON> l1 = (List<JSON>) o;
+					for (JSON j1 : l1) {
+//						String type = 
+					}
 
 					// Get the root element of the document
-					Element rootElement = doc.getDocumentElement();
-					NodeList childList = rootElement.getChildNodes();
+//					Element rootElement = doc.getDocumentElement();
+//					NodeList childList = rootElement.getChildNodes();
 
-					for (int i = 0; i < childList.getLength(); i++) {
-						Node currentNode = childList.item(i);
-						switch (currentNode.getNodeType()) {
-						case Node.TEXT_NODE:
-							break;
-						case Node.ELEMENT_NODE:
-							if (currentNode.getNodeName().endsWith("prop")) {
-								type = FIND_BY_PROPERTY;
-								propNode = currentNode;
-							}
-							if (currentNode.getNodeName().endsWith("propname")) {
-								type = FIND_PROPERTY_NAMES;
-							}
-							if (currentNode.getNodeName().endsWith("allprop")) {
-								type = FIND_ALL_PROP;
-							}
-							break;
-						}
-					}
+//					for (String name: jo.keySet()) {
+//						Node currentNode = childList.item(i);
+//						switch (currentNode.getNodeType()) {
+//						case Node.TEXT_NODE:
+//							break;
+//						case Node.ELEMENT_NODE:
+//							if (currentNode.getNodeName().endsWith("prop")) {
+//								type = FIND_BY_PROPERTY;
+//								propNode = currentNode;
+//							}
+//							if (currentNode.getNodeName().endsWith("propname")) {
+//								type = FIND_PROPERTY_NAMES;
+//							}
+//							if (currentNode.getNodeName().endsWith("allprop")) {
+//								type = FIND_ALL_PROP;
+//							}
+//							break;
+//						}
+//					}
 				} catch (Exception e) {
 					// Something went wrong - bad request
 					resp.sendError(WebdavStatus.SC_BAD_REQUEST);
