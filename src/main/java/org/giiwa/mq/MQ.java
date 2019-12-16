@@ -16,10 +16,13 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.Counter;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.SysTask;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.GLog;
@@ -180,6 +183,10 @@ public abstract class MQ {
 				try {
 					Request r = queue.remove(0);
 					if (r != null) {
+
+						if (r.tt > 0)
+							read.add(System.currentTimeMillis() - r.tt);
+
 						cb.onRequest(r.seq, r);
 					}
 				} catch (Exception e) {
@@ -191,12 +198,10 @@ public abstract class MQ {
 	}
 
 	// static AtomicInteger caller = new AtomicInteger(0);
-	static AtomicLong totalSent = new AtomicLong(0);
-	static AtomicLong totalGot = new AtomicLong(0);
+//	static AtomicLong totalSent = new AtomicLong(0);
+//	static AtomicLong totalGot = new AtomicLong(0);
 
 	protected static void process(final String name, final List<Request> rs, final IStub cb) {
-
-		totalGot.incrementAndGet();
 
 		Caller.call(name, cb, rs);
 
@@ -221,13 +226,19 @@ public abstract class MQ {
 			throw new Exception("MQ not init yet");
 		}
 
-		long s1 = seq.incrementAndGet();
-		if (log.isDebugEnabled())
-			log.debug("send topic to [" + to + "], seq=" + s1);
+		TimeStamp t = TimeStamp.create();
+		try {
+			long s1 = seq.incrementAndGet();
+			if (log.isDebugEnabled())
+				log.debug("send topic to [" + to + "], seq=" + s1);
 
-		req.seq = s1;
-		mq._topic(to, req);
-		return s1;
+			req.seq = s1;
+			req.tt = System.currentTimeMillis();
+			mq._topic(to, req);
+			return s1;
+		} finally {
+			write.add(t.pastms());
+		}
 	}
 
 	protected abstract long _send(String to, Request req) throws Exception;
@@ -241,11 +252,17 @@ public abstract class MQ {
 	 * @throws Exception the Exception
 	 */
 	public static long send(String to, Request req) throws Exception {
-		if (req.seq <= 0) {
-			req.seq = seq.incrementAndGet();
-		}
+		TimeStamp t = TimeStamp.create();
+		try {
+			if (req.seq <= 0) {
+				req.seq = seq.incrementAndGet();
+			}
+			req.tt = System.currentTimeMillis();
 
-		return mq._send(to, req);
+			return mq._send(to, req);
+		} finally {
+			write.add(t.pastms());
+		}
 	}
 
 	// public static void logger(boolean log) {
@@ -257,6 +274,7 @@ public abstract class MQ {
 		public long seq = -1;
 		public int type = 0;
 
+		public long tt = -1; // timestamp
 		public String from;
 		public int priority = 1;
 		public int ttl = (int) X.AMINUTE;
@@ -392,6 +410,17 @@ public abstract class MQ {
 		Result<T> q = Result.create(name);
 		q.bind();
 		return q;
+	}
+
+	private static Counter read = new Counter("read");
+	private static Counter write = new Counter("write");
+
+	public static JSON statRead() {
+		return read.get();
+	}
+
+	public static JSON statWrite() {
+		return write.get();
 	}
 
 }

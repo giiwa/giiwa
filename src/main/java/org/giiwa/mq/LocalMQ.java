@@ -196,7 +196,7 @@ class LocalMQ extends MQ {
 
 		long last = System.currentTimeMillis();
 		String name;
-		ArrayBlockingQueue<Request> queue = new ArrayBlockingQueue<Request>(1000);
+		ArrayBlockingQueue<Request> queue = new ArrayBlockingQueue<Request>(100);
 
 		public void send(Request r) throws JMSException {
 			if (log.isDebugEnabled())
@@ -208,7 +208,7 @@ class LocalMQ extends MQ {
 					last = System.currentTimeMillis();
 				}
 			} catch (Exception e) {
-				log.error("sender=" + name, e);
+				log.error("sender=" + name + ", consumer=" + consumers, e);
 				queue.clear();
 			}
 		}

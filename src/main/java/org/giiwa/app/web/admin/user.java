@@ -202,6 +202,8 @@ public class user extends Controller {
 
 					User.update(id, V.create("password", password));
 
+					Session.expired(id);
+
 					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login,
 							this.getRemoteHost());
 

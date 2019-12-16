@@ -19,14 +19,14 @@ public class TestTask extends Task {
 	@Override
 	public String getName() {
 		// the task name, MUST global unique in JVM
-		return "test.tsk";
+		return "test.task";
 	}
 
 	@Override
 	public void onFinish() {
 		// re-run this task at a minute alter
 		if (!stop) {
-			this.schedule(X.AMINUTE);
+			this.schedule(X.AMINUTE, true);
 		}
 	}
 
@@ -36,11 +36,6 @@ public class TestTask extends Task {
 		try {
 			// mapreduce, create sub task for the stream and dispatch the task to each node
 			// and each core
-			Task.mapreduce(Arrays.asList(1, 2, 3, 4), e -> {
-				return e * 100;
-			}, e -> {
-				System.out.println(e);
-			});
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
@@ -48,7 +43,7 @@ public class TestTask extends Task {
 
 	public static void start() {
 		inst.stop = false;
-		inst.schedule(0);
+		inst.schedule(0, true);
 	}
 
 	public static void stop() {

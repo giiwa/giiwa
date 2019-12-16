@@ -30,8 +30,10 @@ import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.m._CPU;
 import org.giiwa.framework.bean.m._DB;
 import org.giiwa.framework.bean.m._Disk;
+import org.giiwa.framework.bean.m._MQ;
 import org.giiwa.framework.bean.m._Memory;
 import org.giiwa.framework.bean.m._Net;
+import org.giiwa.mq.MQ;
 import org.hyperic.sigar.CpuPerc;
 import org.hyperic.sigar.Mem;
 
@@ -148,6 +150,15 @@ public class PerfMoniterTask extends Task {
 
 				_DB.update(Local.id(), r.append("name", "read"));
 				_DB.update(Local.id(), w.append("name", "write"));
+
+			}
+
+			{
+				JSON r = MQ.statRead();
+				JSON w = MQ.statWrite();
+
+				_MQ.update(Local.id(), r.append("name", "read"));
+				_MQ.update(Local.id(), w.append("name", "write"));
 
 			}
 

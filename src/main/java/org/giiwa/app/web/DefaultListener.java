@@ -128,9 +128,13 @@ public class DefaultListener implements IListener {
 
 			dashboard.desk("/admin/dashboard");
 			dashboard.desk("/admin/home.html");
+			
 			dashboard.portlet("/portlet/db/read");
 			dashboard.portlet("/portlet/db/write");
 			dashboard.portlet("/portlet/db/times");
+			dashboard.portlet("/portlet/mq/read");
+			dashboard.portlet("/portlet/mq/write");
+			dashboard.portlet("/portlet/mq/times");
 
 			setting.register(0, "system", setting.system.class);
 			setting.register(1, "mq", mq.class);

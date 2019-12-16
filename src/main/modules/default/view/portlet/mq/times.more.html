@@ -1,0 +1,43 @@
+
+<div id='mq_times_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('mq_times_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+		    title: {
+		        text: '$lang.get("portlet.mq.times.title")'
+		    },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	    	   formatter:function(){
+	    		      return this.series.name+':<b>' 
+	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
+	    		      + '</b><br>' 
+	    		      + Highcharts.dateFormat('%H:%M', this.x);
+	    		}
+	       },
+	    series: [
+			{name: "$lang.get('mq.read.times')", color:'#0dad76', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},
+			{name: "$lang.get('mq.write.times')", color:'#0a5ea0', data: [#foreach($c in $list2) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]}
+   			], 
+	});
+
+})
+</script>
+
