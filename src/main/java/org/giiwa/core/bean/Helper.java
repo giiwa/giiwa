@@ -1135,11 +1135,11 @@ public class Helper implements Serializable {
 			this.cond = q.cond;
 
 			for (W e : q.queryList) {
-				W e1 = e.copy();
-				if (e1 instanceof Entity) {
-					((Entity) e1).container = this;
+//				W e1 = e.copy();
+				if (e instanceof Entity) {
+					((Entity) e).container = this;
 				}
-				this.queryList.add(e1);
+				this.queryList.add(e);
 			}
 
 			for (Entity e : q.order) {
@@ -1662,6 +1662,7 @@ public class Helper implements Serializable {
 			}
 
 			public void replace(Object value) {
+//				this.value = value;
 				container.queryList.remove(this);
 				if (this.cond == W.AND) {
 					container.and(name, value);
@@ -1671,6 +1672,7 @@ public class Helper implements Serializable {
 			}
 
 			public void remove() {
+//				System.out.println(container.queryList);
 				container.queryList.remove(this);
 			}
 

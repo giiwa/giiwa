@@ -39,13 +39,13 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-					{name: "$lang.get('mq.read.times')", color:'#0a5ea0', data: [#foreach($c in $list2) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},
-	   				{name: "$lang.get('mq.write.times')", color:'#0dad76', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]}
+					{name: "$lang.get('mq.read.times')", color:'#0a5ea0', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},
+	   				{name: "$lang.get('mq.write.times')", color:'#0dad76', data: [#foreach($c in $list2) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]}
     			], 
 	});
 
 	function reload() {
-		if($('#db_times_$!requestid').length > 0) {
+		if($('#mq_times_$!requestid').length > 0) {
 			$.post('/portlet/mq/times/data?__node=$!__node', {}, function(d){
 				if(d.state == 200) {
 					var series=t.series; 

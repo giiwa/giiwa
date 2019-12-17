@@ -32,8 +32,10 @@ import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Stat;
 import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.bean.m._CPU;
+import org.giiwa.framework.bean.m._Cache;
 import org.giiwa.framework.bean.m._DB;
 import org.giiwa.framework.bean.m._Disk;
+import org.giiwa.framework.bean.m._MQ;
 import org.giiwa.framework.bean.m._Memory;
 import org.giiwa.framework.bean.m._Net;
 import org.giiwa.framework.web.Controller;
@@ -135,7 +137,8 @@ public class CleanupTask extends Task {
 					n += Code.cleanup();
 
 					for (BeanDAO d : new BeanDAO[] { GLog.dao, _CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao,
-							_Disk.dao, _Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao }) {
+							_Disk.dao, _Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao,
+							_MQ.dao, _MQ.Record.dao, _Cache.dao, _Cache.Record.dao }) {
 						if (!inCleanupTime())
 							break;
 						n += d.cleanup();

@@ -271,6 +271,7 @@ public abstract class MQ {
 
 	public static class Request {
 
+		public byte ver = 1;
 		public long seq = -1;
 		public int type = 0;
 
@@ -382,6 +383,7 @@ public abstract class MQ {
 		}
 
 		public void copy(Request r) {
+			ver = r.ver;
 			seq = r.seq;
 			tt = r.tt;
 			type = r.type;

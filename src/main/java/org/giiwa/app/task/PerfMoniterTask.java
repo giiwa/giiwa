@@ -23,11 +23,13 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Host;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.cache.Cache;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.m._CPU;
+import org.giiwa.framework.bean.m._Cache;
 import org.giiwa.framework.bean.m._DB;
 import org.giiwa.framework.bean.m._Disk;
 import org.giiwa.framework.bean.m._MQ;
@@ -159,6 +161,15 @@ public class PerfMoniterTask extends Task {
 
 				_MQ.update(Local.id(), r.append("name", "read"));
 				_MQ.update(Local.id(), w.append("name", "write"));
+
+			}
+
+			{
+				JSON r = Cache.statRead();
+				JSON w = Cache.statWrite();
+
+				_Cache.update(Local.id(), r.append("name", "read"));
+				_Cache.update(Local.id(), w.append("name", "write"));
 
 			}
 

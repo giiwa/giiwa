@@ -176,7 +176,8 @@ class KafkaMQ extends MQ {
 
 					Request r = new Request();
 					r.seq = in.readLong();
-//					r.tt = in.readLong();
+					r.ver = in.readByte();
+					r.tt = in.readLong();
 					int len = in.readInt();
 					if (len > 0) {
 						byte[] bb = new byte[len];
@@ -307,7 +308,10 @@ class KafkaMQ extends MQ {
 				}
 
 				out.writeLong(r.seq);
-//				out.writeLong(r.tt);
+				len += Long.SIZE / Byte.SIZE;
+				out.writeByte(r.ver);
+				len ++;
+				out.writeLong(r.tt);
 				len += Long.SIZE / Byte.SIZE;
 
 				len += Integer.SIZE / Byte.SIZE;

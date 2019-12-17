@@ -171,7 +171,10 @@ class ActiveMQ extends MQ {
 
 						Request r = new Request();
 						r.seq = m1.readLong();
-//						r.tt = m1.readLong();
+						pos += Long.SIZE / Byte.SIZE;
+						r.ver = m1.readByte();
+						pos ++;
+						r.tt = m1.readLong();
 						pos += Long.SIZE / Byte.SIZE;
 						int len = m1.readInt();
 						if (len > 0) {
@@ -349,7 +352,10 @@ class ActiveMQ extends MQ {
 				}
 
 				m.writeLong(r.seq);
-//				m.writeLong(r.tt);
+				len += Long.SIZE / Byte.SIZE;
+				m.writeByte(r.ver);
+				len ++;
+				m.writeLong(r.tt);
 				len += Long.SIZE / Byte.SIZE;
 
 				len += Integer.SIZE / Byte.SIZE;

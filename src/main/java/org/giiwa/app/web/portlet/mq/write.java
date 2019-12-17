@@ -9,7 +9,6 @@ import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.m._DB;
 import org.giiwa.framework.bean.m._MQ;
 import org.giiwa.framework.web.Path;
 

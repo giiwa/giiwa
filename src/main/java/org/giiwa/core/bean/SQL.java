@@ -503,10 +503,19 @@ public class SQL {
 		System.out.println(q);
 
 		q = W.create();
-		q.and("cate='J1|J2'");
+		q.and("cate='J1|J3/7'");
 		System.out.println(q);
-		
-		
+		q.scan(e -> {
+			if (X.isSame("cate", e.name)) {
+				if (e.value.toString().indexOf("/") > -1) {
+//					e.remove();
+					String[] ss = X.range(e.value.toString(), "/");
+					e.replace(ss);
+				}
+			}
+		});
+		System.out.println(q);
+
 	}
 
 	// private static String[] KW = { "and", "or", "like", "=", "!=", ">", ">=",

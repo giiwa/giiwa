@@ -22,8 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.*;
+import org.giiwa.core.bean.Counter;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
+import org.giiwa.core.json.JSON;
 
 /**
  * The {@code Cache} Class Cache used for cache object, the cache was grouped by
@@ -84,6 +87,7 @@ public final class Cache {
 	@SuppressWarnings({ "unchecked" })
 	public static <T> T get(String id) {
 
+		TimeStamp t = TimeStamp.create();
 		try {
 
 			id = GROUP + id;
@@ -104,6 +108,8 @@ public final class Cache {
 			}
 
 			log.error("nothing get from memcache by " + id + ", remove it!", e);
+		} finally {
+			read.add(t.pastms());
 		}
 		return null;
 	}
@@ -115,11 +121,16 @@ public final class Cache {
 	 * @return true, if successful
 	 */
 	public static boolean remove(String id) {
-		id = GROUP + id;
-		if (cacheSystem != null) {
-			return cacheSystem.delete(id);
+		TimeStamp t = TimeStamp.create();
+		try {
+			id = GROUP + id;
+			if (cacheSystem != null) {
+				return cacheSystem.delete(id);
+			}
+			return false;
+		} finally {
+			write.add(t.pastms());
 		}
-		return false;
 	}
 
 	/**
@@ -146,16 +157,21 @@ public final class Cache {
 	 */
 	public static boolean set(String id, Object data, long expired) {
 
-		id = GROUP + id;
+		TimeStamp t = TimeStamp.create();
+		try {
+			id = GROUP + id;
 
-		if (cacheSystem != null) {
-			if (data == null) {
-				return cacheSystem.delete(id);
-			} else {
-				return cacheSystem.set(id, data, (int) expired);
+			if (cacheSystem != null) {
+				if (data == null) {
+					return cacheSystem.delete(id);
+				} else {
+					return cacheSystem.set(id, data, (int) expired);
+				}
 			}
+			return false;
+		} finally {
+			write.add(t.pastms());
 		}
-		return false;
 	}
 
 	/**
@@ -167,6 +183,7 @@ public final class Cache {
 	 */
 	public static boolean setBigdata(String id, Object data) {
 
+		TimeStamp t = TimeStamp.create();
 		ObjectOutputStream out = null;
 		ByteArrayInputStream in = null;
 
@@ -196,6 +213,7 @@ public final class Cache {
 			log.error(e.getMessage(), e);
 		} finally {
 			X.close(in, out);
+			write.add(t.pastms());
 		}
 		return false;
 	}
@@ -208,36 +226,41 @@ public final class Cache {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T getBigdata(String id) {
-		List<String> keys = get(id);
-		if (keys != null && keys.size() > 0) {
+		TimeStamp t = TimeStamp.create();
+		try {
+			List<String> keys = get(id);
+			if (keys != null && keys.size() > 0) {
 
-			ByteArrayOutputStream bo = null;
-			ObjectInputStream in = null;
+				ByteArrayOutputStream bo = null;
+				ObjectInputStream in = null;
 
-			try {
-				bo = new ByteArrayOutputStream();
-				for (String k : keys) {
-					Object[] oo = get(k);
-					if (oo == null) {
-						return null;
+				try {
+					bo = new ByteArrayOutputStream();
+					for (String k : keys) {
+						Object[] oo = get(k);
+						if (oo == null) {
+							return null;
+						}
+
+						byte[] bb = (byte[]) oo[0];
+						int len = (int) oo[1];
+						bo.write(bb, 0, len);
 					}
+					bo.flush();
 
-					byte[] bb = (byte[]) oo[0];
-					int len = (int) oo[1];
-					bo.write(bb, 0, len);
+					in = new ObjectInputStream(new ByteArrayInputStream(bo.toByteArray()));
+					Object o = in.readObject();
+					return (T) o;
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				} finally {
+					X.close(in, bo);
 				}
-				bo.flush();
-
-				in = new ObjectInputStream(new ByteArrayInputStream(bo.toByteArray()));
-				Object o = in.readObject();
-				return (T) o;
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			} finally {
-				X.close(in, bo);
 			}
+			return null;
+		} finally {
+			read.add(t.pastms());
 		}
-		return null;
 	}
 
 	/**
@@ -249,11 +272,16 @@ public final class Cache {
 	 * @return
 	 */
 	public static boolean trylock(String name) {
-		if (cacheSystem != null) {
-			name = GROUP + name;
-			return cacheSystem.trylock(name);
+		TimeStamp t = TimeStamp.create();
+		try {
+			if (cacheSystem != null) {
+				name = GROUP + name;
+				return cacheSystem.trylock(name);
+			}
+			return false;
+		} finally {
+			read.add(t.pastms());
 		}
-		return false;
 	}
 
 	/**
@@ -264,9 +292,14 @@ public final class Cache {
 	 * @param ms
 	 */
 	public static void expire(String name, int ms) {
-		if (cacheSystem != null) {
-			name = GROUP + name;
-			cacheSystem.expire(name, ms);
+		TimeStamp t = TimeStamp.create();
+		try {
+			if (cacheSystem != null) {
+				name = GROUP + name;
+				cacheSystem.expire(name, ms);
+			}
+		} finally {
+			write.add(t.pastms());
 		}
 	}
 
@@ -278,13 +311,18 @@ public final class Cache {
 	 * @return
 	 */
 	public static boolean unlock(String name, String value) {
-		if (cacheSystem != null) {
-			name = GROUP + name;
-			return cacheSystem.unlock(name, value);
-		}
+		TimeStamp t = TimeStamp.create();
+		try {
+			if (cacheSystem != null) {
+				name = GROUP + name;
+				return cacheSystem.unlock(name, value);
+			}
 
-		log.warn("no cache system!");
-		return false;
+			log.warn("no cache system!");
+			return false;
+		} finally {
+			write.add(t.pastms());
+		}
 	}
 
 	public static void main(String[] args) {
@@ -311,6 +349,17 @@ public final class Cache {
 			System.out.println("false");
 		}
 
+	}
+
+	private static Counter read = new Counter("read");
+	private static Counter write = new Counter("write");
+
+	public static JSON statRead() {
+		return read.get();
+	}
+
+	public static JSON statWrite() {
+		return write.get();
 	}
 
 }
