@@ -1,6 +1,12 @@
 package org.giiwa.core.dfile.command;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import org.giiwa.core.dfile.ICommand;
 import org.giiwa.core.dfile.IResponseHandler;
@@ -31,6 +37,17 @@ public class LIST implements ICommand {
 				out.writeInt(f1.isFile() ? 1 : 0);
 				out.writeLong(f1.length());
 				out.writeLong(f1.lastModified());
+
+//				try {
+//					Path p1 = Paths.get(f1.getAbsolutePath());
+//					BasicFileAttributeView basicview = Files.getFileAttributeView(p1, BasicFileAttributeView.class,
+//							LinkOption.NOFOLLOW_LINKS);
+//					BasicFileAttributes attr = basicview.readAttributes();
+//					out.writeLong(attr.creationTime().toMillis());
+//				} catch (Exception e) {
+//					log.error(e.getMessage(), e);
+//					out.writeLong(-1);
+//				}
 
 				// JSON jo = JSON.create();
 				// jo.append("name", f1.getName());

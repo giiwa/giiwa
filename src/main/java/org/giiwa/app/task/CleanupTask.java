@@ -26,6 +26,7 @@ import org.giiwa.core.bean.Schema;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.task.Task;
+import org.giiwa.framework.bean.Code;
 import org.giiwa.framework.bean.GLog;
 import org.giiwa.framework.bean.Repo;
 import org.giiwa.framework.bean.Stat;
@@ -130,6 +131,9 @@ public class CleanupTask extends Task {
 			if (door.tryLock()) {
 				try {
 					int n = 0;
+
+					n += Code.cleanup();
+
 					for (BeanDAO d : new BeanDAO[] { GLog.dao, _CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao,
 							_Disk.dao, _Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao }) {
 						if (!inCleanupTime())

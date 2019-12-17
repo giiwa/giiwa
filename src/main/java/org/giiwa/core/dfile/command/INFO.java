@@ -1,6 +1,12 @@
 package org.giiwa.core.dfile.command;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import org.giiwa.core.dfile.ICommand;
 import org.giiwa.core.dfile.IResponseHandler;
@@ -32,6 +38,16 @@ public class INFO implements ICommand {
 		out.writeLong(f.length());
 		out.writeLong(f.lastModified());
 
+//		try {
+//			Path p1 = Paths.get(f.getAbsolutePath());
+//			BasicFileAttributeView basicview = Files.getFileAttributeView(p1, BasicFileAttributeView.class,
+//					LinkOption.NOFOLLOW_LINKS);
+//			BasicFileAttributes attr = basicview.readAttributes();
+//			out.writeLong(attr.creationTime().toMillis());
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//			out.writeLong(-1);
+//		}
 		// out.writeString(jo.toString());
 		handler.send(out);
 

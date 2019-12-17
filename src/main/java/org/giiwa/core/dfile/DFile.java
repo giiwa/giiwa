@@ -208,6 +208,14 @@ public class DFile {
 		return l2;
 	}
 
+	public long getCreation() {
+
+		check();
+
+		getInfo();
+		return info == null ? 0 : info.creation;
+	}
+
 	public long lastModified() {
 
 		check();

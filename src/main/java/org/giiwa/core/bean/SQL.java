@@ -226,7 +226,7 @@ public class SQL {
 				if (c == '\'') {
 					String s2 = s1.pair('\'');
 					if (s2.indexOf("|") > -1) {
-						value = X.split(s2, "|");
+						value = X.split(s2, "\\|");
 					} else {
 						value = s2;
 					}
@@ -236,7 +236,7 @@ public class SQL {
 					String s2 = s1.remain();
 
 					if (s2.indexOf("|") > -1) {
-						value = X.toArray(X.split(s2, "|"), e -> {
+						value = X.toArray(X.split(s2, "\\|"), e -> {
 							try {
 								return JS.calculate(e);
 							} catch (Exception e1) {
@@ -502,6 +502,11 @@ public class SQL {
 		q = SQL.where2W("a", StringFinder.create(s));
 		System.out.println(q);
 
+		q = W.create();
+		q.and("cate='J1|J2'");
+		System.out.println(q);
+		
+		
 	}
 
 	// private static String[] KW = { "and", "or", "like", "=", "!=", ">", ">=",

@@ -331,6 +331,7 @@ public class FileClient implements IRequestHandler {
 					info.isfile = a.readInt() == 1;
 					info.length = a.readLong();
 					info.lastmodified = a.readLong();
+//					info.creation = a.readLong();
 					l1.add(info);
 				}
 
@@ -387,6 +388,7 @@ public class FileClient implements IRequestHandler {
 				info.isfile = a.readInt() == 1;
 				info.length = a.readLong();
 				info.lastmodified = a.readLong();
+//				info.creation = a.readLong();
 
 				return info;
 			}

@@ -6,6 +6,7 @@ public class FileInfo {
 	public boolean exists;
 	public boolean isfile;
 	public long length;
+	public long creation;
 	public long lastmodified;
 
 }

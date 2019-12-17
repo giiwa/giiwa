@@ -383,6 +383,7 @@ public abstract class MQ {
 
 		public void copy(Request r) {
 			seq = r.seq;
+			tt = r.tt;
 			type = r.type;
 			data = r.data;
 			from = r.from;

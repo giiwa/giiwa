@@ -1661,6 +1661,15 @@ public class Helper implements Serializable {
 				return container;
 			}
 
+			public void replace(Object value) {
+				container.queryList.remove(this);
+				if (this.cond == W.AND) {
+					container.and(name, value);
+				} else {
+					container.or(name, value);
+				}
+			}
+
 			public void remove() {
 				container.queryList.remove(this);
 			}

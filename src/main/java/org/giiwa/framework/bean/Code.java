@@ -82,11 +82,15 @@ public class Code extends Bean {
 	}
 
 	public static Code load(String s1, String s2) {
-		return dao.load(W.create("s1", s1).and("s2", s2));
+		return dao.load(W.create("s1", s1).and("s2", s2).and("expired", System.currentTimeMillis(), W.OP.gt));
 	}
 
 	public static void delete(String s1, String s2) {
 		dao.delete(W.create("s1", s1).and("s2", s2));
+	}
+
+	public static int cleanup() {
+		return dao.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lte));
 	}
 
 }
