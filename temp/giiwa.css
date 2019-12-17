@@ -2153,6 +2153,9 @@ button:hover, button:active {
 .portlet a.more:hover{
 	color: #4ea6ff;
 }
+.portlet>div{
+height: 250px; float: left; width: 300px; border: 0;
+}
 #popover{
 	display: none;
     z-index: 10100;
