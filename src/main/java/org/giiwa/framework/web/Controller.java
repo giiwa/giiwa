@@ -2298,10 +2298,28 @@ public class Controller {
 	 * @param statuscode the status code to response
 	 */
 	final public void setStatus(int statuscode) {
-		resp.setStatus(statuscode);
 		status = statuscode;
+		resp.setStatus(statuscode);
 
 		// GLog.applog.info("test", "test", "status=" + statuscode, null, null);
+	}
+
+	final public void sendError(int code) {
+		try {
+			status = code;
+			resp.sendError(code);
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	final public void sendError(int code, String msg) {
+		try {
+			status = code;
+			resp.sendError(code, msg);
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 
 	/**
