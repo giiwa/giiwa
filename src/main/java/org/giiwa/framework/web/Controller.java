@@ -2617,7 +2617,8 @@ public class Controller {
 		try {
 
 			this.setContentType("application/octet-stream");
-			this.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
+			name = Url.encode(name);
+			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name);
 
 			String range = this.getHeader("range");
 
