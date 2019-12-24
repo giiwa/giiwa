@@ -1,0 +1,187 @@
+#!/usr/bin/python3
+
+# chkconfig:   2345 90 10
+# description:  giiwa is a apps daemon tool
+# version: v0.2
+# author: joe
+# required: above python3.0
+
+import os, sys, time, subprocess, signal
+#import re, os, sys, time, threading, subprocess, signal
+
+global running,app
+running=True
+home=sys.path[0]
+app=home + "/bin/startup.sh"
+interval=1
+giiwapid = "/tmp/giiwa.pid"
+catalinapid = "/tmp/catalina.pid"
+
+def onkill(a,b):
+	global running
+	running=False
+	
+def _startx():
+	global app, home
+	print ("Starting: " + app)
+	try:
+		subprocess.Popen(app, shell=True, cwd=home)
+	except Exception as e:
+		print(e)
+		print("Failed:" + app)
+		
+def _pidx():
+	try:
+		f = open(catalinapid, 'r')
+		pid = f.readline().strip()
+		f.close()
+		os.popen("ps -p " + pid).readlines()[1]
+		return pid
+	except:
+		return -1
+	
+def _stopx():
+	pid = _pidx()
+	if pid>'':
+		subprocess.call("kill " + str(pid), shell=True)
+	
+def _start():
+	global running,interval,home
+	pid = os.fork()
+	if pid>0:
+		try:
+			f=open(giiwapid, "wb+")
+			print >>f, pid
+			f.close()
+			sys.exit(0)
+		except Exception as e:
+			print(e)
+			sys.exit(0)
+	while running:
+		if _pidx()>'':
+			time.sleep(interval)
+		else:
+			_startx()
+
+			if interval>5:
+				time.sleep(interval)
+			else:
+				time.sleep(10)
+	else:
+		_stopx()
+
+def _stop():
+	global home
+	try:
+		f = open(giiwapid, 'r');
+		pid = f.readline().strip();
+		f.close()
+		os.popen("ps -p " + pid).readlines()[1]
+		subprocess.call("kill " + pid, shell=True)
+		print("giiwa is stopped.")
+	except Exception as e:
+		print("Not found giiwa.")
+	
+def _install():
+		print("Installing appdog ...")
+
+		os.system("cp appdog/appdog3 /etc/init.d/")
+		os.system("chmod ugo+x /etc/init.d/appdog");
+		os.system("chkconfig appdog on")
+		os.system("mkdir /etc/appdog ");
+		os.system("cp appdog/apps.conf /etc/appdog");
+		print("setup appdog ...")
+		s1 = os.getcwd()
+		f1 = open('/etc/appdog/apps.conf', 'r+')
+		ss = f1.readlines();
+		f1.seek(0,0)
+		for s in ss:
+			s2 = s.replace('/opt/giiwa', s1)
+			f1.write(s2)
+		f1.close()
+		
+		if os.path.isdir("../mongodb"):
+			os.system("cp ./appdog/m.sh ../mongodb/bin/")
+			os.system("chmod ugo+x ../mongodb/bin/m.sh");
+			os.chdir('../mongodb')
+			s1 = os.getcwd()
+			f1 = open('./bin/m.sh', 'r+')
+			ss = f1.readlines();
+			f1.seek(0,0)
+			for s in ss:
+				s2 = s.replace('/opt/mongodb', s1)
+				f1.write(s2)
+			f1.close()
+			
+			s1 = os.getcwd()
+			f1 = open('/etc/appdog/apps.conf', 'r+')
+			ss = f1.readlines();
+			f1.seek(0,0)
+			for s in ss:
+				s2 = s.replace('/opt/mongodb', s1)
+				f1.write(s2)
+			f1.close()
+			
+		print("Install success.")
+		print("Please vi /etc/appdog/apps.conf to get more.")
+			
+def _reset_root():
+		print("Reset the root password ...")
+		
+		os.chdir(home)
+		f1 = open('giiwa.properties', 'r+')
+		ss = f1.readlines();
+		f1.seek(0,0)
+		for s in ss:
+			f1.write(s)
+		f1.write('reset=1\r\n')
+		f1.close()
+		
+		print("Reset success.")
+		_stopx()
+
+def _reset_giiwa():
+		print("Reset the giiwa ...")
+		
+		os.chdir(home)
+		os.system("rm -rf modules/WEB-INF/")
+		os.system("cp -rnf modules/default/WEB-INF/ modules/")
+
+		print("Reset success.")
+		_stopx()
+		
+if __name__=="__main__":
+	if len(sys.argv) > 1:
+		a=sys.argv[1]
+	else:
+		a=""
+	if a=="start":
+		if _pidx()>'':
+			print("giiwa is running.")
+		else:
+			signal.signal(signal.SIGTERM, onkill)
+			_start()
+	elif a=="stop":
+		_stop()
+	elif a=="restart":
+		_stop()
+		_start()
+	elif a=="install":
+		_install()
+	elif a=="reset":
+		if len(sys.argv) > 2:
+			b = sys.argv[2]
+		else:
+			b = ""
+		
+		if b == "root":			
+			_reset_root()
+		elif b == "giiwa":
+			_reset_giiwa()
+		else:
+			print("Help: \n\tgiiwa reset [root|giiwa]")
+			print("\treset root: reset the root password")
+			print("\treset giiwa: repair the giiwa libs\n")
+		
+	else:
+		print("Help: \n\tgiiwa [start|stop|restart|install|reset root|reset giiwa]\n")

@@ -56,67 +56,14 @@ public class temp extends Controller {
 
 		try {
 
-			InputStream in = null;
-
 			String name = ss[1];
 			File f1 = Temp.get(ss[0], name);
-			long total = 0;
 			if (!f1.exists()) {
-
-				File f = Temp.get(ss[0], name);
-				if (!f.exists()) {
-					this.notfound();
-					return;
-				}
-				if (log.isDebugEnabled())
-					log.debug("filename=" + f.getCanonicalPath());
-				total = f.length();
-				in = new FileInputStream(f);
+				this.notfound();
+				return;
 			} else {
-				if (log.isDebugEnabled())
-					log.debug("filename=" + f1.getCanonicalPath());
-				in = new FileInputStream(f1);
-				total = f1.length();
+				this.response(name, new FileInputStream(f1), f1.length());
 			}
-
-			String range = this.getHeader("Range");
-			long start = 0;
-			long end = total;
-			if (!X.isEmpty(range)) {
-				String[] s1 = X.split(range, "[=-]");
-				if (s1.length > 1) {
-					start = X.toLong(s1[1]);
-				}
-
-				if (s1.length > 2) {
-					end = Math.min(total, X.toLong(s1[2]));
-
-					if (end < start) {
-						end = start + 16 * 1024;
-					}
-				}
-			}
-
-			if (end > total) {
-				end = total;
-			}
-
-			long length = end - start;
-
-			this.setContentType("application/octet");
-			this.setHeader("Content-Disposition", "attachment; filename=\"" + Url.encode(name) + "\"");
-			this.setHeader("Content-Length", Long.toString(length));
-			this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
-			if (start == 0) {
-				this.setHeader("Accept-Ranges", "bytes");
-			}
-			if (end < total) {
-				this.setStatus(206);
-			}
-
-			IOUtil.copy(in, this.getOutputStream(), start, end, true);
-
-			return;
 
 		} catch (Exception e) {
 			log.error(path, e);

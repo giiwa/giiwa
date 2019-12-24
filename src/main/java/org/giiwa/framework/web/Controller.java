@@ -2855,6 +2855,9 @@ public class Controller {
 				m.set("local", Local.getInstance());
 				m.set("requestid", UID.random(20));
 
+				String name = Url.encode(f1.getName());
+				m.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name);
+
 				View.merge(f1, m, uri);
 
 				return;
