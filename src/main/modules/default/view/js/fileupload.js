@@ -44,7 +44,7 @@ function initfileupload() {
 							limitConcurrentUploads : 1,
 							sequentialUploads : true,
 							progressInterval : 100,
-							maxChunkSize : 16384
+							maxChunkSize : 32*1024
 						})
 				.on('fileuploadadd', function(e, data) {
 					try {

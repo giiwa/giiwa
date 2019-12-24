@@ -38,7 +38,7 @@
 											this.files,
 											{
 												url : '/upload',
-												chunksize : 16 * 1024,
+												chunksize : 32 * 1024,
 												onstart : function(e) {
 													var s = '';
 													s += "<div class='file-item'><span class='fileupload-filename'>"

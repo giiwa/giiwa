@@ -243,7 +243,6 @@ public class Disk extends Bean {
 	}
 
 	public static Disk get() throws IOException {
-
 		Selector s = Selector.get();
 		return s.pick();
 	}
@@ -354,6 +353,10 @@ public class Disk extends Bean {
 			b1 = dao.load(q, 0, 100);
 			Cache.set("disk", b1, X.AMINUTE);
 		}
+		if (b1 == null || b1.isEmpty()) {
+			b1 = Beans.create();
+			b1.add(Disk.DEFAULT);
+		}
 		return b1;
 	}
 
@@ -394,12 +397,12 @@ public class Disk extends Bean {
 			if (bs == null || bs.isEmpty()) {
 				// add a default
 				try {
-					File f = new File(Controller.GIIWA_HOME + "/data");
-					if (!f.exists()) {
-						f.mkdirs();
-					}
-					Disk.create(
-							V.create("path", f.getCanonicalPath()).append("priority", 1).append("node", Local.id()));
+//					File f = new File(Controller.GIIWA_HOME + "/data");
+//					if (!f.exists()) {
+//						f.mkdirs();
+//					}
+//					Disk.create(
+//							V.create("path", f.getCanonicalPath()).append("priority", 1).append("node", Local.id()));
 
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);

@@ -35,15 +35,20 @@ def _pidx():
 		f = open(catalinapid, 'r')
 		pid = f.readline().strip()
 		f.close()
-		os.popen("ps -p " + pid).readlines()[1]
-		return pid
-	except:
-		return -1
+		if pid != '' and len(os.popen("ps -p " + pid).readlines()) > 1: 
+			return pid
+	except Exception as e:
+		print(e)
+	return '' 
 	
 def _stopx():
 	pid = _pidx()
-	if pid>'':
-		subprocess.call("kill " + str(pid), shell=True)
+	if pid != '':
+		#print ("pid='" + pid + "' 2")
+		try:
+			subprocess.call("kill " + pid, shell=True)
+		except Exception as e:
+			return ''
 	
 def _start():
 	global running,interval,home
@@ -51,7 +56,7 @@ def _start():
 	if pid>0:
 		try:
 			f=open(giiwapid, "wb+")
-			print >>f, pid
+			f.write(str(pid))
 			f.close()
 			sys.exit(0)
 		except Exception as e:
@@ -76,9 +81,10 @@ def _stop():
 		f = open(giiwapid, 'r');
 		pid = f.readline().strip();
 		f.close()
-		os.popen("ps -p " + pid).readlines()[1]
-		subprocess.call("kill " + pid, shell=True)
-		print("giiwa is stopped.")
+		if pid != '' and len(os.popen("ps -p " + pid).readlines()) > 1:
+			subprocess.call("kill " + pid, shell=True)
+#		_stopx()
+		print ("giiwa is stopped.")
 	except Exception as e:
 		print("Not found giiwa.")
 	

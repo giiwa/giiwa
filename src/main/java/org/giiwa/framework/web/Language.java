@@ -332,7 +332,7 @@ public class Language {
 			// "YYYY ? MM ? dd hh:mm:ss"
 
 			synchronized (sdf) {
-				return sdf.format(new Date(_parseDatetime(t)));
+				return sdf.format(new Date(parsetime(t)));
 			}
 		} catch (Exception e) {
 			log.error(t, e);
@@ -340,12 +340,12 @@ public class Language {
 		return t;
 	}
 
-	private long _parseDatetime(String sdate) {
-		if (sdate == null) {
+	public long parsetime(String date) {
+		if (X.isEmpty(date)) {
 			return 0;
 		}
 
-		String[] ss = sdate.split("[-/_:H ]");
+		String[] ss = date.split("[-/_:H ]");
 
 		if (ss.length < 3) {
 			return 0;
@@ -765,4 +765,5 @@ public class Language {
 		return t.getTime();
 	}
 
+	
 }
