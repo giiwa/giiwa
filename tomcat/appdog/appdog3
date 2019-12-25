@@ -1,19 +1,13 @@
-#!/bin/bash
-
-# chkconfig:   2345 90 10
-# description:  appdog is a apps daemon tool
-# version: v0.2
-# author: joe
-# required: above python3.0
-
-### BEGIN INIT INFO
-# Provides:          giiwa
-# Required-Start:    $local_fs $remote_fs $network $syslog
-# Required-Stop:     $local_fs $remote_fs $network $syslog
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: starts the appdog
-# Description:       starts appdog using start-stop-daemon
-### END INIT INFO
-
-/home/giiwa/giiwa3 start
+[Unit]
+Description=appdog3
+ 
+[Service]
+Type=forking
+ExecStart=/opt/giiwa/giiwa3 start
+TimeoutSec=0
+StandardOutput=tty
+RemainAfterExit=yes
+SysVStartPriority=99
+ 
+[Install]
+WantedBy=multi-user.target

@@ -87,7 +87,7 @@ def _install():
 
 		os.system("cp appdog/appdog /etc/init.d/")
 		os.system("chmod ugo+x /etc/init.d/appdog");
-		os.system("chkconfig appdog on")
+		os.system("systemctl enable appdog")
 		os.system("mkdir /etc/appdog ");
 		os.system("cp appdog/apps.conf /etc/appdog");
 		print "setup appdog ..."
