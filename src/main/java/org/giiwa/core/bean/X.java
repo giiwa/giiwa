@@ -27,6 +27,7 @@ import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.framework.web.Language;
 
 /**
  * The {@code X} Class used to define contains.
@@ -975,6 +976,63 @@ public final class X {
 
 		s = "K1/117, K299;199;P1-093/-097";
 		System.out.println(Arrays.toString(X.range(s, "/")));
+
+	}
+
+	public static List<long[]> split(long sdate, long edate, String size) {
+
+		Language lang = Language.getLanguage("zh_cn");
+
+		List<long[]> l1 = new ArrayList<long[]>();
+		if (X.isIn(size, "hour")) {
+			long t1 = lang.parse(lang.format(sdate, "yyyyMMddHH"), "yyyyMMddHH");
+			if (t1 < sdate) {
+				t1 += X.AHOUR;
+				l1.add(new long[] { sdate, t1 });
+			}
+			while (t1 < edate - X.AHOUR) {
+				l1.add(new long[] { t1, t1 + X.AHOUR });
+				t1 += X.AHOUR;
+			}
+			if (t1 < edate) {
+				l1.add(new long[] { t1, edate });
+			}
+
+		} else if (X.isIn(size, "day")) {
+			long t1 = lang.parse(lang.format(sdate, "yyyyMMdd"), "yyyyMMdd");
+			if (t1 < sdate) {
+				t1 += X.ADAY;
+				l1.add(new long[] { sdate, t1 });
+			}
+			while (t1 < edate - X.ADAY) {
+				l1.add(new long[] { t1, t1 + X.ADAY });
+				t1 += X.ADAY;
+			}
+			if (t1 < edate) {
+				l1.add(new long[] { t1, edate });
+			}
+
+		} else if (X.isIn(size, "month")) {
+			long t1 = lang.parse(lang.format(sdate, "yyyyMM"), "yyyyMM");
+			if (t1 < sdate) {
+				t1 = lang.parse((X.toInt(lang.format(t1, "yyyyMM")) + 1) + "", "yyyyMM");
+				t1 = lang.parse(lang.format(t1, "yyyyMM"), "yyyyMM");
+				l1.add(new long[] { sdate, t1 });
+			}
+			while (t1 < edate) {
+				long t2 = lang.parse((X.toInt(lang.format(t1, "yyyyMM")) + 1) + "", "yyyyMM");
+				t2 = lang.parse(lang.format(t2, "yyyyMM"), "yyyyMM");
+				if (t2 > edate) {
+					t2 = edate;
+				}
+				l1.add(new long[] { t1, t2 });
+				t1 = t2;
+			}
+			if (t1 < edate) {
+				l1.add(new long[] { t1, edate });
+			}
+		}
+		return l1;
 
 	}
 

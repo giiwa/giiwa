@@ -182,7 +182,7 @@ public class Language {
 	 * @param locale the locale
 	 * @return the language
 	 */
-	protected static Language getLanguage(String locale) {
+	public static Language getLanguage(String locale) {
 
 		if (locales.containsKey(locale)) {
 			return locales.get(locale);
@@ -765,5 +765,4 @@ public class Language {
 		return t.getTime();
 	}
 
-	
 }
