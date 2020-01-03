@@ -656,7 +656,7 @@ public class Helper implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		public enum OP {
-			eq, gt, gte, lt, lte, like, neq, none, in, exists, nin, type, mod, all, size, near
+			eq, gt, gte, lt, lte, like, like_, like_$, neq, none, in, exists, nin, type, mod, all, size, near
 		};
 
 		/**
@@ -1337,6 +1337,10 @@ public class Helper implements Serializable {
 				return and(name, v, W.OP.neq);
 			} else if (X.isSame("like", op)) {
 				return and(name, v, W.OP.like);
+			} else if (X.isSame("like_", op)) {
+				return and(name, v, W.OP.like_);
+			} else if (X.isSame("like_$", op)) {
+				return and(name, v, W.OP.like_$);
 			}
 			return this;
 		}
@@ -1688,6 +1692,10 @@ public class Helper implements Serializable {
 						}
 					} else if (op == OP.like) {
 						list.add("%" + value + "%");
+					} else if (op == OP.like_) {
+						list.add(value + "%");
+					} else if (op == OP.like_$) {
+						list.add("%" + value);
 					} else {
 						list.add(value);
 					}
@@ -1723,7 +1731,13 @@ public class Helper implements Serializable {
 				} else if (op == OP.lte) {
 					return new BasicDBObject(name, new BasicDBObject("$lte", value));
 				} else if (op == OP.like) {
-					Pattern p1 = Pattern.compile(value.toString(), Pattern.CASE_INSENSITIVE);
+					Pattern p1 = Pattern.compile(value.toString());
+					return new BasicDBObject(name, p1);
+				} else if (op == OP.like_) {
+					Pattern p1 = Pattern.compile("^" + value);
+					return new BasicDBObject(name, p1);
+				} else if (op == OP.like_$) {
+					Pattern p1 = Pattern.compile(value + "$");
 					return new BasicDBObject(name, p1);
 				} else if (op == OP.neq) {
 					if (value == null) {
@@ -1795,7 +1809,7 @@ public class Helper implements Serializable {
 					sb.append("<?");
 				} else if (op == OP.lte) {
 					sb.append("<=?");
-				} else if (op == OP.like) {
+				} else if (op == OP.like || op == OP.like_ || op == OP.like_$) {
 					sb.append(" like ?");
 				} else if (op == OP.neq) {
 					sb.append(" <> ?");

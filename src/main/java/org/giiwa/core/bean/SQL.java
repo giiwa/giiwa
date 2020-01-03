@@ -272,6 +272,10 @@ public class SQL {
 						q.and(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.and(name, value, W.OP.like);
+					} else if (X.isSame(op, "like_")) {
+						q.and(name, value, W.OP.like_);
+					} else if (X.isSame(op, "like_$")) {
+						q.and(name, value, W.OP.like_$);
 					}
 				} else {
 					if (X.isSame(op, "=")) {
@@ -290,6 +294,10 @@ public class SQL {
 						q.or(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.or(name, value, W.OP.like);
+					} else if (X.isSame(op, "like_")) {
+						q.or(name, value, W.OP.like_);
+					} else if (X.isSame(op, "like_$")) {
+						q.or(name, value, W.OP.like_$);
 					}
 				}
 			}
@@ -384,6 +392,10 @@ public class SQL {
 						q.and(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.and(name, value, W.OP.like);
+					} else if (X.isSame(op, "like_")) {
+						q.and(name, value, W.OP.like_);
+					} else if (X.isSame(op, "like_$")) {
+						q.and(name, value, W.OP.like_$);
 					}
 				} else {
 					if (X.isSame(op, "=")) {
@@ -402,6 +414,10 @@ public class SQL {
 						q.or(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.or(name, value, W.OP.like);
+					} else if (X.isSame(op, "like_")) {
+						q.or(name, value, W.OP.like_);
+					} else if (X.isSame(op, "like_$")) {
+						q.or(name, value, W.OP.like_$);
 					}
 				}
 			}
