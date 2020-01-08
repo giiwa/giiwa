@@ -167,6 +167,11 @@ public class Temp {
 		return 0;
 	}
 
+	public long save(String filename) throws Exception {
+		DFile f = Disk.seek(filename);
+		return save(f);
+	}
+
 	public void delete() {
 
 		try {
