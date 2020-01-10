@@ -14,8 +14,11 @@
 */
 package org.giiwa.core.bean;
 
+import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -518,42 +521,32 @@ public final class X {
 
 		StringBuilder sb = null;
 		int p = 0;
-		boolean quota = false;
-		while (p < src.length()) {
+		int len = src.length();
+		while (p < len) {
 			char c = src.charAt(p);
 			if (c == '"') {
 				// goto next "
-				if (sb == null) {
-					// this is start ", must find the end "
-					quota = true;
-				} else {
-					if (quota) {
-						quota = false;
-					} else {
-						sb.append(c);
-					}
-				}
-			} else if (c == ',') {
-				if (!quota) {
-					if (sb == null) {
-						l1.add(X.EMPTY);
-					} else {
-						l1.add(_parse(sb.toString()));
-					}
-					sb = null;
-				} else {
-					if (sb == null) {
-						sb = new StringBuilder();
-					}
-					sb.append(c);
-				}
-			} else if (c == '\\') {
 				p++;
 				c = src.charAt(p);
 				if (sb == null) {
 					sb = new StringBuilder();
 				}
-				sb.append(c);
+
+				while (c != '"' && p < len) {
+					sb.append(c);
+					if (c == '\\') {
+						sb.append(src.charAt(++p));
+					}
+					p++;
+					c = p == len ? '"' : src.charAt(p);
+				}
+			} else if (c == ',') {
+				if (sb == null || sb.length() == 0) {
+					l1.add(X.EMPTY);
+				} else {
+					l1.add(_parse(sb.toString()));
+				}
+				sb = null;
 			} else {
 				if (sb == null) {
 					sb = new StringBuilder();
@@ -976,6 +969,20 @@ public final class X {
 
 		s = "K1/117, K299;199;P1-093/-097";
 		System.out.println(Arrays.toString(X.range(s, "/")));
+
+		String filename = "/Users/joe/Downloads/cate.csv";
+		try {
+			BufferedReader re = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
+			String line = re.readLine();
+			while (line != null) {
+				Object[] ss = X.csv(line);
+				System.out.println(Arrays.toString(ss) + "-" + ss.length);
+				line = re.readLine();
+			}
+			X.close(re);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 

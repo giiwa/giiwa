@@ -32,6 +32,7 @@ import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.core.base.FileVersion;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.base.MD5;
 import org.giiwa.core.base.RSA;
 import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.X;
@@ -646,7 +647,7 @@ public class Module {
 				for (File f : list) {
 					if (f.getName().endsWith(".jar")) {
 						File f1 = new File(Controller.HOME + "/WEB-INF/lib/" + f.getName());
-						if (!f1.exists() || f1.length() < f.length() || f1.lastModified() < f.lastModified()) {
+						if (!f1.exists() || f1.length() != f.length() || !X.isSame(MD5.md5(f1), MD5.md5(f))) {
 							// copy to
 							try {
 								IOUtil.copy(f, f1);
