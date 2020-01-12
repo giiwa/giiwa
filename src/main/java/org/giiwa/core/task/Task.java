@@ -386,6 +386,8 @@ public abstract class Task implements Runnable, Serializable {
 				this.who = who;
 			}
 
+			boolean _run = false;
+
 			/**
 			 * ensure onExecute be executed
 			 */
@@ -396,6 +398,7 @@ public abstract class Task implements Runnable, Serializable {
 					// global
 					if (this.tryLock()) {
 						try {
+							_run = true;
 							runtimes++;
 							onExecute();
 						} finally {
@@ -403,6 +406,7 @@ public abstract class Task implements Runnable, Serializable {
 						}
 					}
 				} else {
+					_run = true;
 					runtimes++;
 					onExecute();
 				}
@@ -429,7 +433,9 @@ public abstract class Task implements Runnable, Serializable {
 					who.setName(old);
 				}
 
-				onFinish();
+				if (_run) {
+					onFinish();
+				}
 
 			}
 
