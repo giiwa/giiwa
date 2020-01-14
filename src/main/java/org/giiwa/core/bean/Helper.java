@@ -1661,6 +1661,10 @@ public class Helper implements Serializable {
 			public int cond; // condition AND, OR
 			public int boost = 1;//
 
+			public void op(String op) {
+				this.op = W.OP.valueOf(op);
+			}
+
 			public W container() {
 				return container;
 			}
@@ -3218,14 +3222,14 @@ public class Helper implements Serializable {
 		System.out.println(q.toString());
 		System.out.println(q.sortkeys());
 
-//		q.scan(e -> {
-//			if (X.isSame(e.name, "a")) {
-//				System.out.println(e.name);
-//				e.container().and(W.create("a", "1").or("a", "2"));
-//				e.remove();
-//			}
-//
-//		});
+		q.scan(e -> {
+			if (X.isSame(e.name, "a")) {
+				System.out.println(e.name);
+				e.container().and(W.create("a", "1").or("a", "2"));
+				e.remove();
+			}
+
+		});
 
 		JSON m = JSON.create();
 		m.append("q", q);
