@@ -177,6 +177,7 @@ public final class Cache {
 	/**
 	 * set the data which exceed 1M
 	 * 
+	 * @deprecated
 	 * @param id
 	 * @param data
 	 * @return

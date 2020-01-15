@@ -482,14 +482,14 @@ public abstract class Task implements Runnable, Serializable {
 					if (t == null)
 						return;
 
-					String node = t.attach("node");
-					log.debug("schedule task, t=" + t);
-
-					if (X.isSame(node, Local.id())) {
-						// ignore
-						log.debug("local task[" + t.getName() + "], ignored");
-						return;
-					}
+//					String node = t.attach("node");
+//					log.debug("schedule task, t=" + t);
+//
+//					if (X.isSame(node, Local.id())) {
+//						// ignore
+//						log.debug("local task[" + t.getName() + "], ignored");
+//						return;
+//					}
 
 					long ms = t.attach("ms");
 					LocalRunner.schedule(t, ms, true);
@@ -645,9 +645,9 @@ public abstract class Task implements Runnable, Serializable {
 						log.error(e.getMessage(), e);
 					}
 
+				} else {
+					LocalRunner.schedule(this, msec, global);
 				}
-
-				LocalRunner.schedule(this, msec, global);
 			}
 		} catch (Throwable e) {
 			log.error(this, e);
@@ -1046,12 +1046,8 @@ public abstract class Task implements Runnable, Serializable {
 			}
 
 			if (pendingQueue.containsKey(name)) {
-				// schedule this task, possible this task is in running
-				// queue, if so, while drop one when start this one in
-				// thread
 
 				Task t = pendingQueue.remove(name);
-//				log.info("reschedule the task:" + task + ", ms=" + ms + ", t=" + t + ", t.sf=" + t.sf);
 
 				if (t.sf != null) {
 					if (!t.sf.cancel(true)) {
@@ -1060,17 +1056,12 @@ public abstract class Task implements Runnable, Serializable {
 					}
 					t.sf = null;
 				}
-//					task.runtimes = t.runtimes;
-			} else {
-//				log.info("schedule the task:" + task + ", ms=" + ms);
 			}
 
 			task.state = State.pending;
 
 			if (task.scheduledtime <= 0)
 				task.scheduledtime = System.currentTimeMillis();
-//				if (!task._params.containsKey("parent"))
-//					task.status("parent", Local.id() + "/" + Thread.currentThread().getName());
 
 			task.e = new Exception("Trace");
 
@@ -1078,10 +1069,6 @@ public abstract class Task implements Runnable, Serializable {
 			if (t1 != null) {
 				log.warn("ERROR, why here is a task? task=" + t1);
 			}
-
-//			if (Language.getLanguage() != null)
-//				task.attach("token", Language.getLanguage().format(System.currentTimeMillis(), "HH:mm:ss"));
-//			log.debug("schedule the task:" + task + ", token=" + task.attach("token"));
 
 			if (ms <= 0) {
 				if (task.scheduledtime <= 0) {
@@ -1106,8 +1093,10 @@ public abstract class Task implements Runnable, Serializable {
 					task._t = "S";
 					task.sf = sys.schedule(task, ms, TimeUnit.MILLISECONDS);
 				} else if (global) {
+
 					task._t = "G";
 					task.sf = LocalRunner.global.schedule(task, ms, TimeUnit.MILLISECONDS);
+
 				} else {
 					task._t = "";
 					task.sf = local.schedule(task, ms, TimeUnit.MILLISECONDS);
