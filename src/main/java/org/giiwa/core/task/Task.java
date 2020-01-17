@@ -433,9 +433,9 @@ public abstract class Task implements Runnable, Serializable {
 					who.setName(old);
 				}
 
-				if (_run) {
-					onFinish();
-				}
+//				if (_run) {
+				onFinish();
+//				}
 
 			}
 
