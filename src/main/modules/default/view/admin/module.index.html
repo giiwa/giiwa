@@ -56,13 +56,6 @@ div.limited, div.trial, div.issue{
 			<td>$!f.readme</td>
 			<td class="a" style="color: #888;font-style: italic;">
 				<div class="$!f.license">$!lang.get("license_$!f.license")</div>
-				#if($f.has('company'))
-					<div>$!f.get('company')</div>
-					#foreach($p in $f.setting.keySet())
-					<div>$!lang.get("$!{f.name}.$!{p}")=$!f.get($p)</div>
-					#end
-					<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="/admin/module/deletelicense?__node=$!__node&name=$f.name"><i class="icon-cancel-circle"></i></a>
-				#end
 			</td>
 			<td class="a">
 				#if($f.id > 0)
