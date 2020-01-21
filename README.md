@@ -1,6 +1,9 @@
 ### 轻量级分布式应用框架 
 [https://www.giiwa.org](https://www.giiwa.org)
 
+#### 支持MVC
+* 支持Web的MVC开发。
+* View支持Velocity，FreeMaker；同时也支持完全分离的前后端开发。
 
 #### 模块化
 * 模块之间可以 *复用*和*重载*。
@@ -17,13 +20,13 @@
 #### 轻量级分布式
 * 并行对等分布式计算节点关系。
 * 更容易从一个节点扩展到N个节点，构建可伸缩的分布式并行计算环境。
-* 支持 MapReduce， 支持分布式锁， 分布式文件系统。
+* 支持分布式任务， 支持分布式锁， 分布式文件系统。
 
 
 #### 安装使用
-* 下载 [giiwa-2.0.tgz](https://www.giiwa.org/archive/release/giiwa-2.0.tgz)，或者[giiwa-2.0.zip](https://www.giiwa.org/archive/release/giiwa-2.0.zip)
+* 下载 [giiwa-2.0.2](https://github.com/giiwa/giiwa/releases)
 * [快速安装](doc/INSTALL.md)
-* [入门教程](doc/FIRST.md)
+* [入门教程](https://wiki.giisoo.com/)
 
 
 #### 获取代码
