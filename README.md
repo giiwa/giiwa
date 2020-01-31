@@ -24,7 +24,7 @@
 
 
 #### 安装使用
-* 下载 [giiwa](https://github.com/giiwa/giiwa/releases)
+* [下载giiwa](https://github.com/giiwa/giiwa/releases)
 * [入门教程](https://wiki.giisoo.com/)
 * [Javadoc](https://www.giisoo.com/javadoc/)
 
