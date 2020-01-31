@@ -1246,7 +1246,41 @@ public class Module {
 		} finally {
 //			System.out.println("init ok! module=" + name);
 		}
+
+		_init_lic();
+
 		return true;
+	}
+
+	private void _init_lic() {
+
+		BufferedReader in = null;
+		try {
+			File f1 = this.getFile("../init/", false, false);
+			File[] ff = f1.listFiles();
+			for (File f2 : ff) {
+				if (f2.getName().endsWith(".lic")) {
+					in = new BufferedReader(new FileReader(f2));
+					String name = in.readLine();
+
+					String code = in.readLine();
+					String content = in.readLine();
+
+					License a = new License();
+					a.set(X.ID, name);
+					a.set("code", code);
+					a.set("content", content);
+
+					if (a.decode()) {
+						a.store();
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			X.close(in);
+		}
 	}
 
 	/**
@@ -1733,43 +1767,6 @@ public class Module {
 
 		store();
 
-	}
-
-	public String getMenu() {
-		/**
-		 * check the menus
-		 * 
-		 */
-		File f = getFile("/install/menu.json", false);
-		if (f != null && f.exists()) {
-			BufferedReader reader = null;
-			try {
-				reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
-				StringBuilder sb = new StringBuilder();
-				String line = reader.readLine();
-				while (line != null) {
-					sb.append(line).append("\r\n");
-					line = reader.readLine();
-				}
-
-				return sb.toString();
-
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			} finally {
-				if (reader != null) {
-					try {
-						reader.close();
-					} catch (IOException e) {
-						log.error(e);
-					}
-				}
-			}
-		} else {
-			return "[{'name':'admin', 'childs':[]},\r\n{'name':'home', childs:[]},\r\n{'name':'user', childs:[]}]\r\n";
-		}
-
-		return null;
 	}
 
 	/**
