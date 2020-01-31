@@ -24,9 +24,9 @@
 
 
 #### 安装使用
-* 下载 [giiwa-2.0.2](https://github.com/giiwa/giiwa/releases)
-* [快速安装](doc/INSTALL.md)
+* 下载 [giiwa](https://github.com/giiwa/giiwa/releases)
 * [入门教程](https://wiki.giisoo.com/)
+* [Javadoc](https://www.giisoo.com/javadoc/)
 
 
 #### 获取代码
