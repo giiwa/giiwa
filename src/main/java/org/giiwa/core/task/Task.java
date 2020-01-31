@@ -102,6 +102,7 @@ public abstract class Task implements Runnable, Serializable {
 	private transient long scheduledtime = 0;
 	private String parent;
 	private static Configuration conf = null;
+	private static boolean _inited = false;
 
 	private transient Lock _door;
 	private transient ScheduledFuture<?> sf;
@@ -499,6 +500,8 @@ public abstract class Task implements Runnable, Serializable {
 
 			st.bind(Mode.TOPIC);
 
+			_inited = true;
+
 			if (log.isInfoEnabled())
 				log.info("bind mq[" + st.getName() + "]");
 
@@ -632,7 +635,7 @@ public abstract class Task implements Runnable, Serializable {
 				if (Language.getLanguage() != null)
 					this.parent = (String) Language.getLanguage().truncate(this.parent, 30);
 
-				if (global) {
+				if (global && _inited) {
 
 					try {
 
