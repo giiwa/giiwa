@@ -61,6 +61,10 @@ public class _Disk extends Bean {
 			// insert or update
 			String path = jo.getString("path");
 			String name = jo.getString("name");
+			if (X.isIn(name, "tmpfs", "devtmpfs")) {
+				continue;
+			}
+
 			if (X.isEmpty(path) || X.isEmpty(name)) {
 				log.error(jo, new Exception("name or path missed"));
 				break;

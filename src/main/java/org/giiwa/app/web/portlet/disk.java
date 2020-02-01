@@ -12,7 +12,7 @@ public class disk extends portlet {
 	@Override
 	public void get() {
 
-		Beans<_Disk> bs = _Disk.dao.load(W.create("node", Local.id()).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("path", 1), 0, 100);
+		Beans<_Disk> bs = _Disk.dao.load(W.create("node", Local.id()).and("updated", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("path", 1), 0, 100);
 		if (bs != null && !bs.isEmpty()) {
 			// Collections.reverse(bs);
 
@@ -32,7 +32,7 @@ public class disk extends portlet {
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_Disk.Record> bs = _Disk.Record.dao.load(
-				W.create("node", Local.id()).and("name", name).and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create("node", Local.id()).and("name", name).and("updated", time, W.OP.gte).sort("created", 1), 0,
 				24 * 60 * 7);
 
 		if (bs != null && !bs.isEmpty()) {

@@ -227,6 +227,7 @@ public class Host {
 	}
 
 	public static Collection<JSON> getDisks() throws SigarException {
+		
 		_init();
 
 		FileSystem[] fs = getFileSystem();
