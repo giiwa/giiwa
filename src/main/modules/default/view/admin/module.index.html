@@ -55,7 +55,7 @@ div.limited, div.trial, div.issue{
 			<td>$!f.build</td>
 			<td>$!f.readme</td>
 			<td class="a" style="color: #888;font-style: italic;">
-				<div class="$!f.license">$!lang.get("license_$!f.license")</div>
+				<div class="$!f.license">$!lang.get("license_$!f.license")#if($f.get('company'))//$!f.get('company')#end</div>
 			</td>
 			<td class="a">
 				#if($f.id > 0)
