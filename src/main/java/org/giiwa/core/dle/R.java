@@ -111,7 +111,7 @@ public class R {
 					return JSON.create();
 				}
 
-				return JSON.create().append("data", r2JSON(x));
+				return JSON.create().append("data", r2JSON(x)).append("summary", x.toString());
 
 			} finally {
 
