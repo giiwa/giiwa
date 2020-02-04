@@ -809,7 +809,7 @@ public class Module {
 	public void setLicense(License.LICENSE s, String code) {
 		try {
 			if (s != LICENSE.issue) {
-				// TODO, verify the code
+				// verify the code
 				String s1 = new String(RSA.decode(Base64.getDecoder().decode(code), key));
 				if (X.isSame("giiwa", s1)) {
 					license = s;
@@ -820,6 +820,7 @@ public class Module {
 			if (log.isDebugEnabled())
 				log.debug(s + ", code=" + code, new Exception());
 			license = LICENSE.issue;
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
