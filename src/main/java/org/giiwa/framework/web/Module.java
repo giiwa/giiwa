@@ -610,7 +610,7 @@ public class Module {
 		}
 
 		// possible license issue
-		this.setLicense(License.LICENSE.issue, null);
+		// this.setLicense(License.LICENSE.issue, null);
 		return defaultValue;
 	}
 
