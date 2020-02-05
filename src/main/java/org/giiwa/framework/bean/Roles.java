@@ -17,6 +17,8 @@ package org.giiwa.framework.bean;
 import java.util.*;
 
 import org.giiwa.core.bean.*;
+import org.giiwa.core.bean.Helper.W;
+import org.giiwa.framework.bean.Role.RoleAccess;
 
 /**
  * group roles.
@@ -33,7 +35,7 @@ public class Roles extends Bean implements IRole {
 
 	private static List<IRole> handlers = new ArrayList<IRole>();
 
-	private Set<String> access;
+	private List<String> access;
 
 	List<Role> list;
 
@@ -45,7 +47,7 @@ public class Roles extends Bean implements IRole {
 		return list;
 	}
 
-	public Set<String> getAccesses() {
+	public List<String> getAccesses() {
 		return access;
 	}
 
@@ -56,30 +58,20 @@ public class Roles extends Bean implements IRole {
 	/**
 	 * Instantiates a new roles.
 	 * 
-	 * @param roles
-	 *            the roles
+	 * @param roles the roles
 	 */
+	@SuppressWarnings("unchecked")
 	public Roles(List<Long> roles) {
-		if (access == null && roles != null && roles.size() > 0) {
-			access = new HashSet<String>();
-			list = Role.loadAll(roles);
-
-			for (Role r : list) {
-				List<?> names = r.getAccesses();
-				if (names != null && names.size() > 0) {
-					for (Object o : names) {
-						access.add(o.toString());
-					}
-				}
-			}
+		if (roles != null && !roles.isEmpty()) {
+			list = Role.dao.load(W.create().and("id", roles), 0, 100);
+			access = (List<String>) RoleAccess.dao.distinct("name", W.create().and("rid", roles));
 		}
 	}
 
 	/**
 	 * Checks for access.
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return true, if successful
 	 */
 	public boolean hasAccess(long uid, String... name) throws Exception {

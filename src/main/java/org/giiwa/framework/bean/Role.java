@@ -21,7 +21,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.*;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.cache.Cache;
 import org.giiwa.core.json.JSON;
 
 /**
@@ -44,12 +43,12 @@ public class Role extends Bean {
 	public static final BeanDAO<Long, Role> dao = BeanDAO.create(Role.class);
 
 	@Column(name = X.ID)
-	private long id;
+	public long id;
 
 	@Column(name = "name")
-	private String name;
+	public String name;
 
-	@Column(name = "name")
+	@Column(name = "url")
 	public String url; // 首页
 
 	// String memo;
@@ -70,6 +69,11 @@ public class Role extends Bean {
 
 	public String getMemo() {
 		return this.getString("memo");
+	}
+
+	@Override
+	public String toString() {
+		return "Role [id=" + id + ", url=" + url + "]";
 	}
 
 	/**
@@ -150,39 +154,6 @@ public class Role extends Bean {
 
 		dao.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
 
-	}
-
-	/**
-	 * Load all.
-	 * 
-	 * @param roles the roles
-	 * @return the list
-	 */
-	public static List<Role> loadAll(List<Long> roles) {
-		List<Role> list = new ArrayList<Role>();
-		if (roles != null) {
-			for (long rid : roles) {
-				Role r = Role.load(rid);
-				if (r != null) {
-					list.add(r);
-				}
-			}
-		}
-		return list;
-	}
-
-	private static Role load(long rid) {
-		Role r = Cache.get("role://" + rid);
-
-		if (r == null) {
-			r = dao.load(rid);
-
-			if (r != null) {
-				Cache.set("role://" + rid, r, X.AMINUTE);
-			}
-		}
-
-		return r;
 	}
 
 	/**
@@ -290,7 +261,7 @@ public class Role extends Bean {
 				long id = e.getLong(X.ID);
 				V v = V.fromJSON(e);
 				v.remove(X.ID, "_id");
-				Role s = Role.load(id);
+				Role s = Role.dao.load(id);
 				if (s != null) {
 					dao.update(id, v);
 				} else {

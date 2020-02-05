@@ -19,7 +19,6 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
@@ -450,15 +449,12 @@ public class User extends Bean {
 	 * 
 	 * @return Roles
 	 */
+	@SuppressWarnings("unchecked")
 	public Roles getRole() {
 		if (role == null) {
-			Beans<UserRole> bs = UserRole.dao.load(W.create("uid", this.getId()), 0, 100);
-			if (bs != null) {
-				List<Long> roles = new ArrayList<Long>();
-				for (UserRole r : bs) {
-					roles.add(r.getLong("rid"));
-				}
-				role = new Roles(roles);
+			List<?> l1 = UserRole.dao.distinct("rid", W.create("uid", this.getId()));
+			if (l1 != null && !l1.isEmpty()) {
+				role = new Roles((List<Long>) l1);
 			}
 		}
 		return role;
@@ -937,7 +933,7 @@ public class User extends Bean {
 		}
 	}
 
-	public Set<String> getAccesses() {
+	public List<String> getAccesses() {
 		if (role == null) {
 			getRole();
 		}

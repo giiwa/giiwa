@@ -103,15 +103,6 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		this.columns = columns;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object.toString()
-	 */
-	public String toString() {
-		return "Beans[total=" + total + ", size=" + size() + "]";
-	}
-
 	public List<JSON> toJSON(Function<E, JSON> cb) {
 		List<JSON> l1 = JSON.createList();
 		for (E e : this) {

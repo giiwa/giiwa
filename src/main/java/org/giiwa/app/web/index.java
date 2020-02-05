@@ -24,6 +24,7 @@ public class index extends Controller {
 				if (l1 != null && !l1.isEmpty()) {
 					for (Role r : l1) {
 						if (!X.isEmpty(r.url)) {
+							this.addHeader("due", "role//" + r.id);
 							this.redirect(r.url);
 							return;
 						}
@@ -39,6 +40,11 @@ public class index extends Controller {
 		String h1 = Local.getString("home.uri.1", null);
 		if (X.isEmpty(h1)) {
 			h1 = Global.getString("home.uri", X.EMPTY);
+			if (!X.isEmpty(h1)) {
+				this.addHeader("due", "global");
+			}
+		} else {
+			this.addHeader("due", "node");
 		}
 
 		if (X.isEmpty(h1)) {
