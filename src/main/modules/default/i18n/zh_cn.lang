@@ -983,3 +983,4 @@ portlet.cache.write.title=Cache/写(ms)
 cache.write.times=写
 cache.write.avg=平均
 cache.write.min=最小
+role.url=首页

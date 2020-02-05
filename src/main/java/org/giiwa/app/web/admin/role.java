@@ -44,7 +44,8 @@ public class role extends Controller {
 
 			String name = this.getString("name");
 			String memo = this.getString("memo");
-			long id = Role.create(name, memo);
+			String url = this.getString("url");
+			long id = Role.create(name, memo, V.create("url", url));
 			if (id > 0) {
 				String[] access = this.getStrings("access");
 				if (access != null) {
@@ -126,7 +127,9 @@ public class role extends Controller {
 			String name = this.getString("name");
 			Role r = Role.dao.load(id);
 			if (r != null) {
-				if (Role.dao.update(id, V.create("name", name).set("memo", this.getString("memo"))) > 0) {
+
+				if (Role.dao.update(id, V.create("name", name).append("url", this.getString("url")).set("memo",
+						this.getString("memo"))) > 0) {
 
 					String[] accesses = this.getStrings("access");
 					r.setAccess(accesses);

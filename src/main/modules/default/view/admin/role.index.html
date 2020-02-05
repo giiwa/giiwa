@@ -15,14 +15,16 @@
 		<tr>
 			<th>$lang.get('role.name')</th>
 			<th>$lang.get('role.memo')</th>
+			<th>$lang.get('role.url')</th>
 			<th></th>
 		</tr>
 	</thead>
 	<tbody>
 #foreach($f in $list)
 	<tr>
-		<td>$f.name</td>
-		<td>$f.memo</td>
+		<td>$!f.name</td>
+		<td>$!f.memo</td>
+		<td>$!f.url</td>
 	#if($edit)
 		<td class="a">
 			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/role/edit?__node=$!__node&id=$f.id"><i class="icon-pencil"></i></a>

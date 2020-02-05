@@ -10,6 +10,7 @@
 	<input type='hidden' name="id" value="$r.id"/>
 	<div><label><h3>$lang.get('role.name')(<r>*</r>):</h3><input type='text' onblur="giiwa.verify(this, '/admin/role/verify')" name='name' value='#if($name)$name#end'/></label></div>
 	<div><label><h3>$lang.get('role.memo'):</h3><input type='text' name='memo' value='#if($memo)$memo#end'/></label></div>	
+	<div><label><h3>$lang.get('role.url'):</h3><input type='text' name='url' value=#if($url) '$url' #else '' #end/></label></div>	
 	
 	<div class='accesses'>
 		<div class='access_title'><label><input type='checkbox' onclick='selectall();'>$lang.get('select.all.access')</label></div>

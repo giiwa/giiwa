@@ -217,7 +217,7 @@ public class Menu extends Bean {
 					if (log.isInfoEnabled())
 						log.info("create role: role=" + role + ", memo=" + memo);
 
-					long rid = Role.create(role, memo);
+					long rid = Role.create(role, memo, V.create().append("url", jo.getString("url")));
 					if (rid <= 0) {
 						Role r = Role.loadByName(role);
 						if (r != null) {

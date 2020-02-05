@@ -830,3 +830,4 @@ a.dfile.folder=Browser
 a.unmount=Unmount
 db.h2=Embedded DB
 a.user.list=User List
+role.url=Home

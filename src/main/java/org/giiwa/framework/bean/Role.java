@@ -49,6 +49,9 @@ public class Role extends Bean {
 	@Column(name = "name")
 	private String name;
 
+	@Column(name = "name")
+	public String url; // 首页
+
 	// String memo;
 	// long updated;
 
@@ -76,7 +79,7 @@ public class Role extends Bean {
 	 * @param memo the memo
 	 * @return the int
 	 */
-	public static long create(String name, String memo) {
+	public static long create(String name, String memo, V v) {
 		Role r = Role.loadByName(name);
 		if (r != null) {
 			/**
@@ -90,7 +93,7 @@ public class Role extends Bean {
 			while (dao.exists(id)) {
 				id = UID.next("role.id");
 			}
-			if (dao.insert(V.create(X.ID, id).set("id", id).set("name", name).set("memo", memo).set(X.UPDATED,
+			if (dao.insert(v.force(X.ID, id).set("id", id).set("name", name).set("memo", memo).set(X.UPDATED,
 					System.currentTimeMillis())) > 0) {
 				return id;
 			}
