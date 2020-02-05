@@ -411,7 +411,8 @@ public class user extends Controller {
 									me.logined(sid(), this.getRemoteHost(),
 											V.create("weblogined", System.currentTimeMillis()));
 
-									this.redirect("/user/go");
+									this.redirect("/");
+//									this.redirect("/user/go");
 								}
 								return;
 							}
@@ -473,7 +474,8 @@ public class user extends Controller {
 				this.response(jo);
 				return;
 			} else if (login != null) {
-				this.redirect("/user/go");
+				this.redirect("/");
+//				this.redirect("/user/go");
 			} else {
 				this.set(this);
 				this.set(X.STATE, jo.getInt(X.STATE));
