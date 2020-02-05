@@ -1258,22 +1258,26 @@ public class Module {
 		BufferedReader in = null;
 		try {
 			File f1 = this.getFile("../init/", false, false);
-			File[] ff = f1.listFiles();
-			for (File f2 : ff) {
-				if (f2.getName().endsWith(".lic")) {
-					in = new BufferedReader(new FileReader(f2));
-					String name = in.readLine();
+			if (f1 != null && f1.exists()) {
+				File[] ff = f1.listFiles();
+				if (ff != null) {
+					for (File f2 : ff) {
+						if (f2.getName().endsWith(".lic")) {
+							in = new BufferedReader(new FileReader(f2));
+							String name = in.readLine();
 
-					String code = in.readLine();
-					String content = in.readLine();
+							String code = in.readLine();
+							String content = in.readLine();
 
-					License a = new License();
-					a.set(X.ID, name);
-					a.set("code", code);
-					a.set("content", content);
+							License a = new License();
+							a.set(X.ID, name);
+							a.set("code", code);
+							a.set("content", content);
 
-					if (a.decode()) {
-						a.store();
+							if (a.decode()) {
+								a.store();
+							}
+						}
 					}
 				}
 			}

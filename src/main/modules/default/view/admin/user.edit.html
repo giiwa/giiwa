@@ -20,6 +20,7 @@
 			<tr>
 				<th>$lang.get('role.name')</th>
 				<th>$lang.get('role.memo')</th>
+				<th>$lang.get('role.url')</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -27,6 +28,7 @@
 		<tr>
 			<td><label><input type="checkbox" name="role" value="$r.id" #if($u.isRole($r)) checked="true" #end>$r.name</label></label></td>
 			<td>$!r.memo</td>
+			<td>$!r.url</td>
 		</tr>
 	#end
 		</tbody>
