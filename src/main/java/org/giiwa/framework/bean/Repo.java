@@ -44,7 +44,6 @@ public class Repo {
 	 * @param conf the conf
 	 */
 	public static void init(Configuration conf) {
-		// ROOT = conf.getString("repo.path", "/home/repo");
 
 		log.info("repo has been initialized.");
 

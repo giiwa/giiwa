@@ -1859,10 +1859,10 @@ public class Helper implements Serializable {
 			private Entity(W container, String name, Object v, OP op, int cond, int boost) {
 				this.container = container;
 				this.name = name;
-				this.op = op;
 				this.cond = cond;
-				this.value = v;
 				this.boost = boost;
+				this.op = op;
+				this.value = v;
 			}
 
 			@Override

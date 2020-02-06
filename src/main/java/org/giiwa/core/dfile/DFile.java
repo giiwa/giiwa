@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.base.Base32;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.bean.Helper.V;
 import org.giiwa.core.bean.X;
@@ -94,6 +95,10 @@ public class DFile {
 
 	public boolean delete() {
 		return delete(-1);
+	}
+
+	public String getId() {
+		return Base32.encode(this.getFilename().getBytes());
 	}
 
 	public boolean delete(long age) {

@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.base.Base32;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.Bean;
@@ -198,6 +199,10 @@ public class Disk extends Bean {
 
 	public static DFile seek(Path filename) {
 		return seek(filename.toString());
+	}
+
+	public static DFile get(String id) {
+		return seek(new String(Base32.decode(id)));
 	}
 
 	public static DFile seek(String filename) {
