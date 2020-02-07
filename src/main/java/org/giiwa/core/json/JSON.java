@@ -81,7 +81,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * @param lenient the boolean of JsonReader.setLenient(lenient)
 	 * @return the json
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes", "restriction" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static JSON fromObject(Object json, boolean lenient) {
 
 		JSON j = null;
@@ -199,7 +199,7 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * @param jsons the jsons
 	 * @return the list
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked", "restriction" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static List<JSON> fromObjects(Object jsons) {
 		List list = null;
 		if (jsons instanceof Collection) {
@@ -674,6 +674,14 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		q.and(" a='or' and b != 'and' AND c='java'");
 
 		System.out.println(q.toString());
+		
+		j1 = JSON.create();
+		j1.append("ret.aaa", 1);
+		System.out.println(j1.toPrettyString());
+		
+		System.out.println(j1.get("ret.aaa"));
+
+		System.out.println(j1.get("ret1.aaa"));
 
 	}
 
@@ -728,11 +736,8 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * 
 	 * @param xpath the xpath expressions can use the dot–notation
 	 * 
-	 *              <pre>
-	$.store.book[0].title
-	or the bracket–notation
-	$['store']['book'][0]['title']
-	 *              </pre>
+	 *              $.store.book[0].title or the bracket–notation
+	 *              $['store']['book'][0]['title']
 	 * 
 	 * @param value the object
 	 * @return JSON the new JSON object
@@ -750,7 +755,18 @@ public final class JSON extends LinkedHashMap<String, Object> {
 	 * @return the JSON
 	 */
 	public JSON append(String name, Object value) {
-		put(name, value);
+		int i = name.indexOf(".");
+		if (i > 0) {
+			String s1 = name.substring(0, i);
+			JSON j1 = (JSON) this.get(s1);
+			if (j1 == null) {
+				j1 = JSON.create();
+				this.put(s1, j1);
+			}
+			j1.append(name.substring(i + 1), value);
+		} else {
+			put(name, value);
+		}
 		return this;
 	}
 
