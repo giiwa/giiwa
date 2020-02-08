@@ -28,9 +28,10 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,7 +56,7 @@ import com.jayway.jsonpath.JsonPath;
  * 
  * @author wujun
  */
-public final class JSON extends ConcurrentHashMap<String, Object> {
+public final class JSON extends HashMap<String, Object> {
 
 	/**
 	 * 
@@ -125,7 +126,7 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 			} else if (json instanceof File) {
 				try {
 					Gson g = new Gson();
-					return g.fromJson(new FileReader((File) json), JSON.class);
+					j = g.fromJson(new FileReader((File) json), JSON.class);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -425,7 +426,8 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 					} else if (d == d.longValue()) {
 						jo.put(name, d.longValue());
 					}
-				} else if (v instanceof JSON) {
+				} else if (v instanceof Map) {
+					v = JSON.fromObject(v);
 					_refine((JSON) v);
 				} else if (v instanceof List) {
 					_refine((List<Object>) v);
@@ -450,6 +452,7 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 						l1.set(i, d.longValue());
 					}
 				} else if (v instanceof Map) {
+					v = JSON.fromObject(v);
 					_refine((Map) v);
 				} else if (v instanceof List) {
 					_refine((List) v);
@@ -467,7 +470,9 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 	 */
 	public static JSON create(Map<String, Object> m) {
 		JSON j = create();
-		j.putAll(m);
+		for (String name : m.keySet()) {
+			j.append(name, m.get(name));
+		}
 		return j;
 	}
 
@@ -691,6 +696,10 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		s = "\"[{\"left\":\"\",\"id\":\"z072lv\",\"type\":\"req\",\"attr\":{\"code\":\"return {a:1, b:2}\",\"name\":\"输入\",\"category\":\"param\"}}, {\"left\":\"z072lv\",\"id\":\"749t9p\",\"type\":\"js\",\"attr\":{\"code\":\"return {c: param.a + 90}\",\"name\":\"数据转换\",\"text\":\"脚本\",\"category\":\"abc\"}}, {\"left\":\"88vmgk\",\"id\":\"yoq1m3\",\"type\":\"js\",\"attr\":{\"code\":\"return {a:3}\",\"name\":\"脚本\",\"text\":\"脚本\",\"category\":\"ccc\"}}, {\"left\":\"\",\"id\":\"88vmgk\",\"type\":\"timer\",\"attr\":{\"timer\":0,\"typeText\":\"周期性\",\"interval\":\"60\",\"time\":\"\"}}, {\"left\":\"88vmgk\",\"id\":\"jdfc8d\",\"type\":\"js\",\"attr\":{\"code\":\"return {a:6}\",\"name\":\"计算\",\"text\":\"脚本\",\"category\":\"bbb\"}}, {\"left\":\"749t9p,7e1od2\",\"id\":\"h4o1oe\",\"type\":\"model\",\"attr\":{\"code\":\"\\n\",\"name\":\"数据聚合\",\"text\":\"数据聚合\",\"category\":\"\"}}, {\"left\":\"88vmgk\",\"id\":\"m2s4pe\",\"type\":\"dset\",\"attr\":{\"filter\":\"\",\"max\":\"10\",\"meta\":\"cip_cate\",\"display\":\"中图分类法\",\"category\":\"aaa\"}}, {\"left\":\"djjeil,m2s4pe,jdfc8d,yoq1m3,r3a15e\",\"id\":\"7e1od2\",\"type\":\"group_data\",\"attr\":{}}, {\"left\":\"88vmgk\",\"id\":\"djjeil\",\"type\":\"group_y\",\"attr\":{\"dset\":27,\"func\":\"样本数\",\"display\":\"_ID\",\"name\":\"_id\",\"category\":\"ab\"}}, {\"left\":\"88vmgk\",\"id\":\"r3a15e\",\"type\":\"group\",\"attr\":{\"dset\":27,\"func\":[{\"name\":\"_id\",\"func\":\"样本数\"}],\"display\":\"中图分类法1\",\"category\":\"bb\",\"group\":[{\"name\":\"no\",\"size\":\"10\"}]}}]\"";
+		List<JSON> l2 = JSON.fromObjects(s);
+		System.out.println(l2);
 
 	}
 
