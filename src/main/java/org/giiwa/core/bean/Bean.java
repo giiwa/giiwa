@@ -479,7 +479,9 @@ public class Bean implements Serializable {
 						Field f = m2.get(name);
 						try {
 							f.setAccessible(true);
-							map_obj.put(name, f.get(this));
+							Object o = f.get(this);
+							if (o != null)
+								map_obj.put(name, o);
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
