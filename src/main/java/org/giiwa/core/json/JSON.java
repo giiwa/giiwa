@@ -774,7 +774,11 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 			}
 			j1.append(name.substring(i + 1), value);
 		} else {
-			put(name, value);
+			if (value == null) {
+				this.remove(name);
+			} else {
+				put(name, value);
+			}
 		}
 		return this;
 	}
