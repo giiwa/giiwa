@@ -28,9 +28,9 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,7 +55,7 @@ import com.jayway.jsonpath.JsonPath;
  * 
  * @author wujun
  */
-public final class JSON extends LinkedHashMap<String, Object> {
+public final class JSON extends ConcurrentHashMap<String, Object> {
 
 	/**
 	 * 
@@ -674,14 +674,23 @@ public final class JSON extends LinkedHashMap<String, Object> {
 		q.and(" a='or' and b != 'and' AND c='java'");
 
 		System.out.println(q.toString());
-		
+
 		j1 = JSON.create();
 		j1.append("ret.aaa", 1);
 		System.out.println(j1.toPrettyString());
-		
-		System.out.println(j1.get("ret.aaa"));
 
-		System.out.println(j1.get("ret1.aaa"));
+		System.out.println("ret.aaa=" + j1.get("ret.aaa"));
+
+		System.out.println("ret1.aaa=" + j1.get("ret1.aaa"));
+
+		j1.append("a", 11);
+		String js = "print('j1.a=' + j1.ret.aaa)";
+		try {
+			JS.run(js, JSON.create().append("j1", j1));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -896,19 +905,20 @@ public final class JSON extends LinkedHashMap<String, Object> {
 
 	@Override
 	public Object get(Object key) {
-		if (X.isEmpty(key))
-			return null;
+//		if (X.isEmpty(key))
+//			return null;
 
 		String name = key.toString();
 
-		if (this.containsKey(name)) {
-			return super.get(key);
+		Object o = super.get(key);
+		if (o != null) {
+			return o;
 		}
 
 		int i = name.indexOf(".");
 		if (i > 0) {
 			String s0 = name.substring(0, i);
-			Object o = this.get(s0);
+			o = super.get(s0);
 			if (o instanceof JSON) {
 				JSON m = (JSON) o;
 				return m.get(name.substring(i + 1));
