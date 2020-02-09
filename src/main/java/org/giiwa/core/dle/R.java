@@ -165,7 +165,7 @@ public class R extends IStub {
 				}
 
 				Object s1 = r2JSON(x);
-				return JSON.create().append("data", s1).append("summary", s1);
+				return JSON.create().append("data", s1);//.append("summary", s1);
 
 			} finally {
 

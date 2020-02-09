@@ -688,9 +688,15 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 		System.out.println("ret1.aaa=" + j1.get("ret1.aaa"));
 
 		j1.append("a", 11);
-		String js = "print('j1.a=' + j1.ret.aaa)";
+		String js = "print('j1.a=' + j1.ret.aaa);j1.b = 'aaaa';";
 		try {
+
 			JS.run(js, JSON.create().append("j1", j1));
+			Object o = j1.get("b");
+			JSON j2 = JSON.fromObject(o);
+			System.out.println(j2);
+			System.out.println(o);
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
