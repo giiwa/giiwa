@@ -33,6 +33,9 @@ import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Temp;
+import org.giiwa.mq.IStub;
+import org.giiwa.mq.MQ;
+import org.giiwa.mq.MQ.Request;
 import org.rosuda.REngine.REXP;
 import org.rosuda.REngine.REXPDouble;
 import org.rosuda.REngine.REXPGenericVector;
@@ -46,20 +49,71 @@ import org.rosuda.REngine.REXPSymbol;
 import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 
-public class R {
+public class R extends IStub {
+
+	public R(String name) {
+		super(name);
+	}
 
 	static Log log = LogFactory.getLog(R.class);
 
 	private static int TIMEOUT = 10000;
 
-	public static R inst = new R();
+	public static R inst = new R("r");
+	private static boolean inited = false;
+
+	public static void serve() {
+
+		String host = Config.getConf().getString("r.host", X.EMPTY);
+
+		if (X.isIn(host, "127.0.0.1", X.EMPTY) && !inited) {
+			// local
+			try {
+				inst.bind();
+				inited = true;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				Task.schedule(() -> {
+					serve();
+				}, 3000);
+			}
+		}
+
+	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JSON run(String code) throws Exception {
-		return run(code, (List) null, null);
+		return run(code, null, (List) null, null);
 	}
 
-	public JSON run(String code, List<JSON> data, String[] header) throws Exception {
+	/**
+	 * run the R code in sanbox
+	 * 
+	 * @param code
+	 * @param name
+	 * @param data
+	 * @param header
+	 * @return
+	 * @throws Exception
+	 */
+	public JSON run(String code, String dataname, List<JSON> data, List<String> header) throws Exception {
+
+		String host = Config.getConf().getString("r.host", X.EMPTY);
+
+		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
+			// local
+			return _run(code, dataname, data, header);
+
+		} else {
+
+			JSON j1 = JSON.create();
+			j1.append("c", code).append("dn", dataname).append("d", data).append("h", header);
+			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
+		}
+
+	}
+
+	private JSON _run(String code, String dataname, List<JSON> data, List<String> header) throws Exception {
 
 		RConnection c = pool.get(TIMEOUT);
 
@@ -74,27 +128,26 @@ public class R {
 				sb.append(func + "<-function(){");
 				if (!X.isEmpty(data)) {
 
-					Temp t = Temp.create("data");
+					if (dataname != null && data != null) {
 
-					Exporter<JSON> ex = t.export("UTF-8", Exporter.FORMAT.plain);
-					ex.createSheet(e -> {
-						Object[] o = new Object[header.length];
-						for (int i = 0; i < header.length; i++) {
-							o[i] = e.get(header[i]);
-						}
-						return o;
-					});
-					ex.print(header);
-					ex.print(data);
-					ex.close();
+						Temp t = Temp.create("data");
 
-//					if (t.getFile().exists()) {
-//						System.out.println(t.getFile().getAbsolutePath() + ", size=" + t.getFile().length());
-//					}
+						Exporter<JSON> ex = t.export("UTF-8", Exporter.FORMAT.plain);
+						ex.createSheet(e -> {
+							Object[] o = new Object[header.size()];
+							for (int i = 0; i < header.size(); i++) {
+								o[i] = e.get(header.get(i));
+							}
+							return o;
+						});
+						ex.print(header);
+						ex.print(data);
+						ex.close();
 
-					l1.add(t);
-					sb.append("data <- read.csv('" + t.getFile().getCanonicalPath()
-							+ "', header=T, stringsAsFactors=TRUE);");
+						l1.add(t);
+						sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath()
+								+ "', header=T, stringsAsFactors=TRUE);");
+					}
 
 				}
 
@@ -111,11 +164,105 @@ public class R {
 					return JSON.create();
 				}
 
-				return JSON.create().append("data", r2JSON(x)).append("summary", x.toString());
+				Object s1 = r2JSON(x);
+				return JSON.create().append("data", s1).append("summary", s1);
 
 			} finally {
 
 				c.eval("rm(" + func + ")");
+
+				pool.release(c);
+
+				if (l1 != null) {
+					for (Temp t : l1)
+						t.delete();
+				}
+			}
+		}
+		return null;
+
+	}
+
+	/**
+	 * run the R code in global and reside the mode as "name"
+	 * 
+	 * @param name
+	 * @param code
+	 * @param data
+	 * @param header
+	 * @return
+	 * @throws Exception
+	 */
+	public JSON bind(String name, String code, String dataname, List<JSON> data, List<String> header) throws Exception {
+
+		String host = Config.getConf().getString("r.host", X.EMPTY);
+
+		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
+			// local
+			return _bind(name, code, dataname, data, header);
+
+		} else {
+
+			JSON j1 = JSON.create();
+			j1.append("m", "bind").append("c", code).append("n", name).append("dn", dataname).append("d", data)
+					.append("h", header);
+			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
+		}
+	}
+
+	private JSON _bind(String name, String code, String dataname, List<JSON> data, List<String> header)
+			throws Exception {
+
+		RConnection c = pool.get(TIMEOUT);
+
+		if (c != null) {
+
+			// save to file
+			List<Temp> l1 = new ArrayList<Temp>();
+			try {
+				StringBuilder sb = new StringBuilder();
+				sb.append(name + "<-function(){");
+				if (!X.isEmpty(data)) {
+
+					Temp t = Temp.create("data");
+
+					Exporter<JSON> ex = t.export("UTF-8", Exporter.FORMAT.plain);
+					ex.createSheet(e -> {
+						Object[] o = new Object[header.size()];
+						for (int i = 0; i < header.size(); i++) {
+							o[i] = e.get(header.get(i));
+						}
+						return o;
+					});
+					ex.print(header);
+					ex.print(data);
+					ex.close();
+
+					l1.add(t);
+					sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath()
+							+ "', header=T, stringsAsFactors=TRUE);");
+
+				}
+
+				sb.append(code).append("};" + name + "();");
+
+//				System.out.println(sb);
+
+				if (log.isDebugEnabled())
+					log.debug("R.run, code=" + sb);
+
+				REXP x = c.eval(sb.toString());
+
+				if (x == null || x.isNull()) {
+					return JSON.create();
+				}
+
+				Object s1 = r2JSON(x);
+				return JSON.create().append("data", s1).append("summary", s1);
+
+			} finally {
+
+				c.eval("rm(" + name + ")");
 
 				pool.release(c);
 
@@ -286,9 +433,10 @@ public class R {
 			l1.add(JSON.create().append("a", 10).append("b", 22).append("c", 39).append("d", 4));
 			l1.add(JSON.create().append("a", 1).append("b", 21).append("c", 3).append("d", 4));
 			l1.add(JSON.create().append("a", 1).append("b", 42).append("c", 3).append("d", 4));
-			j1 = inst.run("library(C50);d1<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));print(summary(d1))", l1,
-					new String[] { "a", "b", "c", "d" });
+			j1 = inst.run("library(C50);d1<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));print(summary(d1))", null,
+					l1, Arrays.asList("a", "b", "c", "d"));
 			System.out.println(j1);
+			System.out.println(j1.get("summary"));
 
 //			System.out.println(((List) j1.get("data")).get(0));
 
@@ -414,6 +562,34 @@ public class R {
 			return X.toDouble(e);
 		}).min().getAsDouble();
 		return JSON.create().append("data", d);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void onRequest(long seq, Request req) {
+
+		try {
+
+			JSON j1 = req.get();
+			String method = j1.getString("m");
+
+			if (X.isSame(method, "run")) {
+
+				JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), j1.getList("d"), (List<String>) j1.get("h"));
+				req.response(j2);
+
+			} else if (X.isSame(method, "bind")) {
+
+				JSON j2 = this._bind(j1.getString("n"), j1.getString("c"), j1.getString("dn"), j1.getList("d"),
+						(List<String>) j1.get("h"));
+				req.response(j2);
+
+			}
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
 	}
 
 }

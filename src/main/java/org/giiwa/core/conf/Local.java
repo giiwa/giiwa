@@ -242,26 +242,32 @@ public final class Local extends Bean {
 
 				@Override
 				public void onRequest(long seq, Request req) {
-					JSON j = req.get();
 
-					if (log.isDebugEnabled())
-						log.debug("got message, j=" + j + ", local=" + Local.id());
+					try {
+						JSON j = req.get();
 
-					if (j != null && X.isSame(Local.id(), j.getString("node"))) {
-						int power = j.getInt("power");
-						synchronized (Task.class) {
-							if (Task.powerstate != power) {
-								Task.powerstate = power;
-								if (Task.powerstate == 1) {
-									// start
-									Module.startAll();
-								} else {
-									// stop
-									Module.stopAll();
+						if (log.isDebugEnabled())
+							log.debug("got message, j=" + j + ", local=" + Local.id());
+
+						if (j != null && X.isSame(Local.id(), j.getString("node"))) {
+							int power = j.getInt("power");
+							synchronized (Task.class) {
+								if (Task.powerstate != power) {
+									Task.powerstate = power;
+									if (Task.powerstate == 1) {
+										// start
+										Module.startAll();
+									} else {
+										// stop
+										Module.stopAll();
+									}
 								}
 							}
 						}
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
 					}
+
 				}
 
 			}.bind(MQ.Mode.TOPIC);

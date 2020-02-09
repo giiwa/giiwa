@@ -16,6 +16,7 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.base.Zip;
 import org.giiwa.core.bean.Counter;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
@@ -62,6 +63,7 @@ public abstract class MQ {
 	 * @return true if success or false if failed.
 	 */
 	public synchronized static boolean init() {
+
 		if (mq == null) {
 
 			_node = Local.id();
@@ -77,6 +79,7 @@ public abstract class MQ {
 
 			try {
 				new Notify().bind(Mode.TOPIC);
+				new RPC().bind();
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -265,9 +268,9 @@ public abstract class MQ {
 		}
 	}
 
-	// public static void logger(boolean log) {
-	// Logger.logger(log);
-	// }
+	public static <T> T call(String name, Request req, long timeout) throws Exception {
+		return RPC.call(name, req, timeout);
+	}
 
 	public static class Request {
 
@@ -337,39 +340,47 @@ public abstract class MQ {
 			return this;
 		}
 
-		public Request put(Serializable t) {
+		public Request put(Serializable t) throws Exception {
 			if (t != null) {
 				ByteArrayOutputStream bb = new ByteArrayOutputStream();
 				try {
 					ObjectOutputStream out = new ObjectOutputStream(bb);
 					out.writeObject(t);
-				} catch (Exception e) {
-					log.error(t.toString(), e);
 				} finally {
 					X.close(bb);
 				}
-				data = bb.toByteArray();
+				data = Zip.zip(bb.toByteArray());
 			}
 			return this;
 		}
 
 		@SuppressWarnings("unchecked")
-		public <T> T get() {
+		public <T> T get() throws Exception {
 			if (data == null || data.length == 0)
 				return null;
 
-			ByteArrayInputStream bb = new ByteArrayInputStream(data);
+			ByteArrayInputStream bb = null;
 			try {
+				bb = new ByteArrayInputStream(Zip.unzip(data));
 				ObjectInputStream in = new ObjectInputStream(bb);
 				return (T) in.readObject();
-			} catch (Exception e) {
-				log.error(e.getMessage());
-				// log.error(e.getMessage(), e);
 			} finally {
 				X.close(bb);
 			}
-			return null;
 		}
+
+		public void response(Serializable data) throws Exception {
+
+			Request r = Request.create();
+			r.seq = seq;
+			r.ver = ver;
+
+			r.put(data);
+
+			MQ.send(from, r);
+
+		}
+
 	}
 
 	public static class Response extends Request {

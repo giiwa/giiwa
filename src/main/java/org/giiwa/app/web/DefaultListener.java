@@ -46,6 +46,7 @@ import org.giiwa.core.conf.Config;
 import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.FileServer;
+import org.giiwa.core.dle.R;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.SysTask;
 import org.giiwa.core.task.Task;
@@ -192,6 +193,8 @@ public class DefaultListener implements IListener {
 			BackupTask.init();
 
 			NodeLoadStatTask.init();
+
+			R.serve();
 
 		});
 

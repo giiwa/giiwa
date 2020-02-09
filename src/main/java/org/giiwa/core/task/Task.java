@@ -479,21 +479,16 @@ public abstract class Task implements Runnable, Serializable {
 				@Override
 				public void onRequest(long seq, Request req) {
 
-					Task t = req.get();
-					if (t == null)
-						return;
+					try {
+						Task t = req.get();
+						if (t == null)
+							return;
 
-//					String node = t.attach("node");
-//					log.debug("schedule task, t=" + t);
-//
-//					if (X.isSame(node, Local.id())) {
-//						// ignore
-//						log.debug("local task[" + t.getName() + "], ignored");
-//						return;
-//					}
-
-					long ms = t.attach("ms");
-					LocalRunner.schedule(t, ms, true);
+						long ms = t.attach("ms");
+						LocalRunner.schedule(t, ms, true);
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
 				}
 
 			};

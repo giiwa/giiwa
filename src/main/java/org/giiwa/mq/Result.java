@@ -39,14 +39,14 @@ public class Result<T> extends IStub implements Closeable {
 		}
 	}
 
-	public Object[] readObject(long timeout) throws InterruptedException {
+	public Object[] readObject(long timeout) throws Exception {
 
 		Request r = l1.poll(timeout, TimeUnit.MILLISECONDS);
 
 		return new Object[] { r.from, r.get() };
 	}
 
-	public T read(long timeout) throws InterruptedException {
+	public T read(long timeout) throws Exception {
 		Request r = l1.poll(timeout, TimeUnit.MILLISECONDS);
 		return r.get();
 	}

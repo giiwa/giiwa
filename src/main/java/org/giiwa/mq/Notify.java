@@ -26,7 +26,14 @@ class Notify extends IStub {
 
 		String name = req.from;
 
-		Object d = req.get();
+		Object d = null;
+
+		try {
+			d = req.get();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
 		List<Object[]> l1 = waiter.get(name);
 		if (l1 != null) {
 			synchronized (l1) {
