@@ -760,6 +760,44 @@ public final class JSON extends ConcurrentHashMap<String, Object> {
 		return this;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public JSON merge(String name, Object value) {
+		if (value == null)
+			return this;
+
+		Object o = this.get(name);
+		if (o == null) {
+			return this.append(name, value);
+		}
+		if (o instanceof Map && value instanceof Map) {
+			((Map) o).putAll((Map) value);
+		} else if (o instanceof List) {
+			if (value instanceof List) {
+				((List) o).addAll((List) value);
+			} else {
+				((List) o).add(value);
+			}
+		} else if (value instanceof List) {
+			((List) value).add(o);
+			this.append(name, value);
+		} else {
+			List l1 = new ArrayList();
+			if (o.getClass().isArray()) {
+				l1.addAll(Arrays.asList((Object[]) o));
+			} else {
+				l1.add(o);
+			}
+			if (value.getClass().isArray()) {
+				l1.addAll(Arrays.asList((Object[]) value));
+			} else {
+				l1.add(value);
+			}
+			this.append(name, l1);
+		}
+
+		return this;
+	}
+
 	/**
 	 * put the value
 	 * 
