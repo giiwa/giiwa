@@ -487,7 +487,8 @@ public abstract class Task implements Runnable, Serializable {
 						long ms = t.attach("ms");
 						LocalRunner.schedule(t, ms, true);
 					} catch (Exception e) {
-						log.error(e.getMessage(), e);
+//						log.error(e.getMessage(), e);
+						// ignore
 					}
 				}
 
