@@ -28,9 +28,9 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,7 +55,7 @@ import com.jayway.jsonpath.JsonPath;
  * 
  * @author wujun
  */
-public final class JSON extends ConcurrentHashMap<String, Object> {
+public final class JSON extends HashMap<String, Object> {
 
 	/**
 	 * 
