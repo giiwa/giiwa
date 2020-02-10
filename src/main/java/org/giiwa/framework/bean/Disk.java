@@ -69,7 +69,7 @@ public class Disk extends Bean {
 	String path;
 
 	@Column(name = "priority")
-	int priority;
+	public int priority;
 
 	@Column(name = "checktime")
 	long checktime;
@@ -78,13 +78,21 @@ public class Disk extends Bean {
 	int bad; // 0:ok, 1: bad
 
 	@Column(name = "total")
-	long total;
+	public long total;
 
 	@Column(name = "free")
-	long free;
+	public long free;
 
 	@Column(name = "count")
-	long count;
+	public long count;
+
+	public long getTotal() {
+		return total;
+	}
+
+	public long getFree() {
+		return free;
+	}
 
 	public boolean isLocal() {
 		return X.isSame(node, Local.id());

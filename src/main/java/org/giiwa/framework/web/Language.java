@@ -529,7 +529,7 @@ public class Language {
 			return X.EMPTY;
 		}
 
-		long d = length;
+		float d = Math.abs(length);
 
 		int i = 0;
 		while (d > step && i < UNITS.length) {
@@ -537,17 +537,11 @@ public class Language {
 			i++;
 		}
 
-		long l = (long) (d * 10);
-		if (length > 0) {
-			if (l % 10 == 0)
-				return l / 10 + UNITS[i];
-
-			return l / 10f + UNITS[i];
+		float d1 = d - (int) d;
+		if (d1 > 0.01) {
+			return (length > 0 ? "" : "-") + String.format("%.2f", d) + UNITS[i];
 		} else {
-			if (l % 10 == 0)
-				return -l / 10 + UNITS[i];
-
-			return -l / 10f + UNITS[i];
+			return (length > 0 ? "" : "-") + ((int) d) + UNITS[i];
 		}
 	}
 

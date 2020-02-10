@@ -8,8 +8,9 @@ import org.giiwa.framework.web.Path;
 
 public class file extends Controller {
 
-	@Path(path = "get/(.*)")
-	public void get(String id) {
+	@Path(path = "get/(.*)/(.*)")
+	public void get(String id, String name) {
+
 		DFile f1 = Disk.get(id);
 		if (f1.isFile()) {
 			this.setContentType(Controller.getMimeType(f1.getName()));
@@ -19,6 +20,7 @@ public class file extends Controller {
 				log.error(e.getMessage(), e);
 			}
 		}
+
 	}
 
 }

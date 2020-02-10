@@ -115,6 +115,8 @@ public class R extends IStub {
 
 	private JSON _run(String code, String dataname, List<JSON> data, List<String> header) throws Exception {
 
+		_check();
+
 		RConnection c = pool.get(TIMEOUT);
 
 		if (c != null) {
@@ -165,7 +167,7 @@ public class R extends IStub {
 				}
 
 				Object s1 = r2JSON(x);
-				return JSON.create().append("data", s1);//.append("summary", s1);
+				return JSON.create().append("data", s1);// .append("summary", s1);
 
 			} finally {
 
@@ -212,6 +214,8 @@ public class R extends IStub {
 
 	private JSON _bind(String name, String code, String dataname, List<JSON> data, List<String> header)
 			throws Exception {
+
+		_check();
 
 		RConnection c = pool.get(TIMEOUT);
 
@@ -349,40 +353,48 @@ public class R extends IStub {
 
 	}
 
-	private static Pool<RConnection> pool = Pool.create(Config.getConf().getInt("r.min", 1),
-			Config.getConf().getInt("r.max", 2), new Pool.IPoolFactory<RConnection>() {
+	private static Pool<RConnection> pool = null;
 
-				@Override
-				public RConnection create() {
-					RConnection c = null;
-					try {
+	synchronized void _check() {
 
-						String host = Config.getConf().getString("r.host", X.EMPTY);
-						int port = Config.getConf().getInt("r.port", 6311);
+		if (pool == null) {
+			pool = Pool.create(Config.getConf().getInt("r.min", 1), Config.getConf().getInt("r.max", 2),
+					new Pool.IPoolFactory<RConnection>() {
 
-						if (X.isEmpty(host)) {
-							c = new RConnection();
-						} else {
-							c = new RConnection(host, port);
+						@Override
+						public RConnection create() {
+							RConnection c = null;
+							try {
+
+								String host = Config.getConf().getString("r.host", X.EMPTY);
+								int port = Config.getConf().getInt("r.port", 6311);
+
+								if (X.isEmpty(host)) {
+									c = new RConnection();
+								} else {
+									c = new RConnection(host, port);
+								}
+
+							} catch (Exception e) {
+								log.error(e.getMessage(), e);
+							}
+							return c;
 						}
 
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					}
-					return c;
-				}
+						@Override
+						public boolean cleanup(RConnection t) {
+							return t.isConnected();
+						}
 
-				@Override
-				public boolean cleanup(RConnection t) {
-					return t.isConnected();
-				}
+						@Override
+						public void destroy(RConnection t) {
+							t.close();
+						}
 
-				@Override
-				public void destroy(RConnection t) {
-					t.close();
-				}
+					});
+		}
 
-			});
+	}
 
 	public static void main(String[] args) {
 
@@ -470,6 +482,8 @@ public class R extends IStub {
 
 			return JSON.create().append("data", sd.getDouble("data") / mean.getDouble("data"));
 		}
+
+		_check();
 
 		RConnection c = pool.get(TIMEOUT);
 
