@@ -100,8 +100,10 @@ public final class JSON extends HashMap<String, Object> {
 			} else if (json instanceof Map) {
 				j = JSON.create((Map) json);
 			} else if (json instanceof String) {
+
 				String s1 = ((String) json).trim();
-				if (s1.charAt(0) == '{') {
+
+				if (!X.isEmpty(s1) && s1.charAt(0) == '{') {
 					Gson g = new Gson();
 					JsonReader reader = new JsonReader(new StringReader(s1));
 					reader.setLenient(lenient);
@@ -114,7 +116,7 @@ public final class JSON extends HashMap<String, Object> {
 						for (String s : ss) {
 							int i = s.indexOf("=");
 							if (i > 0) {
-								j.append(s.substring(0, i), s.substring(i + 1));
+								j.put(s.substring(0, i), s.substring(i + 1));
 							}
 						}
 					}
@@ -144,7 +146,7 @@ public final class JSON extends HashMap<String, Object> {
 				ResultSetMetaData rmd = r.getMetaData();
 				j = JSON.create();
 				for (int i = 0; i < rmd.getColumnCount(); i++) {
-					j.append(rmd.getColumnName(i + 1), r.getObject(i + 1));
+					j.put(rmd.getColumnName(i + 1), r.getObject(i + 1));
 				}
 
 			} else if (json != null) {
@@ -698,7 +700,6 @@ public final class JSON extends HashMap<String, Object> {
 			System.out.println(o);
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -760,6 +761,7 @@ public final class JSON extends HashMap<String, Object> {
 	 * 
 	 * @param value the object
 	 * @return JSON the new JSON object
+	 * @deprecated
 	 */
 	public JSON set(String xpath, Object value) {
 		set(this, xpath, value);
@@ -805,7 +807,7 @@ public final class JSON extends HashMap<String, Object> {
 	}
 
 	/**
-	 * put the value
+	 * put the value, the different with "put" is it will split the key by "."
 	 * 
 	 * @param name  the name
 	 * @param value the value
@@ -881,6 +883,7 @@ public final class JSON extends HashMap<String, Object> {
 	 *              </pre>
 	 * 
 	 * @param value the object
+	 * @deprecated
 	 */
 	public static void set(Object json, String xpath, Object value) {
 		JsonPath.parse(json).set(xpath, value);
