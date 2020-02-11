@@ -142,7 +142,7 @@ public class R extends IStub {
 							}
 							return o;
 						});
-						ex.print(header);
+						ex.print(header.toArray());
 						ex.print(data);
 						ex.close();
 

@@ -104,6 +104,8 @@
 #                   case the default is "true"
 # -----------------------------------------------------------------------------
 ulimit -HSn 65536 > /dev/null 2>&1
+ulimit -n 10240 >/dev/null 2>&1
+
 source /etc/profile
 CATALINA_PID=/tmp/catalina.pid
 

@@ -81,8 +81,8 @@ public class Exporter<V> {
 			throw new IOException("out is null?");
 		}
 
-		if (log.isDebugEnabled())
-			log.debug("print, cols=" + Arrays.toString(cols) + ", out=" + out);
+//		if (log.isDebugEnabled())
+//			log.debug("print, cols=" + Arrays.toString(cols) + ", out=" + out);
 
 		for (int i = 0; i < cols.length; i++) {
 			Object s = cols[i];
