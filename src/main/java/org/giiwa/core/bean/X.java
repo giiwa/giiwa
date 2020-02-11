@@ -540,7 +540,7 @@ public final class X {
 					p++;
 					c = p == len ? '"' : src.charAt(p);
 				}
-			} else if (c == ',') {
+			} else if (c == ',' || c == ' ') {
 				if (sb == null || sb.length() == 0) {
 					l1.add(X.EMPTY);
 				} else {
