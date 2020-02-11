@@ -539,9 +539,9 @@ public class Language {
 
 		float d1 = d - (int) d;
 		if (d1 > 0.01) {
-			return (length > 0 ? "" : "-") + String.format("%.2f", d) + UNITS[i];
+			return (length >= 0 ? "" : "-") + String.format("%.2f", d) + UNITS[i];
 		} else {
-			return (length > 0 ? "" : "-") + ((int) d) + UNITS[i];
+			return (length >= 0 ? "" : "-") + ((int) d) + UNITS[i];
 		}
 	}
 

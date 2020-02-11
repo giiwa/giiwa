@@ -2872,6 +2872,7 @@ public class Helper implements Serializable {
 	 * @return long
 	 */
 	public static long count(W q, String table, String db) {
+
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
@@ -3438,6 +3439,8 @@ public class Helper implements Serializable {
 		List<JSON> listDB();
 
 		List<JSON> listOp();
+
+		long size(String table, String db);
 	}
 
 	public static DBHelper getPrimary() {
@@ -3635,6 +3638,35 @@ public class Helper implements Serializable {
 			read.add(t1.pastms());
 		}
 		return null;
+	}
+
+	public static long size(Class<? extends Bean> c) {
+		return size(getTable(c), getDB(c));
+	}
+
+	public static long size(String table, String db) {
+
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.size(table, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.size(table, db);
+						}
+					}
+				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			}
+
+			return 0;
+		} finally {
+			read.add(t1.pastms());
+		}
 	}
 
 }

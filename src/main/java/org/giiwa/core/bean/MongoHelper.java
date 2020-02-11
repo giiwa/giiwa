@@ -1885,4 +1885,25 @@ public class MongoHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@Override
+	public long size(String table, String db) {
+		TimeStamp t1 = TimeStamp.create();
+		long n = 0;
+		try {
+
+			MongoCollection<Document> c = getCollection(db, table);
+			if (c != null) {
+				n = c. estimatedDocumentCount();
+//				count(q.query());
+			}
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (log.isDebugEnabled())
+				log.debug("size, cost=" + t1.pastms() + "ms,  collection=" + table
+						+ ", n=" + n);
+		}
+		return n;
+	}
+
 }

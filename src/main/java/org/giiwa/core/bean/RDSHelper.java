@@ -3218,4 +3218,10 @@ public class RDSHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@Override
+	public long size(String table, String db) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 }

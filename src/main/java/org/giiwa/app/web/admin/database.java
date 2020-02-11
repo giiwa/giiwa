@@ -56,8 +56,8 @@ public class database extends Controller {
 
 			String name = table;
 			if (!X.isEmpty(name) && !l2.containsKey(name)) {
-				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
-						Helper.count(W.create(), c));
+				JSON j = JSON.create().append("name", c.getName()).append("table", table)
+						.append("total", Helper.count(W.create(), c)).append("size", Helper.size(c));
 				l2.put(name, j);
 			}
 		}
