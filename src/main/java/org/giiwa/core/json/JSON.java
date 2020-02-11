@@ -81,7 +81,7 @@ public final class JSON extends HashMap<String, Object> {
 	 * @param lenient the boolean of JsonReader.setLenient(lenient)
 	 * @return the json
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked", "rawtypes", "restriction" })
 	public static JSON fromObject(Object json, boolean lenient) {
 
 		JSON j = null;
@@ -201,7 +201,7 @@ public final class JSON extends HashMap<String, Object> {
 	 * @param jsons the jsons
 	 * @return the list
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked", "restriction" })
 	public static List<JSON> fromObjects(Object jsons) {
 		List list = null;
 		if (jsons instanceof Collection) {
