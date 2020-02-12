@@ -30,6 +30,7 @@ import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
 
 /**
@@ -1041,6 +1042,47 @@ public final class X {
 		}
 		return l1;
 
+	}
+
+	public List<Object[]> mat(String s, String deli) throws Exception {
+		List<Object[]> l1 = new ArrayList<Object[]>();
+		String[] ss = X.split(s, deli);
+		for (String s1 : ss) {
+			Object[] o = X.csv(s1);
+			l1.add(o);
+		}
+		return l1;
+	}
+
+	@SuppressWarnings({ "restriction", "rawtypes" })
+	public String toString(Object o) {
+		if (o == null) {
+			return X.EMPTY;
+		} else if (o instanceof Map || o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+			return JSON.fromObject(o).toPrettyString();
+		} else if (o instanceof List) {
+			StringBuilder sb = new StringBuilder("[");
+			List l1 = (List) o;
+			for (int i = 0; i < l1.size(); i++) {
+				if (i > 0)
+					sb.append(",");
+				sb.append(toString(l1.get(i)));
+			}
+			sb.append("]");
+			return sb.toString();
+		} else if (o.getClass().isArray()) {
+			StringBuilder sb = new StringBuilder("[");
+			Object[] l1 = (Object[]) o;
+			for (int i = 0; i < l1.length; i++) {
+				if (i > 0)
+					sb.append(",");
+				sb.append(toString(l1[i]));
+			}
+			sb.append("]");
+			return sb.toString();
+		} else {
+			return o.toString();
+		}
 	}
 
 }
