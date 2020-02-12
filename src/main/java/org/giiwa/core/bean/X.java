@@ -585,21 +585,6 @@ public final class X {
 	}
 
 	/**
-	 * printstacktrace
-	 * 
-	 * @param e the throwable
-	 * @return the string
-	 */
-	public static String toString(Throwable e) {
-		if (e == null)
-			return X.EMPTY;
-		StringWriter sw = new StringWriter();
-		PrintWriter out = new PrintWriter(sw);
-		e.printStackTrace(out);
-		return sw.toString();
-	}
-
-	/**
 	 * close all
 	 * 
 	 * @param ss the cloeable object
@@ -705,35 +690,6 @@ public final class X {
 		return l2;
 	}
 
-	public static List<String> toString(List<?> l1) {
-		if (l1 == null || l1.isEmpty())
-			return null;
-
-		List<String> l2 = new ArrayList<String>(l1.size());
-		for (Object e : l1) {
-			if (e != null) {
-				l2.add(e.toString());
-			}
-		}
-		return l2;
-	}
-
-	public static String toString(List<?> l1, String deli) {
-		if (l1 == null || l1.isEmpty())
-			return X.EMPTY;
-
-		StringBuilder sb = new StringBuilder();
-		for (Object e : l1) {
-			if (e != null) {
-				if (sb.length() == 0)
-					sb.append(deli);
-
-				sb.append(e);
-			}
-		}
-		return sb.toString();
-	}
-
 	public static List<Integer> toInt(List<?> l1) {
 		if (l1 == null || l1.isEmpty())
 			return null;
@@ -746,28 +702,41 @@ public final class X {
 		return l2;
 	}
 
-	public static <T, E> List<T> toArray(List<E> l1, Function<E, T> cb) {
-		if (l1 == null) {
+	/**
+	 * to list
+	 * 
+	 * @param <T>
+	 * @param <E>
+	 * @param o
+	 * @param cb
+	 * @return
+	 */
+	@SuppressWarnings({ "rawtypes" })
+	public static <T> List<T> asList(Object o, Function<Object, T> cb) {
+		if (o == null) {
 			return new ArrayList<T>();
 		}
-		List<T> l2 = new ArrayList<T>(l1.size());
-		for (E e : l1) {
-			T t = cb.apply(e);
-			if (t != null) {
-				l2.add(t);
+
+		List<T> l2 = new ArrayList<T>();
+
+		if (o instanceof Collection) {
+			Collection l1 = (Collection) o;
+			for (Object e : l1) {
+				T t = cb.apply(e);
+				if (t != null) {
+					l2.add(t);
+				}
 			}
-		}
-		return l2;
-	}
-
-	public static <T, E> List<T> toArray(E[] l1, Function<E, T> cb) {
-		if (l1 == null) {
-			return new ArrayList<T>();
-		}
-
-		List<T> l2 = new ArrayList<T>(l1.length);
-		for (E e : l1) {
-			T t = cb.apply(e);
+		} else if (o.getClass().isArray()) {
+			Object[] l1 = (Object[]) o;
+			for (Object e : l1) {
+				T t = cb.apply(e);
+				if (t != null) {
+					l2.add(t);
+				}
+			}
+		} else {
+			T t = cb.apply(o);
 			if (t != null) {
 				l2.add(t);
 			}
@@ -1044,7 +1013,7 @@ public final class X {
 
 	}
 
-	public List<Object[]> mat(String s, String deli) throws Exception {
+	public static List<Object[]> mat(String s, String deli) throws Exception {
 		List<Object[]> l1 = new ArrayList<Object[]>();
 		String[] ss = X.split(s, deli);
 		for (String s1 : ss) {
@@ -1055,7 +1024,7 @@ public final class X {
 	}
 
 	@SuppressWarnings({ "restriction", "rawtypes" })
-	public String toString(Object o) {
+	public static String toString(Object o) {
 		if (o == null) {
 			return X.EMPTY;
 		} else if (o instanceof Map || o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
@@ -1080,6 +1049,11 @@ public final class X {
 			}
 			sb.append("]");
 			return sb.toString();
+		} else if (o instanceof Throwable) {
+			StringWriter sw = new StringWriter();
+			PrintWriter out = new PrintWriter(sw);
+			((Throwable) o).printStackTrace(out);
+			return sw.toString();
 		} else {
 			return o.toString();
 		}

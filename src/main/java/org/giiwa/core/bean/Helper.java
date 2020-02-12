@@ -2072,11 +2072,11 @@ public class Helper implements Serializable {
 				log.debug("w=" + this);
 
 			if (dao != null) {
-				return X.toArray(dao.load(this, s, n), e -> {
-					return e.get(name);
+				return X.asList(dao.load(this, s, n), e -> {
+					return ((Bean) e).get(name);
 				});
 			} else if (!X.isEmpty(table)) {
-				return X.toArray(helper.load(table, null, this, s, n, t, Helper.DEFAULT), e -> {
+				return X.asList(helper.load(table, null, this, s, n, t, Helper.DEFAULT), e -> {
 					return ((Bean) e).get(name);
 				});
 			}

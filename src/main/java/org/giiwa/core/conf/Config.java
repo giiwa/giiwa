@@ -112,7 +112,7 @@ public final class Config {
 			List<?> list = conf.getList("@include");
 			if (list != null && !list.isEmpty()) {
 				Set<String> ss = new HashSet<String>();
-				ss.addAll(X.toString(list));
+				ss.addAll(X.asList(list, e -> e.toString()));
 //				System.out.println("include:" + ss);
 
 				for (String s : ss) {

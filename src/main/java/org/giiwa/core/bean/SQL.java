@@ -236,9 +236,9 @@ public class SQL {
 					String s2 = s1.remain();
 
 					if (s2.indexOf("|") > -1) {
-						value = X.toArray(X.split(s2, "\\|"), e -> {
+						value = X.asList(X.split(s2, "\\|"), e -> {
 							try {
-								return JS.calculate(e);
+								return JS.calculate(e.toString());
 							} catch (Exception e1) {
 //								log.error(e1.getMessage(), e1);
 								return e;

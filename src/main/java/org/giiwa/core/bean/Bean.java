@@ -647,4 +647,13 @@ public class Bean implements Serializable {
 		return e.apply((T) this);
 	}
 
+	public static void main(String[] args) {
+		Bean b = new Bean();
+		b.set("a.a", 1);
+		System.out.println(b.toString());
+
+		JSON j1 = b.getJSON();
+		System.out.println(j1.toPrettyString());
+	}
+
 }

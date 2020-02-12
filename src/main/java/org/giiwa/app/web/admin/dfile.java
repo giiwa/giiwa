@@ -43,8 +43,9 @@ public class dfile extends Controller {
 		if (!X.isEmpty(name)) {
 
 			W q1 = W.create();
-			List<String> l1 = X.toString(Node.dao.distinct("id", W.create()
-					.and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).and("ip", name, W.OP.like)));
+			List<String> l1 = X.asList(Node.dao.distinct("id", W.create()
+					.and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).and("ip", name, W.OP.like)),
+					e -> e.toString());
 			if (l1 == null || l1.isEmpty()) {
 				q1.or("node", X.EMPTY);
 			} else {

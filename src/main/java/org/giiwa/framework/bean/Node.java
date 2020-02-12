@@ -197,11 +197,11 @@ public class Node extends Bean {
 					FileServer.resetm();
 					FileClient.resetm();
 
-					v.append("modules", X.toArray(Module.getAll(true), e -> {
-						if (X.isSame("default", e.getName())) {
+					v.append("modules", X.asList(Module.getAll(true), e -> {
+						if (X.isSame("default", ((Module) e).getName())) {
 							return null;
 						}
-						return e.getName();
+						return ((Module) e).getName();
 					}));
 
 					String process = ManagementFactory.getRuntimeMXBean().getName();

@@ -120,7 +120,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return l1;
 	}
 
-	public <K> List<K> toArray(Function<E, K> cb) {
+	public <K> List<K> asList(Function<E, K> cb) {
 		List<K> l1 = new ArrayList<K>();
 		for (E e : this) {
 			K k = cb.apply(e);
