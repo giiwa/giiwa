@@ -15,11 +15,16 @@
 package org.giiwa.core.bean;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +35,7 @@ import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.base.Zip;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
 
@@ -1057,6 +1063,48 @@ public final class X {
 		} else {
 			return o.toString();
 		}
+	}
+
+	public static byte[] getBytes(Serializable o, boolean zip) throws Exception {
+
+		if (o == null)
+			return null;
+
+		ByteArrayOutputStream bb = new ByteArrayOutputStream();
+		try {
+			ObjectOutputStream out = new ObjectOutputStream(bb);
+			out.writeObject(o);
+		} finally {
+			X.close(bb);
+		}
+
+		if (zip) {
+			return Zip.zip(bb.toByteArray());
+		} else {
+			return bb.toByteArray();
+		}
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T fromBytes(byte[] data, boolean zip) throws Exception {
+
+		if (data == null || data.length == 0)
+			return null;
+
+		ByteArrayInputStream bb = null;
+		try {
+
+			if (zip)
+				data = Zip.unzip(data);
+			bb = new ByteArrayInputStream(data);
+			ObjectInputStream in = new ObjectInputStream(bb);
+			return (T) in.readObject();
+
+		} finally {
+			X.close(bb);
+		}
+
 	}
 
 }

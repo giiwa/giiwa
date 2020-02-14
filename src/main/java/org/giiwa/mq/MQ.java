@@ -341,32 +341,13 @@ public abstract class MQ {
 		}
 
 		public Request put(Serializable t) throws Exception {
-			if (t != null) {
-				ByteArrayOutputStream bb = new ByteArrayOutputStream();
-				try {
-					ObjectOutputStream out = new ObjectOutputStream(bb);
-					out.writeObject(t);
-				} finally {
-					X.close(bb);
-				}
-				data = Zip.zip(bb.toByteArray());
-			}
+
+			data = X.getBytes(t, true);
 			return this;
 		}
 
-		@SuppressWarnings("unchecked")
 		public <T> T get() throws Exception {
-			if (data == null || data.length == 0)
-				return null;
-
-			ByteArrayInputStream bb = null;
-			try {
-				bb = new ByteArrayInputStream(Zip.unzip(data));
-				ObjectInputStream in = new ObjectInputStream(bb);
-				return (T) in.readObject();
-			} finally {
-				X.close(bb);
-			}
+			return X.fromBytes(data, true);
 		}
 
 		public void response(Serializable data) throws Exception {

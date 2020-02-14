@@ -49,7 +49,7 @@ public class Zip {
 	 * @return the byte[]
 	 * @throws Exception the exception
 	 */
-	public static byte[] zip(byte[] b) throws Exception {
+	public static byte[] zip(byte[] b) throws IOException {
 
 		Deflater def = new Deflater();
 		def.setInput(b);
