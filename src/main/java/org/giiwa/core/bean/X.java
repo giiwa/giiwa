@@ -36,6 +36,7 @@ import java.util.function.Function;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Zip;
+import org.giiwa.core.dle.JS;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.web.Language;
 
@@ -177,24 +178,43 @@ public final class X {
 				return ((Number) v).longValue();
 			}
 
-			String s = v.toString().replaceAll(",", "").trim();
+			String s = v.toString();
+
+			try {
+				return Long.parseLong(s);
+			} catch (Exception e) {
+				// ignore
+			}
+
+			boolean f = false;
+			int n = 0;
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < s.length(); i++) {
-				char c = s.charAt(i);
-
-				c = X.getNumber(c);
+				char c = X.getNumber(s.charAt(i));
 				if (c >= '0' && c <= '9') {
 					sb.append(c);
-				} else if (c == '-' && sb.length() == 0) {
+					n++;
+				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
 					sb.append(c);
-				} else if (sb.length() > 0) {
+					if (i > 0)
+						f = true;
+				} else if (c == ',' || c == ' ') {
+					// skip
+				} else if (n > 0) {
 					break;
 				}
 			}
 			s = sb.toString();
-			if (s.length() > 0) {
+
+			if (n > 0) {
 				try {
-					return Long.parseLong(s);
+					if (f) {
+						Object f1 = JS.calculate(s);
+						if (f1 instanceof Number)
+							return ((Number) f1).longValue();
+
+					} else
+						return Long.parseLong(s);
 				} catch (Exception e) {
 					log.error(e);
 				}
@@ -226,23 +246,43 @@ public final class X {
 				return ((Number) v).intValue();
 			}
 
-			String s = v.toString().replaceAll(",", "").trim();
+			String s = v.toString();
+
+			try {
+				return Integer.parseInt(s);
+			} catch (Exception e) {
+				// ignore
+			}
+
+			boolean f = false;
+			int n = 0;
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < s.length(); i++) {
 				char c = X.getNumber(s.charAt(i));
 				if (c >= '0' && c <= '9') {
 					sb.append(c);
-				} else if (c == '-' && sb.length() == 0) {
+					n++;
+				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
 					sb.append(c);
-				} else if (sb.length() > 0) {
+					if (i > 0)
+						f = true;
+				} else if (c == ',' || c == ' ') {
+					// skip
+				} else if (n > 0) {
 					break;
 				}
 			}
 			s = sb.toString();
 
-			if (s.length() > 0) {
+			if (n > 0) {
 				try {
-					return Integer.parseInt(s);
+					if (f) {
+						Object f1 = JS.calculate(s);
+						if (f1 instanceof Number)
+							return ((Number) f1).intValue();
+
+					} else
+						return Integer.parseInt(s);
 				} catch (Exception e) {
 					log.error(e);
 				}
@@ -296,30 +336,43 @@ public final class X {
 				return ((Number) v).floatValue();
 			}
 
-			String s = v.toString().replaceAll(",", "").trim();
+			String s = v.toString();
 
+			try {
+				return Float.parseFloat(s);
+			} catch (Exception e) {
+				// ignore
+			}
+
+			boolean f = false;
+			int n = 0;
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < s.length(); i++) {
 				char c = X.getNumber(s.charAt(i));
 				if (c >= '0' && c <= '9') {
 					sb.append(c);
-				} else if (c == '-' && sb.length() == 0) {
+					n++;
+				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
 					sb.append(c);
-				} else if (c == '.') {
-					if (sb.indexOf(".") > -1) {
-						break;
-					} else {
-						sb.append(c);
-					}
-				} else if (sb.length() > 0) {
+					if (i > 0)
+						f = true;
+				} else if (c == ',' || c == ' ') {
+					// skip
+				} else if (n > 0) {
 					break;
 				}
 			}
 			s = sb.toString();
 
-			if (s.length() > 0) {
+			if (n > 0) {
 				try {
-					return Float.parseFloat(s);
+					if (f) {
+						Object f1 = JS.calculate(s);
+						if (f1 instanceof Number)
+							return ((Number) f1).floatValue();
+
+					} else
+						return Float.parseFloat(s);
 				} catch (Exception e) {
 					log.error(e);
 				}
@@ -375,31 +428,46 @@ public final class X {
 				return ((Number) v).doubleValue();
 			}
 
-			String s = v.toString().replaceAll(",", "").trim();
+			String s = v.toString();
+
+			try {
+				return Double.parseDouble(s);
+			} catch (Exception e) {
+				// ignore
+			}
+
+			boolean f = false;
+			int n = 0;
 			StringBuilder sb = new StringBuilder();
 			for (int i = 0; i < s.length(); i++) {
-				char c = s.charAt(i);
+				char c = X.getNumber(s.charAt(i));
 				if (c >= '0' && c <= '9') {
 					sb.append(c);
-				} else if (c == '-' && sb.length() == 0) {
+					n++;
+				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
 					sb.append(c);
-				} else if (c == '.') {
-					if (sb.indexOf(".") > -1) {
-						break;
-					} else {
-						sb.append(c);
-					}
-				} else if (sb.length() > 0) {
+					if (i > 0)
+						f = true;
+				} else if (c == ',' || c == ' ') {
+					// skip
+				} else if (n > 0) {
 					break;
 				}
 			}
 			s = sb.toString();
 
-			try {
-				return Double.parseDouble(s);
-			} catch (Exception e) {
-				log.error(e);
+			if (n > 0) {
+				try {
+					if (f) {
+						Object f1 = JS.calculate(s);
+						if (f1 instanceof Number)
+							return ((Number) f1).doubleValue();
 
+					} else
+						return Double.parseDouble(s);
+				} catch (Exception e) {
+					log.error(e);
+				}
 			}
 		}
 		return defaultValue;
@@ -684,30 +752,6 @@ public final class X {
 		return false;
 	}
 
-	public static List<Long> toLong(List<?> l1) {
-		if (l1 == null || l1.isEmpty())
-			return null;
-
-		List<Long> l2 = new ArrayList<Long>(l1.size());
-		for (Object e : l1) {
-			long i = X.toLong(e);
-			l2.add(i);
-		}
-		return l2;
-	}
-
-	public static List<Integer> toInt(List<?> l1) {
-		if (l1 == null || l1.isEmpty())
-			return null;
-
-		List<Integer> l2 = new ArrayList<Integer>(l1.size());
-		for (Object e : l1) {
-			int i = X.toInt(e);
-			l2.add(i);
-		}
-		return l2;
-	}
-
 	/**
 	 * to list
 	 * 
@@ -959,6 +1003,37 @@ public final class X {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		X.toInt("11*10");
+
+		Object s1 = "12";
+		TimeStamp t1 = TimeStamp.create();
+		int N = 10000;
+		for (int i = 0; i < N; i++) {
+			X.toInt(s1);
+		}
+		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+
+		t1.reset();
+		s1 = "12A";
+		for (int i = 0; i < N; i++) {
+			X.toInt(s1);
+		}
+		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+
+		t1.reset();
+		s1 = 12;
+		for (int i = 0; i < N; i++) {
+			X.toInt(s1);
+		}
+		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+
+		t1.reset();
+		s1 = "12*11";
+		for (int i = 0; i < N; i++) {
+			X.toInt(s1);
+		}
+		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
 
 	}
 
