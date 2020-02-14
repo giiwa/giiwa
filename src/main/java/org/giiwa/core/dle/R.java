@@ -81,7 +81,7 @@ public class R extends IStub {
 
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "rawtypes" })
 	public JSON run(String code) throws Exception {
 		return run(code, null, (List) null, null);
 	}
@@ -96,24 +96,26 @@ public class R extends IStub {
 	 * @return
 	 * @throws Exception
 	 */
-	public JSON run(String code, String dataname, List<JSON> data, List<String> header) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public JSON run(String code, String dataname, List data, List<String> head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
 		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
 			// local
-			return _run(code, dataname, data, header);
+			return _run(code, dataname, data, head);
 
 		} else {
 
 			JSON j1 = JSON.create();
-			j1.append("c", code).append("dn", dataname).append("d", data).append("h", header);
+			j1.append("c", code).append("dn", dataname).append("d", data).append("h", head);
 			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
 		}
 
 	}
 
-	private JSON _run(String code, String dataname, List<JSON> data, List<String> header) throws Exception {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private JSON _run(String code, String dataname, List data, List<String> head) throws Exception {
 
 		_check();
 
@@ -134,15 +136,30 @@ public class R extends IStub {
 
 						Temp t = Temp.create("data");
 
-						Exporter<JSON> ex = t.export("UTF-8", Exporter.FORMAT.plain);
+						Exporter<Object> ex = t.export("UTF-8", Exporter.FORMAT.plain);
 						ex.createSheet(e -> {
-							Object[] o = new Object[header.size()];
-							for (int i = 0; i < header.size(); i++) {
-								o[i] = e.get(header.get(i));
+							if (e == null)
+								return null;
+							if (e.getClass().isArray())
+								return (Object[]) e;
+
+							if (e instanceof List)
+								return ((List) e).toArray();
+
+							if (e instanceof Map) {
+								Map m = (Map) e;
+								Object[] o = new Object[head.size()];
+								for (int i = 0; i < head.size(); i++) {
+									o[i] = m.get(head.get(i));
+								}
+
+								return o;
 							}
-							return o;
+							return null;
 						});
-						ex.print(header.toArray());
+						if (head != null && !head.isEmpty()) {
+							ex.print(head.toArray());
+						}
 						ex.print(data);
 						ex.close();
 
@@ -166,7 +183,7 @@ public class R extends IStub {
 					return JSON.create();
 				}
 
-				Object s1 = r2JSON(x);
+				Object s1 = r2J(x);
 				return JSON.create().append("data", s1);// .append("summary", s1);
 
 			} finally {
@@ -261,7 +278,7 @@ public class R extends IStub {
 					return JSON.create();
 				}
 
-				Object s1 = r2JSON(x);
+				Object s1 = r2J(x);
 				return JSON.create().append("data", s1).append("summary", s1);
 
 			} finally {
@@ -280,7 +297,7 @@ public class R extends IStub {
 
 	}
 
-	private Object r2JSON(REXP x) throws REXPMismatchException {
+	private Object r2J(REXP x) throws REXPMismatchException {
 
 		if (x instanceof REXPDouble) {
 			REXPDouble d = (REXPDouble) x;
@@ -321,7 +338,7 @@ public class R extends IStub {
 				Object o = r1.get(i);
 //				System.out.println("o=" + o);
 				if (o instanceof REXP) {
-					l2.add(r2JSON((REXP) o));
+					l2.add(r2J((REXP) o));
 				}
 			}
 			return l2;
@@ -336,7 +353,7 @@ public class R extends IStub {
 				Object o = r1.get(i);
 //				System.out.println("o=" + o);
 				if (o instanceof REXP) {
-					l2.add(r2JSON((REXP) o));
+					l2.add(r2J((REXP) o));
 				}
 			}
 			return l2;
