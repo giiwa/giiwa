@@ -79,6 +79,7 @@ public class StringFinder {
 	 * @return the string
 	 */
 	public String nextTo(String deli) {
+
 		if (s == null || pos >= len) {
 			return null;
 		}
@@ -88,10 +89,11 @@ public class StringFinder {
 		int min = Integer.MAX_VALUE;
 		String[] ss = deli.split("\\|");
 		for (String s2 : ss) {
-			int i = s.indexOf(s2, pos);
+			int i = _pos(s2, pos);
 			if (i > -1 && i < min) {
 				min = i;
 			}
+
 		}
 		if (min >= pos && min < len) {
 			s1 = s.substring(pos, min);
@@ -102,6 +104,39 @@ public class StringFinder {
 		}
 
 		return s1.trim();
+
+	}
+
+	private int _pos(String s2, int p) {
+		int i = s.indexOf(s2, p);
+		if (i > p) {
+			String s1 = s.substring(pos, i);
+			int n = _count(s1, '\'');
+			if (n % 2 == 1)
+				return _pos(s2, i + 1);
+
+			n = _count(s1, '"');
+			if (n % 2 == 1)
+				return _pos(s2, i + 1);
+
+			return i;
+		}
+		return -1;
+	}
+
+	private int _count(String s1, char c) {
+		int n = 0;
+		int len = s1.length();
+		for (int i = 0; i < len; i++) {
+			char c1 = s1.charAt(i);
+			if (c1 == '\\') {
+				i++;
+				continue;
+			} else if (c1 == c) {
+				n++;
+			}
+		}
+		return n;
 	}
 
 	/**
@@ -133,14 +168,14 @@ public class StringFinder {
 
 		while (hasMore()) {
 			char c1 = next();
-			if (c == c1) {
-				break;
-			}
-			sb.append(c1);
-
 			if (c1 == '\\') {
 				sb.append(next());
+			} else if (c == c1) {
+				break;
+			} else {
+				sb.append(c1);
 			}
+
 		}
 		return sb.toString();
 	}

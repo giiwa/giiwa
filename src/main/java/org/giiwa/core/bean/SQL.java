@@ -532,6 +532,10 @@ public class SQL {
 		});
 		System.out.println(q);
 
+		s = "a='a(b)'";
+		q = SQL.where2W(StringFinder.create(s));
+		System.out.println(q);
+
 	}
 
 	// private static String[] KW = { "and", "or", "like", "=", "!=", ">", ">=",
