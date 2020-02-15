@@ -615,7 +615,7 @@ public final class X {
 					p++;
 					c = p == len ? '"' : src.charAt(p);
 				}
-			} else if (c == ',' || c == ' ') {
+			} else if (c == ',' || c == ' ' || c == '\t') {
 				if (sb == null || sb.length() == 0) {
 					l1.add(X.EMPTY);
 				} else {
