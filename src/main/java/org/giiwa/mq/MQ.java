@@ -5,8 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -16,7 +14,6 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.base.Zip;
 import org.giiwa.core.bean.Counter;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
@@ -340,9 +337,9 @@ public abstract class MQ {
 			return this;
 		}
 
-		public Request put(Serializable t) throws Exception {
+		public Request put(Object obj) throws Exception {
 
-			data = X.getBytes(t, true);
+			data = X.getBytes(obj, true);
 			return this;
 		}
 
@@ -350,7 +347,7 @@ public abstract class MQ {
 			return X.fromBytes(data, true);
 		}
 
-		public void response(Serializable data) throws Exception {
+		public void response(Object data) throws Exception {
 
 			Request r = Request.create();
 			r.seq = seq;
@@ -385,7 +382,7 @@ public abstract class MQ {
 
 	}
 
-	public static void notify(String name, Serializable data) {
+	public static void notify(String name, Object data) {
 		try {
 			MQ.topic(Notify.name, Request.create().from(name).put(data));
 		} catch (Exception e) {

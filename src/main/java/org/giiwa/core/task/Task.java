@@ -144,13 +144,15 @@ public abstract class Task implements Runnable, Serializable {
 	 * 
 	 * @param t
 	 */
-	protected void result(Serializable t) {
+	protected void result(Object t) {
 
-		attach("result", t);
-		if (finished != null) {
-			finished.drop();
+		if (t instanceof Serializable) {
+
+			attach("result", t);
+			if (finished != null) {
+				finished.drop();
+			}
 		}
-
 	}
 
 	/**

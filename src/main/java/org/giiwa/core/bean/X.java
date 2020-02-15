@@ -1140,10 +1140,13 @@ public final class X {
 		}
 	}
 
-	public static byte[] getBytes(Serializable o, boolean zip) throws Exception {
+	public static byte[] getBytes(Object o, boolean zip) throws Exception {
 
 		if (o == null)
 			return null;
+
+		if (!(o instanceof Serializable))
+			throw new Exception("obj is not Serializable! obj.class=" + o.getClass());
 
 		ByteArrayOutputStream bb = new ByteArrayOutputStream();
 		try {
