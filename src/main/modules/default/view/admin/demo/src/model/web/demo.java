@@ -13,13 +13,17 @@ public class demo extends Controller {
 
 	@Path()
 	public void onGet() {
-		// TODO do something
+
+		// TODO
+
 		this.show("/demo.html");
 	}
 
 	@Path(path = "hello")
 	public void hello() {
-		// TODO do something
+
+		// TODO
+
 		this.set("time", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
 		this.show("/demo.html");
 	}

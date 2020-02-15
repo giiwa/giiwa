@@ -14,6 +14,7 @@ public class demo extends Controller {
 
 	@Path(login = true, access = "access.demo.admin")
 	public void onGet() {
+		
 		// get the parameters from the request
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);

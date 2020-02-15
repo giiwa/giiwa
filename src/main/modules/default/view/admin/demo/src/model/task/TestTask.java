@@ -32,13 +32,9 @@ public class TestTask extends Task {
 
 	@Override
 	public void onExecute() {
-		// do something
-		try {
-			// mapreduce, create sub task for the stream and dispatch the task to each node
-			// and each core
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
+		
+		//TODO
+		
 	}
 
 	public static void start() {

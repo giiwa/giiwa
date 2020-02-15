@@ -33,18 +33,11 @@ public class Demo extends Bean {
 
 	// mapping the column and field
 	@Column(name = X.ID)
-	long id;
+	public long id;
 
 	@Column(name = "name")
-	String name;
+	public String name;
 
-	public long getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
 
 	// ------------
 

@@ -32,9 +32,6 @@
 				<exclude name="**/model/**" />
 			</fileset>
 		</zip>
-		<copy todir="../archives">
-			<fileset file="target/${module.name}_${module.version}_${BUILDNO}.zip" />
-		</copy>
 	</target>
 	
 	<target name="src" description="zip the source" depends="compile">
