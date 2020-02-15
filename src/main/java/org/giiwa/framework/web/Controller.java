@@ -635,8 +635,8 @@ public class Controller {
 			}
 			if (!isAjax()) {
 				try {
-					Session.load(sid()).set(X.URI, this.query == null ? this.uri : this.query.path(this.uri).toString())
-							.store();
+					Session.load(sid(), this.getRemoteHost())
+							.set(X.URI, this.query == null ? this.uri : this.query.path(this.uri).toString()).store();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -1687,7 +1687,7 @@ public class Controller {
 	 * @return Session
 	 */
 	final public Session getSession(boolean newsession) {
-		return Session.load(sid(newsession));
+		return Session.load(sid(newsession), this.getRemoteHost());
 	}
 
 	/**
