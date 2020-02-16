@@ -26,7 +26,6 @@ import java.util.stream.DoubleStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.base.Exporter;
-import org.giiwa.core.base.Pool;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
@@ -43,6 +42,7 @@ import org.rosuda.REngine.REXPInteger;
 import org.rosuda.REngine.REXPList;
 import org.rosuda.REngine.REXPLogical;
 import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REXPNull;
 import org.rosuda.REngine.REXPRaw;
 import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.REXPSymbol;
@@ -56,8 +56,6 @@ public class R extends IStub {
 	}
 
 	static Log log = LogFactory.getLog(R.class);
-
-	private static int TIMEOUT = 10000;
 
 	public static R inst = new R("r");
 	private static boolean inited = false;
@@ -81,9 +79,9 @@ public class R extends IStub {
 
 	}
 
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings("rawtypes")
 	public JSON run(String code) throws Exception {
-		return run(code, null, (List) null, null);
+		return run(code, null, (List) null, false);
 	}
 
 	/**
@@ -96,7 +94,7 @@ public class R extends IStub {
 	 * @return
 	 * @throws Exception
 	 */
-	public JSON run(String code, String dataname, List<?> data, List<?> head) throws Exception {
+	public JSON run(String code, String dataname, List<?> data, boolean head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
@@ -107,17 +105,19 @@ public class R extends IStub {
 		} else {
 
 			JSON j1 = JSON.create();
-			j1.append("c", code).append("dn", dataname).append("d", data).append("h", head);
+			j1.append("c", code).append("dn", dataname).append("d", data).append("h",
+					head ? 1 : 0);
 			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
 		}
 
 	}
 
-	private JSON _run(String code, String dataname, List<?> data, List<?> head) throws Exception {
+	@SuppressWarnings("unchecked")
+	private JSON _run(String code, String dataname, List<?> data, boolean head) throws Exception {
 
 		_check();
 
-		RConnection c = pool.get(TIMEOUT);
+		RConnection c = conn;
 
 		if (c != null) {
 
@@ -128,16 +128,21 @@ public class R extends IStub {
 			try {
 				StringBuilder sb = new StringBuilder();
 				sb.append(func + "<-function(){");
-				if (!X.isEmpty(data)) {
+//				if (!X.isEmpty(modelname)) {
+//					String[] ss = X.split(modelname, "[,;]");
+//					for (String s1 : ss) {
+//						sb.append(s1 + "<-readRDS('" + s1 + "');");
+//					}
+//				}
 
+				if (!X.isEmpty(data)) {
 					Temp t = Temp.create("data");
 					l1.add(t);
 
-					String s1 = _export(dataname, data, head, t);
+					String s1 = _export(dataname, (List<Object>) data, head, t);
 					if (!X.isEmpty(s1)) {
 						sb.append(s1);
 					}
-
 				}
 
 				sb.append(code).append("};" + func + "();");
@@ -154,13 +159,11 @@ public class R extends IStub {
 				}
 
 				Object s1 = r2J(x);
-				return JSON.create().append("data", s1);// .append("summary", s1);
+				return JSON.create().append("data", s1);
 
 			} finally {
 
 				c.eval("rm(" + func + ")");
-
-				pool.release(c);
 
 				if (l1 != null) {
 					for (Temp t : l1)
@@ -173,45 +176,69 @@ public class R extends IStub {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	private String _export(String dataname, List<?> data, List<?> head, Temp t) throws Exception {
+	private String _export(String dataname, List<Object> data, boolean head, Temp t) throws Exception {
 
-		if (dataname != null && data != null) {
-
-			StringBuilder sb = new StringBuilder();
-
-			Exporter<Object> ex = t.export("UTF-8", Exporter.FORMAT.plain);
-			ex.createSheet(e -> {
-				if (e == null)
-					return null;
-				if (e.getClass().isArray())
-					return (Object[]) e;
-
-				if (e instanceof List)
-					return ((List) e).toArray();
-
-				if (e instanceof Map) {
-					Map m = (Map) e;
-					Object[] o = new Object[head.size()];
-					for (int i = 0; i < head.size(); i++) {
-						o[i] = m.get(head.get(i));
-					}
-
-					return o;
-				}
-				return null;
-			});
-			if (head != null && !head.isEmpty()) {
-				ex.print(head.toArray());
-			}
-			ex.print(data);
-			ex.close();
-
-			sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath()
-					+ "', header=T, stringsAsFactors=TRUE);");
-			return sb.toString();
-
+		if (dataname == null || data == null || data.isEmpty()) {
+			return X.EMPTY;
 		}
-		return null;
+
+		StringBuilder sb = new StringBuilder();
+
+		Object o1 = data.get(0);
+
+		if (!(o1 instanceof List || o1.getClass().isArray() || o1 instanceof Map)) {
+
+			sb.append(dataname).append("<-c(");
+			for (int i = 0; i < data.size(); i++) {
+				if (i > 0)
+					sb.append(",");
+				sb.append(data.get(i));
+			}
+			sb.append(");");
+			return sb.toString();
+		}
+
+		Object[] hh = (o1 instanceof Map) ? (((Map) o1).keySet().toArray()) : null;
+
+		Exporter<Object> ex = t.export("UTF-8", Exporter.FORMAT.plain);
+		if (head && hh != null) {
+			ex.print(hh);
+		}
+
+		ex.createSheet(e -> {
+			if (e == null)
+				return null;
+			if (e.getClass().isArray())
+				return (Object[]) e;
+
+			if (e instanceof List)
+				return ((List) e).toArray();
+
+			if (e instanceof Map) {
+				Map m = (Map) e;
+				Object[] o = new Object[hh.length];
+				for (int i = 0; i < hh.length; i++) {
+					o[i] = m.get(hh[i]);
+				}
+
+				return o;
+			}
+			return new Object[] { e };
+		});
+
+		ex.print(data);
+		ex.close();
+
+		sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath() + "',");
+		if (head) {
+			sb.append("header=T,");
+		} else {
+			sb.append("header=F,");
+		}
+		sb.append("stringsAsFactors=TRUE);");
+
+		return sb.toString();
+
 	}
 
 	/**
@@ -219,11 +246,11 @@ public class R extends IStub {
 	 * 
 	 * @param code
 	 * @param data
-	 * @param header
+	 * @param head
 	 * @return
 	 * @throws Exception
 	 */
-	public JSON bind(String code, String dataname, List<?> data, List<?> head) throws Exception {
+	public JSON bind(String code, String dataname, List<?> data, boolean head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
@@ -235,16 +262,17 @@ public class R extends IStub {
 
 			JSON j1 = JSON.create();
 			j1.append("m", "bind").append("c", code).append("n", name).append("dn", dataname).append("d", data)
-					.append("h", head);
+					.append("h", head ? 1 : 0);
 			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
 		}
 	}
 
-	private JSON _bind(String code, String dataname, List<?> data, List<?> head) throws Exception {
+	@SuppressWarnings("unchecked")
+	private JSON _bind(String code, String dataname, List<?> data, boolean head) throws Exception {
 
 		_check();
 
-		RConnection c = pool.get(TIMEOUT);
+		RConnection c = conn;
 
 		if (c != null) {
 
@@ -257,12 +285,16 @@ public class R extends IStub {
 					Temp t = Temp.create("data");
 					l1.add(t);
 
-					String s1 = _export(dataname, data, head, t);
+					String s1 = _export(dataname, (List<Object>) data, head, t);
 					if (!X.isEmpty(s1)) {
 						sb.append(s1);
 					}
 
 				}
+				sb.append(code);
+//				if (!X.isEmpty(dataname)) {
+//					sb.append("saveRDS(" + dataname + ", '" + dataname + "');");
+//				}
 
 				if (log.isDebugEnabled())
 					log.debug("R.run, code=" + sb);
@@ -274,11 +306,9 @@ public class R extends IStub {
 				}
 
 				Object s1 = r2J(x);
-				return JSON.create().append("data", s1).append("summary", s1);
+				return JSON.create().append("data", s1);
 
 			} finally {
-
-				pool.release(c);
 
 				if (l1 != null) {
 					for (Temp t : l1)
@@ -294,7 +324,11 @@ public class R extends IStub {
 
 		if (x instanceof REXPDouble) {
 			REXPDouble d = (REXPDouble) x;
-			return d.asDouble();
+			double d1 = d.asDouble();
+			if (Double.isNaN(d1))
+				return d.asString();
+
+			return d1;
 		}
 
 		if (x instanceof REXPInteger) {
@@ -314,7 +348,12 @@ public class R extends IStub {
 
 		if (x instanceof REXPString) {
 			REXPString d = (REXPString) x;
-			return d.asString();
+			try {
+				return d.asString();
+			} catch (Exception e1) {
+				// fuck this, maybe empty
+			}
+			return X.EMPTY;
 		}
 
 		if (x instanceof REXPSymbol) {
@@ -352,6 +391,10 @@ public class R extends IStub {
 			return l2;
 		}
 
+		if (x instanceof REXPNull) {
+			return null;
+		}
+
 		String[] ss = x.asStrings();
 		if (ss == null || ss.length == 0) {
 			return JSON.create();
@@ -363,47 +406,29 @@ public class R extends IStub {
 
 	}
 
-	private static Pool<RConnection> pool = null;
+	private static RConnection conn = null;
+
+//	private static Pool<RConnection> pool = null;
 
 	synchronized void _check() {
 
-		if (pool == null) {
-			pool = Pool.create(Config.getConf().getInt("r.min", 1), Config.getConf().getInt("r.max", 2),
-					new Pool.IPoolFactory<RConnection>() {
+		if (conn != null)
+			return;
 
-						@Override
-						public RConnection create() {
-							RConnection c = null;
-							try {
+		try {
+			String host = Config.getConf().getString("r.host", X.EMPTY);
+			int port = Config.getConf().getInt("r.port", 6311);
 
-								String host = Config.getConf().getString("r.host", X.EMPTY);
-								int port = Config.getConf().getInt("r.port", 6311);
+			if (X.isEmpty(host)) {
+				conn = new RConnection();
+			} else {
+				conn = new RConnection(host, port);
+			}
+			return;
 
-								if (X.isEmpty(host)) {
-									c = new RConnection();
-								} else {
-									c = new RConnection(host, port);
-								}
-
-							} catch (Exception e) {
-								log.error(e.getMessage(), e);
-							}
-							return c;
-						}
-
-						@Override
-						public boolean cleanup(RConnection t) {
-							return t.isConnected();
-						}
-
-						@Override
-						public void destroy(RConnection t) {
-							t.close();
-						}
-
-					});
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-
 	}
 
 	public static void main(String[] args) {
@@ -445,8 +470,14 @@ public class R extends IStub {
 			}).average().getAsDouble();
 			System.out.println(d1 + ", cost=" + t.past());
 
+//			j1 = inst.run("ls()");
+//			System.out.println(j1.get("data"));
+
 			t.reset();
-			r = inst.run("mean(data)", ll);
+			List l2 = new ArrayList<Object>();
+			l2.add(ll);
+			r = inst.run("mean(c1)", "c1", Arrays.asList(ll), false);
+
 			System.out.println(r + ", cost=" + t.past());
 
 			List<JSON> l1 = JSON.createList();
@@ -455,10 +486,16 @@ public class R extends IStub {
 			l1.add(JSON.create().append("a", 10).append("b", 22).append("c", 39).append("d", 4));
 			l1.add(JSON.create().append("a", 1).append("b", 21).append("c", 3).append("d", 4));
 			l1.add(JSON.create().append("a", 1).append("b", 42).append("c", 3).append("d", 4));
-			j1 = inst.run("library(C50);d1<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));print(summary(d1))", null,
-					l1, Arrays.asList("a", "b", "c", "d"));
+
+			j1 = inst.bind("library(C50);d13<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));summary(d13);", null, null, false);
 			System.out.println(j1);
-			System.out.println(j1.get("summary"));
+//			System.out.println(j1.get("data"));
+
+//			j1 = inst.run("ls()");
+//			System.out.println("ls=" + j1.get("data"));
+
+			j1 = inst.run("summary(d13)");
+			System.out.println(j1.get("data"));
 
 //			System.out.println(((List) j1.get("data")).get(0));
 
@@ -495,7 +532,7 @@ public class R extends IStub {
 
 		_check();
 
-		RConnection c = pool.get(TIMEOUT);
+		RConnection c = conn;
 
 		if (c != null) {
 
@@ -533,8 +570,6 @@ public class R extends IStub {
 				}
 
 			} finally {
-
-				pool.release(c);
 
 				t.delete();
 			}
@@ -599,12 +634,13 @@ public class R extends IStub {
 
 			if (X.isSame(method, "run")) {
 
-				JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), (List) j1.get("h"));
+				JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"),
+						j1.getInt("h") == 1);
 				req.response(j2);
 
 			} else if (X.isSame(method, "bind")) {
 
-				JSON j2 = this._bind(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), (List) j1.get("h"));
+				JSON j2 = this._bind(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), j1.getInt("h") == 1);
 				req.response(j2);
 
 			}
