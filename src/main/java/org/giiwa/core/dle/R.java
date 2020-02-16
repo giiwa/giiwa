@@ -241,42 +241,34 @@ public class R extends IStub {
 	private Object r2J(REXP x) throws REXPMismatchException {
 
 		if (x instanceof REXPDouble) {
-			REXPDouble d = (REXPDouble) x;
-			double d1 = d.asDouble();
-			if (Double.isNaN(d1))
-				return d.asString();
+			double[] d1 = x.asDoubles();
 
-			return d1;
+			if (d1.length == 1) {
+				if (Double.isNaN(d1[0]))
+					return x.asString();
+				return d1[0];
+			}
+
+			return X.asList(d1, e -> e);
 		}
 
 		if (x instanceof REXPInteger) {
-			REXPInteger d = (REXPInteger) x;
-			return d.asInteger();
+			int[] ii = x.asIntegers();
+			if (ii.length == 1)
+				return ii[0];
+
+			return X.asList(ii, e -> e);
 		}
 
-		if (x instanceof REXPLogical) {
-			REXPLogical d = (REXPLogical) x;
-			return d.asString();
-		}
-
-		if (x instanceof REXPRaw) {
-			REXPRaw d = (REXPRaw) x;
-			return d.asString();
-		}
-
-		if (x instanceof REXPString) {
-			REXPString d = (REXPString) x;
-			try {
-				return d.asString();
-			} catch (Exception e1) {
-				// fuck this, maybe empty
+		if (x instanceof REXPLogical || x instanceof REXPRaw || x instanceof REXPString || x instanceof REXPSymbol) {
+			String[] ss = x.asStrings();
+			if (ss == null || ss.length == 0) {
+				return null;
+			} else if (ss.length == 1) {
+				return ss[0];
+			} else {
+				return Arrays.asList(ss);
 			}
-			return X.EMPTY;
-		}
-
-		if (x instanceof REXPSymbol) {
-			REXPSymbol d = (REXPSymbol) x;
-			return d.asString();
 		}
 
 		if (x instanceof REXPGenericVector) {
@@ -286,7 +278,6 @@ public class R extends IStub {
 			List<Object> l2 = new ArrayList<Object>();
 			for (int i = 0; i < r1.size(); i++) {
 				Object o = r1.get(i);
-//				System.out.println("o=" + o);
 				if (o instanceof REXP) {
 					l2.add(r2J((REXP) o));
 				}
@@ -315,11 +306,11 @@ public class R extends IStub {
 
 		String[] ss = x.asStrings();
 		if (ss == null || ss.length == 0) {
-			return JSON.create();
+			return null;
 		} else if (ss.length == 1) {
 			return ss[0];
 		} else {
-			return ss;
+			return Arrays.asList(ss);
 		}
 
 	}
@@ -361,7 +352,7 @@ public class R extends IStub {
 			p1.put("b", Arrays.asList(X.split("10, 20, 30", "[, ]"), X.split("10, 20, 30", "[, ]"),
 					X.split("10, 20, 30", "[, ]")));
 
-			System.out.println(inst.run("d<-c(1,2,3,4);mean(d);"));
+			System.out.println(inst.run("d<-c(1,2,3,4);summary(d);"));
 
 			JSON j1 = inst.run(
 					"f509376766<-function(){x <- c(214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,90,93,90,106,214,214,214,214,214,214);fivenum(x)};f509376766();");

@@ -29,6 +29,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -778,11 +779,81 @@ public final class X {
 				}
 			}
 		} else if (o.getClass().isArray()) {
-			Object[] l1 = (Object[]) o;
-			for (Object e : l1) {
-				T t = cb.apply(e);
-				if (t != null) {
-					l2.add(t);
+
+			String name = o.getClass().getName();
+//			System.out.println(name);
+
+			if (X.isSame(name, "[D")) {
+				double[] l1 = (double[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else if (X.isSame(name, "[I")) {
+				int[] l1 = (int[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else if (X.isSame(name, "[J")) {
+				long[] l1 = (long[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else if (X.isSame(name, "[F")) {
+				float[] l1 = (float[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else if (X.isSame(name, "[B")) {
+				byte[] l1 = (byte[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else if (X.isSame(name, "[S")) {
+				short[] l1 = (short[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else if (X.isSame(name, "[C")) {
+				char[] l1 = (char[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else if (X.isSame(name, "[Z")) {
+				boolean[] l1 = (boolean[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
+				}
+			} else {
+				Object[] l1 = (Object[]) o;
+				for (Object e : l1) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
 				}
 			}
 		} else {
@@ -1034,6 +1105,15 @@ public final class X {
 			X.toInt(s1);
 		}
 		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+
+		X.asList(new int[] { 1, 2 }, e -> e);
+		X.asList(new long[] { 1, 2 }, e -> e);
+		X.asList(new float[] { 1, 2 }, e -> e);
+		X.asList(new double[] { 1, 2 }, e -> e);
+		X.asList(new byte[] { 1, 2 }, e -> e);
+		X.asList(new short[] { 1, 2 }, e -> e);
+		X.asList(new char[] { 1, 2 }, e -> e);
+		X.asList(new boolean[] { true, false }, e -> e);
 
 	}
 
