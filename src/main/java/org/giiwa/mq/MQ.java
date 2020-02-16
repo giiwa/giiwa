@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -360,17 +359,20 @@ public abstract class MQ {
 
 		}
 
-		public void error(Throwable e) throws Exception {
+		public void error(Throwable e) {
 
 			Request r = Request.create();
 			r.seq = seq;
 			r.ver = ver;
 			r.type = 201;
 
-			r.put(e.getMessage());
+			try {
+				r.put(e.getMessage());
 
-			MQ.send(from, r);
-
+				MQ.send(from, r);
+			} catch (Exception e1) {
+				log.error(e1.getMessage(), e1);
+			}
 		}
 
 	}
