@@ -4,15 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.TimeStamp;
+import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Local;
 import org.giiwa.mq.MQ.Request;
 
 class RPC extends IStub {
 
-	private static Log log = LogFactory.getLog(RPC.class);
+//	private static Log log = LogFactory.getLog(RPC.class);
 
 	public static String name = "rpc." + Local.id();
 
@@ -29,18 +28,17 @@ class RPC extends IStub {
 	@Override
 	public void onRequest(long seq, Request req) {
 
-		Object d = null;
-		try {
-			d = req.get();
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-
 		Object[] l1 = waiter.get(seq);
 		if (l1 != null) {
 			synchronized (l1) {
 				synchronized (l1) {
-					l1[0] = d;
+					try {
+						l1[0] = req.get();
+						l1[1] = req.type;
+					} catch (Exception e) {
+						l1[0] = e;
+						l1[1] = 500;
+					}
 					l1.notifyAll();
 				}
 			}
@@ -56,7 +54,7 @@ class RPC extends IStub {
 		req.from = RPC.name;
 		req.seq = seq.incrementAndGet();
 
-		Object[] oo = new Object[1];
+		Object[] oo = new Object[2];
 		waiter.put(req.seq, oo);
 		MQ.send(name, req);
 
@@ -68,11 +66,16 @@ class RPC extends IStub {
 
 		waiter.remove(req.seq);
 
-		if (timeout < t.pastms()) {
-			throw new Exception("timeout");
+		int state = X.toInt(oo[1]);
+		if (state == 200) {
+			return (T) oo[0];
 		}
 
-		return (T) oo[0];
+		if (state > 200) {
+			throw new Exception((String) oo[0]);
+		} else {
+			throw new Exception("Timeout calling [" + name + "]");
+		}
 
 	}
 

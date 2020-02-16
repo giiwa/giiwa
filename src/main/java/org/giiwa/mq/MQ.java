@@ -352,8 +352,22 @@ public abstract class MQ {
 			Request r = Request.create();
 			r.seq = seq;
 			r.ver = ver;
+			r.type = 200;
 
 			r.put(data);
+
+			MQ.send(from, r);
+
+		}
+
+		public void error(Throwable e) throws Exception {
+
+			Request r = Request.create();
+			r.seq = seq;
+			r.ver = ver;
+			r.type = 201;
+
+			r.put(e.getMessage());
 
 			MQ.send(from, r);
 

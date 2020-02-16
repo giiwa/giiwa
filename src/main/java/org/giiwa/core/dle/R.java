@@ -96,8 +96,7 @@ public class R extends IStub {
 	 * @return
 	 * @throws Exception
 	 */
-	@SuppressWarnings("rawtypes")
-	public JSON run(String code, String dataname, List data, List<String> head) throws Exception {
+	public JSON run(String code, String dataname, List<?> data, List<?> head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
@@ -114,8 +113,7 @@ public class R extends IStub {
 
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private JSON _run(String code, String dataname, List data, List<String> head) throws Exception {
+	private JSON _run(String code, String dataname, List<?> data, List<?> head) throws Exception {
 
 		_check();
 
@@ -132,40 +130,12 @@ public class R extends IStub {
 				sb.append(func + "<-function(){");
 				if (!X.isEmpty(data)) {
 
-					if (dataname != null && data != null) {
+					Temp t = Temp.create("data");
+					l1.add(t);
 
-						Temp t = Temp.create("data");
-
-						Exporter<Object> ex = t.export("UTF-8", Exporter.FORMAT.plain);
-						ex.createSheet(e -> {
-							if (e == null)
-								return null;
-							if (e.getClass().isArray())
-								return (Object[]) e;
-
-							if (e instanceof List)
-								return ((List) e).toArray();
-
-							if (e instanceof Map) {
-								Map m = (Map) e;
-								Object[] o = new Object[head.size()];
-								for (int i = 0; i < head.size(); i++) {
-									o[i] = m.get(head.get(i));
-								}
-
-								return o;
-							}
-							return null;
-						});
-						if (head != null && !head.isEmpty()) {
-							ex.print(head.toArray());
-						}
-						ex.print(data);
-						ex.close();
-
-						l1.add(t);
-						sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath()
-								+ "', header=T, stringsAsFactors=TRUE);");
+					String s1 = _export(dataname, data, head, t);
+					if (!X.isEmpty(s1)) {
+						sb.append(s1);
 					}
 
 				}
@@ -202,35 +172,75 @@ public class R extends IStub {
 
 	}
 
+	@SuppressWarnings({ "rawtypes" })
+	private String _export(String dataname, List<?> data, List<?> head, Temp t) throws Exception {
+
+		if (dataname != null && data != null) {
+
+			StringBuilder sb = new StringBuilder();
+
+			Exporter<Object> ex = t.export("UTF-8", Exporter.FORMAT.plain);
+			ex.createSheet(e -> {
+				if (e == null)
+					return null;
+				if (e.getClass().isArray())
+					return (Object[]) e;
+
+				if (e instanceof List)
+					return ((List) e).toArray();
+
+				if (e instanceof Map) {
+					Map m = (Map) e;
+					Object[] o = new Object[head.size()];
+					for (int i = 0; i < head.size(); i++) {
+						o[i] = m.get(head.get(i));
+					}
+
+					return o;
+				}
+				return null;
+			});
+			if (head != null && !head.isEmpty()) {
+				ex.print(head.toArray());
+			}
+			ex.print(data);
+			ex.close();
+
+			sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath()
+					+ "', header=T, stringsAsFactors=TRUE);");
+			return sb.toString();
+
+		}
+		return null;
+	}
+
 	/**
 	 * run the R code in global and reside the mode as "name"
 	 * 
-	 * @param name
 	 * @param code
 	 * @param data
 	 * @param header
 	 * @return
 	 * @throws Exception
 	 */
-	public JSON bind(String name, String code, String dataname, List<JSON> data, List<String> header) throws Exception {
+	public JSON bind(String code, String dataname, List<?> data, List<?> head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
 		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
 			// local
-			return _bind(name, code, dataname, data, header);
+			return _bind(code, dataname, data, head);
 
 		} else {
 
 			JSON j1 = JSON.create();
 			j1.append("m", "bind").append("c", code).append("n", name).append("dn", dataname).append("d", data)
-					.append("h", header);
+					.append("h", head);
 			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
 		}
 	}
 
-	private JSON _bind(String name, String code, String dataname, List<JSON> data, List<String> header)
-			throws Exception {
+	private JSON _bind(String code, String dataname, List<?> data, List<?> head) throws Exception {
 
 		_check();
 
@@ -242,32 +252,17 @@ public class R extends IStub {
 			List<Temp> l1 = new ArrayList<Temp>();
 			try {
 				StringBuilder sb = new StringBuilder();
-				sb.append(name + "<-function(){");
 				if (!X.isEmpty(data)) {
 
 					Temp t = Temp.create("data");
-
-					Exporter<JSON> ex = t.export("UTF-8", Exporter.FORMAT.plain);
-					ex.createSheet(e -> {
-						Object[] o = new Object[header.size()];
-						for (int i = 0; i < header.size(); i++) {
-							o[i] = e.get(header.get(i));
-						}
-						return o;
-					});
-					ex.print(header);
-					ex.print(data);
-					ex.close();
-
 					l1.add(t);
-					sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath()
-							+ "', header=T, stringsAsFactors=TRUE);");
+
+					String s1 = _export(dataname, data, head, t);
+					if (!X.isEmpty(s1)) {
+						sb.append(s1);
+					}
 
 				}
-
-				sb.append(code).append("};" + name + "();");
-
-//				System.out.println(sb);
 
 				if (log.isDebugEnabled())
 					log.debug("R.run, code=" + sb);
@@ -282,8 +277,6 @@ public class R extends IStub {
 				return JSON.create().append("data", s1).append("summary", s1);
 
 			} finally {
-
-				c.eval("rm(" + name + ")");
 
 				pool.release(c);
 
@@ -595,7 +588,7 @@ public class R extends IStub {
 		return JSON.create().append("data", d);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	public void onRequest(long seq, Request req) {
 
@@ -606,13 +599,12 @@ public class R extends IStub {
 
 			if (X.isSame(method, "run")) {
 
-				JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), j1.getList("d"), (List<String>) j1.get("h"));
+				JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), (List) j1.get("h"));
 				req.response(j2);
 
 			} else if (X.isSame(method, "bind")) {
 
-				JSON j2 = this._bind(j1.getString("n"), j1.getString("c"), j1.getString("dn"), j1.getList("d"),
-						(List<String>) j1.get("h"));
+				JSON j2 = this._bind(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), (List) j1.get("h"));
 				req.response(j2);
 
 			}
