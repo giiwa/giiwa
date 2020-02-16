@@ -115,15 +115,6 @@ public class R extends IStub {
 		}
 	}
 
-	private String _func() {
-		StringBuilder sb = new StringBuilder();
-
-		sb.append("loadmodel<-function(name){readRDS(paste(\"" + ROOT + "\", name, sep=\"\"))};");
-		sb.append("savemodel<-function(mo, name){saveRDS(mo, paste(\"" + ROOT + "\", name, sep=\"\"))};");
-
-		return sb.toString();
-	}
-
 	@SuppressWarnings("unchecked")
 	private JSON _run(String code, String dataname, List<?> data, boolean head) throws Exception {
 
@@ -139,7 +130,6 @@ public class R extends IStub {
 			List<Temp> l1 = new ArrayList<Temp>();
 			try {
 				StringBuilder sb = new StringBuilder();
-				sb.append(_func());
 				sb.append(func + "<-function(){");
 
 				if (!X.isEmpty(data)) {
@@ -419,7 +409,7 @@ public class R extends IStub {
 
 			t.reset();
 			j1 = inst.run(
-					"library(C50);d15<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));savemodel(d15, \"d15\");summary(d15);",
+					"library(C50);d16<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));save(d16, file=\"d16\");summary(d16);",
 					null, null, false);
 			System.out.println(j1 + ", cost=" + t.past());
 //			System.out.println(j1.get("data"));
@@ -428,7 +418,7 @@ public class R extends IStub {
 //			System.out.println("ls=" + j1.get("data"));
 
 			t.reset();
-			j1 = inst.run("d13<-loadmodel(\"d13\");summary(d13)");
+			j1 = inst.run("load(file=\"d16\");summary(d16)");
 			System.out.println("cost=" + t.past() + "//" + j1.get("data"));
 
 //			System.out.println(((List) j1.get("data")).get(0));
