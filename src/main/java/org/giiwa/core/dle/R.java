@@ -86,12 +86,7 @@ public class R extends IStub {
 
 	@SuppressWarnings("rawtypes")
 	public JSON run(String code) throws Exception {
-		return run(code, null, null, (List) null, false);
-	}
-
-	@SuppressWarnings("rawtypes")
-	public JSON run(String code, String modelname) throws Exception {
-		return run(code, modelname, null, (List) null, false);
+		return run(code, null, (List) null, false);
 	}
 
 	/**
@@ -104,26 +99,33 @@ public class R extends IStub {
 	 * @return
 	 * @throws Exception
 	 */
-	public JSON run(String code, String modelname, String dataname, List<?> data, boolean head) throws Exception {
+	public JSON run(String code, String dataname, List<?> data, boolean head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
 		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
 			// local
-			return _run(code, modelname, dataname, data, head);
+			return _run(code, dataname, data, head);
 
 		} else {
 
 			JSON j1 = JSON.create();
-			j1.append("c", code).append("dn", dataname).append("m", modelname).append("d", data).append("h",
-					head ? 1 : 0);
+			j1.append("c", code).append("dn", dataname).append("d", data).append("h", head ? 1 : 0);
 			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
 		}
+	}
 
+	private String _func() {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("loadmodel<-function(name){readRDS(paste(\"" + ROOT + "\", name, sep=\"\"))};");
+		sb.append("savemodel<-function(mo, name){saveRDS(mo, paste(\"" + ROOT + "\", name, sep=\"\"))};");
+
+		return sb.toString();
 	}
 
 	@SuppressWarnings("unchecked")
-	private JSON _run(String code, String modelname, String dataname, List<?> data, boolean head) throws Exception {
+	private JSON _run(String code, String dataname, List<?> data, boolean head) throws Exception {
 
 		_check();
 
@@ -137,13 +139,8 @@ public class R extends IStub {
 			List<Temp> l1 = new ArrayList<Temp>();
 			try {
 				StringBuilder sb = new StringBuilder();
+				sb.append(_func());
 				sb.append(func + "<-function(){");
-				if (!X.isEmpty(modelname)) {
-					String[] ss = X.split(modelname, "[,;]");
-					for (String s1 : ss) {
-						sb.append(s1 + "<-readRDS(\"" + ROOT + s1 + "\");");
-					}
-				}
 
 				if (!X.isEmpty(data)) {
 					Temp t = Temp.create("data");
@@ -248,85 +245,6 @@ public class R extends IStub {
 		sb.append("stringsAsFactors=TRUE);");
 
 		return sb.toString();
-
-	}
-
-	/**
-	 * run the R code in global and reside the mode as "name"
-	 * 
-	 * @param code
-	 * @param data
-	 * @param head
-	 * @return
-	 * @throws Exception
-	 */
-	public JSON bind(String code, String dataname, List<?> data, boolean head) throws Exception {
-
-		String host = Config.getConf().getString("r.host", X.EMPTY);
-
-		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
-			// local
-			return _bind(code, dataname, data, head);
-
-		} else {
-
-			JSON j1 = JSON.create();
-			j1.append("m", "bind").append("c", code).append("n", name).append("dn", dataname).append("d", data)
-					.append("h", head ? 1 : 0);
-			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private JSON _bind(String code, String dataname, List<?> data, boolean head) throws Exception {
-
-		_check();
-
-		RConnection c = conn;
-
-		if (c != null) {
-
-			// save to file
-			List<Temp> l1 = new ArrayList<Temp>();
-			try {
-				StringBuilder sb = new StringBuilder();
-				if (!X.isEmpty(data)) {
-
-					Temp t = Temp.create("data");
-					l1.add(t);
-
-					String s1 = _export(dataname, (List<Object>) data, head, t);
-					if (!X.isEmpty(s1)) {
-						sb.append(s1);
-					}
-
-				}
-				sb.append(code);
-				if (!X.isEmpty(dataname)) {
-					sb.append("saveRDS(" + dataname + ", file=\"" + ROOT + dataname + "\");");
-				}
-
-				if (log.isDebugEnabled())
-					log.debug("R.run, code=" + sb);
-
-				REXP x = c.eval(sb.toString());
-
-				if (x == null || x.isNull()) {
-					return JSON.create();
-				}
-
-				Object s1 = r2J(x);
-				return JSON.create().append("data", s1);
-
-			} finally {
-
-				if (l1 != null) {
-					for (Temp t : l1)
-						t.delete();
-				}
-			}
-		}
-		return null;
 
 	}
 
@@ -445,6 +363,8 @@ public class R extends IStub {
 
 		Task.init(10);
 
+		R.ROOT = "/Users/joe/d/temp/";
+
 //		String s = "mean(b)";
 		try {
 			Map<String, List<Object[]>> p1 = new HashMap<String, List<Object[]>>();
@@ -486,7 +406,7 @@ public class R extends IStub {
 			t.reset();
 			List l2 = new ArrayList<Object>();
 			l2.add(ll);
-			r = inst.run("mean(c1)", null, "c1", Arrays.asList(ll), false);
+			r = inst.run("mean(c1)", "c1", Arrays.asList(ll), false);
 
 			System.out.println(r + ", cost=" + t.past());
 
@@ -497,23 +417,25 @@ public class R extends IStub {
 			l1.add(JSON.create().append("a", 1).append("b", 21).append("c", 3).append("d", 4));
 			l1.add(JSON.create().append("a", 1).append("b", 42).append("c", 3).append("d", 4));
 
-			j1 = inst.bind("library(C50);d13<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));summary(d13);", null, null,
-					false);
-			System.out.println(j1);
+			t.reset();
+			j1 = inst.run(
+					"library(C50);d15<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));savemodel(d15, \"d15\");summary(d15);",
+					null, null, false);
+			System.out.println(j1 + ", cost=" + t.past());
 //			System.out.println(j1.get("data"));
 
 //			j1 = inst.run("ls()");
 //			System.out.println("ls=" + j1.get("data"));
 
-			j1 = inst.run("summary(d13)");
-			System.out.println(j1.get("data"));
+			t.reset();
+			j1 = inst.run("d13<-loadmodel(\"d13\");summary(d13)");
+			System.out.println("cost=" + t.past() + "//" + j1.get("data"));
 
 //			System.out.println(((List) j1.get("data")).get(0));
 
 //			System.out.println(t1.toPrettyString());
 
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -641,20 +563,9 @@ public class R extends IStub {
 		try {
 
 			JSON j1 = req.get();
-			String method = j1.getString("m");
 
-			if (X.isSame(method, "run")) {
-
-				JSON j2 = this._run(j1.getString("c"), j1.getString("m"), j1.getString("dn"), (List) j1.get("d"),
-						j1.getInt("h") == 1);
-				req.response(j2);
-
-			} else if (X.isSame(method, "bind")) {
-
-				JSON j2 = this._bind(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), j1.getInt("h") == 1);
-				req.response(j2);
-
-			}
+			JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), j1.getInt("h") == 1);
+			req.response(j2);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
