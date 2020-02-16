@@ -32,6 +32,7 @@ import org.giiwa.core.conf.Config;
 import org.giiwa.core.json.JSON;
 import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.Temp;
+import org.giiwa.framework.web.Controller;
 import org.giiwa.mq.IStub;
 import org.giiwa.mq.MQ;
 import org.giiwa.mq.MQ.Request;
@@ -58,9 +59,13 @@ public class R extends IStub {
 	static Log log = LogFactory.getLog(R.class);
 
 	public static R inst = new R("r");
+	private static String ROOT;
 	private static boolean inited = false;
 
 	public static void serve() {
+
+		ROOT = Controller.GIIWA_HOME + "/temp/_R/";
+		new File(ROOT).mkdirs();
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
@@ -81,7 +86,12 @@ public class R extends IStub {
 
 	@SuppressWarnings("rawtypes")
 	public JSON run(String code) throws Exception {
-		return run(code, null, (List) null, false);
+		return run(code, null, null, (List) null, false);
+	}
+
+	@SuppressWarnings("rawtypes")
+	public JSON run(String code, String modelname) throws Exception {
+		return run(code, modelname, null, (List) null, false);
 	}
 
 	/**
@@ -94,18 +104,18 @@ public class R extends IStub {
 	 * @return
 	 * @throws Exception
 	 */
-	public JSON run(String code, String dataname, List<?> data, boolean head) throws Exception {
+	public JSON run(String code, String modelname, String dataname, List<?> data, boolean head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
 		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
 			// local
-			return _run(code, dataname, data, head);
+			return _run(code, modelname, dataname, data, head);
 
 		} else {
 
 			JSON j1 = JSON.create();
-			j1.append("c", code).append("dn", dataname).append("d", data).append("h",
+			j1.append("c", code).append("dn", dataname).append("m", modelname).append("d", data).append("h",
 					head ? 1 : 0);
 			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
 		}
@@ -113,7 +123,7 @@ public class R extends IStub {
 	}
 
 	@SuppressWarnings("unchecked")
-	private JSON _run(String code, String dataname, List<?> data, boolean head) throws Exception {
+	private JSON _run(String code, String modelname, String dataname, List<?> data, boolean head) throws Exception {
 
 		_check();
 
@@ -128,12 +138,12 @@ public class R extends IStub {
 			try {
 				StringBuilder sb = new StringBuilder();
 				sb.append(func + "<-function(){");
-//				if (!X.isEmpty(modelname)) {
-//					String[] ss = X.split(modelname, "[,;]");
-//					for (String s1 : ss) {
-//						sb.append(s1 + "<-readRDS('" + s1 + "');");
-//					}
-//				}
+				if (!X.isEmpty(modelname)) {
+					String[] ss = X.split(modelname, "[,;]");
+					for (String s1 : ss) {
+						sb.append(s1 + "<-readRDS(\"" + ROOT + s1 + "\");");
+					}
+				}
 
 				if (!X.isEmpty(data)) {
 					Temp t = Temp.create("data");
@@ -292,9 +302,9 @@ public class R extends IStub {
 
 				}
 				sb.append(code);
-//				if (!X.isEmpty(dataname)) {
-//					sb.append("saveRDS(" + dataname + ", '" + dataname + "');");
-//				}
+				if (!X.isEmpty(dataname)) {
+					sb.append("saveRDS(" + dataname + ", file=\"" + ROOT + dataname + "\");");
+				}
 
 				if (log.isDebugEnabled())
 					log.debug("R.run, code=" + sb);
@@ -476,7 +486,7 @@ public class R extends IStub {
 			t.reset();
 			List l2 = new ArrayList<Object>();
 			l2.add(ll);
-			r = inst.run("mean(c1)", "c1", Arrays.asList(ll), false);
+			r = inst.run("mean(c1)", null, "c1", Arrays.asList(ll), false);
 
 			System.out.println(r + ", cost=" + t.past());
 
@@ -487,7 +497,8 @@ public class R extends IStub {
 			l1.add(JSON.create().append("a", 1).append("b", 21).append("c", 3).append("d", 4));
 			l1.add(JSON.create().append("a", 1).append("b", 42).append("c", 3).append("d", 4));
 
-			j1 = inst.bind("library(C50);d13<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));summary(d13);", null, null, false);
+			j1 = inst.bind("library(C50);d13<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));summary(d13);", null, null,
+					false);
 			System.out.println(j1);
 //			System.out.println(j1.get("data"));
 
@@ -634,7 +645,7 @@ public class R extends IStub {
 
 			if (X.isSame(method, "run")) {
 
-				JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"),
+				JSON j2 = this._run(j1.getString("c"), j1.getString("m"), j1.getString("dn"), (List) j1.get("d"),
 						j1.getInt("h") == 1);
 				req.response(j2);
 
