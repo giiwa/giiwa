@@ -89,6 +89,11 @@ public class R extends IStub {
 		return run(code, null, (List) null, false);
 	}
 
+	@SuppressWarnings("rawtypes")
+	public JSON run(String code, String dataname, List data) throws Exception {
+		return run(code, dataname, data, false);
+	}
+
 	/**
 	 * run the R code in sanbox
 	 * 
@@ -99,7 +104,8 @@ public class R extends IStub {
 	 * @return
 	 * @throws Exception
 	 */
-	public JSON run(String code, String dataname, List<?> data, boolean head) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public JSON run(String code, String dataname, List data, boolean head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
@@ -115,8 +121,8 @@ public class R extends IStub {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private JSON _run(String code, String dataname, List<?> data, boolean head) throws Exception {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private JSON _run(String code, String dataname, List data, boolean head) throws Exception {
 
 		_check();
 
@@ -172,8 +178,8 @@ public class R extends IStub {
 
 	}
 
-	@SuppressWarnings({ "rawtypes" })
-	private String _export(String dataname, List<Object> data, boolean head, Temp t) throws Exception {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private String _export(String dataname, List data, boolean head, Temp t) throws Exception {
 
 		if (dataname == null || data == null || data.isEmpty()) {
 			return X.EMPTY;
@@ -182,18 +188,6 @@ public class R extends IStub {
 		StringBuilder sb = new StringBuilder();
 
 		Object o1 = data.get(0);
-
-		if (!(o1 instanceof List || o1.getClass().isArray() || o1 instanceof Map)) {
-
-			sb.append(dataname).append("<-c(");
-			for (int i = 0; i < data.size(); i++) {
-				if (i > 0)
-					sb.append(",");
-				sb.append(data.get(i));
-			}
-			sb.append(");");
-			return sb.toString();
-		}
 
 		Object[] hh = (o1 instanceof Map) ? (((Map) o1).keySet().toArray()) : null;
 
@@ -223,7 +217,7 @@ public class R extends IStub {
 			return new Object[] { e };
 		});
 
-		ex.print(data);
+		ex.print((List<Object>) data);
 		ex.close();
 
 		sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath() + "',");
@@ -352,7 +346,7 @@ public class R extends IStub {
 			p1.put("b", Arrays.asList(X.split("10, 20, 30", "[, ]"), X.split("10, 20, 30", "[, ]"),
 					X.split("10, 20, 30", "[, ]")));
 
-			System.out.println(inst.run("d<-c(1,2,3,4);summary(d);"));
+			System.out.println(inst.run("summary(d);", "d", Arrays.asList(1, 2, 3, 100)));
 
 			JSON j1 = inst.run(
 					"f509376766<-function(){x <- c(214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,90,93,90,106,214,214,214,214,214,214);fivenum(x)};f509376766();");

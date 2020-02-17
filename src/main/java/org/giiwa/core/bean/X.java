@@ -29,7 +29,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -618,10 +617,12 @@ public final class X {
 				}
 			} else if (c == ',' || c == ' ' || c == '\t') {
 				if (sb == null || sb.length() == 0) {
-					l1.add(X.EMPTY);
+					if (c == ',')
+						l1.add(X.EMPTY);
 				} else {
 					l1.add(_parse(sb.toString()));
 				}
+
 				sb = null;
 			} else {
 				if (sb == null) {
