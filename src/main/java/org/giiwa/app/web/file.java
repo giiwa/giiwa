@@ -8,6 +8,7 @@ import java.io.OutputStream;
 
 import org.giiwa.core.base.GImage;
 import org.giiwa.core.base.IOUtil;
+import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.framework.bean.Disk;
@@ -81,6 +82,26 @@ public class file extends Controller {
 				}
 			}
 			this.setContentType(mime);
+
+			try {
+				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+
+		}
+
+	}
+
+	@Path(path = "d/(.*)/(.*)")
+	public void d(String id, String name) {
+
+		DFile f1 = Disk.get(id);
+		if (f1.isFile()) {
+
+			String name1 = Url.encode(f1.getName());
+			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
+			this.setContentType(Controller.getMimeType(f1.getName()));
 
 			try {
 				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
