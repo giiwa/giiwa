@@ -777,30 +777,34 @@ public final class JSON extends HashMap<String, Object> {
 		if (o == null) {
 			return this.append(name, value);
 		}
+
 		if (o instanceof Map && value instanceof Map) {
+
 			((Map) o).putAll((Map) value);
+
 		} else if (o instanceof List) {
+
+			List l1 = (List) o;
+
 			if (value instanceof List) {
-				((List) o).addAll((List) value);
-			} else {
-				((List) o).add(value);
-			}
-		} else if (value instanceof List) {
-			((List) value).add(o);
-			this.append(name, value);
-		} else {
-			List l1 = new ArrayList();
-			if (o.getClass().isArray()) {
-				l1.addAll(Arrays.asList((Object[]) o));
-			} else {
-				l1.add(o);
-			}
-			if (value.getClass().isArray()) {
-				l1.addAll(Arrays.asList((Object[]) value));
-			} else {
+				for (Object o1 : (List) value) {
+					if (!l1.contains(o1)) {
+						l1.add(o1);
+					}
+				}
+			} else if (!l1.contains(value)) {
 				l1.add(value);
 			}
+
+		} else if (value instanceof List) {
+			List l1 = (List) value;
+			if (!l1.contains(o)) {
+				l1.add(o);
+			}
 			this.append(name, l1);
+		} else {
+			// replace the old value
+			this.append(name, value);
 		}
 
 		return this;

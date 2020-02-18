@@ -833,6 +833,10 @@ public class Controller {
 		put(name, o);
 	}
 
+	public Object get(String name) {
+		return this.getHtml(name);
+	}
+
 	/**
 	 * get the value from the context
 	 * 
