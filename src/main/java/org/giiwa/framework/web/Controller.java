@@ -723,7 +723,9 @@ public class Controller {
 				}
 			}
 
-			sid += "/" + this.getRemoteHost();
+			if (!X.isEmpty(sid))
+				sid += "/" + this.getRemoteHost();
+			log.debug("sid=" + sid);
 		}
 
 		return sid;
