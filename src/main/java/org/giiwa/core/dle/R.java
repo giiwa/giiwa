@@ -174,7 +174,8 @@ public class R extends IStub {
 				throw re;
 			} finally {
 
-				c.eval("rm(" + func + ", " + dataname + ")");
+				c.eval("rm(" + func + ")");
+//				c.eval("rm(" + func + ", " + dataname + ")");
 
 			}
 		}
