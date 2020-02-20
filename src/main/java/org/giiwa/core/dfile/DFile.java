@@ -393,4 +393,22 @@ public class DFile {
 		return Paths.get(URI.create(filename));
 	}
 
+	public long save(File f) throws IOException {
+		return save(new FileInputStream(f), 0);
+	}
+
+	public long save(InputStream in) throws IOException {
+		return save(in, 0);
+	}
+
+	public long save(InputStream in, long pos) throws IOException {
+		if (pos == 0) {
+			if (exists()) {
+				delete();
+			}
+		}
+
+		return IOUtil.copy(in, getOutputStream(pos));
+	}
+
 }

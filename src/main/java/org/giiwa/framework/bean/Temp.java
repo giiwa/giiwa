@@ -15,7 +15,6 @@
 package org.giiwa.framework.bean;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,11 +65,12 @@ public class Temp {
 
 	}
 
-	public static Temp create(String root, String name) {
+	private static Temp create(String root, String name) {
 		Temp t = new Temp();
-		t.name = name;
 		t.id = UID.id(System.currentTimeMillis(), UID.random());
 		t.root = root;
+		t.name = name;
+
 		return t;
 	}
 
@@ -101,6 +101,16 @@ public class Temp {
 	public File getFile() {
 		if (file == null) {
 			file = new File(root + path(id, name));
+		}
+		return file;
+	}
+
+	public File setFile(String filename) throws IOException {
+		String r1 = new File(root + "/" + ROOT + "/").getCanonicalPath();
+		file = new File(r1 + "/" + filename);
+		if (!file.getCanonicalPath().startsWith(r1)) {
+			file = null;
+			throw new IOException("bad filename=" + filename);
 		}
 		return file;
 	}
@@ -156,15 +166,7 @@ public class Temp {
 	}
 
 	public long save(DFile f) throws Exception {
-		if (f.exists()) {
-			f.delete();
-		}
-
-		File file = getFile();
-		if (file != null && file.exists()) {
-			return IOUtil.copy(new FileInputStream(file), f.getOutputStream());
-		}
-		return 0;
+		return f.save(this.getFile());
 	}
 
 	public long save(String filename) throws Exception {

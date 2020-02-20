@@ -1078,44 +1078,48 @@ public final class X {
 
 		X.toInt("11*10");
 
-		Object s1 = "12";
-		TimeStamp t1 = TimeStamp.create();
-		int N = 10000;
-		for (int i = 0; i < N; i++) {
-			X.toInt(s1);
-		}
-		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+//		Object s1 = "12";
+//		TimeStamp t1 = TimeStamp.create();
+//		int N = 1;
+//		for (int i = 0; i < N; i++) {
+//			X.toInt(s1);
+//		}
+//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+//
+//		t1.reset();
+//		s1 = "12A";
+//		for (int i = 0; i < N; i++) {
+//			X.toInt(s1);
+//		}
+//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+//
+//		t1.reset();
+//		s1 = 12;
+//		for (int i = 0; i < N; i++) {
+//			X.toInt(s1);
+//		}
+//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+//
+//		t1.reset();
+//		s1 = "12*11";
+//		for (int i = 0; i < N; i++) {
+//			X.toInt(s1);
+//		}
+//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
+//
+//		X.asList(new int[] { 1, 2 }, e -> e);
+//		X.asList(new long[] { 1, 2 }, e -> e);
+//		X.asList(new float[] { 1, 2 }, e -> e);
+//		X.asList(new double[] { 1, 2 }, e -> e);
+//		X.asList(new byte[] { 1, 2 }, e -> e);
+//		X.asList(new short[] { 1, 2 }, e -> e);
+//		X.asList(new char[] { 1, 2 }, e -> e);
+//		X.asList(new boolean[] { true, false }, e -> e);
 
-		t1.reset();
-		s1 = "12A";
-		for (int i = 0; i < N; i++) {
-			X.toInt(s1);
-		}
-		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
-
-		t1.reset();
-		s1 = 12;
-		for (int i = 0; i < N; i++) {
-			X.toInt(s1);
-		}
-		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
-
-		t1.reset();
-		s1 = "12*11";
-		for (int i = 0; i < N; i++) {
-			X.toInt(s1);
-		}
-		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
-
-		X.asList(new int[] { 1, 2 }, e -> e);
-		X.asList(new long[] { 1, 2 }, e -> e);
-		X.asList(new float[] { 1, 2 }, e -> e);
-		X.asList(new double[] { 1, 2 }, e -> e);
-		X.asList(new byte[] { 1, 2 }, e -> e);
-		X.asList(new short[] { 1, 2 }, e -> e);
-		X.asList(new char[] { 1, 2 }, e -> e);
-		X.asList(new boolean[] { true, false }, e -> e);
-
+		s = "\"Ford Pantera,L\",15.8,8,351,264,4.22,3.17,14.5,0,1,5,4";
+		Object[] l1 = X.csv(s);
+		System.out.println(l1[0]);
+		
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {

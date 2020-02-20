@@ -88,14 +88,16 @@ public class Exporter<V> {
 			if (i > 0) {
 				out.write(",");
 			}
-			if (format.equals(FORMAT.csv))
+			if (s instanceof String || format.equals(FORMAT.csv))
 				out.write("\"");
+
 			if (s != null) {
 				if (format.equals(FORMAT.csv))
 					s = s.toString().replaceAll("\"", "\\\"").replaceAll("\r\n", "");
 				out.write(s.toString());
 			}
-			if (format.equals(FORMAT.csv))
+
+			if (s instanceof String || format.equals(FORMAT.csv))
 				out.write("\"");
 		}
 		out.write("\r\n");

@@ -49,6 +49,7 @@ import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.REXPSymbol;
 import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
+import org.rosuda.REngine.Rserve.RserveException;
 
 public class R extends IStub {
 
@@ -132,17 +133,18 @@ public class R extends IStub {
 
 			String func = "f" + c.hashCode();
 
+			StringBuilder sb = new StringBuilder();
+
 			// save to file
-			List<Temp> l1 = new ArrayList<Temp>();
 			try {
-				StringBuilder sb = new StringBuilder();
 				sb.append(func + "<-function(){");
 
-				if (!X.isEmpty(data)) {
-					Temp t = Temp.create("data");
-					l1.add(t);
+				Temp temp = null;
 
-					String s1 = _export(dataname, (List<Object>) data, head, t);
+				if (!X.isEmpty(data)) {
+					temp = Temp.create("data");
+
+					String s1 = _export(dataname, (List<Object>) data, head, temp);
 					if (!X.isEmpty(s1)) {
 						sb.append(s1);
 					}
@@ -151,9 +153,9 @@ public class R extends IStub {
 				sb.append(code).append("};" + func + "();");
 
 //				System.out.println(sb);
-
-				if (log.isDebugEnabled())
-					log.debug("R.run, code=" + sb);
+//
+//				if (log.isDebugEnabled())
+//					log.debug("R.run, code=" + sb);
 
 				REXP x = c.eval(sb.toString());
 
@@ -161,17 +163,19 @@ public class R extends IStub {
 					return JSON.create();
 				}
 
+				if (temp != null) {
+					temp.delete();
+				}
+
 				Object s1 = r2J(x);
 				return JSON.create().append("data", s1);
-
+			} catch (RserveException re) {
+				log.error(sb.toString() + ", error=" + re.getRequestErrorDescription(re.getRequestReturnCode()), re);
+				throw re;
 			} finally {
 
-				c.eval("rm(" + func + ")");
+				c.eval("rm(" + func + ", " + dataname + ")");
 
-				if (l1 != null) {
-					for (Temp t : l1)
-						t.delete();
-				}
 			}
 		}
 		return null;
@@ -220,7 +224,7 @@ public class R extends IStub {
 		ex.print((List<Object>) data);
 		ex.close();
 
-		sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath() + "',");
+		sb.append(dataname + " <<- read.csv('" + t.getFile().getCanonicalPath() + "',");
 		if (head) {
 			sb.append("header=T,");
 		} else {
