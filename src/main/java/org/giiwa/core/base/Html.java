@@ -148,6 +148,10 @@ public final class Html {
 		return body;
 	}
 
+	public StringFinder finder() {
+		return StringFinder.create(body());
+	}
+
 	/**
 	 * Body.
 	 *
@@ -433,8 +437,12 @@ public final class Html {
 
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public StringFinder getFinder() {
-		return StringFinder.create(body);
+		return finder();
 	}
 
 }
