@@ -40,6 +40,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -377,6 +378,11 @@ public final class Http {
 		}
 
 		if (client != null) {
+
+//			this.getCookies().forEach(c -> {
+//				log.debug("Cookie: " + c.getName() + "=" + c.getValue());
+//			});
+
 			HttpGet get = null;
 
 			try {
@@ -1028,7 +1034,7 @@ public final class Http {
 		}
 		int t = (int) timeout;
 		RequestConfig config = RequestConfig.custom().setConnectTimeout(t).setSocketTimeout(t)
-				.setConnectionRequestTimeout(t).setCookieSpec("easy").build();
+				.setConnectionRequestTimeout(t).setCookieSpec(CookieSpecs.STANDARD).build();
 		HttpClientBuilder builder = HttpClients.custom().setSSLContext(ctx).setDefaultRequestConfig(config)
 				.setUserAgent(ua);
 
