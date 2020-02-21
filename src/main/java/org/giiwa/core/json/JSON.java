@@ -31,7 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1139,7 +1139,7 @@ public final class JSON extends HashMap<String, Object> {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	private void _scan(Object o, Consumer<Entry> func) {
+	private void _scan(Object o, BiConsumer<JSON, Entry> func) {
 
 		if (o instanceof JSON) {
 			((JSON) o).scan(func);
@@ -1156,10 +1156,10 @@ public final class JSON extends HashMap<String, Object> {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public JSON scan(Consumer<Entry> func) {
+	public JSON scan(BiConsumer<JSON, Entry> func) {
 
 		this.entrySet().parallelStream().forEach(e -> {
-			func.accept(e);
+			func.accept(this, e);
 
 			if (e.getValue() instanceof JSON) {
 				((JSON) e.getValue()).scan(func);
@@ -1172,8 +1172,8 @@ public final class JSON extends HashMap<String, Object> {
 
 	@SuppressWarnings("restriction")
 	public JSON scan(jdk.nashorn.api.scripting.ScriptObjectMirror m) {
-		return this.scan(e -> {
-			m.call(e);
+		return this.scan((p, e) -> {
+			m.call(p, e);
 		});
 	}
 
