@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,8 +41,8 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.core.base.Base32;
 import org.giiwa.core.base.Digest;
-import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.bean.X;
 import org.giiwa.core.dle.JS;
 
 import com.google.gson.Gson;
@@ -1135,6 +1136,45 @@ public final class JSON extends HashMap<String, Object> {
 		List<JSON> l1 = JSON.createList();
 		this.append(name, l1);
 		return l1;
+	}
+
+	@SuppressWarnings({ "rawtypes" })
+	private void _scan(Object o, Consumer<Entry> func) {
+
+		if (o instanceof JSON) {
+			((JSON) o).scan(func);
+		} else if (o instanceof Collection || o.getClass().isArray()) {
+			X.asList(o, e -> {
+				if (e instanceof JSON) {
+					((JSON) o).scan(func);
+				} else if (e instanceof Collection || e.getClass().isArray()) {
+					_scan(e, func);
+				}
+				return null;
+			});
+		}
+	}
+
+	@SuppressWarnings("rawtypes")
+	public JSON scan(Consumer<Entry> func) {
+
+		this.entrySet().parallelStream().forEach(e -> {
+			func.accept(e);
+
+			if (e.getValue() instanceof JSON) {
+				((JSON) e.getValue()).scan(func);
+			} else if (e.getValue() instanceof List || e.getValue().getClass().isArray()) {
+				_scan(e.getValue(), func);
+			}
+		});
+		return this;
+	}
+
+	@SuppressWarnings("restriction")
+	public JSON scan(jdk.nashorn.api.scripting.ScriptObjectMirror m) {
+		return this.scan(e -> {
+			m.call(e);
+		});
 	}
 
 }
