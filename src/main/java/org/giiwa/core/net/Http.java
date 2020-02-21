@@ -1149,9 +1149,22 @@ public final class Http {
 	 *
 	 */
 	public class Response {
+
 		public int status;
 		public String body;
 		private Header[] headers;
+
+		public StringFinder finder() {
+			return StringFinder.create(body);
+		}
+
+		public Html html() {
+			return Html.create(body);
+		}
+
+		public JSON json() {
+			return JSON.fromObject(body);
+		}
 
 		/**
 		 * get the header
