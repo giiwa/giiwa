@@ -125,7 +125,8 @@ public class Temp {
 	 * @return String of uri
 	 */
 	public String getUri() {
-		return ROOT + "/" + id + "/" + name + "?" + ((file == null || !file.exists()) ? 0 : file.lastModified());
+		return "/f/" + ROOT + "/" + id + "/" + name + "?"
+				+ ((file == null || !file.exists()) ? 0 : file.lastModified());
 	}
 
 	public static File get(String id, String name) {

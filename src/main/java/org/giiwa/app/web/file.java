@@ -16,6 +16,11 @@ import org.giiwa.framework.bean.Temp;
 import org.giiwa.framework.web.Controller;
 import org.giiwa.framework.web.Path;
 
+/**
+ * @deprecated
+ * @author joe
+ *
+ */
 public class file extends Controller {
 
 	@Path(path = "get/(.*)/(.*)")

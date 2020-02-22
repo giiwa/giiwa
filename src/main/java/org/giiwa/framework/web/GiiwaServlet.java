@@ -55,6 +55,7 @@ public class GiiwaServlet extends HttpServlet {
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		
 		try {
 			HttpServletRequest r1 = (HttpServletRequest) req;
 			HttpServletResponse r2 = (HttpServletResponse) resp;
@@ -78,6 +79,7 @@ public class GiiwaServlet extends HttpServlet {
 				log.debug(req.getMethod() + ", uri=" + uri);
 
 			Controller.process(uri, r1, r2, req.getMethod());
+			
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}

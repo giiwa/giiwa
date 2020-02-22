@@ -36,12 +36,6 @@
 								"classes": "icon-hammer"
 							},
 							{
-								"name": "menu.accesslog",
-								"load": "/admin/accesslog",
-								"seq": 20,
-								"classes": "icon-user"
-							},
-							{
 								"name": "menu.footprint",
 								"load": "/admin/footprint",
 								"seq": 30,

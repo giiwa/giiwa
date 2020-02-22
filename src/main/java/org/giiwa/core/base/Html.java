@@ -439,13 +439,13 @@ public final class Html {
 		System.out.println("5:" + h.find(".aaa .a"));
 		// System.out.println("5:" + h.find(".aaa .a(aaaa)"));
 
-		s = "https://www.giisoo.com/";
+		s = "https://www.pingshu8.com/";
 		Http http = Http.create();
-		Http.Response r = http.get(s);
+		Http.Response r = http.get(s, "gb2312", X.AMINUTE);
 		h = r.html();
 
 		h.url = s;
-		Collection<JSON> l1 = h.href(".*");
+		Collection<JSON> l1 = h.href();
 		System.out.println(l1);
 
 	}

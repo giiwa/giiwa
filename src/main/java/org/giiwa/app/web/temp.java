@@ -16,9 +16,7 @@ package org.giiwa.app.web;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 
-import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.Url;
 import org.giiwa.core.bean.X;
 import org.giiwa.framework.bean.GLog;
@@ -28,7 +26,7 @@ import org.giiwa.framework.web.Controller;
 /**
  * web api： /temp <br>
  * used to access temporary file which created by Temp
- * 
+ * @deprecated
  * @author joe
  * 
  */

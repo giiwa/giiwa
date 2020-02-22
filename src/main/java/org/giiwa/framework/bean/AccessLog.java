@@ -37,6 +37,7 @@ import org.giiwa.core.task.Task;
  * The web access log bean. <br>
  * table="gi_accesslog"
  * 
+ * @deprecated
  * @author joe
  * 
  */
@@ -75,8 +76,7 @@ public class AccessLog extends Bean {
 	/**
 	 * Count.
 	 *
-	 * @param q
-	 *            the q
+	 * @param q the q
 	 * @return the long
 	 */
 	public static long count(W q) {
@@ -90,12 +90,9 @@ public class AccessLog extends Bean {
 	/**
 	 * Creates the AccessLog.
 	 * 
-	 * @param ip
-	 *            the ip address
-	 * @param url
-	 *            the url
-	 * @param v
-	 *            the values
+	 * @param ip  the ip address
+	 * @param url the url
+	 * @param v   the values
 	 */
 	public static void create(final String ip, final String url, final V v) {
 		Task.schedule(() -> {
@@ -122,8 +119,7 @@ public class AccessLog extends Bean {
 	/**
 	 * Distinct.
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return Map
 	 */
 	public static Map<Object, Long> distinct(String name) {

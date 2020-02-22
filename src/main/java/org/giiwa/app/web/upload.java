@@ -30,6 +30,7 @@ import org.giiwa.framework.web.*;
  * used to upload file and return the file id in file repository, it support
  * "resume“ file upload, the "Content-Range: bytes 0-1024/2048"
  * 
+ * @deprecated
  * @author joe
  * 
  */

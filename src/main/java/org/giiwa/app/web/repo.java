@@ -30,6 +30,7 @@ import org.giiwa.framework.web.*;
  * web api： /repo <br>
  * used to access the file in file repository
  * 
+ * @deprecated
  * @author yjiang
  * 
  */
@@ -38,7 +39,6 @@ public class repo extends Controller {
 	/**
 	 * Download.
 	 */
-	@SuppressWarnings("deprecation")
 	@Path(path = "download", login = true)
 	public void download() {
 		if (path != null) {

@@ -686,6 +686,8 @@ public class Module {
 		return getFile(resource, inFloor, true);
 	}
 
+//	private static Map<String, File> _filecache = new HashMap<String, File>();
+
 	/**
 	 * get the file in the module box
 	 * 
@@ -696,15 +698,23 @@ public class Module {
 	 */
 	public File getFile(String resource, boolean inFloor, boolean inbox) {
 		try {
-			File f = new File(viewroot + File.separator + resource);
+
+			String name = viewroot + File.separator + resource;
+
+//			File f = _filecache.get(name);
+//			if (f == null) {
+			File f = new File(name);
+//			}
 			if (f.exists()) {
 				/**
 				 * test the file is still in the path? if not, then do not allow to access,
 				 * avoid user using "../../" to access system file
 				 */
 				if (inbox && f.getCanonicalPath().startsWith(viewroot)) {
+//					_filecache.put(name, f);
 					return f;
 				} else if (f.exists()) {
+//					_filecache.put(name, f);
 					return f;
 				}
 			}

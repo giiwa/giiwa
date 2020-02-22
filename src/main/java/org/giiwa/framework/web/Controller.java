@@ -529,10 +529,10 @@ public class Controller {
 			this.put("request", req);
 			this.put("this", this);
 			this.put("response", resp);
-			this.set("session", this.getSession(false));
-			this.set("global", Global.getInstance());
-			this.set("conf", Config.getConf());
-			this.set("local", Local.getInstance());
+			this.put("session", this.getSession(false));
+			this.put("global", Global.getInstance());
+			this.put("conf", Config.getConf());
+			this.put("local", Local.getInstance());
 
 			show(uri);
 			return true;
@@ -566,9 +566,9 @@ public class Controller {
 			this.put("this", this);
 			this.put("session", this.getSession(false));
 			this.put("global", Global.getInstance());
-			this.set("conf", Config.getConf());
-			this.set("local", Local.getInstance());
-			this.set("requestid", UID.random(20));
+			this.put("conf", Config.getConf());
+			this.put("local", Local.getInstance());
+			this.put("requestid", UID.random(20));
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -828,6 +828,7 @@ public class Controller {
 	/**
 	 * Sets name=object back to model which accessed by view.
 	 * 
+	 * @deprecated
 	 * @param name the name of data in model
 	 * @param o    the value object
 	 */
@@ -2014,18 +2015,17 @@ public class Controller {
 		this.setContentType(Controller.MIME_JSON);
 		this.print(jsonstr);
 
-		if (AccessLog.isOn()) {
-			try {
-				// TODO, may cause null exception
-				AccessLog.create(getRemoteHost(), uri,
-						V.create().set("status", getStatus()).set("header", Arrays.toString(getHeaders()))
-								.set("client", browser()).set("module", module.getName())
-								.set("model", getClass().getName()).append("request", this.getJSON().toString())
-								.append("response", jsonstr));
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
+//		if (AccessLog.isOn()) {
+//			try {
+//				AccessLog.create(getRemoteHost(), uri,
+//						V.create().set("status", getStatus()).set("header", Arrays.toString(getHeaders()))
+//								.set("client", browser()).set("module", module.getName())
+//								.set("model", getClass().getName()).append("request", this.getJSON().toString())
+//								.append("response", jsonstr));
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
 
 	}
 
@@ -2047,8 +2047,8 @@ public class Controller {
 
 			outputed++;
 
-			this.set("path", this.path);
-			this.set("query", this.query);
+			this.put("path", this.path);
+			this.put("query", this.query);
 
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
@@ -2108,7 +2108,6 @@ public class Controller {
 	 * On post requested from HTTP POST method.
 	 */
 	public void onPost() {
-		// TODO
 
 	}
 
@@ -2772,7 +2771,7 @@ public class Controller {
 		 */
 		Controller mo = Module.home.loadModelFromCache(method, uri);
 		if (mo != null) {
-			mo.set("__node", node);
+			mo.put("__node", node);
 
 			if (log.isDebugEnabled())
 				log.debug("cost=" + t.past() + ", find model, uri=" + uri + ", model=" + mo);
@@ -2785,20 +2784,20 @@ public class Controller {
 				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
 						+ " " + mo);
 
-			if (AccessLog.isOn()) {
-
-				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-				User u1 = mo.getUser();
-				if (u1 != null) {
-					v.set("uid", u1.getId()).set("username", u1.get("name"));
-				}
-
-				AccessLog.create(mo.getRemoteHost(), uri,
-						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-								.set("client", mo.browser())
-								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-								.set("model", mo.getClass().getName()));
-			}
+//			if (AccessLog.isOn()) {
+//
+//				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+//				User u1 = mo.getUser();
+//				if (u1 != null) {
+//					v.set("uid", u1.getId()).set("username", u1.get("name"));
+//				}
+//
+//				AccessLog.create(mo.getRemoteHost(), uri,
+//						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
+//								.set("client", mo.browser())
+//								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+//								.set("model", mo.getClass().getName()));
+//			}
 //			}
 
 			// Counter.max("web.request.max", t.past(), uri);
@@ -2821,18 +2820,18 @@ public class Controller {
 				m.resp = resp;
 				m.set(m);
 
-				m.set("me", m.getUser());
+				m.put("me", m.getUser());
 				m.put("lang", m.lang);
 				m.put(X.URI, uri);
 				m.put("module", Module.home);
 				m.put("request", req);
 				m.put("this", m);
 				m.put("response", resp);
-				m.set("session", m.getSession(false));
-				m.set("global", Global.getInstance());
-				m.set("conf", Config.getConf());
-				m.set("local", Local.getInstance());
-				m.set("requestid", UID.random(20));
+				m.put("session", m.getSession(false));
+				m.put("global", Global.getInstance());
+				m.put("conf", Config.getConf());
+				m.put("local", Local.getInstance());
+				m.put("requestid", UID.random(20));
 				View.merge(f, m, uri);
 
 				return;
@@ -2899,7 +2898,7 @@ public class Controller {
 					if (log.isDebugEnabled())
 						log.debug("cost " + t.past() + ", find the model, uri=" + uri + ", model=" + mo);
 
-					mo.set("__node", node);
+					mo.put("__node", node);
 
 					mo.setPath(path);
 //					Path p = 
@@ -2910,20 +2909,20 @@ public class Controller {
 						log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -"
 								+ mo.getRemoteHost() + " " + mo);
 
-					if (AccessLog.isOn()) {
-
-						V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-						User u1 = mo.getUser();
-						if (u1 != null) {
-							v.set("uid", u1.getId()).set("username", u1.get("name"));
-						}
-
-						AccessLog.create(mo.getRemoteHost(), uri,
-								v.set("status", mo.getStatus()).set("client", mo.browser())
-										.set("header", Arrays.toString(mo.getHeaders()))
-										.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-										.set("model", mo.getClass().getName()));
-					}
+//					if (AccessLog.isOn()) {
+//
+//						V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+//						User u1 = mo.getUser();
+//						if (u1 != null) {
+//							v.set("uid", u1.getId()).set("username", u1.get("name"));
+//						}
+//
+//						AccessLog.create(mo.getRemoteHost(), uri,
+//								v.set("status", mo.getStatus()).set("client", mo.browser())
+//										.set("header", Arrays.toString(mo.getHeaders()))
+//										.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+//										.set("model", mo.getClass().getName()));
+//					}
 //					}
 
 					// Counter.max("web.request.max", t.past(), uri);
@@ -2940,7 +2939,7 @@ public class Controller {
 
 			mo = new DefaultController();
 			mo.module = Module.load(0);
-			mo.set("__node", node);
+			mo.put("__node", node);
 
 			/**
 			 * do not put in model cache, <br>
@@ -2953,20 +2952,20 @@ public class Controller {
 			if (log.isInfoEnabled())
 				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
 						+ " " + mo);
-			if (AccessLog.isOn()) {
-
-				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-				User u1 = mo.getUser();
-				if (u1 != null) {
-					v.set("uid", u1.getId()).set("username", u1.get("name"));
-				}
-
-				AccessLog.create(mo.getRemoteHost(), uri,
-						v.set("status", mo.getStatus()).set("client", mo.browser())
-								.set("header", Arrays.toString(mo.getHeaders()))
-								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-								.set("model", mo.getClass().getName()));
-			}
+//			if (AccessLog.isOn()) {
+//
+//				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+//				User u1 = mo.getUser();
+//				if (u1 != null) {
+//					v.set("uid", u1.getId()).set("username", u1.get("name"));
+//				}
+//
+//				AccessLog.create(mo.getRemoteHost(), uri,
+//						v.set("status", mo.getStatus()).set("client", mo.browser())
+//								.set("header", Arrays.toString(mo.getHeaders()))
+//								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+//								.set("model", mo.getClass().getName()));
+//			}
 
 			// Counter.max("web.request.max", t.past(), uri);
 		}
@@ -2979,15 +2978,15 @@ public class Controller {
 		 * load model from the modules
 		 */
 
-		while (uri.indexOf("//") > -1) {
-			uri = uri.replaceAll("//", "/");
-		}
+//		while (uri.indexOf("//") > -1) {
+//			uri = uri.replaceAll("//", "/");
+//		}
 //		log.debug("_dispatch, uri=" + uri);
 
 		Controller mo = getModel(method, uri, uri);
 		if (mo != null) {
 
-			mo.set("__node", req.getParameter("__node"));
+			mo.put("__node", req.getParameter("__node"));
 
 //			Path p = 
 			mo.dispatch(uri, req, resp, method);
@@ -2997,17 +2996,17 @@ public class Controller {
 				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.pastms() + "ms -" + mo.getRemoteHost()
 						+ " " + mo);
 
-			V v = V.create("method", method.toString()).set("cost", t.pastms()).set("sid", mo.sid());
-			User u1 = mo.getUser();
-			if (u1 != null) {
-				v.set("uid", u1.getId()).set("username", u1.get("name"));
-			}
-			if (AccessLog.isOn())
-				AccessLog.create(mo.getRemoteHost(), uri,
-						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-								.set("client", mo.browser())
-								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-								.set("model", mo.getClass().getName()));
+//			V v = V.create("method", method.toString()).set("cost", t.pastms()).set("sid", mo.sid());
+//			User u1 = mo.getUser();
+//			if (u1 != null) {
+//				v.set("uid", u1.getId()).set("username", u1.get("name"));
+//			}
+//			if (AccessLog.isOn())
+//				AccessLog.create(mo.getRemoteHost(), uri,
+//						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
+//								.set("client", mo.browser())
+//								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
+//								.set("model", mo.getClass().getName()));
 //			}
 
 			// Counter.max("web.request.max", t.past(), uri);
