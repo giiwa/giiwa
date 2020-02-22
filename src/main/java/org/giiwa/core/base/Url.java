@@ -16,10 +16,10 @@ public class Url {
 	private static Log log = LogFactory.getLog(Url.class);
 
 	String url;
-	String protocol;
+	String protocol = "http";
 	String uri;
 	String ip;
-	String port;
+	String port = "";
 
 	Map<String, String> query;
 

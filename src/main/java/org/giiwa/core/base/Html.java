@@ -21,6 +21,7 @@ import javax.swing.text.html.parser.ParserDelegator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.net.Http;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
@@ -146,10 +147,6 @@ public final class Html {
 		}
 
 		return body;
-	}
-
-	public StringFinder finder() {
-		return StringFinder.create(body());
 	}
 
 	/**
@@ -320,6 +317,12 @@ public final class Html {
 	 */
 	public List<String> href(String... hosts) {
 
+		Set<String> hh = new HashSet<String>();
+		if (!X.isEmpty(hosts)) {
+			hh.addAll(Arrays.asList(hosts));
+		}
+		hh.add(_server(url) + ".*");
+
 		List<String> l2 = new ArrayList<String>();
 
 		List<Element> l1 = find("a");
@@ -344,7 +347,7 @@ public final class Html {
 
 				log.debug("href, url=" + href);
 
-				if (!l2.contains(href) && _match(href, hosts)) {
+				if (!l2.contains(href) && _match(href, hh)) {
 					l2.add(href);
 				}
 			}
@@ -355,9 +358,9 @@ public final class Html {
 		return l2;
 	}
 
-	private boolean _match(String href, String[] domains) {
+	private boolean _match(String href, Set<String> domains) {
 
-		if (domains == null || domains.length == 0)
+		if (domains == null || domains.isEmpty())
 			return true;
 
 		for (String s : domains) {
@@ -435,14 +438,15 @@ public final class Html {
 		System.out.println("5:" + h.find(".aaa .a"));
 		// System.out.println("5:" + h.find(".aaa .a(aaaa)"));
 
-	}
+		s = "https://www.giisoo.com/";
+		Http http = Http.create();
+		Http.Response r = http.get(s);
+		h = r.html();
 
-	/**
-	 * @deprecated
-	 * @return
-	 */
-	public StringFinder getFinder() {
-		return finder();
+		h.url = s;
+		List<String> l1 = h.href(".*");
+		System.out.println(l1);
+
 	}
 
 }
