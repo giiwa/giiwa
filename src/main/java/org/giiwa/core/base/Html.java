@@ -21,6 +21,7 @@ import javax.swing.text.html.parser.ParserDelegator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.core.bean.X;
+import org.giiwa.core.json.JSON;
 import org.giiwa.core.net.Http;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
@@ -315,7 +316,7 @@ public final class Html {
 	 * @param hosts
 	 * @return
 	 */
-	public List<String> href(String... hosts) {
+	public Collection<JSON> href(String... hosts) {
 
 		Set<String> hh = new HashSet<String>();
 		if (!X.isEmpty(hosts)) {
@@ -323,7 +324,7 @@ public final class Html {
 		}
 		hh.add(_server(url) + ".*");
 
-		List<String> l2 = new ArrayList<String>();
+		Map<String, JSON> l2 = new HashMap<String, JSON>();
 
 		List<Element> l1 = find("a");
 //		 log.debug("spider url = " + l1.size());
@@ -347,15 +348,15 @@ public final class Html {
 
 				log.debug("href, url=" + href);
 
-				if (!l2.contains(href) && _match(href, hh)) {
-					l2.add(href);
+				if (!l2.containsKey(href) && _match(href, hh)) {
+					l2.put(href, JSON.create().append("href", href).append("label", e1.text()));
 				}
 			}
 		}
 
 //		log.debug("href, l2=" + l2);
 
-		return l2;
+		return l2.values();
 	}
 
 	private boolean _match(String href, Set<String> domains) {
@@ -444,7 +445,7 @@ public final class Html {
 		h = r.html();
 
 		h.url = s;
-		List<String> l1 = h.href(".*");
+		Collection<JSON> l1 = h.href(".*");
 		System.out.println(l1);
 
 	}
