@@ -700,6 +700,9 @@ public final class JSON extends HashMap<String, Object> {
 			System.out.println(j2);
 			System.out.println(o);
 
+			j1.scan((p, e) -> {
+				System.out.println(e.getKey() + "=" + e.getValue());
+			});
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1139,34 +1142,30 @@ public final class JSON extends HashMap<String, Object> {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	private void _scan(Object o, BiConsumer<JSON, Entry> func) {
-
-		if (o instanceof JSON) {
-			((JSON) o).scan(func);
-		} else if (o instanceof Collection || o.getClass().isArray()) {
-			X.asList(o, e -> {
-				if (e instanceof JSON) {
-					((JSON) o).scan(func);
-				} else if (e instanceof Collection || e.getClass().isArray()) {
-					_scan(e, func);
-				}
-				return null;
-			});
-		}
+	private void _scan_list(Object o, BiConsumer<JSON, Entry> func) {
+		X.asList(o, e -> {
+			if (e instanceof JSON) {
+				((JSON) e).scan(func);
+			} else if (e instanceof Collection || e.getClass().isArray()) {
+				_scan_list(e, func);
+			}
+			return null;
+		});
 	}
 
 	@SuppressWarnings("rawtypes")
 	public JSON scan(BiConsumer<JSON, Entry> func) {
 
-		this.entrySet().parallelStream().forEach(e -> {
+		Entry[] ee = this.entrySet().toArray(new Entry[this.size()]);
+		for (Entry e : ee) {
 			func.accept(this, e);
 
 			if (e.getValue() instanceof JSON) {
 				((JSON) e.getValue()).scan(func);
 			} else if (e.getValue() instanceof List || e.getValue().getClass().isArray()) {
-				_scan(e.getValue(), func);
+				_scan_list(e.getValue(), func);
 			}
-		});
+		}
 		return this;
 	}
 
