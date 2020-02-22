@@ -24,6 +24,7 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.bean.Helper.W;
+import org.giiwa.core.conf.Config;
 import org.giiwa.core.bean.Schema;
 import org.giiwa.core.json.JSON;
 import org.giiwa.framework.bean.GLog;
@@ -83,8 +84,25 @@ public class database extends Controller {
 	@Path(path = "drop", login = true, access = "access.config.admin")
 	public void drop() {
 
+		String t = Config.getConf().getString("drop.table");
+
+		if (!X.isIn(t, "t", "yes", "1", "y", "true")) {
+			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "禁止删除，请配置[drop.table=y]"));
+			return;
+		}
+
 		String table = this.getString("table");
-		Helper.drop(table, Helper.DEFAULT);
+		if (table.contains("*")) {
+			List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
+			l1.forEach(j1 -> {
+				String name = j1.getString("table_name");
+				if (name.matches(table)) {
+					Helper.drop(name, Helper.DEFAULT);
+				}
+			});
+		} else {
+			Helper.drop(table, Helper.DEFAULT);
+		}
 		GLog.oplog.warn(database.class, "drop", "table=" + table, login, this.getRemoteHost());
 		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
