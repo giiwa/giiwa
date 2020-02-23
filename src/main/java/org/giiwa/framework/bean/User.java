@@ -296,7 +296,7 @@ public class User extends Bean {
 
 		User u = dao.load(id);
 		if (u != null && !X.isEmpty(u.photo)) {
-			if (X.isSame(nickname, u.nickname) || !u.photo.startsWith("/f/g/")) {
+			if (X.isSame(nickname, u.nickname) || u.photo.startsWith("/f/g/")) {
 				return;
 			}
 		}

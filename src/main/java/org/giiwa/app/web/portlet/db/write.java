@@ -22,7 +22,7 @@ public class write extends portlet {
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			this.set("list", bs);
+			this.put("list", bs);
 			this.show("/portlet/db/write.html");
 		}
 	}
