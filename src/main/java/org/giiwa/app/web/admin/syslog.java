@@ -111,7 +111,6 @@ public class syslog extends Controller {
 		Beans<GLog> bs = GLog.dao.load(w.sort("created", -1).sort("level", -1), s, n);
 		this.set(bs, s, n);
 
-		this.query().path("/admin/syslog");
 		this.show("/admin/syslog.index.html");
 	}
 

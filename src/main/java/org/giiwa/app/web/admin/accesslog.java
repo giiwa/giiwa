@@ -85,7 +85,6 @@ public class accesslog extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/accesslog");
 		this.show("/admin/accesslog.index.html");
 	}
 

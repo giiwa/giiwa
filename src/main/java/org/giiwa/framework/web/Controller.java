@@ -149,12 +149,6 @@ public class Controller {
 	 */
 	protected Module module;
 
-	/**
-	 * @deprecated <br>
-	 *             the query string of the request
-	 */
-	private QueryString _query;
-
 	public static ServletContext s️ervletContext;
 
 	/**
@@ -608,19 +602,6 @@ public class Controller {
 		return null;
 	}
 
-	protected QueryString query() {
-		if (_query == null) {
-			String url = uri;
-
-			if (url.endsWith("/")) {
-				url = url.substring(0, url.length() - 1);
-			}
-			_query = new QueryString(url).copy(this);
-			this.set("query", _query);
-		}
-		return _query;
-	}
-
 	/**
 	 * Goto login.
 	 */
@@ -1062,7 +1043,6 @@ public class Controller {
 			} else {
 				Session s = this.getSession(false);
 				r = s == null ? null : (String) s.get(tagInSession);
-				query().append(tag, r);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -2045,9 +2025,6 @@ public class Controller {
 			}
 
 			outputed++;
-
-			this.put("path", this.path);
-			this.put("query", this.query());
 
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);

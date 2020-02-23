@@ -101,7 +101,6 @@ public class app extends Controller {
 
 		App a = App.dao.load(id);
 		this.set("a", a);
-		this.query().path("/admin/app/edit");
 
 		this.show("/admin/app.edit.html");
 	}

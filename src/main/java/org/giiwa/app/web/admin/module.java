@@ -700,8 +700,6 @@ public class module extends Controller {
 
 		this.set("list", Module.getAll(false));
 
-		this.query().path("/admin/module");
-
 		this.show("/admin/module.index.html");
 
 	}

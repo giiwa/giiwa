@@ -139,7 +139,6 @@ public class node extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/node");
 		this.show("/admin/node.index.html");
 	}
 
@@ -156,7 +155,6 @@ public class node extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/node/usage");
 		this.show("/admin/node.usage.html");
 	}
 
@@ -173,7 +171,6 @@ public class node extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/node/threads");
 		this.show("/admin/node.threads.html");
 	}
 
@@ -190,7 +187,6 @@ public class node extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/node/tcpestablished");
 		this.show("/admin/node.tcpestablished.html");
 	}
 
@@ -207,7 +203,6 @@ public class node extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/node/tcpclosewait");
 		this.show("/admin/node.tcpclosewait.html");
 	}
 
@@ -224,7 +219,6 @@ public class node extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/node/running");
 		this.show("/admin/node.running.html");
 	}
 
@@ -241,7 +235,6 @@ public class node extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/node/pending");
 		this.show("/admin/node.pending.html");
 	}
 

@@ -1224,6 +1224,8 @@ giiwa
 				if (!uri)
 					return;
 
+				giiwa.history(uri);
+
 				giiwa.processing.show();
 
 				giiwa.popup() && giiwa.popup().close();

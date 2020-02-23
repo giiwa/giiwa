@@ -43,8 +43,6 @@ public class profile extends Controller {
 	@Path(path = "get/(.*)", login = true)
 	final public Object get(String name) {
 
-		this.query().path("/admin/profile/get/" + name);
-
 		Class<? extends profile> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/get/" + c);

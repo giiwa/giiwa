@@ -63,7 +63,6 @@ public class database extends Controller {
 			}
 		}
 		this.set("list", l2.values());
-		this.query().path("/admin/database");
 
 		this.show("/admin/database.index.html");
 

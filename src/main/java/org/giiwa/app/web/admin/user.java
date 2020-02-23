@@ -354,8 +354,6 @@ public class user extends Controller {
 		bs.count();
 		this.set(bs, s, n);
 
-		this.query().path("/admin/user");
-
 		this.show("/admin/user.index.html");
 	}
 

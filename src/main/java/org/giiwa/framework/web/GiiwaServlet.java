@@ -67,8 +67,8 @@ public class GiiwaServlet extends HttpServlet {
 //			uri = uri.replaceAll("//", "/");
 //		}
 
-//		if (log.isDebugEnabled())
-//			log.debug(req.getMethod() + " - " + uri);
+		if (log.isDebugEnabled())
+			log.debug(req.getMethod() + " - " + uri);
 
 		if (_domain == null) {
 			_domain = Global.getString("cross.domain", "");
@@ -78,7 +78,7 @@ public class GiiwaServlet extends HttpServlet {
 		}
 
 		try {
-			
+
 			Controller.process(uri, r1, r2, req.getMethod(), t);
 		} finally {
 			if (log.isInfoEnabled())

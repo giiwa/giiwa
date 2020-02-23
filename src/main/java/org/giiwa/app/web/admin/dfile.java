@@ -62,8 +62,6 @@ public class dfile extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/dfile/disk");
-
 		this.show("/admin/dfile.disk.html");
 
 	}
@@ -235,8 +233,6 @@ public class dfile extends Controller {
 
 		Collection<DFile> list = Disk.list(p);
 		this.set("list", list);
-
-		this.query().path("/admin/dfile/folder");
 
 		this.show("/admin/dfile.folder.html");
 	}

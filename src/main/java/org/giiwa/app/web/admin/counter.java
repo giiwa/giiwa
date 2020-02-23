@@ -71,7 +71,6 @@ public class counter extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query().path("/admin/counter");
 		this.show("/admin/counter.index.html");
 	}
 

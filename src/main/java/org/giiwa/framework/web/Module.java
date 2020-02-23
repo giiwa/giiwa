@@ -1423,19 +1423,12 @@ public class Module {
 //						}
 //					} else {
 			c = CachedModel.create(c1, path, this);
-			if (!X.isEmpty(original))
+			if (original != null)
 				_cache(method + "|" + original, c);
 
-//						 log.debug("uri=" + (method + "|" + uri));
-//					}
-//				}
-//			}
+			Controller m = c.create(uri);
 
-			if (c != null) {
-				Controller m = c.create(uri);
-
-				return m;
-			}
+			return m;
 
 			// System.out.println("loading [" + name + "], c=" + c);
 

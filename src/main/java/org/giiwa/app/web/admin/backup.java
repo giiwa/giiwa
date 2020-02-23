@@ -100,7 +100,6 @@ public class backup extends Controller {
 
 		});
 		this.set("list", list);
-		this.query().path("/admin/backup");
 
 		this.show("/admin/backup.index.html");
 
