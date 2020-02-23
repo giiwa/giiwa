@@ -1082,12 +1082,12 @@ public final class Http {
 						}
 
 						byte[] b1 = bb.array();
-						StringFinder sf = StringFinder.create(new String(b1));
+						StringFinder sf = StringFinder.create(new String(b1, 0, bb.position()));
 						String cc = sf.get("charset=", "\"");
-						if(X.isEmpty(cc)) {
+						if (X.isEmpty(cc)) {
 							cc = cs;
 						}
-						context = new String(b1, cc);
+						context = new String(b1, 0, bb.position(), cc);
 
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
@@ -1127,14 +1127,14 @@ public final class Http {
 			}
 
 			byte[] b1 = bb.array();
-			StringFinder sf = StringFinder.create(new String(b1));
+			StringFinder sf = StringFinder.create(new String(b1, 0, bb.position()));
 			String cc = sf.get("charset=", "\"");
 
 			if (X.isEmpty(cc)) {
 				cc = cs;
 			}
 
-			return new String(b1, cc);
+			return new String(b1, 0, bb.position(), cc);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
