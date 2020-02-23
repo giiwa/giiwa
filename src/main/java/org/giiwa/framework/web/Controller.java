@@ -507,10 +507,6 @@ public class Controller {
 
 	}
 
-	/**
-	 * @deprecated
-	 * @return
-	 */
 //	private boolean staticfile() {
 //		String uri = this.uri;
 //		if (!X.isEmpty(path) && !X.isSame(path, X.NONE)) {
@@ -783,8 +779,9 @@ public class Controller {
 	 * Forward to the model(url), do not response yet
 	 * 
 	 * @param url the url
+	 * @throws IOException
 	 */
-	public void forward(String url) {
+	public void forward(String url) throws IOException {
 		req.setAttribute("sid", sid());
 		Controller.process(url, req, resp, method.name, TimeStamp.create());
 	}
@@ -1968,6 +1965,7 @@ public class Controller {
 	 * @param jo the json that will be output
 	 */
 	final public void response(JSON jo) {
+		
 		if (outputed > 0) {
 			Exception e = new Exception("response twice!");
 			GLog.applog.error(this.getClass(), "response", e.getMessage(), e);
@@ -2443,7 +2441,6 @@ public class Controller {
 	final public void print(Object o) {
 		try {
 			BufferedWriter writer = new BufferedWriter(resp.getWriter());
-
 			writer.write(o.toString());
 			writer.flush();
 		} catch (Exception e) {
@@ -2752,23 +2749,24 @@ public class Controller {
 	 * @param req    the req
 	 * @param resp   the resp
 	 * @param method the method
+	 * @throws IOException
 	 */
-	public static void process(String uri, HttpServletRequest req, HttpServletResponse resp, String method,
-			TimeStamp t) {
+	public static void process(String uri, HttpServletRequest req, HttpServletResponse resp, String method, TimeStamp t)
+			throws IOException {
 
 		// log.debug("uri=" + uri);
 
 //		String node = null;
 
-		String node = req.getParameter("__node");
-		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
-			Node n = Node.dao
-					.load(W.create(X.ID, node).and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte));
-			if (n != null) {
-				n.forward(uri, req, resp, method);
-				return;
-			}
-		}
+//		String node = req.getParameter("__node");
+//		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
+//			Node n = Node.dao
+//					.load(W.create(X.ID, node).and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte));
+//			if (n != null) {
+//				n.forward(uri, req, resp, method);
+//				return;
+//			}
+//		}
 
 //		if (!uri.endsWith(".js") && !uri.endsWith(".css")) {
 //			uri = Url.decode(uri);
@@ -2779,48 +2777,24 @@ public class Controller {
 		 */
 		Controller mo = Module.home.loadModelFromCache(method, uri);
 		if (mo != null) {
-			mo.put("__node", node);
+//			mo.put("__node", node);
 
 			if (log.isDebugEnabled())
 				log.debug("cost=" + t.past() + ", find model, uri=" + uri + ", model=" + mo);
 
-//			Path p = 
 			mo.dispatch(uri, req, resp, method);
 
-//			if (p == null) {
-//			if (log.isInfoEnabled())
-//				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
-//						+ " " + mo);
-
-//			if (AccessLog.isOn()) {
-//
-//				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-//				User u1 = mo.getUser();
-//				if (u1 != null) {
-//					v.set("uid", u1.getId()).set("username", u1.get("name"));
-//				}
-//
-//				AccessLog.create(mo.getRemoteHost(), uri,
-//						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-//								.set("client", mo.browser())
-//								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-//								.set("model", mo.getClass().getName()));
-//			}
-//			}
-
-			// Counter.max("web.request.max", t.past(), uri);
 			return;
 		}
 
-		if (log.isDebugEnabled())
-			log.debug("cost=" + t.past() + ", no model for uri=" + uri);
+//		if (log.isDebugEnabled())
+//			log.debug("cost=" + t.past() + ", no model for uri=" + uri);
 
-		{
-			Controller m1 = getModel(method, uri, uri);
-			if (m1 != null) {
-				m1.dispatch(uri, req, resp, method);
-				return;
-			}
+
+		Controller m1 = getModel(method, uri, uri);
+		if (m1 != null) {
+			m1.dispatch(uri, req, resp, method);
+			return;
 		}
 
 		// parallel
@@ -2906,9 +2880,9 @@ public class Controller {
 			Controller[] m = new Controller[1];
 
 			welcomes.parallelStream().forEach(s -> {
-				Controller m1 = getModel(method, uri.endsWith("/") ? (uri + s) : (uri + "/" + s), uri);
-				if (m1 != null) {
-					m[0] = m1;
+				Controller m2 = getModel(method, uri.endsWith("/") ? (uri + s) : (uri + "/" + s), uri);
+				if (m2 != null) {
+					m[0] = m2;
 				}
 			});
 
@@ -2938,7 +2912,7 @@ public class Controller {
 				if (log.isDebugEnabled())
 					log.debug("cost " + t.past() + ", find the model, uri=" + uri + ", model=" + mo);
 
-				mo.put("__node", node);
+//				mo.put("__node", node);
 
 				mo.setPath(path);
 //					Path p = 
@@ -2979,7 +2953,7 @@ public class Controller {
 
 		mo = new DefaultController();
 		mo.module = Module.load(0);
-		mo.put("__node", node);
+//		mo.put("__node", node);
 
 		/**
 		 * do not put in model cache, <br>

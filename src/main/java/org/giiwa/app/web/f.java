@@ -307,7 +307,7 @@ public class f extends Controller {
 	}
 
 	@Path(path = "alive")
-	public void live() {
+	public void alive() {
 		JSON jo = new JSON();
 		jo.put(X.STATE, 200);
 		jo.put("uptime", System.currentTimeMillis() - Controller.UPTIME);

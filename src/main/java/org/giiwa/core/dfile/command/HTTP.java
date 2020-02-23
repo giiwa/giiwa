@@ -37,6 +37,16 @@ public class HTTP implements ICommand {
 			X.close(resp);
 
 			handler.send(out);
+		} catch (Exception e) {
+			try {
+				Response out = Response.create(in.seq, Request.BIG);
+				out.writeInt(500);
+				out.writeString(X.EMPTY);
+				out.writeBytes(e.getMessage().getBytes());
+				handler.send(out);
+			} catch (Exception e1) {
+
+			}
 		} finally {
 			if (log.isInfoEnabled())
 				log.info(m + " - " + uri + ", cost=" + t.past());

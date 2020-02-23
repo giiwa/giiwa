@@ -1382,26 +1382,27 @@ public class Module {
 
 		try {
 
-			method = method.toUpperCase();
+//			method = method.toUpperCase();
 
 			// log.debug("looking for model for <" + method + "|" + uri + ">");
 
 			CachedModel c = null;
-			synchronized (_modelcache) {
-				c = X.isEmpty(original) ? null : _modelcache.get(method + "|" + original);
-				// log.debug("uri=" + (method + "|" + uri));
-				if (c == null) {
-					/**
-					 * looking for the model class
-					 */
-					String name = (pack + "." + uri).replace("/", ".").replace("..", ".");
 
-					Class<Controller> c1 = (Class<Controller>) Class.forName(name);
+//			synchronized (_modelcache) {
+//			c = X.isEmpty(original) ? null : _modelcache.get(method + "|" + original);
+//			// log.debug("uri=" + (method + "|" + uri));
+//			if (c == null) {
+			/**
+			 * looking for the model class
+			 */
+			String name = (pack + uri).replace("/", ".").replace("..", ".");
 
-					/**
-					 * cache it and cache all the path
-					 */
-					Map<String, Map<String, Controller.PathMapping>> path = _loadPath(c1);
+			Class<Controller> c1 = (Class<Controller>) Class.forName(name);
+
+			/**
+			 * cache it and cache all the path
+			 */
+			Map<String, Map<String, Controller.PathMapping>> path = _loadPath(c1);
 //					if (path != null && path.size() > 0) {
 //						
 //						String u = uri;
@@ -1421,20 +1422,21 @@ public class Module {
 //
 //						}
 //					} else {
-					c = CachedModel.create(c1, path, this);
-					if (!X.isEmpty(original))
-						_cache(method + "|" + original, c);
+			c = CachedModel.create(c1, path, this);
+			if (!X.isEmpty(original))
+				_cache(method + "|" + original, c);
 
 //						 log.debug("uri=" + (method + "|" + uri));
 //					}
-				}
-			}
+//				}
+//			}
 
 			if (c != null) {
 				Controller m = c.create(uri);
 
 				return m;
 			}
+
 			// System.out.println("loading [" + name + "], c=" + c);
 
 		} catch (Throwable e) {
@@ -1443,6 +1445,9 @@ public class Module {
 			 */
 
 		}
+
+		if (log.isDebugEnabled())
+			log.debug("load model from floor");
 
 		Module e = floor();
 		if (e != null && e.getId() != this.id) {
@@ -1477,6 +1482,7 @@ public class Module {
 	}
 
 	private void _cache(String uri, CachedModel c) {
+
 		CachedModel c1 = _modelcache.get(uri);
 		if (c1 != null) {
 			if (c1.module.getId() > c.module.getId()) {

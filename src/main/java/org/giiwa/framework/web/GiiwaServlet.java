@@ -63,33 +63,30 @@ public class GiiwaServlet extends HttpServlet {
 		HttpServletResponse r2 = (HttpServletResponse) resp;
 
 		String uri = r1.getRequestURI();
-		while (uri.indexOf("//") > -1) {
-			uri = uri.replaceAll("//", "/");
+//		while (uri.indexOf("//") > -1) {
+//			uri = uri.replaceAll("//", "/");
+//		}
+
+//		if (log.isDebugEnabled())
+//			log.debug(req.getMethod() + " - " + uri);
+
+		if (_domain == null) {
+			_domain = Global.getString("cross.domain", "");
+		}
+		if (!X.isEmpty(_domain)) {
+			r2.addHeader("Access-Control-Allow-Origin", _domain);
 		}
 
-		if (log.isDebugEnabled())
-			log.debug(req.getMethod() + " - " + uri);
-
 		try {
-			/**
-			 * rewrite uri
-			 */
-//			uri = URL.rewrite(uri);
-			String domain = Global.getString("cross.domain", "");
-
-			if (!X.isEmpty(domain)) {
-				r2.addHeader("Access-Control-Allow-Origin", domain);
-			}
-
+			
 			Controller.process(uri, r1, r2, req.getMethod(), t);
-
-		} catch (Throwable e) {
-			log.error(e.getMessage(), e);
 		} finally {
 			if (log.isInfoEnabled())
-				log.info(req.getMethod() + " - " + uri + ", cost=" + t.past());
+				log.info(r1.getMethod() + " - " + uri + ", cost=" + t.past());
 		}
 
 	}
+
+	private static String _domain = null;
 
 }
