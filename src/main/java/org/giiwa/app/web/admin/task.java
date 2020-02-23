@@ -52,7 +52,7 @@ public class task extends Controller {
 
 		this.set("list", Task.getAll());
 
-		this.query.path("/admin/task");
+		this.query().path("/admin/task");
 		this.show("/admin/task.index.html");
 	}
 
@@ -235,7 +235,7 @@ public class task extends Controller {
 		this.set("states", states);
 		this.set("list", l1);
 
-		this.query.path("/admin/task/thread");
+		this.query().path("/admin/task/thread");
 		this.show("/admin/task.thread.html");
 
 	}
@@ -317,7 +317,7 @@ public class task extends Controller {
 
 		this.set("list", l1);
 
-		this.query.path("/admin/task/thread/deadlock");
+		this.query().path("/admin/task/thread/deadlock");
 		this.show("/admin/task.thread.deadlock.html");
 
 	}

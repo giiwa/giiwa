@@ -77,20 +77,18 @@ class DefaultController extends Controller {
 		if (f != null && f.exists() && f.isFile()) {
 			this.set(this);
 
-			this.put("me", this.getUser());
-			this.put("lang", lang);
-			this.put(X.URI, uri);
-			this.put("module", Module.home);
-			this.put("path", path);
-			this.put("request", req);
-			this.put("this", this);
-			this.put("response", resp);
-			this.put("session", this.getSession(false));
-			this.put("global", Global.getInstance());
-			this.put("conf", Config.getConf());
-			this.put("local", Local.getInstance());
-
-			createQuery();
+//			this.put("me", this.getUser());
+//			this.put("lang", lang);
+//			this.put(X.URI, uri);
+//			this.put("module", Module.home);
+//			this.put("path", path);
+//			this.put("request", req);
+//			this.put("this", this);
+//			this.put("response", resp);
+//			this.put("session", this.getSession(false));
+//			this.put("global", Global.getInstance());
+//			this.put("conf", Config.getConf());
+//			this.put("local", Local.getInstance());
 
 			show(uri);
 			return true;
@@ -102,20 +100,18 @@ class DefaultController extends Controller {
 			// show it
 			this.set(this);
 
-			this.put("me", this.getUser());
-			this.put("lang", lang);
-			this.put(X.URI, uri);
-			this.put("module", Module.home);
-			this.put("path", path);
-			this.put("request", req);
-			this.put("this", this);
-			this.put("response", resp);
-			this.put("session", this.getSession(false));
-			this.put("global", Global.getInstance());
-			this.put("conf", Config.getConf());
-			this.put("local", Local.getInstance());
-
-			createQuery();
+//			this.put("me", this.getUser());
+//			this.put("lang", lang);
+//			this.put(X.URI, uri);
+//			this.put("module", Module.home);
+//			this.put("path", path);
+//			this.put("request", req);
+//			this.put("this", this);
+//			this.put("response", resp);
+//			this.put("session", this.getSession(false));
+//			this.put("global", Global.getInstance());
+//			this.put("conf", Config.getConf());
+//			this.put("local", Local.getInstance());
 
 			show(uri);
 			return true;

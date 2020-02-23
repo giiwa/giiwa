@@ -207,8 +207,6 @@ public class role extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query.path("/admin/role");
-
 		this.show("/admin/role.index.html");
 	}
 
@@ -222,7 +220,7 @@ public class role extends Controller {
 
 		this.set(bs, s, n);
 
-		this.query.path("/admin/role/access");
+		this.query().path("/admin/role/access");
 
 		this.show("/admin/role.access.html");
 	}

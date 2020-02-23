@@ -101,7 +101,7 @@ public class app extends Controller {
 
 		App a = App.dao.load(id);
 		this.set("a", a);
-		this.query.path("/admin/app/edit");
+		this.query().path("/admin/app/edit");
 
 		this.show("/admin/app.edit.html");
 	}
@@ -157,7 +157,7 @@ public class app extends Controller {
 		W q = W.create();
 		if (X.isEmpty(this.path) && !X.isEmpty(name)) {
 			q.and("appid", name, W.OP.like);
-			this.set("name", name);
+			this.put("name", name);
 		}
 
 		int s = this.getInt("s");
@@ -166,8 +166,6 @@ public class app extends Controller {
 		Beans<App> bs = App.dao.load(q, s, n);
 		bs.count();
 		this.set(bs, s, n);
-
-		this.query.path("/admin/app");
 
 		this.show("/admin/app.index.html");
 	}

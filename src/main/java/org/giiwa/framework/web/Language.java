@@ -184,12 +184,11 @@ public class Language {
 	 */
 	public static Language getLanguage(String locale) {
 
-		if (locales.containsKey(locale)) {
-			return locales.get(locale);
+		Language l = locales.get(locale);
+		if (l == null) {
+			l = new Language(locale);
+			locales.put(locale, l);
 		}
-
-		Language l = new Language(locale);
-		locales.put(locale, l);
 		return l;
 
 	}

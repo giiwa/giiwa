@@ -86,7 +86,7 @@ public class token extends Controller {
 		Beans<AuthToken> bs = AuthToken.dao.load(q, s, n);
 		this.set(bs, s, n);
 
-		this.query.path("/admin/token");
+		this.query().path("/admin/token");
 
 		this.show("/admin/token.index.html");
 	}

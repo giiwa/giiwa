@@ -61,10 +61,10 @@ public final class Local extends Bean {
 	@Column(name = "l")
 	long l;
 
-	private static Local owner = new Local();
+	private static Local inst = new Local();
 
 	public static Local getInstance() {
-		return owner;
+		return inst;
 	}
 
 	/**

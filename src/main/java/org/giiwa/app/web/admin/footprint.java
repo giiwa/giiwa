@@ -77,7 +77,7 @@ public class footprint extends Controller {
 		Beans<Footprint> bs = Footprint.dao.load(q.sort("created", -1), s, n);
 		this.set(bs, s, n);
 
-		this.query.path("/admin/footprint");
+		this.query().path("/admin/footprint");
 		this.show("/admin/footprint.index.html");
 	}
 

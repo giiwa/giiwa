@@ -39,7 +39,6 @@ import org.giiwa.core.bean.Beans;
 import org.giiwa.core.bean.Helper;
 import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
 import org.giiwa.core.bean.UID;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Config;
@@ -138,7 +137,7 @@ public class Controller {
 	/**
 	 * locale of user
 	 */
-	protected String locale;
+	private static String locale;
 
 	/**
 	 * the uri of request
@@ -151,9 +150,10 @@ public class Controller {
 	protected Module module;
 
 	/**
-	 * the query string of the request
+	 * @deprecated <br>
+	 *             the query string of the request
 	 */
-	protected QueryString query;
+	private QueryString _query;
 
 	public static ServletContext s️ervletContext;
 
@@ -167,7 +167,7 @@ public class Controller {
 	 */
 	protected User login = null;
 
-	private static final ThreadLocal<Module> _currentmodule = new ThreadLocal<Module>();
+//	private static final ThreadLocal<Module> _currentmodule = new ThreadLocal<Module>();
 
 	protected static enum LoginType {
 		web, ajax
@@ -226,9 +226,9 @@ public class Controller {
 	 * 
 	 * @return the module
 	 */
-	public static Module currentModule() {
-		return _currentmodule.get();
-	}
+//	public static Module currentModule() {
+//		return _currentmodule.get();
+//	}
 
 	private Path process() throws Exception {
 
@@ -261,7 +261,7 @@ public class Controller {
 				path = X.NONE;
 			}
 
-			X.getCanonicalPath(path);
+//			X.getCanonicalPath(path);
 
 			while (path.startsWith("/") && path.length() > 1) {
 				path = path.substring(1);
@@ -355,12 +355,6 @@ public class Controller {
 							}
 
 							/**
-							 * set the "global" attribute for the model
-							 */
-
-							createQuery();
-
-							/**
 							 * invoke the method
 							 */
 							Method m = oo.method;
@@ -390,7 +384,11 @@ public class Controller {
 						GLog.oplog.error(this.getClass(), path, e.getMessage(), e, getUser(), this.getRemoteHost());
 
 						error(e);
+						return null;
 					}
+
+					break;
+
 				}
 			}
 		} // end of "pathmapping is not null
@@ -399,8 +397,6 @@ public class Controller {
 //		if (staticfile()) {
 //			return null;
 //		}
-
-		this.createQuery();
 
 		if (method.isGet()) {
 
@@ -562,7 +558,7 @@ public class Controller {
 			this.put("request", req);
 			this.put("response", resp);
 			this.put("this", this);
-			this.put("session", this.getSession(false));
+//			this.put("session", this.getSession(false));
 			this.put("global", Global.getInstance());
 			this.put("conf", Config.getConf());
 			this.put("local", Local.getInstance());
@@ -590,7 +586,7 @@ public class Controller {
 		// init
 		try {
 
-			_currentmodule.set(module);
+//			_currentmodule.set(module);
 
 			init(uri, req, resp, method);
 
@@ -605,22 +601,24 @@ public class Controller {
 		} catch (Exception e) {
 			error(e);
 		} finally {
-			_currentmodule.remove();
+//			_currentmodule.remove();
 
 			Module.home.after(this);
 		}
 		return null;
 	}
 
-	protected void createQuery() {
-		String url = uri;
+	protected QueryString query() {
+		if (_query == null) {
+			String url = uri;
 
-		if (url.endsWith("/")) {
-			url = url.substring(0, url.length() - 1);
+			if (url.endsWith("/")) {
+				url = url.substring(0, url.length() - 1);
+			}
+			_query = new QueryString(url).copy(this);
+			this.set("query", _query);
 		}
-		query = new QueryString(url).copy(this);
-		this.set("query", query);
-
+		return _query;
 	}
 
 	/**
@@ -628,13 +626,9 @@ public class Controller {
 	 */
 	final public void gotoLogin() {
 		if (this.uri != null && this.uri.indexOf("/user/") < 0) {
-			if (query == null) {
-				createQuery();
-			}
 			if (!isAjax()) {
 				try {
-					Session.load(sid()).set(X.URI, this.query == null ? this.uri : this.query.path(this.uri).toString())
-							.store();
+					Session.load(sid()).set(X.URI, this.uri).store();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -1068,7 +1062,7 @@ public class Controller {
 			} else {
 				Session s = this.getSession(false);
 				r = s == null ? null : (String) s.get(tagInSession);
-				query.append(tag, r);
+				query().append(tag, r);
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -1965,7 +1959,7 @@ public class Controller {
 	 * @param jo the json that will be output
 	 */
 	final public void response(JSON jo) {
-		
+
 		if (outputed > 0) {
 			Exception e = new Exception("response twice!");
 			GLog.applog.error(this.getClass(), "response", e.getMessage(), e);
@@ -2053,7 +2047,7 @@ public class Controller {
 			outputed++;
 
 			this.put("path", this.path);
-			this.put("query", this.query);
+			this.put("query", this.query());
 
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
@@ -2572,9 +2566,9 @@ public class Controller {
 	 * 
 	 * @param e the module
 	 */
-	public static void setCurrentModule(Module e) {
-		_currentmodule.set(e);
-	}
+//	public static void setCurrentModule(Module e) {
+//		_currentmodule.set(e);
+//	}
 
 	public static void main(String[] args) {
 		String s = "aaa.tgz";
@@ -2790,7 +2784,6 @@ public class Controller {
 //		if (log.isDebugEnabled())
 //			log.debug("cost=" + t.past() + ", no model for uri=" + uri);
 
-
 		Controller m1 = getModel(method, uri, uri);
 		if (m1 != null) {
 			m1.dispatch(uri, req, resp, method);
@@ -2983,51 +2976,6 @@ public class Controller {
 
 		// Counter.max("web.request.max", t.past(), uri);
 
-	}
-
-	private static boolean _dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method,
-			TimeStamp t) {
-
-		/**
-		 * load model from the modules
-		 */
-
-//		while (uri.indexOf("//") > -1) {
-//			uri = uri.replaceAll("//", "/");
-//		}
-//		log.debug("_dispatch, uri=" + uri);
-
-		Controller mo = getModel(method, uri, uri);
-		if (mo != null) {
-
-			mo.put("__node", req.getParameter("__node"));
-
-//			Path p = 
-			mo.dispatch(uri, req, resp, method);
-
-//			if (p == null) {
-			if (log.isInfoEnabled())
-				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " - " + mo.getRemoteHost()
-						+ " " + mo);
-
-//			V v = V.create("method", method.toString()).set("cost", t.pastms()).set("sid", mo.sid());
-//			User u1 = mo.getUser();
-//			if (u1 != null) {
-//				v.set("uid", u1.getId()).set("username", u1.get("name"));
-//			}
-//			if (AccessLog.isOn())
-//				AccessLog.create(mo.getRemoteHost(), uri,
-//						v.set("status", mo.getStatus()).set("header", Arrays.toString(mo.getHeaders()))
-//								.set("client", mo.browser())
-//								.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-//								.set("model", mo.getClass().getName()));
-//			}
-
-			// Counter.max("web.request.max", t.past(), uri);
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 }

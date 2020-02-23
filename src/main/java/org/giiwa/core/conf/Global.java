@@ -55,10 +55,10 @@ public final class Global extends Bean {
 	@Column(name = "memo")
 	String memo;
 
-	private static Global owner = new Global();
+	private static Global inst = new Global();
 
 	public static Global getInstance() {
-		return owner;
+		return inst;
 	}
 
 	/**
