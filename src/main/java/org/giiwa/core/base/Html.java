@@ -315,14 +315,19 @@ public final class Html {
 	 * @param refer
 	 * @param hosts
 	 * @return
+	 * @throws Exception
 	 */
-	public Collection<JSON> href(String... hosts) {
+	public Collection<JSON> href(String... hosts) throws Exception {
+
+		if (X.isEmpty(url))
+			throw new Exception("url is not setting");
 
 		Set<String> hh = new HashSet<String>();
 		if (!X.isEmpty(hosts)) {
 			hh.addAll(Arrays.asList(hosts));
+		} else {
+			hh.add(_server(url));
 		}
-		hh.add(_server(url) + ".*");
 
 		Map<String, JSON> l2 = new HashMap<String, JSON>();
 
@@ -346,7 +351,8 @@ public final class Html {
 				}
 				href = _format(href);
 
-				log.debug("href, url=" + href);
+//				log.debug("href, url=" + href);
+//				System.out.println("url=" + href);
 
 				if (!l2.containsKey(href) && _match(href, hh)) {
 					l2.put(href, JSON.create().append("href", href).append("label", e1.text()));
@@ -365,7 +371,10 @@ public final class Html {
 			return true;
 
 		for (String s : domains) {
-			log.debug("href=" + href + ", s=" + s);
+//			log.debug("href=" + href + ", s=" + s);
+//
+//			System.out.println("href=" + href + ", s=" + s + ", matches?=" + href.matches(s));
+
 			if (href.matches(s)) {
 				return true;
 			}
@@ -439,14 +448,21 @@ public final class Html {
 		System.out.println("5:" + h.find(".aaa .a"));
 		// System.out.println("5:" + h.find(".aaa .a(aaaa)"));
 
-		s = "https://www.pingshu8.com/";
+		s = "https://www.pingshu8.com/MusicList/mmc_7_5654_1.htm";
 		Http http = Http.create();
-		Http.Response r = http.get(s, "gb2312", X.AMINUTE);
+		Http.Response r = http.get(s);
 		h = r.html();
 
-		h.url = s;
-		Collection<JSON> l1 = h.href();
-		System.out.println(l1);
+		try {
+
+			h.url = s;
+			String p = "(https://www.pingshu8.com/Musiclist/mmc_7_5654_\\d+.htm|https://www.pingshu8.com/play_\\d+.html)";
+			Collection<JSON> l1 = h.href(p);
+			System.out.println(l1);
+
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
 
 	}
 

@@ -20,9 +20,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -60,7 +60,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.ssl.SSLContexts;
-import org.apache.http.util.EntityUtils;
 import org.giiwa.core.base.Html;
 import org.giiwa.core.base.IOUtil;
 import org.giiwa.core.base.StringFinder;
@@ -147,17 +146,6 @@ public final class Http {
 	}
 
 	/**
-	 * Gets the.
-	 *
-	 * @param url     the url
-	 * @param timeout the milliseconds of timeout
-	 * @return the response
-	 */
-	public Response get(String url, long timeout) {
-		return get(url, null, null, timeout);
-	}
-
-	/**
 	 * GET response from a url.
 	 *
 	 * @param url     the url
@@ -165,8 +153,8 @@ public final class Http {
 	 * @param timeout the timeout
 	 * @return Response
 	 */
-	public Response get(String url, String charset, long timeout) {
-		return get(url, charset, null, timeout);
+	public Response get(String url, long timeout) {
+		return get(url, null, timeout);
 	}
 
 	/**
@@ -252,7 +240,7 @@ public final class Http {
 
 				resp = client.execute(post, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp, null);
+				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
 
 				if (log.isDebugEnabled())
@@ -345,7 +333,7 @@ public final class Http {
 	 * @return the response
 	 */
 	public Response get(String url, JSON headers) {
-		return get(url, null, headers, X.AMINUTE);
+		return get(url, headers, X.AMINUTE);
 	}
 
 	/**
@@ -357,7 +345,7 @@ public final class Http {
 	 * @param timeout the timeout
 	 * @return Response
 	 */
-	public Response get(String url, String charset, JSON headers, long timeout) {
+	public Response get(String url, JSON headers, long timeout) {
 
 		TimeStamp t = TimeStamp.create();
 
@@ -397,7 +385,7 @@ public final class Http {
 				if (log.isDebugEnabled())
 					log.debug("get url=" + url);
 
-				return _get(client, localContext, get, charset, timeout - t.pastms());
+				return _get(client, localContext, get, timeout - t.pastms());
 
 			} catch (Throwable e) {
 				log.error("\"" + url + "\"", e);
@@ -414,8 +402,8 @@ public final class Http {
 
 	}
 
-	private Response _get(CloseableHttpClient client, HttpClientContext context, HttpGet get, String charset,
-			long timeout) throws IOException {
+	private Response _get(CloseableHttpClient client, HttpClientContext context, HttpGet get, long timeout)
+			throws IOException {
 
 		TimeStamp t = TimeStamp.create();
 
@@ -427,11 +415,11 @@ public final class Http {
 			resp = client.execute(get, context);
 
 			r.status = resp.getStatusLine().getStatusCode();
-			r.body = getContext(resp, charset);
+			r.body = getContext(resp);
 			r.headers = resp.getAllHeaders();
 
 			if (timeout > t.pastms()) {
-				r = _redirecting(r, client, context, get, charset, timeout - t.pastms());
+				r = _redirecting(r, client, context, get, timeout - t.pastms());
 			}
 		} catch (Exception e) {
 			throw new IOException(get.getURI().toString(), e);
@@ -447,7 +435,7 @@ public final class Http {
 	}
 
 	private Response _redirecting(Response r, CloseableHttpClient client, HttpClientContext context, HttpGet get,
-			String charset, long timeout) throws IOException {
+			long timeout) throws IOException {
 		if (!X.isEmpty(r.body) && r.body.toLowerCase().contains("http-equiv=\"refresh\"")) {
 			Html h = Html.create(r.body);
 
@@ -483,7 +471,7 @@ public final class Http {
 						}
 					}
 
-					return _get(client, context, get1, charset, timeout);
+					return _get(client, context, get1, timeout);
 				}
 			}
 		}
@@ -719,7 +707,7 @@ public final class Http {
 
 				resp = client.execute(post, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp, null);
+				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
 
 				if (log.isDebugEnabled())
@@ -792,7 +780,7 @@ public final class Http {
 
 				resp = client.execute(put, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp, null);
+				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
 
 				if (log.isDebugEnabled())
@@ -860,7 +848,7 @@ public final class Http {
 
 				resp = client.execute(put, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp, null);
+				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
 
 				if (log.isDebugEnabled())
@@ -922,7 +910,7 @@ public final class Http {
 
 				resp = client.execute(delete, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp, null);
+				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
 
 				if (log.isDebugEnabled())
@@ -986,7 +974,7 @@ public final class Http {
 
 				resp = client.execute(head, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp, null);
+				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
 
 				if (log.isDebugEnabled())
@@ -1047,13 +1035,25 @@ public final class Http {
 		return builder.build();
 	}
 
-	private String getContext(HttpResponse response, String charset) {
+	private String getContext(HttpResponse response) {
+
+		String cs = "UTF-8";
+		Header[] hh = response.getHeaders("Content-Type");
+		if (hh != null) {
+			for (Header h : hh) {
+				StringFinder sf = StringFinder.create(h.getValue());
+				String s = sf.get("charset=", ";");
+				if (!X.isEmpty(s)) {
+					cs = s;
+				}
+			}
+		}
+
 		String context = null;
 
 		if (response.getEntity() != null) {
 			try {
 				HttpEntity entity = response.getEntity();
-				String ccs = EntityUtils.getContentCharSet(entity);
 
 				/**
 				 * fix the bug of http.util of apache
@@ -1063,45 +1063,40 @@ public final class Http {
 					encoding = entity.getContentEncoding().getValue();
 				}
 
-				if (ccs == null) {
-					ccs = charset;
-				}
-				if (ccs == null) {
-					ccs = "UTF-8";
-				}
 				if (encoding != null && encoding.indexOf("gzip") > -1) {
 
 					BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
 
 					entity = bufferedEntity;
 
-					StringBuilder sb = new StringBuilder();
+					ByteBuffer bb = ByteBuffer.allocate(2 * 1024 * 1024);
 
 					try {
 						GZIPInputStream in = new GZIPInputStream(bufferedEntity.getContent());
 
-						Reader reader = new InputStreamReader(in, ccs);
-
-						// String s = reader.readLine();
-						char[] buf = new char[2048];
-						int len = reader.read(buf);
+						byte[] buf = new byte[1024];
+						int len = in.read(buf);
 						while (len > 0) {
-							sb.append(buf, 0, len);
-							// sb.append(s).append("\r\n");
-							len = reader.read(buf);
-							// s = reader.readLine();
+							bb.put(buf, 0, len);
+							len = in.read(buf);
 						}
+
+						byte[] b1 = bb.array();
+						StringFinder sf = StringFinder.create(new String(b1));
+						String cc = sf.get("charset=", "\"");
+						if(X.isEmpty(cc)) {
+							cc = cs;
+						}
+						context = new String(b1, cc);
+
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
 					}
 
-					if (sb.length() > 0) {
-						context = sb.toString();
-					}
 				}
 
 				if (context == null || context.length() == 0) {
-					context = _getContext(entity, ccs);
+					context = _getContext(entity, cs);
 				}
 
 				// log.debug(context);
@@ -1114,24 +1109,33 @@ public final class Http {
 
 	}
 
-	private String _getContext(HttpEntity entity, String charset) {
-		StringBuilder sb = new StringBuilder();
+	private String _getContext(HttpEntity entity, String cs) {
 
-		InputStreamReader reader = null;
+		ByteBuffer bb = ByteBuffer.allocate(2 * 1024 * 1024);
+
+		InputStream reader = null;
 
 		try {
-			if (charset == null) {
-				reader = new InputStreamReader(entity.getContent());
-			} else {
-				reader = new InputStreamReader(entity.getContent(), charset);
-			}
 
-			char[] buf = new char[1024];
+			reader = entity.getContent();
+
+			byte[] buf = new byte[1024];
 			int len = reader.read(buf);
 			while (len > 0) {
-				sb.append(buf, 0, len);
+				bb.put(buf, 0, len);
 				len = reader.read(buf);
 			}
+
+			byte[] b1 = bb.array();
+			StringFinder sf = StringFinder.create(new String(b1));
+			String cc = sf.get("charset=", "\"");
+
+			if (X.isEmpty(cc)) {
+				cc = cs;
+			}
+
+			return new String(b1, cc);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
@@ -1144,7 +1148,7 @@ public final class Http {
 			}
 		}
 
-		return sb.toString();
+		return null;
 
 	}
 
@@ -1724,7 +1728,7 @@ public final class Http {
 
 				resp = client.execute(post, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp, null);
+				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
 
 //				if (log.isDebugEnabled())
