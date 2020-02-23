@@ -37,7 +37,7 @@
 									.upload(
 											this.files,
 											{
-												url : '/upload',
+												url : '/f/upload',
 												chunksize : 32 * 1024,
 												onstart : function(e) {
 													var s = '';

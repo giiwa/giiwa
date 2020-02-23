@@ -104,12 +104,12 @@ public class Repo {
 		while (i >= 0) {
 			if (i > 0) {
 				String s = id.substring(0, i);
-				if (s.equals("repo") || s.equals("download")) {
+				if (X.isIn(s, "f", "repo", "download")) {
 					id = id.substring(i + 1);
-					i = id.indexOf("/");
-					if (i > 0) {
-						id = id.substring(0, i);
-					}
+//					i = id.indexOf("/");
+//					if (i > 0) {
+//						id = id.substring(0, i);
+//					}
 				} else {
 					id = s;
 					break;
@@ -146,6 +146,7 @@ public class Repo {
 	public static Entity load(String id) {
 		try {
 			id = getId(id);
+			System.out.println("id=" + id);
 			return new Entity(id, null);
 		} catch (Exception e) {
 			log.error(id, e);
@@ -341,6 +342,12 @@ public class Repo {
 			}
 		}
 		return count;
+	}
+
+	public static void main(String[] args) {
+		String s = "123/aaa.jpg";
+		Entity e = Repo.load(s);
+		System.out.println(e.id);
 	}
 
 }

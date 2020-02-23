@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.License;
@@ -55,16 +56,21 @@ public class GiiwaServlet extends HttpServlet {
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		
+
+		TimeStamp t = TimeStamp.create();
+
+		HttpServletRequest r1 = (HttpServletRequest) req;
+		HttpServletResponse r2 = (HttpServletResponse) resp;
+
+		String uri = r1.getRequestURI();
+		while (uri.indexOf("//") > -1) {
+			uri = uri.replaceAll("//", "/");
+		}
+
+		if (log.isDebugEnabled())
+			log.debug(req.getMethod() + " - " + uri);
+
 		try {
-			HttpServletRequest r1 = (HttpServletRequest) req;
-			HttpServletResponse r2 = (HttpServletResponse) resp;
-
-			String uri = r1.getRequestURI();
-			while (uri.indexOf("//") > -1) {
-				uri = uri.replaceAll("//", "/");
-			}
-
 			/**
 			 * rewrite uri
 			 */
@@ -75,13 +81,13 @@ public class GiiwaServlet extends HttpServlet {
 				r2.addHeader("Access-Control-Allow-Origin", domain);
 			}
 
-			if (log.isDebugEnabled())
-				log.debug(req.getMethod() + ", uri=" + uri);
+			Controller.process(uri, r1, r2, req.getMethod(), t);
 
-			Controller.process(uri, r1, r2, req.getMethod());
-			
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			if (log.isInfoEnabled())
+				log.info(req.getMethod() + " - " + uri + ", cost=" + t.past());
 		}
 
 	}

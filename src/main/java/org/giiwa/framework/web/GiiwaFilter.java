@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.core.bean.TimeStamp;
 import org.giiwa.core.bean.X;
 import org.giiwa.core.conf.Global;
 import org.giiwa.framework.bean.License;
@@ -48,14 +49,17 @@ public class GiiwaFilter implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
 
-		try {
-			HttpServletRequest r1 = (HttpServletRequest) req;
-			HttpServletResponse r2 = (HttpServletResponse) resp;
+		TimeStamp t = TimeStamp.create();
 
-			String uri = r1.getRequestURI();
-			while (uri.indexOf("//") > -1) {
-				uri = uri.replaceAll("//", "/");
-			}
+		HttpServletRequest r1 = (HttpServletRequest) req;
+		HttpServletResponse r2 = (HttpServletResponse) resp;
+
+		String uri = r1.getRequestURI();
+		while (uri.indexOf("//") > -1) {
+			uri = uri.replaceAll("//", "/");
+		}
+
+		try {
 
 			/**
 			 * rewrite uri
@@ -72,14 +76,14 @@ public class GiiwaFilter implements Filter {
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
-				Controller.process(uri, r1, r2, "GET");
+				Controller.process(uri, r1, r2, "GET", t);
 
 			} else if ("POST".equalsIgnoreCase(method)) {
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
 
-				Controller.process(uri, r1, r2, "POST");
+				Controller.process(uri, r1, r2, "POST", t);
 
 			} else if ("OPTIONS".equals(method)) {
 				r2.setStatus(200);
@@ -93,7 +97,11 @@ public class GiiwaFilter implements Filter {
 			// chain.doFilter(req, resp);
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			if (log.isInfoEnabled())
+				log.info(r1.getMethod() + " - " + uri + ", cost=" + t.past());
 		}
+
 	}
 
 	@SuppressWarnings("rawtypes")

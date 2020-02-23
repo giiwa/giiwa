@@ -32,7 +32,7 @@ public class index extends Controller {
 				}
 			}
 			if (u.hasAccess("access.config.admin")) {
-				this.redirect("/admin");
+				this.redirect("/admin/");
 				return;
 			}
 		}

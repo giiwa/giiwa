@@ -47,6 +47,7 @@ import org.giiwa.core.conf.Global;
 import org.giiwa.core.conf.Local;
 import org.giiwa.core.dfile.DFile;
 import org.giiwa.core.json.JSON;
+import org.giiwa.core.task.Task;
 import org.giiwa.framework.bean.*;
 import org.giiwa.framework.web.view.View;
 
@@ -231,27 +232,27 @@ public class Controller {
 
 	private Path process() throws Exception {
 
-		if (method.isGet()) {
-			try {
-				String non = Global.getString("site.browser.nonredirect", null);
-				String ignore = Global.getString("site.browser.ignoreurl", null);
-				if (!X.isEmpty(non) && !X.isSame(non, uri) && !X.isSame(uri, "/admin/browserinfo")
-						&& (X.isEmpty(ignore) || !uri.matches(ignore))) {
-
-					String ua = Global.getString("site.browser", "*");
-
-					if (!X.isEmpty(ua) && !X.isSame(ua, "*")) {
-						String b = this.browser();
-						if (!b.matches(ua)) {
-							this.redirect(non);
-							return null;
-						}
-					}
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
+//		if (method.isGet()) {
+//			try {
+//				String non = Global.getString("site.browser.nonredirect", null);
+//				String ignore = Global.getString("site.browser.ignoreurl", null);
+//				if (!X.isEmpty(non) && !X.isSame(non, uri) && !X.isSame(uri, "/admin/browserinfo")
+//						&& (X.isEmpty(ignore) || !uri.matches(ignore))) {
+//
+//					String ua = Global.getString("site.browser", "*");
+//
+//					if (!X.isEmpty(ua) && !X.isSame(ua, "*")) {
+//						String b = this.browser();
+//						if (!b.matches(ua)) {
+//							this.redirect(non);
+//							return null;
+//						}
+//					}
+//				}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
 
 		if (pathmapping != null) {
 
@@ -395,13 +396,14 @@ public class Controller {
 		} // end of "pathmapping is not null
 
 		// forward the request the file
-		if (staticfile()) {
-			return null;
-		}
+//		if (staticfile()) {
+//			return null;
+//		}
 
 		this.createQuery();
 
 		if (method.isGet()) {
+
 			Method m = this.getClass().getMethod("onGet");
 			// log.debug("m=" + m);
 			if (m != null) {
@@ -509,37 +511,37 @@ public class Controller {
 	 * @deprecated
 	 * @return
 	 */
-	private boolean staticfile() {
-		String uri = this.uri;
-		if (!X.isEmpty(path) && !X.isSame(path, X.NONE)) {
-			uri += "/" + path;
-		}
-		uri = uri.replaceAll("//", "/");
-		// log.debug("staticfile=" + uri);
-
-		File f = Module.home.getFile(uri);
-		if (f != null && f.exists() && f.isFile()) {
-			this.set(this);
-
-			this.set("me", this.getUser());
-			this.put("lang", lang);
-			this.put(X.URI, uri);
-			this.put("module", Module.home);
-			this.put("path", path);
-			this.put("request", req);
-			this.put("this", this);
-			this.put("response", resp);
-			this.put("session", this.getSession(false));
-			this.put("global", Global.getInstance());
-			this.put("conf", Config.getConf());
-			this.put("local", Local.getInstance());
-
-			show(uri);
-			return true;
-		}
-
-		return false;
-	}
+//	private boolean staticfile() {
+//		String uri = this.uri;
+//		if (!X.isEmpty(path) && !X.isSame(path, X.NONE)) {
+//			uri += "/" + path;
+//		}
+//		uri = uri.replaceAll("//", "/");
+//		// log.debug("staticfile=" + uri);
+//
+//		File f = Module.home.getFile(uri);
+//		if (f != null && f.exists() && f.isFile()) {
+//			this.set(this);
+//
+//			this.set("me", this.getUser());
+//			this.put("lang", lang);
+//			this.put(X.URI, uri);
+//			this.put("module", Module.home);
+//			this.put("path", path);
+//			this.put("request", req);
+//			this.put("this", this);
+//			this.put("response", resp);
+//			this.put("session", this.getSession(false));
+//			this.put("global", Global.getInstance());
+//			this.put("conf", Config.getConf());
+//			this.put("local", Local.getInstance());
+//
+//			show(uri);
+//			return true;
+//		}
+//
+//		return false;
+//	}
 
 	final public void init(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 		try {
@@ -725,7 +727,8 @@ public class Controller {
 
 			if (!X.isEmpty(sid))
 				sid += "/" + this.getRemoteHost();
-			log.debug("sid=" + sid);
+
+//			log.debug("sid=" + sid);
 		}
 
 		return sid;
@@ -783,7 +786,7 @@ public class Controller {
 	 */
 	public void forward(String url) {
 		req.setAttribute("sid", sid());
-		Controller.process(url, req, resp, method.name);
+		Controller.process(url, req, resp, method.name, TimeStamp.create());
 	}
 
 	/**
@@ -1773,6 +1776,7 @@ public class Controller {
 
 		if (login != null) {
 			if (System.currentTimeMillis() - login.getLong("lastlogined") > X.AMINUTE) {
+
 				login.set("lastlogined", System.currentTimeMillis());
 
 				V v = V.create();
@@ -1782,8 +1786,11 @@ public class Controller {
 				} else if (X.isSame(type, "ajax")) {
 					v.append("ajaxlogined", System.currentTimeMillis());
 				}
+
 				if (!v.isEmpty()) {
-					User.dao.update(login.getId(), v);
+					Task.schedule(() -> {
+						User.dao.update(login.getId(), v);
+					});
 				}
 			}
 		}
@@ -2746,11 +2753,12 @@ public class Controller {
 	 * @param resp   the resp
 	 * @param method the method
 	 */
-	public static void process(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
+	public static void process(String uri, HttpServletRequest req, HttpServletResponse resp, String method,
+			TimeStamp t) {
 
 		// log.debug("uri=" + uri);
 
-		TimeStamp t = TimeStamp.create();
+//		String node = null;
 
 		String node = req.getParameter("__node");
 		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
@@ -2762,9 +2770,9 @@ public class Controller {
 			}
 		}
 
-		if (!uri.endsWith(".js") && !uri.endsWith(".css")) {
-			uri = Url.decode(uri);
-		}
+//		if (!uri.endsWith(".js") && !uri.endsWith(".css")) {
+//			uri = Url.decode(uri);
+//		}
 
 		/**
 		 * test and load from cache first
@@ -2780,9 +2788,9 @@ public class Controller {
 			mo.dispatch(uri, req, resp, method);
 
 //			if (p == null) {
-			if (log.isInfoEnabled())
-				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
-						+ " " + mo);
+//			if (log.isInfoEnabled())
+//				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
+//						+ " " + mo);
 
 //			if (AccessLog.isOn()) {
 //
@@ -2807,9 +2815,23 @@ public class Controller {
 		if (log.isDebugEnabled())
 			log.debug("cost=" + t.past() + ", no model for uri=" + uri);
 
+		{
+			Controller m1 = getModel(method, uri, uri);
+			if (m1 != null) {
+				m1.dispatch(uri, req, resp, method);
+				return;
+			}
+		}
+
+		// parallel
 		try {
 			// directly file
-			File f = Module.home.getFile(uri);
+			String filename = uri;
+			if (!uri.endsWith(".js") && !uri.endsWith(".css")) {
+				filename = Url.decode(uri);
+			}
+
+			File f = Module.home.getFile(filename);
 			if (f != null && f.exists() && f.isFile()) {
 
 				if (log.isDebugEnabled())
@@ -2832,82 +2854,100 @@ public class Controller {
 				m.put("conf", Config.getConf());
 				m.put("local", Local.getInstance());
 				m.put("requestid", UID.random(20));
+
 				View.merge(f, m, uri);
 
 				return;
 			}
 
 			// file in file.repo
-			DFile f1 = Disk.seek(uri);
-			if (f1 != null && f1.exists() && f1.isFile()) {
-
-				if (log.isDebugEnabled())
-					log.debug("cost " + t.past() + ", find dfile, uri=" + uri);
-
-				Controller m = new DefaultController();
-				m.req = req;
-				m.resp = resp;
-				m.set(m);
-
-				m.set("me", m.getUser());
-				m.put("lang", m.lang);
-				m.put(X.URI, uri);
-				m.put("module", Module.home);
-				m.put("request", req);
-				m.put("this", m);
-				m.put("response", resp);
-				m.set("session", m.getSession(false));
-				m.set("global", Global.getInstance());
-				m.set("conf", Config.getConf());
-				m.set("local", Local.getInstance());
-				m.set("requestid", UID.random(20));
-
-				// String name = Url.encode(f1.getName());
-				// m.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name);
-
-				m.setContentType(Controller.getMimeType(f1.getName()));
-
-				View.merge(f1, m, uri);
-
-				return;
-			}
+//			DFile f1 = Disk.seek(uri);
+//			if (f1 != null && f1.exists() && f1.isFile()) {
+//
+//				if (log.isDebugEnabled())
+//					log.debug("cost " + t.past() + ", find dfile, uri=" + uri);
+//
+//				Controller m = new DefaultController();
+//				m.req = req;
+//				m.resp = resp;
+//				m.set(m);
+//
+//				m.put("me", m.getUser());
+//				m.put("lang", m.lang);
+//				m.put(X.URI, uri);
+//				m.put("module", Module.home);
+//				m.put("request", req);
+//				m.put("this", m);
+//				m.put("response", resp);
+//				m.put("session", m.getSession(false));
+//				m.put("global", Global.getInstance());
+//				m.put("conf", Config.getConf());
+//				m.put("local", Local.getInstance());
+//				m.put("requestid", UID.random(20));
+//
+//				// String name = Url.encode(f1.getName());
+//				// m.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name);
+//
+//				m.setContentType(Controller.getMimeType(f1.getName()));
+//
+//				View.merge(f1, m, uri);
+//
+//				return;
+//			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
 
 		// dispatch to model
-		if (X.isSame("/", uri) || !_dispatch(uri, req, resp, method, t)) {
+		if (X.isEmpty(uri) || uri.endsWith("/")) {
 
-			for (String suffix : welcomes) {
-				if (_dispatch(uri + "/" + suffix, req, resp, method, t)) {
-					return;
+//			log.debug("uri=" + uri);
+
+			Controller[] m = new Controller[1];
+
+			welcomes.parallelStream().forEach(s -> {
+				Controller m1 = getModel(method, uri.endsWith("/") ? (uri + s) : (uri + "/" + s), uri);
+				if (m1 != null) {
+					m[0] = m1;
 				}
+			});
+
+//			for (String suffix : welcomes) {
+//				if (_dispatch(uri + "/" + suffix, req, resp, method, t)) {
+//					return;
+//				}
+//			}
+
+			if (m[0] != null) {
+				m[0].dispatch(uri, req, resp, method);
+				return;
 			}
+		}
 
-			/**
-			 * get back of the uri, and set the path to the model if found, and the path
-			 * instead
-			 */
-			int i = uri.lastIndexOf("/");
-			while (i > 0) {
-				String path = uri.substring(i + 1);
-				String u = uri.substring(0, i);
-				mo = getModel(method, u, uri);
-				if (mo != null) {
+		/**
+		 * get back of the uri, and set the path to the model if found, and the path
+		 * instead
+		 */
+		int i = uri.lastIndexOf("/");
+		while (i > 0) {
+			String path = uri.substring(i + 1);
+			String u = uri.substring(0, i);
+			mo = getModel(method, u, uri);
+			if (mo != null) {
 
-					if (log.isDebugEnabled())
-						log.debug("cost " + t.past() + ", find the model, uri=" + uri + ", model=" + mo);
+				if (log.isDebugEnabled())
+					log.debug("cost " + t.past() + ", find the model, uri=" + uri + ", model=" + mo);
 
-					mo.put("__node", node);
+				mo.put("__node", node);
 
-					mo.setPath(path);
+				mo.setPath(path);
 //					Path p = 
-					mo.dispatch(u, req, resp, method);
+				mo.dispatch(u, req, resp, method);
 
 //					if (p == null) {
-					if (log.isInfoEnabled())
-						log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -"
-								+ mo.getRemoteHost() + " " + mo);
+				if (log.isInfoEnabled())
+					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
+							+ " " + mo);
 
 //					if (AccessLog.isOn()) {
 //
@@ -2925,33 +2965,33 @@ public class Controller {
 //					}
 //					}
 
-					// Counter.max("web.request.max", t.past(), uri);
-					return;
-				}
-				i = uri.lastIndexOf("/", i - 1);
+				// Counter.max("web.request.max", t.past(), uri);
+				return;
 			}
+			i = uri.lastIndexOf("/", i - 1);
+		}
 
-			/**
-			 * not found, then using dummymodel instead, and cache it
-			 */
-			if (log.isDebugEnabled())
-				log.debug("cost " + t.past() + ", no model, using default, uri=" + uri);
+		/**
+		 * not found, then using dummymodel instead, and cache it
+		 */
+		if (log.isDebugEnabled())
+			log.debug("cost " + t.past() + ", no model, using default, uri=" + uri);
 
-			mo = new DefaultController();
-			mo.module = Module.load(0);
-			mo.put("__node", node);
+		mo = new DefaultController();
+		mo.module = Module.load(0);
+		mo.put("__node", node);
 
-			/**
-			 * do not put in model cache, <br>
-			 * let's front-end (CDN, http server) do the the "static" resource cache
-			 */
-			// Module.home.modelMap.put(uri, (Class<Model>)
-			// mo.getClass());
-			mo.dispatch(uri, req, resp, method);
+		/**
+		 * do not put in model cache, <br>
+		 * let's front-end (CDN, http server) do the the "static" resource cache
+		 */
+		// Module.home.modelMap.put(uri, (Class<Model>)
+		// mo.getClass());
+		mo.dispatch(uri, req, resp, method);
 
-			if (log.isInfoEnabled())
-				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
-						+ " " + mo);
+		if (log.isInfoEnabled())
+			log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost() + " "
+					+ mo);
 //			if (AccessLog.isOn()) {
 //
 //				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
@@ -2967,13 +3007,13 @@ public class Controller {
 //								.set("model", mo.getClass().getName()));
 //			}
 
-			// Counter.max("web.request.max", t.past(), uri);
-		}
+		// Counter.max("web.request.max", t.past(), uri);
 
 	}
 
 	private static boolean _dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method,
 			TimeStamp t) {
+
 		/**
 		 * load model from the modules
 		 */
@@ -2993,7 +3033,7 @@ public class Controller {
 
 //			if (p == null) {
 			if (log.isInfoEnabled())
-				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.pastms() + "ms -" + mo.getRemoteHost()
+				log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " - " + mo.getRemoteHost()
 						+ " " + mo);
 
 //			V v = V.create("method", method.toString()).set("cost", t.pastms()).set("sid", mo.sid());

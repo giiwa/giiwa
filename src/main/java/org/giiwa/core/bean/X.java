@@ -303,6 +303,7 @@ public final class X {
 		if (s == null) {
 			return true;
 		}
+		
 		if (s instanceof String) {
 			return X.EMPTY.equals(s);
 		} else if (s instanceof Collection) {

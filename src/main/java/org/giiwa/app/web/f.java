@@ -138,7 +138,7 @@ public class f extends Controller {
 	 * upload file
 	 */
 	@Path(path = "upload", login = true)
-	public void onPost() {
+	public void upload() {
 
 		JSON jo = new JSON();
 
@@ -214,7 +214,7 @@ public class f extends Controller {
 					this.getRemoteHost());
 			if (pos >= 0) {
 				if (jo == null) {
-					this.put("url", "/repo/" + id + "/" + filename);
+					this.put("url", "/f/repo/" + id + "/" + filename);
 					this.put(X.ERROR, 0);
 					this.put("repo", id);
 					if (total > 0) {
@@ -223,7 +223,7 @@ public class f extends Controller {
 						this.put("size", total);
 					}
 				} else {
-					jo.put("url", "/repo/" + id + "/" + filename);
+					jo.put("url", "/f/repo/" + id + "/" + filename);
 					jo.put("repo", id);
 					jo.put(X.ERROR, 0);
 					if (total > 0) {
@@ -275,7 +275,7 @@ public class f extends Controller {
 
 //		if (log.isDebugEnabled())
 //			log.debug("temp: " + this.path);
-		
+
 		if (this.path == null) {
 			this.notfound();
 			return;
@@ -300,9 +300,29 @@ public class f extends Controller {
 
 		} catch (Exception e) {
 			log.error(path, e);
-			GLog.oplog.error(temp.class, "", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.oplog.error(f.class, "temp", e.getMessage(), e, login, this.getRemoteHost());
 		}
 
 		this.notfound();
 	}
+
+	@Path(path = "alive")
+	public void live() {
+		JSON jo = new JSON();
+		jo.put(X.STATE, 200);
+		jo.put("uptime", System.currentTimeMillis() - Controller.UPTIME);
+
+		this.response(jo);
+	}
+
+	@Path(path = "echo")
+	public void echo() {
+		StringBuilder sb = new StringBuilder();
+		for (NameValue s : this.getHeaders()) {
+			sb.append(s.name).append("=").append(s.value).append("<br>");
+		}
+
+		this.print(sb.toString());
+	}
+
 }

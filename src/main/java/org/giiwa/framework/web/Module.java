@@ -455,7 +455,7 @@ public class Module {
 	 * cache the model in the module, the modelMap structure: {"method|uri",
 	 * "class"}
 	 */
-	private static Map<String, CachedModel> modelMap = new HashMap<String, CachedModel>();
+	private static Map<String, CachedModel> _modelcache = new HashMap<String, CachedModel>();
 
 	private static int MAX_CACHE_SIZE = 2000;
 
@@ -468,7 +468,7 @@ public class Module {
 	 * Reset.
 	 */
 	public static void reset() {
-		modelMap.clear();
+		_modelcache.clear();
 	}
 
 	/**
@@ -686,7 +686,7 @@ public class Module {
 		return getFile(resource, inFloor, true);
 	}
 
-//	private static Map<String, File> _filecache = new HashMap<String, File>();
+	private static Map<String, File> _filecache = new HashMap<String, File>();
 
 	/**
 	 * get the file in the module box
@@ -697,24 +697,25 @@ public class Module {
 	 * @return the File if exists, otherwise null
 	 */
 	public File getFile(String resource, boolean inFloor, boolean inbox) {
+
 		try {
 
-			String name = viewroot + File.separator + resource;
+			File f = _filecache.get(resource);
+			if (f != null) {
+				return f;
+			}
 
-//			File f = _filecache.get(name);
-//			if (f == null) {
-			File f = new File(name);
-//			}
+			f = new File(viewroot + File.separator + resource);
 			if (f.exists()) {
 				/**
 				 * test the file is still in the path? if not, then do not allow to access,
 				 * avoid user using "../../" to access system file
 				 */
 				if (inbox && f.getCanonicalPath().startsWith(viewroot)) {
-//					_filecache.put(name, f);
+					_filecache.put(resource, f);
 					return f;
 				} else if (f.exists()) {
-//					_filecache.put(name, f);
+					_filecache.put(resource, f);
 					return f;
 				}
 			}
@@ -1341,7 +1342,7 @@ public class Module {
 			// log.debug("looking for model for <" + method + "|" + uri + ">,
 			// mapping=" + modelMap);
 
-			CachedModel c = modelMap.get(method + "|" + uri);
+			CachedModel c = _modelcache.get(method + "|" + uri);
 
 			if (c != null) {
 				Controller m = c.create(uri);
@@ -1349,7 +1350,7 @@ public class Module {
 				return m;
 			}
 
-			c = modelMap.get("*|" + uri);
+			c = _modelcache.get("*|" + uri);
 			if (c != null) {
 				Controller m = c.create(uri);
 
@@ -1360,10 +1361,11 @@ public class Module {
 			// e.printStackTrace();
 		}
 
-		Module e = floor();
-		if (e != null && e.getId() != this.id) {
-			return e.loadModelFromCache(method, uri);
-		}
+//		Module e = floor();
+//
+//		if (e != null && e.getId() != this.id) {
+//			return e.loadModelFromCache(method, uri);
+//		}
 
 		return null;
 	}
@@ -1385,8 +1387,8 @@ public class Module {
 			// log.debug("looking for model for <" + method + "|" + uri + ">");
 
 			CachedModel c = null;
-			synchronized (modelMap) {
-				c = X.isEmpty(original) ? null : modelMap.get(method + "|" + original);
+			synchronized (_modelcache) {
+				c = X.isEmpty(original) ? null : _modelcache.get(method + "|" + original);
 				// log.debug("uri=" + (method + "|" + uri));
 				if (c == null) {
 					/**
@@ -1475,7 +1477,7 @@ public class Module {
 	}
 
 	private void _cache(String uri, CachedModel c) {
-		CachedModel c1 = modelMap.get(uri);
+		CachedModel c1 = _modelcache.get(uri);
 		if (c1 != null) {
 			if (c1.module.getId() > c.module.getId()) {
 				// the cached uri is bigger module's, forget current
@@ -1484,9 +1486,9 @@ public class Module {
 		}
 
 		c.uri = uri;
-		modelMap.put(uri, c);
+		_modelcache.put(uri, c);
 
-		if (modelMap.size() > MAX_CACHE_SIZE) {
+		if (_modelcache.size() > MAX_CACHE_SIZE) {
 			Task t = new Task() {
 
 				/**
@@ -1501,17 +1503,17 @@ public class Module {
 
 				@Override
 				public void onExecute() {
-					String[] ss = modelMap.keySet().toArray(new String[modelMap.size()]);
+					String[] ss = _modelcache.keySet().toArray(new String[_modelcache.size()]);
 					TreeMap<Long, CachedModel> s1 = new TreeMap<Long, CachedModel>();
 					for (String s : ss) {
-						CachedModel c1 = modelMap.get(s);
+						CachedModel c1 = _modelcache.get(s);
 						s1.put(c1.age, c1);
 					}
 					int d = s1.size() / 5;
 					while (d > 0 && !s1.isEmpty()) {
 						long age = s1.firstKey();
 						CachedModel c1 = s1.remove(age);
-						modelMap.remove(c1.uri);
+						_modelcache.remove(c1.uri);
 						d--;
 					}
 				}

@@ -296,7 +296,7 @@ public class User extends Bean {
 
 		User u = dao.load(id);
 		if (u != null && !X.isEmpty(u.photo)) {
-			if (X.isSame(nickname, u.nickname) || !u.photo.startsWith("/_user/photo/auto/")) {
+			if (X.isSame(nickname, u.nickname) || !u.photo.startsWith("/f/g/")) {
 				return;
 			}
 		}
@@ -310,7 +310,7 @@ public class User extends Bean {
 			try {
 				GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
 						(int) (156 * Math.random()), (int) (156 * Math.random())), f.getOutputStream());
-				v.append("photo", f.getFilename());
+				v.append("photo", "/f/g/" + f.getId() + "/" + f.getName());
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}

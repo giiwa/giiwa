@@ -37,7 +37,7 @@ function initfileupload() {
 		uploadButton = $('#uploadButton');
 		$('#fileupload')
 				.fileupload({
-							url : "/upload?tag=default",
+							url : "/f/upload?tag=default",
 							dataType : 'json',
 							autoUpload : false,
 							maxFileSize : 1024 * 1024 * 1024 * 100, // 100G

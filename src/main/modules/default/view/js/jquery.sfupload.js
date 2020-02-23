@@ -1,7 +1,7 @@
 jQuery.extend({
 	upload : function(options) {
 		options = $.extend({
-					url : "/upload",
+					url : "/f/upload",
 					obj : false,
 					done : false,
 					tag : 'file'
