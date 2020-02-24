@@ -21,9 +21,9 @@ import java.util.*;
 import java.util.function.Function;
 
 import org.apache.commons.logging.*;
+import org.giiwa.bean.Repo;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Repo;
 import org.giiwa.engine.Velocity;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;

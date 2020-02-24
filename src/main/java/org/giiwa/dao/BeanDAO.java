@@ -24,10 +24,10 @@ import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.GLog;
 import org.giiwa.json.JSON;
 
 /**

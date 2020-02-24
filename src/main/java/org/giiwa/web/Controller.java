@@ -31,6 +31,7 @@ import org.apache.commons.logging.*;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.giiwa.bean.*;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
@@ -41,7 +42,6 @@ import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
-import org.giiwa.dao.bean.*;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
@@ -2688,8 +2688,6 @@ public class Controller {
 			Element root = document.getRootElement();
 			Element e1 = root.element("welcome-file-list");
 			List<Element> l1 = e1.elements("welcome-file");
-
-			welcomes.add("index");
 
 			for (Element e2 : l1) {
 				welcomes.add(e2.getText().trim());

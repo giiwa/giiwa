@@ -38,10 +38,10 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.GLog;
 import org.giiwa.task.SysTask;
 
 class ActiveMQ extends MQ {

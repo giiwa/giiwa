@@ -23,10 +23,10 @@ import java.io.PrintStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Temp;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Temp;
 import org.giiwa.web.Language;
 
 /**

@@ -21,12 +21,12 @@ import javax.servlet.*;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Repo;
+import org.giiwa.bean.Temp;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Repo;
-import org.giiwa.dao.bean.Temp;
 import org.giiwa.task.Task;
 
 /**

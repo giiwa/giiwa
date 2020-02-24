@@ -37,10 +37,10 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.GLog;
 import org.giiwa.task.SysTask;
 
 class KafkaMQ extends MQ {

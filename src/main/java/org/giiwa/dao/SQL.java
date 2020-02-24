@@ -8,11 +8,11 @@ import java.util.Stack;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.DBHelper;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.GLog;
 import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.StringFinder;

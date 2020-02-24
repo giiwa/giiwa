@@ -14,9 +14,9 @@
 */
 package org.giiwa.app.task;
 
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.GLog;
 import org.giiwa.misc.Shell;
 import org.giiwa.task.Task;
 

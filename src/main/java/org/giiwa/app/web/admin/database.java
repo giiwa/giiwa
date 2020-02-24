@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.giiwa.bean.GLog;
+import org.giiwa.bean.Temp;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
@@ -25,8 +27,6 @@ import org.giiwa.dao.Helper;
 import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.GLog;
-import org.giiwa.dao.bean.Temp;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Exporter;
 import org.giiwa.web.Controller;

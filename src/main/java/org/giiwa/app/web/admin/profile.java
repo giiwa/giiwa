@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.giiwa.bean.AuthToken;
+import org.giiwa.bean.Code;
+import org.giiwa.bean.GLog;
+import org.giiwa.bean.User;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
-import org.giiwa.dao.bean.AuthToken;
-import org.giiwa.dao.bean.Code;
-import org.giiwa.dao.bean.GLog;
-import org.giiwa.dao.bean.User;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.noti.Email;
 import org.giiwa.web.Controller;

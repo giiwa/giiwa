@@ -18,10 +18,10 @@ import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.giiwa.bean.m._Net;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.m._Net;
 import org.giiwa.web.*;
 
 /**

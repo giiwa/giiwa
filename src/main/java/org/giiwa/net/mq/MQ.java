@@ -13,13 +13,13 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Counter;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.GLog;
 import org.giiwa.json.JSON;
 import org.giiwa.task.SysTask;
 import org.giiwa.task.Task;

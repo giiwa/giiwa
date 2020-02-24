@@ -17,11 +17,11 @@ package org.giiwa.app.web.admin;
 import java.util.List;
 import java.util.Map;
 
+import org.giiwa.bean.*;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.*;
 import org.giiwa.json.JSON;
 import org.giiwa.web.*;
 

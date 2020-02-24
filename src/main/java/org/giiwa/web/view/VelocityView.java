@@ -44,7 +44,7 @@ public class VelocityView extends View {
 			p.setProperty("output.encoding", "utf-8");
 			p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
 			p.setProperty("directive.set.null.allowed", "true");
-			p.setProperty("resource.loader.file.class", "org.giiwa.framework.web.view.VelocityTemplateLoader");
+			p.setProperty("resource.loader.file.class", "org.giiwa.web.view.VelocityTemplateLoader");
 			Velocity.init(p);
 		} catch (Exception e) {
 			log.warn(e.getMessage(), e);

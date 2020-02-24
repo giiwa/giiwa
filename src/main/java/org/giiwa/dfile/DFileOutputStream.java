@@ -3,7 +3,7 @@ package org.giiwa.dfile;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import org.giiwa.dao.bean.Disk;
+import org.giiwa.bean.Disk;
 
 public class DFileOutputStream extends OutputStream {
 

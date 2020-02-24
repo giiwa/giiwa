@@ -17,9 +17,9 @@ package org.giiwa.app.web.admin;
 import java.io.File;
 import java.io.FileInputStream;
 
+import org.giiwa.bean.GLog;
+import org.giiwa.bean.Temp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.GLog;
-import org.giiwa.dao.bean.Temp;
 import org.giiwa.json.JSON;
 import org.giiwa.web.*;
 

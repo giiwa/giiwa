@@ -14,10 +14,10 @@
 */
 package org.giiwa.app.web.admin;
 
+import org.giiwa.bean.Counter;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.Counter;
 import org.giiwa.json.JSON;
 import org.giiwa.web.*;
 

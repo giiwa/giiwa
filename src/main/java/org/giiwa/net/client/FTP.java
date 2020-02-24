@@ -7,7 +7,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPReply;
-import org.giiwa.dao.bean.GLog;
+import org.giiwa.bean.GLog;
 import org.giiwa.misc.Url;
 
 public class FTP {

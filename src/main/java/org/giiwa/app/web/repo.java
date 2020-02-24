@@ -18,9 +18,9 @@ import java.io.*;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.giiwa.bean.*;
+import org.giiwa.bean.Repo.Entity;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.*;
-import org.giiwa.dao.bean.Repo.Entity;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;

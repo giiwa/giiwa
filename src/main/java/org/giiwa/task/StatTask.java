@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Stat;
+import org.giiwa.bean.Stat.SIZE;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Stat;
-import org.giiwa.dao.bean.Stat.SIZE;
 
 /**
  * the task which using to stat

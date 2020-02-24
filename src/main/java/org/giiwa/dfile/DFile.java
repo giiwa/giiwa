@@ -15,10 +15,10 @@ import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Disk;
+import org.giiwa.bean.Node;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
-import org.giiwa.dao.bean.Disk;
-import org.giiwa.dao.bean.Node;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 

@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.giiwa.bean.m._Memory;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.m._Memory;
 import org.giiwa.json.JSON;
 import org.giiwa.web.Path;
 

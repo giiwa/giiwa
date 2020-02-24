@@ -4,13 +4,13 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
+import org.giiwa.bean.Disk;
+import org.giiwa.bean.Node;
+import org.giiwa.bean.Repo;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.Disk;
-import org.giiwa.dao.bean.Node;
-import org.giiwa.dao.bean.Repo;
 import org.giiwa.dfile.DFile;
 import org.giiwa.dfile.FileServer;
 import org.giiwa.json.JSON;

@@ -16,11 +16,11 @@ package org.giiwa.web;
 
 import java.io.*;
 
+import org.giiwa.bean.Disk;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Disk;
 import org.giiwa.dfile.DFile;
 
 /**

@@ -9,13 +9,13 @@ import java.io.OutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
+import org.giiwa.bean.Disk;
+import org.giiwa.bean.GLog;
+import org.giiwa.bean.Repo;
+import org.giiwa.bean.Temp;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Disk;
-import org.giiwa.dao.bean.GLog;
-import org.giiwa.dao.bean.Repo;
-import org.giiwa.dao.bean.Temp;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.GImage;

@@ -27,9 +27,9 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.GLog;
 import org.giiwa.task.SysTask;
 
 class LocalMQ extends MQ {

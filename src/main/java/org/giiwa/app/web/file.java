@@ -6,9 +6,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.giiwa.bean.Disk;
+import org.giiwa.bean.Temp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Disk;
-import org.giiwa.dao.bean.Temp;
 import org.giiwa.dfile.DFile;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;

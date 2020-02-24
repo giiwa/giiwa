@@ -1,10 +1,10 @@
 package org.giiwa.app.web.portlet;
 
+import org.giiwa.bean.m._Disk;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.m._Disk;
 import org.giiwa.web.Path;
 
 public class disk extends portlet {

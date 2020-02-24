@@ -16,12 +16,12 @@ package org.giiwa.app.web.admin;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.giiwa.bean.*;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.*;
 import org.giiwa.json.JSON;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.web.*;

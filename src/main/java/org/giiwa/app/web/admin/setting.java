@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.giiwa.app.task.NtpTask;
+import org.giiwa.bean.GLog;
+import org.giiwa.bean.Role;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.GLog;
-import org.giiwa.dao.bean.Role;
 import org.giiwa.json.JSON;
 import org.giiwa.web.*;
 

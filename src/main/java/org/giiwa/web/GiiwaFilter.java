@@ -30,10 +30,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.License;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.License;
 import org.giiwa.web.view.View;
 
 public class GiiwaFilter implements Filter {

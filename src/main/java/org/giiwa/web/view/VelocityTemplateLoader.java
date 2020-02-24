@@ -27,9 +27,9 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.resource.Resource;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.util.ExtProperties;
+import org.giiwa.bean.Disk;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Disk;
 import org.giiwa.dfile.DFile;
 import org.giiwa.web.Module;
 

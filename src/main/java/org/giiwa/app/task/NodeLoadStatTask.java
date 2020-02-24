@@ -16,12 +16,12 @@ package org.giiwa.app.task;
 
 import java.util.List;
 
+import org.giiwa.bean.Node;
+import org.giiwa.bean.Stat;
+import org.giiwa.bean.Stat.SIZE;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.bean.Node;
-import org.giiwa.dao.bean.Stat;
-import org.giiwa.dao.bean.Stat.SIZE;
 import org.giiwa.task.StatTask;
 
 /**

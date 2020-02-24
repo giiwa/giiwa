@@ -2,12 +2,12 @@ package org.giiwa.app.web;
 
 import java.util.List;
 
+import org.giiwa.bean.Role;
+import org.giiwa.bean.Roles;
+import org.giiwa.bean.User;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.Role;
-import org.giiwa.dao.bean.Roles;
-import org.giiwa.dao.bean.User;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 

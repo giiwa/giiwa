@@ -19,9 +19,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.giiwa.bean.*;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
-import org.giiwa.dao.bean.*;
 import org.giiwa.json.JSON;
 import org.giiwa.web.*;
 

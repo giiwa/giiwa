@@ -14,7 +14,7 @@
 */
 package org.giiwa.app.web.admin;
 
-import org.giiwa.dao.bean.*;
+import org.giiwa.bean.*;
 import org.giiwa.web.*;
 
 /**
