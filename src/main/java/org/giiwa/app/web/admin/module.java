@@ -26,16 +26,16 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.base.RSA;
-import org.giiwa.core.conf.Config;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.*;
-import org.giiwa.framework.bean.Repo.Entity;
-import org.giiwa.framework.web.*;
+import org.giiwa.conf.Config;
+import org.giiwa.conf.Global;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.*;
+import org.giiwa.dao.bean.Repo.Entity;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.RSA;
+import org.giiwa.task.Task;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/module <br>

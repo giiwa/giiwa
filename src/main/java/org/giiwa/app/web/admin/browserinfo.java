@@ -14,7 +14,7 @@
 */
 package org.giiwa.app.web.admin;
 
-import org.giiwa.framework.web.*;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/token <br>

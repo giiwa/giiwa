@@ -14,11 +14,11 @@
 */
 package org.giiwa.app.task;
 
-import org.giiwa.core.base.Shell;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.GLog;
+import org.giiwa.conf.Global;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.misc.Shell;
+import org.giiwa.task.Task;
 
 /**
  * The Class NtpTask.

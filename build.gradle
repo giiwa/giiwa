@@ -3,7 +3,7 @@ apply plugin: 'maven'
 apply plugin: 'eclipse'
 
 group = 'org.giiwa'
-version = '2.0'
+version = '2.1'
 def buildno = new Date().format("yyMMddHHmm")
 
 description = 'giiwa distributed web framework'

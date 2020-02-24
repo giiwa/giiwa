@@ -9,21 +9,21 @@ import java.io.OutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
-import org.giiwa.core.base.GImage;
-import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.base.Url;
-import org.giiwa.core.bean.UID;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.dfile.DFile;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.Disk;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Repo;
-import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.conf.Global;
+import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.Disk;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.Repo;
+import org.giiwa.dao.bean.Temp;
+import org.giiwa.dfile.DFile;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.GImage;
+import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.Url;
+import org.giiwa.task.Task;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 public class f extends Controller {
 

@@ -16,13 +16,13 @@ package org.giiwa.app.web;
 
 import java.io.FileOutputStream;
 
-import org.giiwa.core.base.Captcha;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.Temp;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.Captcha;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 /**
  * web api: <a href='/captcha' target='_blank'>/captcha</a><br>

@@ -19,11 +19,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.*;
-import org.giiwa.framework.web.*;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.*;
+import org.giiwa.json.JSON;
+import org.giiwa.web.*;
 
 /**
  * web api： <a href='/menu' target='_blank'>/menu</a> <br>

@@ -2,8 +2,8 @@ package org.giiwa.app.web.admin;
 
 import java.util.Map;
 
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 /**
  * some setting of the module

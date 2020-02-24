@@ -17,11 +17,11 @@ package org.giiwa.app.web;
 import java.io.File;
 import java.io.FileInputStream;
 
-import org.giiwa.core.base.Url;
-import org.giiwa.core.bean.X;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Controller;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.Temp;
+import org.giiwa.misc.Url;
+import org.giiwa.web.Controller;
 
 /**
  * web api： /temp <br>

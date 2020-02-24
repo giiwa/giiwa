@@ -18,19 +18,19 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.conf.Local;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.noti.Email;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.*;
-import org.giiwa.framework.web.*;
-import org.giiwa.framework.web.view.View;
+import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.*;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.noti.Email;
+import org.giiwa.task.Task;
+import org.giiwa.web.*;
+import org.giiwa.web.view.View;
 
 /**
  * web api: /admin/user <br>

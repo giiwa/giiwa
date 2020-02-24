@@ -16,13 +16,13 @@ package org.giiwa.app.task;
 
 import java.util.List;
 
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.task.StatTask;
-import org.giiwa.framework.bean.Node;
-import org.giiwa.framework.bean.Stat;
-import org.giiwa.framework.bean.Stat.SIZE;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.Node;
+import org.giiwa.dao.bean.Stat;
+import org.giiwa.dao.bean.Stat.SIZE;
+import org.giiwa.task.StatTask;
 
 /**
  * The Class NodeLoadStatTask.

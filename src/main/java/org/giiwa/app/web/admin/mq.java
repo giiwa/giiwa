@@ -14,13 +14,13 @@
 */
 package org.giiwa.app.web.admin;
 
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.web.Path;
+import org.giiwa.conf.Global;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.json.JSON;
+import org.giiwa.web.Path;
 
 public class mq extends setting {
 

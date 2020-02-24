@@ -14,9 +14,9 @@
 */
 package org.giiwa.app.web.admin;
 
-import org.giiwa.core.base.Host;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.framework.web.*;
+import org.giiwa.dao.Helper;
+import org.giiwa.misc.Host;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/task <br>

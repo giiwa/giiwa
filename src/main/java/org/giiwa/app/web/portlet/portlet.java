@@ -1,10 +1,10 @@
 package org.giiwa.app.web.portlet;
 
-import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.bean.X;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.dao.Bean;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 public class portlet extends Controller {
 

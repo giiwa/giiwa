@@ -16,13 +16,13 @@ package org.giiwa.app.web.admin;
 
 import java.lang.management.ManagementFactory;
 
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.conf.Local;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.SysTask;
-import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.*;
+import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.User;
+import org.giiwa.json.JSON;
+import org.giiwa.task.SysTask;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/system <br>

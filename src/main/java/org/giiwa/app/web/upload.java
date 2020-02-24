@@ -17,13 +17,13 @@ package org.giiwa.app.web;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
-import org.giiwa.core.bean.UID;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.*;
-import org.giiwa.framework.web.*;
+import org.giiwa.conf.Global;
+import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.*;
+import org.giiwa.json.JSON;
+import org.giiwa.task.Task;
+import org.giiwa.web.*;
 
 /**
  * web api：/upload <br>

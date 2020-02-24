@@ -5,17 +5,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.UID;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.noti.Email;
-import org.giiwa.framework.bean.AuthToken;
-import org.giiwa.framework.bean.Code;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.bean.AuthToken;
+import org.giiwa.dao.bean.Code;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.User;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.noti.Email;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 public class profile extends Controller {
 

@@ -18,19 +18,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.giiwa.core.base.Exporter;
-import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Config;
-import org.giiwa.core.bean.Schema;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.conf.Config;
+import org.giiwa.dao.Bean;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper;
+import org.giiwa.dao.Schema;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.Temp;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.Exporter;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 /**
  * backup management,<br>

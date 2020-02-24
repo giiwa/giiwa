@@ -20,15 +20,15 @@ import java.util.List;
 import java.util.Map;
 
 import org.giiwa.app.task.NtpTask;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Config;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.conf.Local;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Role;
-import org.giiwa.framework.web.*;
+import org.giiwa.conf.Config;
+import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
+import org.giiwa.dao.Helper;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.Role;
+import org.giiwa.json.JSON;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/setting <br>

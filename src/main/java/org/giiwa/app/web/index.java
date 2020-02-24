@@ -2,14 +2,14 @@ package org.giiwa.app.web;
 
 import java.util.List;
 
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.conf.Local;
-import org.giiwa.framework.bean.Role;
-import org.giiwa.framework.bean.Roles;
-import org.giiwa.framework.bean.User;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.Role;
+import org.giiwa.dao.bean.Roles;
+import org.giiwa.dao.bean.User;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 public class index extends Controller {
 

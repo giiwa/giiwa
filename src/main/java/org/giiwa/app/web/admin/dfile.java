@@ -4,20 +4,20 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
-import org.giiwa.core.bean.X;
-import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.dfile.DFile;
-import org.giiwa.core.dfile.FileServer;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.bean.Disk;
-import org.giiwa.framework.bean.Node;
-import org.giiwa.framework.bean.Repo;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.Disk;
+import org.giiwa.dao.bean.Node;
+import org.giiwa.dao.bean.Repo;
+import org.giiwa.dfile.DFile;
+import org.giiwa.dfile.FileServer;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.IOUtil;
+import org.giiwa.task.Task;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 public class dfile extends Controller {
 

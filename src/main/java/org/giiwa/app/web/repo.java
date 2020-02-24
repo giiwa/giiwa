@@ -18,13 +18,13 @@ import java.io.*;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.giiwa.core.base.GImage;
-import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.*;
-import org.giiwa.framework.bean.Repo.Entity;
-import org.giiwa.framework.web.*;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.*;
+import org.giiwa.dao.bean.Repo.Entity;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.GImage;
+import org.giiwa.misc.IOUtil;
+import org.giiwa.web.*;
 
 /**
  * web api： /repo <br>

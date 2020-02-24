@@ -17,11 +17,11 @@ package org.giiwa.app.web.admin;
 import java.io.File;
 import java.io.FileInputStream;
 
-import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.*;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.Temp;
+import org.giiwa.json.JSON;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/logs <br>

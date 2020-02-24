@@ -14,8 +14,8 @@
 */
 package org.giiwa.app.web.admin;
 
-import org.giiwa.framework.bean.*;
-import org.giiwa.framework.web.*;
+import org.giiwa.dao.bean.*;
+import org.giiwa.web.*;
 
 /**
  * web api: <a href='/admin' target='_blank'>/admin</a> <br>

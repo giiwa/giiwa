@@ -18,10 +18,10 @@ import java.util.Calendar;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Local;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.web.Controller;
+import org.giiwa.conf.Local;
+import org.giiwa.dao.X;
+import org.giiwa.task.Task;
+import org.giiwa.web.Controller;
 
 /**
  * The Class RecycleTask.

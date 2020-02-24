@@ -18,11 +18,11 @@ import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.giiwa.core.bean.X;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.conf.Local;
-import org.giiwa.framework.bean.m._Net;
-import org.giiwa.framework.web.*;
+import org.giiwa.conf.Local;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.m._Net;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/dashboard <br>

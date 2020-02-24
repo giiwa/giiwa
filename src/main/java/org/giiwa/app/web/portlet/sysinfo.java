@@ -2,11 +2,11 @@ package org.giiwa.app.web.portlet;
 
 import java.util.Properties;
 
-import org.giiwa.core.base.Host;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.conf.Local;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Module;
+import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
+import org.giiwa.misc.Host;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Module;
 
 public class sysinfo extends portlet {
 

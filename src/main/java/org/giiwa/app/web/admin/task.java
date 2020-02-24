@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.task.Task;
-import org.giiwa.framework.web.*;
+import org.giiwa.dao.X;
+import org.giiwa.json.JSON;
+import org.giiwa.task.Task;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/task <br>

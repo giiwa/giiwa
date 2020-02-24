@@ -6,15 +6,15 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.giiwa.core.base.GImage;
-import org.giiwa.core.base.IOUtil;
-import org.giiwa.core.base.Url;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.dfile.DFile;
-import org.giiwa.framework.bean.Disk;
-import org.giiwa.framework.bean.Temp;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.dao.X;
+import org.giiwa.dao.bean.Disk;
+import org.giiwa.dao.bean.Temp;
+import org.giiwa.dfile.DFile;
+import org.giiwa.misc.GImage;
+import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.Url;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 /**
  * @deprecated

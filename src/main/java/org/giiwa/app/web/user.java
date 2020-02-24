@@ -21,27 +21,27 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.giiwa.core.base.Captcha;
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper;
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.bean.UID;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.noti.Email;
-import org.giiwa.framework.bean.App;
-import org.giiwa.framework.bean.AuthToken;
-import org.giiwa.framework.bean.Code;
-import org.giiwa.framework.bean.GLog;
-import org.giiwa.framework.bean.Role;
-import org.giiwa.framework.bean.Session;
-import org.giiwa.framework.bean.User;
-import org.giiwa.framework.bean.UserConfig;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
-import org.giiwa.framework.web.view.View;
+import org.giiwa.conf.Global;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper;
+import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.App;
+import org.giiwa.dao.bean.AuthToken;
+import org.giiwa.dao.bean.Code;
+import org.giiwa.dao.bean.GLog;
+import org.giiwa.dao.bean.Role;
+import org.giiwa.dao.bean.Session;
+import org.giiwa.dao.bean.User;
+import org.giiwa.dao.bean.UserConfig;
+import org.giiwa.json.JSON;
+import org.giiwa.misc.Captcha;
+import org.giiwa.misc.noti.Email;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
+import org.giiwa.web.view.View;
 
 /**
  * web api： /user <br>

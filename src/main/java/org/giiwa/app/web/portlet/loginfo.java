@@ -1,8 +1,8 @@
 package org.giiwa.app.web.portlet;
 
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.framework.bean.GLog;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.GLog;
 
 public class loginfo extends portlet {
 

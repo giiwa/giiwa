@@ -15,8 +15,8 @@
 package org.giiwa.app.task;
 
 import org.giiwa.app.web.admin.backup;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.task.Task;
+import org.giiwa.conf.Global;
+import org.giiwa.task.Task;
 
 /**
  * The Class BackupTask.

@@ -16,15 +16,15 @@ package org.giiwa.app.web.admin;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.conf.Global;
-import org.giiwa.core.json.JSON;
-import org.giiwa.framework.bean.*;
-import org.giiwa.framework.web.*;
-import org.giiwa.mq.MQ;
+import org.giiwa.conf.Global;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.bean.*;
+import org.giiwa.json.JSON;
+import org.giiwa.net.mq.MQ;
+import org.giiwa.web.*;
 
 /**
  * web api: /admin/node <br>
@@ -65,7 +65,7 @@ public class node extends Controller {
 			Global.setConfig("node." + id, power);
 
 			MQ.topic("giiwa.state",
-					org.giiwa.mq.MQ.Request.create().put(JSON.create().append("node", id).append("power", power)));
+					org.giiwa.net.mq.MQ.Request.create().put(JSON.create().append("node", id).append("power", power)));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
