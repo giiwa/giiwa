@@ -2001,9 +2001,10 @@ public class Helper implements Serializable {
 		 * @param name the field name
 		 * @return the T
 		 */
+		@SuppressWarnings("unchecked")
 		public <T> T get(String name) throws SQLException {
 			Bean b = load();
-			return b == null ? null : b.get(name);
+			return b == null ? null : (T) b.get(name);
 		}
 
 		public long getLong(String name) throws SQLException {
@@ -2038,9 +2039,10 @@ public class Helper implements Serializable {
 		 * @param name   the field name
 		 * @return the Object
 		 */
+		@SuppressWarnings("unchecked")
 		public <T> T get(int offset, String name) throws SQLException {
 			Bean b = load(offset);
-			return b == null ? null : b.get(name);
+			return b == null ? null : (T) b.get(name);
 		}
 
 		/**

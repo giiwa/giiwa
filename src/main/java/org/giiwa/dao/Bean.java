@@ -16,6 +16,7 @@ package org.giiwa.dao;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -28,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,7 +42,7 @@ import org.giiwa.json.JSON;
  * almost includes all methods that need for database <br>
  * 
  */
-public class Bean implements Serializable {
+public class Bean implements Map<String, Object>, Serializable {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 4L;
@@ -117,6 +117,7 @@ public class Bean implements Serializable {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final Object set(String name, Object value) {
+
 		if (value == V.ignore)
 			return null;
 
@@ -235,8 +236,11 @@ public class Bean implements Serializable {
 						if (!m.containsKey(name)) {
 							m.put(name, f);
 						}
+					} else if ((f.getModifiers() & (Modifier.FINAL | Modifier.STATIC | Modifier.TRANSIENT)) == 0) {
+						m.put(f.getName().toLowerCase(), f);
 					}
 				}
+
 				if (i > 5) {
 					log.error("c1=" + c1);
 				}
@@ -267,8 +271,8 @@ public class Bean implements Serializable {
 	 * @param name the name of the data or the column
 	 * @return Object the value of the name, return null if the name not exists
 	 */
-	@SuppressWarnings("unchecked")
-	public final <T> T get(Object name) {
+	@Override
+	public final Object get(Object name) {
 		if (name == null) {
 			return null;
 		}
@@ -278,7 +282,7 @@ public class Bean implements Serializable {
 		if (f != null) {
 			try {
 				f.setAccessible(true);
-				return (T) f.get(this);
+				return f.get(this);
 			} catch (Exception e) {
 				log.error(name, e);
 			}
@@ -289,7 +293,7 @@ public class Bean implements Serializable {
 		}
 
 		if (data.containsKey(s)) {
-			return (T) data.get(s);
+			return data.get(s);
 		}
 
 		return null;
@@ -627,26 +631,6 @@ public class Bean implements Serializable {
 		return true;
 	}
 
-	/**
-	 * cleanup, do nothing in default
-	 */
-//	public void cleanup() {
-//		// TODO Auto-generated method stub
-//
-//	}
-
-	/**
-	 * refine the bean and output as a json object
-	 * 
-	 * @param <T> the subclass of Bean
-	 * @param e   the refine function
-	 * @return the JSON
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends Bean> JSON refine(Function<T, JSON> e) {
-		return e.apply((T) this);
-	}
-
 	public static void main(String[] args) {
 		Bean b = new Bean();
 		b.set("a.a", 1);
@@ -654,6 +638,16 @@ public class Bean implements Serializable {
 
 		JSON j1 = b.getJSON();
 		System.out.println(j1.toPrettyString());
+	}
+
+	@Override
+	public Object remove(Object key) {
+		return set(key.toString(), null);
+	}
+
+	@Override
+	public Set<Entry<String, Object>> entrySet() {
+		return getAll().entrySet();
 	}
 
 }

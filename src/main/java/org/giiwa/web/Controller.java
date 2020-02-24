@@ -803,7 +803,6 @@ public class Controller {
 	/**
 	 * Sets name=object back to model which accessed by view.
 	 * 
-	 * @deprecated
 	 * @param name the name of data in model
 	 * @param o    the value object
 	 */
@@ -1751,7 +1750,7 @@ public class Controller {
 				login.set("lastlogined", System.currentTimeMillis());
 
 				V v = V.create();
-				String type = login.get("logintype");
+				String type = (String) login.get("logintype");
 				if (X.isSame(type, "web")) {
 					v.append("weblogined", System.currentTimeMillis());
 				} else if (X.isSame(type, "ajax")) {
@@ -1798,7 +1797,7 @@ public class Controller {
 				u.set("ip", this.getRemoteHost());
 
 				V v = V.create();
-				String type = u.get("logintype");
+				String type = (String) u.get("logintype");
 				if (X.isSame(type, "web")) {
 					v.append("weblogined", System.currentTimeMillis());
 					v.append("ip", this.getRemoteHost());

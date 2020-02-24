@@ -157,7 +157,6 @@ public class repo extends Controller {
 	/**
 	 * Delete.
 	 */
-	@SuppressWarnings("deprecation")
 	@Path(path = "delete", login = true)
 	public void delete() {
 

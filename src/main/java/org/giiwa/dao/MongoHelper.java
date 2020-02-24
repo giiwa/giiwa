@@ -180,6 +180,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	private MongoClient client = null;
 
+	@SuppressWarnings("deprecation")
 	private MongoDatabase getDB(String url, String db, String user, String passwd, int conns, int timeout) {
 		url = url.trim();
 		db = db.trim();
@@ -818,6 +819,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param db         the db
 	 * @return long
 	 */
+	@SuppressWarnings("deprecation")
 	public long count(String collection, W q, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		long n = 0;
@@ -1176,6 +1178,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return h;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public List<JSON> getMetaData(String tablename) {
 		MongoCollection<Document> c = getCollection(tablename);
@@ -1852,7 +1855,7 @@ public class MongoHelper implements Helper.DBHelper {
 				q.sort(name, 1);
 				Beans<Bean> b = this.load(table, new String[] { name }, q, (int) (n / 2), 1, Bean.class, db);
 				if (b != null && !b.isEmpty()) {
-					return b.get(0).get(name);
+					return (T) b.get(0).get(name);
 				}
 			} else if (n > 0) {
 				q.sort(name, 1);
@@ -1893,15 +1896,14 @@ public class MongoHelper implements Helper.DBHelper {
 
 			MongoCollection<Document> c = getCollection(db, table);
 			if (c != null) {
-				n = c. estimatedDocumentCount();
+				n = c.estimatedDocumentCount();
 //				count(q.query());
 			}
 		} catch (Exception e) {
 			throw e;
 		} finally {
 			if (log.isDebugEnabled())
-				log.debug("size, cost=" + t1.pastms() + "ms,  collection=" + table
-						+ ", n=" + n);
+				log.debug("size, cost=" + t1.pastms() + "ms,  collection=" + table + ", n=" + n);
 		}
 		return n;
 	}
