@@ -102,6 +102,7 @@ public final class Cache {
 //			log.debug("get cache name=" + id + ", T=" + r);
 
 			return (T) r;
+
 		} catch (Throwable e) {
 			if (cacheSystem != null) {
 				cacheSystem.delete(id);

@@ -99,7 +99,13 @@ public final class Global extends Bean {
 	 */
 	public static String getString(String name, String defaultValue) {
 
-		Global c = Cache.get("global/" + name);
+		Global c = null;
+		try {
+			c = Cache.get("global/" + name);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
 		if (c == null) {
 			c = dao.load(name);
 			if (c != null) {
