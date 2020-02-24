@@ -60,12 +60,12 @@
 	<classpathentry kind="lib" path="depends/commons-lang3-3.9.jar"/>
 	<classpathentry kind="lib" path="depends/commons-pool2-2.6.2.jar"/>
 	<classpathentry kind="lib" path="depends/commons-text-1.6.jar"/>
-	<classpathentry kind="lib" path="depends/giiwa-2.0.jar" sourcepath="/giiwa"/>
 	<classpathentry kind="lib" path="depends/jedis-3.1.0.jar"/>
 	<classpathentry kind="lib" path="depends/slf4j-api-1.6.6.jar"/>
 	<classpathentry kind="lib" path="depends/slf4j-log4j12-1.6.6.jar"/>
 	<classpathentry kind="lib" path="depends/REngine-2.1.0.jar"/>
 	<classpathentry kind="lib" path="depends/Rserve-1.8.1.jar"/>
 	<classpathentry kind="lib" path="depends/mongo-java-driver-3.11.1.jar"/>
+	<classpathentry kind="lib" path="depends/giiwa-2.1.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

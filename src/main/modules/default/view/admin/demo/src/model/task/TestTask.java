@@ -1,9 +1,7 @@
 package org.giiwa.demo.task;
 
-import java.util.Arrays;
-
-import org.giiwa.core.bean.X;
-import org.giiwa.core.task.Task;
+import org.giiwa.dao.X;
+import org.giiwa.task.Task;
 
 public class TestTask extends Task {
 

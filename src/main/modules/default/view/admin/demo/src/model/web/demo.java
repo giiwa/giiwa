@@ -1,7 +1,7 @@
 package org.giiwa.demo.web;
 
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 /**
  * web api: /demo
@@ -24,7 +24,7 @@ public class demo extends Controller {
 
 		// TODO
 
-		this.set("time", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
+		this.put("time", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
 		this.show("/demo.html");
 	}
 

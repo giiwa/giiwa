@@ -1,39 +1,42 @@
 //begin of the Model
 package org.giiwa.demo.web.admin;
 
-import org.giiwa.core.bean.Beans;
-import org.giiwa.core.bean.X;
-import org.giiwa.core.json.JSON;
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Helper.W;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.X;
 import org.giiwa.demo.bean.Demo;
-import org.giiwa.framework.web.Controller;
-import org.giiwa.framework.web.Path;
+import org.giiwa.json.JSON;
+import org.giiwa.web.Controller;
+import org.giiwa.web.Path;
 
 public class demo extends Controller {
 
 	@Path(login = true, access = "access.demo.admin")
 	public void onGet() {
-		
+
 		// get the parameters from the request
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
 		// create the query condition
-		W q = W.create();
+		W q = Demo.dao.query();
 		String name = this.getString("name");
 
 		if (!X.isEmpty(name)) {
 			q.and("name", name, W.OP.like);
-			this.set("name", name);
+			this.put("name", name);
 		}
 
 		// load data from database
-		Beans<Demo> bs = Demo.dao.load(q, s, n);
+		try {
+			Beans<Demo> bs = q.load(s, n);
 
-		// set the data in the model
-		this.set(bs, s, n);
-
+			// set the data in the model
+			this.set(bs, s, n);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 		// show (print) the list HTML page
 		this.show("/admin/demo.index.html");
 	}
@@ -47,8 +50,8 @@ public class demo extends Controller {
 		Demo d = Demo.dao.load(id);
 
 		// set the data in model
-		this.set("b", d);
-		this.set("id", id);
+		this.put("b", d);
+		this.put("id", id);
 
 		// show (print) the detail HTML page
 		this.show("/admin/demo.detail.html");
@@ -114,7 +117,7 @@ public class demo extends Controller {
 
 		// set the data in Model
 		this.set(d.getJSON());
-		this.set("id", id);
+		this.put("id", id);
 
 		// show (print) the edit HTML page
 		this.show("/admin/demo.edit.html");

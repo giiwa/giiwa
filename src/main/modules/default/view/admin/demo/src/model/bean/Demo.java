@@ -3,13 +3,13 @@ package org.giiwa.demo.bean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.core.bean.Bean;
-import org.giiwa.core.bean.BeanDAO;
-import org.giiwa.core.bean.Table;
-import org.giiwa.core.bean.Helper.V;
-import org.giiwa.core.bean.Column;
-import org.giiwa.core.bean.UID;
-import org.giiwa.core.bean.X;
+import org.giiwa.dao.Bean;
+import org.giiwa.dao.BeanDAO;
+import org.giiwa.dao.Column;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Table;
+import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
 
 /**
  * Demo bean
