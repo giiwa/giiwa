@@ -17,17 +17,7 @@
 	<div class='login'>
 		$lang.get('memory.total'):<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i>
 	</div>
-		
-	#if($!diskspeed>100) 
-	<div class='login'>
-		$lang.get('disk.speed'): <i style='color: green'>${diskspeed}(M/s)</i>
-	</div>
-	#elseif ($!diskspeed>0) 
-	<div class='login'>
-		$lang.get('disk.speed'): <i style='color: red'>${diskspeed}(M/s)</i>
-	</div>
-	#end
-		
+				
 	<div class='uptime'>
 		$lang.get('label.uptime'):<i>$uptime</i>, $lang.get('label.past'):<i>$past</i>
 	</div>
