@@ -19,7 +19,9 @@ public abstract class IoHandler extends IoHandlerAdapter {
 
 		IoResponse resp = IoResponse.create(session);
 		req.flip();
+		
 		process(req, resp);
+		
 		resp.release();
 		req.compact();
 

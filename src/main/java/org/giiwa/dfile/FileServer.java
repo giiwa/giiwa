@@ -80,7 +80,7 @@ public class FileServer {
 				URL = Config.getConf().getString("dfile.bind", URL);
 
 //				serv = Server.bind(URL, new RequestHandler(URL, this));
-				serv = Server.create().bind(URL, (req, resp) -> {
+				serv = Server.create().bind(URL).handler((req, resp) -> {
 
 					IoRequest r = born(req);
 					while (r != null) {
@@ -88,7 +88,7 @@ public class FileServer {
 						r = born(req);
 					}
 
-				});
+				}).start();
 
 			} catch (Exception e) {
 
