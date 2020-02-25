@@ -5,26 +5,27 @@ import java.io.FileInputStream;
 
 import org.giiwa.dao.X;
 import org.giiwa.dfile.ICommand;
-import org.giiwa.dfile.IResponseHandler;
-import org.giiwa.dfile.Request;
-import org.giiwa.dfile.Response;
+import org.giiwa.net.nio.IoRequest;
+import org.giiwa.net.nio.IoResponse;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class GET implements ICommand {
 
 	@Override
-	public void process(Request in, IResponseHandler handler) {
+	public void process(long seq, IoRequest req, IoResponse resp) {
 
-		String path = in.readString().replaceAll("[/\\\\]", "/");
-		String filename = in.readString().replaceAll("[/\\\\]", "/");
-
-		long offset = in.readLong();
-		int len = in.readInt();
+		String path = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
+		String filename = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
+ 
+		long offset = req.readLong();
+		int len = req.readInt();
 
 		if (log.isDebugEnabled())
 			log.debug("get, file=" + filename + ", offset=" + offset + ", len=" + len + ", path=" + path);
 
 		File f = new File(path + File.separator + filename);
-		Response out = Response.create(in.seq, Request.BIG);
 
 		FileInputStream f1 = null;
 		try {
@@ -34,15 +35,22 @@ public class GET implements ICommand {
 			byte[] bb = new byte[Math.min(len, f1.available())];
 			f1.read(bb);
 
-			out.writeBytes(bb);
+			resp.write(bb);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			out.writeInt(0);
+			resp.write((int)0);
 		} finally {
 			X.close(f1);
 		}
-		handler.send(out);
+		
+		resp.send(e -> {
+			ByteBuf b = Unpooled.buffer();
+			b.writeInt(e.readableBytes() + 8);
+			b.writeLong(seq);
+			b.writeBytes(e);
+			return b;
+		});
 
 	}
 

@@ -5,20 +5,22 @@ import java.io.RandomAccessFile;
 
 import org.giiwa.dao.X;
 import org.giiwa.dfile.ICommand;
-import org.giiwa.dfile.IResponseHandler;
-import org.giiwa.dfile.Request;
-import org.giiwa.dfile.Response;
+import org.giiwa.net.nio.IoRequest;
+import org.giiwa.net.nio.IoResponse;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class PUT implements ICommand {
 
 	@Override
-	public void process(Request in, IResponseHandler handler) {
+	public void process(long seq, IoRequest req, IoResponse resp) {
 
-		String path = in.readString().replaceAll("[/\\\\]", "/");
-		String filename = in.readString().replaceAll("[/\\\\]", "/");
+		String path = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
+		String filename = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
 
-		long offset = in.readLong();
-		byte[] bb = in.readBytes();
+		long offset = req.readLong();
+		byte[] bb = req.readBytes(req.readInt());
 
 		if (log.isDebugEnabled())
 			log.debug("put, file=" + filename + ", offset=" + offset + ", len=" + bb.length + ", path=" + path);
@@ -26,8 +28,6 @@ public class PUT implements ICommand {
 		File f = new File(path + File.separator + filename);
 
 		RandomAccessFile a = null;
-
-		Response out = Response.create(in.seq, Request.SMALL);
 
 		try {
 			if (bb != null) {
@@ -40,15 +40,22 @@ public class PUT implements ICommand {
 				a.write(bb);
 			}
 
-			out.writeLong(offset + (bb == null ? 0 : bb.length));
+			resp.write((long) (offset + (bb == null ? 0 : bb.length)));
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			out.writeLong(-1);
+			resp.write(-1L);
 		} finally {
 			X.close(a);
 		}
-		handler.send(out);
+
+		resp.send(e -> {
+			ByteBuf b = Unpooled.buffer();
+			b.writeInt(e.readableBytes() + 8);
+			b.writeLong(seq);
+			b.writeBytes(e);
+			return b;
+		});
 
 	}
 

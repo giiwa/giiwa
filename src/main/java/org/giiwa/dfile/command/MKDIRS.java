@@ -3,31 +3,38 @@ package org.giiwa.dfile.command;
 import java.io.File;
 
 import org.giiwa.dfile.ICommand;
-import org.giiwa.dfile.IResponseHandler;
-import org.giiwa.dfile.Request;
-import org.giiwa.dfile.Response;
+import org.giiwa.net.nio.IoRequest;
+import org.giiwa.net.nio.IoResponse;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class MKDIRS implements ICommand {
 
 	@Override
-	public void process(Request in, IResponseHandler handler) {
+	public void process(long seq, IoRequest req, IoResponse out) {
 
-		String path = in.readString().replaceAll("[/\\\\]", "/");
-		String filename = in.readString().replaceAll("[/\\\\]", "/");
-
-		Response out = Response.create(in.seq, Request.SMALL);
+		String path = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
+		String filename = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
 
 		File f = new File(path + File.separator + filename);
 		if (!f.exists()) {
 			if (f.mkdirs()) {
-				out.writeByte((byte) 1);
+				out.write((byte) 1);
 			} else {
-				out.writeByte((byte) 0);
+				out.write((byte) 0);
 			}
 		} else {
-			out.writeByte((byte) 1);
+			out.write((byte) 1);
 		}
-		handler.send(out);
+
+		out.send(e -> {
+			ByteBuf b = Unpooled.buffer();
+			b.writeInt(e.readableBytes() + 8);
+			b.writeLong(seq);
+			b.writeBytes(e);
+			return b;
+		});
 
 	}
 

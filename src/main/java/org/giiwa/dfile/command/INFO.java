@@ -1,25 +1,21 @@
 package org.giiwa.dfile.command;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributeView;
-import java.nio.file.attribute.BasicFileAttributes;
 
 import org.giiwa.dfile.ICommand;
-import org.giiwa.dfile.IResponseHandler;
-import org.giiwa.dfile.Request;
-import org.giiwa.dfile.Response;
+import org.giiwa.net.nio.IoRequest;
+import org.giiwa.net.nio.IoResponse;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class INFO implements ICommand {
 
 	@Override
-	public void process(Request in, IResponseHandler handler) {
+	public void process(long seq, IoRequest in, IoResponse out) {
 
-		String path = in.readString().replaceAll("[/\\\\]", "/");
-		String filename = in.readString().replaceAll("[/\\\\]", "/");
+		String path = new String(in.readBytes(in.readInt())).replaceAll("[/\\\\]", "/");
+		String filename = new String(in.readBytes(in.readInt())).replaceAll("[/\\\\]", "/");
 
 		if (log.isDebugEnabled())
 			log.debug("info, file=" + filename + ", path=" + path);
@@ -32,11 +28,10 @@ public class INFO implements ICommand {
 		// jo.append("l", f.length());
 		// jo.append("u", f.lastModified());
 
-		Response out = Response.create(in.seq, Request.SMALL);
-		out.writeInt(f.exists() ? 1 : 0);
-		out.writeInt(f.isFile() ? 1 : 0);
-		out.writeLong(f.length());
-		out.writeLong(f.lastModified());
+		out.write((int) (f.exists() ? 1 : 0));
+		out.write((int) (f.isFile() ? 1 : 0));
+		out.write((long) f.length());
+		out.write((long) f.lastModified());
 
 //		try {
 //			Path p1 = Paths.get(f.getAbsolutePath());
@@ -49,7 +44,14 @@ public class INFO implements ICommand {
 //			out.writeLong(-1);
 //		}
 		// out.writeString(jo.toString());
-		handler.send(out);
+
+		out.send(e -> {
+			ByteBuf b = Unpooled.buffer();
+			b.writeInt(e.readableBytes() + 8);
+			b.writeLong(seq);
+			b.writeBytes(e);
+			return b;
+		});
 
 	}
 

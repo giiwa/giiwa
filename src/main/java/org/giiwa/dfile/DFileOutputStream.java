@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.giiwa.bean.Disk;
+import org.giiwa.net.nio.IoRequest;
 
 public class DFileOutputStream extends OutputStream {
 
@@ -12,7 +13,7 @@ public class DFileOutputStream extends OutputStream {
 	String filename;
 	Disk disk;
 
-	byte[] bb = new byte[Request.BIG];
+	byte[] bb = new byte[IoRequest.BIG];
 	int pos = 0;
 	long offset = 0;
 

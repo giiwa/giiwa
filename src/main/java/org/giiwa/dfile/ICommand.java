@@ -2,6 +2,8 @@ package org.giiwa.dfile;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.net.nio.IoRequest;
+import org.giiwa.net.nio.IoResponse;
 
 public interface ICommand {
 
@@ -17,6 +19,6 @@ public interface ICommand {
 	public static final byte CMD_HTTP = 8;
 	public static final byte CMD_NOTIFY = 9;
 
-	public void process(Request in, IResponseHandler handler);
+	public void process(long seq, IoRequest req, IoResponse resp);
 
 }

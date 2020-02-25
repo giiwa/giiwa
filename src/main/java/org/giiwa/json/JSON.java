@@ -48,7 +48,6 @@ import org.giiwa.misc.Digest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
-import com.jayway.jsonpath.JsonPath;
 
 /**
  * The Class JSON, simple JSON object, using Gson to parse and format, <br>
@@ -640,8 +639,6 @@ public final class JSON extends HashMap<String, Object> {
 		ss = "{a:'a',b:1, c:{a:1, b:'a'}}";
 		j = JSON.fromObject(ss);
 		System.out.println(j);
-		System.out.println("$.c=" + j.find("$.c"));
-		System.out.println(j.set("$.c", 2));
 
 		System.out.println(j.get("b").getClass());
 		ss = "[{a:'a',b:1}]";
@@ -716,60 +713,6 @@ public final class JSON extends HashMap<String, Object> {
 //		System.out.println(m.get("0").getClass());
 
 		System.out.println(JSON.fromObjects(o));
-	}
-
-	/**
-	 * find the object by the xpath
-	 * 
-	 * @param <T>   the object
-	 * @param xpath the xpath expressions can use the dot–notation
-	 * 
-	 *              <pre>
-	$.store.book[0].title
-	or the bracket–notation
-	$['store']['book'][0]['title']
-	 *              </pre>
-	 * 
-	 * @return the object, or null if not exists
-	 */
-	public <T> T find(String xpath) {
-		return find(this, xpath);
-	}
-
-	/**
-	 * find the object by the xpath in json
-	 * 
-	 * @param <T>   the object returned
-	 * @param json  the json object
-	 * @param xpath the xpath expressions can use the dot–notation
-	 * 
-	 *              <pre>
-	$.store.book[0].title
-	or the bracket–notation
-	$['store']['book'][0]['title']
-	 *              </pre>
-	 * 
-	 * @return the object, or null if not exists
-	 */
-	public static <T> T find(Object json, String xpath) {
-		return JsonPath.parse(json).read(xpath);
-	}
-
-	/**
-	 * set the value by xpath
-	 * 
-	 * @param xpath the xpath expressions can use the dot–notation
-	 * 
-	 *              $.store.book[0].title or the bracket–notation
-	 *              $['store']['book'][0]['title']
-	 * 
-	 * @param value the object
-	 * @return JSON the new JSON object
-	 * @deprecated
-	 */
-	public JSON set(String xpath, Object value) {
-		set(this, xpath, value);
-		return this;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -875,26 +818,6 @@ public final class JSON extends HashMap<String, Object> {
 			}
 		}
 		return this;
-	}
-
-	/**
-	 * set the value by xpath
-	 * 
-	 * @param json  the source json object
-	 * @param xpath the xpath string <br>
-	 *              xpath expressions can use the dot–notation
-	 * 
-	 *              <pre>
-	$.store.book[0].title
-	or the bracket–notation
-	$['store']['book'][0]['title']
-	 *              </pre>
-	 * 
-	 * @param value the object
-	 * @deprecated
-	 */
-	public static void set(Object json, String xpath, Object value) {
-		JsonPath.parse(json).set(xpath, value);
 	}
 
 	/**

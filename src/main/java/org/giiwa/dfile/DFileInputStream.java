@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.giiwa.bean.Disk;
+import org.giiwa.net.nio.IoRequest;
 
 public class DFileInputStream extends InputStream {
 
@@ -107,8 +108,8 @@ public class DFileInputStream extends InputStream {
 			return;
 
 		if (bb == null || pos >= bb.length) {
-			bb = FileClient.get(url).get(path, filename, offset, Request.BIG);
-			if (bb == null || bb.length < Request.BIG) {
+			bb = FileClient.get(url).get(path, filename, offset, IoRequest.BIG);
+			if (bb == null || bb.length < IoRequest.BIG) {
 				// log.debug("last packet, bb=" + bb.length);
 				last = true;
 			}

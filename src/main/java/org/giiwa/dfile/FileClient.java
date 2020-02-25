@@ -21,14 +21,18 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
 import org.giiwa.net.nio.Client;
+import org.giiwa.net.nio.IoRequest;
+import org.giiwa.net.nio.IoResponse;
 import org.giiwa.web.Controller;
 
-public class FileClient implements IRequestHandler {
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+public class FileClient {
 
 	private static Log log = LogFactory.getLog(FileClient.class);
 
@@ -54,7 +58,7 @@ public class FileClient implements IRequestHandler {
 	 */
 	public static long mincost = Long.MAX_VALUE;
 
-	private Map<Long, Request[]> pending = new HashMap<Long, Request[]>();
+	private Map<Long, IoRequest[]> pending = new HashMap<Long, IoRequest[]>();
 
 	private AtomicLong seq = new AtomicLong(0);
 
@@ -78,7 +82,22 @@ public class FileClient implements IRequestHandler {
 
 	private static FileClient create(String url) throws IOException {
 		FileClient c = new FileClient();
-		c.client = Client.connect(url, new FileServer.RequestHandler(url, c));
+		c.client = Client.connect(url, resp -> {
+
+			IoRequest r = FileServer.born(resp);
+			if (r != null) {
+				long seq = resp.readLong();
+
+				Object[] aa = c.pending.get(seq);
+				if (aa != null) {
+					synchronized (aa) {
+						aa[0] = r;
+						aa.notify();
+					}
+				}
+			}
+		});
+
 		return c;
 	}
 
@@ -86,35 +105,41 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return false;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		IoResponse r = client.create();
+
+//		IoResponse r = IoResponse.create(seq.incrementAndGet(), IoRequest.SMALL);
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 
+		long s = seq.incrementAndGet();
+
 		try {
 
-			r.writeByte(ICommand.CMD_DELETE);
-			r.writeString(path);
-			r.writeString(filename);
-			r.writeLong(age);
+			r.write(s);
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			r.write(ICommand.CMD_DELETE);
+			r.write(path.getBytes().length).write(path.getBytes());
+			r.write(filename.getBytes().length).write(filename.getBytes());
+			r.write(age);
+
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
+				IoRequest a = aa[0];
 				return a.readByte() == 1 ? true : false;
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -147,36 +172,40 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return null;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		IoResponse r = client.create();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 
+		long s = seq.incrementAndGet();
+
 		try {
 
-			r.writeByte(ICommand.CMD_GET);
-			r.writeString(path);
-			r.writeString(filename);
-			r.writeLong(offset);
-			r.writeInt(len);
+			r.write(s);
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			r.write(ICommand.CMD_GET);
+			r.write(path.getBytes().length).write(path.getBytes());
+			r.write(filename.getBytes().length).write(filename.getBytes());
+			r.write(offset);
+			r.write(len);
+
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
-				return a.readBytes();
+				IoRequest a = aa[0];
+				return a.readBytes(a.readInt());
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -195,36 +224,38 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return -1;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.BIG);
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
+		long s = seq.incrementAndGet();
+
+		IoResponse r = client.create();
 
 		try {
 
-			r.writeByte(ICommand.CMD_PUT);
-			r.writeString(path);
-			r.writeString(filename);
-			r.writeLong(offset);
-			r.writeBytes(bb, len);
+			r.write(ICommand.CMD_PUT);
+			r.write(path.getBytes().length).write(path.getBytes());
+			r.write(filename.getBytes().length).write(filename.getBytes());
+			r.write(offset);
+			r.write(bb, 0, len);
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
+				IoRequest a = aa[0];
 				return a.readLong();
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -238,48 +269,38 @@ public class FileClient implements IRequestHandler {
 		return 0;
 	}
 
-	@Override
-	public void process(Request r, IResponseHandler ch) {
-		Request[] aa = pending.get(r.seq);
-		if (aa != null) {
-			synchronized (aa) {
-				aa[0] = r;
-				aa.notify();
-			}
-		}
-	}
-
 	public boolean mkdirs(String path, String filename) {
 		if (client == null)
 			return false;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		IoResponse r = client.create();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
+		long s = seq.incrementAndGet();
 
 		try {
 
-			r.writeByte(ICommand.CMD_MKDIRS);
-			r.writeString(path);
-			r.writeString(filename);
+			r.write(ICommand.CMD_MKDIRS);
+			r.write(path.getBytes().length).write(path.getBytes());
+			r.write(filename.getBytes().length).write(path.getBytes());
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
+				IoRequest a = aa[0];
 				return a.readByte() == 1 ? true : false;
 			}
 		} catch (Exception e) {
 			close();
 		} finally {
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -299,34 +320,35 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return null;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.MID);
+		IoResponse r = client.create();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
+		long s = seq.incrementAndGet();
 
 		try {
 
-			r.writeByte(ICommand.CMD_LIST);
-			r.writeString(path);
-			r.writeString(filename);
+			r.write(ICommand.CMD_LIST);
+			r.write(path.getBytes().length).write(path.getBytes());
+			r.write(filename.getBytes().length).write(filename.getBytes());
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
+				IoRequest a = aa[0];
 
 				List<FileInfo> l1 = new ArrayList<FileInfo>();
 
-				while (a.hasRemaining()) {
+				while (a.size() > 0) {
 					// JSON j1 = JSON.create();
 					FileInfo info = new FileInfo();
-					info.name = a.readString();
+					info.name = new String(a.readBytes(a.readInt()));
 					info.exists = a.readInt() == 1;
 					info.isfile = a.readInt() == 1;
 					info.length = a.readLong();
@@ -341,7 +363,7 @@ public class FileClient implements IRequestHandler {
 		} catch (Exception e) {
 			close();
 		} finally {
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -361,27 +383,28 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return null;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		IoResponse r = client.create();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
+		long s = seq.incrementAndGet();
 
 		try {
 
-			r.writeByte(ICommand.CMD_INFO);
-			r.writeString(path);
-			r.writeString(filename);
+			r.write(ICommand.CMD_INFO);
+			r.write(path.getBytes().length).write(path.getBytes());
+			r.write(filename.getBytes().length).write(filename.getBytes());
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
+				IoRequest a = aa[0];
 
 				FileInfo info = new FileInfo();
 				info.exists = a.readInt() == 1;
@@ -396,7 +419,7 @@ public class FileClient implements IRequestHandler {
 		} catch (Exception e) {
 			close();
 		} finally {
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -410,8 +433,7 @@ public class FileClient implements IRequestHandler {
 		return null;
 	}
 
-	@Override
-	public void closed(String name) {
+	public void close(String name) {
 		FileClient c = cached.remove(name);
 		if (c != null && c.client != null) {
 			c.client.close();
@@ -424,35 +446,36 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return false;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.SMALL);
+		IoResponse r = client.create();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
+		long s = seq.incrementAndGet();
 
 		try {
 
-			r.writeByte(ICommand.CMD_MOVE);
-			r.writeString(path);
-			r.writeString(filename);
-			r.writeString(path2);
-			r.writeString(filename2);
+			r.write(ICommand.CMD_MOVE);
+			r.write(path.getBytes().length).write(path.getBytes());
+			r.write(filename.getBytes().length).write(filename.getBytes());
+			r.write(path2.getBytes().length).write(path2.getBytes());
+			r.write(filename2.getBytes().length).write(filename2.getBytes());
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
+				IoRequest a = aa[0];
 				return a.readByte() == 1 ? true : false;
 			}
 		} catch (Exception e) {
 			close();
 		} finally {
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -471,51 +494,52 @@ public class FileClient implements IRequestHandler {
 		if (client == null)
 			return;
 
-		Response r = Response.create(seq.incrementAndGet(), Request.MID);
+		IoResponse r = client.create();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
+		long s = seq.incrementAndGet();
 
 		try {
 
-			r.writeByte(ICommand.CMD_HTTP);
-			r.writeString(method);
-			r.writeString(uri);
+			r.write(ICommand.CMD_HTTP);
+			r.write(method.getBytes().length).write(method.getBytes());
+			r.write(uri.getBytes().length).write(uri.getBytes());
 			JSON head = JSON.create();
 			Enumeration<String> h1 = req.getHeaderNames();
 			if (h1 != null) {
 				while (h1.hasMoreElements()) {
-					String s = h1.nextElement();
-					head.append(s, req.getHeader(s));
+					String s1 = h1.nextElement();
+					head.append(s1, req.getHeader(s1));
 				}
 			}
 
 			JSON body = getJSON(req).append("__node", node);
 
-			r.writeString(head.toString());
-			r.writeString(body.toString());
+			r.write(head.toString().getBytes().length).write(head.toString().getBytes());
+			r.write(body.toString().getBytes().length).write(body.toString().getBytes());
 
 			// r.writeBytes(null);
 
-			Request[] aa = new Request[1];
-			pending.put(r.seq, aa);
+			IoRequest[] aa = new IoRequest[1];
+			pending.put(s, aa);
 			synchronized (aa) {
-				_send(r);
+				_send(s, r);
 				if (aa[0] == null) {
 					aa.wait(TIMEOUT);
 				}
 			}
 
 			if (aa[0] != null) {
-				Request a = aa[0];
+				IoRequest a = aa[0];
 				resp.setStatus(a.readInt());
-				head = JSON.fromObject(a.readString());
+				head = JSON.fromObject(a.readBytes(a.readInt()));
 
 				// log.debug("head=" + head);
 
-				for (String s : head.keySet()) {
-					resp.addHeader(s, head.getString(s));
+				for (String s1 : head.keySet()) {
+					resp.addHeader(s1, head.getString(s1));
 				}
-				byte[] bb = a.readBytes();
+				byte[] bb = a.readBytes(a.readInt());
 				if (bb != null) {
 					OutputStream out = resp.getOutputStream();
 					out.write(bb);
@@ -526,7 +550,7 @@ public class FileClient implements IRequestHandler {
 			log.error(e.getMessage(), e);
 		} finally {
 			close();
-			pending.remove(r.seq);
+			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
 			if (maxcost < t.pastms()) {
@@ -660,16 +684,15 @@ public class FileClient implements IRequestHandler {
 		System.out.println("ok");
 	}
 
-	private void _send(Response resp) {
-		resp.out.flip();
-		IoBuffer b = IoBuffer.allocate(resp.out.remaining() + 4);
-		b.putInt(resp.out.remaining());
-		b.put(resp.out);
-		b.flip();
-		client.write(b);
+	private void _send(long seq, IoResponse resp) {
 
-		b.free();
-		resp.out.free();
+		resp.send(e -> {
+			ByteBuf b = Unpooled.buffer();
+			b.writeInt((int) (e.readableBytes() + 8));
+			b.writeLong(seq);
+			b.writeBytes(e);
+			return b;
+		});
 
 	}
 
