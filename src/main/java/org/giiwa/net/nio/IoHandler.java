@@ -7,7 +7,15 @@ import org.apache.mina.core.session.IoSession;
 public abstract class IoHandler extends IoHandlerAdapter {
 
 	@Override
+	public void sessionCreated(IoSession session) throws Exception {
+//		System.out.println("created: " + Thread.currentThread().getName());
+		super.sessionCreated(session);
+	}
+
+	@Override
 	final public void messageReceived(IoSession session, Object message) throws Exception {
+
+//		System.out.println("data: " + Thread.currentThread().getName());
 
 		IoRequest req = (IoRequest) session.getAttribute("req");
 		if (req == null) {
@@ -19,9 +27,9 @@ public abstract class IoHandler extends IoHandlerAdapter {
 
 		IoResponse resp = IoResponse.create(session);
 		req.flip();
-		
+
 		process(req, resp);
-		
+
 		resp.release();
 		req.compact();
 

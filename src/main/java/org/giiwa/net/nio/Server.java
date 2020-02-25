@@ -167,7 +167,7 @@ public class Server implements Closeable {
 
 		Task.init(10);
 
-		Server.create().option(Key.PROCESSOR, 100).bind("127.0.0.1", 9092).handler((req, resp) -> {
+		Server.create().option(Key.PROCESSOR, 8).bind("127.0.0.1", 9092).handler((req, resp) -> {
 
 			String s = "HTTP/1.1 200\n" + "Access-Control-Allow-Origin: no\n"
 					+ "Content-Type: text/html;charset=UTF-8\n" + "Vary: Accept-Encoding\n"
