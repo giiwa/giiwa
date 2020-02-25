@@ -166,7 +166,9 @@ public class FileServer {
 
 			ICommand c = commands.get(cmd);
 			if (c != null) {
-				// ICommand.log.debug("cmd=" + cmd + ", processor=" + c);
+
+//				ICommand.log.debug("cmd=" + cmd + ", processor=" + c);
+
 				c.process(seq, req, resp);
 
 				costs.addAndGet(t.pastms());

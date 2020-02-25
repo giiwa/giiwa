@@ -18,7 +18,9 @@ public class IoResponse {
 	}
 
 	public IoResponse send(Function<IoBuffer, IoBuffer> func) {
+
 		if (out != null && ch != null) {
+			out.flip();
 			IoBuffer b = func.apply(out);
 			if (b != null) {
 				b.flip();

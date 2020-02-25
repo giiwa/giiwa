@@ -20,8 +20,8 @@ public class HTTP implements ICommand {
 
 		String m = new String(req.readBytes(req.readInt()));
 		String uri = new String(req.readBytes(req.readInt()));
-		JSON head = JSON.fromObject(new String(req.readBytes(req.readInt())));
-		JSON body = JSON.fromObject(new String(req.readBytes(req.readInt())));
+		JSON head = JSON.fromObject(req.readBytes(req.readInt()));
+		JSON body = JSON.fromObject(req.readBytes(req.readInt()));
 
 		// log.debug("head=" + head.toString());
 		// log.debug("body=" + body.toString());
@@ -31,13 +31,15 @@ public class HTTP implements ICommand {
 			Controller.process(uri, MockRequest.create(uri, head, body), resp1, m, t);
 
 			resp.write(resp1.status);
-			resp.write((short) resp1.head.toString().getBytes().length).write(resp1.head.toString().getBytes());
-			resp.write(resp1.out.toByteArray());
+			byte[] b1 = resp1.head.toString().getBytes();
+			resp.write(b1.length).write(b1);
+			b1 = resp1.out.toByteArray();
+			resp.write(b1.length).write(b1);
+
 			X.close(resp1);
 
 			resp.send(e -> {
-				IoBuffer b = IoBuffer.allocate(1024);
-				b.setAutoExpand(true);
+				IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
 				b.putInt(e.remaining() + 8);
 				b.putLong(seq);
 				b.put(e);
@@ -52,8 +54,7 @@ public class HTTP implements ICommand {
 				resp.write(e1.getMessage().getBytes());
 
 				resp.send(e -> {
-					IoBuffer b = IoBuffer.allocate(1024);
-					b.setAutoExpand(true);
+					IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
 					b.putInt(e.remaining() + 8);
 					b.putLong(seq);
 					b.put(e);

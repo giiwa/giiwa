@@ -16,7 +16,7 @@ public class GET implements ICommand {
 
 		String path = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
 		String filename = new String(req.readBytes(req.readInt())).replaceAll("[/\\\\]", "/");
- 
+
 		long offset = req.readLong();
 		int len = req.readInt();
 
@@ -33,18 +33,18 @@ public class GET implements ICommand {
 			byte[] bb = new byte[Math.min(len, f1.available())];
 			f1.read(bb);
 
+			resp.write((int) bb.length);
 			resp.write(bb);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			resp.write((int)0);
+			resp.write((int) 0);
 		} finally {
 			X.close(f1);
 		}
-		
+
 		resp.send(e -> {
-			IoBuffer b = IoBuffer.allocate(1024);
-			b.setAutoExpand(true);
+			IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
 			b.putInt(e.remaining() + 8);
 			b.putLong(seq);
 			b.put(e);

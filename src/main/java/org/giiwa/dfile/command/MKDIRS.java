@@ -27,8 +27,7 @@ public class MKDIRS implements ICommand {
 		}
 
 		out.send(e -> {
-			IoBuffer b = IoBuffer.allocate(1024);
-			b.setAutoExpand(true);
+			IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
 			b.putInt(e.remaining() + 8);
 			b.putLong(seq);
 			b.put(e);

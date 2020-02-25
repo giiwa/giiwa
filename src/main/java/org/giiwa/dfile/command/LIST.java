@@ -24,7 +24,8 @@ public class LIST implements ICommand {
 		File[] ff = f.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
-				out.write((short) f1.getName().getBytes().length).write(f1.getName().getBytes());
+				byte[] b = f1.getName().getBytes();
+				out.write(b.length).write(b);
 				out.write(f1.exists() ? 1 : 0);
 				out.write(f1.isFile() ? 1 : 0);
 				out.write(f1.length());

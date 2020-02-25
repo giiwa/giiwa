@@ -113,11 +113,11 @@ public class FileClient {
 
 		try {
 
-			r.write(s);
-
 			r.write(ICommand.CMD_DELETE);
-			r.write(path.getBytes().length).write(path.getBytes());
-			r.write(filename.getBytes().length).write(filename.getBytes());
+			byte[] b = path.getBytes();
+			r.write(b.length).write(b);
+			b = filename.getBytes();
+			r.write(b.length).write(b);
 			r.write(age);
 
 			IoRequest[] aa = new IoRequest[1];
@@ -178,11 +178,11 @@ public class FileClient {
 
 		try {
 
-			r.write(s);
-
 			r.write(ICommand.CMD_GET);
-			r.write(path.getBytes().length).write(path.getBytes());
-			r.write(filename.getBytes().length).write(filename.getBytes());
+			byte[] b = path.getBytes();
+			r.write(b.length).write(b);
+			b = filename.getBytes();
+			r.write(b.length).write(b);
 			r.write(offset);
 			r.write(len);
 
@@ -231,9 +231,12 @@ public class FileClient {
 		try {
 
 			r.write(ICommand.CMD_PUT);
-			r.write(path.getBytes().length).write(path.getBytes());
-			r.write(filename.getBytes().length).write(filename.getBytes());
+			byte[] b = path.getBytes();
+			r.write(b.length).write(b);
+			b = filename.getBytes();
+			r.write(b.length).write(b);
 			r.write(offset);
+			r.write(len);
 			r.write(bb, 0, len);
 
 			IoRequest[] aa = new IoRequest[1];
@@ -279,8 +282,10 @@ public class FileClient {
 		try {
 
 			r.write(ICommand.CMD_MKDIRS);
-			r.write(path.getBytes().length).write(path.getBytes());
-			r.write(filename.getBytes().length).write(path.getBytes());
+			byte[] b = path.getBytes();
+			r.write(b.length).write(b);
+			b = filename.getBytes();
+			r.write(b.length).write(b);
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -326,8 +331,10 @@ public class FileClient {
 		try {
 
 			r.write(ICommand.CMD_LIST);
-			r.write(path.getBytes().length).write(path.getBytes());
-			r.write(filename.getBytes().length).write(filename.getBytes());
+			byte[] b = path.getBytes();
+			r.write(b.length).write(b);
+			b = filename.getBytes();
+			r.write(b.length).write(b);
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -389,8 +396,10 @@ public class FileClient {
 		try {
 
 			r.write(ICommand.CMD_INFO);
-			r.write(path.getBytes().length).write(path.getBytes());
-			r.write(filename.getBytes().length).write(filename.getBytes());
+			byte[] b = path.getBytes();
+			r.write(b.length).write(b);
+			b = filename.getBytes();
+			r.write(b.length).write(b);
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -452,10 +461,10 @@ public class FileClient {
 		try {
 
 			r.write(ICommand.CMD_MOVE);
-			r.write(path.getBytes().length).write(path.getBytes());
-			r.write(filename.getBytes().length).write(filename.getBytes());
-			r.write(path2.getBytes().length).write(path2.getBytes());
-			r.write(filename2.getBytes().length).write(filename2.getBytes());
+			for (String s1 : new String[] { path, filename, path2, filename2 }) {
+				byte[] b = s1.getBytes();
+				r.write(b.length).write(b);
+			}
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -500,8 +509,7 @@ public class FileClient {
 		try {
 
 			r.write(ICommand.CMD_HTTP);
-			r.write(method.getBytes().length).write(method.getBytes());
-			r.write(uri.getBytes().length).write(uri.getBytes());
+
 			JSON head = JSON.create();
 			Enumeration<String> h1 = req.getHeaderNames();
 			if (h1 != null) {
@@ -513,10 +521,10 @@ public class FileClient {
 
 			JSON body = getJSON(req).append("__node", node);
 
-			r.write(head.toString().getBytes().length).write(head.toString().getBytes());
-			r.write(body.toString().getBytes().length).write(body.toString().getBytes());
-
-			// r.writeBytes(null);
+			for (String s1 : new String[] { method, uri, head.toString(), body.toString() }) {
+				byte[] b = s1.getBytes();
+				r.write(b.length).write(b);
+			}
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -686,11 +694,11 @@ public class FileClient {
 
 		resp.send(e -> {
 
-			IoBuffer b = IoBuffer.allocate(1024);
-			b.setAutoExpand(true);
+			IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
 			b.putInt((int) (e.remaining() + 8));
 			b.putLong(seq);
 			b.put(e);
+
 			return b;
 		});
 
