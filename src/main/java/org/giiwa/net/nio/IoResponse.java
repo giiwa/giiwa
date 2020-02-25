@@ -23,7 +23,9 @@ public class IoResponse {
 			out.flip();
 			IoBuffer b = func.apply(out);
 			if (b != null) {
-				b.flip();
+				if (out != b)
+					b.flip();
+
 				ch.write(b);
 			}
 		}

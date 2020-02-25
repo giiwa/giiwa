@@ -36,6 +36,7 @@ public class Server implements Closeable {
 			if (u.isProtocol("tcp")) {
 				acceptor = new NioSocketAcceptor();
 				((NioSocketAcceptor) acceptor).setReuseAddress(true);
+				((NioSocketAcceptor)acceptor).setBacklog(1024);
 				
 				acceptor.setHandler(new IoHandler() {
 
@@ -108,22 +109,19 @@ public class Server implements Closeable {
 	public static void main(String[] args) {
 
 		Task.init(10);
-		try {
-			Server.create().bind("tcp://127.0.0.1:9092", (req, resp) -> {
 
-				String s = "HTTP/1.1 200\n" + "Access-Control-Allow-Origin: no\n"
-						+ "Content-Type: text/html;charset=UTF-8\n" + "Vary: Accept-Encoding\n"
-						+ "Date: Mon, 24 Feb 2020 21:22:24 GMT\n" + "\n" + "hello world!\n";
+		Server.create().bind("tcp://127.0.0.1:9092", (req, resp) -> {
 
-				resp.write(s.getBytes());
-				resp.flush();
+			String s = "HTTP/1.1 200\n" + "Access-Control-Allow-Origin: no\n"
+					+ "Content-Type: text/html;charset=UTF-8\n" + "Vary: Accept-Encoding\n"
+					+ "Date: Mon, 24 Feb 2020 21:22:24 GMT\n" + "\n" + "hello world!\n";
 
-				resp.close();
+			resp.write(s.getBytes());
+			resp.flush();
 
-			});
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+			resp.close();
+
+		});
 	}
 
 }
