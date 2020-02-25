@@ -2,12 +2,10 @@ package org.giiwa.dfile.command;
 
 import java.io.File;
 
+import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dfile.ICommand;
 import org.giiwa.net.nio.IoRequest;
 import org.giiwa.net.nio.IoResponse;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class INFO implements ICommand {
 
@@ -46,10 +44,11 @@ public class INFO implements ICommand {
 		// out.writeString(jo.toString());
 
 		out.send(e -> {
-			ByteBuf b = Unpooled.buffer();
-			b.writeInt(e.readableBytes() + 8);
-			b.writeLong(seq);
-			b.writeBytes(e);
+			IoBuffer b = IoBuffer.allocate(1024);
+			b.setAutoExpand(true);
+			b.putInt(e.remaining() + 8);
+			b.putLong(seq);
+			b.put(e);
 			return b;
 		});
 

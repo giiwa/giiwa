@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.bean.Disk;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.TimeStamp;
@@ -26,9 +27,6 @@ import org.giiwa.net.nio.IoRequest;
 import org.giiwa.net.nio.IoResponse;
 import org.giiwa.net.nio.Server;
 import org.giiwa.task.Task;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class FileServer {
 
@@ -83,11 +81,13 @@ public class FileServer {
 
 //				serv = Server.bind(URL, new RequestHandler(URL, this));
 				serv = Server.create().bind(URL, (req, resp) -> {
+
 					IoRequest r = born(req);
 					while (r != null) {
 						process(r, resp);
 						r = born(req);
 					}
+
 				});
 
 			} catch (Exception e) {
@@ -133,6 +133,7 @@ public class FileServer {
 	}
 
 	public static IoRequest born(IoRequest p) {
+
 		int size = p.size();
 		if (size < 4)
 			return null;
@@ -147,7 +148,9 @@ public class FileServer {
 
 		byte[] d = new byte[len];
 		p.readBytes(d);
-		IoRequest r = IoRequest.create(Unpooled.wrappedBuffer(d));
+		IoRequest r = IoRequest.create(d);
+		r.flip();
+
 		return r;
 	}
 
@@ -183,10 +186,11 @@ public class FileServer {
 				resp.write(bb.length).write(bb);
 
 				resp.send(e -> {
-					ByteBuf b = Unpooled.buffer();
-					b.writeInt(e.readableBytes() + 8);
-					b.writeLong(seq);
-					b.writeBytes(e);
+					IoBuffer b = IoBuffer.allocate(1024);
+					b.setAutoExpand(true);
+					b.putInt(e.remaining() + 8);
+					b.putLong(seq);
+					b.put(e);
 					return b;
 				});
 			}

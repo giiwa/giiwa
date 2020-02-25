@@ -2,19 +2,22 @@ package org.giiwa.net.nio;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.function.Consumer;
+
+import javax.net.ssl.SSLContext;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
+import org.apache.mina.core.future.ConnectFuture;
+import org.apache.mina.core.service.IoConnector;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.filter.ssl.SslFilter;
+import org.apache.mina.transport.socket.nio.NioDatagramConnector;
+import org.apache.mina.transport.socket.nio.NioSocketConnector;
 import org.giiwa.misc.Url;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
 
 public class Client implements Closeable {
 
@@ -23,11 +26,8 @@ public class Client implements Closeable {
 	protected String url;
 	protected String host;
 	protected int port;
-//	protected IoConnector connector;
-//	protected IoSession session;
-
-	private Bootstrap client;
-	private Channel ch;
+	protected IoConnector connector;
+	protected IoSession session;
 
 	public static Client connect(String server, Consumer<IoRequest> handler) throws IOException {
 
@@ -38,76 +38,135 @@ public class Client implements Closeable {
 
 		Client c = new Client();
 
-		c.client = new Bootstrap();
+		if (u.isProtocol("tcp")) {
 
-		EventLoopGroup group = new NioEventLoopGroup();
+			c.connector = new NioSocketConnector();
 
-		try {
+			try {
+				c.connector.setHandler(new IoHandler() {
 
-			c.client.group(group).channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY, true)
-					.handler(new IoHandler() {
+					@Override
+					public void process(IoRequest req, IoResponse resp) {
+						handler.accept(req);
+					}
 
-						@Override
-						public void process(IoRequest req, IoResponse resp) {
-							handler.accept(req);
-						}
+				});
+				c.connector.setConnectTimeoutMillis(10000);
 
-					});
+				ConnectFuture connFuture = c.connector.connect(new InetSocketAddress(u.getIp(), u.getPort(9091)));
+				connFuture.awaitUninterruptibly();
 
-			// Start the client.
-			c.ch = c.client.connect(u.getIp(), u.getPort(8092)).sync().channel();
+				if (connFuture.isDone()) {
+					if (!connFuture.isConnected()) {
+						throw new IOException("fail to connect url=" + u);
+					}
+				}
+				c.session = connFuture.getSession();
 
-//			c.connector.setHandler(handler);
-//			c.connector.setConnectTimeoutMillis(10000);
-//
-//			ConnectFuture connFuture = c.connector.connect(new InetSocketAddress(u.getIp(), u.getPort(9091)));
-//			connFuture.awaitUninterruptibly();
-//
-//			if (connFuture.isDone()) {
-//				if (!connFuture.isConnected()) {
-//					throw new IOException("fail to connect url=" + u);
-//				}
-//			}
-//			c.session = connFuture.getSession();
-//
-			return c;
+				return c;
 
-		} catch (Exception e) {
-//			c.connector.dispose(true);
-//			c.connector = null;
-//			log.error(server, e);
-			throw new IOException(e);
+			} catch (IOException e) {
+				c.connector.dispose(true);
+				c.connector = null;
+				log.error(server, e);
+				throw e;
+			}
+
+		} else if (u.isProtocol("ssl")) {
+
+			c.connector = new NioSocketConnector();
+
+			try {
+
+				c.connector.setHandler(new IoHandler() {
+
+					@Override
+					public void process(IoRequest req, IoResponse resp) {
+						handler.accept(req);
+					}
+
+				});
+				c.connector.setConnectTimeoutMillis(10000);
+
+				SSLContext sslContext = SSLContext.getInstance("SSL");
+				sslContext.init(null, null, null);
+
+				SslFilter sslFilter = new SslFilter(sslContext);
+				sslFilter.setUseClientMode(true);
+
+				DefaultIoFilterChainBuilder chain = c.connector.getFilterChain();
+				chain.addFirst("sslFilter", sslFilter);
+
+				ConnectFuture connFuture = c.connector.connect(new InetSocketAddress(u.getIp(), u.getPort(9091)));
+				connFuture.awaitUninterruptibly();
+
+				if (connFuture.isDone()) {
+					if (!connFuture.isConnected()) {
+						throw new IOException("fail to connect url=" + u);
+					}
+				}
+				c.session = connFuture.getSession();
+
+				return c;
+
+			} catch (Exception e) {
+				c.connector.dispose(true);
+				c.connector = null;
+				log.error(server, e);
+				throw new IOException(e);
+			}
+
+		} else if (u.isProtocol("udp")) {
+
+			c.connector = new NioDatagramConnector();
+
+			try {
+				c.connector.setHandler(new IoHandler() {
+
+					@Override
+					public void process(IoRequest req, IoResponse resp) {
+						handler.accept(req);
+					}
+
+				});
+
+				ConnectFuture connFuture = c.connector.connect(new InetSocketAddress(u.getIp(), u.getPort(9091)));
+
+				connFuture.awaitUninterruptibly();
+
+				c.session = connFuture.getSession();
+
+				return c;
+			} catch (Exception e) {
+				c.connector.dispose(true);
+				c.connector = null;
+
+				log.error(server, e);
+				throw e;
+			}
+
+		} else {
+			throw new IOException("unknown protocol, url=" + u);
 		}
-
 	}
 
 	public void close() {
-		if (ch != null) {
-			ch.close();
-			ch = null;
+		if (session != null) {
+			session.closeNow();
+			session = null;
 		}
-		if (client != null) {
-			client.config().group().shutdownGracefully();
-			client = null;
+		if (connector != null) {
+			connector.dispose();
+			connector = null;
 		}
-
-//		if (session != null) {
-//			session.closeNow();
-//			session = null;
-//		}
-//		if (connector != null) {
-//			connector.dispose();
-//			connector = null;
-//		}
 	}
 
-	public void write(ByteBuf b) {
-		ch.write(b);
-		ch.flush();
+	public void write(IoBuffer b) {
+		session.write(b);
 	}
 
 	public IoResponse create() {
-		return IoResponse.create(ch);
+		return IoResponse.create(session);
 	}
 
 	// public static void main(String[] args) {

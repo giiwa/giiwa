@@ -3,13 +3,11 @@ package org.giiwa.dfile.command;
 import java.io.File;
 import java.io.RandomAccessFile;
 
+import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.ICommand;
 import org.giiwa.net.nio.IoRequest;
 import org.giiwa.net.nio.IoResponse;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class PUT implements ICommand {
 
@@ -50,10 +48,11 @@ public class PUT implements ICommand {
 		}
 
 		resp.send(e -> {
-			ByteBuf b = Unpooled.buffer();
-			b.writeInt(e.readableBytes() + 8);
-			b.writeLong(seq);
-			b.writeBytes(e);
+			IoBuffer b = IoBuffer.allocate(1024);
+			b.setAutoExpand(true);
+			b.putInt(e.remaining() + 8);
+			b.putLong(seq);
+			b.put(e);
 			return b;
 		});
 

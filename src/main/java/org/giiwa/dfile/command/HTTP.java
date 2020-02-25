@@ -1,5 +1,6 @@
 package org.giiwa.dfile.command;
 
+import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.ICommand;
@@ -9,9 +10,6 @@ import org.giiwa.json.JSON;
 import org.giiwa.net.nio.IoRequest;
 import org.giiwa.net.nio.IoResponse;
 import org.giiwa.web.Controller;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class HTTP implements ICommand {
 
@@ -38,10 +36,11 @@ public class HTTP implements ICommand {
 			X.close(resp1);
 
 			resp.send(e -> {
-				ByteBuf b = Unpooled.buffer();
-				b.writeInt(e.readableBytes() + 8);
-				b.writeLong(seq);
-				b.writeBytes(e);
+				IoBuffer b = IoBuffer.allocate(1024);
+				b.setAutoExpand(true);
+				b.putInt(e.remaining() + 8);
+				b.putLong(seq);
+				b.put(e);
 				return b;
 			});
 
@@ -53,10 +52,11 @@ public class HTTP implements ICommand {
 				resp.write(e1.getMessage().getBytes());
 
 				resp.send(e -> {
-					ByteBuf b = Unpooled.buffer();
-					b.writeInt(e.readableBytes() + 8);
-					b.writeLong(seq);
-					b.writeBytes(e);
+					IoBuffer b = IoBuffer.allocate(1024);
+					b.setAutoExpand(true);
+					b.putInt(e.remaining() + 8);
+					b.putLong(seq);
+					b.put(e);
 					return b;
 				});
 

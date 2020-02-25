@@ -21,6 +21,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
@@ -28,9 +29,6 @@ import org.giiwa.net.nio.Client;
 import org.giiwa.net.nio.IoRequest;
 import org.giiwa.net.nio.IoResponse;
 import org.giiwa.web.Controller;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public class FileClient {
 
@@ -86,7 +84,7 @@ public class FileClient {
 
 			IoRequest r = FileServer.born(resp);
 			if (r != null) {
-				long seq = resp.readLong();
+				long seq = r.readLong();
 
 				Object[] aa = c.pending.get(seq);
 				if (aa != null) {
@@ -687,10 +685,12 @@ public class FileClient {
 	private void _send(long seq, IoResponse resp) {
 
 		resp.send(e -> {
-			ByteBuf b = Unpooled.buffer();
-			b.writeInt((int) (e.readableBytes() + 8));
-			b.writeLong(seq);
-			b.writeBytes(e);
+
+			IoBuffer b = IoBuffer.allocate(1024);
+			b.setAutoExpand(true);
+			b.putInt((int) (e.remaining() + 8));
+			b.putLong(seq);
+			b.put(e);
 			return b;
 		});
 

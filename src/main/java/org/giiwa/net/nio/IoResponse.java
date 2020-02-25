@@ -2,28 +2,27 @@ package org.giiwa.net.nio;
 
 import java.util.function.Function;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.Channel;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.session.IoSession;
 
 public class IoResponse {
 
-	public ByteBuf out;
-	private Channel ch;
+	private IoBuffer out;
+	private IoSession ch;
 
 	public void close() {
 		if (ch != null) {
-//			ctx.write(out).addListener(ChannelFutureListener.CLOSE);
-//			System.out.println(ctx.channel().remoteAddress());
-			ch.close();
+			ch.closeOnFlush();
+			ch = null;
 		}
 	}
 
-	public IoResponse send(Function<ByteBuf, ByteBuf> func) {
+	public IoResponse send(Function<IoBuffer, IoBuffer> func) {
 		if (out != null && ch != null) {
-			ByteBuf b = func.apply(out);
+			IoBuffer b = func.apply(out);
 			if (b != null) {
+				b.flip();
 				ch.write(b);
-				ch.flush();
 			}
 		}
 		return this;
@@ -31,50 +30,63 @@ public class IoResponse {
 	}
 
 	public IoResponse write(long s) {
-		if (out == null)
-			out = ch.alloc().buffer();
+		if (out == null) {
+			out = IoBuffer.allocate(1024);
+			out.setAutoExpand(true);
+		}
 
-		out.writeLong(s);
+		out.putLong(s);
 		return this;
 
 	}
 
 	public IoResponse write(int s) {
-		out.writeInt(s);
+		if (out == null) {
+			out = IoBuffer.allocate(1024);
+			out.setAutoExpand(true);
+		}
+
+		out.putInt(s);
 		return this;
 
 	}
 
 	public IoResponse write(byte[] bb) {
-		if (out == null)
-			out = ch.alloc().buffer();
+		if (out == null) {
+			out = IoBuffer.allocate(1024);
+			out.setAutoExpand(true);
+		}
 
-		out.writeBytes(bb);
+		out.put(bb);
 		return this;
 
 	}
 
 	public IoResponse write(byte[] bb, int offset, int len) {
-		if (out == null)
-			out = ch.alloc().buffer();
+		if (out == null) {
+			out = IoBuffer.allocate(1024);
+			out.setAutoExpand(true);
+		}
 
-		out.writeBytes(bb, offset, len);
+		out.put(bb, offset, len);
 
 		return this;
 
 	}
 
 	public IoResponse write(byte b) {
-		if (out == null)
-			out = ch.alloc().buffer();
+		if (out == null) {
+			out = IoBuffer.allocate(1024);
+			out.setAutoExpand(true);
+		}
 
-		out.writeByte(b);
+		out.put(b);
 
 		return this;
 
 	}
 
-	public static IoResponse create(Channel ch) {
+	public static IoResponse create(IoSession ch) {
 
 		IoResponse r = new IoResponse();
 		r.ch = ch;
@@ -84,7 +96,7 @@ public class IoResponse {
 
 	public void release() {
 		if (out != null) {
-//			out.release();
+			out.free();
 			out = null;
 		}
 	}
