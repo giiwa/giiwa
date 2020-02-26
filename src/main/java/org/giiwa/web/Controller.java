@@ -2002,20 +2002,17 @@ public class Controller {
 	 * @param jsonstr the jsonstr string
 	 */
 	private void responseJson(String jsonstr) {
+		
 		this.setContentType(Controller.MIME_JSON);
-		this.print(jsonstr);
 
-//		if (AccessLog.isOn()) {
-//			try {
-//				AccessLog.create(getRemoteHost(), uri,
-//						V.create().set("status", getStatus()).set("header", Arrays.toString(getHeaders()))
-//								.set("client", browser()).set("module", module.getName())
-//								.set("model", getClass().getName()).append("request", this.getJSON().toString())
-//								.append("response", jsonstr));
-//			} catch (Exception e) {
-//				log.error(e.getMessage(), e);
-//			}
-//		}
+		try {
+			PrintWriter writer = resp.getWriter();
+			writer.write(jsonstr);
+			writer.flush();
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(jsonstr, e);
+		}
 
 	}
 
@@ -2423,7 +2420,7 @@ public class Controller {
 	final public void print(Object o) {
 		try {
 			PrintWriter writer = resp.getWriter();
-			writer.write("</pre>" + X.toString(o) + "</pre>");
+			writer.write("<pre>" + X.toString(o) + "</pre>");
 			writer.flush();
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
