@@ -57,7 +57,7 @@ public class Backup {
 			Beans<Data> l1 = Helper.load(table, q, s, 100, Data.class, db);
 			while (l1 != null && !l1.isEmpty()) {
 				for (Data d : l1) {
-					JSON j1 = d.getJSON();
+					JSON j1 = d.json();
 					j1.append("_table", table);
 					String s1 = j1.toString();
 					s1 = Base64.getEncoder().encodeToString(s1.getBytes()) + "\r\n";

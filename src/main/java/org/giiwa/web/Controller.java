@@ -1662,6 +1662,10 @@ public class Controller {
 
 	}
 
+	final public List<String> keySet() {
+		return this.getNames();
+	}
+
 	/**
 	 * get the session, if not presented, then create a new, "user" should store the
 	 * session invoking session.store()

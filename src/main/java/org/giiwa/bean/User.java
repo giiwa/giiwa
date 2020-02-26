@@ -887,7 +887,7 @@ public class User extends Bean {
 		Beans<User> bs = User.load(q, s, 100);
 		while (bs != null && !bs.isEmpty()) {
 			for (User e : bs) {
-				l1.add(e.getJSON());
+				l1.add(e.json());
 			}
 			s += bs.size();
 			bs = User.load(q, s, 100);

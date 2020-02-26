@@ -2128,7 +2128,7 @@ public class RDSHelper implements Helper.DBHelper {
 			while (r.next()) {
 				Bean b = new Bean();
 				b.load(r, null);
-				list.add(b.getJSON());
+				list.add(b.json());
 			}
 
 			Collections.sort(list, new Comparator<JSON>() {

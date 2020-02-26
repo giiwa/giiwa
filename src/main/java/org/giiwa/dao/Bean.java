@@ -74,12 +74,22 @@ public class Bean implements Map<String, Object>, Serializable {
 	}
 
 	/**
+	 * @deprecated
+	 * @param jo
+	 * @return
+	 */
+	public boolean fromJSON(JSON jo) {
+		return fromJSON(jo);
+
+	}
+
+	/**
 	 * refill the bean from json.
 	 *
 	 * @param jo the JSON object
 	 * @return true if all successful
 	 */
-	public boolean fromJSON(JSON jo) {
+	public boolean from(JSON jo) {
 		for (String name : jo.keySet()) {
 			set(name, jo.get(name));
 		}
@@ -88,7 +98,8 @@ public class Bean implements Map<String, Object>, Serializable {
 
 	/**
 	 * get the key-value in the bean to json.<br>
-	 *
+	 * 
+	 * @deprecated
 	 * @param jo the JSON object
 	 */
 	public void toJSON(JSON jo) {
@@ -105,7 +116,7 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * @see java.lang.Object.toString()
 	 */
 	public String toString() {
-		return this.getClass().getSimpleName() + "@" + this.getJSON();
+		return this.getClass().getSimpleName() + "@" + this.json();
 	}
 
 	/**
@@ -533,7 +544,7 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * 
 	 * @return JSON
 	 */
-	public final JSON getJSON() {
+	public final JSON json() {
 
 		if (json_obj == null) {
 			json_obj = new JSON();
@@ -541,6 +552,14 @@ public class Bean implements Map<String, Object>, Serializable {
 			toJSON(json_obj);
 		}
 		return json_obj;
+	}
+
+	/**
+	 * @deprecated
+	 * @return
+	 */
+	public final JSON getJSON() {
+		return json();
 	}
 
 	/**
@@ -636,7 +655,7 @@ public class Bean implements Map<String, Object>, Serializable {
 		b.set("a.a", 1);
 		System.out.println(b.toString());
 
-		JSON j1 = b.getJSON();
+		JSON j1 = b.json();
 		System.out.println(j1.toPrettyString());
 	}
 

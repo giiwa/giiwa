@@ -245,7 +245,7 @@ public class user extends Controller {
 		if (this.getUser() != null) {
 			User u = User.dao.load(login.getId());
 			if (u != null) {
-				this.response(JSON.create().append(X.STATE, 200).append("data", u.getJSON()));
+				this.response(JSON.create().append(X.STATE, 200).append("data", u.json()));
 				return;
 			}
 		}

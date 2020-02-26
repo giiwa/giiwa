@@ -56,10 +56,17 @@ public class Temp {
 
 	}
 
-	private String id = null;
-	private String name = null;
+	public String id = null;
+
+	public String name = null;
+
 	private File file = null;
+
 	private String root = null;
+
+	public long size() {
+		return this.getFile().length();
+	}
 
 	private Temp() {
 

@@ -256,7 +256,7 @@ public class user extends Controller {
 
 			User u = User.dao.load(id);
 			if (u != null) {
-				this.set(u.getJSON());
+				this.set(u.json());
 				this.set("u", u);
 
 				Beans<Role> bs = Role.load(0, 1000);

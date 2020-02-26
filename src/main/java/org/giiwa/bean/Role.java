@@ -244,7 +244,7 @@ public class Role extends Bean {
 		Beans<Role> bs = dao.load(q, s, 100);
 		while (bs != null && !bs.isEmpty()) {
 			for (Role e : bs) {
-				l1.add(e.getJSON());
+				l1.add(e.json());
 			}
 			s += bs.size();
 			bs = dao.load(q, s, 100);

@@ -110,7 +110,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 			if (cb != null) {
 				j = cb.apply(e);
 			} else {
-				j = e.getJSON();
+				j = e.json();
 
 			}
 			if (j != null) {
