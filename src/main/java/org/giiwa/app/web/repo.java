@@ -181,7 +181,7 @@ public class repo extends Controller {
 			jo.put(X.MESSAGE, "parameters error");
 		}
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 

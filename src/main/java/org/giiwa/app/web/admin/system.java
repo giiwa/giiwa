@@ -37,7 +37,7 @@ public class system extends Controller {
 	@Path(path = "info")
 	public void info() {
 		String name = ManagementFactory.getRuntimeMXBean().getName();
-		this.response(JSON.create().append(X.STATE, 200).append("uptime", Controller.UPTIME).append("local", Local.id())
+		this.send(JSON.create().append(X.STATE, 200).append("uptime", Controller.UPTIME).append("local", Local.id())
 				.append("global", Global.id()).append("pid", X.split(name, "[@]")[0]));
 	}
 
@@ -73,7 +73,7 @@ public class system extends Controller {
 			jo.put("message", lang.get("invalid.password"));
 		}
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 }

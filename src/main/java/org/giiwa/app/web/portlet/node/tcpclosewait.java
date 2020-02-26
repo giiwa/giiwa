@@ -54,10 +54,10 @@ public class tcpclosewait extends portlet {
 				l1.add(JSON.create().append("x", lang.time(e.getLong("time"), "m")).append("y", e.getLong("n14")));
 			});
 			p.append("data", l1);
-			this.response(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p)).append("max", max));
+			this.send(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p)).append("max", max));
 			return;
 		}
-		this.response(JSON.create().append(X.STATE, 201));
+		this.send(JSON.create().append(X.STATE, 201));
 	}
 
 	@Path(path = "more", login = true)

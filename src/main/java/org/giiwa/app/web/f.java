@@ -83,11 +83,8 @@ public class f extends Controller {
 
 								this.setContentType(Controller.getMimeType("a.png"));
 
-								InputStream in = new FileInputStream(f);
-								OutputStream out = this.getOutputStream();
+								_send(new FileInputStream(f), f.length());
 
-								IOUtil.copy(in, out, false);
-								in.close();
 								return;
 							}
 						}
@@ -99,7 +96,8 @@ public class f extends Controller {
 			this.setContentType(mime);
 
 			try {
-				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
+				_send(f1.getInputStream(), f1.length());
+
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -120,15 +118,16 @@ public class f extends Controller {
 		DFile f1 = Disk.get(id);
 		if (f1.isFile()) {
 
-			String name1 = Url.encode(f1.getName());
-			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
-			this.setContentType(Controller.getMimeType(f1.getName()));
-
-			try {
-				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
+			this.send(f1.getName(), f1.getInputStream(), f1.length());
+//			String name1 = Url.encode(f1.getName());
+//			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
+//			this.setContentType(Controller.getMimeType(f1.getName()));
+//
+//			try {
+//				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
 
 		}
 
@@ -145,7 +144,7 @@ public class f extends Controller {
 		// String access = Module.home.get("upload.require.access");
 
 		if (Task.powerstate == 0) {
-			this.response(JSON.create().append(X.STATE, HttpServletResponse.SC_BAD_REQUEST)
+			this.send(JSON.create().append(X.STATE, HttpServletResponse.SC_BAD_REQUEST)
 					.append(X.ERROR, HttpServletResponse.SC_BAD_REQUEST)
 					.append(X.MESSAGE, lang.get("upload.node.state_0")));
 			return;
@@ -167,7 +166,7 @@ public class f extends Controller {
 		// * test
 		// */
 		// jo.put("error", "error");
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -295,7 +294,7 @@ public class f extends Controller {
 				this.notfound();
 				return;
 			} else {
-				this.response(name, new FileInputStream(f1), f1.length());
+				this.send(name, new FileInputStream(f1), f1.length());
 			}
 
 		} catch (Exception e) {
@@ -312,7 +311,7 @@ public class f extends Controller {
 		jo.put(X.STATE, 200);
 		jo.put("uptime", System.currentTimeMillis() - Controller.UPTIME);
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	@Path(path = "echo")
@@ -325,4 +324,55 @@ public class f extends Controller {
 		this.print(sb.toString());
 	}
 
+	void _send(InputStream in, long total) {
+
+		try {
+			String range = this.getHeader("range");
+
+			long start = 0;
+			long end = total;
+			if (!X.isEmpty(range)) {
+				String[] ss = range.split("(=|-)");
+				if (ss.length > 1) {
+					start = X.toLong(ss[1]);
+				}
+
+				if (ss.length > 2) {
+					end = Math.min(total, X.toLong(ss[2]));
+				}
+			}
+
+			if (end <= start) {
+				end = start + 1024 * 1024;
+			}
+
+			if (end > total) {
+				end = total;
+			}
+
+			long length = end - start;
+
+			if (end < total) {
+				this.setStatus(206);
+			}
+
+			if (start == 0) {
+				this.setHeader("Accept-Ranges", "bytes");
+			}
+			this.setHeader("Content-Length", Long.toString(length));
+			this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
+
+			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
+			if (length > 0) {
+				OutputStream out = this.getOutputStream();
+
+				IOUtil.copy(in, out, start, end, false);
+				out.flush();
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			X.close(in);
+		}
+	}
 }

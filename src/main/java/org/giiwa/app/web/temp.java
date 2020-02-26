@@ -60,7 +60,7 @@ public class temp extends Controller {
 				this.notfound();
 				return;
 			} else {
-				this.response(name, new FileInputStream(f1), f1.length());
+				this.send(name, new FileInputStream(f1), f1.length());
 			}
 
 		} catch (Exception e) {

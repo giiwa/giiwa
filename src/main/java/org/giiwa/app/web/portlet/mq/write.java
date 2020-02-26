@@ -49,11 +49,11 @@ public class write extends portlet {
 				data.add(p);
 			}
 
-			this.response(JSON.create().append(X.STATE, 200).append("data", data));
+			this.send(JSON.create().append(X.STATE, 200).append("data", data));
 			return;
 		}
 
-		this.response(JSON.create().append(X.STATE, 201));
+		this.send(JSON.create().append(X.STATE, 201));
 
 	}
 

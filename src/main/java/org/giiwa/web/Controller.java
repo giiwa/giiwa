@@ -362,7 +362,7 @@ public class Controller {
 								if (log.isErrorEnabled())
 									log.error(e.getMessage(), e);
 
-								GLog.oplog.error(this.getClass(), pp.path(), this.getJSON().toString(), e, getUser(),
+								GLog.oplog.error(this.getClass(), pp.path(), this.json().toString(), e, getUser(),
 										this.getRemoteHost());
 
 								error(e);
@@ -626,7 +626,7 @@ public class Controller {
 
 			jo.put(X.MESSAGE, lang.get("login.required"));
 			jo.put(X.ERROR, lang.get("not.login"));
-			this.response(jo);
+			this.send(jo);
 
 		} else {
 			String node = this.getString("__node");
@@ -810,7 +810,13 @@ public class Controller {
 		put(name, o);
 	}
 
-	public Object get(String name) {
+	/**
+	 * get parameter from request
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public String get(String name) {
 		return this.getHtml(name);
 	}
 
@@ -855,7 +861,8 @@ public class Controller {
 	/**
 	 * Sets Beans back to Model which accessed by view, it will auto paging
 	 * according the start and number per page.
-	 *
+	 * 
+	 * @deprecated
 	 * @param bs the Beans
 	 * @param s  the start position
 	 * @param n  the number per page
@@ -889,7 +896,7 @@ public class Controller {
 	 * @param jo    the map of data
 	 * @param names the names that will be set back to model, if null, will set all
 	 */
-	final public void set(JSON jo, String... names) {
+	final public void copy(JSON jo, String... names) {
 		if (jo == null) {
 			return;
 		}
@@ -1201,6 +1208,7 @@ public class Controller {
 	/**
 	 * get the sub.path of the uri
 	 * 
+	 * @deprecated
 	 * @return String
 	 */
 	final public String getPath() {
@@ -1228,6 +1236,7 @@ public class Controller {
 	/**
 	 * get local port
 	 * 
+	 * @deprecated
 	 * @return int of local port
 	 */
 	final public int getPort() {
@@ -1256,6 +1265,7 @@ public class Controller {
 	/**
 	 * get all parameter names
 	 * 
+	 * @deprecated
 	 * @return Enumeration
 	 */
 	final public Enumeration<String> getParameterNames() {
@@ -1271,15 +1281,23 @@ public class Controller {
 	private JSON _json;
 
 	/**
+	 * @deprecated
+	 * @return
+	 */
+	final public JSON getJSON() {
+		return json();
+	}
+
+	/**
 	 * get the request as JSON
 	 * 
 	 * @return JSONObject
 	 */
-	final public JSON getJSON() {
+	final public JSON json() {
 		if (_json == null) {
 			_json = JSON.create();
 			for (String name : this.getNames()) {
-				String s = this.getString(name);
+				String s = this.getHtml(name);
 				_json.put(name, s);
 			}
 
@@ -1302,7 +1320,7 @@ public class Controller {
 	 */
 	final public JSON getJSONNonPassword() {
 		if (_json == null) {
-			getJSON();
+			json();
 		}
 
 		JSON jo = JSON.fromObject(_json);
@@ -1677,17 +1695,6 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the http session.
-	 * 
-	 * @param bfCreate the bf create
-	 * @return the http session
-	 */
-	final public HttpSession getHttpSession(boolean bfCreate) {
-
-		return req.getSession(bfCreate);
-	}
-
-	/**
 	 * indicator of multipart request
 	 */
 	transient boolean _multipart = false;
@@ -1697,9 +1704,9 @@ public class Controller {
 	 * 
 	 * @return boolean
 	 */
-	final public boolean isMultipart() {
-		return _multipart;
-	}
+//	final public boolean isMultipart() {
+//		return _multipart;
+//	}
 
 	/**
 	 * @deprecated
@@ -1941,7 +1948,7 @@ public class Controller {
 	 * 
 	 * @param jo the json that will be output
 	 */
-	final public void response(JSON jo) {
+	final public void send(JSON jo) {
 
 		if (outputed > 0) {
 			Exception e = new Exception("response twice!");
@@ -1968,19 +1975,20 @@ public class Controller {
 	 * @param state   the status to response
 	 * @param message the message to response
 	 */
-	final public void response(int state, String message) {
+	final public void send(int state, String message) {
 		JSON jo = JSON.create();
 		jo.put(X.STATE, HttpServletResponse.SC_OK);
 		jo.put(X.MESSAGE, message);
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/**
 	 * output the jsonarr as "application/json" to end-user
 	 * 
+	 * @deprecated
 	 * @param arr the array of json
 	 */
-	final public void response(List<JSON> arr) {
+	final public void send(List<JSON> arr) {
 		if (arr == null) {
 			responseJson("[]");
 		} else {
@@ -2057,24 +2065,24 @@ public class Controller {
 		return false;
 	}
 
-	final public boolean passup(String viewname) {
-
-		try {
-
-			File file = module.floor() != null ? module.floor().getFile(viewname) : null;
-			if (file != null && file.exists()) {
-				View.merge(file, this, viewname);
-				return true;
-			} else {
-				notfound("page not found, page=" + viewname);
-			}
-		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(viewname, e);
-		}
-
-		return false;
-	}
+//	final public boolean passup(String viewname) {
+//
+//		try {
+//
+//			File file = module.floor() != null ? module.floor().getFile(viewname) : null;
+//			if (file != null && file.exists()) {
+//				View.merge(file, this, viewname);
+//				return true;
+//			} else {
+//				notfound("page not found, page=" + viewname);
+//			}
+//		} catch (Exception e) {
+//			if (log.isErrorEnabled())
+//				log.error(viewname, e);
+//		}
+//
+//		return false;
+//	}
 
 	/**
 	 * On get requested from HTTP GET method.
@@ -2095,7 +2103,7 @@ public class Controller {
 	 */
 	public void onPut() {
 		if (this.isAjax()) {
-			response(JSON.create().append(X.STATE, HttpServletResponse.SC_FORBIDDEN));
+			send(JSON.create().append(X.STATE, HttpServletResponse.SC_FORBIDDEN));
 		} else {
 			this.print("forbidden");
 		}
@@ -2107,7 +2115,7 @@ public class Controller {
 
 	public void onOptions() {
 		if (this.isAjax()) {
-			response(JSON.create().append(X.STATE, HttpServletResponse.SC_FORBIDDEN));
+			send(JSON.create().append(X.STATE, HttpServletResponse.SC_FORBIDDEN));
 		} else {
 			this.print("forbidden");
 		}
@@ -2172,7 +2180,7 @@ public class Controller {
 			}
 
 			jo.append(X.TRACE, s);
-			this.response(jo);
+			this.send(jo);
 		} else {
 			this.set("me", this.getUser());
 
@@ -2232,7 +2240,7 @@ public class Controller {
 			JSON jo = new JSON();
 			jo.put(X.STATE, HttpServletResponse.SC_NOT_FOUND);
 			jo.put(X.MESSAGE, "not found, " + message);
-			this.response(jo);
+			this.send(jo);
 		} else {
 			this.set("me", this.getUser());
 			this.print("not found, " + message);
@@ -2333,7 +2341,7 @@ public class Controller {
 			jo.put(X.MESSAGE, lang.get("access.deny"));
 			jo.put(X.ERROR, error);
 			jo.put(X.URL, url);
-			this.response(jo);
+			this.send(jo);
 
 		} else {
 
@@ -2387,11 +2395,11 @@ public class Controller {
 
 	}
 
-	final public void set(Controller m) {
-		for (String name : m.getNames()) {
-			this.set(name, m.getHtml(name));
-		}
-	}
+//	final public void set(Controller m) {
+//		for (String name : m.getNames()) {
+//			this.set(name, m.getHtml(name));
+//		}
+//	}
 
 	/**
 	 * pathmapping structure: {"method", {"path", Path|Method}}
@@ -2403,9 +2411,9 @@ public class Controller {
 	 * 
 	 * @param o the object of printing
 	 */
-	final public void println(Object o) {
-		print(o + "<br>");
-	}
+//	final public void println(Object o) {
+//		print(o + "<br>");
+//	}
 
 	/**
 	 * Print the object to end-user
@@ -2414,8 +2422,8 @@ public class Controller {
 	 */
 	final public void print(Object o) {
 		try {
-			BufferedWriter writer = new BufferedWriter(resp.getWriter());
-			writer.write(o.toString());
+			PrintWriter writer = resp.getWriter();
+			writer.write("</pre>" + X.toString(o) + "</pre>");
 			writer.flush();
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
@@ -2597,7 +2605,7 @@ public class Controller {
 
 	}
 
-	public void response(String name, InputStream in, long total) {
+	public void send(String name, InputStream in, long total) {
 
 		try {
 
@@ -2788,15 +2796,15 @@ public class Controller {
 				Controller m = new DefaultController();
 				m.req = req;
 				m.resp = resp;
-				m.set(m);
+//				m.set(m);
 
 				m.put("me", m.getUser());
 				m.put("lang", m.lang);
 				m.put(X.URI, uri);
 				m.put("module", Module.home);
-				m.put("request", req);
+				m.put("req", req);
 				m.put("this", m);
-				m.put("response", resp);
+				m.put("resp", resp);
 				m.put("session", m.getSession(false));
 				m.put("global", Global.getInstance());
 				m.put("conf", Config.getConf());

@@ -41,7 +41,7 @@ public class syslog extends Controller {
 		int i = GLog.dao.delete(W.create());
 		GLog.oplog.warn(syslog.class, "deleteall", "deleted=" + i, login, this.getRemoteHost());
 		jo.put(X.STATE, 200);
-		this.response(jo);
+		this.send(jo);
 	}
 
 	private W getW(JSON jo) {
@@ -89,7 +89,7 @@ public class syslog extends Controller {
 			q.and(X.CREATED, lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.lte);
 		}
 
-		this.set(jo);
+		this.copy(jo);
 
 		return q;
 	}
@@ -105,7 +105,7 @@ public class syslog extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
-		JSON jo = this.getJSON();
+		JSON jo = this.json();
 		W w = getW(jo);
 
 		Beans<GLog> bs = GLog.dao.load(w.sort("created", -1).sort("level", -1), s, n);

@@ -110,7 +110,7 @@ public class setting extends Controller {
 	 * @return the object
 	 */
 	@Path(path = "get/(.*)", login = true, access = "access.config.admin")
-	final public Object get(String name) {
+	public String get(String name) {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/get/" + c);
@@ -211,7 +211,7 @@ public class setting extends Controller {
 			return;
 		}
 
-		this.println("not find page");
+		this.print("not find page");
 
 	}
 
@@ -270,7 +270,7 @@ public class setting extends Controller {
 				Helper.disableOptmizer();
 			}
 
-			this.response(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
+			this.send(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
 
 		/*
@@ -318,7 +318,7 @@ public class setting extends Controller {
 			Global.setConfig("mail.user", this.getString("mail.user"));
 			Global.setConfig("mail.passwd", this.getString("mail.passwd"));
 
-			this.response(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
+			this.send(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
 
 		/*
@@ -345,7 +345,7 @@ public class setting extends Controller {
 		public void set() {
 			Global.setConfig("site.counter", this.getHtml("counter"));
 
-			this.response(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
+			this.send(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
 
 		/*

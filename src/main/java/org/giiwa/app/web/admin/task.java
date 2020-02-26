@@ -61,7 +61,7 @@ public class task extends Controller {
 		Task t = Task.get(name);
 		t.stop(false);
 
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "killed"));
+		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "killed"));
 
 	}
 
@@ -105,7 +105,7 @@ public class task extends Controller {
 			j.put(X.ERROR, lang.get("task.notfound"));
 		}
 
-		this.response(j);
+		this.send(j);
 
 	}
 
@@ -132,7 +132,7 @@ public class task extends Controller {
 			j.put(X.ERROR, lang.get("task.notfound"));
 		}
 
-		this.response(j);
+		this.send(j);
 
 	}
 
@@ -169,7 +169,7 @@ public class task extends Controller {
 			j.put(X.ERROR, lang.get("task.notfound"));
 		}
 
-		this.response(j);
+		this.send(j);
 	}
 
 	@Path(login = true, path = "thread", access = "access.config.admin")
@@ -255,7 +255,7 @@ public class task extends Controller {
 			log.error(e.getMessage(), e);
 		}
 
-		this.response(JSON.create().append(X.STATE, 200));
+		this.send(JSON.create().append(X.STATE, 200));
 
 	}
 

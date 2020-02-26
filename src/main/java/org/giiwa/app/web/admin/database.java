@@ -77,7 +77,7 @@ public class database extends Controller {
 		String table = this.getString("table");
 		int n = Helper.delete(W.create(), table, Helper.DEFAULT);
 		GLog.oplog.warn(database.class, "delete", "table=" + table + ", n=" + n, login, this.getRemoteHost());
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
+		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
 	@Path(path = "drop", login = true, access = "access.config.admin")
@@ -86,7 +86,7 @@ public class database extends Controller {
 		String t = Config.getConf().getString("drop.table");
 
 		if (!X.isIn(t, "t", "yes", "1", "y", "true")) {
-			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "禁止删除，请配置[drop.table=y]"));
+			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "禁止删除，请配置[drop.table=y]"));
 			return;
 		}
 
@@ -103,7 +103,7 @@ public class database extends Controller {
 			Helper.drop(table, Helper.DEFAULT);
 		}
 		GLog.oplog.warn(database.class, "drop", "table=" + table, login, this.getRemoteHost());
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
+		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
 	@Path(path = "er", login = true, access = "access.config.admin")
@@ -167,11 +167,11 @@ public class database extends Controller {
 				}
 				e.close();
 
-				this.response(JSON.create().append(X.STATE, 200).append("file", t.getUri()));
+				this.send(JSON.create().append(X.STATE, 200).append("file", t.getUri()));
 
 			} else {
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("nonselect.error")));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("nonselect.error")));
 			}
 			return;
 		}

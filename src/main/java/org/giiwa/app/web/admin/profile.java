@@ -41,7 +41,7 @@ public class profile extends Controller {
 	}
 
 	@Path(path = "get/(.*)", login = true)
-	final public Object get(String name) {
+	public String get(String name) {
 
 		Class<? extends profile> c = settings.get(name);
 		if (log.isDebugEnabled())
@@ -102,7 +102,7 @@ public class profile extends Controller {
 				log.error(name, e);
 				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 			}
 		}
 	}
@@ -140,7 +140,7 @@ public class profile extends Controller {
 			return;
 		}
 
-		this.println("not find page");
+		this.print("not find page");
 
 	}
 
@@ -163,7 +163,7 @@ public class profile extends Controller {
 					GLog.securitylog.info(profile.class, "passwd", lang.get("user.passwd.change"), login,
 							this.getRemoteHost());
 
-					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 
 				} else {
@@ -192,7 +192,7 @@ public class profile extends Controller {
 					AuthToken.delete(login.getId());
 					this.setUser(login, LoginType.web);
 
-					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
+					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
 
@@ -200,7 +200,7 @@ public class profile extends Controller {
 
 				log.error(e.getMessage(), e);
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
 						lang.get("save.failed") + ":" + e.getMessage()));
 				return;
 			}
@@ -227,7 +227,7 @@ public class profile extends Controller {
 			Code.create(email, code, V.create("expired", System.currentTimeMillis() + X.AMINUTE * 10));
 			try {
 				if (Email.send(lang.get("email.verify.subject"), code, email)) {
-					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
 					return;
 				}
 			} catch (Exception e) {
@@ -235,7 +235,7 @@ public class profile extends Controller {
 				GLog.applog.error(profile.class, "verify1", e.getMessage(), e, login, this.getRemoteHost());
 			}
 		}
-		this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.sent.error")));
+		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.sent.error")));
 	}
 
 	@Path(path = "verify2", login = true)
@@ -246,17 +246,17 @@ public class profile extends Controller {
 		if (!X.isEmpty(email)) {
 			Code e = Code.load(email, code);
 			if (e != null && e.getExpired() > System.currentTimeMillis()) {
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
 				return;
 			}
 		} else if (!X.isEmpty(phone)) {
 			Code e = Code.load(phone, code);
 			if (e != null && e.getExpired() > System.currentTimeMillis()) {
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
 				return;
 			}
 		}
-		this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.error")));
+		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.error")));
 	}
 
 }

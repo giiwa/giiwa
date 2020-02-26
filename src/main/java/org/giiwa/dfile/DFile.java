@@ -120,7 +120,7 @@ public class DFile {
 		return false;
 	}
 
-	public InputStream getInputStream() throws FileNotFoundException {
+	public InputStream getInputStream() {
 		check();
 
 		return DFileInputStream.create(this.getDisk_obj(), filename);

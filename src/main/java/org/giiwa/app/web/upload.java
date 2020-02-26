@@ -50,7 +50,7 @@ public class upload extends Controller {
 		// String access = Module.home.get("upload.require.access");
 
 		if (Task.powerstate == 0) {
-			this.response(JSON.create().append(X.STATE, HttpServletResponse.SC_BAD_REQUEST)
+			this.send(JSON.create().append(X.STATE, HttpServletResponse.SC_BAD_REQUEST)
 					.append(X.ERROR, HttpServletResponse.SC_BAD_REQUEST)
 					.append(X.MESSAGE, lang.get("upload.node.state_0")));
 			return;
@@ -72,7 +72,7 @@ public class upload extends Controller {
 		// * test
 		// */
 		// jo.put("error", "error");
-		this.response(jo);
+		this.send(jo);
 
 	}
 

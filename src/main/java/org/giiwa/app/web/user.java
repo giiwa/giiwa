@@ -150,7 +150,7 @@ public class user extends Controller {
 							lang.get("create.success") + ":" + name + ", uid=" + id, login, this.getRemoteHost());
 
 					if (this.isAjax()) {
-						this.response(JSON.create().append(X.STATE, 200).append("id", u.getId()).append(X.MESSAGE,
+						this.send(JSON.create().append(X.STATE, 200).append("id", u.getId()).append(X.MESSAGE,
 								lang.get("create.success")));
 						return;
 					} else {
@@ -167,11 +167,11 @@ public class user extends Controller {
 					GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
 
 					if (this.isAjax()) {
-						this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+						this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 						return;
 					} else {
 						this.set(X.MESSAGE, e.getMessage());
-						this.set(this);
+						this.copy(this.json());
 					}
 				}
 			}
@@ -233,10 +233,10 @@ public class user extends Controller {
 				}
 			}
 
-			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("MAXSIZE", 4096));
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("MAXSIZE", 4096));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()).append("MAXSIZE", 4096));
+			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()).append("MAXSIZE", 4096));
 		}
 	}
 
@@ -245,12 +245,12 @@ public class user extends Controller {
 		if (this.getUser() != null) {
 			User u = User.dao.load(login.getId());
 			if (u != null) {
-				this.response(JSON.create().append(X.STATE, 200).append("data", u.json()));
+				this.send(JSON.create().append(X.STATE, 200).append("data", u.json()));
 				return;
 			}
 		}
 
-		this.response(JSON.create().append(X.STATE, 401).append(X.MESSAGE, "login required"));
+		this.send(JSON.create().append(X.STATE, 401).append(X.MESSAGE, "login required"));
 	}
 
 	@Path(login = true, path = "get")
@@ -268,7 +268,7 @@ public class user extends Controller {
 			}
 		}
 
-		this.response(jo.append(X.STATE, 200).append(X.MESSAGE, "ok"));
+		this.send(jo.append(X.STATE, 200).append(X.MESSAGE, "ok"));
 
 	}
 
@@ -400,7 +400,7 @@ public class user extends Controller {
 											jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 										}
 									}
-									this.response(jo);
+									this.send(jo);
 								} else {
 
 									this.setUser(me, LoginType.web);
@@ -471,13 +471,13 @@ public class user extends Controller {
 			}
 
 			if (X.isSame("json", this.getString("type")) || this.isAjax()) {
-				this.response(jo);
+				this.send(jo);
 				return;
 			} else if (login != null) {
 				this.redirect("/");
 //				this.redirect("/user/go");
 			} else {
-				this.set(this);
+				this.copy(this.json());
 				this.set(X.STATE, jo.getInt(X.STATE));
 				this.set(X.MESSAGE, jo.getString(X.MESSAGE));
 			}
@@ -537,7 +537,7 @@ public class user extends Controller {
 			jo.put("path", "/");
 			// this.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
 			this.setHeader("Location", "/");
-			this.response(jo);
+			this.send(jo);
 			return;
 		} else {
 			this.redirect("/");
@@ -595,7 +595,7 @@ public class user extends Controller {
 			}
 		}
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/**
@@ -630,7 +630,7 @@ public class user extends Controller {
 			jo.put(X.STATE, 201);
 		}
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -871,7 +871,7 @@ public class user extends Controller {
 				jo.put(X.MESSAGE, lang.get("param.error"));
 			}
 
-			this.response(jo);
+			this.send(jo);
 			return;
 		}
 
@@ -898,7 +898,7 @@ public class user extends Controller {
 
 	@Path(path = "access", login = true)
 	public void access() {
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("list",
+		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("list",
 				login.getRole().getAccesses()));
 	}
 

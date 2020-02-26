@@ -54,11 +54,11 @@ public class role extends Controller {
 					}
 				}
 
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 				return;
 
 			} else {
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
 				return;
 
 			}
@@ -91,7 +91,7 @@ public class role extends Controller {
 			}
 		}
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	@Path(path = "cleanup", login = true, access = "access.config.admin")
@@ -113,7 +113,7 @@ public class role extends Controller {
 			}
 		}
 
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 	}
 
 	/**
@@ -135,12 +135,12 @@ public class role extends Controller {
 					r.setAccess(accesses);
 
 				} else {
-					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
+					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.failed")));
 					return;
 				}
 			}
 
-			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 
 		} else {
@@ -151,7 +151,7 @@ public class role extends Controller {
 
 			JSON jo = new JSON();
 			r.toJSON(jo);
-			this.set(jo);
+			this.copy(jo);
 
 			Map<String, List<Access>> bs = Access.load();
 			this.set("accesses", bs);
@@ -228,7 +228,7 @@ public class role extends Controller {
 		String id = this.getString("id");
 		Access.dao.delete(id);
 
-		this.response(JSON.create().append(X.STATE, 200));
+		this.send(JSON.create().append(X.STATE, 200));
 	}
 
 }

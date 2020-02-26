@@ -68,11 +68,11 @@ public class module extends Controller {
 				log.error(e.getMessage(), e);
 				GLog.oplog.error(module.class, "create", e.getMessage(), e, login, this.getRemoteHost());
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 				return;
 
 			}
-			this.response(jo);
+			this.send(jo);
 		} else {
 			this.set("id", Global.getInt("module.id.next", 100));
 			this.show("/admin/module.create.html");
@@ -604,16 +604,16 @@ public class module extends Controller {
 			if (a.decode()) {
 				a.store();
 
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			} else {
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("license.bad")));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("license.bad")));
 			}
 
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
 			GLog.applog.error(module.class, "license", e1.getMessage(), e1, login, this.getRemoteHost());
 
-			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e1.getMessage()));
+			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e1.getMessage()));
 		} finally {
 			X.close(in);
 			e.delete();
@@ -672,7 +672,7 @@ public class module extends Controller {
 
 		Module.reset();
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -764,7 +764,7 @@ public class module extends Controller {
 			jo.put(X.MESSAGE, lang.get("module.id.gt0"));
 		}
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/**

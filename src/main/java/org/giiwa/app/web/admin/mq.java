@@ -62,7 +62,7 @@ public class mq extends setting {
 		//
 		// MQ.logger(logger == 1 ? true : false);
 
-		this.response(JSON.create().append(X.MESSAGE, lang.get("restart.required")).append(X.STATE, 201));
+		this.send(JSON.create().append(X.MESSAGE, lang.get("restart.required")).append(X.STATE, 201));
 	}
 
 	public void get() {

@@ -85,7 +85,7 @@ public class setup extends Controller {
 		if (Helper.isConfigured()) {
 			jo.put(X.STATE, 201);
 			jo.put(X.MESSAGE, "already configured, forbidden override, must edit the giiwa.properties by manual");
-			this.response(jo);
+			this.send(jo);
 			return;
 		}
 
@@ -130,7 +130,7 @@ public class setup extends Controller {
 		DefaultListener.owner.upgrade(conf, Module.load("default"));
 
 		jo.put(X.STATE, 200);
-		this.response(jo);
+		this.send(jo);
 
 		Task.schedule(() -> {
 			System.exit(0);
@@ -272,7 +272,7 @@ public class setup extends Controller {
 			jo.put(X.STATE, 201);
 
 		}
-		this.response(jo);
+		this.send(jo);
 	}
 
 }

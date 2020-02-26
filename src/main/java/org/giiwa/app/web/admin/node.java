@@ -48,7 +48,7 @@ public class node extends Controller {
 		Node.dao.delete(id);
 		jo.put(X.STATE, 200);
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -71,7 +71,7 @@ public class node extends Controller {
 		}
 		jo.put(X.STATE, 200);
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -82,7 +82,7 @@ public class node extends Controller {
 		String id = this.getString("id");
 		Node.dao.update(id, V.create("label", label));
 
-		this.response(JSON.create().append(X.STATE, 200));
+		this.send(JSON.create().append(X.STATE, 200));
 
 	}
 
@@ -107,7 +107,7 @@ public class node extends Controller {
 		jo.put(X.STATE, HttpServletResponse.SC_OK);
 		jo.put(X.MESSAGE, "ok");
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/*

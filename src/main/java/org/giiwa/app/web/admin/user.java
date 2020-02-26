@@ -50,7 +50,7 @@ public class user extends Controller {
 	public void create() {
 		if (method.isPost()) {
 
-			JSON jo = this.getJSON();
+			JSON jo = this.json();
 			final String name = this.getString("name").trim().toLowerCase();
 			try {
 
@@ -61,7 +61,7 @@ public class user extends Controller {
 					/**
 					 * exists, create failded
 					 */
-					this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.exists")));
+					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.exists")));
 					return;
 
 				} else {
@@ -134,14 +134,14 @@ public class user extends Controller {
 						}
 					}
 
-					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				GLog.securitylog.error(user.class, "create", e.getMessage(), e, login, this.getRemoteHost());
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
 						lang.get("save.failed") + ":" + e.getMessage()));
 				return;
 			}
@@ -182,7 +182,7 @@ public class user extends Controller {
 			jo.put(X.MESSAGE, lang.get("delete.failed"));
 		}
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -207,10 +207,10 @@ public class user extends Controller {
 					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login,
 							this.getRemoteHost());
 
-					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
-				JSON j = this.getJSON();
+				JSON j = this.json();
 				V v = V.create().copy(j);
 				v.remove("role", X.ID);
 
@@ -244,10 +244,10 @@ public class user extends Controller {
 				GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login,
 						this.getRemoteHost());
 
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 				return;
 			} catch (Exception e) {
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
 						lang.get("save.failed") + ":" + e.getMessage()));
 				return;
 			}
@@ -256,7 +256,7 @@ public class user extends Controller {
 
 			User u = User.dao.load(id);
 			if (u != null) {
-				this.set(u.json());
+				this.copy(u.json());
 				this.set("u", u);
 
 				Beans<Role> bs = Role.load(0, 1000);
@@ -303,7 +303,7 @@ public class user extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
-		W q = getW(this.getJSON());
+		W q = getW(this.json());
 		Beans<GLog> bs = GLog.dao.load(q, s, n);
 		this.set(bs, s, n);
 
@@ -400,7 +400,7 @@ public class user extends Controller {
 		} else {
 			q.sort(X.CREATED, -1);
 		}
-		this.set(jo);
+		this.copy(jo);
 
 		return q;
 	}

@@ -42,7 +42,7 @@ public class accesslog extends Controller {
 		Global.setConfig("accesslog.on", on);
 		jo.put(X.STATE, HttpServletResponse.SC_OK);
 		jo.put("on", on);
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/*

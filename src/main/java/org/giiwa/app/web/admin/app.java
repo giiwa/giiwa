@@ -59,16 +59,16 @@ public class app extends Controller {
 
 					App.create(v);
 
-					this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 				}
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("appid.exists")));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("appid.exists")));
 				return;
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 				return;
 			}
 
@@ -94,7 +94,7 @@ public class app extends Controller {
 
 			App.dao.update(id, v);
 
-			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 
 		}
@@ -117,7 +117,7 @@ public class app extends Controller {
 		App.dao.delete(id);
 		jo.put(X.STATE, 200);
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -130,7 +130,7 @@ public class app extends Controller {
 		App.update(id, V.create("secret", UID.random(32)));
 		jo.put(X.STATE, 200);
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 

@@ -45,7 +45,7 @@ public class counter extends Controller {
 
 		Counter.dao.delete(q);
 
-		this.response(JSON.create().append(X.STATE, 200));
+		this.send(JSON.create().append(X.STATE, 200));
 
 	}
 

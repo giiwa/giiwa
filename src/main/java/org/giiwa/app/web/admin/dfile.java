@@ -29,7 +29,7 @@ public class dfile extends Controller {
 			Disk.delete(f);
 		}
 
-		this.response(JSON.create().append(X.MESSAGE, 200).append(X.MESSAGE, "删除成功！"));
+		this.send(JSON.create().append(X.MESSAGE, 200).append(X.MESSAGE, "删除成功！"));
 	}
 
 	@Path(path = "disk", login = true, access = "access.config.admin")
@@ -81,14 +81,14 @@ public class dfile extends Controller {
 				v.append("node", this.getString("node1"));
 
 				Disk.create(v);
-				this.response(JSON.create().append(X.STATE, 200));
+				this.send(JSON.create().append(X.STATE, 200));
 
 				FileServer.reset();
 				Disk.reset();
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 			}
 			return;
 		}
@@ -114,7 +114,7 @@ public class dfile extends Controller {
 				f1.delete();
 				IOUtil.copy(e.getInputStream(), f1.getOutputStream());
 
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
 				return;
 			} catch (Exception e1) {
 				log.error(e1.getMessage(), e1);
@@ -122,7 +122,7 @@ public class dfile extends Controller {
 				e.delete();
 			}
 		}
-		this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "failed"));
+		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "failed"));
 
 	}
 
@@ -138,7 +138,7 @@ public class dfile extends Controller {
 			Disk.dao.update(id, v);
 			FileServer.reset();
 			Disk.reset();
-			this.response(JSON.create().append(X.STATE, 200));
+			this.send(JSON.create().append(X.STATE, 200));
 
 			return;
 		}
@@ -216,7 +216,7 @@ public class dfile extends Controller {
 
 			}.schedule(0);
 		}
-		this.response(JSON.create().append(X.STATE, 200));
+		this.send(JSON.create().append(X.STATE, 200));
 	}
 
 	@Path(path = "folder", login = true, access = "access.config.admin")

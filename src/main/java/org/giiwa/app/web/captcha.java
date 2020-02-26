@@ -60,7 +60,7 @@ public class captcha extends Controller {
 			jo.put(X.MESSAGE, e1.getMessage());
 		}
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/**
@@ -83,7 +83,7 @@ public class captcha extends Controller {
 			jo.put(X.MESSAGE, "ok");
 		}
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 

@@ -45,7 +45,7 @@ public class token extends Controller {
 		AuthToken.dao.delete(id);
 		jo.put(X.STATE, 200);
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -57,7 +57,7 @@ public class token extends Controller {
 		jo.put(X.STATE, HttpServletResponse.SC_OK);
 		jo.put(X.MESSAGE, "ok");
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/*

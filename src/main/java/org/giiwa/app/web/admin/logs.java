@@ -64,7 +64,7 @@ public class logs extends Controller {
 			jo.put(X.STATE, 201);
 		}
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/**
@@ -90,7 +90,7 @@ public class logs extends Controller {
 			jo.put(X.STATE, 201);
 			jo.put(X.MESSAGE, e.getMessage());
 		}
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/*

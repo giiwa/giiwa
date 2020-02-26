@@ -145,6 +145,6 @@ public class menu extends Controller {
 			}
 		}
 
-		this.response(arr);
+		this.send(arr);
 	}
 }

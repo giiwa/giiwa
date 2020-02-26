@@ -48,10 +48,10 @@ public class usage extends portlet {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.getLong("n0")));
 			});
 			p.append("data", l1);
-			this.response(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p)));
+			this.send(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p)));
 			return;
 		}
-		this.response(JSON.create().append(X.STATE, 201));
+		this.send(JSON.create().append(X.STATE, 201));
 	}
 
 	@Path(path = "more", login = true)

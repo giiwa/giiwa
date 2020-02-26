@@ -41,7 +41,7 @@ public class footprint extends Controller {
 		int i = Footprint.dao.delete(W.create());
 		GLog.oplog.warn(footprint.class, "deleteall", "deleted=" + i, login, this.getRemoteHost());
 		jo.put(X.STATE, 200);
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/*

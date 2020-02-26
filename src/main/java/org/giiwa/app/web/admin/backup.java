@@ -141,7 +141,7 @@ public class backup extends Controller {
 			jo.put(X.STATE, 201);
 			jo.put(X.MESSAGE, e.getMessage());
 		}
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -172,7 +172,7 @@ public class backup extends Controller {
 			e.delete();
 		}
 
-		this.response(jo);
+		this.send(jo);
 
 	}
 
@@ -187,11 +187,11 @@ public class backup extends Controller {
 			if (ss != null && ss.length > 0) {
 
 				new BackupTask(ss, Global.getString("backup.url", null)).schedule(0);
-				this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("backup.started")));
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("backup.started")));
 
 			} else {
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("backup.error.notable")));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("backup.error.notable")));
 			}
 			return;
 		}
@@ -273,11 +273,11 @@ public class backup extends Controller {
 				}
 				e.close();
 
-				this.response(JSON.create().append(X.STATE, 200).append("file", t.getUri()));
+				this.send(JSON.create().append(X.STATE, 200).append("file", t.getUri()));
 
 			} else {
 
-				this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("nonselect.error")));
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("nonselect.error")));
 			}
 			return;
 		}
@@ -320,7 +320,7 @@ public class backup extends Controller {
 
 			org.giiwa.app.task.BackupTask.init();
 
-			this.response(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
+			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
 			return;
 		}
 
@@ -345,7 +345,7 @@ public class backup extends Controller {
 			jo.put("id", id);
 		}
 
-		this.response(jo);
+		this.send(jo);
 	}
 
 	/**

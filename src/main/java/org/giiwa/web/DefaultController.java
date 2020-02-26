@@ -17,10 +17,6 @@ package org.giiwa.web;
 import java.io.*;
 
 import org.giiwa.bean.Disk;
-import org.giiwa.conf.Config;
-import org.giiwa.conf.Global;
-import org.giiwa.conf.Local;
-import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 
 /**
@@ -75,7 +71,7 @@ class DefaultController extends Controller {
 		uri = uri.replaceAll("//", "/");
 		File f = Module.home.getFile(uri);
 		if (f != null && f.exists() && f.isFile()) {
-			this.set(this);
+			this.copy(this.json());
 
 //			this.put("me", this.getUser());
 //			this.put("lang", lang);
@@ -98,7 +94,7 @@ class DefaultController extends Controller {
 		DFile d = Disk.seek(uri);
 		if (d.exists() && d.isFile()) {
 			// show it
-			this.set(this);
+			this.copy(this.json());
 
 //			this.put("me", this.getUser());
 //			this.put("lang", lang);

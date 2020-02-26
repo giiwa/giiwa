@@ -58,12 +58,12 @@ public class mem extends portlet {
 			});
 			p1.append("data", l1);
 			p2.append("data", l2);
-			this.response(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p1, p2)));
+			this.send(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p1, p2)));
 
 			return;
 
 		}
-		this.response(JSON.create().append(X.STATE, 201));
+		this.send(JSON.create().append(X.STATE, 201));
 
 	}
 
