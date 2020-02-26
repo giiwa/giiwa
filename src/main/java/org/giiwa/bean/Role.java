@@ -253,24 +253,24 @@ public class Role extends Bean {
 		j.append("roles", l1);
 	}
 
-	public static int from(JSON j) {
-		int total = 0;
-		Collection<JSON> l1 = j.getList("roles");
-		if (l1 != null) {
-			for (JSON e : l1) {
-				long id = e.getLong(X.ID);
-				V v = V.fromJSON(e);
-				v.remove(X.ID, "_id");
-				Role s = Role.dao.load(id);
-				if (s != null) {
-					dao.update(id, v);
-				} else {
-					dao.insert(v.append(X.ID, id));
-				}
-				total++;
-			}
-		}
-		return total;
-	}
+//	public static int from(JSON j) {
+//		int total = 0;
+//		Collection<JSON> l1 = j.getList("roles");
+//		if (l1 != null) {
+//			for (JSON e : l1) {
+//				long id = e.getLong(X.ID);
+//				V v = V.fromJSON(e);
+//				v.remove(X.ID, "_id");
+//				Role s = Role.dao.load(id);
+//				if (s != null) {
+//					dao.update(id, v);
+//				} else {
+//					dao.insert(v.append(X.ID, id));
+//				}
+//				total++;
+//			}
+//		}
+//		return total;
+//	}
 
 }

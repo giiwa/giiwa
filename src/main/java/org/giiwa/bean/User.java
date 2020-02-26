@@ -17,7 +17,6 @@ package org.giiwa.bean;
 import java.awt.Color;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.configuration2.Configuration;
@@ -896,25 +895,25 @@ public class User extends Bean {
 		j.append("users", l1);
 	}
 
-	public static int from(JSON j) {
-		int total = 0;
-		Collection<JSON> l1 = j.getList("users");
-		if (l1 != null) {
-			for (JSON e : l1) {
-				long id = e.getLong(X.ID);
-				V v = V.fromJSON(e);
-				v.remove(X.ID, "_id");
-				User s = dao.load(W.create(X.ID, id));
-				if (s != null) {
-					dao.update(id, v);
-				} else {
-					dao.insert(v.append(X.ID, id));
-				}
-				total++;
-			}
-		}
-		return total;
-	}
+//	public static int from(JSON j) {
+//		int total = 0;
+//		Collection<JSON> l1 = j.getList("users");
+//		if (l1 != null) {
+//			for (JSON e : l1) {
+//				long id = e.getLong(X.ID);
+//				V v = V.fromJSON(e);
+//				v.remove(X.ID, "_id");
+//				User s = dao.load(W.create(X.ID, id));
+//				if (s != null) {
+//					dao.update(id, v);
+//				} else {
+//					dao.insert(v.append(X.ID, id));
+//				}
+//				total++;
+//			}
+//		}
+//		return total;
+//	}
 
 	public static void repair() {
 		Beans<User> bs = User.dao.load(W.create().sort("created", 1), 0, 1000);
