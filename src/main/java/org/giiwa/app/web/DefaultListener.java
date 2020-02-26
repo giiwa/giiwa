@@ -386,12 +386,12 @@ public class DefaultListener implements IListener {
 			 * check the menus
 			 * 
 			 */
-			File f = module.getFile("../resources/menu.json", false, false);
+			File f = module.getFile("../init/menu.json", false, false);
 			if (f == null || !f.exists()) {
 				f = module.getFile("../res/menu.json", false, false);
 			}
 			if (f == null || !f.exists()) {
-				f = module.getFile("../init/menu.json", false, false);
+				f = module.getFile("../resources/menu.json", false, false);
 			}
 
 			if (f != null && f.exists()) {

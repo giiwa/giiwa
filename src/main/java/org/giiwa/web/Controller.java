@@ -2659,6 +2659,8 @@ public class Controller {
 	 */
 	public static void init(Configuration conf, String path) {
 
+		log.info("controller init ... ");
+
 		PATH = path;
 
 		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
@@ -2694,6 +2696,7 @@ public class Controller {
 
 			if (log.isInfoEnabled())
 				log.info("welcome=" + welcomes);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

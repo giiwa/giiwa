@@ -701,7 +701,7 @@ public class Module {
 		try {
 
 			File f = _filecache.get(resource);
-			if (f != null) {
+			if (inbox && f != null) {
 				return f;
 			}
 
@@ -867,6 +867,8 @@ public class Module {
 	 * @param conf the conf
 	 */
 	public static void init(Configuration conf) {
+
+		log.info("Module init ...");
 
 		boolean changed = false;
 
