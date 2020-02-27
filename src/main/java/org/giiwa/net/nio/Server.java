@@ -67,23 +67,23 @@ public class Server implements Closeable {
 
 	public Server group(int parent, int child) {
 
-//		if (Epoll.isAvailable()) {
-//
-//			EpollEventLoopGroup parentGroup = new EpollEventLoopGroup(parent);
-//			EpollEventLoopGroup childGroup = new EpollEventLoopGroup(child);
-//
-//			boot.channel(EpollServerSocketChannel.class);
-//			boot.option(EpollChannelOption.SO_REUSEPORT, true);
-//			boot.group(parentGroup, childGroup);
-//
-//		} else {
+		if (Epoll.isAvailable()) {
+
+			EpollEventLoopGroup parentGroup = new EpollEventLoopGroup(parent);
+			EpollEventLoopGroup childGroup = new EpollEventLoopGroup(child);
+
+			boot.channel(EpollServerSocketChannel.class);
+			boot.option(EpollChannelOption.SO_REUSEPORT, true);
+			boot.group(parentGroup, childGroup);
+
+		} else {
 
 			EventLoopGroup parentGroup = new NioEventLoopGroup(parent);
 			EventLoopGroup childGroup = new NioEventLoopGroup(child);
 			boot.channel(NioServerSocketChannel.class);
 			boot.group(parentGroup, childGroup);
 
-//		}
+		}
 
 		return this;
 	}

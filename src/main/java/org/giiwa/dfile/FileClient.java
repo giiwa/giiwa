@@ -78,7 +78,13 @@ public class FileClient {
 	}
 
 	private static FileClient create(String url) throws IOException {
+
+		if (log.isInfoEnabled())
+			log.info("create new client, url=" + url);
+
 		FileClient c = new FileClient();
+		c.url = url;
+
 		c.client = Client.create().error(e -> {
 			c.close();
 		}).connect(url, resp -> {
@@ -149,6 +155,7 @@ public class FileClient {
 
 		} catch (Exception e) {
 			close();
+			log.error(e.getMessage(), e);
 		} finally {
 
 			r.release();
@@ -169,8 +176,12 @@ public class FileClient {
 	}
 
 	private void close() {
+
 		FileClient c1 = cached.remove(this.url);
 		if (c1 != null) {
+
+			log.debug("close the client, client=" + c1.client);
+
 			Client c2 = c1.client;
 			if (c2 != null) {
 				c1.client = null;
@@ -233,6 +244,7 @@ public class FileClient {
 
 		} catch (Exception e) {
 			close();
+			log.error(e.getMessage(), e);
 		} finally {
 
 			r.release();
@@ -253,10 +265,10 @@ public class FileClient {
 		return null;
 	}
 
-	public long put(String path, String filename, long offset, byte[] bb, int len) {
+	public long put(String path, String filename, long offset, byte[] bb, int len) throws IOException {
 
 		if (client == null)
-			return -1;
+			throw new IOException("client not inited");
 
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
@@ -299,6 +311,7 @@ public class FileClient {
 
 		} catch (Exception e) {
 			close();
+			throw new IOException(e);
 		} finally {
 
 			r.release();
@@ -316,7 +329,6 @@ public class FileClient {
 			log.debug("put, cost=" + t.past() + ", filename=" + filename);
 
 		}
-		return 0;
 	}
 
 	public boolean mkdirs(String path, String filename) {
@@ -359,6 +371,7 @@ public class FileClient {
 			}
 		} catch (Exception e) {
 			close();
+			log.error(e.getMessage(), e);
 		} finally {
 
 			r.release();
@@ -433,6 +446,7 @@ public class FileClient {
 
 		} catch (Exception e) {
 			close();
+			log.error(e.getMessage(), e);
 		} finally {
 
 			r.release();
@@ -500,6 +514,7 @@ public class FileClient {
 
 		} catch (Exception e) {
 			close();
+			log.error(e.getMessage(), e);
 		} finally {
 
 			r.release();
@@ -566,6 +581,7 @@ public class FileClient {
 			}
 		} catch (Exception e) {
 			close();
+			log.error(e.getMessage(), e);
 		} finally {
 
 			r.release();
@@ -645,8 +661,8 @@ public class FileClient {
 				throw new IOException("Timeout");
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 			close();
+			log.error(e.getMessage(), e);
 		} finally {
 
 			r.release();

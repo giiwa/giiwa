@@ -1,8 +1,5 @@
 package org.giiwa.net.nio;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -13,7 +10,7 @@ import io.netty.util.AttributeKey;
 @ChannelHandler.Sharable
 public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 
-	private static Log log = LogFactory.getLog(IoHandler.class);
+//	private static Log log = LogFactory.getLog(IoHandler.class);
 
 	public IoHandler() {
 		System.out.println("new io");
@@ -58,6 +55,8 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 				resp.retain();
 
 				process(req, resp);
+
+				req.compact();
 
 			} finally {
 				resp.release();

@@ -5,7 +5,9 @@ import io.netty.buffer.Unpooled;
 
 public class IoRequest {
 
-	public static final int BIG = 1024 * 128;
+//	private static Log log = LogFactory.getLog(IoRequest.class);
+
+	public static final int BIG = 1024 * 32;
 	public static final int MID = 1024 * 16;
 	public static final int SMALL = 1024;
 
@@ -81,6 +83,15 @@ public class IoRequest {
 			data.release();
 			data = null;
 		}
+	}
+
+	public void compact() {
+//		log.debug("data=" + data.readerIndex() + "<" + data.writerIndex() + "<" + data.capacity());
+		ByteBuf b = Unpooled.buffer(data.readableBytes() + 1024);
+		b.writeBytes(data);
+		data.release();
+		data = b;
+//		log.debug("data=" + data.readerIndex() + "<" + data.writerIndex() + "<" + data.capacity());
 	}
 
 }

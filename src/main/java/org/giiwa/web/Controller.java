@@ -1297,17 +1297,11 @@ public class Controller {
 		if (_json == null) {
 			_json = JSON.create();
 			for (String name : this.getNames()) {
+
 				String s = this.getHtml(name);
 				_json.put(name, s);
 			}
 
-			// mix the password
-			// for (Object name : _json.keySet()) {
-			// if ("password".equals(name) || "pwd".equals(name) ||
-			// "passwd".equals(name)) {
-			// _json.put(name, "*******");
-			// }
-			// }
 		}
 		return _json;
 	}
@@ -1845,7 +1839,9 @@ public class Controller {
 	 */
 	@SuppressWarnings("unchecked")
 	final private Map<String, Object> getFiles() {
+
 		if (uploads == null) {
+
 			uploads = new HashMap<String, Object>();
 			DiskFileItemFactory factory = new DiskFileItemFactory();
 
@@ -2002,7 +1998,7 @@ public class Controller {
 	 * @param jsonstr the jsonstr string
 	 */
 	private void responseJson(String jsonstr) {
-		
+
 		this.setContentType(Controller.MIME_JSON);
 
 		try {
@@ -2391,12 +2387,6 @@ public class Controller {
 		}
 
 	}
-
-//	final public void set(Controller m) {
-//		for (String name : m.getNames()) {
-//			this.set(name, m.getHtml(name));
-//		}
-//	}
 
 	/**
 	 * pathmapping structure: {"method", {"path", Path|Method}}
