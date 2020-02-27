@@ -66,44 +66,53 @@ public class FileServer {
 	public void start() {
 
 		if (serv == null) {
-			try {
-				commands.put(ICommand.CMD_DELETE, new DELETE());
-				commands.put(ICommand.CMD_INFO, new INFO());
-				commands.put(ICommand.CMD_GET, new GET());
-				commands.put(ICommand.CMD_PUT, new PUT());
-				commands.put(ICommand.CMD_LIST, new LIST());
-				commands.put(ICommand.CMD_MKDIRS, new MKDIRS());
-				commands.put(ICommand.CMD_MOVE, new MOVE());
-				commands.put(ICommand.CMD_HTTP, new HTTP());
 
-				URL = Config.getConf().getString("dfile.bind", URL);
+			commands.put(ICommand.CMD_DELETE, new DELETE());
+			commands.put(ICommand.CMD_INFO, new INFO());
+			commands.put(ICommand.CMD_GET, new GET());
+			commands.put(ICommand.CMD_PUT, new PUT());
+			commands.put(ICommand.CMD_LIST, new LIST());
+			commands.put(ICommand.CMD_MKDIRS, new MKDIRS());
+			commands.put(ICommand.CMD_MOVE, new MOVE());
+			commands.put(ICommand.CMD_HTTP, new HTTP());
 
-//				serv = Server.bind(URL, new RequestHandler(URL, this));
-				serv = Server.create().handler((req, resp) -> {
+			URL = Config.getConf().getString("dfile.bind", URL);
 
-					IoRequest r = born(req);
-					while (r != null) {
-						process(r, resp);
-						r = born(req);
-					}
+			serv = Server.create().handler((req, resp) -> {
 
-				}).bind(URL);
+				IoRequest r = born(req);
+				while (r != null) {
 
-			} catch (Exception e) {
+					process(r, resp);
 
-				log.error(URL, e);
+					r = born(req);
+				}
 
-				Task.schedule(() -> {
-					start();
-				}, 3000);
-			}
+			});
 
-			_bind();
+			_bind1();
+			_bind2();
 
+		}
+
+	}
+
+	private void _bind2() {
+
+		try {
+			serv.bind(URL);
+
+		} catch (Exception e) {
+
+			log.error(URL, e);
+
+			Task.schedule(() -> {
+				_bind2();
+			}, 3000);
 		}
 	}
 
-	private void _bind() {
+	private void _bind1() {
 		try {
 			// listen the reset
 			new IStub("disk.reset") {
@@ -117,7 +126,7 @@ public class FileServer {
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			Task.schedule(() -> {
-				_bind();
+				_bind1();
 			}, 3000);
 		}
 	}
@@ -161,38 +170,49 @@ public class FileServer {
 
 		TimeStamp t = TimeStamp.create();
 		Task.schedule(() -> {
-			byte cmd = req.readByte();
-			// System.out.println("cmd=" + cmd);
 
-			ICommand c = commands.get(cmd);
-			if (c != null) {
+			try {
+
+				byte cmd = req.readByte();
+				// System.out.println("cmd=" + cmd);
+
+				ICommand c = commands.get(cmd);
+				if (c != null) {
 
 //				ICommand.log.debug("cmd=" + cmd + ", processor=" + c);
 
-				c.process(seq, req, resp);
+					c.process(seq, req, resp);
 
-				costs.addAndGet(t.pastms());
-				times.incrementAndGet();
-				if (maxcost < t.pastms()) {
-					maxcost = t.pastms();
-				}
-				if (mincost > t.pastms()) {
-					mincost = t.pastms();
-				}
+					costs.addAndGet(t.pastms());
+					times.incrementAndGet();
+					if (maxcost < t.pastms()) {
+						maxcost = t.pastms();
+					}
+					if (mincost > t.pastms()) {
+						mincost = t.pastms();
+					}
 
 //				if (log.isDebugEnabled())
 //					log.debug("process, cmd=" + cmd + ", cost=" + t.past());
 
-			} else {
-				byte[] bb = "unknown cmd".getBytes();
+				} else {
+					byte[] bb = "unknown cmd".getBytes();
+					resp.write(bb.length);
+					resp.write(bb);
+
+					resp.send(resp.size() + 8, seq);
+				}
+			} catch (Throwable e) {
+				log.error(e.getMessage(), e);
+				byte[] bb = X.toString(e).getBytes();
 				resp.write(bb.length);
 				resp.write(bb);
 
 				resp.send(resp.size() + 8, seq);
+			} finally {
+				req.release();
+				resp.release();
 			}
-
-			req.release();
-			resp.release();
 		});
 
 	}

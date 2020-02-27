@@ -862,104 +862,13 @@ giiwa
 									});
 				}
 			},
-
-			_format : function(url) {
-				var p = {};
-				var i = url.indexOf('?');
-				if (i >= 0) {
-					var uri = url.substring(0, i);
-					var query = url.substring(i + 1);
-				} else {
-					i = url.indexOf('&');
-					if (i >= 0) {
-						var uri = url.substring(0, i);
-						var query = url.substring(i + 1);
-					} else {
-						i = url.indexOf('#');
-						if (i >= 0) {
-							var uri = url.substring(0, i);
-							var query = url.substring(i + 1);
-						} else {
-							uri = url;
-							query = '';
-						}
-					}
-				}
-				i = uri.indexOf('//');
-				if (i >= 0) {
-					var s = uri.substring(i + 2);
-					i = s.indexOf('/');
-					if (i >= 0) {
-						p.uri = s.substring(i);
-					} else {
-						p.uri = '/';
-					}
-				} else {
-					p.uri = uri;
-				}
-				if (p.uri[0] != '/') {
-					p.uri = '/' + p.uri;
-				}
-				if (p.uri.length > 1 && p.uri[p.uri.length - 1] == '/') {
-					p.uri = p.uri.substring(0, p.uri.length - 1);
-				}
-
-				i = query.indexOf('&');
-				while (i > 0) {
-					var s = query.substring(0, i);
-					query = query.substring(i + 1);
-
-					i = s.indexOf('=');
-					if (i > 0) {
-						var s1 = s.substring(0, i);
-						var s2 = s.substring(i + 1);
-						if (s1.length > 0 && s2.length > 0) {
-							p[s1] = s2;
-						}
-					}
-					i = query.indexOf('&');
-				}
-				s = query;
-				i = s.indexOf('=');
-				if (i > 0) {
-					var s1 = s.substring(0, i);
-					var s2 = s.substring(i + 1);
-					if (s1.length > 0 && s2.length > 0) {
-						p[s1] = s2;
-					}
-				}
-				return p;
-			},
-			_equals : function(url1, url2) {
-				var p1 = giiwa._format(url1);
-				var p2 = giiwa._format(url2);
-				// console.log(url1);
-				// console.log(p1);
-				// console.log(url2);
-				// console.log(p2);
-
-				for ( var key in p1) {
-					if (p1[key] != p2[key]) {
-						return false;
-					}
-				}
-				for ( var key in p2) {
-					if (p1[key] != p2[key]) {
-						return false;
-					}
-				}
-				return true;
-			},
 			history : function(url) {
 				if (url !== undefined && url.length > 0) {
-					if (url[url.length - 1] == '?') {
-						url = url.substring(0, url.length - 1);
-					}
 					var p = giiwa.__history.pop();
 					if (p !== undefined) {
 						giiwa.__history.push(p);
 					}
-					if (p === undefined || !giiwa._equals(p, url)) {
+					if (p === undefined || p !== url)) {
 						giiwa.__history.push(url);
 					}
 					while (giiwa.__history.length > 100) {
