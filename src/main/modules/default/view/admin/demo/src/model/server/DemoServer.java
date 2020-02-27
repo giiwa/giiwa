@@ -14,6 +14,8 @@ public class DemoServer {
 				String s = "HTTP/1.1 200\nAccess-Control-Allow-Origin: no\nContent-Type: text/html;charset=UTF-8\nVary: Accept-Encoding\n\nhello world!\n";
 
 				resp.write(s.getBytes());
+				resp.send();
+				resp.release();
 				resp.close();
 
 			}).bind("tcp://127.0.0.1:8091");
