@@ -1,6 +1,5 @@
 package org.giiwa.dfile.command;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.ICommand;
@@ -32,41 +31,30 @@ public class HTTP implements ICommand {
 
 			resp.write(resp1.status);
 			byte[] b1 = resp1.head.toString().getBytes();
-			resp.write(b1.length).write(b1);
+			resp.write(b1.length);
+			resp.write(b1);
 			b1 = resp1.out.toByteArray();
-			resp.write(b1.length).write(b1);
+			resp.write(b1.length);
+			resp.write(b1);
 
 			X.close(resp1);
 
-			resp.send(e -> {
-				IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
-				b.putInt(e.remaining() + 8);
-				b.putLong(seq);
-				b.put(e);
-				return b;
-			});
+			resp.send(resp.size() + 8, seq);
 
 		} catch (Exception e1) {
 			try {
 
 				resp.write((int) 500);
-				resp.write((short) X.EMPTY.getBytes().length).write(X.EMPTY.getBytes());
-				resp.write(e1.getMessage().getBytes());
 
-				resp.send(e -> {
-					IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
-					b.putInt(e.remaining() + 8);
-					b.putLong(seq);
-					b.put(e);
-					return b;
-				});
+				byte[] b = e1.getMessage().getBytes();
+				resp.write(b.length);
+				resp.write(b);
+
+				resp.send(resp.size() + 8, seq);
 
 			} catch (Exception e2) {
 
 			}
-		} finally {
-			if (log.isInfoEnabled())
-				log.info(m + " - " + uri + ", cost=" + t.past());
 		}
 	}
 

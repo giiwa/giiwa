@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.bean.Disk;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.TimeStamp;
@@ -80,7 +79,7 @@ public class FileServer {
 				URL = Config.getConf().getString("dfile.bind", URL);
 
 //				serv = Server.bind(URL, new RequestHandler(URL, this));
-				serv = Server.create().bind(URL).handler((req, resp) -> {
+				serv = Server.create().handler((req, resp) -> {
 
 					IoRequest r = born(req);
 					while (r != null) {
@@ -88,7 +87,7 @@ public class FileServer {
 						r = born(req);
 					}
 
-				}).start();
+				}).bind(URL);
 
 			} catch (Exception e) {
 
@@ -148,16 +147,17 @@ public class FileServer {
 
 		byte[] d = new byte[len];
 		p.readBytes(d);
+
 		IoRequest r = IoRequest.create(d);
-		r.flip();
 
 		return r;
 	}
 
-//	public void process(IoRequest in, IResponseHandler handler) {
 	public void process(IoRequest req, IoResponse resp) {
 
 		long seq = req.readLong();
+
+		resp.retain();
 
 		TimeStamp t = TimeStamp.create();
 		Task.schedule(() -> {
@@ -185,17 +185,14 @@ public class FileServer {
 
 			} else {
 				byte[] bb = "unknown cmd".getBytes();
-				resp.write(bb.length).write(bb);
+				resp.write(bb.length);
+				resp.write(bb);
 
-				resp.send(e -> {
-					IoBuffer b = IoBuffer.allocate(1024);
-					b.setAutoExpand(true);
-					b.putInt(e.remaining() + 8);
-					b.putLong(seq);
-					b.put(e);
-					return b;
-				});
+				resp.send(resp.size() + 8, seq);
 			}
+
+			req.release();
+			resp.release();
 		});
 
 	}

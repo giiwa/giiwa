@@ -2,7 +2,6 @@ package org.giiwa.dfile.command;
 
 import java.io.File;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dfile.ICommand;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.net.nio.IoRequest;
@@ -28,13 +27,7 @@ public class DELETE implements ICommand {
 			resp.write((byte) 0);
 		}
 
-		resp.send(e -> {
-			IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
-			b.putInt(e.remaining() + 8);
-			b.putLong(seq);
-			b.put(e);
-			return b;
-		});
+		resp.send(resp.size() + 8, seq);
 
 	}
 

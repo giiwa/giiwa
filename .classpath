@@ -13,7 +13,7 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.mina/mina-core/2.1.3/de31a9e9ae2daea713409cf749369baa9a83ab5b/mina-core-2.1.3.jar" sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.mina/mina-core/2.1.3/7f930571bf66617cc8b08adc8e1450e6fe3e577e/mina-core-2.1.3-sources.jar">
+	<classpathentry kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/io.netty/netty-all/4.1.45.Final/e830eae36d22f2bba3118a3bc08e17f15263a01d/netty-all-4.1.45.Final.jar" sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/io.netty/netty-all/4.1.45.Final/68a28b6890ee3a8ea253a638ead53fe6f608ef96/netty-all-4.1.45.Final-sources.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>

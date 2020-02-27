@@ -3,7 +3,6 @@ package org.giiwa.dfile.command;
 import java.io.File;
 import java.io.RandomAccessFile;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.ICommand;
 import org.giiwa.net.nio.IoRequest;
@@ -21,7 +20,7 @@ public class PUT implements ICommand {
 		byte[] bb = req.readBytes(req.readInt());
 
 		if (log.isDebugEnabled())
-			log.debug("put, file=" + filename + ", offset=" + offset + ", len=" + bb.length + ", path=" + path);
+			log.debug("put, file=" + filename + ", offset=" + offset + ", len=" + bb.length);
 
 		File f = new File(path + File.separator + filename);
 
@@ -47,14 +46,7 @@ public class PUT implements ICommand {
 			X.close(a);
 		}
 
-		resp.send(e -> {
-			IoBuffer b = IoBuffer.allocate(1024);
-			b.setAutoExpand(true);
-			b.putInt(e.remaining() + 8);
-			b.putLong(seq);
-			b.put(e);
-			return b;
-		});
+		resp.send(resp.size() + 8, seq);
 
 	}
 

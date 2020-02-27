@@ -317,7 +317,7 @@ public final class IOUtil {
 			if (in == null || out == null)
 				return 0;
 
-			byte[] bb = new byte[1024 * 4];
+			byte[] bb = new byte[1024 * 128];
 			int total = 0;
 			int len = in.read(bb);
 			while (len > 0) {

@@ -1,112 +1,99 @@
 package org.giiwa.net.nio;
 
-import java.util.function.Function;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.session.IoSession;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 
 public class IoResponse {
 
-	private IoBuffer out;
-	private IoSession ch;
+	private static Log log = LogFactory.getLog(IoResponse.class);
+
+	public ByteBuf data;
+	private Channel ch;
 
 	public void close() {
+
 		if (ch != null) {
-			ch.closeOnFlush();
-			ch = null;
+			ch.close();
 		}
 	}
 
-	public IoResponse send(Function<IoBuffer, IoBuffer> func) {
+	public void send(Object... head) {
 
-		if (out != null && ch != null) {
-			out.flip();
-			IoBuffer b = func.apply(out);
-			if (b != null) {
-				if (out != b)
-					b.flip();
+		if (head != null && head.length > 0) {
 
-				ch.write(b);
+			ByteBuf o1 = Unpooled.buffer(data.readableBytes() + 128);
+
+			for (Object o : head) {
+				if (o instanceof Byte) {
+					o1.writeByte((byte) o);
+				} else if (o instanceof Short) {
+					o1.writeShort((short) o);
+				} else if (o instanceof Integer) {
+					o1.writeInt((int) o);
+				} else if (o instanceof Long) {
+					o1.writeLong((long) o);
+				} else if (o instanceof ByteBuf) {
+					o1.writeBytes((ByteBuf) o);
+				} else if (o.getClass().isArray()) {
+					o1.writeBytes((byte[]) o);
+				}
 			}
+
+//			log.debug("data=" + data.readableBytes() + "<" + data.writableBytes() + "<" + data.capacity());
+//			log.debug("o1=" + o1.readableBytes() + "<" + o1.writableBytes() + "<" + o1.capacity());
+
+			o1.writeBytes(data);
+			ch.writeAndFlush(o1);
+
+		} else {
+			ch.writeAndFlush(data);
 		}
-		return this;
 
 	}
 
-	public IoResponse write(long s) {
-		if (out == null) {
-			out = IoBuffer.allocate(1024);
-			out.setAutoExpand(true);
-		}
-
-		out.putLong(s);
-		return this;
-
+	public void write(long s) {
+		data.writeLong(s);
 	}
 
-	public IoResponse write(int s) {
-		if (out == null) {
-			out = IoBuffer.allocate(1024);
-			out.setAutoExpand(true);
-		}
-
-		out.putInt(s);
-		return this;
-
+	public void write(int s) {
+		data.writeInt(s);
 	}
 
-	public IoResponse write(byte[] bb) {
-		if (out == null) {
-			out = IoBuffer.allocate(1024);
-			out.setAutoExpand(true);
-		}
-
-		out.put(bb);
-		return this;
-
+	public void write(byte[] bb) {
+		data.writeBytes(bb);
 	}
 
-	public IoResponse write(byte[] bb, int offset, int len) {
-		if (out == null) {
-			out = IoBuffer.allocate(1024);
-			out.setAutoExpand(true);
-		}
-
-		out.put(bb, offset, len);
-
-		return this;
-
+	public void write(byte[] bb, int offset, int len) {
+		data.writeBytes(bb, offset, len);
 	}
 
-	public IoResponse write(byte b) {
-		if (out == null) {
-			out = IoBuffer.allocate(1024);
-			out.setAutoExpand(true);
-		}
-
-		out.put(b);
-
-		return this;
-
+	public void write(byte b) {
+		data.writeByte(b);
 	}
 
-	public static IoResponse create(IoSession ch) {
+	public static IoResponse create(Channel ch) {
 
 		IoResponse r = new IoResponse();
 		r.ch = ch;
+		r.data = Unpooled.buffer(1024);
 		return r;
 
 	}
 
 	public void release() {
-		if (out != null) {
-			out.free();
-			out = null;
-		}
+		data.release();
 	}
 
-	public void flush() {
-		send(e -> e);
+	public int size() {
+		return data.readableBytes();
+	}
+
+	public void retain() {
+		data.retain();
 	}
 
 }

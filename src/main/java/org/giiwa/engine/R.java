@@ -339,6 +339,7 @@ public class R extends IStub {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void main(String[] args) {
 
 		Task.init(10);

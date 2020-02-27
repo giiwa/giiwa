@@ -2,7 +2,6 @@ package org.giiwa.dfile.command;
 
 import java.io.File;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dfile.ICommand;
 import org.giiwa.net.nio.IoRequest;
 import org.giiwa.net.nio.IoResponse;
@@ -26,13 +25,7 @@ public class MKDIRS implements ICommand {
 			out.write((byte) 1);
 		}
 
-		out.send(e -> {
-			IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
-			b.putInt(e.remaining() + 8);
-			b.putLong(seq);
-			b.put(e);
-			return b;
-		});
+		out.send(out.size() + 8, seq);
 
 	}
 

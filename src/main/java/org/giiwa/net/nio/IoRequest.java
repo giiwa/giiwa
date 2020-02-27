@@ -1,6 +1,7 @@
 package org.giiwa.net.nio;
 
-import org.apache.mina.core.buffer.IoBuffer;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class IoRequest {
 
@@ -10,17 +11,15 @@ public class IoRequest {
 
 	public static IoRequest create() {
 		IoRequest r = new IoRequest();
-		r.data = IoBuffer.allocate(1024);
-		r.data.setAutoExpand(true);
+		r.data = Unpooled.buffer(1024);
 		return r;
 	}
 
-	public static IoRequest create(IoBuffer bb) {
+	public static IoRequest create(ByteBuf bb) {
 
 		IoRequest r = new IoRequest();
-		r.data = IoBuffer.allocate(bb.remaining());
-		r.data.setAutoExpand(true);
-		r.data.put(bb);
+		r.data = Unpooled.buffer(bb.readableBytes());
+		r.data.writeBytes(bb);
 
 		return r;
 	}
@@ -28,71 +27,60 @@ public class IoRequest {
 	public static IoRequest create(byte[] bb) {
 
 		IoRequest r = new IoRequest();
-		r.data = IoBuffer.allocate(bb.length);
-		r.data.put(bb);
+		r.data = Unpooled.wrappedBuffer(bb);
 		return r;
 	}
 
 	public IoRequest mark() {
-		data.mark();
+		data.markReaderIndex();
 		return this;
 	}
 
 	public IoRequest reset() {
-		data.reset();
+		data.resetReaderIndex();
 		return this;
 	}
 
 	public int size() {
-		return data.remaining();
+		return data.readableBytes();
 	}
 
 	public long readLong() {
-		return data.getLong();
+		return data.readLong();
 	}
 
 	public byte readByte() {
-		return data.get();
+		return data.readByte();
 	}
 
 	public int readInt() {
-		return data.getInt();
+		return data.readInt();
 	}
 
 	public int readBytes(byte[] bb) {
-		int len = Math.min(bb.length, data.remaining());
-		data.get(bb, 0, len);
+		int len = Math.min(bb.length, data.readableBytes());
+		data.readBytes(bb, 0, len);
 		return len;
 	}
 
 	public byte[] readBytes(int len) {
 		byte[] bb = new byte[len];
-		data.get(bb, 0, len);
+		data.readBytes(bb, 0, len);
 		return bb;
 	}
 
-	private IoBuffer data = null;
+	private ByteBuf data = null;
 
-	public IoRequest put(IoBuffer bb) {
-		data.put(bb);
+	public IoRequest put(ByteBuf bb) {
+		data.writeBytes(bb);
 		return this;
 	}
 
 	public void release() {
 		if (data != null) {
-			data.free();
+			data.release();
 			data = null;
 		}
-	}
-
-	public IoRequest compact() {
-		data.compact();
-		return this;
-	}
-
-	public IoRequest flip() {
-		data.flip();
-		return this;
 	}
 
 }

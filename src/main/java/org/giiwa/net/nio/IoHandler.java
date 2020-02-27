@@ -1,37 +1,71 @@
 package org.giiwa.net.nio;
 
-import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.service.IoHandlerAdapter;
-import org.apache.mina.core.session.IoSession;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-public abstract class IoHandler extends IoHandlerAdapter {
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 
-	@Override
-	public void sessionCreated(IoSession session) throws Exception {
-//		System.out.println("created: " + Thread.currentThread().getName());
-		super.sessionCreated(session);
+@ChannelHandler.Sharable
+public abstract class IoHandler extends ChannelInboundHandlerAdapter {
+
+	private static Log log = LogFactory.getLog(IoHandler.class);
+
+	public IoHandler() {
+		System.out.println("new io");
 	}
 
 	@Override
-	final public void messageReceived(IoSession session, Object message) throws Exception {
+	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 
-//		System.out.println("data: " + Thread.currentThread().getName());
-
-		IoRequest req = (IoRequest) session.getAttribute("req");
-		if (req == null) {
-			req = IoRequest.create((IoBuffer) message);
-			session.setAttribute("req", req);
-		} else {
-			req.put((IoBuffer) message);
+		AttributeKey<IoRequest> a = AttributeKey.valueOf("req");
+		Attribute<IoRequest> at = ctx.channel().attr(a);
+		IoRequest r = at.get();
+		if (r != null) {
+			r.release();
 		}
 
-		IoResponse resp = IoResponse.create(session);
-		req.flip();
+		super.handlerRemoved(ctx);
 
-		process(req, resp);
+//		System.out.println("remove");
+	}
 
-		resp.release();
-		req.compact();
+	public void channelRead(ChannelHandlerContext ctx, Object msg) {
+
+//		log.debug("got data, client=" + ctx.channel().remoteAddress());
+
+		ByteBuf m = (ByteBuf) msg;
+
+		try {
+			AttributeKey<IoRequest> a = AttributeKey.valueOf("req");
+			Attribute<IoRequest> at = ctx.channel().attr(a);
+
+			IoRequest req = at.get();
+			if (req == null) {
+				req = IoRequest.create(m);
+				at.set(req);
+			} else {
+				req.put(m);
+			}
+
+			IoResponse resp = IoResponse.create(ctx.channel());
+
+			try {
+				resp.retain();
+
+				process(req, resp);
+
+			} finally {
+				resp.release();
+			}
+
+		} finally {
+			m.release();
+		}
 
 	}
 

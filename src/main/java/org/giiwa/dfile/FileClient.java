@@ -21,7 +21,6 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
@@ -80,10 +79,12 @@ public class FileClient {
 
 	private static FileClient create(String url) throws IOException {
 		FileClient c = new FileClient();
-		c.client = Client.connect(url, resp -> {
+		c.client = Client.create().error(e -> {
+			c.close();
+		}).connect(url, resp -> {
 
 			IoRequest r = FileServer.born(resp);
-			if (r != null) {
+			while (r != null) {
 				long seq = r.readLong();
 
 				Object[] aa = c.pending.get(seq);
@@ -92,7 +93,11 @@ public class FileClient {
 						aa[0] = r;
 						aa.notify();
 					}
+				} else {
+					r.release();
 				}
+
+				r = FileServer.born(resp);
 			}
 		});
 
@@ -103,7 +108,7 @@ public class FileClient {
 		if (client == null)
 			return false;
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 
 //		IoResponse r = IoResponse.create(seq.incrementAndGet(), IoRequest.SMALL);
 		TimeStamp t = TimeStamp.create();
@@ -115,9 +120,11 @@ public class FileClient {
 
 			r.write(ICommand.CMD_DELETE);
 			byte[] b = path.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			b = filename.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			r.write(age);
 
 			IoRequest[] aa = new IoRequest[1];
@@ -131,12 +138,21 @@ public class FileClient {
 
 			if (aa[0] != null) {
 				IoRequest a = aa[0];
-				return a.readByte() == 1 ? true : false;
+				try {
+					return a.readByte() == 1 ? true : false;
+				} finally {
+					a.release();
+				}
+			} else {
+				throw new IOException("Timeout");
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -153,7 +169,14 @@ public class FileClient {
 	}
 
 	private void close() {
-		cached.remove(this.url);
+		FileClient c1 = cached.remove(this.url);
+		if (c1 != null) {
+			Client c2 = c1.client;
+			if (c2 != null) {
+				c1.client = null;
+				c2.close();
+			}
+		}
 	}
 
 	/**
@@ -170,7 +193,7 @@ public class FileClient {
 		if (client == null)
 			return null;
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 
@@ -180,9 +203,11 @@ public class FileClient {
 
 			r.write(ICommand.CMD_GET);
 			byte[] b = path.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			b = filename.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			r.write(offset);
 			r.write(len);
 
@@ -197,12 +222,21 @@ public class FileClient {
 
 			if (aa[0] != null) {
 				IoRequest a = aa[0];
-				return a.readBytes(a.readInt());
+				try {
+					return a.readBytes(a.readInt());
+				} finally {
+					a.release();
+				}
+			} else {
+				throw new IOException("Timeout");
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -212,6 +246,8 @@ public class FileClient {
 			if (mincost > t.pastms()) {
 				mincost = t.pastms();
 			}
+
+			log.debug("get, cost=" + t.past() + " filename=" + filename);
 
 		}
 		return null;
@@ -226,15 +262,17 @@ public class FileClient {
 		times.incrementAndGet();
 		long s = seq.incrementAndGet();
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 
 		try {
 
 			r.write(ICommand.CMD_PUT);
 			byte[] b = path.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			b = filename.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			r.write(offset);
 			r.write(len);
 			r.write(bb, 0, len);
@@ -250,12 +288,21 @@ public class FileClient {
 
 			if (aa[0] != null) {
 				IoRequest a = aa[0];
-				return a.readLong();
+				try {
+					return a.readLong();
+				} finally {
+					a.release();
+				}
+			} else {
+				throw new IOException("Timeout");
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -266,6 +313,8 @@ public class FileClient {
 				mincost = t.pastms();
 			}
 
+			log.debug("put, cost=" + t.past() + ", filename=" + filename);
+
 		}
 		return 0;
 	}
@@ -274,7 +323,7 @@ public class FileClient {
 		if (client == null)
 			return false;
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 		long s = seq.incrementAndGet();
@@ -283,9 +332,11 @@ public class FileClient {
 
 			r.write(ICommand.CMD_MKDIRS);
 			byte[] b = path.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			b = filename.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -298,11 +349,20 @@ public class FileClient {
 
 			if (aa[0] != null) {
 				IoRequest a = aa[0];
-				return a.readByte() == 1 ? true : false;
+				try {
+					return a.readByte() == 1 ? true : false;
+				} finally {
+					a.release();
+				}
+			} else {
+				throw new IOException("Timeout");
 			}
 		} catch (Exception e) {
 			close();
 		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -323,7 +383,7 @@ public class FileClient {
 		if (client == null)
 			return null;
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 		long s = seq.incrementAndGet();
@@ -332,9 +392,11 @@ public class FileClient {
 
 			r.write(ICommand.CMD_LIST);
 			byte[] b = path.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			b = filename.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -362,12 +424,19 @@ public class FileClient {
 					l1.add(info);
 				}
 
+				a.release();
+
 				return l1;
+			} else {
+				throw new IOException("Timeout");
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -388,7 +457,7 @@ public class FileClient {
 		if (client == null)
 			return null;
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 		long s = seq.incrementAndGet();
@@ -397,9 +466,11 @@ public class FileClient {
 
 			r.write(ICommand.CMD_INFO);
 			byte[] b = path.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 			b = filename.getBytes();
-			r.write(b.length).write(b);
+			r.write(b.length);
+			r.write(b);
 
 			IoRequest[] aa = new IoRequest[1];
 			pending.put(s, aa);
@@ -420,12 +491,19 @@ public class FileClient {
 				info.lastmodified = a.readLong();
 //				info.creation = a.readLong();
 
+				a.release();
+
 				return info;
+			} else {
+				throw new IOException("Timeout");
 			}
 
 		} catch (Exception e) {
 			close();
 		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -453,7 +531,7 @@ public class FileClient {
 		if (client == null)
 			return false;
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 		long s = seq.incrementAndGet();
@@ -463,7 +541,8 @@ public class FileClient {
 			r.write(ICommand.CMD_MOVE);
 			for (String s1 : new String[] { path, filename, path2, filename2 }) {
 				byte[] b = s1.getBytes();
-				r.write(b.length).write(b);
+				r.write(b.length);
+				r.write(b);
 			}
 
 			IoRequest[] aa = new IoRequest[1];
@@ -477,11 +556,20 @@ public class FileClient {
 
 			if (aa[0] != null) {
 				IoRequest a = aa[0];
-				return a.readByte() == 1 ? true : false;
+				try {
+					return a.readByte() == 1 ? true : false;
+				} finally {
+					a.release();
+				}
+			} else {
+				throw new IOException("Timeout");
 			}
 		} catch (Exception e) {
 			close();
 		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -501,7 +589,7 @@ public class FileClient {
 		if (client == null)
 			return;
 
-		IoResponse r = client.create();
+		IoResponse r = client.createResponse();
 		TimeStamp t = TimeStamp.create();
 		times.incrementAndGet();
 		long s = seq.incrementAndGet();
@@ -523,7 +611,8 @@ public class FileClient {
 
 			for (String s1 : new String[] { method, uri, head.toString(), body.toString() }) {
 				byte[] b = s1.getBytes();
-				r.write(b.length).write(b);
+				r.write(b.length);
+				r.write(b);
 			}
 
 			IoRequest[] aa = new IoRequest[1];
@@ -551,11 +640,17 @@ public class FileClient {
 					out.write(bb);
 					out.flush();
 				}
+				a.release();
+			} else {
+				throw new IOException("Timeout");
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-		} finally {
 			close();
+		} finally {
+
+			r.release();
+
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -692,15 +787,7 @@ public class FileClient {
 
 	private void _send(long seq, IoResponse resp) {
 
-		resp.send(e -> {
-
-			IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
-			b.putInt((int) (e.remaining() + 8));
-			b.putLong(seq);
-			b.put(e);
-
-			return b;
-		});
+		resp.send(resp.size() + 8, seq);
 
 	}
 

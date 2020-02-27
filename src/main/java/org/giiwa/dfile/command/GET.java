@@ -3,7 +3,6 @@ package org.giiwa.dfile.command;
 import java.io.File;
 import java.io.FileInputStream;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.ICommand;
 import org.giiwa.net.nio.IoRequest;
@@ -21,7 +20,7 @@ public class GET implements ICommand {
 		int len = req.readInt();
 
 		if (log.isDebugEnabled())
-			log.debug("get, file=" + filename + ", offset=" + offset + ", len=" + len + ", path=" + path);
+			log.debug("get, file=" + filename + ", offset=" + offset + ", len=" + len);
 
 		File f = new File(path + File.separator + filename);
 
@@ -43,13 +42,7 @@ public class GET implements ICommand {
 			X.close(f1);
 		}
 
-		resp.send(e -> {
-			IoBuffer b = IoBuffer.allocate(e.remaining() + 12);
-			b.putInt(e.remaining() + 8);
-			b.putLong(seq);
-			b.put(e);
-			return b;
-		});
+		resp.send(resp.size() + 8, seq);
 
 	}
 

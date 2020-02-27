@@ -349,55 +349,59 @@ public final class Http {
 
 		TimeStamp t = TimeStamp.create();
 
-		if (log.isDebugEnabled())
-			log.debug("url=\"" + url + "\"");
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=\"" + url + "\"");
 
-		String[] ss = url.split(" ");
-		url = ss[ss.length - 1];
+			String[] ss = url.split(" ");
+			url = ss[ss.length - 1];
 
-		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-		if (client == null) {
-			client = getClient(url, ua, timeout);
-		}
+			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+			if (client == null) {
+				client = getClient(url, ua, timeout);
+			}
 
-		if (localContext == null) {
-			localContext = HttpClientContext.create();
-			localContext.setCookieStore(cookies);
-		}
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
 
-		if (client != null) {
+			if (client != null) {
 
 //			this.getCookies().forEach(c -> {
 //				log.debug("Cookie: " + c.getName() + "=" + c.getValue());
 //			});
 
-			HttpGet get = null;
+				HttpGet get = null;
 
-			try {
-				get = new HttpGet(url);
+				try {
+					get = new HttpGet(url);
 
-				if (headers != null && headers.size() > 0) {
-					for (String s : headers.keySet()) {
-						get.addHeader(s, headers.getString(s));
+					if (headers != null && headers.size() > 0) {
+						for (String s : headers.keySet()) {
+							get.addHeader(s, headers.getString(s));
+						}
 					}
+
+					if (log.isDebugEnabled())
+						log.debug("get url=" + url);
+
+					return _get(client, localContext, get, timeout - t.pastms());
+
+				} catch (Throwable e) {
+					log.error("\"" + url + "\"", e);
+
+					Response r = new Response();
+					r.status = 500;
+					r.body = url + "\r\n" + X.toString(e);
+					// e.printStackTrace();
+					return r;
 				}
-
-				if (log.isDebugEnabled())
-					log.debug("get url=" + url);
-
-				return _get(client, localContext, get, timeout - t.pastms());
-
-			} catch (Throwable e) {
-				log.error("\"" + url + "\"", e);
-
-				Response r = new Response();
-				r.status = 500;
-				r.body = url + "\r\n" + X.toString(e);
-				// e.printStackTrace();
-				return r;
 			}
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("get, cost=" + t.past() + ", url=" + url);
 		}
-
 		return null;
 
 	}
@@ -516,70 +520,77 @@ public final class Http {
 	 */
 	public int download(String url, JSON header, File localfile) {
 
-		if (log.isDebugEnabled())
-			log.debug("url=\"" + url + "\"");
+		TimeStamp t = TimeStamp.create();
 
-		String[] ss = url.split(" ");
-		url = ss[ss.length - 1];
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=\"" + url + "\"");
 
-		String ua = header != null && header.containsKey("user-agent") ? header.getString("user-agent") : _UA();
-		if (client == null) {
-			client = getClient(url, ua, X.AMINUTE);
-		}
-		if (localContext == null) {
-			localContext = HttpClientContext.create();
-			localContext.setCookieStore(cookies);
-		}
-		if (client != null) {
-			HttpGet get = null;
-			CloseableHttpResponse resp = null;
-			try {
-				get = new HttpGet(url);
+			String[] ss = url.split(" ");
+			url = ss[ss.length - 1];
 
-				if (header != null && header.size() > 0) {
-					for (String name : header.keySet()) {
-						get.addHeader(name, header.getString(name));
-					}
-				}
+			String ua = header != null && header.containsKey("user-agent") ? header.getString("user-agent") : _UA();
+			if (client == null) {
+				client = getClient(url, ua, X.AMINUTE);
+			}
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
+			if (client != null) {
+				HttpGet get = null;
+				CloseableHttpResponse resp = null;
+				try {
+					get = new HttpGet(url);
 
-				if (log.isDebugEnabled())
-					log.debug("get url=" + url);
-
-				resp = client.execute(get, localContext);
-				int status = resp.getStatusLine().getStatusCode();
-
-				if (DEBUG) {
-					Header[] hh = resp.getAllHeaders();
-					if (hh != null) {
-						for (Header h : hh) {
-							if (log.isDebugEnabled())
-								log.debug(h.getName() + ":" + h.getValue());
+					if (header != null && header.size() > 0) {
+						for (String name : header.keySet()) {
+							get.addHeader(name, header.getString(name));
 						}
 					}
+
 					if (log.isDebugEnabled())
-						log.debug("status:" + status);
-				}
+						log.debug("get url=" + url);
 
-				if (status == 200 || status == 206) {
-					HttpEntity e = resp.getEntity();
-					InputStream in = e.getContent();
+					resp = client.execute(get, localContext);
+					int status = resp.getStatusLine().getStatusCode();
 
-					localfile.getParentFile().mkdirs();
-
-					FileOutputStream out = new FileOutputStream(localfile);
-					return IOUtil.copy(in, out);
-				}
-				return 0;
-			} catch (Exception e) {
-				log.error("\"" + url + "\"", e);
-			} finally {
-				if (resp != null)
-					try {
-						resp.close();
-					} catch (IOException e) {
+					if (DEBUG) {
+						Header[] hh = resp.getAllHeaders();
+						if (hh != null) {
+							for (Header h : hh) {
+								if (log.isDebugEnabled())
+									log.debug(h.getName() + ":" + h.getValue());
+							}
+						}
+						if (log.isDebugEnabled())
+							log.debug("status:" + status);
 					}
 
+					if (status == 200 || status == 206) {
+						HttpEntity e = resp.getEntity();
+						InputStream in = e.getContent();
+
+						localfile.getParentFile().mkdirs();
+
+						FileOutputStream out = new FileOutputStream(localfile);
+						return IOUtil.copy(in, out);
+					}
+					return 0;
+				} catch (Exception e) {
+					log.error("\"" + url + "\"", e);
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+
+				}
 			}
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("download, cost=" + t.past() + ", url=" + url + ", size=" + localfile.length());
 		}
 
 		return 0;
@@ -654,82 +665,88 @@ public final class Http {
 	 */
 	public Response post(String url, JSON headers, JSON body, String name, InputStream in, long timeout) {
 
-		if (log.isDebugEnabled())
-			log.debug("url=" + url);
+		TimeStamp t = TimeStamp.create();
 
 		Response r = new Response();
 
-		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=" + url);
 
-		if (client == null) {
-			client = getClient(url, ua, timeout);
-		}
+			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
 
-		if (localContext == null) {
-			localContext = HttpClientContext.create();
-			localContext.setCookieStore(cookies);
-		}
-
-		if (client != null) {
-			TimeStamp t = TimeStamp.create();
-
-			HttpPost post = new HttpPost(url);
-			CloseableHttpResponse resp = null;
-			try {
-
-				if (headers != null && headers.size() > 0) {
-					if (log.isDebugEnabled())
-						log.debug("header: " + headers);
-					for (String s : headers.keySet()) {
-						post.addHeader(s, headers.getString(s));
-					}
-				}
-
-				if (log.isDebugEnabled())
-					log.debug("post url=" + url);
-
-				MultipartEntityBuilder b = MultipartEntityBuilder.create();
-				if (body != null) {
-					if (log.isDebugEnabled())
-						log.debug("body: " + body);
-
-					for (String s : body.keySet()) {
-//						b.addTextBody(name, body.getString(s),
-//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
-						b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
-					}
-
-				}
-				if (in != null) {
-					b.addBinaryBody(name, in);
-				}
-				post.setEntity(b.build());
-
-				resp = client.execute(post, localContext);
-				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
-				r.headers = resp.getAllHeaders();
-
-				if (log.isDebugEnabled())
-					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
-
-			} catch (Throwable e) {
-				log.error("cost=" + t.past() + ", " + url, e);
-				r.status = 600;
-				r.body = "error: " + e.getMessage();
-			} finally {
-				if (resp != null)
-					try {
-						resp.close();
-					} catch (IOException e) {
-					}
+			if (client == null) {
+				client = getClient(url, ua, timeout);
 			}
 
-		} else {
-			r.status = 600;
-			r.body = "error: can not init a client";
-		}
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
 
+			if (client != null) {
+
+				HttpPost post = new HttpPost(url);
+				CloseableHttpResponse resp = null;
+				try {
+
+					if (headers != null && headers.size() > 0) {
+						if (log.isDebugEnabled())
+							log.debug("header: " + headers);
+						for (String s : headers.keySet()) {
+							post.addHeader(s, headers.getString(s));
+						}
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("post url=" + url);
+
+					MultipartEntityBuilder b = MultipartEntityBuilder.create();
+					if (body != null) {
+						if (log.isDebugEnabled())
+							log.debug("body: " + body);
+
+						for (String s : body.keySet()) {
+//						b.addTextBody(name, body.getString(s),
+//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
+							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+						}
+
+					}
+					if (in != null) {
+						b.addBinaryBody(name, in);
+					}
+					post.setEntity(b.build());
+
+					resp = client.execute(post, localContext);
+					r.status = resp.getStatusLine().getStatusCode();
+					r.body = getContext(resp);
+					r.headers = resp.getAllHeaders();
+
+					if (log.isDebugEnabled())
+						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+				} catch (Throwable e) {
+					log.error("cost=" + t.past() + ", " + url, e);
+					r.status = 600;
+					r.body = "error: " + e.getMessage();
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+				}
+
+			} else {
+				r.status = 600;
+				r.body = "error: can not init a client";
+			}
+
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("post, cost=" + t.past() + ", url=" + url);
+		}
 		return r;
 	}
 
