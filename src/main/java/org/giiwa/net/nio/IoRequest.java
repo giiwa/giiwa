@@ -86,12 +86,15 @@ public class IoRequest {
 	}
 
 	public void compact() {
-//		log.debug("data=" + data.readerIndex() + "<" + data.writerIndex() + "<" + data.capacity());
+		
+		if (data.readerIndex() < 1024)
+			return;
+
 		ByteBuf b = Unpooled.buffer(data.readableBytes() + 1024);
 		b.writeBytes(data);
 		data.release();
 		data = b;
-//		log.debug("data=" + data.readerIndex() + "<" + data.writerIndex() + "<" + data.capacity());
+
 	}
 
 }
