@@ -5,10 +5,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
-import org.giiwa.dao.Column;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Table;
-import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 
 /**
@@ -32,10 +30,8 @@ public class Demo extends Bean {
 	public static final BeanDAO<Long, Demo> dao = BeanDAO.create(Demo.class);
 
 	// mapping the column and field
-	@Column(name = X.ID)
 	public long id;
 
-	@Column(name = "name")
 	public String name;
 
 
@@ -46,10 +42,10 @@ public class Demo extends Bean {
 		/**
 		 * generate a unique id in distribute system
 		 */
-		long id = UID.next("demo.id");
 		try {
+			long id = dao.next();
 			while (dao.exists(id)) {
-				id = UID.next("demo.id");
+				id = dao.next();
 			}
 			dao.insert(v.force(X.ID, id));
 			return id;

@@ -66,7 +66,7 @@ public class demo extends Controller {
 		Demo.dao.delete(id);
 
 		// response (print) the json to response
-		this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
+		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
 	@Path(path = "create", login = true, access = "access.demo.admin")
@@ -83,7 +83,7 @@ public class demo extends Controller {
 			Demo.create(v);
 
 			// response(print) the json to response
-			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 		}
 
@@ -108,7 +108,7 @@ public class demo extends Controller {
 			Demo.dao.update(id, v);
 
 			// response (print) the json to response
-			this.response(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 		}
 
@@ -116,7 +116,7 @@ public class demo extends Controller {
 		Demo d = Demo.dao.load(id);
 
 		// set the data in Model
-		this.set(d.getJSON());
+		this.copy(d.json());
 		this.put("id", id);
 
 		// show (print) the edit HTML page
