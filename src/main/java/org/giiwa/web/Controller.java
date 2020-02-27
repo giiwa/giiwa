@@ -2012,6 +2012,20 @@ public class Controller {
 
 	}
 
+	/**
+	 * @deprecated
+	 */
+	private void createQuery() {
+		String url = uri;
+
+		if (url.endsWith("/")) {
+			url = url.substring(0, url.length() - 1);
+		}
+		QueryString query = new QueryString(url).copy(this);
+		this.set("query", query);
+
+	}
+
 	private int outputed = 0;
 
 	/**
@@ -2030,6 +2044,8 @@ public class Controller {
 
 			outputed++;
 
+			createQuery();
+			
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
 			if (file != null && file.exists()) {
