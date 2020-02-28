@@ -164,7 +164,7 @@ public class app extends Controller {
 
 		Beans<App> bs = App.dao.load(q, s, n);
 		bs.count();
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/app.index.html");
 	}

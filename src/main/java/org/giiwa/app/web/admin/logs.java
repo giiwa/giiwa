@@ -79,7 +79,7 @@ public class logs extends Controller {
 		try {
 			if (f1.getCanonicalPath().startsWith(new File(Controller.GIIWA_HOME + "/logs/").getCanonicalPath())
 					&& f1.delete()) {
-				GLog.oplog.warn(logs.class, "delete", "deleted=" + f, login, this.getRemoteHost());
+				GLog.oplog.warn(logs.class, "delete", "deleted=" + f, login, this.ip());
 				jo.put(X.STATE, 200);
 			} else {
 				jo.put(X.STATE, 201);

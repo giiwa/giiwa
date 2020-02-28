@@ -60,7 +60,7 @@ public class dfile extends Controller {
 		Beans<Disk> bs = Disk.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/dfile.disk.html");
 

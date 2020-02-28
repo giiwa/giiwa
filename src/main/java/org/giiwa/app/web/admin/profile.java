@@ -63,7 +63,7 @@ public class profile extends Controller {
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "get", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "get", e.getMessage(), e, login, this.ip());
 
 				this.show("/admin/profile.html");
 			}
@@ -100,7 +100,7 @@ public class profile extends Controller {
 				// s.show("/admin/profile.html");
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.ip());
 
 				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 			}
@@ -161,7 +161,7 @@ public class profile extends Controller {
 					login.update(V.create("password", password));
 
 					GLog.securitylog.info(profile.class, "passwd", lang.get("user.passwd.change"), login,
-							this.getRemoteHost());
+							this.ip());
 
 					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
@@ -232,7 +232,7 @@ public class profile extends Controller {
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				GLog.applog.error(profile.class, "verify1", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.applog.error(profile.class, "verify1", e.getMessage(), e, login, this.ip());
 			}
 		}
 		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("validation.sent.error")));

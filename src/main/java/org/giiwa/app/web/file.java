@@ -105,7 +105,7 @@ public class file extends Controller {
 		if (f1.isFile()) {
 
 			String name1 = Url.encode(f1.getName());
-			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
+			this.head("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
 			this.setContentType(Controller.getMimeType(f1.getName()));
 
 			try {

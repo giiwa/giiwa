@@ -39,7 +39,7 @@ public class syslog extends Controller {
 	public void deleteall() {
 		JSON jo = new JSON();
 		int i = GLog.dao.delete(W.create());
-		GLog.oplog.warn(syslog.class, "deleteall", "deleted=" + i, login, this.getRemoteHost());
+		GLog.oplog.warn(syslog.class, "deleteall", "deleted=" + i, login, this.ip());
 		jo.put(X.STATE, 200);
 		this.send(jo);
 	}
@@ -109,7 +109,7 @@ public class syslog extends Controller {
 		W w = getW(jo);
 
 		Beans<GLog> bs = GLog.dao.load(w.sort("created", -1).sort("level", -1), s, n);
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/syslog.index.html");
 	}

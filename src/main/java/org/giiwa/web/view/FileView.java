@@ -71,9 +71,9 @@ public class FileView extends View {
 			boolean media = (filetype != null && (filetype.startsWith("video") || filetype.startsWith("audio"))) ? true
 					: false;
 
-			String date = m.header("If-Modified-Since");
+			String date = m.head("If-Modified-Since");
 
-			String range = m.header("Range");
+			String range = m.head("Range");
 			String date2 = Language.getLanguage().format(View.lastModified(file), "yyyy-MM-dd HH:mm:ss z");
 			if (X.isEmpty(range) && date != null && date.equals(date2)) {
 				m.resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
@@ -107,21 +107,21 @@ public class FileView extends View {
 
 			long length = end - start + 1;
 
-			m.setHeader("Content-Length", Long.toString(length));
-			m.setHeader("Last-Modified", date2);
+			m.head("Content-Length", Long.toString(length));
+			m.head("Last-Modified", date2);
 
 			if (start == 0) {
-				m.setHeader("Accept-Ranges", "bytes");
+				m.head("Accept-Ranges", "bytes");
 			}
 
-			m.setHeader("Content-Length", Long.toString(length));
+			m.head("Content-Length", Long.toString(length));
 			if (media || (!X.isEmpty(range) && total > length)) {
-				m.setHeader("Content-Range", "bytes " + start + "-" + (start + length - 1) + "/" + total);
+				m.head("Content-Range", "bytes " + start + "-" + (start + length - 1) + "/" + total);
 			}
 
 			if (media || end < total - 1) {
 				// if (media) {
-				m.setStatus(206);
+				m.status(206);
 				// GLog.applog.info("file", "download", "range=" + range + ", status=206",
 				// m.getUser(), m.getRemoteHost());
 			}

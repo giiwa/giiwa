@@ -94,7 +94,7 @@ public class setting extends Controller {
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "reset", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "reset", e.getMessage(), e, login, this.ip());
 
 				this.show("/admin/setting.html");
 			}
@@ -130,7 +130,7 @@ public class setting extends Controller {
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "get", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "get", e.getMessage(), e, login, this.ip());
 
 				this.show("/admin/setting.html");
 			}
@@ -164,7 +164,7 @@ public class setting extends Controller {
 				// s.show("/admin/setting.html");
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.ip());
 
 				this.show("/admin/setting.html");
 			}

@@ -57,23 +57,23 @@ public class repo extends Controller {
 				if (e != null) {
 
 					this.setContentType("application/octet-stream");
-					this.addHeader("Content-Disposition", "attachment; filename=\"" + e.getName() + "\"");
+					this.head("Content-Disposition", "attachment; filename=\"" + e.getName() + "\"");
 
 					String date2 = lang.format(e.getCreated(), "yyyy-MM-dd HH:mm:ss z");
 
 					/**
 					 * if not point-transfer, then check the if-modified-since
 					 */
-					String range = this.header("range");
+					String range = this.head("range");
 					if (X.isEmpty(range)) {
-						String date = this.header("If-Modified-Since");
+						String date = this.head("If-Modified-Since");
 						if (date != null && date.equals(date2)) {
 							resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
 							return;
 						}
 					}
 
-					this.addHeader("Last-Modified", date2);
+					this.head("Last-Modified", date2);
 
 					try {
 
@@ -133,7 +133,7 @@ public class repo extends Controller {
 							end = start + 16 * 1024;
 						}
 
-						this.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + total);
+						this.head("Content-Range", "bytes " + start + "-" + end + "/" + total);
 
 						log.info(start + "-" + end + "/" + total);
 						IOUtil.copy(in, out, start, end, true);
@@ -141,7 +141,7 @@ public class repo extends Controller {
 						return;
 					} catch (IOException e1) {
 						log.error(e1);
-						GLog.oplog.error(repo.class, "download", e1.getMessage(), e1, login, this.getRemoteHost());
+						GLog.oplog.error(repo.class, "download", e1.getMessage(), e1, login, this.ip());
 					}
 				}
 			} finally {
@@ -229,7 +229,7 @@ public class repo extends Controller {
 
 					String date2 = lang.format(e.getCreated(), "yyyy-MM-dd HH:mm:ss z");
 
-					this.addHeader("Last-Modified", date2);
+					this.head("Last-Modified", date2);
 
 					try {
 
@@ -331,17 +331,17 @@ public class repo extends Controller {
 							}
 						}
 
-						String range = this.header("Range");
+						String range = this.head("Range");
 						if (log.isDebugEnabled())
 							log.debug("range=" + range);
 
 						if (X.isEmpty(range)) {
-							String date = this.header("if-modified-since");
+							String date = this.head("if-modified-since");
 							/**
 							 * if not point-transfer, then check the if-modified-since
 							 */
 							if (date != null && date.equals(date2)) {
-								this.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
+								this.status(HttpServletResponse.SC_NOT_MODIFIED);
 								return;
 							}
 						}
@@ -379,15 +379,15 @@ public class repo extends Controller {
 						}
 
 						long length = end - start;
-						this.setHeader("Content-Length", Long.toString(length));
-						this.setHeader("Last-Modified", date2);
-						this.setHeader("ETag", "W/repo-" + e.getId());
-						this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
+						this.head("Content-Length", Long.toString(length));
+						this.head("Last-Modified", date2);
+						this.head("ETag", "W/repo-" + e.getId());
+						this.head("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
 						if (start == 0) {
-							this.setHeader("Accept-Ranges", "bytes");
+							this.head("Accept-Ranges", "bytes");
 						}
 						if (end < total) {
-							this.setStatus(206);
+							this.status(206);
 						}
 
 						log.info(start + "-" + end + "/" + total);
@@ -398,7 +398,7 @@ public class repo extends Controller {
 						return;
 					} catch (IOException e1) {
 						log.error(e1.getMessage(), e1);
-						GLog.oplog.error(repo.class, "", e1.getMessage(), e1, login, this.getRemoteHost());
+						GLog.oplog.error(repo.class, "", e1.getMessage(), e1, login, this.ip());
 
 						return;
 					}

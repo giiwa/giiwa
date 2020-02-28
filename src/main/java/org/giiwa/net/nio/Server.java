@@ -28,7 +28,6 @@ public class Server implements Closeable {
 	private static Log log = LogFactory.getLog(Server.class);
 
 	private ServerBootstrap boot = new ServerBootstrap();
-	private Channel ch = null;
 	private BiConsumer<Channel, Throwable> error;
 
 	public static Server create() {
@@ -57,7 +56,7 @@ public class Server implements Closeable {
 			group(1, 2);
 		}
 
-		ch = boot.bind(address, port).sync().channel();
+		boot.bind(address, port).sync();
 		return this;
 	}
 

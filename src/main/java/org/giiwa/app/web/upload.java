@@ -80,13 +80,13 @@ public class upload extends Controller {
 //		String tag = this.getString("tag");
 
 		try {
-			String range = this.header("Content-Range");
+			String range = this.head("Content-Range");
 			if (range == null) {
 				range = this.getString("Content-Range");
 			}
 			long position = 0;
 			long total = 0;
-			String lastModified = this.header("lastModified");
+			String lastModified = this.head("lastModified");
 			if (X.isEmpty(lastModified)) {
 				lastModified = this.getString("lastModified");
 			}
@@ -116,7 +116,7 @@ public class upload extends Controller {
 				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
 
 			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(),
-					this.getRemoteHost());
+					this.ip());
 			if (pos >= 0) {
 				if (jo == null) {
 					this.put("url", "/repo/" + id + "/" + filename);
@@ -156,7 +156,7 @@ public class upload extends Controller {
 			return true;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			GLog.oplog.error(upload.class, "", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.oplog.error(upload.class, "", e.getMessage(), e, login, this.ip());
 
 			if (jo == null) {
 				this.set(X.ERROR, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

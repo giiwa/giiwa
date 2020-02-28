@@ -1,15 +1,12 @@
 package org.giiwa.net.nio;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 
 public class IoResponse {
 
-	private static Log log = LogFactory.getLog(IoResponse.class);
+//	private static Log log = LogFactory.getLog(IoResponse.class);
 
 	public ByteBuf data;
 	private Channel ch;

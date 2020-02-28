@@ -37,7 +37,7 @@ public class mq extends setting {
 		W q = W.create("model", "admin.mq").sort("created", -1);
 
 		Beans<GLog> bs = GLog.dao.load(q, s, n);
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/mq.logs.html");
 	}

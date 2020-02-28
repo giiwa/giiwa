@@ -314,7 +314,7 @@ public class QueryString implements Cloneable {
 	 * @return the query string
 	 */
 	public QueryString copy(Controller m) {
-		Enumeration<String> it = m.getParameterNames();
+		Enumeration<String> it = m.req.getParameterNames();
 		if (it != null) {
 			while (it.hasMoreElements()) {
 				String name = it.nextElement();

@@ -68,7 +68,7 @@ public class user extends Controller {
 
 					V v = V.create("name", name).copy(jo).set("locked", 0);
 					v.remove("role");
-					v.append("createdip", this.getRemoteHost()).append("createdua", this.browser()).append("createdby",
+					v.append("createdip", this.ip()).append("createdua", this.browser()).append("createdby",
 							login.getId());
 
 					long id = User.create(name, v);
@@ -93,7 +93,7 @@ public class user extends Controller {
 					 * log
 					 */
 					GLog.securitylog.info(user.class, "create", this.getJSONNonPassword().toString(), login,
-							this.getRemoteHost());
+							this.ip());
 
 					if (Global.getInt("user.updated.noti", 1) == 1) {
 						final String email = this.getString("email");
@@ -123,7 +123,7 @@ public class user extends Controller {
 											} catch (Exception e) {
 												log.error(e.getMessage(), e);
 												GLog.applog.error(user.class, "create", e.getMessage(), e, login,
-														this.getRemoteHost());
+														this.ip());
 											}
 										}
 									}
@@ -139,7 +139,7 @@ public class user extends Controller {
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				GLog.securitylog.error(user.class, "create", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.securitylog.error(user.class, "create", e.getMessage(), e, login, this.ip());
 
 				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
 						lang.get("save.failed") + ":" + e.getMessage()));
@@ -176,7 +176,7 @@ public class user extends Controller {
 			}
 
 			GLog.securitylog.warn(user.class, "delete", this.getJSONNonPassword().toString(), login,
-					this.getRemoteHost());
+					this.ip());
 			jo.put(X.STATE, 200);
 		} else {
 			jo.put(X.MESSAGE, lang.get("delete.failed"));
@@ -205,7 +205,7 @@ public class user extends Controller {
 					Session.expired(id);
 
 					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login,
-							this.getRemoteHost());
+							this.ip());
 
 					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
@@ -242,7 +242,7 @@ public class user extends Controller {
 				Session.expired(id);
 
 				GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login,
-						this.getRemoteHost());
+						this.ip());
 
 				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 				return;
@@ -305,7 +305,7 @@ public class user extends Controller {
 
 		W q = getW(this.json());
 		Beans<GLog> bs = GLog.dao.load(q, s, n);
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/user.oplog.html");
 	}
@@ -321,7 +321,7 @@ public class user extends Controller {
 
 		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/user.accesslog.html");
 	}
@@ -352,7 +352,7 @@ public class user extends Controller {
 
 		Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt).sort("name", 1), s, n);
 		bs.count();
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/user.index.html");
 	}

@@ -149,8 +149,7 @@ public class role extends Controller {
 			Role r = Role.dao.load(id);
 			this.set("r", r);
 
-			JSON jo = new JSON();
-			r.toJSON(jo);
+			JSON jo = r.json();
 			this.copy(jo);
 
 			Map<String, List<Access>> bs = Access.load();
@@ -176,7 +175,7 @@ public class role extends Controller {
 				int i = Role.dao.delete(id);
 				if (i > 0) {
 					updated += i;
-					GLog.oplog.info(role.class, "delete", r.getName(), null, login, this.getRemoteHost());
+					GLog.oplog.info(role.class, "delete", r.getName(), null, login, this.ip());
 				}
 			}
 		}
@@ -205,7 +204,7 @@ public class role extends Controller {
 		Beans<Role> bs = Role.load(s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/role.index.html");
 	}
@@ -218,7 +217,7 @@ public class role extends Controller {
 		Beans<Access> bs = Access.dao.load(W.create().sort(X.ID, 1), s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/role.access.html");
 	}

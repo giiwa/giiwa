@@ -343,7 +343,7 @@ public class Controller {
 
 									GLog.securitylog.warn(this.getClass(), pp.path(),
 											"deny the access, requred: " + lang.get(pp.access()), user(),
-											this.getRemoteHost());
+											this.ip());
 									return pp;
 								}
 							}
@@ -363,7 +363,7 @@ public class Controller {
 									log.error(e.getMessage(), e);
 
 								GLog.oplog.error(this.getClass(), pp.path(), this.json().toString(), e, user(),
-										this.getRemoteHost());
+										this.ip());
 
 								error(e);
 							}
@@ -375,7 +375,7 @@ public class Controller {
 						if (log.isErrorEnabled())
 							log.error(s, e);
 
-						GLog.oplog.error(this.getClass(), path, e.getMessage(), e, user(), this.getRemoteHost());
+						GLog.oplog.error(this.getClass(), path, e.getMessage(), e, user(), this.ip());
 
 						error(e);
 						return null;
@@ -665,7 +665,7 @@ public class Controller {
 		if (X.isEmpty(sid)) {
 			sid = this.cookie("sid");
 			if (X.isEmpty(sid)) {
-				sid = this.header("sid");
+				sid = this.head("sid");
 				if (X.isEmpty(sid)) {
 					sid = this.getString("sid");
 					if (X.isEmpty(sid)) {
@@ -686,15 +686,15 @@ public class Controller {
 				if (!X.isEmpty(sid)) {
 					long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
 					if (expired <= 0) {
-						addCookie("sid", sid, (int) expired);
+						cookie("sid", sid, (int) expired);
 					} else {
-						addCookie("sid", sid, (int) (expired / 1000));
+						cookie("sid", sid, (int) (expired / 1000));
 					}
 				}
 			}
 
 			if (!X.isEmpty(sid))
-				sid += "/" + this.getRemoteHost();
+				sid += "/" + this.ip();
 
 //			log.debug("sid=" + sid);
 		}
@@ -710,7 +710,7 @@ public class Controller {
 	final public String token() {
 		String token = this.cookie("token");
 		if (token == null) {
-			token = this.header("token");
+			token = this.head("token");
 			if (token == null) {
 				token = this.getString("token");
 			}
@@ -725,7 +725,7 @@ public class Controller {
 	 */
 	final public void redirect(String url) {
 		resp.setHeader("Location", url);
-		setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+		status(HttpServletResponse.SC_MOVED_TEMPORARILY);
 	}
 
 	/**
@@ -832,30 +832,6 @@ public class Controller {
 	}
 
 	/**
-	 * Sets response the header name=value.
-	 * 
-	 * @param name  the name of header to response
-	 * @param value the String value
-	 */
-	final public void setHeader(String name, String value) {
-		if (resp.containsHeader(name)) {
-			resp.setHeader(name, value);
-		} else {
-			addHeader(name, value);
-		}
-	}
-
-	/**
-	 * set response the date header name=value
-	 * 
-	 * @param name the name of header to response
-	 * @param date the data value in header to response
-	 */
-	final public void setDateHeader(String name, long date) {
-		resp.setDateHeader(name, date);
-	}
-
-	/**
 	 * Sets Beans back to Model which accessed by view, it will auto paging
 	 * according the start and number per page.
 	 * 
@@ -865,6 +841,19 @@ public class Controller {
 	 * @param n  the number per page
 	 */
 	final public void set(Beans<? extends Bean> bs, int s, int n) {
+		pages(bs, s, n);
+	}
+
+	/**
+	 * 
+	 * Sets Beans back to Model which accessed by view, it will auto paging
+	 * according the start and number per page.
+	 * 
+	 * @param bs
+	 * @param s
+	 * @param n
+	 */
+	final public void pages(Beans<? extends Bean> bs, int s, int n) {
 		if (bs != null) {
 			this.set("list", bs);
 			int total = (int) bs.getTotal();
@@ -914,22 +903,12 @@ public class Controller {
 	}
 
 	/**
-	 * Checks if has the name in the model for response
-	 * 
-	 * @param name the name
-	 * @return true, if has
-	 */
-	final public boolean has(String name) {
-		return context != null && context.containsKey(name);
-	}
-
-	/**
 	 * @deprecated
 	 * @param tag
 	 * @return
 	 */
 	final public String getHeader(String tag) {
-		return header(tag);
+		return head(tag);
 	}
 
 	/**
@@ -938,7 +917,7 @@ public class Controller {
 	 * @param tag the header tag
 	 * @return String of the header
 	 */
-	final public String header(String tag) {
+	final public String head(String tag) {
 		try {
 			return req.getHeader(tag);
 		} catch (Exception e) {
@@ -949,12 +928,16 @@ public class Controller {
 	/**
 	 * Adds the header.
 	 * 
-	 * @param tag the tag
-	 * @param v   the v
+	 * @param name  the name
+	 * @param value the value
 	 */
-	final public void addHeader(String tag, String v) {
+	final public void head(String name, String value) {
 		try {
-			resp.addHeader(tag, v);
+			if (resp.containsHeader(name)) {
+				resp.setHeader(name, value);
+			} else {
+				resp.addHeader(name, value);
+			}
 		} catch (Exception e) {
 		}
 	}
@@ -1168,7 +1151,7 @@ public class Controller {
 	 * @return the string
 	 */
 	final public String browser() {
-		return this.header("user-agent");
+		return this.head("user-agent");
 	}
 
 	/**
@@ -1178,7 +1161,7 @@ public class Controller {
 	 * @param value         the value of the cookie
 	 * @param expireseconds the expire time of seconds.
 	 */
-	final public void addCookie(String key, String value, int expireseconds) {
+	final public void cookie(String key, String value, int expireseconds) {
 		if (key == null) {
 			return;
 		}
@@ -1200,18 +1183,7 @@ public class Controller {
 			c.setDomain(domain);
 		}
 
-		addCookie(c);
-	}
-
-	/**
-	 * Adds the cookie.
-	 * 
-	 * @param c the c
-	 */
-	final public void addCookie(Cookie c) {
-		if (c != null) {
-			resp.addCookie(c);
-		}
+		resp.addCookie(c);
 	}
 
 	/**
@@ -1254,9 +1226,9 @@ public class Controller {
 	 * @return String
 	 */
 	final public String ip() {
-		String remote = this.header("X-Forwarded-For");
+		String remote = this.head("X-Forwarded-For");
 		if (remote == null) {
-			remote = header("X-Real-IP");
+			remote = head("X-Real-IP");
 
 			if (remote == null) {
 				remote = req.getRemoteAddr();
@@ -1273,7 +1245,7 @@ public class Controller {
 	 * @return int of local port
 	 */
 	final public int getPort() {
-		String port = this.header("Port");
+		String port = this.head("Port");
 		if (X.isEmpty(port)) {
 			return req.getLocalPort();
 		}
@@ -1287,28 +1259,12 @@ public class Controller {
 	 * @return String of local host
 	 */
 	final public String getHost() {
-		String host = this.header("Host");
+		String host = this.head("Host");
 		if (X.isEmpty(host)) {
 			host = req.getLocalAddr();
 		}
 
 		return host;
-	}
-
-	/**
-	 * get all parameter names
-	 * 
-	 * @deprecated
-	 * @return Enumeration
-	 */
-	final public Enumeration<String> getParameterNames() {
-		try {
-			return req.getParameterNames();
-		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(e.getMessage(), e);
-			return null;
-		}
 	}
 
 	private JSON _json;
@@ -1368,12 +1324,69 @@ public class Controller {
 	 * @return string of requested value
 	 */
 	final public String getString(String name) {
+		String s = this.getHtml(name);
+		if (s != null) {
+			return s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the request value by name, and limited length.
+	 * 
+	 * @param name      the parameter name
+	 * @param maxlength the maxlength
+	 * @return string of value
+	 */
+	final public String get(String name, int maxlength) {
+		String s = getString(name);
+		if (!X.isEmpty(s)) {
+			if (s.getBytes().length > maxlength) {
+				s = Html.create(s).text(maxlength);
+			}
+		}
+
+		return s;
+	}
+
+	/**
+	 * Gets the request value by name, and limited length, if not presented, using
+	 * the default value.
+	 * 
+	 * @param name         the parameter name
+	 * @param maxlength    the maxlength
+	 * @param defaultvalue the defaultvalue
+	 * @return string of value
+	 */
+	final public String get(String name, int maxlength, String defaultvalue) {
+		String s = getString(name);
+		if (!X.isEmpty(s)) {
+			if (s.getBytes().length > maxlength) {
+				s = Html.create(s).text(maxlength);
+			}
+		} else {
+			s = defaultvalue;
+		}
+
+		return s;
+	}
+
+	/**
+	 * get the request value as html (original string), it maybe includes html
+	 * format
+	 * 
+	 * @param name the parameter name
+	 * @return String of value
+	 */
+	final public String getHtml(String name) {
+
 		try {
 			String c1 = req.getContentType();
 
 //			log.debug("get s, name=" + name + ", c1=" + c1);
 
 			if (c1 != null && c1.indexOf("application/json") > -1) {
+
 				if (uploads == null) {
 
 					BufferedReader in = req.getReader();
@@ -1414,24 +1427,19 @@ public class Controller {
 					byte[] bb = new byte[in.available()];
 					in.read(bb);
 					in.close();
-					String s = new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
-
-//					log.debug("get s=" + s);
-
-					return s;
+					return new String(bb, ENCODING);
 				}
+				return null;
 
 			}
 
 			String[] ss = req.getParameterValues(name);
-
 			if (ss == null || ss.length == 0) {
 				return null;
 			}
 
 			String s = ss[ss.length - 1];
 			s = _decode(s);
-			s = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
 
 //			log.debug("get s = " + s);
 			return s;
@@ -1439,130 +1447,15 @@ public class Controller {
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error("get request parameter " + name + " get exception.", e);
-			return null;
-		}
-	}
-
-	/**
-	 * Gets the request value by name, and limited length.
-	 * 
-	 * @param name      the parameter name
-	 * @param maxlength the maxlength
-	 * @return string of value
-	 */
-	final public String getString(String name, int maxlength) {
-		String s = getString(name);
-		if (!X.isEmpty(s)) {
-			if (s.getBytes().length > maxlength) {
-				s = Html.create(s).text(maxlength);
-			}
 		}
 
-		return s;
-	}
+		return null;
 
-	/**
-	 * Gets the request value by name, and limited length, if not presented, using
-	 * the default value.
-	 * 
-	 * @param name         the parameter name
-	 * @param maxlength    the maxlength
-	 * @param defaultvalue the defaultvalue
-	 * @return string of value
-	 */
-	final public String getString(String name, int maxlength, String defaultvalue) {
-		String s = getString(name);
-		if (!X.isEmpty(s)) {
-			if (s.getBytes().length > maxlength) {
-				s = Html.create(s).text(maxlength);
-			}
-		} else {
-			s = defaultvalue;
-		}
-
-		return s;
-	}
-
-	/**
-	 * get the request value as html (original string), it maybe includes html
-	 * format
-	 * 
-	 * @param name the parameter name
-	 * @return String of value
-	 */
-	final public String getHtml(String name) {
-		return getHtml(name, false);
-	}
-
-	/**
-	 * Gets the html.
-	 * 
-	 * @param name the name of the parameter
-	 * @param all  whether get all data
-	 * @return String
-	 */
-	final public String getHtml(String name, boolean all) {
-		try {
-			String c1 = req.getContentType();
-			if (c1 != null && c1.indexOf("application/json") > -1) {
-				if (uploads == null) {
-					BufferedReader in = req.getReader();
-
-					StringBuilder sb = new StringBuilder();
-					char[] buff = new char[1024];
-					int len;
-					while ((len = in.read(buff)) != -1) {
-						sb.append(buff, 0, len);
-					}
-
-//					log.debug("params=" + sb.toString());
-
-					JSON jo = JSON.fromObject(sb.toString());
-					uploads = new HashMap<String, Object>();
-					uploads.putAll(jo);
-				}
-
-				Object v1 = uploads.get(name);
-				if (v1 != null) {
-					return v1.toString();
-				}
-				return null;
-			} else if (this._multipart) {
-
-				_get_files();
-
-				FileItem i = this.file(name);
-
-				if (i != null && i.isFormField()) {
-					InputStream in = i.getInputStream();
-					byte[] bb = new byte[in.available()];
-					in.read(bb);
-					in.close();
-					return new String(bb, ENCODING);
-				}
-				return null;
-
-			} else {
-
-				String s = req.getParameter(name);
-				if (s == null)
-					return null;
-
-				s = _decode(s);
-
-				return s;
-
-			}
-		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error("get request parameter " + name + " get exception.", e);
-			return null;
-		}
 	}
 
 	private String _decode(String s) {
 		try {
-			String t = this.header("Content-Type");
+			String t = this.head("Content-Type");
 			if (t == null) {
 				// do nothing
 				// log.debug("get s=" + s);
@@ -1587,41 +1480,14 @@ public class Controller {
 		return s;
 	}
 
-	/**
-	 * Gets the html from the request, and cut by the maxlength
-	 * 
-	 * @param name      the name
-	 * @param maxlength the maxlength
-	 * @return the html
-	 */
-	final public String getHtml(String name, int maxlength) {
-		String html = getHtml(name);
-		if (!X.isEmpty(html)) {
-			if (html.getBytes().length >= maxlength) {
-				html = Html.create(html).text(maxlength);
+	final public String[] getStrings(String name) {
+		String[] ss = getHtmls(name);
+		if (ss != null) {
+			for (int i = 0; i < ss.length; i++) {
+				ss[i] = ss[i].replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 			}
 		}
-		return html;
-	}
-
-	/**
-	 * Gets the html from the request, it will not convert anything for the html
-	 * 
-	 * @param name         the name of request parameter
-	 * @param maxlength    the maxlength
-	 * @param defaultvalue the defaultvalue
-	 * @return String of the html
-	 */
-	final public String getHtml(String name, int maxlength, String defaultvalue) {
-		String html = getHtml(name);
-		if (!X.isEmpty(html)) {
-			if (html.getBytes().length >= maxlength) {
-				html = Html.create(html).text(maxlength);
-			}
-		} else {
-			html = defaultvalue;
-		}
-		return html;
+		return ss;
 	}
 
 	/**
@@ -1632,7 +1498,7 @@ public class Controller {
 	 * @return String[] of request
 	 */
 	@SuppressWarnings("unchecked")
-	final public String[] getStrings(String name) {
+	final public String[] getHtmls(String name) {
 		try {
 			if (this._multipart) {
 				_get_files();
@@ -1848,7 +1714,7 @@ public class Controller {
 	 * @param logintype
 	 */
 	public void setUser(User u, LoginType logintype) {
-
+		this.user(u, logintype);
 	}
 
 	/**
@@ -1871,16 +1737,16 @@ public class Controller {
 			}
 			if (System.currentTimeMillis() - u.getLong("lastlogined") > X.AMINUTE) {
 				u.set("lastlogined", System.currentTimeMillis());
-				u.set("ip", this.getRemoteHost());
+				u.set("ip", this.ip());
 
 				V v = V.create();
 				String type = (String) u.get("logintype");
 				if (X.isSame(type, "web")) {
 					v.append("weblogined", System.currentTimeMillis());
-					v.append("ip", this.getRemoteHost());
+					v.append("ip", this.ip());
 				} else if (X.isSame(type, "ajax")) {
 					v.append("ajaxlogined", System.currentTimeMillis());
-					v.append("ip", this.getRemoteHost());
+					v.append("ip", this.ip());
 				}
 				if (!v.isEmpty()) {
 					User.dao.update(u.getId(), v);
@@ -2129,7 +1995,7 @@ public class Controller {
 			if (log.isErrorEnabled())
 				log.error(viewname, e);
 
-			GLog.applog.error(this.getClass(), "show", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.applog.error(this.getClass(), "show", e.getMessage(), e, login, this.ip());
 
 			error(e);
 		}
@@ -2194,16 +2060,6 @@ public class Controller {
 	}
 
 	/**
-	 * set current path.
-	 * 
-	 * @deprecated
-	 * @param path rewrite the path
-	 */
-	final public void setPath(String path) {
-		this.path = path;
-	}
-
-	/**
 	 * Get the mime type.
 	 * 
 	 * @param uri the type of uri
@@ -2263,7 +2119,7 @@ public class Controller {
 			this.set("error", s);
 
 			this.show("/error.html");
-			setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
 	}
@@ -2316,7 +2172,7 @@ public class Controller {
 		} else {
 			this.set("me", this.user());
 			this.print("not found, " + message);
-			this.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			this.status(HttpServletResponse.SC_NOT_FOUND);
 		}
 	}
 
@@ -2330,12 +2186,12 @@ public class Controller {
 	 */
 	public boolean isAjax() {
 
-		String request = this.header("X-Requested-With");
+		String request = this.head("X-Requested-With");
 		if (X.isSame(request, "XMLHttpRequest")) {
 			return true;
 		}
 
-		String type = this.header("Content-Type");
+		String type = this.head("Content-Type");
 		if (X.isSame(type, "application/json")) {
 			return true;
 		}
@@ -2345,12 +2201,12 @@ public class Controller {
 			return true;
 		}
 
-		output = this.header("output");
+		output = this.head("output");
 		if (X.isSame("json", output)) {
 			return true;
 		}
 
-		String accept = this.header("Accept");
+		String accept = this.head("Accept");
 		if (!X.isEmpty(accept) && accept.indexOf("application/json") > -1 && accept.indexOf("text/html") == -1) {
 			return true;
 		}
@@ -2363,7 +2219,7 @@ public class Controller {
 	 * 
 	 * @param statuscode the status code to response
 	 */
-	final public void setStatus(int statuscode) {
+	final public void status(int statuscode) {
 		status = statuscode;
 		resp.setStatus(statuscode);
 
@@ -2412,7 +2268,7 @@ public class Controller {
 
 		} else {
 
-			setStatus(HttpServletResponse.SC_FORBIDDEN);
+			status(HttpServletResponse.SC_FORBIDDEN);
 			this.set("me", this.user());
 			this.set(X.ERROR, error);
 			this.set(X.URL, url);
@@ -2681,9 +2537,9 @@ public class Controller {
 
 			this.setContentType("application/octet-stream");
 			name = Url.encode(name);
-			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name);
+			this.head("Content-Disposition", "attachment; filename*=UTF-8''" + name);
 
-			String range = this.header("range");
+			String range = this.head("range");
 
 			long start = 0;
 			long end = total;
@@ -2709,14 +2565,14 @@ public class Controller {
 			long length = end - start;
 
 			if (end < total) {
-				this.setStatus(206);
+				this.status(206);
 			}
 
 			if (start == 0) {
-				this.setHeader("Accept-Ranges", "bytes");
+				this.head("Accept-Ranges", "bytes");
 			}
-			this.setHeader("Content-Length", Long.toString(length));
-			this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
+			this.head("Content-Length", Long.toString(length));
+			this.head("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
 
 			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
 			if (length > 0) {
@@ -2963,13 +2819,14 @@ public class Controller {
 
 //				mo.put("__node", node);
 
-				mo.setPath(path);
+				mo.path = path;
+
 //					Path p = 
 				mo.dispatch(u, req, resp, method);
 
 //					if (p == null) {
 				if (log.isInfoEnabled())
-					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost()
+					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip()
 							+ " " + mo);
 
 //					if (AccessLog.isOn()) {
@@ -3013,7 +2870,7 @@ public class Controller {
 		mo.dispatch(uri, req, resp, method);
 
 		if (log.isInfoEnabled())
-			log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.getRemoteHost() + " "
+			log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip() + " "
 					+ mo);
 //			if (AccessLog.isOn()) {
 //

@@ -39,7 +39,7 @@ public class footprint extends Controller {
 	public void deleteall() {
 		JSON jo = new JSON();
 		int i = Footprint.dao.delete(W.create());
-		GLog.oplog.warn(footprint.class, "deleteall", "deleted=" + i, login, this.getRemoteHost());
+		GLog.oplog.warn(footprint.class, "deleteall", "deleted=" + i, login, this.ip());
 		jo.put(X.STATE, 200);
 		this.send(jo);
 	}
@@ -75,7 +75,7 @@ public class footprint extends Controller {
 		}
 
 		Beans<Footprint> bs = Footprint.dao.load(q.sort("created", -1), s, n);
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/footprint.index.html");
 	}

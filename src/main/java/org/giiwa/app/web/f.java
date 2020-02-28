@@ -20,7 +20,6 @@ import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.misc.Url;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
@@ -67,7 +66,7 @@ public class f extends Controller {
 								/**
 								 * using scale3 to cut the middle of the image
 								 */
-								if (GImage.scale(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
+								if (GImage.scale2(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
 										X.toInt(ss[1])) < 0) {
 									failed = true;
 									log.warn("scale image failed");
@@ -174,13 +173,13 @@ public class f extends Controller {
 //		String tag = this.getString("tag");
 
 		try {
-			String range = this.header("Content-Range");
+			String range = this.head("Content-Range");
 			if (range == null) {
 				range = this.getString("Content-Range");
 			}
 			long position = 0;
 			long total = 0;
-			String lastModified = this.header("lastModified");
+			String lastModified = this.head("lastModified");
 			if (X.isEmpty(lastModified)) {
 				lastModified = this.getString("lastModified");
 			}
@@ -210,7 +209,7 @@ public class f extends Controller {
 				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
 
 			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(),
-					this.getRemoteHost());
+					this.ip());
 			if (pos >= 0) {
 				if (jo == null) {
 					this.put("url", "/f/repo/" + id + "/" + filename);
@@ -250,7 +249,7 @@ public class f extends Controller {
 			return true;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			GLog.oplog.error(f.class, "upload", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.oplog.error(f.class, "upload", e.getMessage(), e, login, this.ip());
 
 			if (jo == null) {
 				this.put(X.ERROR, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -299,7 +298,7 @@ public class f extends Controller {
 
 		} catch (Exception e) {
 			log.error(path, e);
-			GLog.oplog.error(f.class, "temp", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.oplog.error(f.class, "temp", e.getMessage(), e, login, this.ip());
 		}
 
 		this.notfound();
@@ -327,7 +326,7 @@ public class f extends Controller {
 	void _send(InputStream in, long total) {
 
 		try {
-			String range = this.header("range");
+			String range = this.head("range");
 
 			long start = 0;
 			long end = total;
@@ -353,14 +352,14 @@ public class f extends Controller {
 			long length = end - start;
 
 			if (end < total) {
-				this.setStatus(206);
+				this.status(206);
 			}
 
 			if (start == 0) {
-				this.setHeader("Accept-Ranges", "bytes");
+				this.head("Accept-Ranges", "bytes");
 			}
-			this.setHeader("Content-Length", Long.toString(length));
-			this.setHeader("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
+			this.head("Content-Length", Long.toString(length));
+			this.head("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
 
 			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
 			if (length > 0) {

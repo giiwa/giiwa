@@ -66,7 +66,7 @@ public class module extends Controller {
 				jo.put("file", file);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				GLog.oplog.error(module.class, "create", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.oplog.error(module.class, "create", e.getMessage(), e, login, this.ip());
 
 				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 				return;
@@ -611,7 +611,7 @@ public class module extends Controller {
 
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
-			GLog.applog.error(module.class, "license", e1.getMessage(), e1, login, this.getRemoteHost());
+			GLog.applog.error(module.class, "license", e1.getMessage(), e1, login, this.ip());
 
 			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e1.getMessage()));
 		} finally {
@@ -663,7 +663,7 @@ public class module extends Controller {
 			log.error(url, e1);
 
 			GLog.applog.error(module.class, "add", "entity not found in repo for [" + url + "]", e1, login,
-					this.getRemoteHost());
+					this.ip());
 
 			jo.put(X.STATE, 404);
 			jo.put(X.ERROR, "entity not found in repo for [" + url + "]");

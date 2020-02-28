@@ -83,7 +83,7 @@ public class accesslog extends Controller {
 		q.sort(sortby, sortby_type);
 		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/accesslog.index.html");
 	}

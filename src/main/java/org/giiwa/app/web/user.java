@@ -147,7 +147,7 @@ public class user extends Controller {
 					}
 					this.user(u, LoginType.web);
 					GLog.securitylog.info(user.class, "register",
-							lang.get("create.success") + ":" + name + ", uid=" + id, login, this.getRemoteHost());
+							lang.get("create.success") + ":" + name + ", uid=" + id, login, this.ip());
 
 					if (this.isAjax()) {
 						this.send(JSON.create().append(X.STATE, 200).append("id", u.getId()).append(X.MESSAGE,
@@ -164,7 +164,7 @@ public class user extends Controller {
 					}
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
-					GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.getRemoteHost());
+					GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.ip());
 
 					if (this.isAjax()) {
 						this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
@@ -301,7 +301,7 @@ public class user extends Controller {
 				User u = a.getUser_obj();
 				this.user(u, LoginType.ajax);
 
-				GLog.securitylog.info(user.class, "login", null, u, this.getRemoteHost());
+				GLog.securitylog.info(user.class, "login", null, u, this.ip());
 			} else {
 				String name = this.getString("name");
 				if (name != null) {
@@ -324,14 +324,14 @@ public class user extends Controller {
 					jo.put(X.MESSAGE, lang.get("captcha.bad"));
 					jo.put(X.STATE, 202);
 
-					GLog.securitylog.error(user.class, "login", lang.get("captcha.bad"), null, this.getRemoteHost());
+					GLog.securitylog.error(user.class, "login", lang.get("captcha.bad"), null, this.ip());
 
 				} else if (Captcha.Result.expired == r) {
 					jo.put(X.MESSAGE, lang.get("captcha.expired"));
 					jo.put(X.STATE, 203);
 
 					GLog.securitylog.error(user.class, "login", lang.get("captcha.expired"), null,
-							this.getRemoteHost());
+							this.ip());
 
 				} else {
 
@@ -343,11 +343,11 @@ public class user extends Controller {
 
 						long uid = me.getId();
 						long time = System.currentTimeMillis() - X.AHOUR;
-						List<User.Lock> list = User.Lock.loadByHost(uid, time, this.getRemoteHost());
+						List<User.Lock> list = User.Lock.loadByHost(uid, time, this.ip());
 
 						if (me.isLocked() || (list != null && list.size() >= 6)) {
 							// locked by the host
-							me.failed(this.getRemoteHost(), sid(), this.browser());
+							me.failed(this.ip(), sid(), this.browser());
 							jo.put(X.MESSAGE, lang.get("account.locked.error"));
 
 							jo.put(X.STATE, 204);
@@ -355,12 +355,12 @@ public class user extends Controller {
 							jo.put("pwd", pwd);
 
 							GLog.securitylog.error(user.class, "login", lang.get("account.locked.error"), me,
-									this.getRemoteHost());
+									this.ip());
 
 						} else {
 							list = User.Lock.loadBySid(uid, time, sid());
 							if (list != null && list.size() >= 3) {
-								me.failed(this.getRemoteHost(), sid(), this.browser());
+								me.failed(this.ip(), sid(), this.browser());
 
 								jo.put(X.MESSAGE, lang.get("account.locked.error"));
 								jo.put("name", name);
@@ -368,10 +368,10 @@ public class user extends Controller {
 								jo.put(X.STATE, 204);
 
 								GLog.securitylog.error(user.class, "login", lang.get("account.locked.error"), me,
-										this.getRemoteHost());
+										this.ip());
 							} else {
 
-								GLog.securitylog.info(user.class, "login", null, me, this.getRemoteHost());
+								GLog.securitylog.info(user.class, "login", null, me, this.ip());
 
 								if (X.isSame("json", this.getString("type")) || this.isAjax()) {
 
@@ -380,7 +380,7 @@ public class user extends Controller {
 									if (log.isDebugEnabled())
 										log.debug("isAjax login");
 
-									login.logined(sid(), this.getRemoteHost(),
+									login.logined(sid(), this.ip(),
 											V.create("ajaxlogined", System.currentTimeMillis()));
 
 									jo.put("sid", sid());
@@ -390,7 +390,7 @@ public class user extends Controller {
 									 * test the configuration is enabled user token and this request is ajax
 									 */
 									if (Global.getInt("user.token", 1) == 1) {
-										AuthToken t = AuthToken.update(me.getId(), sid(), this.getRemoteHost());
+										AuthToken t = AuthToken.update(me.getId(), sid(), this.ip());
 										if (t != null) {
 											jo.put("token", t.getToken());
 											jo.put("expired", t.getExpired());
@@ -408,7 +408,7 @@ public class user extends Controller {
 									/**
 									 * logined, to update the stat data
 									 */
-									me.logined(sid(), this.getRemoteHost(),
+									me.logined(sid(), this.ip(),
 											V.create("weblogined", System.currentTimeMillis()));
 
 									this.redirect("/");
@@ -428,20 +428,20 @@ public class user extends Controller {
 							jo.put(X.STATE, 201);
 
 							GLog.securitylog.error(user.class, "login",
-									lang.get("login.name_password.error") + ":" + name, u, this.getRemoteHost());
+									lang.get("login.name_password.error") + ":" + name, u, this.ip());
 						} else {
 
-							u.failed(this.getRemoteHost(), sid(), this.browser());
+							u.failed(this.ip(), sid(), this.browser());
 
 							List<User.Lock> list = User.Lock.loadByHost(u.getId(), System.currentTimeMillis() - X.AHOUR,
-									this.getRemoteHost());
+									this.ip());
 
 							if (list != null && list.size() >= 6) {
 								jo.put("message", lang.get("login.locked.error"));
 								jo.put(X.STATE, 204);
 
 								GLog.securitylog.error(user.class, "login", lang.get("login.failed") + ":" + name, u,
-										this.getRemoteHost());
+										this.ip());
 
 							} else {
 								list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid());
@@ -450,7 +450,7 @@ public class user extends Controller {
 									jo.put(X.STATE, 204);
 
 									GLog.securitylog.error(user.class, "login",
-											lang.get("login.locked.error") + ":" + name, u, this.getRemoteHost());
+											lang.get("login.locked.error") + ":" + name, u, this.ip());
 
 								} else {
 									jo.put(X.MESSAGE, String.format(lang.get("login.name_password.error.times"),
@@ -458,7 +458,7 @@ public class user extends Controller {
 									jo.put(X.STATE, 204);
 
 									GLog.securitylog.warn(user.class, "login", jo.getString(X.MESSAGE) + ":" + name, u,
-											this.getRemoteHost());
+											this.ip());
 
 								}
 							}
@@ -494,7 +494,7 @@ public class user extends Controller {
 				this.session(true).set("uri", URLDecoder.decode(refer, "UTF-8")).store();
 			} catch (Exception e) {
 				log.error(refer, e);
-				GLog.securitylog.error(user.class, "login", e.getMessage(), e, login, this.getRemoteHost());
+				GLog.securitylog.error(user.class, "login", e.getMessage(), e, login, this.ip());
 			}
 		}
 
@@ -516,7 +516,7 @@ public class user extends Controller {
 			 */
 			AuthToken.delete(u.getId(), sid());
 
-			GLog.securitylog.info(user.class, "logout", null, u, this.getRemoteHost());
+			GLog.securitylog.info(user.class, "logout", null, u, this.ip());
 
 			login.logout();
 
@@ -536,7 +536,7 @@ public class user extends Controller {
 			jo.put(X.MESSAGE, "ok");
 			jo.put("path", "/");
 			// this.setStatus(HttpServletResponse.SC_TEMPORARY_REDIRECT);
-			this.setHeader("Location", "/");
+			this.head("Location", "/");
 			this.send(jo);
 			return;
 		} else {
@@ -563,7 +563,7 @@ public class user extends Controller {
 					jo.put(X.MESSAGE, lang.get("user.name.exists"));
 
 					GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",exists", login,
-							this.getRemoteHost());
+							this.ip());
 
 				} else {
 					String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
@@ -573,7 +573,7 @@ public class user extends Controller {
 						jo.put(X.MESSAGE, lang.get("user.name.format.error"));
 
 						GLog.securitylog.info(user.class, "verify",
-								"name=" + name + ",value=" + value + ",rule=" + rule, login, this.getRemoteHost());
+								"name=" + name + ",value=" + value + ",rule=" + rule, login, this.ip());
 					} else {
 						jo.put(X.STATE, 200);
 					}
@@ -589,7 +589,7 @@ public class user extends Controller {
 				jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
 
 				GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
-						this.getRemoteHost());
+						this.ip());
 			} else {
 				jo.put(X.STATE, 200);
 			}
@@ -720,7 +720,7 @@ public class user extends Controller {
 									} catch (Exception e) {
 										log.error(e.getMessage(), e);
 										GLog.applog.error(user.class, "forget", e.getMessage(), e, login,
-												this.getRemoteHost());
+												this.ip());
 										jo.put(X.MESSAGE,
 												lang.get("user.forget.email.sent.failed") + ": " + e.getMessage());
 										jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

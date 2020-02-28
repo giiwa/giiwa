@@ -69,7 +69,7 @@ public class counter extends Controller {
 		Beans<Counter> bs = Counter.dao.load(q.sort("node", 1).sort("name", 1), s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/counter.index.html");
 	}

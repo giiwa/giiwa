@@ -65,7 +65,7 @@ public class temp extends Controller {
 
 		} catch (Exception e) {
 			log.error(path, e);
-			GLog.oplog.error(temp.class, "", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.oplog.error(temp.class, "", e.getMessage(), e, login, this.ip());
 		}
 
 		this.notfound();

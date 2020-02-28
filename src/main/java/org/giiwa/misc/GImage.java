@@ -186,18 +186,18 @@ public class GImage {
 	 * @param w      the w
 	 * @param h      the h
 	 */
-	public static void scale2(String source, String file, int w, int h) {
+	public static int scale2(String source, String file, int w, int h) {
 		try {
 
 			BufferedImage img = ImageIO.read(new File(source));
 			if (img == null || w < 0 || h < 0)
-				return;
+				return -1;
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
 
 			if (w > w1 || h > h1)
-				return;
+				return -1;
 
 			if (h <= 0)
 				h = h1;
@@ -223,9 +223,11 @@ public class GImage {
 			g.drawImage(tmp, 0, 0, w, h, null);
 			ImageIO.write(out, "png", new File(file));
 
+			return 1;
 		} catch (Exception e) {
 			log.error(source, e);
 		}
+		return -1;
 	}
 
 	/**

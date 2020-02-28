@@ -137,7 +137,7 @@ public class node extends Controller {
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/node.index.html");
 	}
@@ -153,7 +153,7 @@ public class node extends Controller {
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/node.usage.html");
 	}
@@ -169,7 +169,7 @@ public class node extends Controller {
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/node.threads.html");
 	}
@@ -185,7 +185,7 @@ public class node extends Controller {
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/node.tcpestablished.html");
 	}
@@ -201,7 +201,7 @@ public class node extends Controller {
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/node.tcpclosewait.html");
 	}
@@ -217,7 +217,7 @@ public class node extends Controller {
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/node.running.html");
 	}
@@ -233,7 +233,7 @@ public class node extends Controller {
 		Beans<Node> bs = Node.dao.load(q, s, n);
 		bs.count();
 
-		this.set(bs, s, n);
+		this.pages(bs, s, n);
 
 		this.show("/admin/node.pending.html");
 	}

@@ -121,7 +121,7 @@ public class backup extends Controller {
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.ip());
 		}
 
 	}
@@ -137,7 +137,7 @@ public class backup extends Controller {
 			jo.put("url", f.getFilename());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.getRemoteHost());
+			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.ip());
 			jo.put(X.STATE, 201);
 			jo.put(X.MESSAGE, e.getMessage());
 		}
@@ -165,7 +165,7 @@ public class backup extends Controller {
 			jo.put(X.STATE, 200);
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
-			GLog.oplog.error(backup.class, "upload", e1.getMessage(), e1, login, this.getRemoteHost());
+			GLog.oplog.error(backup.class, "upload", e1.getMessage(), e1, login, this.ip());
 			jo.put(X.STATE, 201);
 			jo.put(X.MESSAGE, e1.getMessage());
 		} finally {

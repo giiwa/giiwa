@@ -76,7 +76,7 @@ public class database extends Controller {
 
 		String table = this.getString("table");
 		int n = Helper.delete(W.create(), table, Helper.DEFAULT);
-		GLog.oplog.warn(database.class, "delete", "table=" + table + ", n=" + n, login, this.getRemoteHost());
+		GLog.oplog.warn(database.class, "delete", "table=" + table + ", n=" + n, login, this.ip());
 		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
@@ -102,7 +102,7 @@ public class database extends Controller {
 		} else {
 			Helper.drop(table, Helper.DEFAULT);
 		}
-		GLog.oplog.warn(database.class, "drop", "table=" + table, login, this.getRemoteHost());
+		GLog.oplog.warn(database.class, "drop", "table=" + table, login, this.ip());
 		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 

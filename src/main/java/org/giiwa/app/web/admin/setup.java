@@ -187,7 +187,7 @@ public class setup extends Controller {
 				jo.put(X.STATE, 200);
 			} catch (Exception e1) {
 				log.error(e1.getMessage(), e1);
-				GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
+				GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.ip());
 
 				jo.put(X.STATE, 201);
 				jo.put(X.MESSAGE, e1.getMessage());
@@ -229,7 +229,7 @@ public class setup extends Controller {
 					client.close();
 				} catch (Exception e1) {
 					log.error(e1.getMessage(), e1);
-					GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.getRemoteHost());
+					GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.ip());
 
 					jo.put(X.STATE, 201);
 					jo.put(X.MESSAGE, e1.getMessage());
