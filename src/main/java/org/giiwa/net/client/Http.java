@@ -506,8 +506,8 @@ public final class Http {
 	 * @param localfile the destination file
 	 * @return the length
 	 */
-	public int download(String url, File localfile) {
-		return download(url, null, localfile);
+	public int download(String url, File file) {
+		return download(url, null, file);
 	}
 
 	/**
@@ -518,7 +518,7 @@ public final class Http {
 	 * @param localfile the localfile
 	 * @return the length of bytes
 	 */
-	public int download(String url, JSON header, File localfile) {
+	public int download(String url, JSON header, File file) {
 
 		TimeStamp t = TimeStamp.create();
 
@@ -571,9 +571,9 @@ public final class Http {
 						HttpEntity e = resp.getEntity();
 						InputStream in = e.getContent();
 
-						localfile.getParentFile().mkdirs();
+						file.getParentFile().mkdirs();
 
-						FileOutputStream out = new FileOutputStream(localfile);
+						FileOutputStream out = new FileOutputStream(file);
 						return IOUtil.copy(in, out);
 					}
 					return 0;
@@ -590,7 +590,7 @@ public final class Http {
 			}
 		} finally {
 			if (log.isInfoEnabled())
-				log.info("download, cost=" + t.past() + ", url=" + url + ", size=" + localfile.length());
+				log.info("download, cost=" + t.past() + ", url=" + url + ", size=" + file.length());
 		}
 
 		return 0;

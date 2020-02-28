@@ -14,6 +14,7 @@
 */
 package org.giiwa.misc;
 
+import java.io.File;
 import java.util.*;
 
 import javax.swing.text.html.parser.ParserDelegator;
@@ -323,10 +324,10 @@ public final class Html {
 			throw new Exception("url is not setting");
 
 		Set<String> hh = new HashSet<String>();
-		if (!X.isEmpty(hosts) && !X.isEmpty(hosts[0])) {
-			hh.addAll(Arrays.asList(hosts));
-		} else {
+		if (X.isEmpty(hosts) || hosts.length == 0 || X.isEmpty(hosts[0])) {
 			hh.add(_server(url));
+		} else {
+			hh.addAll(Arrays.asList(hosts));
 		}
 
 		Map<String, JSON> l2 = new HashMap<String, JSON>();
@@ -336,7 +337,14 @@ public final class Html {
 
 		if (l1 != null && l1.size() > 0) {
 			for (Element e1 : l1) {
-				String href = e1.attr("href").trim();
+
+//				System.out.println(e1.attributes());
+
+				String href = e1.attr("href");
+//				System.out.println(href);
+				href = href.trim();
+//				System.out.println(href);
+
 				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")
 						|| href.toLowerCase().startsWith("tel:") || href.toLowerCase().startsWith("mail:")) {
 					continue;
@@ -349,7 +357,7 @@ public final class Html {
 				if (i > 0) {
 					href = href.substring(0, i);
 				}
-				href = _format(href);
+//				href = _format(href);
 
 //				log.debug("href, url=" + href);
 //				System.out.println("url=" + href);
@@ -436,34 +444,9 @@ public final class Html {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-		String s = "<div id='aaa' class='b'>aaaaa<span class='a'>dddd</span><span class='a'>aaaaaa</span></div>";
-		Html h = Html.create(s);
-		List<Element> e = h.find("div");
-
-		System.out.println("1:" + e);
-		e = h.find("div span");
-		System.out.println("2:" + e);
-		System.out.println("3:" + h.find("div.b"));
-		System.out.println("4:" + h.find("div.b span.a"));
-		System.out.println("5:" + h.find(".aaa .a"));
-		// System.out.println("5:" + h.find(".aaa .a(aaaa)"));
-
-		s = "https://www.pingshu8.com/MusicList/mmc_7_5654_1.htm";
-		Http http = Http.create();
-		Http.Response r = http.get(s);
-		h = r.html();
-
-		try {
-
-			h.url = s;
-			String p = "(https://www.pingshu8.com/Musiclist/mmc_7_5654_\\d+.htm|https://www.pingshu8.com/play_\\d+.html)";
-			Collection<JSON> l1 = h.href(p);
-			System.out.println(l1);
-
-		} catch (Exception e1) {
-			e1.printStackTrace();
-		}
-
+		Http h = Http.create();
+		
+		
 	}
 
 }
