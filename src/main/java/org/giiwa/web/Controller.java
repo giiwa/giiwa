@@ -549,10 +549,7 @@ public class Controller {
 			this.put(X.URI, uri);
 			this.put("module", Module.home);
 			this.put("path", this.path);
-			this.put("request", req);
-			this.put("response", resp);
-			this.put("this", this);
-//			this.put("session", this.getSession(false));
+			this.put("req", this);
 			this.put("global", Global.getInstance());
 			this.put("conf", Config.getConf());
 			this.put("local", Local.getInstance());
@@ -2875,10 +2872,7 @@ public class Controller {
 				m.put("lang", m.lang);
 				m.put(X.URI, uri);
 				m.put("module", Module.home);
-				m.put("req", req);
-				m.put("this", m);
-				m.put("resp", resp);
-				m.put("session", m.session(false));
+				m.put("req", m);
 				m.put("global", Global.getInstance());
 				m.put("conf", Config.getConf());
 				m.put("local", Local.getInstance());

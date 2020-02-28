@@ -34,7 +34,7 @@ public class f extends Controller {
 	 * @param name
 	 */
 	@Path(path = "g/(.*)/(.*)")
-	public void get(String id, String name) {
+	public void g(String id, String name) {
 
 		DFile f1 = Disk.get(id);
 		if (f1.isFile()) {
@@ -67,10 +67,10 @@ public class f extends Controller {
 								/**
 								 * using scale3 to cut the middle of the image
 								 */
-								if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
+								if (GImage.scale(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
 										X.toInt(ss[1])) < 0) {
 									failed = true;
-									log.warn("scale3 image failed");
+									log.warn("scale image failed");
 								}
 							} else {
 								if (log.isDebugEnabled())
