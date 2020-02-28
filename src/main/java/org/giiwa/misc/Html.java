@@ -323,7 +323,7 @@ public final class Html {
 			throw new Exception("url is not setting");
 
 		Set<String> hh = new HashSet<String>();
-		if (!X.isEmpty(hosts)) {
+		if (!X.isEmpty(hosts) && !X.isEmpty(hosts[0])) {
 			hh.addAll(Arrays.asList(hosts));
 		} else {
 			hh.add(_server(url));

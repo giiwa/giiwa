@@ -2196,6 +2196,20 @@ height: 250px; float: left; width: 300px; border: 0;
 td.a a {
     text-decoration: none;
     color: #333;
+	background: transparent;
+    padding: 0;
+}
+td.a a.success{
+	color: #37a92a;
+}
+td.a a.info{
+	color: #144fbd;
+}
+td.a a.warning{
+	color: #d68742;
+}
+td.a a.danger{
+	color: #c30909;
 }
 td.a a:hover{
 	color: #4ea6ff;
