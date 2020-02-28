@@ -2083,17 +2083,14 @@ public class Controller {
 
 	}
 
-	/**
-	 * @deprecated
-	 */
-	private void _create_query() {
-		String url = uri;
+	transient QueryString _query;
 
-		if (url.endsWith("/")) {
-			url = url.substring(0, url.length() - 1);
+	public QueryString query() {
+		if (_query == null) {
+			String url = req.getRequestURI();
+			_query = new QueryString(url).copy(this);
 		}
-		QueryString query = new QueryString(url).copy(this);
-		this.set("query", query);
+		return _query;
 
 	}
 
@@ -2114,8 +2111,6 @@ public class Controller {
 			}
 
 			outputed++;
-
-			_create_query();
 
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);

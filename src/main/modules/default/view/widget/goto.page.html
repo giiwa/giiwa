@@ -5,7 +5,7 @@
 		<span class="page_2">$p.label</span>
 		#set($currp=$p)
 	#else
-		<a class="page_1" href="$query.copy().set('s', $p.s).set('n', $p.n)">$p.label</a>
+		<a class="page_1" href="$req.query().copy().set('s', $p.s).set('n', $p.n)">$p.label</a>
 	#end
  #end
 #end 
@@ -62,10 +62,10 @@
 		var s = parseInt($('.pages input[name=_goto_page_num]').val());
 		var n = parseInt($('.pages input[name=_goto_page_count]').val());
 		if (typeof (giiwa.load) == 'function') {
-			giiwa.load('$query.copy().remove("s", "n").toString()&s=' + ((s - 1) * n)
+			giiwa.load('$req.query().copy().remove("s", "n").toString()&s=' + ((s - 1) * n)
 					+ '&n=' + n);
 		} else {
-			window.location.href = '$query.copy().remove("s", "n").toString()&s='
+			window.location.href = '$req.query().copy().remove("s", "n").toString()&s='
 					+ ((s - 1) * n) + '&n=' + n;
 		}
 	}
