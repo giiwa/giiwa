@@ -864,21 +864,18 @@ giiwa
 			},
 			history : function(url) {
 				
-				console.log(url);
-				
 				if (url !== undefined && url.length > 0) {
 					var p = giiwa.__history.pop();
 					if (p !== undefined) {
 						giiwa.__history.push(p);
 					}
-					if (p === undefined || p !== url)) {
+					if (p === undefined || p != url) {
 						giiwa.__history.push(url);
 					}
 					while (giiwa.__history.length > 100) {
 						// remove the first
 						giiwa.__history.shift();
 					}
-					console.log(giiwa.__history);
 				}
 			},
 			back : function() {

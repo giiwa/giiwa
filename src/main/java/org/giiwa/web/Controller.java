@@ -1216,11 +1216,19 @@ public class Controller {
 	}
 
 	/**
+	 * @deprecated
+	 * @return
+	 */
+	final public String getRemoteHost() {
+		return this.ip();
+	}
+
+	/**
 	 * trying to get the client ip from request header
 	 * 
 	 * @return String
 	 */
-	final public String getRemoteHost() {
+	public String ip() {
 		String remote = this.getHeader("X-Forwarded-For");
 		if (remote == null) {
 			remote = getHeader("X-Real-IP");
@@ -2045,7 +2053,7 @@ public class Controller {
 			outputed++;
 
 			createQuery();
-			
+
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
 			if (file != null && file.exists()) {
