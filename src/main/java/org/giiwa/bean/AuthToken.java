@@ -123,23 +123,26 @@ public class AuthToken extends Bean {
 		return sid;
 	}
 
+	public static AuthToken update(long uid, String sid, String ip) {
+		long expired = System.currentTimeMillis() + Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+
+		return update(uid, sid, ip, V.create("expired", expired));
+	}
+
 	/**
 	 * update the session token.
 	 *
-	 * @param uid
-	 *            the uid
-	 * @param sid
-	 *            the sid
-	 * @param ip
-	 *            the ip
+	 * @param uid the uid
+	 * @param sid the sid
+	 * @param ip  the ip
 	 * @return the auth token
 	 */
-	public static AuthToken update(long uid, String sid, String ip) {
+	public static AuthToken update(long uid, String sid, String ip, V v) {
 		String token = UID.random(20);
 
 		String id = UID.id(uid, sid, ip, token);
 
-		V v = V.create("uid", uid).set("sid", sid).set("token", token).set("ip", ip);
+		v = v.set("uid", uid).set("sid", sid).set("token", token).set("ip", ip);
 
 		try {
 			if (dao.exists(id)) {
@@ -147,9 +150,7 @@ public class AuthToken extends Bean {
 				dao.update(id, v);
 			} else {
 				// insert
-				long expired = System.currentTimeMillis()
-						+ Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
-				dao.insert(v.set(X.ID, id).append("expired", expired));
+				dao.insert(v.set(X.ID, id));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -161,10 +162,8 @@ public class AuthToken extends Bean {
 	/**
 	 * load the AuthToken by the session and token.
 	 *
-	 * @param sid
-	 *            the sid
-	 * @param token
-	 *            the token
+	 * @param sid   the sid
+	 * @param token the token
 	 * @return AuthToken
 	 */
 	public static AuthToken load(String sid, String token) {
@@ -175,8 +174,7 @@ public class AuthToken extends Bean {
 	 * remove all the session and token for the uid, and return all the session id
 	 * for the user.
 	 *
-	 * @param uid
-	 *            the user id
+	 * @param uid the user id
 	 * @return List of session
 	 */
 	public static List<String> delete(long uid) {
@@ -199,8 +197,7 @@ public class AuthToken extends Bean {
 	/**
 	 * load Beans by uid, a uid may has more AuthToken.
 	 *
-	 * @param uid
-	 *            the user id
+	 * @param uid the user id
 	 * @return Beans of the Token
 	 */
 	public static Beans<AuthToken> load(long uid) {
@@ -210,10 +207,8 @@ public class AuthToken extends Bean {
 	/**
 	 * delete all the token by the uid and sid
 	 * 
-	 * @param uid
-	 *            the user id
-	 * @param sid
-	 *            the session id
+	 * @param uid the user id
+	 * @param sid the session id
 	 */
 	public static void delete(long uid, String sid) {
 		dao.delete(W.create("uid", uid).and("sid", sid));

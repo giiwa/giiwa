@@ -11,7 +11,7 @@ public class portlet extends Controller {
 	@Path()
 	public final void onGet() {
 
-		login = this.getUser();
+		login = this.user();
 		W q = W.create("uri", this.uri);
 		if (login == null) {
 			q.and("uid", 0);

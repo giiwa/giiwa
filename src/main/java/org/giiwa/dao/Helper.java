@@ -283,7 +283,7 @@ public class Helper implements Serializable {
 		public V copy(Controller m, String... names) {
 			if (X.isEmpty(names)) {
 				// copy all
-				for (String name : m.getNames()) {
+				for (String name : m.names()) {
 					this.set(name, m.getString(name));
 				}
 			} else {

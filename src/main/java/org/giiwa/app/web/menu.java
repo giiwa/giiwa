@@ -50,7 +50,7 @@ public class menu extends Controller {
 	 * @see org.giiwa.framework.web.Model.onPost()
 	 */
 	public void onPost() {
-		User me = this.getUser();
+		User me = this.user();
 
 		long id = this.getLong("root");
 		String name = this.getString("name");

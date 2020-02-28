@@ -71,9 +71,9 @@ public class FileView extends View {
 			boolean media = (filetype != null && (filetype.startsWith("video") || filetype.startsWith("audio"))) ? true
 					: false;
 
-			String date = m.getHeader("If-Modified-Since");
+			String date = m.header("If-Modified-Since");
 
-			String range = m.getHeader("Range");
+			String range = m.header("Range");
 			String date2 = Language.getLanguage().format(View.lastModified(file), "yyyy-MM-dd HH:mm:ss z");
 			if (X.isEmpty(range) && date != null && date.equals(date2)) {
 				m.resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);

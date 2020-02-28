@@ -64,9 +64,9 @@ public class repo extends Controller {
 					/**
 					 * if not point-transfer, then check the if-modified-since
 					 */
-					String range = this.getHeader("range");
+					String range = this.header("range");
 					if (X.isEmpty(range)) {
-						String date = this.getHeader("If-Modified-Since");
+						String date = this.header("If-Modified-Since");
 						if (date != null && date.equals(date2)) {
 							resp.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
 							return;
@@ -331,12 +331,12 @@ public class repo extends Controller {
 							}
 						}
 
-						String range = this.getHeader("Range");
+						String range = this.header("Range");
 						if (log.isDebugEnabled())
 							log.debug("range=" + range);
 
 						if (X.isEmpty(range)) {
-							String date = this.getHeader("if-modified-since");
+							String date = this.header("if-modified-since");
 							/**
 							 * if not point-transfer, then check the if-modified-since
 							 */

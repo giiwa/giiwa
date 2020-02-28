@@ -16,7 +16,7 @@ public class index extends Controller {
 	@Path()
 	public void onGet() {
 
-		User u = this.getUser();
+		User u = this.user();
 		if (u != null) {
 			Roles rs = u.getRole();
 			if (rs != null) {

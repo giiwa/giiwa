@@ -47,7 +47,7 @@ public class dashboard extends Controller {
 		}
 		this.set("__node", _node);
 
-		login = this.getUser();
+		login = this.user();
 		if (login != null && !X.isEmpty(login.getString("desktop"))) {
 			if (!X.isSame("/admin/dashboard", login.getString("desktop"))) {
 				this.redirect(login.getString("desktop"));

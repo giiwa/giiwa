@@ -48,7 +48,7 @@ public class index extends Controller {
 	@Path(login = true, method = "POST")
 	public void onPost() {
 
-		User me = this.getUser();
+		User me = this.user();
 		/**
 		 * put the user in mode
 		 */

@@ -150,7 +150,7 @@ public class f extends Controller {
 			return;
 		}
 
-		FileItem file = this.getFile("file");
+		FileItem file = this.file("file");
 		if (file != null) {
 			String filename = this.getString("filename");
 			if (X.isEmpty(filename)) {
@@ -174,13 +174,13 @@ public class f extends Controller {
 //		String tag = this.getString("tag");
 
 		try {
-			String range = this.getHeader("Content-Range");
+			String range = this.header("Content-Range");
 			if (range == null) {
 				range = this.getString("Content-Range");
 			}
 			long position = 0;
 			long total = 0;
-			String lastModified = this.getHeader("lastModified");
+			String lastModified = this.header("lastModified");
 			if (X.isEmpty(lastModified)) {
 				lastModified = this.getString("lastModified");
 			}
@@ -327,7 +327,7 @@ public class f extends Controller {
 	void _send(InputStream in, long total) {
 
 		try {
-			String range = this.getHeader("range");
+			String range = this.header("range");
 
 			long start = 0;
 			long end = total;

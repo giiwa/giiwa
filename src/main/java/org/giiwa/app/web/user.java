@@ -145,7 +145,7 @@ public class user extends Controller {
 					if (r != null) {
 						u.setRole(r.getId());
 					}
-					this.setUser(u, LoginType.web);
+					this.user(u, LoginType.web);
 					GLog.securitylog.info(user.class, "register",
 							lang.get("create.success") + ":" + name + ", uid=" + id, login, this.getRemoteHost());
 
@@ -154,7 +154,7 @@ public class user extends Controller {
 								lang.get("create.success")));
 						return;
 					} else {
-						Session s = this.getSession(true);
+						Session s = this.session(true);
 						if (s.has("uri")) {
 							this.redirect((String) s.get("uri"));
 							return;
@@ -189,7 +189,7 @@ public class user extends Controller {
 	@Path(path = "go", login = true)
 	public boolean go() {
 
-		Session s = this.getSession(false);
+		Session s = this.session(false);
 		if (s.has("uri")) {
 			String uri = (String) s.get("uri");
 
@@ -223,7 +223,7 @@ public class user extends Controller {
 	public void set() {
 
 		try {
-			List<String> ss = this.getNames();
+			List<String> ss = this.names();
 			if (ss != null && !ss.isEmpty()) {
 				for (String s1 : ss) {
 					String content = this.getHtml(s1);
@@ -242,7 +242,7 @@ public class user extends Controller {
 
 	@Path(path = "info")
 	public void info() {
-		if (this.getUser() != null) {
+		if (this.user() != null) {
 			User u = User.dao.load(login.getId());
 			if (u != null) {
 				this.send(JSON.create().append(X.STATE, 200).append("data", u.json()));
@@ -299,7 +299,7 @@ public class user extends Controller {
 				jo.put("uid", a.getUid());
 				jo.put("expired", a.getExpired());
 				User u = a.getUser_obj();
-				this.setUser(u, LoginType.ajax);
+				this.user(u, LoginType.ajax);
 
 				GLog.securitylog.info(user.class, "login", null, u, this.getRemoteHost());
 			} else {
@@ -375,7 +375,7 @@ public class user extends Controller {
 
 								if (X.isSame("json", this.getString("type")) || this.isAjax()) {
 
-									this.setUser(me, LoginType.ajax);
+									this.user(me, LoginType.ajax);
 
 									if (log.isDebugEnabled())
 										log.debug("isAjax login");
@@ -403,7 +403,7 @@ public class user extends Controller {
 									this.send(jo);
 								} else {
 
-									this.setUser(me, LoginType.web);
+									this.user(me, LoginType.web);
 
 									/**
 									 * logined, to update the stat data
@@ -491,7 +491,7 @@ public class user extends Controller {
 		String refer = this.getString("refer");
 		if (!X.isEmpty(refer) && !isAjax()) {
 			try {
-				this.getSession(true).set("uri", URLDecoder.decode(refer, "UTF-8")).store();
+				this.session(true).set("uri", URLDecoder.decode(refer, "UTF-8")).store();
 			} catch (Exception e) {
 				log.error(refer, e);
 				GLog.securitylog.error(user.class, "login", e.getMessage(), e, login, this.getRemoteHost());
@@ -507,7 +507,7 @@ public class user extends Controller {
 	@Path(path = "logout")
 	public void logout() {
 
-		User u = this.getUser();
+		User u = this.user();
 
 		if (u != null) {
 
@@ -523,7 +523,7 @@ public class user extends Controller {
 			/**
 			 * clear the user in session, but still keep the session
 			 */
-			setUser(null, null);
+			user(null, null);
 
 		}
 

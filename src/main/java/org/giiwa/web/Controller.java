@@ -224,7 +224,7 @@ public class Controller {
 //		return _currentmodule.get();
 //	}
 
-	private Path process() throws Exception {
+	private Path _process() throws Exception {
 
 //		if (method.isGet()) {
 //			try {
@@ -325,7 +325,7 @@ public class Controller {
 									return null;
 								}
 
-								login = this.getUser();
+								login = this.user();
 								if (login == null) {
 									/**
 									 * login require
@@ -342,7 +342,7 @@ public class Controller {
 									this.deny();
 
 									GLog.securitylog.warn(this.getClass(), pp.path(),
-											"deny the access, requred: " + lang.get(pp.access()), getUser(),
+											"deny the access, requred: " + lang.get(pp.access()), user(),
 											this.getRemoteHost());
 									return pp;
 								}
@@ -362,7 +362,7 @@ public class Controller {
 								if (log.isErrorEnabled())
 									log.error(e.getMessage(), e);
 
-								GLog.oplog.error(this.getClass(), pp.path(), this.json().toString(), e, getUser(),
+								GLog.oplog.error(this.getClass(), pp.path(), this.json().toString(), e, user(),
 										this.getRemoteHost());
 
 								error(e);
@@ -375,7 +375,7 @@ public class Controller {
 						if (log.isErrorEnabled())
 							log.error(s, e);
 
-						GLog.oplog.error(this.getClass(), path, e.getMessage(), e, getUser(), this.getRemoteHost());
+						GLog.oplog.error(this.getClass(), path, e.getMessage(), e, user(), this.getRemoteHost());
 
 						error(e);
 						return null;
@@ -401,7 +401,7 @@ public class Controller {
 				if (p != null) {
 					// check ogin
 					if (p.login()) {
-						if (this.getUser() == null) {
+						if (this.user() == null) {
 							gotoLogin();
 							return null;
 						}
@@ -426,7 +426,7 @@ public class Controller {
 				if (p != null) {
 					// check ogin
 					if (p.login()) {
-						if (this.getUser() == null) {
+						if (this.user() == null) {
 							gotoLogin();
 							return null;
 						}
@@ -450,7 +450,7 @@ public class Controller {
 				if (p != null) {
 					// check ogin
 					if (p.login()) {
-						if (this.getUser() == null) {
+						if (this.user() == null) {
 							gotoLogin();
 							return null;
 						}
@@ -474,7 +474,7 @@ public class Controller {
 				if (p != null) {
 					// check ogin
 					if (p.login()) {
-						if (this.getUser() == null) {
+						if (this.user() == null) {
 							gotoLogin();
 							return null;
 						}
@@ -590,7 +590,7 @@ public class Controller {
 				return null;
 			}
 
-			return process();
+			return _process();
 
 		} catch (Exception e) {
 			error(e);
@@ -666,9 +666,9 @@ public class Controller {
 	 */
 	final public String sid(boolean newSession) {
 		if (X.isEmpty(sid)) {
-			sid = this.getCookie("sid");
+			sid = this.cookie("sid");
 			if (X.isEmpty(sid)) {
-				sid = this.getHeader("sid");
+				sid = this.header("sid");
 				if (X.isEmpty(sid)) {
 					sid = this.getString("sid");
 					if (X.isEmpty(sid)) {
@@ -710,10 +710,10 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	final public String getToken() {
-		String token = this.getCookie("token");
+	final public String token() {
+		String token = this.cookie("token");
 		if (token == null) {
-			token = this.getHeader("token");
+			token = this.header("token");
 			if (token == null) {
 				token = this.getString("token");
 			}
@@ -743,7 +743,7 @@ public class Controller {
 
 			m.copy(this);
 
-			return m.process();
+			return m._process();
 		} catch (Exception e) {
 			error(e);
 		}
@@ -927,12 +927,21 @@ public class Controller {
 	}
 
 	/**
+	 * @deprecated
+	 * @param tag
+	 * @return
+	 */
+	final public String getHeader(String tag) {
+		return header(tag);
+	}
+
+	/**
 	 * Gets the request header.
 	 * 
 	 * @param tag the header tag
 	 * @return String of the header
 	 */
-	final public String getHeader(String tag) {
+	final public String header(String tag) {
 		try {
 			return req.getHeader(tag);
 		} catch (Exception e) {
@@ -978,13 +987,13 @@ public class Controller {
 		int r = getInt(tag);
 		try {
 			if (r < 1) {
-				Session s = this.getSession(false);
+				Session s = this.session(false);
 				r = s == null ? -1 : s.getInt(tagInSession);
 				if (r < 1) {
 					r = defaultValue;
 				}
 			} else {
-				Session s = this.getSession(false);
+				Session s = this.session(false);
 				if (s != null) {
 					s.set(tagInSession, r).store();
 				}
@@ -1013,14 +1022,14 @@ public class Controller {
 		String r = getString(tag);
 		try {
 			if (X.isEmpty(r)) {
-				Session s = this.getSession(false);
+				Session s = this.session(false);
 				r = s == null ? null : (String) s.get(tagInSession);
 				if (X.isEmpty(r)) {
 					r = defaultValue;
 					s.set(tagInSession, r).store();
 				}
 			} else {
-				Session s = this.getSession(false);
+				Session s = this.session(false);
 				if (s != null)
 					s.set(tagInSession, r).store();
 			}
@@ -1043,11 +1052,11 @@ public class Controller {
 		try {
 			if (queryfirst) {
 				r = getString(tag);
-				Session s = this.getSession(false);
+				Session s = this.session(false);
 				if (s != null)
 					s.set(tagInSession, r).store();
 			} else {
-				Session s = this.getSession(false);
+				Session s = this.session(false);
 				r = s == null ? null : (String) s.get(tagInSession);
 			}
 		} catch (Exception e) {
@@ -1091,12 +1100,29 @@ public class Controller {
 	}
 
 	/**
+	 * @deprecated
+	 * @return
+	 */
+	final public Cookie[] getCookie() {
+		return cookies();
+	}
+
+	/**
 	 * get all cookies
 	 * 
 	 * @return Cookie[]
 	 */
-	final public Cookie[] getCookie() {
+	final public Cookie[] cookies() {
 		return req.getCookies();
+	}
+
+	/**
+	 * @deprecated
+	 * @param name
+	 * @return
+	 */
+	final public String getCookie(String name) {
+		return cookie(name);
 	}
 
 	/**
@@ -1105,8 +1131,8 @@ public class Controller {
 	 * @param name the name
 	 * @return the cookie
 	 */
-	final public String getCookie(String name) {
-		Cookie[] cc = getCookie();
+	final public String cookie(String name) {
+		Cookie[] cc = cookies();
 		if (cc != null) {
 			for (int i = cc.length - 1; i >= 0; i--) {
 				Cookie c = cc[i];
@@ -1122,18 +1148,20 @@ public class Controller {
 	/**
 	 * get the request
 	 * 
+	 * @deprecated
 	 * @return HttpServletRequest
 	 */
-	final public HttpServletRequest getRequest() {
+	public HttpServletRequest getRequest() {
 		return req;
 	}
 
 	/**
 	 * get the response
 	 * 
+	 * @deprecated
 	 * @return HttpServletResponse
 	 */
-	final public HttpServletResponse getResponse() {
+	public HttpServletResponse getResponse() {
 		return resp;
 	}
 
@@ -1143,7 +1171,7 @@ public class Controller {
 	 * @return the string
 	 */
 	final public String browser() {
-		return this.getHeader("user-agent");
+		return this.header("user-agent");
 	}
 
 	/**
@@ -1228,10 +1256,10 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	public String ip() {
-		String remote = this.getHeader("X-Forwarded-For");
+	final public String ip() {
+		String remote = this.header("X-Forwarded-For");
 		if (remote == null) {
-			remote = getHeader("X-Real-IP");
+			remote = header("X-Real-IP");
 
 			if (remote == null) {
 				remote = req.getRemoteAddr();
@@ -1248,7 +1276,7 @@ public class Controller {
 	 * @return int of local port
 	 */
 	final public int getPort() {
-		String port = this.getHeader("Port");
+		String port = this.header("Port");
 		if (X.isEmpty(port)) {
 			return req.getLocalPort();
 		}
@@ -1262,7 +1290,7 @@ public class Controller {
 	 * @return String of local host
 	 */
 	final public String getHost() {
-		String host = this.getHeader("Host");
+		String host = this.header("Host");
 		if (X.isEmpty(host)) {
 			host = req.getLocalAddr();
 		}
@@ -1304,7 +1332,7 @@ public class Controller {
 	final public JSON json() {
 		if (_json == null) {
 			_json = JSON.create();
-			for (String name : this.getNames()) {
+			for (String name : this.names()) {
 
 				String s = this.getHtml(name);
 				_json.put(name, s);
@@ -1380,9 +1408,9 @@ public class Controller {
 
 			if (this._multipart) {
 
-				getFiles();
+				_get_files();
 
-				FileItem i = this.getFile(name);
+				FileItem i = this.file(name);
 
 				if (i != null && i.isFormField()) {
 					InputStream in = i.getInputStream();
@@ -1504,9 +1532,9 @@ public class Controller {
 				return null;
 			} else if (this._multipart) {
 
-				getFiles();
+				_get_files();
 
-				FileItem i = this.getFile(name);
+				FileItem i = this.file(name);
 
 				if (i != null && i.isFormField()) {
 					InputStream in = i.getInputStream();
@@ -1537,7 +1565,7 @@ public class Controller {
 
 	private String _decode(String s) {
 		try {
-			String t = this.getHeader("Content-Type");
+			String t = this.header("Content-Type");
 			if (t == null) {
 				// do nothing
 				// log.debug("get s=" + s);
@@ -1610,7 +1638,7 @@ public class Controller {
 	final public String[] getStrings(String name) {
 		try {
 			if (this._multipart) {
-				getFiles();
+				_get_files();
 
 				Object o = uploads.get(name);
 				if (o instanceof FileItem) {
@@ -1652,11 +1680,19 @@ public class Controller {
 	}
 
 	/**
+	 * @deprecated
+	 * @return
+	 */
+	public List<String> getNames() {
+		return names();
+	}
+
+	/**
 	 * get the parameters names
 	 * 
 	 * @return List of the request names
 	 */
-	final public List<String> getNames() {
+	final public List<String> names() {
 		String c1 = req.getContentType();
 		if (c1 != null && c1.indexOf("application/json") > -1) {
 			this.getString(null);// initialize uploads
@@ -1664,7 +1700,7 @@ public class Controller {
 				return new ArrayList<String>(uploads.keySet());
 			}
 		} else if (this._multipart) {
-			getFiles();
+			_get_files();
 			return new ArrayList<String>(uploads.keySet());
 		}
 
@@ -1683,7 +1719,16 @@ public class Controller {
 	}
 
 	final public List<String> keySet() {
-		return this.getNames();
+		return this.names();
+	}
+
+	/**
+	 * @deprecated
+	 * @param newsession
+	 * @return
+	 */
+	final public Session getSession(boolean newsession) {
+		return session(newsession);
 	}
 
 	/**
@@ -1692,7 +1737,7 @@ public class Controller {
 	 * 
 	 * @return Session
 	 */
-	final public Session getSession(boolean newsession) {
+	final public Session session(boolean newsession) {
 		return Session.load(sid(newsession));
 	}
 
@@ -1715,17 +1760,26 @@ public class Controller {
 	 * @return
 	 */
 	final public Roles getRoles() {
-		User u = this.getUser();
+		User u = this.user();
 		if (u != null) {
 			return u.getRole();
 		}
 
-		Session s = this.getSession(false);
+		Session s = this.session(false);
 		if (s != null && s.has("roles")) {
 			return s.get("roles");
 		}
 
 		return null;
+	}
+
+	/**
+	 * @deprecated
+	 * @return
+	 */
+
+	public User getUser() {
+		return user();
 	}
 
 	/**
@@ -1735,20 +1789,20 @@ public class Controller {
 	 * 
 	 * @return User
 	 */
-	final public User getUser() {
+	final public User user() {
 		if (login == null) {
-			Session s = getSession(false);
+			Session s = session(false);
 			login = s == null ? null : s.get("user");
 
 			if (login == null) {
 				if (Global.getInt("user.token", 1) == 1) {
 					String sid = sid();
-					String token = getToken();
+					String token = token();
 					if (!X.isEmpty(sid) && !X.isEmpty(token)) {
 						AuthToken t = AuthToken.load(sid, token);
 						if (t != null) {
 							login = t.getUser_obj();
-							this.setUser(login, LoginType.ajax);
+							this.user(login, LoginType.ajax);
 						}
 					}
 				}
@@ -1783,8 +1837,21 @@ public class Controller {
 		return login;
 	}
 
-	final public void setUser(User u) {
-		this.setUser(u, LoginType.web);
+	/**
+	 * @deprecated
+	 * @param u
+	 */
+	public void setUser(User u) {
+		this.user(u, LoginType.web);
+	}
+
+	/**
+	 * @deprecated
+	 * @param u
+	 * @param logintype
+	 */
+	public void setUser(User u, LoginType logintype) {
+
 	}
 
 	/**
@@ -1792,9 +1859,9 @@ public class Controller {
 	 * 
 	 * @param u the user object associated with the session
 	 */
-	final public void setUser(User u, LoginType logintype) {
+	final public void user(User u, LoginType logintype) {
 
-		Session s = getSession(true);
+		Session s = session(true);
 		User u1 = s.get("user");
 		if (u != null && u1 != null && u1.getId() != u.getId()) {
 			log.warn("clear the data in session");
@@ -1835,7 +1902,7 @@ public class Controller {
 		s.store();
 
 		if (log.isDebugEnabled())
-			log.debug("store session: session=" + s + ", getSession=" + getSession(false));
+			log.debug("store session: session=" + s + ", getSession=" + session(false));
 
 		login = u;
 	}
@@ -1846,7 +1913,7 @@ public class Controller {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	final private Map<String, Object> getFiles() {
+	final private Map<String, Object> _get_files() {
 
 		if (uploads == null) {
 
@@ -1893,15 +1960,24 @@ public class Controller {
 	}
 
 	/**
+	 * @deprecated
+	 * @param name
+	 * @return
+	 */
+	final public FileItem getFile(String name) {
+		return file(name);
+	}
+
+	/**
 	 * Gets the request file by name.
 	 * 
 	 * @param name the parameter name
 	 * @return file of value, null if not presented
 	 */
 	@SuppressWarnings("unchecked")
-	final public FileItem getFile(String name) {
+	final public FileItem file(String name) {
 
-		getFiles();
+		_get_files();
 
 		Object o = uploads.get(name);
 		if (o instanceof FileItem) {
@@ -1967,23 +2043,10 @@ public class Controller {
 		outputed++;
 
 		if (jo == null) {
-			responseJson("{}");
+			_send_json("{}");
 		} else {
-			responseJson(jo.toString());
+			_send_json(jo.toString());
 		}
-	}
-
-	/**
-	 * response "json" to end-user directly
-	 * 
-	 * @param state   the status to response
-	 * @param message the message to response
-	 */
-	final public void send(int state, String message) {
-		JSON jo = JSON.create();
-		jo.put(X.STATE, HttpServletResponse.SC_OK);
-		jo.put(X.MESSAGE, message);
-		this.send(jo);
 	}
 
 	/**
@@ -1994,9 +2057,9 @@ public class Controller {
 	 */
 	final public void send(List<JSON> arr) {
 		if (arr == null) {
-			responseJson("[]");
+			_send_json("[]");
 		} else {
-			responseJson(arr.toString());
+			_send_json(arr.toString());
 		}
 	}
 
@@ -2005,7 +2068,7 @@ public class Controller {
 	 * 
 	 * @param jsonstr the jsonstr string
 	 */
-	private void responseJson(String jsonstr) {
+	private void _send_json(String jsonstr) {
 
 		this.setContentType(Controller.MIME_JSON);
 
@@ -2023,7 +2086,7 @@ public class Controller {
 	/**
 	 * @deprecated
 	 */
-	private void createQuery() {
+	private void _create_query() {
 		String url = uri;
 
 		if (url.endsWith("/")) {
@@ -2052,7 +2115,7 @@ public class Controller {
 
 			outputed++;
 
-			createQuery();
+			_create_query();
 
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
@@ -2199,7 +2262,7 @@ public class Controller {
 			jo.append(X.TRACE, s);
 			this.send(jo);
 		} else {
-			this.set("me", this.getUser());
+			this.set("me", this.user());
 
 			String lineSeparator = System.lineSeparator();
 			s = s.replaceAll(lineSeparator, "<br/>");
@@ -2259,7 +2322,7 @@ public class Controller {
 			jo.put(X.MESSAGE, "not found, " + message);
 			this.send(jo);
 		} else {
-			this.set("me", this.getUser());
+			this.set("me", this.user());
 			this.print("not found, " + message);
 			this.setStatus(HttpServletResponse.SC_NOT_FOUND);
 		}
@@ -2275,12 +2338,12 @@ public class Controller {
 	 */
 	public boolean isAjax() {
 
-		String request = this.getHeader("X-Requested-With");
+		String request = this.header("X-Requested-With");
 		if (X.isSame(request, "XMLHttpRequest")) {
 			return true;
 		}
 
-		String type = this.getHeader("Content-Type");
+		String type = this.header("Content-Type");
 		if (X.isSame(type, "application/json")) {
 			return true;
 		}
@@ -2290,12 +2353,12 @@ public class Controller {
 			return true;
 		}
 
-		output = this.getHeader("output");
+		output = this.header("output");
 		if (X.isSame("json", output)) {
 			return true;
 		}
 
-		String accept = this.getHeader("Accept");
+		String accept = this.header("Accept");
 		if (!X.isEmpty(accept) && accept.indexOf("application/json") > -1 && accept.indexOf("text/html") == -1) {
 			return true;
 		}
@@ -2315,16 +2378,11 @@ public class Controller {
 		// GLog.applog.info("test", "test", "status=" + statuscode, null, null);
 	}
 
-	final public void sendError(int code) {
-		try {
-			status = code;
-			resp.sendError(code);
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
-		}
+	final public void send(int code) {
+		send(code, X.MESSAGE);
 	}
 
-	final public void sendError(int code, String msg) {
+	final public void send(int code, String msg) {
 		try {
 			status = code;
 			resp.sendError(code, msg);
@@ -2363,7 +2421,7 @@ public class Controller {
 		} else {
 
 			setStatus(HttpServletResponse.SC_FORBIDDEN);
-			this.set("me", this.getUser());
+			this.set("me", this.user());
 			this.set(X.ERROR, error);
 			this.set(X.URL, url);
 			this.show("/deny.html");
@@ -2373,11 +2431,19 @@ public class Controller {
 	}
 
 	/**
+	 * @deprecated
+	 * @return
+	 */
+	public String getMethod() {
+		return method();
+	}
+
+	/**
 	 * get the request method, GET/POST
 	 * 
 	 * @return int
 	 */
-	final public String getMethod() {
+	final public String method() {
 		return method.name;
 	}
 
@@ -2407,7 +2473,7 @@ public class Controller {
 		this.login = m.login;
 
 		if (this._multipart) {
-			this.uploads = m.getFiles();
+			this.uploads = m._get_files();
 		}
 
 	}
@@ -2479,7 +2545,7 @@ public class Controller {
 	 * @see java.lang.Object.toString()
 	 */
 	@Override
-	final public String toString() {
+	public String toString() {
 		if (tostring == null) {
 			tostring = new StringBuilder(this.getClass().getName()).append("[").append(this.uri).append(", path=")
 					.append(this.path).append("]").toString();
@@ -2490,6 +2556,7 @@ public class Controller {
 	/**
 	 * get the name pair from the request query
 	 * 
+	 * @deprecated
 	 * @return NameValue[]
 	 */
 	final public NameValue[] getQueries() {
@@ -2624,7 +2691,7 @@ public class Controller {
 			name = Url.encode(name);
 			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name);
 
-			String range = this.getHeader("range");
+			String range = this.header("range");
 
 			long start = 0;
 			long end = total;
@@ -2699,13 +2766,13 @@ public class Controller {
 
 //		System.out.println("init welcome page");
 		// get welcome list
-		init_welcome();
+		_init_welcome();
 
 		log.info("controller has been initialized.");
 	}
 
 	@SuppressWarnings("unchecked")
-	private static void init_welcome() {
+	private static void _init_welcome() {
 		try {
 			SAXReader reader = new SAXReader();
 			Document document = reader.read(Controller.HOME + "/WEB-INF/web.xml");
@@ -2809,14 +2876,14 @@ public class Controller {
 				m.resp = resp;
 //				m.set(m);
 
-				m.put("me", m.getUser());
+				m.put("me", m.user());
 				m.put("lang", m.lang);
 				m.put(X.URI, uri);
 				m.put("module", Module.home);
 				m.put("req", req);
 				m.put("this", m);
 				m.put("resp", resp);
-				m.put("session", m.getSession(false));
+				m.put("session", m.session(false));
 				m.put("global", Global.getInstance());
 				m.put("conf", Config.getConf());
 				m.put("local", Local.getInstance());

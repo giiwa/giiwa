@@ -58,7 +58,7 @@ public class profile extends Controller {
 				s.set("__node", this.getString("__node"));
 				s.set("name", name);
 				s.set("settings", names);
-				s.set("me", this.getUser());
+				s.set("me", this.user());
 				s.show("/admin/profile.html");
 
 			} catch (Exception e) {
@@ -190,7 +190,7 @@ public class profile extends Controller {
 
 					login = User.dao.load(login.getId());
 					AuthToken.delete(login.getId());
-					this.setUser(login, LoginType.web);
+					this.user(login, LoginType.web);
 
 					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
 					return;
