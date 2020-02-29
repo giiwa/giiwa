@@ -33,6 +33,7 @@ import org.giiwa.web.Path;
  * @author joe
  *
  */
+@SuppressWarnings("deprecation")
 public class accesslog extends Controller {
 
 	@Path(path = "open", login = true, access = "access.config.admin|access.config.logs.admin")

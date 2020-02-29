@@ -342,8 +342,7 @@ public class Controller {
 									this.deny();
 
 									GLog.securitylog.warn(this.getClass(), pp.path(),
-											"deny the access, requred: " + lang.get(pp.access()), user(),
-											this.ip());
+											"deny the access, requred: " + lang.get(pp.access()), user(), this.ip());
 									return pp;
 								}
 							}
@@ -1700,6 +1699,10 @@ public class Controller {
 		return login;
 	}
 
+	public void user(User u) {
+		this.user(u, LoginType.web);
+	}
+
 	/**
 	 * @deprecated
 	 * @param u
@@ -1915,7 +1918,6 @@ public class Controller {
 	/**
 	 * output the jsonarr as "application/json" to end-user
 	 * 
-	 * @deprecated
 	 * @param arr the array of json
 	 */
 	final public void send(List<JSON> arr) {
@@ -2826,8 +2828,8 @@ public class Controller {
 
 //					if (p == null) {
 				if (log.isInfoEnabled())
-					log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip()
-							+ " " + mo);
+					log.info(
+							method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip() + " " + mo);
 
 //					if (AccessLog.isOn()) {
 //
@@ -2870,8 +2872,7 @@ public class Controller {
 		mo.dispatch(uri, req, resp, method);
 
 		if (log.isInfoEnabled())
-			log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip() + " "
-					+ mo);
+			log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip() + " " + mo);
 //			if (AccessLog.isOn()) {
 //
 //				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());

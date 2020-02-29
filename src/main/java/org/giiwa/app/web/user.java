@@ -92,7 +92,7 @@ public class user extends Controller {
 			if (System.currentTimeMillis() - time < X.AMINUTE) {
 				User u = User.load(name);
 				if (u != null) {
-					this.setUser(u);
+					this.user(u);
 					this.redirect("/");
 					return;
 				} else {
@@ -330,8 +330,7 @@ public class user extends Controller {
 					jo.put(X.MESSAGE, lang.get("captcha.expired"));
 					jo.put(X.STATE, 203);
 
-					GLog.securitylog.error(user.class, "login", lang.get("captcha.expired"), null,
-							this.ip());
+					GLog.securitylog.error(user.class, "login", lang.get("captcha.expired"), null, this.ip());
 
 				} else {
 
@@ -408,8 +407,7 @@ public class user extends Controller {
 									/**
 									 * logined, to update the stat data
 									 */
-									me.logined(sid(), this.ip(),
-											V.create("weblogined", System.currentTimeMillis()));
+									me.logined(sid(), this.ip(), V.create("weblogined", System.currentTimeMillis()));
 
 									this.redirect("/");
 //									this.redirect("/user/go");
@@ -719,8 +717,7 @@ public class user extends Controller {
 										}
 									} catch (Exception e) {
 										log.error(e.getMessage(), e);
-										GLog.applog.error(user.class, "forget", e.getMessage(), e, login,
-												this.ip());
+										GLog.applog.error(user.class, "forget", e.getMessage(), e, login, this.ip());
 										jo.put(X.MESSAGE,
 												lang.get("user.forget.email.sent.failed") + ": " + e.getMessage());
 										jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

@@ -53,24 +53,11 @@ public class f extends Controller {
 
 							if (!f.exists()) {
 
-								File src = Temp.get(id, null);
-								if (src.exists()) {
-									src.delete();
-								}
-								src.getParentFile().mkdirs();
+								f.getParentFile().mkdirs();
 
-								OutputStream out = new FileOutputStream(src);
-								IOUtil.copy(f1.getInputStream(), out, false);
-								out.close();
+								GImage.scale1(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+										X.toInt(ss[1]));
 
-								/**
-								 * using scale3 to cut the middle of the image
-								 */
-								if (GImage.scale2(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
-										X.toInt(ss[1])) < 0) {
-									failed = true;
-									log.warn("scale image failed");
-								}
 							} else {
 								if (log.isDebugEnabled())
 									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
@@ -208,8 +195,7 @@ public class f extends Controller {
 			if (log.isDebugEnabled())
 				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
 
-			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(),
-					this.ip());
+			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(), this.ip());
 			if (pos >= 0) {
 				if (jo == null) {
 					this.put("url", "/f/repo/" + id + "/" + filename);

@@ -90,15 +90,11 @@ public class repo extends Controller {
 								File f = Temp.get(id, size);
 								if (!f.exists()) {
 
-									File src = Temp.get(id, null);
-									OutputStream out = new FileOutputStream(src);
-									IOUtil.copy(e.getInputStream(), out, false);
-									out.close();
+									f.getParentFile().mkdirs();
 
-									if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
-											X.toInt(ss[1])) < 0) {
-										failed = true;
-									}
+									GImage.scale3(e.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+											X.toInt(ss[1]));
+
 								}
 
 								if (f.exists() && !failed) {
@@ -247,22 +243,14 @@ public class repo extends Controller {
 
 								if (!f.exists()) {
 
-									File src = Temp.get(id, null);
-									if (src.exists()) {
-										src.delete();
-									}
-									OutputStream out = new FileOutputStream(src);
-									IOUtil.copy(e.getInputStream(), out, false);
-									out.close();
+									f.getParentFile().mkdirs();
 
 									/**
 									 * using scale3 to cut the middle of the image
 									 */
-									if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
-											X.toInt(ss[1])) < 0) {
-										failed = true;
-										log.warn("scale3 image failed");
-									}
+									GImage.scale3(e.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+											X.toInt(ss[1]));
+
 								} else {
 									if (log.isDebugEnabled())
 										log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
@@ -296,22 +284,14 @@ public class repo extends Controller {
 								File f = Temp.get(id, "s1_" + size);
 								if (!f.exists()) {
 
-									File src = Temp.get(id, null);
-									if (src.exists()) {
-										src.delete();
-									}
-									OutputStream out = new FileOutputStream(src);
-									IOUtil.copy(e.getInputStream(), out, false);
-									out.close();
+									f.getParentFile().mkdirs();
 
 									/**
 									 * using scale to smooth the original image
 									 */
-									if (GImage.scale(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
-											X.toInt(ss[1])) < 0) {
-										log.warn("scale3 image failed");
-										failed = true;
-									}
+									GImage.scale(e.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+											X.toInt(ss[1]));
+
 								} else {
 									if (log.isDebugEnabled())
 										log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());

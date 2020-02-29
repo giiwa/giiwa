@@ -92,8 +92,7 @@ public class user extends Controller {
 					/**
 					 * log
 					 */
-					GLog.securitylog.info(user.class, "create", this.getJSONNonPassword().toString(), login,
-							this.ip());
+					GLog.securitylog.info(user.class, "create", this.getJSONNonPassword().toString(), login, this.ip());
 
 					if (Global.getInt("user.updated.noti", 1) == 1) {
 						final String email = this.getString("email");
@@ -175,8 +174,7 @@ public class user extends Controller {
 				}
 			}
 
-			GLog.securitylog.warn(user.class, "delete", this.getJSONNonPassword().toString(), login,
-					this.ip());
+			GLog.securitylog.warn(user.class, "delete", this.getJSONNonPassword().toString(), login, this.ip());
 			jo.put(X.STATE, 200);
 		} else {
 			jo.put(X.MESSAGE, lang.get("delete.failed"));
@@ -204,8 +202,7 @@ public class user extends Controller {
 
 					Session.expired(id);
 
-					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login,
-							this.ip());
+					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login, this.ip());
 
 					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
@@ -241,8 +238,7 @@ public class user extends Controller {
 
 				Session.expired(id);
 
-				GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login,
-						this.ip());
+				GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login, this.ip());
 
 				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 				return;
@@ -310,21 +306,21 @@ public class user extends Controller {
 		this.show("/admin/user.oplog.html");
 	}
 
-	@Path(path = "accesslog", login = true, access = "access.config.admin|access.config.logs.admin")
-	public void accesslog() {
-		long uid = this.getLong("uid");
-		this.set("uid", uid);
-
-		W q = W.create("uid", uid).sort("created", -1);
-		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
-
-		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
-
-		this.pages(bs, s, n);
-
-		this.show("/admin/user.accesslog.html");
-	}
+//	@Path(path = "accesslog", login = true, access = "access.config.admin|access.config.logs.admin")
+//	public void accesslog() {
+//		long uid = this.getLong("uid");
+//		this.set("uid", uid);
+//
+//		W q = W.create("uid", uid).sort("created", -1);
+//		int s = this.getInt("s");
+//		int n = this.getInt("n", 10);
+//
+//		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
+//
+//		this.pages(bs, s, n);
+//
+//		this.show("/admin/user.accesslog.html");
+//	}
 
 	/*
 	 * (non-Javadoc)

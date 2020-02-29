@@ -44,24 +44,14 @@ public class file extends Controller {
 
 							if (!f.exists()) {
 
-								File src = Temp.get(id, null);
-								if (src.exists()) {
-									src.delete();
-								}
-								src.getParentFile().mkdirs();
-
-								OutputStream out = new FileOutputStream(src);
-								IOUtil.copy(f1.getInputStream(), out, false);
-								out.close();
+								f.getParentFile().mkdirs();
 
 								/**
 								 * using scale3 to cut the middle of the image
 								 */
-								if (GImage.scale3(src.getAbsolutePath(), f.getAbsolutePath(), X.toInt(ss[0]),
-										X.toInt(ss[1])) < 0) {
-									failed = true;
-									log.warn("scale3 image failed");
-								}
+								GImage.scale3(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+										X.toInt(ss[1]));
+
 							} else {
 								if (log.isDebugEnabled())
 									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());

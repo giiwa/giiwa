@@ -14,7 +14,6 @@
 */
 package org.giiwa.misc;
 
-import java.io.File;
 import java.util.*;
 
 import javax.swing.text.html.parser.ParserDelegator;
@@ -23,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
-import org.giiwa.net.client.Http;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
@@ -398,45 +396,45 @@ public final class Html {
 		return url;
 	}
 
-	private String _format(String href, String... removals) {
-
-		if (X.isEmpty(href))
-			return null;
-
-		String[] ss = X.split(href, "[#?&]");
-		if (ss.length < 2) {
-			return ss[0];
-		}
-
-		TreeMap<String, String> p = new TreeMap<String, String>();
-		for (int i = 1; i < ss.length; i++) {
-			StringFinder f = StringFinder.create(ss[i]);
-			String name = f.nextTo("=");
-			String value = f.remain();
-			if (!X.isEmpty(name)) {
-				p.put(name, value);
-			}
-		}
-		if (removals != null) {
-			for (String s : removals) {
-				p.remove(s);
-			}
-		}
-		StringBuilder sb = new StringBuilder();
-		for (String name : p.keySet()) {
-			if (sb.length() > 0)
-				sb.append("&");
-
-			sb.append(name).append("=");
-			if (!X.isEmpty(p.get(name))) {
-				sb.append(p.get(name));
-			}
-		}
-		if (sb.length() > 0) {
-			return ss[0] + "?" + sb.toString();
-		}
-		return ss[0];
-	}
+//	private String _format(String href, String... removals) {
+//
+//		if (X.isEmpty(href))
+//			return null;
+//
+//		String[] ss = X.split(href, "[#?&]");
+//		if (ss.length < 2) {
+//			return ss[0];
+//		}
+//
+//		TreeMap<String, String> p = new TreeMap<String, String>();
+//		for (int i = 1; i < ss.length; i++) {
+//			StringFinder f = StringFinder.create(ss[i]);
+//			String name = f.nextTo("=");
+//			String value = f.remain();
+//			if (!X.isEmpty(name)) {
+//				p.put(name, value);
+//			}
+//		}
+//		if (removals != null) {
+//			for (String s : removals) {
+//				p.remove(s);
+//			}
+//		}
+//		StringBuilder sb = new StringBuilder();
+//		for (String name : p.keySet()) {
+//			if (sb.length() > 0)
+//				sb.append("&");
+//
+//			sb.append(name).append("=");
+//			if (!X.isEmpty(p.get(name))) {
+//				sb.append(p.get(name));
+//			}
+//		}
+//		if (sb.length() > 0) {
+//			return ss[0] + "?" + sb.toString();
+//		}
+//		return ss[0];
+//	}
 
 	/**
 	 * The main method.
@@ -444,9 +442,8 @@ public final class Html {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-		Http h = Http.create();
-		
-		
+//		Http h = Http.create();
+
 	}
 
 }

@@ -133,7 +133,8 @@ public class GImage {
 
 	/**
 	 * Scale the source image to destination image file.
-	 *
+	 * 
+	 * @deprecated
 	 * @param source the source image file
 	 * @param x      the x of source image
 	 * @param y      the y of source image
@@ -179,25 +180,26 @@ public class GImage {
 	}
 
 	/**
-	 * Scale2.
+	 * 以最大（高/宽）缩放， 不填充，输出w/h 不一定与参数一致
 	 *
 	 * @param source the source
 	 * @param file   the file
 	 * @param w      the w
 	 * @param h      the h
+	 * @throws IOException
 	 */
-	public static int scale2(String source, String file, int w, int h) {
-		try {
+	public static void scale2(InputStream src, OutputStream dest, int w, int h) throws IOException {
 
-			BufferedImage img = ImageIO.read(new File(source));
+		try {
+			BufferedImage img = ImageIO.read(src);
 			if (img == null || w < 0 || h < 0)
-				return -1;
+				throw new IOException("bad [src, w, h]");
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
 
 			if (w > w1 || h > h1)
-				return -1;
+				throw new IOException("bad [src, w, h]");
 
 			if (h <= 0)
 				h = h1;
@@ -221,13 +223,11 @@ public class GImage {
 
 			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
 			g.drawImage(tmp, 0, 0, w, h, null);
-			ImageIO.write(out, "png", new File(file));
-
-			return 1;
-		} catch (Exception e) {
-			log.error(source, e);
+			ImageIO.write(out, "png", dest);
+		} finally {
+			X.close(src, dest);
 		}
-		return -1;
+
 	}
 
 	/**
@@ -304,20 +304,20 @@ public class GImage {
 	}
 
 	/**
-	 * scale the whole source image to destination image.
+	 * 以最小（高/宽）缩放， 然后裁剪，输出w/h=输入参数
 	 *
-	 * @param source the source image file
+	 * @param source the source image
 	 * @param file   the destination image file
 	 * @param w      the width of the destination image
 	 * @param h      the height of the destination image
-	 * @return the int
+	 * @throws IOException
 	 */
-	public static int scale3(String source, String file, final int w, final int h) {
-		try {
+	public static void scale3(InputStream src, OutputStream dest, final int w, final int h) throws IOException {
 
-			BufferedImage img = ImageIO.read(new File(source));
+		try {
+			BufferedImage img = ImageIO.read(src);
 			if (img == null || w < 0 || h < 0)
-				return -1;
+				throw new IOException("bad [src, w, h]");
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
@@ -354,39 +354,29 @@ public class GImage {
 			int oy = (h - h0) / 2;
 
 			g.drawImage(tmp, ox, oy, w0, h0, null);
-			File f1 = new File(file);
-			if (f1.exists()) {
-				f1.delete();
-			} else {
-				f1.getParentFile().mkdirs();
-			}
-			ImageIO.write(out, "png", f1);
 
-			return 1;
-		} catch (Exception e) {
-			log.error(source, e);
+			ImageIO.write(out, "png", dest);
+		} finally {
+			X.close(src, dest);
 		}
-		return -1;
+
 	}
 
 	/**
-	 * scale the dest w/h with center meet the min
+	 * 以最小（高/宽）， 缩放收裁剪， 输出w/h=输入参数
 	 * 
 	 * @param source the InputStream
 	 * @param file   the file object
 	 * @param w      the width
 	 * @param h      the height
-	 * @return 1 success, -1 failed
+	 * @throws IOException
 	 */
-	public static int scale(InputStream source, File file, final int w, final int h) {
-		try {
+	public static void scale(InputStream src, OutputStream dest, final int w, final int h) throws IOException {
 
-			BufferedImage img = ImageIO.read(source);
-			if (img == null || w < 0 || h < 0) {
-				if (log.isDebugEnabled())
-					log.debug("img = " + img);
-				return -1;
-			}
+		try {
+			BufferedImage img = ImageIO.read(src);
+			if (img == null || w < 0 || h < 0)
+				throw new IOException("bad [src, w, h]");
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
@@ -423,35 +413,28 @@ public class GImage {
 			int oy = (h - h0) / 2;
 
 			g.drawImage(tmp, ox, oy, w0, h0, null);
-			if (file.exists()) {
-				file.delete();
-			} else {
-				file.getParentFile().mkdirs();
-			}
-			ImageIO.write(out, "jpeg", file);
-
-			return 1;
-		} catch (Throwable e) {
-			log.error(source, e);
+			ImageIO.write(out, "jpg", dest);
+		} finally {
+			X.close(src, dest);
 		}
-		return -1;
 	}
 
 	/**
-	 * Scale the source image file to destination image file.
+	 * 以最大（高/宽）缩放， 透明填充， 输出w/h=输入参数
 	 *
 	 * @param source the source image file
 	 * @param file   the destination image file
 	 * @param w      the width of destination image
 	 * @param h      the height of destination image
 	 * @return the int
+	 * @throws IOException
 	 */
-	public static int scale(String source, String file, int w, int h) {
-		try {
+	public static void scale1(InputStream src, OutputStream dest, int w, int h) throws IOException {
 
-			BufferedImage img = ImageIO.read(new File(source));
+		try {
+			BufferedImage img = ImageIO.read(src);
 			if (img == null)
-				return -1;
+				throw new IOException("bad [src, w, h]");
 
 			// BufferedImage out = Scalr.resize(img, Scalr.Method.ULTRA_QUALITY,
 			// w, h);// , Scalr.OP_ANTIALIAS);
@@ -486,18 +469,17 @@ public class GImage {
 
 			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
 			g.drawImage(tmp, ow, oh, w, h, null);
-			ImageIO.write(out, "png", new File(file));
-
-			return 1;
-		} catch (Exception e) {
-			log.error(source, e);
+			ImageIO.write(out, "png", dest);
+		} finally {
+			X.close(src, dest);
 		}
-		return -1;
+
 	}
 
 	/**
 	 * Scale the source image in "url" with "referer" to destination image.
-	 *
+	 * 
+	 * @deprecated
 	 * @param url     the source image url
 	 * @param referer the referer which maybe required when "get" the source image
 	 * @param file    the destination image file
@@ -1285,7 +1267,10 @@ public class GImage {
 		String s2 = "/Users/joe/Downloads/t2.png";
 
 		try {
-			scale(new FileInputStream(s1), new File(s2), 300, 300);
+			OutputStream out = new FileOutputStream(s2);
+
+			scale1(new FileInputStream(s1), out, 300, 300);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

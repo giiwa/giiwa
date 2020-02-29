@@ -2068,6 +2068,14 @@ public class Helper implements Serializable {
 
 		}
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param s
+		 * @param n
+		 * @return
+		 * @throws SQLException
+		 */
 		@SuppressWarnings("unchecked")
 		public List<?> load(String name, int s, int n) throws SQLException {
 			if (log.isDebugEnabled())
