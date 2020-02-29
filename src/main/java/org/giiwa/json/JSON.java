@@ -789,10 +789,16 @@ public final class JSON extends HashMap<String, Object> {
 	 * 
 	 * @return
 	 */
-	public JSON copy() {
+	public JSON copy(String... names) {
 		JSON j = JSON.create();
-		for (String s : this.keySet()) {
-			j.put(s, this.get(s));
+		if (names == null || names.length == 0) {
+			for (String s : this.keySet()) {
+				j.put(s, this.get(s));
+			}
+		} else {
+			for (String s : names) {
+				j.put(s, this.get(s));
+			}
 		}
 		return j;
 	}

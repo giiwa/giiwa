@@ -1676,7 +1676,14 @@ public class Controller {
 		if (login != null) {
 			if (System.currentTimeMillis() - login.getLong("lastlogined") > X.AMINUTE) {
 
-				login.set("lastlogined", System.currentTimeMillis());
+				try {
+					login.set("lastlogined", System.currentTimeMillis());
+					Session s = session(true);
+					s.set("user", login);
+					s.store();
+				} catch (Exception e) {
+
+				}
 
 				V v = V.create();
 				String type = (String) login.get("logintype");
