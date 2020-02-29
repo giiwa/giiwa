@@ -350,7 +350,7 @@ public class SQL {
 				String s1 = s.nextTo("(|)|and|or");
 				s.trim();
 
-				s1.trim();
+				s1 = s1.trim();
 				c = s1.charAt(0);
 				String op = null;
 				if (c == '>' || c == '<') {
@@ -370,7 +370,7 @@ public class SQL {
 					op = "=";
 				}
 
-				s1.trim();
+				s1 = s1.trim();
 
 				Object value = s1;
 

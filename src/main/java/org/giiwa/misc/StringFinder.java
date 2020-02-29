@@ -112,11 +112,11 @@ public class StringFinder {
 		if (i > p) {
 			String s1 = s.substring(pos, i);
 			int n = _count(s1, '\'');
-			if (n % 2 == 1)
+			if (n % 2 != 0)
 				return _pos(s2, i + 1);
 
 			n = _count(s1, '"');
-			if (n % 2 == 1)
+			if (n % 2 != 0)
 				return _pos(s2, i + 1);
 
 			return i;

@@ -569,12 +569,27 @@ public final class Http {
 
 					if (status == 200 || status == 206) {
 						HttpEntity e = resp.getEntity();
+
 						InputStream in = e.getContent();
 
 						file.getParentFile().mkdirs();
 
 						FileOutputStream out = new FileOutputStream(file);
-						return IOUtil.copy(in, out);
+						int l2 = IOUtil.copy(in, out);
+
+						Header[] hh = resp.getHeaders("Content-Length");
+						if (hh != null && hh.length > 0) {
+							int l1 = X.toInt(hh[0].getValue());
+							if (l1 != l2) {
+								// bad file size
+								IOUtil.delete(file);
+								return 0;
+							} else {
+								// size error
+								log.error("download size error, expect=" + l1 + ", actual=" + l2, new Exception(url));
+							}
+						}
+						return l2;
 					}
 					return 0;
 				} catch (Exception e) {

@@ -79,7 +79,7 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * @return
 	 */
 	public boolean fromJSON(JSON jo) {
-		return fromJSON(jo);
+		return from(jo);
 
 	}
 

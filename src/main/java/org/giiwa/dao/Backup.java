@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Base64;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -142,12 +142,13 @@ public class Backup {
 
 	}
 
-	public static void find(ZipInputStream in, String filename, Consumer<String> func) throws IOException {
+	public static void find(ZipInputStream in, String filename, BiConsumer<String, ZipInputStream> func)
+			throws IOException {
 
 		ZipEntry e = in.getNextEntry();
 		while (e != null) {
 			if (e.getName().matches(filename)) {
-				func.accept(e.getName());
+				func.accept(e.getName(), in);
 			}
 			e = in.getNextEntry();
 		}
@@ -155,10 +156,11 @@ public class Backup {
 	}
 
 	public static void recover(ZipInputStream in) throws IOException {
-		find(in, ".*", filename -> {
+
+		find(in, ".*", (filename, in1) -> {
 			try {
 				if (filename.startsWith("/.dfile/")) {
-					recover(filename, in);
+					recover(filename, in1);
 				} else if (filename.endsWith(".db")) {
 					recover(filename.substring(0, filename.length() - 3), Helper.DEFAULT, in);
 				}
@@ -166,6 +168,7 @@ public class Backup {
 				log.error(e.getMessage(), e);
 			}
 		});
+
 	}
 
 }

@@ -92,7 +92,7 @@ class DefaultController extends Controller {
 
 		// check dfile
 		DFile d = Disk.seek(uri);
-		if (d.exists() && d.isFile()) {
+		if (d != null && d.exists() && d.isFile()) {
 			// show it
 			this.copy(this.json());
 
