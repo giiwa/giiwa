@@ -49,7 +49,6 @@ public class f extends Controller {
 
 						if (ss.length == 2) {
 							File f = Temp.get(id, "s_" + size);
-							boolean failed = false;
 
 							if (!f.exists()) {
 
@@ -63,7 +62,7 @@ public class f extends Controller {
 									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
 							}
 
-							if (f.exists() && !failed) {
+							if (f.exists()) {
 								if (log.isDebugEnabled())
 									log.debug("load the scaled image from " + f.getCanonicalPath());
 
