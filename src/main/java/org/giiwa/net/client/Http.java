@@ -581,12 +581,11 @@ public final class Http {
 						if (hh != null && hh.length > 0) {
 							int l1 = X.toInt(hh[0].getValue());
 							if (l1 != l2) {
+								// size error
+								log.error("download size error, expect=" + l1 + ", actual=" + l2, new Exception(url));
 								// bad file size
 								IOUtil.delete(file);
 								return 0;
-							} else {
-								// size error
-								log.error("download size error, expect=" + l1 + ", actual=" + l2, new Exception(url));
 							}
 						}
 						return l2;
