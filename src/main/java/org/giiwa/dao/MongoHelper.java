@@ -1841,6 +1841,8 @@ public class MongoHelper implements Helper.DBHelper {
 					l1.add(new BasicDBObject().append("$group",
 							new BasicDBObject().append("_id", 1).append("count", new BasicDBObject("$sum", 1))));
 
+					log.debug("count, l1=" + l1);
+
 					Document a = c.aggregate(l1).first();
 					return a.getLong("count");
 				}
