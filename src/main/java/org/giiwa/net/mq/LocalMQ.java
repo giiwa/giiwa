@@ -233,8 +233,12 @@ class LocalMQ extends MQ {
 						if (log.isDebugEnabled())
 							log.debug("Sending: [" + name + "], consumer=" + l1);
 
-						for (R r1 : l1) {
-							r1.onMessage(r);
+						if (l1.size() == 1) {
+							l1.get(0).onMessage(r);
+						} else {
+							l1.parallelStream().forEach(e -> {
+								e.onMessage(r);
+							});
 						}
 
 					} else {

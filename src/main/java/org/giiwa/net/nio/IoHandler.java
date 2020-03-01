@@ -13,7 +13,7 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 //	private static Log log = LogFactory.getLog(IoHandler.class);
 
 	public IoHandler() {
-		System.out.println("new io");
+//		System.out.println("new io");
 	}
 
 	@Override

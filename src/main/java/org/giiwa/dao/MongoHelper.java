@@ -819,24 +819,8 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param db         the db
 	 * @return long
 	 */
-	@SuppressWarnings("deprecation")
 	public long count(String collection, W q, String db) {
-		TimeStamp t1 = TimeStamp.create();
-		long n = 0;
-		try {
-
-			MongoCollection<Document> c = getCollection(db, collection);
-			if (c != null) {
-				n = c.count(q.query());
-			}
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			if (log.isDebugEnabled())
-				log.debug("count, cost=" + t1.pastms() + "ms,  collection=" + collection + ", query=" + q.query()
-						+ ", n=" + n);
-		}
-		return n;
+		return count(collection, q, "*", db);
 	}
 
 	/**
@@ -1371,80 +1355,9 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param db
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<JSON> count(String collection, W q, String[] name, String db) {
-
-		TimeStamp t = TimeStamp.create();
-		MongoCollection<Document> db1 = null;
-
-		BasicDBObject query = q.query();
-		BasicDBObject order = q.order();
-
-		try {
-			if (X.isEmpty(collection)) {
-				log.error("bad collection=" + collection, new Exception("bad collection=" + collection));
-				return null;
-			}
-
-			if (name == null || name.length == 0) {
-				log.error("bad name", new Exception("bad name"));
-				return null;
-			}
-
-			db1 = getCollection(db, collection);
-			if (db1 != null) {
-
-				List<Bson> l1 = new ArrayList<Bson>();
-
-				if (!query.isEmpty()) {
-					l1.add(new BasicDBObject().append("$match", query));
-				}
-
-				BasicDBObject group = new BasicDBObject();
-				for (String s : name) {
-					group.append(s, "$" + s);
-				}
-				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", group).append("count",
-						new BasicDBObject().append("$sum", 1))));
-
-				if (!order.isEmpty()) {
-					BasicDBObject ord = new BasicDBObject();
-					for (Map.Entry<String, Object> s : order.entrySet()) {
-						if (X.isSame(s.getKey(), "count")) {
-							ord.append(s.getKey(), s.getValue());
-						} else {
-							ord.append("_id." + s.getKey(), s.getValue());
-						}
-					}
-					l1.add(new BasicDBObject().append("$sort", ord));
-				}
-
-				AggregateIterable<Document> a1 = db1.aggregate(l1);
-
-				List<JSON> l2 = JSON.createList();
-				for (Document d : a1) {
-					JSON j1 = JSON.fromObject(d);
-					Object o = j1.remove("_id");
-					if (o instanceof Map) {
-						j1.putAll((Map) o);
-						l2.add(j1);
-					}
-				}
-
-				if (log.isDebugEnabled())
-					log.debug("count " + collection + ", cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
-//				System.out.println("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
-
-				return l2;
-			}
-		} catch (Exception e) {
-			log.error("query=" + query + ", order=" + order, e);
-
-		}
-
-		return null;
-
+		return count(collection, q, "*", name, db);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -1906,6 +1819,114 @@ public class MongoHelper implements Helper.DBHelper {
 				log.debug("size, cost=" + t1.pastms() + "ms,  collection=" + table + ", n=" + n);
 		}
 		return n;
+	}
+
+	@Override
+	public long count(String table, W q, String name, String db) {
+
+		TimeStamp t1 = TimeStamp.create();
+		long n = 0;
+		try {
+
+			MongoCollection<Document> c = getCollection(db, table);
+			if (c != null) {
+				if (X.isSame(name, "*")) {
+					n = c.count(q.query());
+				} else {
+
+					// aggregate({$group:{_id:'$album'}},{$group:{_id:1, count:{$sum:1}}})
+					List<BasicDBObject> l1 = new ArrayList<BasicDBObject>();
+					l1.add(new BasicDBObject().append("$match", q.query()));
+					l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", "$" + name)));
+					l1.add(new BasicDBObject().append("$group",
+							new BasicDBObject().append("_id", 1).append("count", new BasicDBObject("$sum", 1))));
+
+					Document a = c.aggregate(l1).first();
+					return a.getLong("count");
+				}
+			}
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (log.isDebugEnabled())
+				log.debug("count, cost=" + t1.pastms() + "ms,  table=" + table + ", query=" + q.query() + ", n=" + n);
+		}
+		return n;
+	}
+
+	@Override
+	public List<JSON> count(String table, W q, String name, String[] group, String db) {
+
+		TimeStamp t = TimeStamp.create();
+		MongoCollection<Document> db1 = null;
+
+		BasicDBObject query = q.query();
+		BasicDBObject order = q.order();
+
+		try {
+			if (X.isEmpty(table)) {
+				log.error("bad collection=" + table, new Exception("bad collection=" + table));
+				return null;
+			}
+
+			if (group == null || group.length == 0) {
+				log.error("bad name", new Exception("bad name"));
+				return null;
+			}
+
+			db1 = getCollection(db, table);
+			if (db1 != null) {
+
+				List<Bson> l1 = new ArrayList<Bson>();
+
+				if (!query.isEmpty()) {
+					l1.add(new BasicDBObject().append("$match", query));
+				}
+
+				BasicDBObject group1 = new BasicDBObject();
+				for (String s : group) {
+					group1.append(s, "$" + s);
+				}
+				l1.add(new BasicDBObject().append("$group", new BasicDBObject().append("_id", group1).append("count",
+						new BasicDBObject().append("$sum", 1))));
+
+				if (!order.isEmpty()) {
+					BasicDBObject ord = new BasicDBObject();
+					for (Map.Entry<String, Object> s : order.entrySet()) {
+						if (X.isSame(s.getKey(), "count")) {
+							ord.append(s.getKey(), s.getValue());
+						} else {
+							ord.append("_id." + s.getKey(), s.getValue());
+						}
+					}
+					l1.add(new BasicDBObject().append("$sort", ord));
+				}
+
+				AggregateIterable<Document> a1 = db1.aggregate(l1);
+
+				List<JSON> l2 = JSON.createList();
+				for (Document d : a1) {
+					JSON j1 = JSON.fromObject(d);
+					Object o = j1.remove("_id");
+					if (o instanceof Map) {
+						j1.putAll((Map) o);
+						l2.add(j1);
+					}
+				}
+
+				if (log.isDebugEnabled())
+					log.debug("count " + table + ", cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+//				System.out.println("count, cost=" + t.past() + ", query=" + l1 + ", result=" + l2);
+
+				return l2;
+			}
+		} catch (Exception e) {
+			log.error("query=" + query + ", order=" + order, e);
+
+		}
+
+		return null;
+
 	}
 
 }

@@ -1560,65 +1560,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @return the number of data
 	 */
 	public long count(String table, W q, String db) {
-
-		/**
-		 * create the sql statement
-		 */
-		TimeStamp t = TimeStamp.create();
-
-		// log.debug("sql:" + sql.toString());
-
-		/**
-		 * search it in database
-		 */
-		Connection c = null;
-		PreparedStatement p = null;
-		ResultSet r = null;
-		long n = 0;
-		try {
-
-			c = getConnection(db);
-
-			if (c == null) {
-				n = 0;
-			} else {
-				StringBuilder sum = new StringBuilder();
-				sum.append("select count(*) t from ").append(table);
-				String where = _where(q, c);
-				Object[] args = q.args();
-
-				if (!X.isEmpty(where)) {
-					sum.append(" where ").append(where);
-				}
-
-				p = c.prepareStatement(sum.toString());
-
-				int order = 1;
-				if (args != null) {
-					for (int i = 0; i < args.length; i++) {
-						Object o = args[i];
-
-						setParameter(p, order++, o, isOracle(c));
-					}
-				}
-
-				r = p.executeQuery();
-				if (r.next()) {
-					n = r.getInt("t");
-				}
-			}
-		} catch (Exception e) {
-
-			log.error(q, e);
-
-		} finally {
-			close(r, p, c);
-
-			if (log.isDebugEnabled())
-				log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
-		}
-
-		return n;
+		return count(table, q, "*", db);
 	}
 
 	/**
@@ -2591,104 +2533,7 @@ public class RDSHelper implements Helper.DBHelper {
 
 	@Override
 	public List<JSON> count(String table, W q, String[] group, String db) {
-
-		/**
-		 * create the sql statement
-		 */
-		TimeStamp t = TimeStamp.create();
-
-		// log.debug("sql:" + sql.toString());
-
-		/**
-		 * search it in database
-		 */
-		Connection c = null;
-		PreparedStatement p = null;
-		ResultSet r = null;
-		long n = 0;
-		try {
-
-			c = getConnection(db);
-
-			if (c == null) {
-				n = 0;
-			} else {
-				StringBuilder sum = new StringBuilder();
-				sum.append("select");
-				for (int i = 0; i < group.length; i++) {
-					sum.append(group[i]);
-				}
-				sum.append(",count(*) t from ").append(table);
-				String where = _where(q, c);
-				Object[] args = q.args();
-
-				if (!X.isEmpty(where)) {
-					sum.append(" where ").append(where);
-				}
-
-				sum.append(" groug by ");
-				for (int i = 0; i < group.length; i++) {
-					sum.append(group[i]).append(",");
-				}
-
-				BasicDBObject sort = q.order();
-				if (sort != null && !sort.isEmpty()) {
-					sum.append("order by ");
-					int i = 0;
-					for (String s : sort.keySet()) {
-						if (i > 0)
-							sum.append(",");
-
-						if (X.isSame(s, "count")) {
-							sum.append("t");
-						} else {
-							sum.append(s.replaceAll("_id.", X.EMPTY));
-						}
-
-						if (sort.getInt(s) == -1) {
-							sum.append(" desc");
-						}
-					}
-				}
-
-				p = c.prepareStatement(sum.toString());
-
-				int order = 1;
-				if (args != null) {
-					for (int i = 0; i < args.length; i++) {
-						Object o = args[i];
-
-						setParameter(p, order++, o, isOracle(c));
-					}
-				}
-
-				r = p.executeQuery();
-				List<JSON> l1 = JSON.createList();
-				while (r.next()) {
-
-					JSON j1 = JSON.create();
-					for (String s : group) {
-						j1.append(s, r.getObject(s));
-					}
-
-					JSON j = JSON.create();
-					j.append("_id", j1).append("count", r.getLong("t"));
-
-					l1.add(j);
-				}
-				return l1;
-			}
-		} catch (Exception e) {
-			log.error(q, e);
-
-		} finally {
-			close(r, p, c);
-
-			if (log.isDebugEnabled())
-				log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
-		}
-
-		return null;
+		return count(table, q, "*", group, db);
 	}
 
 	@Override
@@ -3222,6 +3067,171 @@ public class RDSHelper implements Helper.DBHelper {
 	public long size(String table, String db) {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	@Override
+	public long count(String table, W q, String name, String db) {
+
+		/**
+		 * create the sql statement
+		 */
+		TimeStamp t = TimeStamp.create();
+
+		// log.debug("sql:" + sql.toString());
+
+		/**
+		 * search it in database
+		 */
+		Connection c = null;
+		PreparedStatement p = null;
+		ResultSet r = null;
+		long n = 0;
+		try {
+
+			c = getConnection(db);
+
+			if (c == null) {
+				n = 0;
+			} else {
+				StringBuilder sum = new StringBuilder();
+				sum.append("select count(" + name + ") t from ").append(table);
+				String where = _where(q, c);
+				Object[] args = q.args();
+
+				if (!X.isEmpty(where)) {
+					sum.append(" where ").append(where);
+				}
+
+				p = c.prepareStatement(sum.toString());
+
+				int order = 1;
+				if (args != null) {
+					for (int i = 0; i < args.length; i++) {
+						Object o = args[i];
+
+						setParameter(p, order++, o, isOracle(c));
+					}
+				}
+
+				r = p.executeQuery();
+				if (r.next()) {
+					n = r.getInt("t");
+				}
+			}
+		} catch (Exception e) {
+
+			log.error(q, e);
+
+		} finally {
+			close(r, p, c);
+
+			if (log.isDebugEnabled())
+				log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+		}
+
+		return n;
+	}
+
+	@Override
+	public List<JSON> count(String table, W q, String name, String[] group, String db) {
+
+		/**
+		 * create the sql statement
+		 */
+		TimeStamp t = TimeStamp.create();
+
+		// log.debug("sql:" + sql.toString());
+
+		/**
+		 * search it in database
+		 */
+		Connection c = null;
+		PreparedStatement p = null;
+		ResultSet r = null;
+		long n = 0;
+		try {
+
+			c = getConnection(db);
+
+			if (c == null) {
+				n = 0;
+			} else {
+				StringBuilder sum = new StringBuilder();
+				sum.append("select");
+				for (int i = 0; i < group.length; i++) {
+					sum.append(group[i]);
+				}
+				sum.append(",count(" + name + ") t from ").append(table);
+				String where = _where(q, c);
+				Object[] args = q.args();
+
+				if (!X.isEmpty(where)) {
+					sum.append(" where ").append(where);
+				}
+
+				sum.append(" groug by ");
+				for (int i = 0; i < group.length; i++) {
+					sum.append(group[i]).append(",");
+				}
+
+				BasicDBObject sort = q.order();
+				if (sort != null && !sort.isEmpty()) {
+					sum.append("order by ");
+					int i = 0;
+					for (String s : sort.keySet()) {
+						if (i > 0)
+							sum.append(",");
+
+						if (X.isSame(s, "count")) {
+							sum.append("t");
+						} else {
+							sum.append(s.replaceAll("_id.", X.EMPTY));
+						}
+
+						if (sort.getInt(s) == -1) {
+							sum.append(" desc");
+						}
+					}
+				}
+
+				p = c.prepareStatement(sum.toString());
+
+				int order = 1;
+				if (args != null) {
+					for (int i = 0; i < args.length; i++) {
+						Object o = args[i];
+
+						setParameter(p, order++, o, isOracle(c));
+					}
+				}
+
+				r = p.executeQuery();
+				List<JSON> l1 = JSON.createList();
+				while (r.next()) {
+
+					JSON j1 = JSON.create();
+					for (String s : group) {
+						j1.append(s, r.getObject(s));
+					}
+
+					JSON j = JSON.create();
+					j.append("_id", j1).append("count", r.getLong("t"));
+
+					l1.add(j);
+				}
+				return l1;
+			}
+		} catch (Exception e) {
+			log.error(q, e);
+
+		} finally {
+			close(r, p, c);
+
+			if (log.isDebugEnabled())
+				log.debug("cost:" + t.pastms() + "ms, sql=" + q + ", n=" + n);
+		}
+
+		return null;
 	}
 
 }

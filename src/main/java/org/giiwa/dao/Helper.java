@@ -2824,6 +2824,10 @@ public class Helper implements Serializable {
 		return count(q, t, getDB(t));
 	}
 
+	public static long count(String name, W q, Class<? extends Bean> t) {
+		return count(name, q, t, getDB(t));
+	}
+
 	public static <T> T sum(W q, String name, Class<? extends Bean> t) {
 		return sum(q, name, t, getDB(t));
 	}
@@ -2851,6 +2855,11 @@ public class Helper implements Serializable {
 	public static long count(W q, Class<? extends Bean> t, String db) {
 		String table = getTable(t);
 		return count(q, table, db);
+	}
+
+	public static long count(String name, W q, Class<? extends Bean> t, String db) {
+		String table = getTable(t);
+		return count(name, q, table, db);
 	}
 
 	public static <T> T sum(W q, String name, Class<? extends Bean> t, String db) {
@@ -2896,6 +2905,34 @@ public class Helper implements Serializable {
 					for (DBHelper h : customs) {
 						if (h.getDB(db) != null) {
 							return h.count(table, q, db);
+						}
+					}
+				}
+
+				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			}
+
+			return 0;
+		} finally {
+			read.add(t1.pastms());
+		}
+	}
+
+	public static long count(String name, W q, String table, String db) {
+
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
+				if (primary != null && primary.getDB(db) != null) {
+					return primary.count(table, q, name, db);
+				} else if (!X.isEmpty(customs)) {
+					for (DBHelper h : customs) {
+						if (h.getDB(db) != null) {
+							return h.count(table, q, name, db);
 						}
 					}
 				}
@@ -3410,9 +3447,13 @@ public class Helper implements Serializable {
 
 		int inc(String table, W q, String name, int n, V v, String db);
 
+		long count(String table, W q, String name, String db);
+
 		long count(String table, W q, String db);
 
 		List<JSON> count(String table, W q, String[] group, String db);
+
+		List<JSON> count(String table, W q, String name, String[] group, String db);
 
 		<T> T sum(String table, W q, String name, String db);
 

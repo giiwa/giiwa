@@ -254,6 +254,10 @@ public class BeanDAO<I, T extends Bean> {
 		return Helper.count(q, t);
 	}
 
+	public long count(String name, W q) {
+		return Helper.count(name, q, t);
+	}
+
 	/**
 	 * summary the field
 	 * 

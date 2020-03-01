@@ -54,7 +54,7 @@ public class f extends Controller {
 
 								f.getParentFile().mkdirs();
 
-								GImage.scale1(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+								GImage.scale3(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
 										X.toInt(ss[1]));
 
 							} else {
