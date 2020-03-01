@@ -1844,7 +1844,9 @@ public class MongoHelper implements Helper.DBHelper {
 					log.debug("count, l1=" + l1);
 
 					Document a = c.aggregate(l1).first();
-					return X.toLong(a.get("count"));
+					if (a != null) {
+						return X.toLong(a.get("count"));
+					}
 				}
 			}
 		} catch (Exception e) {
