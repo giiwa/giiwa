@@ -17,6 +17,7 @@ package org.giiwa.dao;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -659,6 +660,8 @@ public class Helper implements Serializable {
 			eq, gt, gte, lt, lte, like, like_, like_$, neq, none, in, exists, nin, type, mod, all, size, near
 		};
 
+		public IAccess access;
+
 		/**
 		 * "and"
 		 */
@@ -999,16 +1002,6 @@ public class Helper implements Serializable {
 		 */
 		public static W create() {
 			return new W();
-		}
-
-		/**
-		 * create a empty q, only query the data of this node in clusters envir
-		 * 
-		 * @return the W
-		 */
-		public static W createLocal() {
-			W q = create().and("_node", Global.id());
-			return q;
 		}
 
 		/**
@@ -1972,12 +1965,20 @@ public class Helper implements Serializable {
 			if (log.isDebugEnabled())
 				log.debug("w=" + this);
 
+			T t1 = null;
 			if (dao != null) {
-				return (T) dao.load(this);
+				t1 = (T) dao.load(this);
 			} else if (!X.isEmpty(table)) {
-				return (T) helper.load(table, null, this, t, Helper.DEFAULT);
+				t1 = (T) helper.load(table, null, this, t, Helper.DEFAULT);
+			} else {
+				throw new SQLException("not set table");
 			}
-			throw new SQLException("not set table");
+
+			if (access != null) {
+				access.read(table, t1);
+			}
+
+			return t1;
 
 		}
 
@@ -2059,39 +2060,21 @@ public class Helper implements Serializable {
 			if (log.isDebugEnabled())
 				log.debug("w=" + this);
 
-			if (dao != null) {
-				return (Beans<T>) dao.load(this, s, n);
-			} else if (!X.isEmpty(table)) {
-				return helper.load(table, null, this, s, n, t, Helper.DEFAULT);
-			}
-			throw new SQLException("not set table");
-
-		}
-
-		/**
-		 * @deprecated
-		 * @param name
-		 * @param s
-		 * @param n
-		 * @return
-		 * @throws SQLException
-		 */
-		@SuppressWarnings("unchecked")
-		public List<?> load(String name, int s, int n) throws SQLException {
-			if (log.isDebugEnabled())
-				log.debug("w=" + this);
+			Beans<T> l1 = null;
 
 			if (dao != null) {
-				return X.asList(dao.load(this, s, n), e -> {
-					return ((Bean) e).get(name);
-				});
+				l1 = (Beans<T>) dao.load(this, s, n);
 			} else if (!X.isEmpty(table)) {
-				return X.asList(helper.load(table, null, this, s, n, t, Helper.DEFAULT), e -> {
-					return ((Bean) e).get(name);
-				});
+				l1 = helper.load(table, null, this, s, n, t, Helper.DEFAULT);
+			} else {
+				throw new SQLException("not set table");
 			}
-			throw new SQLException("not set table");
 
+			if (access != null) {
+				access.read(table, l1);
+			}
+
+			return l1;
 		}
 
 		public long count() throws SQLException {
@@ -2108,7 +2091,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.sum(name, this);
 			} else if (!X.isEmpty(table)) {
-				return helper.sum(table, this, name, Helper.DEFAULT);
+				if (access == null || access.read(table, name)) {
+					return helper.sum(table, this, name, Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2118,7 +2105,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.avg(name, this);
 			} else if (!X.isEmpty(table)) {
-				return helper.avg(table, this, name, Helper.DEFAULT);
+				if (access == null || access.read(table, name)) {
+					return helper.avg(table, this, name, Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2128,7 +2119,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.min(name, this);
 			} else if (!X.isEmpty(table)) {
-				return helper.min(table, this, name, Helper.DEFAULT);
+				if (access == null || access.read(table, name)) {
+					return helper.min(table, this, name, Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2138,7 +2133,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.max(name, this);
 			} else if (!X.isEmpty(table)) {
-				return helper.max(table, this, name, Helper.DEFAULT);
+				if (access == null || access.read(table, name)) {
+					return helper.max(table, this, name, Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2148,7 +2147,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.delete(this);
 			} else if (!X.isEmpty(table)) {
-				return helper.delete(table, this, Helper.DEFAULT);
+				if (access == null || access.write(table, null)) {
+					return helper.delete(table, this, Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 		}
@@ -2157,7 +2160,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.update(this, v);
 			} else if (!X.isEmpty(table)) {
-				return helper.updateTable(table, this, v, Helper.DEFAULT);
+				if (access == null || access.write(table, v)) {
+					return helper.updateTable(table, this, v, Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 		}
@@ -2166,7 +2173,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.distinct(name, this);
 			} else if (!X.isEmpty(table)) {
-				return helper.distinct(table, name, this, Helper.DEFAULT);
+				if (access == null || access.read(table, name)) {
+					return helper.distinct(table, name, this, Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 		}
@@ -2175,7 +2186,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.count(this, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				return helper.count(table, this, X.split(group, "[,]"), Helper.DEFAULT);
+				if (access == null || access.read(table, group)) {
+					return helper.count(table, this, X.split(group, "[,]"), Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2185,7 +2200,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.sum(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				return helper.sum(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				if (access == null || access.read(table, Arrays.asList(name, group))) {
+					return helper.sum(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2195,7 +2214,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.aggregate(this, X.split(name, "[,]"), X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				return helper.aggregate(table, X.split(name, "[,]"), this, X.split(group, "[,]"), Helper.DEFAULT);
+				if (access == null || access.read(table, Arrays.asList(name, group))) {
+					return helper.aggregate(table, X.split(name, "[,]"), this, X.split(group, "[,]"), Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2205,7 +2228,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.min(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				return helper.min(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				if (access == null || access.read(table, Arrays.asList(name, group))) {
+					return helper.min(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2215,7 +2242,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.max(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				return helper.max(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				if (access == null || access.read(table, Arrays.asList(name, group))) {
+					return helper.max(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -2225,7 +2256,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.avg(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				return helper.avg(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				if (access == null || access.read(table, Arrays.asList(name, group))) {
+					return helper.avg(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+				} else {
+					throw new SQLException("no privilege!");
+				}
 			}
 			throw new SQLException("not set table");
 
@@ -3179,92 +3214,8 @@ public class Helper implements Serializable {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-		/*
-		 * W w = W.create("name", 1).sort("name", 1).sort("nickname", -1).sort("ddd",
-		 * 1); w.and("aaa", 2); W w1 = W.create("a", 1).or("b", 2); w.and(w1);
-		 * 
-		 * System.out.println(w.where()); System.out.println(Helper.toString(w.args()));
-		 * System.out.println(w.orderby());
-		 * 
-		 * System.out.println("-----------"); System.out.println(w.query());
-		 * System.out.println(w.order());
-		 * 
-		 * w = W.create("a", 1); w.and("b", new BasicDBObject("$exists", true));
-		 * System.out.println("-----------"); System.out.println(w.query());
-		 * System.out.println(w.order());
-		 * 
-		 * W q = W.create("a", 1).or("a", 2).or(W.create("c", 1, W.OP.gt).and("c", 3,
-		 * W.OP.lt)); System.out.println(q); System.out.println(q.query());
-		 * 
-		 * W q1 = W.create("pid", 1).and("state", 1, W.OP.neq).and("cno",
-		 * 1).and(W.create("role", 1).or("role", 2)); System.out.println(q1);
-		 * System.out.println(q1.query());
-		 * 
-		 * W q2 = W.create("state", 1) .or(W.create("state", 2).and("enddate",
-		 * System.currentTimeMillis() - X.AHOUR, W.OP.lt)); System.out.println(q2);
-		 * System.out.println(q2.query());
-		 * 
-		 * q1 = W.create("a", 1).and("b", 2).or("c", 1).and("d", 1);
-		 * System.out.println(q1); System.out.println(q1.query());
-		 * 
-		 * q1 = W.create("a", 1).and("b", 2).or(W.create("c", 1).and("d", 1));
-		 * System.out.println(q1); System.out.println(q1.query());
-		 * 
-		 * System.out.println("................."); W sql = W.create(); sql.and("a",
-		 * "B").and("c", "d").or("e", "f").and("f", "g");
-		 * System.out.println(sql.query()); System.out.println(sql.where()); sql =
-		 * W.create(); sql.and("a", "c", W.OP.gt); sql.and(W.create().and("a", "b",
-		 * W.OP.lt).and("d", "4")); sql.or("c", "d"); System.out.println(sql.query());
-		 * System.out.println(sql.where());
-		 * 
-		 * sql = W.create(); sql.and("eventType", "1"); sql.and("msgType",
-		 * "NOTIFICATION", W.OP.neq); if (true) { sql.and("convType", "PERSON");
-		 * sql.and(W.create().or(W.create().and("fromAccount", "to").and("to", "from"))
-		 * .or(W.create().and("fromAccount", "from").and("to", "to"))); } long time =
-		 * System.currentTimeMillis(); if (time > 0) { sql.and("msgTimestamp", time,
-		 * W.OP.lt); } System.out.println(sql.query()); System.out.println(sql.where());
-		 * sql = W.create(); sql.and("eventType", "1"); sql.and("msgType",
-		 * "NOTIFICATION", W.OP.neq); if (true) { sql.and("convType", "PERSON");
-		 * sql.or(W.create().and("fromAccount", "from").and("to", "to"));
-		 * sql.or(W.create().and("fromAccount", "to").and("to", "from")); } if (time >
-		 * 0) { sql.append("msgTimestamp", time, W.OP.lt); }
-		 * System.out.println(sql.query()); System.out.println(sql.where());
-		 * System.out.println(sql.sortkeys());
-		 * 
-		 * sql = W.create(); sql.and("a", "b"); sql.or("c", "1"); sql.and(W.create("b",
-		 * "x")); System.out.println(sql.query()); System.out.println(sql.where());
-		 * System.out.println(sql.sortkeys());
-		 * 
-		 * q = W.create("a", 1).sort("b", -1); System.out.println(q.sortkeys());
-		 * 
-		 * String s = "(updated>10) and (created>10)";
-		 * 
-		 * try { q = SQL.where2W(StringFinder.create(s));
-		 * 
-		 * System.out.println(q.query());
-		 * 
-		 * } catch (Exception e) { // TODO Auto-generated catch block
-		 * e.printStackTrace(); }
-		 */
-//		W q = W.create();
-//		q.and("cip_firstauthor", "\\(法\\)", W.OP.like);
-//		System.out.println(q.query());
-//
-//		try {
-//			StringFinder s = StringFinder.create("cip_firstauthor like '\\(法\\)'");
-//			q = SQL.where2W(s);
-//			System.out.println(q.query());
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//		Beans<User> l1 = User.dao.query().and("a", 1).sort("a", 1).load(0, 10);
 
 		W q = W.create();
-//		q.and("a", 1);
-//		q.and("b = 2 and (c < 3 or c > 4) and d = '2'");
-//		q.and("b = 2|3|4 and (c < 3 or c > 4) and d = '2' or g = 1");
-//		q.sort("f", -1);
-//		q.and("a like 'a'");
 		q.and("a=b").and(W.create("b", "c"));
 
 		System.out.println(q.toString());
