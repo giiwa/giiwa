@@ -122,7 +122,7 @@ public class Module {
 	 * @return boolean
 	 */
 	public boolean before(Controller m) {
-		String uri = m.getURI();
+		String uri = m.uri();
 
 		for (String name : filters.keySet()) {
 			if (uri.matches(name)) {
@@ -390,7 +390,7 @@ public class Module {
 	 * @return boolean
 	 */
 	public boolean after(Controller m) {
-		String uri = m.getURI();
+		String uri = m.uri();
 
 		// log.debug("after//" + name + "//uri=" + uri + ", filter=" +
 		// filters.keySet());

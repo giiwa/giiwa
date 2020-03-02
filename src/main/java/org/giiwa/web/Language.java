@@ -242,7 +242,7 @@ public class Language {
 	public String parse(String str, Controller m) {
 
 		try {
-			str = Velocity.parse(str, m.context);
+			str = Velocity.parse(str, m.data);
 		} catch (Exception e) {
 			log.error(str, e);
 		}

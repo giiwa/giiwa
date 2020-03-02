@@ -27,7 +27,7 @@ import org.giiwa.json.JSON;
 import org.giiwa.net.nio.Client;
 import org.giiwa.net.nio.IoRequest;
 import org.giiwa.net.nio.IoResponse;
-import org.giiwa.web.Controller;
+import org.giiwa.web.GiiwaServlet;
 
 public class FileClient {
 
@@ -711,7 +711,7 @@ public class FileClient {
 				DiskFileItemFactory factory = new DiskFileItemFactory();
 
 				// Configure a repository (to ensure a secure temp location is used)
-				File repository = (File) Controller.s️ervletContext.getAttribute("javax.servlet.context.tempdir");
+				File repository = (File) GiiwaServlet.s️ervletContext.getAttribute("javax.servlet.context.tempdir");
 				factory.setRepository(repository);
 
 				// Create a new file upload handler

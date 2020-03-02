@@ -34,7 +34,7 @@ public class browserinfo extends Controller {
 	@Override
 	@Path()
 	public void onGet() {
-		this.set("list", this.getHeaders());
+		this.set("list", this.heads());
 		this.show("/admin/browserinfo.html");
 
 	}

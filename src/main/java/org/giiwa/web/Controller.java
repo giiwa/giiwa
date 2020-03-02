@@ -73,17 +73,12 @@ import org.giiwa.web.view.View;
  */
 public class Controller {
 
-	public static Log log = LogFactory.getLog(Controller.class);
+	protected static Log log = LogFactory.getLog(Controller.class);
 
 	/**
 	 * the configured context path
 	 */
-	public static String PATH;
-
-	/**
-	 * os info
-	 */
-	public static String OS;
+//	public static String PATH;
 
 	protected static List<String> welcomes = new ArrayList<String>();
 
@@ -92,7 +87,7 @@ public class Controller {
 	 */
 	public final static long UPTIME = System.currentTimeMillis();
 
-	public static String ENCODING = "UTF-8";
+	private static String ENCODING = "UTF-8";
 
 	/**
 	 * the original request (http, mdc)
@@ -105,7 +100,7 @@ public class Controller {
 	public HttpServletResponse resp;
 
 	/**
-	 * language map
+	 * language utility
 	 */
 	public Language lang = Language.getLanguage();
 
@@ -117,10 +112,10 @@ public class Controller {
 	/**
 	 * the response context, includes all the response key-value, used by view(html)
 	 */
-	public Map<String, Object> context;
+	public Map<String, Object> data;
 
 	/**
-	 * the home of the webgiiwa
+	 * the home of the modules
 	 */
 	public static String HOME;
 
@@ -149,8 +144,6 @@ public class Controller {
 	 */
 	protected Module module;
 
-	public static ServletContext s️ervletContext;
-
 	/**
 	 * contentType of response
 	 */
@@ -167,14 +160,8 @@ public class Controller {
 		web, ajax
 	};
 
-	/**
-	 * get the request as inputstream.
-	 * 
-	 * @return InputStream
-	 * @throws IOException occur error when get the inputstream from request
-	 */
-	final public InputStream getInputStream() throws IOException {
-		return req.getInputStream();
+	public ServletContext context() {
+		return GiiwaServlet.s️ervletContext;
 	}
 
 	/**
@@ -197,7 +184,7 @@ public class Controller {
 	 * 
 	 * @return int of state code
 	 */
-	final public int getStatus() {
+	final public int status() {
 		return status;
 	}
 
@@ -206,7 +193,7 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	final public String getLocale() {
+	final public String locale() {
 		if (locale == null) {
 			locale = Global.getString("language", "en_us");
 		}
@@ -330,7 +317,7 @@ public class Controller {
 									/**
 									 * login require
 									 */
-									gotoLogin();
+									_gotoLogin();
 									return pp;
 								}
 
@@ -401,7 +388,7 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							gotoLogin();
+							_gotoLogin();
 							return null;
 						}
 
@@ -426,7 +413,7 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							gotoLogin();
+							_gotoLogin();
 							return null;
 						}
 
@@ -450,7 +437,7 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							gotoLogin();
+							_gotoLogin();
 							return null;
 						}
 
@@ -474,7 +461,7 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							gotoLogin();
+							_gotoLogin();
 							return null;
 						}
 
@@ -542,7 +529,7 @@ public class Controller {
 			/**
 			 * set default data in model
 			 */
-			this.lang = Language.getLanguage(getLocale());
+			this.lang = Language.getLanguage(locale());
 
 			this.put("lang", lang);
 			this.put(X.URI, uri);
@@ -598,10 +585,7 @@ public class Controller {
 		return null;
 	}
 
-	/**
-	 * Goto login.
-	 */
-	final public void gotoLogin() {
+	private void _gotoLogin() {
 		if (this.uri != null && this.uri.indexOf("/user/") < 0) {
 			if (!isAjax()) {
 				try {
@@ -637,7 +621,8 @@ public class Controller {
 	/**
 	 * get the current session sid, if not present, create a new one, please refer
 	 * {@code sid(boolean)}.
-	 *
+	 * 
+	 * @deprecated
 	 * @return the string
 	 */
 	final public String sid() {
@@ -766,8 +751,8 @@ public class Controller {
 	final public void put(String name, Object o) {
 		// System.out.println("put:" + name + "=>" + o);
 
-		if (context == null) {
-			context = new HashMap<String, Object>();
+		if (data == null) {
+			data = new HashMap<String, Object>();
 		}
 		if (name == null) {
 			return;
@@ -777,9 +762,9 @@ public class Controller {
 			/**
 			 * clear
 			 */
-			context.remove(name);
+			data.remove(name);
 		} else {
-			context.put(name, o);
+			data.put(name, o);
 		}
 
 		return;
@@ -791,8 +776,8 @@ public class Controller {
 	 * @param name the name of data setted in model
 	 */
 	final public void remove(String name) {
-		if (context != null) {
-			context.remove(name);
+		if (data != null) {
+			data.remove(name);
 		}
 	}
 
@@ -824,8 +809,8 @@ public class Controller {
 	 * @return Object
 	 */
 	final public Object get(String name, Object defaultValue) {
-		if (context != null) {
-			return context.get(name);
+		if (data != null) {
+			return data.get(name);
 		}
 		return defaultValue;
 	}
@@ -906,7 +891,7 @@ public class Controller {
 	 * @param tag
 	 * @return
 	 */
-	final public String getHeader(String tag) {
+	public String getHeader(String tag) {
 		return head(tag);
 	}
 
@@ -947,7 +932,7 @@ public class Controller {
 	 * @param tag the tag
 	 * @return the int
 	 */
-	final public int getInt(String tag) {
+	public int getInt(String tag) {
 		return getInt(tag, 0);
 	}
 
@@ -962,7 +947,7 @@ public class Controller {
 	 * @param tagInSession the tag in session
 	 * @return the int
 	 */
-	final public int getInt(String tag, int defaultValue, String tagInSession) {
+	public int getInt(String tag, int defaultValue, String tagInSession) {
 		int r = getInt(tag);
 		try {
 			if (r < 1) {
@@ -1051,7 +1036,7 @@ public class Controller {
 	 * @param defaultValue the default value
 	 * @return the int
 	 */
-	final public int getInt(String tag, int defaultValue) {
+	public int getInt(String tag, int defaultValue) {
 		String v = this.getString(tag);
 		return X.toInt(v, defaultValue);
 	}
@@ -1082,7 +1067,7 @@ public class Controller {
 	 * @deprecated
 	 * @return
 	 */
-	final public Cookie[] getCookie() {
+	public Cookie[] getCookie() {
 		return cookies();
 	}
 
@@ -1100,7 +1085,7 @@ public class Controller {
 	 * @param name
 	 * @return
 	 */
-	final public String getCookie(String name) {
+	public String getCookie(String name) {
 		return cookie(name);
 	}
 
@@ -1145,7 +1130,7 @@ public class Controller {
 	}
 
 	/**
-	 * get the user-agent of browser
+	 * get the browser user-agent
 	 * 
 	 * @return the string
 	 */
@@ -1190,7 +1175,7 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	final public String getURI() {
+	final public String uri() {
 		if (X.isEmpty(uri)) {
 			uri = req.getRequestURI();
 			while (uri.indexOf("//") > -1) {
@@ -1215,7 +1200,7 @@ public class Controller {
 	 * @deprecated
 	 * @return
 	 */
-	final public String getRemoteHost() {
+	public String getRemoteHost() {
 		return this.ip();
 	}
 
@@ -1237,42 +1222,13 @@ public class Controller {
 		return remote;
 	}
 
-	/**
-	 * get local port
-	 * 
-	 * @deprecated
-	 * @return int of local port
-	 */
-	final public int getPort() {
-		String port = this.head("Port");
-		if (X.isEmpty(port)) {
-			return req.getLocalPort();
-		}
-
-		return X.toInt(port, -1);
-	}
-
-	/**
-	 * get the local host name
-	 * 
-	 * @return String of local host
-	 */
-	final public String getHost() {
-		String host = this.head("Host");
-		if (X.isEmpty(host)) {
-			host = req.getLocalAddr();
-		}
-
-		return host;
-	}
-
 	private JSON _json;
 
 	/**
 	 * @deprecated
 	 * @return
 	 */
-	final public JSON getJSON() {
+	public JSON getJSON() {
 		return json();
 	}
 
@@ -1300,7 +1256,7 @@ public class Controller {
 	 * @deprecated
 	 * @return JSONObject
 	 */
-	final public JSON getJSONNonPassword() {
+	public JSON getJSONNonPassword() {
 		if (_json == null) {
 			json();
 		}
@@ -1589,7 +1545,7 @@ public class Controller {
 	 * @param newsession
 	 * @return
 	 */
-	final public Session getSession(boolean newsession) {
+	public Session getSession(boolean newsession) {
 		return session(newsession);
 	}
 
@@ -1621,7 +1577,7 @@ public class Controller {
 	 * @deprecated
 	 * @return
 	 */
-	final public Roles getRoles() {
+	public Roles getRoles() {
 		User u = this.user();
 		if (u != null) {
 			return u.getRole();
@@ -1794,7 +1750,7 @@ public class Controller {
 			DiskFileItemFactory factory = new DiskFileItemFactory();
 
 			// Configure a repository (to ensure a secure temp location is used)
-			File repository = (File) s️ervletContext.getAttribute("javax.servlet.context.tempdir");
+			File repository = (File) context().getAttribute("javax.servlet.context.tempdir");
 			factory.setRepository(repository);
 
 			// Create a new file upload handler
@@ -1837,7 +1793,7 @@ public class Controller {
 	 * @param name
 	 * @return
 	 */
-	final public FileItem getFile(String name) {
+	public FileItem getFile(String name) {
 		return file(name);
 	}
 
@@ -1888,7 +1844,7 @@ public class Controller {
 	 * 
 	 * @return String of content-type
 	 */
-	final public String getResponseContentType() {
+	public String getResponseContentType() {
 		if (contentType == null) {
 			return MIME_HTML;
 		} else {
@@ -2056,10 +2012,6 @@ public class Controller {
 		}
 	}
 
-	public ServletContext getServletContext() {
-		return Controller.s️ervletContext;
-	}
-
 	public void onOptions() {
 		if (this.isAjax()) {
 			send(JSON.create().append(X.STATE, HttpServletResponse.SC_FORBIDDEN));
@@ -2075,18 +2027,15 @@ public class Controller {
 	 * @return String of mime type
 	 */
 	public static String getMimeType(String uri) {
-		if (s️ervletContext != null) {
-			String mime = s️ervletContext.getMimeType(uri);
-			if (mime == null) {
-				if (uri.endsWith(".tgz")) {
-					mime = "application/x-gzip";
-				}
+		String mime = GiiwaServlet.s️ervletContext.getMimeType(uri);
+		if (mime == null) {
+			if (uri.endsWith(".tgz")) {
+				mime = "application/x-gzip";
 			}
-			if (log.isDebugEnabled())
-				log.debug("mimetype=" + mime + ", uri=" + uri);
-			return mime;
 		}
-		return null;
+		if (log.isDebugEnabled())
+			log.debug("mimetype=" + mime + ", uri=" + uri);
+		return mime;
 	}
 
 	/**
@@ -2145,7 +2094,7 @@ public class Controller {
 
 	final public void notfound(String message) {
 		if (log.isWarnEnabled())
-			log.warn(this.getClass().getName() + "[" + this.getURI() + "]");
+			log.warn(this.getClass().getName() + "[" + this.uri() + "]");
 
 		Controller m = Module.home.getModel(method.name, "/notfound", null);
 
@@ -2166,7 +2115,7 @@ public class Controller {
 					m.onPost();
 				}
 
-				status = m.getStatus();
+				status = m.status();
 				return;
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -2235,10 +2184,21 @@ public class Controller {
 		// GLog.applog.info("test", "test", "status=" + statuscode, null, null);
 	}
 
+	/**
+	 * send error code and empty message
+	 * 
+	 * @param code
+	 */
 	final public void send(int code) {
 		send(code, X.MESSAGE);
 	}
 
+	/**
+	 * send error code and message
+	 * 
+	 * @param code
+	 * @param msg
+	 */
 	final public void send(int code, String msg) {
 		try {
 			status = code;
@@ -2264,7 +2224,7 @@ public class Controller {
 	 */
 	final public void deny(String url, String error) {
 		if (log.isDebugEnabled())
-			log.debug(this.getClass().getName() + "[" + this.getURI() + "]", new Exception("deny " + error));
+			log.debug(this.getClass().getName() + "[" + this.uri() + "]", new Exception("deny " + error));
 
 		if (isAjax()) {
 
@@ -2307,17 +2267,12 @@ public class Controller {
 	/**
 	 * MIME TYPE of JSON
 	 */
-	final public static String MIME_JSON = "application/json;charset=" + ENCODING;
-
-	/**
-	 * MIME TYPE of stream
-	 */
-	final public static String MIME_STREAM = "application/octet-stream";
+	private static String MIME_JSON = "application/json;charset=" + ENCODING;
 
 	/**
 	 * MIME TYPE of HTML
 	 */
-	final public static String MIME_HTML = "text/html;charset=" + ENCODING;
+	private static String MIME_HTML = "text/html;charset=" + ENCODING;
 
 	/**
 	 * Copy all request params from the model.
@@ -2338,7 +2293,7 @@ public class Controller {
 	/**
 	 * pathmapping structure: {"method", {"path", Path|Method}}
 	 */
-	protected Map<String, Map<String, PathMapping>> pathmapping;
+	Map<String, Map<String, PathMapping>> pathmapping;
 
 	/**
 	 * println the object to end-user
@@ -2394,21 +2349,21 @@ public class Controller {
 
 	}
 
-	transient String tostring;
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object.toString()
-	 */
-	@Override
-	public String toString() {
-		if (tostring == null) {
-			tostring = new StringBuilder(this.getClass().getName()).append("[").append(this.uri).append(", path=")
-					.append(this.path).append("]").toString();
-		}
-		return tostring;
-	}
+//	transient String tostring;
+//
+//	/*
+//	 * (non-Javadoc)
+//	 * 
+//	 * @see java.lang.Object.toString()
+//	 */
+//	@Override
+//	public String toString() {
+//		if (tostring == null) {
+//			tostring = new StringBuilder(this.getClass().getName()).append("[").append(this.uri).append(", path=")
+//					.append(this.path).append("]").toString();
+//		}
+//		return tostring;
+//	}
 
 	/**
 	 * get the name pair from the request query
@@ -2416,7 +2371,7 @@ public class Controller {
 	 * @deprecated
 	 * @return NameValue[]
 	 */
-	final public NameValue[] getQueries() {
+	public NameValue[] getQueries() {
 		Enumeration<String> e = req.getParameterNames();
 		if (e != null) {
 			List<NameValue> list = new ArrayList<NameValue>();
@@ -2435,7 +2390,7 @@ public class Controller {
 	 * 
 	 * @return NameValue[]
 	 */
-	final public NameValue[] getHeaders() {
+	final public NameValue[] heads() {
 		Enumeration<String> e = req.getHeaderNames();
 		if (e != null) {
 			List<NameValue> list = new ArrayList<NameValue>();
@@ -2608,10 +2563,8 @@ public class Controller {
 
 		log.info("controller init ... ");
 
-		PATH = path;
-
-		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
-				+ System.getProperty("os.arch");
+//		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
+//				+ System.getProperty("os.arch");
 
 		Controller.HOME = Controller.GIIWA_HOME + "/modules";
 
@@ -2835,8 +2788,7 @@ public class Controller {
 
 //					if (p == null) {
 				if (log.isInfoEnabled())
-					log.info(
-							method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip() + " " + mo);
+					log.info(method + " " + uri + " - " + mo.status() + " - " + t.past() + " -" + mo.ip() + " " + mo);
 
 //					if (AccessLog.isOn()) {
 //
@@ -2879,7 +2831,7 @@ public class Controller {
 		mo.dispatch(uri, req, resp, method);
 
 		if (log.isInfoEnabled())
-			log.info(method + " " + uri + " - " + mo.getStatus() + " - " + t.past() + " -" + mo.ip() + " " + mo);
+			log.info(method + " " + uri + " - " + mo.status() + " - " + t.past() + " -" + mo.ip() + " " + mo);
 //			if (AccessLog.isOn()) {
 //
 //				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());

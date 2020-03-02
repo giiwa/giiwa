@@ -38,7 +38,7 @@ public class FreemarkerView extends View {
 			if (template != null) {
 
 				Writer out = new OutputStreamWriter(m.getOutputStream());
-				template.process(m.context, out);
+				template.process(m.data, out);
 				out.flush();
 
 				return true;

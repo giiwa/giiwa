@@ -44,7 +44,7 @@ public class ThymeleafView extends View {
 
 			Writer out = new OutputStreamWriter(m.getOutputStream());
 
-			_engine.process(View.getCanonicalPath(file), _parse(m.context), out);
+			_engine.process(View.getCanonicalPath(file), _parse(m.data), out);
 
 			out.flush();
 

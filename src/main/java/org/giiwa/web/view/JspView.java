@@ -28,9 +28,9 @@ public class JspView extends View {
 			log.debug("viewname=" + name);
 
 		name = name.replaceAll("\\\\", "/");
-		if (m.context != null) {
-			for (String s : m.context.keySet()) {
-				m.req.setAttribute(s, m.context.get(s));
+		if (m.data != null) {
+			for (String s : m.data.keySet()) {
+				m.req.setAttribute(s, m.data.get(s));
 			}
 		}
 		m.req.setAttribute(System.getProperty("org.apache.jasper.Constants.JSP_FILE", "org.apache.catalina.jsp_file"),

@@ -156,7 +156,6 @@ public class repo extends Controller {
 	@Path(path = "delete", login = true)
 	public void delete() {
 
-		this.setContentType(Controller.MIME_JSON);
 		JSON jo = new JSON();
 
 		String repo = this.getString("repo");

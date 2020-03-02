@@ -5,6 +5,7 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +21,8 @@ import org.giiwa.web.view.View;
 
 public class GiiwaServlet extends HttpServlet {
 
+	public static ServletContext s️ervletContext;
+
 	private Map<String, String> config = new ConcurrentHashMap<String, String>();
 
 	/**
@@ -30,8 +33,9 @@ public class GiiwaServlet extends HttpServlet {
 
 	@Override
 	public synchronized void init() {
+
 		try {
-			Controller.s️ervletContext = getServletContext();
+			s️ervletContext = getServletContext();
 
 			if (log.isDebugEnabled())
 				log.debug("init view ...");

@@ -1858,6 +1858,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return n;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<JSON> count(String table, W q, String name, String[] group, String db) {
 

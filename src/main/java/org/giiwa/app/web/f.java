@@ -301,7 +301,7 @@ public class f extends Controller {
 	@Path(path = "echo")
 	public void echo() {
 		StringBuilder sb = new StringBuilder();
-		for (NameValue s : this.getHeaders()) {
+		for (NameValue s : this.heads()) {
 			sb.append(s.name).append("=").append(s.value).append("<br>");
 		}
 

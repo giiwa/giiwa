@@ -110,7 +110,7 @@ public class GiiwaFilter implements Filter {
 		try {
 			if (log.isDebugEnabled())
 				log.debug("initing model ...");
-			Controller.s️ervletContext = c1.getServletContext();
+			GiiwaServlet.s️ervletContext = c1.getServletContext();
 
 			if (log.isDebugEnabled())
 				log.debug("initing view ...");
