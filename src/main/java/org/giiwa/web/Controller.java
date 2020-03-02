@@ -75,11 +75,6 @@ public class Controller {
 
 	protected static Log log = LogFactory.getLog(Controller.class);
 
-	/**
-	 * the configured context path
-	 */
-//	public static String PATH;
-
 	protected static List<String> welcomes = new ArrayList<String>();
 
 	/**
@@ -90,12 +85,12 @@ public class Controller {
 	private static String ENCODING = "UTF-8";
 
 	/**
-	 * the original request (http, mdc)
+	 * the request
 	 */
 	public HttpServletRequest req;
 
 	/**
-	 * the original response
+	 * the response
 	 */
 	public HttpServletResponse resp;
 
@@ -105,19 +100,19 @@ public class Controller {
 	public Language lang = Language.getLanguage();
 
 	/**
-	 * the request method(POST, GET)
+	 * the request method(POST, GET, ...)
 	 */
 	public HttpMethod method = HttpMethod.GET;
 
 	/**
-	 * the response context, includes all the response key-value, used by view(html)
+	 * the data which put by "put or set" api, used for HTML view
 	 */
 	public Map<String, Object> data;
 
 	/**
 	 * the home of the modules
 	 */
-	public static String HOME;
+	public static String MODULE_HOME;
 
 	/**
 	 * the home of the giiwa
@@ -160,6 +155,11 @@ public class Controller {
 		web, ajax
 	};
 
+	/**
+	 * get the ServletContext
+	 * 
+	 * @return
+	 */
 	public ServletContext context() {
 		return GiiwaServlet.s️ervletContext;
 	}
@@ -555,7 +555,7 @@ public class Controller {
 	 * @param method the method
 	 * @return Path
 	 */
-	final public Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
+	final Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 
 		// created = System.currentTimeMillis();
 
@@ -738,7 +738,7 @@ public class Controller {
 	 * @throws IOException
 	 */
 	public void forward(String url) throws IOException {
-		req.setAttribute("sid", sid());
+		req.setAttribute("sid", sid(false));
 		Controller.process(url, req, resp, method.name, TimeStamp.create());
 	}
 
@@ -802,20 +802,6 @@ public class Controller {
 	}
 
 	/**
-	 * get the value from the context
-	 * 
-	 * @param name         the name in model which using in view
-	 * @param defaultValue the default value if the name not presented in model
-	 * @return Object
-	 */
-	final public Object get(String name, Object defaultValue) {
-		if (data != null) {
-			return data.get(name);
-		}
-		return defaultValue;
-	}
-
-	/**
 	 * Sets Beans back to Model which accessed by view, it will auto paging
 	 * according the start and number per page.
 	 * 
@@ -861,7 +847,7 @@ public class Controller {
 	}
 
 	/**
-	 * Sets Map back to the Model which accessed by view.
+	 * copy the data from the JSON.
 	 * 
 	 * @param jo    the map of data
 	 * @param names the names that will be set back to model, if null, will set all
@@ -888,22 +874,22 @@ public class Controller {
 
 	/**
 	 * @deprecated
-	 * @param tag
+	 * @param name
 	 * @return
 	 */
-	public String getHeader(String tag) {
-		return head(tag);
+	public String getHeader(String name) {
+		return head(name);
 	}
 
 	/**
 	 * Gets the request header.
 	 * 
-	 * @param tag the header tag
+	 * @param name the header name
 	 * @return String of the header
 	 */
-	final public String head(String tag) {
+	final public String head(String name) {
 		try {
-			return req.getHeader(tag);
+			return req.getHeader(name);
 		} catch (Exception e) {
 			return null;
 		}
@@ -929,11 +915,11 @@ public class Controller {
 	/**
 	 * Gets the int parameter from request
 	 * 
-	 * @param tag the tag
+	 * @param name the name
 	 * @return the int
 	 */
-	public int getInt(String tag) {
-		return getInt(tag, 0);
+	public int getInt(String name) {
+		return getInt(name, 0);
 	}
 
 	/**
@@ -942,13 +928,13 @@ public class Controller {
 	 * minvalue, and store the value in session
 	 * 
 	 * @deprecated
-	 * @param tag          the tag
+	 * @param name         the name
 	 * @param defaultValue the default value
 	 * @param tagInSession the tag in session
 	 * @return the int
 	 */
-	public int getInt(String tag, int defaultValue, String tagInSession) {
-		int r = getInt(tag);
+	public int getInt(String name, int defaultValue, String tagInSession) {
+		int r = getInt(name);
 		try {
 			if (r < 1) {
 				Session s = this.session(false);
@@ -982,8 +968,8 @@ public class Controller {
 	 * @param defaultValue the default value if not presented in both.
 	 * @return String of the value
 	 */
-	final public String getString(String tag, String tagInSession, String defaultValue) {
-		String r = getString(tag);
+	final public String getString(String name, String tagInSession, String defaultValue) {
+		String r = getString(name);
 		try {
 			if (X.isEmpty(r)) {
 				Session s = this.session(false);
@@ -1011,11 +997,11 @@ public class Controller {
 	 * @param queryfirst
 	 * @return
 	 */
-	final public String getString(String tag, String tagInSession, boolean queryfirst) {
+	final public String getString(String name, String tagInSession, boolean queryfirst) {
 		String r = null;
 		try {
 			if (queryfirst) {
-				r = getString(tag);
+				r = getString(name);
 				Session s = this.session(false);
 				if (s != null)
 					s.set(tagInSession, r).store();
@@ -1032,12 +1018,12 @@ public class Controller {
 	/**
 	 * Gets the int in request parameter, if not presented, return the defaultvalue
 	 * 
-	 * @param tag          the tag
+	 * @param name         the name
 	 * @param defaultValue the default value
 	 * @return the int
 	 */
-	public int getInt(String tag, int defaultValue) {
-		String v = this.getString(tag);
+	public int getInt(String name, int defaultValue) {
+		String v = this.getString(name);
 		return X.toInt(v, defaultValue);
 	}
 
@@ -1072,7 +1058,7 @@ public class Controller {
 	}
 
 	/**
-	 * get all cookies
+	 * get all cookies from the request
 	 * 
 	 * @return Cookie[]
 	 */
@@ -1090,7 +1076,7 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the cookie.
+	 * Gets the cookie from the request
 	 * 
 	 * @param name the name
 	 * @return the cookie
@@ -1171,7 +1157,7 @@ public class Controller {
 	}
 
 	/**
-	 * the the request uri
+	 * the request uri
 	 * 
 	 * @return String
 	 */
@@ -1287,7 +1273,7 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the request value by name, and limited length.
+	 * Gets the request value by name, and truncate the value by length.
 	 * 
 	 * @param name      the parameter name
 	 * @param maxlength the maxlength
@@ -1435,6 +1421,12 @@ public class Controller {
 		return s;
 	}
 
+	/**
+	 * get the values by name from the request, and convert the HTML tag
+	 * 
+	 * @param name
+	 * @return
+	 */
 	final public String[] getStrings(String name) {
 		String[] ss = getHtmls(name);
 		if (ss != null) {
@@ -1447,7 +1439,6 @@ public class Controller {
 
 	/**
 	 * Gets the strings from the request, <br>
-	 * and will convert the "&lt;" to "&amp;lt;", "&gt;" to "&amp;gt;"
 	 * 
 	 * @param name the name of the request parameter
 	 * @return String[] of request
@@ -1662,7 +1653,12 @@ public class Controller {
 		return login;
 	}
 
-	public void user(User u) {
+	/**
+	 * set user in session
+	 * 
+	 * @param u
+	 */
+	final public void user(User u) {
 		this.user(u, LoginType.web);
 	}
 
@@ -1798,7 +1794,7 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the request file by name.
+	 * Gets the file by name from the request.
 	 * 
 	 * @param name the parameter name
 	 * @return file of value, null if not presented
@@ -2087,11 +2083,18 @@ public class Controller {
 	 * 1) look for "/notfound" model, if found, dispatch to it. <br>
 	 * 2) else response notfound page or json to front-end according the request
 	 * type <br>
+	 * 
+	 * @deprecated
 	 */
-	final public void notfound() {
+	public void notfound() {
 		notfound(null);
 	}
 
+	/**
+	 * show notfound with message
+	 * 
+	 * @param message
+	 */
 	final public void notfound(String message) {
 		if (log.isWarnEnabled())
 			log.warn(this.getClass().getName() + "[" + this.uri() + "]");
@@ -2566,7 +2569,7 @@ public class Controller {
 //		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
 //				+ System.getProperty("os.arch");
 
-		Controller.HOME = Controller.GIIWA_HOME + "/modules";
+		Controller.MODULE_HOME = Controller.GIIWA_HOME + "/modules";
 
 		/**
 		 * initialize the module
@@ -2585,7 +2588,7 @@ public class Controller {
 	private static void _init_welcome() {
 		try {
 			SAXReader reader = new SAXReader();
-			Document document = reader.read(Controller.HOME + "/WEB-INF/web.xml");
+			Document document = reader.read(Controller.MODULE_HOME + "/WEB-INF/web.xml");
 			Element root = document.getRootElement();
 			Element e1 = root.element("welcome-file-list");
 			List<Element> l1 = e1.elements("welcome-file");

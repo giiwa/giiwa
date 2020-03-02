@@ -159,7 +159,7 @@ public class Module {
 	 */
 	public static boolean checkAndMerge() {
 
-		if (!new File(Controller.HOME + "/default/WEB-INF/lib/").exists()) {
+		if (!new File(Controller.MODULE_HOME + "/default/WEB-INF/lib/").exists()) {
 			return false;
 		}
 
@@ -183,7 +183,7 @@ public class Module {
 			}
 		}
 
-		File f = new File(Controller.HOME + "/WEB-INF/lib/");
+		File f = new File(Controller.MODULE_HOME + "/WEB-INF/lib/");
 		File[] ff = f.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
@@ -211,7 +211,7 @@ public class Module {
 		boolean changed = false;
 
 		// check default/WEB-INF/lib
-		File u1 = new File(Controller.HOME + "/default/WEB-INF/");
+		File u1 = new File(Controller.MODULE_HOME + "/default/WEB-INF/");
 		if (!u1.exists()) {
 			u1.mkdirs();
 			// copy all
@@ -220,21 +220,21 @@ public class Module {
 				log.debug("checkAndUpgrade, copy WEB-INF/lib to " + u1.getAbsolutePath());
 
 			try {
-				IOUtil.copyDir(new File(Controller.HOME + "/WEB-INF/lib/"), u1);
+				IOUtil.copyDir(new File(Controller.MODULE_HOME + "/WEB-INF/lib/"), u1);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		}
 
 		// upgrade
-		u1 = new File(Controller.HOME + "/upgrade/");
+		u1 = new File(Controller.MODULE_HOME + "/upgrade/");
 		File[] ff = u1.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
 				try {
 					String name = f1.getName();
 					if (new File(f1.getCanonicalPath() + "/ok").exists()) {
-						File f2 = new File(Controller.HOME + "/" + name);
+						File f2 = new File(Controller.MODULE_HOME + "/" + name);
 //						log.debug("checkAndUpgrade, checking " + f2.getAbsolutePath());
 						if (f2.exists()) {
 //							log.debug("checkAndUpgrade, delete " + f2.getAbsolutePath());
@@ -243,7 +243,7 @@ public class Module {
 
 //						log.debug("checkAndUpgrade, copy upgrade/" + name + " to " + Model.HOME);
 
-						IOUtil.copyDir(f1, new File(Controller.HOME));
+						IOUtil.copyDir(f1, new File(Controller.MODULE_HOME));
 
 						// f1.renameTo(f2);
 //						log.debug("checkAndUpgrade, delete " + f2.getCanonicalPath() + "/ok");
@@ -255,7 +255,7 @@ public class Module {
 						File f3 = new File(f2.getCanonicalPath() + "/WEB-INF");
 						if (f3.exists()) {
 							// merge all
-							if (move(name, f3, Controller.HOME)) {
+							if (move(name, f3, Controller.MODULE_HOME)) {
 								changed = true;
 							}
 						}
@@ -292,7 +292,7 @@ public class Module {
 			in = new ZipInputStream(e.getInputStream());
 
 			String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
-			String root = Controller.HOME + "/upgrade/" + temp + "/";
+			String root = Controller.MODULE_HOME + "/upgrade/" + temp + "/";
 
 			File f0 = new File(root);
 			if (f0.exists()) {
@@ -341,7 +341,7 @@ public class Module {
 				Element r1 = document.getRootElement();
 				Module t = new Module();
 				t._load(r1);
-				String dest = Controller.HOME + "/upgrade/" + t.getName();
+				String dest = Controller.MODULE_HOME + "/upgrade/" + t.getName();
 				File d1 = new File(dest);
 				if (d1.exists()) {
 					IOUtil.delete(d1);
@@ -362,8 +362,8 @@ public class Module {
 						if (f1.isDirectory()) {
 							if (new File(f1.getCanonicalPath() + "/module.xml").exists()) {
 								String name = f1.getName();
-								f1.renameTo(new File(Controller.HOME + "/upgrade/" + name));
-								new File(Controller.HOME + "/upgrade/" + name + "/ok").createNewFile();
+								f1.renameTo(new File(Controller.MODULE_HOME + "/upgrade/" + name));
+								new File(Controller.MODULE_HOME + "/upgrade/" + name + "/ok").createNewFile();
 								r = true;
 							}
 						}
@@ -498,7 +498,7 @@ public class Module {
 	 * Store.
 	 */
 	public void store() {
-		File f = new File(Controller.HOME + File.separator + name + File.separator + "module.xml");
+		File f = new File(Controller.MODULE_HOME + File.separator + name + File.separator + "module.xml");
 		try {
 
 			Document doc = DocumentHelper.createDocument();
@@ -646,7 +646,7 @@ public class Module {
 			if (list != null) {
 				for (File f : list) {
 					if (f.getName().endsWith(".jar")) {
-						File f1 = new File(Controller.HOME + "/WEB-INF/lib/" + f.getName());
+						File f1 = new File(Controller.MODULE_HOME + "/WEB-INF/lib/" + f.getName());
 						if (!f1.exists() || f1.length() != f.length() || !X.isSame(MD5.md5(f1), MD5.md5(f))) {
 							// copy to
 							try {
@@ -886,7 +886,7 @@ public class Module {
 
 //			System.out.println("load modules");
 			// load modules
-			File f = new File(Controller.HOME);
+			File f = new File(Controller.MODULE_HOME);
 
 			if (f.exists()) {
 				File[] list = f.listFiles();
@@ -1061,7 +1061,7 @@ public class Module {
 			}
 
 			Module t = new Module();
-			File f = new File(Controller.HOME + File.separator + name + "/module.xml");
+			File f = new File(Controller.MODULE_HOME + File.separator + name + "/module.xml");
 			if (f.exists()) {
 				/**
 				 * initialize the module
@@ -1311,7 +1311,7 @@ public class Module {
 		if (enabled) {
 			return new ArrayList<Module>(modules.values());
 		} else {
-			String home = Controller.HOME;
+			String home = Controller.MODULE_HOME;
 			File troot = new File(home);
 			File[] files = troot.listFiles();
 
@@ -1933,7 +1933,7 @@ public class Module {
 				 * possible the original has been moved to ..., always using the package to
 				 * initialize
 				 */
-				m.path = new File(Controller.HOME + File.separator + m.name).getCanonicalPath();
+				m.path = new File(Controller.MODULE_HOME + File.separator + m.name).getCanonicalPath();
 				m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
 
 				if (log.isDebugEnabled())

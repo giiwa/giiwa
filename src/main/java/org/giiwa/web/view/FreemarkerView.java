@@ -55,10 +55,10 @@ public class FreemarkerView extends View {
 		T t = cache.get(fullname);
 		if (t == null || t.last != View.lastModified(f)) {
 			if (cache.size() == 0) {
-				cfg.setDirectoryForTemplateLoading(new File(Controller.HOME));
+				cfg.setDirectoryForTemplateLoading(new File(Controller.MODULE_HOME));
 			}
 
-			Template t1 = cfg.getTemplate(View.getCanonicalPath(f).substring(Controller.HOME.length()), "UTF-8");
+			Template t1 = cfg.getTemplate(View.getCanonicalPath(f).substring(Controller.MODULE_HOME.length()), "UTF-8");
 			t = T.create(t1, View.lastModified(f));
 
 			if (Local.getInt("web.debug", 0) == 0) {

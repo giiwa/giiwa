@@ -716,7 +716,7 @@ public class module extends Controller {
 		 */
 		Module m = Module.load(name);
 		String file = ROOT + name + ".zip";
-		File f = m.zipTo(Controller.HOME + file);
+		File f = m.zipTo(Controller.MODULE_HOME + file);
 		if (f != null && f.exists()) {
 
 			this.set("f", f);

@@ -23,7 +23,7 @@ public class JspView extends View {
 
 	@Override
 	protected boolean parse(Object file, Controller m, String viewname) throws Exception {
-		String name = View.getCanonicalPath(file).substring(Controller.HOME.length());
+		String name = View.getCanonicalPath(file).substring(Controller.MODULE_HOME.length());
 		if (log.isDebugEnabled())
 			log.debug("viewname=" + name);
 
