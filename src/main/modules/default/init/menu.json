@@ -142,11 +142,7 @@
 	{
 		"role": "SYSADM",
 		"memo": "系统管理员",
-		"access": "access.config.admin,access.config.debug"
-	},
-	{
-		"role": "USER",
-		"memo": "普通用户",
-		"access": ""
+		"access": "access.config.admin,access.config.debug",
+		"url": "/admin/"
 	}
 ]

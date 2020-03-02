@@ -51,20 +51,20 @@ import org.giiwa.task.Task;
 import org.giiwa.web.view.View;
 
 /**
- * the {@code Model} Class is base model, all class that provides web api should
- * inherit it <br>
+ * the {@code Controller} Class is base controller, all class that provides web
+ * api should inherit it <br>
  * it provides api mapping, path/method mapping, contains all the parameters
  * from the request, and contains all key/value will be pass to view. <br>
- * it package all the request in getHeader, or getString method.
+ * it wrap all parameter in head, or get method.
  * 
  * <br>
  * the most important method:
  * 
  * <pre>
- * getString(String name), get the value of parameter in request, it will convert HTML tag to "special" tag, to avoid destroy;
+ * get(String name), get the value of parameter in request, it will convert HTML tag to "special" tag, to avoid destroy;
  * getHtml(String name), get the value of the parameter in request as original HTML format;
- * getHeader(String name),get the value from header;
- * getFile(String name),get the File value from the request;
+ * head(String name),get the value from header;
+ * file(String name),get the File value from the request;
  * set(String, Object), set the key/value back to view;
  * </pre>
  * 
@@ -165,7 +165,7 @@ public class Controller {
 	}
 
 	/**
-	 * get the response as outputstream.
+	 * get the response outputstream.
 	 * 
 	 * @return OutputStream
 	 * @throws IOException occur error when get the outputstream from the reqponse.
@@ -913,7 +913,7 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the int parameter from request
+	 * Gets the int parameter by name
 	 * 
 	 * @param name the name
 	 * @return the int
@@ -1016,7 +1016,7 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the int in request parameter, if not presented, return the defaultvalue
+	 * Gets the int parameter by name, if not presented, return the defaultvalue
 	 * 
 	 * @param name         the name
 	 * @param defaultValue the default value
@@ -1028,7 +1028,7 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the long request parameter, if not presented, return the defaultvalue
+	 * Gets the long parameter by name, if not presented, return the defaultvalue
 	 * 
 	 * @param tag          the name of parameter
 	 * @param defaultvalue the default value when the name not presented.
@@ -1040,12 +1040,12 @@ public class Controller {
 	}
 
 	/**
-	 * get the long request value, if not presented, return 0;
+	 * get the long parameter by name, if not presented, return 0;
 	 * 
 	 * @param tag the name of parameter in request.
 	 * @return long
 	 */
-	final public long getLong(String tag) {
+	public long getLong(String tag) {
 		return getLong(tag, 0);
 	}
 
@@ -1273,7 +1273,7 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the request value by name, and truncate the value by length.
+	 * get the paramter by value and truncate by length
 	 * 
 	 * @param name      the parameter name
 	 * @param maxlength the maxlength
@@ -1291,15 +1291,16 @@ public class Controller {
 	}
 
 	/**
-	 * Gets the request value by name, and limited length, if not presented, using
-	 * the default value.
+	 * Get the parameter by name and truncate by length, if not presented, using the
+	 * default value.
 	 * 
+	 * @deprecated
 	 * @param name         the parameter name
 	 * @param maxlength    the maxlength
 	 * @param defaultvalue the defaultvalue
 	 * @return string of value
 	 */
-	final public String get(String name, int maxlength, String defaultvalue) {
+	public String get(String name, int maxlength, String defaultvalue) {
 		String s = getString(name);
 		if (!X.isEmpty(s)) {
 			if (s.getBytes().length > maxlength) {
@@ -1313,8 +1314,7 @@ public class Controller {
 	}
 
 	/**
-	 * get the request value as html (original string), it maybe includes html
-	 * format
+	 * get the parameter by name as keep original string
 	 * 
 	 * @param name the parameter name
 	 * @return String of value
@@ -1838,6 +1838,7 @@ public class Controller {
 	/**
 	 * return the contentType
 	 * 
+	 * @deprecated
 	 * @return String of content-type
 	 */
 	public String getResponseContentType() {
@@ -1909,6 +1910,11 @@ public class Controller {
 
 	transient QueryString _query;
 
+	/**
+	 * get the parameter as querystring object
+	 * 
+	 * @return
+	 */
 	public QueryString query() {
 		if (_query == null) {
 			String url = req.getRequestURI();
@@ -2393,7 +2399,7 @@ public class Controller {
 	 * 
 	 * @return NameValue[]
 	 */
-	final public NameValue[] heads() {
+	public NameValue[] heads() {
 		Enumeration<String> e = req.getHeaderNames();
 		if (e != null) {
 			List<NameValue> list = new ArrayList<NameValue>();

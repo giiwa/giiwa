@@ -199,7 +199,7 @@ public class role extends Controller {
 	public void onGet() {
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", 50);
+		int n = this.getInt("n", 10);
 
 		Beans<Role> bs = Role.load(s, n);
 		bs.count();
