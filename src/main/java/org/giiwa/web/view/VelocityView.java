@@ -51,6 +51,7 @@ public class VelocityView extends View {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean parse(Object file, Controller m, String viewname) throws IOException {
 

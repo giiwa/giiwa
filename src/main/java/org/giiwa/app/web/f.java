@@ -14,6 +14,8 @@ import org.giiwa.bean.GLog;
 import org.giiwa.bean.Repo;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Global;
+import org.giiwa.dao.Counter;
+import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
@@ -25,6 +27,17 @@ import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
 public class f extends Controller {
+
+	private static Counter get = new Counter("g");
+	private static Counter down = new Counter("d");
+
+	public static JSON statGet() {
+		return get.get();
+	}
+
+	public static JSON statDown() {
+		return down.get();
+	}
 
 	/**
 	 * get file
@@ -38,55 +51,63 @@ public class f extends Controller {
 		DFile f1 = Disk.get(id);
 		if (f1.isFile()) {
 
-			String mime = Controller.getMimeType(f1.getName());
-			log.debug("mime=" + mime);
-
-			if (mime != null && mime.startsWith("image/")) {
-				try {
-					String size = this.getString("size");
-					if (!X.isEmpty(size)) {
-						String[] ss = size.split("x");
-
-						if (ss.length == 2) {
-							File f = Temp.get(id, "s_" + size);
-
-							if (!f.exists()) {
-
-								f.getParentFile().mkdirs();
-
-								GImage.scale3(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
-										X.toInt(ss[1]));
-
-							} else {
-								if (log.isDebugEnabled())
-									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
-							}
-
-							if (f.exists()) {
-								if (log.isDebugEnabled())
-									log.debug("load the scaled image from " + f.getCanonicalPath());
-
-								this.setContentType(Controller.getMimeType("a.png"));
-
-								_send(new FileInputStream(f), f.length());
-
-								return;
-							}
-						}
-					}
-				} catch (Exception e1) {
-					log.error(e1.getMessage(), e1);
-				}
-			}
-			this.setContentType(mime);
+			TimeStamp t = TimeStamp.create();
 
 			try {
-				_send(f1.getInputStream(), f1.length());
+				GLog.applog.info(f.class, "get", f1.getFilename());
 
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				String mime = Controller.getMimeType(f1.getName());
+				log.debug("mime=" + mime);
+
+				if (mime != null && mime.startsWith("image/")) {
+					try {
+						String size = this.getString("size");
+						if (!X.isEmpty(size)) {
+							String[] ss = size.split("x");
+
+							if (ss.length == 2) {
+								File f = Temp.get(id, "s_" + size);
+
+								if (!f.exists()) {
+
+									f.getParentFile().mkdirs();
+
+									GImage.scale3(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+											X.toInt(ss[1]));
+
+								} else {
+									if (log.isDebugEnabled())
+										log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
+								}
+
+								if (f.exists()) {
+									if (log.isDebugEnabled())
+										log.debug("load the scaled image from " + f.getCanonicalPath());
+
+									this.setContentType(Controller.getMimeType("a.png"));
+
+									_send(new FileInputStream(f), f.length());
+
+									return;
+								}
+							}
+						}
+					} catch (Exception e1) {
+						log.error(e1.getMessage(), e1);
+					}
+				}
+				this.setContentType(mime);
+
+				try {
+					_send(f1.getInputStream(), f1.length());
+
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+
+			} finally {
+				get.add(t.pastms());
 			}
-
 		}
 
 	}
@@ -103,16 +124,15 @@ public class f extends Controller {
 		DFile f1 = Disk.get(id);
 		if (f1.isFile()) {
 
-			this.send(f1.getName(), f1.getInputStream(), f1.length());
-//			String name1 = Url.encode(f1.getName());
-//			this.addHeader("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
-//			this.setContentType(Controller.getMimeType(f1.getName()));
-//
-//			try {
-//				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
-//			} catch (Exception e) {
-//				log.error(e.getMessage(), e);
-//			}
+			TimeStamp t = TimeStamp.create();
+
+			try {
+				GLog.applog.info(f.class, "download", f1.getFilename());
+				this.send(f1.getName(), f1.getInputStream(), f1.length());
+
+			} finally {
+				down.add(t.pastms());
+			}
 
 		}
 
@@ -256,29 +276,15 @@ public class f extends Controller {
 	@Path(path = "temp/(.*)/(.*)", login = true)
 	public void temp(String id, String name) {
 
-//		if (log.isDebugEnabled())
-//			log.debug("temp: " + this.path);
-
-		if (this.path == null) {
-			this.notfound();
-			return;
-		}
-
-//		String[] ss = X.split(Url.decode(this.path), "[/]");
-//		if (ss.length != 2) {
-//			this.notfound();
-//			return;
-//		}
-
 		try {
 
-//			String name = ss[1];
 			File f1 = Temp.get(id, name);
 			if (!f1.exists()) {
-				this.notfound();
+				this.notfound(name);
 				return;
 			} else {
 				this.send(name, new FileInputStream(f1), f1.length());
+				return;
 			}
 
 		} catch (Exception e) {
@@ -286,7 +292,7 @@ public class f extends Controller {
 			GLog.oplog.error(f.class, "temp", e.getMessage(), e, login, this.ip());
 		}
 
-		this.notfound();
+		this.notfound(name);
 	}
 
 	@Path(path = "alive")

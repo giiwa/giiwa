@@ -125,8 +125,8 @@ public class user extends Controller {
 				if (code != null) {
 					code = code.toLowerCase();
 				}
-				r1 = Captcha.verify(this.sid(), code);
-				Captcha.remove(this.sid());
+				r1 = Captcha.verify(this.sid(true), code);
+				Captcha.remove(this.sid(true));
 			}
 
 			if (Captcha.Result.badcode == r1 || Captcha.Result.expired == r1) {
@@ -316,8 +316,8 @@ public class user extends Controller {
 					if (code != null) {
 						code = code.toLowerCase();
 					}
-					r = Captcha.verify(this.sid(), code);
-					Captcha.remove(this.sid());
+					r = Captcha.verify(this.sid(true), code);
+					Captcha.remove(this.sid(true));
 				}
 
 				if (Captcha.Result.badcode == r) {
@@ -336,7 +336,7 @@ public class user extends Controller {
 
 					User me = User.load(name, pwd);
 
-					log.info("login: " + sid() + "-" + me);
+					log.info("login: " + sid(true) + "-" + me);
 
 					if (me != null) {
 
@@ -346,7 +346,7 @@ public class user extends Controller {
 
 						if (me.isLocked() || (list != null && list.size() >= 6)) {
 							// locked by the host
-							me.failed(this.ip(), sid(), this.browser());
+							me.failed(this.ip(), sid(true), this.browser());
 							jo.put(X.MESSAGE, lang.get("account.locked.error"));
 
 							jo.put(X.STATE, 204);
@@ -357,9 +357,9 @@ public class user extends Controller {
 									this.ip());
 
 						} else {
-							list = User.Lock.loadBySid(uid, time, sid());
+							list = User.Lock.loadBySid(uid, time, sid(true));
 							if (list != null && list.size() >= 3) {
-								me.failed(this.ip(), sid(), this.browser());
+								me.failed(this.ip(), sid(true), this.browser());
 
 								jo.put(X.MESSAGE, lang.get("account.locked.error"));
 								jo.put("name", name);
@@ -379,17 +379,17 @@ public class user extends Controller {
 									if (log.isDebugEnabled())
 										log.debug("isAjax login");
 
-									login.logined(sid(), this.ip(),
+									login.logined(sid(true), this.ip(),
 											V.create("ajaxlogined", System.currentTimeMillis()));
 
-									jo.put("sid", sid());
+									jo.put("sid", sid(true));
 									jo.put("uid", me.getId());
 
 									/**
 									 * test the configuration is enabled user token and this request is ajax
 									 */
 									if (Global.getInt("user.token", 1) == 1) {
-										AuthToken t = AuthToken.update(me.getId(), sid(), this.ip());
+										AuthToken t = AuthToken.update(me.getId(), sid(true), this.ip());
 										if (t != null) {
 											jo.put("token", t.getToken());
 											jo.put("expired", t.getExpired());
@@ -407,7 +407,8 @@ public class user extends Controller {
 									/**
 									 * logined, to update the stat data
 									 */
-									me.logined(sid(), this.ip(), V.create("weblogined", System.currentTimeMillis()));
+									me.logined(sid(true), this.ip(),
+											V.create("weblogined", System.currentTimeMillis()));
 
 									this.redirect("/");
 //									this.redirect("/user/go");
@@ -429,7 +430,7 @@ public class user extends Controller {
 									lang.get("login.name_password.error") + ":" + name, u, this.ip());
 						} else {
 
-							u.failed(this.ip(), sid(), this.browser());
+							u.failed(this.ip(), sid(true), this.browser());
 
 							List<User.Lock> list = User.Lock.loadByHost(u.getId(), System.currentTimeMillis() - X.AHOUR,
 									this.ip());
@@ -442,7 +443,7 @@ public class user extends Controller {
 										this.ip());
 
 							} else {
-								list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid());
+								list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid(true));
 								if (list != null && list.size() >= 3) {
 									jo.put("message", lang.get("login.locked.error"));
 									jo.put(X.STATE, 204);
@@ -512,7 +513,7 @@ public class user extends Controller {
 			/**
 			 * clear auth-token
 			 */
-			AuthToken.delete(u.getId(), sid());
+			AuthToken.delete(u.getId(), sid(true));
 
 			GLog.securitylog.info(user.class, "logout", null, u, this.ip());
 

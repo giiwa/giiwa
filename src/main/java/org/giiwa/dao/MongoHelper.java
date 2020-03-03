@@ -1821,6 +1821,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return n;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public long count(String table, W q, String name, String db) {
 
@@ -1858,7 +1859,7 @@ public class MongoHelper implements Helper.DBHelper {
 		return n;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public List<JSON> count(String table, W q, String name, String[] group, String db) {
 

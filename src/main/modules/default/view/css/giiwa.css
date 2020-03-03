@@ -2142,6 +2142,7 @@ button:hover, button:active {
 	display: none;
 	position: relative;
 	float: left;
+	margin-bottom: 80px;
 }
 .portlet a.more{
 	position: absolute;

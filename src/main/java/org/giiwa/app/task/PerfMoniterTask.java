@@ -20,10 +20,12 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.web.f;
 import org.giiwa.bean.m._CPU;
 import org.giiwa.bean.m._Cache;
 import org.giiwa.bean.m._DB;
 import org.giiwa.bean.m._Disk;
+import org.giiwa.bean.m._File;
 import org.giiwa.bean.m._MQ;
 import org.giiwa.bean.m._Memory;
 import org.giiwa.bean.m._Net;
@@ -170,6 +172,15 @@ public class PerfMoniterTask extends Task {
 
 				_Cache.update(Local.id(), r.append("name", "read"));
 				_Cache.update(Local.id(), w.append("name", "write"));
+
+			}
+
+			{
+				JSON r = f.statGet();
+				JSON w = f.statDown();
+
+				_File.update(Local.id(), r.append("name", "get"));
+				_File.update(Local.id(), w.append("name", "down"));
 
 			}
 

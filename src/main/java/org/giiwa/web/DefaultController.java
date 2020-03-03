@@ -58,7 +58,7 @@ class DefaultController extends Controller {
 			}
 
 			// not found
-			this.notfound();
+			this.notfound(uri);
 		}
 
 	}
