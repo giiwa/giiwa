@@ -2085,6 +2085,7 @@ public class Helper implements Serializable {
 
 			if (dao != null) {
 				l1 = (Beans<T>) dao.load(this, s, n);
+				l1.dao = dao;
 			} else if (!X.isEmpty(table)) {
 				W q = this;
 				if (access != null) {
@@ -2099,6 +2100,8 @@ public class Helper implements Serializable {
 				}
 
 				l1 = helper.load(table, null, q, s, n, t, Helper.DEFAULT);
+				l1.table = table;
+				l1.q = this;
 			} else {
 				throw new SQLException("not set table");
 			}
