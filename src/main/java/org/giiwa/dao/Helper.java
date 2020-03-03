@@ -2131,7 +2131,7 @@ public class Helper implements Serializable {
 
 				return helper.count(table, q, Helper.DEFAULT);
 			}
-			
+
 			throw new SQLException("not set table");
 
 		}
@@ -2245,7 +2245,20 @@ public class Helper implements Serializable {
 				return dao.delete(this);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.write(table, null)) {
-					return helper.delete(table, this, Helper.DEFAULT);
+
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.delete(table, q, Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2253,10 +2266,20 @@ public class Helper implements Serializable {
 			throw new SQLException("not set table");
 		}
 
-		public int update(V v) throws SQLException {
+		public int update(Object o) throws SQLException {
+
+			V v = null;
+			if (o instanceof V) {
+				v = (V) o;
+			} else {
+				JSON j1 = JSON.fromObject(o);
+				v = V.fromJSON(j1);
+			}
+
 			if (dao != null) {
 				return dao.update(this, v);
 			} else if (!X.isEmpty(table)) {
+
 				if (access == null || access.write(table, v)) {
 					W q = this;
 					if (access != null) {
