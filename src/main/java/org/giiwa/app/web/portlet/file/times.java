@@ -44,7 +44,7 @@ public class times extends portlet {
 
 			List<JSON> data = JSON.createList();
 			JSON p = JSON.create();
-			p.append("name", lang.get("file.get1.times")).append("color", "#0a5ea0");
+			p.append("name", lang.get("file.get.times")).append("color", "#0a5ea0");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));

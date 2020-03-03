@@ -39,7 +39,7 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-					{name: "$lang.get('file.get1.times')", color:'#0a5ea0', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},
+					{name: "$lang.get('file.get.times')", color:'#0a5ea0', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},
 	   				{name: "$lang.get('file.down.times')", color:'#0dad76', data: [#foreach($c in $list2) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]}
     			], 
 	});

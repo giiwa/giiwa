@@ -1,9 +1,9 @@
 
-<div id='file_get1_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+<div id='file_get_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
 
 <script>
 $(function(){
-	Highcharts.stockChart('file_get1_$!requestid', {
+	Highcharts.stockChart('file_get_$!requestid', {
 		rangeSelector: {
 			enabled: false,
 	       },
@@ -16,7 +16,7 @@ $(function(){
 	           }
 	       },
 		    title: {
-		        text: '$lang.get("portlet.file.get1.title")'
+		        text: '$lang.get("portlet.file.get.title")'
 		    },
 	       credits: {
 				enabled: false
@@ -33,9 +33,9 @@ $(function(){
 	    		}
 	       },
 	    series: [
-			{name: "$lang.get('file.get1.max')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.max},#end]},
-			{name: "$lang.get('file.get1.avg')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.avg},#end]},
-			{name: "$lang.get('file.get1.min')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.min},#end]}
+			{name: "$lang.get('file.get.max')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.max},#end]},
+			{name: "$lang.get('file.get.avg')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.avg},#end]},
+			{name: "$lang.get('file.get.min')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.min},#end]}
    			], 
 	});
 
