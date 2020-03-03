@@ -18,14 +18,14 @@ public class times extends portlet {
 	@Override
 	public void get() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "read")
+		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "get")
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("list1", bs);
 
-			Beans<_Cache.Record> list2 = _Cache.Record.dao.load(W.create("node", Local.id()).and("name", "write")
+			Beans<_Cache.Record> list2 = _Cache.Record.dao.load(W.create("node", Local.id()).and("name", "down")
 					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			Collections.reverse(list2);
 			this.set("list2", list2);
@@ -37,14 +37,14 @@ public class times extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "read")
+		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "get")
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			List<JSON> data = JSON.createList();
 			JSON p = JSON.create();
-			p.append("name", lang.get("mq.read.times")).append("color", "#0a5ea0");
+			p.append("name", lang.get("file.get1.times")).append("color", "#0a5ea0");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
@@ -52,12 +52,12 @@ public class times extends portlet {
 			p.append("data", l1);
 			data.add(p);
 
-			bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "write")
+			bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "down")
 					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			if (bs != null && !bs.isEmpty()) {
 				Collections.reverse(bs);
 				p = JSON.create();
-				p.append("name", lang.get("db.write.times")).append("color", "#0dad76");
+				p.append("name", lang.get("file.down.times")).append("color", "#0dad76");
 				List<JSON> l2 = JSON.createList();
 				bs.forEach(e -> {
 					l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
@@ -80,14 +80,14 @@ public class times extends portlet {
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_File.Record> bs = _File.Record.dao.load(
-				W.create("node", Local.id()).and("name", "read").and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create("node", Local.id()).and("name", "get").and("created", time, W.OP.gte).sort("created", 1), 0,
 				24 * 60 * 7);
 		if (bs != null && !bs.isEmpty()) {
 			this.set("list1", bs);
 		}
 
 		Beans<_File.Record> list2 = _File.Record.dao.load(
-				W.create("node", Local.id()).and("name", "write").and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create("node", Local.id()).and("name", "down").and("created", time, W.OP.gte).sort("created", 1), 0,
 				24 * 60 * 7);
 		if (list2 != null && !list2.isEmpty()) {
 			this.set("list2", list2);

@@ -43,7 +43,7 @@ public class times extends portlet {
 
 			List<JSON> data = JSON.createList();
 			JSON p = JSON.create();
-			p.append("name", lang.get("mq.read.times")).append("color", "#0a5ea0");
+			p.append("name", lang.get("cache.read.times")).append("color", "#0a5ea0");
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));
@@ -56,7 +56,7 @@ public class times extends portlet {
 			if (bs != null && !bs.isEmpty()) {
 				Collections.reverse(bs);
 				p = JSON.create();
-				p.append("name", lang.get("db.write.times")).append("color", "#0dad76");
+				p.append("name", lang.get("cache.write.times")).append("color", "#0dad76");
 				List<JSON> l2 = JSON.createList();
 				bs.forEach(e -> {
 					l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get("times")));

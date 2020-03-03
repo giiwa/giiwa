@@ -40,7 +40,7 @@ public class read extends portlet {
 			List<JSON> data = JSON.createList();
 			for (String[] s : new String[][] { { "max", "#860606" }, { "avg", "#0dad76" }, { "min", "#0a5ea0" } }) {
 				JSON p = JSON.create();
-				p.append("name", lang.get("mq.read." + s[0])).append("color", s[1]);
+				p.append("name", lang.get("cache.read." + s[0])).append("color", s[1]);
 				List<JSON> l1 = JSON.createList();
 				bs.forEach(e -> {
 					l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get(s[0])));

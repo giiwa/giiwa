@@ -17,7 +17,7 @@ public class get1 extends portlet {
 	@Override
 	public void get() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "read")
+		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "get")
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -30,7 +30,7 @@ public class get1 extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "read")
+		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "get")
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -40,7 +40,7 @@ public class get1 extends portlet {
 			List<JSON> data = JSON.createList();
 			for (String[] s : new String[][] { { "max", "#860606" }, { "avg", "#0dad76" }, { "min", "#0a5ea0" } }) {
 				JSON p = JSON.create();
-				p.append("name", lang.get("mq.read." + s[0])).append("color", s[1]);
+				p.append("name", lang.get("file.get." + s[0])).append("color", s[1]);
 				List<JSON> l1 = JSON.createList();
 				bs.forEach(e -> {
 					l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.get(s[0])));
@@ -63,7 +63,7 @@ public class get1 extends portlet {
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_File.Record> bs = _File.Record.dao.load(
-				W.create("node", Local.id()).and("name", "read").and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create("node", Local.id()).and("name", "get").and("created", time, W.OP.gte).sort("created", 1), 0,
 				24 * 60 * 7);
 		if (bs != null && !bs.isEmpty()) {
 			this.set("list", bs);
