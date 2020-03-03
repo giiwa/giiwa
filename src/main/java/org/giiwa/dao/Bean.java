@@ -136,6 +136,8 @@ public class Bean implements Map<String, Object>, Serializable {
 			data = new HashMap<String, Object>();
 		}
 
+		map_obj = null;
+		
 		Object old = null;
 
 		// change all to lower case avoid some database auto change to upper case
@@ -373,6 +375,9 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * set the fields to null that annotation by @Column.
 	 */
 	public final void clear() {
+		
+		map_obj = null;
+		
 		/**
 		 * clear data in data
 		 */
@@ -520,6 +525,9 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * @param names the names
 	 */
 	public final void remove(String... names) {
+		
+		map_obj = null;
+		
 		if (data != null && names != null) {
 			for (String name : names) {
 				if (name.indexOf("*") > -1) {
