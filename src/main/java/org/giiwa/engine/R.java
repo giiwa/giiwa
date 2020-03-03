@@ -196,7 +196,7 @@ public class R extends IStub {
 
 		Object[] hh = (o1 instanceof Map) ? (((Map) o1).keySet().toArray()) : null;
 
-		Exporter<Object> ex = t.export("UTF-8", Exporter.FORMAT.plain);
+		Exporter<Object> ex = t.export(Exporter.FORMAT.plain);
 		if (head && hh != null) {
 			ex.print(hh);
 		}

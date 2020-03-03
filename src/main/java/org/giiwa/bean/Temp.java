@@ -158,18 +158,18 @@ public class Temp {
 		return sb.toString();
 	}
 
-	public <V> Exporter<V> export(String charset, Exporter.FORMAT format) {
+	public <V> Exporter<V> export(Exporter.FORMAT format) {
 		File f = this.getLocalFile();
 		if (f.exists()) {
 			f.delete();
 		} else {
 			f.getParentFile().mkdirs();
 		}
-		return export(f, charset, format);
+		return export(f, format);
 	}
 
-	public <V> Exporter<V> export(File f, String charset, Exporter.FORMAT format) {
-		Exporter<V> e = Exporter.create(f, charset, format);
+	public <V> Exporter<V> export(File f, Exporter.FORMAT format) {
+		Exporter<V> e = Exporter.create(f, format);
 		return e;
 	}
 

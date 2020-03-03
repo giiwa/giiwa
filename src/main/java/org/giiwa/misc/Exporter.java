@@ -2,6 +2,7 @@ package org.giiwa.misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,28 +22,31 @@ public class Exporter<V> {
 		csv, plain
 	}
 
-	BufferedWriter out = null;
+	public BufferedWriter out = null;
 	FORMAT format;
 
 	Function<V, Object[]> cols = null;
 
-	public static <V> Exporter<V> create(File file, String charset, FORMAT format) {
+	public static <V> Exporter<V> create(File file, FORMAT format) {
 		try {
-			Exporter<V> s = new Exporter<V>();
-			s.out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset));
-			s.format = format;
-
-			return s;
-		} catch (Exception e) {
+			file.getParentFile().mkdirs();
+			return create(new FileOutputStream(file), format);
+		} catch (FileNotFoundException e) {
 			log.error(e.getMessage(), e);
 		}
 		return null;
 	}
 
-	public static <V> Exporter<V> create(OutputStream out, String charset, FORMAT format) {
+	public static <V> Exporter<V> create(OutputStream out, FORMAT format) {
+
 		try {
+			if (FORMAT.csv == format) {
+				// BOM, UTF-8
+				out.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });
+			}
+
 			Exporter<V> s = new Exporter<V>();
-			s.out = new BufferedWriter(new OutputStreamWriter(out, charset));
+			s.out = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
 			s.format = format;
 
 			return s;

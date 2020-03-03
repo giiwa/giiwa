@@ -2755,12 +2755,13 @@ public class Controller {
 
 			Controller[] m = new Controller[1];
 
-			welcomes.parallelStream().forEach(s -> {
-				Controller m2 = getModel(method, uri.endsWith("/") ? (uri + s) : (uri + "/" + s), uri);
+			for (String s : welcomes) {
+				Controller m2 = getModel(method, uri + s, uri);
 				if (m2 != null) {
 					m[0] = m2;
+					break;
 				}
-			});
+			}
 
 //			for (String suffix : welcomes) {
 //				if (_dispatch(uri + "/" + suffix, req, resp, method, t)) {

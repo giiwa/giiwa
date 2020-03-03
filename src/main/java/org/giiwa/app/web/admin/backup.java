@@ -222,7 +222,7 @@ public class backup extends Controller {
 			if (ss != null && ss.length > 0) {
 				new BackupTask(ss, null).schedule(0);
 				Temp t = Temp.create("er.csv");
-				Exporter<Bean> e = t.export("GBK", Exporter.FORMAT.csv);
+				Exporter<Bean> e = t.export(Exporter.FORMAT.csv);
 
 				for (String s : ss) {
 
