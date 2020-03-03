@@ -267,10 +267,20 @@ public class Helper implements Serializable {
 
 		/**
 		 * To json.
-		 *
+		 * 
+		 * @deprecated
 		 * @return the json
 		 */
 		public JSON toJSON() {
+			return json();
+		}
+
+		/**
+		 * convert the V to json and return
+		 * 
+		 * @return
+		 */
+		public JSON json() {
 			return JSON.fromObject(m);
 		}
 

@@ -46,11 +46,11 @@ public class captcha extends Controller {
 
 			t.getFile().getParentFile().mkdirs();
 
-			Captcha.create(this.sid(), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
+			Captcha.create(this.sid(true), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
 					new FileOutputStream(t.getFile()), 4);
 
 			jo.put(X.STATE, 200);
-			jo.put("sid", sid());
+			jo.put("sid", sid(false));
 			jo.put("uri", t.getUri() + "?" + System.currentTimeMillis());
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -69,7 +69,7 @@ public class captcha extends Controller {
 	@Path(path = "verify")
 	public void verify() {
 		String code = this.getString("code").toLowerCase();
-		Captcha.Result r = Captcha.verify(this.sid(), code);
+		Captcha.Result r = Captcha.verify(this.sid(false), code);
 
 		JSON jo = new JSON();
 		if (Captcha.Result.badcode == r) {
