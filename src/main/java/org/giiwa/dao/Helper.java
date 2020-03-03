@@ -1979,7 +1979,18 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				t1 = (T) dao.load(this);
 			} else if (!X.isEmpty(table)) {
-				t1 = (T) helper.load(table, null, this, t, Helper.DEFAULT);
+				W q = this;
+				if (access != null) {
+					W q1 = access.filter(table);
+					if (q1 != null) {
+						if (q.isEmpty()) {
+							q = q1;
+						} else if (!q1.isEmpty()) {
+							q = W.create().and(q).and(q1);
+						}
+					}
+				}
+				t1 = (T) helper.load(table, null, q, t, Helper.DEFAULT);
 			} else {
 				throw new SQLException("not set table");
 			}
@@ -2075,7 +2086,19 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				l1 = (Beans<T>) dao.load(this, s, n);
 			} else if (!X.isEmpty(table)) {
-				l1 = helper.load(table, null, this, s, n, t, Helper.DEFAULT);
+				W q = this;
+				if (access != null) {
+					W q1 = access.filter(table);
+					if (q1 != null) {
+						if (q.isEmpty()) {
+							q = q1;
+						} else if (!q1.isEmpty()) {
+							q = W.create().and(q).and(q1);
+						}
+					}
+				}
+
+				l1 = helper.load(table, null, q, s, n, t, Helper.DEFAULT);
 			} else {
 				throw new SQLException("not set table");
 			}
@@ -2102,7 +2125,19 @@ public class Helper implements Serializable {
 				return dao.sum(name, this);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, name)) {
-					return helper.sum(table, this, name, Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.sum(table, q, name, Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2116,7 +2151,19 @@ public class Helper implements Serializable {
 				return dao.avg(name, this);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, name)) {
-					return helper.avg(table, this, name, Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.avg(table, q, name, Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2130,7 +2177,19 @@ public class Helper implements Serializable {
 				return dao.min(name, this);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, name)) {
-					return helper.min(table, this, name, Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.min(table, q, name, Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2144,7 +2203,19 @@ public class Helper implements Serializable {
 				return dao.max(name, this);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, name)) {
-					return helper.max(table, this, name, Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.max(table, q, name, Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2171,7 +2242,19 @@ public class Helper implements Serializable {
 				return dao.update(this, v);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.write(table, v)) {
-					return helper.updateTable(table, this, v, Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.updateTable(table, q, v, Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2184,7 +2267,19 @@ public class Helper implements Serializable {
 				return dao.distinct(name, this);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, name)) {
-					return helper.distinct(table, name, this, Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.distinct(table, name, q, Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2197,7 +2292,19 @@ public class Helper implements Serializable {
 				return dao.count(this, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, group)) {
-					return helper.count(table, this, X.split(group, "[,]"), Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.count(table, q, X.split(group, "[,]"), Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2211,7 +2318,19 @@ public class Helper implements Serializable {
 				return dao.sum(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, Arrays.asList(name, group))) {
-					return helper.sum(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.sum(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2225,7 +2344,18 @@ public class Helper implements Serializable {
 				return dao.aggregate(this, X.split(name, "[,]"), X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, Arrays.asList(name, group))) {
-					return helper.aggregate(table, X.split(name, "[,]"), this, X.split(group, "[,]"), Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+					return helper.aggregate(table, X.split(name, "[,]"), q, X.split(group, "[,]"), Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2239,7 +2369,19 @@ public class Helper implements Serializable {
 				return dao.min(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, Arrays.asList(name, group))) {
-					return helper.min(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.min(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2253,7 +2395,19 @@ public class Helper implements Serializable {
 				return dao.max(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, Arrays.asList(name, group))) {
-					return helper.max(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.max(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2267,7 +2421,19 @@ public class Helper implements Serializable {
 				return dao.avg(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, Arrays.asList(name, group))) {
-					return helper.avg(table, this, name, X.split(group, "[,]"), Helper.DEFAULT);
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.avg(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
 				} else {
 					throw new SQLException("no privilege!");
 				}
