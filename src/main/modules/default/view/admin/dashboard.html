@@ -12,12 +12,18 @@
 		
 		<div class="portlet" data-url="/portlet/disk?__node=$!__node"></div>
 		
+		<div class="br"></div>
 		#foreach($p in $nets)
 		<div class="portlet" data-url="/portlet/net?name=$!p.name&__node=$!__node"></div>
 		#end
-		
+
+		<div class="br"></div>
 		#foreach($p in $portlets)
+		#if($p=='br')
+		<div class="br"></div>
+		#else
 		<div class="portlet" data-url="$p&__node=$!__node"></div>
+		#end
 		#end
 		
 	#end

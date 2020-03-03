@@ -133,12 +133,18 @@ public class DefaultListener implements IListener {
 			dashboard.portlet("/portlet/db/read");
 			dashboard.portlet("/portlet/db/write");
 			dashboard.portlet("/portlet/db/times");
+			
+			dashboard.portlet("br");
 			dashboard.portlet("/portlet/mq/read");
 			dashboard.portlet("/portlet/mq/write");
 			dashboard.portlet("/portlet/mq/times");
+
+			dashboard.portlet("br");
 			dashboard.portlet("/portlet/cache/read");
 			dashboard.portlet("/portlet/cache/write");
 			dashboard.portlet("/portlet/cache/times");
+
+			dashboard.portlet("br");
 			dashboard.portlet("/portlet/file/get1");
 			dashboard.portlet("/portlet/file/down");
 			dashboard.portlet("/portlet/file/times");

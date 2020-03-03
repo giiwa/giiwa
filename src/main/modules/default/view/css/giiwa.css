@@ -2138,6 +2138,11 @@ button:hover, button:active {
 	width: 100%;
 	margin: 4px 0;
 }
+div.br{
+	float: left;
+	width: 100%;
+	height: 1px;
+}
 .portlet {
 	display: none;
 	position: relative;
