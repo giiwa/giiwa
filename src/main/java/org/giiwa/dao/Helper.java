@@ -2117,8 +2117,21 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.count(this);
 			} else if (!X.isEmpty(table)) {
-				return helper.count(table, this, Helper.DEFAULT);
+				W q = this;
+				if (access != null) {
+					W q1 = access.filter(table);
+					if (q1 != null) {
+						if (q.isEmpty()) {
+							q = q1;
+						} else if (!q1.isEmpty()) {
+							q = W.create().and(q).and(q1);
+						}
+					}
+				}
+
+				return helper.count(table, q, Helper.DEFAULT);
 			}
+			
 			throw new SQLException("not set table");
 
 		}
