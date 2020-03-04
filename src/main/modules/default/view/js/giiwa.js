@@ -523,7 +523,7 @@ giiwa
 
 				var p = $('#dialog');
 				if (p.length == 0) {
-					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"><img src="/images/loading2.gif"></div></div></div>');
+					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"></div></div></div>');
 					$('body').append(p);
 
 					if (opt && opt.moveable) {
@@ -547,7 +547,7 @@ giiwa
 				p1.css('top', 'calc(50% - ' + opt.height/2 + 'px');
 
 				var pp = $('#dialog .dialog>.scroll');
-				pp.html('<img src="/images/loading2.gif">');
+				pp.empty();
 				var p2 = panel.clone();
 				pp.append(p2);
 				p2.css('display', 'inline-block');
@@ -601,7 +601,7 @@ giiwa
 
 				var p = $('#gwpopup');
 				if (p.length == 0) {
-					p = $('<div id="gwpopup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="max"><i class="icon-checkbox-unchecked"></i></a><a class="close">X</a><div class="scroll"></div></div></div>');
+					p = $('<div id="gwpopup"><div class="popupbg"></div><div class="popup"><a class="prev">&lt;</a><a class="max"><i class="icon-checkbox-unchecked"></i></a><a class="close">X</a><div class="scroll"><img src="/images/loading2.gif"></div></div></div>');
 					$('body').append(p);
 
 					$("#gwpopup>.popup").draggable();
@@ -648,7 +648,10 @@ giiwa
 							});
 
 					giiwa.popuphistory = [];
+				} else {
+					p.find('div.scroll').html('<img src="/images/loading2.gif">');
 				}
+				
 				p.css("z-index", opt.z);
 
 				if (giiwa.popuphistory && giiwa.popuphistory.length > 0) {
