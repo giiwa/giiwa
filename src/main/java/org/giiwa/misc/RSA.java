@@ -31,188 +31,178 @@ import org.apache.commons.logging.LogFactory;
  * @author yjiang
  */
 public class RSA {
-  static Log log = LogFactory.getLog(RSA.class);
+	static Log log = LogFactory.getLog(RSA.class);
 
-  /**
-   * decode data with private key.
-   * 
-   * @param data
-   *          the data
-   * @param pri_key
-   *          the pri_key
-   * @return the byte[]
-   */
-  public static byte[] decode(byte[] data, String pri_key) {
-    try {
-      Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+	/**
+	 * decode data with private key.
+	 * 
+	 * @param data    the data
+	 * @param pri_key the pri_key
+	 * @return the byte[]
+	 */
+	public static byte[] decode(byte[] data, String pri_key) {
+		try {
+			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 
-      java.security.Key k = getPrivateKey(pri_key);
+			java.security.Key k = getPrivateKey(pri_key);
 
-      cipher.init(Cipher.DECRYPT_MODE, k);
+			cipher.init(Cipher.DECRYPT_MODE, k);
 
-      byte[] deBytes = cipher.doFinal(data);
+			byte[] deBytes = cipher.doFinal(data);
 
-      return deBytes;
-    } catch (Exception e) {
-      log.error(pri_key, e);
-    }
-    return null;
-  }
+			return deBytes;
+		} catch (Exception e) {
+			// ignore error
+//			log.error(pri_key, e);
 
-  /**
-   * encode the data with the public key.
-   * 
-   * @param data
-   *          the data
-   * @param pub_key
-   *          the pub_key
-   * @return the byte[]
-   */
-  public static byte[] encode(byte[] data, String pub_key) {
-    try {
-      Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+		}
+		return null;
+	}
 
-      java.security.Key k = getPublicKey(pub_key);
+	/**
+	 * encode the data with the public key.
+	 * 
+	 * @param data    the data
+	 * @param pub_key the pub_key
+	 * @return the byte[]
+	 */
+	public static byte[] encode(byte[] data, String pub_key) {
+		try {
+			Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 
-      cipher.init(Cipher.ENCRYPT_MODE, k);
-      byte[] enBytes = cipher.doFinal(data);
+			java.security.Key k = getPublicKey(pub_key);
 
-      return enBytes;
-    } catch (Exception e) {
-      log.error("pubkey=" + pub_key + ", data.length=" + data.length, e);
-    }
+			cipher.init(Cipher.ENCRYPT_MODE, k);
+			byte[] enBytes = cipher.doFinal(data);
 
-    return null;
-  }
+			return enBytes;
+		} catch (Exception e) {
+			log.error("pubkey=" + pub_key + ", data.length=" + data.length, e);
+		}
 
-  /**
-   * generate key pair which include public and private key.
-   * 
-   * @param length
-   *          the length
-   * @return the key
-   */
-  public static Key generate(int length) {
-    try {
-      KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
+		return null;
+	}
 
-      keyPairGen.initialize(length);
+	/**
+	 * generate key pair which include public and private key.
+	 * 
+	 * @param length the length
+	 * @return the key
+	 */
+	public static Key generate(int length) {
+		try {
+			KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
 
-      KeyPair keyPair = keyPairGen.generateKeyPair();
+			keyPairGen.initialize(length);
 
-      PublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+			KeyPair keyPair = keyPairGen.generateKeyPair();
 
-      PrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+			PublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 
-      Key k = new Key();
-      k.pub_key = getKeyString(publicKey);
-      k.pri_key = getKeyString(privateKey);
+			PrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
 
-      return k;
-    } catch (Exception e) {
+			Key k = new Key();
+			k.pub_key = getKeyString(publicKey);
+			k.pri_key = getKeyString(privateKey);
 
-    }
+			return k;
+		} catch (Exception e) {
 
-    return null;
-  }
+		}
 
-  /**
-   * Gets the key string.
-   * 
-   * @param key
-   *          the key
-   * @return the key string
-   * @throws Exception
-   *           the exception
-   */
-  private static String getKeyString(java.security.Key key) throws Exception {
-    byte[] keyBytes = key.getEncoded();
-    String s = Base64.getEncoder().encodeToString(keyBytes);
-    return s;
-  }
+		return null;
+	}
 
-  /**
-   * The Class Key.
-   */
-  public static class Key {
+	/**
+	 * Gets the key string.
+	 * 
+	 * @param key the key
+	 * @return the key string
+	 * @throws Exception the exception
+	 */
+	private static String getKeyString(java.security.Key key) throws Exception {
+		byte[] keyBytes = key.getEncoded();
+		String s = Base64.getEncoder().encodeToString(keyBytes);
+		return s;
+	}
 
-    /** The pub_key. */
-    public String pub_key;
+	/**
+	 * The Class Key.
+	 */
+	public static class Key {
 
-    /** The pri_key. */
-    public String pri_key;
+		/** The pub_key. */
+		public String pub_key;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object.toString()
-     */
-    @Override
-    public String toString() {
-      return "Key:[pub:" + pub_key + ", pri:" + pri_key + "]";
-    }
-  }
+		/** The pri_key. */
+		public String pri_key;
 
-  /**
-   * The main method.
-   * 
-   * @param args
-   *          the arguments
-   */
-  public static void main(String[] args) {
-    Key k = generate(512);
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.lang.Object.toString()
+		 */
+		@Override
+		public String toString() {
+			return "Key:[pub:" + pub_key + ", pri:" + pri_key + "]";
+		}
+	}
 
-    System.out.println(k);
+	/**
+	 * The main method.
+	 * 
+	 * @param args the arguments
+	 */
+	public static void main(String[] args) {
+		Key k = generate(512);
 
-    String s = "hello";
+		System.out.println(k);
 
-    String pub_key = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANckZ1iK/1sOb7N1n2xuwiIoHZtJ3mgaV3s0PCcJKhdV5MsjQ/yzQ5N4lnQd9RyLjVfDH6M6KNDSmPc+rmRFRH0CAwEAAQ==";
-    String pri_key = "MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEA1yRnWIr/Ww5vs3WfbG7CIigdm0neaBpXezQ8JwkqF1XkyyND/LNDk3iWdB31HIuNV8Mfozoo0NKY9z6uZEVEfQIDAQABAkArmSv8TIa9DCrkwkRhc/yRcXG2g3y3ugbaZ9Z8zqWh/p2bU0ih2EdhqCl1M9QzOlmwdgL6dOZtupr93cvPwb2dAiEA/8plzQ4y0xGqbRjDai4KfEwgNQ57T0f74giFqErHzRsCIQDXUXzpRbnMqksB/SrT45BzPUH4eEIoYQ2ZBuEVuLJGRwIhANufHlU30a+kRV4ymuZ57YrXmfe0HW/u8HgctRXQT0jtAiBqPCNkOOm+KDtP5OhPmRS5Nv0oqbUClTgPS4ycmf8jmwIgfKUvHfL+DBr0mhee0kXE//RVOHUORv9jgyFL7TK1W6s=";
+		String s = "hello";
 
-    byte[] ss = encode(s.getBytes(), pub_key);
+		String pub_key = "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANckZ1iK/1sOb7N1n2xuwiIoHZtJ3mgaV3s0PCcJKhdV5MsjQ/yzQ5N4lnQd9RyLjVfDH6M6KNDSmPc+rmRFRH0CAwEAAQ==";
+		String pri_key = "MIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEA1yRnWIr/Ww5vs3WfbG7CIigdm0neaBpXezQ8JwkqF1XkyyND/LNDk3iWdB31HIuNV8Mfozoo0NKY9z6uZEVEfQIDAQABAkArmSv8TIa9DCrkwkRhc/yRcXG2g3y3ugbaZ9Z8zqWh/p2bU0ih2EdhqCl1M9QzOlmwdgL6dOZtupr93cvPwb2dAiEA/8plzQ4y0xGqbRjDai4KfEwgNQ57T0f74giFqErHzRsCIQDXUXzpRbnMqksB/SrT45BzPUH4eEIoYQ2ZBuEVuLJGRwIhANufHlU30a+kRV4ymuZ57YrXmfe0HW/u8HgctRXQT0jtAiBqPCNkOOm+KDtP5OhPmRS5Nv0oqbUClTgPS4ycmf8jmwIgfKUvHfL+DBr0mhee0kXE//RVOHUORv9jgyFL7TK1W6s=";
 
-    System.out.println(Base64.getEncoder().encodeToString(ss));
+		byte[] ss = encode(s.getBytes(), pub_key);
 
-    byte[] ss1 = decode(ss, pri_key);
+		System.out.println(Base64.getEncoder().encodeToString(ss));
 
-    System.out.println(new String(ss1));
+		byte[] ss1 = decode(ss, pri_key);
 
-  }
+		System.out.println(new String(ss1));
 
-  /**
-   * Gets the public key.
-   * 
-   * @param key
-   *          the key
-   * @return the public key
-   * @throws Exception
-   *           the exception
-   */
-  private static PublicKey getPublicKey(String key) throws Exception {
-    byte[] keyBytes;
-    keyBytes = Base64.getDecoder().decode(key);
-    X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
-    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-    PublicKey publicKey = keyFactory.generatePublic(keySpec);
-    return publicKey;
-  }
+	}
 
-  /**
-   * Gets the private key.
-   * 
-   * @param key
-   *          the key
-   * @return the private key
-   * @throws Exception
-   *           the exception
-   */
-  private static PrivateKey getPrivateKey(String key) throws Exception {
-    byte[] keyBytes;
-    keyBytes = Base64.getDecoder().decode(key);
+	/**
+	 * Gets the public key.
+	 * 
+	 * @param key the key
+	 * @return the public key
+	 * @throws Exception the exception
+	 */
+	private static PublicKey getPublicKey(String key) throws Exception {
+		byte[] keyBytes;
+		keyBytes = Base64.getDecoder().decode(key);
+		X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		PublicKey publicKey = keyFactory.generatePublic(keySpec);
+		return publicKey;
+	}
 
-    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
-    KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-    PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
-    return privateKey;
-  }
+	/**
+	 * Gets the private key.
+	 * 
+	 * @param key the key
+	 * @return the private key
+	 * @throws Exception the exception
+	 */
+	private static PrivateKey getPrivateKey(String key) throws Exception {
+		byte[] keyBytes;
+		keyBytes = Base64.getDecoder().decode(key);
+
+		PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+		KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+		PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+		return privateKey;
+	}
 }

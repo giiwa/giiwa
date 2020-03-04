@@ -833,7 +833,8 @@ public class Module {
 			license = LICENSE.issue;
 
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			// ignore the error
+//			log.error(e.getMessage(), e);
 		}
 	}
 
