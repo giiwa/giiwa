@@ -25,12 +25,7 @@ $(function(){
                enabled: false
            },
 	       tooltip: {
-	    	   formatter:function(){
-	    		      return this.series.name+':<b>' 
-	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
-	    		      + '</b><br>' 
-	    		      + Highcharts.dateFormat('%H:%M', this.x);
-	    		}
+	           pointFormat: '{series.name}: <b>{point.y}ms</b>'
 	       },
 	    series: [
 			{name: "$lang.get('mq.write.max')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.max},#end]},

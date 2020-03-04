@@ -20,7 +20,8 @@ public class mem extends portlet {
 		long id = this.getLong("id");
 		this.set("id", id);
 
-		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id()).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id())
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -36,7 +37,8 @@ public class mem extends portlet {
 		long id = this.getLong("id");
 		this.set("id", id);
 
-		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id()).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id())
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -69,15 +71,16 @@ public class mem extends portlet {
 
 	@Path(path = "more", login = true)
 	public void more() {
-		long id = this.getLong("id");
-		this.set("id", id);
+//		long id = this.getLong("id");
+//		this.set("id", id);
 
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_Memory.Record> bs = _Memory.Record.dao
-				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", 1), 0, 30 * 24 * 7);
+				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", -1), 0, 60 * 24 * 2);
 
 		if (bs != null && !bs.isEmpty()) {
+			Collections.reverse(bs);
 			this.set("list", bs);
 		}
 		this.show("/portlet/mem.more.html");

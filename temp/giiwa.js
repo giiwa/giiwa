@@ -523,7 +523,7 @@ giiwa
 
 				var p = $('#dialog');
 				if (p.length == 0) {
-					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"></div></div></div>');
+					p = $('<div id="dialog"><div class="dialogbg"></div><div class="dialog"><a class="close">X</a><div class="scroll"><img src="/images/loading2.gif"></div></div></div>');
 					$('body').append(p);
 
 					if (opt && opt.moveable) {
@@ -547,7 +547,7 @@ giiwa
 				p1.css('top', 'calc(50% - ' + opt.height/2 + 'px');
 
 				var pp = $('#dialog .dialog>.scroll');
-				pp.empty();
+				pp.html('<img src="/images/loading2.gif">');
 				var p2 = panel.clone();
 				pp.append(p2);
 				p2.css('display', 'inline-block');

@@ -25,12 +25,7 @@ $(function(){
                enabled: false
            },
 	       tooltip: {
-	    	   formatter:function(){
-	    		      return this.series.name+':<b>' 
-	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
-	    		      + '</b><br>' 
-	    		      + Highcharts.dateFormat('%H:%M', this.x);
-	    		}
+	           pointFormat: '{series.name}: <b>{point.y}</b>'
 	       },
 	    series: [
 			{name: "$lang.get('file.get.times')", color:'#0dad76', data: [#foreach($c in $list1) {x:$lang.time($c.created, 'm'), y:$!c.times},#end]},

@@ -56,8 +56,10 @@ public class cpu extends portlet {
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_CPU.Record> bs = _CPU.Record.dao
-				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", 1), 0, 24 * 60 * 7);
+				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", -1), 0, 24 * 60 * 2);
+
 		if (bs != null && !bs.isEmpty()) {
+			Collections.reverse(bs);
 			this.set("list", bs);
 		}
 		this.show("/portlet/cpu.more.html");

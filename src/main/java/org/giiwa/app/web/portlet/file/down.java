@@ -63,9 +63,10 @@ public class down extends portlet {
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_File.Record> bs = _File.Record.dao.load(
-				W.create("node", Local.id()).and("name", "down").and("created", time, W.OP.gte).sort("created", 1), 0,
-				24 * 60 * 7);
+				W.create("node", Local.id()).and("name", "down").and("created", time, W.OP.gte).sort("created", -1), 0,
+				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
+			Collections.reverse(bs);
 			this.set("list", bs);
 		}
 		this.show("/portlet/file/down.more.html");

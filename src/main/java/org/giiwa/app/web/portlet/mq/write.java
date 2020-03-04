@@ -63,9 +63,10 @@ public class write extends portlet {
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_MQ.Record> bs = _MQ.Record.dao.load(
-				W.create("node", Local.id()).and("name", "write").and("created", time, W.OP.gte).sort("created", 1), 0,
-				24 * 60 * 7);
+				W.create("node", Local.id()).and("name", "write").and("created", time, W.OP.gte).sort("created", -1), 0,
+				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
+			Collections.reverse(bs);
 			this.set("list", bs);
 		}
 		this.show("/portlet/mq/write.more.html");
