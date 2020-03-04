@@ -27,6 +27,7 @@
 			<th>$lang.get('user.phone')</th>
 			<th>$lang.get('user.tokens')</th>
 			<th style="width: 120px;">$lang.get('user.roles')</th>
+			<th style="width: 120px;">$lang.get('user.ip')</th>
 			<th style="width: 110px;">$lang.get('user.lastlogintime')</th>
 #if($edit)
 			<th style="width: 60px;"></th>
@@ -46,6 +47,7 @@
 		<td>$!f.phone</td>
 		<td>$!f.tokens.size()</td>
 		<td>#foreach($r in $f.role.list)<div class='icon-shield' style="line-height: 16px;">$r.name</div>#end</td>
+		<td>$!f.ip</td>
 		<td>
 			#if($f.lastlogintime > 0)
 			$!lang.format($f.lastlogintime, 'yyyy-MM-dd HH:mm')
