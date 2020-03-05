@@ -137,7 +137,7 @@ public class Bean implements Map<String, Object>, Serializable {
 		}
 
 		map_obj = null;
-		
+
 		Object old = null;
 
 		// change all to lower case avoid some database auto change to upper case
@@ -375,9 +375,9 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * set the fields to null that annotation by @Column.
 	 */
 	public final void clear() {
-		
+
 		map_obj = null;
-		
+
 		/**
 		 * clear data in data
 		 */
@@ -487,6 +487,7 @@ public class Bean implements Map<String, Object>, Serializable {
 	 */
 	public Map<String, Object> getAll() {
 		if (map_obj == null) {
+
 			map_obj = new HashMap<String, Object>();
 			if (data != null && data.size() > 0) {
 				map_obj.putAll(data);
@@ -525,9 +526,9 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * @param names the names
 	 */
 	public final void remove(String... names) {
-		
+
 		map_obj = null;
-		
+
 		if (data != null && names != null) {
 			for (String name : names) {
 				if (name.indexOf("*") > -1) {
@@ -557,7 +558,16 @@ public class Bean implements Map<String, Object>, Serializable {
 		if (json_obj == null) {
 			json_obj = new JSON();
 
-			toJSON(json_obj);
+			json_obj.putAll(getAll());
+
+			json_obj.scan((j1, e) -> {
+				Object o = e.getValue();
+				if (!(o instanceof Serializable)) {
+					log.info("bad data, name=" + e.getKey(), new Exception());
+					j1.remove(e.getKey());
+				}
+			});
+
 		}
 		return json_obj;
 	}

@@ -687,7 +687,7 @@ public class Helper implements Serializable {
 		private List<Entity> order = new ArrayList<Entity>();
 		private String groupby;
 
-		private int cond = AND;
+		public int cond = AND;
 
 		private transient BeanDAO<?, ?> dao = null;
 		private transient String table = null;
@@ -1661,7 +1661,7 @@ public class Helper implements Serializable {
 			public String name;
 			public Object value;
 			public OP op; // operation EQ, GT, ...
-			public int cond; // condition AND, OR
+//			public int cond; // condition AND, OR
 			public int boost = 1;//
 
 			public void op(String op) {
@@ -2244,7 +2244,7 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.delete(this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.write(table, null)) {
+				if (access == null || access.checkWrite(table, null)) {
 
 					W q = this;
 					if (access != null) {
@@ -2280,7 +2280,7 @@ public class Helper implements Serializable {
 				return dao.update(this, v);
 			} else if (!X.isEmpty(table)) {
 
-				if (access == null || access.write(table, v)) {
+				if (access == null || access.checkWrite(table, v)) {
 					W q = this;
 					if (access != null) {
 						W q1 = access.filter(table);
