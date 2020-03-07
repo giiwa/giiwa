@@ -37,6 +37,8 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Base32;
+import org.giiwa.misc.Digest;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.MD5;
 import org.giiwa.web.Controller;
@@ -824,6 +826,33 @@ public class User extends Bean {
 		Lock.cleanup(id);
 
 		return dao.delete(id);
+	}
+
+	public static User loadByToken(String token, long expired) {
+		try {
+			String s = new String(Digest.des_decrypt(Base32.decode(token), "giiwa"));
+			String[] ss = X.split(s, "//");
+			if (ss != null && ss.length == 2) {
+				long id = X.toLong(ss[0]);
+				long time = X.toLong(ss[1]);
+				if (System.currentTimeMillis() - time < expired) {
+					return dao.load(id);
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	public String token() {
+		try {
+			String s = id + "//" + System.currentTimeMillis();
+			return Base32.encode(Digest.des_encrypt(s.getBytes(), "giiwa"));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	private List<AuthToken> token_obj;
