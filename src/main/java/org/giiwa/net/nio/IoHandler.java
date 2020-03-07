@@ -13,7 +13,6 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 //	private static Log log = LogFactory.getLog(IoHandler.class);
 
 	public IoHandler() {
-//		System.out.println("new io");
 	}
 
 	@Override
@@ -35,12 +34,9 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 
 		super.handlerRemoved(ctx);
 
-//		System.out.println("remove");
 	}
 
 	public void channelRead(ChannelHandlerContext ctx, Object msg) {
-
-//		log.debug("got data, client=" + ctx.channel().remoteAddress());
 
 		ByteBuf m = (ByteBuf) msg;
 

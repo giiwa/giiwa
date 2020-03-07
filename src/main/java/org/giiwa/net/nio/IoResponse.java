@@ -14,11 +14,14 @@ public class IoResponse {
 	public void close() {
 
 		if (ch != null) {
-			ch.close();
+			ch.disconnect();
+//			ch.close();
 		}
 	}
 
 	public void send(Object... head) {
+
+//		System.out.println("size=" + data.readableBytes());
 
 		if (head != null && head.length > 0) {
 
@@ -44,13 +47,12 @@ public class IoResponse {
 //			log.debug("o1=" + o1.readableBytes() + "<" + o1.writableBytes() + "<" + o1.capacity());
 
 			o1.writeBytes(data);
-			ch.write(o1);
+			ch.writeAndFlush(o1);
 
 		} else {
-			ch.write(data);
+			data.retain();
+			ch.writeAndFlush(data);
 		}
-
-		ch.flush();
 
 		_compact();
 
@@ -91,7 +93,10 @@ public class IoResponse {
 			return;
 
 		ByteBuf b = Unpooled.buffer(data.readableBytes() + 1024);
-		b.writeBytes(data);
+		if (data.readableBytes() > 0) {
+			b.writeBytes(data);
+		}
+
 		data.release();
 		data = b;
 

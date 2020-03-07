@@ -2,7 +2,6 @@ package org.giiwa.net.nio;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
@@ -141,17 +140,11 @@ public class Server implements Closeable {
 
 				if (req.size() > 4) {
 					req.mark();
-//					System.out.println(req.size());
 					byte[] b = new byte[128];
 					int n = req.readBytes(b);
-					String s = new String(b, 0, n);
-					System.out.println(s);
-					System.out.println(Arrays.toString(b));
 					if (b[n - 4] == 13 && b[n - 3] == 10 && b[n - 2] == 13 && b[n - 1] == 10) {
 
-						 s = "HTTP/1.1 200\n" + "Content-Type: application/json;charset=UTF-8\n"
-								+ "Transfer-Encoding: chunked\n" + "Date: Sat, 07 Mar 2020 00:37:34 GMT\n" + "\n"
-								+ "1d\n" + "{\"state\":200,\"uptime\":857891}\n" + "0\n";
+						String s = "HTTP/1.1 200\n\nhello world!\n\n";
 
 						resp.write(s.getBytes());
 						resp.send();

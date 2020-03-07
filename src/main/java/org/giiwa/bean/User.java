@@ -830,7 +830,7 @@ public class User extends Bean {
 
 	public static User loadByToken(String token, long expired) {
 		try {
-			String s = new String(Digest.des_decrypt(Base32.decode(token), "giiwa"));
+			String s = new String(Digest.des_decrypt(Base32.decode(token), "giisoo12"));
 			String[] ss = X.split(s, "//");
 			if (ss != null && ss.length == 2) {
 				long id = X.toLong(ss[0]);
@@ -848,7 +848,7 @@ public class User extends Bean {
 	public String token() {
 		try {
 			String s = id + "//" + System.currentTimeMillis();
-			return Base32.encode(Digest.des_encrypt(s.getBytes(), "giiwa"));
+			return Base32.encode(Digest.des_encrypt(s.getBytes(), "giisoo12"));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -968,6 +968,12 @@ public class User extends Bean {
 
 		return role.getAccesses();
 
+	}
+
+	public static void main(String[] args) {
+		User u = new User();
+		u.id = 10;
+		System.out.println(u.token());
 	}
 
 }
