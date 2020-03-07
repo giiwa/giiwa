@@ -44,11 +44,15 @@ public class IoResponse {
 //			log.debug("o1=" + o1.readableBytes() + "<" + o1.writableBytes() + "<" + o1.capacity());
 
 			o1.writeBytes(data);
-			ch.writeAndFlush(o1);
+			ch.write(o1);
 
 		} else {
-			ch.writeAndFlush(data);
+			ch.write(data);
 		}
+
+		ch.flush();
+
+		_compact();
 
 	}
 
@@ -81,16 +85,28 @@ public class IoResponse {
 
 	}
 
-	public void release() {
+	private void _compact() {
+
+		if (data.readerIndex() < 1024)
+			return;
+
+		ByteBuf b = Unpooled.buffer(data.readableBytes() + 1024);
+		b.writeBytes(data);
 		data.release();
+		data = b;
+
 	}
 
 	public int size() {
 		return data.readableBytes();
 	}
 
-	public void retain() {
-		data.retain();
+	public void release() {
+		data.release();
 	}
+
+//	public void retain() {
+//		data.retain();
+//	}
 
 }

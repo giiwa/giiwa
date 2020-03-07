@@ -158,8 +158,6 @@ public class FileClient {
 			log.error(e.getMessage(), e);
 		} finally {
 
-			r.release();
-
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -247,8 +245,6 @@ public class FileClient {
 			log.error(e.getMessage(), e);
 		} finally {
 
-			r.release();
-
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -314,8 +310,6 @@ public class FileClient {
 			throw new IOException(e);
 		} finally {
 
-			r.release();
-
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -373,8 +367,6 @@ public class FileClient {
 			close();
 			log.error(e.getMessage(), e);
 		} finally {
-
-			r.release();
 
 			pending.remove(s);
 
@@ -449,8 +441,6 @@ public class FileClient {
 			log.error(e.getMessage(), e);
 		} finally {
 
-			r.release();
-
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -517,8 +507,6 @@ public class FileClient {
 			log.error(e.getMessage(), e);
 		} finally {
 
-			r.release();
-
 			pending.remove(s);
 
 			costs.addAndGet(t.pastms());
@@ -583,8 +571,6 @@ public class FileClient {
 			close();
 			log.error(e.getMessage(), e);
 		} finally {
-
-			r.release();
 
 			pending.remove(s);
 
@@ -664,8 +650,6 @@ public class FileClient {
 			close();
 			log.error(e.getMessage(), e);
 		} finally {
-
-			r.release();
 
 			pending.remove(s);
 

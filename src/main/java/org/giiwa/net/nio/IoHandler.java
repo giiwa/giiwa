@@ -19,11 +19,18 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 
-		AttributeKey<IoRequest> a = AttributeKey.valueOf("req");
-		Attribute<IoRequest> at = ctx.channel().attr(a);
-		IoRequest r = at.get();
-		if (r != null) {
-			r.release();
+		AttributeKey<IoRequest> req = AttributeKey.valueOf("req");
+		Attribute<IoRequest> req1 = ctx.channel().attr(req);
+		IoRequest r1 = req1.get();
+		if (r1 != null) {
+			r1.release();
+		}
+
+		AttributeKey<IoResponse> resp = AttributeKey.valueOf("resp");
+		Attribute<IoResponse> resp1 = ctx.channel().attr(resp);
+		IoResponse r2 = resp1.get();
+		if (r2 != null) {
+			r2.release();
 		}
 
 		super.handlerRemoved(ctx);
@@ -39,28 +46,28 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 
 		try {
 			AttributeKey<IoRequest> a = AttributeKey.valueOf("req");
-			Attribute<IoRequest> at = ctx.channel().attr(a);
+			Attribute<IoRequest> a1 = ctx.channel().attr(a);
 
-			IoRequest req = at.get();
+			IoRequest req = a1.get();
 			if (req == null) {
 				req = IoRequest.create(m);
-				at.set(req);
+				a1.set(req);
 			} else {
 				req.put(m);
 			}
 
-			IoResponse resp = IoResponse.create(ctx.channel());
+			AttributeKey<IoResponse> b = AttributeKey.valueOf("resp");
+			Attribute<IoResponse> b1 = ctx.channel().attr(b);
 
-			try {
-				resp.retain();
-
-				process(req, resp);
-
-				req.compact();
-
-			} finally {
-				resp.release();
+			IoResponse resp = b1.get();
+			if (resp == null) {
+				resp = IoResponse.create(ctx.channel());
+				b1.set(resp);
 			}
+
+			process(req, resp);
+
+			req.compact();
 
 		} finally {
 			m.release();

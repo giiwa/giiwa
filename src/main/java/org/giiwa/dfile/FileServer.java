@@ -166,7 +166,7 @@ public class FileServer {
 
 		long seq = req.readLong();
 
-		resp.retain();
+//		resp.retain();
 
 		TimeStamp t = TimeStamp.create();
 		Task.schedule(() -> {
@@ -211,7 +211,6 @@ public class FileServer {
 				resp.send(resp.size() + 8, seq);
 			} finally {
 				req.release();
-				resp.release();
 			}
 		});
 
