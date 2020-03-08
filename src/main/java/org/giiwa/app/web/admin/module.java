@@ -365,6 +365,17 @@ public class module extends Controller {
 			}
 			out.closeEntry();
 
+			// create server
+			create(out, name + "/src/model/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/server/").closeEntry();
+
+			create(out, name + "/src/model/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/server/DemoServer.java");
+			f1 = module.getFile("/admin/demo/src/model/server/DemoServer.java");
+			if (f1 != null) {
+				copy(out, f1, new String[] { "org.giiwa.demo.server",
+						(p1.substring(0, p1.lastIndexOf("/")) + "/server").replaceAll("/", ".") });
+			}
+			out.closeEntry();
+
 			// copy demo model
 			create(out, name + "/src/model/java/" + p1 + "/demo.java");
 			f1 = module.getFile("/admin/demo/src/model/web/demo.java");
@@ -662,8 +673,7 @@ public class module extends Controller {
 			e.delete();
 			log.error(url, e1);
 
-			GLog.applog.error(module.class, "add", "entity not found in repo for [" + url + "]", e1, login,
-					this.ip());
+			GLog.applog.error(module.class, "add", "entity not found in repo for [" + url + "]", e1, login, this.ip());
 
 			jo.put(X.STATE, 404);
 			jo.put(X.ERROR, "entity not found in repo for [" + url + "]");
