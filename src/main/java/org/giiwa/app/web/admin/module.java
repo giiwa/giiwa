@@ -408,6 +408,15 @@ public class module extends Controller {
 			}
 			out.closeEntry();
 
+			create(out, name + "/src/model/java/" + p1 + "/admin/" + name + "setting.java");
+			f1 = module.getFile("/admin/demo/src/model/web/admin/demosetting.java");
+			if (f1 != null) {
+				copy(out, f1, new String[] { "org.giiwa.demo.web", p1.replaceAll("/", ".") },
+						new String[] { "demosetting", name + "setting" }, new String[] { "org.giiwa.demo.bean",
+								(p1.substring(0, p1.lastIndexOf("/")) + "/bean").replaceAll("/", ".") });
+			}
+			out.closeEntry();
+
 			// end of model
 
 			/**
