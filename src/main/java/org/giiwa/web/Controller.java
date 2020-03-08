@@ -526,21 +526,6 @@ public class Controller {
 
 			req.setCharacterEncoding(ENCODING);
 
-			/**
-			 * set default data in model
-			 */
-			this.lang = Language.getLanguage(locale());
-
-			this.put("lang", lang);
-			this.put(X.URI, uri);
-			this.put("module", Module.home);
-			this.put("path", this.path);
-			this.put("req", this);
-			this.put("global", Global.getInstance());
-			this.put("conf", Config.getConf());
-			this.put("local", Local.getInstance());
-			this.put("requestid", UID.random(20));
-
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -748,14 +733,14 @@ public class Controller {
 	 * @param name the name
 	 * @param o    the object
 	 */
-	final public void put(String name, Object o) {
+	final public Controller put(String name, Object o) {
 		// System.out.println("put:" + name + "=>" + o);
 
 		if (data == null) {
 			data = new HashMap<String, Object>();
 		}
 		if (name == null) {
-			return;
+			return this;
 		}
 
 		if (o == null) {
@@ -767,7 +752,7 @@ public class Controller {
 			data.put(name, o);
 		}
 
-		return;
+		return this;
 	}
 
 	/**
@@ -787,8 +772,8 @@ public class Controller {
 	 * @param name the name of data in model
 	 * @param o    the value object
 	 */
-	final public void set(String name, Object o) {
-		put(name, o);
+	final public Controller set(String name, Object o) {
+		return put(name, o);
 	}
 
 	/**
@@ -1942,6 +1927,21 @@ public class Controller {
 
 			outputed++;
 
+			/**
+			 * set default data in model
+			 */
+			this.lang = Language.getLanguage(locale());
+
+			this.put("lang", lang);
+			this.put(X.URI, uri);
+			this.put("module", Module.home);
+			this.put("path", this.path);
+			this.put("req", this);
+			this.put("global", Global.getInstance());
+			this.put("conf", Config.getConf());
+			this.put("local", Local.getInstance());
+			this.put("requestid", UID.random(20));
+
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
 			if (file != null && file.exists()) {
@@ -2199,33 +2199,23 @@ public class Controller {
 	 * @param code
 	 */
 	final public void send(int code) {
-		if (this.isAjax()) {
 
-			JSON j1 = JSON.create();
-			j1.putAll(data);
-			send(JSON.create().append(X.STATE, code));
+		status = code;
 
-		} else {
-
-			try {
-				resp.sendError(code, (String) data.get(X.MESSAGE));
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
-
+		JSON j1 = JSON.create();
+		j1.putAll(data);
+		send(j1.append(X.STATE, code));
 	}
 
-	/**
-	 * send error code and message
-	 * 
-	 * @param code
-	 * @param msg
-	 */
-	final public void send(int code, String msg) {
-		status = code;
-		this.set(X.MESSAGE, msg);
-		send(code);
+	final public void error(int code) {
+		try {
+			status = code;
+
+			resp.sendError(code, (String) data.get(X.MESSAGE));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
 	}
 
 	/**
