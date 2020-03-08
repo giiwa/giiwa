@@ -2199,7 +2199,21 @@ public class Controller {
 	 * @param code
 	 */
 	final public void send(int code) {
-		send(code, X.MESSAGE);
+		if (this.isAjax()) {
+
+			JSON j1 = JSON.create();
+			j1.putAll(data);
+			send(JSON.create().append(X.STATE, code));
+
+		} else {
+
+			try {
+				resp.sendError(code, (String) data.get(X.MESSAGE));
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+
 	}
 
 	/**
@@ -2209,12 +2223,9 @@ public class Controller {
 	 * @param msg
 	 */
 	final public void send(int code, String msg) {
-		try {
-			status = code;
-			resp.sendError(code, msg);
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
-		}
+		status = code;
+		this.set(X.MESSAGE, msg);
+		send(code);
 	}
 
 	/**
