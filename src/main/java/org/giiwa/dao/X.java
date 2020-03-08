@@ -303,7 +303,7 @@ public final class X {
 		if (s == null) {
 			return true;
 		}
-		
+
 		if (s instanceof String) {
 			return X.EMPTY.equals(s);
 		} else if (s instanceof Collection) {
@@ -772,7 +772,7 @@ public final class X {
 
 		List<T> l2 = new ArrayList<T>();
 
-		if (o instanceof Collection) {
+		if (o instanceof Iterable) {
 			Collection l1 = (Collection) o;
 			for (Object e : l1) {
 				T t = cb.apply(e);
@@ -1120,7 +1120,7 @@ public final class X {
 		s = "\"Ford Pantera,L\",15.8,8,351,264,4.22,3.17,14.5,0,1,5,4";
 		Object[] l1 = X.csv(s);
 		System.out.println(l1[0]);
-		
+
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {
