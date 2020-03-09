@@ -28,7 +28,7 @@ $(function(){
 	           pointFormat: '{series.name}: <b>{point.y}%</b>'
 	       },
 	    series: [
-					{name: "$lang.get('cpu.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$lang.format($!c.usage, '%.1f')},#end]}
+					{name: "$lang.get('cpu.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.usage},#end]}
 	    			], 
 	});
 
