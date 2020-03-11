@@ -48,6 +48,7 @@ import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.RDB;
 import org.giiwa.dao.RDSHelper;
+import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.FileServer;
 import org.giiwa.engine.R;
@@ -133,7 +134,7 @@ public class DefaultListener implements IListener {
 			dashboard.portlet("/portlet/db/read");
 			dashboard.portlet("/portlet/db/write");
 			dashboard.portlet("/portlet/db/times");
-			
+
 			dashboard.portlet("br");
 			dashboard.portlet("/portlet/mq/read");
 			dashboard.portlet("/portlet/mq/write");
@@ -174,6 +175,9 @@ public class DefaultListener implements IListener {
 			}
 
 			IOUtil.cleanup(f);
+
+			Schema.add("org.giiwa.bean");
+			Schema.add("org.giiwa.conf");
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
@@ -303,6 +307,7 @@ public class DefaultListener implements IListener {
 		if (count > 0) {
 			// TODO
 		}
+
 	}
 
 	/*

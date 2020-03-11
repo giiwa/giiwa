@@ -1633,8 +1633,6 @@ public class Controller {
 			}
 		}
 
-		this.put("me", login);
-
 		return login;
 	}
 
@@ -1925,8 +1923,6 @@ public class Controller {
 				throw new Exception("show twice!");
 			}
 
-			outputed++;
-
 			/**
 			 * set default data in model
 			 */
@@ -1941,6 +1937,7 @@ public class Controller {
 			this.put("conf", Config.getConf());
 			this.put("local", Local.getInstance());
 			this.put("requestid", UID.random(20));
+			this.put("me", login);
 
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
@@ -1965,6 +1962,8 @@ public class Controller {
 			GLog.applog.error(this.getClass(), "show", e.getMessage(), e, login, this.ip());
 
 			error(e);
+		} finally {
+			outputed++;
 		}
 
 		return false;
