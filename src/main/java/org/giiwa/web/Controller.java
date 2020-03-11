@@ -2202,7 +2202,9 @@ public class Controller {
 		status = code;
 
 		JSON j1 = JSON.create();
-		j1.putAll(data);
+		if (data != null && !data.isEmpty()) {
+			j1.putAll(data);
+		}
 		send(j1.append(X.STATE, code));
 	}
 
