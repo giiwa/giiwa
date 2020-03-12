@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,7 +50,7 @@ class Notify extends IStub {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T wait(String name, long timeout, Runnable prepare) {
+	public static <T, R> R wait(String name, long timeout, Function<T, R> func) {
 		Object[] a = new Object[1];
 		try {
 			synchronized (a) {
@@ -62,10 +63,15 @@ class Notify extends IStub {
 					l1.add(a);
 				}
 
-				if (prepare != null) {
-					prepare.run();
+				R t1 = null;
+				if (func != null) {
+					t1 = func.apply(null);
 				}
-				a.wait(timeout);
+				if (t1 != null) {
+					return t1;
+				} else {
+					a.wait(timeout);
+				}
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -81,7 +87,7 @@ class Notify extends IStub {
 			}
 		}
 
-		return ((T) a[0]);
+		return ((R) a[0]);
 	}
 
 }

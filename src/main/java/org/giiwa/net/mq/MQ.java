@@ -7,6 +7,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -410,7 +411,7 @@ public abstract class MQ {
 		return Notify.wait(name, timeout, null);
 	}
 
-	public static <T> T wait(String name, long timeout, Runnable prepare) {
+	public static <T, R> R wait(String name, long timeout, Function<T, R> prepare) {
 		return Notify.wait(name, timeout, prepare);
 	}
 

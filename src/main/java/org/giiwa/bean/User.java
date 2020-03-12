@@ -77,29 +77,21 @@ public class User extends Bean {
 
 	public static final BeanDAO<Long, User> dao = BeanDAO.create(User.class);
 
-	@Column(name = X.ID)
-	private long id;
+	public long id;
 
-	@Column(name = "name")
-	private String name;
+	public String name;
 
-	@Column(name = "nickname")
-	private String nickname;
+	public String nickname;
 
-	@Column(name = "title")
-	private String title;
+	public String title;
 
-	@Column(name = "password")
-	private String password;
+//	private String password;
+//
+//	private String md5passwd;
+//
+//	private String createdip;
 
-	@Column(name = "md5passwd")
-	private String md5passwd;
-
-	@Column(name = "createdip")
-	private String createdip;
-
-	@Column(name = "photo")
-	private String photo;
+	public String photo;
 
 	@Column(name = "createdua")
 	private String createdua;
