@@ -1391,7 +1391,8 @@ public class Controller {
 
 			} else if (t.indexOf("urlencoded") > -1) {
 				// do nothing
-				s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+//				s = new String(s.getBytes("ISO-8859-1"), ENCODING);
+
 			} else if (t.indexOf("application/json") > -1) {
 //				log.debug("get s=" + s);
 				if (method.isPost()) {
