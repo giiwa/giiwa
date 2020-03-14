@@ -1178,7 +1178,7 @@ public class MongoHelper implements Helper.DBHelper {
 		System.out.println("count=" + i);
 
 		List<JSON> l1 = h.count("gi_user", W.create().and("id", 1, W.OP.gt).sort("count", -1), new String[] { "a" },
-				Helper.DEFAULT);
+				Helper.DEFAULT, 10);
 		System.out.println("count=" + l1);
 
 		l1 = h.max("gi_user", W.create().sort("max", -1), "b", new String[] { "a" }, Helper.DEFAULT);
@@ -1356,8 +1356,8 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @return
 	 */
 	@Override
-	public List<JSON> count(String collection, W q, String[] name, String db) {
-		return count(collection, q, "*", name, db);
+	public List<JSON> count(String collection, W q, String[] name, String db, int n) {
+		return count(collection, q, "*", name, db, n);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -1861,7 +1861,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public List<JSON> count(String table, W q, String name, String[] group, String db) {
+	public List<JSON> count(String table, W q, String name, String[] group, String db, int n) {
 
 		TimeStamp t = TimeStamp.create();
 		MongoCollection<Document> db1 = null;
@@ -1918,6 +1918,8 @@ public class MongoHelper implements Helper.DBHelper {
 						j1.putAll((Map) o);
 						l2.add(j1);
 					}
+					if (l2.size() >= n)
+						break;
 				}
 
 				if (log.isDebugEnabled())

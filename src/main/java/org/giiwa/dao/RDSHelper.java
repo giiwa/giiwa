@@ -2532,8 +2532,8 @@ public class RDSHelper implements Helper.DBHelper {
 	}
 
 	@Override
-	public List<JSON> count(String table, W q, String[] group, String db) {
-		return count(table, q, "*", group, db);
+	public List<JSON> count(String table, W q, String[] group, String db, int n) {
+		return count(table, q, "*", group, db, n);
 	}
 
 	@Override
@@ -3133,7 +3133,7 @@ public class RDSHelper implements Helper.DBHelper {
 	}
 
 	@Override
-	public List<JSON> count(String table, W q, String name, String[] group, String db) {
+	public List<JSON> count(String table, W q, String name, String[] group, String db, int n1) {
 
 		/**
 		 * create the sql statement
@@ -3218,6 +3218,10 @@ public class RDSHelper implements Helper.DBHelper {
 					j.append("_id", j1).append("count", r.getLong("t"));
 
 					l1.add(j);
+
+					if (l1.size() >= n1)
+						break;
+
 				}
 				return l1;
 			}

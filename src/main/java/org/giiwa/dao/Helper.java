@@ -2326,9 +2326,9 @@ public class Helper implements Serializable {
 			throw new SQLException("not set table");
 		}
 
-		public List<JSON> count(String group) throws SQLException {
+		public List<JSON> count(String group, int n) throws SQLException {
 			if (dao != null) {
-				return dao.count(this, X.split(group, "[,]"));
+				return dao.count(this, X.split(group, "[,]"), n);
 			} else if (!X.isEmpty(table)) {
 				if (access == null || access.read(table, group)) {
 					W q = this;
@@ -2343,7 +2343,7 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.count(table, q, X.split(group, "[,]"), Helper.DEFAULT);
+					return helper.count(table, q, X.split(group, "[,]"), Helper.DEFAULT, n);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -3617,9 +3617,9 @@ public class Helper implements Serializable {
 
 		long count(String table, W q, String db);
 
-		List<JSON> count(String table, W q, String[] group, String db);
+		List<JSON> count(String table, W q, String[] group, String db, int n);
 
-		List<JSON> count(String table, W q, String name, String[] group, String db);
+		List<JSON> count(String table, W q, String name, String[] group, String db, int n);
 
 		<T> T sum(String table, W q, String name, String db);
 
@@ -3687,15 +3687,15 @@ public class Helper implements Serializable {
 		}
 	}
 
-	public static List<JSON> count(String table, W q, String[] name, String dbName) {
+	public static List<JSON> count(String table, W q, String[] name, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.count(table, q, name, dbName);
+				return primary.count(table, q, name, dbName, n);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.count(table, q, name, dbName);
+						return h.count(table, q, name, dbName, n);
 					}
 				}
 			}
