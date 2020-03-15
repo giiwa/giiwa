@@ -37,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.GImage;
 import org.giiwa.misc.Zip;
 import org.giiwa.web.Language;
 
@@ -1270,5 +1271,11 @@ public final class X {
 		}
 
 	}
+
+	public static class Image extends GImage {
+
+	}
+	
+	
 
 }

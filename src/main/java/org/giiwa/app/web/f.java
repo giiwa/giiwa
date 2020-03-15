@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 import org.giiwa.bean.Disk;
-import org.giiwa.bean.GLog;
 import org.giiwa.bean.Repo;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Global;
@@ -54,7 +53,7 @@ public class f extends Controller {
 			TimeStamp t = TimeStamp.create();
 
 			try {
-				GLog.applog.info(f.class, "get", f1.getFilename());
+				//GLog.applog.info(f.class, "get", f1.getFilename());
 
 				String mime = Controller.getMimeType(f1.getName());
 				log.debug("mime=" + mime);
@@ -127,7 +126,7 @@ public class f extends Controller {
 			TimeStamp t = TimeStamp.create();
 
 			try {
-				GLog.applog.info(f.class, "download", f1.getFilename());
+				//GLog.applog.info(f.class, "download", f1.getFilename());
 				this.send(f1.getName(), f1.getInputStream(), f1.length());
 
 			} finally {
@@ -254,7 +253,7 @@ public class f extends Controller {
 			return true;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			GLog.oplog.error(f.class, "upload", e.getMessage(), e, login, this.ip());
+//			GLog.oplog.error(f.class, "upload", e.getMessage(), e, login, this.ip());
 
 			if (jo == null) {
 				this.put(X.ERROR, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -289,7 +288,7 @@ public class f extends Controller {
 
 		} catch (Exception e) {
 			log.error(path, e);
-			GLog.oplog.error(f.class, "temp", e.getMessage(), e, login, this.ip());
+//			GLog.oplog.error(f.class, "temp", e.getMessage(), e, login, this.ip());
 		}
 
 		this.notfound(name);

@@ -553,6 +553,11 @@ public class user extends Controller {
 		String name = this.getString("name").trim().toLowerCase();
 		String value = this.getString("value").trim().toLowerCase();
 
+		if (X.isEmpty(value)) {
+			this.set(X.MESSAGE, lang.get("user.name.format.error")).send(201);
+			return;
+		}
+
 		JSON jo = new JSON();
 		if ("name".equals(name)) {
 			try {
@@ -567,14 +572,17 @@ public class user extends Controller {
 				} else {
 					String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
 
-					if (X.isEmpty(value) || !value.matches(rule)) {
-						jo.put(X.STATE, 201);
-						jo.put(X.MESSAGE, lang.get("user.name.format.error"));
+					if ((!X.isEmpty(rule) && !value.matches(rule))) {
 
 						GLog.securitylog.info(user.class, "verify",
 								"name=" + name + ",value=" + value + ",rule=" + rule, login, this.ip());
+
+						this.set(X.MESSAGE, lang.get("user.name.format.error")).send(201);
+						return;
+
 					} else {
-						jo.put(X.STATE, 200);
+						this.send(200);
+						return;
 					}
 				}
 			} catch (Exception e) {
@@ -583,12 +591,14 @@ public class user extends Controller {
 			}
 		} else if ("password".equals(name)) {
 			String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
-			if (X.isEmpty(value) || !value.matches(rule)) {
-				jo.put(X.STATE, 201);
-				jo.put(X.MESSAGE, lang.get("user.passwd.format.error"));
+			if (!X.isEmpty(rule) && !value.matches(rule)) {
 
 				GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
 						this.ip());
+
+				this.set(X.MESSAGE, lang.get("user.name.format.error")).send(201);
+				return;
+
 			} else {
 				jo.put(X.STATE, 200);
 			}

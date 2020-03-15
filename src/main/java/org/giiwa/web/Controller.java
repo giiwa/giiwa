@@ -1609,16 +1609,18 @@ public class Controller {
 		if (login != null) {
 			if (System.currentTimeMillis() - login.getLong("lastlogined") > X.AMINUTE) {
 
+				User.dao.update(login.id, V.create("lastlogined", System.currentTimeMillis()));
+
+				login.set("lastlogined", System.currentTimeMillis());
+				Session s = session(true);
 				try {
-					login.set("lastlogined", System.currentTimeMillis());
-					Session s = session(true);
 					s.set("user", login);
 					s.store();
 				} catch (Exception e) {
-
 				}
 
-				V v = V.create();
+				V v = V.create("lastlogined", System.currentTimeMillis());
+
 				String type = (String) login.get("logintype");
 				if (X.isSame(type, "web")) {
 					v.append("weblogined", System.currentTimeMillis());
@@ -1626,11 +1628,21 @@ public class Controller {
 					v.append("ajaxlogined", System.currentTimeMillis());
 				}
 
-				if (!v.isEmpty()) {
-					Task.schedule(() -> {
-						User.dao.update(login.getId(), v);
-					});
-				}
+				Task.schedule(() -> {
+					try {
+						User.dao.update(login.id, v);
+						login = User.dao.load(login.id);
+						if (login == null || login.isLocked() || login.isDeleted()) {
+							s.remove("user");
+						} else {
+							s.set("user", login);
+						}
+						s.store();
+					} catch (Exception e) {
+
+					}
+
+				});
 			}
 		}
 

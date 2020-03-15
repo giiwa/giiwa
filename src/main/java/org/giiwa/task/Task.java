@@ -644,6 +644,9 @@ public abstract class Task implements Runnable, Serializable {
 
 					} catch (Throwable e) {
 						log.error(e.getMessage(), e);
+
+						// schedule a local
+						LocalRunner.schedule(this, msec, global);
 					}
 
 				} else {

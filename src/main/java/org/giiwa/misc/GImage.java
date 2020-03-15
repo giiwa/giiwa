@@ -1245,12 +1245,16 @@ public class GImage {
 			g.setColor(color);
 			g.fillRect(0, 0, w, w);
 
-			g.setFont(new Font("宋体", Font.BOLD, w / 2));
+			int n = s.length() + 1;
+
+			g.setFont(new Font("宋体", Font.BOLD, w / n));
 			int x = (w - g.getFontMetrics().stringWidth(s)) / 2;
+
+			int h = g.getFontMetrics().stringWidth("A");
 
 			g.setColor(Color.WHITE);
 
-			g.drawString(s, x, w - x);
+			g.drawString(s, x, (w + h) / 2);
 
 			ImageIO.write(out, "png", output);
 
@@ -1269,7 +1273,11 @@ public class GImage {
 		try {
 			OutputStream out = new FileOutputStream(s2);
 
-			scale1(new FileInputStream(s1), out, 300, 300);
+//			scale1(new FileInputStream(s1), out, 300, 300);
+
+			X.Image.cover(100, "测试",
+					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
+					out);
 
 		} catch (Exception e) {
 			e.printStackTrace();
