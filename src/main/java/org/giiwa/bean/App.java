@@ -37,7 +37,7 @@ import org.giiwa.misc.Digest;
  * @author wujun
  *
  */
-@Table(name = "gi_app")
+@Table(name = "gi_app", memo = "GI-应用接入")
 public class App extends Bean {
 
 	/**
@@ -49,22 +49,22 @@ public class App extends Bean {
 
 	public static final BeanDAO<Long, App> dao = BeanDAO.create(App.class);
 
-	@Column(name = X.ID, index = true, unique = true)
+	@Column(memo = "唯一序号")
 	private long id;
 
-	@Column(name = "appid", index = true, unique = true)
+	@Column(memo = "应用名称")
 	private String appid;
 
-	@Column(name = "memo")
+	@Column(memo = "备注")
 	private String memo;
 
-	@Column(name = "secret")
+	@Column(memo = "密钥")
 	private String secret;
 
-	@Column(name = "ip")
+	@Column(memo = "IP地址")
 	private String ip;
 
-	@Column(name = "lastime")
+	@Column(memo = "lastime")
 	private long lastime;
 
 	@Column(name = "expired")

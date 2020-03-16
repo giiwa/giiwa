@@ -48,7 +48,7 @@ import org.hyperic.sigar.NetStat;
  * @author wujun
  *
  */
-@Table(name = "gi_node")
+@Table(name = "gi_node", memo="GI-集群节点")
 public class Node extends Bean {
 
 	/**
@@ -62,16 +62,16 @@ public class Node extends Bean {
 
 	public static final long LOST = 10 * 1000;
 
-	@Column(name = X.ID, index = true)
+	@Column(memo = "唯一序号")
 	private String id;
 
 	@Column(name = "pid")
 	private String pid;
 
-	@Column(name = "ip")
+	@Column(memo = "IP地址")
 	private String ip;
 
-	@Column(name = "label")
+	@Column(memo = "标签")
 	private String label;
 
 	@Column(name = "url")

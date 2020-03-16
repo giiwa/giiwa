@@ -14,7 +14,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 
-@Table(name = "gi_m_disk")
+@Table(name = "gi_m_disk", memo = "GI-磁盘监测")
 public class _Disk extends Bean {
 
 	/**
@@ -26,25 +26,25 @@ public class _Disk extends Bean {
 
 	public static BeanDAO<String, _Disk> dao = BeanDAO.create(_Disk.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "node")
+	@Column(memo = "节点")
 	String node;
 
-	@Column(name = "disk")
+	@Column(memo = "磁盘")
 	String disk;
 
-	@Column(name = "path")
+	@Column(memo = "路径")
 	String path;
 
-	@Column(name = "total")
+	@Column(memo = "总空间")
 	long total;
 
-	@Column(name = "used")
+	@Column(memo = "已使用")
 	long used;
 
-	@Column(name = "free")
+	@Column(memo = "空闲")
 	long free;
 
 	public long getUsed() {
@@ -95,7 +95,7 @@ public class _Disk extends Bean {
 		}
 	}
 
-	@Table(name = "gi_m_disk_record")
+	@Table(name = "gi_m_disk_record", memo = "GI-磁盘监测历史")
 	public static class Record extends _Disk {
 
 		/**

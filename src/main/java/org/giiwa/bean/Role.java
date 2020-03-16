@@ -30,7 +30,7 @@ import org.giiwa.json.JSON;
  * @author yjiang
  * 
  */
-@Table(name = "gi_role")
+@Table(name = "gi_role", memo="GI-角色")
 public class Role extends Bean {
 
 	/**
@@ -42,13 +42,13 @@ public class Role extends Bean {
 
 	public static final BeanDAO<Long, Role> dao = BeanDAO.create(Role.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	public long id;
 
-	@Column(name = "name")
+	@Column(memo = "名称")
 	public String name;
 
-	@Column(name = "url")
+	@Column(memo = "角色首页")
 	public String url; // 首页
 
 	// String memo;
@@ -195,7 +195,7 @@ public class Role extends Bean {
 		}
 	}
 
-	@Table(name = "gi_roleaccess")
+	@Table(name = "gi_roleaccess", memo="GI-角色权限")
 	public static class RoleAccess extends Bean {
 
 		/**

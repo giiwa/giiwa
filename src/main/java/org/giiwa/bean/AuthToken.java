@@ -37,7 +37,7 @@ import org.giiwa.dao.Helper.W;
  * @author wujun
  *
  */
-@Table(name = "gi_authtoken")
+@Table(name = "gi_authtoken", memo = "GI-授权TOKEN")
 public class AuthToken extends Bean {
 
 	/**
@@ -49,19 +49,19 @@ public class AuthToken extends Bean {
 
 	public static final BeanDAO<String, AuthToken> dao = BeanDAO.create(AuthToken.class);
 
-	@Column(name = X.ID, index = true, unique = true)
+	@Column(memo = "唯一序号")
 	private String id;
 
-	@Column(name = "uid")
+	@Column(memo = "用户ID")
 	private long uid;
 
-	@Column(name = "token", index = true)
+	@Column(memo = "TOKEN")
 	private String token;
 
-	@Column(name = "expired", index = true)
+	@Column(memo = "过期时间")
 	private long expired;
 
-	@Column(name = "sid")
+	@Column(memo = "会话ID")
 	private String sid;
 
 	/**

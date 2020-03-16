@@ -31,7 +31,7 @@ import org.giiwa.web.Module;
  * @author yjiang
  * 
  */
-@Table(name = "gi_glog")
+@Table(name = "gi_glog", memo = "GI-系统日志")
 public class GLog extends Bean {
 
 	private static final long serialVersionUID = 1L;
@@ -47,10 +47,10 @@ public class GLog extends Bean {
 	private static final int LEVEL_WARN = 1;
 	private static final int LEVEL_ERROR = 2;
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "type1")
+	@Column(name = "type1", memo = "类型")
 	int type;
 
 	public String getId() {

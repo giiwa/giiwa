@@ -243,10 +243,10 @@ public class Session implements Serializable {
 
 		public static final BeanDAO<String, SID> dao = BeanDAO.create(SID.class);
 
-		@Column(name = "sid")
+		@Column(memo = "会话ID")
 		String sid;
 
-		@Column(name = "uid")
+		@Column(memo = "用户ID")
 		long uid;
 
 		public static void update(String sid, long uid) {

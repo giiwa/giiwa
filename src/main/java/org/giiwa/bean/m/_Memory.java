@@ -12,7 +12,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 
-@Table(name = "gi_m_mem")
+@Table(name = "gi_m_mem", memo = "GI-内存监测")
 public class _Memory extends Bean {
 
 	/**
@@ -24,28 +24,28 @@ public class _Memory extends Bean {
 
 	public static BeanDAO<String, _Memory> dao = BeanDAO.create(_Memory.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "node")
+	@Column(memo = "节点")
 	String node;
 
-	@Column(name = "total")
+	@Column(memo = "总空间")
 	long total;
 
-	@Column(name = "used")
+	@Column(memo = "已使用")
 	long used;
 
-	@Column(name = "usage")
+	@Column(memo = "使用率")
 	int usage;
 
-	@Column(name = "free")
+	@Column(memo = "空余")
 	long free;
 
-	@Column(name = "swaptotal")
+	@Column(memo = "总交换空间")
 	long swaptotal;
 
-	@Column(name = "swapfree")
+	@Column(memo = "交换空间空余")
 	long swapfree;
 
 	public long getUsed() {
@@ -76,7 +76,7 @@ public class _Memory extends Bean {
 		}
 	}
 
-	@Table(name = "gi_m_mem_record")
+	@Table(name = "gi_m_mem_record", memo = "GI-内存监测历史")
 	public static class Record extends _Memory {
 
 		/**

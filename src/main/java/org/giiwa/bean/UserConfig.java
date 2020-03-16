@@ -32,7 +32,7 @@ import org.giiwa.dao.Helper.W;
  * @author wujun
  *
  */
-@Table(name = "gi_userconfig")
+@Table(name = "gi_userconfig", memo="GI-用户设置")
 public class UserConfig extends Bean {
 
 	/**
@@ -44,16 +44,16 @@ public class UserConfig extends Bean {
 
 	public static final BeanDAO<String, UserConfig> dao = BeanDAO.create(UserConfig.class);
 
-	@Column(name = X.ID, index = true)
+	@Column(memo = "唯一序号")
 	private String id;
 
-	@Column(name = "uid", index = true)
+	@Column(memo = "用户ID")
 	private long uid;
 
-	@Column(name = "name", index = true)
+	@Column(memo = "数据名称")
 	private String name;
 
-	@Column(name = "data")
+	@Column(memo = "数据")
 	private String data;
 
 	public static void set(long uid, String name, String value) {

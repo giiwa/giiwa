@@ -14,7 +14,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 
-@Table(name = "gi_m_net")
+@Table(name = "gi_m_net", memo = "GI-网络监测")
 public class _Net extends Bean {
 
 	/**
@@ -26,43 +26,43 @@ public class _Net extends Bean {
 
 	public static BeanDAO<String, _Net> dao = BeanDAO.create(_Net.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "node")
+	@Column(memo = "节点")
 	String node;
 
-	@Column(name = "name")
+	@Column(memo = "名称")
 	String name;
 
-	@Column(name = "inet")
+	@Column(memo = "IPv4")
 	String inet;
 
-	@Column(name = "inet6")
+	@Column(memo = "IPv6")
 	String inet6;
 
-	@Column(name = "txbytes")
+	@Column(memo = "发送字节")
 	long txbytes;
 
-	@Column(name = "txpackets")
+	@Column(memo = "发送包")
 	long txpackets;
 
-	@Column(name = "txdrop")
+	@Column(memo = "发送丢失")
 	long txdrop;
 
-	@Column(name = "txerr")
+	@Column(memo = "发送错误")
 	long txerr;
 
-	@Column(name = "rxbytes")
+	@Column(memo = "接收字节")
 	long rxbytes;
 
-	@Column(name = "rxpackets")
+	@Column(memo = "接收包")
 	long rxpackets;
 
-	@Column(name = "rxdrop")
+	@Column(memo = "接收丢失")
 	long rxdrop;
 
-	@Column(name = "rxerr")
+	@Column(memo = "接收错误")
 	long rxerr;
 
 	public long getTxbytes() {
@@ -136,7 +136,7 @@ public class _Net extends Bean {
 		}
 	}
 
-	@Table(name = "gi_m_net_record")
+	@Table(name = "gi_m_net_record", memo = "GI-网络监测历史")
 	public static class Record extends _Net {
 
 		/**

@@ -65,7 +65,7 @@ import org.giiwa.web.Language;
  * @author yjiang
  * 
  */
-@Table(name = "gi_user")
+@Table(name = "gi_user", memo="GI-用户")
 public class User extends Bean {
 
 	/**
@@ -77,12 +77,16 @@ public class User extends Bean {
 
 	public static final BeanDAO<Long, User> dao = BeanDAO.create(User.class);
 
+	@Column(memo = "唯一序号")
 	public long id;
 
+	@Column(memo = "登录名")
 	public String name;
 
+	@Column(memo = "昵称")
 	public String nickname;
 
+	@Column(memo = "称谓")
 	public String title;
 
 //	private String password;
@@ -91,6 +95,7 @@ public class User extends Bean {
 //
 //	private String createdip;
 
+	@Column(memo = "头像")
 	public String photo;
 
 	@Column(name = "createdua")
@@ -659,7 +664,7 @@ public class User extends Bean {
 
 	}
 
-	@Table(name = "gi_userrole")
+	@Table(name = "gi_userrole", memo = "GI-用户角色")
 	public static class UserRole extends Bean {
 
 		/**
@@ -669,10 +674,10 @@ public class User extends Bean {
 
 		public static final BeanDAO<String, UserRole> dao = BeanDAO.create(UserRole.class);
 
-		@Column(name = "uid")
+		@Column(memo = "用户ID")
 		long uid;
 
-		@Column(name = "rid")
+		@Column(memo = "角色ID")
 		long rid;
 
 	}
@@ -685,7 +690,7 @@ public class User extends Bean {
 	 * @author joe
 	 *
 	 */
-	@Table(name = "gi_userlock")
+	@Table(name = "gi_userlock", memo="GI-用户登录失败")
 	public static class Lock extends Bean {
 
 		/**
@@ -847,7 +852,7 @@ public class User extends Bean {
 		return null;
 	}
 
-	private List<AuthToken> token_obj;
+	private transient List<AuthToken> token_obj;
 
 	public List<AuthToken> getTokens() {
 		if (token_obj == null) {

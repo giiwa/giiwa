@@ -34,7 +34,7 @@ import org.giiwa.web.Language;
  * @author wujun
  *
  */
-@Table(name = "gi_stat")
+@Table(name = "gi_stat", memo="GI-统计")
 public class Stat extends Bean implements Comparable<Stat> {
 
 	/**
@@ -54,19 +54,19 @@ public class Stat extends Bean implements Comparable<Stat> {
 		delta, snapshot;
 	}
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	protected long id;
 
-	@Column(name = "module")
+	@Column(memo = "模块名称")
 	protected String module; // 统计模块
 
-	@Column(name = "date")
+	@Column(memo = "统计日期")
 	protected String date; // 日期
 
-	@Column(name = "time")
+	@Column(memo = "统计时间")
 	protected long time; // 时间
 
-	@Column(name = "size")
+	@Column(memo = "统计粒度")
 	protected String size;// size of the stat data
 
 	public String getDate() {

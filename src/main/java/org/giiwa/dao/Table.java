@@ -50,4 +50,10 @@ public @interface Table {
 	 */
 	String db() default Helper.DEFAULT;
 
+	/**
+	 * 
+	 * @return
+	 */
+	String memo() default X.EMPTY;
+
 }

@@ -37,7 +37,7 @@ import org.giiwa.json.JSON;
  * @author yjiang
  * 
  */
-@Table(name = "gi_menu")
+@Table(name = "gi_menu", memo="GI-菜单")
 public class Menu extends Bean {
 
 	/**

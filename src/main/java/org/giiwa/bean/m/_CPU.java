@@ -12,7 +12,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 
-@Table(name = "gi_m_cpu")
+@Table(name = "gi_m_cpu", memo = "GI-CPU监测")
 public class _CPU extends Bean {
 
 	/**
@@ -24,31 +24,31 @@ public class _CPU extends Bean {
 
 	public static BeanDAO<String, _CPU> dao = BeanDAO.create(_CPU.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "node")
+	@Column(memo = "节点")
 	String node;
 
-	@Column(name = "name")
+	@Column(memo = "名称")
 	String name;
 
-	@Column(name = "sys")
+	@Column(memo = "系统")
 	double sys;
 
-	@Column(name = "user1")
+	@Column(name = "user1", memo = "用户")
 	double user;
 
-	@Column(name = "usage")
+	@Column(memo = "使用率")
 	double usage;
 
-	@Column(name = "wait")
+	@Column(memo = "等待")
 	double wait;
 
-	@Column(name = "nice")
+	@Column(memo = "NICE")
 	double nice;
 
-	@Column(name = "idle")
+	@Column(memo = "空闲")
 	double idle;
 
 	public int getUsage() {
@@ -96,7 +96,7 @@ public class _CPU extends Bean {
 		idle += c1.idle;
 	}
 
-	@Table(name = "gi_m_cpu_record")
+	@Table(name = "gi_m_cpu_record", memo = "GI-CPU监测历史")
 	public static class Record extends _CPU {
 
 		/**

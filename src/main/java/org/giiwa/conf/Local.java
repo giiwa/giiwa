@@ -49,16 +49,16 @@ public final class Local extends Bean {
 
 	public static final BeanDAO<String, Local> dao = BeanDAO.create(Local.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "s")
+	@Column(memo = "字符串值")
 	String s;
 
-	@Column(name = "i")
+	@Column(memo = "整数值")
 	int i;
 
-	@Column(name = "l")
+	@Column(memo = "长整数值")
 	long l;
 
 	private static Local inst = new Local();

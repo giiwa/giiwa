@@ -11,7 +11,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 
-@Table(name = "gi_footprint")
+@Table(name = "gi_footprint", memo = "GI-数据痕迹")
 public class Footprint extends Bean {
 
 	/**
@@ -21,22 +21,22 @@ public class Footprint extends Bean {
 
 	public static BeanDAO<String, Footprint> dao = BeanDAO.create(Footprint.class);
 
-	@Column(name = "id")
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "_table")
+	@Column(name = "_table", memo = "数据表")
 	String table;
 
-	@Column(name = "dataid")
+	@Column(memo = "数据ID")
 	String dataid;
 
-	@Column(name = "field")
+	@Column(memo = "字段名")
 	String field;
 
-	@Column(name = "uid")
+	@Column(memo = "用户ID")
 	long uid;
 
-	@Column(name = "data")
+	@Column(memo = "数据")
 	Object data;
 
 	transient User uid_obj;

@@ -35,7 +35,7 @@ import org.giiwa.dao.Helper.W;
  * @author yjiang
  * 
  */
-@Table(name = "gi_access")
+@Table(name = "gi_access", memo = "GI-权限令牌")
 public class Access extends Bean {
 	/**
 	* 
@@ -43,13 +43,13 @@ public class Access extends Bean {
 	private static final long serialVersionUID = 1L;
 
 	private static Log log = LogFactory.getLog(Access.class);
-	
+
 	public final static BeanDAO<String, Access> dao = BeanDAO.create(Access.class);
 
-	@Column(name = X.ID, index = true, unique = true)
+	@Column(name = X.ID, memo = "名称")
 	private String name;
 
-	@Column(name = "memo")
+	@Column(memo = "备注")
 	private String memo;
 
 	/**
@@ -82,8 +82,7 @@ public class Access extends Bean {
 	/**
 	 * Add a access name, the access name MUST fit with "access.[group].[name]" .
 	 * 
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 */
 	public static void set(String name) {
 		if (Helper.isConfigured()) {
@@ -109,8 +108,7 @@ public class Access extends Bean {
 	/**
 	 * check exists of the name
 	 *
-	 * @param name
-	 *            the name
+	 * @param name the name
 	 * @return true, if successful
 	 */
 	public static boolean exists(String name) {

@@ -32,7 +32,7 @@ import org.giiwa.dao.Helper.W;
  * @author wujun
  *
  */
-@Table(name = "gi_code")
+@Table(name = "gi_code", memo = "GI-验证码")
 public class Code extends Bean {
 
 	/**
@@ -44,20 +44,17 @@ public class Code extends Bean {
 
 	public static final BeanDAO<String, Code> dao = BeanDAO.create(Code.class);
 
-	@Column(name = X.ID, index = true)
+	@Column(memo = "唯一序号")
 	private String id;
 
-	@Column(name = "s1", index = true)
+	@Column(memo = "名称1")
 	private String s1;
 
-	@Column(name = "s2", index = true)
+	@Column(memo = "名称2")
 	private String s2;
 
-	@Column(name = "expired")
+	@Column(memo = "过期时间")
 	private long expired;
-
-	@Column(name = X.CREATED)
-	private long created;
 
 	public long getExpired() {
 		return expired;

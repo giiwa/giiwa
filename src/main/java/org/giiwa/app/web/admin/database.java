@@ -14,6 +14,7 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,9 +23,10 @@ import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Bean;
-import org.giiwa.dao.Beans;
+import org.giiwa.dao.Column;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.Schema;
+import org.giiwa.dao.Table;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
@@ -53,14 +55,21 @@ public class database extends Controller {
 		List<Class<? extends Bean>> l1 = Schema.beans;
 		Map<String, JSON> l2 = new TreeMap<String, JSON>();
 		for (Class<? extends Bean> c : l1) {
-			String table = Helper.getTable(c);
-
-			String name = table;
-			if (!X.isEmpty(name) && !l2.containsKey(name)) {
-				JSON j = JSON.create().append("name", c.getName()).append("table", table)
-						.append("total", Helper.count(W.create(), c)).append("size", Helper.size(c));
-				l2.put(name, j);
+			Table table = (Table) c.getAnnotation(Table.class);
+			if (table == null || X.isEmpty(table.name()) || l2.containsKey(table.name())) {
+				// log.error("table missed/error in [" + t + "] declaretion", new Exception());
+				continue;
 			}
+
+			String display = table.memo();
+			if (X.isEmpty(display)) {
+				display = lang.get("name." + c.getName());
+			}
+
+			JSON j = JSON.create().append("name", c.getName()).append("table", table.name()).append("display", display)
+					.append("total", Helper.count(W.create(), c)).append("size", Helper.size(c));
+			l2.put(table.name(), j);
+
 		}
 		this.set("list", l2.values());
 
@@ -124,42 +133,34 @@ public class database extends Controller {
 					if (c == null)
 						continue;
 
-					Map<String, Class<?>> st = new TreeMap<String, Class<?>>();
-					Beans<Bean> bs = Helper.load(s, W.create().sort("created", -1), 0, 10, Bean.class, Helper.DEFAULT);
-					for (Bean b : bs) {
-						Map<String, Object> m = b.getAll();
-						for (String name : m.keySet()) {
-							Class<?> c1 = m.get(name).getClass();
-							Class<?> c2 = st.get(name);
-							if (c2 == null) {
-								st.put(name, c1);
-							} else if (!X.isSame(c1, c2)) {
-								st.put(name, Object.class);
-							}
-						}
-					}
-
-					// TODO
 					try {
+
+						Table table = (Table) c.getAnnotation(Table.class);
+						String display = table.memo();
+						if (X.isEmpty(display)) {
+							display = lang.get("name." + c.getName());
+						}
+						Bean b = c.newInstance();
+						Map<String, Field> st = b.getFields();
+						st = new TreeMap<String, Field>(st);
+
 						e.print(new String[] { "" });
-						e.print(new String[] { s });
-						e.print(new String[] { lang.get("name." + c.getName()) });
-						e.print(new String[] { "Field", "Type", "Memo" });
+						e.print(new String[] { display, s });
+						e.print(new String[] { lang.get("column.name"), lang.get("column.type"),
+								lang.get("column.memo"), lang.get("column.value") });
+
 						for (String s1 : st.keySet()) {
-							Class<?> c1 = st.get(s1);
-							String t1 = "text";
-							if (c1.equals(Integer.class)) {
-								t1 = "int";
-							} else if (c1.equals(Long.class)) {
-								t1 = "bigint";
-							} else if (c1.equals(Float.class)) {
-								t1 = "float";
-							} else if (c1.equals(Double.class)) {
-								t1 = "double";
-							} else if (c1.isArray()) {
-								t1 = "list";
+
+							Field f1 = st.get(s1);
+							Column c1 = f1.getAnnotation(Column.class);
+							String t1 = f1.getType().getName();
+							int i = t1.lastIndexOf(".");
+							if (i > 0) {
+								t1 = t1.substring(i + 1);
 							}
-							e.print(new String[] { s1, t1 });
+
+							e.print(new String[] { s1, t1, c1 == null ? X.EMPTY : c1.memo(),
+									c1 == null ? X.EMPTY : c1.value() });
 						}
 					} catch (Exception e1) {
 						log.error(e1.getMessage(), e1);

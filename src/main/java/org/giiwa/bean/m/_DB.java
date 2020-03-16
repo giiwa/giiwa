@@ -12,7 +12,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 
-@Table(name = "gi_m_db")
+@Table(name = "gi_m_db", memo = "GI-数据库监测")
 public class _DB extends Bean {
 
 	/**
@@ -24,25 +24,25 @@ public class _DB extends Bean {
 
 	public static BeanDAO<String, _DB> dao = BeanDAO.create(_DB.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "node")
+	@Column(memo = "节点")
 	String node;
 
-	@Column(name = "name")
+	@Column(memo = "名称")
 	String name;
 
-	@Column(name = "max")
+	@Column(memo = "最大")
 	long max;
 
-	@Column(name = "min")
+	@Column(memo = "最小")
 	long min;
 
-	@Column(name = "avg")
+	@Column(memo = "平均")
 	long avg;
 
-	@Column(name = "times")
+	@Column(memo = "次数")
 	long times;
 
 	public synchronized static void update(String node, JSON jo) {
@@ -67,7 +67,7 @@ public class _DB extends Bean {
 		}
 	}
 
-	@Table(name = "gi_m_db_record")
+	@Table(name = "gi_m_db_record", memo = "GI-数据库监测历史")
 	public static class Record extends _DB {
 
 		/**

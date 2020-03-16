@@ -43,7 +43,7 @@ import org.giiwa.web.Controller;
  * @author joe
  * 
  */
-@Table(name = "gi_disk")
+@Table(name = "gi_disk", memo = "GI-磁盘")
 public class Disk extends Bean {
 
 	/**
@@ -59,31 +59,31 @@ public class Disk extends Bean {
 
 	// private final static String RESETNAME = "disk.reset";
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	long id;
 
-	@Column(name = "node")
+	@Column(memo = "节点")
 	String node;
 
-	@Column(name = "path")
+	@Column(memo = "路径")
 	String path;
 
-	@Column(name = "priority")
+	@Column(memo = "优先级")
 	public int priority;
 
 	@Column(name = "checktime")
 	long checktime;
 
-	@Column(name = "bad")
+	@Column(memo = "是否可用", value = "0:ok, 1:bad")
 	int bad; // 0:ok, 1: bad
 
-	@Column(name = "total")
+	@Column(memo = "总空间")
 	public long total;
 
-	@Column(name = "free")
+	@Column(memo = "可用空间")
 	public long free;
 
-	@Column(name = "count")
+	@Column(memo = "文件数")
 	public long count;
 
 	public long getTotal() {

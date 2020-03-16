@@ -33,7 +33,7 @@ import org.giiwa.dao.Helper.W;
  * @author wujun
  *
  */
-@Table(name = "gi_counter")
+@Table(name = "gi_counter", memo = "GI-计数器")
 public class Counter extends Bean {
 
 	/**
@@ -45,16 +45,16 @@ public class Counter extends Bean {
 
 	public static final BeanDAO<String, Counter> dao = BeanDAO.create(Counter.class);
 
-	@Column(name = X.ID, index = true)
+	@Column(memo = "唯一序号")
 	private String id;
 
-	@Column(name = "node")
+	@Column(memo = "节点")
 	private String node;
 
-	@Column(name = "name")
+	@Column(memo = "名称")
 	private String name;
 
-	@Column(name = "count")
+	@Column(memo = "计数")
 	private long count;
 
 	public synchronized static long set(String name, long count) {

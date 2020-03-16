@@ -40,6 +40,7 @@ import org.giiwa.bean.Repo.Entity;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
+import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.FileVersion;
@@ -1022,6 +1023,8 @@ public class Module {
 			if (checkAndMerge()) {
 				changed = true;
 			}
+
+			Schema.init();
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);

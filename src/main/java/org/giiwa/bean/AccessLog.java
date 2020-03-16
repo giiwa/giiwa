@@ -41,7 +41,7 @@ import org.giiwa.task.Task;
  * @author joe
  * 
  */
-@Table(name = "gi_accesslog")
+@Table(name = "gi_accesslog", memo="GI-访问日志")
 public class AccessLog extends Bean {
 
 	/**

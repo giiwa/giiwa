@@ -30,7 +30,7 @@ import org.giiwa.task.GlobalLock;
  * 
  * @author yjiang
  */
-@Table(name = "gi_config")
+@Table(name = "gi_config", memo = "GI-全局配置")
 public final class Global extends Bean {
 
 	/** The Constant serialVersionUID. */
@@ -40,19 +40,19 @@ public final class Global extends Bean {
 
 	public static final BeanDAO<String, Global> dao = BeanDAO.create(Global.class);
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	String id;
 
-	@Column(name = "s")
+	@Column(memo = "字符串值")
 	String s;
 
-	@Column(name = "i")
+	@Column(memo = "整数值")
 	int i;
 
-	@Column(name = "l")
+	@Column(memo = "长整数值")
 	long l;
 
-	@Column(name = "memo")
+	@Column(memo = "备注")
 	String memo;
 
 	private static Global inst = new Global();

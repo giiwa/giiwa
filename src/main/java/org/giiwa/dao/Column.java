@@ -66,4 +66,18 @@ public @interface Column {
 	 */
 	boolean unique() default false;
 
+	/**
+	 * the memo of the column
+	 * 
+	 * @return
+	 */
+	String memo() default X.EMPTY;
+
+	/**
+	 * the valid value of the column
+	 * 
+	 * @return
+	 */
+	String value() default X.EMPTY;
+
 }

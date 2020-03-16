@@ -3047,7 +3047,7 @@ public class Helper implements Serializable {
 
 		return table.name();
 	}
-
+	
 	/**
 	 * get the db name
 	 * 

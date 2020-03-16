@@ -222,13 +222,13 @@ public class Bean implements Map<String, Object>, Serializable {
 	 */
 	public Field getField(String columnname) {
 
-		Map<String, Field> m = _getFields();
+		Map<String, Field> m = getFields();
 		return m == null ? null : m.get(columnname);
 
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<String, Field> _getFields() {
+	public Map<String, Field> getFields() {
 
 		Class<? extends Bean> c1 = this.getClass();
 		Map<String, Field> m = _fields.get(c1);
@@ -244,7 +244,7 @@ public class Bean implements Map<String, Object>, Serializable {
 				Field[] ff = c1.getDeclaredFields();
 				for (Field f : ff) {
 					Column f1 = f.getAnnotation(Column.class);
-					if (f1 != null) {
+					if (f1 != null && !X.isEmpty(f1.name())) {
 						String name = f1.name().toLowerCase();
 						if (!m.containsKey(name)) {
 							m.put(name, f);
@@ -388,7 +388,7 @@ public class Bean implements Map<String, Object>, Serializable {
 		/**
 		 * clear data Annotation by @Column
 		 */
-		Map<String, Field> m1 = this._getFields();
+		Map<String, Field> m1 = this.getFields();
 		if (m1 != null && m1.size() > 0) {
 			for (Field f : m1.values()) {
 				try {
@@ -493,7 +493,7 @@ public class Bean implements Map<String, Object>, Serializable {
 				map_obj.putAll(data);
 			}
 
-			Map<String, Field> m2 = _getFields();
+			Map<String, Field> m2 = getFields();
 			if (m2 != null && m2.size() > 0) {
 				for (String name : m2.keySet()) {
 					if (!X.isSame("data", name)) {

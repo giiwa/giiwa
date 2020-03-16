@@ -1267,7 +1267,7 @@ public class GImage {
 	}
 
 	public static void main(String[] args) {
-		String s1 = "/Users/joe/Downloads/aaa.jpg";
+//		String s1 = "/Users/joe/Downloads/aaa.jpg";
 		String s2 = "/Users/joe/Downloads/t2.png";
 
 		try {

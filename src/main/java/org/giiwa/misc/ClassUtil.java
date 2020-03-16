@@ -19,7 +19,7 @@ public class ClassUtil {
 	private static Log log = LogFactory.getLog(ClassUtil.class);
 
 	public static void main(String[] args) {
-		System.out.println(listSubType("org.giiwa.core.base", Bean.class));
+		System.out.println(listSubType("", Bean.class));
 	}
 
 	public static <T> List<Class<T>> listSubType(String packname, Class<T> t) {
@@ -39,6 +39,8 @@ public class ClassUtil {
 		try {
 
 			String name = packname.replaceAll("\\.", "/");
+//			System.out.println(name);
+
 			Enumeration<URL> en = loader.getResources(name);
 
 			while (en.hasMoreElements()) {
@@ -60,8 +62,8 @@ public class ClassUtil {
 								if (t.isAssignableFrom(c)) {
 									rlist.add((Class<T>) c);
 								}
-							} catch (Exception e) {
-								log.error(e.getMessage(), e);
+							} catch (Throwable e) {
+//								log.error(e.getMessage(), e);
 							}
 						}
 					}
@@ -87,11 +89,15 @@ public class ClassUtil {
 										if (t.isAssignableFrom(c)) {
 											rlist.add((Class<T>) c);
 										}
-									} catch (Exception e) {
-										log.error(e.getMessage(), e);
+									} catch (Throwable e) {
+//										log.error(e.getMessage(), e);
 									}
 								} else if (f1.isDirectory()) {
-									_load(rlist, loader, packname + "." + f1.getName(), t);
+									String ch = f1.getName();
+									if (!X.isEmpty(packname)) {
+										ch = packname + "." + ch;
+									}
+									_load(rlist, loader, ch, t);
 								}
 							}
 						}

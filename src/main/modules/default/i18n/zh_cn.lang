@@ -998,3 +998,7 @@ cache.write.times=写
 cache.write.avg=平均
 cache.write.min=最小
 role.url=首页
+column.name=名称
+column.type=类型
+column.memo=说明
+column.value=值范围

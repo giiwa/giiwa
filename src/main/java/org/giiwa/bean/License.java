@@ -37,7 +37,7 @@ import org.giiwa.web.Module;
  * @author yjiang
  * 
  */
-@Table(name = "gi_license")
+@Table(name = "gi_license", memo = "GI-许可证")
 public class License extends Bean {
 	/**
 	* 
@@ -52,13 +52,13 @@ public class License extends Bean {
 		free, trial, limited, licensed, issue
 	};
 
-	@Column(name = X.ID)
+	@Column(memo = "唯一序号")
 	private String id; // name
 
-	@Column(name = "code")
+	@Column(memo = "CODE")
 	private String code;
 
-	@Column(name = "content")
+	@Column(memo = "内容")
 	private String content;
 
 	public static void init() {

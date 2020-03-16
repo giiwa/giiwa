@@ -60,17 +60,9 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.ssl.SSLContexts;
-import org.giiwa.dao.Bean;
-import org.giiwa.dao.BeanDAO;
-import org.giiwa.dao.Beans;
-import org.giiwa.dao.Column;
-import org.giiwa.dao.Helper;
-import org.giiwa.dao.Table;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
-import org.giiwa.dao.Helper.V;
-import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
 import org.giiwa.misc.IOUtil;
@@ -83,7 +75,6 @@ import org.jsoup.nodes.Element;
  * @author joe
  * 
  */
-@SuppressWarnings("deprecation")
 public final class Http {
 
 	// private static final long MIN_ZIP_SIZE = 1024 * 1024 * 1024;
@@ -1473,69 +1464,6 @@ public final class Http {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Save cookies to database.
-	 */
-	public void saveCookies() {
-		_C.dao.delete(W.create());
-
-		// clear(new Date(System.currentTimeMillis()));
-		List<Cookie> l1 = getCookies();
-		if (!X.isEmpty(l1)) {
-			for (Cookie c : l1) {
-				V v = V.create(X.ID, UID.id(c.getName(), c.getDomain(), c.getPath()));
-				v.set("name", c.getName()).set("value", c.getValue()).set("path", c.getPath())
-						.set("domain", c.getDomain()).set("expired", c.getExpiryDate().getTime());
-				Helper.insert(v, _C.class);
-			}
-		}
-	}
-
-	/**
-	 * Load cookies from databases.
-	 */
-	public void loadCookies() {
-		clearCookies();
-		int s = 0;
-		W q = W.create();
-		Beans<_C> bs = Helper.load(q, s, 10, _C.class);
-
-		while (bs != null && !bs.isEmpty()) {
-			for (_C c : bs) {
-				addCookie(c.name, c.value, c.domain, c.path, new Date(c.expired));
-			}
-			s += bs.size();
-			bs = Helper.load(q, s, 10, _C.class);
-		}
-	}
-
-	@Table(name = "gi_httpcookie")
-	private static class _C extends Bean {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		public static final BeanDAO<String, _C> dao = BeanDAO.create(_C.class);
-
-		@Column(name = "name")
-		String name;
-
-		@Column(name = "value")
-		String value;
-
-		@Column(name = "domain")
-		String domain;
-
-		@Column(name = "path")
-		String path;
-
-		@Column(name = "expired")
-		String expired;
-
 	}
 
 	public static String format(String href, String... removals) {
