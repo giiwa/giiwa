@@ -18,7 +18,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Node;
 import org.giiwa.cache.Cache;
-import org.giiwa.conf.Config;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
@@ -31,10 +30,8 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
-import org.giiwa.dfile.FileServer;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.misc.Url;
 import org.giiwa.web.Controller;
 
 /**
@@ -55,7 +52,7 @@ public class Disk extends Bean {
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 
-	public static Disk DEFAULT = new Disk();
+//	public static Disk DEFAULT = new Disk();
 
 	// private final static String RESETNAME = "disk.reset";
 
@@ -205,15 +202,15 @@ public class Disk extends Bean {
 		return 0;
 	}
 
-	public static DFile seek(Path filename) {
+	public static DFile seek(Path filename) throws Exception {
 		return seek(filename.toString());
 	}
 
-	public static DFile get(String id) {
+	public static DFile get(String id) throws Exception {
 		return seek(new String(Base32.decode(id)));
 	}
 
-	public static DFile seek(String filename) {
+	public static DFile seek(String filename) throws Exception {
 
 		if (Helper.isConfigured()) {
 			filename = X.getCanonicalPath(filename);
@@ -227,21 +224,17 @@ public class Disk extends Bean {
 				}
 			}
 
-			try {
-				// log.debug("seek, not found, filename=" + filename, new Exception());
-				DFile f = DFile.create(Disk.get(), filename);
+			// log.debug("seek, not found, filename=" + filename, new Exception());
+			DFile f = DFile.create(Disk.get(), filename);
 
-				return f;
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
+			return f;
 		}
 
 		return null;
 
 	}
 
-	public static boolean exists(String filename) {
+	public static boolean exists(String filename) throws Exception {
 
 		Beans<Disk> bs = disks();
 
@@ -260,7 +253,7 @@ public class Disk extends Bean {
 		return s.pick();
 	}
 
-	public static Collection<DFile> list(String filename) {
+	public static Collection<DFile> list(String filename) throws Exception {
 		Map<String, DFile> l1 = new TreeMap<String, DFile>();
 
 		Beans<Disk> bs = disks();
@@ -292,15 +285,15 @@ public class Disk extends Bean {
 		return l1.values();
 	}
 
-	public static void delete(String filename, long age) {
+	public static void delete(String filename, long age) throws Exception {
 		delete(filename, age, true);
 	}
 
-	public static void delete(String filename) {
+	public static void delete(String filename) throws Exception {
 		delete(filename, -1, true);
 	}
 
-	public static void delete(String filename, long age, boolean global) {
+	public static void delete(String filename, long age, boolean global) throws Exception {
 
 		Beans<Disk> bs = disks();
 
@@ -314,7 +307,7 @@ public class Disk extends Bean {
 
 	}
 
-	public static long move(DFile src, DFile dest) throws IOException {
+	public static long move(DFile src, DFile dest) throws Exception {
 		long len = 0;
 		if (src.isDirectory()) {
 			// for
@@ -333,7 +326,7 @@ public class Disk extends Bean {
 		return len;
 	}
 
-	public static long copy(DFile src, DFile dest, Consumer<String> moni) throws IOException {
+	public static long copy(DFile src, DFile dest, Consumer<String> moni) throws Exception {
 		long len = 0;
 
 		if (moni != null) {
@@ -359,7 +352,7 @@ public class Disk extends Bean {
 		return IOUtil.copy(in, out);
 	}
 
-	private static Beans<Disk> disks() {
+	private static Beans<Disk> disks() throws Exception {
 		Beans<Disk> b1 = Cache.get("disk");
 		if (b1 == null) {
 			W q = W.create().and("bad", 0).sort("priority", -1).sort("path", 1);
@@ -367,8 +360,9 @@ public class Disk extends Bean {
 			Cache.set("disk", b1, X.AMINUTE);
 		}
 		if (b1 == null || b1.isEmpty()) {
-			b1 = Beans.create();
-			b1.add(Disk.DEFAULT);
+//			b1 = Beans.create();
+//			b1.add(Disk.DEFAULT);
+			throw new Exception("not disk configured!");
 		}
 		return b1;
 	}
@@ -392,16 +386,16 @@ public class Disk extends Bean {
 
 	public static void repair() {
 
-		{
-			DEFAULT = new Disk();
-			DEFAULT.path = Controller.GIIWA_HOME + "/data";
-			DEFAULT.node_obj = new Node();
-			Url u = Url.create(Config.getConf().getString("dfile.bind", FileServer.URL));
-			String s1 = u.getProtocol() + "://" + (X.isSame(u.getIp(), "0.0.0.0") ? "127.0.0.1" : u.getIp()) + ":"
-					+ u.getPort();
-
-			DEFAULT.node_obj.set("url", s1);
-		}
+//		{
+//			DEFAULT = new Disk();
+//			DEFAULT.path = Controller.GIIWA_HOME + "/data";
+//			DEFAULT.node_obj = new Node();
+//			Url u = Url.create(Config.getConf().getString("dfile.bind", FileServer.URL));
+//			String s1 = u.getProtocol() + "://" + (X.isSame(u.getIp(), "0.0.0.0") ? "127.0.0.1" : u.getIp()) + ":"
+//					+ u.getPort();
+//
+//			DEFAULT.node_obj.set("url", s1);
+//		}
 
 		if (Helper.isConfigured()) {
 			int s = 0;
@@ -410,12 +404,12 @@ public class Disk extends Bean {
 			if (bs == null || bs.isEmpty()) {
 				// add a default
 				try {
-//					File f = new File(Controller.GIIWA_HOME + "/data");
-//					if (!f.exists()) {
-//						f.mkdirs();
-//					}
-//					Disk.create(
-//							V.create("path", f.getCanonicalPath()).append("priority", 1).append("node", Local.id()));
+					File f = new File(Controller.GIIWA_HOME + "/data");
+					if (!f.exists()) {
+						f.mkdirs();
+					}
+					Disk.create(
+							V.create("path", f.getCanonicalPath()).append("priority", 1).append("node", Local.id()));
 
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);

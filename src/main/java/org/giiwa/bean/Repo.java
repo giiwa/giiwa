@@ -81,10 +81,10 @@ public class Repo {
 	 * @param uid      the uid
 	 * @param ip       the report ip
 	 * @return the long
-	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws Exception 
 	 */
 	public static long append(String id, String filename, long position, long total, InputStream in, long uid,
-			String ip) throws IOException {
+			String ip) throws Exception {
 		Entity e = new Entity(id, filename);
 		return e.store(position, in, total);
 	}
@@ -221,14 +221,14 @@ public class Repo {
 			}
 		}
 
-		private Entity(String id, String name) throws IOException {
+		private Entity(String id, String name) throws Exception {
 			this.id = id;
 			this.name = name;
 
 			this.getFile();
 		}
 
-		private void getFile() throws IOException {
+		private void getFile() throws Exception {
 
 			String path = path(id);
 			if (X.isEmpty(name)) {
@@ -244,7 +244,7 @@ public class Repo {
 			log.debug("id=" + id + ", path=" + path(id) + ", name=" + name + ", file=" + file);
 		}
 
-		private long store(long position, InputStream in, long total) throws IOException {
+		private long store(long position, InputStream in, long total) throws Exception {
 
 			file.upload(position, in);
 

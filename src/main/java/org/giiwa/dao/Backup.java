@@ -104,7 +104,7 @@ public class Backup {
 		return 0;
 	}
 
-	public static void recover(String filename, ZipInputStream in) throws IOException {
+	public static void recover(String filename, ZipInputStream in) throws Exception {
 
 		if (filename.startsWith("/.dfile/")) {
 			filename = filename.replaceFirst("/.dfile/", X.EMPTY);

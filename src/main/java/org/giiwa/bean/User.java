@@ -284,7 +284,7 @@ public class User extends Bean {
 		return id;
 	}
 
-	private static void _checkphoto(long id, V v) {
+	private static void _checkphoto(long id, V v) throws Exception {
 
 		Object nickname = v.value("nickname");
 
@@ -941,7 +941,7 @@ public class User extends Bean {
 //		return total;
 //	}
 
-	public static void repair() {
+	public static void repair() throws Exception {
 		Beans<User> bs = User.dao.load(W.create().sort("created", 1), 0, 1000);
 		if (bs != null) {
 			for (User u : bs) {

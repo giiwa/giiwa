@@ -26,14 +26,14 @@ public class file extends Controller {
 	@Path(path = "get/(.*)/(.*)")
 	public void get(String id, String name) {
 
-		DFile f1 = Disk.get(id);
-		if (f1.isFile()) {
+		try {
+			DFile f1 = Disk.get(id);
+			if (f1.isFile()) {
 
-			String mime = Controller.getMimeType(f1.getName());
-			log.debug("mime=" + mime);
+				String mime = Controller.getMimeType(f1.getName());
+				log.debug("mime=" + mime);
 
-			if (mime != null && mime.startsWith("image/")) {
-				try {
+				if (mime != null && mime.startsWith("image/")) {
 					String size = this.getString("size");
 					if (!X.isEmpty(size)) {
 						String[] ss = size.split("x");
@@ -72,18 +72,14 @@ public class file extends Controller {
 							}
 						}
 					}
-				} catch (Exception e1) {
-					log.error(e1.getMessage(), e1);
 				}
-			}
-			this.setContentType(mime);
+				this.setContentType(mime);
 
-			try {
 				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
 
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
 		}
 
 	}
@@ -91,19 +87,19 @@ public class file extends Controller {
 	@Path(path = "d/(.*)/(.*)")
 	public void d(String id, String name) {
 
-		DFile f1 = Disk.get(id);
-		if (f1.isFile()) {
+		try {
+			DFile f1 = Disk.get(id);
+			if (f1.isFile()) {
 
-			String name1 = Url.encode(f1.getName());
-			this.head("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
-			this.setContentType(Controller.getMimeType(f1.getName()));
+				String name1 = Url.encode(f1.getName());
+				this.head("Content-Disposition", "attachment; filename*=UTF-8''" + name1);
+				this.setContentType(Controller.getMimeType(f1.getName()));
 
-			try {
 				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
 
+			}
+		} catch (Exception e) {
+			this.error(e);
 		}
 
 	}

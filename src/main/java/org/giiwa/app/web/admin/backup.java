@@ -73,10 +73,11 @@ public class backup extends Controller {
 	@Path(login = true, access = "access.config.admin")
 	@Override
 	public void onGet() {
-		DFile root = Disk.seek(BackupTask.ROOT);
 
-		List<DFile> list = new ArrayList<DFile>();
 		try {
+			DFile root = Disk.seek(BackupTask.ROOT);
+
+			List<DFile> list = new ArrayList<DFile>();
 			DFile[] fs = root.listFiles();
 			if (fs != null) {
 				for (DFile f : fs) {
@@ -85,23 +86,25 @@ public class backup extends Controller {
 					}
 				}
 			}
+
+			Collections.sort(list, new Comparator<DFile>() {
+
+				@Override
+				public int compare(DFile o1, DFile o2) {
+					String n1 = o1.getName();
+					String n2 = o2.getName();
+					return n2.compareToIgnoreCase(n1);
+				}
+
+			});
+			this.set("list", list);
+
+			this.show("/admin/backup.index.html");
+
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			this.error(e);
+			return;
 		}
-
-		Collections.sort(list, new Comparator<DFile>() {
-
-			@Override
-			public int compare(DFile o1, DFile o2) {
-				String n1 = o1.getName();
-				String n2 = o2.getName();
-				return n2.compareToIgnoreCase(n1);
-			}
-
-		});
-		this.set("list", list);
-
-		this.show("/admin/backup.index.html");
 
 	}
 
@@ -468,9 +471,9 @@ public class backup extends Controller {
 
 		public static void clean(int days) {
 
-			DFile f = Disk.seek(BackupTask.ROOT);
-			if (f.exists()) {
-				try {
+			try {
+				DFile f = Disk.seek(BackupTask.ROOT);
+				if (f.exists()) {
 					DFile[] ff = f.listFiles();
 					if (ff != null && ff.length > 0) {
 						for (DFile f1 : ff) {
@@ -479,9 +482,9 @@ public class backup extends Controller {
 							}
 						}
 					}
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 

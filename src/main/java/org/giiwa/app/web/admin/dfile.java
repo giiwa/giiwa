@@ -24,12 +24,16 @@ public class dfile extends Controller {
 	@Path(path = "file/delete", login = true, access = "access.config.admin")
 	public void file_delete() {
 
-		String f = this.getString("f");
-		if (!X.isEmpty(f)) {
-			Disk.delete(f);
-		}
+		try {
+			String f = this.getString("f");
+			if (!X.isEmpty(f)) {
+				Disk.delete(f);
+			}
 
-		this.send(JSON.create().append(X.MESSAGE, 200).append(X.MESSAGE, "删除成功！"));
+			this.send(JSON.create().append(X.MESSAGE, 200).append(X.MESSAGE, "删除成功！"));
+		} catch (Exception e) {
+			this.error(e);
+		}
 	}
 
 	@Path(path = "disk", login = true, access = "access.config.admin")
@@ -222,19 +226,23 @@ public class dfile extends Controller {
 	@Path(path = "folder", login = true, access = "access.config.admin")
 	public void folder() {
 
-		String p = this.getString("f");
-		if (X.isEmpty(p)) {
-			p = "/";
+		try {
+			String p = this.getString("f");
+			if (X.isEmpty(p)) {
+				p = "/";
+			}
+
+			if (!X.isSame(p, "/")) {
+				this.set("f", Disk.seek(p));
+			}
+
+			Collection<DFile> list = Disk.list(p);
+			this.set("list", list);
+
+			this.show("/admin/dfile.folder.html");
+		} catch (Exception e) {
+			this.error(e);
 		}
-
-		if (!X.isSame(p, "/")) {
-			this.set("f", Disk.seek(p));
-		}
-
-		Collection<DFile> list = Disk.list(p);
-		this.set("list", list);
-
-		this.show("/admin/dfile.folder.html");
 	}
 
 }

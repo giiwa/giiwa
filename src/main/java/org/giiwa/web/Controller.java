@@ -2059,6 +2059,7 @@ public class Controller {
 	 * @param e the throwable
 	 */
 	final public void error(Throwable e) {
+
 		if (log.isErrorEnabled())
 			log.error(e.getMessage(), e);
 

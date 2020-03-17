@@ -50,15 +50,19 @@ class DefaultController extends Controller {
 		 */
 //		log.debug("uri=" + uri + ", remote=" + this.getRemoteHost(), new Exception());
 
-		if (!_onPost(uri)) {
-			for (String suffix : Controller.welcomes) {
-				if (_onPost(uri + "/" + suffix)) {
-					return;
+		try {
+			if (!_onPost(uri)) {
+				for (String suffix : Controller.welcomes) {
+					if (_onPost(uri + "/" + suffix)) {
+						return;
+					}
 				}
-			}
 
-			// not found
-			this.notfound(uri);
+				// not found
+				this.notfound(uri);
+			}
+		} catch (Exception e) {
+			this.error(e);
 		}
 
 	}
@@ -67,7 +71,7 @@ class DefaultController extends Controller {
 		return this.browser().matches(".*(iPhone|Android).*");
 	}
 
-	private boolean _onPost(String uri) {
+	private boolean _onPost(String uri) throws Exception {
 		uri = uri.replaceAll("//", "/");
 		File f = Module.home.getFile(uri);
 		if (f != null && f.exists() && f.isFile()) {
@@ -91,6 +95,7 @@ class DefaultController extends Controller {
 		}
 
 		// check dfile
+
 		DFile d = Disk.seek(uri);
 		if (d != null && d.exists() && d.isFile()) {
 			// show it

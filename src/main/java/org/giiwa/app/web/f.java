@@ -47,66 +47,60 @@ public class f extends Controller {
 	@Path(path = "g/(.*)/(.*)")
 	public void g(String id, String name) {
 
-		DFile f1 = Disk.get(id);
-		if (f1.isFile()) {
+		TimeStamp t = TimeStamp.create();
 
-			TimeStamp t = TimeStamp.create();
+		try {
+			DFile f1 = Disk.get(id);
+			if (f1.isFile()) {
 
-			try {
-				//GLog.applog.info(f.class, "get", f1.getFilename());
+				// GLog.applog.info(f.class, "get", f1.getFilename());
 
 				String mime = Controller.getMimeType(f1.getName());
 				log.debug("mime=" + mime);
 
 				if (mime != null && mime.startsWith("image/")) {
-					try {
-						String size = this.getString("size");
-						if (!X.isEmpty(size)) {
-							String[] ss = size.split("x");
+					String size = this.getString("size");
+					if (!X.isEmpty(size)) {
+						String[] ss = size.split("x");
 
-							if (ss.length == 2) {
-								File f = Temp.get(id, "s_" + size);
+						if (ss.length == 2) {
+							File f = Temp.get(id, "s_" + size);
 
-								if (!f.exists()) {
+							if (!f.exists()) {
 
-									f.getParentFile().mkdirs();
+								f.getParentFile().mkdirs();
 
-									GImage.scale3(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
-											X.toInt(ss[1]));
+								GImage.scale3(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+										X.toInt(ss[1]));
 
-								} else {
-									if (log.isDebugEnabled())
-										log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
-								}
+							} else {
+								if (log.isDebugEnabled())
+									log.debug("load the image from the temp cache, file=" + f.getCanonicalPath());
+							}
 
-								if (f.exists()) {
-									if (log.isDebugEnabled())
-										log.debug("load the scaled image from " + f.getCanonicalPath());
+							if (f.exists()) {
+								if (log.isDebugEnabled())
+									log.debug("load the scaled image from " + f.getCanonicalPath());
 
-									this.setContentType(Controller.getMimeType("a.png"));
+								this.setContentType(Controller.getMimeType("a.png"));
 
-									_send(new FileInputStream(f), f.length());
+								_send(new FileInputStream(f), f.length());
 
-									return;
-								}
+								return;
 							}
 						}
-					} catch (Exception e1) {
-						log.error(e1.getMessage(), e1);
 					}
 				}
+
 				this.setContentType(mime);
 
-				try {
-					_send(f1.getInputStream(), f1.length());
-
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-
-			} finally {
-				get.add(t.pastms());
+				_send(f1.getInputStream(), f1.length());
 			}
+
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		} finally {
+			get.add(t.pastms());
 		}
 
 	}
@@ -120,19 +114,20 @@ public class f extends Controller {
 	@Path(path = "d/(.*)/(.*)")
 	public void d(String id, String name) {
 
-		DFile f1 = Disk.get(id);
-		if (f1.isFile()) {
+		TimeStamp t = TimeStamp.create();
 
-			TimeStamp t = TimeStamp.create();
+		try {
+			DFile f1 = Disk.get(id);
+			if (f1.isFile()) {
 
-			try {
-				//GLog.applog.info(f.class, "download", f1.getFilename());
+				// GLog.applog.info(f.class, "download", f1.getFilename());
 				this.send(f1.getName(), f1.getInputStream(), f1.length());
 
-			} finally {
-				down.add(t.pastms());
 			}
-
+		} catch (Exception e) {
+			this.error(e);
+		} finally {
+			down.add(t.pastms());
 		}
 
 	}
