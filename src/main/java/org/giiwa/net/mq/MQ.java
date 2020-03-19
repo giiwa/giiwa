@@ -152,7 +152,7 @@ public abstract class MQ {
 
 	protected abstract void _unbind(IStub stub) throws Exception;
 
-	static class Caller extends SysTask {
+	private static class _Caller extends SysTask {
 
 		/**
 		 * 
@@ -169,7 +169,7 @@ public abstract class MQ {
 		}
 
 		static Task call(String name, IStub cb, List<Request> l1) {
-			Caller c = new Caller();
+			_Caller c = new _Caller();
 			c.cb = cb;
 			c.name = name;
 			c.queue = l1;
@@ -203,7 +203,7 @@ public abstract class MQ {
 
 	protected static void process(final String name, final List<Request> rs, final IStub cb) {
 
-		Caller.call(name, cb, rs);
+		_Caller.call(name, cb, rs);
 
 	}
 

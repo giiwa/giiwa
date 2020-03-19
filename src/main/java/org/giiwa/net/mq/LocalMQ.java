@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import javax.jms.JMSException;
 
@@ -29,8 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
 import org.giiwa.dao.TimeStamp;
-import org.giiwa.dao.X;
-import org.giiwa.task.SysTask;
 
 class LocalMQ extends MQ {
 
@@ -98,19 +94,19 @@ class LocalMQ extends MQ {
 		}
 
 		public void onMessage(Request m) {
-			try {
-				// System.out.println("got a message.., " + t.reset() +
-				// "ms");
-				List<Request> l1 = new LinkedList<Request>();
-				l1.add(m);
-				process(name, l1, cb);
+//			try {
+			// System.out.println("got a message.., " + t.reset() +
+			// "ms");
+			List<Request> l1 = new LinkedList<Request>();
+			l1.add(m);
+			process(name, l1, cb);
 
-				if (log.isDebugEnabled())
-					log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
+			if (log.isDebugEnabled())
+				log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
 		}
 	}
 
@@ -162,24 +158,22 @@ class LocalMQ extends MQ {
 
 	private Sender getSender(String name, Mode m) {
 		String name1 = name + ":" + m.name();
-		synchronized (senders) {
-			if (senders.containsKey(name1)) {
-				return senders.get(name1);
-			}
-
-			try {
-
-				Sender s = new Sender(name1);
-				s.schedule(0);
-				senders.put(name1, s);
-
-				return s;
-			} catch (Exception e) {
-				log.error(name, e);
-			}
+		if (senders.containsKey(name1)) {
+			return senders.get(name1);
 		}
 
-		return null;
+//			try {
+
+		Sender s = new Sender(name1);
+//				s.schedule(0);
+		senders.put(name1, s);
+
+		return s;
+//			} catch (Exception e) {
+//				log.error(name, e);
+//			}
+
+//		return null;
 	}
 
 	/**
@@ -187,30 +181,35 @@ class LocalMQ extends MQ {
 	 */
 	private Map<String, Sender> senders = new HashMap<String, Sender>();
 
-	class Sender extends SysTask {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
+	class Sender {
 
 		long last = System.currentTimeMillis();
 		String name;
-		ArrayBlockingQueue<Request> queue = new ArrayBlockingQueue<Request>(100);
+//		ArrayBlockingQueue<Request> queue = new ArrayBlockingQueue<Request>(100);
 
 		public void send(Request r) throws JMSException {
 			if (log.isDebugEnabled())
 				log.debug("sending, r=" + r);
 
-			try {
-				if (consumers.containsKey(name)) {
-					queue.add(r);
-					last = System.currentTimeMillis();
+//				if (consumers.containsKey(name)) {
+//					queue.add(r);
+//					last = System.currentTimeMillis();
+//				}
+
+			List<R> l1 = consumers.get(name);
+			if (l1 != null && !l1.isEmpty()) {
+				if (log.isDebugEnabled())
+					log.debug("Sending: [" + name + "], consumer=" + l1);
+
+				for (R r1 : l1) {
+					r1.onMessage(r);
 				}
-			} catch (Exception e) {
-				log.error("sender=" + name + ", consumer=" + consumers, e);
-				queue.clear();
+
+			} else {
+//					log.warn("no consumer for [" + name + "], queue.size=" + queue.size() + ",consumers="
+//							+ consumers);
 			}
+
 		}
 
 		public Sender(String name) {
@@ -221,50 +220,50 @@ class LocalMQ extends MQ {
 			return "sender." + name;
 		}
 
-		@Override
-		public void onExecute() {
-			try {
-				Request r = queue.poll(5, TimeUnit.SECONDS);
+//		@Override
+//		public void onExecute() {
+//			try {
+//				Request r = queue.poll(5, TimeUnit.SECONDS);
+//
+//				if (r != null) {
+//
+//					List<R> l1 = consumers.get(name);
+//					if (l1 != null && !l1.isEmpty()) {
+//						if (log.isDebugEnabled())
+//							log.debug("Sending: [" + name + "], consumer=" + l1);
+//
+//						if (l1.size() == 1) {
+//							l1.get(0).onMessage(r);
+//						} else {
+//							l1.parallelStream().forEach(e -> {
+//								e.onMessage(r);
+//							});
+//						}
+//
+//					} else {
+//						log.warn("no consumer for [" + name + "], queue.size=" + queue.size() + ",consumers="
+//								+ consumers);
+//					}
+//
+//				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
+//					synchronized (senders) {
+//						senders.remove(name);
+//					}
+//				}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
 
-				if (r != null) {
-
-					List<R> l1 = consumers.get(name);
-					if (l1 != null && !l1.isEmpty()) {
-						if (log.isDebugEnabled())
-							log.debug("Sending: [" + name + "], consumer=" + l1);
-
-						if (l1.size() == 1) {
-							l1.get(0).onMessage(r);
-						} else {
-							l1.parallelStream().forEach(e -> {
-								e.onMessage(r);
-							});
-						}
-
-					} else {
-						log.warn("no consumer for [" + name + "], queue.size=" + queue.size() + ",consumers="
-								+ consumers);
-					}
-
-				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
-					synchronized (senders) {
-						senders.remove(name);
-					}
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
-
-		@Override
-		public void onFinish() {
-			if (last < System.currentTimeMillis() - X.AMINUTE) {
-				if (log.isDebugEnabled())
-					log.debug("sender." + name + " is stopped.");
-			} else {
-				this.schedule(0);
-			}
-		}
+//		@Override
+//		public void onFinish() {
+//			if (last < System.currentTimeMillis() - X.AMINUTE) {
+//				if (log.isDebugEnabled())
+//					log.debug("sender." + name + " is stopped.");
+//			} else {
+//				this.schedule(0);
+//			}
+//		}
 
 	}
 

@@ -48,7 +48,6 @@ import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.RDB;
 import org.giiwa.dao.RDSHelper;
-import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.FileServer;
 import org.giiwa.engine.R;
@@ -176,8 +175,8 @@ public class DefaultListener implements IListener {
 
 			IOUtil.cleanup(f);
 
-			Schema.add("org.giiwa.bean");
-			Schema.add("org.giiwa.conf");
+//			Schema.add("org.giiwa.bean");
+//			Schema.add("org.giiwa.conf");
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);

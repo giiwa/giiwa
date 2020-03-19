@@ -1426,6 +1426,8 @@ public class Helper implements Serializable {
 			if (X.isEmpty(name))
 				return this;
 
+			name = name.toLowerCase();
+
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
 				Collection l1 = (Collection) v;
@@ -1512,6 +1514,8 @@ public class Helper implements Serializable {
 			if (X.isEmpty(name))
 				return this;
 
+			name = name.toLowerCase();
+			
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
 				Collection l1 = (Collection) v;
@@ -3047,7 +3051,7 @@ public class Helper implements Serializable {
 
 		return table.name();
 	}
-	
+
 	/**
 	 * get the db name
 	 * 

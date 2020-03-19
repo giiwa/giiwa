@@ -487,7 +487,7 @@ public class Language {
 				return sdf.parse(t).getTime();
 			}
 		} catch (Exception e) {
-			log.error(t, e);
+			log.error(t + ", format=" + format, e);
 		}
 
 		return 0;

@@ -42,7 +42,6 @@ import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.task.SysTask;
 
 class ActiveMQ extends MQ {
 
@@ -173,7 +172,7 @@ class ActiveMQ extends MQ {
 						r.seq = m1.readLong();
 						pos += Long.SIZE / Byte.SIZE;
 						r.ver = m1.readByte();
-						pos ++;
+						pos++;
 						r.tt = m1.readLong();
 						pos += Long.SIZE / Byte.SIZE;
 						int len = m1.readInt();
@@ -274,39 +273,39 @@ class ActiveMQ extends MQ {
 
 	}
 
-	private Sender getSender(String name, MQ.Mode type) {
+	private Sender getSender(String name, MQ.Mode type) throws JMSException {
+
 		String name1 = name + ":" + type;
-		synchronized (senders) {
-			if (session != null) {
-				if (senders.containsKey(name1)) {
-					return senders.get(name1);
-				}
-
-				try {
-					Destination dest = null;
-					if (MQ.Mode.QUEUE.equals(type)) {
-						dest = new ActiveMQQueue(group + name);
-					} else {
-						dest = new ActiveMQTopic(group + name);
-					}
-
-					MessageProducer p = session.createProducer(dest);
-
-					p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-					// p.setTimeToLive(0);
-
-					Sender s = new Sender(name1, name, p);
-					senders.put(name1, s);
-					s.schedule(0);
-
-					return s;
-				} catch (Exception e) {
-					log.error(name, e);
-				}
-			}
+		if (session == null) {
+			return null;
 		}
 
-		return null;
+		if (senders.containsKey(name1)) {
+			return senders.get(name1);
+		}
+
+		synchronized (senders) {
+			Destination dest = null;
+			if (MQ.Mode.QUEUE.equals(type)) {
+				dest = new ActiveMQQueue(group + name);
+			} else {
+				dest = new ActiveMQTopic(group + name);
+			}
+
+			MessageProducer p = session.createProducer(dest);
+
+			p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			// p.setTimeToLive(0);
+
+			Sender s = new Sender(name1, name, p);
+			senders.put(name1, s);
+//					s.schedule(0);
+
+			return s;
+		}
+//		}
+
+//		return null;
 	}
 
 	/**
@@ -314,78 +313,74 @@ class ActiveMQ extends MQ {
 	 */
 	private Map<String, Sender> senders = new HashMap<String, Sender>();
 
-	class Sender extends SysTask {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
+	class Sender {
 
 		long last = System.currentTimeMillis();
 		String name;
 		String to;
 		MessageProducer p;
-		BytesMessage m = null;
-		int len = 0;
-		int priority = 1;
-		long ttl = (int) X.AMINUTE;
-		int persistent = DeliveryMode.NON_PERSISTENT;
+//		BytesMessage m = null;
+//		int len = 0;
+//		int priority = 1;
+//		long ttl = (int) X.AMINUTE;
+//		int persistent = DeliveryMode.NON_PERSISTENT;
 
 		public void send(Request r) throws JMSException {
 
 			if (log.isDebugEnabled())
 				log.debug("sending, r=" + r);
 
-			last = System.currentTimeMillis();
-			synchronized (p) {
-				try {
-					if (len > 2 * 1024 * 1024) {
-						// slow down
-						p.wait(1000);
-					}
-				} catch (Exception e) {
-					// forget this exception
-				}
-				if (m == null) {
-					m = session.createBytesMessage();
-					len = 0;
-				}
+//			if (m == null) {
+//				m = session.createBytesMessage();
+//				len = 0;
+//			}
 
-				m.writeLong(r.seq);
-				len += Long.SIZE / Byte.SIZE;
-				m.writeByte(r.ver);
-				len ++;
-				m.writeLong(r.tt);
-				len += Long.SIZE / Byte.SIZE;
+			BytesMessage m = session.createBytesMessage();
+			m.writeLong(r.seq);
+//			len += Long.SIZE / Byte.SIZE;
+			m.writeByte(r.ver);
+//			len ++;
+			m.writeLong(r.tt);
+//			len += Long.SIZE / Byte.SIZE;
 
-				len += Integer.SIZE / Byte.SIZE;
-				byte[] ff = r.from == null ? null : r.from.getBytes();
-				if (ff == null) {
-					m.writeInt(0);
-				} else {
-					m.writeInt(ff.length);
-					m.writeBytes(ff);
-					len += ff.length;
-				}
-
-				m.writeInt(r.type);
-				len += Integer.SIZE / Byte.SIZE;
-
-				len += Integer.SIZE / Byte.SIZE;
-				if (r.data == null) {
-					m.writeInt(0);
-				} else {
-					m.writeInt(r.data.length);
-					m.writeBytes(r.data);
-					len += r.data.length;
-				}
-
-				ttl = r.ttl;
-				priority = r.priority;
-				persistent = r.persistent;
-
-				p.notify();
+//			len += Integer.SIZE / Byte.SIZE;
+			byte[] ff = r.from == null ? null : r.from.getBytes();
+			if (ff == null) {
+				m.writeInt(0);
+			} else {
+				m.writeInt(ff.length);
+				m.writeBytes(ff);
+//				len += ff.length;
 			}
+
+			m.writeInt(r.type);
+//			len += Integer.SIZE / Byte.SIZE;
+
+//			len += Integer.SIZE / Byte.SIZE;
+			if (r.data == null) {
+				m.writeInt(0);
+			} else {
+				m.writeInt(r.data.length);
+				m.writeBytes(r.data);
+//				len += r.data.length;
+			}
+
+//			ttl = r.ttl;
+//			priority = r.priority;
+//			persistent = r.persistent;
+
+//			if (m != null) {
+			p.send(m, r.persistent, r.priority, r.ttl);
+			// p.send(m);
+
+			if (log.isDebugEnabled()) {
+				log.debug("Sending:" + group + name);
+			}
+//			} else if (last < System.currentTimeMillis() - X.AMINUTE) {
+//				senders.remove(name);
+//				p.close();
+//			}
+
 		}
 
 		public Sender(String name, String to, MessageProducer p) {
@@ -398,50 +393,50 @@ class ActiveMQ extends MQ {
 			return "sender." + name;
 		}
 
-		@Override
-		public void onExecute() {
-			try {
-				BytesMessage m = null;
-				synchronized (p) {
-					while (this.m == null) {
-						if (last < System.currentTimeMillis() - X.AMINUTE) {
-							break;
-						}
+//		@Override
+//		public void onExecute() {
+//			try {
+//				BytesMessage m = null;
+//				synchronized (p) {
+//					while (this.m == null) {
+//						if (last < System.currentTimeMillis() - X.AMINUTE) {
+//							break;
+//						}
+//
+//						p.wait(10000);
+//					}
+//					m = this.m;
+//					this.m = null;
+//					this.len = 0;
+//
+//					p.notify();
+//				}
+//
+//				if (m != null) {
+//					p.send(m, persistent, priority, ttl);
+//					// p.send(m);
+//
+//					if (log.isDebugEnabled()) {
+//						log.debug("Sending:" + group + name);
+//					}
+//				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
+//					senders.remove(name);
+//					p.close();
+//				}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
 
-						p.wait(10000);
-					}
-					m = this.m;
-					this.m = null;
-					this.len = 0;
-
-					p.notify();
-				}
-
-				if (m != null) {
-					p.send(m, persistent, priority, ttl);
-					// p.send(m);
-
-					if (log.isDebugEnabled()) {
-						log.debug("Sending:" + group + name);
-					}
-				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
-					senders.remove(name);
-					p.close();
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		}
-
-		@Override
-		public void onFinish() {
-			if (last < System.currentTimeMillis() - X.AMINUTE) {
-				if (log.isDebugEnabled())
-					log.debug("sender." + name + " is stopped.");
-			} else {
-				this.schedule(0);
-			}
-		}
+//		@Override
+//		public void onFinish() {
+//			if (last < System.currentTimeMillis() - X.AMINUTE) {
+//				if (log.isDebugEnabled())
+//					log.debug("sender." + name + " is stopped.");
+//			} else {
+//				this.schedule(0);
+//			}
+//		}
 
 	}
 
