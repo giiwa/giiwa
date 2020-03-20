@@ -58,9 +58,22 @@ public class Client implements Closeable {
 
 			connector.group(new NioEventLoopGroup());
 			connector.channel(NioSocketChannel.class);
-			connector.option(ChannelOption.TCP_NODELAY, true);
+//			connector.option(ChannelOption.TCP_NODELAY, true);
 
 			IoHandler io = new IoHandler() {
+
+				@Override
+				public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+
+					if (error != null) {
+						error.accept(new Exception("inactive"));
+					}
+					if (session != null) {
+						session.close();
+						session = null;
+					}
+
+				}
 
 				@Override
 				public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

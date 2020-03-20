@@ -60,7 +60,6 @@ public class FileClient {
 	private AtomicLong seq = new AtomicLong(0);
 
 	private Client client;
-	private String url;
 
 	private static Map<String, FileClient> cached = new HashMap<String, FileClient>();
 
@@ -83,7 +82,7 @@ public class FileClient {
 			log.info("create new client, url=" + url);
 
 		FileClient c = new FileClient();
-		c.url = url;
+//		c.url = url;
 
 		c.client = Client.create().error(e -> {
 			c.close();
@@ -175,16 +174,25 @@ public class FileClient {
 
 	private void close() {
 
-		FileClient c1 = cached.remove(this.url);
-		if (c1 != null) {
+		synchronized (cached) {
 
-			log.debug("close the client, client=" + c1.client);
+			String[] ss = cached.keySet().toArray(new String[cached.size()]);
 
-			Client c2 = c1.client;
-			if (c2 != null) {
-				c1.client = null;
-				c2.close();
+			for (String name : ss) {
+				FileClient c1 = cached.get(name);
+				if (c1 == this) {
+					cached.remove(name);
+
+					log.debug("close the client, client=" + c1.client);
+
+					Client c2 = c1.client;
+					if (c2 != null) {
+						c1.client = null;
+						c2.close();
+					}
+				}
 			}
+
 		}
 	}
 

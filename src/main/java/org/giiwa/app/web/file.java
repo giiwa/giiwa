@@ -42,7 +42,7 @@ public class file extends Controller {
 							File f = Temp.get(id, "s_" + size);
 							boolean failed = false;
 
-							if (!f.exists()) {
+							if (!f.exists() || f.length() == 0) {
 
 								f.getParentFile().mkdirs();
 
