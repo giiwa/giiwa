@@ -170,7 +170,7 @@ public class Controller {
 	 * @return OutputStream
 	 * @throws IOException occur error when get the outputstream from the reqponse.
 	 */
-	final public OutputStream getOutputStream() throws IOException {
+	public OutputStream getOutputStream() throws IOException {
 		return resp.getOutputStream();
 	}
 
@@ -184,7 +184,7 @@ public class Controller {
 	 * 
 	 * @return int of state code
 	 */
-	final public int status() {
+	public int status() {
 		return status;
 	}
 
@@ -193,7 +193,7 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	final public String locale() {
+	public String locale() {
 		if (locale == null) {
 			locale = Global.getString("language", "en_us");
 		}
@@ -540,7 +540,7 @@ public class Controller {
 	 * @param method the method
 	 * @return Path
 	 */
-	final Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
+	Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 
 		// created = System.currentTimeMillis();
 
@@ -610,7 +610,7 @@ public class Controller {
 	 * @deprecated
 	 * @return the string
 	 */
-	final public String sid() {
+	public String sid() {
 		return sid(true);
 	}
 
@@ -676,7 +676,7 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	final public String token() {
+	public String token() {
 		String token = this.cookie("token");
 		if (token == null) {
 			token = this.head("token");
@@ -692,7 +692,7 @@ public class Controller {
 	 * 
 	 * @param url the url
 	 */
-	final public void redirect(String url) {
+	public void redirect(String url) {
 		resp.setHeader("Location", url);
 		status(HttpServletResponse.SC_MOVED_TEMPORARILY);
 	}
@@ -703,7 +703,7 @@ public class Controller {
 	 * @param clazz the class name
 	 * @return the Path
 	 */
-	final public Path forward(Class<? extends Controller> clazz) {
+	public Path forward(Class<? extends Controller> clazz) {
 		try {
 			Controller m = module.getModel(method.name, clazz);
 
@@ -733,7 +733,7 @@ public class Controller {
 	 * @param name the name
 	 * @param o    the object
 	 */
-	final public Controller put(String name, Object o) {
+	public Controller put(String name, Object o) {
 		// System.out.println("put:" + name + "=>" + o);
 
 		if (data == null) {
@@ -760,7 +760,7 @@ public class Controller {
 	 * 
 	 * @param name the name of data setted in model
 	 */
-	final public void remove(String name) {
+	public void remove(String name) {
 		if (data != null) {
 			data.remove(name);
 		}
@@ -795,7 +795,7 @@ public class Controller {
 	 * @param s  the start position
 	 * @param n  the number per page
 	 */
-	final public void set(Beans<? extends Bean> bs, int s, int n) {
+	public void set(Beans<? extends Bean> bs, int s, int n) {
 		pages(bs, s, n);
 	}
 
@@ -808,7 +808,7 @@ public class Controller {
 	 * @param s
 	 * @param n
 	 */
-	final public void pages(Beans<? extends Bean> bs, int s, int n) {
+	public void pages(Beans<? extends Bean> bs, int s, int n) {
 		if (bs != null) {
 			this.set("list", bs);
 			int total = (int) bs.getTotal();
@@ -837,7 +837,7 @@ public class Controller {
 	 * @param jo    the map of data
 	 * @param names the names that will be set back to model, if null, will set all
 	 */
-	final public void copy(JSON jo, String... names) {
+	public void copy(JSON jo, String... names) {
 		if (jo == null) {
 			return;
 		}
@@ -872,7 +872,7 @@ public class Controller {
 	 * @param name the header name
 	 * @return String of the header
 	 */
-	final public String head(String name) {
+	public String head(String name) {
 		try {
 			return req.getHeader(name);
 		} catch (Exception e) {
@@ -886,7 +886,7 @@ public class Controller {
 	 * @param name  the name
 	 * @param value the value
 	 */
-	final public void head(String name, String value) {
+	public void head(String name, String value) {
 		try {
 			if (resp.containsHeader(name)) {
 				resp.setHeader(name, value);
@@ -953,7 +953,7 @@ public class Controller {
 	 * @param defaultValue the default value if not presented in both.
 	 * @return String of the value
 	 */
-	final public String getString(String name, String tagInSession, String defaultValue) {
+	public String getString(String name, String tagInSession, String defaultValue) {
 		String r = getString(name);
 		try {
 			if (X.isEmpty(r)) {
@@ -982,7 +982,7 @@ public class Controller {
 	 * @param queryfirst
 	 * @return
 	 */
-	final public String getString(String name, String tagInSession, boolean queryfirst) {
+	public String getString(String name, String tagInSession, boolean queryfirst) {
 		String r = null;
 		try {
 			if (queryfirst) {
@@ -1047,7 +1047,7 @@ public class Controller {
 	 * 
 	 * @return Cookie[]
 	 */
-	final public Cookie[] cookies() {
+	public Cookie[] cookies() {
 		return req.getCookies();
 	}
 
@@ -1066,7 +1066,7 @@ public class Controller {
 	 * @param name the name
 	 * @return the cookie
 	 */
-	final public String cookie(String name) {
+	public String cookie(String name) {
 		Cookie[] cc = cookies();
 		if (cc != null) {
 			for (int i = cc.length - 1; i >= 0; i--) {
@@ -1105,7 +1105,7 @@ public class Controller {
 	 * 
 	 * @return the string
 	 */
-	final public String browser() {
+	public String browser() {
 		return this.head("user-agent");
 	}
 
@@ -1116,7 +1116,7 @@ public class Controller {
 	 * @param value         the value of the cookie
 	 * @param expireseconds the expire time of seconds.
 	 */
-	final public void cookie(String key, String value, int expireseconds) {
+	public void cookie(String key, String value, int expireseconds) {
 		if (key == null) {
 			return;
 		}
@@ -1146,7 +1146,7 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	final public String uri() {
+	public String uri() {
 		if (X.isEmpty(uri)) {
 			uri = req.getRequestURI();
 			while (uri.indexOf("//") > -1) {
@@ -1163,7 +1163,7 @@ public class Controller {
 	 * @deprecated
 	 * @return String
 	 */
-	final public String getPath() {
+	public String getPath() {
 		return path;
 	}
 
@@ -1180,7 +1180,7 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	final public String ip() {
+	public String ip() {
 		String remote = this.head("X-Forwarded-For");
 		if (remote == null) {
 			remote = head("X-Real-IP");
@@ -1208,7 +1208,7 @@ public class Controller {
 	 * 
 	 * @return JSONObject
 	 */
-	final public JSON json() {
+	public JSON json() {
 		if (_json == null) {
 			_json = JSON.create();
 			for (String name : this.names()) {
@@ -1249,7 +1249,7 @@ public class Controller {
 	 * @param name the name of parameter
 	 * @return string of requested value
 	 */
-	final public String getString(String name) {
+	public String getString(String name) {
 		String s = this.getHtml(name);
 		if (s != null) {
 			return s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -1264,7 +1264,7 @@ public class Controller {
 	 * @param maxlength the maxlength
 	 * @return string of value
 	 */
-	final public String get(String name, int maxlength) {
+	public String get(String name, int maxlength) {
 		String s = getString(name);
 		if (!X.isEmpty(s)) {
 			if (s.getBytes().length > maxlength) {
@@ -1304,7 +1304,7 @@ public class Controller {
 	 * @param name the parameter name
 	 * @return String of value
 	 */
-	final public String getHtml(String name) {
+	public String getHtml(String name) {
 
 		try {
 			String c1 = req.getContentType();
@@ -1413,7 +1413,7 @@ public class Controller {
 	 * @param name
 	 * @return
 	 */
-	final public String[] getStrings(String name) {
+	public String[] getStrings(String name) {
 		String[] ss = getHtmls(name);
 		if (ss != null) {
 			for (int i = 0; i < ss.length; i++) {
@@ -1430,7 +1430,7 @@ public class Controller {
 	 * @return String[] of request
 	 */
 	@SuppressWarnings("unchecked")
-	final public String[] getHtmls(String name) {
+	public String[] getHtmls(String name) {
 		try {
 			if (this._multipart) {
 				_get_files();
@@ -1487,7 +1487,7 @@ public class Controller {
 	 * 
 	 * @return List of the request names
 	 */
-	final public List<String> names() {
+	public List<String> names() {
 		String c1 = req.getContentType();
 		if (c1 != null && c1.indexOf("application/json") > -1) {
 			this.getString(null);// initialize uploads
@@ -1513,7 +1513,7 @@ public class Controller {
 
 	}
 
-	final public List<String> keySet() {
+	public List<String> keySet() {
 		return this.names();
 	}
 
@@ -1532,7 +1532,7 @@ public class Controller {
 	 * 
 	 * @return Session
 	 */
-	final public Session session(boolean newsession) {
+	public Session session(boolean newsession) {
 		return Session.load(sid(newsession));
 	}
 
@@ -1734,7 +1734,7 @@ public class Controller {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	final private Map<String, Object> _get_files() {
+	private Map<String, Object> _get_files() {
 
 		if (uploads == null) {
 
@@ -1796,7 +1796,7 @@ public class Controller {
 	 * @return file of value, null if not presented
 	 */
 	@SuppressWarnings("unchecked")
-	final public FileItem file(String name) {
+	public FileItem file(String name) {
 
 		_get_files();
 
@@ -1826,7 +1826,7 @@ public class Controller {
 	 * 
 	 * @param contentType the content type in response
 	 */
-	final public void setContentType(String contentType) {
+	public void setContentType(String contentType) {
 		this.contentType = contentType;
 		resp.setContentType(contentType);
 	}
@@ -1876,7 +1876,7 @@ public class Controller {
 	 * 
 	 * @param arr the array of json
 	 */
-	final public void send(List<JSON> arr) {
+	public void send(List<JSON> arr) {
 		if (arr == null) {
 			_send_json("[]");
 		} else {
@@ -2058,7 +2058,7 @@ public class Controller {
 	 * 
 	 * @param e the throwable
 	 */
-	final public void error(Throwable e) {
+	public void error(Throwable e) {
 
 		if (log.isErrorEnabled())
 			log.error(e.getMessage(), e);
@@ -2114,7 +2114,7 @@ public class Controller {
 	 * 
 	 * @param message
 	 */
-	final public void notfound(String message) {
+	public void notfound(String message) {
 		if (log.isWarnEnabled())
 			log.warn(this.getClass().getName() + "[" + this.uri() + "]");
 
@@ -2199,7 +2199,7 @@ public class Controller {
 	 * 
 	 * @param statuscode the status code to response
 	 */
-	final public void status(int statuscode) {
+	public void status(int statuscode) {
 		status = statuscode;
 		resp.setStatus(statuscode);
 
@@ -2222,7 +2222,7 @@ public class Controller {
 		send(j1.append(X.STATE, code));
 	}
 
-	final public void error(int code) {
+	public void error(int code) {
 		try {
 			status = code;
 
@@ -2237,7 +2237,7 @@ public class Controller {
 	 * show deny page to end-user <br>
 	 * if the request is AJAX, then response json back to front
 	 */
-	final public void deny() {
+	public void deny() {
 		deny(null, null);
 	}
 
@@ -2247,7 +2247,7 @@ public class Controller {
 	 * @param url   the url will be responsed
 	 * @param error the error that will be displaied
 	 */
-	final public void deny(String url, String error) {
+	public void deny(String url, String error) {
 		if (log.isDebugEnabled())
 			log.debug(this.getClass().getName() + "[" + this.uri() + "]", new Exception("deny " + error));
 
@@ -2285,7 +2285,7 @@ public class Controller {
 	 * 
 	 * @return int
 	 */
-	final public String method() {
+	public String method() {
 		return method.name;
 	}
 
@@ -2304,7 +2304,7 @@ public class Controller {
 	 *
 	 * @param m the model of source
 	 */
-	final public void copy(Controller m) {
+	public void copy(Controller m) {
 
 		this.init(m.uri, m.req, m.resp, m.method.name);
 		this.login = m.login;
@@ -2334,7 +2334,7 @@ public class Controller {
 	 * 
 	 * @param o the object of printing
 	 */
-	final public void print(Object o) {
+	public void print(Object o) {
 		try {
 			PrintWriter writer = resp.getWriter();
 			writer.write("<pre>" + X.toString(o) + "</pre>");
