@@ -25,6 +25,7 @@ import org.giiwa.bean.m._CPU;
 import org.giiwa.bean.m._Cache;
 import org.giiwa.bean.m._DB;
 import org.giiwa.bean.m._Disk;
+import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._File;
 import org.giiwa.bean.m._MQ;
 import org.giiwa.bean.m._Memory;
@@ -126,12 +127,23 @@ public class PerfMoniterTask extends Task {
 			// disk
 			Collection<JSON> l1 = Host.getDisks();
 			if (l1 != null && !l1.isEmpty()) {
+
 				List<JSON> l2 = new ArrayList<JSON>();
+				List<JSON> l3 = new ArrayList<JSON>();
 				for (JSON j1 : l1) {
+
 					l2.add(JSON.create().append("path", j1.getString("dirname")).append("name", j1.getString("devname"))
 							.copy(j1, "total", "free", "used"));
+
+					l3.add(JSON.create().append("path", j1.getString("dirname")).append("name", j1.getString("devname"))
+							.copy(j1, "readbytes", "writebytes", "reads", "writes", "queue"));
+
 				}
+
 				_Disk.update(Local.id(), l2);
+
+				_DiskIO.update(Local.id(), l3);
+
 				// log.debug("disk=" + l2);
 			}
 			// log.debug("disk=" + l1);

@@ -245,9 +245,9 @@ public class Host {
 							.append("dirname", f.getDirName()).append("typename", f.getTypeName())
 							.append("total", 1024 * p.getTotal()).append("used", 1024 * p.getUsed())
 							.append("free", 1024 * p.getFree()).append("files", p.getFiles())
-							.append("usepercent", p.getUsePercent()).append("diskreads", p.getDiskReads())
-							.append("diskreadbytes", p.getDiskReadBytes()).append("diskwrites", p.getDiskWrites())
-							.append("diskwritebytes", p.getDiskWriteBytes()).append("diskqueue", p.getDiskQueue()));
+							.append("usepercent", p.getUsePercent()).append("reads", p.getDiskReads())
+							.append("readbytes", p.getDiskReadBytes()).append("writes", p.getDiskWrites())
+							.append("writebytes", p.getDiskWriteBytes()).append("queue", p.getDiskQueue()));
 				}
 			}
 		}

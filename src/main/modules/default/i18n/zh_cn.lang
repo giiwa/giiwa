@@ -1002,3 +1002,6 @@ column.name=名称
 column.type=类型
 column.memo=说明
 column.value=值范围
+diskio.name=磁盘IO
+disk.reads=读字节
+disk.writes=写字节

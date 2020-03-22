@@ -18,6 +18,11 @@
 		#end
 
 		<div class="br"></div>
+		#foreach($p in $disks)
+		<div class="portlet" data-url="/portlet/diskio?name=$!p.path&__node=$!__node"></div>
+		#end
+
+		<div class="br"></div>
 		#foreach($p in $portlets)
 		#if($p=='br?')
 		<div class="br"></div>

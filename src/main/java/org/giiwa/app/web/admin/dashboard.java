@@ -18,6 +18,7 @@ import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._Net;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
@@ -64,6 +65,7 @@ public class dashboard extends Controller {
 		if (login != null && login.hasAccess("access.config.admin")) {
 
 			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
+			this.set("disks", _DiskIO.dao.load(W.create("node", Local.id()).sort("path", 1), 0, 100));
 
 			this.set("portlets", portlets);
 
