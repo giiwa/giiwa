@@ -144,10 +144,10 @@ public class DefaultListener implements IListener {
 			dashboard.portlet("/portlet/cache/write");
 			dashboard.portlet("/portlet/cache/times");
 
-			dashboard.portlet("br");
-			dashboard.portlet("/portlet/file/get1");
-			dashboard.portlet("/portlet/file/down");
-			dashboard.portlet("/portlet/file/times");
+//			dashboard.portlet("br");
+//			dashboard.portlet("/portlet/file/get1");
+//			dashboard.portlet("/portlet/file/down");
+//			dashboard.portlet("/portlet/file/times");
 
 			setting.register(0, "system", setting.system.class);
 			setting.register(1, "mq", mq.class);

@@ -1,6 +1,8 @@
 package org.giiwa.bean.m;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,9 +34,6 @@ public class _DiskIO extends Bean {
 	@Column(memo = "节点")
 	String node;
 
-	@Column(memo = "磁盘")
-	String disk;
-
 	@Column(memo = "路径")
 	public String path;
 
@@ -54,6 +53,8 @@ public class _DiskIO extends Bean {
 	public double queue;
 
 	public synchronized static void update(String node, List<JSON> l1) {
+
+//		Map<String, JSON> l2 = new HashMap<String, JSON>();
 
 		for (JSON jo : l1) {
 			// insert or update
