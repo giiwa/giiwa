@@ -70,6 +70,10 @@ public class _Disk extends Bean {
 				break;
 			}
 
+			long total = jo.getLong("total");
+			if (total < 10 * 1024 * 1024 * 1024L)
+				continue;
+
 			String id = UID.id(node, path);
 			try {
 

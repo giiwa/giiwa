@@ -67,6 +67,8 @@ public class f extends Controller {
 						if (ss.length == 2) {
 							File f = Temp.get(id, "s_" + size);
 
+							log.debug("file=" + f.getAbsolutePath());
+
 							if (!f.exists() || f.length() == 0) {
 
 								f.getParentFile().mkdirs();

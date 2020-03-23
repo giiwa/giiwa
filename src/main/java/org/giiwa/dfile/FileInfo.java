@@ -1,6 +1,6 @@
 package org.giiwa.dfile;
 
-public class FileInfo {
+ class FileInfo {
 
 	public String name;
 	public boolean exists;

@@ -13,6 +13,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.dfile.FileServer;
+import org.giiwa.dfile.MyDFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Task;
@@ -183,7 +184,7 @@ public class dfile extends Controller {
 						Disk.reset();
 
 						if (f == 0) {
-							DFile f = DFile.create(d, "/");
+							DFile f = MyDFile.create(d, "/");
 							DFile[] ff = f.listFiles();
 							if (ff != null) {
 								for (DFile f1 : ff) {
@@ -201,7 +202,7 @@ public class dfile extends Controller {
 						if (f.isFile()) {
 							try {
 								String filename = f.getCanonicalPath().replace(pre, "");
-								Disk.copy(f, Disk.seek(filename), null);
+								Disk.copy(f, Disk.seek(filename));
 							} catch (Exception e) {
 								log.error(e.getMessage(), e);
 							}

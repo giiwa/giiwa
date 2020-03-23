@@ -6,7 +6,7 @@ import java.io.InputStream;
 import org.giiwa.bean.Disk;
 import org.giiwa.net.nio.IoRequest;
 
-public class DFileInputStream extends InputStream {
+ class DFileInputStream extends InputStream {
 
 	// private static Log log = LogFactory.getLog(DFileInputStream.class);
 

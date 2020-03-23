@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import org.giiwa.bean.Disk;
 import org.giiwa.net.nio.IoRequest;
 
-public class DFileOutputStream extends OutputStream {
+ class DFileOutputStream extends OutputStream {
 
 	String url;
 	String path;

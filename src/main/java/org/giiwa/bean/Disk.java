@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,6 +29,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
+import org.giiwa.dfile.MyDFile;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.web.Controller;
@@ -51,6 +51,34 @@ public class Disk extends Bean {
 	private static Log log = LogFactory.getLog(Disk.class);
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
+
+	public static interface IDisk {
+
+		long getUsed();
+
+		long getTotal();
+
+		DFile seek(Path filename);
+
+		DFile seek(String filename);
+
+		boolean exists(String filename);
+
+		Collection<DFile> list(String filename);
+
+		void delete(String filename, long age, boolean global);
+
+		long move(DFile src, DFile dest);
+
+		long copy(DFile src, DFile dest);
+
+	}
+
+	private static IDisk _disk;
+
+	public static void setDisk(IDisk d) {
+		_disk = d;
+	}
 
 //	public static Disk DEFAULT = new Disk();
 
@@ -186,7 +214,12 @@ public class Disk extends Bean {
 
 	}
 
+	// ---------------
 	public long getUsed() {
+		if (_disk != null) {
+			return _disk.getUsed();
+		}
+
 		return this.total - this.free;
 	}
 
@@ -196,6 +229,11 @@ public class Disk extends Bean {
 	}
 
 	public int getUsage() {
+		if (_disk != null) {
+			long total = _disk.getTotal();
+			return (int) (_disk.getUsed() * 100 / total);
+		}
+
 		if (this.total > 0) {
 			return (int) ((this.total - this.free) * 100 / this.total);
 		}
@@ -203,6 +241,9 @@ public class Disk extends Bean {
 	}
 
 	public static DFile seek(Path filename) throws Exception {
+		if (_disk != null) {
+			return _disk.seek(filename);
+		}
 		return seek(filename.toString());
 	}
 
@@ -212,20 +253,24 @@ public class Disk extends Bean {
 
 	public static DFile seek(String filename) throws Exception {
 
+		if (_disk != null) {
+			return _disk.seek(filename);
+		}
+
 		if (Helper.isConfigured()) {
 			filename = X.getCanonicalPath(filename);
 
 			Beans<Disk> bs = disks();
 
 			for (Disk e : bs) {
-				DFile d = DFile.create(e, filename);
+				DFile d = MyDFile.create(e, filename);
 				if (d.exists()) {
 					return d;
 				}
 			}
 
 			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = DFile.create(Disk.get(), filename);
+			DFile f = MyDFile.create(Disk.get(), filename);
 
 			return f;
 		}
@@ -236,10 +281,14 @@ public class Disk extends Bean {
 
 	public static boolean exists(String filename) throws Exception {
 
+		if (_disk != null) {
+			return _disk.exists(filename);
+		}
+
 		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
-			DFile d = DFile.create(e, filename);
+			DFile d = MyDFile.create(e, filename);
 			if (d.exists()) {
 				return true;
 			}
@@ -254,12 +303,17 @@ public class Disk extends Bean {
 	}
 
 	public static Collection<DFile> list(String filename) throws Exception {
+
+		if (_disk != null) {
+			return _disk.list(filename);
+		}
+
 		Map<String, DFile> l1 = new TreeMap<String, DFile>();
 
 		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
-			DFile f = DFile.create(e, filename);
+			DFile f = MyDFile.create(e, filename);
 			try {
 				if (f.exists()) {
 					DFile[] ff = f.listFiles();
@@ -295,11 +349,16 @@ public class Disk extends Bean {
 
 	public static void delete(String filename, long age, boolean global) throws Exception {
 
+		if (_disk != null) {
+			_disk.delete(filename, age, global);
+			return;
+		}
+
 		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
 
-			DFile f = DFile.create(e, filename);
+			DFile f = MyDFile.create(e, filename);
 
 			f.delete(age);
 
@@ -308,6 +367,11 @@ public class Disk extends Bean {
 	}
 
 	public static long move(DFile src, DFile dest) throws Exception {
+
+		if (_disk != null) {
+			return _disk.move(src, dest);
+		}
+
 		long len = 0;
 		if (src.isDirectory()) {
 			// for
@@ -326,12 +390,13 @@ public class Disk extends Bean {
 		return len;
 	}
 
-	public static long copy(DFile src, DFile dest, Consumer<String> moni) throws Exception {
-		long len = 0;
+	public static long copy(DFile src, DFile dest) throws Exception {
 
-		if (moni != null) {
-			moni.accept(src.getFilename());
+		if (_disk != null) {
+			return _disk.copy(src, dest);
 		}
+
+		long len = 0;
 
 		if (src.isDirectory()) {
 			dest.mkdirs();
@@ -339,7 +404,7 @@ public class Disk extends Bean {
 			DFile[] ff = src.listFiles();
 			if (ff != null) {
 				for (DFile f : ff) {
-					len += copy(f, Disk.seek(dest.getFilename() + "/" + f.getName()), moni);
+					len += copy(f, Disk.seek(dest.getFilename() + "/" + f.getName()));
 				}
 			}
 		} else {
@@ -495,6 +560,10 @@ public class Disk extends Bean {
 	}
 
 	public static long getTotalSpace() {
+		if (_disk != null) {
+			return _disk.getTotal();
+		}
+
 		long total = 0;
 		if (Helper.isConfigured()) {
 			int s = 0;
@@ -513,6 +582,11 @@ public class Disk extends Bean {
 	}
 
 	public static long getFreeSpace() {
+
+		if (_disk != null) {
+			return _disk.getTotal() - _disk.getUsed();
+		}
+
 		long total = 0;
 		if (Helper.isConfigured()) {
 			int s = 0;
@@ -525,6 +599,7 @@ public class Disk extends Bean {
 				}
 				s += bs.size();
 				bs = dao.load(q, s, 10);
+
 			}
 		}
 		return total;

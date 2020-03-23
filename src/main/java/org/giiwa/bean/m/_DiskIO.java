@@ -57,6 +57,7 @@ public class _DiskIO extends Bean {
 //		Map<String, JSON> l2 = new HashMap<String, JSON>();
 
 		for (JSON jo : l1) {
+
 			// insert or update
 			String path = jo.getString("path");
 			String name = jo.getString("name");
@@ -68,6 +69,10 @@ public class _DiskIO extends Bean {
 				log.error(jo, new Exception("name or path missed"));
 				break;
 			}
+
+			_Disk d1 = _Disk.dao.load(W.create("node", node).and("path", path));
+			if (d1 == null)
+				continue;
 
 			String id = UID.id(node, path);
 			try {

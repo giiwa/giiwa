@@ -174,7 +174,7 @@ public class Temp {
 	}
 
 	public long save(DFile f) throws Exception {
-		return f.save(this.getFile());
+		return f.upload(this.getFile());
 	}
 
 	public long save(String filename) throws Exception {
