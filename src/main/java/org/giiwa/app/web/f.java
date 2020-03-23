@@ -3,6 +3,7 @@ package org.giiwa.app.web;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -70,7 +71,14 @@ public class f extends Controller {
 
 								f.getParentFile().mkdirs();
 
-								GImage.scale3(f1.getInputStream(), new FileOutputStream(f), X.toInt(ss[0]),
+								Temp t2 = Temp.create("a.jpg");
+								File f2 = t2.getFile();
+								f2.getParentFile().mkdirs();
+								long len = IOUtil.copy(f1.getInputStream(), new FileOutputStream(f2));
+								if (len != f1.length())
+									throw new IOException("get dfile error");
+
+								GImage.scale3(new FileInputStream(f2), new FileOutputStream(f), X.toInt(ss[0]),
 										X.toInt(ss[1]));
 
 							} else {
