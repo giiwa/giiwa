@@ -876,7 +876,6 @@ disk.priority.hint=存储顺序=free*priority
 a.disk.edit=编辑
 disk.node=节点
 disk.node.hint=存储设备所在的节点
-disk.state=状态
 disk.count=文件数
 name.org.giiwa.bean.Disk=GI-分布式磁盘
 a.add.file=上传文件
@@ -1005,3 +1004,5 @@ column.value=值范围
 diskio.name=磁盘IO
 disk.reads=读字节
 disk.writes=写字节
+disk.enabled.hint=开启该磁盘
+disk.enabled=开关

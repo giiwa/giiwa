@@ -24,7 +24,7 @@
 			<th>$lang.get('node.url')</th>
 			<th>$lang.get('disk.path')</th>
 			<th>$lang.get('disk.priority')</th>
-			<th>$lang.get('disk.state')</th>
+			<th>$lang.get('disk.enabled')</th>
 			<th>$lang.get('disk.total')</th>
 			<th>$lang.get('disk.free')</th>
 			<th colspan="2">$lang.get('disk.used')</th>
@@ -39,7 +39,7 @@
 		<td><i class="icon-folder" style="color: #58b957;"></i>&nbsp;$f1.path</td>
 		<td>$f1.priority</td>
 		<td>
-			#if($f1.live)
+			#if($f1.enabled>0)
 			<i class='icon-radio-checked' style="color: green"></i>
 			#else
 			<i class='icon-radio-checked' style="color: red"></i>
@@ -71,7 +71,7 @@
 function _edit(id){
 	giiwa.popup('/admin/dfile/disk/edit?__node=$!__node&id=' + id, {
 		width: 500,
-		height: 250,
+		height: 300,
 		moveable: true,
 		max: false,
 		onsubmit: function(){
@@ -82,7 +82,7 @@ function _edit(id){
 function _add(){
 	giiwa.popup('/admin/dfile/disk/add?__node=$!__node', {
 		width: 500,
-		height: 250,
+		height: 300,
 		moveable: true,
 		max: false,
 		onsubmit: function(){

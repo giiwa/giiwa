@@ -41,6 +41,8 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 	public JSON stats;
 
+	public long created = System.currentTimeMillis();
+
 	public long cost = -1;
 
 	public List<String> columns = null;

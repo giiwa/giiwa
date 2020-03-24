@@ -16,7 +16,6 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Node;
-import org.giiwa.cache.Cache;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
@@ -98,6 +97,9 @@ public class Disk extends Bean {
 
 	@Column(name = "checktime")
 	long checktime;
+
+	@Column(memo = "开关")
+	public int enabled; // 1: ok, 0: disabled
 
 	@Column(memo = "是否可用", value = "0:ok, 1:bad")
 	int bad; // 0:ok, 1: bad
@@ -417,23 +419,21 @@ public class Disk extends Bean {
 		return IOUtil.copy(in, out);
 	}
 
+	static transient Beans<Disk> _disks;
+
 	private static Beans<Disk> disks() throws Exception {
-		Beans<Disk> b1 = Cache.get("disk");
-		if (b1 == null) {
-			W q = W.create().and("bad", 0).sort("priority", -1).sort("path", 1);
-			b1 = dao.load(q, 0, 100);
-			Cache.set("disk", b1, X.AMINUTE);
+		if (X.isEmpty(_disks) || System.currentTimeMillis() - _disks.created > X.AMINUTE) {
+			W q = W.create().and("enabled", 1).sort("priority", -1).sort("path", 1);
+			_disks = dao.load(q, 0, 100);
 		}
-		if (b1 == null || b1.isEmpty()) {
-//			b1 = Beans.create();
-//			b1.add(Disk.DEFAULT);
+		if (X.isEmpty(_disks)) {
 			throw new Exception("not disk configured!");
 		}
-		return b1;
+		return _disks;
 	}
 
 	public static void reset() {
-		Cache.remove("disk");
+		_disks = null;
 	}
 
 	public String getNode() {
@@ -451,17 +451,6 @@ public class Disk extends Bean {
 
 	public static void repair() {
 
-//		{
-//			DEFAULT = new Disk();
-//			DEFAULT.path = Controller.GIIWA_HOME + "/data";
-//			DEFAULT.node_obj = new Node();
-//			Url u = Url.create(Config.getConf().getString("dfile.bind", FileServer.URL));
-//			String s1 = u.getProtocol() + "://" + (X.isSame(u.getIp(), "0.0.0.0") ? "127.0.0.1" : u.getIp()) + ":"
-//					+ u.getPort();
-//
-//			DEFAULT.node_obj.set("url", s1);
-//		}
-
 		if (Helper.isConfigured()) {
 			int s = 0;
 			W q = W.create().sort("created", 1);
@@ -473,8 +462,8 @@ public class Disk extends Bean {
 					if (!f.exists()) {
 						f.mkdirs();
 					}
-					Disk.create(
-							V.create("path", f.getCanonicalPath()).append("priority", 1).append("node", Local.id()));
+					Disk.create(V.create("path", f.getCanonicalPath()).append("enabled", 1).append("priority", 1)
+							.append("node", Local.id()));
 
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);

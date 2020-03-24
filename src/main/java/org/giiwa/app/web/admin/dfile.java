@@ -84,7 +84,8 @@ public class dfile extends Controller {
 				v.append("path", f.getCanonicalPath());
 				v.append("priority", this.getInt("priority"));
 				v.append("node", this.getString("node1"));
-
+				v.append("enabled", this.getInt("enabled"));
+				
 				Disk.create(v);
 				this.send(JSON.create().append(X.STATE, 200));
 
@@ -139,6 +140,7 @@ public class dfile extends Controller {
 		if (method.isPost()) {
 			V v = V.create();
 			v.append("priority", this.getInt("priority"));
+			v.append("enabled", this.getInt("enabled"));
 
 			Disk.dao.update(id, v);
 			FileServer.reset();
