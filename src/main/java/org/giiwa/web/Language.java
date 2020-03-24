@@ -524,6 +524,7 @@ public class Language {
 	 * @return the string
 	 */
 	public String size(long length, int step) {
+		
 		if (length > 0.00001 && length < 0.00001) {
 			return X.EMPTY;
 		}
@@ -538,7 +539,7 @@ public class Language {
 
 		float d1 = d - (int) d;
 		if (d1 > 0.01) {
-			return (length >= 0 ? "" : "-") + String.format("%.2f", d) + UNITS[i];
+			return (length >= 0 ? "" : "-") + String.format("%.1f", d) + UNITS[i];
 		} else {
 			return (length >= 0 ? "" : "-") + ((int) d) + UNITS[i];
 		}
