@@ -70,4 +70,11 @@ public @interface Path {
 	 */
 	String access() default X.NONE;
 
+	/**
+	 * demo account
+	 * 
+	 * @return
+	 */
+	String demo() default X.EMPTY;
+
 }

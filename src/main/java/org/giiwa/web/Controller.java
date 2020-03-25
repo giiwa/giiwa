@@ -317,8 +317,13 @@ public class Controller {
 									/**
 									 * login require
 									 */
-									_gotoLogin();
-									return pp;
+									if (!X.isEmpty(pp.demo())) {
+										login = User.load("demo");
+									}
+									if (login == null) {
+										_gotoLogin();
+										return pp;
+									}
 								}
 
 								if (!X.NONE.equals(pp.access()) && !login.hasAccess(pp.access().split("\\|"))) {
@@ -388,8 +393,13 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							_gotoLogin();
-							return null;
+							if (!X.isEmpty(p.demo())) {
+								login = User.load("demo");
+							}
+							if (login == null) {
+								_gotoLogin();
+								return null;
+							}
 						}
 
 						// check access
@@ -413,8 +423,13 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							_gotoLogin();
-							return null;
+							if (!X.isEmpty(p.demo())) {
+								login = User.load("demo");
+							}
+							if (login == null) {
+								_gotoLogin();
+								return null;
+							}
 						}
 
 						// check access
@@ -437,8 +452,13 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							_gotoLogin();
-							return null;
+							if (!X.isEmpty(p.demo())) {
+								login = User.load("demo");
+							}
+							if (login == null) {
+								_gotoLogin();
+								return null;
+							}
 						}
 
 						// check access
@@ -461,8 +481,13 @@ public class Controller {
 					// check ogin
 					if (p.login()) {
 						if (this.user() == null) {
-							_gotoLogin();
-							return null;
+							if (!X.isEmpty(p.demo())) {
+								login = User.load("demo");
+							}
+							if (login == null) {
+								_gotoLogin();
+								return null;
+							}
 						}
 
 						// check access
@@ -1974,7 +1999,9 @@ public class Controller {
 
 			GLog.applog.error(this.getClass(), "show", e.getMessage(), e, login, this.ip());
 
-			error(e);
+			if (!X.isSame("/error.html", viewname)) {
+				error(e);
+			}
 		} finally {
 			outputed++;
 		}
@@ -2089,9 +2116,14 @@ public class Controller {
 			s = s.replaceAll(lineSeparator, "<br/>");
 			s = s.replaceAll(" ", "&nbsp;");
 			s = s.replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;");
-			this.set("error", s);
 
-			this.show("/error.html");
+			File file = Module.home.getFile("/error.html");
+			if (file != null && file.exists()) {
+				this.set("error", s);
+				this.show("/error.html");
+			} else {
+				this.print(s);
+			}
 			status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
