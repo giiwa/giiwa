@@ -35,8 +35,7 @@
 				<div class='arrawup'></div>
 				<div class='item' style="padding-left: 12px;">#if($me.nickname)$me.nickname #else $!me.name #end</div>
 				<div class='item'><a href='javascript:;' onclick='giiwa.load("/admin/profile/my?__node=$!__node");_mymenu();'><i class='icon-cogs'></i>&nbsp;&nbsp;$lang.get('a.profile')</a></div>
-				<div class='item'><a href='javascript:;' onclick='giiwa.load("/admin/dashboard/info?__node=$!__node");_mymenu();'><i class='icon-notification'></i>&nbsp;&nbsp;$lang.get('a.about')</a></div>
-				<div class='item'><a href='javascript:;' onclick='giiwa.open("https://www.giisoo.com/book/giiwa/");_mymenu();'><i class='icon-question'></i>&nbsp;&nbsp;$lang.get('a.help')</a></div>
+				<div class='item'><a href='javascript:;' onclick='giiwa.open("https://wiki.giisoo.com/");_mymenu();'><i class='icon-question'></i>&nbsp;&nbsp;$lang.get('a.help')</a></div>
 				
 				#if($me.hasAccess('access.config.admin'))
 				<div class='item'><a href="javascript:;" onclick="giiwa.open('/docs/icomoon/demo.html');_mymenu();"><i class='icon-image'></i>&nbsp;&nbsp;Icons</a></div>
