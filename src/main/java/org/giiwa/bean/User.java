@@ -65,7 +65,7 @@ import org.giiwa.web.Language;
  * @author yjiang
  * 
  */
-@Table(name = "gi_user", memo="GI-用户")
+@Table(name = "gi_user", memo = "GI-用户")
 public class User extends Bean {
 
 	/**
@@ -690,7 +690,7 @@ public class User extends Bean {
 	 * @author joe
 	 *
 	 */
-	@Table(name = "gi_userlock", memo="GI-用户登录失败")
+	@Table(name = "gi_userlock", memo = "GI-用户登录失败")
 	public static class Lock extends Bean {
 
 		/**
@@ -971,6 +971,13 @@ public class User extends Bean {
 		User u = new User();
 		u.id = 10;
 		System.out.println(u.token());
+	}
+
+	@Override
+	public JSON json() {
+		JSON j1 = super.json();
+		j1.remove("_.*", "password", "md5passwd", "sid");
+		return j1;
 	}
 
 }

@@ -553,7 +553,7 @@ public class Bean implements Map<String, Object>, Serializable {
 	 * 
 	 * @return JSON
 	 */
-	public final JSON json() {
+	public JSON json() {
 
 		if (json_obj == null) {
 			json_obj = new JSON();
