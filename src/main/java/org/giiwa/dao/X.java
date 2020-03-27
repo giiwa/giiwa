@@ -590,6 +590,7 @@ public final class X {
 	public static Object[] csv(String src) {
 		if (X.isEmpty(src))
 			return null;
+
 		src = src.trim();
 		if (src.length() == 0)
 			return null;
@@ -605,9 +606,9 @@ public final class X {
 				// goto next "
 				p++;
 				c = src.charAt(p);
-				if (sb == null) {
-					sb = new StringBuilder();
-				}
+//				if (sb == null) {
+				sb = new StringBuilder();
+//				}
 
 				while (c != '"' && p < len) {
 					sb.append(c);
@@ -1275,7 +1276,5 @@ public final class X {
 	public static class Image extends GImage {
 
 	}
-	
-	
 
 }
