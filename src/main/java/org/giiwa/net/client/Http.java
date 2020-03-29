@@ -28,6 +28,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
@@ -59,6 +60,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.ssl.SSLContexts;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
@@ -626,25 +628,30 @@ public final class Http {
 			HttpURLConnection conn = (HttpURLConnection) u.openConnection();
 			conn.setDoOutput(true);
 			conn.setDoInput(true);
-			conn.setRequestMethod("POST");
+//			conn.setRequestMethod("POST");
 
 			func.accept(conn);
 
-			if (conn.getResponseCode() >= 300) {
-				throw new Exception("HTTP Request is not success, Response code is " + conn.getResponseCode());
-			}
+			r.status = conn.getResponseCode();
 
-			if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-				re = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-
-				StringBuilder sb = new StringBuilder();
-				String line = null;
-				while ((line = re.readLine()) != null) {
-					sb.append(line).append("\r\n");
+			List<Header> l1 = new ArrayList<Header>();
+			Map<String, List<String>> m1 = conn.getHeaderFields();
+			for (String name : m1.keySet()) {
+				if (!X.isEmpty(name)) {
+					List<String> l2 = m1.get(name);
+					l1.add(new BasicHeader(name, l2.get(0)));
 				}
-				r.status = 200;
-				r.body = sb.toString();
 			}
+			r.headers = l1.toArray(new Header[l1.size()]);
+
+			re = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+			StringBuilder sb = new StringBuilder();
+			String line = null;
+			while ((line = re.readLine()) != null) {
+				sb.append(line).append("\r\n");
+			}
+			r.body = sb.toString();
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);

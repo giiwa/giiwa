@@ -18,6 +18,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -243,6 +245,48 @@ public class Temp {
 			X.close(in, out);
 		}
 
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public boolean export(List data, Exporter.FORMAT fmt, boolean head) throws IOException {
+
+		if (data == null || data.isEmpty()) {
+			return false;
+		}
+
+		Object o1 = data.get(0);
+
+		Object[] hh = (o1 instanceof Map) ? (((Map) o1).keySet().toArray()) : null;
+
+		Exporter<Object> ex = export(fmt);
+		if (head && hh != null) {
+			ex.print(hh);
+		}
+
+		ex.createSheet(e -> {
+			if (e == null)
+				return null;
+			if (e.getClass().isArray())
+				return (Object[]) e;
+
+			if (e instanceof List)
+				return ((List) e).toArray();
+
+			if (e instanceof Map) {
+				Map m = (Map) e;
+				Object[] o = new Object[hh.length];
+				for (int i = 0; i < hh.length; i++) {
+					o[i] = m.get(hh[i]);
+				}
+
+				return o;
+			}
+			return new Object[] { e };
+		});
+		ex.print((List<Object>) data);
+		ex.close();
+
+		return true;
 	}
 
 }
