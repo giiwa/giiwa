@@ -1105,4 +1105,8 @@ public final class JSON extends HashMap<String, Object> {
 		});
 	}
 
+	public JSON json() {
+		return this;
+	}
+
 }
