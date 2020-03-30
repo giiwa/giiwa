@@ -14,8 +14,8 @@ public class IoResponse {
 	public void close() {
 
 		if (ch != null) {
-			ch.disconnect();
-//			ch.close();
+//			ch.disconnect();
+			ch.close();
 		}
 	}
 

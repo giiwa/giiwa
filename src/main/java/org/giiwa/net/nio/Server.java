@@ -111,10 +111,12 @@ public class Server implements Closeable {
 			};
 
 			boot.childHandler(new ChannelInitializer<SocketChannel>() {
+
 				@Override
 				public void initChannel(SocketChannel ch) throws Exception {
 					ch.pipeline().addLast(io);
 				}
+
 			});
 
 		} catch (Exception e) {
@@ -138,17 +140,21 @@ public class Server implements Closeable {
 
 			Server.create().group(2, 8).handler((req, resp) -> {
 
+//				System.out.println(req.size());
+
 				if (req.size() > 4) {
 					req.mark();
 					byte[] b = new byte[128];
 					int n = req.readBytes(b);
 					if (b[n - 4] == 13 && b[n - 3] == 10 && b[n - 2] == 13 && b[n - 1] == 10) {
 
-						String s = "HTTP/1.1 200\n\nhello world!\n\n";
+						System.out.println(new String(b, 0, n));
+
+						String s = "HTTP/1.1 200\n\nhello world!\n\n\n\n";
 
 						resp.write(s.getBytes());
 						resp.send();
-						resp.close();
+//						resp.close();
 					} else {
 						req.reset();
 					}

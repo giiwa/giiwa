@@ -16,7 +16,15 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 	}
 
 	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+		cause.printStackTrace();
+		super.exceptionCaught(ctx, cause);
+	}
+
+	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+
+		System.out.println("remove, client=" + ctx.channel().remoteAddress());
 
 		AttributeKey<IoRequest> req = AttributeKey.valueOf("req");
 		Attribute<IoRequest> req1 = ctx.channel().attr(req);
@@ -60,6 +68,8 @@ public abstract class IoHandler extends ChannelInboundHandlerAdapter {
 				resp = IoResponse.create(ctx.channel());
 				b1.set(resp);
 			}
+
+			System.out.println("got data, client=" + ctx.channel().remoteAddress());
 
 			process(req, resp);
 
