@@ -14,6 +14,9 @@
 */
 package org.giiwa.misc;
 
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -61,8 +64,9 @@ public class Host {
 	static Log log = LogFactory.getLog(Host.class);
 
 	public static long getPid() {
-		_init();
-		return sigar.getPid();
+		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+//		System.out.println(runtimeMXBean.getName());
+		return X.toInt(runtimeMXBean.getName().split("@")[0]);
 	}
 
 	/**
@@ -75,6 +79,10 @@ public class Host {
 		System.out.println(Host.getLocalip());
 
 		System.out.println(getPid());
+
+		File[] ff = File.listRoots();
+
+		System.out.println(Arrays.toString(ff));
 
 	}
 
@@ -227,7 +235,7 @@ public class Host {
 	}
 
 	public static Collection<JSON> getDisks() throws SigarException {
-		
+
 		_init();
 
 		FileSystem[] fs = getFileSystem();
@@ -241,13 +249,14 @@ public class Host {
 				// log.debug("p.total=" + p.getTotal());
 				if (p.getTotal() > 0) {
 
-					m1.put(f.getDirName(), JSON.create().append("devname", f.getDevName())
-							.append("dirname", f.getDirName()).append("typename", f.getTypeName())
-							.append("total", 1024 * p.getTotal()).append("used", 1024 * p.getUsed())
-							.append("free", 1024 * p.getFree()).append("files", p.getFiles())
-							.append("usepercent", p.getUsePercent()).append("reads", p.getDiskReads())
-							.append("readbytes", p.getDiskReadBytes()).append("writes", p.getDiskWrites())
-							.append("writebytes", p.getDiskWriteBytes()).append("queue", p.getDiskQueue()));
+					m1.put(f.getDirName(),
+							JSON.create().append("devname", f.getDevName()).append("dirname", f.getDirName())
+									.append("typename", f.getTypeName()).append("total", 1024 * p.getTotal())
+									.append("used", 1024 * p.getUsed()).append("free", 1024 * p.getFree())
+									.append("files", p.getFiles()).append("usepercent", p.getUsePercent())
+									.append("reads", p.getDiskReads()).append("readbytes", p.getDiskReadBytes())
+									.append("writes", p.getDiskWrites()).append("writebytes", p.getDiskWriteBytes())
+									.append("queue", p.getDiskQueue()));
 				}
 			}
 		}

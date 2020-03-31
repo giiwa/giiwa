@@ -25,6 +25,7 @@ import java.util.TreeMap;
 
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Host;
 import org.giiwa.misc.Shell;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
@@ -177,12 +178,8 @@ public class task extends Controller {
 	@Path(login = true, path = "thread", access = "access.config.admin")
 	public void thread() {
 
-		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-		System.out.println(runtimeMXBean.getName());
-		int pid = X.toInt(runtimeMXBean.getName().split("@")[0]);
-
 		try {
-			String s = Shell.run("jstack " + pid, X.AMINUTE);
+			String s = Shell.run("jstack " + Host.getPid(), X.AMINUTE);
 
 			this.set("dump", s);
 			this.show("/admin/task.thread.html");

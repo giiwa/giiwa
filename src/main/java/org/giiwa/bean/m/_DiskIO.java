@@ -75,7 +75,7 @@ public class _DiskIO extends Bean {
 			String id = UID.id(node, path);
 			try {
 
-				name = name.replace("[\\\\]", "/");
+//				name = name.replace("[\\\\]", "/");
 				V v = V.fromJSON(jo).append("node", node).force("name", name).remove("_id", X.ID);
 
 				Record r1 = Record.dao.load(W.create().and("node", node).and("path", path).sort("created", -1));
