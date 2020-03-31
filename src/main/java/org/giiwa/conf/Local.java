@@ -19,12 +19,10 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.Disk;
 import org.giiwa.bean.Node;
 import org.giiwa.cache.Cache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
-import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.net.mq.IStub;
 import org.giiwa.net.mq.MQ;
@@ -296,22 +294,22 @@ public final class Local extends Bean {
 				}
 
 				// check node disk
-				W q = W.create().and("node", Local.id()).sort("created", 1);
-				Beans<Disk> l1 = Disk.dao.load(q, 0, 10);
-				if (l1 != null && !l1.isEmpty()) {
-					for (Disk d : l1) {
-
-						if (d.isLocal()) {
-							Disk.dao.update(d.getId(),
-									V.create("bad", 0).append("lasttime", System.currentTimeMillis()));
-
-							if (System.currentTimeMillis() - d.getLong("checktime") > X.AMINUTE) {
-								d.check();
-							}
-						}
-
-					}
-				}
+//				W q = W.create().and("node", Local.id()).sort("created", 1);
+//				Beans<Disk> l1 = Disk.dao.load(q, 0, 10);
+//				if (l1 != null && !l1.isEmpty()) {
+//					for (Disk d : l1) {
+//
+//						if (d.isLocal()) {
+//							Disk.dao.update(d.getId(),
+//									V.create("bad", 0).append("lasttime", System.currentTimeMillis()));
+//
+//							if (System.currentTimeMillis() - d.getLong("checktime") > X.AMINUTE) {
+//								d.check();
+//							}
+//						}
+//
+//					}
+//				}
 
 			}
 

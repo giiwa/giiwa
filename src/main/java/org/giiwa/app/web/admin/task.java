@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,6 +25,7 @@ import java.util.TreeMap;
 
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Shell;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
 
@@ -175,66 +177,18 @@ public class task extends Controller {
 	@Path(login = true, path = "thread", access = "access.config.admin")
 	public void thread() {
 
-		List<JSON> l1 = JSON.createList();
-		TreeMap<Thread.State, Long> states = new TreeMap<Thread.State, Long>();
+		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+		System.out.println(runtimeMXBean.getName());
+		int pid = X.toInt(runtimeMXBean.getName().split("@")[0]);
 
 		try {
-			Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
-			for (Thread t : dumps.keySet()) {
+			String s = Shell.run("jstack " + pid, X.AMINUTE);
 
-				Long n = states.get(t.getState());
-				if (n == null) {
-					states.put(t.getState(), 1L);
-				} else {
-					states.put(t.getState(), n + 1);
-				}
-
-				JSON j = JSON.create();
-				j.append("name", t.getName());
-				j.append("priority", t.getPriority());
-				j.append("id", t.getId());
-				j.append("state", t.getState());
-
-				StackTraceElement[] ss = dumps.get(t);
-				StringBuilder sb1 = new StringBuilder();
-				StringBuilder sb2 = new StringBuilder();
-				if (ss != null && ss.length > 0) {
-					int ii = 0;
-					for (StackTraceElement e : ss) {
-						if (ii < 2) {
-							sb1.append(e.toString()).append("<br/>");
-							ii++;
-						}
-						sb2.append(e.toString()).append("<br/>");
-					}
-				}
-				j.append("trace1", sb1.toString());
-				j.append("trace2", sb2.toString());
-
-				l1.add(j);
-			}
-		} catch (Throwable e) {
-			log.error(e.getMessage(), e);
+			this.set("dump", s);
+			this.show("/admin/task.thread.html");
+		} catch (Exception e) {
+			this.error(e);
 		}
-
-		Collections.sort(l1, new Comparator<JSON>() {
-
-			@Override
-			public int compare(JSON o1, JSON o2) {
-				long id1 = o1.getLong("id");
-				long id2 = o2.getLong("id");
-				if (id1 == id2)
-					return 0;
-
-				return id1 < id2 ? -1 : 1;
-			}
-
-		});
-
-		this.set("states", states);
-		this.set("list", l1);
-
-		this.show("/admin/task.thread.html");
 
 	}
 
