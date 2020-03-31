@@ -1024,7 +1024,9 @@ public class Module {
 				changed = true;
 			}
 
-			Schema.init();
+			Task.schedule(() -> {
+				Schema.init();
+			});
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
