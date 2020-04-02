@@ -73,6 +73,7 @@ public class Repo {
 	/**
 	 * Store the input data to associated id
 	 * 
+	 * @deprecated
 	 * @param id       the id
 	 * @param filename the filename
 	 * @param position the position
@@ -81,7 +82,7 @@ public class Repo {
 	 * @param uid      the uid
 	 * @param ip       the report ip
 	 * @return the long
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	public static long append(String id, String filename, long position, long total, InputStream in, long uid,
 			String ip) throws Exception {
@@ -244,7 +245,7 @@ public class Repo {
 			log.debug("id=" + id + ", path=" + path(id) + ", name=" + name + ", file=" + file);
 		}
 
-		private long store(long position, InputStream in, long total) throws Exception {
+		public long store(long position, InputStream in, long total) throws Exception {
 
 			file.upload(position, in);
 
@@ -294,6 +295,10 @@ public class Repo {
 			return id;
 		}
 
+		public DFile getDFile() {
+			return file;
+		}
+
 	}
 
 	static private String path(String path) {
@@ -307,6 +312,7 @@ public class Repo {
 
 		sb.append("/").append(p1).append("/").append(p2).append("/").append(p3).append("/").append(p4).append("/")
 				.append(id).append("/");
+
 		return sb.toString();
 	}
 
@@ -348,6 +354,10 @@ public class Repo {
 		String s = "123/aaa.jpg";
 		Entity e = Repo.load(s);
 		System.out.println(e.id);
+	}
+
+	public static Entity get(String id, String filename) throws Exception {
+		return new Entity(id, filename);
 	}
 
 }

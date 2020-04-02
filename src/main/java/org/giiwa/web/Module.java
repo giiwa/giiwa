@@ -36,12 +36,12 @@ import org.giiwa.bean.License;
 import org.giiwa.bean.Menu;
 import org.giiwa.bean.User;
 import org.giiwa.bean.License.LICENSE;
-import org.giiwa.bean.Repo.Entity;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
+import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.FileVersion;
 import org.giiwa.misc.IOUtil;
@@ -280,7 +280,7 @@ public class Module {
 	 * @return true required restart, false not need
 	 * @throws Exception throw Exception if failed
 	 */
-	public static boolean prepare(Entity e) throws Exception {
+	public static boolean prepare(DFile e) throws Exception {
 		if (e == null) {
 			throw new Exception("invalid repo entity");
 		}

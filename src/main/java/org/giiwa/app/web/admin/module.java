@@ -31,6 +31,7 @@ import org.giiwa.bean.Repo.Entity;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
+import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.RSA;
@@ -647,12 +648,16 @@ public class module extends Controller {
 	public void add() {
 
 		String url = this.getString(X.URL);
-		Entity e = Repo.load(url);
 
 		JSON jo = new JSON();
 
+		DFile d = null;
+
 		try {
-			boolean restart = Module.prepare(e);
+
+			d = Disk.getByUrl(url);
+
+			boolean restart = Module.prepare(d);
 
 			jo.put("result", "ok");
 
@@ -679,8 +684,9 @@ public class module extends Controller {
 
 		} catch (Exception e1) {
 
-			e.delete();
 			log.error(url, e1);
+
+			d.delete();
 
 			GLog.applog.error(module.class, "add", "entity not found in repo for [" + url + "]", e1, login, this.ip());
 

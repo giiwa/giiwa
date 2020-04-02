@@ -253,6 +253,16 @@ public class Disk extends Bean {
 		return seek(new String(Base32.decode(id)));
 	}
 
+	public static DFile getByUrl(String url) throws Exception {
+		if (url.startsWith("/f/g/")) {
+			String[] ss = X.split(url, "/");
+			if (ss.length > 2) {
+				return seek(new String(Base32.decode(ss[2])));
+			}
+		}
+		return seek(url);
+	}
+
 	public static DFile seek(String filename) throws Exception {
 
 		if (_disk != null) {

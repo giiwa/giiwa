@@ -148,6 +148,8 @@ public class f extends Controller {
 	@Path(path = "upload", login = true)
 	public void upload() {
 
+		String tag = this.get("tag");
+
 		JSON jo = new JSON();
 
 		// String access = Module.home.get("upload.require.access");
@@ -165,7 +167,7 @@ public class f extends Controller {
 			if (X.isEmpty(filename)) {
 				filename = file.getName();
 			}
-			store(file, filename, jo);
+			_store(file, filename, jo);
 		} else {
 			jo.append(X.STATE, HttpServletResponse.SC_BAD_REQUEST).append(X.ERROR, HttpServletResponse.SC_BAD_REQUEST)
 					.append(X.MESSAGE, lang.get("upload.notfound"));
@@ -175,11 +177,11 @@ public class f extends Controller {
 		// * test
 		// */
 		// jo.put("error", "error");
-		this.send(jo);
+		this.send(jo.append("tag", tag));
 
 	}
 
-	private boolean store(FileItem file, String filename, JSON jo) {
+	private boolean _store(FileItem file, String filename, JSON jo) {
 //		String tag = this.getString("tag");
 
 		try {
@@ -218,10 +220,14 @@ public class f extends Controller {
 			if (log.isDebugEnabled())
 				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
 
-			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(), this.ip());
+			Repo.Entity e1 = Repo.get(id, filename);
+
+			long pos = e1.store(position, file.getInputStream(), total);
+			// Repo.append(id, filename, position, total,file.getInputStream(),
+			// login.getId(), this.ip());
 			if (pos >= 0) {
 				if (jo == null) {
-					this.put("url", "/f/repo/" + id + "/" + filename);
+					this.put("url", "/f/g/" + e1.getDFile().getId() + "/" + filename);
 					this.put(X.ERROR, 0);
 					this.put("repo", id);
 					if (total > 0) {
@@ -230,7 +236,7 @@ public class f extends Controller {
 						this.put("size", total);
 					}
 				} else {
-					jo.put("url", "/f/repo/" + id + "/" + filename);
+					jo.put("url", "/f/g/" + e1.getDFile().getId() + "/" + filename);
 					jo.put("repo", id);
 					jo.put(X.ERROR, 0);
 					if (total > 0) {
