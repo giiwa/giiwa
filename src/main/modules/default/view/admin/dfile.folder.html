@@ -95,9 +95,9 @@ function _addfile() {
 				btn_cancel : "$lang.get('btn.cancel')",
 				msg_stop : "$lang.get('msg.stop')",
 				msg_done : "$lang.get('msg.done')",
-				done : function(url) {
+				done : function(url, id) {
 						giiwa.processing.show();
-						$.post('/admin/dfile/file/add?__node=$!__node', {repo: url, f: p.find('input[name=name]').val()}, function(d){
+						$.post('/admin/dfile/file/add?__node=$!__node', {repo: id, f: p.find('input[name=name]').val()}, function(d){
 							giiwa.processing.hide();
 							giiwa.reload();
 						})

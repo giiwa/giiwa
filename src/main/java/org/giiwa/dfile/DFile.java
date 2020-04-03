@@ -1,18 +1,26 @@
 package org.giiwa.dfile;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.Node;
 import org.giiwa.dao.X;
+import org.giiwa.json.JSON;
 import org.giiwa.misc.Base32;
+import org.giiwa.misc.IOUtil;
 
 /**
  * Demo bean
@@ -118,5 +126,112 @@ public abstract class DFile {
 	public abstract long sum(Consumer<String> moni);
 
 	public abstract Path getPath();
+
+	public Zip zip() {
+		return new Zip();
+	}
+
+	public class Zip {
+		ZipInputStream in = null;
+
+		public JSON json(String name) throws IOException {
+			X.close(in);
+			in = new ZipInputStream(getInputStream());
+			ZipEntry e = in.getNextEntry();
+			while (e != null) {
+				if (X.isSame(name, e.getName())) {
+					return JSON.fromObject(in);
+				}
+			}
+			return null;
+		}
+
+		public InputStream get(String name) throws IOException {
+			X.close(in);
+			in = new ZipInputStream(getInputStream());
+			ZipEntry e = in.getNextEntry();
+			while (e != null) {
+				if (X.isSame(name, e.getName())) {
+					return in;
+				}
+			}
+			return null;
+		}
+
+		public _CSV csv(String name, String deli) throws IOException {
+			X.close(in);
+			in = new ZipInputStream(getInputStream());
+			ZipEntry e = in.getNextEntry();
+			while (e != null) {
+				if (X.isSame(name, e.getName())) {
+					return new _CSV(in, deli);
+				}
+			}
+			return null;
+		}
+
+		public _TEXT text(String name, String deli) throws IOException {
+			X.close(in);
+			in = new ZipInputStream(getInputStream());
+			ZipEntry e = in.getNextEntry();
+			while (e != null) {
+				if (X.isSame(name, e.getName())) {
+					return new _TEXT(in, deli);
+				}
+			}
+			return null;
+		}
+
+	}
+
+	public class _CSV {
+
+		BufferedReader re = null;
+		List<Character> deli;
+
+		_CSV(InputStream in, String deli) {
+			re = new BufferedReader(new InputStreamReader(in));
+			if (X.isEmpty(deli)) {
+				this.deli = Arrays.asList(',');
+			} else {
+				this.deli = X.asList(deli.toCharArray(), e -> (Character) e);
+			}
+		}
+
+		public Object[] next() throws IOException {
+			String line = IOUtil.readcvs(re);
+			if (line == null)
+				return null;
+			return X.csv(line, deli);
+		}
+
+	}
+
+	public class _TEXT {
+
+		BufferedReader re = null;
+		List<Character> deli;
+
+		_TEXT(InputStream in, String deli) {
+			re = new BufferedReader(new InputStreamReader(in));
+			if (X.isEmpty(deli)) {
+				this.deli = Arrays.asList(',');
+			} else {
+				this.deli = X.asList(deli.toCharArray(), e -> (Character) e);
+			}
+		}
+
+		public Object[] next() throws IOException {
+			String line = IOUtil.readcvs(re);
+			if (line == null)
+				return null;
+			return X.csv(line, deli);
+		}
+
+		public String read() throws IOException {
+			return re.readLine();
+		}
+
+	}
 
 }

@@ -976,7 +976,7 @@ public class User extends Bean {
 	@Override
 	public JSON json() {
 		JSON j1 = super.json();
-		j1.remove("_.*", "password", "md5passwd", "sid");
+		j1.remove("_.*", "password", "md4passwd", "md5passwd", "sid");
 		return j1;
 	}
 

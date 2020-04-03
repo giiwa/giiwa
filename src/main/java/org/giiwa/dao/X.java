@@ -588,6 +588,10 @@ public final class X {
 	}
 
 	public static Object[] csv(String src) {
+		return csv(src, Arrays.asList(',', ' ', '\t'));
+	}
+
+	public static Object[] csv(String src, List<Character> deli) {
 		if (X.isEmpty(src))
 			return null;
 
@@ -618,7 +622,7 @@ public final class X {
 					p++;
 					c = p == len ? '"' : src.charAt(p);
 				}
-			} else if (c == ',' || c == ' ' || c == '\t') {
+			} else if (deli.contains(c)) {
 				if (sb == null || sb.length() == 0) {
 					if (c == ',')
 						l1.add(X.EMPTY);
