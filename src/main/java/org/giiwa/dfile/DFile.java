@@ -127,11 +127,11 @@ public abstract class DFile {
 
 	public abstract Path getPath();
 
-	public Zip zip() {
-		return new Zip();
+	public _Zip zip() {
+		return new _Zip();
 	}
 
-	public class Zip {
+	public class _Zip {
 		ZipInputStream in = null;
 
 		public JSON json(String name) throws IOException {
