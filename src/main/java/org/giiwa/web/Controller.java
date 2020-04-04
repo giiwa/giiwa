@@ -1797,8 +1797,9 @@ public class Controller {
 						log.warn("nothing got!!!");
 				}
 			} catch (FileUploadException e) {
-				if (log.isErrorEnabled())
-					log.error(e.getMessage(), e);
+				// ignore
+//				if (log.isErrorEnabled())
+//					log.error(e.getMessage(), e);
 			}
 		}
 
