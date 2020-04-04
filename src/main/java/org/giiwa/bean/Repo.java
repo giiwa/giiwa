@@ -22,8 +22,10 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.*;
+import org.giiwa.dao.Helper.V;
 import org.giiwa.dfile.DFile;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.web.Language;
 
 /**
  * repository of file system bean. <br>
@@ -36,7 +38,7 @@ public class Repo {
 
 	private static Log log = LogFactory.getLog(Repo.class);
 
-	private static String ROOT = "/temp";
+	private static String ROOT = "/repo";
 
 	/**
 	 * Initialize the Repo, this will be invoke when giiwa startup
@@ -86,7 +88,7 @@ public class Repo {
 	 */
 	public static long append(String id, String filename, long position, long total, InputStream in, long uid,
 			String ip) throws Exception {
-		Entity e = new Entity(id, filename);
+		Entity e = Entity.load(id, filename);
 		return e.store(position, in, total);
 	}
 
@@ -141,14 +143,14 @@ public class Repo {
 	/**
 	 * Load.
 	 * 
-	 * @param id the id
+	 * @ @param id the id
 	 * @return the entity
 	 */
 	public static Entity load(String id) {
 		try {
 			id = getId(id);
 			System.out.println("id=" + id);
-			return new Entity(id, null);
+			return Entity.load(id, null);
 		} catch (Exception e) {
 			log.error(id, e);
 		}
@@ -179,12 +181,27 @@ public class Repo {
 	 * @author yjiang
 	 * 
 	 */
-	public static class Entity {
+	@Table(name = "gi_repo", memo = "GI-文件仓库")
+	public static class Entity extends Bean {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public static BeanDAO<String, Entity> dao = BeanDAO.create(Entity.class);
+
+		@Column(memo = "唯一序号ID")
 		String id;
-		DFile file;
+
+		@Column(memo = "文件名")
 		String name;
-		private InputStream in;
+
+		@Column(memo = "文件路径")
+		String path;
+
+		transient DFile file;
+		transient InputStream in;
 
 		public long length() {
 			return file.length();
@@ -222,16 +239,28 @@ public class Repo {
 			}
 		}
 
-		private Entity(String id, String name) throws Exception {
-			this.id = id;
-			this.name = name;
+		private static Entity load(String id, String name) throws Exception {
 
-			this.getFile();
+			Entity e = dao.load(id);
+			if (e == null) {
+				V v = V.create();
+				v.append(X.ID, id);
+				v.append("name", name);
+				v.append("path", path(id));
+
+				dao.insert(v);
+				e = dao.load(id);
+			}
+			e.getFile();
+			return e;
 		}
 
 		private void getFile() throws Exception {
 
-			String path = path(id);
+			if (X.isEmpty(path)) {
+				throw new IOException("path is empty");
+			}
+
 			if (X.isEmpty(name)) {
 				DFile f = Disk.seek(path);
 				DFile[] ff = f.listFiles();
@@ -242,7 +271,7 @@ public class Repo {
 				file = Disk.seek(path + name);
 			}
 
-			log.debug("id=" + id + ", path=" + path(id) + ", name=" + name + ", file=" + file);
+			log.debug("id=" + id + ", path=" + path + ", name=" + name + ", file=" + file);
 		}
 
 		public long store(long position, InputStream in, long total) throws Exception {
@@ -301,19 +330,8 @@ public class Repo {
 
 	}
 
-	static private String path(String path) {
-		long id = Math.abs(UID.hash(path));
-		char p1 = (char) (id % 23 + 'a');
-		char p2 = (char) (id % 19 + 'A');
-		char p3 = (char) (id % 17 + 'a');
-		char p4 = (char) (id % 13 + 'A');
-
-		StringBuilder sb = new StringBuilder(ROOT);
-
-		sb.append("/").append(p1).append("/").append(p2).append("/").append(p3).append("/").append(p4).append("/")
-				.append(id).append("/");
-
-		return sb.toString();
+	static private String path(String id) {
+		return ROOT + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss/");
 	}
 
 	private static AtomicLong total = new AtomicLong(0); // byte
@@ -357,7 +375,7 @@ public class Repo {
 	}
 
 	public static Entity get(String id, String filename) throws Exception {
-		return new Entity(id, filename);
+		return Entity.load(id, filename);
 	}
 
 }
