@@ -142,6 +142,7 @@ public abstract class DFile {
 				if (X.isSame(name, e.getName())) {
 					return JSON.fromObject(in);
 				}
+				e = in.getNextEntry();
 			}
 			return null;
 		}
@@ -154,6 +155,7 @@ public abstract class DFile {
 				if (X.isSame(name, e.getName())) {
 					return in;
 				}
+				e = in.getNextEntry();
 			}
 			return null;
 		}
@@ -166,6 +168,7 @@ public abstract class DFile {
 				if (X.isSame(name, e.getName())) {
 					return new _CSV(in, deli);
 				}
+				e = in.getNextEntry();
 			}
 			return null;
 		}
@@ -178,6 +181,7 @@ public abstract class DFile {
 				if (X.isSame(name, e.getName())) {
 					return new _TEXT(in, deli);
 				}
+				e = in.getNextEntry();
 			}
 			return null;
 		}
