@@ -147,7 +147,7 @@ public abstract class DFile {
 			return null;
 		}
 
-		public InputStream get(String name) throws IOException {
+		public InputStream stream(String name) throws IOException {
 			X.close(in);
 			in = new ZipInputStream(getInputStream());
 			ZipEntry e = in.getNextEntry();
