@@ -115,7 +115,7 @@ public class CleanupTask extends Task {
 			/**
 			 * clean up repo
 			 */
-			count += Repo.cleanup(X.ADAY);
+//			count += Repo.cleanup(X.ADAY);
 			count += Temp.cleanup(X.ADAY);
 
 			/**
