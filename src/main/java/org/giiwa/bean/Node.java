@@ -48,7 +48,7 @@ import org.hyperic.sigar.NetStat;
  * @author wujun
  *
  */
-@Table(name = "gi_node", memo="GI-集群节点")
+@Table(name = "gi_node", memo = "GI-集群节点")
 public class Node extends Bean {
 
 	/**
@@ -229,7 +229,8 @@ public class Node extends Bean {
 				}
 
 				// update the disk
-				Disk.dao.update(W.create("node", Local.id()), V.create("bad", 0));
+				Disk.touch();
+//				Disk.dao.update(W.create("node", Local.id()), V.create("bad", 0));
 			} else {
 				// create
 				dao.insert(getNodeInfo().append(X.ID, Local.id()));

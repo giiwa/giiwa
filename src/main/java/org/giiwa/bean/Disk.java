@@ -604,4 +604,11 @@ public class Disk extends Bean {
 		return total;
 	}
 
+	public static void touch() {
+		Beans<Disk> l1 = dao.load(W.create("node", Local.id()), 0, 100);
+		l1.forEach(e -> {
+			e.check();
+		});
+	}
+
 }
