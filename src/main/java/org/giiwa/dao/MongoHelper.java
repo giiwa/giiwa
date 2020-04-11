@@ -790,6 +790,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 */
 	public List<?> distinct(String collection, String key, W q, String db) {
 
+		List<?> l1 = null;
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
@@ -797,7 +798,7 @@ public class MongoHelper implements Helper.DBHelper {
 			Document d = g.runCommand(
 					new BasicDBObject("distinct", collection).append("key", key).append("query", q.query()));
 			if (d.containsKey("values")) {
-				return (List<?>) (d.get("values"));
+				l1 = (List<?>) (d.get("values"));
 			}
 
 		} catch (Exception e) {
@@ -806,9 +807,9 @@ public class MongoHelper implements Helper.DBHelper {
 		} finally {
 			if (log.isDebugEnabled())
 				log.debug("distinct[" + key + "] cost=" + t1.pastms() + "ms,  collection=" + collection + ", query="
-						+ q.query());
+						+ q.query() + ", n=" + (l1 == null ? "null" : l1.size()));
 		}
-		return null;
+		return l1;
 	}
 
 	/**
