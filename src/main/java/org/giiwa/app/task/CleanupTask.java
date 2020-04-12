@@ -22,7 +22,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Code;
 import org.giiwa.bean.GLog;
-import org.giiwa.bean.Repo;
 import org.giiwa.bean.Stat;
 import org.giiwa.bean.Temp;
 import org.giiwa.bean.m._CPU;

@@ -15,13 +15,11 @@
 package org.giiwa.app.web.admin;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
