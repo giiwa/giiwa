@@ -761,6 +761,16 @@ public final class X {
 		return false;
 	}
 
+	public static <T> List<T> unique(List<T> l1) {
+		List<T> l2 = new ArrayList<T>();
+		l1.forEach(e -> {
+			if (!l2.contains(e)) {
+				l2.add(e);
+			}
+		});
+		return l2;
+	}
+
 	/**
 	 * to list
 	 * 
@@ -782,7 +792,7 @@ public final class X {
 			Collection l1 = (Collection) o;
 			for (Object e : l1) {
 				T t = cb.apply(e);
-				if (t != null && !l2.contains(t)) {
+				if (t != null) {
 					l2.add(t);
 				}
 			}
@@ -795,7 +805,7 @@ public final class X {
 				double[] l1 = (double[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -803,7 +813,7 @@ public final class X {
 				int[] l1 = (int[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -811,7 +821,7 @@ public final class X {
 				long[] l1 = (long[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -819,7 +829,7 @@ public final class X {
 				float[] l1 = (float[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -827,7 +837,7 @@ public final class X {
 				byte[] l1 = (byte[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -835,7 +845,7 @@ public final class X {
 				short[] l1 = (short[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -843,7 +853,7 @@ public final class X {
 				char[] l1 = (char[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -851,7 +861,7 @@ public final class X {
 				boolean[] l1 = (boolean[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
@@ -859,14 +869,14 @@ public final class X {
 				Object[] l1 = (Object[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null && !l2.contains(t)) {
+					if (t != null) {
 						l2.add(t);
 					}
 				}
 			}
 		} else {
 			T t = cb.apply(o);
-			if (t != null && !l2.contains(t)) {
+			if (t != null) {
 				l2.add(t);
 			}
 		}
