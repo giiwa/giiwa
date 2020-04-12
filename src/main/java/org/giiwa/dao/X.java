@@ -782,7 +782,7 @@ public final class X {
 			Collection l1 = (Collection) o;
 			for (Object e : l1) {
 				T t = cb.apply(e);
-				if (t != null) {
+				if (t != null && !l2.contains(t)) {
 					l2.add(t);
 				}
 			}
@@ -795,7 +795,7 @@ public final class X {
 				double[] l1 = (double[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -803,7 +803,7 @@ public final class X {
 				int[] l1 = (int[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -811,7 +811,7 @@ public final class X {
 				long[] l1 = (long[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -819,7 +819,7 @@ public final class X {
 				float[] l1 = (float[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -827,7 +827,7 @@ public final class X {
 				byte[] l1 = (byte[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -835,7 +835,7 @@ public final class X {
 				short[] l1 = (short[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -843,7 +843,7 @@ public final class X {
 				char[] l1 = (char[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -851,7 +851,7 @@ public final class X {
 				boolean[] l1 = (boolean[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
@@ -859,14 +859,14 @@ public final class X {
 				Object[] l1 = (Object[]) o;
 				for (Object e : l1) {
 					T t = cb.apply(e);
-					if (t != null) {
+					if (t != null && !l2.contains(t)) {
 						l2.add(t);
 					}
 				}
 			}
 		} else {
 			T t = cb.apply(o);
-			if (t != null) {
+			if (t != null && !l2.contains(t)) {
 				l2.add(t);
 			}
 		}
@@ -1049,12 +1049,20 @@ public final class X {
 		return isCauseBy(e.getCause(), regex);
 	}
 
-	public static String join(List<?> l1, String deli) {
+	/**
+	 * link the object by deli
+	 * 
+	 * @param l1,  the list or array object
+	 * @param deli
+	 * @return
+	 */
+	public static String join(Object l1, String deli) {
 		if (X.isEmpty(l1))
 			return X.EMPTY;
 
 		StringBuilder sb = new StringBuilder();
-		for (Object o : l1) {
+		List<Object> l2 = X.asList(l1, e -> e);
+		for (Object o : l2) {
 			if (sb.length() > 0)
 				sb.append(deli);
 			sb.append(X.isEmpty(o) ? X.EMPTY : o);
@@ -1126,6 +1134,10 @@ public final class X {
 		s = "\"Ford Pantera,L\",15.8,8,351,264,4.22,3.17,14.5,0,1,5,4";
 		Object[] l1 = X.csv(s);
 		System.out.println(l1[0]);
+
+		s = "aaa;bbb;aaa";
+		List<?> l2 = X.asList(X.split(s, "[,;]"), e -> e);
+		System.out.println(l2);
 
 	}
 
