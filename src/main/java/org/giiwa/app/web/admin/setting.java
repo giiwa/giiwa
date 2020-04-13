@@ -249,6 +249,7 @@ public class setting extends Controller {
 			Local.setConfig("web.debug", X.isSame("on", this.getString("web.debug")) ? 1 : 0);
 			Global.setConfig("glog.keep.days", this.getInt("glog.keep.days"));
 			Global.setConfig("web.cache", this.getString("web.cache"));
+			Global.setConfig("db.optimizer.time", this.getString("db.optimizer.time"));
 
 			NtpTask.inst.schedule(0);
 
