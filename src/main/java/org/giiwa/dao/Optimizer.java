@@ -28,10 +28,6 @@ class Optimizer implements Helper.IOptimizer {
 	@Override
 	public void query(final String db, final String table, final W w) {
 
-		// check the db.optimizer=1 ?
-		if (Global.getInt("db.optimizer", 1) != 1)
-			return;
-
 		if (w != null && !w.isEmpty()) {
 
 			try {
@@ -89,6 +85,12 @@ class Optimizer implements Helper.IOptimizer {
 					@SuppressWarnings("unchecked")
 					@Override
 					public void onExecute() {
+
+						// check the db.optimizer=1 ?
+						if (Global.getInt("db.optimizer", 1) != 1) {
+							queue.clear();
+							return;
+						}
 
 						// check the time, db.optimizer.time
 						String time = Global.getString("db.optimizer.time", null);
