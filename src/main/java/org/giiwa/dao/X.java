@@ -299,11 +299,14 @@ public final class X {
 	 * @param s the object, may string, list, map
 	 * @return boolean, return true if null, or empty
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "restriction" })
 	public static boolean isEmpty(Object s) {
 		if (s == null) {
 			return true;
 		}
+
+		if (s instanceof jdk.nashorn.internal.runtime.Undefined)
+			return true;
 
 		if (s instanceof String) {
 			return X.EMPTY.equals(s);
