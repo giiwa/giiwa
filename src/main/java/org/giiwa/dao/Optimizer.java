@@ -9,7 +9,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.GLog;
+//import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.task.Task;
@@ -120,8 +120,8 @@ class Optimizer implements Helper.IOptimizer {
 								LinkedHashMap<String, Integer> keys = (LinkedHashMap<String, Integer>) o[2];
 
 								if (!keys.isEmpty()) {
-									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + keys.toString(),
-											null, null);
+//									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + keys.toString(),
+//											null, null);
 
 									if (log.isDebugEnabled())
 										log.debug("db.index, table=" + table + ", create.index=" + keys.toString());

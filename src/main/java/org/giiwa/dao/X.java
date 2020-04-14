@@ -780,7 +780,7 @@ public final class X {
 	 * @param cb
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings({ "rawtypes", "restriction", "unchecked" })
 	public static <T> List<T> asList(Object o, Function<Object, T> cb) {
 		if (o == null) {
 			return new ArrayList<T>();
@@ -788,7 +788,26 @@ public final class X {
 
 		List<T> l2 = new ArrayList<T>();
 
-		if (o instanceof Iterable) {
+		if (o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+			jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
+			if (m.isArray()) {
+				for (Object o2 : m.values()) {
+					if (o2 instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+						jdk.nashorn.api.scripting.ScriptObjectMirror m1 = (jdk.nashorn.api.scripting.ScriptObjectMirror) o2;
+						if (m1.isArray()) {
+							List<?> l1 = JSON.fromObjects(m1);
+							l2.add((T) l1);
+						} else {
+							l2.add((T) JSON.fromObject(m1));
+						}
+					} else {
+						l2.add((T) o2);
+					}
+				}
+			} else {
+				l2.add((T) JSON.fromObject(o));
+			}
+		} else if (o instanceof Iterable) {
 			Collection l1 = (Collection) o;
 			for (Object e : l1) {
 				T t = cb.apply(e);
