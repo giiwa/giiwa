@@ -15,6 +15,8 @@
 package org.giiwa.app.web.admin;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -52,26 +54,22 @@ public class database extends Controller {
 	@Override
 	public void onGet() {
 
-		List<Class<? extends Bean>> l1 = Schema.beans;
-		Map<String, JSON> l2 = new TreeMap<String, JSON>();
-		for (Class<? extends Bean> c : l1) {
-			Table table = (Table) c.getAnnotation(Table.class);
-			if (table == null || X.isEmpty(table.name()) || l2.containsKey(table.name())) {
-				// log.error("table missed/error in [" + t + "] declaretion", new Exception());
-				continue;
+		List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
+		List<JSON> l2 = JSON.createList();
+		l1.forEach(e -> {
+			JSON j1 = Schema.format(e, lang);
+			l2.add(j1);
+		});
+		Collections.sort(l2, new Comparator<JSON>() {
+
+			@Override
+			public int compare(JSON o1, JSON o2) {
+				return o1.getString("table").compareTo(o2.getString("table"));
 			}
 
-			String display = table.memo();
-			if (X.isEmpty(display)) {
-				display = lang.get("name." + c.getName());
-			}
+		});
 
-			JSON j = JSON.create().append("name", c.getName()).append("table", table.name()).append("display", display)
-					.append("total", Helper.count(W.create(), c)).append("size", Helper.size(c));
-			l2.put(table.name(), j);
-
-		}
-		this.set("list", l2.values());
+		this.set("list", l2);
 
 		this.show("/admin/database.index.html");
 
@@ -129,7 +127,7 @@ public class database extends Controller {
 
 				for (String s : ss) {
 
-					Class<? extends Bean> c = _getBean(s);
+					Class<? extends Bean> c = Schema.bean(s);
 					if (c == null)
 						continue;
 
@@ -190,16 +188,6 @@ public class database extends Controller {
 		this.set("list", l2.values());
 		this.show("/admin/backup.er.html");
 
-	}
-
-	private Class<? extends Bean> _getBean(String table) {
-		List<Class<? extends Bean>> l1 = Schema.beans;
-		for (Class<? extends Bean> c : l1) {
-			if (X.isSame(table, Helper.getTable(c))) {
-				return c;
-			}
-		}
-		return null;
 	}
 
 }

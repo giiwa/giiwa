@@ -15,8 +15,9 @@
 				<th>$lang.get('table.memo')</th>
 				<th>$lang.get('table.bean')</th>
 				<th>$lang.get('table.name')</th>
-				<th>$lang.get('table.total')</th>
-				<th></th>
+				<th style="width: 90px;">$lang.get('table.total')</th>
+				<th style="width: 130px;">$lang.get('table.updated')</th>
+				<th style="width: 60px;"></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -28,6 +29,7 @@
 				<td>$!t.name</td>
 				<td>$!t.table</td>
 				<td>$!t.total</td>
+				<td>#if($t.updated>0) $lang.format($t.updated, 'yyyy-MM-dd HH:mm:ss') #end</td>
 				<td class="a">
 					<a class="hint hint--bottom" data-hint="$lang.get('a.delete.table')" href="javascript:;" onclick="_delete('$t.table')"><i class='icon-bin2'></i></a>
 					<a class="hint hint--bottom" data-hint="$lang.get('a.drop.table')" href="javascript:;" onclick="_drop('$t.table')"><i class='icon-cancel-circle'></i></a>

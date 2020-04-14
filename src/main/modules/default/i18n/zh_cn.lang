@@ -1008,3 +1008,4 @@ disk.enabled.hint=开启该磁盘
 disk.enabled=开关
 db.optimizer.time.hint=空:所有时段，e.g:02:00-06:00
 db.optimizer.time=优化时间
+table.updated=更新时间

@@ -229,7 +229,7 @@ public class backup extends Controller {
 
 				for (String s : ss) {
 
-					Class<? extends Bean> c = _getBean(s);
+					Class<? extends Bean> c = Schema.bean(s);
 					if (c == null)
 						continue;
 
@@ -298,16 +298,6 @@ public class backup extends Controller {
 		this.set("list", l2.values());
 		this.show("/admin/backup.er.html");
 
-	}
-
-	private Class<? extends Bean> _getBean(String table) {
-		List<Class<? extends Bean>> l1 = Schema.beans;
-		for (Class<? extends Bean> c : l1) {
-			if (X.isSame(table, Helper.getTable(c))) {
-				return c;
-			}
-		}
-		return null;
 	}
 
 	@Path(path = "auto", login = true, access = "access.config.admin")
