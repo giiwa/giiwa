@@ -49,16 +49,24 @@
 function _delete(table) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		$.post('/admin/database/delete?__node=$!__node', {table: table}, function(d){
-			giiwa.hint(d.message);
-			giiwa.reload();
+			if(d.state == 200) {
+				giiwa.hint(d.message);
+				giiwa.reload();
+			} else {
+				giiwa.error(d.message);
+			}
 		})
 	}
 }
 function _drop(table) {
 	if(confirm("$lang.get('title.are_u_sure_delete')")) {
 		$.post('/admin/database/drop?__node=$!__node', {table: table}, function(d){
-			giiwa.hint(d.message);
-			giiwa.reload();
+			if(d.state == 200) {
+				giiwa.hint(d.message);
+				giiwa.reload();
+			} else {
+				giiwa.error(d.message);
+			}
 		})
 	}
 }

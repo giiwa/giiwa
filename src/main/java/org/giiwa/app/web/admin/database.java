@@ -23,6 +23,7 @@ import java.util.TreeMap;
 
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
+import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Column;
@@ -33,6 +34,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Exporter;
+import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
@@ -54,20 +56,41 @@ public class database extends Controller {
 	@Override
 	public void onGet() {
 
-		List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
-		List<JSON> l2 = JSON.createList();
-		l1.forEach(e -> {
-			JSON j1 = Schema.format(e, lang);
-			l2.add(j1);
-		});
-		Collections.sort(l2, new Comparator<JSON>() {
+		List<JSON> l2 = Cache.get("db.schema");
+
+		new Task() {
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
 
 			@Override
-			public int compare(JSON o1, JSON o2) {
-				return o1.getString("table").compareTo(o2.getString("table"));
+			public String getName() {
+				return "db.schema.reload";
 			}
 
-		});
+			public void onExecute() {
+
+				List<JSON> l3 = JSON.createList();
+
+				List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
+				l1.forEach(e -> {
+					JSON j1 = Schema.format(e, lang);
+					l3.add(j1);
+				});
+				Collections.sort(l3, new Comparator<JSON>() {
+
+					@Override
+					public int compare(JSON o1, JSON o2) {
+						return o1.getString("table").compareTo(o2.getString("table"));
+					}
+
+				});
+
+				Cache.set("db.schema", l3, X.AHOUR);
+
+			}
+		}.schedule(0);
 
 		this.set("list", l2);
 

@@ -21,7 +21,7 @@ class Optimizer implements Helper.IOptimizer {
 
 	private static HashSet<String> exists = new HashSet<String>();
 
-	private static Queue<Object[]> queue = new ArrayBlockingQueue<Object[]>(100);
+	private static Queue<Object[]> queue = new ArrayBlockingQueue<Object[]>(20);
 
 	private Task checker = null;
 
@@ -49,12 +49,12 @@ class Optimizer implements Helper.IOptimizer {
 							_init(db, table);
 
 							if (!exists.contains(id)) {
+								exists.add(id);
 								if (queue.size() < 20) {
 									queue.add(new Object[] { db, table, e });
 								} else {
 									log.warn("optimizer drop the [" + db + ", " + table + ", " + e + "]");
 								}
-								exists.add(id);
 							}
 						}
 					});
@@ -124,11 +124,10 @@ class Optimizer implements Helper.IOptimizer {
 //											null, null);
 
 									if (log.isDebugEnabled())
-										log.debug("db.index, table=" + table + ", create.index=" + keys.toString());
+										log.debug("db.index, table=" + table + ", create.index=" + keys.toString()
+												+ ", queue.size=" + queue.size());
 
 									Helper.createIndex(db, table, keys);
-
-									queue.add(o);
 
 								}
 
