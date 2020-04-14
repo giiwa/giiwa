@@ -105,8 +105,32 @@ public class database extends Controller {
 	public void delete() {
 
 		String table = this.getString("table");
-		int n = Helper.delete(W.create(), table, Helper.DEFAULT);
-		GLog.oplog.warn(database.class, "delete", "table=" + table + ", n=" + n, login, this.ip());
+		new Task() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public String getName() {
+				return "db.delete." + table;
+			}
+
+			@Override
+			public void onExecute() {
+				String[] ss = X.split(table, "[,;]");
+				for (String s : ss) {
+					if (X.isEmpty(s))
+						continue;
+
+					int n = Helper.delete(W.create(), s, Helper.DEFAULT);
+					GLog.oplog.warn(database.class, "delete", "table=" + s + ", n=" + n, login, database.this.ip());
+				}
+			}
+
+		}.schedule(0);
+
 		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
@@ -121,18 +145,32 @@ public class database extends Controller {
 		}
 
 		String table = this.getString("table");
-		if (table.contains("*")) {
-			List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
-			l1.forEach(j1 -> {
-				String name = j1.getString("table_name");
-				if (name.matches(table)) {
-					Helper.drop(name, Helper.DEFAULT);
+
+		new Task() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void onExecute() {
+				String[] ss = X.split(table, "[,;]");
+				for (String s : ss) {
+					if (X.isEmpty(s))
+						continue;
+					Helper.drop(s, Helper.DEFAULT);
+					GLog.oplog.warn(database.class, "drop", "table=" + table, login, database.this.ip());
 				}
-			});
-		} else {
-			Helper.drop(table, Helper.DEFAULT);
-		}
-		GLog.oplog.warn(database.class, "drop", "table=" + table, login, this.ip());
+			}
+
+			@Override
+			public String getName() {
+				return "db.drop." + table;
+			}
+
+		}.schedule(0);
+
 		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 

@@ -12,6 +12,7 @@
 	<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 		<thead>
 			<tr>
+				<th style="width: 20px;"></th>
 				<th>$lang.get('table.memo')</th>
 				<th>$lang.get('table.bean')</th>
 				<th>$lang.get('table.name')</th>
@@ -21,8 +22,11 @@
 			</tr>
 		</thead>
 		<tbody>
+		#set($i=0)
 		#foreach($t in $list)
+			#set($i=$i+1)
 			<tr>
+				<td>$i</td>
 				<td>
 					<label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!t.display</label>
 				</td>
@@ -41,6 +45,9 @@
 
 	<div class='btns'>
 		<a class='btn btn-success' href="javascript:;" onclick="_submit();">$lang.get('btn.database.er')</a>
+
+		<a style="margin-left: 40px;" class='btn btn-warning' href="javascript:;" onclick="_deleteall();">$lang.get('btn.database.deleteall')</a>
+		<a style="margin-left: 10px;" class='btn btn-danger' href="javascript:;" onclick="_dropall();">$lang.get('btn.database.dropall')</a>
 	</div>
 	
 </form>
@@ -81,5 +88,50 @@ function _submit(){
 			}
 		}
 	});
+}
+function _deleteall() {
+	
+	var selected = $("#E$!requestid input:checked");
+	if (selected.length == 0) {
+		return;
+	}
+	var s = '';
+	selected.each(function(i, e) {
+		if (s.length > 0)
+			s += ',';
+		s += e.value;
+	});
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post('/admin/database/delete?__node=$!__node', {table: s}, function(d){
+			if(d.state == 200) {
+				giiwa.hint(d.message);
+				giiwa.reload();
+			} else {
+				giiwa.error(d.message);
+			}
+		})
+	}
+}
+function _dropall() {
+	var selected = $("#E$!requestid input:checked");
+	if (selected.length == 0) {
+		return;
+	}
+	var s = '';
+	selected.each(function(i, e) {
+		if (s.length > 0)
+			s += ',';
+		s += e.value;
+	});
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post('/admin/database/drop?__node=$!__node', {table: s}, function(d){
+			if(d.state == 200) {
+				giiwa.hint(d.message);
+				giiwa.reload();
+			} else {
+				giiwa.error(d.message);
+			}
+		})
+	}
 }
 </script>
