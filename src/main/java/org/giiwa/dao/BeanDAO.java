@@ -495,6 +495,10 @@ public class BeanDAO<I, T extends Bean> {
 		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
 
+	public List<JSON> count(W q, String name, String[] group, int n) {
+		return Helper.count(this.tableName(), q, group, n, this.dbName());
+	}
+
 	public List<JSON> sum(W q, String name, String[] group) {
 		return Helper.sum(this.tableName(), q, name, group, this.dbName());
 	}

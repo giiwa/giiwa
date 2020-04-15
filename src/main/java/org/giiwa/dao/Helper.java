@@ -1515,7 +1515,7 @@ public class Helper implements Serializable {
 				return this;
 
 			name = name.toLowerCase();
-			
+
 			if (v != null && v instanceof Collection) {
 				W q = W.create();
 				Collection l1 = (Collection) v;
@@ -2348,6 +2348,32 @@ public class Helper implements Serializable {
 					}
 
 					return helper.count(table, q, X.split(group, "[,]"), Helper.DEFAULT, n);
+				} else {
+					throw new SQLException("no privilege!");
+				}
+			}
+			throw new SQLException("not set table");
+
+		}
+
+		public List<JSON> count(String name, String group, int n) throws SQLException {
+			if (dao != null) {
+				return dao.count(this, X.split(group, "[,]"), n);
+			} else if (!X.isEmpty(table)) {
+				if (access == null || access.read(table, group)) {
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter(table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					return helper.count(table, q, name, X.split(group, "[,]"), Helper.DEFAULT, n);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -3691,15 +3717,33 @@ public class Helper implements Serializable {
 		}
 	}
 
-	public static List<JSON> count(String table, W q, String[] name, int n, String dbName) {
+	public static List<JSON> count(String table, W q, String[] group, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.count(table, q, name, dbName, n);
+				return primary.count(table, q, group, dbName, n);
 			} else if (!X.isEmpty(customs)) {
 				for (DBHelper h : customs) {
 					if (h.getDB(dbName) != null) {
-						return h.count(table, q, name, dbName, n);
+						return h.count(table, q, group, dbName, n);
+					}
+				}
+			}
+			return null;
+		} finally {
+			read.add(t1.pastms());
+		}
+	}
+
+	public static List<JSON> count(String table, W q, String name, String[] group, int n, String dbName) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (primary != null && primary.getDB(dbName) != null) {
+				return primary.count(table, q, name, group, dbName, n);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					if (h.getDB(dbName) != null) {
+						return h.count(table, q, name, group, dbName, n);
 					}
 				}
 			}
