@@ -1109,4 +1109,30 @@ public final class JSON extends HashMap<String, Object> {
 		return this;
 	}
 
+	transient JSON _test;
+
+	public Object test(String name, String display, Object defaultvalue, String options) {
+
+		if (_test == null)
+			_test = JSON.create();
+
+		_test.put(name, JSON.create().append("name", name).append("display", display).append("value", defaultvalue)
+				.append("options", options));
+
+		if (this.containsKey(name)) {
+			return this.get(name);
+		}
+		return defaultvalue;
+	}
+
+	public Collection<JSON> test() {
+		List<JSON> l1 = JSON.createList();
+		if (_test != null) {
+			for (Object o : _test.values()) {
+				l1.add((JSON) o);
+			}
+		}
+		return l1;
+	}
+
 }
