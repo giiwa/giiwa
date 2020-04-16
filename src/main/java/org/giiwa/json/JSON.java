@@ -1111,6 +1111,14 @@ public final class JSON extends HashMap<String, Object> {
 
 	transient JSON _test;
 
+	public Object test(String name, String display) {
+		return test(name, display, null, null);
+	}
+
+	public Object test(String name, String display, Object defaultvalue) {
+		return test(name, display, defaultvalue);
+	}
+
 	public Object test(String name, String display, Object defaultvalue, String options) {
 
 		if (_test == null)
@@ -1125,7 +1133,7 @@ public final class JSON extends HashMap<String, Object> {
 		return defaultvalue;
 	}
 
-	public Collection<JSON> test() {
+	public List<JSON> test() {
 		List<JSON> l1 = JSON.createList();
 		if (_test != null) {
 			for (Object o : _test.values()) {
