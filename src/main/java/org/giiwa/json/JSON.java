@@ -1116,7 +1116,7 @@ public final class JSON extends HashMap<String, Object> {
 	}
 
 	public Object test(String name, String display, Object defaultvalue) {
-		return test(name, display, defaultvalue);
+		return test(name, display, defaultvalue, null);
 	}
 
 	public Object test(String name, String display, Object defaultvalue, String options) {
