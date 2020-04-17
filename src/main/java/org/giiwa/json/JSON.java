@@ -472,7 +472,7 @@ public final class JSON extends HashMap<String, Object> {
 	public static JSON create(Map<String, Object> m) {
 		JSON j = create();
 		for (String name : m.keySet()) {
-			j.append(name, m.get(name));
+			j.put(name, m.get(name));
 		}
 		return j;
 	}
