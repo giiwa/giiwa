@@ -599,7 +599,7 @@ public class Controller {
 		if (this.uri != null && this.uri.indexOf("/user/") < 0) {
 			if (!isAjax()) {
 				try {
-					Session.load(sid()).set(X.URI, this.uri).store();
+					Session.load(sid(), this.ip()).set(X.URI, this.uri).store();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -687,8 +687,8 @@ public class Controller {
 				}
 			}
 
-			if (!X.isEmpty(sid))
-				sid += "/" + this.ip();
+//			if (!X.isEmpty(sid) && Global.getInt("session.baseip", 0) == 1)
+//				sid += "/" + this.ip();
 
 //			log.debug("sid=" + sid);
 		}
@@ -1558,7 +1558,7 @@ public class Controller {
 	 * @return Session
 	 */
 	public Session session(boolean newsession) {
-		return Session.load(sid(newsession));
+		return Session.load(sid(newsession), this.ip());
 	}
 
 	/**

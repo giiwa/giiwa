@@ -246,6 +246,7 @@ public class setting extends Controller {
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
 			Global.setConfig("perf.moniter", X.isSame("on", this.getString("perf.moniter")) ? 1 : 0);
+			Global.setConfig("session.baseip", X.isSame("on", this.getString("session.baseip")) ? 1 : 0);
 			Local.setConfig("web.debug", X.isSame("on", this.getString("web.debug")) ? 1 : 0);
 			Global.setConfig("glog.keep.days", this.getInt("glog.keep.days"));
 			Global.setConfig("web.cache", this.getString("web.cache"));

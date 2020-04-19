@@ -86,7 +86,7 @@ public class Session implements Serializable {
 	 * @param sid the sid
 	 * @return the session
 	 */
-	public static Session load(String sid) {
+	public static Session load(String sid, String ip) {
 
 		if (X.isEmpty(sid))
 			return null;
@@ -95,13 +95,18 @@ public class Session implements Serializable {
 
 		Session o = (Session) Cache.get("session/" + sid);
 
-		if (o == null) {
+		if (o == null || (Global.getInt("session.baseip", 0) == 1 && !X.isSame(ip, o.get("ip")))) {
 			o = new Session();
 
 			/**
 			 * set the session expired time
 			 */
 			o.sid = sid;
+			try {
+				o.set("ip", ip);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 
 			log.debug("new session, sid=" + sid);
 
