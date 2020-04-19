@@ -192,10 +192,6 @@ public class StringFinder {
 		return s.charAt(pos++);
 	}
 
-	public void reset() {
-		pos = 0;
-	}
-
 	/**
 	 * get the char by offset refer the current position.
 	 *
@@ -472,6 +468,39 @@ public class StringFinder {
 
 	@Override
 	public String toString() {
+		return s;
+	}
+
+	private Stack<Integer> _mark;
+
+	public void mark() {
+		if (_mark == null) {
+			_mark = new Stack<Integer>();
+		}
+		_mark.push(pos);
+	}
+
+	public void reset() {
+		if (_mark != null && !_mark.isEmpty()) {
+			pos = _mark.pop();
+		} else {
+			pos = 0;
+		}
+	}
+
+	public void replace(String s1, String r1) {
+		this.s = this.s.replaceFirst(s1, r1);
+	}
+
+	public String word(String regex) {
+		String s = "";
+		while (this.hasMore()) {
+			String s1 = s + this.next();
+			if (!s1.matches(regex)) {
+				return s;
+			}
+			s = s1;
+		}
 		return s;
 	}
 

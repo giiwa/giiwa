@@ -154,8 +154,8 @@ public class R extends IStub {
 
 //				System.out.println(sb);
 //
-//				if (log.isDebugEnabled())
-//					log.debug("R.run, code=" + sb);
+				if (log.isDebugEnabled())
+					log.debug("R.run, code=\n" + sb);
 
 				REXP x = c.eval(sb.toString());
 
@@ -170,6 +170,7 @@ public class R extends IStub {
 				Object s1 = r2J(x);
 				return JSON.create().append("data", s1);
 			} catch (RserveException re) {
+
 				log.error(sb.toString() + ", error=" + re.getRequestErrorDescription(re.getRequestReturnCode()), re);
 				throw re;
 			} finally {
@@ -178,7 +179,10 @@ public class R extends IStub {
 //				c.eval("rm(" + func + ", " + dataname + ")");
 
 			}
+		} else {
+			log.error("R.run, c=null");
 		}
+
 		return null;
 
 	}
@@ -225,7 +229,7 @@ public class R extends IStub {
 		ex.print((List<Object>) data);
 		ex.close();
 
-		sb.append(dataname + " <<- read.csv('" + t.getFile().getCanonicalPath() + "',");
+		sb.append(dataname + " <- read.csv('" + t.getFile().getCanonicalPath() + "',");
 		if (head) {
 			sb.append("header=T,");
 		} else {

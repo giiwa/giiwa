@@ -44,6 +44,7 @@ import org.giiwa.dao.Helper.W;
 import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.Digest;
+import org.giiwa.misc.StringFinder;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -704,6 +705,13 @@ public final class JSON extends HashMap<String, Object> {
 			e.printStackTrace();
 		}
 
+		j1 = JSON.create();
+		j1.append("a", 1);
+		j1.append("x.b", 2);
+		s = "$a a$x.b aa";
+		System.out.println("s=" + s);
+		s = j1.parse(s);
+		System.out.println("s=" + s);
 	}
 
 	public void test(Object o) {
@@ -1141,6 +1149,24 @@ public final class JSON extends HashMap<String, Object> {
 			}
 		}
 		return l1;
+	}
+
+	public String parse(String template) {
+		StringFinder sf = StringFinder.create(template);
+		while (sf.find("$") >= 0) {
+			sf.skip(1);
+			sf.mark();
+			String name = sf.word("[a-zA-Z0-9._]+");
+			if (!X.isEmpty(name)) {
+				Object o = this.get(name);
+				if (o != null) {
+					sf.reset();
+					sf.skip(-1);
+					sf.replace("\\$" + name, o.toString());
+				}
+			}
+		}
+		return sf.toString();
 	}
 
 }

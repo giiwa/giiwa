@@ -1230,6 +1230,22 @@ public final class X {
 
 	}
 
+	public static List<long[]> split(long sdate, long edate, long step) {
+
+		List<long[]> l1 = new ArrayList<long[]>();
+		long t1 = sdate;
+		while (t1 < edate) {
+			l1.add(new long[] { t1, t1 + step });
+			t1 += step;
+		}
+		if (t1 < edate) {
+			l1.add(new long[] { t1, edate });
+		}
+
+		return l1;
+
+	}
+
 	public static List<Object[]> mat(String s, String deli) throws Exception {
 		List<Object[]> l1 = new ArrayList<Object[]>();
 		String[] ss = X.split(s, deli);
