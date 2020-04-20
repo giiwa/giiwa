@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Base64;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -26,7 +27,7 @@ public class Backup {
 	private static Log log = LogFactory.getLog(Backup.class);
 
 	public static long backup(String table, ZipOutputStream out) throws IOException {
-		return backup(table, null, Helper.DEFAULT, out);
+		return backup(table, null, Helper.DEFAULT, out, null);
 	}
 
 	public static long write(String filename, byte[] bb, ZipOutputStream out) throws IOException {
@@ -42,7 +43,8 @@ public class Backup {
 
 	}
 
-	public static long backup(String table, W q, String db, ZipOutputStream out) throws IOException {
+	public static long backup(String table, W q, String db, ZipOutputStream out, BiFunction<String, Data, JSON> func)
+			throws IOException {
 
 		log.debug("backup, table=" + table);
 
@@ -57,11 +59,18 @@ public class Backup {
 			Beans<Data> l1 = Helper.load(table, q, s, 100, Data.class, db);
 			while (l1 != null && !l1.isEmpty()) {
 				for (Data d : l1) {
-					JSON j1 = d.json();
-					j1.append("_table", table);
-					String s1 = j1.toString();
-					s1 = Base64.getEncoder().encodeToString(s1.getBytes()) + "\r\n";
-					out.write(s1.getBytes());
+					JSON j1 = null;
+					if (func != null) {
+						j1 = func.apply(table, d);
+					} else {
+						j1 = d.json();
+					}
+					if (j1 != null) {
+						j1.append("_table", table);
+						String s1 = j1.toString();
+						s1 = Base64.getEncoder().encodeToString(s1.getBytes()) + "\r\n";
+						out.write(s1.getBytes());
+					}
 				}
 				s += l1.size();
 				l1 = Helper.load(table, q, s, 100, Data.class, db);
