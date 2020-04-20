@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.Base64;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -133,7 +134,7 @@ public class Backup {
 		}
 	}
 
-	public static void recover(String table, String db, ZipInputStream in) throws IOException {
+	public static void recover(String table, String db, ZipInputStream in, Consumer<JSON> func) throws IOException {
 
 		log.debug("recover, table=" + table);
 
@@ -143,7 +144,9 @@ public class Backup {
 		while (line != null) {
 			String s1 = new String(Base64.getDecoder().decode(line));
 			JSON j1 = JSON.fromObject(s1);
-
+			if (func != null) {
+				func.accept(j1);
+			}
 			Helper.insert(V.fromJSON(j1), table, db);
 
 			line = re.readLine();
@@ -168,10 +171,11 @@ public class Backup {
 
 		find(in, ".*", (filename, in1) -> {
 			try {
-				if (filename.startsWith("/.dfile/")) {
-					recover(filename, in1);
-				} else if (filename.endsWith(".db")) {
-					recover(filename.substring(0, filename.length() - 3), Helper.DEFAULT, in);
+//				if (filename.startsWith("/.dfile/")) {
+//					recover(filename, in1);
+//				} else if (filename.endsWith(".db")) {
+				if (filename.endsWith(".db")) {
+					recover(filename.substring(0, filename.length() - 3), Helper.DEFAULT, in, null);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);

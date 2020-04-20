@@ -157,9 +157,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.delete(table, q, db);
@@ -173,6 +170,11 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -229,9 +231,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.exists(table, q, db);
@@ -245,6 +244,11 @@ public class Helper implements Serializable {
 			}
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
 	}
@@ -2534,6 +2538,8 @@ public class Helper implements Serializable {
 
 	public static interface IOptimizer {
 
+		public static long MIN = 5000;
+
 		/**
 		 * Query.
 		 * 
@@ -2621,9 +2627,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.load(table, fields, q, t, db);
@@ -2640,6 +2643,11 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -2835,10 +2843,6 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
 				values.set(X.UPDATED, System.currentTimeMillis());
 
 				if (primary != null && primary.getDB(db) != null) {
@@ -2857,6 +2861,11 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -2904,10 +2913,6 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.inc(table, q, name, n, v, db);
 
@@ -2924,6 +2929,11 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -2984,9 +2994,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		Beans<T> bs = null;
 		try {
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 			if (primary != null && primary.getDB(db) != null) {
 				bs = primary.load(table, fields, q, s, n, t, db);
@@ -3010,6 +3017,11 @@ public class Helper implements Serializable {
 			log.error(e.getMessage(), e);
 		} finally {
 			read.add(t1.pastms());
+
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 		return bs;
 	}
@@ -3035,10 +3047,6 @@ public class Helper implements Serializable {
 		String db = getDB(t);
 		try {
 
-			if (monitor != null) {
-				monitor.query(db, table, q);
-			}
-
 			Cursor<T> cur = null;
 			if (primary != null && primary.getDB(db) != null) {
 				cur = primary.query(table, q, s, n, t, db);
@@ -3054,6 +3062,11 @@ public class Helper implements Serializable {
 			return BeanStream.create(cur);
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3175,9 +3188,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.count(table, q, db);
@@ -3195,6 +3205,11 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3203,9 +3218,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.count(table, q, name, db);
@@ -3223,6 +3235,11 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3230,9 +3247,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.median(table, q, name, db);
@@ -3250,6 +3264,11 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3257,9 +3276,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.std_deviation(table, q, name, db);
@@ -3277,6 +3293,11 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3284,9 +3305,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.sum(table, q, name, db);
@@ -3304,6 +3322,11 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3311,9 +3334,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.max(table, q, name, db);
@@ -3331,6 +3351,11 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3365,9 +3390,6 @@ public class Helper implements Serializable {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.avg(table, q, name, db);
@@ -3385,6 +3407,11 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
@@ -3429,9 +3456,6 @@ public class Helper implements Serializable {
 		try {
 
 			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
 
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.distinct(table, name, q, db);
@@ -3450,6 +3474,11 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
+			
+			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 		}
 	}
 
