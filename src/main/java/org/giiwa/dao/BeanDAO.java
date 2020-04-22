@@ -335,12 +335,7 @@ public class BeanDAO<I, T extends Bean> {
 	 */
 	public T copy(Bean src) {
 		try {
-			T b = t.newInstance();
-			Map<String, Object> m = src.getAll();
-			for (String name : m.keySet()) {
-				b.set(name, m.get(name));
-			}
-			return b;
+			return (T)src.clone();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

@@ -42,7 +42,7 @@ import org.giiwa.json.JSON;
  * almost includes all methods that need for database <br>
  * 
  */
-public class Bean implements Map<String, Object>, Serializable {
+public class Bean implements Map<String, Object>, Serializable, Cloneable {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 4L;
@@ -669,12 +669,28 @@ public class Bean implements Map<String, Object>, Serializable {
 	}
 
 	public static void main(String[] args) {
-		Bean b = new Bean();
-		b.set("a.a", 1);
-		System.out.println(b.toString());
 
-		JSON j1 = b.json();
-		System.out.println(j1.toPrettyString());
+		try {
+			Bean b = new Bean() {
+				transient int aaa = 1;
+
+				public String toString() {
+					return json().append("aaa", aaa).toString();
+				}
+			};
+			b.set("a.a", 1);
+			System.out.println(b.toString());
+
+			JSON j1 = b.json();
+//			System.out.println(j1.toPrettyString());
+
+			Bean a = (Bean) b.clone();
+			System.out.println(a);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	@Override
@@ -685,6 +701,11 @@ public class Bean implements Map<String, Object>, Serializable {
 	@Override
 	public Set<Entry<String, Object>> entrySet() {
 		return getAll().entrySet();
+	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
 	}
 
 }
