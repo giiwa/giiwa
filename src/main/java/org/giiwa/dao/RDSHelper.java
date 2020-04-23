@@ -28,6 +28,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -1150,10 +1151,12 @@ public class RDSHelper implements Helper.DBHelper {
 	}
 
 	private String _type(Object v, Connection c) {
-		if (v instanceof Long) {
+		if (v instanceof Long || v instanceof Integer) {
 			return "bigint";
-		} else if (v instanceof Integer) {
-			return "int";
+		} else if (v instanceof Float || v instanceof Double) {
+			return "double";
+		} else if (v instanceof Collection || v.getClass().isArray()) {
+			return "varchar(" + Math.max(v == null ? 0 : (v.toString().length() * 2), 100) + ")[]";
 		} else {
 			try {
 				if (isOracle(c)) {
