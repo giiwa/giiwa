@@ -170,7 +170,7 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -244,7 +244,7 @@ public class Helper implements Serializable {
 			}
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -1405,7 +1405,13 @@ public class Helper implements Serializable {
 			for (int i = queryList.size() - 1; i >= 0; i--) {
 				W e = queryList.get(i);
 				if (e instanceof Entity) {
-					func.accept((Entity) e);
+					Entity e1 = (Entity) e;
+					func.accept(e1);
+					if (e1.value instanceof Collection || e1.value.getClass().isArray()) {
+						e1.value = X.asList(e1.value, s -> s);
+						e1.replace(e1.value);
+					}
+
 				} else {
 					e.scan(func);
 
@@ -2643,7 +2649,7 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -2861,7 +2867,7 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -2929,7 +2935,7 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3062,7 +3068,7 @@ public class Helper implements Serializable {
 			return BeanStream.create(cur);
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3205,7 +3211,7 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3235,7 +3241,7 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3264,7 +3270,7 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3293,7 +3299,7 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3322,7 +3328,7 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3351,7 +3357,7 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3407,7 +3413,7 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
@@ -3474,7 +3480,7 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-			
+
 			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
 				monitor.query(db, table, q);
 			}
