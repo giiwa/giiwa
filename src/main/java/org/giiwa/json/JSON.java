@@ -56,7 +56,7 @@ import com.google.gson.stream.JsonReader;
  * 
  * @author wujun
  */
-public final class JSON extends HashMap<String, Object> {
+public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 	/**
 	 * 
@@ -801,11 +801,19 @@ public final class JSON extends HashMap<String, Object> {
 		JSON j = JSON.create();
 		if (names == null || names.length == 0) {
 			for (String s : this.keySet()) {
-				j.put(s, this.get(s));
+				Object o = this.get(s);
+				if (o instanceof JSON) {
+					o = ((JSON) o).copy();
+				}
+				j.put(s, o);
 			}
 		} else {
 			for (String s : names) {
-				j.put(s, this.get(s));
+				Object o = this.get(s);
+				if (o instanceof JSON) {
+					o = ((JSON) o).copy();
+				}
+				j.put(s, o);
 			}
 		}
 		return j;

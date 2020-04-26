@@ -1241,6 +1241,8 @@ public class Controller {
 				String s = this.getHtml(name);
 				_json.put(name, s);
 			}
+			_json.put("ip", this.ip());
+			_json.put("useragent", this.browser());
 
 		}
 		return _json;
