@@ -769,10 +769,10 @@ public class module extends Controller {
 		j1.append("global", Global.id());
 
 		try {
-			String s1 = Base64.getEncoder().encodeToString(Digest.des_encrypt(j1.toString().getBytes(), "giiwa"));
+			String s1 = Base64.getEncoder().encodeToString(Digest.des_encrypt(j1.toString().getBytes(), "giiwa666"));
 
 			Http h = Http.create();
-			Http.Response r = h.post("https://giisoo.com/home/activate", JSON.create().append("data", s1));
+			Http.Response r = h.post("https://wwww.giisoo.com/home/activate", JSON.create().append("data", s1));
 
 			j1 = r.json();
 			if (j1 != null && j1.getInt(X.STATE) == 200) {
@@ -787,6 +787,7 @@ public class module extends Controller {
 				this.set(X.MESSAGE, "激活失败, 请稍后重试 ...").send(201);
 			}
 		} catch (Throwable e1) {
+			log.error(e1.getMessage(), e1);
 			this.set(X.MESSAGE, "激活失败, 请稍后重试 ...").send(201);
 		}
 	}
