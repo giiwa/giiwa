@@ -23,6 +23,10 @@ div.limited, div.trial, div.issue{
 	$lang.get('notes.upload.module')
 </div>
 
+#if($atime)
+<p>$lang.get('node.atime'): $atime</p>
+#end
+
 <div class="btns">
 	<a class="btn btn-success" href="javascript:;" onclick="_module();">$lang.get("a.upload.module")</a>
 	<a class="btn btn-primary" href="javascript:;" onclick="_activate();" style="margin-left: 20px;">$lang.get("a.activate.module")</a>

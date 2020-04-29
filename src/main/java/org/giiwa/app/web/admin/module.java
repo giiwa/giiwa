@@ -727,6 +727,11 @@ public class module extends Controller {
 		this.set("pid", X.split(name, "[@]")[0]);
 		this.set("uptime", Controller.UPTIME);
 
+		long time = Global.getLong("node.time", 0);
+		if (time > 0) {
+			this.set("atime", lang.format(time, "yyyy-MM-dd"));
+		}
+
 		this.set("list", Module.getAll(false));
 
 		this.show("/admin/module.index.html");
@@ -772,7 +777,7 @@ public class module extends Controller {
 			String s1 = Base64.getEncoder().encodeToString(Digest.des_encrypt(j1.toString().getBytes(), "giiwa666"));
 
 			Http h = Http.create();
-			Http.Response r = h.post("https://wwww.giisoo.com/home/activate", JSON.create().append("data", s1));
+			Http.Response r = h.post("https://www.giisoo.com/home/activate", JSON.create().append("data", s1));
 
 			j1 = r.json();
 			if (j1 != null && j1.getInt(X.STATE) == 200) {

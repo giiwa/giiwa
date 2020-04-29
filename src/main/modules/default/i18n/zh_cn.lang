@@ -1014,3 +1014,4 @@ btn.database.dropall=删除表
 session.baseip=基于IP登录
 session.baseip.hint=切换IP后需要查询登录
 a.activate.module=激活GIIWA
+node.atime=已激活
