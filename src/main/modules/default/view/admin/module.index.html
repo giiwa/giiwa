@@ -25,7 +25,8 @@ div.limited, div.trial, div.issue{
 
 <div class="btns">
 	<a class="btn btn-success" href="javascript:;" onclick="_module();">$lang.get("a.upload.module")</a>
-	<a class="btn btn-warning" href="javascript:;" onclick="_license();">$lang.get("a.upload.license")</a>
+	<a class="btn btn-primary" href="javascript:;" onclick="_activate();" style="margin-left: 20px;">$lang.get("a.activate.module")</a>
+	<a class="btn btn-warning" href="javascript:;" onclick="_license();" style="margin-left: 10px;">$lang.get("a.upload.license")</a>
 </div>
 
 #parse('/widget/widget.message.html')
@@ -114,6 +115,16 @@ function _load() {
 	$.get('/admin/system/info?__node=$!__node', {}, function(d) {
 		if(d.pid != pid) {
 			window.location.href = window.location.href;
+		}
+	});
+}
+function _activate() {
+	$.get('/admin/module/activate?__node=$!__node', {}, function(d) {
+		if (d.state == 200) {
+			giiwa.message(d.message);
+			giiwa.reload();
+		}else {
+			giiwa.error(d.message);
 		}
 	});
 }

@@ -31,10 +31,14 @@ import org.giiwa.bean.Repo.Entity;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Digest;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.RSA;
+import org.giiwa.net.client.Http;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
 
@@ -752,6 +756,38 @@ public class module extends Controller {
 		} else {
 			this.set(X.MESSAGE, lang.get("message.fail"));
 			onGet();
+		}
+	}
+
+	@Path(path = "activate", login = true, access = "access.config.admin|access.config.module.admin")
+	public void activate() {
+
+		Beans<Node> bs = Node.dao.load(W.create().sort("updated", -1), 0, 100);
+		List<JSON> l1 = bs.asList(e -> e.json());
+
+		JSON j1 = JSON.create().append("list", l1);
+		j1.append("global", Global.id());
+
+		try {
+			String s1 = Base64.getEncoder().encodeToString(Digest.des_encrypt(j1.toString().getBytes(), "giiwa"));
+
+			Http h = Http.create();
+			Http.Response r = h.post("https://giisoo.com/home/activate", JSON.create().append("data", s1));
+
+			j1 = r.json();
+			if (j1 != null && j1.getInt(X.STATE) == 200) {
+
+				String code = j1.getString("code");
+				long time = j1.getLong("time");
+				Global.setConfig("node.code", code);
+				Global.setConfig("node.time", time);
+
+				this.set(X.MESSAGE, "激活成功！").send(200);
+			} else {
+				this.set(X.MESSAGE, "激活失败, 请稍后重试 ...").send(201);
+			}
+		} catch (Throwable e1) {
+			this.set(X.MESSAGE, "激活失败, 请稍后重试 ...").send(201);
 		}
 	}
 

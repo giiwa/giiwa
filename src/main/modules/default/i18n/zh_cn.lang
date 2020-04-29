@@ -232,7 +232,7 @@ mq.url.hint=Active MQ server
 new_password_error=新密码错误
 node.hint=节点名，在相同的分布式系统中，节点名称必须唯一, [node.name]
 node.type_default=
-notes.upload.module=上传模块包文件 package(*.zip)，框架会自动根据模块名称确定是新模块或是更新已经存在的模块，请访问 <a href='http://giiwa.org' target='_blank'>giiwa.org</a> 搜索更多模块。
+notes.upload.module=上传模块包文件 package(*.zip)，框架会自动根据模块名称确定是新模块或是更新已经存在的模块，请访问 <a href='http://giiwa.org' target='_blank'>giiwa.org</a> 搜索更多模块。<br>激活GIIWA: giiwa本身完全开源免费，不需要激活，但是某些模块包，可能依赖giiwa激活。
 notification.newbuild=有新版本
 oplog.index.title=日志管理
 oplog.notes=日志，请参考 Javadoc GLog.{applog|oplog|securitylog}.{info|warn|error} APIs 获得更多帮助
@@ -1013,3 +1013,4 @@ btn.database.deleteall=清除数据
 btn.database.dropall=删除表
 session.baseip=基于IP登录
 session.baseip.hint=切换IP后需要查询登录
+a.activate.module=激活GIIWA
