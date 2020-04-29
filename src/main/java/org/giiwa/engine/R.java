@@ -51,6 +51,12 @@ import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
+/**
+ * R utility
+ * 
+ * @author joe
+ *
+ */
 public class R extends IStub {
 
 	public R(String name) {

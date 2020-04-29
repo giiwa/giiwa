@@ -15,6 +15,12 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.UID;
 import org.giiwa.task.Task;
 
+/**
+ * JS utility
+ * 
+ * @author joe
+ *
+ */
 public class JS {
 
 	static Log log = LogFactory.getLog(JS.class);

@@ -25,6 +25,8 @@ import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 
 /**
+ * Velocity utility
+ * 
  * @author wujun
  *
  */
