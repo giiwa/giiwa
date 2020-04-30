@@ -4,6 +4,16 @@
 		<input type='number' name='cluster.code' value="$!global.getLong('cluster.code',0)"/>
 		<g>$lang.get('cluster.code.hint')</g></label></div>
 
+	<div style="margin-left:20px">
+		<div><label><h3>$lang.get('uid.next.s1'):</h3>
+			<input type='number' name='uid.next.s1' value="$!global.getLong('uid.next.s1',1)"/>
+			<g>$lang.get('uid.next.s1.hint')</g></label></div>
+	
+		<div><label><h3>$lang.get('uid.next.s2'):</h3>
+			<input type='number' name='uid.next.s2' value="$!global.getLong('uid.next.s2',-1)"/>
+			<g>$lang.get('uid.next.s2.hint')</g></label></div>
+	</div>
+
 	<div><label><h3>$lang.get('site.group'):</h3>
 		<input type='text' name='site.group' value="$!global.getString('site.group','demo')"/>
 		<g>$lang.get('site.group.hint')</g></label></div>

@@ -70,7 +70,7 @@ public final class UID {
 		return -1;
 	}
 
-	private static long _next(String key) {
+	private static long _next(String key) throws Exception {
 
 		long prefix = Global.getLong("cluster.code", 0) * 10000000000000L;
 
@@ -81,7 +81,7 @@ public final class UID {
 
 		Global f = Helper.load(key, Global.class);
 
-		long v = 1;
+		long v = Math.max(1, Global.getLong("uid.next.s1", 1));
 		if (f == null) {
 			String linkid = UID.random();
 
@@ -104,6 +104,10 @@ public final class UID {
 			v += 1;
 		}
 
+		long max = Global.getLong("uid.next.s2", -1);
+		if (max > -1 && v > max) {
+			throw new Exception("uid.next(" + key + ") is run out, max=" + max + ", cur=" + v);
+		}
 		return prefix + v;
 	}
 

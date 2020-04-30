@@ -271,7 +271,7 @@ sort.by=排序
 sortby.type_=升序
 sortby.type_desc=降序
 cluster.code=集群编码
-cluster.code.hint=不同集群，有全局序列号, 参见<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a>. [cluster.code]
+cluster.code.hint=不同集群编码，生成不同的全局序列号, 参见<a href='http://giiwa.org/docs/apidocs/org/giiwa/core/bean/UID.html' target='_blank'>UID.next()</a>. [cluster.code]
 system.setting.title=基本设置
 cross.domain=跨域访问
 cross.domain.hint=域名表达式，"*"全部，请参考 "Access-Control-Allow-Origin". [cross.domain]
@@ -427,7 +427,7 @@ home.uri=首页URI
 home.uri.hint=缺省首页重定向到, 比如：'/forum',[home.uri]
 home.uri.1=节点首页URI
 home.uri.1.hint=如果节点首页为空，则使用全局首页URI，[home.uri.1]
-session.alive=会话过期时间（小时）
+session.alive=登录有效期(小时)
 session.alive.hint=小时, 缺省1周,-1=会话级cookie，关闭浏览器失效
 title.data_will_be_replaced=恢复数据，现在的数据将被覆盖?
 backup.status_0=未知
@@ -1012,6 +1012,10 @@ table.updated=更新时间
 btn.database.deleteall=清除数据
 btn.database.dropall=删除表
 session.baseip=基于IP登录
-session.baseip.hint=切换IP后需要查询登录
+session.baseip.hint=切换IP后需要重新登录
 a.activate.module=激活GIIWA
 node.atime=已激活
+uid.next.s1=全局序号开始
+uid.next.s2=全局序号结束
+uid.next.s1.hint=生成全局序号时的开始值
+uid.next.s2.hint=默认-1，不限制
