@@ -29,6 +29,7 @@ import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._File;
 import org.giiwa.bean.m._MQ;
 import org.giiwa.bean.m._Memory;
+import org.giiwa.bean.m._Memory2;
 import org.giiwa.bean.m._Net;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Global;
@@ -158,6 +159,14 @@ public class PerfMoniterTask extends Task {
 							.append("_type", "snapshot"));
 				}
 				_Net.update(Local.id(), l2);
+			}
+
+			{
+				JSON jo = JSON.create();
+				Runtime t = Runtime.getRuntime();
+				jo.append("total", t.totalMemory());
+				jo.append("used", t.totalMemory() - t.freeMemory());
+				_Memory2.update(Local.id(), jo);
 			}
 
 			{
