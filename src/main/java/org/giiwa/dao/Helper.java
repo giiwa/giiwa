@@ -1978,6 +1978,21 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		public boolean exists() throws SQLException {
+
+			if (log.isDebugEnabled())
+				log.debug("w=" + this);
+
+			if (dao != null) {
+				return dao.exists(this);
+			} else if (!X.isEmpty(table)) {
+				return helper.exists(table, this, Helper.DEFAULT);
+			} else {
+				throw new SQLException("not set table");
+			}
+
+		}
+
 		/**
 		 * load a data
 		 * 
@@ -1986,6 +2001,7 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("unchecked")
 		public <T> T load() throws SQLException {
+
 			if (log.isDebugEnabled())
 				log.debug("w=" + this);
 
