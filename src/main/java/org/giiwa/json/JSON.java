@@ -712,6 +712,16 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		System.out.println("s=" + s);
 		s = j1.parse(s);
 		System.out.println("s=" + s);
+
+		j1 = JSON.create();
+		j1.append("ret.a", new ArrayList<String>());
+		System.out.println(j1.toPrettyString());
+		JSON j2 = j1.copy();
+		j1.append("ret.a", "1");
+		j1.append("ret.a", "2");
+		System.out.println(j2.toPrettyString());
+		System.out.println(j1.toPrettyString());
+
 	}
 
 	public void test(Object o) {
