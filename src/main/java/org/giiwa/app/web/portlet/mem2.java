@@ -23,7 +23,7 @@ public class mem2 extends portlet {
 		Beans<_Memory2.Record> bs = _Memory2.Record.dao.load(W.create("node", Local.id())
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
-			this.set("total", bs.get(0).getLong("total"));
+//			this.set("total", bs.get(0).getLong("total"));
 			Collections.reverse(bs);
 
 			this.set("list", bs);
