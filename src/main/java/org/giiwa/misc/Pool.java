@@ -15,7 +15,9 @@
 package org.giiwa.misc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -32,17 +34,39 @@ import org.giiwa.task.Task;
  *
  */
 public class Pool<E> {
+
 	static Log log = LogFactory.getLog(Pool.class);
 
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition door = lock.newCondition();
 
-	private List<E> list = new ArrayList<E>();
+	private Map<E, _E> cached = new HashMap<E, _E>();
+	private List<_E> list = new ArrayList<_E>();
 	private int initial = 10;
 	private int max = 10;
 	private int created = 0;
+	private int age = 60; // second
 
 	private IPoolFactory<E> factory = null;
+
+	private class _E {
+		E e;
+		long last = System.currentTimeMillis();
+
+		_E(E e) {
+			this.e = e;
+			cached.put(e, this);
+		}
+
+	}
+
+	private _E _get(E e) {
+		_E e1 = cached.get(e);
+		if (e1 == null) {
+			e1 = new _E(e);
+		}
+		return e1;
+	}
 
 	/**
 	 * create a pool by initial, max and factory.
@@ -71,7 +95,7 @@ public class Pool<E> {
 			if (t != null) {
 				try {
 					lock.lock();
-					list.add(t);
+					list.add(_get(t));
 					door.signal();
 				} finally {
 					lock.unlock();
@@ -92,10 +116,13 @@ public class Pool<E> {
 		} else {
 			try {
 				lock.lock();
-				if (factory.cleanup(t)) {
-					list.add(t);
+
+				_E e = _get(t);
+				if (System.currentTimeMillis() - e.last < age && factory.cleanup(t)) {
+					list.add(e);
 				} else {
 					// the t is bad
+					cached.remove(t);
 					factory.destroy(t);
 					created--;
 				}
@@ -111,8 +138,9 @@ public class Pool<E> {
 	 */
 	public void destroy() {
 		synchronized (list) {
-			for (E e : list) {
-				factory.destroy(e);
+			for (_E e : list) {
+				cached.remove(e.e);
+				factory.destroy(e.e);
 			}
 			list.clear();
 		}
@@ -135,7 +163,8 @@ public class Pool<E> {
 
 				while (t1 > 0) {
 					if (list.size() > 0) {
-						return list.remove(0);
+						_E e = list.remove(0);
+						return e.e;
 					} else {
 						t1 = timeout - t.pastms();
 						if (t1 > 0) {
@@ -196,5 +225,6 @@ public class Pool<E> {
 		 * @param t the t
 		 */
 		public void destroy(E t);
+
 	}
 }

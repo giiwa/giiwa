@@ -18,6 +18,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -126,6 +127,12 @@ public class VelocityView extends View {
 
 			if (Local.getInt("web.debug", 0) == 0) {
 				// not debug
+				if (cache.size() >= 100) {
+					for (int i = 0; i < 10; i++) {
+						String s1 = cache.keySet().iterator().next();
+						cache.remove(s1);
+					}
+				}
 				cache.put(viewname, t);
 			}
 		}
@@ -149,6 +156,6 @@ public class VelocityView extends View {
 	/**
 	 * cache the template by viewname, the template will be override in child module
 	 */
-	private static Map<String, T> cache = new HashMap<String, T>();
+	private static LinkedHashMap<String, T> cache = new LinkedHashMap<String, T>();
 
 }

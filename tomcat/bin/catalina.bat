@@ -212,7 +212,7 @@ set "JAVA_OPTS=%JAVA_OPTS% %LOGGING_MANAGER%"
 rem ----- Execute The Requested Command ---------------------------------------
 
 set "GIIWA_HOME=%CATALINA_HOME%"
-set "JAVA_OPTS=%JAVA_OPTS% -Xms512m -Xmx512m -XX:-UseConcMarkSweepGC -Djava.library.path=%GIIWA_HOME%\lib\sigar"
+set "JAVA_OPTS=%JAVA_OPTS% -Xms512m -Xmx512m -XX:-UseG1GC -Djava.library.path=%GIIWA_HOME%\lib\sigar"
 echo Using CATALINA_BASE:   "%CATALINA_BASE%"
 echo Using CATALINA_HOME:   "%CATALINA_HOME%"
 echo Using GIIWA_HOME:   "%GIIWA_HOME%"

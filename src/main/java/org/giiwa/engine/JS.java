@@ -32,12 +32,15 @@ public class JS {
 	public static Object run(String js, Map<String, Object> params) throws Exception {
 
 		_E e = compile(js);
-		Bindings bs = e.engine.createBindings();
+		Bindings bs = _E.engine.createBindings();
 		if (params != null) {
 			bs.putAll(params);
 		}
 
-		return e.compiled.eval(bs);
+		Object r = e.compiled.eval(bs);
+		bs.clear();
+		
+		return r;
 
 	}
 
@@ -45,11 +48,13 @@ public class JS {
 		String id = UID.id(code);
 		_E e = cached.get(id);
 		if (e == null) {
-			ScriptEngineManager manager = new ScriptEngineManager();
-			ScriptEngine engine = manager.getEngineByName("JavaScript");
+			if (_E.engine == null) {
+				ScriptEngineManager manager = new ScriptEngineManager();
+				_E.engine = manager.getEngineByName("JavaScript");
+			}
 			e = new _E();
-			e.compiled = ((Compilable) engine).compile(code);
-			e.engine = engine;
+			e.compiled = ((Compilable) _E.engine).compile(code);
+//			e.engine = engine;
 			cached.put(id, e);
 		}
 		return e;
@@ -58,7 +63,7 @@ public class JS {
 	private static Map<String, _E> cached = new HashMap<String, _E>();
 
 	static class _E {
-		ScriptEngine engine;
+		static ScriptEngine engine;
 		CompiledScript compiled;
 	}
 
