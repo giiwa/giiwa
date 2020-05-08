@@ -28,6 +28,7 @@ td i.icon-image{
 	<thead>
 		<tr>
 			<th>$lang.get('file.name')</th>
+			<th>$lang.get('disk.type')</th>
 			<th>$lang.get('file.size')</th>
 			<th>$lang.get('file.updated')</th>
 			<th></th>
@@ -38,7 +39,7 @@ td i.icon-image{
 	<tr>
 		<td class='a'><a href="/admin/dfile/folder?f=$!f.getParentFile().filename">
 			<i class="icon-folder"></i>&nbsp;..</a></td>
-		<td colspan="3">&nbsp;</td>
+		<td colspan="4">&nbsp;</td>
 	</tr>
 #end
 #foreach($f1 in $list)
@@ -56,6 +57,7 @@ td i.icon-image{
 			</a>
 			#end
 		</td>
+		<td>$!lang.get("disk.type_$f1.disk_obj.type")</td>
 		<td>
 			#if($f1.isFile())
 			$lang.size($!f1.length())

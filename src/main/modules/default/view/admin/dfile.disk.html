@@ -22,6 +22,7 @@
 		<tr>
 			<th>$lang.get('disk.node')</th>
 			<th>$lang.get('node.url')</th>
+			<th>$lang.get('disk.type')</th>
 			<th>$lang.get('disk.path')</th>
 			<th>$lang.get('disk.priority')</th>
 			<th>$lang.get('disk.enabled')</th>
@@ -36,6 +37,7 @@
 	<tr>
 		<td>$!f1.node_obj.label</td>
 		<td>$!f1.node_obj.url</td>
+		<td>$!lang.get("disk.type_$f1.type")</td>
 		<td><i class="icon-folder" style="color: #58b957;"></i>&nbsp;$f1.path</td>
 		<td>$f1.priority</td>
 		<td>
@@ -71,7 +73,7 @@
 function _edit(id){
 	giiwa.popup('/admin/dfile/disk/edit?__node=$!__node&id=' + id, {
 		width: 500,
-		height: 300,
+		height: 350,
 		moveable: true,
 		max: false,
 		onsubmit: function(){
@@ -82,7 +84,7 @@ function _edit(id){
 function _add(){
 	giiwa.popup('/admin/dfile/disk/add?__node=$!__node', {
 		width: 500,
-		height: 300,
+		height: 350,
 		moveable: true,
 		max: false,
 		onsubmit: function(){

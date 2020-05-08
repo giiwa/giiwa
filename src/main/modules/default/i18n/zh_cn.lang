@@ -1019,3 +1019,6 @@ uid.next.s1=全局序号开始
 uid.next.s2=全局序号结束
 uid.next.s1.hint=生成全局序号时的开始值
 uid.next.s2.hint=默认-1，不限制
+disk.type=类型
+disk.type_data=DATA
+disk.type_nginx=NGINX

@@ -2959,6 +2959,8 @@ public class Helper implements Serializable {
 		}
 	}
 
+	private static boolean _configured = false;
+
 	/**
 	 * test is configured RDS or Mongo
 	 * 
@@ -2966,7 +2968,10 @@ public class Helper implements Serializable {
 	 *         true: configured RDS or Mongo; false: no DB configured
 	 */
 	public static boolean isConfigured() {
-		return primary != null && primary.getDB(DEFAULT) != null;
+		if (!_configured) {
+			_configured = primary != null && primary.getDB(DEFAULT) != null;
+		}
+		return _configured;
 	}
 
 	/**

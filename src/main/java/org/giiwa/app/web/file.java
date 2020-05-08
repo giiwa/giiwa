@@ -14,6 +14,7 @@ import org.giiwa.dfile.DFile;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.Url;
+import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
@@ -76,6 +77,23 @@ public class file extends Controller {
 
 								IOUtil.copy(in, out, false);
 								in.close();
+
+								if (!f1.getFilename().startsWith("/file/get/")) {
+									Task.schedule(() -> {
+										// save the file to nginx
+										try {
+
+											DFile f2 = Disk.seek("/file/get/" + id + "/" + name, Disk.TYPE_NGINX);
+											if (f2 != null) {
+												f2.upload(f);
+											}
+
+										} catch (Exception e) {
+											log.error(e.getMessage(), e);
+										}
+									});
+								}
+
 								return;
 							}
 						}
@@ -84,6 +102,22 @@ public class file extends Controller {
 				this.setContentType(mime);
 
 				IOUtil.copy(f1.getInputStream(), this.getOutputStream());
+
+				if (!f1.getFilename().startsWith("/file/get/")) {
+					Task.schedule(() -> {
+						// save the file to nginx
+						try {
+
+							DFile f2 = Disk.seek("/file/get/" + id + "/" + name, Disk.TYPE_NGINX);
+							if (f2 != null) {
+								f2.upload(f1.getInputStream());
+							}
+
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					});
+				}
 
 			}
 		} catch (Exception e1) {

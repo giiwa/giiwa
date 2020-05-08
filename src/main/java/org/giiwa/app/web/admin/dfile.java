@@ -85,7 +85,8 @@ public class dfile extends Controller {
 				v.append("priority", this.getInt("priority"));
 				v.append("node", this.getString("node1"));
 				v.append("enabled", this.getInt("enabled"));
-				
+				v.append("type", this.get("type"));
+
 				Disk.create(v);
 				this.send(JSON.create().append(X.STATE, 200));
 

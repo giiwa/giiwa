@@ -51,33 +51,39 @@ public class Disk extends Bean {
 
 	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 
-	public static interface IDisk {
+	public static final String TYPE_ALL = "all";
+	public static final String TYPE_DATA = "data";
+	public static final String TYPE_NGINX = "nginx";
 
-		long getUsed();
-
-		long getTotal();
-
-		DFile seek(Path filename);
-
-		DFile seek(String filename);
-
-		boolean exists(String filename);
-
-		Collection<DFile> list(String filename);
-
-		void delete(String filename, long age, boolean global);
-
-		long move(DFile src, DFile dest);
-
-		long copy(DFile src, DFile dest);
-
-	}
-
-	private static IDisk _disk;
-
-	public static void setDisk(IDisk d) {
-		_disk = d;
-	}
+//	public static interface IDisk {
+//
+//		long getUsed();
+//
+//		long getTotal();
+//
+//		DFile seek(Path filename);
+//
+//		DFile seek(String filename);
+//
+//		DFile seek(String filename, String type);
+//
+//		boolean exists(String filename);
+//
+//		Collection<DFile> list(String filename);
+//
+//		void delete(String filename, long age, boolean global);
+//
+//		long move(DFile src, DFile dest);
+//
+//		long copy(DFile src, DFile dest);
+//
+//	}
+//
+//	private static Map<String, IDisk> _disk = new HashMap<String, IDisk>();
+//
+//	public static void setDisk(String type, IDisk d) {
+//		_disk.put(type, d);
+//	}
 
 //	public static Disk DEFAULT = new Disk();
 
@@ -92,6 +98,9 @@ public class Disk extends Bean {
 	@Column(memo = "路径")
 	String path;
 
+	@Column(memo = "type", value = "data, nginx")
+	String type = "data";
+
 	@Column(memo = "优先级")
 	public int priority;
 
@@ -101,7 +110,7 @@ public class Disk extends Bean {
 	@Column(memo = "开关")
 	public int enabled; // 1: ok, 0: disabled
 
-	@Column(memo = "是否可用", value = "0:ok, 1:bad")
+	@Column(memo = "是否可用", value = "0: ok, 1: bad")
 	int bad; // 0:ok, 1: bad
 
 	@Column(memo = "总空间")
@@ -218,9 +227,9 @@ public class Disk extends Bean {
 
 	// ---------------
 	public long getUsed() {
-		if (_disk != null) {
-			return _disk.getUsed();
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).getUsed();
+//		}
 
 		return this.total - this.free;
 	}
@@ -231,10 +240,10 @@ public class Disk extends Bean {
 	}
 
 	public int getUsage() {
-		if (_disk != null) {
-			long total = _disk.getTotal();
-			return (int) (_disk.getUsed() * 100 / total);
-		}
+//		if (_disk != null) {
+//			long total = _disk.get(TYPE_DATA).getTotal();
+//			return (int) (_disk.get(TYPE_DATA).getUsed() * 100 / total);
+//		}
 
 		if (this.total > 0) {
 			return (int) ((this.total - this.free) * 100 / this.total);
@@ -243,9 +252,9 @@ public class Disk extends Bean {
 	}
 
 	public static DFile seek(Path filename) throws Exception {
-		if (_disk != null) {
-			return _disk.seek(filename);
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).seek(filename);
+//		}
 		return seek(filename.toString());
 	}
 
@@ -265,14 +274,14 @@ public class Disk extends Bean {
 
 	public static DFile seek(String filename) throws Exception {
 
-		if (_disk != null) {
-			return _disk.seek(filename);
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).seek(filename);
+//		}
 
 		if (Helper.isConfigured()) {
 			filename = X.getCanonicalPath(filename);
 
-			Beans<Disk> bs = disks();
+			Beans<Disk> bs = disks(TYPE_DATA);
 
 			for (Disk e : bs) {
 				DFile d = MyDFile.create(e, filename);
@@ -282,7 +291,37 @@ public class Disk extends Bean {
 			}
 
 			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = MyDFile.create(Disk.get(), filename);
+			DFile f = MyDFile.create(Disk._get(TYPE_DATA), filename);
+
+			return f;
+		}
+
+		return null;
+
+	}
+
+	public static DFile seek(String filename, String type) throws Exception {
+
+//		if (_disk != null) {
+//			return _disk.get(type).seek(filename);
+//		}
+
+		if (Helper.isConfigured()) {
+
+			filename = X.getCanonicalPath(filename);
+
+			Beans<Disk> bs = disks(type);
+			if (bs != null) {
+				for (Disk e : bs) {
+					DFile d = MyDFile.create(e, filename);
+					if (d.exists()) {
+						return d;
+					}
+				}
+			}
+
+			// log.debug("seek, not found, filename=" + filename, new Exception());
+			DFile f = MyDFile.create(Disk._get(type), filename);
 
 			return f;
 		}
@@ -293,11 +332,11 @@ public class Disk extends Bean {
 
 	public static boolean exists(String filename) throws Exception {
 
-		if (_disk != null) {
-			return _disk.exists(filename);
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).exists(filename);
+//		}
 
-		Beans<Disk> bs = disks();
+		Beans<Disk> bs = disks(TYPE_DATA);
 
 		for (Disk e : bs) {
 			DFile d = MyDFile.create(e, filename);
@@ -309,20 +348,20 @@ public class Disk extends Bean {
 		return false;
 	}
 
-	public static Disk get() throws IOException {
-		Selector s = Selector.get();
+	private static Disk _get(String type) throws IOException {
+		Selector s = Selector.get(type);
 		return s.pick();
 	}
 
 	public static Collection<DFile> list(String filename) throws Exception {
 
-		if (_disk != null) {
-			return _disk.list(filename);
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).list(filename);
+//		}
 
 		Map<String, DFile> l1 = new TreeMap<String, DFile>();
 
-		Beans<Disk> bs = disks();
+		Beans<Disk> bs = disks(TYPE_ALL);
 
 		for (Disk e : bs) {
 			DFile f = MyDFile.create(e, filename);
@@ -361,12 +400,12 @@ public class Disk extends Bean {
 
 	public static void delete(String filename, long age, boolean global) throws Exception {
 
-		if (_disk != null) {
-			_disk.delete(filename, age, global);
-			return;
-		}
+//		if (_disk != null) {
+//			_disk.get(TYPE_DATA).delete(filename, age, global);
+//			return;
+//		}
 
-		Beans<Disk> bs = disks();
+		Beans<Disk> bs = disks(TYPE_DATA);
 
 		for (Disk e : bs) {
 
@@ -380,9 +419,9 @@ public class Disk extends Bean {
 
 	public static long move(DFile src, DFile dest) throws Exception {
 
-		if (_disk != null) {
-			return _disk.move(src, dest);
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).move(src, dest);
+//		}
 
 		long len = 0;
 		if (src.isDirectory()) {
@@ -404,9 +443,9 @@ public class Disk extends Bean {
 
 	public static long copy(DFile src, DFile dest) throws Exception {
 
-		if (_disk != null) {
-			return _disk.copy(src, dest);
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).copy(src, dest);
+//		}
 
 		long len = 0;
 
@@ -429,17 +468,28 @@ public class Disk extends Bean {
 		return IOUtil.copy(in, out);
 	}
 
-	static transient Beans<Disk> _disks;
+	private static Map<String, Beans<Disk>> _disks = new HashMap<String, Beans<Disk>>();
 
-	private static Beans<Disk> disks() throws Exception {
-		if (X.isEmpty(_disks) || System.currentTimeMillis() - _disks.created > X.AMINUTE) {
+	private static Beans<Disk> disks(String type) throws Exception {
+
+		Beans<Disk> d1 = _disks.get(type);
+
+		if (X.isEmpty(d1) || System.currentTimeMillis() - d1.created > X.AMINUTE) {
 			W q = W.create().and("enabled", 1).sort("priority", -1).sort("path", 1);
-			_disks = dao.load(q, 0, 100);
+			if (type == TYPE_DATA) {
+				q.and(W.create("type", null).or("type", TYPE_DATA));
+			} else if (type != TYPE_ALL) {
+				q.and("type", type);
+			}
+
+			d1 = dao.load(q, 0, 100);
+			_disks.put(type, d1);
 		}
-		if (X.isEmpty(_disks)) {
+
+		if (X.isEmpty(d1)) {
 			throw new Exception("not disk configured!");
 		}
-		return _disks;
+		return d1;
 	}
 
 	public static void reset() {
@@ -515,53 +565,52 @@ public class Disk extends Bean {
 	static class Selector {
 
 		private long age = System.currentTimeMillis();
-		private static Selector _inst;
+		private static Map<String, Selector> _inst = new HashMap<String, Selector>();
 
-		long pos = 0;
-		Map<Disk, Long[]> ss = new HashMap<Disk, Long[]>();
+		TreeMap<Long, Disk> ss = new TreeMap<Long, Disk>();
 
-		static synchronized Selector get() {
+		static synchronized Selector get(String type) {
 
-			if (_inst == null || System.currentTimeMillis() - _inst.age > X.AMINUTE) {
-				_inst = new Selector();
+			Selector d1 = _inst.get(type);
+
+			if (d1 == null || System.currentTimeMillis() - d1.age > X.AMINUTE) {
+				d1 = new Selector();
 
 				W q = W.create().sort("priority", -1).sort("path", 1);
 				Beans<Disk> bs = dao.load(q, 0, 1000);
 				for (Disk e : bs) {
 					long f1 = e.free * e.priority;
-					_inst.add(e, f1);
+					d1.add(e, f1);
 				}
+				_inst.put(type, d1);
 			}
 
-			return _inst;
+			return d1;
 		}
 
 		private void add(Disk d, long rate) {
-			ss.put(d, new Long[] { pos, pos + rate });
-			pos += rate;
+			ss.put(rate, d);
 		}
 
 		Disk pick() throws IOException {
-			if (ss.size() == 1)
-				return ss.keySet().iterator().next();
 
-			long r = (long) (pos * Math.random());
-			for (Disk d : ss.keySet()) {
-				Long[] ll = ss.get(d);
-				if (r >= ll[0] && r < ll[1]) {
-					return d;
-				}
-			}
+			if (!ss.isEmpty())
+				return ss.lastEntry().getValue();
+
 //			return DEFAULT;
-			throw new IOException("no disk, ss=" + ss.size() + ", pos=" + pos);
+			throw new IOException("no disk, ss=" + ss.size());
 		}
 
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public static long getTotalSpace() {
-		if (_disk != null) {
-			return _disk.getTotal();
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).getTotal();
+//		}
 
 		long total = 0;
 		if (Helper.isConfigured()) {
@@ -580,11 +629,15 @@ public class Disk extends Bean {
 		return total;
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public static long getFreeSpace() {
 
-		if (_disk != null) {
-			return _disk.getTotal() - _disk.getUsed();
-		}
+//		if (_disk != null) {
+//			return _disk.get(TYPE_DATA).getTotal() - _disk.get(TYPE_DATA).getUsed();
+//		}
 
 		long total = 0;
 		if (Helper.isConfigured()) {
