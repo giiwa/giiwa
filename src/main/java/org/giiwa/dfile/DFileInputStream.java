@@ -108,7 +108,7 @@ import org.giiwa.net.nio.IoRequest;
 			return;
 
 		if (bb == null || pos >= bb.length) {
-			bb = FileClient.get(url).get(path, filename, offset, IoRequest.BIG);
+			bb = FileClient.get(url, path).get(filename, offset, IoRequest.BIG);
 			if (bb == null || bb.length < IoRequest.BIG) {
 				// log.debug("last packet, bb=" + bb.length);
 				last = true;

@@ -265,13 +265,19 @@ public class Repo {
 				DFile f = Disk.seek(path);
 				DFile[] ff = f.listFiles();
 				if (ff != null && ff.length > 0) {
-					file = ff[0];
+					for (DFile f1 : ff) {
+						if (X.isSame(f1.getDisk_obj().type, Disk.TYPE_DATA)) {
+							file = ff[0];
+							break;
+						}
+					}
 				}
 			} else {
 				file = Disk.seek(path + name);
 			}
 
-			log.debug("id=" + id + ", path=" + path + ", name=" + name + ", file=" + file);
+			log.debug("id=" + id + ", path=" + path + ", name=" + name + ", file=" + file + ", type="
+					+ file.getDisk_obj().type);
 		}
 
 		public long store(long position, InputStream in, long total) throws Exception {

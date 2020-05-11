@@ -41,11 +41,11 @@ public class Pool<E> {
 	private Condition door = lock.newCondition();
 
 	private Map<E, _E> cached = new HashMap<E, _E>();
-	private List<_E> list = new ArrayList<_E>();
+	private List<_E> idle = new ArrayList<_E>();
 	private int initial = 10;
 	private int max = 10;
 	private int created = 0;
-	private int age = 60; // second
+	private int age = 600; // second
 
 	private IPoolFactory<E> factory = null;
 
@@ -95,14 +95,14 @@ public class Pool<E> {
 			if (t != null) {
 				try {
 					lock.lock();
-					list.add(_get(t));
+					idle.add(_get(t));
 					door.signal();
 				} finally {
 					lock.unlock();
 				}
 			}
 		}
-		created = list.size();
+		created = idle.size();
 	}
 
 	/**
@@ -119,7 +119,7 @@ public class Pool<E> {
 
 				_E e = _get(t);
 				if (System.currentTimeMillis() - e.last < age && factory.cleanup(t)) {
-					list.add(e);
+					idle.add(e);
 				} else {
 					// the t is bad
 					cached.remove(t);
@@ -137,12 +137,12 @@ public class Pool<E> {
 	 * destroy the pool, and destroy all the object in the pool.
 	 */
 	public void destroy() {
-		synchronized (list) {
-			for (_E e : list) {
+		synchronized (idle) {
+			for (_E e : idle) {
 				cached.remove(e.e);
 				factory.destroy(e.e);
 			}
-			list.clear();
+			idle.clear();
 		}
 	}
 
@@ -162,8 +162,8 @@ public class Pool<E> {
 				lock.lock();
 
 				while (t1 > 0) {
-					if (list.size() > 0) {
-						_E e = list.remove(0);
+					if (idle.size() > 0) {
+						_E e = idle.remove(0);
 						return e.e;
 					} else {
 						t1 = timeout - t.pastms();

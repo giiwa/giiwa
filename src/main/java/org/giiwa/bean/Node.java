@@ -279,7 +279,7 @@ public class Node extends Bean {
 
 	public void forward(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 		try {
-			FileClient.get(url).http(uri, req, resp, method, id);
+			FileClient.get(url, X.EMPTY).http(uri, req, resp, method, id);
 		} catch (Exception e) {
 			log.error(url, e);
 		}

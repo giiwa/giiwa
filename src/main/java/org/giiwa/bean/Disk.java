@@ -55,40 +55,6 @@ public class Disk extends Bean {
 	public static final String TYPE_DATA = "data";
 	public static final String TYPE_NGINX = "nginx";
 
-//	public static interface IDisk {
-//
-//		long getUsed();
-//
-//		long getTotal();
-//
-//		DFile seek(Path filename);
-//
-//		DFile seek(String filename);
-//
-//		DFile seek(String filename, String type);
-//
-//		boolean exists(String filename);
-//
-//		Collection<DFile> list(String filename);
-//
-//		void delete(String filename, long age, boolean global);
-//
-//		long move(DFile src, DFile dest);
-//
-//		long copy(DFile src, DFile dest);
-//
-//	}
-//
-//	private static Map<String, IDisk> _disk = new HashMap<String, IDisk>();
-//
-//	public static void setDisk(String type, IDisk d) {
-//		_disk.put(type, d);
-//	}
-
-//	public static Disk DEFAULT = new Disk();
-
-	// private final static String RESETNAME = "disk.reset";
-
 	@Column(memo = "唯一序号")
 	long id;
 
@@ -493,7 +459,7 @@ public class Disk extends Bean {
 	}
 
 	public static void reset() {
-		_disks = null;
+		_disks.clear();
 	}
 
 	public String getNode() {
@@ -577,6 +543,9 @@ public class Disk extends Bean {
 				d1 = new Selector();
 
 				W q = W.create().sort("priority", -1).sort("path", 1);
+				if (type != Disk.TYPE_DATA) {
+					q.and(W.create("type", null).or("type", type));
+				}
 				Beans<Disk> bs = dao.load(q, 0, 1000);
 				for (Disk e : bs) {
 					long f1 = e.free * e.priority;

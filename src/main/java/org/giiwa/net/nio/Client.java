@@ -66,6 +66,8 @@ public class Client implements Closeable {
 				@Override
 				public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 
+					log.warn("idle, server=" + server);
+
 					if (error != null) {
 						error.accept(new Exception("inactive"));
 					}

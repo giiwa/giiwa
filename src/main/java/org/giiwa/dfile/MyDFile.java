@@ -106,7 +106,7 @@ public class MyDFile extends DFile {
 
 		try {
 
-			return FileClient.get(url).delete(path, filename, age);
+			return FileClient.get(url, path).delete(filename, age);
 
 		} catch (Exception e) {
 			log.error(url, e);
@@ -145,7 +145,7 @@ public class MyDFile extends DFile {
 		check();
 
 		try {
-			return FileClient.get(url).mkdirs(path, this.filename);
+			return FileClient.get(url, path).mkdirs(this.filename);
 		} catch (Exception e) {
 			log.error(url, e);
 			Disk.dao.update(this.disk, V.create("bad", 1));
@@ -165,7 +165,7 @@ public class MyDFile extends DFile {
 	private FileInfo getInfo() {
 		if (info == null) {
 			try {
-				info = FileClient.get(url).info(path, filename);
+				info = FileClient.get(url, path).info(filename);
 			} catch (IOException e) {
 				log.error(url, e);
 				Disk.dao.update(this.disk, V.create("bad", 1));
@@ -200,7 +200,7 @@ public class MyDFile extends DFile {
 	public MyDFile[] listFiles() throws IOException {
 		check();
 
-		List<FileInfo> l1 = FileClient.get(url).list(path, filename);
+		List<FileInfo> l1 = FileClient.get(url, path).list(filename);
 
 		MyDFile[] l2 = new MyDFile[l1.size()];
 		int i = 0;
@@ -244,7 +244,7 @@ public class MyDFile extends DFile {
 	public boolean move(DFile file) {
 
 		try {
-			return FileClient.get(url).move(path, filename, path, file.getFilename());
+			return FileClient.get(url, path).move(filename, file.getFilename());
 		} catch (Exception e) {
 			log.error(url, e);
 

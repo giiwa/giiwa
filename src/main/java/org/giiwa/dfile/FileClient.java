@@ -22,6 +22,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.TimeStamp;
+import org.giiwa.dao.UID;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Pool;
@@ -60,29 +61,35 @@ public class FileClient {
 
 	private AtomicLong seq = new AtomicLong(0);
 
+	private String id;
+	private String path;
+
 	private Pool<Client> client;
 
 	private static Map<String, FileClient> cached = new HashMap<String, FileClient>();
 
-	public static FileClient get(String url) throws IOException {
+	public static FileClient get(String url, String path) throws IOException {
 
-		FileClient c = cached.get(url);
+		String id = UID.id(url, path);
+		FileClient c = cached.get(id);
 		if (c != null) {
 			return c;
 		}
 
-		c = create(url);
-		cached.put(url, c);
+		c = create(url, path);
+		c.id = id;
+		cached.put(id, c);
 		return c;
 
 	}
 
-	private static FileClient create(String url) throws IOException {
+	private static FileClient create(String url, String path) throws IOException {
 
 		if (log.isInfoEnabled())
-			log.info("create new client, url=" + url);
+			log.info("create new client, url=" + url +", path=" + path);
 
 		FileClient c = new FileClient();
+		c.path = path;
 //		c.url = url;
 
 		c.client = Pool.create(1, 10, new Pool.IPoolFactory<Client>() {
@@ -135,7 +142,7 @@ public class FileClient {
 		return c;
 	}
 
-	public boolean delete(String path, String filename, long age) {
+	public boolean delete(String filename, long age) {
 		if (client == null)
 			return false;
 
@@ -206,26 +213,29 @@ public class FileClient {
 
 		synchronized (cached) {
 
-			String[] ss = cached.keySet().toArray(new String[cached.size()]);
-
-			for (String name : ss) {
-				FileClient c1 = cached.get(name);
-				if (c1 == this) {
-					cached.remove(name);
-
-					log.debug("close the client, client=" + c1.client);
-
-					c1.client.destroy();
-					c1.client = null;
+			cached.remove(id);
+			client.destroy();
+//			String[] ss = cached.keySet().toArray(new String[cached.size()]);
+//
+//			for (String name : ss) {
+//				FileClient c1 = cached.get(name);
+//				if (c1 == this) {
+//					cached.remove(name);
+//
+//					log.debug("close the client, client=" + c1.client);
+//
+//					c1.client.destroy();
+//					c1.client = null;
 //					Client c2 = c1.client;
 //					if (c2 != null) {
 //						c1.client = null;
 //						c2.close();
 //					}
-				}
-			}
+//				}
+//		}
 
 		}
+
 	}
 
 	/**
@@ -237,7 +247,7 @@ public class FileClient {
 	 * @param len      the length
 	 * @return the bytes, or null{@code null} if the client not ready
 	 */
-	public byte[] get(String path, String filename, long offset, int len) {
+	public byte[] get(String filename, long offset, int len) {
 
 		if (client == null)
 			return null;
@@ -305,7 +315,7 @@ public class FileClient {
 		return null;
 	}
 
-	public long put(String path, String filename, long offset, byte[] bb, int len) throws IOException {
+	public long put(String filename, long offset, byte[] bb, int len) throws IOException {
 
 		if (client == null)
 			throw new IOException("client not inited");
@@ -371,7 +381,7 @@ public class FileClient {
 		}
 	}
 
-	public boolean mkdirs(String path, String filename) {
+	public boolean mkdirs(String filename) {
 		if (client == null)
 			return false;
 
@@ -432,7 +442,7 @@ public class FileClient {
 
 	}
 
-	public List<FileInfo> list(String path, String filename) {
+	public List<FileInfo> list(String filename) {
 
 		if (client == null)
 			return null;
@@ -509,7 +519,7 @@ public class FileClient {
 
 	}
 
-	public FileInfo info(String path, String filename) {
+	public FileInfo info(String filename) {
 
 		if (client == null)
 			return null;
@@ -578,15 +588,15 @@ public class FileClient {
 		return null;
 	}
 
-	public void close(String name) {
-		FileClient c = cached.remove(name);
-		if (c != null && c.client != null) {
-			c.client.destroy();
-			c.client = null;
-		}
-	}
+//	public void close(String name) {
+//		FileClient c = cached.remove(name);
+//		if (c != null && c.client != null) {
+//			c.client.destroy();
+//			c.client = null;
+//		}
+//	}
 
-	public boolean move(String path, String filename, String path2, String filename2) {
+	public boolean move(String filename, String filename2) {
 
 		if (client == null)
 			return false;
@@ -602,7 +612,7 @@ public class FileClient {
 			IoResponse r = c.createResponse();
 
 			r.write(ICommand.CMD_MOVE);
-			for (String s1 : new String[] { path, filename, path2, filename2 }) {
+			for (String s1 : new String[] { path, filename, path, filename2 }) {
 				byte[] b = s1.getBytes();
 				r.write(b.length);
 				r.write(b);
@@ -808,7 +818,7 @@ public class FileClient {
 
 	public static void main(String[] args) throws Exception {
 
-		FileClient c = FileClient.get("tcp://g14:9099");
+		FileClient c = FileClient.get("tcp://g14:9099", "/Users/joe/d/temp");
 
 		// System.out.println(c.info("/Users/joe/d/temp", "/"));
 		//

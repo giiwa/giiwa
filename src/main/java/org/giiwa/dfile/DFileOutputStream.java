@@ -59,7 +59,7 @@ import org.giiwa.net.nio.IoRequest;
 	@Override
 	public void flush() throws IOException {
 		if (pos > 0) {
-			offset = FileClient.get(url).put(path, filename, offset, bb, pos);
+			offset = FileClient.get(url, path).put(filename, offset, bb, pos);
 			pos = 0;
 		}
 	}
