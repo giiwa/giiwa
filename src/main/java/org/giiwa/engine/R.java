@@ -143,10 +143,8 @@ public class R extends IStub {
 
 			// save to file
 			try {
-				sb.append(func + "<-function(){");
 
 				Temp temp = null;
-
 				if (!X.isEmpty(data)) {
 					temp = Temp.create("data");
 
@@ -155,6 +153,8 @@ public class R extends IStub {
 						sb.append(s1);
 					}
 				}
+
+				sb.append(func + "<-function(){");
 
 				sb.append(code).append("};" + func + "();");
 
@@ -182,6 +182,7 @@ public class R extends IStub {
 			} finally {
 
 				c.eval("rm(" + func + ")");
+				c.eval("rm(" + dataname + ")");
 //				c.eval("rm(" + func + ", " + dataname + ")");
 
 			}

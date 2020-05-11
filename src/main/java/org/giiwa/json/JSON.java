@@ -708,7 +708,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		j1 = JSON.create();
 		j1.append("a", 1);
 		j1.append("x.b", 2);
-		s = "$a a$x.b aa";
+		s = "$a a$$x.b aa";
 		System.out.println("s=" + s);
 		s = j1.parse(s);
 		System.out.println("s=" + s);
@@ -1170,6 +1170,10 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	}
 
 	public String parse(String template) {
+
+		log.debug("template=" + template);
+		log.debug("json=" + this.toString());
+
 		StringFinder sf = StringFinder.create(template);
 		while (sf.find("$") >= 0) {
 			sf.skip(1);
@@ -1182,6 +1186,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 					sf.skip(-1);
 					sf.replace("\\$" + name, o.toString());
 				}
+			} else {
+				sf.reset();
 			}
 		}
 		return sf.toString();
