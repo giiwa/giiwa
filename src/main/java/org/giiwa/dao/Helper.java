@@ -1706,21 +1706,21 @@ public class Helper implements Serializable {
 			}
 
 			private List<Object> args(List<Object> list) {
-				if (value != null) {
-					if (value instanceof Object[]) {
-						for (Object o : (Object[]) value) {
-							list.add(o);
-						}
-					} else if (op == OP.like) {
-						list.add("%" + value + "%");
-					} else if (op == OP.like_) {
-						list.add(value + "%");
-					} else if (op == OP.like_$) {
-						list.add("%" + value);
-					} else {
-						list.add(value);
+//				if (value != null) {
+				if (value instanceof Object[]) {
+					for (Object o : (Object[]) value) {
+						list.add(o);
 					}
+				} else if (op == OP.like) {
+					list.add("%" + value + "%");
+				} else if (op == OP.like_) {
+					list.add(value + "%");
+				} else if (op == OP.like_$) {
+					list.add("%" + value);
+				} else {
+					list.add(value);
 				}
+//				}
 
 				return list;
 			}
@@ -3543,6 +3543,13 @@ public class Helper implements Serializable {
 
 		System.out.println(q.toString());
 
+		q = W.create();
+		q.and("a", "1").and("b", null);
+
+		q = W.create();
+		q.and("a>=1").and("a>'1'");
+		System.out.println("q=" + q);
+		
 	}
 
 	/**

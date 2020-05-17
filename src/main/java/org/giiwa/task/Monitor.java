@@ -42,8 +42,30 @@ public class Monitor {
 	 * @return the long
 	 */
 	public static long start(Task t, long ms) {
+		return start(t, ms, X.EMPTY);
+	}
+
+	public static long start(Task t) {
+		return start(t, 0, X.EMPTY);
+	}
+
+	public static long start(Task t, String access) {
+		return start(t, 0, X.EMPTY);
+	}
+
+	/**
+	 * start a task in monitor
+	 * 
+	 * @param t the task
+	 * @param 
+	 * @param access
+	 * @return
+	 */
+	public static long start(Task t, long ms, String access) {
+
 		long tid = UID.next("monitor.id");
 		t.attach("tid", tid);
+		t.attach("access", access);
 		flush(t);
 
 		t.schedule(ms);
@@ -62,6 +84,8 @@ public class Monitor {
 		Field[] fs = t.getClass().getDeclaredFields();
 		if (fs != null) {
 			JSON jo = JSON.create();
+			jo.put("_access", t.attach("access"));
+			
 			for (Field f : fs) {
 				int p = f.getModifiers();
 				if ((p & Modifier.TRANSIENT) != 0 || (p & Modifier.STATIC) != 0 || (p & Modifier.FINAL) != 0)
@@ -88,12 +112,22 @@ public class Monitor {
 	 * @return the json
 	 */
 	public static JSON get(long tid) {
+		return get(tid, X.EMPTY);
+	}
+
+	/**
+	 * get the state with the access
+	 * @param tid
+	 * @param access
+	 * @return
+	 */
+	public static JSON get(long tid, String access) {
 
 		String name = _name(tid);
 
 		Object t = Cache.get(name);
 		if (t != null) {
-			if (t instanceof JSON) {
+			if (t instanceof JSON && X.isSame(access, ((JSON)t).get("_access"))) {
 //				Cache.remove(name);
 				return (JSON) t;
 			}

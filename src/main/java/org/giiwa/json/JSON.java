@@ -82,7 +82,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * @param lenient the boolean of JsonReader.setLenient(lenient)
 	 * @return the json
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes", "restriction" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static JSON fromObject(Object json, boolean lenient) {
 
 		JSON j = null;
@@ -202,7 +202,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * @param jsons the jsons
 	 * @return the list
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked", "restriction" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static List<JSON> fromObjects(Object jsons) {
 		List list = null;
 		if (jsons instanceof Collection) {
@@ -1124,7 +1124,6 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return this;
 	}
 
-	@SuppressWarnings("restriction")
 	public JSON scan(jdk.nashorn.api.scripting.ScriptObjectMirror m) {
 		return this.scan((p, e) -> {
 			m.call(p, e);
@@ -1135,16 +1134,40 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return this;
 	}
 
+	/**
+	 * @deprecated
+	 */
 	transient JSON _test;
 
+	/**
+	 * @deprecated
+	 * @param name
+	 * @param display
+	 * @return
+	 */
 	public Object test(String name, String display) {
 		return test(name, display, null, null);
 	}
 
+	/**
+	 * @deprecated
+	 * @param name
+	 * @param display
+	 * @param defaultvalue
+	 * @return
+	 */
 	public Object test(String name, String display, Object defaultvalue) {
 		return test(name, display, defaultvalue, null);
 	}
 
+	/**
+	 * @deprecated
+	 * @param name
+	 * @param display
+	 * @param defaultvalue
+	 * @param options
+	 * @return
+	 */
 	public Object test(String name, String display, Object defaultvalue, String options) {
 
 		if (_test == null)
@@ -1159,6 +1182,10 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return defaultvalue;
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public List<JSON> test() {
 		List<JSON> l1 = JSON.createList();
 		if (_test != null) {

@@ -68,13 +68,13 @@ public class Client implements Closeable {
 
 					log.warn("idle, server=" + server);
 
-					if (error != null) {
-						error.accept(new Exception("inactive"));
-					}
-					if (session != null) {
-						session.close();
-						session = null;
-					}
+//					if (error != null) {
+//						error.accept(new Exception("inactive"));
+//					}
+//					if (session != null) {
+//						session.close();
+//						session = null;
+//					}
 
 				}
 

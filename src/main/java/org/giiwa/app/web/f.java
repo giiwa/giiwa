@@ -22,6 +22,7 @@ import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.task.Monitor;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
@@ -407,4 +408,23 @@ public class f extends Controller {
 			X.close(in);
 		}
 	}
+
+	/**
+	 * check the task state in monitor<br>
+	 * #/f/t/state?id=&access=
+	 * 
+	 */
+	@Path(path = "t/state", login = true)
+	public void t_state() {
+
+		long id = this.getLong("id");
+		String access = this.get("access");
+		if (X.isEmpty(access))
+			access = X.EMPTY;
+
+		JSON jo = Monitor.get(id, access);
+		this.send(JSON.create().append(X.STATE, 200).append("data", jo));
+
+	}
+
 }
