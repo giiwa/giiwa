@@ -427,6 +427,14 @@ public class R extends IStub {
 
 //			System.out.println(t1.toPrettyString());
 
+			StringBuilder sb = new StringBuilder();
+			sb.append("library(randomForest)\n");
+			sb.append("f <- randomForest(mpg ~ hp + cyl + disp, data = mtcars)\n");
+			sb.append("print(importance(f))");
+
+			j1 = inst.run(sb.toString());
+			System.out.println(j1);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

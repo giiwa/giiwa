@@ -65,12 +65,6 @@
 								"name": "menu.sysinfo",
 								"load": "/admin/sysinfo/cpu",
 								"seq": 20,
-								"classes": "icon-info"
-							},
-							{
-								"name": "menu.sysstat",
-								"load": "/admin/sysstat/cpu",
-								"seq": 30,
 								"classes": "icon-stats-dots"
 							},
 							{
@@ -84,12 +78,6 @@
 								"load": "/admin/dfile/disk",
 								"seq": 50,
 								"classes": "icon-drawer"
-							},
-							{
-								"name": "menu.counter",
-								"load": "/admin/counter",
-								"seq": 60,
-								"classes": "icon-trending-up"
 							},
 							{
 								"name": "menu.database",
