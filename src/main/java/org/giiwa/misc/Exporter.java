@@ -30,17 +30,17 @@ public class Exporter<V> {
 	public static <V> Exporter<V> create(File file, FORMAT format) {
 		try {
 			file.getParentFile().mkdirs();
-			return create(new FileOutputStream(file), format);
+			return create(new FileOutputStream(file, true), format, !file.exists());
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage(), e);
 		}
 		return null;
 	}
 
-	public static <V> Exporter<V> create(OutputStream out, FORMAT format) {
+	public static <V> Exporter<V> create(OutputStream out, FORMAT format, boolean init) {
 
 		try {
-			if (FORMAT.csv == format) {
+			if (init && FORMAT.csv == format) {
 				// BOM, UTF-8
 				out.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });
 			}
