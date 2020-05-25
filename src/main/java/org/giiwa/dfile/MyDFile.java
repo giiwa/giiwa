@@ -154,9 +154,11 @@ public class MyDFile extends DFile {
 	}
 
 	public MyDFile getParentFile() {
-		int i = filename.lastIndexOf("/");
+		int i = filename.lastIndexOf("/", filename.length() - 1);
 		if (i > 0) {
 			return create(disk_obj, filename.substring(0, i));
+		} else if (i == 0) {
+			return create(disk_obj, "/");
 		} else {
 			return null;
 		}
