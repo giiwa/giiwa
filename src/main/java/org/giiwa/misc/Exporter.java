@@ -29,8 +29,12 @@ public class Exporter<V> {
 
 	public static <V> Exporter<V> create(File file, FORMAT format) {
 		try {
-			file.getParentFile().mkdirs();
-			return create(new FileOutputStream(file, true), format, !file.exists());
+			if (file.exists()) {
+				return create(new FileOutputStream(file, true), format, false);
+			} else {
+				file.getParentFile().mkdirs();
+				return create(new FileOutputStream(file), format, true);
+			}
 		} catch (FileNotFoundException e) {
 			log.error(e.getMessage(), e);
 		}
