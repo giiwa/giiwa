@@ -636,7 +636,7 @@ public class Language {
 			duration %= 1000;
 			i++;
 		}
-		if (duration > 0 && i < 2) {
+		if (duration > 0 && i < 1) {
 			sb.append(duration).append(get("time.ms"));
 			i++;
 		}
