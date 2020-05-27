@@ -249,6 +249,7 @@ time.d=天
 time.h=小时
 time.m=分
 time.s=秒
+time.ms=
 register.deny=禁止注册
 register.user=用户注册
 restart.required=请稍后重启服务

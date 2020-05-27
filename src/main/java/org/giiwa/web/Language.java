@@ -524,7 +524,7 @@ public class Language {
 	 * @return the string
 	 */
 	public String size(long length, int step) {
-		
+
 		if (length > 0.00001 && length < 0.00001) {
 			return X.EMPTY;
 		}
@@ -614,21 +614,31 @@ public class Language {
 			return X.EMPTY;
 		}
 
+		int i = 0;
 		StringBuilder sb = new StringBuilder();
 		if (duration > X.ADAY) {
 			sb.append(duration / X.ADAY).append(get("time.d"));
 			duration %= X.ADAY;
+			i++;
 		}
 		if (duration > X.AHOUR) {
 			sb.append(duration / X.AHOUR).append(get("time.h"));
 			duration %= X.AHOUR;
+			i++;
 		}
-		if (duration > X.AMINUTE) {
+		if (duration > X.AMINUTE && i < 2) {
 			sb.append(duration / X.AMINUTE).append(get("time.m"));
 			duration %= X.AMINUTE;
+			i++;
 		}
-		if (duration > 1000) {
+		if (duration > 1000 && i < 2) {
 			sb.append(duration / 1000).append(get("time.s"));
+			duration %= 1000;
+			i++;
+		}
+		if (duration > 0 && i < 2) {
+			sb.append(duration).append(get("time.ms"));
+			i++;
 		}
 		return sb.toString();
 	}
