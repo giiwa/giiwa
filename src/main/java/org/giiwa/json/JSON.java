@@ -40,6 +40,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.dao.X;
+import org.giiwa.dao.BeanAdapter;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
@@ -82,7 +83,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * @param lenient the boolean of JsonReader.setLenient(lenient)
 	 * @return the json
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked", "rawtypes", "restriction" })
 	public static JSON fromObject(Object json, boolean lenient) {
 
 		JSON j = null;
@@ -105,7 +106,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 				String s1 = ((String) json).trim();
 
 				if (!X.isEmpty(s1) && s1.charAt(0) == '{') {
-					Gson g = new Gson();
+					Gson g = _gson();
 					JsonReader reader = new JsonReader(new StringReader(s1));
 					reader.setLenient(lenient);
 					j = g.fromJson(reader, JSON.class);
@@ -123,20 +124,20 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 					}
 				}
 			} else if (json instanceof InputStream) {
-				Gson g = new Gson();
+				Gson g = _gson();
 				j = g.fromJson(new InputStreamReader((InputStream) json), JSON.class);
 			} else if (json instanceof File) {
 				try {
-					Gson g = new Gson();
+					Gson g = _gson();
 					j = g.fromJson(new FileReader((File) json), JSON.class);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
 			} else if (json instanceof Reader) {
-				Gson g = new Gson();
+				Gson g = _gson();
 				j = g.fromJson((Reader) json, JSON.class);
 			} else if (json instanceof byte[]) {
-				Gson g = new Gson();
+				Gson g = _gson();
 				byte[] b1 = (byte[]) json;
 				JsonReader reader = new JsonReader(new InputStreamReader(new ByteArrayInputStream(b1)));
 				reader.setLenient(lenient);
@@ -196,13 +197,17 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return j;
 	}
 
+	private static Gson _gson() {
+		return new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY).create();
+	}
+
 	/**
 	 * parse the jsons to array of JSON.
 	 *
 	 * @param jsons the jsons
 	 * @return the list
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked", "restriction" })
 	public static List<JSON> fromObjects(Object jsons) {
 		List list = null;
 		if (jsons instanceof Collection) {
@@ -211,7 +216,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 			list.addAll((Collection) jsons);
 
 		} else if (jsons instanceof String) {
-			Gson g = new Gson();
+			Gson g = _gson();
 			if (((String) jsons).startsWith("{")) {
 				list = JSON.createList();
 				list.add(JSON.fromObject(jsons));
@@ -219,21 +224,21 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 				list = g.fromJson((String) jsons, List.class);
 			}
 		} else if (jsons instanceof InputStream) {
-			Gson g = new Gson();
+			Gson g = _gson();
 			JsonReader reader = new JsonReader(new InputStreamReader((InputStream) jsons));
 			list = g.fromJson(reader, List.class);
 		} else if (jsons instanceof File) {
 			try {
-				Gson g = new Gson();
+				Gson g = _gson();
 				return g.fromJson(new FileReader((File) jsons), List.class);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		} else if (jsons instanceof Reader) {
-			Gson g = new Gson();
+			Gson g = _gson();
 			list = g.fromJson((Reader) jsons, List.class);
 		} else if (jsons instanceof byte[]) {
-			Gson g = new Gson();
+			Gson g = _gson();
 			byte[] b1 = (byte[]) jsons;
 			list = g.fromJson(new String(b1), List.class);
 		} else if (jsons instanceof ResultSet) {
@@ -310,20 +315,20 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	@SuppressWarnings("rawtypes")
 	public static <T> T fromObject(Object json, Class<T> t) {
 		if (json instanceof String) {
-			Gson g = new Gson();
+			Gson g = _gson();
 			return g.fromJson((String) json, t);
 		} else if (json instanceof File) {
 			try {
-				Gson g = new Gson();
+				Gson g = _gson();
 				return g.fromJson(new FileReader((File) json), t);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		} else if (json instanceof Reader) {
-			Gson g = new Gson();
+			Gson g = _gson();
 			return g.fromJson((Reader) json, t);
 		} else if (json instanceof byte[]) {
-			Gson g = new Gson();
+			Gson g = _gson();
 			byte[] b1 = (byte[]) json;
 			return g.fromJson(new String(b1), t);
 		} else if (json instanceof Map) {
@@ -382,12 +387,12 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * create a json string
 	 */
 	public String toString() {
-		Gson g = new Gson();
+		Gson g = _gson();
 		return g.toJson(this);
 	}
 
 	public String toPrettyString() {
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
+		Gson gson =  new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY).setPrettyPrinting().create();
 		return gson.toJson(this);
 	}
 
@@ -1124,6 +1129,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return this;
 	}
 
+	@SuppressWarnings("restriction")
 	public JSON scan(jdk.nashorn.api.scripting.ScriptObjectMirror m) {
 		return this.scan((p, e) -> {
 			m.call(p, e);

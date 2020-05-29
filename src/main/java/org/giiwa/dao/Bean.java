@@ -668,6 +668,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return true;
 	}
 
+	@SuppressWarnings({ "serial", "unused" })
 	public static void main(String[] args) {
 
 		try {
