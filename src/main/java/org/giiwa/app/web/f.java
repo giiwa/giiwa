@@ -60,7 +60,7 @@ public class f extends Controller {
 				String mime = Controller.getMimeType(f1.getName());
 				log.debug("mime=" + mime);
 
-				if (mime != null && mime.startsWith("image/")) {
+				if (mime != null && mime.startsWith("image/") && !f1.getName().endsWith(".webp")) {
 					String size = this.getString("size");
 					if (!X.isEmpty(size)) {
 						String[] ss = size.split("x");
