@@ -1,8 +1,8 @@
-package org.giiwa.dao;
+package org.giiwa.json;
 
 import java.io.IOException;
 
-import org.giiwa.json.JSON;
+import org.giiwa.dao.Bean;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -20,6 +20,7 @@ public class BeanAdapter extends TypeAdapter<Bean> {
 		public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
 			return (Bean.class.isAssignableFrom(type.getRawType()) ? (TypeAdapter<T>) new BeanAdapter(gson) : null);
 		}
+		
 	};
 
 	private final Gson context;

@@ -40,7 +40,6 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.dao.X;
-import org.giiwa.dao.BeanAdapter;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
