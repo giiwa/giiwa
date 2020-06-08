@@ -149,7 +149,7 @@ public class Repo {
 	public static Entity load(String id) {
 		try {
 			id = getId(id);
-			System.out.println("id=" + id);
+//			System.out.println("id=" + id);
 			return Entity.load(id, null);
 		} catch (Exception e) {
 			log.error(id, e);

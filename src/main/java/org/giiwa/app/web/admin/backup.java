@@ -31,9 +31,7 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.net.ftp.FTPClient;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
-import org.giiwa.bean.Repo;
 import org.giiwa.bean.Temp;
-import org.giiwa.bean.Repo.Entity;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
@@ -150,32 +148,43 @@ public class backup extends Controller {
 
 	@Path(path = "upload", login = true, access = "access.config.admin")
 	public void upload() {
+
 		String repo = this.getString("repo");
 
-		Entity e = Repo.load(repo);
+//		if (repo.startsWith("/f/g/")) {
+//			repo = repo.substring(4);
+//		}
+//
+//		Entity e = Repo.load(repo);
 
-		JSON jo = JSON.create();
+		DFile f = null;
+
 		try {
-			DFile f = Disk.seek(BackupTask.ROOT + "/" + e.getName());
 
-			if (f.exists()) {
-				f.delete();
+			f = Disk.getByUrl(repo);
+
+			DFile f1 = Disk.seek(BackupTask.ROOT + "/" + f.getName());
+
+			if (f1.exists()) {
+				f1.delete();
 			} else {
-				f.getParentFile().mkdirs();
+				f1.getParentFile().mkdirs();
 			}
-			IOUtil.copy(e.getInputStream(), f.getOutputStream());
+			IOUtil.copy(f.getInputStream(), f1.getOutputStream());
 
-			jo.put(X.STATE, 200);
+			this.send(200);
+			return;
 		} catch (Exception e1) {
+
 			log.error(e1.getMessage(), e1);
 			GLog.oplog.error(backup.class, "upload", e1.getMessage(), e1, login, this.ip());
-			jo.put(X.STATE, 201);
-			jo.put(X.MESSAGE, e1.getMessage());
-		} finally {
-			e.delete();
-		}
 
-		this.send(jo);
+			this.set(X.MESSAGE, e1.getMessage()).send(201);
+			return;
+		} finally {
+			if (f != null)
+				f.delete();
+		}
 
 	}
 
