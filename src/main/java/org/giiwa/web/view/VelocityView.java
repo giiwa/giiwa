@@ -17,9 +17,7 @@ package org.giiwa.web.view;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -35,22 +33,6 @@ import org.giiwa.web.Controller;
 public class VelocityView extends View {
 
 	private static Log log = LogFactory.getLog(VelocityView.class);
-
-	public VelocityView() {
-
-		try {
-			// TODO Auto-generated constructor stub
-			Properties p = new Properties();
-			p.setProperty("resource.default_encoding", "utf-8");
-			p.setProperty("output.encoding", "utf-8");
-			p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
-			p.setProperty("directive.set.null.allowed", "true");
-			p.setProperty("resource.loader.file.class", "org.giiwa.web.view.VelocityTemplateLoader");
-			Velocity.init(p);
-		} catch (Exception e) {
-			log.warn(e.getMessage(), e);
-		}
-	}
 
 	@SuppressWarnings("deprecation")
 	@Override

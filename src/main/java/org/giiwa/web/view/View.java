@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.velocity.app.Velocity;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
@@ -58,6 +60,20 @@ public abstract class View {
 	 * @param config the config
 	 */
 	public static void init(Map<String, String> config) {
+
+		try {
+
+			Properties p = new Properties();
+			p.setProperty("resource.default_encoding", "utf-8");
+			p.setProperty("output.encoding", "utf-8");
+			p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
+			p.setProperty("directive.set.null.allowed", "true");
+			p.setProperty("resource.loader.file.class", "org.giiwa.web.view.VelocityTemplateLoader");
+			Velocity.init(p);
+
+		} catch (Exception e) {
+			log.warn(e.getMessage(), e);
+		}
 
 		for (String name : config.keySet()) {
 			if (name.startsWith(".")) {
