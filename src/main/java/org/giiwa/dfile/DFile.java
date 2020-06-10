@@ -238,4 +238,18 @@ public abstract class DFile {
 
 	}
 
+	public void scan(Consumer<DFile> func) throws IOException {
+		DFile[] ff = this.listFiles();
+		if (ff != null && ff.length > 0 && func != null) {
+			for (DFile f1 : ff) {
+
+				func.accept(f1);
+
+				if (f1.isDirectory()) {
+					f1.scan(func);
+				}
+			}
+		}
+	}
+
 }

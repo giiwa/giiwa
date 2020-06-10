@@ -50,7 +50,7 @@ public class Monitor {
 	}
 
 	public static long start(Task t, String access) {
-		return start(t, 0, X.EMPTY);
+		return start(t, 0, access);
 	}
 
 	/**
@@ -129,7 +129,9 @@ public class Monitor {
 		if (t != null) {
 			if (t instanceof JSON && X.isSame(access, ((JSON)t).get("_access"))) {
 //				Cache.remove(name);
-				return (JSON) t;
+				JSON j1 = ((JSON) t).copy();
+				j1.remove("_access");
+				return j1;
 			}
 		}
 

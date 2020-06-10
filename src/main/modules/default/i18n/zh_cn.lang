@@ -885,6 +885,7 @@ disk.node.hint=存储设备所在的节点
 disk.count=文件数
 name.org.giiwa.bean.Disk=GI-分布式磁盘
 a.add.file=上传文件
+a.add.files=批量上传
 btn.upload.file=上传文件
 a.task.thread=线程列表
 thread.priority=优先级

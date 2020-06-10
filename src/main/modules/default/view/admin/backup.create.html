@@ -22,7 +22,7 @@
 		<tbody>
 		#foreach($t in $list)
 			<tr>
-				<td><label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!lang.get("name.$!t.name")</label></label></td>
+				<td><label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!t.display</label></label></td>
 				<td>$!t.name</td>
 				<td>$!t.table</td>
 				<td>$!t.size</td>

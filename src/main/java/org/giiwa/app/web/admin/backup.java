@@ -32,6 +32,7 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
+import org.giiwa.cache.Cache;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
@@ -208,17 +209,20 @@ public class backup extends Controller {
 			return;
 		}
 
-		List<Class<? extends Bean>> l1 = Schema.beans;
-		Map<String, JSON> l2 = new TreeMap<String, JSON>();
-		for (Class<? extends Bean> c : l1) {
-			String table = Helper.getTable(c);
-			if (!X.isEmpty(table) && !l2.containsKey(table)) {
-				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
-						Helper.count(W.create(), c));
-				l2.put(table, j);
-			}
-		}
-		this.set("list", l2.values());
+		//TODO
+		List<JSON> l2 = Cache.get("db.schema");
+//		List<Class<? extends Bean>> l1 = Schema.beans;
+//		Map<String, JSON> l2 = new TreeMap<String, JSON>();
+//		for (Class<? extends Bean> c : l1) {
+//			String table = Helper.getTable(c);
+//			if (!X.isEmpty(table) && !l2.containsKey(table)) {
+//				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+//						Helper.count(W.create(), c));
+//				l2.put(table, j);
+//			}
+//		}
+//		this.set("list", l2.values());
+		this.set("list", l2);
 		this.show("/admin/backup.create.html");
 
 	}

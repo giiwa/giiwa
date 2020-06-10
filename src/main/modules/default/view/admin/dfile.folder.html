@@ -65,6 +65,7 @@ td i.icon-image{
 		</td>
 		<td>$!lang.format($f1.lastModified(), 'yyyy-MM-dd HH:mm:ss')</td>
 		<td class="a">
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.download')" onclick="_download('$f1.id', '$!f1.filename')"><i class="icon-cloud_download"></i></a>
 			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.delete')" onclick="_delete('$f1.id', '$!f1.filename')"><i class="icon-cancel-circle"></i></a>
 		</td>
 	</tr>
@@ -74,12 +75,17 @@ td i.icon-image{
 
 <div class='btns'>
 	<a class='btn btn-primary' href="javascript:;" onclick="_addfile();">$lang.get('a.add.file')</a>
+	<a class='btn btn-success' href="javascript:;" onclick="_addfiles();">$lang.get('a.add.files')</a>
 </div>
 
 <div id="m$!requestid" style="display: none">
 	<div style="margin-bottom: 20px;">
 		<label>存储位置:<input type="text" name="name" value="$!f.filename"/></label>
 	</div>
+	<input type='hidden' name='repo'/>
+</div>
+
+<div id="ms$!requestid" style="display: none">
 	<input type='hidden' name='repo'/>
 </div>
 
@@ -99,7 +105,33 @@ function _addfile() {
 				msg_done : "$lang.get('msg.done')",
 				done : function(url, id) {
 						giiwa.processing.show();
-						$.post('/admin/dfile/file/add?__node=$!__node', {repo: id, f: p.find('input[name=name]').val()}, function(d){
+						$.post('/admin/dfile/file/add', {repo: id, f: p.find('input[name=name]').val()}, function(d){
+							giiwa.processing.hide();
+							giiwa.reload();
+						})
+						giiwa.dialog().close();
+					}
+				})
+			}
+		})
+}
+
+function _addfiles() {
+	
+	giiwa.dialog($("#ms$!requestid"), {
+		width: 350,
+		height: 150,
+		prepare: function(p){
+			p.find('input[name=repo]').upload({
+				caption : "$lang.get('btn.upload.file')",
+				btn_resume : "$lang.get('btn.resume')",
+				btn_delete : "$lang.get('btn.delete')",
+				btn_cancel : "$lang.get('btn.cancel')",
+				msg_stop : "$lang.get('msg.stop')",
+				msg_done : "$lang.get('msg.done')",
+				done : function(url, id) {
+						giiwa.processing.show();
+						$.post('/admin/dfile/file/batch', {repo: id}, function(d){
 							giiwa.processing.hide();
 							giiwa.reload();
 						})
@@ -113,12 +145,52 @@ function _addfile() {
 function _delete(id, filename) {
 	if(confirm(filename + ", $lang.get('title.are_u_sure_delete')")) {
 		giiwa.processing.show();
-		$.post("/admin/dfile/file/delete?__node=$!__node", {id:id, f:filename}, function(d){
+		$.post("/admin/dfile/file/delete", {id:id, f:filename}, function(d){
 			giiwa.processing.hide();
 			giiwa.hint(d.message);
 			giiwa.reload();
 		})
 	}
 }
+
+function _checking(uri) {
+	$.get(uri, function(d){
+		if(d.data) {
+			if(d.data.state == 200) {
+				giiwa.download(d.data.uri);
+			} else if(d.data.state == 201) {
+				if(d.data.message)
+					giiwa.hint(d.data.message);
+				
+				setTimeout(function(){
+					_checking(uri);				
+				}, 3000);
+			} else {
+				giiwa.error(d.data.message);
+			}
+		} else {
+			setTimeout(function(){
+				_checking(uri);				
+			}, 3000);
+		}
+	});
+}
+
+function _download(id, filename) {
+	giiwa.processing.show();
+	$.post("/admin/dfile/file/download", {id:id, f:filename}, function(d){
+		giiwa.processing.hide();
+		if(d.state == 200) {
+			if(d.checking) {
+				_checking(d.checking);
+			} else if(d.uri) {
+				giiwa.download(d.uri);
+			}
+		} else {
+			giiwa.error(d.message);
+		}
+	})
+}
+
 </script>
 
