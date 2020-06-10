@@ -181,7 +181,7 @@ public class f extends Controller {
 	@Path(path = "upload", login = true)
 	public void upload() {
 
-		String tag = this.get("tag");
+		String path = this.get("path");
 
 		JSON jo = new JSON();
 
@@ -200,7 +200,7 @@ public class f extends Controller {
 			if (X.isEmpty(filename)) {
 				filename = file.getName();
 			}
-			_store(file, filename, jo);
+			_store(file, path, filename, jo);
 		} else {
 			jo.append(X.STATE, HttpServletResponse.SC_BAD_REQUEST).append(X.ERROR, HttpServletResponse.SC_BAD_REQUEST)
 					.append(X.MESSAGE, lang.get("upload.notfound"));
@@ -210,11 +210,11 @@ public class f extends Controller {
 		// * test
 		// */
 		// jo.put("error", "error");
-		this.send(jo.append("tag", tag));
+		this.send(jo.append("path", path));
 
 	}
 
-	private boolean _store(FileItem file, String filename, JSON jo) {
+	private boolean _store(FileItem file, String path, String filename, JSON jo) {
 //		String tag = this.getString("tag");
 
 		try {
@@ -253,7 +253,7 @@ public class f extends Controller {
 			if (log.isDebugEnabled())
 				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
 
-			Repo.Entity e1 = Repo.get(id, filename);
+			Repo.Entity e1 = Repo.get(id, path, filename);
 
 			long pos = e1.store(position, file.getInputStream(), total);
 			// Repo.append(id, filename, position, total,file.getInputStream(),

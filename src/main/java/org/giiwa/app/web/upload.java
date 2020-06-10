@@ -115,7 +115,7 @@ public class upload extends Controller {
 			if (log.isDebugEnabled())
 				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
 
-			long pos = Repo.append(id, filename, position, total, file.getInputStream(), login.getId(),
+			long pos = Repo.append(id, null, filename, position, total, file.getInputStream(), login.getId(),
 					this.ip());
 			if (pos >= 0) {
 				if (jo == null) {

@@ -59,11 +59,11 @@ public class Repo {
 	 * @return the repo id
 	 * @throws IOException the ioexception
 	 */
-	public static String append(String filename, InputStream in) throws IOException {
+	public static String append(String path, String filename, InputStream in) throws IOException {
 		try {
 			String id = UID.id(filename, System.currentTimeMillis(), UID.random());
 
-			append(id, filename, 0, in.available(), in, -1, null);
+			append(id, path, filename, 0, in.available(), in, -1, null);
 
 			return id;
 		} catch (Exception e) {
@@ -86,9 +86,9 @@ public class Repo {
 	 * @return the long
 	 * @throws Exception
 	 */
-	public static long append(String id, String filename, long position, long total, InputStream in, long uid,
-			String ip) throws Exception {
-		Entity e = Entity.load(id, filename);
+	public static long append(String id, String path, String filename, long position, long total, InputStream in,
+			long uid, String ip) throws Exception {
+		Entity e = Entity.load(id, path, filename);
 		return e.store(position, in, total);
 	}
 
@@ -150,7 +150,7 @@ public class Repo {
 		try {
 			id = getId(id);
 //			System.out.println("id=" + id);
-			return Entity.load(id, null);
+			return Entity.load(id, null, null);
 		} catch (Exception e) {
 			log.error(id, e);
 		}
@@ -239,14 +239,14 @@ public class Repo {
 			}
 		}
 
-		private static Entity load(String id, String name) throws Exception {
+		private static Entity load(String id, String path, String name) throws Exception {
 
 			Entity e = dao.load(id);
 			if (e == null) {
 				V v = V.create();
 				v.append(X.ID, id);
 				v.append("name", name);
-				v.append("path", path(id));
+				v.append("path", path(id, path));
 
 				dao.insert(v);
 				e = dao.load(id);
@@ -336,7 +336,10 @@ public class Repo {
 
 	}
 
-	static private String path(String id) {
+	static private String path(String id, String path) {
+		if (X.isEmpty(path)) {
+			return path + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss/");
+		}
 		return ROOT + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss/");
 	}
 
@@ -380,8 +383,8 @@ public class Repo {
 		System.out.println(e.id);
 	}
 
-	public static Entity get(String id, String filename) throws Exception {
-		return Entity.load(id, filename);
+	public static Entity get(String id, String path, String filename) throws Exception {
+		return Entity.load(id, path, filename);
 	}
 
 }
