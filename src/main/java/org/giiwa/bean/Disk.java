@@ -486,8 +486,8 @@ public class Disk extends Bean {
 					if (!f.exists()) {
 						f.mkdirs();
 					}
-					Disk.create(V.create("path", f.getCanonicalPath()).append("enabled", 1).append("priority", 1)
-							.append("node", Local.id()));
+					Disk.create(V.create("path", f.getCanonicalPath()).append("type", "data").append("enabled", 1)
+							.append("priority", 1).append("node", Local.id()));
 
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
