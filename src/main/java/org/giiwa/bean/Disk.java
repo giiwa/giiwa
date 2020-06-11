@@ -442,9 +442,7 @@ public class Disk extends Bean {
 
 		if (X.isEmpty(d1) || System.currentTimeMillis() - d1.created > X.AMINUTE) {
 			W q = W.create().and("enabled", 1).sort("priority", -1).sort("path", 1);
-			if (type == TYPE_DATA) {
-				q.and(W.create("type", null).or("type", TYPE_DATA));
-			} else if (type != TYPE_ALL) {
+			if (type != TYPE_ALL) {
 				q.and("type", type);
 			}
 

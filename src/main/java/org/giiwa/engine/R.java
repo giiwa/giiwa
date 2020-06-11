@@ -173,6 +173,8 @@ public class R extends IStub {
 					temp.delete();
 				}
 
+//				System.out.println(r2J2(x));
+
 				Object s1 = r2J(x);
 				return JSON.create().append("data", s1);
 			} catch (RserveException re) {
@@ -325,6 +327,83 @@ public class R extends IStub {
 
 	}
 
+	private String r2J2(REXP x) throws REXPMismatchException {
+
+		if (x instanceof REXPDouble) {
+			double[] d1 = x.asDoubles();
+
+			if (d1.length == 1) {
+				if (Double.isNaN(d1[0]))
+					return x.asString();
+				return Double.toString(d1[0]);
+			}
+
+			return X.asList(d1, e -> e).toString();
+		}
+
+		if (x instanceof REXPInteger) {
+			int[] ii = x.asIntegers();
+			if (ii.length == 1)
+				return Integer.toString(ii[0]);
+
+			return X.asList(ii, e -> e).toString();
+		}
+
+		if (x instanceof REXPLogical || x instanceof REXPRaw || x instanceof REXPString || x instanceof REXPSymbol) {
+			String[] ss = x.asStrings();
+			if (ss == null || ss.length == 0) {
+				return null;
+			} else if (ss.length == 1) {
+				return ss[0];
+			} else {
+				return Arrays.asList(ss).toString();
+			}
+		}
+
+		if (x instanceof REXPGenericVector) {
+			REXPGenericVector x1 = (REXPGenericVector) x;
+
+			RList r1 = x1.asList();
+			List<Object> l2 = new ArrayList<Object>();
+			for (int i = 0; i < r1.size(); i++) {
+				Object o = r1.get(i);
+				if (o instanceof REXP) {
+					l2.add(r2J2((REXP) o));
+				}
+			}
+			return l2.toString();
+		}
+
+		if (x instanceof REXPList) {
+			REXPList x1 = (REXPList) x;
+
+			RList r1 = x1.asList();
+			List<Object> l2 = new ArrayList<Object>();
+			for (int i = 0; i < r1.size(); i++) {
+				Object o = r1.get(i);
+//				System.out.println("o=" + o);
+				if (o instanceof REXP) {
+					l2.add(r2J2((REXP) o));
+				}
+			}
+			return l2.toString();
+		}
+
+		if (x instanceof REXPNull) {
+			return null;
+		}
+
+		String[] ss = x.asStrings();
+		if (ss == null || ss.length == 0) {
+			return null;
+		} else if (ss.length == 1) {
+			return ss[0];
+		} else {
+			return Arrays.asList(ss).toString();
+		}
+
+	}
+
 	private static RConnection conn = null;
 
 //	private static Pool<RConnection> pool = null;
@@ -428,12 +507,19 @@ public class R extends IStub {
 //			System.out.println(t1.toPrettyString());
 
 			StringBuilder sb = new StringBuilder();
-			sb.append("library(randomForest)\n");
-			sb.append("f <- randomForest(mpg ~ hp + cyl + disp, data = mtcars)\n");
-			sb.append("print(importance(f))");
+			sb.append("m1 <- read.csv('/Users/joe/d/temp/data',header=T,stringsAsFactors=TRUE);\n");
+			sb.append("library(vegan)\n");
+			sb.append("a <- vegdist(m1, method = 'bray')\n");
+			sb.append("a <- anosim(a, m1$mpg, permutations = 999)\n");
+			sb.append("print(a)");
 
 			j1 = inst.run(sb.toString());
 			System.out.println(j1);
+
+			List l3 = (List) j1.get("data");
+			for (int i = 0; i < l3.size(); i++) {
+				System.out.println(i + "=> " + l3.get(i));
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
