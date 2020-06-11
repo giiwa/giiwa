@@ -1091,6 +1091,40 @@ public class Helper implements Serializable {
 			return this;
 		}
 
+		public String toSQL() {
+
+			StringBuilder sql = new StringBuilder();
+
+			this.sql(sql);
+
+			return sql.toString();
+		}
+
+		void sql(StringBuilder sql) {
+
+			StringBuilder sb = new StringBuilder();
+			for (W clause : queryList) {
+				if (sb.length() > 0) {
+					if (clause.getCondition() == AND) {
+						sb.append(" and ");
+					} else if (clause.getCondition() == OR) {
+						sb.append(" or ");
+					}
+				}
+//				clause.where(tansfers);
+				if (clause instanceof Entity) {
+					clause.sql(sb);
+				} else {
+					sb.append("(");
+					clause.sql(sb);
+					sb.append(")");
+				}
+			}
+//			sql.append("(").append(sb.toString()).append(")");
+			sql.append(sb.toString());
+
+		}
+
 		/**
 		 * and a SQL
 		 * 
@@ -1807,6 +1841,38 @@ public class Helper implements Serializable {
 			 */
 			public Entity copy() {
 				return new Entity(this, name, value, op, cond, boost);
+			}
+
+			public void sql(StringBuilder sql) {
+
+				if (value == null)
+					return;
+
+				sql.append(name);
+
+				if (op == OP.eq) {
+					sql.append("=");
+				} else if (op == OP.gt) {
+					sql.append(">");
+				} else if (op == OP.gte) {
+					sql.append(">=");
+				} else if (op == OP.lt) {
+					sql.append("<");
+				} else if (op == OP.lte) {
+					sql.append("<=");
+				} else if (op == OP.like || op == OP.like_ || op == OP.like_$) {
+					sql.append(" like ");
+				} else if (op == OP.neq) {
+					sql.append(" <> ");
+				}
+
+				if (value instanceof String) {
+					sql.append("'").append(value).append("'");
+				} else {
+					sql.append(value);
+				}
+
+//				return sb.toString();
 			}
 
 			public String where(Map<String, String> tansfers) {
@@ -3548,8 +3614,18 @@ public class Helper implements Serializable {
 
 		q = W.create();
 		q.and("a>=1").and("a>'1'");
-		System.out.println("q=" + q);
-		
+		System.out.println("q=" + q.toString());
+
+		q.and(W.create("b", 1).or("b", 2));
+
+		q.sort("a").sort("b", -1);
+		String sql = q.toSQL();
+		System.out.println("sql=" + sql);
+		q = W.create();
+		q.and(sql);
+		sql = q.toSQL();
+		System.out.println("sql=" + sql);
+
 	}
 
 	/**
