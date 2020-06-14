@@ -333,9 +333,10 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param src the source Bean
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public T copy(Bean src) {
 		try {
-			return (T)src.clone();
+			return (T) src.clone();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

@@ -14,10 +14,13 @@
 */
 package org.giiwa.bean;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
+import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Module;
 
@@ -37,6 +40,8 @@ public class GLog extends Bean {
 	private static final long serialVersionUID = 1L;
 
 	public static final BeanDAO<String, GLog> dao = BeanDAO.create(GLog.class);
+
+	private static final Log log = LogFactory.getLog(GLog.class);
 
 	public static final int TYPE_SECURITY = 0;
 	public static final int TYPE_APP = 1;
@@ -297,6 +302,14 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void error(String model, String op, String message, Throwable e) {
+
+			if (e instanceof OutOfMemoryError) {
+				Task.schedule(() -> {
+					log.error("restart as outofmemory", e);
+					System.exit(0);
+				}, 5000);
+			}
+
 			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
 					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), null, null);
 		}
@@ -309,6 +322,14 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void error(Class<? extends Controller> model, String op, String message, Throwable e) {
+
+			if (e instanceof OutOfMemoryError) {
+				Task.schedule(() -> {
+					log.error("restart as outofmemory", e);
+					System.exit(0);
+				}, 5000);
+			}
+
 			error(Module.shortName(model), op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
 					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), null, null);
 		}
@@ -499,6 +520,15 @@ public class GLog extends Bean {
 		public void error(String model, String op, String message, Throwable e, User u, String ip) {
 			if (!isEnabled(model))
 				return;
+
+			if (e instanceof OutOfMemoryError) {
+				Task.schedule(() -> {
+
+					log.error("restart as outofmemory", e);
+
+					System.exit(0);
+				}, 5000);
+			}
 
 			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
 					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);

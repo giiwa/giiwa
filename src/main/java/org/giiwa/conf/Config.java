@@ -56,7 +56,8 @@ public final class Config {
 	public static void initLog() {
 
 		if (confFile != null && new File(confFile.getParent() + File.separator + "log4j.properties").exists()) {
-			PropertyConfigurator.configure(confFile.getParent() + File.separator + "log4j.properties");
+			PropertyConfigurator.configureAndWatch(confFile.getParent() + File.separator + "log4j.properties",
+					X.AMINUTE);
 		} else {
 			Properties prop = new Properties();
 			prop.setProperty("log4j.rootLogger", "error, stdout");
