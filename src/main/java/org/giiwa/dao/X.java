@@ -325,7 +325,11 @@ public final class X {
 	 * @return float
 	 */
 	public static float toFloat(Object v) {
-		return toFloat(v, 0);
+		return toFloat(v, 0, -1);
+	}
+
+	public static float toFloat(Object v, float defaultValue) {
+		return toFloat(v, defaultValue, -1);
 	}
 
 	/**
@@ -335,12 +339,12 @@ public final class X {
 	 * @param defaultValue the default value
 	 * @return float
 	 */
-	public static float toFloat(Object v, float defaultValue) {
+	public static float toFloat(Object v, float defaultValue, int precision) {
 		if (v != null) {
 			if (v instanceof Number) {
 				float f = ((Number) v).floatValue();
 				if (f == f)
-					return f;
+					return precision < 1 ? f : ((long) (f * precision)) / precision;
 
 				return defaultValue;
 			}
@@ -350,7 +354,7 @@ public final class X {
 			try {
 				float f = Float.parseFloat(s);
 				if (f == f)
-					return f;
+					return precision < 1 ? f : ((long) (f * precision)) / precision;
 
 				return defaultValue;
 			} catch (Exception e) {
@@ -384,7 +388,7 @@ public final class X {
 						if (f1 instanceof Number) {
 							float f2 = ((Number) f1).floatValue();
 							if (f2 == f2)
-								return f2;
+								return precision < 1 ? f2 : ((long) (f2 * precision)) / precision;
 
 							return defaultValue;
 						}
@@ -392,7 +396,7 @@ public final class X {
 					} else {
 						float f2 = Float.parseFloat(s);
 						if (f2 == f2)
-							return f2;
+							return precision < 1 ? f2 : ((long) (f2 * precision)) / precision;
 
 						return defaultValue;
 					}
@@ -435,7 +439,7 @@ public final class X {
 	 * @return the double result
 	 */
 	public static double toDouble(Object v) {
-		return toDouble(v, 0);
+		return toDouble(v, 0, -1);
 	}
 
 	/**
@@ -446,12 +450,15 @@ public final class X {
 	 * @return the double
 	 */
 	public static double toDouble(Object v, double defaultValue) {
+		return toDouble(v, defaultValue, -1);
+	}
 
+	public static double toDouble(Object v, double defaultValue, long precision) {
 		if (v != null) {
 			if (v instanceof Number) {
 				double d = ((Number) v).doubleValue();
 				if (d == d)
-					return d;
+					return precision < 1 ? d : ((long) (d * precision)) / precision;
 				return defaultValue;
 			}
 
@@ -460,7 +467,7 @@ public final class X {
 			try {
 				double d = Double.parseDouble(s);
 				if (d == d)
-					return d;
+					return precision < 1 ? d : ((long) (d * precision)) / precision;
 				return defaultValue;
 			} catch (Exception e) {
 				// ignore
@@ -493,14 +500,14 @@ public final class X {
 						if (f1 instanceof Number) {
 							double d = ((Number) f1).doubleValue();
 							if (d == d)
-								return d;
+								return precision < 1 ? d : ((long) (d * precision)) / precision;
 							return defaultValue;
 						}
 
 					} else {
 						double d = Double.parseDouble(s);
 						if (d == d)
-							return d;
+							return precision < 1 ? d : ((long) (d * precision)) / precision;
 
 						return defaultValue;
 					}
