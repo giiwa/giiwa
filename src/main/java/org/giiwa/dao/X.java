@@ -338,13 +338,21 @@ public final class X {
 	public static float toFloat(Object v, float defaultValue) {
 		if (v != null) {
 			if (v instanceof Number) {
-				return ((Number) v).floatValue();
+				float f = ((Number) v).floatValue();
+				if (f == f)
+					return f;
+
+				return defaultValue;
 			}
 
 			String s = v.toString();
 
 			try {
-				return Float.parseFloat(s);
+				float f = Float.parseFloat(s);
+				if (f == f)
+					return f;
+
+				return defaultValue;
 			} catch (Exception e) {
 				// ignore
 			}
@@ -373,11 +381,21 @@ public final class X {
 				try {
 					if (f) {
 						Object f1 = JS.calculate(s);
-						if (f1 instanceof Number)
-							return ((Number) f1).floatValue();
+						if (f1 instanceof Number) {
+							float f2 = ((Number) f1).floatValue();
+							if (f2 == f2)
+								return f2;
 
-					} else
-						return Float.parseFloat(s);
+							return defaultValue;
+						}
+
+					} else {
+						float f2 = Float.parseFloat(s);
+						if (f2 == f2)
+							return f2;
+
+						return defaultValue;
+					}
 				} catch (Exception e) {
 					log.error(e);
 				}
@@ -428,15 +446,22 @@ public final class X {
 	 * @return the double
 	 */
 	public static double toDouble(Object v, double defaultValue) {
+
 		if (v != null) {
 			if (v instanceof Number) {
-				return ((Number) v).doubleValue();
+				double d = ((Number) v).doubleValue();
+				if (d == d)
+					return d;
+				return defaultValue;
 			}
 
 			String s = v.toString();
 
 			try {
-				return Double.parseDouble(s);
+				double d = Double.parseDouble(s);
+				if (d == d)
+					return d;
+				return defaultValue;
 			} catch (Exception e) {
 				// ignore
 			}
@@ -465,11 +490,20 @@ public final class X {
 				try {
 					if (f) {
 						Object f1 = JS.calculate(s);
-						if (f1 instanceof Number)
-							return ((Number) f1).doubleValue();
+						if (f1 instanceof Number) {
+							double d = ((Number) f1).doubleValue();
+							if (d == d)
+								return d;
+							return defaultValue;
+						}
 
-					} else
-						return Double.parseDouble(s);
+					} else {
+						double d = Double.parseDouble(s);
+						if (d == d)
+							return d;
+
+						return defaultValue;
+					}
 				} catch (Exception e) {
 					log.error(e);
 				}
