@@ -344,7 +344,7 @@ public final class X {
 			if (v instanceof Number) {
 				float f = ((Number) v).floatValue();
 				if (f == f)
-					return precision < 1 ? f : ((long) (f * precision)) / precision;
+					return precision < 1 ? f : ((long) (f * precision)) * 1f / precision;
 
 				return defaultValue;
 			}
@@ -354,7 +354,7 @@ public final class X {
 			try {
 				float f = Float.parseFloat(s);
 				if (f == f)
-					return precision < 1 ? f : ((long) (f * precision)) / precision;
+					return precision < 1 ? f : ((long) (f * precision)) * 1f / precision;
 
 				return defaultValue;
 			} catch (Exception e) {
@@ -388,7 +388,7 @@ public final class X {
 						if (f1 instanceof Number) {
 							float f2 = ((Number) f1).floatValue();
 							if (f2 == f2)
-								return precision < 1 ? f2 : ((long) (f2 * precision)) / precision;
+								return precision < 1 ? f2 : ((long) (f2 * precision)) * 1f / precision;
 
 							return defaultValue;
 						}
@@ -396,7 +396,7 @@ public final class X {
 					} else {
 						float f2 = Float.parseFloat(s);
 						if (f2 == f2)
-							return precision < 1 ? f2 : ((long) (f2 * precision)) / precision;
+							return precision < 1 ? f2 : ((long) (f2 * precision)) * 1f / precision;
 
 						return defaultValue;
 					}
@@ -458,7 +458,7 @@ public final class X {
 			if (v instanceof Number) {
 				double d = ((Number) v).doubleValue();
 				if (d == d)
-					return precision < 1 ? d : ((long) (d * precision)) / precision;
+					return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 				return defaultValue;
 			}
 
@@ -467,7 +467,7 @@ public final class X {
 			try {
 				double d = Double.parseDouble(s);
 				if (d == d)
-					return precision < 1 ? d : ((long) (d * precision)) / precision;
+					return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 				return defaultValue;
 			} catch (Exception e) {
 				// ignore
@@ -500,14 +500,14 @@ public final class X {
 						if (f1 instanceof Number) {
 							double d = ((Number) f1).doubleValue();
 							if (d == d)
-								return precision < 1 ? d : ((long) (d * precision)) / precision;
+								return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 							return defaultValue;
 						}
 
 					} else {
 						double d = Double.parseDouble(s);
 						if (d == d)
-							return precision < 1 ? d : ((long) (d * precision)) / precision;
+							return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 
 						return defaultValue;
 					}
