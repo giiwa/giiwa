@@ -9,11 +9,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-//import org.giiwa.bean.GLog;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.task.Task;
-import org.giiwa.web.Language;
 
 class Optimizer implements Helper.IOptimizer {
 
@@ -87,30 +86,6 @@ class Optimizer implements Helper.IOptimizer {
 					public void onExecute() {
 
 						// check the db.optimizer=1 ?
-						if (Global.getInt("db.optimizer", 1) != 1) {
-							queue.clear();
-							return;
-						}
-
-						// check the time, db.optimizer.time
-						String time = Global.getString("db.optimizer.time", null);
-						if (!X.isEmpty(time)) {
-							String t1 = Language.getLanguage().format(System.currentTimeMillis(), "HH:mm");
-							String[] ss = X.split(time, "-");
-							if (ss.length == 2) {
-								if (ss[0].compareTo(ss[1]) < 0) {
-									if (t1.compareTo(ss[0]) < 0 || t1.compareTo(ss[1]) > 0) {
-										// not in time
-										return;
-									}
-								} else if (ss[0].compareTo(ss[1]) > 0) {
-									if (t1.compareTo(ss[0]) > 0 || t1.compareTo(ss[1]) < 0) {
-										// not in time
-										return;
-									}
-								}
-							}
-						}
 
 						try {
 							Object[] o = queue.remove();
@@ -120,14 +95,17 @@ class Optimizer implements Helper.IOptimizer {
 								LinkedHashMap<String, Integer> keys = (LinkedHashMap<String, Integer>) o[2];
 
 								if (!keys.isEmpty()) {
-//									GLog.applog.warn("db", "optimize", "table=" + table + ", key=" + keys.toString(),
-//											null, null);
 
 									if (log.isDebugEnabled())
 										log.debug("db.index, table=" + table + ", create.index=" + keys.toString()
 												+ ", queue.size=" + queue.size());
 
-									Helper.createIndex(db, table, keys);
+									if (Global.getInt("db.optimizer", 1) != 1) {
+										Helper.createIndex(db, table, keys);
+									} else {
+										GLog.applog.info("db", "optimize",
+												"required, table=" + table + ", keys=" + keys);
+									}
 
 								}
 
