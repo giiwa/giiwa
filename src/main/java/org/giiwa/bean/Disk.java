@@ -229,7 +229,7 @@ public class Disk extends Bean {
 	}
 
 	public static DFile getByUrl(String url) throws Exception {
-		if (url.startsWith("/f/g/")) {
+		if (url.startsWith("/f/g/") || url.startsWith("/f/d/")) {
 			String[] ss = X.split(url, "/");
 			if (ss.length > 2) {
 				return seek(new String(Base32.decode(ss[2])));
