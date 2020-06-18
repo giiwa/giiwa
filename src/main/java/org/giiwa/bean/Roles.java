@@ -37,13 +37,13 @@ public class Roles extends Bean implements IRole {
 
 	private List<String> access;
 
-	List<Role> list;
+	transient Beans<Role> list;
 
 	public static void addHandler(IRole r) {
 		handlers.add(r);
 	}
 
-	public List<Role> getList() {
+	public Beans<Role> getList() {
 		return list;
 	}
 
