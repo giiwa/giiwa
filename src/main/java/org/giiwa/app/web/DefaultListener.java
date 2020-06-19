@@ -120,9 +120,9 @@ public class DefaultListener implements IListener {
 			/**
 			 * start the optimizer
 			 */
-			if (Global.getInt("db.optimizer", 1) == 1) {
-				Helper.enableOptmizer();
-			}
+//			if (Global.getInt("db.optimizer", 1) == 1) {
+			Helper.enableOptmizer();
+//			}
 
 			module.setLicense(License.LICENSE.licensed,
 					"MFEjwN3hxRT8BD8dRGwTY+mod5O9m7gau0MXwwxx+gN7SI2NXKZYGBmyUD65fPmnPgrB3q8/7Y2TwOLsMa3gVVz9bx1OiKN02S9mQtoYvuiy1fD7OwdXJ4EWgilIn1/Rur4LsIu9JCCN5MSO3ucqxaI0Ccu94s+GsIAwWtCQ65M=");
