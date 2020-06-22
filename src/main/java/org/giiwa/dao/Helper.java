@@ -1462,6 +1462,7 @@ public class Helper implements Serializable {
 			return and(name, v, op, 1);
 		}
 
+		@SuppressWarnings("rawtypes")
 		public W scan(Consumer<Entity> func) {
 
 			for (int i = queryList.size() - 1; i >= 0; i--) {
@@ -1469,8 +1470,19 @@ public class Helper implements Serializable {
 				if (e instanceof Entity) {
 					Entity e1 = (Entity) e;
 					func.accept(e1);
-					if (e1.value instanceof Collection || e1.value.getClass().isArray()) {
-						e1.value = X.asList(e1.value, s -> s);
+
+					boolean changed = false;
+					List l1 = X.asList(e1.value, s -> s);
+					if (l1 != null && l1.size() > 1) {
+						e1.value = l1;
+						changed = true;
+					}
+
+					l1 = X.asList(e1.name, s -> s);
+					if (l1 != null && l1.size() > 1) {
+						changed = true;
+					}
+					if (changed) {
 						e1.replace(e1.value);
 					}
 
@@ -1749,29 +1761,17 @@ public class Helper implements Serializable {
 			}
 
 			/**
-			 * replace the value by ...
-			 * 
-			 * @deprecated, using e.value=
-			 * 
-			 * @param value
-			 */
-			public void replace(Object value) {
-//				this.value = value;
-				replace(name, value);
-			}
-
-			/**
 			 * replace the name and value
 			 * 
 			 * @param name
 			 * @param value
 			 */
-			public void replace(Object name, Object value) {
+			public void replace(Object value) {
 //				this.value = value;
 				container.queryList.remove(this);
 				if (this.cond == W.AND) {
 
-					List<String> l1 = X.asList(name, s -> s.toString());
+					List<String> l1 = X.asList(X.split(name, "[,;\"\'\\[\\]]"), s -> s.toString());
 					if (l1.size() == 1) {
 						container.and(name.toString(), value, this.op);
 					} else {
@@ -3743,7 +3743,8 @@ public class Helper implements Serializable {
 
 		q.scan(e -> {
 			if (X.isSame(e.name, "b")) {
-				e.replace(Arrays.asList("c", "d"), Arrays.asList("1", "2"));
+				e.name = "c,d";
+				e.replace(Arrays.asList("1", "2"));
 //				e.value = Arrays.asList("1", "2");
 			}
 		});
