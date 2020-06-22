@@ -686,6 +686,8 @@ public class Helper implements Serializable {
 		 */
 		public static final int OR = 10;
 
+		public static final int NOT = 11;
+
 		private String connectsql;
 		private List<W> queryList = new ArrayList<W>();
 		private List<Entity> order = new ArrayList<Entity>();
@@ -1000,6 +1002,8 @@ public class Helper implements Serializable {
 						sb.append(" and ");
 					} else if (clause.getCondition() == OR) {
 						sb.append(" or ");
+					} else if (clause.getCondition() == NOT) {
+						sb.append(" and not ");
 					}
 				}
 				sb.append(clause.where(tansfers));
@@ -1078,11 +1082,23 @@ public class Helper implements Serializable {
 		 * @param w the w
 		 * @return W
 		 */
+
 		public W and(W w) {
+			return and(w, W.AND);
+		}
+
+		/**
+		 * 
+		 * @param w
+		 * @param cond, and, or, not
+		 * @return
+		 */
+		public W and(W w, int cond) {
+
 			if (w.isEmpty())
 				return this;
 
-			w.cond = AND;
+			w.cond = cond;
 			if (w instanceof Entity) {
 				((Entity) w).container = this;
 			}
@@ -1109,6 +1125,8 @@ public class Helper implements Serializable {
 						sb.append(" and ");
 					} else if (clause.getCondition() == OR) {
 						sb.append(" or ");
+					} else if (clause.getCondition() == NOT) {
+						sb.append(" and not ");
 					}
 				}
 //				clause.where(tansfers);
@@ -1725,8 +1743,10 @@ public class Helper implements Serializable {
 				container.queryList.remove(this);
 				if (this.cond == W.AND) {
 					container.and(name, value);
-				} else {
+				} else if (this.cond == W.OR) {
 					container.or(name, value);
+				} else if (this.cond == W.NOT) {
+					container.and(name, value);
 				}
 			}
 
@@ -1962,22 +1982,44 @@ public class Helper implements Serializable {
 			for (W clause : queryList) {
 				if (!list.isEmpty() && cond != clause.getCondition()) {
 					if (cond == AND) {
-						BasicDBObject q = new BasicDBObject("$and", list.clone());
-						list.clear();
-						list.add(q);
+						if (list.size() > 1) {
+							BasicDBObject q = new BasicDBObject("$and", list.clone());
+							list.clear();
+							list.add(q);
+						}
 					} else if (cond == OR) {
-						BasicDBObject q = new BasicDBObject("$or", list.clone());
-						list.clear();
-						list.add(q);
+						if (list.size() > 1) {
+							BasicDBObject q = new BasicDBObject("$or", list.clone());
+							list.clear();
+							list.add(q);
+						}
+//					} else if (cond == NOT) {
+//						BasicDBObject q = new BasicDBObject("$not", list.clone());
+//						list.clear();
+//						list.add(q);
 					}
 				}
 
-				if (clause instanceof W) {
-					list.add(((W) clause).query());
+				int c1 = clause.getCondition();
+				if (c1 == W.NOT) {
+
+					if (clause instanceof W) {
+						BasicDBObject q = new BasicDBObject("$not", ((W) clause).query());
+						list.add(q);
+					} else {
+						BasicDBObject q = new BasicDBObject("$not", clause);
+						list.add(q);
+					}
+
 				} else {
-					list.add(clause);
+					cond = c1;
+
+					if (clause instanceof W) {
+						list.add(((W) clause).query());
+					} else {
+						list.add(clause);
+					}
 				}
-				cond = clause.getCondition();
 
 			}
 
@@ -1990,6 +2032,8 @@ public class Helper implements Serializable {
 					return new BasicDBObject().append("$and", list);
 				} else if (cond == OR) {
 					return new BasicDBObject().append("$or", list);
+//				} else if (cond == NOT) {
+//					return new BasicDBObject().append("$not", list);
 				}
 			}
 			return new BasicDBObject();
@@ -3625,6 +3669,16 @@ public class Helper implements Serializable {
 		q.and(sql);
 		sql = q.toSQL();
 		System.out.println("sql=" + sql);
+
+		q = W.create();
+		q.and("a='1' and a!='2'");
+		System.out.println("q=" + q);
+
+		q = W.create();
+		q.and("a like '1' and a !like '2'");
+		System.out.println("q=" + q);
+		System.out.println("q.where=" + q.where());
+		System.out.println("q.query=" + q.query());
 
 	}
 

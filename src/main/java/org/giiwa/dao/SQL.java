@@ -198,7 +198,7 @@ public class SQL {
 				// throw new Exception("expect [op] more after [" + s1.toString() +
 				// "]");
 
-				String name = s1.nextTo(" |!|=|>|<|like|LIKE");
+				String name = s1.nextTo(" |!|=|>|<|like|LIKE|!like|!LIKE");
 
 				s1.trim();
 				c = s1.next();
@@ -209,6 +209,9 @@ public class SQL {
 					char c1 = s1.next();
 					if (c1 == '=') {
 						op = Character.toString(c) + c1;
+					} else if (c == '!') {
+						s1.skip(-1);
+						op = c + s1.nextTo(" ").toLowerCase();
 					} else {
 						s1.skip(-1);
 						op = Character.toString(c);
@@ -216,7 +219,7 @@ public class SQL {
 				} else {
 					// like ?
 					s1.skip(-1);
-					op = s1.nextTo(" ");
+					op = s1.nextTo(" ").toLowerCase();
 				}
 
 				s1.trim();
@@ -272,6 +275,8 @@ public class SQL {
 						q.and(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.and(name, value, W.OP.like);
+					} else if (X.isSame(op, "!like")) {
+						q.and(W.create().and(name, value, W.OP.like), W.NOT);
 					} else if (X.isSame(op, "like_")) {
 						q.and(name, value, W.OP.like_);
 					} else if (X.isSame(op, "like_$")) {
@@ -294,6 +299,8 @@ public class SQL {
 						q.or(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
 						q.or(name, value, W.OP.like);
+					} else if (X.isSame(op, "!like")) {
+						q.and(W.create().and(name, value, W.OP.like), W.NOT);
 					} else if (X.isSame(op, "like_")) {
 						q.or(name, value, W.OP.like_);
 					} else if (X.isSame(op, "like_$")) {
