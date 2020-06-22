@@ -1098,6 +1098,11 @@ public class Helper implements Serializable {
 			if (w.isEmpty())
 				return this;
 
+			if (w.queryList.size() == 1 && (cond == W.AND || cond == W.OR)) {
+				queryList.add(w.queryList.get(0));
+				return this;
+			}
+
 			w.cond = cond;
 			if (w instanceof Entity) {
 				((Entity) w).container = this;
@@ -1219,6 +1224,11 @@ public class Helper implements Serializable {
 		public W or(W w) {
 			if (w.isEmpty())
 				return this;
+
+			if (w.queryList.size() == 1 && (cond == W.AND || cond == W.OR)) {
+				queryList.add(w.queryList.get(0));
+				return this;
+			}
 
 			w.cond = OR;
 			if (w instanceof Entity) {
@@ -1498,10 +1508,10 @@ public class Helper implements Serializable {
 					if (o instanceof W) {
 						o = ((W) o).query();
 					}
-					if (op.equals(OP.eq)) {
-						q.or(name, o);
-					} else if (op.equals(OP.neq)) {
+					if (op.equals(OP.neq)) {
 						q.and(name, o, OP.neq);
+					} else {
+						q.or(name, o);
 					}
 				}
 				this.and(q);
@@ -1512,10 +1522,10 @@ public class Helper implements Serializable {
 					if (o instanceof W) {
 						o = ((W) o).query();
 					}
-					if (op.equals(OP.eq)) {
-						q.or(name, o);
-					} else if (op.equals(OP.neq)) {
+					if (op.equals(OP.neq)) {
 						q.and(name, o, OP.neq);
+					} else {
+						q.or(name, o);
 					}
 				}
 				this.and(q);
@@ -1585,13 +1595,13 @@ public class Helper implements Serializable {
 					if (o instanceof W) {
 						o = ((W) o).query();
 					}
-					if (op.equals(OP.eq)) {
-						q.or(name, o);
-					} else if (op.equals(OP.neq)) {
+					if (op.equals(OP.neq)) {
 						q.and(name, o, OP.neq);
+					} else {
+						q.or(name, o);
 					}
 				}
-				this.and(q);
+				this.or(q);
 			} else if (v != null && v.getClass().isArray()) {
 				W q = W.create();
 				Object[] l1 = (Object[]) v;
@@ -1599,10 +1609,10 @@ public class Helper implements Serializable {
 					if (o instanceof W) {
 						o = ((W) o).query();
 					}
-					if (op.equals(OP.eq)) {
-						q.or(name, o);
-					} else if (op.equals(OP.neq)) {
+					if (op.equals(OP.neq)) {
 						q.and(name, o, OP.neq);
+					} else {
+						q.or(name, o);
 					}
 				}
 				this.or(q);
@@ -1738,15 +1748,66 @@ public class Helper implements Serializable {
 				return container;
 			}
 
+			/**
+			 * replace the value by ...
+			 * 
+			 * @deprecated, using e.value=
+			 * 
+			 * @param value
+			 */
 			public void replace(Object value) {
+//				this.value = value;
+				replace(name, value);
+			}
+
+			/**
+			 * replace the name and value
+			 * 
+			 * @param name
+			 * @param value
+			 */
+			public void replace(Object name, Object value) {
 //				this.value = value;
 				container.queryList.remove(this);
 				if (this.cond == W.AND) {
-					container.and(name, value);
+
+					List<String> l1 = X.asList(name, s -> s.toString());
+					if (l1.size() == 1) {
+						container.and(name.toString(), value, this.op);
+					} else {
+						W q = W.create();
+						for (String s : l1) {
+							q.or(s, value, this.op);
+						}
+						container.and(q);
+					}
+
 				} else if (this.cond == W.OR) {
-					container.or(name, value);
+
+					List<String> l1 = X.asList(name, s -> s.toString());
+					if (l1.size() == 1) {
+						container.or(name.toString(), value, this.op);
+					} else {
+						W q = W.create();
+						for (String s : l1) {
+							q.or(s, value, this.op);
+						}
+						container.or(q);
+					}
+
 				} else if (this.cond == W.NOT) {
-					container.and(name, value);
+
+					List<String> l1 = X.asList(name, s -> s.toString());
+					if (l1.size() == 1) {
+						container.and(W.create(name.toString(), value, this.op), W.NOT);
+					} else {
+						W q = W.create();
+						for (String s : l1) {
+							q.or(s, value, this.op);
+						}
+						container.and(q, W.NOT);
+					}
+
 				}
 			}
 
@@ -3675,10 +3736,23 @@ public class Helper implements Serializable {
 		System.out.println("q=" + q);
 
 		q = W.create();
-		q.and("a like '1' and a !like '2'");
+		q.and("a like '1' and b !like '2'");
 		System.out.println("q=" + q);
-		System.out.println("q.where=" + q.where());
-		System.out.println("q.query=" + q.query());
+//		System.out.println("q.where=" + q.where());
+//		System.out.println("q.query=" + q.query());
+
+		q.scan(e -> {
+			if (X.isSame(e.name, "b")) {
+				e.replace(Arrays.asList("c", "d"), Arrays.asList("1", "2"));
+//				e.value = Arrays.asList("1", "2");
+			}
+		});
+		System.out.println("q=" + q);
+
+		q = W.create();
+		q.and(W.create("a", 1));
+		q.or(W.create("b", 2));
+		System.out.println("q=" + q.toString());
 
 	}
 
