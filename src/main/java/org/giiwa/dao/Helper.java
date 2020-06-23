@@ -1520,9 +1520,11 @@ public class Helper implements Serializable {
 			if (v != null && v instanceof Collection) {
 				Collection l1 = (Collection) v;
 
-				if (l1.size() == 1) {
+				if (l1.isEmpty()) {
+					this.and(name, null, op);
+				} else if (l1.size() == 1) {
 					this.and(name, l1.iterator().next(), op);
-				} else if (l1.size() > 1) {
+				} else {
 					W q = W.create();
 					for (Object o : l1) {
 						if (o instanceof W) {
@@ -1539,9 +1541,11 @@ public class Helper implements Serializable {
 			} else if (v != null && v.getClass().isArray()) {
 				Object[] l1 = (Object[]) v;
 
-				if (l1.length == 1) {
+				if (l1 == null || l1.length == 0) {
+					this.and(name, null, op);
+				} else if (l1.length == 1) {
 					this.and(name, l1[0], op);
-				} else if (l1.length > 1) {
+				} else {
 					W q = W.create();
 					for (Object o : l1) {
 						if (o instanceof W) {
@@ -1615,33 +1619,45 @@ public class Helper implements Serializable {
 			name = name.toLowerCase();
 
 			if (v != null && v instanceof Collection) {
-				W q = W.create();
 				Collection l1 = (Collection) v;
-				for (Object o : l1) {
-					if (o instanceof W) {
-						o = ((W) o).query();
+				if (l1.isEmpty()) {
+					this.or(name, null, op);
+				} else if (l1.size() == 1) {
+					this.or(name, l1.iterator().next(), op);
+				} else {
+					W q = W.create();
+					for (Object o : l1) {
+						if (o instanceof W) {
+							o = ((W) o).query();
+						}
+						if (op.equals(OP.neq)) {
+							q.and(name, o, OP.neq);
+						} else {
+							q.or(name, o, op);
+						}
 					}
-					if (op.equals(OP.neq)) {
-						q.and(name, o, OP.neq);
-					} else {
-						q.or(name, o);
-					}
+					this.or(q);
 				}
-				this.or(q);
 			} else if (v != null && v.getClass().isArray()) {
-				W q = W.create();
 				Object[] l1 = (Object[]) v;
-				for (Object o : l1) {
-					if (o instanceof W) {
-						o = ((W) o).query();
+				if (l1 == null || l1.length == 0) {
+					this.or(name, null, op);
+				} else if (l1.length == 1) {
+					this.or(name, l1[0], op);
+				} else {
+					W q = W.create();
+					for (Object o : l1) {
+						if (o instanceof W) {
+							o = ((W) o).query();
+						}
+						if (op.equals(OP.neq)) {
+							q.and(name, o, OP.neq);
+						} else {
+							q.or(name, o, op);
+						}
 					}
-					if (op.equals(OP.neq)) {
-						q.and(name, o, OP.neq);
-					} else {
-						q.or(name, o);
-					}
+					this.or(q);
 				}
-				this.or(q);
 			} else {
 				if (v instanceof W) {
 					v = ((W) v).query();
@@ -3778,7 +3794,7 @@ public class Helper implements Serializable {
 			}
 		});
 		System.out.println("q=" + q.toString());
-		q = W.create().and("parentid", 95).and("type", new Integer[] { 0 }).sort("seq");
+		q = W.create().and("parentid", 95).or("type", new Integer[] { 0, 1 }, W.OP.neq).sort("seq");
 
 		System.out.println("q=" + q);
 
