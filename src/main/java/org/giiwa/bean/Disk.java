@@ -451,7 +451,7 @@ public class Disk extends Bean {
 		}
 
 		if (X.isEmpty(d1)) {
-			throw new Exception("not disk configured!");
+			throw new Exception("not disk configured! [" + type + "]");
 		}
 		return d1;
 	}
