@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import org.giiwa.bean.*;
+import org.giiwa.conf.Global;
 import org.giiwa.web.*;
 
 /**
@@ -47,6 +48,12 @@ public class index extends Controller {
 	 */
 	@Path(login = true, method = "POST")
 	public void onPost() {
+
+		String ip = Global.getString("admin.ip", ".*");
+		if (!this.ipPath().matches(ip)) {
+			this.deny();
+			return;
+		}
 
 		User me = this.user();
 		/**

@@ -213,27 +213,18 @@ public class Controller {
 
 	private Path _process() throws Exception {
 
-//		if (method.isGet()) {
-//			try {
-//				String non = Global.getString("site.browser.nonredirect", null);
-//				String ignore = Global.getString("site.browser.ignoreurl", null);
-//				if (!X.isEmpty(non) && !X.isSame(non, uri) && !X.isSame(uri, "/admin/browserinfo")
-//						&& (X.isEmpty(ignore) || !uri.matches(ignore))) {
-//
-//					String ua = Global.getString("site.browser", "*");
-//
-//					if (!X.isEmpty(ua) && !X.isSame(ua, "*")) {
-//						String b = this.browser();
-//						if (!b.matches(ua)) {
-//							this.redirect(non);
-//							return null;
-//						}
-//					}
-//				}
-//			} catch (Exception e) {
-//				log.error(e.getMessage(), e);
-//			}
-//		}
+		/**
+		 * this is very very important to access other node behind nginx
+		 */
+		String node = this.get("__node");
+		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
+			Node n = Node.dao.load(node);
+			if (n != null) {
+				n.forward(uri, req, resp, method.name);
+				return null;
+			}
+		}
+		// end of forward to other node
 
 		if (pathmapping != null) {
 
@@ -378,11 +369,6 @@ public class Controller {
 			}
 		} // end of "pathmapping is not null
 
-		// forward the request the file
-//		if (staticfile()) {
-//			return null;
-//		}
-
 		if (method.isGet()) {
 
 			Method m = this.getClass().getMethod("onGet");
@@ -508,38 +494,6 @@ public class Controller {
 
 	}
 
-//	private boolean staticfile() {
-//		String uri = this.uri;
-//		if (!X.isEmpty(path) && !X.isSame(path, X.NONE)) {
-//			uri += "/" + path;
-//		}
-//		uri = uri.replaceAll("//", "/");
-//		// log.debug("staticfile=" + uri);
-//
-//		File f = Module.home.getFile(uri);
-//		if (f != null && f.exists() && f.isFile()) {
-//			this.set(this);
-//
-//			this.set("me", this.getUser());
-//			this.put("lang", lang);
-//			this.put(X.URI, uri);
-//			this.put("module", Module.home);
-//			this.put("path", path);
-//			this.put("request", req);
-//			this.put("this", this);
-//			this.put("response", resp);
-//			this.put("session", this.getSession(false));
-//			this.put("global", Global.getInstance());
-//			this.put("conf", Config.getConf());
-//			this.put("local", Local.getInstance());
-//
-//			show(uri);
-//			return true;
-//		}
-//
-//		return false;
-//	}
-
 	final public void init(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
 		try {
 			this.uri = uri;
@@ -619,12 +573,7 @@ public class Controller {
 			this.send(jo);
 
 		} else {
-			String node = this.getString("__node");
-			if (!X.isEmpty(node)) {
-				this.redirect("/user/login?__node=" + node);
-			} else {
-				this.redirect("/user/login");
-			}
+			this.redirect("/user/login");
 		}
 	}
 
@@ -718,6 +667,16 @@ public class Controller {
 	 * @param url the url
 	 */
 	public void redirect(String url) {
+
+		String node = this.getString("__node");
+		if (!X.isEmpty(node)) {
+			if (url.indexOf("?") > 0) {
+				url += "&__node=" + node;
+			} else {
+				url += "?__node=" + node;
+			}
+		}
+
 		resp.setHeader("Location", url);
 		status(HttpServletResponse.SC_MOVED_TEMPORARILY);
 	}
@@ -1206,9 +1165,9 @@ public class Controller {
 	 * @return String
 	 */
 	public String ip() {
-		String remote = this.head("X-Forwarded-For");
+		String remote = this.head("X-Real-IP");
 		if (remote == null) {
-			remote = head("X-Real-IP");
+			remote = head("X-Forwarded-For");
 
 			if (remote == null) {
 				remote = req.getRemoteAddr();
@@ -1216,6 +1175,32 @@ public class Controller {
 		}
 
 		return remote;
+	}
+
+	public String ipPath() {
+
+		StringBuilder sb = new StringBuilder();
+
+		String remote = head("X-Real-IP");
+		if (!X.isEmpty(remote)) {
+			sb.append(remote);
+		}
+
+		remote = this.head("X-Forwarded-For");
+		if (!X.isEmpty(remote)) {
+			if (sb.length() > 0)
+				sb.append("->");
+			sb.append(remote);
+		}
+
+		remote = req.getRemoteAddr();
+		if (!X.isEmpty(remote)) {
+			if (sb.length() > 0)
+				sb.append("->");
+			sb.append(remote);
+		}
+
+		return sb.toString();
 	}
 
 	private JSON _json;
@@ -1973,6 +1958,13 @@ public class Controller {
 			this.put(X.URI, uri);
 			this.put("module", Module.home);
 			this.put("path", this.path);
+
+			String node = this.get("__node");
+			if (X.isEmpty(node)) {
+				node = Local.id();
+			}
+			this.put("__node", node);
+
 			this.put("req", this);
 			this.put("global", Global.getInstance());
 			this.put("conf", Config.getConf());

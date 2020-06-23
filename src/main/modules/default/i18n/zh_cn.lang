@@ -1027,3 +1027,5 @@ uid.next.s2.hint=默认-1，不限制
 disk.type=类型
 disk.type_data=DATA
 disk.type_nginx=NGINX
+admin.ip=管理IP
+admin.ip.hint=正则表达式，.*

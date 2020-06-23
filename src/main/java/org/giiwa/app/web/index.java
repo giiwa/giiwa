@@ -51,16 +51,7 @@ public class index extends Controller {
 			h1 = "/index.html";
 		}
 
-		String node = this.getString("__node");
-		if (X.isEmpty(node)) {
-			this.redirect(h1);
-		} else {
-			if (h1.indexOf("?") > 0) {
-				this.redirect(h1 + "&__node=" + node);
-			} else {
-				this.redirect(h1 + "?__node=" + node);
-			}
-		}
+		this.redirect(h1);
 	}
 
 }

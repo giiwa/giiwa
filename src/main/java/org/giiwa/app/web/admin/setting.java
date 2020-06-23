@@ -227,6 +227,7 @@ public class setting extends Controller {
 			String lang1 = this.getString("language");
 			Global.setConfig("language", lang1);
 
+			Global.setConfig("admin.ip", this.getHtml("admin.ip"));
 			Global.setConfig("home.uri", this.getHtml("home_uri"));
 			Local.setConfig("home.uri.1", this.getHtml("home.uri.1"));
 
