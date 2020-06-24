@@ -24,6 +24,8 @@ public class sysinfo extends portlet {
 		this.set("total", lang.size(Runtime.getRuntime().totalMemory()));
 		this.set("cpus", Runtime.getRuntime().availableProcessors());
 
+		this.set("ip", this.ipPath());
+
 		Properties props = System.getProperties();
 		this.set("jdkversion", props.getProperty("java.version"));
 		this.set("jdkvendor", props.getProperty("java.vendor"));
