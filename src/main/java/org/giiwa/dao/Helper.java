@@ -1225,6 +1225,9 @@ public class Helper implements Serializable {
 			if (w.isEmpty())
 				return this;
 
+			if (this.queryList.isEmpty())
+				return and(w);
+
 			if (w.queryList.size() == 1) {
 				W q1 = w.queryList.get(0);
 				q1.cond = OR;
@@ -1615,6 +1618,9 @@ public class Helper implements Serializable {
 
 			if (X.isEmpty(name))
 				return this;
+
+			if (this.queryList.isEmpty())
+				return and(name, v, op, boost);
 
 			name = name.toLowerCase();
 
