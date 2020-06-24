@@ -6,7 +6,7 @@
 			{
 				"name": "menu.system",
 				"classes": "icon-cog",
-				"access": "access.menu.sysmenu|access.config.admin",
+				"access": "access.config.admin",
 				"seq": 10,
 				"childs": [
 					{
@@ -99,7 +99,7 @@
 			{
 				"name": "menu.usermgr",
 				"classes": "icon-shield",
-				"access": "access.menu.usermgmt|access.config.admin",
+				"access": "access.config.admin",
 				"seq": 20,
 				"childs": [
 					{
