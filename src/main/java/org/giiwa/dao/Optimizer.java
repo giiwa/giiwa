@@ -100,7 +100,7 @@ class Optimizer implements Helper.IOptimizer {
 										log.debug("db.index, table=" + table + ", create.index=" + keys.toString()
 												+ ", queue.size=" + queue.size());
 
-									if (Global.getInt("db.optimizer", 1) != 1) {
+									if (Global.getInt("db.optimizer", 1) == 1) {
 										Helper.createIndex(db, table, keys);
 									} else {
 										GLog.applog.info("db", "optimize",

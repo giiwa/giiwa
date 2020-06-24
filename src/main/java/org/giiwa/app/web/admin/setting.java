@@ -266,11 +266,11 @@ public class setting extends Controller {
 
 			Global.setConfig("module.center", X.isSame(this.getString("module_center"), "on") ? 1 : 0);
 
-			if (Global.getInt("db.optimizer", 1) == 1) {
-				Helper.enableOptmizer();
-			} else {
-				Helper.disableOptmizer();
-			}
+//			if (Global.getInt("db.optimizer", 1) == 1) {
+//				Helper.enableOptmizer();
+//			} else {
+//				Helper.disableOptmizer();
+//			}
 
 			this.send(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}
