@@ -43,7 +43,6 @@ import org.giiwa.bean.License;
 import org.giiwa.bean.Menu;
 import org.giiwa.bean.User;
 import org.giiwa.conf.Config;
-import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.RDB;

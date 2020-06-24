@@ -1028,4 +1028,4 @@ disk.type=类型
 disk.type_data=DATA
 disk.type_nginx=NGINX
 admin.ip=管理IP
-admin.ip.hint=正则表达式，.*
+admin.ip.hint=只有限定的IP才能访问/admin/站点，正则表达式，.*
