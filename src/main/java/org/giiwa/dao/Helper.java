@@ -1104,9 +1104,9 @@ public class Helper implements Serializable {
 			}
 
 			w.cond = cond;
-			if (w instanceof Entity) {
-				((Entity) w).container = this;
-			}
+//			if (w instanceof Entity) {
+//				((Entity) w).container = this;
+//			}
 			queryList.add(w);
 
 			return this;
@@ -1200,15 +1200,15 @@ public class Helper implements Serializable {
 
 			for (W e : q.queryList) {
 //				W e1 = e.copy();
-				if (e instanceof Entity) {
-					((Entity) e).container = this;
-				}
+//				if (e instanceof Entity) {
+//					((Entity) e).container = this;
+//				}
 				this.queryList.add(e);
 			}
 
 			for (Entity e : q.order) {
 				Entity e1 = e.copy();
-				e1.container = this;
+//				e1.container = this;
 				this.order.add(e1);
 			}
 
@@ -1236,9 +1236,9 @@ public class Helper implements Serializable {
 			}
 
 			w.cond = OR;
-			if (w instanceof Entity) {
-				((Entity) w).container = this;
-			}
+//			if (w instanceof Entity) {
+//				((Entity) w).container = this;
+//			}
 			queryList.add(w);
 			return this;
 		}
@@ -1475,6 +1475,10 @@ public class Helper implements Serializable {
 				if (e instanceof Entity) {
 
 					Entity e1 = (Entity) e;
+
+					e1._idx = i;
+					e1._queryList = queryList;
+
 					String name = e1.name;
 
 					func.accept(e1);
@@ -1566,7 +1570,7 @@ public class Helper implements Serializable {
 				if (v instanceof W) {
 					v = ((W) v).query();
 				}
-				queryList.add(new Entity(this, name, v, op, AND, boost));
+				queryList.add(new Entity(name, v, op, AND, boost));
 			}
 			return this;
 		}
@@ -1669,7 +1673,7 @@ public class Helper implements Serializable {
 					v = ((W) v).query();
 				}
 //				elist.add(new Entity(name, v, op, OR, boost));
-				queryList.add(new Entity(this, name, v, op, OR, boost));
+				queryList.add(new Entity(name, v, op, OR, boost));
 			}
 			return this;
 		}
@@ -1775,12 +1779,16 @@ public class Helper implements Serializable {
 
 		public static class Entity extends W {
 
+			public List<W> _queryList;
+
+			public int _idx;
+
 			/**
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
 
-			private W container;
+//			private W container;
 
 			public String name;
 			public Object value;
@@ -1792,9 +1800,9 @@ public class Helper implements Serializable {
 				this.op = W.OP.valueOf(op);
 			}
 
-			public W container() {
-				return container;
-			}
+//			public W container() {
+//				return container;
+//			}
 
 			/**
 			 * replace the name and value
@@ -1804,52 +1812,58 @@ public class Helper implements Serializable {
 			 */
 			public void replace(Object value) {
 //				this.value = value;
-				container.queryList.remove(this);
-				if (this.cond == W.AND) {
+//				final int i = container.queryList.indexOf(this);
+//				container.queryList.remove(i);
 
-					List<String> l1 = X.asList(X.split(name, "[,;\"\'\\[\\]]"), s -> s.toString());
-					if (l1.size() == 1) {
-						container.and(name.toString(), value, this.op);
-					} else {
-						W q = W.create();
-						for (String s : l1) {
-							q.or(s, value, this.op);
-						}
-						container.and(q);
+//				if (this.cond == W.AND) {
+
+				List<String> l1 = X.asList(X.split(name, "[,;\"\'\\[\\]]"), s -> s.toString());
+				if (l1.size() == 1) {
+					this.name = name.toString();
+					this.value = value;
+//						container.and(name.toString(), value, this.op);
+				} else {
+					W q = W.create();
+					for (String s : l1) {
+						q.or(s, value, this.op);
 					}
-
-				} else if (this.cond == W.OR) {
-
-					List<String> l1 = X.asList(name, s -> s.toString());
-					if (l1.size() == 1) {
-						container.or(name.toString(), value, this.op);
-					} else {
-						W q = W.create();
-						for (String s : l1) {
-							q.or(s, value, this.op);
-						}
-						container.or(q);
-					}
-
-				} else if (this.cond == W.NOT) {
-
-					List<String> l1 = X.asList(name, s -> s.toString());
-					if (l1.size() == 1) {
-						container.and(W.create(name.toString(), value, this.op), W.NOT);
-					} else {
-						W q = W.create();
-						for (String s : l1) {
-							q.or(s, value, this.op);
-						}
-						container.and(q, W.NOT);
-					}
-
+					_queryList.remove(this._idx);
+					_queryList.add(this._idx, q);
+//						container.and(q);
 				}
+
+//				} else if (this.cond == W.OR) {
+//
+//					List<String> l1 = X.asList(name, s -> s.toString());
+//					if (l1.size() == 1) {
+//						container.or(name.toString(), value, this.op);
+//					} else {
+//						W q = W.create();
+//						for (String s : l1) {
+//							q.or(s, value, this.op);
+//						}
+//						container.or(q);
+//					}
+//
+//				} else if (this.cond == W.NOT) {
+//
+//					List<String> l1 = X.asList(name, s -> s.toString());
+//					if (l1.size() == 1) {
+//						container.and(W.create(name.toString(), value, this.op), W.NOT);
+//					} else {
+//						W q = W.create();
+//						for (String s : l1) {
+//							q.or(s, value, this.op);
+//						}
+//						container.and(q, W.NOT);
+//					}
+//
+//				}
 			}
 
 			public void remove() {
 //				System.out.println(container.queryList);
-				container.queryList.remove(this);
+				_queryList.remove(_idx);
 			}
 
 			public int getCondition() {
@@ -1883,7 +1897,7 @@ public class Helper implements Serializable {
 			 * @return the entity
 			 */
 			public static Entity fromJSON(JSON j1) {
-				return new Entity(null, j1.getString("name"), j1.get("value"), OP.valueOf(j1.getString("op")),
+				return new Entity(j1.getString("name"), j1.get("value"), OP.valueOf(j1.getString("op")),
 						j1.getInt("cond"), j1.getInt("boost", 1));
 			}
 
@@ -1957,7 +1971,7 @@ public class Helper implements Serializable {
 			 * @return the entity
 			 */
 			public Entity copy() {
-				return new Entity(this, name, value, op, cond, boost);
+				return new Entity(name, value, op, cond, boost);
 			}
 
 			public void sql(StringBuilder sql) {
@@ -2056,8 +2070,8 @@ public class Helper implements Serializable {
 				return tostring;
 			}
 
-			private Entity(W container, String name, Object v, OP op, int cond, int boost) {
-				this.container = container;
+			private Entity(String name, Object v, OP op, int cond, int boost) {
+//				this.container = container;
 				this.name = name;
 				this.cond = cond;
 				this.boost = boost;
@@ -2172,7 +2186,7 @@ public class Helper implements Serializable {
 		public W sort(String name, int i) {
 			if (X.isEmpty(name))
 				return this;
-			order.add(new Entity(this, name, i, OP.eq, AND, 0));
+			order.add(new Entity(name, i, OP.eq, AND, 0));
 			return this;
 		}
 
@@ -3727,20 +3741,20 @@ public class Helper implements Serializable {
 		q.and("a=b").and(W.create("b", "c"));
 
 		System.out.println(q.toString());
-		System.out.println(q.sortkeys());
+//		System.out.println(q.sortkeys());
 
-		q.scan(e -> {
-			if (X.isSame(e.name, "a")) {
-				System.out.println(e.name);
-				e.container().and(W.create("a", "1").or("a", "2"));
-				e.remove();
-			}
-
-		});
+//		q.scan(e -> {
+//			if (X.isSame(e.name, "a")) {
+//				System.out.println(e.name);
+//				e.container().and(W.create("a", "1").or("a", "2"));
+//				e.remove();
+//			}
+//
+//		});
 
 		JSON m = JSON.create();
 		m.append("q", q);
-		String js = "q.scan(function(e) {e.value=2;})";
+		String js = "q.scan(function(e) {if(e.name=='b') {e.name='a,b,c';}})";
 		try {
 			JS.run(js, m);
 		} catch (Exception e) {
@@ -3795,14 +3809,14 @@ public class Helper implements Serializable {
 		q.and("( cip_firstbookname like '汪曾祺') or ( cip_firstauthor like '汪曾祺')");
 		System.out.println("q=" + q.toString());
 		q.scan(e -> {
-			if (X.isSame(e.name, "cip_firstauthor")) {
-				e.name = "f_firstauthor";
+			if (X.isSame(e.name, "cip_firstbookname")) {
+				e.name = "cip_firstbookname,cip_secondbookname,cip_seriesbookname";
 			}
 		});
 		System.out.println("q=" + q.toString());
-		q = W.create().and("parentid", 95).or("type", new Integer[] { 0, 1 }, W.OP.neq).sort("seq");
-
-		System.out.println("q=" + q);
+//		q = W.create().and("parentid", 95).or("type", new Integer[] { 0, 1 }, W.OP.neq).sort("seq");
+//
+//		System.out.println("q=" + q);
 
 	}
 
