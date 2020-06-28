@@ -668,12 +668,14 @@ public class Controller {
 	 */
 	public void redirect(String url) {
 
-		String node = this.getString("__node");
-		if (!X.isEmpty(node)) {
-			if (url.indexOf("?") > 0) {
-				url += "&__node=" + node;
-			} else {
-				url += "?__node=" + node;
+		if (this.getUser() != null) {
+			String node = this.getString("__node");
+			if (!X.isEmpty(node)) {
+				if (url.indexOf("?") > 0) {
+					url += "&__node=" + node;
+				} else {
+					url += "?__node=" + node;
+				}
 			}
 		}
 
