@@ -337,7 +337,7 @@ public class Repo {
 	}
 
 	static private String path(String id, String path) {
-		if (X.isEmpty(path)) {
+		if (!X.isEmpty(path)) {
 			return path + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss/");
 		}
 		return ROOT + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss/");
