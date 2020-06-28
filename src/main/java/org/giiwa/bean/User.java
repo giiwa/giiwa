@@ -301,7 +301,7 @@ public class User extends Bean {
 
 		char c = nickname.toString().charAt(0);
 		Language lang = Language.getLanguage();
-		DFile f = Disk.seek("/_user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
+		DFile f = Disk.seek("/user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
 				+ System.currentTimeMillis() + ".png");
 
 		if (f != null) {

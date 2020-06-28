@@ -113,7 +113,7 @@ public class dfile extends Controller {
 
 						X.close(out);
 
-						DFile f3 = Disk.seek("/_temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/")
+						DFile f3 = Disk.seek("/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/")
 								+ System.currentTimeMillis() + "/" + f1.getName() + ".zip");
 						t.save(f3);
 
