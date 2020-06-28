@@ -209,7 +209,7 @@ public class backup extends Controller {
 			return;
 		}
 
-		//TODO
+		// TODO
 		List<JSON> l2 = Cache.get("db.schema");
 //		List<Class<? extends Bean>> l1 = Schema.beans;
 //		Map<String, JSON> l2 = new TreeMap<String, JSON>();
@@ -367,7 +367,7 @@ public class backup extends Controller {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static String ROOT = "/_backup/";
+		public static String ROOT = "/backup/";
 
 		String[] cc; // collections
 		String url;
