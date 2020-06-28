@@ -21,11 +21,15 @@
 		</tr>
 		<tr>
 			<td>$lang.get('user.nickname')</td>
-			<td>#if($u.nickname) $u.nickname #end</td>
+			<td>$!u.nickname</td>
+		</tr>
+		<tr>
+			<td>$lang.get('user.company')</td>
+			<td>$!u.company</td>
 		</tr>
 		<tr>
 			<td>$lang.get('user.title')</td>
-			<td>#if($u.title) $u.title #end</td>
+			<td>$u.title</td>
 		</tr>
 		<tr>
 			<td>$lang.get('user.email')</td>

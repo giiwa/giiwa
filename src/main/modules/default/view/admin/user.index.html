@@ -21,11 +21,10 @@
 <table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th style="width:150px;">$lang.get('user.name')</th>
+			<th>$lang.get('user.name')</th>
 			<th>$lang.get('user.nickname')</th>
 			<th>$lang.get('user.email')</th>
 			<th>$lang.get('user.phone')</th>
-			<th>$lang.get('user.tokens')</th>
 			<th style="width: 120px;">$lang.get('user.roles')</th>
 			<th style="width: 100px;">$lang.get('user.ip')</th>
 			<th style="width: 110px;">$lang.get('user.lastlogintime')</th>
@@ -45,7 +44,6 @@
 		<td>$!f.nickname</td>
 		<td>$!f.email</td>
 		<td>$!f.phone</td>
-		<td>$!f.tokens.size()</td>
 		<td>#foreach($r in $f.role.list)<div class='icon-shield' style="line-height: 16px;">$r.name</div>#end</td>
 		<td>$!f.ip</td>
 		<td>
