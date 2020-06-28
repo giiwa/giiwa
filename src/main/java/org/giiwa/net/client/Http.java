@@ -500,7 +500,7 @@ public final class Http {
 	 * @return the length
 	 */
 	public int download(String url, File file) {
-		return download(url, null, file);
+		return download(url, (JSON) null, file);
 	}
 
 	/**
@@ -598,6 +598,92 @@ public final class Http {
 		} finally {
 			if (log.isInfoEnabled())
 				log.info("download, cost=" + t.past() + ", url=" + url + ", size=" + file.length());
+		}
+
+		return 0;
+	}
+
+	/**
+	 * using post to download
+	 * 
+	 * @param url
+	 * @param body
+	 * @param file
+	 * @return
+	 */
+	public int post_download(String url, String body, File file) {
+
+		if (log.isDebugEnabled())
+			log.debug("url=" + url);
+
+		Response r = new Response();
+
+		if (client == null) {
+			client = getClient(url, _UA(), X.AMINUTE);
+		}
+
+		if (localContext == null) {
+			localContext = HttpClientContext.create();
+			localContext.setCookieStore(cookies);
+		}
+
+		if (client != null) {
+			TimeStamp t = TimeStamp.create();
+
+			HttpPost post = new HttpPost(url);
+			CloseableHttpResponse resp = null;
+			try {
+
+				post.addHeader("Content-Type", "application/json");
+
+				if (log.isDebugEnabled())
+					log.debug("post url=" + url);
+
+				StringEntity e1 = new StringEntity(body, "UTF8");
+				post.setEntity(e1);
+
+				resp = client.execute(post, localContext);
+
+				int status = resp.getStatusLine().getStatusCode();
+
+				if (status == 200 || status == 206) {
+					HttpEntity e = resp.getEntity();
+
+					InputStream in = e.getContent();
+
+					file.getParentFile().mkdirs();
+
+					FileOutputStream out = new FileOutputStream(file);
+					int l2 = IOUtil.copy(in, out);
+
+					Header[] hh = resp.getHeaders("Content-Length");
+					if (hh != null && hh.length > 0) {
+						int l1 = X.toInt(hh[0].getValue());
+						if (l1 != l2) {
+							// size error
+							log.error("download size error, expect=" + l1 + ", actual=" + l2, new Exception(url));
+							// bad file size
+							IOUtil.delete(file);
+							return 0;
+						}
+					}
+					return l2;
+				}
+				return 0;
+
+			} catch (Throwable e) {
+				log.error("cost=" + t.past() + ", " + url, e);
+				r.status = 600;
+				r.body = "error: " + e.getMessage();
+			} finally {
+				if (resp != null)
+					try {
+						resp.close();
+					} catch (IOException e) {
+					}
+
+			}
+
 		}
 
 		return 0;
