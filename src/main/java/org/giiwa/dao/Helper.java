@@ -3824,7 +3824,7 @@ public class Helper implements Serializable {
 		System.out.println("q=" + q.toString());
 
 		q = W.create();
-		q.and("cip_publisher='学苑出版社' AND ( cip_firstbookname like '孙子兵法')");
+		q.and(" cip_publisher='学苑出版社' AND ( cip_firstbookname like 孙子兵法 ) and ( cip_isbn like )");
 		System.out.println("q=" + q.toString());
 		q.scan(e -> {
 			if (X.isSame(e.name, "cip_firstbookname")) {

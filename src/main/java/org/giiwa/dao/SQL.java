@@ -223,36 +223,39 @@ public class SQL {
 				}
 
 				s1.trim();
-				c = s1.next();
 
-				Object value = null;
-				if (c == '\'') {
-					String s2 = s1.pair('\'');
-					if (s2.indexOf("|") > -1) {
-						value = X.split(s2, "\\|");
-					} else {
-						value = s2;
-					}
-				} else {
-					s1.skip(-1);
+				Object value = X.EMPTY;
+				if (s1.hasMore()) {
+					c = s1.next();
 
-					String s2 = s1.remain();
-
-					if (s2.indexOf("|") > -1) {
-						value = X.asList(X.split(s2, "\\|"), e -> {
-							try {
-								return JS.calculate(e.toString());
-							} catch (Exception e1) {
-//								log.error(e1.getMessage(), e1);
-								return e;
-							}
-						});
-					} else {
-						try {
-							value = JS.calculate(s2);
-						} catch (Exception e) {
-//							log.error(e.getMessage(), e);
+					if (c == '\'') {
+						String s2 = s1.pair('\'');
+						if (s2.indexOf("|") > -1) {
+							value = X.split(s2, "\\|");
+						} else {
 							value = s2;
+						}
+					} else {
+						s1.skip(-1);
+
+						String s2 = s1.remain();
+
+						if (s2.indexOf("|") > -1) {
+							value = X.asList(X.split(s2, "\\|"), e -> {
+								try {
+									return JS.calculate(e.toString());
+								} catch (Exception e1) {
+//								log.error(e1.getMessage(), e1);
+									return e;
+								}
+							});
+						} else {
+							try {
+								value = JS.calculate(s2);
+							} catch (Exception e) {
+//							log.error(e.getMessage(), e);
+								value = s2;
+							}
 						}
 					}
 				}
