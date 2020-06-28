@@ -1467,7 +1467,6 @@ public class Helper implements Serializable {
 			return and(name, v, op, 1);
 		}
 
-		@SuppressWarnings("rawtypes")
 		public W scan(Consumer<Entity> func) {
 
 			for (int i = queryList.size() - 1; i >= 0; i--) {
@@ -1480,21 +1479,11 @@ public class Helper implements Serializable {
 					e1._queryList = queryList;
 
 					String name = e1.name;
+					Object value = e1.value;
 
 					func.accept(e1);
 
-					boolean changed = false;
-					List l1 = X.asList(e1.value, s -> s);
-					if (l1 != null && l1.size() > 1) {
-						e1.value = l1;
-						changed = true;
-					}
-
-					if (!X.isSame(name, e1.name)) {
-						changed = true;
-					}
-
-					if (changed) {
+					if (!X.isSame(e1.value, value) || !X.isSame(name, e1.name)) {
 						e1.replace(e1.value);
 					}
 
@@ -1819,16 +1808,45 @@ public class Helper implements Serializable {
 
 				List<String> l1 = X.asList(X.split(name, "[,;\"\'\\[\\]]"), s -> s.toString());
 				if (l1.size() == 1) {
+
 					this.name = name.toString();
-					this.value = value;
+
+					List<?> l2 = X.asList(value, s -> s);
+					if (l2.size() == 1) {
+						this.value = l2.get(0);
+					} else {
+						W q = W.create();
+						for (Object s : l2) {
+							q.or(this.name, s, this.op);
+						}
+						_queryList.remove(this._idx);
+						q.cond = this.cond;
+						_queryList.add(this._idx, q);
+					}
 //						container.and(name.toString(), value, this.op);
 				} else {
-					W q = W.create();
-					for (String s : l1) {
-						q.or(s, value, this.op);
+
+					List<?> l2 = X.asList(value, s -> s);
+					if (l2.size() == 1) {
+						W q = W.create();
+						for (String s : l1) {
+							q.or(s, l2.get(0), this.op);
+						}
+						_queryList.remove(this._idx);
+						q.cond = this.cond;
+						_queryList.add(this._idx, q);
+					} else {
+						W q = W.create();
+						for (String s : l1) {
+							for (Object v : l2) {
+								q.or(s, v, this.op);
+							}
+						}
+						_queryList.remove(this._idx);
+						q.cond = this.cond;
+						_queryList.add(this._idx, q);
 					}
-					_queryList.remove(this._idx);
-					_queryList.add(this._idx, q);
+
 //						container.and(q);
 				}
 
@@ -3806,11 +3824,13 @@ public class Helper implements Serializable {
 		System.out.println("q=" + q.toString());
 
 		q = W.create();
-		q.and("( cip_firstbookname like '汪曾祺') or ( cip_firstauthor like '汪曾祺')");
+		q.and("cip_publisher='学苑出版社' AND ( cip_firstbookname like '孙子兵法')");
 		System.out.println("q=" + q.toString());
 		q.scan(e -> {
 			if (X.isSame(e.name, "cip_firstbookname")) {
 				e.name = "cip_firstbookname,cip_secondbookname,cip_seriesbookname";
+			} else if (X.isSame(e.name, "cip_publisher")) {
+				e.value = Arrays.asList("学苑出版社");
 			}
 		});
 		System.out.println("q=" + q.toString());
