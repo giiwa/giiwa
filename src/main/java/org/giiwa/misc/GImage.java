@@ -198,8 +198,8 @@ public class GImage {
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
 
-			if (w > w1 || h > h1)
-				throw new IOException("bad [src, w, h]");
+//			if (w > w1 || h > h1)
+//				throw new IOException("bad [src, w, h]");
 
 			if (h <= 0)
 				h = h1;

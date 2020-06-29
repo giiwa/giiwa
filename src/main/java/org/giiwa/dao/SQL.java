@@ -277,13 +277,19 @@ public class SQL {
 					} else if (X.isSame(op, "<")) {
 						q.and(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
-						q.and(name, value, W.OP.like);
+						if (!X.isEmpty(value)) {
+							q.and(name, value, W.OP.like);
+						}
 					} else if (X.isSame(op, "!like")) {
 						q.and(W.create().and(name, value, W.OP.like), W.NOT);
 					} else if (X.isSame(op, "like_")) {
-						q.and(name, value, W.OP.like_);
+						if (!X.isEmpty(value)) {
+							q.and(name, value, W.OP.like_);
+						}
 					} else if (X.isSame(op, "like_$")) {
-						q.and(name, value, W.OP.like_$);
+						if (!X.isEmpty(value)) {
+							q.and(name, value, W.OP.like_$);
+						}
 					}
 				} else {
 					if (X.isSame(op, "=")) {
@@ -301,13 +307,19 @@ public class SQL {
 					} else if (X.isSame(op, "<")) {
 						q.or(name, value, W.OP.lt);
 					} else if (X.isSame(op, "like")) {
-						q.or(name, value, W.OP.like);
+						if (!X.isEmpty(value)) {
+							q.or(name, value, W.OP.like);
+						}
 					} else if (X.isSame(op, "!like")) {
 						q.and(W.create().and(name, value, W.OP.like), W.NOT);
 					} else if (X.isSame(op, "like_")) {
-						q.or(name, value, W.OP.like_);
+						if (!X.isEmpty(value)) {
+							q.or(name, value, W.OP.like_);
+						}
 					} else if (X.isSame(op, "like_$")) {
-						q.or(name, value, W.OP.like_$);
+						if (!X.isEmpty(value)) {
+							q.or(name, value, W.OP.like_$);
+						}
 					}
 				}
 			}

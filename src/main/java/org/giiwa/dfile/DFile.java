@@ -43,6 +43,10 @@ public abstract class DFile {
 
 	public abstract String getAbsolutePath();
 
+	public boolean is(String root) {
+		return this.getFilename().startsWith("/" + root + "/");
+	}
+
 	public String getCanonicalPath() {
 		return X.getCanonicalPath(this.getAbsolutePath());
 	}
