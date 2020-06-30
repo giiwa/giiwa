@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,6 +16,8 @@ import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.Node;
 import org.giiwa.dao.X;
@@ -30,6 +33,8 @@ import org.giiwa.misc.IOUtil;
  */
 
 public abstract class DFile {
+
+	private static Log log = LogFactory.getLog(DFile.class);
 
 	public abstract String getFilename();
 
@@ -115,7 +120,14 @@ public abstract class DFile {
 	 * @param in  the inputstream
 	 * @return the size
 	 */
-	public abstract long upload(long pos, InputStream in);
+	public long upload(long pos, InputStream in) {
+		try {
+			return IOUtil.copy(in, this.getOutputStream(pos));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return -1;
+	}
 
 	/**
 	 * download the file to local file
@@ -123,7 +135,15 @@ public abstract class DFile {
 	 * @param f the local file
 	 * @return the size
 	 */
-	public abstract long download(File f);
+	public long download(File f) {
+		try {
+			f.getParentFile().mkdirs();
+			return IOUtil.copy(this.getInputStream(), new FileOutputStream(f));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return -1;
+	}
 
 	public abstract long count(Consumer<String> moni);
 

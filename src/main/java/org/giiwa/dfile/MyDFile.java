@@ -307,42 +307,6 @@ public class MyDFile extends DFile {
 		return upload(0, in);
 	}
 
-	/**
-	 * upload the inputsteam to the file
-	 * 
-	 * @param pos the position
-	 * @param in  the inputstream
-	 * @return the size
-	 */
-	public long upload(long pos, InputStream in) {
-		try {
-			return IOUtil.copy(in, this.getOutputStream(pos));
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			Disk.dao.update(this.disk, V.create("bad", 1));
-
-		}
-		return -1;
-	}
-
-	/**
-	 * download the file to local file
-	 * 
-	 * @param f the local file
-	 * @return the size
-	 */
-	public long download(File f) {
-		try {
-			f.getParentFile().mkdirs();
-			return IOUtil.copy(this.getInputStream(), new FileOutputStream(f));
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			Disk.dao.update(this.disk, V.create("bad", 1));
-
-		}
-		return -1;
-	}
-
 	public long count(Consumer<String> moni) {
 		long n = 0;
 		if (this.isDirectory()) {
