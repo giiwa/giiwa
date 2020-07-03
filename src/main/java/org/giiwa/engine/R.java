@@ -170,7 +170,8 @@ public class R extends IStub {
 				}
 
 				if (temp != null) {
-					temp.delete();
+					// TODO
+//					temp.delete();
 				}
 
 //				System.out.println(r2J2(x));
@@ -590,7 +591,8 @@ public class R extends IStub {
 
 			} finally {
 
-				t.delete();
+				// TODO
+//				t.delete();
 			}
 		}
 

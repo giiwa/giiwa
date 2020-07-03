@@ -706,7 +706,12 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 
 	@Override
 	public Object clone() throws CloneNotSupportedException {
-		return super.clone();
+		Bean b = (Bean) super.clone();
+		if (this.data != null) {
+			b.data = new HashMap<String, Object>();
+			b.data.putAll(this.data);
+		}
+		return b;
 	}
 
 }
