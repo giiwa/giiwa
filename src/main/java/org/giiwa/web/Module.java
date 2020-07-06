@@ -342,7 +342,7 @@ public class Module {
 				Element r1 = document.getRootElement();
 				Module t = new Module();
 				t._load(r1);
-				String dest = Controller.MODULE_HOME + "/upgrade/" + t.getName();
+				String dest = Controller.MODULE_HOME + "/upgrade/" + t.name;
 				File d1 = new File(dest);
 				if (d1.exists()) {
 					IOUtil.delete(d1);
@@ -868,7 +868,7 @@ public class Module {
 	 * 
 	 * @param conf the conf
 	 */
-	public static void init(Configuration conf) {
+	public synchronized static void init(Configuration conf) {
 
 		log.info("Module init ...");
 
@@ -983,7 +983,7 @@ public class Module {
 					 */
 //					System.out.println("init module=" + m.name);
 					if (!m._init(_conf)) {
-						log.error("module init failed, name=" + m.getName());
+						log.error("module init failed, name=" + m.name);
 					}
 				} catch (Throwable e) {
 					log.error(e.getMessage(), e);
@@ -1921,9 +1921,9 @@ public class Module {
 	 * @param m the m
 	 * @return true, if successful
 	 */
-	public static boolean init(Module m) {
+	public synchronized static boolean init(Module m) {
 		if (!m.enabled) {
-			log.info("[" + m.getName() + "] is disabled");
+			log.info("[" + m.name + "] is disabled");
 		} else if (modules.containsKey(m.id)) {
 			log.error("the [id] duplicated, [" + m.name + ", " + modules.get(m.id).name + "], ignore the [" + m.name
 					+ "]");
@@ -2110,7 +2110,7 @@ public class Module {
 		 * @see java.lang.Object.toString()
 		 */
 		public String toString() {
-			return "{" + module.getName() + "//" + model.getName() + "}";
+			return "{" + module.name + "//" + model.getName() + "}";
 		}
 
 		/**

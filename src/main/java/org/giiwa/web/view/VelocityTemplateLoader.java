@@ -100,6 +100,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 
 		} catch (Exception e) {
 			cache.remove(resource);
+			log.error(resource, e);
 		}
 		return f;
 	}

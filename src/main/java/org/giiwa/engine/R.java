@@ -31,6 +31,7 @@ import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Exporter;
+import org.giiwa.misc.IOUtil;
 import org.giiwa.net.mq.IStub;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.net.mq.MQ.Request;
@@ -92,12 +93,12 @@ public class R extends IStub {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public JSON run(String code) throws Exception {
+	public Object run(String code) throws Exception {
 		return run(code, null, (List) null, false);
 	}
 
 	@SuppressWarnings("rawtypes")
-	public JSON run(String code, String dataname, List data) throws Exception {
+	public Object run(String code, String dataname, List data) throws Exception {
 		return run(code, dataname, data, false);
 	}
 
@@ -112,7 +113,7 @@ public class R extends IStub {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("rawtypes")
-	public JSON run(String code, String dataname, List data, boolean head) throws Exception {
+	public Object run(String code, String dataname, List data, boolean head) throws Exception {
 
 		String host = Config.getConf().getString("r.host", X.EMPTY);
 
@@ -129,7 +130,7 @@ public class R extends IStub {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private JSON _run(String code, String dataname, List data, boolean head) throws Exception {
+	private Object _run(String code, String dataname, List data, boolean head) throws Exception {
 
 		_check();
 
@@ -150,34 +151,41 @@ public class R extends IStub {
 
 					String s1 = _export(dataname, (List<Object>) data, head, temp);
 					if (!X.isEmpty(s1)) {
-						sb.append(s1);
+						sb.append(s1).append("\n");
 					}
 				}
 
-				sb.append(func + "<-function(){");
-
-				sb.append(code).append("};" + func + "();");
+				Temp t = Temp.create("a.txt");
+				File f = t.getFile();
+				f.getParentFile().mkdirs();
+				sb.append(func + "<-function(){\n");
+				sb.append("sink(file=\"" + f.getAbsolutePath() + "\");\n");
+				sb.append(code).append("\nsink(file=NULL)\n};\n" + func + "();");
 
 //				System.out.println(sb);
 //
 				if (log.isDebugEnabled())
 					log.debug("R.run, code=\n" + sb);
 
-				REXP x = c.eval(sb.toString());
-
-				if (x == null || x.isNull()) {
-					return JSON.create();
-				}
+				c.eval(sb.toString());
 
 				if (temp != null) {
 					// TODO
 //					temp.delete();
 				}
 
+				String r = IOUtil.read(f, "UTF8");
+
+				if (log.isDebugEnabled())
+					log.debug("R.run, result=\n" + r);
+
+				t.delete();
+				return r;
+
 //				System.out.println(r2J2(x));
 
-				Object s1 = r2J(x);
-				return JSON.create().append("data", s1);
+//				Object s1 = r2J(x);
+//				return JSON.create().append("data", s1);
 			} catch (RserveException re) {
 
 				log.error(sb.toString() + ", error=" + re.getRequestErrorDescription(re.getRequestReturnCode()), re);
@@ -445,7 +453,7 @@ public class R extends IStub {
 
 			System.out.println(inst.run("summary(d);", "d", Arrays.asList(1, 2, 3, 100)));
 
-			JSON j1 = inst.run(
+			Object j1 = inst.run(
 					"f509376766<-function(){x <- c(214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,90,93,90,106,214,214,214,214,214,214);fivenum(x)};f509376766();");
 			System.out.println(j1);
 
@@ -457,11 +465,11 @@ public class R extends IStub {
 			}
 
 			t.reset();
-			JSON r = inst.run("count(data)", ll);
+			Object r = inst.run("count(data)", ll);
 			System.out.println(r + ", cost=" + t.past());
 
-			r = inst.run("median(data)", ll);
-			System.out.println(r + ", cost=" + t.past());
+			Object r1 = inst.run("median(data)", ll);
+			System.out.println(r1 + ", cost=" + t.past());
 
 			for (int i = 0; i < ll.length; i++) {
 				ll[i] = i + 1;
@@ -501,7 +509,7 @@ public class R extends IStub {
 
 			t.reset();
 			j1 = inst.run("load(file=\"d16\");summary(d16)");
-			System.out.println("cost=" + t.past() + "//" + j1.get("data"));
+			System.out.println("cost=" + t.past() + "//" + j1);
 
 //			System.out.println(((List) j1.get("data")).get(0));
 
@@ -517,17 +525,17 @@ public class R extends IStub {
 			j1 = inst.run(sb.toString());
 			System.out.println(j1);
 
-			List l3 = (List) j1.get("data");
-			for (int i = 0; i < l3.size(); i++) {
-				System.out.println(i + "=> " + l3.get(i));
-			}
+//			List l3 = (List) j1.get("data");
+//			for (int i = 0; i < l3.size(); i++) {
+//				System.out.println(i + "=> " + l3.get(i));
+//			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public JSON run(String code, Object[] data) throws Exception {
+	public Object run(String code, Object[] data) throws Exception {
 
 		if (X.isIn(code, "mean(data)", "avg(data)", "mean", "avg")) {
 			return mean(data);
@@ -542,12 +550,12 @@ public class R extends IStub {
 		} else if (X.isIn(code, "value_count(data)", "value_count")) {
 			return value_count(data);
 		} else if (X.isIn(code, "cv", "cv(data)")) {
-			JSON sd = run("sd(data)", data);
-			JSON mean = run("mean(data)", data);
-			if (X.isEmpty(sd) || X.isEmpty(mean) || mean.getDouble("data") != 0)
+			Object sd = run("sd(data)", data);
+			Object mean = run("mean(data)", data);
+			if (X.isEmpty(sd) || X.isEmpty(mean) || X.toDouble(mean) != 0)
 				return null;
 
-			return JSON.create().append("data", sd.getDouble("data") / mean.getDouble("data"));
+			return JSON.create().append("data", X.toDouble(sd) / X.toDouble(mean));
 		}
 
 		_check();
@@ -600,48 +608,48 @@ public class R extends IStub {
 
 	}
 
-	public JSON mean(Object[] data) throws Exception {
+	public Object mean(Object[] data) throws Exception {
 		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
 			return X.toDouble(e);
 		}).average().getAsDouble();
-		return JSON.create().append("data", d);
+		return d;
 	}
 
-	public JSON sum(Object[] data) throws Exception {
+	public Object sum(Object[] data) throws Exception {
 		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
 			return X.toDouble(e);
 		}).sum();
-		return JSON.create().append("data", d);
+		return d;
 	}
 
-	public JSON count(Object[] data) throws Exception {
-		return JSON.create().append("data", data.length);
+	public Object count(Object[] data) throws Exception {
+		return data.length;
 	}
 
-	public JSON value_count(Object[] data) throws Exception {
+	public Object value_count(Object[] data) throws Exception {
 		long d = Arrays.asList(data).parallelStream().distinct().count();
-		return JSON.create().append("data", d);
+		return d;
 	}
 
-	public JSON range(Object[] data) throws Exception {
+	public Object range(Object[] data) throws Exception {
 		DoubleStream d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
 			return X.toDouble(e);
 		});
-		return JSON.create().append("data", d.max().getAsDouble() - d.min().getAsDouble());
+		return d.max().getAsDouble() - d.min().getAsDouble();
 	}
 
-	public JSON max(Object[] data) throws Exception {
+	public Object max(Object[] data) throws Exception {
 		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
 			return X.toDouble(e);
 		}).max().getAsDouble();
-		return JSON.create().append("data", d);
+		return d;
 	}
 
-	public JSON min(Object[] data) throws Exception {
+	public Object min(Object[] data) throws Exception {
 		double d = Arrays.asList(data).parallelStream().mapToDouble(e -> {
 			return X.toDouble(e);
 		}).min().getAsDouble();
-		return JSON.create().append("data", d);
+		return d;
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -652,7 +660,7 @@ public class R extends IStub {
 
 			JSON j1 = req.get();
 
-			JSON j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), j1.getInt("h") == 1);
+			Object j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), j1.getInt("h") == 1);
 			req.response(j2);
 
 		} catch (Exception e) {

@@ -197,7 +197,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	}
 
 	private static Gson _gson() {
-		return new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY).create();
+		return new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY).excludeFieldsWithoutExposeAnnotation()
+				.create();
 	}
 
 	/**
@@ -391,7 +392,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	}
 
 	public String toPrettyString() {
-		Gson gson =  new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY).setPrettyPrinting().create();
+		Gson gson = new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY)
+				.excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
 		return gson.toJson(this);
 	}
 
