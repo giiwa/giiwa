@@ -138,12 +138,13 @@ public class _Task extends Bean {
 
 			for (Object o : l1) {
 				String name = o.toString();
-//				dao.delete(name);
 
 				_Task t = dao.load(name);
 				Task t1 = t.getTask_obj();
 				if (t1 != null) {
 					t1.schedule(0, true);
+				} else if (System.currentTimeMillis() - t.lasttime > X.ADAY) {
+					dao.delete(name);
 				}
 			}
 
