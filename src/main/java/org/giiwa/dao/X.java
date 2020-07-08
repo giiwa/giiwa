@@ -26,6 +26,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1211,6 +1212,11 @@ public final class X {
 		List<?> l2 = X.asList(X.split(s, "[,;]"), e -> e);
 		System.out.println(l2);
 
+		JSON j1 = JSON.create();
+		j1.append("a", 1);
+		JSON j2 = (JSON) (j1.clone());
+		System.out.println(j2);
+
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {
@@ -1379,6 +1385,42 @@ public final class X {
 
 	public static class Image extends GImage {
 
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static Object clone(Object data) {
+
+		if (data == null)
+			return null;
+
+		if (data instanceof Cloneable) {
+			Object r = null;
+			try {
+				Method m = data.getClass().getMethod("clone", (Class<?>[]) null);
+				System.out.println(m);
+
+				r = m.invoke(data, (Object[]) null);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				e.printStackTrace();
+			}
+
+			if (r instanceof List) {
+				List l1 = (List) r;
+				for (int i = l1.size() - 1; i >= 0; i--) {
+					l1.set(i, X.clone(l1.get(i)));
+				}
+			} else if (r instanceof Map) {
+				Map m1 = (Map) r;
+				for (Object name : m1.keySet()) {
+					m1.put(name, X.clone(m1.get(name)));
+				}
+			}
+
+			return r;
+		}
+
+		return data;
 	}
 
 }

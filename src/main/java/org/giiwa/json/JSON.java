@@ -1227,4 +1227,13 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return sf.toString();
 	}
 
+	@Override
+	public Object clone() {
+		JSON j1 = (JSON) super.clone();
+		for (String name : j1.keySet()) {
+			j1.put(name, X.clone(j1.get(name)));
+		}
+		return j1;
+	}
+
 }

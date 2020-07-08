@@ -704,14 +704,17 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return getAll().entrySet();
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public Object clone() throws CloneNotSupportedException {
-		Bean b = (Bean) super.clone();
-		if (this.data != null) {
-			b.data = new HashMap<String, Object>();
-			b.data.putAll(this.data);
+	public Object clone() {
+		try {
+			Bean b = (Bean) super.clone();
+			b.data = (Map) X.clone(this.data);
+			return b;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
-		return b;
+		return null;
 	}
 
 	@Override
