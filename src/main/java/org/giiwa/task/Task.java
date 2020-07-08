@@ -27,6 +27,7 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
+import org.giiwa.bean._Task;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
@@ -403,6 +404,9 @@ public abstract class Task implements Runnable, Serializable {
 					if (this.tryLock()) {
 						try {
 //							_run = true;
+
+							_Task.update(this);
+
 							runtimes++;
 							onExecute();
 						} finally {
@@ -420,6 +424,8 @@ public abstract class Task implements Runnable, Serializable {
 
 				state = State.finished;
 				LocalRunner.remove(this);
+
+				_Task.remove(this);
 
 				sf = null;
 
@@ -665,6 +671,10 @@ public abstract class Task implements Runnable, Serializable {
 
 	final public boolean isScheduled() {
 		return LocalRunner.isScheduled(this);
+	}
+
+	public static boolean isRunning(String name) {
+		return LocalRunner.isRunning(name);
 	}
 
 	public static Task[] schedule(Task[] tt, long ms, boolean global) {
@@ -951,6 +961,15 @@ public abstract class Task implements Runnable, Serializable {
 			}
 
 			if (pendingQueue.containsKey(t.getName())) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public synchronized static boolean isRunning(String name) {
+
+			if (runningQueue.containsKey(name)) {
 				return true;
 			}
 
