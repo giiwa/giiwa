@@ -50,19 +50,19 @@ public class _Task extends Bean {
 
 	public static final long LOST = 10 * 1000;
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "id")
 	private String id;
 
-	@Column(memo = "任务全局唯一名称")
+	@Column(memo = "task name")
 	private String name;
 
-	@Column(memo = "任务状态心跳")
+	@Column(memo = "heartbeat")
 	private long lasttime;
 
-	@Column(name = "运行节点")
+	@Column(memo = "running node")
 	private String _node;
 
-	@Column(name = "任务体")
+	@Column(memo = "task body")
 	private String body;
 
 	public static void update(Task t) {
@@ -97,9 +97,14 @@ public class _Task extends Bean {
 		return Base64.getEncoder().encodeToString(bb);
 	}
 
-	private Task getTask_obj() throws Exception {
-		byte[] bb = Base64.getDecoder().decode(body);
-		return X.fromBytes(bb, true);
+	private Task getTask_obj() {
+		try {
+			byte[] bb = Base64.getDecoder().decode(body);
+			return X.fromBytes(bb, true);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	public static void touch() {
@@ -133,9 +138,13 @@ public class _Task extends Bean {
 
 			for (Object o : l1) {
 				String name = o.toString();
+//				dao.delete(name);
+
 				_Task t = dao.load(name);
 				Task t1 = t.getTask_obj();
-				t1.schedule(0, true);
+				if (t1 != null) {
+					t1.schedule(0, true);
+				}
 			}
 
 		} catch (Exception e) {
