@@ -1214,8 +1214,10 @@ public final class X {
 
 		JSON j1 = JSON.create();
 		j1.append("a", 1);
-		JSON j2 = (JSON) (j1.clone());
+		JSON j2 = X.clone(j1);
 		System.out.println(j2);
+
+		System.out.println(X.asList(new long[] { 1L, 2L }, s1 -> s1));
 
 	}
 
@@ -1388,21 +1390,27 @@ public final class X {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Object clone(Object data) {
+	public static <T> T clone(T data) {
 
 		if (data == null)
 			return null;
 
 		if (data instanceof Cloneable) {
-			Object r = null;
-			try {
-				Method m = data.getClass().getMethod("clone", (Class<?>[]) null);
-				System.out.println(m);
+			T r = null;
+			if (data.getClass().isArray()) {
+				r = (T) X.asList(data, s -> s);
+			} else {
+				try {
 
-				r = m.invoke(data, (Object[]) null);
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-				e.printStackTrace();
+					Method m = data.getClass().getMethod("clone", (Class<?>[]) null);
+//				System.out.println(m);
+
+					r = (T) m.invoke(data, (Object[]) null);
+				} catch (Exception e) {
+					log.error(data.getClass() + ", " + data.toString(), e);
+//				e.printStackTrace();
+					r = data;
+				}
 			}
 
 			if (r instanceof List) {
@@ -1415,6 +1423,11 @@ public final class X {
 				for (Object name : m1.keySet()) {
 					m1.put(name, X.clone(m1.get(name)));
 				}
+			}
+
+			if (data.getClass().isArray()) {
+				List l1 = (List) r;
+				r = (T) l1.toArray();
 			}
 
 			return r;
