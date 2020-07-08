@@ -209,6 +209,14 @@ public abstract class MQ {
 
 	protected abstract long _topic(String to, Request req) throws Exception;
 
+	public static long topic(String to, Task task) throws Exception {
+
+		Request req = Request.create();
+		req.put(task);
+
+		return topic(to, req);
+	}
+
 	/**
 	 * broadcast the message as "topic" to all "dest:to", and return immediately
 	 * 
@@ -217,7 +225,6 @@ public abstract class MQ {
 	 * @return the sequence of the message
 	 * @throws Exception the Exception
 	 */
-
 	public static long topic(String to, Request req) throws Exception {
 
 		// FileClient.notify(to, req.get());

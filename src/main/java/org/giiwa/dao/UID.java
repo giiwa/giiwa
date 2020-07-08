@@ -104,10 +104,10 @@ public final class UID {
 			v += 1;
 		}
 
-		long max = Global.getLong("uid.next.s2", -1);
-		if (max > -1 && v > max) {
-			throw new Exception("uid.next(" + key + ") is run out, max=" + max + ", cur=" + v);
-		}
+//		long max = Global.getLong("uid.next.s2", -1);
+//		if (max > -1 && v > max) {
+//			throw new Exception("uid.next(" + key + ") is run out, max=" + max + ", cur=" + v);
+//		}
 		return prefix + v;
 	}
 

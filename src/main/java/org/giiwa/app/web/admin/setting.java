@@ -28,6 +28,8 @@ import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.net.mq.MQ;
+import org.giiwa.task.Task;
 import org.giiwa.web.*;
 
 /**
@@ -232,6 +234,8 @@ public class setting extends Controller {
 			Local.setConfig("home.uri.1", this.getHtml("home.uri.1"));
 
 			Global.setConfig("cluster.code", this.getLong("cluster.code"));
+			Global.setConfig("uid.next.s1", this.getLong("uid.next.s1"));
+
 			Global.setConfig("site.group", this.getString("site.group"));
 			Global.setConfig("user.name.rule", this.getHtml("user_name"));
 			Global.setConfig("user.passwd.rule", this.getHtml("user_passwd"));
@@ -271,6 +275,27 @@ public class setting extends Controller {
 //			} else {
 //				Helper.disableOptmizer();
 //			}
+
+			try {
+
+				MQ.topic(Task.MQNAME, new Task() {
+
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void onExecute() {
+						Language.inst = null;
+						Language.getLanguage();
+					}
+
+				}.attach("ms", 0).attach("g", false));
+
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 
 			this.send(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
 		}

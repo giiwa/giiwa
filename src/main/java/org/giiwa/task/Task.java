@@ -65,7 +65,7 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static final String MQNAME = "task";
+	public static final String MQNAME = "task";
 
 	/** The log. */
 	public static Log log = LogFactory.getLog(Task.class);
@@ -127,8 +127,9 @@ public abstract class Task implements Runnable, Serializable {
 		return (T) _attached.get(name);
 	}
 
-	public void attach(String name, Object value) {
+	public Task attach(String name, Object value) {
 		_attached.put(name, value);
+		return this;
 	}
 
 	public String get_t() {
@@ -487,7 +488,9 @@ public abstract class Task implements Runnable, Serializable {
 							return;
 
 						long ms = t.attach("ms");
-						LocalRunner.schedule(t, ms, true);
+						boolean global = t.attach("g");
+						LocalRunner.schedule(t, ms, global);
+
 					} catch (Exception e) {
 //						log.error(e.getMessage(), e);
 						// ignore
@@ -639,6 +642,7 @@ public abstract class Task implements Runnable, Serializable {
 
 						this.attach("node", Local.id());
 						this.attach("ms", msec);
+						this.attach("g", true);
 						MQ.Request r = MQ.Request.create().put(this);
 						MQ.topic(Task.MQNAME, r);
 
