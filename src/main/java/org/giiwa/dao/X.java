@@ -114,6 +114,8 @@ public final class X {
 
 	public static X inst = new X();
 
+	public static boolean INITED = false;
+
 	private X() {
 	}
 
@@ -128,10 +130,10 @@ public final class X {
 		if (s1 == s2)
 			return true;
 
-		if (X.isEmpty(s1) && X.isEmpty(s2))
+		if (s1 == null && s2 == null)
 			return true;
 
-		if (X.isEmpty(s1) || X.isEmpty(s2)) {
+		if (s1 == null || s2 == null) {
 			return false;
 		}
 
@@ -159,11 +161,8 @@ public final class X {
 			return true;
 		}
 
-		if (s1 != null) {
-			return s1.equals(s2);
-		}
+		return s1.equals(s2);
 
-		return false;
 	}
 
 	/**

@@ -136,6 +136,8 @@ public class GiiwaContextListener implements ServletContextListener {
 
 //			System.out.println("init finished");
 
+			X.INITED = true;
+
 		} catch (Exception e) {
 			java.util.logging.Logger.getLogger("giiwa").severe(e.getMessage());
 			e.printStackTrace();

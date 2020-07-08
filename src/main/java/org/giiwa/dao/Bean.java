@@ -714,4 +714,30 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return b;
 	}
 
+	@Override
+	public int hashCode() {
+
+		Object id = this.get(X.ID);
+
+		if (id == null)
+			return 0;
+		return id.hashCode();
+
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+
+		if (this == obj)
+			return true;
+
+		if (!this.getClass().equals(obj.getClass()))
+			return false;
+
+		Object id1 = this.get(X.ID);
+		Object id2 = ((Bean) obj).get(X.ID);
+
+		return X.isSame(id1, id2);
+	}
+
 }

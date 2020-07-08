@@ -61,6 +61,9 @@ public class GiiwaServlet extends HttpServlet {
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
+		if (!X.INITED)
+			throw new IOException("not inited");
+
 		TimeStamp t = TimeStamp.create();
 
 		HttpServletRequest r1 = (HttpServletRequest) req;

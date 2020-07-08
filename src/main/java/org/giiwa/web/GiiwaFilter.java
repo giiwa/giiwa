@@ -49,6 +49,9 @@ public class GiiwaFilter implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
 
+		if (!X.INITED)
+			throw new IOException("not inited");
+
 		TimeStamp t = TimeStamp.create();
 
 		HttpServletRequest r1 = (HttpServletRequest) req;
