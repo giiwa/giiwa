@@ -14,6 +14,7 @@ import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
 import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -94,9 +95,17 @@ public class SFTP implements Closeable {
 
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Vector list(String src) throws SftpException {
+	@SuppressWarnings("unchecked")
+	public Vector<LsEntry> list(String src) throws SftpException {
 		return sftp.ls(src);
+	}
+
+	public void rm(String src) throws SftpException {
+		sftp.rm(src);
+	}
+
+	public void rmdir(String src) throws SftpException {
+		sftp.rmdir(src);
 	}
 
 	private static Session getSession(Url url) throws JSchException {
