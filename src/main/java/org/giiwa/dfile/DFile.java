@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -32,8 +33,13 @@ import org.giiwa.misc.IOUtil;
  * 
  */
 
-public abstract class DFile {
+public abstract class DFile implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
 	private static Log log = LogFactory.getLog(DFile.class);
 
 	public abstract String getFilename();
