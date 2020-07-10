@@ -69,8 +69,9 @@ public abstract class View {
 			p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
 			p.setProperty("directive.set.null.allowed", "true");
 			p.setProperty("resource.loader.file.class", "org.giiwa.web.view.VelocityTemplateLoader");
+			
 			Velocity.init(p);
-
+			
 		} catch (Exception e) {
 			log.warn(e.getMessage(), e);
 		}

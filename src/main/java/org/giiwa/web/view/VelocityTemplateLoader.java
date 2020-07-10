@@ -179,6 +179,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 		} catch (Exception e) {
 			log.warn(e.getMessage(), e);
 		}
+		
 	}
 
 }
