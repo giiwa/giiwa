@@ -326,7 +326,7 @@ public final class Local extends Bean {
 				this.schedule(1000 * 6);
 			}
 
-		}.schedule(1000);
+		}.schedule(6000);
 	}
 
 }

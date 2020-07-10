@@ -425,7 +425,9 @@ public abstract class Task implements Runnable, Serializable {
 				state = State.finished;
 				LocalRunner.remove(this);
 
-				_Task.remove(this);
+				if (X.isSame(_t, "G")) {
+					_Task.remove(this);
+				}
 
 				sf = null;
 

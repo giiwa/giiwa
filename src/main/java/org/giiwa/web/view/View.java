@@ -73,7 +73,7 @@ public abstract class View {
 			Velocity.init(p);
 			
 		} catch (Exception e) {
-			log.warn(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 
 		for (String name : config.keySet()) {
