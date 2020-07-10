@@ -83,7 +83,7 @@
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.velocity/velocity-engine-core/2.1/af23c9cc6eafd771a75ef19c4bcaf89337401c10/velocity-engine-core-2.1.jar" sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.velocity/velocity-engine-core/2.1/27f1bba304bb4a0b423d5b2c86e0aa0d40bee246/velocity-engine-core-2.1-sources.jar">
+	<classpathentry kind="lib" path="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.velocity/velocity-engine-core/2.2/68d899cb70cd27d495562fa808feb2da4926d38f/velocity-engine-core-2.2.jar" sourcepath="/Users/joe/.gradle/caches/modules-2/files-2.1/org.apache.velocity/velocity-engine-core/2.2/fc07f1a396db418034c5a4a8115fbb8df785a64/velocity-engine-core-2.2-sources.jar">
 		<attributes>
 			<attribute name="gradle_used_by_scope" value="main,test"/>
 		</attributes>

@@ -56,7 +56,7 @@ dependencies {
     	exclude group: 'org.slf4j',module: 'slf4j-api'
     }
     compile ('log4j:log4j:1.2.17')
-    compile ("org.apache.velocity:velocity-engine-core:2.1"){
+    compile ("org.apache.velocity:velocity-engine-core:2.2"){
     	exclude group: 'org.apache.commons',module: 'commons-lang3'
     	exclude group: 'org.slf4j',module: 'slf4j-api'
     }
