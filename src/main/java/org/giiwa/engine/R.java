@@ -555,7 +555,7 @@ public class R extends IStub {
 			if (X.isEmpty(sd) || X.isEmpty(mean) || X.toDouble(mean) != 0)
 				return null;
 
-			return JSON.create().append("data", X.toDouble(sd) / X.toDouble(mean));
+			return X.toDouble(sd) / X.toDouble(mean);
 		}
 
 		_check();
@@ -590,11 +590,11 @@ public class R extends IStub {
 
 				String[] ss = x.asStrings();
 				if (ss == null || ss.length == 0) {
-					return JSON.create();
+					return null;
 				} else if (ss.length == 1) {
-					return JSON.create().append("data", ss[0]);
+					return ss[0];
 				} else {
-					return JSON.create().append("data", ss);
+					return ss;
 				}
 
 			} finally {
