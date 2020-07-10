@@ -28,6 +28,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.task.Task;
+import org.giiwa.web.Controller;
 
 /**
  * The code bean, used to store special code linked with s1 and s2 fields
@@ -140,11 +141,20 @@ public class _Task extends Bean {
 				String name = o.toString();
 
 				_Task t = dao.load(name);
+				if (System.currentTimeMillis() - t.lasttime > X.ADAY || (X.isSame(t._node, Local.id())
+						&& System.currentTimeMillis() - Controller.UPTIME > X.AMINUTE)) {
+					dao.delete(name);
+					continue;
+				}
+
 				Task t1 = t.getTask_obj();
 				if (t1 != null) {
-					t1.schedule(0, true);
-				} else if (System.currentTimeMillis() - t.lasttime > X.ADAY) {
-					dao.delete(name);
+					if (t1.isScheduled()) {
+						dao.delete(name);
+					} else {
+						// recover
+						t1.schedule(0, true);
+					}
 				}
 			}
 

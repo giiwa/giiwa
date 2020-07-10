@@ -116,11 +116,21 @@ public class SFTP implements Closeable {
 		session.setPassword(url.get("passwd"));
 
 		UserInfo ui = new MyUserInfo() {
+
+			@Override
+			public boolean promptPassphrase(String message) {
+				if (log.isDebugEnabled())
+					log.debug("promptPassphrase:" + message);
+				return true;
+			}
+
+			@Override
 			public void showMessage(String message) {
 				if (log.isDebugEnabled())
 					log.debug("showMessage:" + message);
 			}
 
+			@Override
 			public boolean promptYesNo(String message) {
 				if (log.isDebugEnabled())
 					log.debug("promptYesNo:" + message);
@@ -133,7 +143,11 @@ public class SFTP implements Closeable {
 		// session.connect();
 		session.connect(30 * 1000);
 
-		return session;
+		if (session.isConnected()) {
+			return session;
+		} else {
+			throw new JSchException("connect failed!");
+		}
 	}
 
 	private static abstract class MyUserInfo implements UserInfo, UIKeyboardInteractive {
