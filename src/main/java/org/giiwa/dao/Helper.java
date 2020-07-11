@@ -4285,4 +4285,12 @@ public class Helper implements Serializable {
 		}
 	}
 
+	public static void init(String name) {
+		for (String key : new String[] { "id", "created", "updated" }) {
+			LinkedHashMap<String, Integer> m = new LinkedHashMap<String, Integer>();
+			m.put(key, 1);
+			Helper.createIndex(Helper.DEFAULT, name, m);
+		}
+	}
+
 }

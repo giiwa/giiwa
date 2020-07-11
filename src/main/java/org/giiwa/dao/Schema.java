@@ -6,9 +6,11 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.giiwa.bean.Data;
+import org.giiwa.cache.Cache;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.ClassUtil;
+import org.giiwa.task.Task;
 import org.giiwa.web.Language;
 
 public class Schema {
@@ -26,6 +28,7 @@ public class Schema {
 				}
 
 				if (!beans.contains(t)) {
+					Helper.init(table.name());
 					beans.add(t);
 				}
 			}
@@ -39,6 +42,8 @@ public class Schema {
 
 			});
 		}
+
+		load(Language.getLanguage());
 
 	}
 
@@ -98,6 +103,36 @@ public class Schema {
 		}
 
 		return j1;
+	}
+
+	public static List<JSON> load(Language lang) {
+
+		List<JSON> l = Cache.get("db.schema");
+
+		if (l == null) {
+			Task.schedule("db.schema.reload", () -> {
+				List<JSON> l3 = JSON.createList();
+
+				List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
+				l1.forEach(e -> {
+					JSON j1 = Schema.format(e, lang);
+					l3.add(j1);
+				});
+				Collections.sort(l3, new Comparator<JSON>() {
+
+					@Override
+					public int compare(JSON o1, JSON o2) {
+						return o1.getString("table").compareTo(o2.getString("table"));
+					}
+
+				});
+
+				Cache.set("db.schema", l3, X.AMINUTE * 10);
+			});
+		}
+
+		return l;
+
 	}
 
 }

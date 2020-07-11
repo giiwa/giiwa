@@ -81,9 +81,9 @@ public class CleanupTask extends Task {
 
 		home = Controller.GIIWA_HOME;
 
-		add("org.giiwa.framework.bean");
-		add("org.giiwa.framework.bean.m");
-		add("org.giiwa.core.conf");
+//		add("org.giiwa.framework.bean");
+//		add("org.giiwa.framework.bean.m");
+//		add("org.giiwa.core.conf");
 
 	}
 

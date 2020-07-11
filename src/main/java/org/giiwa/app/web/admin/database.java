@@ -56,41 +56,7 @@ public class database extends Controller {
 	@Override
 	public void onGet() {
 
-		List<JSON> l2 = Cache.get("db.schema");
-
-		new Task() {
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public String getName() {
-				return "db.schema.reload";
-			}
-
-			public void onExecute() {
-
-				List<JSON> l3 = JSON.createList();
-
-				List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
-				l1.forEach(e -> {
-					JSON j1 = Schema.format(e, lang);
-					l3.add(j1);
-				});
-				Collections.sort(l3, new Comparator<JSON>() {
-
-					@Override
-					public int compare(JSON o1, JSON o2) {
-						return o1.getString("table").compareTo(o2.getString("table"));
-					}
-
-				});
-
-				Cache.set("db.schema", l3, X.AHOUR);
-
-			}
-		}.schedule(0);
+		List<JSON> l2 = Schema.load(lang);
 
 		this.set("list", l2);
 
