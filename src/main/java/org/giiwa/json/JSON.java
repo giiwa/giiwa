@@ -391,6 +391,19 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return g.toJson(this);
 	}
 
+	public String toUrl() {
+		StringBuilder sb = new StringBuilder();
+		for (String name : this.keySet()) {
+			if (sb.length() > 0)
+				sb.append("&");
+			sb.append(name).append("=");
+			Object o = this.get(name);
+			if (o != null)
+				sb.append(o);
+		}
+		return sb.toString();
+	}
+
 	public String toPrettyString() {
 		Gson gson = new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY)
 				.excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();

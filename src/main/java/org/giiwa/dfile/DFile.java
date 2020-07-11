@@ -33,13 +33,13 @@ import org.giiwa.misc.IOUtil;
  * 
  */
 
-public abstract class DFile implements Serializable{
+public abstract class DFile implements Serializable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	private static Log log = LogFactory.getLog(DFile.class);
 
 	public abstract String getFilename();
@@ -111,11 +111,11 @@ public abstract class DFile implements Serializable{
 	 * @return the actually length
 	 * @throws FileNotFoundException
 	 */
-	public long upload(File f) throws FileNotFoundException {
+	public DFile upload(File f) throws FileNotFoundException {
 		return upload(0, new FileInputStream(f));
 	}
 
-	public long upload(InputStream in) {
+	public DFile upload(InputStream in) {
 		return upload(0, in);
 	}
 
@@ -126,13 +126,13 @@ public abstract class DFile implements Serializable{
 	 * @param in  the inputstream
 	 * @return the size
 	 */
-	public long upload(long pos, InputStream in) {
+	public DFile upload(long pos, InputStream in) {
 		try {
-			return IOUtil.copy(in, this.getOutputStream(pos));
+			IOUtil.copy(in, this.getOutputStream(pos));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
-		return -1;
+		return this;
 	}
 
 	/**

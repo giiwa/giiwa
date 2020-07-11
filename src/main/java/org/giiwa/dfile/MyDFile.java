@@ -3,7 +3,6 @@ package org.giiwa.dfile;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,6 +29,11 @@ import org.giiwa.misc.IOUtil;
  */
 
 public class MyDFile extends DFile {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	private static Log log = LogFactory.getLog(MyDFile.class);
 
@@ -284,27 +288,6 @@ public class MyDFile extends DFile {
 	@Override
 	public String toString() {
 		return "DFile [" + url + filename + ", exists=" + this.exists() + ", dir=" + this.isDirectory() + "]";
-	}
-
-	/**
-	 * copy the file and upload to disk
-	 * 
-	 * @param f the File
-	 * @return the actually length
-	 */
-	public long upload(File f) {
-		try {
-			return IOUtil.copy(new FileInputStream(f), this.getOutputStream());
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			Disk.dao.update(this.disk, V.create("bad", 1));
-
-		}
-		return -1;
-	}
-
-	public long upload(InputStream in) {
-		return upload(0, in);
 	}
 
 	public long count(Consumer<String> moni) {

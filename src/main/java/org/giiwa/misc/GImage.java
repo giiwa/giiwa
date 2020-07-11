@@ -364,8 +364,8 @@ public class GImage {
 
 	}
 
-	public static void mix(InputStream src1, InputStream src2, OutputStream dest, int gap, int transparent)
-			throws IOException {
+	public static void mix(InputStream src1, InputStream src2, OutputStream dest, int gap, int transparent, int xpos,
+			int ypos, int num) throws IOException {
 
 		try {
 			BufferedImage img1 = ImageIO.read(src1);
@@ -400,9 +400,15 @@ public class GImage {
 					}
 				}
 
-				for (int x = 0; x < w - gap; x += w2 + gap) {
-					for (int y = 0; y < h - gap; y += h2 + gap) {
+				int n = 0;
+				n1: for (int x = xpos; x < w - gap; x += w2 + gap) {
+					for (int y = ypos; y < h - gap; y += h2 + gap) {
 						g.drawImage(img2, x, y, w2, h2, null);
+
+						n++;
+						if (num > 0 && n >= num) {
+							break n1;
+						}
 					}
 				}
 			}
@@ -1338,7 +1344,7 @@ public class GImage {
 			String f2 = "/Users/joe/Documents/u4/pdc200.png";
 
 			X.Image.mix(new FileInputStream(f1), new FileInputStream(f2),
-					new FileOutputStream("/Users/joe/d/temp/a.png"), 100, 10);
+					new FileOutputStream("/Users/joe/d/temp/a.png"), 100, 10, 10, 10, -1);
 
 		} catch (Exception e) {
 			e.printStackTrace();

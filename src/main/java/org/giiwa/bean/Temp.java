@@ -110,6 +110,7 @@ public class Temp {
 	public File getFile() {
 		if (file == null) {
 			file = new File(root + path(id, name));
+			file.getParentFile().mkdirs();
 		}
 		return file;
 	}
@@ -175,13 +176,13 @@ public class Temp {
 		return e;
 	}
 
-	public long save(DFile f) throws Exception {
-		return f.upload(this.getFile());
+	public void save(DFile f) throws Exception {
+		f.upload(this.getFile());
 	}
 
-	public long save(String filename) throws Exception {
+	public void save(String filename) throws Exception {
 		DFile f = Disk.seek(filename);
-		return save(f);
+		save(f);
 	}
 
 	public void delete() {
