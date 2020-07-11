@@ -355,9 +355,64 @@ public class GImage {
 
 			g.drawImage(tmp, ox, oy, w0, h0, null);
 
+			g.dispose();
+
 			ImageIO.write(out, "png", dest);
 		} finally {
 			X.close(src, dest);
+		}
+
+	}
+
+	public static void mix(InputStream src1, InputStream src2, OutputStream dest, int gap, int transparent)
+			throws IOException {
+
+		try {
+			BufferedImage img1 = ImageIO.read(src1);
+			if (img1 == null)
+				throw new IOException("bad [src1]");
+
+			BufferedImage img2 = ImageIO.read(src2);
+
+			int h = img1.getHeight();
+			int w = img1.getWidth();
+
+			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
+																						// TYPE_4BYTE_BGR);
+			Graphics g = out.getGraphics();
+
+			g.drawImage(img1, 0, 0, w, h, null);
+
+			if (transparent > 0 && img2 != null) {
+				int h2 = img2.getHeight();
+				int w2 = img2.getWidth();
+				if (transparent < 100) {
+
+					float alpha = transparent / 100f;
+					for (int i = 0; i < w2; ++i) {
+						for (int j = 0; j < h2; ++j) {
+							int rgb = img2.getRGB(i, j);
+							int t1 = (rgb >> 24) & 0x000000ff;
+							t1 = ((int) (alpha * t1)) << 24;
+							rgb = (t1 | (rgb & 0x00ffffff));
+							img2.setRGB(i, j, rgb);
+						}
+					}
+				}
+
+				for (int x = 0; x < w - gap; x += w2 + gap) {
+					for (int y = 0; y < h - gap; y += h2 + gap) {
+						g.drawImage(img2, x, y, w2, h2, null);
+					}
+				}
+			}
+
+			g.dispose();
+
+			ImageIO.write(out, "png", dest);
+
+		} finally {
+			X.close(src1, src2, dest);
 		}
 
 	}
@@ -1268,16 +1323,22 @@ public class GImage {
 
 	public static void main(String[] args) {
 //		String s1 = "/Users/joe/Downloads/aaa.jpg";
-		String s2 = "/Users/joe/Downloads/t2.png";
+//		String s2 = "/Users/joe/Downloads/t2.png";
 
 		try {
-			OutputStream out = new FileOutputStream(s2);
-
+//			OutputStream out = new FileOutputStream(s2);
+//
 //			scale1(new FileInputStream(s1), out, 300, 300);
+//
+//			X.Image.cover(100, "测试",
+//					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
+//					out);
 
-			X.Image.cover(100, "测试",
-					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
-					out);
+			String f1 = "/Users/joe/Documents/a.jpg";
+			String f2 = "/Users/joe/Documents/u4/pdc200.png";
+
+			X.Image.mix(new FileInputStream(f1), new FileInputStream(f2),
+					new FileOutputStream("/Users/joe/d/temp/a.png"), 100, 10);
 
 		} catch (Exception e) {
 			e.printStackTrace();
