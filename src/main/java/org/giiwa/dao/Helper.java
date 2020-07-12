@@ -134,6 +134,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * Delete.
+	 * 
+	 * @deprecated
 	 *
 	 * @param q  the q
 	 * @param t  the t
@@ -146,7 +148,20 @@ public class Helper implements Serializable {
 	}
 
 	/**
+	 * delete the data by query
+	 * 
+	 * @param table
+	 * @param q
+	 * @return
+	 */
+	public static int delete(String table, W q) {
+		return delete(q, table, Helper.DEFAULT);
+	}
+
+	/**
 	 * delete the data in table
+	 * 
+	 * @deprecated
 	 * 
 	 * @param q     the query
 	 * @param table the table name
@@ -205,7 +220,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * Exists.
-	 *
+	 * 
+	 * @deprecated
 	 * @param q  the q
 	 * @param t  the t
 	 * @param db the db
@@ -218,8 +234,21 @@ public class Helper implements Serializable {
 	}
 
 	/**
+	 * exists
+	 * 
+	 * @param table
+	 * @param q
+	 * @return
+	 * @throws SQLException
+	 */
+	public static boolean exists(String table, W q) throws SQLException {
+		return exists(q, table, Helper.DEFAULT);
+	}
+
+	/**
 	 * exists testing
 	 * 
+	 * @deprecated
 	 * @param q     the query
 	 * @param table the table name
 	 * @param db    the db name
@@ -2836,13 +2865,22 @@ public class Helper implements Serializable {
 		return load(q, t, getDB(t));
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param fields
+	 * @param q
+	 * @param t
+	 * @return
+	 */
 	public static <T extends Bean> T load(String[] fields, W q, Class<T> t) {
 		return load(fields, q, t, getDB(t));
 	}
 
 	/**
 	 * Load.
-	 *
+	 * 
+	 * @deprecated
 	 * @param <T> the generic type
 	 * @param q   the q
 	 * @param t   the t
@@ -2854,6 +2892,15 @@ public class Helper implements Serializable {
 		return load(table, null, q, t, db);
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param fields
+	 * @param q
+	 * @param t
+	 * @param db
+	 * @return
+	 */
 	public static <T extends Bean> T load(String[] fields, W q, Class<T> t, String db) {
 		String table = getTable(t);
 		return load(table, fields, q, t, db);
@@ -2874,7 +2921,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * Load.
-	 *
+	 * 
+	 * @deprecated
 	 * @param <T>    the generic type
 	 * @param table  the table
 	 * @param fields the fields
@@ -2923,10 +2971,6 @@ public class Helper implements Serializable {
 		return insert(value, t, getDB(t));
 	}
 
-	public static int insert(String table, V value) {
-		return insert(value, table, DEFAULT);
-	}
-
 	/**
 	 * batch insert
 	 * 
@@ -2941,6 +2985,7 @@ public class Helper implements Serializable {
 	/**
 	 * batch insert
 	 * 
+	 * @deprecated
 	 * @param values the values
 	 * @param t      the Class of Bean
 	 * @param db     the DB name
@@ -2955,6 +3000,18 @@ public class Helper implements Serializable {
 	/**
 	 * batch insert
 	 * 
+	 * @param table
+	 * @param values
+	 * @return
+	 */
+	public static int insert(String table, List<V> values) {
+		return insert(values, table, Helper.DEFAULT);
+	}
+
+	/**
+	 * batch insert
+	 * 
+	 * @deprecated
 	 * @param values the values
 	 * @param table  the table name
 	 * @param db     the db name
@@ -2993,7 +3050,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * Insert.
-	 *
+	 * 
+	 * @deprecated
 	 * @param value the values
 	 * @param t     the t
 	 * @param db    the db
@@ -3004,9 +3062,14 @@ public class Helper implements Serializable {
 		return insert(value, table, db);
 	}
 
+	public static int insert(String table, V value) {
+		return insert(value, table, Helper.DEFAULT);
+	}
+
 	/**
 	 * insert
 	 * 
+	 * @deprecated
 	 * @param value the value
 	 * @param table the table
 	 * @param db    the db name
@@ -3053,7 +3116,7 @@ public class Helper implements Serializable {
 
 	/**
 	 * update the values by the W for the Class of Bean.
-	 *
+	 * 
 	 * @param q      the query
 	 * @param values the values to update
 	 * @param t      the Class of Ban
@@ -3065,6 +3128,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * update the values by the Q for the Class of Bean in the "db".
+	 * 
+	 * @deprecated
 	 *
 	 * @param q      the query
 	 * @param values the values
@@ -3091,6 +3156,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * update the table by the query with the values.
+	 * 
+	 * @deprecated
 	 *
 	 * @param table  the table
 	 * @param q      the query
@@ -3131,8 +3198,23 @@ public class Helper implements Serializable {
 	}
 
 	/**
+	 * increase
+	 * 
+	 * @param name
+	 * @param n
+	 * @param q
+	 * @param v
+	 * @param t
+	 * @return
+	 */
+	public static int inc(String name, int n, W q, V v, Class<? extends Bean> t) {
+		return inc(q, name, n, v, t);
+	}
+
+	/**
 	 * Inc.
-	 *
+	 * 
+	 * @deprecated
 	 * @param q    the query
 	 * @param name the name
 	 * @param n    the number
@@ -3145,8 +3227,23 @@ public class Helper implements Serializable {
 	}
 
 	/**
+	 * increase
+	 * 
+	 * @param table
+	 * @param name
+	 * @param n
+	 * @param q
+	 * @param v
+	 * @return
+	 */
+	public static int inc(String table, String name, int n, W q, V v) {
+		return inc(table, q, name, n, v);
+	}
+
+	/**
 	 * Inc.
-	 *
+	 * 
+	 * @deprecated
 	 * @param table the table
 	 * @param q     the q
 	 * @param name  the name
@@ -3159,6 +3256,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * increase the value
+	 * 
+	 * @deprecated
 	 * 
 	 * @param table the table
 	 * @param q     the query
@@ -3229,13 +3328,25 @@ public class Helper implements Serializable {
 		return load(table, q, s, n, t, getDB(t));
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param table
+	 * @param fields
+	 * @param q
+	 * @param s
+	 * @param n
+	 * @param t
+	 * @return
+	 */
 	public static <T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t) {
 		return load(table, fields, q, s, n, t, getDB(t));
 	}
 
 	/**
 	 * Load.
-	 *
+	 * 
+	 * @deprecated
 	 * @param <T>   the generic type
 	 * @param table the table
 	 * @param q     the q
@@ -3249,6 +3360,18 @@ public class Helper implements Serializable {
 		return _load(table, null, q, s, n, t, db, 1);
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param table
+	 * @param fields
+	 * @param q
+	 * @param s
+	 * @param n
+	 * @param t
+	 * @param db
+	 * @return
+	 */
 	public static <T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t,
 			String db) {
 		return _load(table, fields, q, s, n, t, db, 1);
@@ -3336,6 +3459,16 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param fields
+	 * @param q
+	 * @param s
+	 * @param n
+	 * @param t
+	 * @return
+	 */
 	public static <T extends Bean> Beans<T> load(String[] fields, W q, int s, int n, Class<T> t) {
 		String table = getTable(t);
 		return load(table, fields, q, s, n, t);
@@ -3383,29 +3516,122 @@ public class Helper implements Serializable {
 		return count(q, t, getDB(t));
 	}
 
+	/**
+	 * count
+	 * 
+	 * @param name
+	 * @param q
+	 * @param t
+	 * @return
+	 */
 	public static long count(String name, W q, Class<? extends Bean> t) {
 		return count(name, q, t, getDB(t));
 	}
 
+	/**
+	 * sum
+	 * 
+	 * @param <T>
+	 * @param name
+	 * @param q
+	 * @param t
+	 * @return
+	 */
+	public static <T> T sum(String name, W q, Class<? extends Bean> t) {
+		return sum(q, name, t);
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @return
+	 */
 	public static <T> T sum(W q, String name, Class<? extends Bean> t) {
 		return sum(q, name, t, getDB(t));
 	}
 
+	/**
+	 * max
+	 * 
+	 * @param <T>
+	 * @param name
+	 * @param q
+	 * @param t
+	 * @return
+	 */
+	public static <T> T max(String name, W q, Class<? extends Bean> t) {
+		return max(q, name, t);
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @return
+	 */
 	public static <T> T max(W q, String name, Class<? extends Bean> t) {
 		return max(q, name, t, getDB(t));
 	}
 
+	/**
+	 * min
+	 * 
+	 * @param <T>
+	 * @param name
+	 * @param q
+	 * @param t
+	 * @return
+	 */
+	public static <T> T min(String name, W q, Class<? extends Bean> t) {
+		return min(q, name, t, getDB(t));
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @return
+	 */
 	public static <T> T min(W q, String name, Class<? extends Bean> t) {
 		return min(q, name, t, getDB(t));
 	}
 
+	/**
+	 * average
+	 * 
+	 * @param <T>
+	 * @param name
+	 * @param q
+	 * @param t
+	 * @return
+	 */
+	public static <T> T avg(String name, W q, Class<? extends Bean> t) {
+		return avg(q, name, t, getDB(t));
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @return
+	 */
 	public static <T> T avg(W q, String name, Class<? extends Bean> t) {
 		return avg(q, name, t, getDB(t));
 	}
 
 	/**
 	 * count the items in the db.
-	 *
+	 * 
+	 * @deprecated
 	 * @param q  the query
 	 * @param t  the Class of Bean
 	 * @param db the name of db pool
@@ -3416,34 +3642,90 @@ public class Helper implements Serializable {
 		return count(q, table, db);
 	}
 
+	/**
+	 * @deprecated
+	 * @param name
+	 * @param q
+	 * @param t
+	 * @param db
+	 * @return
+	 */
 	public static long count(String name, W q, Class<? extends Bean> t, String db) {
 		String table = getTable(t);
 		return count(name, q, table, db);
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @param db
+	 * @return
+	 */
 	public static <T> T sum(W q, String name, Class<? extends Bean> t, String db) {
 		String table = getTable(t);
 		return sum(q, name, table, db);
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @param db
+	 * @return
+	 */
 	public static <T> T max(W q, String name, Class<? extends Bean> t, String db) {
 		String table = getTable(t);
 		return max(q, name, table, db);
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @param db
+	 * @return
+	 */
 	public static <T> T min(W q, String name, Class<? extends Bean> t, String db) {
 		String table = getTable(t);
 		return min(q, name, table, db);
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param t
+	 * @param db
+	 * @return
+	 */
 	public static <T> T avg(W q, String name, Class<? extends Bean> t, String db) {
 		String table = getTable(t);
 		return avg(q, name, table, db);
 	}
 
 	/**
+	 * count the table by query
+	 * 
+	 * @param table
+	 * @param q
+	 * @return
+	 */
+	public static long count(String table, W q) {
+		return count(q, table, Helper.DEFAULT);
+	}
+
+	/**
 	 * count the items in table, db
 	 * 
+	 * @deprecated
 	 * @param q     the query
 	 * @param table the table name
 	 * @param db    the db name
@@ -3479,6 +3761,26 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * count
+	 * 
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @return
+	 */
+	public static long count(String table, String name, W q) {
+		return count(name, q, table, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param name
+	 * @param q
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static long count(String name, W q, String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
@@ -3509,6 +3811,15 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static <T> T median(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3538,6 +3849,15 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static <T> T std_deviation(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3567,6 +3887,28 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * sum
+	 * 
+	 * @param <T>
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @return
+	 */
+	public static <T> T sum(String table, String name, W q) {
+		return sum(q, name, table, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static <T> T sum(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3596,6 +3938,28 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * max
+	 * 
+	 * @param <T>
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @return
+	 */
+	public static <T> T max(String table, String name, W q) {
+		return max(q, name, table, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static <T> T max(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3625,6 +3989,29 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * min
+	 * 
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param table
+	 * @param db
+	 * @return
+	 */
+	public static <T> T min(String table, String name, W q) {
+		return min(q, name, table, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static <T> T min(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3652,6 +4039,28 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * average
+	 * 
+	 * @param <T>
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @return
+	 */
+	public static <T> T avg(String table, String name, W q) {
+		return avg(q, name, table, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param <T>
+	 * @param q
+	 * @param name
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static <T> T avg(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3695,6 +4104,8 @@ public class Helper implements Serializable {
 
 	/**
 	 * Distinct.
+	 * 
+	 * @deprecated
 	 *
 	 * @param name the name
 	 * @param q    the query
@@ -3708,7 +4119,21 @@ public class Helper implements Serializable {
 	}
 
 	/**
+	 * distinct the name by query
+	 * 
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @return
+	 */
+	public static List<?> distinct(String table, String name, W q) {
+		return distinct(name, q, table, Helper.DEFAULT);
+	}
+
+	/**
 	 * get the distinct data
+	 * 
+	 * @deprecated
 	 * 
 	 * @param name  the column name
 	 * @param q     the query
@@ -3878,8 +4303,19 @@ public class Helper implements Serializable {
 	}
 
 	/**
+	 * get indexes
+	 * 
+	 * @param table
+	 * @return
+	 */
+	public static List<Map<String, Object>> getIndexes(String table) {
+		return getIndexes(table, Helper.DEFAULT);
+	}
+
+	/**
 	 * get indexes on table
 	 * 
+	 * @deprecated
 	 * @param table the table
 	 * @param db    the db
 	 * @return the list of indexes
@@ -4050,6 +4486,20 @@ public class Helper implements Serializable {
 		void close();
 	}
 
+	/**
+	 * drop table
+	 * 
+	 * @param table
+	 */
+	public static void drop(String table) {
+		drop(table, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param db
+	 */
 	public static void drop(String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
@@ -4068,6 +4518,28 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * count
+	 * 
+	 * @param table
+	 * @param q
+	 * @param group
+	 * @param n
+	 * @return
+	 */
+	public static List<JSON> count(String table, W q, String[] group, int n) {
+		return count(table, q, group, n, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param q
+	 * @param group
+	 * @param n
+	 * @param dbName
+	 * @return
+	 */
 	public static List<JSON> count(String table, W q, String[] group, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -4086,6 +4558,30 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * count
+	 * 
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @param group
+	 * @param n
+	 * @return
+	 */
+	public static List<JSON> count(String table, String name, W q, String[] group, int n) {
+		return count(table, q, name, group, n, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @param n
+	 * @param dbName
+	 * @return
+	 */
 	public static List<JSON> count(String table, W q, String name, String[] group, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -4104,6 +4600,28 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * sum
+	 * 
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @param group
+	 * @return
+	 */
+	public static List<JSON> sum(String table, String name, W q, String[] group) {
+		return sum(table, q, name, group, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @param dbName
+	 * @return
+	 */
 	public static List<JSON> sum(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -4122,6 +4640,29 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * aggregate
+	 * 
+	 * @param table
+	 * @param func
+	 * @param q
+	 * @param group
+	 * @return
+	 */
+	public static List<JSON> aggregate(String table, String[] func, W q, String[] group) {
+		return aggregate(table, q, func, group, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * 
+	 * @param table
+	 * @param q
+	 * @param func
+	 * @param group
+	 * @param dbName
+	 * @return
+	 */
 	public static List<JSON> aggregate(String table, W q, String[] func, String[] group, String dbName) {
 
 		TimeStamp t1 = TimeStamp.create();
@@ -4141,6 +4682,28 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * min
+	 * 
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @param group
+	 * @return
+	 */
+	public static List<JSON> min(String table, String name, W q, String[] group) {
+		return min(table, q, name, group, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @param dbName
+	 * @return
+	 */
 	public static List<JSON> min(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -4160,6 +4723,28 @@ public class Helper implements Serializable {
 		}
 	}
 
+	/**
+	 * max
+	 * 
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @param group
+	 * @return
+	 */
+	public static List<JSON> max(String table, String name, W q, String[] group) {
+		return max(table, q, name, group, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @param dbName
+	 * @return
+	 */
 	public static List<JSON> max(String table, W q, String name, String[] group, String dbName) {
 
 		TimeStamp t1 = TimeStamp.create();
@@ -4179,6 +4764,28 @@ public class Helper implements Serializable {
 		return null;
 	}
 
+	/**
+	 * average
+	 * 
+	 * @param table
+	 * @param name
+	 * @param q
+	 * @param group
+	 * @return
+	 */
+	public static List<JSON> avg(String table, String name, W q, String[] group) {
+		return avg(table, q, name, group, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param q
+	 * @param name
+	 * @param group
+	 * @param dbName
+	 * @return
+	 */
 	public static List<JSON> avg(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -4256,10 +4863,32 @@ public class Helper implements Serializable {
 		return null;
 	}
 
+	/**
+	 * size
+	 * 
+	 * @param c
+	 * @return
+	 */
 	public static long size(Class<? extends Bean> c) {
 		return size(getTable(c), getDB(c));
 	}
 
+	/**
+	 * size of the table
+	 * 
+	 * @param table
+	 * @return
+	 */
+	public static long size(String table) {
+		return size(table, Helper.DEFAULT);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param db
+	 * @return
+	 */
 	public static long size(String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();

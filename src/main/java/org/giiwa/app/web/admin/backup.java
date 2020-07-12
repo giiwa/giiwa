@@ -493,7 +493,7 @@ public class backup extends Controller {
 
 	};
 
-	static class RecoverTask extends Task {
+	public static class RecoverTask extends Task {
 
 		/**
 		 * 

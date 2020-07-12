@@ -111,6 +111,8 @@ public final class X {
 	/** the Constant "updated" */
 	public static final String UPDATED = "updated";
 
+	public static final String VERSION = "_version";
+
 	public static final int ITEMS_PER_PAGE = 10;
 
 	public static X inst = new X();
