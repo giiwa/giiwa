@@ -2396,7 +2396,8 @@ public class Helper implements Serializable {
 
 			if (dao != null) {
 				l1 = (Beans<T>) dao.load(this, s, n);
-				l1.dao = dao;
+				if (l1 != null)
+					l1.dao = dao;
 			} else if (!X.isEmpty(table)) {
 				W q = this;
 				if (access != null) {
