@@ -33,6 +33,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -588,6 +590,37 @@ public final class X {
 		}
 
 		return l1.toArray(new String[l1.size()]);
+	}
+
+	/**
+	 * using patter.find to split the string <br>
+	 * 
+	 * eg: abc(.*)->aaa(.*)
+	 * 
+	 * @param src
+	 * @param regex
+	 * @return
+	 */
+	public static String[] split2(String src, String regex) {
+
+		Pattern p = Pattern.compile(regex);
+		Matcher m1 = p.matcher(src);
+
+		/**
+		 * find
+		 */
+		String[] params = null;
+		if (m1.find()) {
+			/**
+			 * get all the params
+			 */
+			params = new String[m1.groupCount()];
+			for (int i = 0; i < params.length; i++) {
+				params[i] = m1.group(i + 1);
+			}
+		}
+		return params;
+
 	}
 
 	public static String[] range(String s, String deli) {
@@ -1229,6 +1262,14 @@ public final class X {
 		System.out.println(j2);
 
 		System.out.println(X.asList(new long[] { 1L, 2L }, s1 -> s1));
+
+		String[] ss = X.split2("@dict[a='a']->(value, name)", "\\@(.*)\\[(.*)\\]->\\((.*), (.*)\\)");
+		System.out.println(Arrays.toString(ss));
+
+		ss = X.split2("@dict[a='a']->(value, name)", "[=]");
+		System.out.println(Arrays.toString(ss));
+
+		System.out.println("@dict[a='a']->(value, name)".matches("\\@.*\\[.*\\]->\\(.*, .*\\)"));
 
 	}
 
