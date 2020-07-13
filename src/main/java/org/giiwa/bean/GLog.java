@@ -262,6 +262,17 @@ public class GLog extends Bean {
 		}
 
 		/**
+		 * info log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void info(Controller model, String op, String message) {
+			info(model.getClass(), op, message, model.user(), model.ip());
+		}
+
+		/**
 		 * record the info log
 		 * 
 		 * @param model
@@ -281,6 +292,17 @@ public class GLog extends Bean {
 		 */
 		public void warn(String model, String op, String message) {
 			warn(model, op, message, null, null);
+		}
+
+		/**
+		 * warn log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 */
+		public void warn(Controller model, String op, String message) {
+			warn(model.getClass(), op, message, model.user(), model.ip());
 		}
 
 		/**
@@ -490,6 +512,18 @@ public class GLog extends Bean {
 		 */
 		public void error(Class<? extends Controller> model, String op, String message, User u, String ip) {
 			error(model, op, message, (String) null, u, ip);
+		}
+
+		/**
+		 * error log
+		 * 
+		 * @param model
+		 * @param op
+		 * @param message
+		 * @param e
+		 */
+		public void error(Controller model, String op, String message, Exception e) {
+			error(model.getClass(), op, message, e, model.user(), model.ip());
 		}
 
 		/**
