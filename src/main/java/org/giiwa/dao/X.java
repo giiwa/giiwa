@@ -807,6 +807,15 @@ public final class X {
 		return false;
 	}
 
+	public static boolean isIn(Object s1, Object... s2) {
+		for (Object s : s2) {
+			if (X.isSame(s1, s)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static <T> List<T> unique(List<T> l1) {
 		List<T> l2 = new ArrayList<T>();
 		l1.forEach(e -> {

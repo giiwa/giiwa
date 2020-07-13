@@ -224,7 +224,7 @@ public class SQL {
 
 				s1.trim();
 
-				Object value = X.EMPTY;
+				Object value = null;// X.EMPTY;
 				if (s1.hasMore()) {
 					c = s1.next();
 
@@ -256,6 +256,9 @@ public class SQL {
 //							log.error(e.getMessage(), e);
 								value = s2;
 							}
+						}
+						if (X.isSame(s2, "NULL")) {
+							value = null;
 						}
 					}
 				}
@@ -557,6 +560,10 @@ public class SQL {
 		s = "a='a(b)'";
 		q = SQL.where2W(StringFinder.create(s));
 		System.out.println(q);
+
+		s = "a=NULL and b='a'";
+		q = SQL.where2W(StringFinder.create(s));
+		System.out.println(q.query());
 
 	}
 

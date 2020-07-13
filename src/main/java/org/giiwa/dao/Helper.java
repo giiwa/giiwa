@@ -1839,41 +1839,54 @@ public class Helper implements Serializable {
 				if (l1.size() == 1) {
 
 					this.name = name.toString();
-
-					List<?> l2 = X.asList(value, s -> s);
-					if (l2.size() == 1) {
-						this.value = l2.get(0);
+					if (value == null) {
+						this.value = value;
 					} else {
-						W q = W.create();
-						for (Object s : l2) {
-							q.or(this.name, s, this.op);
+						List<?> l2 = X.asList(value, s -> s);
+						if (l2.size() == 1) {
+							this.value = l2.get(0);
+						} else {
+							W q = W.create();
+							for (Object s : l2) {
+								q.or(this.name, s, this.op);
+							}
+							_queryList.remove(this._idx);
+							q.cond = this.cond;
+							_queryList.add(this._idx, q);
 						}
-						_queryList.remove(this._idx);
-						q.cond = this.cond;
-						_queryList.add(this._idx, q);
 					}
 //						container.and(name.toString(), value, this.op);
 				} else {
 
-					List<?> l2 = X.asList(value, s -> s);
-					if (l2.size() == 1) {
+					if (value == null) {
 						W q = W.create();
 						for (String s : l1) {
-							q.or(s, l2.get(0), this.op);
+							q.or(s, value, this.op);
 						}
 						_queryList.remove(this._idx);
 						q.cond = this.cond;
 						_queryList.add(this._idx, q);
 					} else {
-						W q = W.create();
-						for (String s : l1) {
-							for (Object v : l2) {
-								q.or(s, v, this.op);
+						List<?> l2 = X.asList(value, s -> s);
+						if (l2.size() == 1) {
+							W q = W.create();
+							for (String s : l1) {
+								q.or(s, l2.get(0), this.op);
 							}
+							_queryList.remove(this._idx);
+							q.cond = this.cond;
+							_queryList.add(this._idx, q);
+						} else {
+							W q = W.create();
+							for (String s : l1) {
+								for (Object v : l2) {
+									q.or(s, v, this.op);
+								}
+							}
+							_queryList.remove(this._idx);
+							q.cond = this.cond;
+							_queryList.add(this._idx, q);
 						}
-						_queryList.remove(this._idx);
-						q.cond = this.cond;
-						_queryList.add(this._idx, q);
 					}
 
 //						container.and(q);
