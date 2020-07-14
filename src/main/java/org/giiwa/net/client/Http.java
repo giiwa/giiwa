@@ -1275,18 +1275,44 @@ public final class Http {
 	 */
 	public class Response {
 
+		/**
+		 * 状态
+		 */
 		public int status;
+
+		/**
+		 * 返回数据body
+		 */
 		public String body;
+
+		/**
+		 * 返回头部信息
+		 */
 		private Header[] headers;
 
+		/**
+		 * 用body 生成StringFinder工具类
+		 * 
+		 * @return StringFinder工具类
+		 */
 		public StringFinder finder() {
 			return StringFinder.create(body);
 		}
 
+		/**
+		 * 用body生成 Html工具类
+		 * 
+		 * @return Html工具类
+		 */
 		public Html html() {
 			return Html.create(body);
 		}
 
+		/**
+		 * 用body 生成json对象
+		 * 
+		 * @return JSON对象
+		 */
 		public JSON json() {
 			return JSON.fromObject(body);
 		}
