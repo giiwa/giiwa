@@ -69,9 +69,9 @@ public abstract class View {
 			p.setProperty("log4j.logger.org.apache.velocity", "ERROR");
 			p.setProperty("directive.set.null.allowed", "true");
 			p.setProperty("resource.loader.file.class", "org.giiwa.web.view.VelocityTemplateLoader");
-			
+
 			Velocity.init(p);
-			
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -120,6 +120,10 @@ public abstract class View {
 			}
 		}
 
+		fileview.parse(file, m, viewname);
+	}
+
+	public static void source(File file, Controller m, String viewname) throws Exception {
 		fileview.parse(file, m, viewname);
 	}
 

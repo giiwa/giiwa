@@ -63,6 +63,11 @@
 	<div><label><h3>$lang.get('cross.header'):</h3>
 		<input type='text' name='cross_header' value="$!cross_header" style="width:40%"/>
 		<g>$lang.get('cross.header.hint')</g></label></div>
+		
+	<div><label><h3>$lang.get('html.source'):</h3>
+		<input type='text' name='html.source' value="$global.getString('html.source', '.*(.js$|.css$|.jpg$|.png$|.jpeg$|/javadoc/.*)')" style="width:40%"/>
+		<g>$lang.get('html.source.hint')</g></label></div>
+
 
 	<div><label><h3>$lang.get('site.browser'):</h3>
 		<input type='text' name='site_browser' value="$!global.getString('site.browser','*')" />

@@ -2504,7 +2504,11 @@ public class Controller {
 
 	public static void main(String[] args) {
 		String s = "aaa.tgz";
-		System.out.println(Controller.getMimeType(s));
+//		System.out.println(Controller.getMimeType(s));
+
+		s = "/a/javadoc/a.html";
+		System.out.println(s.matches(".*(.js$|.css$|.jpg$|.png$|.jpeg$|/javadoc/.*)"));
+
 	}
 
 	public static class HttpMethod {
@@ -2738,19 +2742,26 @@ public class Controller {
 				Controller m = new DefaultController();
 				m.req = req;
 				m.resp = resp;
+
+				String source = Global.getString("html.source", ".*(.js$|.css$|.jpg$|.png$|.jpeg$|/javadoc/.*)");
+
+				if (filename.matches(source)) {
+					View.source(f, m, uri);
+				} else {
 //				m.set(m);
 
-				m.put("me", m.user());
-				m.put("lang", m.lang);
-				m.put(X.URI, uri);
-				m.put("module", Module.home);
-				m.put("req", m);
-				m.put("global", Global.getInstance());
-				m.put("conf", Config.getConf());
-				m.put("local", Local.getInstance());
-				m.put("requestid", UID.random(20));
+					m.put("me", m.user());
+					m.put("lang", m.lang);
+					m.put(X.URI, uri);
+					m.put("module", Module.home);
+					m.put("req", m);
+					m.put("global", Global.getInstance());
+					m.put("conf", Config.getConf());
+					m.put("local", Local.getInstance());
+					m.put("requestid", UID.random(20));
 
-				View.merge(f, m, uri);
+					View.merge(f, m, uri);
+				}
 
 				return;
 			}
