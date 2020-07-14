@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.GImage;
+import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.Zip;
 import org.giiwa.web.Language;
 
@@ -1438,6 +1439,10 @@ public final class X {
 	}
 
 	public static class Image extends GImage {
+
+	}
+
+	public static class IO extends IOUtil {
 
 	}
 

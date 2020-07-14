@@ -36,7 +36,7 @@ import org.giiwa.dfile.DFile;
  * @author wujun
  *
  */
-public final class IOUtil {
+public class IOUtil {
 
 	private static Log log = LogFactory.getLog(IOUtil.class);
 
@@ -335,25 +335,44 @@ public final class IOUtil {
 	}
 
 	public static String read(File f, String encoding) {
-		StringBuilder sb = new StringBuilder();
 
-		BufferedReader in = null;
+		FileInputStream in = null;
 
 		try {
 			if (X.isEmpty(encoding)) {
 				encoding = "UTF-8";
 			}
-			in = new BufferedReader(new InputStreamReader(new FileInputStream(f), encoding));
-			String line = null;
-			while ((line = in.readLine()) != null) {
-				sb.append(line).append("\r\n");
-			}
+			in = new FileInputStream(f);
+
+			return read(in, encoding);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
 			X.close(in);
 		}
+		return null;
+	}
+
+	public static String read(InputStream in, String encoding) {
+
+		StringBuilder sb = new StringBuilder();
+
+		BufferedReader read = null;
+
+		try {
+			if (X.isEmpty(encoding)) {
+				encoding = "UTF-8";
+			}
+			read = new BufferedReader(new InputStreamReader(in, encoding));
+			String line = null;
+			while ((line = read.readLine()) != null) {
+				sb.append(line).append("\r\n");
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 		return sb.toString();
+
 	}
 
 	public static long count(File f) {
