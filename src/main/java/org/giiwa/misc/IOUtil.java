@@ -15,6 +15,7 @@
 package org.giiwa.misc;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -351,6 +353,43 @@ public class IOUtil {
 			X.close(in);
 		}
 		return null;
+	}
+
+	public static void write(File f, String encoding, String str) {
+
+		FileOutputStream out = null;
+
+		try {
+			if (X.isEmpty(encoding)) {
+				encoding = "UTF-8";
+			}
+			out = new FileOutputStream(f);
+
+			write(out, encoding, str);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			X.close(out);
+		}
+	}
+
+	public static void write(OutputStream out, String encoding, String str) {
+
+		StringBuilder sb = new StringBuilder();
+
+		BufferedWriter wri = null;
+
+		try {
+			if (X.isEmpty(encoding)) {
+				encoding = "UTF-8";
+			}
+			wri = new BufferedWriter(new OutputStreamWriter(out, encoding));
+			wri.write(str);
+			wri.flush();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
 	}
 
 	public static String read(InputStream in, String encoding) {
