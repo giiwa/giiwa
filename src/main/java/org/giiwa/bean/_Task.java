@@ -133,7 +133,7 @@ public class _Task extends Bean {
 
 		try {
 
-			List<?> l1 = dao.query().and("lasttime", System.currentTimeMillis() - LOST, W.OP.lte).distinct(X.ID);
+			List<?> l1 = dao.query().and("updated", System.currentTimeMillis() - LOST, W.OP.lte).distinct(X.ID);
 			if (l1 == null || l1.isEmpty())
 				return;
 

@@ -747,7 +747,11 @@ public abstract class Task implements Runnable, Serializable {
 			}
 
 		};
-		return t.schedule(ms);
+		if (X.isEmpty(name)) {
+			return t.schedule(ms);
+		} else {
+			return t.schedule(ms, true);
+		}
 	}
 
 	/**

@@ -295,7 +295,8 @@ public final class Local extends Bean {
 				}
 
 				_Task.touch();
-				
+				_Task.recover();
+
 				// check node disk
 //				W q = W.create().and("node", Local.id()).sort("created", 1);
 //				Beans<Disk> l1 = Disk.dao.load(q, 0, 10);
