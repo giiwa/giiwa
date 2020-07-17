@@ -55,16 +55,20 @@ public class index extends Controller {
 			return;
 		}
 
-		User me = this.user();
-		/**
-		 * put the user in mode
-		 */
-		this.put("me", me);
+		if (login.hasAccess("access.config.admin")) {
+			User me = this.user();
+			/**
+			 * put the user in mode
+			 */
+			this.put("me", me);
 
-		/**
-		 * show view ...
-		 */
-		this.show("/admin/index.html");
+			/**
+			 * show view ...
+			 */
+			this.show("/admin/index.html");
+		} else {
+			this.deny();
+		}
 
 	}
 

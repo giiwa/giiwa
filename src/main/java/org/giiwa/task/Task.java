@@ -27,7 +27,6 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
-import org.giiwa.bean._Task;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
@@ -405,8 +404,6 @@ public abstract class Task implements Runnable, Serializable {
 						try {
 //							_run = true;
 
-							_Task.update(this);
-
 							runtimes++;
 							onExecute();
 						} finally {
@@ -424,10 +421,6 @@ public abstract class Task implements Runnable, Serializable {
 
 				state = State.finished;
 				LocalRunner.remove(this);
-
-				if (X.isSame(_t, "G")) {
-					_Task.remove(this);
-				}
 
 				sf = null;
 

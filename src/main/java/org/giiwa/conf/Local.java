@@ -20,7 +20,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Node;
-import org.giiwa.bean._Task;
 import org.giiwa.cache.Cache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
@@ -293,9 +292,6 @@ public final class Local extends Bean {
 				} else {
 					Node.touch(false);
 				}
-
-				_Task.touch();
-				_Task.recover();
 
 				// check node disk
 //				W q = W.create().and("node", Local.id()).sort("created", 1);
