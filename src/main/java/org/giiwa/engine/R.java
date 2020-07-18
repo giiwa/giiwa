@@ -15,7 +15,6 @@
 package org.giiwa.engine;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.TimeStamp;
+import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Exporter;
@@ -37,18 +37,6 @@ import org.giiwa.net.mq.MQ;
 import org.giiwa.net.mq.MQ.Request;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
-import org.rosuda.REngine.REXP;
-import org.rosuda.REngine.REXPDouble;
-import org.rosuda.REngine.REXPGenericVector;
-import org.rosuda.REngine.REXPInteger;
-import org.rosuda.REngine.REXPList;
-import org.rosuda.REngine.REXPLogical;
-import org.rosuda.REngine.REXPMismatchException;
-import org.rosuda.REngine.REXPNull;
-import org.rosuda.REngine.REXPRaw;
-import org.rosuda.REngine.REXPString;
-import org.rosuda.REngine.REXPSymbol;
-import org.rosuda.REngine.RList;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
@@ -92,14 +80,107 @@ public class R extends IStub {
 
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Object run(String code) throws Exception {
-		return run(code, null, (List) null, false);
+	public void close(String sid) {
+
+		try {
+			JSON j1 = JSON.create();
+			j1.append("sid", sid);
+			MQ.send(inst.name, Request.create().put(j1));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 
+	private void _close(String sessionid) {
+
+		RConnection conn = conns.get(sessionid);
+		if (conn != null) {
+			conn.close();
+			conns.remove(sessionid);
+		}
+	}
+
+	/**
+	 * run R code and close the session
+	 * 
+	 * @param code the R code
+	 * @return the result
+	 * @throws Exception error
+	 */
+	public Object run(String code) throws Exception {
+		String sid = UID.random();
+		try {
+			return run(sid, code);
+		} finally {
+			close(sid);
+		}
+	}
+
+	/**
+	 * run the R code and keep the session
+	 * 
+	 * @param sid  the session id
+	 * @param code the code
+	 * @return the result
+	 * @throws Exception error
+	 */
+	@SuppressWarnings("rawtypes")
+	public Object run(String sid, String code) throws Exception {
+		return run(sid, code, null, (List) null, false);
+	}
+
+	/**
+	 * run the R code with the data and close the session
+	 * 
+	 * @param code     the R code
+	 * @param dataname the data name
+	 * @param data     the data
+	 * @return the result
+	 * @throws Exception error
+	 */
 	@SuppressWarnings("rawtypes")
 	public Object run(String code, String dataname, List data) throws Exception {
-		return run(code, dataname, data, false);
+		String sid = UID.random();
+		try {
+			return run(sid, code, dataname, data);
+		} finally {
+			close(sid);
+		}
+	}
+
+	/**
+	 * run R code with data, and keep the session
+	 * 
+	 * @param sid      the session id
+	 * @param code     the R code
+	 * @param dataname the data name
+	 * @param data     the data
+	 * @return the result
+	 * @throws Exception error
+	 */
+	@SuppressWarnings("rawtypes")
+	public Object run(String sid, String code, String dataname, List data) throws Exception {
+		return run(sid, code, dataname, data, false);
+	}
+
+	/**
+	 * run the R code with the data, and close the session
+	 * 
+	 * @param code,     the R code
+	 * @param dataname, the data name
+	 * @param data,     the data
+	 * @param head,     the head
+	 * @return the result
+	 * @throws Exception error
+	 */
+	@SuppressWarnings("rawtypes")
+	public Object run(String code, String dataname, List data, boolean head) throws Exception {
+		String sid = UID.random();
+		try {
+			return run(sid, code, dataname, data, head);
+		} finally {
+			close(sid);
+		}
 	}
 
 	/**
@@ -113,32 +194,33 @@ public class R extends IStub {
 	 * @throws Exception
 	 */
 	@SuppressWarnings("rawtypes")
-	public Object run(String code, String dataname, List data, boolean head) throws Exception {
+	public Object run(String sid, String code, String dataname, List data, boolean head) throws Exception {
 
-		String host = Config.getConf().getString("r.host", X.EMPTY);
+//		String host = Config.getConf().getString("r.host", X.EMPTY);
+//
+//		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
+//			// local
+//			return _run(code, dataname, data, head);
+//
+//		} else {
 
-		if (X.isIn(host, "127.0.0.1", X.EMPTY)) {
-			// local
-			return _run(code, dataname, data, head);
-
-		} else {
-
-			JSON j1 = JSON.create();
-			j1.append("c", code).append("dn", dataname).append("d", data).append("h", head ? 1 : 0);
-			return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
-		}
+		JSON j1 = JSON.create();
+		j1.append("sid", sid);
+		j1.append("code", code).append("name", dataname).append("data", data).append("head", head ? 1 : 0);
+		return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
+//		}
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Object _run(String code, String dataname, List data, boolean head) throws Exception {
+	private Object _run(String sid, String code, String dataname, List data, boolean head) throws Exception {
 
-		_check();
+//		_check();
 
-		RConnection c = conn;
+		RConnection c = _get(sid);
 
 		if (c != null) {
 
-			String func = "f" + c.hashCode();
+//			String func = "f" + c.hashCode();
 
 			StringBuilder sb = new StringBuilder();
 
@@ -158,9 +240,11 @@ public class R extends IStub {
 				Temp t = Temp.create("a.txt");
 				File f = t.getFile();
 				f.getParentFile().mkdirs();
-				sb.append(func + "<-function(){\n");
+//				sb.append(func + "<-function(){\n");
 				sb.append("sink(file=\"" + f.getAbsolutePath() + "\");\n");
-				sb.append(code).append("\nsink(file=NULL)\n};\n" + func + "();");
+				sb.append(code).append("\nsink(file=NULL)\n");
+
+//				+ func + "();");
 
 //				System.out.println(sb);
 //
@@ -192,7 +276,7 @@ public class R extends IStub {
 				throw re;
 			} finally {
 
-				c.eval("rm(" + func + ")");
+//				c.eval("rm(" + func + ")");
 				c.eval("rm(" + dataname + ")");
 //				c.eval("rm(" + func + ", " + dataname + ")");
 
@@ -259,168 +343,192 @@ public class R extends IStub {
 
 	}
 
-	private Object r2J(REXP x) throws REXPMismatchException {
+//	private Object r2J(REXP x) throws REXPMismatchException {
+//
+//		if (x instanceof REXPDouble) {
+//			double[] d1 = x.asDoubles();
+//
+//			if (d1.length == 1) {
+//				if (Double.isNaN(d1[0]))
+//					return x.asString();
+//				return d1[0];
+//			}
+//
+//			return X.asList(d1, e -> e);
+//		}
+//
+//		if (x instanceof REXPInteger) {
+//			int[] ii = x.asIntegers();
+//			if (ii.length == 1)
+//				return ii[0];
+//
+//			return X.asList(ii, e -> e);
+//		}
+//
+//		if (x instanceof REXPLogical || x instanceof REXPRaw || x instanceof REXPString || x instanceof REXPSymbol) {
+//			String[] ss = x.asStrings();
+//			if (ss == null || ss.length == 0) {
+//				return null;
+//			} else if (ss.length == 1) {
+//				return ss[0];
+//			} else {
+//				return Arrays.asList(ss);
+//			}
+//		}
+//
+//		if (x instanceof REXPGenericVector) {
+//			REXPGenericVector x1 = (REXPGenericVector) x;
+//
+//			RList r1 = x1.asList();
+//			List<Object> l2 = new ArrayList<Object>();
+//			for (int i = 0; i < r1.size(); i++) {
+//				Object o = r1.get(i);
+//				if (o instanceof REXP) {
+//					l2.add(r2J((REXP) o));
+//				}
+//			}
+//			return l2;
+//		}
+//
+//		if (x instanceof REXPList) {
+//			REXPList x1 = (REXPList) x;
+//
+//			RList r1 = x1.asList();
+//			List<Object> l2 = new ArrayList<Object>();
+//			for (int i = 0; i < r1.size(); i++) {
+//				Object o = r1.get(i);
+////				System.out.println("o=" + o);
+//				if (o instanceof REXP) {
+//					l2.add(r2J((REXP) o));
+//				}
+//			}
+//			return l2;
+//		}
+//
+//		if (x instanceof REXPNull) {
+//			return null;
+//		}
+//
+//		String[] ss = x.asStrings();
+//		if (ss == null || ss.length == 0) {
+//			return null;
+//		} else if (ss.length == 1) {
+//			return ss[0];
+//		} else {
+//			return Arrays.asList(ss);
+//		}
+//
+//	}
 
-		if (x instanceof REXPDouble) {
-			double[] d1 = x.asDoubles();
+//	private String r2J2(REXP x) throws REXPMismatchException {
+//
+//		if (x instanceof REXPDouble) {
+//			double[] d1 = x.asDoubles();
+//
+//			if (d1.length == 1) {
+//				if (Double.isNaN(d1[0]))
+//					return x.asString();
+//				return Double.toString(d1[0]);
+//			}
+//
+//			return X.asList(d1, e -> e).toString();
+//		}
+//
+//		if (x instanceof REXPInteger) {
+//			int[] ii = x.asIntegers();
+//			if (ii.length == 1)
+//				return Integer.toString(ii[0]);
+//
+//			return X.asList(ii, e -> e).toString();
+//		}
+//
+//		if (x instanceof REXPLogical || x instanceof REXPRaw || x instanceof REXPString || x instanceof REXPSymbol) {
+//			String[] ss = x.asStrings();
+//			if (ss == null || ss.length == 0) {
+//				return null;
+//			} else if (ss.length == 1) {
+//				return ss[0];
+//			} else {
+//				return Arrays.asList(ss).toString();
+//			}
+//		}
+//
+//		if (x instanceof REXPGenericVector) {
+//			REXPGenericVector x1 = (REXPGenericVector) x;
+//
+//			RList r1 = x1.asList();
+//			List<Object> l2 = new ArrayList<Object>();
+//			for (int i = 0; i < r1.size(); i++) {
+//				Object o = r1.get(i);
+//				if (o instanceof REXP) {
+//					l2.add(r2J2((REXP) o));
+//				}
+//			}
+//			return l2.toString();
+//		}
+//
+//		if (x instanceof REXPList) {
+//			REXPList x1 = (REXPList) x;
+//
+//			RList r1 = x1.asList();
+//			List<Object> l2 = new ArrayList<Object>();
+//			for (int i = 0; i < r1.size(); i++) {
+//				Object o = r1.get(i);
+////				System.out.println("o=" + o);
+//				if (o instanceof REXP) {
+//					l2.add(r2J2((REXP) o));
+//				}
+//			}
+//			return l2.toString();
+//		}
+//
+//		if (x instanceof REXPNull) {
+//			return null;
+//		}
+//
+//		String[] ss = x.asStrings();
+//		if (ss == null || ss.length == 0) {
+//			return null;
+//		} else if (ss.length == 1) {
+//			return ss[0];
+//		} else {
+//			return Arrays.asList(ss).toString();
+//		}
+//
+//	}
 
-			if (d1.length == 1) {
-				if (Double.isNaN(d1[0]))
-					return x.asString();
-				return d1[0];
-			}
-
-			return X.asList(d1, e -> e);
-		}
-
-		if (x instanceof REXPInteger) {
-			int[] ii = x.asIntegers();
-			if (ii.length == 1)
-				return ii[0];
-
-			return X.asList(ii, e -> e);
-		}
-
-		if (x instanceof REXPLogical || x instanceof REXPRaw || x instanceof REXPString || x instanceof REXPSymbol) {
-			String[] ss = x.asStrings();
-			if (ss == null || ss.length == 0) {
-				return null;
-			} else if (ss.length == 1) {
-				return ss[0];
-			} else {
-				return Arrays.asList(ss);
-			}
-		}
-
-		if (x instanceof REXPGenericVector) {
-			REXPGenericVector x1 = (REXPGenericVector) x;
-
-			RList r1 = x1.asList();
-			List<Object> l2 = new ArrayList<Object>();
-			for (int i = 0; i < r1.size(); i++) {
-				Object o = r1.get(i);
-				if (o instanceof REXP) {
-					l2.add(r2J((REXP) o));
-				}
-			}
-			return l2;
-		}
-
-		if (x instanceof REXPList) {
-			REXPList x1 = (REXPList) x;
-
-			RList r1 = x1.asList();
-			List<Object> l2 = new ArrayList<Object>();
-			for (int i = 0; i < r1.size(); i++) {
-				Object o = r1.get(i);
-//				System.out.println("o=" + o);
-				if (o instanceof REXP) {
-					l2.add(r2J((REXP) o));
-				}
-			}
-			return l2;
-		}
-
-		if (x instanceof REXPNull) {
-			return null;
-		}
-
-		String[] ss = x.asStrings();
-		if (ss == null || ss.length == 0) {
-			return null;
-		} else if (ss.length == 1) {
-			return ss[0];
-		} else {
-			return Arrays.asList(ss);
-		}
-
-	}
-
-	private String r2J2(REXP x) throws REXPMismatchException {
-
-		if (x instanceof REXPDouble) {
-			double[] d1 = x.asDoubles();
-
-			if (d1.length == 1) {
-				if (Double.isNaN(d1[0]))
-					return x.asString();
-				return Double.toString(d1[0]);
-			}
-
-			return X.asList(d1, e -> e).toString();
-		}
-
-		if (x instanceof REXPInteger) {
-			int[] ii = x.asIntegers();
-			if (ii.length == 1)
-				return Integer.toString(ii[0]);
-
-			return X.asList(ii, e -> e).toString();
-		}
-
-		if (x instanceof REXPLogical || x instanceof REXPRaw || x instanceof REXPString || x instanceof REXPSymbol) {
-			String[] ss = x.asStrings();
-			if (ss == null || ss.length == 0) {
-				return null;
-			} else if (ss.length == 1) {
-				return ss[0];
-			} else {
-				return Arrays.asList(ss).toString();
-			}
-		}
-
-		if (x instanceof REXPGenericVector) {
-			REXPGenericVector x1 = (REXPGenericVector) x;
-
-			RList r1 = x1.asList();
-			List<Object> l2 = new ArrayList<Object>();
-			for (int i = 0; i < r1.size(); i++) {
-				Object o = r1.get(i);
-				if (o instanceof REXP) {
-					l2.add(r2J2((REXP) o));
-				}
-			}
-			return l2.toString();
-		}
-
-		if (x instanceof REXPList) {
-			REXPList x1 = (REXPList) x;
-
-			RList r1 = x1.asList();
-			List<Object> l2 = new ArrayList<Object>();
-			for (int i = 0; i < r1.size(); i++) {
-				Object o = r1.get(i);
-//				System.out.println("o=" + o);
-				if (o instanceof REXP) {
-					l2.add(r2J2((REXP) o));
-				}
-			}
-			return l2.toString();
-		}
-
-		if (x instanceof REXPNull) {
-			return null;
-		}
-
-		String[] ss = x.asStrings();
-		if (ss == null || ss.length == 0) {
-			return null;
-		} else if (ss.length == 1) {
-			return ss[0];
-		} else {
-			return Arrays.asList(ss).toString();
-		}
-
-	}
-
-	private static RConnection conn = null;
+//	private static RConnection conn = null;
 
 //	private static Pool<RConnection> pool = null;
 
-	synchronized void _check() {
+//	synchronized void _check() {
+//
+//		if (conn != null)
+//			return;
+//
+//		try {
+//			String host = Config.getConf().getString("r.host", X.EMPTY);
+//			int port = Config.getConf().getInt("r.port", 6311);
+//
+//			if (X.isEmpty(host)) {
+//				conn = new RConnection();
+//			} else {
+//				conn = new RConnection(host, port);
+//			}
+//			return;
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
-		if (conn != null)
-			return;
+	private static Map<String, RConnection> conns = new HashMap<String, RConnection>();
+
+	synchronized RConnection _get(String sid) {
+
+		RConnection conn = conns.get(sid);
+		if (conn != null && conn.isConnected())
+			return conn;
 
 		try {
 			String host = Config.getConf().getString("r.host", X.EMPTY);
@@ -431,11 +539,13 @@ public class R extends IStub {
 			} else {
 				conn = new RConnection(host, port);
 			}
-			return;
+
+			conns.put(sid, conn);
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e.getMessage(), e);
 		}
+		return conn;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -486,7 +596,7 @@ public class R extends IStub {
 			t.reset();
 			List l2 = new ArrayList<Object>();
 			l2.add(ll);
-			r = inst.run("mean(c1)", "c1", Arrays.asList(ll), false);
+//			r = inst.run("mean(c1)", "c1", Arrays.asList(ll), false);
 
 			System.out.println(r + ", cost=" + t.past());
 
@@ -498,9 +608,9 @@ public class R extends IStub {
 			l1.add(JSON.create().append("a", 1).append("b", 42).append("c", 3).append("d", 4));
 
 			t.reset();
-			j1 = inst.run(
-					"library(C50);d16<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));save(d16, file=\"d16\");summary(d16);",
-					null, null, false);
+//			j1 = inst.run(
+//					"library(C50);d16<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));save(d16, file=\"d16\");summary(d16);",
+//					null, null, false);
 			System.out.println(j1 + ", cost=" + t.past());
 //			System.out.println(j1.get("data"));
 
@@ -558,51 +668,51 @@ public class R extends IStub {
 			return X.toDouble(sd) / X.toDouble(mean);
 		}
 
-		_check();
+//		_check();
 
-		RConnection c = conn;
+//		RConnection c = conn;
 
-		if (c != null) {
+//		if (c != null) {
 
-			// save to file
-			Temp t = Temp.create("data");
-			try {
-				StringBuilder sb = new StringBuilder();
-				String func = "f" + c.hashCode();
-				sb.append(func + "<-function(){");
-				if (!X.isEmpty(data)) {
-					File f = t.getFile();
-					f.getParentFile().mkdirs();
-					FileWriter f1 = new FileWriter(f);
-					for (Object o : data) {
-						f1.write(o + " ");
-					}
-					f1.close();
-					sb.append("data <- scan('" + f.getAbsolutePath() + "');");
-				}
-
-				sb.append(code).append("};" + func + "();");
-
-				if (log.isDebugEnabled())
-					log.debug("R.run, code=" + sb);
-
-				REXP x = c.eval(sb.toString());
-
-				String[] ss = x.asStrings();
-				if (ss == null || ss.length == 0) {
-					return null;
-				} else if (ss.length == 1) {
-					return ss[0];
-				} else {
-					return ss;
-				}
-
-			} finally {
-
-				// TODO
-//				t.delete();
-			}
-		}
+		// save to file
+//			Temp t = Temp.create("data");
+//			try {
+//				StringBuilder sb = new StringBuilder();
+//				String func = "f" + c.hashCode();
+//				sb.append(func + "<-function(){");
+//				if (!X.isEmpty(data)) {
+//					File f = t.getFile();
+//					f.getParentFile().mkdirs();
+//					FileWriter f1 = new FileWriter(f);
+//					for (Object o : data) {
+//						f1.write(o + " ");
+//					}
+//					f1.close();
+//					sb.append("data <- scan('" + f.getAbsolutePath() + "');");
+//				}
+//
+//				sb.append(code).append("};" + func + "();");
+//
+//				if (log.isDebugEnabled())
+//					log.debug("R.run, code=" + sb);
+//
+//				REXP x = c.eval(sb.toString());
+//
+//				String[] ss = x.asStrings();
+//				if (ss == null || ss.length == 0) {
+//					return null;
+//				} else if (ss.length == 1) {
+//					return ss[0];
+//				} else {
+//					return ss;
+//				}
+//
+//			} finally {
+//
+//				// TODO
+////				t.delete();
+//			}
+//		}
 
 		return null;
 
@@ -660,11 +770,26 @@ public class R extends IStub {
 
 			JSON j1 = req.get();
 
-			Object j2 = this._run(j1.getString("c"), j1.getString("dn"), (List) j1.get("d"), j1.getInt("h") == 1);
-			req.response(j2);
-
+			String sid = j1.getString("sid");
+			String code = j1.getString("code");
+			if (X.isEmpty(code)) {
+				_close(sid);
+				return;
+//				req.response(200);
+			} else {
+				String name = j1.getString("name");
+				List data = j1.getList("data");
+				boolean head = j1.getInt("head") == 1;
+				Object j2 = this._run(sid, code, name, data, head);
+				req.response(j2);
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			try {
+				req.response(e.getMessage());
+			} catch (Exception e1) {
+				// ignore
+			}
 		}
 
 	}
