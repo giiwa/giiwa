@@ -15,6 +15,7 @@
 package org.giiwa.web;
 
 import java.io.File;
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -34,7 +35,12 @@ import org.giiwa.misc.Html;
  * @author yjiang
  * 
  */
-public class Language {
+public class Language implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	final static Log log = LogFactory.getLog(Language.class);
 

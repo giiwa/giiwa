@@ -19,7 +19,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -31,10 +30,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.giiwa.dao.X;
 
-import com.drew.imaging.jpeg.JpegMetadataReader;
-import com.drew.metadata.Directory;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.Tag;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
@@ -239,48 +234,52 @@ public class GImage {
 	public static Point size(InputStream in) {
 		Point p = new Point();
 		try {
-			in = new BufferedInputStream(in);
-			in.mark(Integer.MAX_VALUE);
+//			in = new BufferedInputStream(in);
+//			in.mark(Integer.MAX_VALUE);
 			BufferedImage img = ImageIO.read(in);
 
 			if (img != null) {
 				p.y = img.getHeight();
 				p.x = img.getWidth();
 
-				in.reset();
-				Metadata metadata = JpegMetadataReader.readMetadata(in);
-				if (metadata != null && metadata.getDirectories() != null) {
-					Iterator<Directory> it = metadata.getDirectories().iterator();
-					while (it.hasNext()) {
-						Directory exif = it.next();
-						if (exif != null && exif.getTags() != null) {
-							Iterator<Tag> tags = exif.getTags().iterator();
-							while (tags.hasNext()) {
-								Tag tag = (Tag) tags.next();
-								if ("Orientation".equals(tag.getTagName())) {
-									String desc = tag.getDescription();
-									if (desc.indexOf("Rotate 90") > 0 || desc.indexOf("Rotate 270") > 0) {
-										int x = p.x;
-										p.x = p.y;
-										p.y = x;
-										return p;
-									}
-								}
-							}
-						}
-					}
-				}
+//				in.reset();
+//				
+//				Metadata metadata = JpegMetadataReader.readMetadata(in);
+//				Metadata metadata = PngMetadataReader.readMetadata(in);
+//				
+//				if (metadata != null && metadata.getDirectories() != null) {
+//					Iterator<Directory> it = metadata.getDirectories().iterator();
+//					while (it.hasNext()) {
+//						Directory exif = it.next();
+//						if (exif != null && exif.getTags() != null) {
+//							Iterator<Tag> tags = exif.getTags().iterator();
+//							while (tags.hasNext()) {
+//								Tag tag = (Tag) tags.next();
+//								if ("Orientation".equals(tag.getTagName())) {
+//									String desc = tag.getDescription();
+//									if (desc.indexOf("Rotate 90") > 0 || desc.indexOf("Rotate 270") > 0) {
+//										int x = p.x;
+//										p.x = p.y;
+//										p.y = x;
+//										return p;
+//									}
+//								}
+//							}
+//						}
+//					}
+//				}
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			e.printStackTrace();
+//			e.printStackTrace();
 		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-				}
-			}
+			X.clone(in);
+//			if (in != null) {
+//				try {
+//					in.close();
+//				} catch (IOException e) {
+//				}
+//			}
 		}
 		return p;
 	}
