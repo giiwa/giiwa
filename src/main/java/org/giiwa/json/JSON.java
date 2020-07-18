@@ -45,6 +45,7 @@ import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.Digest;
 import org.giiwa.misc.StringFinder;
+import org.giiwa.misc.Url;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -391,15 +392,31 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return g.toJson(this);
 	}
 
+	/**
+	 * convert the json to url string
+	 * 
+	 * @deprecated
+	 * @return url string
+	 */
 	public String toUrl() {
+		return url();
+	}
+
+	/**
+	 * convert the json to a url string
+	 * 
+	 * @return url string
+	 */
+	public String url() {
 		StringBuilder sb = new StringBuilder();
 		for (String name : this.keySet()) {
 			if (sb.length() > 0)
 				sb.append("&");
 			sb.append(name).append("=");
 			Object o = this.get(name);
-			if (o != null)
+			if (o != null) {
 				sb.append(o);
+			}
 		}
 		return sb.toString();
 	}
