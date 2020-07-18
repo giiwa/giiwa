@@ -1029,3 +1029,4 @@ admin.ip.hint=只有限定的IP才能访问/admin/站点，正则表达式，.*
 label.ippath=访问地址
 html.source=源文件
 html.source.hint=正则表达式，将直接返回文件，eg: .*(.js$|.css$|.jpg$|.png$|.jpeg$|/javadoc/.*)
+module.javadoc=Javadoc

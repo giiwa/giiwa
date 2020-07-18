@@ -43,6 +43,7 @@ div.limited, div.trial, div.issue{
 			<th>$lang.get('module.version')</th>
 			<th>$lang.get('module.build')</th>
 			<th style="width:20%">$lang.get('module.readme')</th>
+			<th>$lang.get('module.javadoc')</th>
 			<th style="width:20%">$lang.get('module.license')</th>
 			<th></th>
 		</tr>
@@ -62,6 +63,7 @@ div.limited, div.trial, div.issue{
 			<td class="a" style="color: #888;font-style: italic;">
 				<div class="$!f.license">$!lang.get("license_$!f.license")#if($f.get('company'))//$!f.get('company')#end</div>
 			</td>
+			<td class="a"><a href="/$!f.name/javadoc/" target="_blank">/$!f.name/javadoc/</a></td>
 			<td class="a">
 				#if($f.id > 0)
 				<a class="hint hint--bottom" data-hint="$lang.get('a.disable')" href="/admin/module/disable?__node=$!__node&name=$f.name"><i class="icon-switch"></i></a>
