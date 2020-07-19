@@ -272,7 +272,7 @@ public class R extends IStub {
 //				return JSON.create().append("data", s1);
 			} catch (RserveException re) {
 
-				log.error(sb.toString() + ", error=" + re.getRequestErrorDescription(re.getRequestReturnCode()), re);
+				log.error(re.getRequestErrorDescription(re.getRequestReturnCode()), re);
 				throw re;
 			} finally {
 
