@@ -195,6 +195,18 @@ public class R extends IStub {
 	 */
 	@SuppressWarnings("rawtypes")
 	public Object run(String sid, String code, String dataname, List data, boolean head) throws Exception {
+		return run(sid, code, new Object[] { dataname, data, head ? 1 : 0 });
+	}
+
+	/**
+	 * 
+	 * @param sid
+	 * @param code
+	 * @param data
+	 * @return
+	 * @throws Exception
+	 */
+	public Object run(String sid, String code, Object[]... data) throws Exception {
 
 //		String host = Config.getConf().getString("r.host", X.EMPTY);
 //
@@ -206,13 +218,13 @@ public class R extends IStub {
 
 		JSON j1 = JSON.create();
 		j1.append("sid", sid);
-		j1.append("code", code).append("name", dataname).append("data", data).append("head", head ? 1 : 0);
+		j1.append("code", code).append("data", data);
 		return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
 //		}
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private Object _run(String sid, String code, String dataname, List data, boolean head) throws Exception {
+	@SuppressWarnings({ "unchecked" })
+	private Object _run(String sid, String code, Object[]... data) throws Exception {
 
 //		_check();
 
@@ -229,11 +241,14 @@ public class R extends IStub {
 
 				Temp temp = null;
 				if (!X.isEmpty(data)) {
-					temp = Temp.create("data");
+					for (Object[] d : data) {
+						temp = Temp.create("data");
 
-					String s1 = _export(dataname, (List<Object>) data, head, temp);
-					if (!X.isEmpty(s1)) {
-						sb.append(s1).append("\n");
+						String s1 = _export(d[0].toString(), (List<Object>) d[1], X.toInt(d[2]) == 1 ? true : false,
+								temp);
+						if (!X.isEmpty(s1)) {
+							sb.append(s1).append("\n");
+						}
 					}
 				}
 
@@ -277,7 +292,9 @@ public class R extends IStub {
 			} finally {
 
 //				c.eval("rm(" + func + ")");
-				c.eval("rm(" + dataname + ")");
+				for (Object[] d : data) {
+					c.eval("rm(" + d[0] + ")");
+				}
 //				c.eval("rm(" + func + ", " + dataname + ")");
 
 			}
@@ -777,10 +794,7 @@ public class R extends IStub {
 				return;
 //				req.response(200);
 			} else {
-				String name = j1.getString("name");
-				List data = j1.getList("data");
-				boolean head = j1.getInt("head") == 1;
-				Object j2 = this._run(sid, code, name, data, head);
+				Object j2 = this._run(sid, code, new Object[] { j1.get("name"), j1.get("data"), j1.getInt("head") });
 				req.response(j2);
 			}
 		} catch (Exception e) {
