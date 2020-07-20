@@ -242,6 +242,9 @@ public class R extends IStub {
 				Temp temp = null;
 				if (!X.isEmpty(data)) {
 					for (Object[] d : data) {
+						if (d == null || d[0] == null || d.length != 3)
+							continue;
+
 						temp = Temp.create("data");
 
 						String s1 = _export(d[0].toString(), (List<Object>) d[1], X.toInt(d[2]) == 1 ? true : false,
