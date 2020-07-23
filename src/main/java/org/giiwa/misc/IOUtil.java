@@ -375,8 +375,6 @@ public class IOUtil {
 
 	public static void write(OutputStream out, String encoding, String str) {
 
-		StringBuilder sb = new StringBuilder();
-
 		BufferedWriter wri = null;
 
 		try {
@@ -411,6 +409,19 @@ public class IOUtil {
 			log.error(e.getMessage(), e);
 		}
 		return sb.toString();
+
+	}
+
+	public static byte[] read(InputStream in) {
+
+		byte[] bb = null;
+		try {
+			bb = new byte[in.available()];
+			in.read(bb, 0, bb.length);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return bb;
 
 	}
 

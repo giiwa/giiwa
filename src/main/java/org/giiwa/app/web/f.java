@@ -81,7 +81,7 @@ public class f extends Controller {
 								if (len != f1.length())
 									throw new IOException("get dfile error");
 
-								GImage.scale3(new FileInputStream(f2), new FileOutputStream(f), X.toInt(ss[0]),
+								GImage.scale1(new FileInputStream(f2), new FileOutputStream(f), X.toInt(ss[0]),
 										X.toInt(ss[1]));
 
 							} else {
