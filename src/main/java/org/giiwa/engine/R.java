@@ -32,6 +32,7 @@ import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Exporter;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.StringFinder;
 import org.giiwa.net.mq.IStub;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.net.mq.MQ.Request;
@@ -218,13 +219,22 @@ public class R extends IStub {
 
 		JSON j1 = JSON.create();
 		j1.append("sid", sid);
-		j1.append("code", code).append("data", data);
-		return MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
+		j1.append("code", code).append("data", Arrays.asList(data));
+		Object r = MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
+		if (r instanceof String) {
+			StringFinder sf = StringFinder.create(r.toString());
+			String error = sf.get("=error=", "=end=");
+			if (!X.isEmpty(error))
+				throw new Exception(error);
+		}
+
+		return r;
 //		}
+
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private Object _run(String sid, String code, Object[]... data) throws Exception {
+	private Object _run(String sid, String code, List<Object[]> data) throws Exception {
 
 //		_check();
 
@@ -235,6 +245,7 @@ public class R extends IStub {
 //			String func = "f" + c.hashCode();
 
 			StringBuilder sb = new StringBuilder();
+			sb.append("tryCatch({\n");
 
 			// save to file
 			try {
@@ -266,6 +277,8 @@ public class R extends IStub {
 
 //				System.out.println(sb);
 //
+				sb.append("}, error=function(e){cat('=error=');print(e);cat('=end=');})");
+
 				if (log.isDebugEnabled())
 					log.debug("R.run, code=\n" + sb);
 
@@ -296,7 +309,8 @@ public class R extends IStub {
 
 //				c.eval("rm(" + func + ")");
 				for (Object[] d : data) {
-					c.eval("rm(" + d[0] + ")");
+					if (d != null && d[0] != null)
+						c.eval("rm(" + d[0] + ")");
 				}
 //				c.eval("rm(" + func + ", " + dataname + ")");
 
@@ -782,7 +796,6 @@ public class R extends IStub {
 		return d;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public void onRequest(long seq, Request req) {
 
@@ -797,7 +810,8 @@ public class R extends IStub {
 				return;
 //				req.response(200);
 			} else {
-				Object j2 = this._run(sid, code, new Object[] { j1.get("name"), j1.get("data"), j1.getInt("head") });
+				List<Object[]> data = (List) j1.get("data");
+				Object j2 = this._run(sid, code, data);
 				req.response(j2);
 			}
 		} catch (Exception e) {
