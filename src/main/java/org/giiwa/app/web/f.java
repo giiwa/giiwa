@@ -97,21 +97,21 @@ public class f extends Controller {
 
 								_send(new FileInputStream(f), f.length());
 
-								if (!f1.getFilename().startsWith("/f/g/")) {
-									Task.schedule(() -> {
-										// save the file to nginx
-										try {
-
-											DFile f2 = Disk.seek("/f/g/" + id + "/" + name, Disk.TYPE_NGINX);
-											if (f2 != null) {
-												f2.upload(f);
-											}
-
-										} catch (Exception e) {
-											log.error(e.getMessage(), e);
-										}
-									});
-								}
+//								if (!f1.getFilename().startsWith("/f/g/")) {
+//									Task.schedule(() -> {
+//										// save the file to nginx
+//										try {
+//
+//											DFile f2 = Disk.seek("/f/g/" + id + "/" + name, Disk.TYPE_NGINX);
+//											if (f2 != null) {
+//												f2.upload(f);
+//											}
+//
+//										} catch (Exception e) {
+//											log.error(e.getMessage(), e);
+//										}
+//									});
+//								}
 								return;
 							}
 						}
@@ -360,8 +360,10 @@ public class f extends Controller {
 	void _send(InputStream in, long total) {
 
 		try {
-			
+
 			String range = this.head("range");
+
+			log.debug("range=" + range);
 
 			long start = 0;
 			long end = total;
@@ -398,17 +400,19 @@ public class f extends Controller {
 
 			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
 			if (length > 0) {
+				
 				OutputStream out = this.getOutputStream();
-
-				IOUtil.copy(in, out, start, end, false);
 				out.flush();
+
+				IOUtil.copy(in, out, start, end, true);
+				
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
 			X.close(in);
 		}
-		
+
 	}
 
 	/**
