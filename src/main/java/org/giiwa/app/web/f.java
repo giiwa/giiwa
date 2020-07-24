@@ -388,7 +388,7 @@ public class f extends Controller {
 
 			long length = end - start;
 
-			if (end < total) {
+			if (end < total || start > 0) {
 				this.status(206);
 			}
 
@@ -400,12 +400,12 @@ public class f extends Controller {
 
 			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
 			if (length > 0) {
-				
+
 				OutputStream out = this.getOutputStream();
 				out.flush();
 
-				IOUtil.copy(in, out, start, end, true);
-				
+				IOUtil.copy(in, out, start, end, false);
+
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
