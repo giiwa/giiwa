@@ -27,8 +27,6 @@ import org.giiwa.json.JSON;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 
-import jdk.nashorn.api.scripting.JSObject;
-
 /**
  * Demo bean
  * 
@@ -192,6 +190,10 @@ public abstract class DFile implements Serializable {
 		}
 
 		public void json(String name, BiConsumer<String, JSON> func) throws IOException {
+			this.json(name, "UTF8", func);
+		}
+
+		public void json(String name, String charset, BiConsumer<String, JSON> func) throws IOException {
 
 			ZipInputStream in = null;
 
@@ -200,7 +202,7 @@ public abstract class DFile implements Serializable {
 				ZipEntry e = in.getNextEntry();
 				while (e != null) {
 					if (e.getName().matches(name)) {
-						JSON j1 = JSON.fromObject(in);
+						JSON j1 = JSON.fromObject(new BufferedReader(new InputStreamReader(in, charset)));
 						if (j1 != null && !j1.isEmpty()) {
 							func.accept(e.getName(), j1);
 						}
@@ -212,15 +214,6 @@ public abstract class DFile implements Serializable {
 			}
 		}
 
-		@SuppressWarnings("restriction")
-		public void json(String name, JSObject func) throws IOException {
-
-			json(name, (filename, j1) -> {
-				func.call(this, filename, j1);
-			});
-
-		}
-
 		/**
 		 * @deprecated
 		 * @param name
@@ -230,13 +223,19 @@ public abstract class DFile implements Serializable {
 		public InputStream stream(String name) throws IOException {
 			ZipInputStream in = null;
 
-			in = new ZipInputStream(getInputStream());
-			ZipEntry e = in.getNextEntry();
-			while (e != null) {
-				if (X.isSame(name, e.getName())) {
-					return in;
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (X.isSame(name, e.getName())) {
+						return in;
+					}
+					e = in.getNextEntry();
 				}
-				e = in.getNextEntry();
+				X.clone(in);
+			} catch (Exception e) {
+				X.clone(in);
+				throw e;
 			}
 			return null;
 		}
@@ -254,26 +253,23 @@ public abstract class DFile implements Serializable {
 			}
 		}
 
-		@SuppressWarnings("restriction")
-		public void stream(String name, JSObject func) throws IOException {
-
-			stream(name, (filename, j1) -> {
-				func.call(this, filename, j1);
-			});
-
-		}
-
 		public _CSV csv(String name, String deli) throws IOException {
 
 			ZipInputStream in = null;
 
-			in = new ZipInputStream(getInputStream());
-			ZipEntry e = in.getNextEntry();
-			while (e != null) {
-				if (X.isSame(name, e.getName())) {
-					return new _CSV(in, deli);
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (X.isSame(name, e.getName())) {
+						return new _CSV(in, deli);
+					}
+					e = in.getNextEntry();
 				}
-				e = in.getNextEntry();
+				X.clone(in);
+			} catch (Exception e) {
+				X.clone(in);
+				throw e;
 			}
 			return null;
 		}
@@ -296,13 +292,6 @@ public abstract class DFile implements Serializable {
 			}
 		}
 
-		@SuppressWarnings("restriction")
-		public void csv(String name, String deli, JSObject func) throws IOException {
-			csv(name, deli, (filename, e) -> {
-				func.call(this, filename, e);
-			});
-		}
-
 		/**
 		 * @deprecated
 		 * @param name
@@ -314,13 +303,19 @@ public abstract class DFile implements Serializable {
 
 			ZipInputStream in = null;
 
-			in = new ZipInputStream(getInputStream());
-			ZipEntry e = in.getNextEntry();
-			while (e != null) {
-				if (X.isSame(name, e.getName())) {
-					return new _TEXT(in, deli);
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (X.isSame(name, e.getName())) {
+						return new _TEXT(in, deli);
+					}
+					e = in.getNextEntry();
 				}
-				e = in.getNextEntry();
+				X.close(in);
+			} catch (Exception e) {
+				X.close(in);
+				throw e;
 			}
 			return null;
 
@@ -345,13 +340,6 @@ public abstract class DFile implements Serializable {
 
 		}
 
-		@SuppressWarnings("restriction")
-		public void text(String name, String deli, JSObject func) throws IOException {
-			text(name, deli, (filename, e) -> {
-				func.call(this, filename, e);
-			});
-		}
-
 	}
 
 	public class _CSV {
@@ -373,6 +361,10 @@ public abstract class DFile implements Serializable {
 			if (line == null)
 				return null;
 			return X.csv(line, deli);
+		}
+
+		public void close() {
+			X.close(re);
 		}
 
 	}
@@ -400,6 +392,10 @@ public abstract class DFile implements Serializable {
 
 		public String read() throws IOException {
 			return re.readLine();
+		}
+
+		public void close() {
+			X.clone(re);
 		}
 
 	}

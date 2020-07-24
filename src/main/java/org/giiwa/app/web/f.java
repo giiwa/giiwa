@@ -122,21 +122,21 @@ public class f extends Controller {
 
 				_send(f1.getInputStream(), f1.length());
 
-				if (!f1.getFilename().startsWith("/f/g/")) {
-					Task.schedule(() -> {
-						// save the file to nginx
-						try {
-
-							DFile f2 = Disk.seek("/f/g/" + id + "/" + name, Disk.TYPE_NGINX);
-							if (f2 != null) {
-								f2.upload(f1.getInputStream());
-							}
-
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-						}
-					});
-				}
+//				if (!f1.getFilename().startsWith("/f/g/")) {
+//					Task.schedule(() -> {
+//						// save the file to nginx
+//						try {
+//
+//							DFile f2 = Disk.seek("/f/g/" + id + "/" + name, Disk.TYPE_NGINX);
+//							if (f2 != null) {
+//								f2.upload(f1.getInputStream());
+//							}
+//
+//						} catch (Exception e) {
+//							log.error(e.getMessage(), e);
+//						}
+//					});
+//				}
 
 			}
 
@@ -360,6 +360,7 @@ public class f extends Controller {
 	void _send(InputStream in, long total) {
 
 		try {
+			
 			String range = this.head("range");
 
 			long start = 0;
@@ -407,6 +408,7 @@ public class f extends Controller {
 		} finally {
 			X.close(in);
 		}
+		
 	}
 
 	/**
