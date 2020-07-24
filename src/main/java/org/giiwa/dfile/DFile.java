@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -25,6 +26,8 @@ import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
+
+import jdk.nashorn.api.scripting.JSObject;
 
 /**
  * Demo bean
@@ -162,23 +165,71 @@ public abstract class DFile implements Serializable {
 	}
 
 	public class _Zip {
-		ZipInputStream in = null;
 
+		/**
+		 * @deprecated
+		 * @param name
+		 * @return
+		 * @throws IOException
+		 */
 		public JSON json(String name) throws IOException {
-			X.close(in);
-			in = new ZipInputStream(getInputStream());
-			ZipEntry e = in.getNextEntry();
-			while (e != null) {
-				if (X.isSame(name, e.getName())) {
-					return JSON.fromObject(in);
+
+			ZipInputStream in = null;
+
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (X.isSame(name, e.getName())) {
+						return JSON.fromObject(in);
+					}
+					e = in.getNextEntry();
 				}
-				e = in.getNextEntry();
+				return null;
+			} finally {
+				X.close(in);
 			}
-			return null;
 		}
 
+		public void json(String name, BiConsumer<String, JSON> func) throws IOException {
+
+			ZipInputStream in = null;
+
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (e.getName().matches(name)) {
+						JSON j1 = JSON.fromObject(in);
+						if (j1 != null && !j1.isEmpty()) {
+							func.accept(e.getName(), j1);
+						}
+					}
+					e = in.getNextEntry();
+				}
+			} finally {
+				X.close(in);
+			}
+		}
+
+		@SuppressWarnings("restriction")
+		public void json(String name, JSObject func) throws IOException {
+
+			json(name, (filename, j1) -> {
+				func.call(this, filename, j1);
+			});
+
+		}
+
+		/**
+		 * @deprecated
+		 * @param name
+		 * @return
+		 * @throws IOException
+		 */
 		public InputStream stream(String name) throws IOException {
-			X.close(in);
+			ZipInputStream in = null;
+
 			in = new ZipInputStream(getInputStream());
 			ZipEntry e = in.getNextEntry();
 			while (e != null) {
@@ -190,8 +241,32 @@ public abstract class DFile implements Serializable {
 			return null;
 		}
 
+		public void stream(String name, BiConsumer<String, InputStream> func) throws IOException {
+			ZipInputStream in = null;
+
+			in = new ZipInputStream(getInputStream());
+			ZipEntry e = in.getNextEntry();
+			while (e != null) {
+				if (e.getName().matches(name)) {
+					func.accept(e.getName(), in);
+				}
+				e = in.getNextEntry();
+			}
+		}
+
+		@SuppressWarnings("restriction")
+		public void stream(String name, JSObject func) throws IOException {
+
+			stream(name, (filename, j1) -> {
+				func.call(this, filename, j1);
+			});
+
+		}
+
 		public _CSV csv(String name, String deli) throws IOException {
-			X.close(in);
+
+			ZipInputStream in = null;
+
 			in = new ZipInputStream(getInputStream());
 			ZipEntry e = in.getNextEntry();
 			while (e != null) {
@@ -203,8 +278,42 @@ public abstract class DFile implements Serializable {
 			return null;
 		}
 
+		public void csv(String name, String deli, BiConsumer<String, _CSV> func) throws IOException {
+
+			ZipInputStream in = null;
+
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (e.getName().matches(name)) {
+						func.accept(e.getName(), new _CSV(in, deli));
+					}
+					e = in.getNextEntry();
+				}
+			} finally {
+				X.close(in);
+			}
+		}
+
+		@SuppressWarnings("restriction")
+		public void csv(String name, String deli, JSObject func) throws IOException {
+			csv(name, deli, (filename, e) -> {
+				func.call(this, filename, e);
+			});
+		}
+
+		/**
+		 * @deprecated
+		 * @param name
+		 * @param deli
+		 * @return
+		 * @throws IOException
+		 */
 		public _TEXT text(String name, String deli) throws IOException {
-			X.close(in);
+
+			ZipInputStream in = null;
+
 			in = new ZipInputStream(getInputStream());
 			ZipEntry e = in.getNextEntry();
 			while (e != null) {
@@ -214,6 +323,33 @@ public abstract class DFile implements Serializable {
 				e = in.getNextEntry();
 			}
 			return null;
+
+		}
+
+		public void text(String name, String deli, BiConsumer<String, _TEXT> func) throws IOException {
+
+			ZipInputStream in = null;
+
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (e.getName().matches(name)) {
+						func.accept(e.getName(), new _TEXT(in, deli));
+					}
+					e = in.getNextEntry();
+				}
+			} finally {
+				X.clone(in);
+			}
+
+		}
+
+		@SuppressWarnings("restriction")
+		public void text(String name, String deli, JSObject func) throws IOException {
+			text(name, deli, (filename, e) -> {
+				func.call(this, filename, e);
+			});
 		}
 
 	}
