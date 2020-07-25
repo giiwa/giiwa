@@ -214,6 +214,31 @@ public abstract class DFile implements Serializable {
 			}
 		}
 
+		public void xml(String name, BiConsumer<String, JSON> func) throws IOException {
+			this.xml(name, "UTF8", func);
+		}
+
+		public void xml(String name, String charset, BiConsumer<String, JSON> func) throws IOException {
+
+			ZipInputStream in = null;
+
+			try {
+				in = new ZipInputStream(getInputStream());
+				ZipEntry e = in.getNextEntry();
+				while (e != null) {
+					if (e.getName().matches(name)) {
+						JSON j1 = JSON.fromObject(new BufferedReader(new InputStreamReader(in, charset)));
+						if (j1 != null && !j1.isEmpty()) {
+							func.accept(e.getName(), j1);
+						}
+					}
+					e = in.getNextEntry();
+				}
+			} finally {
+				X.close(in);
+			}
+		}
+
 		/**
 		 * @deprecated
 		 * @param name
@@ -262,19 +287,19 @@ public abstract class DFile implements Serializable {
 				ZipEntry e = in.getNextEntry();
 				while (e != null) {
 					if (X.isSame(name, e.getName())) {
-						return new _CSV(in, deli);
+						return new _CSV(in, deli, "UTF8");
 					}
 					e = in.getNextEntry();
 				}
 				X.clone(in);
-			} catch (Exception e) {
+			} catch (IOException e) {
 				X.clone(in);
 				throw e;
 			}
 			return null;
 		}
 
-		public void csv(String name, String deli, BiConsumer<String, _CSV> func) throws IOException {
+		public void csv(String name, String deli, String charset, BiConsumer<String, _CSV> func) throws IOException {
 
 			ZipInputStream in = null;
 
@@ -283,7 +308,7 @@ public abstract class DFile implements Serializable {
 				ZipEntry e = in.getNextEntry();
 				while (e != null) {
 					if (e.getName().matches(name)) {
-						func.accept(e.getName(), new _CSV(in, deli));
+						func.accept(e.getName(), new _CSV(in, deli, charset));
 					}
 					e = in.getNextEntry();
 				}
@@ -313,7 +338,7 @@ public abstract class DFile implements Serializable {
 					e = in.getNextEntry();
 				}
 				X.close(in);
-			} catch (Exception e) {
+			} catch (IOException e) {
 				X.close(in);
 				throw e;
 			}
@@ -321,7 +346,7 @@ public abstract class DFile implements Serializable {
 
 		}
 
-		public void text(String name, String deli, BiConsumer<String, _TEXT> func) throws IOException {
+		public void text(String name, String charset, BiConsumer<String, _TEXT> func) throws IOException {
 
 			ZipInputStream in = null;
 
@@ -330,7 +355,7 @@ public abstract class DFile implements Serializable {
 				ZipEntry e = in.getNextEntry();
 				while (e != null) {
 					if (e.getName().matches(name)) {
-						func.accept(e.getName(), new _TEXT(in, deli));
+						func.accept(e.getName(), new _TEXT(in, charset));
 					}
 					e = in.getNextEntry();
 				}
@@ -347,8 +372,8 @@ public abstract class DFile implements Serializable {
 		BufferedReader re = null;
 		List<Character> deli;
 
-		_CSV(InputStream in, String deli) {
-			re = new BufferedReader(new InputStreamReader(in));
+		_CSV(InputStream in, String deli, String charset) throws IOException {
+			re = new BufferedReader(new InputStreamReader(in, charset));
 			if (X.isEmpty(deli)) {
 				this.deli = Arrays.asList(',');
 			} else {
@@ -372,22 +397,13 @@ public abstract class DFile implements Serializable {
 	public class _TEXT {
 
 		BufferedReader re = null;
-		List<Character> deli;
 
-		_TEXT(InputStream in, String deli) {
-			re = new BufferedReader(new InputStreamReader(in));
-			if (X.isEmpty(deli)) {
-				this.deli = Arrays.asList(',');
-			} else {
-				this.deli = X.asList(deli.toCharArray(), e -> (Character) e);
-			}
+		_TEXT(InputStream in, String charset) throws IOException {
+			re = new BufferedReader(new InputStreamReader(in, charset));
 		}
 
-		public Object[] next() throws IOException {
-			String line = IOUtil.readcvs(re);
-			if (line == null)
-				return null;
-			return X.csv(line, deli);
+		public String next() throws IOException {
+			return re.readLine();
 		}
 
 		public String read() throws IOException {

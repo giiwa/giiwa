@@ -57,7 +57,7 @@ public class Backup {
 
 			out.putNextEntry(e);
 			int s = 0;
-			Beans<Data> l1 = Helper.load(table, q, s, 100, Data.class, db);
+			Beans<Data> l1 = Helper.load(table, q, s, 100, Data.class);
 			while (l1 != null && !l1.isEmpty()) {
 				for (Data d : l1) {
 					JSON j1 = null;
@@ -74,7 +74,7 @@ public class Backup {
 					}
 				}
 				s += l1.size();
-				l1 = Helper.load(table, q, s, 100, Data.class, db);
+				l1 = Helper.load(table, q, s, 100, Data.class);
 			}
 			return s;
 		} finally {
@@ -147,7 +147,7 @@ public class Backup {
 			if (func != null) {
 				func.accept(j1);
 			}
-			Helper.insert(V.fromJSON(j1), table, db);
+			Helper.insert(table, V.fromJSON(j1));
 
 			line = re.readLine();
 		}
