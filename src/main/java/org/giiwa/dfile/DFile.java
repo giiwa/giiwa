@@ -165,12 +165,11 @@ public abstract class DFile implements Serializable {
 	public class _Zip {
 
 		/**
-		 * @deprecated
 		 * @param name
 		 * @return
 		 * @throws IOException
 		 */
-		public JSON json(String name) throws IOException {
+		public JSON json(String name, String charset) throws IOException {
 
 			ZipInputStream in = null;
 
@@ -179,7 +178,7 @@ public abstract class DFile implements Serializable {
 				ZipEntry e = in.getNextEntry();
 				while (e != null) {
 					if (X.isSame(name, e.getName())) {
-						return JSON.fromObject(in);
+						return JSON.fromObject(new InputStreamReader(in, charset));
 					}
 					e = in.getNextEntry();
 				}
@@ -278,7 +277,7 @@ public abstract class DFile implements Serializable {
 			}
 		}
 
-		public _CSV csv(String name, String deli) throws IOException {
+		public _CSV csv(String name, String charset, String deli) throws IOException {
 
 			ZipInputStream in = null;
 
@@ -287,7 +286,7 @@ public abstract class DFile implements Serializable {
 				ZipEntry e = in.getNextEntry();
 				while (e != null) {
 					if (X.isSame(name, e.getName())) {
-						return new _CSV(in, deli, "UTF8");
+						return new _CSV(in, deli, charset);
 					}
 					e = in.getNextEntry();
 				}
