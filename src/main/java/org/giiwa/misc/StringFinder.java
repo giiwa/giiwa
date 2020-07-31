@@ -48,14 +48,15 @@ public class StringFinder {
 	/**
 	 * skip the " " in current position
 	 */
-	public void trim() {
+	public StringFinder trim() {
 		while (hasMore()) {
 			char c = next();
 			if (c != ' ') {
 				skip(-1);
-				return;
+				return this;
 			}
 		}
+		return this;
 	}
 
 	/**
@@ -473,23 +474,26 @@ public class StringFinder {
 
 	private Stack<Integer> _mark;
 
-	public void mark() {
+	public StringFinder mark() {
 		if (_mark == null) {
 			_mark = new Stack<Integer>();
 		}
 		_mark.push(pos);
+		return this;
 	}
 
-	public void reset() {
+	public StringFinder reset() {
 		if (_mark != null && !_mark.isEmpty()) {
 			pos = _mark.pop();
 		} else {
 			pos = 0;
 		}
+		return this;
 	}
 
-	public void replace(String s1, String r1) {
+	public StringFinder replace(String s1, String r1) {
 		this.s = this.s.replaceFirst(s1, r1);
+		return this;
 	}
 
 	public String word(String regex) {
