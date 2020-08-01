@@ -703,7 +703,18 @@ public class Helper implements Serializable {
 			eq, gt, gte, lt, lte, like, like_, like_$, neq, none, in, exists, nin, type, mod, all, size, near
 		};
 
-		public IAccess access;
+		private IAccess access;
+
+		/**
+		 * 设置权限过滤器， 只能设置一次
+		 * 
+		 * @param access， 权限过滤器
+		 */
+		public void access(IAccess access) {
+			if (this.access == null) {
+				this.access = access;
+			}
+		}
 
 		/**
 		 * "and"
@@ -917,6 +928,7 @@ public class Helper implements Serializable {
 			w.table = this.table;
 			w.helper = this.helper;
 			w.groupby = groupby;
+			w.access = this.access;
 
 			w.cond = cond;
 

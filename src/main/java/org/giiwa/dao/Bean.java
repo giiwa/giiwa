@@ -50,6 +50,12 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	/** The log utility */
 	private static Log log = LogFactory.getLog(Bean.class);
 
+	private boolean _readonly = false;
+
+	public void readonly() {
+		_readonly = true;
+	}
+
 	/**
 	 * the row number
 	 */
@@ -90,6 +96,10 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return true if all successful
 	 */
 	public boolean from(JSON jo) {
+
+		if (_readonly)
+			return false;
+
 		for (String name : jo.keySet()) {
 			set(name, jo.get(name));
 		}
@@ -128,6 +138,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final Object set(String name, Object value) {
+
+		if (_readonly)
+			return null;
 
 		if (value == V.ignore)
 			return null;
@@ -365,6 +378,10 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @param m the data map
 	 */
 	public final void putAll(Map<? extends String, ? extends Object> m) {
+
+		if (_readonly)
+			return;
+
 		for (String s : m.keySet()) {
 			set(s, m.get(s));
 		}
@@ -375,6 +392,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * set the fields to null that annotation by @Column.
 	 */
 	public final void clear() {
+
+		if (_readonly)
+			return;
 
 		map_obj = null;
 
@@ -517,6 +537,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * remove all value, same as clear.
 	 */
 	public final void removeAll() {
+		if (_readonly)
+			return;
+
 		clear();
 	}
 
@@ -526,6 +549,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @param names the names
 	 */
 	public final void remove(String... names) {
+
+		if (_readonly)
+			return;
 
 		map_obj = null;
 
