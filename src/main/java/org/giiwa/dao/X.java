@@ -684,9 +684,11 @@ public final class X {
 		StringBuilder sb = null;
 		int p = 0;
 		int len = src.length();
+		boolean str = false;
 		while (p < len) {
 			char c = src.charAt(p);
 			if (c == '"') {
+				str = true;
 				// goto next "
 				p++;
 				c = src.charAt(p);
@@ -707,10 +709,15 @@ public final class X {
 					if (c == ',')
 						l1.add(X.EMPTY);
 				} else {
-					l1.add(_parse(sb.toString()));
+					if (str) {
+						l1.add(sb.toString());
+					} else {
+						l1.add(_parse(sb.toString()));
+					}
 				}
 
 				sb = null;
+				str = false;
 			} else {
 				if (sb == null) {
 					sb = new StringBuilder();
@@ -720,13 +727,20 @@ public final class X {
 			p++;
 		}
 		if (sb != null) {
-			l1.add(_parse(sb.toString()));
+			if (str) {
+				l1.add(sb.toString());
+			} else {
+				l1.add(_parse(sb.toString()));
+			}
 		}
 
 		return l1.toArray();
 	}
 
 	private static Object _parse(String s) {
+		if (X.isEmpty(s))
+			return s;
+
 		boolean dot = false;
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
@@ -1272,6 +1286,7 @@ public final class X {
 
 		System.out.println("@dict[a='a']->(value, name)".matches("\\@.*\\[.*\\]->\\(.*, .*\\)"));
 
+		System.out.println(X.matches("abc汉字", "[a-zA-Z0-9_]"));
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {
@@ -1491,6 +1506,10 @@ public final class X {
 		}
 
 		return data;
+	}
+
+	public static boolean matches(String src, String valid) {
+		return src.matches(valid + "*");
 	}
 
 }
