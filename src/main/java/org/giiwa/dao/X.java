@@ -1287,6 +1287,9 @@ public final class X {
 		System.out.println("@dict[a='a']->(value, name)".matches("\\@.*\\[.*\\]->\\(.*, .*\\)"));
 
 		System.out.println(X.matches("abc汉字", "[a-zA-Z0-9_]"));
+		
+		System.out.println("2.2e-16=" + X.toDouble("2.2e-16"));
+		
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {

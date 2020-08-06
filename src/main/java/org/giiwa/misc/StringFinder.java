@@ -331,15 +331,30 @@ public class StringFinder {
 	public String get(String begin, String end) {
 		if (s == null)
 			return null;
-		int b = s.indexOf(begin, pos);
-		if (b < 0)
-			return null;
-		int e = s.indexOf(end, b + begin.length());
-		if (e < 0) {
-			return null;
+
+		String[] bb = X.split(begin, "\\|");
+
+		int b = this.len;
+		for (String s1 : bb) {
+			int b1 = s.indexOf(s1, pos);
+			if (b1 > -1 && b1 < b) {
+				b = b1 + s1.length();
+			}
 		}
-		pos = e + end.length();
-		return s.substring(b + begin.length(), e);
+
+		if (b == this.len)
+			return null;
+
+		String[] ee = X.split(end, "\\|");
+		int e = this.len;
+		for (String s1 : ee) {
+			int e1 = s.indexOf(s1, b);
+			if (e1 > 0 && e1 < e) {
+				e = e1;
+			}
+		}
+		pos = e;
+		return s.substring(b, e);
 	}
 
 	/**

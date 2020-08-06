@@ -154,7 +154,7 @@ public class Server implements Closeable {
 
 						resp.write(s.getBytes());
 						resp.send();
-//						resp.close();
+						resp.close();
 					} else {
 						req.reset();
 					}

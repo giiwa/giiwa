@@ -492,6 +492,8 @@ public abstract class Task implements Runnable, Serializable {
 						boolean global = t.attach("g");
 						LocalRunner.schedule(t, ms, global);
 
+						// TODO, stop the task
+						
 					} catch (Exception e) {
 //						log.error(e.getMessage(), e);
 						// ignore
