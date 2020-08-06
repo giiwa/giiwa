@@ -16,6 +16,8 @@ package org.giiwa.misc;
 
 import java.util.Stack;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 
 /**
@@ -24,6 +26,8 @@ import org.giiwa.dao.X;
  *
  */
 public class StringFinder {
+
+	private static Log log = LogFactory.getLog(StringFinder.class);
 
 	/**
 	 * Creates the.
@@ -332,7 +336,7 @@ public class StringFinder {
 		if (s == null)
 			return null;
 
-		String[] bb = X.split(begin, "\\|");
+		String[] bb = begin.split("\\|");
 
 		int b = this.len;
 		for (String s1 : bb) {
@@ -345,10 +349,11 @@ public class StringFinder {
 		if (b == this.len)
 			return null;
 
-		String[] ee = X.split(end, "\\|");
+		String[] ee = end.split("\\|");
 		int e = this.len;
 		for (String s1 : ee) {
 			int e1 = s.indexOf(s1, b);
+			log.debug("e1=" + e1 + ", s1=" + s1);
 			if (e1 > 0 && e1 < e) {
 				e = e1;
 			}

@@ -42,6 +42,7 @@ import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.StringFinder;
 import org.giiwa.misc.Zip;
 import org.giiwa.web.Language;
 
@@ -1287,9 +1288,12 @@ public final class X {
 		System.out.println("@dict[a='a']->(value, name)".matches("\\@.*\\[.*\\]->\\(.*, .*\\)"));
 
 		System.out.println(X.matches("abc汉字", "[a-zA-Z0-9_]"));
-		
+
 		System.out.println("2.2e-16=" + X.toDouble("2.2e-16"));
-		
+
+		StringFinder sf = StringFinder.create("t = 0.08506, df = 31, p-value = 0.5336\nabcdddd");
+		System.out.println(sf.get("p-value =", "\n|\r").trim());
+
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {
