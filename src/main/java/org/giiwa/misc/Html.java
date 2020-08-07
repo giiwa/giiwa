@@ -323,7 +323,7 @@ public final class Html {
 
 		Set<String> hh = new HashSet<String>();
 		if (X.isEmpty(hosts) || hosts.length == 0 || X.isEmpty(hosts[0])) {
-			hh.add(_server(url));
+			hh.add(_server(url) + ".*");
 		} else {
 			hh.addAll(Arrays.asList(hosts));
 		}

@@ -44,6 +44,11 @@ public class RecycleTask extends Task {
 	public static RecycleTask owner = new RecycleTask();
 
 	@Override
+	protected boolean isSys() {
+		return true;
+	}
+
+	@Override
 	public String getName() {
 		return "gi.recycle";
 	}
