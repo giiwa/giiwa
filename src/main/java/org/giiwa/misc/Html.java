@@ -286,6 +286,14 @@ public final class Html {
 		return l1;
 	}
 
+	public StringFinder finder() {
+		return StringFinder.create(body);
+	}
+
+	public JSON json() {
+		return JSON.fromObject(body);
+	}
+
 	/**
 	 * Removes the.
 	 * 
@@ -305,6 +313,14 @@ public final class Html {
 			return url.substring(0, i + 1);
 		}
 		return url + "/";
+	}
+
+	private String _path2(String url) {
+		int i = url.indexOf("?");
+		if (i > 8) {
+			return url.substring(0, i);
+		}
+		return url;
 	}
 
 	/**
@@ -348,6 +364,8 @@ public final class Html {
 					continue;
 				} else if (href.startsWith("/")) {
 					href = _server(url) + href;
+				} else if (href.startsWith("?")) {
+					href = _path2(url) + href;
 				} else if (!href.startsWith("http")) {
 					href = _path(url) + href;
 				}
@@ -396,45 +414,45 @@ public final class Html {
 		return url;
 	}
 
-//	private String _format(String href, String... removals) {
-//
-//		if (X.isEmpty(href))
-//			return null;
-//
-//		String[] ss = X.split(href, "[#?&]");
-//		if (ss.length < 2) {
-//			return ss[0];
-//		}
-//
-//		TreeMap<String, String> p = new TreeMap<String, String>();
-//		for (int i = 1; i < ss.length; i++) {
-//			StringFinder f = StringFinder.create(ss[i]);
-//			String name = f.nextTo("=");
-//			String value = f.remain();
-//			if (!X.isEmpty(name)) {
-//				p.put(name, value);
-//			}
-//		}
-//		if (removals != null) {
-//			for (String s : removals) {
-//				p.remove(s);
-//			}
-//		}
-//		StringBuilder sb = new StringBuilder();
-//		for (String name : p.keySet()) {
-//			if (sb.length() > 0)
-//				sb.append("&");
-//
-//			sb.append(name).append("=");
-//			if (!X.isEmpty(p.get(name))) {
-//				sb.append(p.get(name));
-//			}
-//		}
-//		if (sb.length() > 0) {
-//			return ss[0] + "?" + sb.toString();
-//		}
-//		return ss[0];
-//	}
+	private String _format(String href, String... removals) {
+
+		if (X.isEmpty(href))
+			return null;
+
+		String[] ss = X.split(href, "[#?&]");
+		if (ss.length < 2) {
+			return ss[0];
+		}
+
+		TreeMap<String, String> p = new TreeMap<String, String>();
+		for (int i = 1; i < ss.length; i++) {
+			StringFinder f = StringFinder.create(ss[i]);
+			String name = f.nextTo("=");
+			String value = f.remain();
+			if (!X.isEmpty(name)) {
+				p.put(name, value);
+			}
+		}
+		if (removals != null) {
+			for (String s : removals) {
+				p.remove(s);
+			}
+		}
+		StringBuilder sb = new StringBuilder();
+		for (String name : p.keySet()) {
+			if (sb.length() > 0)
+				sb.append("&");
+
+			sb.append(name).append("=");
+			if (!X.isEmpty(p.get(name))) {
+				sb.append(p.get(name));
+			}
+		}
+		if (sb.length() > 0) {
+			return ss[0] + "?" + sb.toString();
+		}
+		return ss[0];
+	}
 
 	/**
 	 * The main method.
