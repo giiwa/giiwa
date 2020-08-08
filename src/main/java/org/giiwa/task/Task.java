@@ -493,7 +493,7 @@ public abstract class Task implements Runnable, Serializable {
 						LocalRunner.schedule(t, ms, global);
 
 						// TODO, stop the task
-						
+
 					} catch (Exception e) {
 //						log.error(e.getMessage(), e);
 						// ignore
@@ -710,6 +710,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the Task
 	 */
 	final public static Task schedule(String name, TaskFunction cc, long ms) {
+
 		Task t = new Task() {
 
 			/**
@@ -728,23 +729,16 @@ public abstract class Task implements Runnable, Serializable {
 
 			@Override
 			public void onExecute() {
-				if (X.isEmpty(name)) {
-					cc.call();
-				} else {
-					if (this.tryLock()) {
-						try {
-							cc.call();
-						} finally {
-							this.unlock();
-						}
-					}
-				}
+				cc.call();
 			}
 
 		};
+
 		if (X.isEmpty(name)) {
+			// local
 			return t.schedule(ms);
 		} else {
+			// global
 			return t.schedule(ms, true);
 		}
 	}

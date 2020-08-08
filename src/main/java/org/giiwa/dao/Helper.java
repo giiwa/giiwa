@@ -875,6 +875,11 @@ public class Helper implements Serializable {
 		private W() {
 		}
 
+		public W inc(String name, int n) {
+			Helper.inc(this.table, name, n, this, null);
+			return this;
+		}
+
 		/**
 		 * remove the conditions from the query.
 		 *

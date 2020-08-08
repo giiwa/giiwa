@@ -743,7 +743,6 @@ public class R extends IStub {
 //
 //			} finally {
 //
-//				// TODO
 ////				t.delete();
 //			}
 //		}
@@ -796,6 +795,7 @@ public class R extends IStub {
 		return d;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public void onRequest(long seq, Request req) {
 

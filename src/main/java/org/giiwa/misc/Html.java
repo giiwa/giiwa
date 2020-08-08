@@ -332,7 +332,7 @@ public final class Html {
 	 * @return
 	 * @throws Exception
 	 */
-	public Collection<JSON> href(String... hosts) throws Exception {
+	public List<JSON> href(String... hosts) throws Exception {
 
 		if (X.isEmpty(url))
 			throw new Exception("url is not setting");
@@ -373,7 +373,8 @@ public final class Html {
 				if (i > 0) {
 					href = href.substring(0, i);
 				}
-//				href = _format(href);
+
+				href = _format(href);
 
 //				log.debug("href, url=" + href);
 //				System.out.println("url=" + href);
@@ -386,7 +387,8 @@ public final class Html {
 
 //		log.debug("href, l2=" + l2);
 
-		return l2.values();
+		return new ArrayList<JSON>(l2.values());
+
 	}
 
 	private boolean _match(String href, Set<String> domains) {
@@ -428,6 +430,7 @@ public final class Html {
 		for (int i = 1; i < ss.length; i++) {
 			StringFinder f = StringFinder.create(ss[i]);
 			String name = f.nextTo("=");
+			f.skip(1);
 			String value = f.remain();
 			if (!X.isEmpty(name)) {
 				p.put(name, value);
