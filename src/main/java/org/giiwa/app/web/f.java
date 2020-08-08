@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload.FileItem;
 import org.giiwa.bean.Disk;
+import org.giiwa.bean.GLog;
 import org.giiwa.bean.Repo;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Global;
@@ -20,6 +21,7 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Captcha;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Monitor;
@@ -430,6 +432,59 @@ public class f extends Controller {
 
 		JSON jo = Monitor.get(id, access);
 		this.send(JSON.create().append(X.STATE, 200).append("data", jo));
+
+	}
+
+	@Path(path = "captcha")
+	public void captcha() {
+
+		JSON jo = new JSON();
+		Temp t = Temp.create("code.jpg");
+		try {
+
+			t.getFile().getParentFile().mkdirs();
+
+			Captcha.create(this.sid(true), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
+					new FileOutputStream(t.getFile()), 4);
+
+			String filename = "/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/")
+					+ System.currentTimeMillis() + "_" + UID.random(10) + ".jpg";
+			DFile f1 = Disk.seek(filename);
+			t.save(f1);
+
+			jo.put(X.STATE, 200);
+			jo.put("sid", sid(false));
+			jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + System.currentTimeMillis());
+
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+			GLog.securitylog.error(captcha.class, "", e1.getMessage(), e1, login, this.ip());
+
+			jo.put(X.STATE, 201);
+			jo.put(X.MESSAGE, e1.getMessage());
+		}
+
+		this.send(jo);
+	}
+
+	@Path(path = "verify")
+	public void verify() {
+		String code = this.getString("code").toLowerCase();
+		Captcha.Result r = Captcha.verify(this.sid(false), code);
+
+		JSON jo = new JSON();
+		if (Captcha.Result.badcode == r) {
+			jo.put(X.STATE, 202);
+			jo.put(X.MESSAGE, "bad code");
+		} else if (Captcha.Result.expired == r) {
+			jo.put(X.STATE, 201);
+			jo.put(X.MESSAGE, "expired");
+		} else {
+			jo.put(X.STATE, 200);
+			jo.put(X.MESSAGE, "ok");
+		}
+
+		this.send(jo);
 
 	}
 

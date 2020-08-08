@@ -87,7 +87,7 @@ $(function(){
 		<a href="javascript:" onclick="_oncaptcha();" class="validateCodeRefresh ">$lang.get('a.refresh')</a>
 		<script>
 			function _oncaptcha() {
-				$.get('/captcha', {}, function(d) {
+				$.get('/f/captcha', {}, function(d) {
 					if (d.state == 200) {
 						$('#validateImg').attr('src', d.uri);
 					}

@@ -16,9 +16,12 @@ package org.giiwa.app.web;
 
 import java.io.FileOutputStream;
 
+import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
+import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
+import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Captcha;
 import org.giiwa.web.Controller;
@@ -49,9 +52,15 @@ public class captcha extends Controller {
 			Captcha.create(this.sid(true), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
 					new FileOutputStream(t.getFile()), 4);
 
+			String filename = "/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/")
+					+ System.currentTimeMillis() + "_" + UID.random(10) + ".jpg";
+			DFile f1 = Disk.seek(filename);
+			t.save(f1);
+
 			jo.put(X.STATE, 200);
 			jo.put("sid", sid(false));
-			jo.put("uri", t.getUri() + "?" + System.currentTimeMillis());
+			jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + System.currentTimeMillis());
+
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
 			GLog.securitylog.error(captcha.class, "", e1.getMessage(), e1, login, this.ip());
