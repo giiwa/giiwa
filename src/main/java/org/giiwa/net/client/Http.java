@@ -193,6 +193,10 @@ public final class Http {
 		return post(url, params, X.AMINUTE);
 	}
 
+	public Response post(String url, Object head, Object params) {
+		return post(url, JSON.fromObject(head), JSON.fromObject(params), null, null, X.AMINUTE);
+	}
+
 	/**
 	 * post body string
 	 * 
@@ -318,9 +322,14 @@ public final class Http {
 		return head(url, "application/x-javascript; charset=UTF8", headers, timeout);
 	}
 
+	public Response get(String url, Object head) {
+		return get(url, JSON.fromObject(head), X.AMINUTE);
+	}
+
 	/**
 	 * Gets the.
-	 *
+	 * 
+	 * @deprecated
 	 * @param url     the url
 	 * @param headers the headers
 	 * @return the response
