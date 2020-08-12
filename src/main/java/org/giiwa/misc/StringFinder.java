@@ -39,8 +39,8 @@ public class StringFinder {
 		return new StringFinder(s);
 	}
 
-	int pos = 0;
-	int len = 0;
+	public int pos = 0;
+	public int len = 0;
 	String s;
 
 	private StringFinder(String s) {
@@ -55,10 +55,11 @@ public class StringFinder {
 	public StringFinder trim() {
 		while (hasMore()) {
 			char c = next();
-			if (c != ' ') {
-				skip(-1);
-				return this;
-			}
+			if (c == ' ' || c == '\r' || c == '\n' || c == '\t')
+				continue;
+
+			skip(-1);
+			break;
 		}
 		return this;
 	}
@@ -84,7 +85,10 @@ public class StringFinder {
 	 * @return the string
 	 */
 	public String nextTo(String deli) {
+		return get(deli);
+	}
 
+	public String get(String end) {
 		if (s == null || pos >= len) {
 			return null;
 		}
@@ -92,7 +96,7 @@ public class StringFinder {
 		String s1 = null;
 
 		int min = Integer.MAX_VALUE;
-		String[] ss = deli.split("\\|");
+		String[] ss = end.split("\\|");
 		for (String s2 : ss) {
 			int i = _pos(s2, pos);
 			if (i > -1 && i < min) {
@@ -109,7 +113,6 @@ public class StringFinder {
 		}
 
 		return s1.trim();
-
 	}
 
 	private int _pos(String s2, int p) {
@@ -155,7 +158,7 @@ public class StringFinder {
 		}
 		String s1 = s.substring(pos);
 		pos = s.length();
-		return s1.trim();
+		return s1;
 	}
 
 	public boolean hasMore() {
@@ -303,6 +306,11 @@ public class StringFinder {
 		return null;
 	}
 
+	public int seek(int pos) {
+		this.pos = pos;
+		return this.pos;
+	}
+
 	/**
 	 * Skip.
 	 *
@@ -320,6 +328,34 @@ public class StringFinder {
 			}
 			pos++;
 			c = s.charAt(pos);
+		}
+
+		return pos;
+	}
+
+	/**
+	 * check the index of the string
+	 * 
+	 * @param str the string
+	 * @return
+	 */
+	public int indexOf(String str) {
+		return s.indexOf(str, pos);
+	}
+
+	/**
+	 * skip to the end of the str
+	 * 
+	 * @param str the string to skip
+	 * @return the new position
+	 */
+	public int skip(String str) {
+
+		int i = s.indexOf(str, pos);
+		if (i > -1) {
+			pos = i + str.length();
+		} else {
+			pos = this.len;
 		}
 
 		return pos;
@@ -353,7 +389,7 @@ public class StringFinder {
 		int e = this.len;
 		for (String s1 : ee) {
 			int e1 = s.indexOf(s1, b);
-			log.debug("e1=" + e1 + ", s1=" + s1);
+//			log.debug("e1=" + e1 + ", s1=" + s1);
 			if (e1 > 0 && e1 < e) {
 				e = e1;
 			}
@@ -511,8 +547,17 @@ public class StringFinder {
 		return this;
 	}
 
+	public String[] split(String regex) {
+		return X.split(this.remain(), regex);
+	}
+
+	public boolean startsWith(String str) {
+		return this.s.startsWith(str, pos);
+	}
+
 	public StringFinder replace(String s1, String r1) {
 		this.s = this.s.replaceFirst(s1, r1);
+		this.len = this.s.length();
 		return this;
 	}
 

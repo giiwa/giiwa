@@ -45,7 +45,6 @@ import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.Digest;
 import org.giiwa.misc.StringFinder;
-import org.giiwa.misc.Url;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -972,12 +971,32 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		int i = name.indexOf(".");
 		if (i > 0) {
 			String s0 = name.substring(0, i);
-			o = super.get(s0);
+			o = get(s0);
 			if (o instanceof JSON) {
 				JSON m = (JSON) o;
 				return m.get(name.substring(i + 1));
 			}
 		}
+
+//		i = name.indexOf("[");
+//		if (i > 0) {
+//			String s0 = name.substring(0, i);
+//			o = get(s0);
+//			if (o != null) {
+//				int j = name.indexOf("]", i + 1);
+//				if (j > 0) {
+//					String filter = name.substring(i + 1, j);
+//					StringFinder sf = StringFinder.create(filter);
+//					String na1 = sf.get(">|=|<");
+//					String op = null;
+//					
+//					char c1 = sf.next();
+//					
+//				}
+//			}
+//
+//		}
+
 		return null;
 	}
 

@@ -217,18 +217,27 @@ public class R extends IStub {
 //
 //		} else {
 
-		JSON j1 = JSON.create();
-		j1.append("sid", sid);
-		j1.append("code", code).append("data", Arrays.asList(data));
-		Object r = MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
+		Object r = null;
+		if (inited) {
+			// run in local
+			r = _run(sid, code, Arrays.asList(data));
+
+		} else {
+			JSON j1 = JSON.create();
+			j1.append("sid", sid);
+			j1.append("code", code).append("data", Arrays.asList(data));
+			r = MQ.call(inst.name, Request.create().put(j1), X.AMINUTE * 60);
+		}
+
 		if (r instanceof String) {
-			StringFinder sf = StringFinder.create(r.toString());
+			StringFinder sf = StringFinder.create((String) r);
 			String error = sf.get("=error=", "=end=");
 			if (!X.isEmpty(error))
 				throw new Exception(error);
-		}
 
+		}
 		return r;
+
 //		}
 
 	}
@@ -295,6 +304,7 @@ public class R extends IStub {
 					log.debug("R.run, result=\n" + r);
 
 				t.delete();
+
 				return r;
 
 //				System.out.println(r2J2(x));
@@ -371,7 +381,7 @@ public class R extends IStub {
 		} else {
 			sb.append("header=F,");
 		}
-		sb.append("stringsAsFactors=TRUE);");
+		sb.append("stringsAsFactors=FALSE);");
 
 		return sb.toString();
 

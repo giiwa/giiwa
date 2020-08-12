@@ -24,8 +24,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -505,7 +507,17 @@ public class IOUtil {
 		}
 	}
 
+	/**
+	 * @deprecated
+	 * @param re
+	 * @return
+	 * @throws IOException
+	 */
 	public static String readcvs(BufferedReader re) throws IOException {
+		return readcsv(re);
+	}
+
+	public static String readcsv(BufferedReader re) throws IOException {
 		String line = re.readLine();
 		while (line != null && ((count(line, "\"") & 1) == 1)) {
 			String s1 = re.readLine();
@@ -528,6 +540,24 @@ public class IOUtil {
 			i = line.indexOf(substr, i + substr.length());
 		}
 		return n;
+	}
+
+	public static void lines(String lines, BiConsumer<String, BufferedReader> func) {
+		BufferedReader re = null;
+
+		try {
+			re = new BufferedReader(new StringReader(lines));
+			String line = re.readLine();
+			while (line != null) {
+				func.accept(line, re);
+				line = re.readLine();
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			X.close(re);
+		}
+
 	}
 
 }
