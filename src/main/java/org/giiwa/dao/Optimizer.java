@@ -29,6 +29,8 @@ class Optimizer implements Helper.IOptimizer {
 
 		if (w != null && !w.isEmpty()) {
 
+			log.debug("optimaizer, table=" + table + ", query=" + w);
+
 			try {
 				List<LinkedHashMap<String, Integer>> l1 = w.sortkeys();
 				if (l1 != null) {
@@ -48,15 +50,21 @@ class Optimizer implements Helper.IOptimizer {
 							_init(db, table);
 
 							if (!exists.contains(id)) {
-								exists.add(id);
 								if (queue.size() < 20) {
+									exists.add(id);
 									queue.add(new Object[] { db, table, e });
 								} else {
-									log.warn("optimizer drop the [" + db + ", " + table + ", " + e + "]");
+									log.warn("optimizer, table=" + table + ", drop the [" + w + "]");
 								}
+							} else {
+								log.debug("optimaizer, table=" + table + ", sortkey exists, q=" + w);
 							}
+						} else {
+							log.debug("optimaizer, table=" + table + ", sortkey exists, q=" + w);
 						}
 					});
+				} else {
+					log.warn("optimaizer, table=" + table + ", sortkey is null, q=" + w);
 				}
 			} catch (Throwable e) {
 				// ignore
@@ -97,12 +105,15 @@ class Optimizer implements Helper.IOptimizer {
 								if (!keys.isEmpty()) {
 
 									if (log.isDebugEnabled())
-										log.debug("db.index, table=" + table + ", create.index=" + keys.toString()
+										log.debug("optimaizer, table=" + table + ", create.index=" + keys.toString()
 												+ ", queue.size=" + queue.size());
 
 									if (Global.getInt("db.optimizer", 1) == 1) {
 										Helper.createIndex(db, table, keys);
 									} else {
+										if (log.isDebugEnabled())
+											log.debug("optimaizer, table=" + table + ", disabled");
+
 										GLog.applog.info("db", "optimize",
 												"required, table=" + table + ", keys=" + keys);
 									}

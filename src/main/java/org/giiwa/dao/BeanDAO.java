@@ -115,6 +115,8 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load Beans only the fields
 	 * 
+	 * @deprecated
+	 * 
 	 * @param fields the fields
 	 * @param q      the conditions
 	 * @param s      the offset

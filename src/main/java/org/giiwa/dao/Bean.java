@@ -52,12 +52,17 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 
 	private boolean _readonly = false;
 
+	/**
+	 * set the bean as read only mode
+	 */
 	public void readonly() {
 		_readonly = true;
 	}
 
 	/**
 	 * the row number
+	 * 
+	 * @deprecated
 	 */
 	public long _rowid;
 
@@ -126,7 +131,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @see java.lang.Object.toString()
 	 */
 	public String toString() {
-		return this.getClass().getSimpleName() + "@" + this.json();
+		return this.getClass().getSimpleName() + "@{ID=" + this.get(X.ID) + "}";
 	}
 
 	/**

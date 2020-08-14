@@ -2859,7 +2859,7 @@ public class Helper implements Serializable {
 
 	public static interface IOptimizer {
 
-		public static long MIN = 5000;
+		public static long MIN = 1000;
 
 		/**
 		 * Query.
