@@ -233,7 +233,7 @@ public class user extends Controller {
 				}
 			}
 
-			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("MAXSIZE", 4096));
+			this.send(JSON.create().append(X.STATE, 200).append("MAXSIZE", 4096));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()).append("MAXSIZE", 4096));
@@ -268,7 +268,7 @@ public class user extends Controller {
 			}
 		}
 
-		this.send(jo.append(X.STATE, 200).append(X.MESSAGE, "ok"));
+		this.send(jo.append(X.STATE, 200));
 
 	}
 

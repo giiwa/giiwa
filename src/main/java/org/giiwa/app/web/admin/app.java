@@ -92,6 +92,11 @@ public class app extends Controller {
 			v.append("memo", this.getString("memo"));
 			v.append("access", Arrays.asList(X.split(this.getHtml("access"), "[,;\r\n]")));
 
+			String secret = this.get("secret");
+			if (!X.isEmpty(secret)) {
+				v.append("secret", secret);
+			}
+
 			App.dao.update(id, v);
 
 			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));

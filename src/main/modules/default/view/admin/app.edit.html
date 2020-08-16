@@ -9,6 +9,7 @@
 <form action='/admin/app/edit?__node=$!__node'  method='post' class='form' >
 	<input type='hidden' name="id" value="$!a.id"/>
 	<div><label><h3>$lang.get('app.appid')<r>*</r>:</h3><i>$a.appid</i></label></div>
+	<div><label><h3>$lang.get('app.secret'):</h3><input type='text' name='secret' value=""/></label></div>
 	<div><label><h3>$lang.get('app.expired'):</h3><input type='text' name='expired' value="#if($a.expired>0)$!lang.format($a.expired, 'yyyy-MM-dd HH:mm')#end"/><g>yyyy-MM-dd HH:mm</g></label></div>
 	<div><label><h3>$lang.get('app.memo'):</h3><input type='text' class="width-40" name='memo' value='$!a.memo'/><g>$lang.get("app.memo.hint")</g></label></div>
 	<div><label><h3>$lang.get('app.access'):</h3><textarea name='access'>#foreach($p in $a.access)$p,#end</textarea></label></div>
