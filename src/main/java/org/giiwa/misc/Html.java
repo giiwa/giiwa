@@ -332,16 +332,23 @@ public final class Html {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<JSON> href(String... hosts) throws Exception {
+	public List<JSON> href(String... regex) throws Exception {
 
 		if (X.isEmpty(url))
 			throw new Exception("url is not setting");
 
 		Set<String> hh = new HashSet<String>();
-		if (X.isEmpty(hosts) || hosts.length == 0 || X.isEmpty(hosts[0])) {
+		if (X.isEmpty(regex) || regex.length == 0 || X.isEmpty(regex[0])) {
 			hh.add(_server(url) + ".*");
 		} else {
-			hh.addAll(Arrays.asList(hosts));
+
+			for (String s : regex) {
+				String[] ss = X.split(s, "[;]");
+				for (String s1 : ss) {
+					hh.add(s1);
+				}
+
+			}
 		}
 
 		Map<String, JSON> l2 = new HashMap<String, JSON>();
