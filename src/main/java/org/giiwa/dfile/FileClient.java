@@ -156,7 +156,7 @@ public class FileClient {
 
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 
 			r.write(ICommand.CMD_DELETE);
 			byte[] b = path.getBytes();
@@ -260,7 +260,7 @@ public class FileClient {
 
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 
 			r.write(ICommand.CMD_GET);
 			byte[] b = path.getBytes();
@@ -328,7 +328,7 @@ public class FileClient {
 
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 			r.write(ICommand.CMD_PUT);
 			byte[] b = path.getBytes();
 			r.write(b.length);
@@ -392,7 +392,7 @@ public class FileClient {
 		Client c = client.get(3000);
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 
 			r.write(ICommand.CMD_MKDIRS);
 			byte[] b = path.getBytes();
@@ -455,7 +455,7 @@ public class FileClient {
 
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 
 			r.write(ICommand.CMD_LIST);
 			byte[] b = path.getBytes();
@@ -532,7 +532,7 @@ public class FileClient {
 
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 
 			r.write(ICommand.CMD_INFO);
 			byte[] b = path.getBytes();
@@ -609,7 +609,7 @@ public class FileClient {
 
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 
 			r.write(ICommand.CMD_MOVE);
 			for (String s1 : new String[] { path, filename, path, filename2 }) {
@@ -670,7 +670,7 @@ public class FileClient {
 
 		try {
 
-			IoResponse r = c.createResponse();
+			IoResponse r = c.packet();
 
 			r.write(ICommand.CMD_HTTP);
 

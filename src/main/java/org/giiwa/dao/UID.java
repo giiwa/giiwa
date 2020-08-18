@@ -77,7 +77,7 @@ public final class UID {
 		/**
 		 * remove cache
 		 */
-		Cache.remove("global/" + key);
+//		Cache.remove("global/" + key);
 
 		Global f = Helper.load(key, Global.class);
 
@@ -88,20 +88,21 @@ public final class UID {
 			Helper.insert(V.create(X.ID, key).append("l", v).append("linkid", linkid), Global.class);
 			f = Helper.load(key, Global.class);
 			if (f == null) {
-				log.error("occur error when create unique id, name=" + key);
-				return -1;
+//				log.error("occur error when create unique id, name=" + key);
+				throw new Exception("get uid error! key=" + key);
 			} else if (!X.isSame(f.getString("linkid"), linkid)) {
 				return _next(key);
 			}
 
 		} else {
-			v = f.getLong("l");
 			// log.debug("v=" + v + ", f=" + f);
+			long v1 = Math.max(f.getLong("l"), Global.getLong("uid.next.s1", 1));
 
-			if (Helper.update(W.create(X.ID, key).and("l", v), V.create("l", v + 1L), Global.class) <= 0) {
+			if (Helper.update(W.create(X.ID, key).and("l", f.getLong("l")), V.create("l", v1 + 1L),
+					Global.class) <= 0) {
 				return _next(key);
 			}
-			v += 1;
+			v = v1 + 1;
 		}
 
 //		long max = Global.getLong("uid.next.s2", -1);

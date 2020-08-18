@@ -289,7 +289,7 @@ public class R extends IStub {
 				sb.append("}, error=function(e){cat('=error=');print(e);cat('=end=');})");
 
 				if (log.isDebugEnabled())
-					log.debug("R.run, code=\n" + sb);
+					log.debug("R.run, code=\n" + sb.toString());
 
 				c.eval(sb.toString());
 

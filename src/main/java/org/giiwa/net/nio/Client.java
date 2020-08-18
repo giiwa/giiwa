@@ -141,7 +141,7 @@ public class Client implements Closeable {
 //		session.write(b);
 //	}
 
-	public IoResponse createResponse() {
+	public IoResponse packet() {
 		return IoResponse.create(session);
 	}
 
@@ -177,7 +177,7 @@ public class Client implements Closeable {
 					@Override
 					public void onExecute() {
 						n--;
-						IoResponse r = c.createResponse();
+						IoResponse r = c.packet();
 						r.write(("n=" + n).getBytes());
 						r.send();
 					}
