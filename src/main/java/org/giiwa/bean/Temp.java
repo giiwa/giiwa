@@ -189,7 +189,9 @@ public class Temp {
 
 		try {
 			File f = this.getFile();
+			
 			delete(f);
+			
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
