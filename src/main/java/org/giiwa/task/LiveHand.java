@@ -39,6 +39,18 @@ public class LiveHand implements Serializable {
 		this.timeout = created.pastms() + timeout;
 	}
 
+	public synchronized void increase() {
+		max++;
+		door++;
+		this.notifyAll();
+	}
+
+	public synchronized void descrease() {
+		max--;
+		door--;
+		this.notifyAll();
+	}
+
 	public void put(String name, Object value) {
 		attachs.put(name, value);
 	}
