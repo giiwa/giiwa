@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Digest;
 
 /**
  * The {@code Bean} Class is entity class that mapping to a table,<br>
@@ -769,6 +770,17 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		Object id2 = ((Bean) obj).get(X.ID);
 
 		return X.isSame(id1, id2);
+	}
+
+	/**
+	 * get the md5 for attributes except ( _.*, created, updated)
+	 * 
+	 * @return
+	 */
+	public String md5() {
+		JSON j1 = this.json();
+		j1.remove("_.*", "created", "updated");
+		return Digest.md5(j1.toString());
 	}
 
 }
