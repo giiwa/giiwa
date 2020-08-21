@@ -632,6 +632,7 @@ public abstract class Task implements Runnable, Serializable {
 			} else {
 
 				if (powerstate != 1 && !this.isSys()) {
+					// power off and not sys task
 					return this;
 				}
 

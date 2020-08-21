@@ -42,6 +42,8 @@ public class LiveHand implements Serializable {
 	public synchronized void increase() {
 		max++;
 		door++;
+
+		log.debug("max=" + max + ", door=" + door);
 		this.notifyAll();
 	}
 
@@ -106,7 +108,14 @@ public class LiveHand implements Serializable {
 		this.notifyAll();
 	}
 
-	public synchronized boolean tryHold() {
+	/**
+	 * @return
+	 */
+	public boolean tryHold() {
+		return tryLock();
+	}
+
+	public synchronized boolean tryLock() {
 		if (door > 0) {
 			door--;
 			return true;
@@ -114,11 +123,23 @@ public class LiveHand implements Serializable {
 		return false;
 	}
 
-	public synchronized boolean hold() throws InterruptedException {
+	/**
+	 * @return
+	 * @throws InterruptedException
+	 */
+	public boolean hold() throws InterruptedException {
+		return lock();
+	}
+
+	public synchronized boolean lock() throws InterruptedException {
 
 		TimeStamp t = TimeStamp.create();
 		try {
+
 			while (isLive()) {
+
+				log.debug("max=" + max + ", door=" + door);
+
 				if (door > 0) {
 					door--;
 					return true;
@@ -142,7 +163,14 @@ public class LiveHand implements Serializable {
 		}
 	}
 
-	public synchronized void drop() {
+	/**
+	 * release the hand
+	 */
+	public void drop() {
+		release();
+	}
+
+	public synchronized void release() {
 		door++;
 		if (door > max)
 			door = max;
@@ -185,19 +213,18 @@ public class LiveHand implements Serializable {
 
 	@Override
 	public String toString() {
-		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", alive=" + live + ", available=" + door
-				+ ", max=" + max + ", timeout=" + timeout + ", age=" + created.pastms() + "ms, attachs=" + attachs
-				+ "]";
+		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", " + (live ? "alive" : "over") + ", " + max
+				+ ">" + door + ", timeout=" + timeout + ", age=" + created.past() + ", attachs=" + attachs + "]";
 	}
 
 	public static void main(String[] args) {
-		LiveHand h = new LiveHand(-1, 20);
+		LiveHand h = LiveHand.create(5);
 		System.out.println("holding");
 		try {
-			h.hold();
+			h.lock();
+			h.release();
 			h.await(5000);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("done");
