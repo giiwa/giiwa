@@ -4307,8 +4307,16 @@ public class Helper implements Serializable {
 		monitor = null;
 	}
 
+	public static void createIndex(String table, LinkedHashMap<String, Integer> ss) {
+		createIndex(Helper.DEFAULT, table, ss);
+	}
+
 	/**
 	 * create index on table
+	 * 
+	 * @deprecated <br>
+	 *             replace by createIndex(String table, LinkedHashMap<String,
+	 *             Integer> ss)
 	 * 
 	 * @param db    the db
 	 * @param table the table

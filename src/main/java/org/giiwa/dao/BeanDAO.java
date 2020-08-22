@@ -90,6 +90,9 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load a Bean only fields
 	 * 
+	 * @deprecated <br>
+	 *             replace by load(W q)
+	 * 
 	 * @param fields the fields
 	 * @param q      the condition
 	 * @return
@@ -115,7 +118,9 @@ public class BeanDAO<I, T extends Bean> {
 	/**
 	 * load Beans only the fields
 	 * 
-	 * @deprecated
+	 * @deprecated <br>
+	 *             replace by load(W q, int s, int n);
+	 * 
 	 * 
 	 * @param fields the fields
 	 * @param q      the conditions
@@ -497,10 +502,12 @@ public class BeanDAO<I, T extends Bean> {
 		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
 
+	@SuppressWarnings("deprecation")
 	public List<JSON> sum(W q, String name, String[] group) {
 		return Helper.sum(this.tableName(), q, name, group, this.dbName());
 	}
 
+	@SuppressWarnings("deprecation")
 	public List<JSON> aggregate(W q, String[] name, String[] group) {
 		return Helper.aggregate(this.tableName(), q, name, group, this.dbName());
 	}

@@ -86,7 +86,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated <br>
+	 *             replace by from(JSON jo)
+	 * 
 	 * @param jo
 	 * @return
 	 */
@@ -115,7 +117,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	/**
 	 * get the key-value in the bean to json.<br>
 	 * 
-	 * @deprecated
+	 * @deprecated <br>
+	 *             replace by json()
 	 * @param jo the JSON object
 	 */
 	public void toJSON(JSON jo) {
@@ -605,7 +608,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated <br>
+	 *             replace by json()
+	 * 
 	 * @return
 	 */
 	public final JSON getJSON() {
@@ -651,7 +656,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 				try {
 					Object o = r.getObject(i);
 					if (o instanceof Date) {
-						o = ((Date) o).getTime();
+						Date d = ((Date) o);
+						o = d.getTime();
 					} else if (o instanceof oracle.sql.TIMESTAMP) {
 						o = ((oracle.sql.TIMESTAMP) o).toString();
 					}
