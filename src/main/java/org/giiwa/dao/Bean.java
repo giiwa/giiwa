@@ -581,7 +581,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 
 	private Map<String, Object> data = null;
 
-	private transient JSON json_obj;
+//	private transient JSON json_obj;
 
 	/**
 	 * create the data as json.<br>
@@ -590,20 +590,18 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 */
 	public JSON json() {
 
-		if (json_obj == null) {
-			json_obj = new JSON();
+		JSON json_obj = new JSON();
 
-			json_obj.putAll(getAll());
+		json_obj.putAll(getAll());
 
-			json_obj.scan((j1, e) -> {
-				Object o = e.getValue();
-				if (!(o instanceof Serializable)) {
-					log.info("bad data, name=" + e.getKey(), new Exception());
-					j1.remove(e.getKey());
-				}
-			});
+		json_obj.scan((j1, e) -> {
+			Object o = e.getValue();
+			if (!(o instanceof Serializable)) {
+				log.info("bad data, name=" + e.getKey(), new Exception());
+				j1.remove(e.getKey());
+			}
+		});
 
-		}
 		return json_obj;
 	}
 
@@ -784,9 +782,11 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return
 	 */
 	public String md5() {
-		JSON j1 = this.json();
+		JSON j1 = this.json().copy();
 		j1.remove("_.*", "created", "updated");
-		return Digest.md5(j1.toString());
+		String s1 = j1.toString();
+		log.debug("s1=" + s1);
+		return Digest.md5(s1);
 	}
 
 }
