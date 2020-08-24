@@ -11,26 +11,6 @@
 	<servlet>
 		<servlet-name>giiwaServlet</servlet-name>
 		<servlet-class>org.giiwa.web.GiiwaServlet</servlet-class>
-		<init-param>
-			<param-name>.html</param-name>
-			<param-value>org.giiwa.web.view.VelocityView</param-value>
-		</init-param>
-		<init-param>
-			<param-name>.htm</param-name>
-			<param-value>org.giiwa.web.view.VelocityView</param-value>
-		</init-param>
-		<init-param>
-			<param-name>.jsp</param-name>
-			<param-value>org.giiwa.web.view.JspView</param-value>
-		</init-param>
-		<init-param>
-			<param-name>.ftl</param-name>
-			<param-value>org.giiwa.web.view.FreemarkerView</param-value>
-		</init-param>
-		<init-param>
-			<param-name>.th</param-name>
-			<param-value>org.giiwa.web.view.ThymeleafView</param-value>
-		</init-param>
 		<load-on-startup>0</load-on-startup>
 	</servlet>
 	<servlet-mapping>

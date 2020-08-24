@@ -107,24 +107,19 @@ public class GiiwaFilter implements Filter {
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public synchronized void init(FilterConfig c1) throws ServletException {
+		
 		try {
+			
 			if (log.isDebugEnabled())
-				log.debug("initing model ...");
+				log.debug("filter initing model ...");
 			GiiwaServlet.s️ervletContext = c1.getServletContext();
 
 			if (log.isDebugEnabled())
-				log.debug("initing view ...");
-			Enumeration e = c1.getInitParameterNames();
-			while (e.hasMoreElements()) {
-				String name = e.nextElement().toString();
-				String value = c1.getInitParameter(name);
-				config.put(name, value);
-			}
-
-			View.init(config);
+				log.debug("filter initing view ...");
+			
+			View.init();
 
 			License.init();
 
@@ -135,7 +130,5 @@ public class GiiwaFilter implements Filter {
 		log.info("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
 
 	}
-
-	private Map<String, String> config = new HashMap<String, String>();
 
 }

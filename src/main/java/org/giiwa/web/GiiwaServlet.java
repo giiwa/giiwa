@@ -1,9 +1,6 @@
 package org.giiwa.web;
 
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -23,8 +20,6 @@ public class GiiwaServlet extends HttpServlet {
 
 	public static ServletContext s️ervletContext;
 
-	private Map<String, String> config = new ConcurrentHashMap<String, String>();
-
 	/**
 	 * 
 	 */
@@ -40,14 +35,7 @@ public class GiiwaServlet extends HttpServlet {
 			if (log.isDebugEnabled())
 				log.debug("init view ...");
 
-			Enumeration<?> e = getInitParameterNames();
-			while (e.hasMoreElements()) {
-				String name = e.nextElement().toString();
-				String value = getInitParameter(name);
-				config.put(name, value);
-			}
-
-			View.init(config);
+			View.init();
 
 			License.init();
 

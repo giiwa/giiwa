@@ -25,6 +25,7 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.app.Velocity;
+import org.giiwa.bean.GLog;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
@@ -57,9 +58,8 @@ public abstract class View {
 	/**
 	 * init the views by config
 	 * 
-	 * @param config the config
 	 */
-	public static void init(Map<String, String> config) {
+	public static void init() {
 
 		try {
 
@@ -73,20 +73,15 @@ public abstract class View {
 			Velocity.init(p);
 
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+//			log.error(e.getMessage(), e);
+			GLog.applog.error("sys", "init", e.getMessage(), e);
 		}
 
-		for (String name : config.keySet()) {
-			if (name.startsWith(".")) {
-				String value = config.get(name);
-				try {
-					View v = (View) Class.forName(value).newInstance();
-					views.put(name, v);
-				} catch (Exception e1) {
-					log.error(value, e1);
-				}
-			}
-		}
+		views.put(".html", new org.giiwa.web.view.VelocityView());
+		views.put(".htm", new org.giiwa.web.view.VelocityView());
+		views.put(".jsp", new org.giiwa.web.view.JspView());
+		views.put(".ftl", new org.giiwa.web.view.FreemarkerView());
+		views.put(".th", new org.giiwa.web.view.ThymeleafView());
 
 		if (log.isDebugEnabled()) {
 			log.debug("View Parser: ");
