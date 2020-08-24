@@ -62,6 +62,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return id;
 	}
 
+	@SuppressWarnings("deprecation")
 	public long count() {
 		if (dao != null && total < 0) {
 			total = dao.count(q);

@@ -272,6 +272,7 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param q    the condition
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public <E> E sum(String name, W q) {
 		return Helper.sum(q, name, t);
 	}
@@ -283,6 +284,7 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param q    the condition
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public <E> E max(String name, W q) {
 		return Helper.max(q, name, t);
 	}
@@ -294,6 +296,7 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param q    the condition
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public <E> E min(String name, W q) {
 		return Helper.min(q, name, t);
 	}
@@ -305,6 +308,7 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param q    the condition
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public <E> E avg(String name, W q) {
 		return Helper.avg(q, name, t);
 	}
@@ -329,6 +333,7 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param v    the value
 	 * @return
 	 */
+	@SuppressWarnings("deprecation")
 	public int inc(W q, String name, int n, V v) {
 		_cache.remove();
 		return Helper.inc(q, name, n, v, t);
@@ -494,10 +499,12 @@ public class BeanDAO<I, T extends Bean> {
 		return q;
 	}
 
+	@SuppressWarnings("deprecation")
 	public List<JSON> count(W q, String[] group, int n) {
 		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
 
+	@SuppressWarnings("deprecation")
 	public List<JSON> count(W q, String name, String[] group, int n) {
 		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
@@ -512,14 +519,17 @@ public class BeanDAO<I, T extends Bean> {
 		return Helper.aggregate(this.tableName(), q, name, group, this.dbName());
 	}
 
+	@SuppressWarnings("deprecation")
 	public List<JSON> min(W q, String name, String[] group) {
 		return Helper.min(this.tableName(), q, name, group, this.dbName());
 	}
 
+	@SuppressWarnings("deprecation")
 	public List<JSON> max(W q, String name, String[] group) {
 		return Helper.max(this.tableName(), q, name, group, this.dbName());
 	}
 
+	@SuppressWarnings("deprecation")
 	public List<JSON> avg(W q, String name, String[] group) {
 		return Helper.avg(this.tableName(), q, name, group, this.dbName());
 	}

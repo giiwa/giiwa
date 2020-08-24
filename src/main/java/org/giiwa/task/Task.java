@@ -471,12 +471,6 @@ public abstract class Task implements Runnable, Serializable {
 
 	private static void _initMQ() {
 
-//		String task = conf.getString("global.task", "yes");
-//		if (!X.isIn(task, "true", "yes")) {
-//			log.warn("forbidden global task in this node");
-//			return;
-//		}
-
 		try {
 			IStub st = new IStub(Task.MQNAME) {
 

@@ -508,7 +508,7 @@ public class IOUtil {
 	}
 
 	/**
-	 * @deprecated
+	 * @deprecated <br> replace by readcsv
 	 * @param re
 	 * @return
 	 * @throws IOException

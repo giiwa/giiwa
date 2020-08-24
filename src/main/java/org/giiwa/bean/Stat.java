@@ -92,6 +92,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param n      the n
 	 * @return the int
 	 */
+	@SuppressWarnings("deprecation")
 	public static int insertOrUpdate(String module, String date, SIZE size, W q0, V v, long... n) {
 		if (v == null) {
 			v = V.create();
@@ -139,12 +140,14 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return -1;
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void delete(String module, W q) {
 		// delete
 		String table = table(module);
 		Helper.delete(q, table, Helper.DEFAULT);
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void cleanup(String module, SIZE size) {
 		// delete old data
 		String table = table(module);
@@ -393,6 +396,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return Helper.load(table(name), q, Stat.class);
 	}
 
+	@SuppressWarnings("deprecation")
 	public static long max(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
@@ -401,6 +405,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return X.toLong((Object) Helper.max(q, field, table(name), Helper.DEFAULT));
 	}
 
+	@SuppressWarnings("deprecation")
 	public static long sum(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
@@ -409,6 +414,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return X.toLong((Object) Helper.sum(q, field, table(name), Helper.DEFAULT));
 	}
 
+	@SuppressWarnings("deprecation")
 	public static long avg(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
@@ -417,6 +423,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return X.toLong((Object) Helper.avg(q, field, table(name), Helper.DEFAULT));
 	}
 
+	@SuppressWarnings("deprecation")
 	public static long min(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
@@ -509,6 +516,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return lang.parse(lang.format(time, "yyyy"), "yyyy");
 	}
 
+	@SuppressWarnings("deprecation")
 	public static List<Stat> merge(String module, W q, String groupby, MergeFunc func) {
 		// load from stat, and group
 
@@ -562,6 +570,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 	}
 
+	@SuppressWarnings("deprecation")
 	public static List<?> distinct(String module, String field, W q) {
 		String table = table(module);
 		return Helper.distinct(field, q, table, Helper.DEFAULT);
@@ -621,6 +630,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return hour;
 	}
 
+	@SuppressWarnings("deprecation")
 	public synchronized static int cleanup() {
 		if (rules == null) {
 			Configuration conf = Config.getConf();

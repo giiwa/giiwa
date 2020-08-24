@@ -72,7 +72,7 @@ public class Data extends Bean {
 	 * @throws SQLException
 	 */
 	public static boolean exists(String table, W q) throws SQLException {
-		return Helper.exists(q, table, Helper.DEFAULT);
+		return Helper.exists(table, q);
 	}
 
 	/**
@@ -133,7 +133,7 @@ public class Data extends Bean {
 	 * @return the number impacted
 	 */
 	public static int remove(String table, W q) {
-		return Helper.delete(q, table, Helper.DEFAULT);
+		return Helper.delete(table, q);
 	}
 
 }

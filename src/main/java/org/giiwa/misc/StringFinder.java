@@ -16,8 +16,6 @@ package org.giiwa.misc;
 
 import java.util.Stack;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 
 /**
@@ -27,7 +25,7 @@ import org.giiwa.dao.X;
  */
 public class StringFinder {
 
-	private static Log log = LogFactory.getLog(StringFinder.class);
+//	private static Log log = LogFactory.getLog(StringFinder.class);
 
 	/**
 	 * Creates the.

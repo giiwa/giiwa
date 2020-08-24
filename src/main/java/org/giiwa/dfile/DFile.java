@@ -381,7 +381,7 @@ public abstract class DFile implements Serializable {
 		}
 
 		public Object[] next() throws IOException {
-			String line = IOUtil.readcvs(re);
+			String line = IOUtil.readcsv(re);
 			if (line == null)
 				return null;
 			return X.csv(line, deli);
