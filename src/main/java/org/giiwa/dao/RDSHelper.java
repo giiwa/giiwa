@@ -1151,7 +1151,9 @@ public class RDSHelper implements Helper.DBHelper {
 	}
 
 	private String _type(Object v, Connection c) {
-		if (v instanceof Long || v instanceof Integer) {
+		if(v == null) {
+			return "varchar(100)";
+		} else if (v instanceof Long || v instanceof Integer) {
 			return "bigint";
 		} else if (v instanceof Float || v instanceof Double) {
 			return "double";

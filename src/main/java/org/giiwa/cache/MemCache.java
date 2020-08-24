@@ -81,14 +81,14 @@ class MemCache implements ICacheSystem {
 	 * @param o  the o
 	 * @return true, if successful
 	 */
-	public synchronized boolean set(String name, Object o, int expired) {
+	public synchronized boolean set(String name, Object o, long expired) {
 		try {
 			if (o == null) {
 				return delete(name);
 			} else {
 //				System.out.println("cache.set, name=" + name + ", expired=" + expired);
 //				return memCachedClient.set(name, o, new Date(System.currentTimeMillis() + expired));
-				return memCachedClient.set(name, o, new Date((long) expired));
+				return memCachedClient.set(name, o, new Date(expired));
 //				return memCachedClient.set(name, o);
 			}
 		} catch (Exception e) {
@@ -119,8 +119,8 @@ class MemCache implements ICacheSystem {
 
 	}
 
-	public void expire(String name, int ms) {
-		memCachedClient.set(name, 1, new Date((long) ms));
+	public void expire(String name, long ms) {
+		memCachedClient.set(name, 1, new Date(ms));
 //		log.debug("memcached expire, name=" + name + ", value=" + memCachedClient.get(name));
 	}
 

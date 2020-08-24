@@ -39,11 +39,11 @@ interface ICacheSystem {
 	 * @param data the data
 	 * @return true, if successful
 	 */
-	boolean set(String name, Object data, int expired);
+	boolean set(String name, Object data, long expired);
 
 	boolean trylock(String name);
 
-	void expire(String name, int ms);
+	void expire(String name, long ms);
 
 	boolean unlock(String name, String value);
 

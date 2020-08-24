@@ -95,7 +95,7 @@ class FileCache implements ICacheSystem {
 	 * @param o  the o
 	 * @return true, if successful
 	 */
-	public synchronized boolean set(String id, Object o, int expired) {
+	public synchronized boolean set(String id, Object o, long expired) {
 		try {
 			if (o == null) {
 				return delete(id);
@@ -283,7 +283,7 @@ class FileCache implements ICacheSystem {
 	}
 
 	@Override
-	public void expire(String id, int ms) {
+	public void expire(String id, long ms) {
 		// TODO Auto-generated method stub
 
 	}

@@ -208,7 +208,7 @@ public class module extends Controller {
 
 			// e = root.addElement("filter");
 			// e.addComment(
-			// "TODO, please refer web.IFilter, eg.
+			// ", please refer web.IFilter, eg.
 			// <pattern>/user/login</pattern>,<class>org.giiwa.demo.web.UserFiler</class>");
 
 			e = root.addElement("required");
@@ -690,7 +690,8 @@ public class module extends Controller {
 
 			log.error(url, e1);
 
-			d.delete();
+			if (d != null)
+				d.delete();
 
 			GLog.applog.error(module.class, "add", "entity not found in repo for [" + url + "]", e1, login, this.ip());
 

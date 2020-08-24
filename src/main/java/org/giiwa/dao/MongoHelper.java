@@ -434,7 +434,7 @@ public class MongoHelper implements Helper.DBHelper {
 
 				final Beans<T> bs = new Beans<T>();
 
-				// TODO, ignore this as big performance
+				// ignore this as big performance
 				// bs.total = (int) db.count(query);
 				// log.debug("cost=" + t.past() + "ms, count=" + bs.total);
 
