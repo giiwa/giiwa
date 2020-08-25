@@ -207,7 +207,7 @@ class ActiveMQ extends MQ {
 						log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
 				} else {
-					log.warn("unknown message=" + m);
+					log.error("unknown message=" + m);
 				}
 
 			} catch (Exception e) {

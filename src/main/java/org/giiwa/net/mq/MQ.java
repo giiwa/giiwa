@@ -285,8 +285,8 @@ public abstract class MQ {
 		public long tt = -1; // timestamp
 		public String from;
 		public int priority = 1;
-		public int ttl = (int) X.AMINUTE;
-		public int persistent = DeliveryMode.NON_PERSISTENT;
+		public int ttl = (int) X.AMINUTE * 10;
+		public int persistent = DeliveryMode.PERSISTENT;// NON_PERSISTENT;
 		public byte[] data;
 
 		@Override
