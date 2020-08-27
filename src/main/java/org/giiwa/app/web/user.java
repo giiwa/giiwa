@@ -906,8 +906,62 @@ public class user extends Controller {
 
 	@Path(path = "access", login = true)
 	public void access() {
-		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok").append("list",
-				login.getRole().getAccesses()));
+		this.send(JSON.create().append(X.STATE, 200).append("list", login.getRole().getAccesses()));
+	}
+
+	/**
+	 * 获取用户列表，参数：access 具有该权限的用户列表
+	 */
+	@Path(login = true, path = "list")
+	public void list() {
+
+		List<User> l1 = User.loadByAccess(this.get("access"));
+
+		this.send(JSON.create().append(X.STATE, 200).append("data", X.asList(l1, e -> {
+			return ((User) e).json().remove("_.*", "updated", "created", "password", "md4passwd", "locked");
+		})));
+
+	}
+
+	/**
+	 * 获取登录用户信息
+	 */
+	@Path(path = "myinfo")
+	public void myinfo() {
+
+		User u = this.user();
+		if (u == null) {
+			this.set(X.ERROR, "login required").send(401);
+			return;
+		}
+
+		u = User.dao.load(login.getId());
+		JSON j1 = JSON.create();
+		j1.append("id", u.id).append("name", u.name).append("nickname", u.nickname).append("title", u.title);
+
+		this.send(JSON.create().append(X.STATE, 200).append("data",
+				j1.append("accesses", u.getAccesses()).append("roles", X.asList(u.getRole().getList(), e -> {
+					return ((Role) e).getName();
+				}))));
+
+	}
+
+	/**
+	 * 修改个人密码
+	 */
+	@Path(login = true, path = "passwd")
+	public void passwd() {
+
+		try {
+			String passwd = this.getString("passwd");
+			User.dao.update(login.getId(),
+					V.create().append("password", User.encrypt(passwd)).append("md4passwd", User.md5encrypt(passwd)));
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "密码修改成功！"));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			this.send(JSON.create().append(X.STATE, 201).append(X.ERROR, e.getMessage()));
+		}
+
 	}
 
 }
