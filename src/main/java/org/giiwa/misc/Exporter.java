@@ -96,17 +96,21 @@ public class Exporter<V> {
 			if (i > 0) {
 				out.write(",");
 			}
-			if (s instanceof String || format.equals(FORMAT.csv))
-				out.write("\"");
-
-			if (s != null) {
-				if (format.equals(FORMAT.csv))
-					s = s.toString().replaceAll("\"", "\\\"").replaceAll("\r\n", "");
+			if(X.isEmpty(s)) 
+				continue;
+			
+			if(format.equals(FORMAT.csv)) {
+				if(s instanceof String) {
+					out.write("\"");
+					s = s.toString().replaceAll("\"", "\"\"");// .replaceAll("\n", "").replaceAll("\r", "");
+					out.write(s.toString());
+					out.write("\"");
+				} else {
+					out.write(s.toString());
+				}
+			} else {
 				out.write(s.toString());
 			}
-
-			if (s instanceof String || format.equals(FORMAT.csv))
-				out.write("\"");
 		}
 		out.write("\r\n");
 		out.flush();
