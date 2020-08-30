@@ -34,7 +34,7 @@ import org.giiwa.web.Language;
  * @author wujun
  *
  */
-@Table(name = "gi_stat", memo="GI-统计")
+@Table(name = "gi_stat", memo = "GI-统计")
 public class Stat extends Bean implements Comparable<Stat> {
 
 	/**
@@ -256,13 +256,21 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		String date = format(time, size);
 		String table = table(name);
+		if (q == null) {
+			q = W.create();
+		}
+		if (v == null) {
+			v = V.create();
+		}
 
 		Stat s1 = Helper.load(table, q.and("module", name + "." + Stat.TYPE.snapshot).and("size", size.toString())
 				.and("time", time, W.OP.lt).sort("time", -1), Stat.class);
+
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] + s1.getLong("n" + i);
 		}
+
 		v.append("time", time);
 		Stat.insertOrUpdate(name + "." + Stat.TYPE.snapshot, date, size, q, v, d);
 		Stat.insertOrUpdate(name + "." + Stat.TYPE.delta, date, size, q, v, n);
