@@ -616,8 +616,14 @@ public class Helper implements Serializable {
 		 */
 		public V remove(String... name) {
 			if (name != null && name.length > 0) {
-				for (String s : name) {
-					m.remove(s);
+				String[] ss = this.m.keySet().toArray(new String[this.m.size()]);
+				for (String s : ss) {
+					for (String s1 : name) {
+						if (s.matches(s1)) {
+							m.remove(s);
+							break;
+						}
+					}
 				}
 			}
 			return this;
