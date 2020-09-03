@@ -26,14 +26,10 @@ public class Paging {
 	/**
 	 * Pages.
 	 * 
-	 * @param url
-	 *            the url
-	 * @param total
-	 *            the total
-	 * @param curr
-	 *            the curr
-	 * @param numofPage
-	 *            the numof page
+	 * @param url       the url
+	 * @param total     the total
+	 * @param curr      the curr
+	 * @param numofPage the numof page
 	 * @return the array list
 	 */
 	public static ArrayList<PageLink> pages(QueryString url, int total, int curr, int numofPage) {
@@ -131,14 +127,10 @@ public class Paging {
 	/**
 	 * Paging.
 	 * 
-	 * @param url
-	 *            the url
-	 * @param total
-	 *            the total
-	 * @param curr
-	 *            the curr
-	 * @param numofPage
-	 *            the numof page
+	 * @param url       the url
+	 * @param total     the total
+	 * @param curr      the curr
+	 * @param numofPage the numof page
 	 * @return the array list
 	 */
 	public static ArrayList<PageLink> paging(QueryString url, int total, int curr, int numofPage) {
@@ -214,12 +206,9 @@ public class Paging {
 	/**
 	 * Creates the.
 	 * 
-	 * @param total
-	 *            the total
-	 * @param s
-	 *            the s
-	 * @param ITEM_NUMBER
-	 *            the item number
+	 * @param total       the total
+	 * @param s           the s
+	 * @param ITEM_NUMBER the item number
 	 * @return the list
 	 */
 	public static List<PageLabel> create(int total, int s, int ITEM_NUMBER) {
@@ -229,14 +218,10 @@ public class Paging {
 	/**
 	 * Creates the.
 	 * 
-	 * @param total
-	 *            the total
-	 * @param s
-	 *            the s
-	 * @param ITEM_NUMBER
-	 *            the item number
-	 * @param pages
-	 *            the pages
+	 * @param total       the total
+	 * @param s           the s
+	 * @param ITEM_NUMBER the item number
+	 * @param pages       the pages
 	 * @return the list
 	 */
 	public static List<PageLabel> create(int total, int s, int ITEM_NUMBER, int pages) {
@@ -246,6 +231,10 @@ public class Paging {
 
 		if (s < 0) {
 			s = 0;
+		}
+
+		if (total > 10000) {
+			total = 10000;
 		}
 
 		// if (total <= ITEM_NUMBER) {
