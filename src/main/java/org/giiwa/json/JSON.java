@@ -674,6 +674,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 		ss = "{a:'a',b:1, c:{a:1, b:'a'}}";
 		j = JSON.fromObject(ss);
+		j.remove("a");
+
 		System.out.println(j);
 
 		System.out.println(j.get("b").getClass());
@@ -937,6 +939,19 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return this;
 	}
 
+	@Override
+	public boolean remove(Object key1, Object key2) {
+		remove(new String[] { key1.toString(), key2.toString() });
+		return true;
+	}
+
+	@Override
+	public Object remove(Object key) {
+		Object o = this.get(key);
+		remove(new String[] { key.toString() });
+		return o;
+	}
+
 	public JSON remove(String... names) {
 		if (names != null && names.length > 0) {
 			for (String name : names) {
@@ -944,11 +959,11 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 					String[] ss = this.keySet().toArray(new String[this.size()]);
 					for (String k : ss) {
 						if (k.matches(name)) {
-							this.remove(k);
+							super.remove(k);
 						}
 					}
 				} else {
-					this.remove(name);
+					super.remove(name);
 				}
 			}
 		}
