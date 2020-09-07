@@ -381,6 +381,8 @@ public final class X {
 						f = true;
 				} else if (c == ',' || c == ' ') {
 					// skip
+				} else if (c == '.' && sb.indexOf(".") == -1) {
+					sb.append(c);
 				} else if (n > 0) {
 					break;
 				}
@@ -493,6 +495,8 @@ public final class X {
 						f = true;
 				} else if (c == ',' || c == ' ') {
 					// skip
+				} else if (c == '.' && sb.indexOf(".") == -1) {
+					sb.append(c);
 				} else if (n > 0) {
 					break;
 				}
