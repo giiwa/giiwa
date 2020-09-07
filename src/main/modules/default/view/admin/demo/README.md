@@ -1,7 +1,6 @@
 # The module is base on giiwa framework
 Please refer http://giiwa.org to learn more about giiwa
 
-# Goal
 ### Features
 * 1) feature1
 * 2) feature2
