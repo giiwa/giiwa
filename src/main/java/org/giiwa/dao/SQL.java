@@ -94,9 +94,9 @@ public class SQL {
 		sf.nextTo(" ");
 		sf.trim();
 		String table = sf.nextTo(" ");
-		if (X.isEmpty(table)) {
-			throw new SQLException("unknow table [" + table + "]");
-		}
+//		if (X.isEmpty(table)) {
+//			throw new SQLException("unknow table [" + table + "]");
+//		}
 		r.put("tablename", table);
 
 		return _condition(sf, r);
@@ -162,6 +162,39 @@ public class SQL {
 		} else {
 			throw new SQLException("unknow key [" + s + "]");
 		}
+	}
+
+	public static W where2W(String cond) throws Exception {
+
+		String s1 = "select * from ttt where " + cond;
+		JSON j1 = _sql(StringFinder.create(s1));
+
+		W q = where2W(StringFinder.create(j1.getString("where")));
+
+		if (j1.containsKey("orderby")) {
+			String order = j1.getString("orderby");
+			if (!X.isEmpty(order)) {
+				String[] ss = X.split(order, ",");
+				if (ss != null) {
+
+					for (String s : ss) {
+						String[] ss1 = X.split(s, " ");
+						if (ss1.length > 1) {
+							if (X.isSame(ss1[1], "desc")) {
+								q.sort(ss1[0], -1);
+							} else {
+								q.sort(ss1[0], 1);
+							}
+						} else {
+							q.sort(ss1[0], 1);
+						}
+					}
+				}
+			}
+		}
+
+		return q;
+
 	}
 
 	public static W where2W(StringFinder s) throws Exception {
@@ -564,6 +597,10 @@ public class SQL {
 		s = "a=NULL and b='a'";
 		q = SQL.where2W(StringFinder.create(s));
 		System.out.println(q.query());
+
+		s = "a='1' and b='2' order by c desc";
+		q = SQL.where2W(s);
+		System.out.println(q);
 
 	}
 
