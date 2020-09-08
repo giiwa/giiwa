@@ -1340,7 +1340,7 @@ public class Helper implements Serializable {
 		 *
 		 * @return List keys
 		 */
-		List<LinkedHashMap<String, Integer>> sortkeys() {
+		public List<LinkedHashMap<String, Integer>> sortkeys() {
 
 			List<LinkedHashMap<String, Integer>> l1 = new ArrayList<LinkedHashMap<String, Integer>>();
 
