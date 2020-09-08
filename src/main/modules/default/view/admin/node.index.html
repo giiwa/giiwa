@@ -24,6 +24,7 @@
 	<thead>
 		<tr>
 			<th rowspan="2" style="width: 70px;">$lang.get('node.label')</th>
+			<th rowspan="2" style="width: 120px;">$lang.get('node.ip')</th>
 			<th rowspan="2" style="width: 60px;">$lang.get('node.os')</th>
 			<th rowspan="2" style="width: 100px;">$lang.get('node.giiwa')</th>
 			<th rowspan="2">$lang.get('node.modules')</th>
@@ -51,6 +52,7 @@
 			<a href="/?__node=$!f.id" target="_blank">$!f.label</a>
 			<a class="hint hint--bottom" data-hint="Edit" href="javascript:;" onclick="_showlabel('$f.id', '$!f.label')"><i class='icon-pencil'></i></a>
 		</td>
+		<td>$!f.ip</td>
 		<td>$!f.os</td>
 		<td>$!f.giiwa</td>
 		<td>$!f.modules</td>

@@ -667,6 +667,7 @@ node.cpu.cores=内核数
 node.url=URL
 node.mem=内存
 node.os=操作系统
+node.ip=IP
 menu.node=节点管理
 a.node.list=节点列表
 a.node.usage=CPU

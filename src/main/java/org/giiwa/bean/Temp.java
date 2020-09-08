@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -125,6 +126,10 @@ public class Temp {
 		return file;
 	}
 
+	/**
+	 * @deprecated
+	 * @return
+	 */
 	public File getLocalFile() {
 		return getFile();
 	}
@@ -176,10 +181,22 @@ public class Temp {
 		return e;
 	}
 
+	/**
+	 * @deprecated <br>
+	 *             refer DFile.upload
+	 * @param f
+	 * @throws Exception
+	 */
 	public void save(DFile f) throws Exception {
 		f.upload(this.getFile());
 	}
 
+	/**
+	 * @deprecated <br>
+	 *             refer DFile.upload
+	 * @param filename
+	 * @throws Exception
+	 */
 	public void save(String filename) throws Exception {
 		DFile f = Disk.seek(filename);
 		save(f);
@@ -189,9 +206,9 @@ public class Temp {
 
 		try {
 			File f = this.getFile();
-			
+
 			delete(f);
-			
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -290,6 +307,13 @@ public class Temp {
 		ex.close();
 
 		return true;
+	}
+
+	public void save(InputStream in) throws Exception {
+		File f1 = this.getFile();
+		f1.getParentFile().mkdirs();
+		OutputStream out = new FileOutputStream(f1);
+		X.IO.copy(in, out);
 	}
 
 }
