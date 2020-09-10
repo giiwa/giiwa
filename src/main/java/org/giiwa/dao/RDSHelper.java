@@ -3243,4 +3243,10 @@ public class RDSHelper implements Helper.DBHelper {
 		return null;
 	}
 
+	@Override
+	public void repair(String table) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

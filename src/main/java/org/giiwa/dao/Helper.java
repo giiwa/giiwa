@@ -193,6 +193,20 @@ public class Helper implements Serializable {
 		}
 	}
 
+	public static void repair(String table) {
+		if (table != null) {
+
+			if (primary != null) {
+				primary.repair(table);
+			} else if (!X.isEmpty(customs)) {
+				for (DBHelper h : customs) {
+					h.repair(table);
+				}
+			}
+
+		}
+	}
+
 	/**
 	 * test if exists for the object.
 	 *
@@ -4445,6 +4459,8 @@ public class Helper implements Serializable {
 	public interface DBHelper {
 
 		boolean isConfigured();
+
+		void repair(String table);
 
 		List<Map<String, Object>> getIndexes(String table, String db);
 

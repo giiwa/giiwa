@@ -1938,4 +1938,12 @@ public class MongoHelper implements Helper.DBHelper {
 
 	}
 
+	@Override
+	public void repair(String table) {
+
+		MongoDatabase g = getDB(Helper.DEFAULT);
+		g.runCommand(new BasicDBObject().append("validate", table));
+
+	}
+
 }
