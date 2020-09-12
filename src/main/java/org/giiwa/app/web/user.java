@@ -931,7 +931,7 @@ public class user extends Controller {
 
 		User u = this.user();
 		if (u == null) {
-			this.set(X.ERROR, "login required").send(401);
+//			this.set(X.ERROR, "login required").send(401);
 			return;
 		}
 
