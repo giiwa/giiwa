@@ -242,8 +242,7 @@ public class Host {
 		Map<String, JSON> m1 = new TreeMap<String, JSON>();
 		for (FileSystem f : fs) {
 
-			if (Arrays.asList(FileSystem.TYPE_LOCAL_DISK, FileSystem.TYPE_NETWORK, FileSystem.TYPE_NONE,
-					FileSystem.TYPE_UNKNOWN, FileSystem.TYPE_CDROM).contains(f.getType())) {
+			if (Arrays.asList(FileSystem.TYPE_LOCAL_DISK).contains(f.getType())) {
 				FileSystemUsage p = sigar.getFileSystemUsage(f.getDirName());
 
 				// log.debug("p.total=" + p.getTotal());

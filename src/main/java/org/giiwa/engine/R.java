@@ -69,8 +69,8 @@ public class R extends IStub {
 		if (X.isIn(host, "127.0.0.1", X.EMPTY) && !inited) {
 			// local
 			try {
-				inst.bind();
 				inited = true;
+				inst.bind();
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 				Task.schedule(() -> {
@@ -413,96 +413,25 @@ public class R extends IStub {
 		return conn;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static void main(String[] args) {
 
 		Task.init(10);
 
 		R.ROOT = "/Users/joe/d/temp/";
 
-//		String s = "mean(b)";
-		try {
-			Map<String, List<Object[]>> p1 = new HashMap<String, List<Object[]>>();
-			p1.put("b", Arrays.asList(X.split("10, 20, 30", "[, ]"), X.split("10, 20, 30", "[, ]"),
-					X.split("10, 20, 30", "[, ]")));
+		R.serve();
 
-			System.out.println(inst.run("summary(d);", "d", Arrays.asList(1, 2, 3, 100)));
+		List<Double> l1 = new ArrayList<Double>();
+		l1.add(0.1);
+		l1.add(10d);
+		l1.add(11d);
+		l1.add(1d);
+		l1.add(2d);
 
-			Object j1 = inst.run(
-					"f509376766<-function(){x <- c(214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,214,90,93,90,106,214,214,214,214,214,214);fivenum(x)};f509376766();");
-			System.out.println(j1);
+		System.out.println("mean=" + inst.mean(l1));
+		System.out.println("sd=" + inst.sd(l1));
+		System.out.println("cv=" + inst.cv(l1));
 
-			TimeStamp t = TimeStamp.create();
-
-			Object[] ll = new Object[10];
-			for (int i = 0; i < ll.length; i++) {
-				ll[i] = (long) (ll.length * Math.random());
-			}
-
-			t.reset();
-			Object r = inst.run("count(data)", ll);
-			System.out.println(r + ", cost=" + t.past());
-
-			Object r1 = inst.run("median(data)", ll);
-			System.out.println(r1 + ", cost=" + t.past());
-
-			for (int i = 0; i < ll.length; i++) {
-				ll[i] = i + 1;
-			}
-			t.reset();
-			double d1 = Arrays.asList(ll).stream().mapToInt(e -> {
-				return X.toInt(e);
-			}).average().getAsDouble();
-			System.out.println(d1 + ", cost=" + t.past());
-
-//			j1 = inst.run("ls()");
-//			System.out.println(j1.get("data"));
-
-			t.reset();
-			List l2 = new ArrayList<Object>();
-			l2.add(ll);
-//			r = inst.run("mean(c1)", "c1", Arrays.asList(ll), false);
-
-			System.out.println(r + ", cost=" + t.past());
-
-			List<JSON> l1 = JSON.createList();
-			l1.add(JSON.create().append("a", 1).append("b", 2).append("c", 3).append("d", 4));
-			l1.add(JSON.create().append("a", 1).append("b", 32).append("c", 3).append("d", 4));
-			l1.add(JSON.create().append("a", 10).append("b", 22).append("c", 39).append("d", 4));
-			l1.add(JSON.create().append("a", 1).append("b", 21).append("c", 3).append("d", 4));
-			l1.add(JSON.create().append("a", 1).append("b", 42).append("c", 3).append("d", 4));
-
-			t.reset();
-//			j1 = inst.run(
-//					"library(C50);d16<-C5.0(x=mtcars[, 1:5], y=as.factor(mtcars[,6]));save(d16, file=\"d16\");summary(d16);",
-//					null, null, false);
-			System.out.println(j1 + ", cost=" + t.past());
-//			System.out.println(j1.get("data"));
-
-//			j1 = inst.run("ls()");
-//			System.out.println("ls=" + j1.get("data"));
-
-			t.reset();
-			j1 = inst.run("load(file=\"d16\");summary(d16)");
-			System.out.println("cost=" + t.past() + "//" + j1);
-
-//			System.out.println(((List) j1.get("data")).get(0));
-
-//			System.out.println(t1.toPrettyString());
-
-			StringBuilder sb = new StringBuilder();
-			sb.append("m1 <- read.csv('/Users/joe/d/temp/data',header=T,stringsAsFactors=TRUE);\n");
-			sb.append("library(vegan)\n");
-			sb.append("a <- vegdist(m1, method = 'bray')\n");
-			sb.append("a <- anosim(a, m1$mpg, permutations = 999)\n");
-			sb.append("print(a)");
-
-			j1 = inst.run(sb.toString());
-			System.out.println(j1);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public Object run(String code, Object[] data) throws Exception {
@@ -604,6 +533,40 @@ public class R extends IStub {
 			}
 		}
 
+	}
+
+	public double sd(List l1) {
+		try {
+			Object s = run("a<-a[,1];print(sd(a))", "a", l1);
+			double r = X.toDouble(s.toString().replaceAll("\\[1\\] ", X.EMPTY));
+			return r;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
+	}
+
+	public double mean(List l1) {
+		try {
+			Object s = run("a<-a[,1];print(mean(a))", "a", l1);
+			double r = X.toDouble(s.toString().replaceAll("\\[1\\] ", X.EMPTY));
+			return r;
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.error(e.getMessage(), e);
+		}
+		return 0;
+	}
+
+	public double cv(List l1) {
+		try {
+			Object s = run("a<-a[,1];print(sd(a)/mean(a))", "a", l1);
+			double r = X.toDouble(s.toString().replaceAll("\\[1\\] ", X.EMPTY));
+			return r;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
 }
