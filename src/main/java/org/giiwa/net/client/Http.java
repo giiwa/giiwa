@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -1317,6 +1318,18 @@ public final class Http {
 			return Html.create(body);
 		}
 
+		public String cookie() {
+			String[] ss = this.getHeaders("Set-Cookie");
+			return X.join(X.asList(ss, s -> {
+				String s1 = s.toString();
+				int i = s1.indexOf(";");
+				if (i > 0) {
+					return s1.substring(0, i);
+				}
+				return s1;
+			}), ";");
+		}
+
 		/**
 		 * 用body 生成json对象
 		 * 
@@ -1381,71 +1394,11 @@ public final class Http {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-		Http.DEBUG = true;
 
-		String s = "//aaa.com/";
-		s = "http://aaa.com?aaa";
-		s = "http://aaa.com&aaa";
-		s = "http://aaa.com.aaa";
-		s = "https://aaa.com.aaa";
-		System.out.println(format(s));
-		// Http h = Http.create();
-		// System.out.println("response=" + h.get("http://giiwa.org").body);
-		//
-		// String url = "http://www.giiwa.org/repo/3vfusptnmaoeu";
-		// File f = new File("/Users/wujun/d/temp/repo.zip");
-		// JSON head = JSON.create();
-		// head.put("Range", "bytes=0-1");
-		// int len = h.download(url, head, f);
-		// System.out.println("repo, done, len=" + len);
-		//
-		// head = JSON.create();
-		// head.put("Range", "bytes=1-10");
-		// len = h.download(url, head, f);
-		// System.out.println("repo, done, len=" + len);
-		//
-		// url = "http://www.giiwa.org/giiwa-1.2-1611111820.zip";
-		// File f1 = new File("/Users/wujun/d/temp/stat.zip");
-		// head = JSON.create();
-		// head.put("Range", "bytes=0-1");
-		// len = h.download(url, head, f1);
-		//
-		// System.out.println("static done, len=" + len);
-		//
-		// try {
-		// FileInputStream i1 = new FileInputStream(f);
-		// byte[] b1 = new byte[10];
-		// i1.read(b1);
-		// System.out.print("repo=");
-		// for (int i = 0; i < b1.length; i++) {
-		// System.out.print(b1[i] + " ");
-		// }
-		// i1.close();
-		//
-		// FileInputStream i2 = new FileInputStream(f1);
-		// byte[] b2 = new byte[10];
-		// i2.read(b2);
-		// System.out.print("\r\nstat=");
-		// for (int i = 0; i < b2.length; i++) {
-		// System.out.print(b2[i] + " ");
-		// }
-		// i2.close();
-		// } catch (Exception e) {
-		// // e.printStackTrace();
-		// }
-
-		System.out.println(_UA());
-
-		System.out.println(format("http://top.sogou.com/hot/../movie/../tvshow/./all_1.html"));
-		System.out.println(format("http://top.sogou.com/tvshow/all_1.html?aaa=111"));
-
-		// String s1 = "http://10.30.2.5:8088/dahuaIS/rest/devChn/search";
-		//
-		// Response s2 = owner.get(s1 + "?q=" + URLEncoder.encode("{}"),
-		// JSON.create().append("authorization", "DAHUA")
-		// .append("Accept", "application/json").append("Content-Type",
-		// "application/json"));
-		// System.out.println(s2.body);
+		String s = "https://search.jd.com/Search?keyword=iphone&enc=utf-8&wq=iphone&pvid=953db99c2e714e0fa516ddd1a6937f24";
+		Http h = Http.create();
+		Http.Response r = h.get(s);
+		System.out.println(r.cookie());
 
 	}
 
