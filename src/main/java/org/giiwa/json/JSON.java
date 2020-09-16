@@ -28,9 +28,9 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import org.apache.commons.logging.Log;
@@ -56,7 +56,7 @@ import com.google.gson.stream.JsonReader;
  * 
  * @author wujun
  */
-public final class JSON extends HashMap<String, Object> implements Cloneable {
+public final class JSON extends ConcurrentHashMap<String, Object> implements Cloneable {
 
 	/**
 	 * 
@@ -1294,7 +1294,9 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 	@Override
 	public Object clone() {
-		return super.clone();
+		JSON j1 = JSON.create();
+		j1.putAll(this);
+		return j1;
 	}
 
 }
