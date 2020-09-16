@@ -96,17 +96,17 @@ public class Exporter<V> {
 			if (i > 0) {
 				out.write(",");
 			}
-			if(X.isEmpty(s)) 
+			if (X.isEmpty(s))
 				continue;
-			
-			if(format.equals(FORMAT.csv)) {
-				if(s instanceof String) {
+
+			if (format.equals(FORMAT.csv)) {
+				if (s instanceof Number) {
+					out.write(s.toString());
+				} else {
 					out.write("\"");
 					s = s.toString().replaceAll("\"", "\"\"");// .replaceAll("\n", "").replaceAll("\r", "");
 					out.write(s.toString());
 					out.write("\"");
-				} else {
-					out.write(s.toString());
 				}
 			} else {
 				out.write(s.toString());
@@ -139,6 +139,11 @@ public class Exporter<V> {
 			print(ss);
 		}
 
+	}
+
+	public static void main(String[] args) {
+		Object d = 1d;
+		System.out.println((d instanceof Number));
 	}
 
 }
