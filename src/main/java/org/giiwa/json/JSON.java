@@ -510,11 +510,14 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * @return the json
 	 */
 	public static JSON create(Map<String, Object> m) {
+
 		JSON j = create();
-		for (String name : m.keySet()) {
+		Set<String> m1 = m.keySet();
+		for (String name : m1) {
 			j.put(name, m.get(name));
 		}
 		return j;
+
 	}
 
 	/**
@@ -824,6 +827,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * @return the JSON
 	 */
 	public JSON append(String name, Object value) {
+
 		int i = name.indexOf(".");
 		if (i > 0) {
 			String s1 = name.substring(0, i);
@@ -851,7 +855,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	public JSON copy(String... names) {
 		JSON j = JSON.create();
 		if (names == null || names.length == 0) {
-			for (String s : this.keySet()) {
+			Set<String> m1 = this.keySet();
+			for (String s : m1) {
 				Object o = this.get(s);
 				if (o instanceof JSON) {
 					o = ((JSON) o).copy();
@@ -882,7 +887,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 			return this;
 
 		if (name == null || name.length == 0) {
-			for (String s : m.keySet()) {
+			Set<String> m1 = m.keySet();
+			for (String s : m1) {
 				this.append(s, m.get(s));
 			}
 		} else {
@@ -901,8 +907,12 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public JSON merge(JSON jo) {
+
 		if (jo != null && !jo.isEmpty()) {
-			for (String k : jo.keySet()) {
+
+			Set<String> m1 = jo.keySet();
+
+			for (String k : m1) {
 				Object v2 = jo.get(k);
 				if (!this.containsKey(k)) {
 					this.put(k, v2);
@@ -963,11 +973,15 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 					String[] ss = this.keySet().toArray(new String[this.size()]);
 					for (String k : ss) {
 						if (k.matches(name)) {
-							super.remove(k);
+							synchronized (this) {
+								super.remove(k);
+							}
 						}
 					}
 				} else {
-					super.remove(name);
+					synchronized (this) {
+						super.remove(name);
+					}
 				}
 			}
 		}
@@ -977,8 +991,6 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 	@Override
 	public Object get(Object key) {
-//		if (X.isEmpty(key))
-//			return null;
 
 		String name = key.toString();
 
@@ -996,25 +1008,6 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 				return m.get(name.substring(i + 1));
 			}
 		}
-
-//		i = name.indexOf("[");
-//		if (i > 0) {
-//			String s0 = name.substring(0, i);
-//			o = get(s0);
-//			if (o != null) {
-//				int j = name.indexOf("]", i + 1);
-//				if (j > 0) {
-//					String filter = name.substring(i + 1, j);
-//					StringFinder sf = StringFinder.create(filter);
-//					String na1 = sf.get(">|=|<");
-//					String op = null;
-//					
-//					char c1 = sf.next();
-//					
-//				}
-//			}
-//
-//		}
 
 		return null;
 	}
@@ -1304,7 +1297,6 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 	@Override
 	public synchronized Object put(String key, Object value) {
-		// TODO Auto-generated method stub
 		return super.put(key, value);
 	}
 
@@ -1317,31 +1309,26 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 	@Override
 	public synchronized Set<String> keySet() {
-		// TODO Auto-generated method stub
 		return new HashSet<String>(super.keySet());
 	}
 
 	@Override
 	public synchronized Collection<Object> values() {
-		// TODO Auto-generated method stub
 		return new ArrayList<Object>(super.values());
 	}
 
 	@Override
 	public synchronized boolean replace(String key, Object oldValue, Object newValue) {
-		// TODO Auto-generated method stub
 		return super.replace(key, oldValue, newValue);
 	}
 
 	@Override
 	public synchronized Object replace(String key, Object value) {
-		// TODO Auto-generated method stub
 		return super.replace(key, value);
 	}
 
 	@Override
 	public synchronized void replaceAll(BiFunction<? super String, ? super Object, ? extends Object> function) {
-		// TODO Auto-generated method stub
 		super.replaceAll(function);
 	}
 
