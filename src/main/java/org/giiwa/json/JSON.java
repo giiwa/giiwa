@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1317,13 +1318,13 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	@Override
 	public synchronized Set<String> keySet() {
 		// TODO Auto-generated method stub
-		return super.keySet();
+		return new HashSet<String>(super.keySet());
 	}
 
 	@Override
 	public synchronized Collection<Object> values() {
 		// TODO Auto-generated method stub
-		return super.values();
+		return new ArrayList<Object>(super.values());
 	}
 
 	@Override
