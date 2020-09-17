@@ -28,10 +28,12 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,7 +58,7 @@ import com.google.gson.stream.JsonReader;
  * 
  * @author wujun
  */
-public final class JSON extends ConcurrentHashMap<String, Object> implements Cloneable {
+public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 	/**
 	 * 
@@ -1293,10 +1295,53 @@ public final class JSON extends ConcurrentHashMap<String, Object> implements Clo
 	}
 
 	@Override
-	public Object clone() {
+	public synchronized Object clone() {
 		JSON j1 = JSON.create();
 		j1.putAll(this);
 		return j1;
+	}
+
+	@Override
+	public synchronized Object put(String key, Object value) {
+		// TODO Auto-generated method stub
+		return super.put(key, value);
+	}
+
+	@Override
+	public synchronized void putAll(Map<? extends String, ? extends Object> m) {
+		synchronized (m) {
+			super.putAll(m);
+		}
+	}
+
+	@Override
+	public synchronized Set<String> keySet() {
+		// TODO Auto-generated method stub
+		return super.keySet();
+	}
+
+	@Override
+	public synchronized Collection<Object> values() {
+		// TODO Auto-generated method stub
+		return super.values();
+	}
+
+	@Override
+	public synchronized boolean replace(String key, Object oldValue, Object newValue) {
+		// TODO Auto-generated method stub
+		return super.replace(key, oldValue, newValue);
+	}
+
+	@Override
+	public synchronized Object replace(String key, Object value) {
+		// TODO Auto-generated method stub
+		return super.replace(key, value);
+	}
+
+	@Override
+	public synchronized void replaceAll(BiFunction<? super String, ? super Object, ? extends Object> function) {
+		// TODO Auto-generated method stub
+		super.replaceAll(function);
 	}
 
 }
