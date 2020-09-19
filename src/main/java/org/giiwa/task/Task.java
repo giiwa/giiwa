@@ -1013,7 +1013,8 @@ public abstract class Task implements Runnable, Serializable {
 
 			});
 
-			global = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadFactory() {
+			int global_threads = Runtime.getRuntime().availableProcessors() * conf.getInt("global.turbo", 1);
+			global = new ScheduledThreadPoolExecutor(global_threads, new ThreadFactory() {
 
 				AtomicInteger i = new AtomicInteger(1);
 
