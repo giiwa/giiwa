@@ -324,7 +324,7 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void error(String model, String op, String message, Throwable e) {
-
+			
 			if (e instanceof OutOfMemoryError) {
 				Task.schedule(() -> {
 					log.error("restart as outofmemory", e);
