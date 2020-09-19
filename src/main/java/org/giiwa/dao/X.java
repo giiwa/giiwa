@@ -918,9 +918,11 @@ public final class X {
 		} else if (o instanceof Iterable) {
 			Collection l1 = (Collection) o;
 			for (Object e : l1) {
-				T t = cb.apply(e);
-				if (t != null) {
-					l2.add(t);
+				if (cb != null) {
+					T t = cb.apply(e);
+					if (t != null) {
+						l2.add(t);
+					}
 				}
 			}
 		} else if (o.getClass().isArray()) {

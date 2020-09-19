@@ -1847,6 +1847,7 @@ public class Helper implements Serializable {
 
 			public String name;
 			public Object value;
+			public String type; // datatype: long, string
 			public OP op; // operation EQ, GT, ...
 //			public int cond; // condition AND, OR
 			public int boost = 1;//
@@ -2273,6 +2274,10 @@ public class Helper implements Serializable {
 			return sort(name, 1);
 		}
 
+		public W sort(String name, String type) {
+			return sort(name, 1, type);
+		}
+
 		/**
 		 * Sort.
 		 *
@@ -2284,6 +2289,16 @@ public class Helper implements Serializable {
 			if (X.isEmpty(name))
 				return this;
 			order.add(new Entity(name, i, OP.eq, AND, 0));
+			return this;
+		}
+
+		public W sort(String name, int i, String type) {
+			if (X.isEmpty(name))
+				return this;
+
+			Entity e = new Entity(name, i, OP.eq, AND, 0);
+			e.type = type;
+			order.add(e);
 			return this;
 		}
 

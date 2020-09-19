@@ -23,24 +23,33 @@ public class Url {
 
 	Map<String, String> query;
 
-	public void setProtocol(String protocol) {
+	public String getHash() {
+		return Integer.toString(this.getUrl().hashCode());
+	}
+
+	public Url setProtocol(String protocol) {
 		this.protocol = protocol;
 		this.url = null;
+		return this;
+
 	}
 
-	public void setUri(String uri) {
+	public Url setUri(String uri) {
 		this.uri = uri;
 		this.url = null;
+		return this;
 	}
 
-	public void setIp(String ip) {
+	public Url setIp(String ip) {
 		this.ip = ip;
 		this.url = null;
+		return this;
 	}
 
-	public void setPort(String port) {
+	public Url setPort(String port) {
 		this.port = port;
 		this.url = null;
+		return this;
 	}
 
 	public JSON toJson() {
@@ -286,6 +295,13 @@ public class Url {
 	public String toString() {
 		return "Url [url=" + url + ", protocol=" + protocol + ", ip=" + ip + ", port=" + port + ", uri=" + uri
 				+ ", query=" + query + "]";
+	}
+
+	public Url clear() {
+		if (query != null) {
+			query.clear();
+		}
+		return this;
 	}
 
 	public void put(String name, String value) {
