@@ -23,6 +23,10 @@ public class Url {
 
 	Map<String, String> query;
 
+	public String getHref() {
+		return this.getUrl();
+	}
+
 	public String getHash() {
 		return Integer.toString(this.getUrl().hashCode());
 	}
