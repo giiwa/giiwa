@@ -349,7 +349,7 @@ public final class X {
 		if (v != null) {
 			if (v instanceof Number) {
 				float f = ((Number) v).floatValue();
-				if (f == f)
+				if (Float.isFinite(f))
 					return precision < 1 ? f : ((long) (f * precision)) * 1f / precision;
 
 				return defaultValue;
@@ -359,7 +359,7 @@ public final class X {
 
 			try {
 				float f = Float.parseFloat(s);
-				if (f == f)
+				if (Float.isFinite(f))
 					return precision < 1 ? f : ((long) (f * precision)) * 1f / precision;
 
 				return defaultValue;
@@ -395,7 +395,7 @@ public final class X {
 						Object f1 = JS.calculate(s);
 						if (f1 instanceof Number) {
 							float f2 = ((Number) f1).floatValue();
-							if (f2 == f2)
+							if (Float.isFinite(f2))
 								return precision < 1 ? f2 : ((long) (f2 * precision)) * 1f / precision;
 
 							return defaultValue;
@@ -403,7 +403,7 @@ public final class X {
 
 					} else {
 						float f2 = Float.parseFloat(s);
-						if (f2 == f2)
+						if (Float.isFinite(f2))
 							return precision < 1 ? f2 : ((long) (f2 * precision)) * 1f / precision;
 
 						return defaultValue;
@@ -465,7 +465,7 @@ public final class X {
 		if (v != null) {
 			if (v instanceof Number) {
 				double d = ((Number) v).doubleValue();
-				if (d == d)
+				if (Double.isFinite(d))
 					return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 				return defaultValue;
 			}
@@ -474,7 +474,7 @@ public final class X {
 
 			try {
 				double d = Double.parseDouble(s);
-				if (d == d)
+				if (Double.isFinite(d))
 					return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 				return defaultValue;
 			} catch (Exception e) {
@@ -509,14 +509,14 @@ public final class X {
 						Object f1 = JS.calculate(s);
 						if (f1 instanceof Number) {
 							double d = ((Number) f1).doubleValue();
-							if (d == d)
+							if (Double.isFinite(d))
 								return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 							return defaultValue;
 						}
 
 					} else {
 						double d = Double.parseDouble(s);
-						if (d == d)
+						if (Double.isFinite(d))
 							return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
 
 						return defaultValue;
