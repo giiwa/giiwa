@@ -1166,6 +1166,9 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	@SuppressWarnings({ "rawtypes" })
 	private void _scan_list(Object o, BiConsumer<JSON, Entry> func) {
 		X.asList(o, e -> {
+			if (e == null)
+				return null;
+
 			if (e instanceof JSON) {
 				((JSON) e).scan(func);
 			} else if (e instanceof Collection || e.getClass().isArray()) {
