@@ -715,7 +715,7 @@ public final class X {
 						l1.add(X.EMPTY);
 				} else {
 					if (str) {
-						l1.add(sb.toString());
+						l1.add(sb.toString().trim());
 					} else {
 						l1.add(_parse(sb.toString()));
 					}
@@ -733,7 +733,7 @@ public final class X {
 		}
 		if (sb != null) {
 			if (str) {
-				l1.add(sb.toString());
+				l1.add(sb.toString().trim());
 			} else {
 				l1.add(_parse(sb.toString()));
 			}
@@ -756,7 +756,7 @@ public final class X {
 			} else if ((c == '+' || c == '-') && i == 0) {
 				continue;
 			} else {
-				return s;
+				return s.trim();
 			}
 		}
 		if (dot) {
