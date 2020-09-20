@@ -692,7 +692,12 @@ public final class X {
 		boolean str = false;
 		while (p < len) {
 			char c = src.charAt(p);
-			if (c == '"') {
+//			System.out.println((int) c);
+			if (c == 65279) {
+				// UTF8 format
+				p++;
+				continue;
+			} else if (c == '"') {
 				str = true;
 				// goto next "
 				p++;
@@ -1210,95 +1215,23 @@ public final class X {
 	}
 
 	public static void main(String[] args) {
-		String s = "-1,+2,c,d,e,\"a\"";
-		System.out.println(Arrays.toString(X.csv(s)));
-
-		s = "K1/117, K299;199;P1-093/-097";
-		System.out.println(Arrays.toString(X.range(s, "/")));
-
-		String filename = "/Users/joe/Downloads/cate.csv";
+		String filename = "/Users/joe/Downloads/采集表汇总.csv";
 		try {
-			BufferedReader re = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
-			String line = re.readLine();
-			while (line != null) {
-				Object[] ss = X.csv(line);
-				System.out.println(Arrays.toString(ss) + "-" + ss.length);
-				line = re.readLine();
-			}
-			X.close(re);
+
+			BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF8"));
+			String line = IOUtil.readcsv(r);
+			System.out.println(line);
+
+			Object[] ss = X.csv(line);
+			System.out.println(Arrays.toString(ss));
+
+			System.out.println(Integer.toHexString(Byte.toUnsignedInt(ss[0].toString().getBytes()[0])));
+			System.out.println(Integer.toHexString(Byte.toUnsignedInt(ss[0].toString().getBytes()[1])));
+			System.out.println(ss[0].toString().charAt(1));
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		X.toInt("11*10");
-
-//		Object s1 = "12";
-//		TimeStamp t1 = TimeStamp.create();
-//		int N = 1;
-//		for (int i = 0; i < N; i++) {
-//			X.toInt(s1);
-//		}
-//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
-//
-//		t1.reset();
-//		s1 = "12A";
-//		for (int i = 0; i < N; i++) {
-//			X.toInt(s1);
-//		}
-//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
-//
-//		t1.reset();
-//		s1 = 12;
-//		for (int i = 0; i < N; i++) {
-//			X.toInt(s1);
-//		}
-//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
-//
-//		t1.reset();
-//		s1 = "12*11";
-//		for (int i = 0; i < N; i++) {
-//			X.toInt(s1);
-//		}
-//		System.out.println(s1 + ", " + N + ", cost=" + t1.past());
-//
-//		X.asList(new int[] { 1, 2 }, e -> e);
-//		X.asList(new long[] { 1, 2 }, e -> e);
-//		X.asList(new float[] { 1, 2 }, e -> e);
-//		X.asList(new double[] { 1, 2 }, e -> e);
-//		X.asList(new byte[] { 1, 2 }, e -> e);
-//		X.asList(new short[] { 1, 2 }, e -> e);
-//		X.asList(new char[] { 1, 2 }, e -> e);
-//		X.asList(new boolean[] { true, false }, e -> e);
-
-		s = "\"Ford Pantera,L\",15.8,8,351,264,4.22,3.17,14.5,0,1,5,4";
-		Object[] l1 = X.csv(s);
-		System.out.println(l1[0]);
-
-		s = "aaa;bbb;aaa";
-		List<?> l2 = X.asList(X.split(s, "[,;]"), e -> e);
-		System.out.println(l2);
-
-		JSON j1 = JSON.create();
-		j1.append("a", 1);
-		JSON j2 = X.clone(j1);
-		System.out.println(j2);
-
-		System.out.println(X.asList(new long[] { 1L, 2L }, s1 -> s1));
-
-		String[] ss = X.split2("@dict[a='a']->(value, name)", "\\@(.*)\\[(.*)\\]->\\((.*), (.*)\\)");
-		System.out.println(Arrays.toString(ss));
-
-		ss = X.split2("@dict[a='a']->(value, name)", "[=]");
-		System.out.println(Arrays.toString(ss));
-
-		System.out.println("@dict[a='a']->(value, name)".matches("\\@.*\\[.*\\]->\\(.*, .*\\)"));
-
-		System.out.println(X.matches("abc汉字", "[a-zA-Z0-9_]"));
-
-		System.out.println("2.2e-16=" + X.toDouble("2.2e-16"));
-
-		StringFinder sf = StringFinder.create("t = 0.08506, df = 31, p-value = 0.5336\nabcdddd");
-		System.out.println(sf.get("p-value =", "\n|\r").trim());
 
 	}
 
