@@ -284,36 +284,35 @@ public class User extends Bean {
 		return id;
 	}
 
-	private static void _checkphoto(long id, V v) throws Exception {
+	private static void _checkphoto(long id, V v) {
 
-		Object nickname = v.value("nickname");
+		try {
+			Object nickname = v.value("nickname");
 
-		if (X.isEmpty(nickname)) {
-			return;
-		}
-
-		User u = dao.load(id);
-		if (u != null && !X.isEmpty(u.photo)) {
-			if (X.isSame(nickname, u.nickname) || u.photo.startsWith("/f/g/")) {
+			if (X.isEmpty(nickname)) {
 				return;
 			}
-		}
 
-		char c = nickname.toString().charAt(0);
-		Language lang = Language.getLanguage();
-		DFile f = Disk.seek("/user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
-				+ System.currentTimeMillis() + ".png");
+			User u = dao.load(id);
+			if (u != null && !X.isEmpty(u.photo)) {
+				if (X.isSame(nickname, u.nickname) || u.photo.startsWith("/f/g/")) {
+					return;
+				}
+			}
 
-		if (f != null) {
-			try {
+			char c = nickname.toString().charAt(0);
+			Language lang = Language.getLanguage();
+			DFile f = Disk.seek("/user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
+					+ System.currentTimeMillis() + ".png");
+
+			if (f != null) {
 				GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
 						(int) (156 * Math.random()), (int) (156 * Math.random())), f.getOutputStream());
 				v.append("photo", "/f/g/" + f.getId() + "/" + f.getName());
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
 			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
 		}
-
 	}
 
 	/**
