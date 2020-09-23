@@ -291,6 +291,7 @@ if [ $have_tty -eq 1 ]; then
   echo "Using CATALINA_HOME:   $CATALINA_HOME"
   echo "Using GIIWA_HOME:      $GIIWA_HOME"
   echo "Using CATALINA_TMPDIR: $CATALINA_TMPDIR"
+  echo "`java -version`"
   if [ "$1" = "debug" ] ; then
     echo "Using JAVA_HOME:       $JAVA_HOME"
   else
