@@ -18,10 +18,12 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
 
 import org.apache.commons.logging.*;
 import org.apache.http.HttpResponse;
@@ -492,6 +494,7 @@ public class GImage {
 	public static void scale1(InputStream src, OutputStream dest, int w, int h) throws IOException {
 
 		try {
+
 			BufferedImage img = ImageIO.read(src);
 			if (img == null)
 				throw new IOException("bad [src, w, h]");
@@ -1327,23 +1330,15 @@ public class GImage {
 	}
 
 	public static void main(String[] args) {
-//		String s1 = "/Users/joe/Downloads/aaa.jpg";
-//		String s2 = "/Users/joe/Downloads/t2.png";
+		String s1 = "/Users/joe/d/temp/tif/LH0050073-A1.tif";
+		String s2 = "/Users/joe/d/temp/tif/LH0050073-A1.png";
 
 		try {
-//			OutputStream out = new FileOutputStream(s2);
-//
-//			scale1(new FileInputStream(s1), out, 300, 300);
-//
-//			X.Image.cover(100, "测试",
-//					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
-//					out);
 
-			String f1 = "/Users/joe/Documents/a.jpg";
-			String f2 = "/Users/joe/Documents/u4/pdc200.png";
+			String[] ss = ImageIO.getReaderFormatNames();
+			System.out.println(Arrays.toString(ss));
 
-			X.Image.mix(new FileInputStream(f1), new FileInputStream(f2),
-					new FileOutputStream("/Users/joe/d/temp/a.png"), 100, 10, 10, 10, -1);
+			GImage.scale1(new FileInputStream(s1), new FileOutputStream(s2), 100, 100);
 
 		} catch (Exception e) {
 			e.printStackTrace();

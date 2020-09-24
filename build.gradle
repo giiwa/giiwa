@@ -31,6 +31,7 @@ dependencies {
     compile group: 'commons-net', name: 'commons-net', version:'3.6'
 
 	compile group: 'io.netty', name: 'netty-all', version: '4.1.45.Final'
+	compile group: 'com.twelvemonkeys.imageio', name: 'imageio-tiff', version: '3.6'
 		
     compile ('org.fusesource:sigar:1.6.4') {
     	exclude group: 'log4j',module: 'log4j'
