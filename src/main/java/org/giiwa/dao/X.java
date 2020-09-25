@@ -14,13 +14,10 @@
 */
 package org.giiwa.dao;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -42,7 +39,6 @@ import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.misc.StringFinder;
 import org.giiwa.misc.Zip;
 import org.giiwa.web.Language;
 
@@ -634,6 +630,7 @@ public final class X {
 		List<String> l1 = new ArrayList<String>();
 		String[] ss = X.split(s, "[,;]");
 		for (String s1 : ss) {
+
 			String[] s2 = X.split(s1, deli);
 			if (s2.length == 1) {
 				if (!l1.contains(s1)) {
@@ -660,16 +657,58 @@ public final class X {
 					p2 = p2.substring(1);
 				}
 
+				if (!l1.contains(p1)) {
+					l1.add(p1);
+				}
+
 				String p3 = p1;
-				while (p3.compareTo(p2) <= 0) {
+				while (p3.compareTo(p2) < 0) {
 					if (!l1.contains(prefix + p3)) {
 						l1.add(prefix + p3);
 					}
 					p3 = X.add(p3, 1);
 				}
+				if (!l1.contains(p2)) {
+					l1.add(p2);
+				}
 			}
 		}
 		return l1.toArray(new String[l1.size()]);
+	}
+
+	public static char[] range2(String s, String deli) {
+
+		List<Character> l1 = new ArrayList<Character>();
+		String[] ss = X.split(s, "[,;]");
+		for (String s1 : ss) {
+
+			String[] s2 = X.split(s1, deli);
+			if (s2.length == 1) {
+				if (!l1.contains(s1)) {
+					l1.add(s1.charAt(0));
+				}
+			} else {
+				char p1 = s2[0].charAt(0);
+				char p2 = s2[1].charAt(0);
+				char p3 = p1;
+
+				while (p3 < p2) {
+					if (!l1.contains(p3)) {
+						l1.add(p3);
+					}
+					p3++;
+				}
+				if (!l1.contains(p2)) {
+					l1.add(p2);
+				}
+			}
+		}
+
+		char[] cc = new char[l1.size()];
+		for (int i = 0; i < cc.length; i++) {
+			cc[i] = l1.get(i);
+		}
+		return cc;
 	}
 
 	public static Object[] csv(String src) {
@@ -1215,24 +1254,9 @@ public final class X {
 	}
 
 	public static void main(String[] args) {
-		String filename = "/Users/joe/Downloads/采集表汇总.csv";
-		try {
-
-			BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF8"));
-			String line = IOUtil.readcsv(r);
-			System.out.println(line);
-
-			Object[] ss = X.csv(line);
-			System.out.println(Arrays.toString(ss));
-
-			System.out.println(Integer.toHexString(Byte.toUnsignedInt(ss[0].toString().getBytes()[0])));
-			System.out.println(Integer.toHexString(Byte.toUnsignedInt(ss[0].toString().getBytes()[1])));
-			System.out.println(ss[0].toString().charAt(1));
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
+		String s = "a-c";
+		char[] ss = X.range2(s, "-");
+		System.out.print(Arrays.toString(ss));
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {
