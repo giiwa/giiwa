@@ -295,21 +295,22 @@ public class User extends Bean {
 
 			User u = dao.load(id);
 			if (u != null && !X.isEmpty(u.photo)) {
-				if (X.isSame(nickname, u.nickname) || u.photo.startsWith("/f/g/")) {
+				if (X.isSame(nickname, u.nickname) && Disk.getByUrl(u.photo).exists()) {
 					return;
 				}
 			}
 
 			char c = nickname.toString().charAt(0);
+
 			Language lang = Language.getLanguage();
 			DFile f = Disk.seek("/user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
 					+ System.currentTimeMillis() + ".png");
 
-			if (f != null) {
-				GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
-						(int) (156 * Math.random()), (int) (156 * Math.random())), f.getOutputStream());
-				v.append("photo", "/f/g/" + f.getId() + "/" + f.getName());
-			}
+			GImage.cover(145, Character.toString(c).toUpperCase(),
+					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
+					f.getOutputStream());
+			v.append("photo", "/f/g/" + f.getId() + "/" + f.getName());
+
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}

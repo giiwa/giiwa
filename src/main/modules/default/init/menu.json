@@ -36,12 +36,6 @@
 								"classes": "icon-hammer"
 							},
 							{
-								"name": "menu.footprint",
-								"load": "/admin/footprint",
-								"seq": 30,
-								"classes": "icon-history"
-							},
-							{
 								"name": "menu.logs",
 								"load": "/admin/logs",
 								"seq": 40,

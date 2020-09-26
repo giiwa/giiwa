@@ -449,8 +449,8 @@ public class f extends Controller {
 
 			String filename = "/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/")
 					+ System.currentTimeMillis() + "_" + UID.random(10) + ".jpg";
-			DFile f1 = Disk.seek(filename);
-			t.save(f1);
+
+			DFile f1 = Disk.seek(filename).upload(t.getFile());
 
 			jo.put(X.STATE, 200);
 			jo.put("sid", sid(false));

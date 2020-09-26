@@ -298,10 +298,6 @@ public class Disk extends Bean {
 
 	public static boolean exists(String filename) throws Exception {
 
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).exists(filename);
-//		}
-
 		Beans<Disk> bs = disks(TYPE_DATA);
 
 		for (Disk e : bs) {
