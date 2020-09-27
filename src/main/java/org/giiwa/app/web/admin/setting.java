@@ -26,8 +26,11 @@ import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
+import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Digest;
+import org.giiwa.misc.Host;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
@@ -247,7 +250,7 @@ public class setting extends Controller {
 			Global.setConfig("cross.domain", this.getString("cross_domain"));
 			Global.setConfig("cross.header", this.getString("cross_header"));
 			Global.setConfig("html.source", this.getHtml("html.source"));
-			
+
 			Global.setConfig("session.alive", this.getLong("session.alive"));
 			Global.setConfig("ntp.server", this.getString("ntpserver"));
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
@@ -324,6 +327,8 @@ public class setting extends Controller {
 			this.set("db_url", Config.getConf().getString("db[default].url", null));
 			this.set("db_primary", Helper.primary == null ? X.EMPTY : Helper.primary.getClass().getName());
 			this.set("roles", Role.load(0, 100));
+
+			this.set("machineid", Digest.md5(Host.getLocalip() + "/" + Local.id()));
 
 			this.settingPage("/admin/setting.system.html");
 		}
