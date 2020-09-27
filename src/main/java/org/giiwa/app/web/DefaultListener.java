@@ -43,6 +43,7 @@ import org.giiwa.bean.License;
 import org.giiwa.bean.Menu;
 import org.giiwa.bean.User;
 import org.giiwa.conf.Config;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.RDB;
@@ -51,6 +52,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dfile.FileServer;
 import org.giiwa.engine.R;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Host;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.task.SysTask;
@@ -194,6 +196,10 @@ public class DefaultListener implements IListener {
 	public void onStart(Configuration conf, Module module) {
 
 		log.warn("giiwa is starting...");
+
+		log.info("global.id: " + Global.id());
+		log.info("local.id: " + Local.id());
+		log.info("server bind: " + Host.getLocalip());
 
 		Task.schedule(() -> {
 
