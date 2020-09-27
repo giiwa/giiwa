@@ -26,7 +26,6 @@ import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
-import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Digest;
@@ -328,7 +327,7 @@ public class setting extends Controller {
 			this.set("db_primary", Helper.primary == null ? X.EMPTY : Helper.primary.getClass().getName());
 			this.set("roles", Role.load(0, 100));
 
-			this.set("machineid", Digest.md5(Host.getLocalip() + "/" + Local.id()));
+			this.set("machineid", Digest.md5(Host.getMAC() + "/" + Local.id()));
 
 			this.settingPage("/admin/setting.system.html");
 		}

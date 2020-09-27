@@ -338,7 +338,7 @@ public final class Local extends Bean {
 				return false;
 			}
 
-			String machineid = Digest.md5(Host.getLocalip() + "/" + Local.id());
+			String machineid = Digest.md5(Host.getMAC() + "/" + Local.id());
 
 			String ip = machineid + "/" + name;
 			String s1 = MD5.sha1(Base64.encode(Digest.aes_encrypt(ip.getBytes(), "giisoo")));

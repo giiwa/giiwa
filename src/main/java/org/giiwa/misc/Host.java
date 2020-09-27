@@ -23,6 +23,7 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -355,6 +356,28 @@ public class Host {
 		_init();
 
 		return sigar.getNetRouteList();
+	}
+
+	public static List<String> getMAC() {
+
+		List<String> l1 = new ArrayList<String>();
+
+		try {
+			String s = Shell.run("ifconfig |grep ether", 10000);
+			X.IO.lines(s, (line, re) -> {
+
+				String[] ss = X.split(line.trim(), " ");
+				if (ss.length > 1) {
+					l1.add(ss[1]);
+				}
+
+			});
+
+			Collections.sort(l1);
+		} catch (Exception e) {
+			// ignore
+		}
+		return l1;
 	}
 
 }
