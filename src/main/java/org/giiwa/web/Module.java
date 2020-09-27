@@ -584,6 +584,7 @@ public class Module {
 	/**
 	 * Gets the.
 	 * 
+	 * @deprecated
 	 * @param name the name
 	 * @return the string
 	 */
@@ -591,6 +592,11 @@ public class Module {
 		return get(name, null);
 	}
 
+	/**
+	 * @deprecated
+	 * @param name
+	 * @return
+	 */
 	public boolean has(String name) {
 		String s1 = License.get(this.name, name);
 		return !X.isEmpty(s1);
@@ -599,6 +605,7 @@ public class Module {
 	/**
 	 * Gets the.
 	 * 
+	 * @deprecated
 	 * @param name         the name
 	 * @param defaultValue the default value
 	 * @return the string

@@ -19,15 +19,11 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.internal.Base64;
 import org.giiwa.bean.Node;
 import org.giiwa.cache.Cache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Digest;
-import org.giiwa.misc.Host;
-import org.giiwa.misc.MD5;
 import org.giiwa.net.mq.IStub;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.net.mq.MQ.Request;
@@ -328,29 +324,6 @@ public final class Local extends Bean {
 			}
 
 		}.schedule(6000);
-	}
-
-	public static boolean unlimited(String name) {
-
-		try {
-			String s = getString(name, null);
-			if (X.isEmpty(s)) {
-				return false;
-			}
-
-			String machineid = Digest.md5(Host.getMAC() + "/" + Local.id());
-
-			String ip = machineid + "/" + name;
-			String s1 = MD5.sha1(Base64.encode(Digest.aes_encrypt(ip.getBytes(), "giisoo")));
-			if (X.isSame(s, s1))
-				return true;
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-
-		return false;
-
 	}
 
 }

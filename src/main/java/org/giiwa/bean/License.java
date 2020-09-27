@@ -34,6 +34,7 @@ import org.giiwa.web.Module;
  * the "access" method in @Path interface. <br>
  * table="gi_access"
  * 
+ * @deprecated
  * @author yjiang
  * 
  */

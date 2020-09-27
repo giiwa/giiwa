@@ -121,7 +121,7 @@ public class GiiwaFilter implements Filter {
 			
 			View.init();
 
-			License.init();
+//			License.init();
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);

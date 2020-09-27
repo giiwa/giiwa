@@ -37,7 +37,7 @@ public class GiiwaServlet extends HttpServlet {
 
 			View.init();
 
-			License.init();
+//			License.init();
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
