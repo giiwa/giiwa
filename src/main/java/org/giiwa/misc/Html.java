@@ -234,7 +234,8 @@ public final class Html {
 
 	/**
 	 * find the element by the selector <br>
-	 * .
+	 * 
+	 * @deprecated
 	 *
 	 * @param selector 1, .id for id element<br>
 	 *                 e.g: find(".aaa") <br>
@@ -248,9 +249,14 @@ public final class Html {
 		return d.select(selector);
 	}
 
+	public Elements select(String selector) {
+		return d.select(selector);
+	}
+
 	/**
 	 * find the elements in the node.
-	 *
+	 * 
+	 * @deprecated
 	 * @param e        the element node
 	 * @param selector the selector string
 	 * @return the list of element or null if nothing found
@@ -262,6 +268,7 @@ public final class Html {
 	/**
 	 * find the elements in the elements by the selector.
 	 *
+	 * @deprecated
 	 * @param list     the original elements
 	 * @param selector the string of selector, .id, .class, tag
 	 * @return the list of element or null nothing found
