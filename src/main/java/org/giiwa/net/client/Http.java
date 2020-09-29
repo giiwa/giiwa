@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -397,6 +396,7 @@ public final class Http {
 					Response r = new Response();
 					r.status = 500;
 					r.body = url + "\r\n" + X.toString(e);
+					r.url = url;
 					// e.printStackTrace();
 					return r;
 				}
@@ -830,6 +830,7 @@ public final class Http {
 					r.status = resp.getStatusLine().getStatusCode();
 					r.body = getContext(resp);
 					r.headers = resp.getAllHeaders();
+					r.url = url;
 
 					if (log.isDebugEnabled())
 						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -975,6 +976,7 @@ public final class Http {
 				r.status = resp.getStatusLine().getStatusCode();
 				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
+				r.url = url;
 
 				if (log.isDebugEnabled())
 					log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -1037,6 +1039,7 @@ public final class Http {
 				r.status = resp.getStatusLine().getStatusCode();
 				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
+				r.url = url;
 
 				if (log.isDebugEnabled())
 					log.debug("delete: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -1290,6 +1293,8 @@ public final class Http {
 		 */
 		public int status;
 
+		public String url;
+
 		/**
 		 * 返回数据body
 		 */
@@ -1315,7 +1320,9 @@ public final class Http {
 		 * @return Html工具类
 		 */
 		public Html html() {
-			return Html.create(body);
+			Html m = Html.create(body);
+			m.url = url;
+			return m;
 		}
 
 		public String cookie() {
