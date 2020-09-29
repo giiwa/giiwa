@@ -388,7 +388,9 @@ public final class Http {
 					if (log.isDebugEnabled())
 						log.debug("get url=" + url);
 
-					return _get(client, localContext, get, timeout - t.pastms());
+					Http.Response r = _get(client, localContext, get, timeout - t.pastms());
+					r.url = url;
+					return r;
 
 				} catch (Throwable e) {
 					log.error("\"" + url + "\"", e);
@@ -449,6 +451,7 @@ public final class Http {
 			// log.debug("body=" + r.body);
 			List<Element> l1 = h.find("meta[http-equiv=refresh]");
 			if (l1 != null && !l1.isEmpty()) {
+
 				String url = l1.get(0).attr("content");
 
 				StringFinder sf = StringFinder.create(url);
@@ -478,7 +481,9 @@ public final class Http {
 						}
 					}
 
-					return _get(client, context, get1, timeout);
+					r = _get(client, context, get1, timeout);
+					r.url = url;
+					return r;
 				}
 			}
 		}
