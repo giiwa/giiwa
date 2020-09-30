@@ -18,7 +18,9 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Url;
 
 /**
  * 
@@ -27,7 +29,7 @@ import org.giiwa.json.JSON;
  */
 public class QueryString implements Cloneable {
 
-	HashMap<String, String> query = new HashMap<String, String>();
+	TreeMap<String, String> query = new TreeMap<String, String>();
 
 	String q;
 	String path;
@@ -293,7 +295,7 @@ public class QueryString implements Cloneable {
 	public QueryString copy() {
 		try {
 			QueryString q = (QueryString) super.clone();
-			q.query = new HashMap<String, String>();
+			q.query = new TreeMap<String, String>();
 			q.q = null;
 
 			for (Iterator<String> it = query.keySet().iterator(); it.hasNext();) {
@@ -352,14 +354,42 @@ public class QueryString implements Cloneable {
 				path = path.substring(0, path.length() - 5);
 			}
 
+			path = _format(path);
+
 			if (sb.length() > 0) {
 				q = path + "?" + sb.toString();
 			} else {
-				q = path + "?";
+				q = path;
 			}
 		}
 
 		return q;
+	}
+
+	private String _format(String path) {
+
+		StringBuilder sb = new StringBuilder();
+		int i = path.indexOf("/", 10);
+		while (i > 0) {
+			String s = path.substring(0, i);
+			if (sb.length() > 0) {
+				s = Url.encode(s);
+			}
+			sb.append(s).append("/");
+			path = path.substring(i + 1);
+			i = path.indexOf("/");
+		}
+
+		String s = path;
+		if (!X.isEmpty(s)) {
+			if (sb.length() > 0) {
+				s = Url.encode(s);
+			}
+			sb.append(s);
+		}
+
+		return sb.toString();
+
 	}
 
 	/**

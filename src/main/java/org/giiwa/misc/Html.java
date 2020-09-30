@@ -22,6 +22,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.net.client.Http;
+import org.giiwa.web.QueryString;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
@@ -331,7 +333,18 @@ public final class Html {
 	}
 
 	/**
-	 * find all href
+	 * @deprecated
+	 * @param regex
+	 * @return
+	 * @throws Exception
+	 */
+	public List<JSON> href(String... regex) throws Exception {
+		return a(regex);
+	}
+
+	/**
+	 * 
+	 * find all a tag
 	 * 
 	 * @param h
 	 * @param refer
@@ -339,7 +352,7 @@ public final class Html {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<JSON> href(String... regex) throws Exception {
+	public List<JSON> a(String... regex) throws Exception {
 
 		if (X.isEmpty(url))
 			throw new Exception("url is not setting");
@@ -360,18 +373,13 @@ public final class Html {
 
 		Map<String, JSON> l2 = new HashMap<String, JSON>();
 
-		List<Element> l1 = find("a");
-//		 log.debug("spider url = " + l1.size());
+		List<Element> l1 = select("a");
 
 		if (l1 != null && l1.size() > 0) {
 			for (Element e1 : l1) {
 
-//				System.out.println(e1.attributes());
-
 				String href = e1.attr("href");
-//				System.out.println(href);
 				href = href.trim();
-//				System.out.println(href);
 
 				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")
 						|| href.toLowerCase().startsWith("tel:") || href.toLowerCase().startsWith("mail:")) {
@@ -388,18 +396,13 @@ public final class Html {
 					href = href.substring(0, i);
 				}
 
-				href = _format(href);
-
-//				log.debug("href, url=" + href);
-//				System.out.println("url=" + href);
+				href = _sort(href);
 
 				if (!l2.containsKey(href) && _match(href, hh)) {
 					l2.put(href, JSON.create().append("href", href).append("label", e1.text()));
 				}
 			}
 		}
-
-//		log.debug("href, l2=" + l2);
 
 		return new ArrayList<JSON>(l2.values());
 
@@ -430,45 +433,15 @@ public final class Html {
 		return url;
 	}
 
-	private String _format(String href, String... removals) {
+	private String _sort(String href, String... removals) {
 
 		if (X.isEmpty(href))
 			return null;
 
-		String[] ss = X.split(href, "[#?&]");
-		if (ss.length < 2) {
-			return ss[0];
-		}
+		QueryString qs = new QueryString(href);
+		qs.remove(removals);
 
-		TreeMap<String, String> p = new TreeMap<String, String>();
-		for (int i = 1; i < ss.length; i++) {
-			StringFinder f = StringFinder.create(ss[i]);
-			String name = f.nextTo("=");
-			f.skip(1);
-			String value = f.remain();
-			if (!X.isEmpty(name)) {
-				p.put(name, value);
-			}
-		}
-		if (removals != null) {
-			for (String s : removals) {
-				p.remove(s);
-			}
-		}
-		StringBuilder sb = new StringBuilder();
-		for (String name : p.keySet()) {
-			if (sb.length() > 0)
-				sb.append("&");
-
-			sb.append(name).append("=");
-			if (!X.isEmpty(p.get(name))) {
-				sb.append(p.get(name));
-			}
-		}
-		if (sb.length() > 0) {
-			return ss[0] + "?" + sb.toString();
-		}
-		return ss[0];
+		return qs.toString();
 	}
 
 	/**
@@ -477,7 +450,18 @@ public final class Html {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-//		Http h = Http.create();
+
+		Http.Response r = Http.owner.get("https://book.douban.com/tag/?view=type&icn=index-sorttags-all");
+
+		Html h = r.html();
+		try {
+			List<JSON> l1 = h.a("https://book.douban.com/tag/.*");
+			l1.forEach(e -> {
+				System.out.println(e.getString("href"));
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
