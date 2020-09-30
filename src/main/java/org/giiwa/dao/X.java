@@ -287,7 +287,7 @@ public final class X {
 					} else
 						return Integer.parseInt(s);
 				} catch (Exception e) {
-					log.error(e);
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
@@ -1256,7 +1256,9 @@ public final class X {
 	public static void main(String[] args) {
 		String s = "a-c";
 		char[] ss = X.range2(s, "-");
-		System.out.print(Arrays.toString(ss));
+		System.out.println(Arrays.toString(ss));
+
+		System.out.println(X.toLong("9700262001", -1));
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {
