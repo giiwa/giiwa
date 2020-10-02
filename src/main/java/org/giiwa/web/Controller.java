@@ -1826,6 +1826,26 @@ public class Controller {
 	}
 
 	/**
+	 * get files
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public List<FileItem> files(String name) {
+
+		_get_files();
+
+		Object o = uploads.get(name);
+		if (o instanceof FileItem) {
+			return Arrays.asList((FileItem) o);
+		} else if (o instanceof List) {
+			List<FileItem> list = (List<FileItem>) o;
+			return list;
+		}
+		return null;
+	}
+
+	/**
 	 * uploaded file
 	 */
 	private Map<String, Object> uploads = null;

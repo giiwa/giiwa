@@ -194,7 +194,7 @@ public final class Http {
 	}
 
 	public Response post(String url, Object head, Object params) {
-		return post(url, JSON.fromObject(head), JSON.fromObject(params), null, null, X.AMINUTE);
+		return post(url, JSON.fromObject(head), JSON.fromObject(params), null, (InputStream) null, X.AMINUTE);
 	}
 
 	/**
@@ -714,7 +714,7 @@ public final class Http {
 	 * @return Response
 	 */
 	public Response post(String url, JSON headers, JSON params, long timeout) {
-		return post(url, headers, params, null, null, timeout);
+		return post(url, headers, params, null, (InputStream) null, timeout);
 	}
 
 	public Response open(String url, Consumer<HttpURLConnection> func) {
@@ -828,6 +828,96 @@ public final class Http {
 					}
 					if (in != null) {
 						b.addBinaryBody(name, in);
+					}
+					post.setEntity(b.build());
+
+					resp = client.execute(post, localContext);
+					r.status = resp.getStatusLine().getStatusCode();
+					r.body = getContext(resp);
+					r.headers = resp.getAllHeaders();
+					r.url = url;
+
+					if (log.isDebugEnabled())
+						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+				} catch (Throwable e) {
+					log.error("cost=" + t.past() + ", " + url, e);
+					r.status = 600;
+					r.body = "error: " + e.getMessage();
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+				}
+
+			} else {
+				r.status = 600;
+				r.body = "error: can not init a client";
+			}
+
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("post, cost=" + t.past() + ", url=" + url);
+		}
+		return r;
+	}
+
+	public Response post(String url, JSON headers, JSON body, String name, List<File> files, long timeout) {
+
+		TimeStamp t = TimeStamp.create();
+
+		Response r = new Response();
+
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=" + url);
+
+			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+
+			if (client == null) {
+				client = getClient(url, ua, timeout);
+			}
+
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
+
+			if (client != null) {
+
+				HttpPost post = new HttpPost(url);
+				CloseableHttpResponse resp = null;
+				try {
+
+					if (headers != null && headers.size() > 0) {
+						if (log.isDebugEnabled())
+							log.debug("header: " + headers);
+						for (String s : headers.keySet()) {
+							post.addHeader(s, headers.getString(s));
+						}
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("post url=" + url);
+
+					MultipartEntityBuilder b = MultipartEntityBuilder.create();
+					if (body != null) {
+						if (log.isDebugEnabled())
+							log.debug("body: " + body);
+
+						for (String s : body.keySet()) {
+//						b.addTextBody(name, body.getString(s),
+//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
+							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+						}
+
+					}
+					if (files != null) {
+						for (File f1 : files) {
+							b.addBinaryBody(name, f1);
+						}
 					}
 					post.setEntity(b.build());
 
