@@ -161,7 +161,7 @@ public class Temp {
 				.append(id);
 
 		if (name != null)
-			sb.append("_").append(name);
+			sb.append("/").append(name);
 
 		return sb.toString();
 	}
