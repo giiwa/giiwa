@@ -399,7 +399,69 @@ public final class Html {
 				href = _sort(href);
 
 				if (!l2.containsKey(href) && _match(href, hh)) {
-					l2.put(href, JSON.create().append("href", href).append("label", e1.text()));
+					JSON a = JSON.create().append("href", href).append("label", e1.text());
+					l2.put(href, a);
+				}
+			}
+		}
+
+		return new ArrayList<JSON>(l2.values());
+
+	}
+
+	public List<JSON> link(String selector, String attr, String... regex) throws Exception {
+
+		if (X.isEmpty(url))
+			throw new Exception("url is not setting");
+
+		Set<String> hh = new HashSet<String>();
+		if (X.isEmpty(regex) || regex.length == 0 || X.isEmpty(regex[0])) {
+			hh.add(_server(url) + ".*");
+		} else {
+
+			for (String s : regex) {
+				String[] ss = X.split(s, "[;]");
+				for (String s1 : ss) {
+					hh.add(s1);
+				}
+
+			}
+		}
+
+		Map<String, JSON> l2 = new HashMap<String, JSON>();
+
+		List<Element> l1 = select(selector);
+
+		if (l1 != null && l1.size() > 0) {
+			for (Element e1 : l1) {
+
+				String href = e1.attr(attr);
+				href = href.trim();
+
+				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")
+						|| href.toLowerCase().startsWith("tel:") || href.toLowerCase().startsWith("mail:")) {
+					continue;
+				} else if (href.startsWith("/")) {
+					href = _server(url) + href;
+				} else if (href.startsWith("?")) {
+					href = _path2(url) + href;
+				} else if (!href.startsWith("http")) {
+					href = _path(url) + href;
+				}
+				int i = href.indexOf("#");
+				if (i > 0) {
+					href = href.substring(0, i);
+				}
+
+				href = _sort(href);
+
+				if (!l2.containsKey(href) && _match(href, hh)) {
+					JSON a = JSON.create().append("href", href).append("text", e1.text());
+					List<Attribute> l3 = e1.attributes().asList();
+					l3.forEach(e -> {
+						a.put(e.getKey(), e.getValue());
+					});
+					l2.put(href, a);
 				}
 			}
 		}
