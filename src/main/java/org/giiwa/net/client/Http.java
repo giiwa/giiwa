@@ -449,7 +449,7 @@ public final class Http {
 			Html h = Html.create(r.body);
 
 			// log.debug("body=" + r.body);
-			List<Element> l1 = h.find("meta[http-equiv=refresh]");
+			List<Element> l1 = h.select("meta[http-equiv=refresh]");
 			if (l1 != null && !l1.isEmpty()) {
 
 				String url = l1.get(0).attr("content");
@@ -918,6 +918,94 @@ public final class Http {
 						for (File f1 : files) {
 							b.addBinaryBody(name, f1);
 						}
+					}
+					post.setEntity(b.build());
+
+					resp = client.execute(post, localContext);
+					r.status = resp.getStatusLine().getStatusCode();
+					r.body = getContext(resp);
+					r.headers = resp.getAllHeaders();
+					r.url = url;
+
+					if (log.isDebugEnabled())
+						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+				} catch (Throwable e) {
+					log.error("cost=" + t.past() + ", " + url, e);
+					r.status = 600;
+					r.body = "error: " + e.getMessage();
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+				}
+
+			} else {
+				r.status = 600;
+				r.body = "error: can not init a client";
+			}
+
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("post, cost=" + t.past() + ", url=" + url);
+		}
+		return r;
+	}
+
+	public Response post(String url, JSON headers, JSON body, String name, File file, long timeout) {
+
+		TimeStamp t = TimeStamp.create();
+
+		Response r = new Response();
+
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=" + url);
+
+			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+
+			if (client == null) {
+				client = getClient(url, ua, timeout);
+			}
+
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
+
+			if (client != null) {
+
+				HttpPost post = new HttpPost(url);
+				CloseableHttpResponse resp = null;
+				try {
+
+					if (headers != null && headers.size() > 0) {
+						if (log.isDebugEnabled())
+							log.debug("header: " + headers);
+						for (String s : headers.keySet()) {
+							post.addHeader(s, headers.getString(s));
+						}
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("post url=" + url);
+
+					MultipartEntityBuilder b = MultipartEntityBuilder.create();
+					if (body != null) {
+						if (log.isDebugEnabled())
+							log.debug("body: " + body);
+
+						for (String s : body.keySet()) {
+//						b.addTextBody(name, body.getString(s),
+//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
+							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+						}
+
+					}
+					if (file != null) {
+						b.addBinaryBody(name, file);
 					}
 					post.setEntity(b.build());
 
