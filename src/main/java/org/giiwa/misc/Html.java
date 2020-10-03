@@ -396,10 +396,11 @@ public final class Html {
 					href = href.substring(0, i);
 				}
 
-				href = _sort(href);
+				href = _format(href);
 
 				if (!l2.containsKey(href) && _match(href, hh)) {
 					JSON a = JSON.create().append("href", href).append("label", e1.text());
+
 					l2.put(href, a);
 				}
 			}
@@ -453,7 +454,7 @@ public final class Html {
 					href = href.substring(0, i);
 				}
 
-				href = _sort(href);
+				href = _format(href);
 
 				if (!l2.containsKey(href) && _match(href, hh)) {
 					JSON a = JSON.create().append("href", href).append("text", e1.text());
@@ -495,7 +496,7 @@ public final class Html {
 		return url;
 	}
 
-	private String _sort(String href, String... removals) {
+	private String _format(String href, String... removals) {
 
 		if (X.isEmpty(href))
 			return null;
@@ -513,15 +514,23 @@ public final class Html {
 	 */
 	public static void main(String[] args) {
 
-		Http.Response r = Http.owner.get("https://book.douban.com/tag/?view=type&icn=index-sorttags-all");
+		String url = "https://www.af.mil/News/Features/";
+		Http h = Http.create();
+		Http.Response r = h.get(url);
+		Html h1 = r.html();
 
-		Html h = r.html();
+//		System.out.println(r.body);
+
+//		System.out.println("http://www.af.mil/News/Features/?Page=3".matches("http(s|)://www.af.mil/News/Features/.*"));
+
 		try {
-			List<JSON> l1 = h.a("https://book.douban.com/tag/.*");
+			List<JSON> l1 = h1.a("http(s|)://www.af.mil/News/Features/.*");
 			l1.forEach(e -> {
-				System.out.println(e.getString("href"));
+				System.out.println(e.get("href"));
 			});
+
 		} catch (Exception e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

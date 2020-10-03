@@ -245,7 +245,22 @@ public class QueryString implements Cloneable {
 	 */
 	public QueryString(String path) {
 		q = null;
-		this.path = path;
+		int i = path.indexOf("?");
+		if (i > 0) {
+			this.path = path.substring(0, i);
+			String s = path.substring(i + 1);
+			String[] ss = X.split(s, "&");
+			if (ss != null) {
+				for (String s1 : ss) {
+					int j = s1.indexOf("=");
+					if (j > 0) {
+						this.append(s1.substring(0, j), s1.substring(j + 1));
+					}
+				}
+			}
+		} else {
+			this.path = path;
+		}
 	}
 
 	/**
@@ -334,6 +349,7 @@ public class QueryString implements Cloneable {
 	 * @see java.lang.Object.toString()
 	 */
 	public String toString() {
+
 		if (q == null) {
 			StringBuilder sb = new StringBuilder();
 
