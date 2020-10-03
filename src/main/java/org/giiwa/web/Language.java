@@ -499,6 +499,23 @@ public class Language implements Serializable {
 		return 0;
 	}
 
+	public long parse(String t, String format, Locale loc) {
+		if (t == null || "".equals(t))
+			return 0;
+
+		try {
+			SimpleDateFormat sdf = new SimpleDateFormat(format, loc);
+			// sdf.setTimeZone(TimeZone.getTimeZone(get("date.timezone")));
+			synchronized (sdf) {
+				return sdf.parse(t).getTime();
+			}
+		} catch (Exception e) {
+			log.error(t + ", format=" + format, e);
+		}
+
+		return 0;
+	}
+
 	/**
 	 * Format.
 	 * 
