@@ -1421,7 +1421,6 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * @deprecated
 		 * @param name
 		 * @param v
 		 * @return
@@ -1431,7 +1430,6 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * @deprecated
 		 * @param name
 		 * @param v
 		 * @param op
@@ -1442,7 +1440,6 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * @deprecated
 		 * @param name
 		 * @param v
 		 * @param op
@@ -1450,11 +1447,53 @@ public class Helper implements Serializable {
 		 * @return
 		 */
 		public W and(String[] name, Object v, OP op, int boost) {
-			W q = W.create();
-			for (String s : name) {
-				q.or(s, v, op, boost);
+			if (v instanceof String) {
+				String[] ss = X.split(v.toString(), "[ ]");
+				for (String s1 : ss) {
+					W q = W.create();
+					String[] s2 = X.split(s1, "|");
+					for (String s3 : s2) {
+						for (String s : name) {
+							q.or(s, s3, op, boost);
+						}
+					}
+					this.and(q);
+				}
+			} else {
+				W q = W.create();
+				for (String s : name) {
+					q.or(s, v, op, boost);
+				}
+				this.and(q);
 			}
-			return and(q);
+			return this;
+		}
+
+		public W and(String[] name, Object v, int[] boost) {
+			return and(name, v, OP.eq, boost);
+		}
+
+		public W and(String[] name, Object v, OP op, int[] boost) {
+			if (v instanceof String) {
+				String[] ss = X.split(v.toString(), "[ ]");
+				for (String s1 : ss) {
+					W q = W.create();
+					String[] s2 = X.split(s1, "|");
+					for (String s3 : s2) {
+						for (int i = 0; i < name.length; i++) {
+							q.or(name[i], s3, op, boost[i]);
+						}
+					}
+					this.and(q);
+				}
+			} else {
+				W q = W.create();
+				for (int i = 0; i < name.length; i++) {
+					q.or(name[i], v, op, boost[i]);
+				}
+				this.and(q);
+			}
+			return this;
 		}
 
 		/**
