@@ -499,16 +499,21 @@ public class Language implements Serializable {
 		return 0;
 	}
 
+	public long parse(String t, String format, String loc) {
+		return parse(t, format, new Locale(loc));
+	}
+
 	public long parse(String t, String format, Locale loc) {
-		if (t == null || "".equals(t))
+		if (t == null)
+			return 0;
+
+		t = t.trim();
+		if (X.isEmpty(t))
 			return 0;
 
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat(format, loc);
-			// sdf.setTimeZone(TimeZone.getTimeZone(get("date.timezone")));
-			synchronized (sdf) {
-				return sdf.parse(t).getTime();
-			}
+			return sdf.parse(t).getTime();
 		} catch (Exception e) {
 			log.error(t + ", format=" + format, e);
 		}
