@@ -15,6 +15,7 @@
 package org.giiwa.bean;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -245,6 +246,22 @@ public class Temp {
 			f.getParentFile().mkdirs();
 		}
 		return IOUtils.copy(in, new FileOutputStream(f));
+	}
+
+	public ZipOutputStream getZipOutputStream() throws Exception {
+		return new ZipOutputStream(this.getOutputStream());
+	}
+
+	public OutputStream getOutputStream() throws Exception {
+		File f1 = this.getFile();
+		f1.getParentFile().mkdirs();
+		return new FileOutputStream(f1);
+	}
+
+	public InputStream getInputStream() throws Exception {
+		File f1 = this.getFile();
+		f1.getParentFile().mkdirs();
+		return new FileInputStream(f1);
 	}
 
 	public long zipcopy(String name, InputStream in) throws IOException {

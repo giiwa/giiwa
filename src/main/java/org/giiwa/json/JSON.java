@@ -394,6 +394,18 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return g.toJson(this);
 	}
 
+	public static String toString(List<JSON> l1) {
+		Gson g = _gson();
+		return g.toJson(l1);
+	}
+
+	public static String toPrettyString(List<JSON> l1) {
+		Gson gson = new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY)
+				.excludeFieldsWithoutExposeAnnotation().serializeSpecialFloatingPointValues().setPrettyPrinting()
+				.create();
+		return gson.toJson(l1);
+	}
+
 	/**
 	 * convert the json to url string
 	 * 
