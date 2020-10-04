@@ -1475,10 +1475,10 @@ public class Helper implements Serializable {
 
 		public W and(String[] name, Object v, OP op, int[] boost) {
 			if (v instanceof String) {
-				String[] ss = X.split(v.toString(), "[ ]");
+				String[] ss = X.split(v.toString(), " ");
 				for (String s1 : ss) {
 					W q = W.create();
-					String[] s2 = X.split(s1, "|");
+					String[] s2 = X.split(s1, "\\|");
 					for (String s3 : s2) {
 						for (int i = 0; i < name.length; i++) {
 							q.or(name[i], s3, op, boost[i]);
