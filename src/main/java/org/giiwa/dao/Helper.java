@@ -275,6 +275,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.exists(table, q, db);
 				} else if (!X.isEmpty(customs)) {
@@ -287,10 +291,6 @@ public class Helper implements Serializable {
 			}
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -3042,6 +3042,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.load(table, fields, q, t, db);
 				} else if (!X.isEmpty(customs)) {
@@ -3057,11 +3061,6 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
-
 		}
 	}
 
@@ -3276,6 +3275,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				values.set(X.UPDATED, System.currentTimeMillis());
 
 				if (primary != null && primary.getDB(db) != null) {
@@ -3294,11 +3297,6 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
-
 		}
 	}
 

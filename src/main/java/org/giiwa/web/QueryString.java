@@ -245,21 +245,42 @@ public class QueryString implements Cloneable {
 	 */
 	public QueryString(String path) {
 		q = null;
+
+		int j = path.lastIndexOf("#");
+		if (j > 0) {
+			path = path.substring(0, j);
+		}
+
 		int i = path.indexOf("?");
 		if (i > 0) {
 			this.path = path.substring(0, i);
 			String s = path.substring(i + 1);
-			String[] ss = X.split(s, "&");
-			if (ss != null) {
-				for (String s1 : ss) {
-					int j = s1.indexOf("=");
-					if (j > 0) {
-						this.append(s1.substring(0, j), s1.substring(j + 1));
-					}
+
+			this.append(s);
+			return;
+		}
+
+		i = path.indexOf("&");
+		if (i > 0) {
+			this.path = path.substring(0, i);
+			String s = path.substring(i + 1);
+
+			this.append(s);
+			return;
+		}
+
+		this.path = path;
+	}
+
+	public void append(String s) {
+		String[] ss = X.split(s, "[&?]");
+		if (ss != null) {
+			for (String s1 : ss) {
+				int j = s1.indexOf("=");
+				if (j > 0) {
+					this.append(s1.substring(0, j), s1.substring(j + 1));
 				}
 			}
-		} else {
-			this.path = path;
 		}
 	}
 
@@ -643,6 +664,14 @@ public class QueryString implements Cloneable {
 		query.clear();
 		q = null;
 		return this;
+	}
+
+	public static void main(String[] args) {
+
+		String url = "https://www.aa.com/?a=1a=2";
+		QueryString s1 = new QueryString(url);
+		System.out.println(s1.toString());
+
 	}
 
 }

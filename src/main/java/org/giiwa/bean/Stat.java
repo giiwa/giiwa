@@ -359,6 +359,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		Stat s1 = Helper.load(table, q.and("module", name + "." + TYPE.snapshot).and("size", size.toString())
 				.and("time", time, W.OP.lt).sort("time", -1), Stat.class);
+		
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] - s1.getLong("n" + i);
