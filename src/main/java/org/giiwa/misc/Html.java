@@ -384,6 +384,8 @@ public final class Html {
 				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")
 						|| href.toLowerCase().startsWith("tel:") || href.toLowerCase().startsWith("mail:")) {
 					continue;
+				} else if (href.startsWith("//")) {
+					href = _protocol(url) + href;
 				} else if (href.startsWith("/")) {
 					href = _server(url) + href;
 				} else if (href.startsWith("?")) {
@@ -442,6 +444,8 @@ public final class Html {
 				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")
 						|| href.toLowerCase().startsWith("tel:") || href.toLowerCase().startsWith("mail:")) {
 					continue;
+				} else if (href.startsWith("//")) {
+					href = _protocol(url) + href;
 				} else if (href.startsWith("/")) {
 					href = _server(url) + href;
 				} else if (href.startsWith("?")) {
@@ -490,6 +494,14 @@ public final class Html {
 
 	private String _server(String url) {
 		int i = url.indexOf("/", 8);
+		if (i > 0) {
+			return url.substring(0, i);
+		}
+		return url;
+	}
+
+	private String _protocol(String url) {
+		int i = url.indexOf("/");
 		if (i > 0) {
 			return url.substring(0, i);
 		}

@@ -99,21 +99,6 @@ public class f extends Controller {
 
 								_send(new FileInputStream(f), f.length());
 
-//								if (!f1.getFilename().startsWith("/f/g/")) {
-//									Task.schedule(() -> {
-//										// save the file to nginx
-//										try {
-//
-//											DFile f2 = Disk.seek("/f/g/" + id + "/" + name, Disk.TYPE_NGINX);
-//											if (f2 != null) {
-//												f2.upload(f);
-//											}
-//
-//										} catch (Exception e) {
-//											log.error(e.getMessage(), e);
-//										}
-//									});
-//								}
 								return;
 							}
 						}
@@ -123,22 +108,6 @@ public class f extends Controller {
 				this.setContentType(mime);
 
 				_send(f1.getInputStream(), f1.length());
-
-//				if (!f1.getFilename().startsWith("/f/g/")) {
-//					Task.schedule(() -> {
-//						// save the file to nginx
-//						try {
-//
-//							DFile f2 = Disk.seek("/f/g/" + id + "/" + name, Disk.TYPE_NGINX);
-//							if (f2 != null) {
-//								f2.upload(f1.getInputStream());
-//							}
-//
-//						} catch (Exception e) {
-//							log.error(e.getMessage(), e);
-//						}
-//					});
-//				}
 
 			}
 

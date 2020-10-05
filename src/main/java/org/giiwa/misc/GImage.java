@@ -23,7 +23,6 @@ import java.util.Hashtable;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
 
 import org.apache.commons.logging.*;
 import org.apache.http.HttpResponse;
@@ -192,16 +191,17 @@ public class GImage {
 			if (img == null || w < 0 || h < 0)
 				throw new IOException("bad [src, w, h]");
 
-			int h1 = img.getHeight();
-			int w1 = img.getWidth();
+			float h1 = img.getHeight();
+			float w1 = img.getWidth();
 
 //			if (w > w1 || h > h1)
 //				throw new IOException("bad [src, w, h]");
 
+			float f1 = h1 / w1;
 			if (h <= 0)
-				h = h1;
+				h = X.toInt(w * f1);
 			if (w <= 0)
-				w = w1;
+				w = X.toInt(h / f1);
 
 			float fh = ((float) h1) / h;
 			float fw = ((float) w1) / w;
@@ -502,18 +502,20 @@ public class GImage {
 			// BufferedImage out = Scalr.resize(img, Scalr.Method.ULTRA_QUALITY,
 			// w, h);// , Scalr.OP_ANTIALIAS);
 
-			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
-																						// TYPE_4BYTE_BGR);
-			Graphics g = out.getGraphics();
-			// g.setColor(Color.white);
-			// g.fillRect(0, 0, w, h);
+			float h1 = img.getHeight();
+			float w1 = img.getWidth();
 
-			int h1 = img.getHeight();
-			int w1 = img.getWidth();
+			float f1 = h1 / w1;
 			if (h <= 0)
-				h = h1;
+				h = X.toInt(w * f1);
 			if (w <= 0)
-				w = w1;
+				w = X.toInt(h / f1);
+
+			log.debug("w=" + w + ", h=" + h + ", h1=" + h1 + ", w1=" + w1 + ", f1=" + f1);
+
+			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
+			// TYPE_4BYTE_BGR);
+			Graphics g = out.getGraphics();
 
 			float fh = ((float) h1) / h;
 			float fw = ((float) w1) / w;
