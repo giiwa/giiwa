@@ -15,6 +15,7 @@
 package org.giiwa.misc;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import javax.swing.text.html.parser.ParserDelegator;
 
@@ -27,6 +28,8 @@ import org.giiwa.web.QueryString;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
+
+import jdk.nashorn.api.scripting.*;
 
 /**
  * The {@code Html} Class used to string to html, html to plain, or get images
@@ -346,88 +349,51 @@ public final class Html {
 	 * 
 	 * find all a tag
 	 * 
-	 * @param h
-	 * @param refer
-	 * @param hosts
 	 * @return
 	 * @throws Exception
 	 */
-	public List<JSON> a(String... regex) throws Exception {
+	public List<JSON> a(Object regex) throws Exception {
 
-		if (X.isEmpty(url))
-			throw new Exception("url is not setting");
-
-		Set<String> hh = new HashSet<String>();
-		if (X.isEmpty(regex) || regex.length == 0 || X.isEmpty(regex[0])) {
-			hh.add(_server(url) + ".*");
-		} else {
-
-			for (String s : regex) {
-				String[] ss = X.split(s, "[;]");
-				for (String s1 : ss) {
-					hh.add(s1);
-				}
-
-			}
-		}
-
-		Map<String, JSON> l2 = new HashMap<String, JSON>();
-
-		List<Element> l1 = select("a");
-
-		if (l1 != null && l1.size() > 0) {
-			for (Element e1 : l1) {
-
-				String href = e1.attr("href");
-				href = href.trim();
-
-				if (href.startsWith("#") || href.toLowerCase().startsWith("javascript:")
-						|| href.toLowerCase().startsWith("tel:") || href.toLowerCase().startsWith("mail:")) {
-					continue;
-				} else if (href.startsWith("//")) {
-					href = _protocol(url) + href;
-				} else if (href.startsWith("/")) {
-					href = _server(url) + href;
-				} else if (href.startsWith("?")) {
-					href = _path2(url) + href;
-				} else if (!href.startsWith("http")) {
-					href = _path(url) + href;
-				}
-				int i = href.indexOf("#");
-				if (i > 0) {
-					href = href.substring(0, i);
-				}
-
-				href = _format(href);
-
-				if (!l2.containsKey(href) && _match(href, hh)) {
-					JSON a = JSON.create().append("href", href).append("label", e1.text());
-
-					l2.put(href, a);
-				}
-			}
-		}
-
-		return new ArrayList<JSON>(l2.values());
+		return a(regex, null);
 
 	}
 
-	public List<JSON> link(String selector, String attr, String... regex) throws Exception {
+	public List<JSON> a(Object regex, Object func) throws Exception {
+		return link("a", "href", regex, func);
+	}
+
+	public List<JSON> link(String selector, String attr, Object regex) throws Exception {
+		return link(selector, attr, regex, null);
+	}
+
+	/**
+	 * find links
+	 * 
+	 * @param selector the html tag selector
+	 * @param attr     the tag's attribute
+	 * @param regex    the link's regex
+	 * @param func     callback function
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings({ "unchecked", "restriction", "rawtypes" })
+	public List<JSON> link(String selector, String attr, Object regex, Object func) throws Exception {
 
 		if (X.isEmpty(url))
 			throw new Exception("url is not setting");
 
+		List<String> r1 = X.asList(regex, s -> s.toString());
+
 		Set<String> hh = new HashSet<String>();
-		if (X.isEmpty(regex) || regex.length == 0 || X.isEmpty(regex[0])) {
+		if (X.isEmpty(r1) || X.isEmpty(r1.get(0))) {
 			hh.add(_server(url) + ".*");
 		} else {
 
-			for (String s : regex) {
+			for (String s : r1) {
 				String[] ss = X.split(s, "[;]");
 				for (String s1 : ss) {
 					hh.add(s1);
 				}
-
 			}
 		}
 
@@ -459,6 +425,15 @@ public final class Html {
 				}
 
 				href = _format(href);
+				if (func != null) {
+					Url u1 = Url.create(href);
+					if (func instanceof Consumer) {
+						((Consumer) func).accept(u1);
+					} else if (func instanceof JSObject) {
+						((JSObject) func).call(this, u1);
+					}
+					href = u1.encodedUrl();
+				}
 
 				if (!l2.containsKey(href) && _match(href, hh)) {
 					JSON a = JSON.create().append("href", href).append("text", e1.text());
@@ -508,13 +483,13 @@ public final class Html {
 		return url;
 	}
 
-	private String _format(String href, String... removals) {
+	private String _format(String href) {
 
 		if (X.isEmpty(href))
 			return null;
 
 		QueryString qs = new QueryString(href);
-		qs.remove(removals);
+//		qs.remove(removals);
 
 		return qs.toString();
 	}

@@ -29,7 +29,7 @@ class Optimizer implements Helper.IOptimizer {
 
 		if (w != null && !w.isEmpty()) {
 
-			log.debug("optimaizer, table=" + table + ", query=" + w);
+//			log.debug("optimaizer, table=" + table + ", query=" + w);
 
 			try {
 				List<LinkedHashMap<String, Integer>> l1 = w.sortkeys();
@@ -60,7 +60,7 @@ class Optimizer implements Helper.IOptimizer {
 								log.debug("optimaizer, table=" + table + ", sortkey exists, q=" + w);
 							}
 						} else {
-							log.debug("optimaizer, table=" + table + ", sortkey exists, q=" + w);
+//							log.debug("optimaizer, table=" + table + ", sortkey exists, q=" + w);
 						}
 					});
 				} else {

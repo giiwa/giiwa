@@ -16,10 +16,10 @@ public class Url {
 	private static Log log = LogFactory.getLog(Url.class);
 
 	String url;
-	String protocol = "http";
+	public String proto = "http";
 	String uri;
 	String ip;
-	String port = "";
+	public String port = "";
 
 	Map<String, String> query;
 
@@ -32,7 +32,7 @@ public class Url {
 	}
 
 	public Url setProtocol(String protocol) {
-		this.protocol = protocol;
+		this.proto = protocol;
 		this.url = null;
 		return this;
 
@@ -69,8 +69,8 @@ public class Url {
 		if (X.isEmpty(url)) {
 
 			StringBuilder sb = new StringBuilder();
-			if (!X.isEmpty(protocol)) {
-				sb.append(protocol).append("://");
+			if (!X.isEmpty(proto)) {
+				sb.append(proto).append("://");
 			}
 			if (!X.isEmpty(ip)) {
 				sb.append(ip);
@@ -102,8 +102,8 @@ public class Url {
 		return url;
 	}
 
-	public String getProtocol() {
-		return protocol;
+	public String getProto() {
+		return proto;
 	}
 
 	public String getIp() {
@@ -164,7 +164,7 @@ public class Url {
 			return false;
 		}
 
-		if (!X.isSame(this.protocol, u1.protocol)) {
+		if (!X.isSame(this.proto, u1.proto)) {
 			return false;
 		}
 
@@ -251,7 +251,7 @@ public class Url {
 		String s = url;
 		int i = s.indexOf("://");
 		if (i > 0) {
-			protocol = s.substring(0, i);
+			proto = s.substring(0, i);
 			s = s.substring(i + 3);
 		}
 
@@ -297,8 +297,8 @@ public class Url {
 
 	@Override
 	public String toString() {
-		return "Url [url=" + url + ", protocol=" + protocol + ", ip=" + ip + ", port=" + port + ", uri=" + uri
-				+ ", query=" + query + "]";
+		return "Url [url=" + url + ", proto=" + proto + ", ip=" + ip + ", port=" + port + ", uri=" + uri + ", query="
+				+ query + "]";
 	}
 
 	public Url clear() {
@@ -331,8 +331,8 @@ public class Url {
 
 	public String encodedUrl() {
 		StringBuilder sb = new StringBuilder();
-		if (!X.isEmpty(protocol)) {
-			sb.append(protocol).append("://");
+		if (!X.isEmpty(proto)) {
+			sb.append(proto).append("://");
 		}
 		if (!X.isEmpty(ip)) {
 			sb.append(ip);
@@ -361,8 +361,8 @@ public class Url {
 		return sb.toString();
 	}
 
-	public boolean isProtocol(String protocol) {
-		return X.isEmpty(this.protocol) || X.isSame("*", this.protocol) || X.isSame(this.protocol, protocol);
+	public boolean isProto(String protocol) {
+		return X.isEmpty(this.proto) || X.isSame("*", this.proto) || X.isSame(this.proto, protocol);
 	}
 
 	public static String encode(String url) {
