@@ -569,7 +569,7 @@ public class Controller {
 //			this.setHeader("Location", "/");
 
 			jo.put(X.MESSAGE, lang.get("login.required"));
-			jo.put(X.ERROR, lang.get("not.login"));
+			jo.put(X.ERROR, lang.get("login.required"));
 			this.send(jo);
 
 		} else {
@@ -2287,7 +2287,7 @@ public class Controller {
 	 * if the request is AJAX, then response json back to front
 	 */
 	public void deny() {
-		deny(null, null);
+		deny(null, lang.get("access.deny"));
 	}
 
 	/**
