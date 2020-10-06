@@ -29,8 +29,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 
-import jdk.nashorn.api.scripting.*;
-
 /**
  * The {@code Html} Class used to string to html, html to plain, or get images
  * from the html string.
@@ -353,32 +351,22 @@ public final class Html {
 	 * @throws Exception
 	 */
 	public List<JSON> a(Object regex) throws Exception {
-
-		return a(regex, null);
-
+		return link("a", "href", regex, (Consumer<Url>) null);
 	}
 
-	public List<JSON> a(Object regex, Object func) throws Exception {
+	public List<JSON> a(Object regex, Consumer<Url> func) throws Exception {
 		return link("a", "href", regex, func);
 	}
+
+//	public List<JSON> a(Object regex, JSObject func) throws Exception {
+//		return link("a", "href", regex, func);
+//	}
 
 	public List<JSON> link(String selector, String attr, Object regex) throws Exception {
 		return link(selector, attr, regex, null);
 	}
 
-	/**
-	 * find links
-	 * 
-	 * @param selector the html tag selector
-	 * @param attr     the tag's attribute
-	 * @param regex    the link's regex
-	 * @param func     callback function
-	 * @return
-	 * @throws Exception
-	 */
-	@SuppressWarnings({ "unchecked", "restriction", "rawtypes" })
-	public List<JSON> link(String selector, String attr, Object regex, Object func) throws Exception {
-
+	public List<JSON> link(String selector, String attr, Object regex, Consumer<Url> func) throws Exception {
 		if (X.isEmpty(url))
 			throw new Exception("url is not setting");
 
@@ -427,28 +415,41 @@ public final class Html {
 				href = _format(href);
 				if (func != null) {
 					Url u1 = Url.create(href);
-					if (func instanceof Consumer) {
-						((Consumer) func).accept(u1);
-					} else if (func instanceof JSObject) {
-						((JSObject) func).call(this, u1);
-					}
+					func.accept(u1);
 					href = u1.encodedUrl();
 				}
 
 				if (!l2.containsKey(href) && _match(href, hh)) {
-					JSON a = JSON.create().append("href", href).append("text", e1.text());
+					JSON a = JSON.create();
 					List<Attribute> l3 = e1.attributes().asList();
 					l3.forEach(e -> {
 						a.put(e.getKey(), e.getValue());
 					});
+					a.append("href", href).append("text", e1.text());
 					l2.put(href, a);
 				}
 			}
 		}
 
 		return new ArrayList<JSON>(l2.values());
-
 	}
+
+	/**
+	 * find links
+	 * 
+	 * @param selector the html tag selector
+	 * @param attr     the tag's attribute
+	 * @param regex    the link's regex
+	 * @param func     callback function
+	 * @return
+	 * @throws Exception
+	 */
+//	@SuppressWarnings({ "unchecked", "restriction", "rawtypes" })
+//	public List<JSON> link(String selector, String attr, Object regex, JSObject func) throws Exception {
+//		return link(selector, attr, regex, u -> {
+//			func.call(this, u);
+//		});
+//	}
 
 	private boolean _match(String href, Set<String> domains) {
 
@@ -501,17 +502,15 @@ public final class Html {
 	 */
 	public static void main(String[] args) {
 
-		String url = "https://www.af.mil/News/Features/";
+		String url = "https://www.af.mil/";
 		Http h = Http.create();
 		Http.Response r = h.get(url);
 		Html h1 = r.html();
 
-//		System.out.println(r.body);
-
-//		System.out.println("http://www.af.mil/News/Features/?Page=3".matches("http(s|)://www.af.mil/News/Features/.*"));
-
 		try {
-			List<JSON> l1 = h1.a("http(s|)://www.af.mil/News/Features/.*");
+			List<JSON> l1 = h1.a("http(s|)://www.af.mil/News/.*", u -> {
+				u.proto = "https";
+			});
 			l1.forEach(e -> {
 				System.out.println(e.get("href"));
 			});
