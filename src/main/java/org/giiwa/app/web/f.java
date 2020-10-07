@@ -293,6 +293,8 @@ public class f extends Controller {
 		try {
 
 			File f1 = Temp.get(id, name);
+			log.debug("f1=" + f1.getAbsolutePath());
+
 			if (!f1.exists()) {
 				this.notfound(name);
 				return;

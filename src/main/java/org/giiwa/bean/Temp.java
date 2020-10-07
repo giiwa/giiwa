@@ -92,6 +92,9 @@ public class Temp {
 	 * @return the Temp
 	 */
 	public static Temp create(String name) {
+
+		name = name.replaceAll(" ", "_").replaceAll("\\*", "_").replaceAll("\\?", "_");
+
 		return create(Controller.GIIWA_HOME, name);
 	}
 
@@ -141,8 +144,7 @@ public class Temp {
 	 * @return String of uri
 	 */
 	public String getUri() {
-		return "/f/" + ROOT + "/" + id + "/" + name + "?"
-				+ ((file == null || !file.exists()) ? 0 : file.lastModified());
+		return "/f" + ROOT + "/" + id + "/" + name + "?" + ((file == null || !file.exists()) ? 0 : file.lastModified());
 	}
 
 	public static File get(String id, String name) {
