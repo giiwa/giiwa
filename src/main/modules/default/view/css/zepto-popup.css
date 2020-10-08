@@ -1,0 +1,49 @@
+.zepto-popup {
+  background: rgba(0,0,0,0.65);
+  bottom: 0;
+  height: 100%;
+  left: 0;
+  position: fixed;
+  transition: all .3s;
+  -webkit-transition: all .3s;
+  transform: translate3d(0, 100%, 0);
+  -webkit-transform: translate3d(0, 100%, 0);
+  width: 100%;
+  z-index: 99;
+}
+
+.zepto-popup.show {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
+.zepto-popup > .z-popup {
+  background: white;
+  bottom: 0;
+  overflow-y: auto; 
+  position: absolute;
+  width: 100%;
+  z-index: 100;
+}
+
+.zepto-popup-toast {
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 5px;
+  bottom: 50px;
+  color: white;
+  left: 50%;
+  min-width: 160px;
+  padding: 10px 15px;
+  position: fixed;
+  transition: all .3s;
+  -webkit-transition: all .3s;
+  text-align: center;
+  transform: translate3d(-50%, 0, 0) scale3d(0, 0, 0);
+  -webkit-transform: translate3d(-50%, 0, 0) scale3d(0, 0, 0);
+  z-index: 101;
+}
+
+.zepto-popup-toast.show {
+  transform: translate3d(-50%, 0, 0) scale3d(1, 1, 1);
+  -webkit-transform: translate3d(-50%, 0, 0) scale3d(1, 1, 1);
+}

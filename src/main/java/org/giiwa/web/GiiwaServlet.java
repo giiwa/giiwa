@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.License;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
@@ -62,8 +61,9 @@ public class GiiwaServlet extends HttpServlet {
 //			uri = uri.replaceAll("//", "/");
 //		}
 
-		if (log.isDebugEnabled())
-			log.debug(req.getMethod() + " - " + uri);
+		if (log.isDebugEnabled()) {
+			log.debug(req.getMethod() + " - " + uri + " - " + _ip(req));
+		}
 
 		if (_domain == null) {
 			_domain = Global.getString("cross.domain", "");
@@ -77,11 +77,37 @@ public class GiiwaServlet extends HttpServlet {
 			Controller.process(uri, r1, r2, req.getMethod(), t);
 		} finally {
 			if (log.isInfoEnabled())
-				log.info(r1.getMethod() + " - " + uri + ", cost=" + t.past());
+				log.info(r1.getMethod() + " - " + uri + ", cost=" + t.past() + " - " + _ip(req));
 		}
 
 	}
 
 	private static String _domain = null;
+
+	private String _ip(HttpServletRequest req) {
+
+		StringBuilder sb = new StringBuilder();
+
+		String remote = req.getHeader("X-Real-IP");
+		if (!X.isEmpty(remote)) {
+			sb.append(remote);
+		}
+
+		remote = req.getHeader("X-Forwarded-For");
+		if (!X.isEmpty(remote)) {
+			if (sb.length() > 0)
+				sb.append("->");
+			sb.append(remote);
+		}
+
+		remote = req.getRemoteAddr();
+		if (!X.isEmpty(remote)) {
+			if (sb.length() > 0)
+				sb.append("->");
+			sb.append(remote);
+		}
+
+		return sb.toString();
+	}
 
 }
