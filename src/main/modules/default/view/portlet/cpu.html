@@ -9,7 +9,7 @@ $(function(){
 	        type: 'area'
 	    },
 	    title: {
-	        text: '$lang.get("portlet.cpu.title")(%)'
+	        text: "$lang.get('portlet.cpu.title')($!temp)"
 	    },
 	    xAxis: {
 	    		type: 'datetime'
@@ -49,6 +49,9 @@ $(function(){
 		if($('#cpu_$!requestid').length > 0) {
 			$.post('/portlet/cpu/data?__node=$!__node', {}, function(d){
 				if(d.state == 200) {
+					if(d.temp) {
+						t.setTitle({text:"$lang.get('portlet.cpu.title')(" + d.temp + ")"});
+					}
 					var series=t.series; 
 			        while(series.length > 0){
 			          	series[0].remove(false); 

@@ -51,6 +51,9 @@ public class _CPU extends Bean {
 	@Column(memo = "空闲")
 	double idle;
 
+	@Column(memo = "温度")
+	public String temp;
+
 	public int getUsage() {
 		return X.toInt(usage);
 	}

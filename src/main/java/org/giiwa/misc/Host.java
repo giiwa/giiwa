@@ -380,4 +380,20 @@ public class Host {
 		return l1;
 	}
 
+	public static String getCpuTemp() {
+		try {
+			String s = Shell.run("sensors", 10 * 1000);
+			StringFinder sf = StringFinder.create(s);
+
+			String temp = sf.get("Core 0:", "(high =");
+			if (!X.isEmpty(temp)) {
+				temp = temp.trim();
+			}
+			return temp;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return X.EMPTY;
+	}
+
 }

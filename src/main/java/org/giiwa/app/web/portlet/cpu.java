@@ -20,6 +20,9 @@ public class cpu extends portlet {
 		Beans<_CPU.Record> bs = _CPU.Record.dao.load(W.create("node", Local.id())
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
+
+			this.set("temp", bs.get(0).temp);
+
 			Collections.reverse(bs);
 
 			this.set("list", bs);
@@ -33,9 +36,10 @@ public class cpu extends portlet {
 		Beans<_CPU.Record> bs = _CPU.Record.dao.load(W.create("node", Local.id())
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
-			Collections.reverse(bs);
 
-			this.set("list", bs);
+			String temp = bs.get(0).temp;
+
+			Collections.reverse(bs);
 
 			JSON p = JSON.create();
 			p.append("name", lang.get("cpu.usage")).append("color", "#860606");
@@ -44,7 +48,8 @@ public class cpu extends portlet {
 				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.getUsage()));
 			});
 			p.append("data", l1);
-			this.send(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p)));
+
+			this.send(JSON.create().append(X.STATE, 200).append("temp", temp).append("data", Arrays.asList(p)));
 			return;
 		}
 		this.send(JSON.create().append(X.STATE, 201));
@@ -59,7 +64,10 @@ public class cpu extends portlet {
 				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", -1), 0, 24 * 60 * 2);
 
 		if (bs != null && !bs.isEmpty()) {
+
+			this.set("temp", bs.get(0).temp);
 			Collections.reverse(bs);
+
 			this.set("list", bs);
 		}
 		this.show("/portlet/cpu.more.html");
