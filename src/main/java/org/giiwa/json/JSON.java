@@ -175,7 +175,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 			_refine(j);
 
 			if (j != null) {
-				for (String name : j.keySet().toArray(new String[j.size()])) {
+				Set<String> ss = j.keySet();
+				for (String name : ss) {
 					Object o = j.get(name);
 					if (o == null) {
 						j.remove(name);
