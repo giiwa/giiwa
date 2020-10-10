@@ -249,10 +249,13 @@ public final class Html {
 	 * @return the list of Elements
 	 */
 	public List<Element> find(String selector) {
-		return d.select(selector);
+		return select(selector);
 	}
 
 	public Elements select(String selector) {
+		if (d == null)
+			return null;
+
 		return d.select(selector);
 	}
 
