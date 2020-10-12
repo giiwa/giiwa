@@ -218,7 +218,7 @@ public class RDB {
 				if (log.isDebugEnabled())
 					log.debug("locale， default=" + oldlocale + ", set=" + Locale.getDefault());
 
-				Class.forName(D);
+//				Class.forName(D);
 				DriverManager.setLoginTimeout(10);
 				Connection conn = DriverManager.getConnection(url, username, passwd);
 				return conn;

@@ -2152,7 +2152,6 @@ public class Controller {
 	 * 2) else response notfound page or json to front-end according the request
 	 * type <br>
 	 * 
-	 * @deprecated
 	 */
 	public void notfound() {
 		notfound(null);

@@ -56,4 +56,10 @@ public @interface Table {
 	 */
 	String memo() default X.EMPTY;
 
+	/**
+	 * 
+	 * @return
+	 */
+	String method() default X.EMPTY;
+
 }
