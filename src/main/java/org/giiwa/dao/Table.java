@@ -51,12 +51,15 @@ public @interface Table {
 	String db() default Helper.DEFAULT;
 
 	/**
+	 * comment
 	 * 
 	 * @return
 	 */
 	String memo() default X.EMPTY;
 
 	/**
+	 * method list <br>
+	 * e.g.: "list, create, edit"
 	 * 
 	 * @return
 	 */

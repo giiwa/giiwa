@@ -11,6 +11,12 @@ import org.giiwa.dao.Helper.W;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
+/**
+ * simple controller for bean directly access db
+ * 
+ * @author joe
+ *
+ */
 public class beancontroller extends Controller {
 
 	@Path(path = "list", login = true)
@@ -52,6 +58,11 @@ public class beancontroller extends Controller {
 
 	}
 
+	/**
+	 * get query from request
+	 * 
+	 * @param q
+	 */
 	protected void _query(W q) {
 
 	}
@@ -118,6 +129,11 @@ public class beancontroller extends Controller {
 		this.set(X.MESSAGE, lang.get("save.success")).send(200);
 	}
 
+	/**
+	 * get data from request
+	 * 
+	 * @param v
+	 */
 	protected void _fetch(V v) {
 		// TODO Auto-generated method stub
 
