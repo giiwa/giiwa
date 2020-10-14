@@ -45,7 +45,7 @@
 	<classpathentry kind="lib" path="depends/mail-1.4.jar"/>
 	<classpathentry kind="lib" path="depends/Memcached-Java-Client-3.0.2.jar"/>
 	<classpathentry kind="lib" path="depends/metadata-extractor-2.9.1.jar"/>
-	<classpathentry kind="lib" path="depends/mongo-java-driver-3.11.1.jar"/>
+	<classpathentry kind="lib" path="depends/mongo-java-driver-3.12.7.jar"/>
 	<classpathentry kind="lib" path="depends/mysql-connector-java-8.0.16.jar"/>
 	<classpathentry kind="lib" path="depends/ognl-3.1.12.jar"/>
 	<classpathentry kind="lib" path="depends/ojdbc8.jar"/>
