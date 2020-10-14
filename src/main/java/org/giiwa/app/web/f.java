@@ -24,6 +24,7 @@ import org.giiwa.json.JSON;
 import org.giiwa.misc.Captcha;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.Url;
 import org.giiwa.task.Monitor;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
@@ -292,6 +293,7 @@ public class f extends Controller {
 
 		try {
 
+			name = Url.decode(name);
 			File f1 = Temp.get(id, name);
 			log.debug("f1=" + f1.getAbsolutePath());
 

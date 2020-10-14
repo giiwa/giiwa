@@ -47,7 +47,7 @@ public class Temp {
 
 	static Log log = LogFactory.getLog(Temp.class);
 
-	public static String ROOT = "/temp";
+	private final static String ROOT = "/temp";
 
 	/**
 	 * Initialize the Temp object, this will be invoke in giiwa startup.
