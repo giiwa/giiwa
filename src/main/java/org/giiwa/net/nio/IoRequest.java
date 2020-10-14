@@ -7,8 +7,8 @@ public class IoRequest {
 
 //	private static Log log = LogFactory.getLog(IoRequest.class);
 
-	public static final int BIG = 1024 * 32;
-	public static final int MID = 1024 * 16;
+	public static final int BIG = 1024 * 1024;
+	public static final int MID = 1024 * 32;
 	public static final int SMALL = 1024;
 
 	public static IoRequest create() {
@@ -86,7 +86,7 @@ public class IoRequest {
 	}
 
 	public void compact() {
-		
+
 		if (data.readerIndex() < 1024)
 			return;
 

@@ -204,9 +204,10 @@ public class Shell {
 				sb.append(line).append("\r\n");
 				line = re.readLine();
 			}
-
-		} finally {
 			t1.delete();
+		} catch (Exception e) {
+			log.error(cmd, e);
+		} finally {
 			X.close(re);
 			if (p != null) {
 				p.destroy();
