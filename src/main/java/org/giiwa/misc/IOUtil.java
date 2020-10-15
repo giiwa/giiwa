@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
+import org.giiwa.net.nio.IoRequest;
 
 /**
  * IO utility
@@ -273,7 +274,7 @@ public class IOUtil {
 			if (in == null || out == null)
 				return 0;
 
-			byte[] bb = new byte[1024 * 32];
+			byte[] bb = new byte[IoRequest.BIG];
 			int total = 0;
 
 			// log.debug("skip=" + start);
@@ -321,7 +322,7 @@ public class IOUtil {
 			if (in == null || out == null)
 				return 0;
 
-			byte[] bb = new byte[1024 * 128];
+			byte[] bb = new byte[IoRequest.BIG];
 			int total = 0;
 			int len = in.read(bb);
 			while (len > 0) {
@@ -508,7 +509,8 @@ public class IOUtil {
 	}
 
 	/**
-	 * @deprecated <br> replace by readcsv
+	 * @deprecated <br>
+	 *             replace by readcsv
 	 * @param re
 	 * @return
 	 * @throws IOException

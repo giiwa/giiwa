@@ -69,7 +69,7 @@ public class StringFinder {
 	 * @return int the position
 	 */
 	public int find(String sub) {
-		int s1 = s != null ? s.indexOf(sub, pos) : -1;
+		int s1 = s != null ? s.toLowerCase().indexOf(sub.toLowerCase(), pos) : -1;
 		if (s1 > -1) {
 			pos = s1;
 		}
@@ -84,6 +84,15 @@ public class StringFinder {
 	 */
 	public String nextTo(String deli) {
 		return get(deli);
+	}
+
+	public String get(int len) {
+
+		String s1 = null;
+		s1 = s.substring(pos, pos + len);
+		pos += len;
+
+		return s1.trim();
 	}
 
 	public String get(String end) {

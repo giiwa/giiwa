@@ -7,7 +7,7 @@ public class IoRequest {
 
 //	private static Log log = LogFactory.getLog(IoRequest.class);
 
-	public static final int BIG = 1024 * 1024;
+	public static final int BIG = 4 * 1024 * 1024;
 	public static final int MID = 1024 * 32;
 	public static final int SMALL = 1024;
 
