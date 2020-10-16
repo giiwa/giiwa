@@ -79,7 +79,7 @@ giiwa
 			
 			upload : function(files, opt) {
 				opt = $.extend({
-					chunksize : 32 * 1024
+					chunksize : 1024 * 1024
 				}, opt);
 
 				// console.log(files);
