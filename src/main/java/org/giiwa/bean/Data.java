@@ -132,6 +132,16 @@ public class Data extends Bean {
 	 * @param q     the query
 	 * @return the number impacted
 	 */
+	public static int delete(String table, W q) {
+		return Helper.delete(table, q);
+	}
+
+	/**
+	 * @deprecated
+	 * @param table
+	 * @param q
+	 * @return
+	 */
 	public static int remove(String table, W q) {
 		return Helper.delete(table, q);
 	}

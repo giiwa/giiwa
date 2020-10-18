@@ -92,7 +92,6 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param n      the n
 	 * @return the int
 	 */
-	@SuppressWarnings("deprecation")
 	public static int insertOrUpdate(String module, String date, SIZE size, W q0, V v, long... n) {
 		if (v == null) {
 			v = V.create();
@@ -102,24 +101,24 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		try {
 			String table = table(module);
-			W q = W.create().copy(v).and("date", date).and("size", size.toString()).and("module", module);
+			W q = q0.and("date", date).and("size", size.toString()).and("module", module);
 
-			if (!Helper.exists(q, table, Helper.DEFAULT)) {
+			if (!Helper.exists(table, q)) {
 
 				long id = UID.hash(module + "_" + date + "_" + size + "_" + q0.toString());
-				if (Helper.exists(W.create(X.ID, id), table, Helper.DEFAULT)) {
+				if (Helper.exists(table, W.create(X.ID, id))) {
 					// update
 					for (int i = 0; i < n.length; i++) {
 						v.set("n" + i, n[i]);
 					}
-					Helper.update(table, W.create(X.ID, id), v, Helper.DEFAULT);
+					Helper.update(table, W.create(X.ID, id), v);
 				} else {
 					v.append("date", date).force(X.ID, id).append("size", size.toString()).append("module", module);
 					for (int i = 0; i < n.length; i++) {
 						v.set("n" + i, n[i]);
 					}
 
-					return Helper.insert(v, table, Helper.DEFAULT);
+					return Helper.insert(table, v);
 				}
 
 			} else {
@@ -264,7 +263,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		}
 
 		Stat s1 = Helper.load(table, q.and("module", name + "." + Stat.TYPE.snapshot).and("size", size.toString())
-				.and("time", time, W.OP.lt).sort("time", -1), Stat.class);
+				.and("date", date, W.OP.lt).sort("time", -1), Stat.class);
 
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
@@ -358,8 +357,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 		String table = table(name);
 
 		Stat s1 = Helper.load(table, q.and("module", name + "." + TYPE.snapshot).and("size", size.toString())
-				.and("time", time, W.OP.lt).sort("time", -1), Stat.class);
-		
+				.and("date", date, W.OP.lt).sort("time", -1), Stat.class);
+
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
 			d[i] = s1 == null ? n[i] : n[i] - s1.getLong("n" + i);

@@ -224,13 +224,22 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			if (value == null) {
 				data.remove(name);
 			} else {
+
 				if (value instanceof Date) {
 					data.put(name, ((Date) value).getTime());
 				} else if (value instanceof Timestamp) {
 					data.put(name, ((Timestamp) value).getTime());
+				} else if (value instanceof Number) {
+					Number n = (Number) value;
+					if (n.toString().indexOf(".") > -1) {
+						data.put(name, n.doubleValue());
+					} else {
+						data.put(name, n.longValue());
+					}
 				} else {
 					data.put(name, value);
 				}
+
 			}
 		}
 		return old;
@@ -520,6 +529,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			map_obj = new HashMap<String, Object>();
 			if (data != null && data.size() > 0) {
 				map_obj.putAll(data);
+//				for (String s1 : map_obj.keySet()) {
+//					log.debug(s1 + "=" + map_obj.get(s1) + ", " + map_obj.get(s1).getClass());
+//				}
 			}
 
 			Map<String, Field> m2 = getFields();
@@ -590,9 +602,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 */
 	public JSON json() {
 
-		JSON json_obj = new JSON();
-
-		json_obj.putAll(getAll());
+		JSON json_obj = JSON.fromObject(getAll());
 
 		json_obj.scan((j1, e) -> {
 			Object o = e.getValue();
