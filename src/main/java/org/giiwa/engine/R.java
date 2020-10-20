@@ -26,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Config;
-import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
@@ -278,6 +277,7 @@ public class R extends IStub {
 				Temp t = Temp.create("a.txt");
 				File f = t.getFile();
 				f.getParentFile().mkdirs();
+				
 //				sb.append(func + "<-function(){\n");
 				sb.append("sink(file=\"" + f.getAbsolutePath() + "\");\n");
 				sb.append(code).append("\nsink(file=NULL)\n");
