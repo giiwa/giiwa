@@ -536,7 +536,9 @@ public abstract class Task implements Runnable, Serializable {
 				onStop(fast);
 			}
 		} else {
-			onStop(fast);
+			log.warn("who is null, stop failed, name=" + this.getName());
+
+//			onStop(fast);
 		}
 	}
 
