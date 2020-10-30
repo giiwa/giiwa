@@ -347,18 +347,18 @@ public final class Http {
 	 * @param timeout the timeout
 	 * @return Response
 	 */
-	public Response get(String url, JSON headers, long timeout) {
+	public Response get(String url, JSON head, long timeout) {
 
 		TimeStamp t = TimeStamp.create();
 
 		try {
 			if (log.isDebugEnabled())
-				log.debug("url=\"" + url + "\"");
+				log.debug("url=\"" + url + "\", head=" + head);
 
 			String[] ss = url.split(" ");
 			url = ss[ss.length - 1];
 
-			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+			String ua = (head != null && head.containsKey("user-agent")) ? head.getString("user-agent") : _UA();
 			if (client == null) {
 				client = getClient(url, ua, timeout);
 			}
@@ -379,9 +379,9 @@ public final class Http {
 				try {
 					get = new HttpGet(url);
 
-					if (headers != null && headers.size() > 0) {
-						for (String s : headers.keySet()) {
-							get.addHeader(s, headers.getString(s));
+					if (head != null && head.size() > 0) {
+						for (String s : head.keySet()) {
+							get.addHeader(s, head.getString(s));
 						}
 					}
 
@@ -708,13 +708,13 @@ public final class Http {
 	 * POST method.
 	 *
 	 * @param url     the url
-	 * @param headers the headers
+	 * @param head    the headers
 	 * @param params  the params
 	 * @param timeout the timeout
 	 * @return Response
 	 */
-	public Response post(String url, JSON headers, JSON params, long timeout) {
-		return post(url, headers, params, null, (InputStream) null, timeout);
+	public Response post(String url, JSON head, JSON params, long timeout) {
+		return post(url, head, params, null, (InputStream) null, timeout);
 	}
 
 	public Response open(String url, Consumer<HttpURLConnection> func) {
@@ -776,7 +776,7 @@ public final class Http {
 	 * @param timeout the timeout
 	 * @return Response
 	 */
-	public Response post(String url, JSON headers, JSON body, String name, InputStream in, long timeout) {
+	public Response post(String url, JSON head, JSON body, String name, InputStream in, long timeout) {
 
 		TimeStamp t = TimeStamp.create();
 
@@ -784,9 +784,9 @@ public final class Http {
 
 		try {
 			if (log.isDebugEnabled())
-				log.debug("url=" + url);
+				log.debug("url=" + url + ", head=" + head);
 
-			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+			String ua = (head != null && head.containsKey("user-agent")) ? head.getString("user-agent") : _UA();
 
 			if (client == null) {
 				client = getClient(url, ua, timeout);
@@ -803,11 +803,11 @@ public final class Http {
 				CloseableHttpResponse resp = null;
 				try {
 
-					if (headers != null && headers.size() > 0) {
+					if (head != null && head.size() > 0) {
 						if (log.isDebugEnabled())
-							log.debug("header: " + headers);
-						for (String s : headers.keySet()) {
-							post.addHeader(s, headers.getString(s));
+							log.debug("head: " + head);
+						for (String s : head.keySet()) {
+							post.addHeader(s, head.getString(s));
 						}
 					}
 
@@ -1469,7 +1469,7 @@ public final class Http {
 	 * @author joe
 	 *
 	 */
-	public class Response {
+	public static class Response {
 
 		/**
 		 * 状态
