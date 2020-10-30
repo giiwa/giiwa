@@ -51,6 +51,8 @@ public class GiiwaServlet extends HttpServlet {
 		if (!X.INITED)
 			throw new IOException("not inited");
 
+		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+
 		TimeStamp t = TimeStamp.create();
 
 		HttpServletRequest r1 = (HttpServletRequest) req;

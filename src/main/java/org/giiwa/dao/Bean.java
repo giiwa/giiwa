@@ -316,7 +316,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return Object the value of the name, return null if the name not exists
 	 */
 	@Override
-	public final Object get(Object name) {
+	public Object get(Object name) {
 		if (name == null) {
 			return null;
 		}
