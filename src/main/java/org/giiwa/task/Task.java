@@ -1010,6 +1010,7 @@ public abstract class Task implements Runnable, Serializable {
 					Thread th = new Thread(r);
 					th.setContextClassLoader(Thread.currentThread().getContextClassLoader());
 					th.setName("gi-sys-" + i.incrementAndGet());
+					th.setPriority(Thread.MAX_PRIORITY);
 					return th;
 				}
 
