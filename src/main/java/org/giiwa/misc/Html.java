@@ -415,7 +415,8 @@ public final class Html {
 					href = href.substring(0, i);
 				}
 
-				href = _format(href);
+				href = format(href);
+
 				if (func != null) {
 					Url u1 = Url.create(href);
 					func.accept(u1);
@@ -435,6 +436,37 @@ public final class Html {
 		}
 
 		return new ArrayList<JSON>(l2.values());
+	}
+
+	/**
+	 * 格式化链接
+	 * 
+	 * @param href
+	 * @return
+	 */
+	public String format(String href) {
+		if (href.startsWith("//")) {
+			href = _protocol(url) + href;
+		} else if (href.startsWith("/")) {
+			href = _server(url) + href;
+		} else if (href.startsWith("?")) {
+			href = _path2(url) + href;
+		} else if (!href.startsWith("http")) {
+			href = _path(url) + href;
+		}
+		int i = href.indexOf("#");
+		if (i > 0) {
+			href = href.substring(0, i);
+		}
+
+		if (X.isEmpty(href))
+			return null;
+
+		QueryString qs = new QueryString(href);
+//		qs.remove(removals);
+
+		return qs.toString();
+
 	}
 
 	/**
@@ -485,17 +517,6 @@ public final class Html {
 			return url.substring(0, i);
 		}
 		return url;
-	}
-
-	private String _format(String href) {
-
-		if (X.isEmpty(href))
-			return null;
-
-		QueryString qs = new QueryString(href);
-//		qs.remove(removals);
-
-		return qs.toString();
 	}
 
 	/**
