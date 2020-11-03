@@ -164,6 +164,19 @@ public final class X {
 			return true;
 		}
 
+		if (s1 instanceof Number && s2 instanceof Number) {
+			if ((s1 instanceof Short || s1 instanceof Integer || s1 instanceof Long)
+					&& (s2 instanceof Short || s2 instanceof Integer || s2 instanceof Long)) {
+				return X.toLong(s1) == X.toLong(s2);
+			}
+
+			if ((s1 instanceof Float || s1 instanceof Double) && (s2 instanceof Float || s2 instanceof Double)) {
+				double d1 = X.toDouble(s1);
+				double d2 = X.toDouble(s2);
+				return d1 > (d2 - 0.0000000001) && d1 < (d2 + 0.0000000001);
+			}
+		}
+
 		return s1.equals(s2);
 
 	}

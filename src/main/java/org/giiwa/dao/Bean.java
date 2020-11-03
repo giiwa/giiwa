@@ -706,7 +706,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			Object v0 = get(name);
 			Object v1 = v.value(name);
 			if (!X.isSame(v0, v1)) {
-				log.debug("name=" + name + ", v0=" + v0 + ", v1=" + v1);
+				log.debug("name=" + name + ", v0=" + v0 + "/" + v0.getClass() + ", v1=" + v1 + "/" + v1.getClass());
 				return false;
 			}
 		}
