@@ -2,10 +2,12 @@ package org.giiwa.net.client;
 
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.util.Properties;
 import java.util.Vector;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 import org.junit.Test;
 
@@ -17,18 +19,18 @@ public class SFTPTest {
 	public void list() {
 
 		init();
-		
+
 		try {
 
 			SFTP s = SFTP.create(Url.create("sftp://188.131.146.157:22?"));
-			Vector<LsEntry> l1 = s.list("/home/ftpuser1/data");
-			System.out.println(l1);
+			File[] l1 = s.list("/home/ftpuser1/data");
+			System.out.println(X.asList(l1, f -> ((File) f).getName()));
 
 			s.close();
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			fail(e.getMessage());
+//			fail(e.getMessage());
 		}
 
 	}

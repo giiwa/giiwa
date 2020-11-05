@@ -90,6 +90,8 @@ dependencies {
     compile files('lib/ojdbc8.jar')
     compile files('tomcat/lib/catalina.jar')
     compile files('tomcat/lib/servlet-api.jar')
+    
+    testCompile 'junit:junit:4.8.2'
 }
 
 task prepare(dependsOn: build) {

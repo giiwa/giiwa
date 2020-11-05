@@ -2,14 +2,17 @@ package org.giiwa.net.client;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Temp;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
@@ -18,7 +21,7 @@ import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import com.jcraft.jsch.SftpException;
+import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 
@@ -52,12 +55,20 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws JSchException
 	 */
-	public static SFTP create(Url url) throws JSchException {
-		SFTP s = new SFTP();
-		s.session = getSession(url);
-		s.sftp = (ChannelSftp) s.session.openChannel("sftp");
-		s.sftp.connect();
-		return s;
+	public static SFTP create(Url url) throws IOException {
+		try {
+			SFTP s = new SFTP();
+			s.session = getSession(url);
+			s.sftp = (ChannelSftp) s.session.openChannel("sftp");
+			s.sftp.connect();
+			return s;
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
+
+	public boolean put(String filename, InputStream in) throws IOException {
+		return put(new File(filename), in);
 	}
 
 	/**
@@ -66,94 +77,203 @@ public class SFTP implements Closeable {
 	 * 
 	 * @param filename
 	 * @param in
-	 * @throws SftpException
+	 * @throws IOException
 	 */
-	public void put(String filename, InputStream in) throws SftpException {
+	public boolean put(File f, InputStream in) throws IOException {
 
-		log.debug("sftp put, filename=" + filename);
+		try {
+			log.debug("sftp put, filename=" + f.getAbsolutePath());
 
-		File f = new File(filename);
-		String path = f.getParent();
-		log.debug("cd " + path);
+			String path = f.getParent();
+			log.debug("cd " + path);
 
-		sftp.cd(path);
-		sftp.put(in, f.getName());
+			sftp.cd(path);
+			sftp.put(in, f.getName());
+			return true;
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
 
 	}
 
-	/**
-	 * 
-	 * @param url
-	 * @param src
-	 * @param dest
-	 * @throws SftpException
-	 * @throws FileNotFoundException
-	 */
-	public void get(String src, String dest) throws SftpException, FileNotFoundException {
+	public Temp get(String filename) throws IOException {
+		File f = new File(filename);
+		Temp t = Temp.create(f.getName());
+		get(f, t.getFile().getAbsolutePath());
+		return t;
+	}
+
+	public void get(String filename, String dest) throws IOException {
 		OutputStream out = null;
 		try {
 			new File(dest).getParentFile().mkdirs();
 			out = new FileOutputStream(dest);
-			sftp.get(src, out);
+			sftp.get(filename, out);
+		} catch (Exception e) {
+			throw new IOException(e);
 		} finally {
 			X.close(out);
 		}
+	}
 
+	public void get(File filename, String dest) throws IOException {
+		get(filename.getAbsolutePath(), dest);
 	}
 
 	@SuppressWarnings("unchecked")
-	public Vector<LsEntry> list(String src) throws SftpException {
-		return sftp.ls(src);
+	public File[] list(String src) throws IOException {
+
+		try {
+			List<File> l1 = new ArrayList<File>();
+			Vector<LsEntry> l2 = sftp.ls(src);
+			_toFile(src, l1, l2);
+			return l1.toArray(new File[l1.size()]);
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
 	}
 
-	public void rm(String src) throws SftpException {
-		sftp.rm(src);
+	private void _toFile(String path, List<File> l1, Vector<LsEntry> ff) {
+
+		while (path.endsWith("/") && path.length() > 1) {
+			path = path.substring(0, path.length() - 1);
+		}
+
+		if (ff != null) {
+			for (LsEntry f : ff) {
+				File f1 = new File(path + "/" + f.getFilename()) {
+
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public boolean exists() {
+						return true;
+					}
+
+					@Override
+					public boolean isDirectory() {
+						SftpATTRS att = f.getAttrs();
+						return att.isDir();
+					}
+
+					@Override
+					public boolean isFile() {
+						SftpATTRS att = f.getAttrs();
+						return !att.isDir();
+					}
+
+					@Override
+					public long length() {
+						SftpATTRS att = f.getAttrs();
+						return att.getSize();
+					}
+
+					@Override
+					public boolean delete() {
+						try {
+							rm(this.getAbsolutePath());
+							return true;
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+						return false;
+					}
+
+					@Override
+					public String[] list() {
+						return null;
+					}
+
+					@Override
+					public File[] listFiles() {
+						try {
+							return SFTP.this.list(this.getAbsolutePath());
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+						return null;
+					}
+
+					@Override
+					public boolean renameTo(File dest) {
+						try {
+							sftp.rename(this.getAbsolutePath(), dest.getAbsolutePath());
+							return true;
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+						return false;
+					}
+
+				};
+				l1.add(f1);
+			}
+		}
 	}
 
-	public void rmdir(String src) throws SftpException {
-		sftp.rmdir(src);
+	public void rm(String src) throws IOException {
+		try {
+			sftp.rm(src);
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
 	}
 
-	private static Session getSession(Url url) throws JSchException {
+	public void rmdir(String src) throws IOException {
+		try {
+			sftp.rmdir(src);
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+	}
+
+	private static Session getSession(Url url) throws IOException {
 
 		JSch jsch = new JSch();
 
-		Session session = jsch.getSession(url.get("username"), url.getIp(), url.getPort(22));
-		session.setPassword(url.get("passwd"));
+		try {
+			Session session = jsch.getSession(url.get("username"), url.getIp(), url.getPort(22));
+			session.setPassword(url.get("passwd"));
 
-		UserInfo ui = new MyUserInfo() {
+			UserInfo ui = new MyUserInfo() {
 
-			@Override
-			public boolean promptPassphrase(String message) {
-				if (log.isDebugEnabled())
-					log.debug("promptPassphrase:" + message);
-				return true;
+				@Override
+				public boolean promptPassphrase(String message) {
+					if (log.isDebugEnabled())
+						log.debug("promptPassphrase:" + message);
+					return true;
+				}
+
+				@Override
+				public void showMessage(String message) {
+					if (log.isDebugEnabled())
+						log.debug("showMessage:" + message);
+				}
+
+				@Override
+				public boolean promptYesNo(String message) {
+					if (log.isDebugEnabled())
+						log.debug("promptYesNo:" + message);
+					return true;
+				}
+
+			};
+
+			session.setUserInfo(ui);
+			// session.connect();
+			session.connect(30 * 1000);
+
+			if (session.isConnected()) {
+				return session;
 			}
-
-			@Override
-			public void showMessage(String message) {
-				if (log.isDebugEnabled())
-					log.debug("showMessage:" + message);
-			}
-
-			@Override
-			public boolean promptYesNo(String message) {
-				if (log.isDebugEnabled())
-					log.debug("promptYesNo:" + message);
-				return true;
-			}
-
-		};
-
-		session.setUserInfo(ui);
-		// session.connect();
-		session.connect(30 * 1000);
-
-		if (session.isConnected()) {
-			return session;
-		} else {
-			throw new JSchException("connect failed!");
+		} catch (Exception e) {
+			throw new IOException(e);
 		}
+
+		throw new IOException("connect failed!");
 	}
 
 	private static abstract class MyUserInfo implements UserInfo, UIKeyboardInteractive {
