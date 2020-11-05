@@ -22,9 +22,9 @@ public class SFTPTest {
 
 		try {
 
-			SFTP s = SFTP.create(Url.create("sftp://188.131.146.157:22?"));
-			File[] l1 = s.list("/home/ftpuser1/data");
-			System.out.println(X.asList(l1, f -> ((File) f).getName()));
+			SFTP s = SFTP.create(Url.create("sftp://g14"));
+			File[] l1 = s.list("/home/demo");
+			System.out.println(X.asList(l1, f -> ((File) f).getAbsolutePath()));
 
 			s.close();
 

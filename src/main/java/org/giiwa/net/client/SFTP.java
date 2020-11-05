@@ -141,6 +141,9 @@ public class SFTP implements Closeable {
 
 		if (ff != null) {
 			for (LsEntry f : ff) {
+				if (X.isIn(f.getFilename(), ".", ".."))
+					continue;
+
 				File f1 = new File(path + "/" + f.getFilename()) {
 
 					/**

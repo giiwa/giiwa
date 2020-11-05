@@ -14,6 +14,7 @@ import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.giiwa.bean.Temp;
+import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
 public class FTP {
@@ -74,6 +75,9 @@ public class FTP {
 
 		if (ff != null) {
 			for (FTPFile f : ff) {
+				if (X.isIn(f.getName(), ".", ".."))
+					continue;
+
 				File f1 = new File(path + "/" + f.getName()) {
 
 					/**
