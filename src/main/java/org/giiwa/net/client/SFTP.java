@@ -46,6 +46,12 @@ public class SFTP implements Closeable {
 
 	}
 
+	/**
+	 * 
+	 * @param url, sftp://g01:22?username=,passwd=
+	 * @return
+	 * @throws JSchException
+	 */
 	public static SFTP create(Url url) throws JSchException {
 		SFTP s = new SFTP();
 		s.session = getSession(url);

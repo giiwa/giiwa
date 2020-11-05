@@ -28,7 +28,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.net.ftp.FTPClient;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
@@ -433,13 +432,13 @@ public class backup extends Controller {
 					if (url.startsWith("ftp://")) {
 
 						Url u = Url.create(url);
-						FTPClient f1 = FTP.login(u);
+						FTP f1 = FTP.connect(u);
 						if (f1 != null) {
 							InputStream in = new FileInputStream(t.getFile());
 							try {
 								log.debug("ftp put, filename=" + u.get("path") + "/" + name);
 
-								f1.appendFile(u.get("path") + "/" + name, in);
+								f1.put(u.get("path") + "/" + name, in);
 
 								GLog.applog.info("backup", "auto", "backup success, name=" + name + ".zip", null, null);
 							} finally {

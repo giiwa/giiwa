@@ -254,7 +254,7 @@ public class Temp {
 		return new ZipOutputStream(this.getOutputStream());
 	}
 
-	public OutputStream getOutputStream() throws Exception {
+	public OutputStream getOutputStream() throws IOException {
 		File f1 = this.getFile();
 		f1.getParentFile().mkdirs();
 		return new FileOutputStream(f1);
