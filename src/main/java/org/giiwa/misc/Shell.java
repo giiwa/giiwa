@@ -186,24 +186,27 @@ public class Shell {
 			out.println(cmd);
 			out.close();
 
-			Runtime.getRuntime().exec("chmod ugo+x " + f.getAbsolutePath());
+			Shell.run("chmod ugo+x " + f.getAbsolutePath(), X.AMINUTE);
+//			Runtime.getRuntime().exec("chmod ugo+x " + f.getAbsolutePath());
 
-			p = Runtime.getRuntime().exec(f.getAbsolutePath());
+			sb.append(Shell.run(f.getAbsolutePath(), timeout));
 
-			re = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String line = re.readLine();
-			while (line != null && t.pastms() < timeout) {
-				sb.append(line).append("\r\n");
-				line = re.readLine();
-			}
-			re.close();
-
-			re = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-			line = re.readLine();
-			while (line != null && t.pastms() < timeout) {
-				sb.append(line).append("\r\n");
-				line = re.readLine();
-			}
+//			p = Runtime.getRuntime().exec(f.getAbsolutePath());
+//
+//			re = new BufferedReader(new InputStreamReader(p.getInputStream()));
+//			String line = re.readLine();
+//			while (line != null && t.pastms() < timeout) {
+//				sb.append(line).append("\r\n");
+//				line = re.readLine();
+//			}
+//			re.close();
+//
+//			re = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+//			line = re.readLine();
+//			while (line != null && t.pastms() < timeout) {
+//				sb.append(line).append("\r\n");
+//				line = re.readLine();
+//			}
 			t1.delete();
 		} catch (Exception e) {
 			log.error(cmd, e);
