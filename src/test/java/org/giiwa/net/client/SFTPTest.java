@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 
-class SFTPTest {
+public class SFTPTest {
 
 	@Test
 	public void list() {

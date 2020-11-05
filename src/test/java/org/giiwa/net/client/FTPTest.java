@@ -3,20 +3,19 @@ package org.giiwa.net.client;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.util.Vector;
+import java.util.Properties;
 
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.PropertyConfigurator;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 import org.junit.Test;
 
-import com.jcraft.jsch.ChannelSftp.LsEntry;
-
-class FTPTest {
+public class FTPTest {
 
 	@Test
 	public void list() {
+
+		init();
 
 		try {
 
@@ -30,6 +29,19 @@ class FTPTest {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
+
+	}
+
+	public void init() {
+
+		Properties prop = new Properties();
+		prop.put("log4j.rootLogger", "WARN,Log1");
+		prop.put("log4j.appender.Log1", "org.apache.log4j.ConsoleAppender");
+		prop.put("log4j.appender.Log1.layout", "org.apache.log4j.PatternLayout");
+		prop.put("log4j.appender.G.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
+		prop.put("log4j.logger.org.giiwa", "debug");
+
+		PropertyConfigurator.configure(prop);
 
 	}
 
