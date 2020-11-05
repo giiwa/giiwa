@@ -149,7 +149,7 @@ public class FTP {
 	 * @param url the command
 	 * @return the FTPClient
 	 */
-	public static FTP connect(Url url) {
+	public static FTP create(Url url) {
 
 		FTPClient ftp = new FTPClient();
 		FTPClientConfig config = new FTPClientConfig();

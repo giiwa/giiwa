@@ -432,7 +432,7 @@ public class backup extends Controller {
 					if (url.startsWith("ftp://")) {
 
 						Url u = Url.create(url);
-						FTP f1 = FTP.connect(u);
+						FTP f1 = FTP.create(u);
 						if (f1 != null) {
 							InputStream in = new FileInputStream(t.getFile());
 							try {
@@ -443,6 +443,7 @@ public class backup extends Controller {
 								GLog.applog.info("backup", "auto", "backup success, name=" + name + ".zip", null, null);
 							} finally {
 								X.close(in);
+								f1.close();
 							}
 						}
 

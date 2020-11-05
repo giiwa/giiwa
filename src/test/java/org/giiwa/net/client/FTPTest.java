@@ -19,7 +19,7 @@ public class FTPTest {
 
 		try {
 
-			FTP s = FTP.connect(Url.create("ftp://188.131.146.157?username=ftpuser1&passwd=ftp@666"));
+			FTP s = FTP.create(Url.create("ftp://188.131.146.157?"));
 			File[] l1 = s.list("/home/ftpuser1");
 			System.out.println(X.asList(l1, f -> ((File) f).getName()));
 
