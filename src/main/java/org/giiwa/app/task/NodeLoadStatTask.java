@@ -18,7 +18,6 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.Stat;
-import org.giiwa.bean.Stat.SIZE;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
@@ -40,11 +39,6 @@ public class NodeLoadStatTask extends StatTask {
 	}
 
 	@Override
-	protected SIZE[] getSizes() {
-		return new Stat.SIZE[] { Stat.SIZE.min };
-	}
-
-	@Override
 	public void onFinish() {
 		this.schedule(X.AMINUTE, true);
 	}
@@ -55,7 +49,7 @@ public class NodeLoadStatTask extends StatTask {
 	}
 
 	@Override
-	protected void onStat(SIZE size, long start, long end, Object cat) {
+	protected void onStat(long start, long end, Object cat) {
 		if (cat == null)
 			return;
 
@@ -98,7 +92,7 @@ public class NodeLoadStatTask extends StatTask {
 			ff[14] = e.getLong("tcp_closewait");
 		}
 
-		Stat.snapshot(start, "node.load", size, W.create().and("dataid", id), V.create().append("dataid", id), ff);
+		Stat.snapshot(start, "node.load", W.create().and("dataid", id), V.create().append("dataid", id), ff);
 
 	}
 
