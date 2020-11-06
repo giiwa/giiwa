@@ -85,7 +85,7 @@ public class beancontroller extends Controller {
 
 		Data.insert(_table(), v);
 
-		this.set("id", v.value(X.ID)).send(200);
+		this.set("id", v.value(X.ID)).set(X.MESSAGE, lang.get("save.success")).send(200);
 	}
 
 	@Path(path = "detail", login = true)
