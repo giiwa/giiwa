@@ -92,7 +92,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param n      the n
 	 * @return the int
 	 */
-	public static int insertOrUpdate(String module, String date, SIZE size, W q0, V v, long... n) {
+	private static int insertOrUpdate(String module, String date, SIZE size, W q0, V v, long... n) {
 		if (v == null) {
 			v = V.create();
 		} else {
@@ -202,6 +202,14 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return c;
 	}
 
+	/**
+	 * @deprecated
+	 * @param time
+	 * @param name
+	 * @param sizes
+	 * @param v
+	 * @param n
+	 */
 	public static void delta(long time, String name, SIZE[] sizes, V v, long... n) {
 		if (sizes != null) {
 			for (SIZE size : sizes) {
@@ -251,7 +259,48 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return new long[] { 0, 0 };
 	}
 
+	/**
+	 * 
+	 * @param time
+	 * @param name
+	 * @param q
+	 * @param v
+	 * @param n
+	 */
+	public static void delta(long time, String name, W q, V v, long... n) {
+
+		_delta(time, name, SIZE.min, q, v, n);
+
+		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q.copy().and("time", time, W.OP.lte).sort("time", -1));
+
+		if (s1 != null) {
+			long[] n1 = new long[n.length];
+			for (int i = 0; i < n1.length; i++) {
+				n1[i] = s1.getLong("n" + i);
+			}
+
+			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
+					SIZE.season, SIZE.year }) {
+				_snapshot(time, name, s2, q, v, n1);
+			}
+		}
+
+	}
+
+	/**
+	 * @deprecated
+	 * @param time
+	 * @param name
+	 * @param size
+	 * @param q
+	 * @param v
+	 * @param n
+	 */
 	public static void delta(long time, String name, SIZE size, W q, V v, long... n) {
+		_delta(time, name, size, q, v, n);
+	}
+
+	private static void _delta(long time, String name, SIZE size, W q, V v, long... n) {
 
 		String date = format(time, size);
 		String table = table(name);
@@ -276,6 +325,15 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 	}
 
+	/**
+	 * @deprecated
+	 * @param time
+	 * @param name
+	 * @param sizes
+	 * @param q
+	 * @param v
+	 * @param n
+	 */
 	public static void snapshot(long time, String name, SIZE[] sizes, W q, V v, long... n) {
 		if (sizes != null) {
 			for (SIZE size : sizes) {
@@ -343,7 +401,36 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	/**
+	 * snapshot the stat
 	 * 
+	 * @param time
+	 * @param name
+	 * @param q
+	 * @param v
+	 * @param n
+	 */
+	public static void snapshot(long time, String name, W q, V v, long... n) {
+
+		_snapshot(time, name, SIZE.min, q, v, n);
+
+		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q.copy().and("time", time, W.OP.lte).sort("time", -1));
+
+		if (s1 != null) {
+			long[] n1 = new long[n.length];
+			for (int i = 0; i < n1.length; i++) {
+				n1[i] = s1.getLong("n" + i);
+			}
+
+			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
+					SIZE.season, SIZE.year }) {
+				_snapshot(time, name, s2, q, v, n1);
+			}
+		}
+
+	}
+
+	/**
+	 * @deprecated
 	 * @param time the long of the timestamp
 	 * @param name the string of the module name
 	 * @param size the SIZE
@@ -352,6 +439,10 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 * @param n    the data
 	 */
 	public static void snapshot(long time, String name, SIZE size, W q, V v, long... n) {
+		_snapshot(time, name, size, q, v, n);
+	}
+
+	private static void _snapshot(long time, String name, SIZE size, W q, V v, long... n) {
 
 		String date = format(time, size);
 		String table = table(name);
@@ -638,20 +729,20 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return hour;
 	}
 
-	@SuppressWarnings("deprecation")
 	public synchronized static int cleanup() {
 		if (rules == null) {
 			Configuration conf = Config.getConf();
-			rules = new Object[][] { new Object[] { SIZE.min, conf.getInt("stat.cleanup.min", 7) },
-					new Object[] { SIZE.m10, conf.getInt("stat.cleanup.m10", 2 * 365) },
-					new Object[] { SIZE.m15, conf.getInt("stat.cleanup.m15", 2 * 365) },
-					new Object[] { SIZE.m30, conf.getInt("stat.cleanup.m30", 2 * 365) },
-					new Object[] { SIZE.hour, conf.getInt("stat.cleanup.hour", 2 * 365) },
-					new Object[] { SIZE.day, conf.getInt("stat.cleanup.day", 2 * 365) },
-					new Object[] { SIZE.week, conf.getInt("stat.cleanup.week", 2 * 365) },
-					new Object[] { SIZE.month, conf.getInt("stat.cleanup.month", 5 * 365) },
-					new Object[] { SIZE.season, conf.getInt("stat.cleanup.season", 5 * 365) },
-					new Object[] { SIZE.year, conf.getInt("stat.cleanup.year", -1) } };
+			rules = new Object[][] { new Object[] { SIZE.min, conf.getInt("stat.cleanup.min", 31) },
+					new Object[] { SIZE.m10, conf.getInt("stat.cleanup.m10", 31) },
+					new Object[] { SIZE.m15, conf.getInt("stat.cleanup.m15", 31) },
+					new Object[] { SIZE.m30, conf.getInt("stat.cleanup.m30", 31) },
+					new Object[] { SIZE.hour, conf.getInt("stat.cleanup.hour", 365) },
+//					new Object[] { SIZE.day, conf.getInt("stat.cleanup.day", 20 * 365) },
+//					new Object[] { SIZE.week, conf.getInt("stat.cleanup.week", 20 * 365) },
+//					new Object[] { SIZE.month, conf.getInt("stat.cleanup.month", 20 * 365) },
+//					new Object[] { SIZE.season, conf.getInt("stat.cleanup.season", 20 * 365) },
+//					new Object[] { SIZE.year, conf.getInt("stat.cleanup.year", -1) },
+			};
 		}
 
 		int n = 0;
@@ -673,11 +764,11 @@ public class Stat extends Bean implements Comparable<Stat> {
 						W q = W.create();
 						q.and("size", s1.toString());
 						q.and("time", System.currentTimeMillis() - day * X.ADAY, W.OP.lt);
-						n += Helper.delete(q, name, Helper.DEFAULT);
+						n += Helper.delete(name, q);
 
-						long c1 = Helper.count(W.create(), name, Helper.DEFAULT);
+						long c1 = Helper.count(name, W.create());
 						if (c1 == 0) {
-							Helper.drop(name, Helper.DEFAULT);
+							Helper.drop(name);
 						}
 					}
 				}
