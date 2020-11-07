@@ -173,6 +173,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.delete(table, q, db);
 				} else if (!X.isEmpty(customs)) {
@@ -185,10 +189,6 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -3376,6 +3376,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.inc(table, q, name, n, v, db);
 
@@ -3392,10 +3396,6 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			write.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -3539,6 +3539,10 @@ public class Helper implements Serializable {
 		String db = getDB(t);
 		try {
 
+			if (monitor != null) {
+				monitor.query(db, table, q);
+			}
+
 			Cursor<T> cur = null;
 			if (primary != null && primary.getDB(db) != null) {
 				cur = primary.query(table, q, s, n, t, db);
@@ -3554,10 +3558,6 @@ public class Helper implements Serializable {
 			return BeanStream.create(cur);
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -3840,6 +3840,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.count(table, q, db);
 				} else if (!X.isEmpty(customs)) {
@@ -3856,10 +3860,6 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -3890,6 +3890,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.count(table, q, name, db);
 				} else if (!X.isEmpty(customs)) {
@@ -3906,10 +3910,6 @@ public class Helper implements Serializable {
 			return 0;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -3928,6 +3928,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.median(table, q, name, db);
 				} else if (!X.isEmpty(customs)) {
@@ -3944,10 +3948,6 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -4017,6 +4017,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.sum(table, q, name, db);
 				} else if (!X.isEmpty(customs)) {
@@ -4033,10 +4037,6 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -4068,6 +4068,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.max(table, q, name, db);
 				} else if (!X.isEmpty(customs)) {
@@ -4084,10 +4088,6 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -4169,6 +4169,10 @@ public class Helper implements Serializable {
 		try {
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.avg(table, q, name, db);
 				} else if (!X.isEmpty(customs)) {
@@ -4185,10 +4189,6 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -4251,6 +4251,10 @@ public class Helper implements Serializable {
 
 			if (table != null) {
 
+				if (monitor != null) {
+					monitor.query(db, table, q);
+				}
+
 				if (primary != null && primary.getDB(db) != null) {
 					return primary.distinct(table, name, q, db);
 
@@ -4268,10 +4272,6 @@ public class Helper implements Serializable {
 			return null;
 		} finally {
 			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
 
 		}
 	}
@@ -4656,6 +4656,11 @@ public class Helper implements Serializable {
 	public static List<JSON> count(String table, W q, String[] group, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
+
+			if (monitor != null) {
+				monitor.query(dbName, table, q);
+			}
+
 			if (primary != null && primary.getDB(dbName) != null) {
 				return primary.count(table, q, group, dbName, n);
 			} else if (!X.isEmpty(customs)) {
@@ -4698,6 +4703,10 @@ public class Helper implements Serializable {
 	public static List<JSON> count(String table, W q, String name, String[] group, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
+			if (monitor != null) {
+				monitor.query(dbName, table, q);
+			}
+
 			if (primary != null && primary.getDB(dbName) != null) {
 				return primary.count(table, q, name, group, dbName, n);
 			} else if (!X.isEmpty(customs)) {
@@ -4738,6 +4747,11 @@ public class Helper implements Serializable {
 	public static List<JSON> sum(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
+
+			if (monitor != null) {
+				monitor.query(dbName, table, q);
+			}
+
 			if (primary != null && primary.getDB(dbName) != null) {
 				return primary.sum(table, q, name, group, dbName);
 			} else if (!X.isEmpty(customs)) {
@@ -4780,6 +4794,11 @@ public class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
+
+			if (monitor != null) {
+				monitor.query(dbName, table, q);
+			}
+
 			if (primary != null && primary.getDB(dbName) != null) {
 				return primary.aggregate(table, func, q, group, dbName);
 			} else if (!X.isEmpty(customs)) {
@@ -4820,6 +4839,10 @@ public class Helper implements Serializable {
 	public static List<JSON> min(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
+
+			if (monitor != null) {
+				monitor.query(dbName, table, q);
+			}
 
 			if (primary != null && primary.getDB(dbName) != null) {
 				return primary.min(table, q, name, group, dbName);
@@ -4862,6 +4885,11 @@ public class Helper implements Serializable {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
+
+			if (monitor != null) {
+				monitor.query(dbName, table, q);
+			}
+
 			if (primary != null && primary.getDB(dbName) != null) {
 				return primary.max(table, q, name, group, dbName);
 			} else if (!X.isEmpty(customs)) {
@@ -4902,6 +4930,11 @@ public class Helper implements Serializable {
 	public static List<JSON> avg(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
+
+			if (monitor != null) {
+				monitor.query(dbName, table, q);
+			}
+
 			if (primary != null && primary.getDB(dbName) != null) {
 				return primary.avg(table, q, name, group, dbName);
 			} else if (!X.isEmpty(customs)) {

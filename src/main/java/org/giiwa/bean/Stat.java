@@ -25,6 +25,7 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.Optimizer;
 import org.giiwa.json.JSON;
 import org.giiwa.web.Language;
 
@@ -103,9 +104,14 @@ public class Stat extends Bean implements Comparable<Stat> {
 			String table = table(module);
 			W q = q0.copy().and("date", date).and("size", size.toString()).and("module", module);
 
+			// force optimize
+			Optimizer.optimize(table, q);
+
 			if (!Helper.exists(table, q)) {
 
 				long id = UID.hash(module + "_" + date + "_" + size + "_" + q.toString());
+				Optimizer.optimize(table, W.create(X.ID, id));
+
 				if (Helper.exists(table, W.create(X.ID, id))) {
 					// update
 					for (int i = 0; i < n.length; i++) {
@@ -184,6 +190,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q1.and("time", System.currentTimeMillis() - 12 * 30 * 24 * X.ADAY, W.OP.lt);
 			break;
 		}
+
+		Optimizer.optimize(table, q1);
 
 		Helper.delete(q1, table, Helper.DEFAULT);
 
@@ -321,8 +329,11 @@ public class Stat extends Bean implements Comparable<Stat> {
 			v = V.create();
 		}
 
-		Stat s1 = Helper.load(table, q.and("module", name + "." + Stat.TYPE.snapshot).and("size", size.toString())
-				.and("date", date, W.OP.lt).sort("time", -1), Stat.class);
+		W q1 = q.and("module", name + "." + Stat.TYPE.snapshot).and("size", size.toString()).and("date", date, W.OP.lt)
+				.sort("time", -1);
+		Optimizer.optimize(table, q1);
+
+		Stat s1 = Helper.load(table, q1, Stat.class);
 
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
@@ -469,8 +480,11 @@ public class Stat extends Bean implements Comparable<Stat> {
 		String date = format(time, size);
 		String table = table(name);
 
-		Stat s1 = Helper.load(table, q.and("module", name + "." + TYPE.snapshot).and("size", size.toString())
-				.and("date", date, W.OP.lt).sort("time", -1), Stat.class);
+		W q1 = q.and("module", name + "." + TYPE.snapshot).and("size", size.toString()).and("date", date, W.OP.lt)
+				.sort("time", -1);
+		Optimizer.optimize(table, q1);
+
+		Stat s1 = Helper.load(table, q1, Stat.class);
 
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
@@ -786,6 +800,9 @@ public class Stat extends Bean implements Comparable<Stat> {
 						W q = W.create();
 						q.and("size", s1.toString());
 						q.and("time", System.currentTimeMillis() - day * X.ADAY, W.OP.lt);
+
+						Optimizer.optimize(name, q);
+
 						n += Helper.delete(name, q);
 
 						long c1 = Helper.count(name, W.create());

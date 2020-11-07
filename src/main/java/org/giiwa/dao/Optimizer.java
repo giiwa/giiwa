@@ -14,7 +14,7 @@ import org.giiwa.conf.Global;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.task.Task;
 
-class Optimizer implements Helper.IOptimizer {
+public class Optimizer implements Helper.IOptimizer {
 
 	private static Log log = LogFactory.getLog(Optimizer.class);
 
@@ -139,6 +139,45 @@ class Optimizer implements Helper.IOptimizer {
 
 			checker.schedule(0);
 
+		}
+
+	}
+
+	public static void optimize(String table, W q) {
+
+		List<LinkedHashMap<String, Integer>> l1 = q.sortkeys();
+		if (l1 != null) {
+			l1.forEach(e -> {
+				StringBuilder sb = new StringBuilder();
+				for (String s : e.keySet()) {
+
+					if (X.isSame(s, "_id"))
+						return;
+
+					if (sb.length() > 0)
+						sb.append(",");
+					sb.append(s).append(":").append(e.get(s));
+				}
+				String id = UID.id(Helper.DEFAULT, table, sb.toString());
+
+				if (!exists.contains(id)) {
+					_init(Helper.DEFAULT, table);
+
+					if (!exists.contains(id)) {
+						if (queue.size() < 20) {
+							exists.add(id);
+
+							Helper.createIndex(table, e);
+
+						} else {
+							log.warn("optimizer, table=" + table + ", drop the [" + q + "]");
+						}
+					} else {
+						log.debug("optimaizer, table=" + table + ", sortkey exists, q=" + q);
+					}
+				} else {
+				}
+			});
 		}
 
 	}
