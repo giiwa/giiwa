@@ -101,11 +101,11 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		try {
 			String table = table(module);
-			W q = q0.and("date", date).and("size", size.toString()).and("module", module);
+			W q = q0.copy().and("date", date).and("size", size.toString()).and("module", module);
 
 			if (!Helper.exists(table, q)) {
 
-				long id = UID.hash(module + "_" + date + "_" + size + "_" + q0.toString());
+				long id = UID.hash(module + "_" + date + "_" + size + "_" + q.toString());
 				if (Helper.exists(table, W.create(X.ID, id))) {
 					// update
 					for (int i = 0; i < n.length; i++) {
@@ -269,7 +269,16 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 */
 	public static void delta(long time, String name, W q, V v, long... n) {
 
-		_delta(time, name, SIZE.min, q, v, n);
+		time = Stat.tomin(time);
+
+		if (v == null) {
+			v = V.create();
+		}
+		if (q == null) {
+			q = W.create();
+		}
+
+		_delta(time, name, SIZE.min, q.copy(), v.copy(), n);
 
 		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q.copy().and("time", time, W.OP.lte).sort("time", -1));
 
@@ -281,7 +290,8 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
 					SIZE.season, SIZE.year }) {
-				_snapshot(time, name, s2, q, v, n1);
+				long time1 = Stat.parse(time, s2);
+				_snapshot(time1, name, s2, q.copy(), v.copy(), n1);
 			}
 		}
 
@@ -376,25 +386,25 @@ public class Stat extends Bean implements Comparable<Stat> {
 	public static long parse(long time, SIZE size) {
 
 		if (SIZE.min == size) {
-			return time / X.AMINUTE * X.AMINUTE;
+			return Stat.tomin(time);
 		} else if (SIZE.m10 == size) {
-			return time / X.AMINUTE / 10 * X.AMINUTE * 10;
+			return Stat.tom10(time);
 		} else if (SIZE.m15 == size) {
-			return time / X.AMINUTE / 15 * X.AMINUTE * 15;
+			return Stat.tom15(time);
 		} else if (SIZE.m30 == size) {
-			return time / X.AMINUTE / 30 * X.AMINUTE * 30;
+			return Stat.tom30(time);
 		} else if (SIZE.hour == size) {
-			return time / X.AHOUR * X.AHOUR;
+			return Stat.tohour(time);
 		} else if (SIZE.day == size) {
-			return time / X.ADAY * X.ADAY;
+			return Stat.today(time);
 		} else if (SIZE.week == size) {
-			return time / X.AWEEK * X.AWEEK;
+			return Stat.toweek(time);
 		} else if (SIZE.month == size) {
-			return time / X.AMONTH * X.AMONTH;
+			return Stat.tomonth(time);
 		} else if (SIZE.season == size) {
-			return time / X.AMONTH / 3 * X.AMINUTE * 3;
+			return Stat.toseason(time);
 		} else if (SIZE.year == size) {
-			return time / X.AYEAR * X.AYEAR;
+			return Stat.toyear(time);
 		}
 
 		return time;
@@ -411,11 +421,21 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 */
 	public static void snapshot(long time, String name, W q, V v, long... n) {
 
-		_snapshot(time, name, SIZE.min, q, v, n);
+		if (v == null) {
+			v = V.create();
+		}
+		if (q == null) {
+			q = W.create();
+		}
+
+		time = Stat.tomin(time);
+
+		_snapshot(time, name, SIZE.min, q.copy(), v.copy(), n);
 
 		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q.copy().and("time", time, W.OP.lte).sort("time", -1));
 
 		if (s1 != null) {
+
 			long[] n1 = new long[n.length];
 			for (int i = 0; i < n1.length; i++) {
 				n1[i] = s1.getLong("n" + i);
@@ -423,7 +443,9 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
 					SIZE.season, SIZE.year }) {
-				_snapshot(time, name, s2, q, v, n1);
+
+				long time1 = Stat.parse(time, s2);
+				_snapshot(time1, name, s2, q.copy(), v.copy(), n1);
 			}
 		}
 
@@ -697,11 +719,11 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return tom30(System.currentTimeMillis());
 	}
 
-	public static long tom30(long ms) {
-		long hour = tohour(ms);
+	public static long tom30(long time) {
+		long hour = tohour(time);
 
-		ms = ms - hour;
-		if (ms > X.AMINUTE * 30) {
+		time = time - hour;
+		if (time > X.AMINUTE * 30) {
 			hour += X.AMINUTE * 30;
 		}
 		return hour;
