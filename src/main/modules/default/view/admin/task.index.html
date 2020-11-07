@@ -22,7 +22,7 @@
 			<th style="width: 20%;">Name</th>
 			<th>CLASS</th>
 			<th>POOL</th>
-			<th style="width: 105px;">STATE</th>
+			<th style="width: 115px;">STATE</th>
 			<th>SCHEDULED</th>
 			<th>DELAY</th>
 			<th>RT</th>
@@ -41,24 +41,25 @@
 				<a class="hint hint--bottom" href="javascript:;" onclick='_trace("$f.name")' data-hint="Trace"><i class='icon-download'></i></a>
 			</td>
 			<td>$!f.class.name</td> 
-			<td>$!f._t</td>
+			<td #if($f._t=='S') style='color:red' #elseif($f._t=='G') style='color:green' #end>$!f._t</td>
 			#if($f.state == 'running')
 			<td style='color: green' class="a">
 				<i class='icon-radio-checked'></i>
 				$!f.state 
 				<a class="hint hint--bottom" href="javascript:;" onclick='_dump("$f.name")' data-hint="Dump"><i class='icon-download'></i></a>
-				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill"><i class='icon-cancel-circle'></i></a>
+				&nbsp;
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-cancel-circle'></i></a>
 			</td> 
 			#else
 			<td style="color: #999" class="a">
 				<i class='icon-clock'></i>
 				$!f.state
 				#if($f.state == 'pending')
-				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill"><i class='icon-cancel-circle'></i></a>
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-cancel-circle'></i></a>
 				#end
 			</td> 
 			#end
-			<td>$f.remain</td>
+			<td #if($f.remain<0) style='color:red' #end>$f.remain</td>
 			<td>#if($f.delay>-1)$f.delay#end</td>
 			<td>#if($f.runtime>0)$f.runtime#end</td>
 			<td>#if($f.costing>0)$f.costing#end</td>

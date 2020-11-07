@@ -519,10 +519,11 @@ public abstract class Task implements Runnable, Serializable {
 	 *
 	 * @param fast the fast
 	 */
-	final public void stop(boolean fast) {
+	final public boolean stop(boolean fast) {
 		stop = true;
 		this.fast = fast;
 		if (who != null) {
+
 			if (interruptable()) {
 
 				result(null); // killed
@@ -534,12 +535,14 @@ public abstract class Task implements Runnable, Serializable {
 
 				// schedule the run a time to clear the resource
 				onStop(fast);
+				return true;
 			}
 		} else {
 			log.warn("who is null, stop failed, name=" + this.getName());
 
 //			onStop(fast);
 		}
+		return false;
 	}
 
 	/**
