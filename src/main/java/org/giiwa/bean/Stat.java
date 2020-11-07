@@ -27,6 +27,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dao.Optimizer;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Task;
 import org.giiwa.web.Language;
 
 /**
@@ -277,8 +278,6 @@ public class Stat extends Bean implements Comparable<Stat> {
 	 */
 	public static void delta(long time, String name, W q, V v, long... n) {
 
-		time = Stat.tomin(time);
-
 		if (v == null) {
 			v = V.create();
 		}
@@ -286,22 +285,29 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 
-		_delta(time, name, SIZE.min, q.copy(), v.copy(), n);
+		long time1 = Stat.tomin(time);
+		W q1 = q;
+		V v1 = v;
 
-		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q.copy().and("time", time, W.OP.lte).sort("time", -1));
+		Task.schedule(() -> {
 
-		if (s1 != null) {
-			long[] n1 = new long[n.length];
-			for (int i = 0; i < n1.length; i++) {
-				n1[i] = s1.getLong("n" + i);
+			_delta(time1, name, SIZE.min, q1.copy(), v1.copy(), n);
+
+			Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
+
+			if (s1 != null) {
+				long[] n1 = new long[n.length];
+				for (int i = 0; i < n1.length; i++) {
+					n1[i] = s1.getLong("n" + i);
+				}
+
+				for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
+						SIZE.season, SIZE.year }) {
+					long time2 = Stat.parse(time1, s2);
+					_snapshot(time2, name, s2, q1.copy(), v1.copy(), n1);
+				}
 			}
-
-			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
-					SIZE.season, SIZE.year }) {
-				long time1 = Stat.parse(time, s2);
-				_snapshot(time1, name, s2, q.copy(), v.copy(), n1);
-			}
-		}
+		});
 
 	}
 
@@ -439,26 +445,31 @@ public class Stat extends Bean implements Comparable<Stat> {
 			q = W.create();
 		}
 
-		time = Stat.tomin(time);
+		long time1 = Stat.tomin(time);
+		V v1 = v;
+		W q1 = q;
 
-		_snapshot(time, name, SIZE.min, q.copy(), v.copy(), n);
+		Task.schedule(() -> {
 
-		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q.copy().and("time", time, W.OP.lte).sort("time", -1));
+			_snapshot(time1, name, SIZE.min, q1.copy(), v1.copy(), n);
 
-		if (s1 != null) {
+			Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
 
-			long[] n1 = new long[n.length];
-			for (int i = 0; i < n1.length; i++) {
-				n1[i] = s1.getLong("n" + i);
+			if (s1 != null) {
+
+				long[] n1 = new long[n.length];
+				for (int i = 0; i < n1.length; i++) {
+					n1[i] = s1.getLong("n" + i);
+				}
+
+				for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
+						SIZE.season, SIZE.year }) {
+
+					long time2 = Stat.parse(time1, s2);
+					_snapshot(time2, name, s2, q1.copy(), v1.copy(), n1);
+				}
 			}
-
-			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
-					SIZE.season, SIZE.year }) {
-
-				long time1 = Stat.parse(time, s2);
-				_snapshot(time1, name, s2, q.copy(), v.copy(), n1);
-			}
-		}
+		});
 
 	}
 
