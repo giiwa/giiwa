@@ -289,25 +289,22 @@ public class Stat extends Bean implements Comparable<Stat> {
 		W q1 = q;
 		V v1 = v;
 
-		Task.schedule(() -> {
+		_delta(time1, name, SIZE.min, q1.copy(), v1.copy(), n);
 
-			_delta(time1, name, SIZE.min, q1.copy(), v1.copy(), n);
+		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
 
-			Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
-
-			if (s1 != null) {
-				long[] n1 = new long[n.length];
-				for (int i = 0; i < n1.length; i++) {
-					n1[i] = s1.getLong("n" + i);
-				}
-
-				for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
-						SIZE.season, SIZE.year }) {
-					long time2 = Stat.parse(time1, s2);
-					_snapshot(time2, name, s2, q1.copy(), v1.copy(), n1);
-				}
+		if (s1 != null) {
+			long[] n1 = new long[n.length];
+			for (int i = 0; i < n1.length; i++) {
+				n1[i] = s1.getLong("n" + i);
 			}
-		});
+
+			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
+					SIZE.season, SIZE.year }) {
+				long time2 = Stat.parse(time1, s2);
+				_snapshot(time2, name, s2, q1.copy(), v1.copy(), n1);
+			}
+		}
 
 	}
 
@@ -449,27 +446,24 @@ public class Stat extends Bean implements Comparable<Stat> {
 		V v1 = v;
 		W q1 = q;
 
-		Task.schedule(() -> {
+		_snapshot(time1, name, SIZE.min, q1.copy(), v1.copy(), n);
 
-			_snapshot(time1, name, SIZE.min, q1.copy(), v1.copy(), n);
+		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
 
-			Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
+		if (s1 != null) {
 
-			if (s1 != null) {
-
-				long[] n1 = new long[n.length];
-				for (int i = 0; i < n1.length; i++) {
-					n1[i] = s1.getLong("n" + i);
-				}
-
-				for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
-						SIZE.season, SIZE.year }) {
-
-					long time2 = Stat.parse(time1, s2);
-					_snapshot(time2, name, s2, q1.copy(), v1.copy(), n1);
-				}
+			long[] n1 = new long[n.length];
+			for (int i = 0; i < n1.length; i++) {
+				n1[i] = s1.getLong("n" + i);
 			}
-		});
+
+			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
+					SIZE.season, SIZE.year }) {
+
+				long time2 = Stat.parse(time1, s2);
+				_snapshot(time2, name, s2, q1.copy(), v1.copy(), n1);
+			}
+		}
 
 	}
 
