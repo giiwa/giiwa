@@ -687,10 +687,6 @@ public class GLog extends Bean {
 
 	}
 
-	public static void main(String[] aa) {
-		oplog._logger();
-	}
-
 	static {
 		Counter.set("error.app", 0);
 		Counter.set("warn.app", 0);

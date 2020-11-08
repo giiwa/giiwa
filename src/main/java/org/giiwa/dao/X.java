@@ -697,7 +697,7 @@ public final class X {
 
 			String[] s2 = X.split(s1, deli);
 			if (s2.length == 1) {
-				if (!l1.contains(s1)) {
+				if (!l1.contains(s1.charAt(0))) {
 					l1.add(s1.charAt(0));
 				}
 			} else {
@@ -1264,14 +1264,6 @@ public final class X {
 			sb.append(X.isEmpty(o) ? X.EMPTY : o);
 		}
 		return sb.toString();
-	}
-
-	public static void main(String[] args) {
-		String s = "a-c";
-		char[] ss = X.range2(s, "-");
-		System.out.println(Arrays.toString(ss));
-
-		System.out.println(X.toLong("9700262001", -1));
 	}
 
 	public static List<long[]> split(long sdate, long edate, String size) {

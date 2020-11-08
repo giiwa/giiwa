@@ -89,7 +89,7 @@ public class Optimizer implements Helper.IOptimizer {
 						return "gi.db.optimizer";
 					}
 
-					@SuppressWarnings("unchecked")
+					@SuppressWarnings({ "unchecked", "deprecation" })
 					@Override
 					public void onExecute() {
 
@@ -182,7 +182,7 @@ public class Optimizer implements Helper.IOptimizer {
 
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	private static void _init(String db, String table) {
 
 		List<Map<String, Object>> l1 = Helper.getIndexes(table, db);
@@ -213,14 +213,6 @@ public class Optimizer implements Helper.IOptimizer {
 				}
 			}
 		}
-	}
-
-	public static void main(String[] args) {
-		String s1 = "02:00";
-		String s2 = "06:00";
-
-		System.out.println(s1.compareTo(s2));
-
 	}
 
 }

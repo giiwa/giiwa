@@ -1831,6 +1831,7 @@ public class Controller {
 	 * @param name
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public List<FileItem> files(String name) {
 
 		_get_files();
@@ -2520,15 +2521,6 @@ public class Controller {
 //	public static void setCurrentModule(Module e) {
 //		_currentmodule.set(e);
 //	}
-
-	public static void main(String[] args) {
-		String s = "aaa.tgz";
-//		System.out.println(Controller.getMimeType(s));
-
-		s = "/a/javadoc/a.html";
-		System.out.println(s.matches(".*(.js$|.css$|.jpg$|.png$|.jpeg$|/javadoc/.*)"));
-
-	}
 
 	public static class HttpMethod {
 

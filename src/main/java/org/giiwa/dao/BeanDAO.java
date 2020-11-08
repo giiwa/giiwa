@@ -355,10 +355,6 @@ public class BeanDAO<I, T extends Bean> {
 		return null;
 	}
 
-//	public static void main(String[] args) {
-//		System.out.println();
-//	}
-
 	/**
 	 * create a DAO object
 	 * 

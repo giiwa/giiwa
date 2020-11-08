@@ -129,10 +129,4 @@ public class TimeStamp implements Serializable {
 		return r;
 	}
 
-	public static void main(String[] args) {
-		TimeStamp t = TimeStamp.create();
-		System.out.println(t.past());
-		System.out.println(t.pastns());
-		System.out.println(t.past());
-	}
 }

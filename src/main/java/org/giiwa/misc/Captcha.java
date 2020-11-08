@@ -21,8 +21,6 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -257,21 +255,6 @@ public class Captcha {
 
 		}
 
-	}
-
-	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
-	public static void main(String[] args) throws IOException {
-		File dir = new File("/tmp/verifies");
-		int w = 200, h = 80;
-		for (int i = 0; i < 50; i++) {
-			File file = new File(dir, i + ".jpg");
-			create("1", System.currentTimeMillis() + 6 * X.AMINUTE, w, h, new FileOutputStream(file), 4);
-		}
 	}
 
 	static class Code implements Serializable {

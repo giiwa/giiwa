@@ -23,7 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
-import org.giiwa.net.client.Http;
 import org.giiwa.web.QueryString;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
@@ -517,33 +516,6 @@ public final class Html {
 			return url.substring(0, i);
 		}
 		return url;
-	}
-
-	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
-	 */
-	public static void main(String[] args) {
-
-		String url = "https://www.af.mil/";
-		Http h = Http.create();
-		Http.Response r = h.get(url);
-		Html h1 = r.html();
-
-		try {
-			List<JSON> l1 = h1.a("http(s|)://www.af.mil/News/.*", u -> {
-				u.proto = "https";
-			});
-			l1.forEach(e -> {
-				System.out.println(e.get("href"));
-			});
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
 	}
 
 }

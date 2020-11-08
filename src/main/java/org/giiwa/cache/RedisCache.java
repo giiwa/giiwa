@@ -102,7 +102,7 @@ class RedisCache implements ICacheSystem {
 			if (o == null) {
 				return delete(name);
 			} else {
-				return jedis.setex(name.getBytes(), (int)(expired / 1000), serialize(o)) != null;
+				return jedis.setex(name.getBytes(), (int) (expired / 1000), serialize(o)) != null;
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -178,20 +178,5 @@ class RedisCache implements ICacheSystem {
 		jedis.del(name);
 		return true;
 	}
-
-	// public static void main(String[] args) {
-	// Task.init(10);
-	//
-	// try {
-	// ICacheSystem r = RedisCache.create("redis://s01:6379");
-	// System.out.println(r.trylock("a", 12000));
-	// Thread.sleep(10000);
-	// System.out.println(r.delete("a"));
-	// System.out.println(r.trylock("a", 12000));
-	// } catch (Exception e) {
-	// log.error(e.getMessage(), e);
-	// }
-	//
-	// }
 
 }

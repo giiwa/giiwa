@@ -887,23 +887,6 @@ public class user extends Controller {
 
 	}
 
-	// public static void main(String[] args) {
-	// // String rule = "^[a-zA-Z0-9]{4,16}$";
-	// // String name = "joej";
-	// // System.out.println(name.matches(rule));
-	//
-	// try {
-	// StringBuilder sb = new StringBuilder();
-	// sb.append("var a = 1 + 1;");
-	// sb.append("a");
-	// Object o = JS.run(sb.toString());
-	//
-	// System.out.println(o);
-	// } catch (Exception e) {
-	// log.error(e.getMessage(), e);
-	// }
-	// }
-
 	@Path(path = "access", login = true)
 	public void access() {
 		this.send(JSON.create().append(X.STATE, 200).append("list", login.getRole().getAccesses()));

@@ -18,14 +18,10 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.bson.internal.Base64;
 import org.giiwa.cache.Cache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.misc.Digest;
-import org.giiwa.misc.Host;
-import org.giiwa.misc.MD5;
 import org.giiwa.task.GlobalLock;
 
 /**

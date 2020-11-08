@@ -90,16 +90,6 @@ public class MD5 {
     return DigestUtils.md5Hex(target);
   }
 
-  /**
-   * The main method.
-   *
-   * @param args
-   *          the arguments
-   */
-  public static void main(String[] args) {
-    File f = new File("/Users/wujun/d/workspace/giiwa/README.md");
-    System.out.println(md5(f));
-  }
 
   /**
    * Generate SHA1 string for the string.

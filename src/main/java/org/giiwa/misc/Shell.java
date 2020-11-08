@@ -172,7 +172,7 @@ public class Shell {
 
 	public static String bash(String cmd, long timeout) throws IOException {
 
-		TimeStamp t = TimeStamp.create();
+//		TimeStamp t = TimeStamp.create();
 		BufferedReader re = null;
 		StringBuilder sb = new StringBuilder();
 		Process p = null;
@@ -272,25 +272,6 @@ public class Shell {
 			String pid = lineArray[17].trim();
 			run("taskkill /F /PID " + pid, 5 * 1000);
 
-		}
-	}
-
-	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
-	 */
-	public static void main(String[] args) {
-		try {
-//			String s1 = "/usr/local/bin/node /Users/joe/d/temp/zong.js http://dicom.giisoo.com:19999/ehrview/pageControlDC.action?disease=zyjl&eventId=320106466000838|C0002|01015210201807260000711&zjhm=320111111111111111&zjlx=01&zxwyh=01@320111111111111111@457 .ser_wrap /Users/joe/d/temp/a1.jpg";
-//			String s2 = "/usr/local/bin/node /Users/joe/d/temp/zong.js \"http://dicom.giisoo.com:19999/ehrview/pageControlDC.action?disease=mzjl&eventId=cs320116426061230|C0001|7627686&zjhm=320111111111111111&zjlx=01&zxwyh=01@320111111111111111@457\" \"tr:nth-child(2)\" /Users/joe/d/temp/a2.jpg";
-			String s2 = "/usr/local/bin/node /Users/joe/d/temp/zong.js \"http://dicom.giisoo.com:19999/ehrview/pageControlDC.action?disease=mzjl&eventId=cs320116426061230|C0001|7627686&zjhm=320111111111111111&zjlx=01&zxwyh=01@320111111111111111@457\" \"tr:nth-child(2)\" /Users/joe/d/temp/a3.jpg";
-//			System.out.println(run(s1, X.AMINUTE));
-			System.out.println(run(s2, X.AMINUTE));
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 

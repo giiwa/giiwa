@@ -15,7 +15,6 @@
 package org.giiwa.engine;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +54,7 @@ public class R extends IStub {
 	static Log log = LogFactory.getLog(R.class);
 
 	public static R inst = new R("r");
-	private static String ROOT;
+	public static String ROOT;
 	private static boolean inited = false;
 
 	public static void serve() {
@@ -413,27 +412,6 @@ public class R extends IStub {
 		return conn;
 	}
 
-	public static void main(String[] args) {
-
-		Task.init(10);
-
-		R.ROOT = "/Users/joe/d/temp/";
-
-		R.serve();
-
-		List<Double> l1 = new ArrayList<Double>();
-		l1.add(0.1);
-		l1.add(10d);
-		l1.add(11d);
-		l1.add(1d);
-		l1.add(2d);
-
-		System.out.println("mean=" + inst.mean(l1));
-		System.out.println("sd=" + inst.sd(l1));
-		System.out.println("cv=" + inst.cv(l1));
-
-	}
-
 	public Object run(String code, Object[] data) throws Exception {
 
 		if (X.isIn(code, "mean(data)", "avg(data)", "mean", "avg")) {
@@ -535,6 +513,7 @@ public class R extends IStub {
 
 	}
 
+	@SuppressWarnings("rawtypes")
 	public double sd(List l1) {
 		try {
 			Object s = run("a<-a[,1];print(sd(a))", "a", l1);
@@ -546,6 +525,7 @@ public class R extends IStub {
 		return 0;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public double mean(List l1) {
 		try {
 			Object s = run("a<-a[,1];print(mean(a))", "a", l1);
@@ -558,6 +538,7 @@ public class R extends IStub {
 		return 0;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public double cv(List l1) {
 		try {
 			Object s = run("a<-a[,1];print(sd(a)/mean(a))", "a", l1);

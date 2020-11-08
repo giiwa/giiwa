@@ -353,10 +353,4 @@ public class RDB {
 		return null;
 	}
 
-	public static void main(String[] args) {
-		Locale e = Locale.ENGLISH;// new Locale("en_US");
-		System.out.println(e);
-		System.out.println(Locale.US.equals(e));
-	}
-
 }

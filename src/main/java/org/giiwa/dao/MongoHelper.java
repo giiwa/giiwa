@@ -413,6 +413,7 @@ public class MongoHelper implements Helper.DBHelper {
 	 * @param db         the db
 	 * @return Beans
 	 */
+	@SuppressWarnings("deprecation")
 	public <T extends Bean> Beans<T> load(String collection, String[] fields, W q, int offset, int limit,
 			final Class<T> clazz, String db) throws SQLException {
 
@@ -1170,25 +1171,6 @@ public class MongoHelper implements Helper.DBHelper {
 		List<JSON> list = new ArrayList<JSON>();
 		list.add(JSON.create().append("name", tablename).append("size", c.count()));
 		return list;
-	}
-
-	public static void main(String[] args) {
-
-		MongoHelper h = MongoHelper.create("mongodb://127.0.0.1:27018/demo", "giiwa", "j123123");
-		long i = h.count("gi_user", W.create(), Helper.DEFAULT);
-		System.out.println("count=" + i);
-
-		List<JSON> l1 = h.count("gi_user", W.create().and("id", 1, W.OP.gt).sort("count", -1), new String[] { "a" },
-				Helper.DEFAULT, 10);
-		System.out.println("count=" + l1);
-
-		l1 = h.max("gi_user", W.create().sort("max", -1), "b", new String[] { "a" }, Helper.DEFAULT);
-		System.out.println("count=" + l1);
-
-		l1 = h.aggregate("gi_user", new String[] { "count(b)", "min(a)" }, W.create(), new String[] { "a" },
-				Helper.DEFAULT);
-		System.out.println("count=" + l1);
-
 	}
 
 	@SuppressWarnings("unchecked")

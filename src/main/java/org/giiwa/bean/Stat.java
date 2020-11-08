@@ -27,7 +27,6 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dao.Optimizer;
 import org.giiwa.json.JSON;
-import org.giiwa.task.Task;
 import org.giiwa.web.Language;
 
 /**
@@ -692,22 +691,6 @@ public class Stat extends Bean implements Comparable<Stat> {
 	@FunctionalInterface
 	public static interface MergeFunc extends Serializable {
 		public long call(String name, List<Stat> l1);
-	}
-
-	public static void main(String[] args) {
-		long t = System.currentTimeMillis() + X.AMINUTE * 30;
-
-		System.out.println(Stat.format(t, Stat.SIZE.min));
-		System.out.println(Stat.format(t, Stat.SIZE.m10));
-		System.out.println(Stat.format(t, Stat.SIZE.m15));
-		System.out.println(Stat.format(t, Stat.SIZE.m30));
-
-		SIZE s1 = SIZE.m10;
-		String s2 = Stat.format(t, s1);
-		long[] ss = Stat.time(s1, s2);
-
-		System.out.println(s2 + ", " + Stat.format(ss[0], s1) + ", " + Stat.format(ss[1], s1));
-
 	}
 
 	@SuppressWarnings("deprecation")

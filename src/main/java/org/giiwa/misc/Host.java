@@ -14,7 +14,6 @@
 */
 package org.giiwa.misc;
 
-import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.Inet6Address;
@@ -68,23 +67,6 @@ public class Host {
 		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
 //		System.out.println(runtimeMXBean.getName());
 		return X.toInt(runtimeMXBean.getName().split("@")[0]);
-	}
-
-	/**
-	 * The main method.
-	 * 
-	 * @param args the arguments
-	 */
-	public static void main(String[] args) {
-
-		System.out.println(Host.getLocalip());
-
-		System.out.println(getPid());
-
-		File[] ff = File.listRoots();
-
-		System.out.println(Arrays.toString(ff));
-
 	}
 
 	public static String getLocalip() {

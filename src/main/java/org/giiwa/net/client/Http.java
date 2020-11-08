@@ -1579,20 +1579,6 @@ public final class Http {
 	}
 
 	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
-	 */
-	public static void main(String[] args) {
-
-		String s = "https://search.jd.com/Search?keyword=iphone&enc=utf-8&wq=iphone&pvid=953db99c2e714e0fa516ddd1a6937f24";
-		Http h = Http.create();
-		Http.Response r = h.get(s);
-		System.out.println(r.cookie());
-
-	}
-
-	/**
 	 * add a cookie in Http. or replace the old one by (name, domain, path)
 	 *
 	 * @param name    the name

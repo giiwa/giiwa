@@ -141,9 +141,4 @@ public class Exporter<V> {
 
 	}
 
-	public static void main(String[] args) {
-		Object d = 1d;
-		System.out.println((d instanceof Number));
-	}
-
 }

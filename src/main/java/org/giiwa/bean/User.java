@@ -967,12 +967,6 @@ public class User extends Bean {
 
 	}
 
-	public static void main(String[] args) {
-		User u = new User();
-		u.id = 10;
-		System.out.println(u.token());
-	}
-
 	@Override
 	public JSON json() {
 		JSON j1 = super.json();

@@ -561,49 +561,6 @@ public class SQL {
 		return -1;
 	}
 
-	public static void main(String[] args) throws Exception {
-		String s = "a>10/2*5 and b>11 and (c>1 or r>2)";
-		W q = SQL.where2W(StringFinder.create(s));
-		System.out.println(q);
-
-		// SQL.query(null, "select *");
-		JSON q1 = _sql(StringFinder.create("select a,b,c from gi_oplog order by a limit 10"));
-		System.out.println(q1);
-
-		// SQL.query(h, sql);
-		s = "11 and (1 or 2) and !12";
-
-		q = SQL.where2W("a", StringFinder.create(s));
-		System.out.println(q);
-
-		q = W.create();
-		q.and("cate='J1|J3/7'");
-		System.out.println(q);
-		q.scan(e -> {
-			if (X.isSame("cate", e.name)) {
-				if (e.value.toString().indexOf("/") > -1) {
-//					e.remove();
-					String[] ss = X.range(e.value.toString(), "/");
-					e.replace(ss);
-				}
-			}
-		});
-		System.out.println(q);
-
-		s = "a='a(b)'";
-		q = SQL.where2W(StringFinder.create(s));
-		System.out.println(q);
-
-		s = "a=NULL and b='a'";
-		q = SQL.where2W(StringFinder.create(s));
-		System.out.println(q.query());
-
-		s = "a='1' and b='2' order by c desc";
-		q = SQL.where2W(s);
-		System.out.println(q);
-
-	}
-
 	// private static String[] KW = { "and", "or", "like", "=", "!=", ">", ">=",
 	// "<", "<=" };
 

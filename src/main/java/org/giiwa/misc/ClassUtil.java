@@ -11,16 +11,12 @@ import java.util.jar.JarFile;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.dao.Bean;
 import org.giiwa.dao.X;
 
 public class ClassUtil {
 
 	private static Log log = LogFactory.getLog(ClassUtil.class);
 
-	public static void main(String[] args) {
-		System.out.println(listSubType("", Bean.class));
-	}
 
 	public static <T> List<Class<T>> listSubType(String packname, Class<T> t) {
 

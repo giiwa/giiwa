@@ -21,7 +21,6 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.VelocityContext;
-import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 
 /**
@@ -33,30 +32,6 @@ import org.giiwa.dao.X;
 public class Velocity {
 
 	static Log log = LogFactory.getLog(Velocity.class);
-
-	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
-	 */
-	public static void main(String[] args) {
-
-		String s = "${age}>10";
-
-		TimeStamp t = TimeStamp.create();
-		for (int i = 0; i < 1; i++) {
-			Map<String, Object> m = new HashMap<String, Object>();
-			m.put("age", i);
-			try {
-				System.out.println(Velocity.test(s, m));
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			// System.out.println(i);
-		}
-		System.out.println(t.pastms() + "ms");
-	}
 
 	/**
 	 * test the velocity sentence is true or false by the data model.

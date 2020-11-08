@@ -16,7 +16,6 @@ package org.giiwa.dao;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -309,28 +308,4 @@ public final class UID {
 	private static final char[] digitals = "0123456789".toCharArray();
 	private static final char[] chars = "0123456789abcdefghjiklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
-	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
-	 * @throws Exception the exception
-	 */
-	public static void main(String[] args) throws Exception {
-		TimeStamp t = TimeStamp.create();
-		int[] ii = UID.random("12131", 100);
-		System.out.println("cost=" + t.past() + ", " + Arrays.toString(ii));
-
-		tt(10);
-	}
-
-	private static void tt(int i) {
-		try {
-			if (i > 0) {
-				System.out.println("i=" + i);
-				tt(i - 1);
-			}
-		} finally {
-			System.out.println("i=" + i);
-		}
-	}
 }

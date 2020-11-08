@@ -250,23 +250,4 @@ public class Zip {
 		}
 	}
 
-	/**
-	 * The main method.
-	 *
-	 * @param args the arguments
-	 */
-	public static void main(String[] args) {
-		try {
-			zip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/logs"));
-
-			unzip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/aa"));
-
-			System.out.println("done");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
 }

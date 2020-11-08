@@ -27,7 +27,6 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
-import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
@@ -1213,27 +1212,4 @@ public abstract class Task implements Runnable, Serializable {
 		}
 	}
 
-	public static void main(String[] ss) {
-
-		Config.init();
-		Global.setConfig("site.group", "demo");
-
-		Cache.init(null);
-
-		Task.init(100);
-
-		MQ.init();
-
-		try {
-
-			TimeStamp t = TimeStamp.create();
-
-			t.reset();
-
-			// Thread.sleep(X.AHOUR);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
 }

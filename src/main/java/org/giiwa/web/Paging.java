@@ -284,11 +284,4 @@ public class Paging {
 		return list;
 	}
 
-	public static void main(String[] args) {
-		System.out.println(create(10, 0, 5, 2));
-		System.out.println(create(10, 4, 5, 2));
-		System.out.println(create(-1, 0, 5, 2));
-		System.out.println(create(-1, 20, 5, 2));
-
-	}
 }

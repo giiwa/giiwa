@@ -666,12 +666,4 @@ public class QueryString implements Cloneable {
 		return this;
 	}
 
-	public static void main(String[] args) {
-
-		String url = "https://www.aa.com/?a=1a=2";
-		QueryString s1 = new QueryString(url);
-		System.out.println(s1.toString());
-
-	}
-
 }

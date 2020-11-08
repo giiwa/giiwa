@@ -40,11 +40,9 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.conf.Config;
 import org.giiwa.dao.Helper.Cursor;
 import org.giiwa.dao.Helper.DBHelper;
 import org.giiwa.dao.Helper.V;
@@ -663,6 +661,7 @@ public class RDSHelper implements Helper.DBHelper {
 	 * @param clazz  the Bean Class
 	 * @return List
 	 */
+	@SuppressWarnings("deprecation")
 	public <T extends Bean> Beans<T> load(String table, String[] fields, W q, int offset, int limit, Class<T> clazz,
 			String db) throws SQLException {
 		/**
@@ -2499,26 +2498,6 @@ public class RDSHelper implements Helper.DBHelper {
 	public void repair() {
 		// not support
 
-	}
-
-	public static void main(String[] args) {
-		String url = "jdbc:h2:file:/Users/joe/d/temp/db/demo1";
-		try {
-			Connection con = RDB.getConnectionByUrl("h2", url, null, null);
-			System.out.println(con);
-			con.close();
-
-			Configuration conf = Config.getConf();
-			conf.setProperty("db[default].url", url);
-			RDB.init();
-
-			con = RDB.getConnection("default");
-			System.out.println(con);
-			con.close();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override

@@ -28,7 +28,6 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.json.JSON;
 import org.giiwa.misc.Digest;
 
 /**
@@ -50,16 +49,16 @@ public class App extends Bean {
 	public static final BeanDAO<Long, App> dao = BeanDAO.create(App.class);
 
 	@Column(memo = "唯一序号")
-	private long id;
+	public long id;
 
 	@Column(memo = "应用名称")
-	private String appid;
+	public String appid;
 
 	@Column(memo = "备注")
 	private String memo;
 
 	@Column(memo = "密钥")
-	private String secret;
+	public String secret;
 
 	@Column(memo = "IP地址")
 	private String ip;
@@ -256,25 +255,6 @@ public class App extends Bean {
 	 */
 	public static int update(String appid, V v) {
 		return dao.update(W.create("appid", appid), v);
-	}
-
-	public static void main(String[] args) {
-		App a = new App();
-		a.appid = "1";
-		a.secret = "123123";
-
-		JSON j1 = JSON.create();
-		j1.put("name", "1");
-		j1.put("key", "122");
-
-		try {
-			String data = App.encode(j1.toPrettyString(), a.secret);
-			System.out.println("data=" + data);
-			String jo = App.decode(data, a.secret);
-			System.out.println("jo=" + jo);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 }

@@ -67,6 +67,7 @@ public class Schema {
 		return null;
 	}
 
+	@SuppressWarnings("deprecation")
 	public static JSON format(JSON e, Language lang) {
 
 		String tablename = e.getString("table_name");

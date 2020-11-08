@@ -377,12 +377,6 @@ public class Repo {
 		return count;
 	}
 
-	public static void main(String[] args) {
-		String s = "123/aaa.jpg";
-		Entity e = Repo.load(s);
-		System.out.println(e.id);
-	}
-
 	public static Entity get(String id, String path, String filename) throws Exception {
 		return Entity.load(id, path, filename);
 	}

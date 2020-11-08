@@ -715,32 +715,6 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return true;
 	}
 
-	@SuppressWarnings({ "serial", "unused" })
-	public static void main(String[] args) {
-
-		try {
-			Bean b = new Bean() {
-				transient int aaa = 1;
-
-				public String toString() {
-					return json().append("aaa", aaa).toString();
-				}
-			};
-			b.set("a.a", 1);
-			System.out.println(b.toString());
-
-			JSON j1 = b.json();
-//			System.out.println(j1.toPrettyString());
-
-			Bean a = (Bean) b.clone();
-			System.out.println(a);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-	}
-
 	@Override
 	public Object remove(Object key) {
 		return set(key.toString(), null);

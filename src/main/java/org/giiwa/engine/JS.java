@@ -13,7 +13,6 @@ import javax.script.ScriptException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.UID;
-import org.giiwa.task.Task;
 
 /**
  * JS utility
@@ -39,7 +38,7 @@ public class JS {
 
 		Object r = e.compiled.eval(bs);
 		bs.clear();
-		
+
 		return r;
 
 	}
@@ -65,44 +64,6 @@ public class JS {
 	static class _E {
 		static ScriptEngine engine;
 		CompiledScript compiled;
-	}
-
-	public static void main(String[] args) {
-
-		Task.init(10);
-
-		String s = "a = 0;for(i=0;i<10000;i++) {a+=b;}";
-		try {
-			Map<String, Object> p1 = new HashMap<String, Object>();
-			p1.put("b", 10);
-
-			Map<String, Object> p2 = new HashMap<String, Object>();
-			p2.put("b", 5);
-
-			Task.schedule(() -> {
-				try {
-					System.out.println(run(s, p1));
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			});
-
-			Task.schedule(() -> {
-				try {
-					System.out.println(run(s, p2));
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			});
-
-			Object r = calculate("2+1.0");
-			System.out.println(r + ", " + r.getClass());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	/**
