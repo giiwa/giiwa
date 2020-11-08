@@ -30,7 +30,7 @@ public class SFTPTest {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-//			fail(e.getMessage());
+			fail(e.getMessage());
 		}
 
 	}

@@ -17,6 +17,8 @@ public class DigestTest {
 			System.out.println(s);
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 	}
 

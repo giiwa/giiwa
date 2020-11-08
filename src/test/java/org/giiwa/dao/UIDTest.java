@@ -1,6 +1,6 @@
 package org.giiwa.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
@@ -16,6 +16,8 @@ public class UIDTest {
 			System.out.println("cost=" + t.past() + ", " + Arrays.toString(ii));
 		} catch (Exception e) {
 			e.printStackTrace();
+			
+			fail(e.getMessage());
 		}
 	}
 

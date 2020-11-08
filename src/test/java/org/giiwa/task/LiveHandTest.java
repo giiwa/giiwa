@@ -14,10 +14,13 @@ public class LiveHandTest {
 			h.lock();
 			h.release();
 			h.await(5000);
+			System.out.println("done");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			
+			fail(e.getMessage());
+
 		}
-		System.out.println("done");
 	}
 
 }

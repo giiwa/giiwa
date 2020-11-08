@@ -31,6 +31,7 @@ public class TaskTest {
 			// Thread.sleep(X.AHOUR);
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
 		}
 	}
 

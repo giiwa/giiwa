@@ -53,6 +53,8 @@ public class SQLTest {
 			System.out.println(q);
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 	}
 

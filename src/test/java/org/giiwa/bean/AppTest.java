@@ -1,5 +1,7 @@
 package org.giiwa.bean;
 
+import static org.junit.Assert.fail;
+
 import org.giiwa.json.JSON;
 import org.junit.Test;
 
@@ -23,6 +25,8 @@ public class AppTest {
 			System.out.println("jo=" + jo);
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 
 	}

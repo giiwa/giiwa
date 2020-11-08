@@ -7,6 +7,7 @@ import org.junit.Test;
 
 public class BeanTest {
 
+	@SuppressWarnings("serial")
 	@Test
 	public void test() {
 		try {
@@ -28,6 +29,8 @@ public class BeanTest {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 	}
 

@@ -28,6 +28,8 @@ public class RDSHelperTest {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 	}
 

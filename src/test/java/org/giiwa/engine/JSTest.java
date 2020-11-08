@@ -45,6 +45,8 @@ public class JSTest {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 	}
 

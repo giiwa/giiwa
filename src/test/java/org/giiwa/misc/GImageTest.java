@@ -24,11 +24,14 @@ public class GImageTest {
 
 			GImage.scale1(new FileInputStream(s1), new FileOutputStream(s2), 100, 100);
 
+			System.out.println("done");
+
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 
-		System.out.println("done");
 	}
 
 }

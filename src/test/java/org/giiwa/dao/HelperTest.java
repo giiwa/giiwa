@@ -36,6 +36,8 @@ public class HelperTest {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 
 		System.out.println(q.toString());

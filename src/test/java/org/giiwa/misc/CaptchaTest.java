@@ -22,6 +22,8 @@ public class CaptchaTest {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			fail(e.getMessage());
+
 		}
 	}
 
