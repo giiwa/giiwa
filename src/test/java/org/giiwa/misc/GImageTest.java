@@ -22,7 +22,7 @@ public class GImageTest {
 			String[] ss = ImageIO.getReaderFormatNames();
 			System.out.println(Arrays.toString(ss));
 
-			GImage.scale1(new FileInputStream(s1), new FileOutputStream(s2), 100, 100);
+//			GImage.scale1(new FileInputStream(s1), new FileOutputStream(s2), 100, 100);
 
 			System.out.println("done");
 
