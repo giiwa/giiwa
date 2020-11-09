@@ -405,14 +405,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return gson.toJson(l1);
 	}
 
-	/**
-	 * convert the json to url string
-	 * 
-	 * @deprecated
-	 * @return url string
-	 */
-	public String toUrl() {
-		return url();
+	public String url() {
+		return toUrl();
 	}
 
 	/**
@@ -420,7 +414,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * 
 	 * @return url string
 	 */
-	public String url() {
+	public String toUrl() {
 		StringBuilder sb = new StringBuilder();
 		for (String name : this.keySet()) {
 			if (sb.length() > 0)

@@ -34,4 +34,13 @@ public class BeanTest {
 		}
 	}
 
+	@Test
+	public void testUrl() {
+		Bean b = new Bean();
+		b.set("url", "https://123.com");
+		System.out.println(b.json());
+		System.out.println(b.json().toUrl());
+
+	}
+
 }
