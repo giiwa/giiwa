@@ -17,4 +17,10 @@ public class XTest {
 		System.out.println(X.toLong("9700262001", -1));
 	}
 
+	@Test
+	public void testTo() {
+		double d = 6.462212122;
+		System.out.println(X.toFloat(d, 0, 10));
+	}
+
 }

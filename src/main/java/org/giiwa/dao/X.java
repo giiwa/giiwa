@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -350,6 +351,7 @@ public final class X {
 	/**
 	 * safely parse a object to a float, if failed return default value.
 	 * 
+	 * @deprecated
 	 * @param v            the v
 	 * @param defaultValue the default value
 	 * @return float
@@ -470,6 +472,24 @@ public final class X {
 		return toDouble(v, defaultValue, -1);
 	}
 
+	/**
+	 * 
+	 * @param v       value
+	 * @param format, "0.00", "#,##"
+	 * @return
+	 */
+	public static String format(Object v, String format) {
+		DecimalFormat df = new DecimalFormat(format);
+		return df.format(X.toDouble(v));
+	}
+
+	/**
+	 * @deprecated
+	 * @param v
+	 * @param defaultValue
+	 * @param precision
+	 * @return
+	 */
 	public static double toDouble(Object v, double defaultValue, long precision) {
 		if (v != null) {
 			if (v instanceof Number) {
