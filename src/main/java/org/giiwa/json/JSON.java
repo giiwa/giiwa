@@ -405,10 +405,6 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return gson.toJson(l1);
 	}
 
-	public String url() {
-		return toUrl();
-	}
-
 	/**
 	 * convert the json to a url string
 	 * 
