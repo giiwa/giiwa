@@ -1,6 +1,8 @@
 package org.giiwa.engine;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.script.Bindings;
@@ -31,13 +33,19 @@ public class JS {
 	public static Object run(String js, Map<String, Object> params) throws Exception {
 
 		_E e = compile(js);
-		Bindings bs = _E.engine.createBindings();
-		if (params != null) {
-			bs.putAll(params);
-		}
 
-		Object r = e.compiled.eval(bs);
-		bs.clear();
+		Object r = null;
+		Bindings bs = e.get();
+		try {
+			if (params != null) {
+				bs.putAll(params);
+			}
+
+			r = e.compiled.eval(bs);
+			bs.clear();
+		} finally {
+			e.release(bs);
+		}
 
 		return r;
 
@@ -63,7 +71,27 @@ public class JS {
 
 	static class _E {
 		static ScriptEngine engine;
+		static List<Bindings> l1 = new ArrayList<Bindings>();
+
 		CompiledScript compiled;
+
+		public synchronized Bindings get() {
+
+			if (l1.isEmpty()) {
+				return engine.createBindings();
+			} else {
+				return l1.remove(0);
+			}
+
+		}
+
+		public synchronized void release(Bindings bs) {
+
+			bs.clear();
+			l1.add(bs);
+
+		}
+
 	}
 
 	/**
