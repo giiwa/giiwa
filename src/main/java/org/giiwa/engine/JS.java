@@ -42,7 +42,8 @@ public class JS {
 			}
 
 			r = e.compiled.eval(bs);
-			bs.clear();
+		} catch (Exception e1) {
+			log.error(bs.keySet(), e1);
 		} finally {
 			e.release(bs);
 		}
