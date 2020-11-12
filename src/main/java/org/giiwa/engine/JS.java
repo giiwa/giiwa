@@ -42,8 +42,12 @@ public class JS {
 			}
 
 			r = e.compiled.eval(bs);
+
+			System.out.println(r);
+			System.out.println(bs.keySet());
+
 		} catch (Exception e1) {
-			log.error(bs.keySet(), e1);
+			log.error(bs.keySet() + ", " + (params == null ? "[]" : params.keySet()), e1);
 		} finally {
 			e.release(bs);
 		}
@@ -102,7 +106,15 @@ public class JS {
 	 * @throws Exception the Exception
 	 */
 	public static Object calculate(String f) throws Exception {
-		Object o = run(f, null);
-		return o;
+		if (f.startsWith("'") || f.startsWith("\"")) {
+			return f;
+		}
+
+		if (f.contains("+") || f.contains("-") || f.contains("*") || f.contains("/") || f.contains("(")) {
+			Object o = run(f, null);
+			return o;
+		}
+		return f;
+
 	}
 }

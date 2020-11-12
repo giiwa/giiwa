@@ -58,4 +58,10 @@ public class SQLTest {
 		}
 	}
 
+	@Test
+	public void testW1() {
+		String s = "ab+c";
+		System.out.println(s.matches(".*[\\+\\-*/].*"));
+	}
+
 }

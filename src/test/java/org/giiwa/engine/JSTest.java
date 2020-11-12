@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.giiwa.json.JSON;
 import org.giiwa.task.Task;
 import org.junit.Test;
 
@@ -47,6 +48,22 @@ public class JSTest {
 			e.printStackTrace();
 			fail(e.getMessage());
 
+		}
+	}
+
+	@Test
+	public void testBindings() {
+
+		String code = "a = b + c";
+		JSON j1 = JSON.create();
+		j1.append("b", 1);
+		j1.append("c", 2);
+
+		try {
+			JS.run(code, j1);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

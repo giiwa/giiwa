@@ -272,25 +272,25 @@ public class SQL {
 						s1.skip(-1);
 
 						String s2 = s1.remain();
-
-						if (s2.indexOf("|") > -1) {
-							value = X.asList(X.split(s2, "\\|"), e -> {
+						if (s2 != null) {
+							if (s2.indexOf("|") > -1) {
+								value = X.asList(X.split(s2, "\\|"), e -> {
+									try {
+										return JS.calculate(e.toString());
+									} catch (Exception e1) {
+										return e;
+									}
+								});
+							} else {
 								try {
-									return JS.calculate(e.toString());
-								} catch (Exception e1) {
-//								log.error(e1.getMessage(), e1);
-									return e;
+									value = JS.calculate(s2);
+								} catch (Exception e) {
+									value = s2;
 								}
-							});
-						} else {
-							try {
-								value = JS.calculate(s2);
-							} catch (Exception e) {
-//							log.error(e.getMessage(), e);
-								value = s2;
 							}
 						}
-						if (X.isSame(s2, "NULL")) {
+
+						if (s2 == null || X.isSame(s2, "NULL")) {
 							value = null;
 						}
 					}
