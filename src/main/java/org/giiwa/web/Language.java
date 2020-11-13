@@ -311,7 +311,6 @@ public class Language implements Serializable {
 		}
 	}
 
-//	private static Map<String, SimpleDateFormat> formats = new HashMap<String, SimpleDateFormat>();
 
 	/**
 	 * Format.
@@ -393,8 +392,6 @@ public class Language implements Serializable {
 	 * @return the string
 	 */
 	public String format(long t, String format) {
-		// if (t <= X.ADAY)
-		// return X.EMPTY;
 
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat(format);
@@ -402,11 +399,17 @@ public class Language implements Serializable {
 			return sdf.format(new Date(t));
 		} catch (Exception e) {
 			log.error(t, e);
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		return Long.toString(t);
 	}
 
+	/**
+	 * @deprecated
+	 * @param t
+	 * @param format
+	 * @return
+	 */
 	public String percent(double t, String format) {
 		return String.format(format, t * 100);
 	}
@@ -414,6 +417,7 @@ public class Language implements Serializable {
 	/**
 	 * Convert.
 	 * 
+	 * @deprecated
 	 * @param date   the date
 	 * @param from   the from
 	 * @param format the format
@@ -433,21 +437,22 @@ public class Language implements Serializable {
 	/**
 	 * Convert.
 	 * 
-	 * @param date   the date
-	 * @param from   the from
-	 * @param format the format
+	 * @deprecated
+	 * @param date      the date
+	 * @param oldformat the from
+	 * @param newformat the format
 	 * @return the string
 	 */
-	public String convert(String date, String from, String format) {
+	public String convert(String date, String oldformat, String newformat) {
 		if (date == null || date.length() < 8) {
 			return date;
 		}
 
-		long t = parse(date, from);
+		long t = parse(date, oldformat);
 		if (t == 0)
 			return X.EMPTY;
 
-		return format(t, format);
+		return format(t, newformat);
 	}
 
 	/**

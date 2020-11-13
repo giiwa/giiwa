@@ -64,4 +64,14 @@ public class SQLTest {
 		System.out.println(s.matches(".*[\\+\\-*/].*"));
 	}
 
+	@Test
+	public void testSQL() {
+
+		W q = W.create();
+		q.and("date2>0");
+
+		System.out.println(q.toString());
+
+	}
+
 }
