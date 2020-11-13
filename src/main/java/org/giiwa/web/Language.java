@@ -464,13 +464,18 @@ public class Language implements Serializable {
 
 		List<String> ss = X.asList(format, s -> s.toString());
 
+		Exception _e = null;
 		for (String f : ss) {
 			try {
 				SimpleDateFormat sdf = new SimpleDateFormat(f);
 				return sdf.parse(t).getTime();
 			} catch (Exception e) {
-				log.error(t + ", format=" + f, e);
+				_e = e;
 			}
+		}
+
+		if (_e != null) {
+			log.error(t + ", format=" + ss, _e);
 		}
 
 		return 0;
@@ -490,13 +495,18 @@ public class Language implements Serializable {
 
 		List<String> ss = X.asList(format, s -> s.toString());
 
+		Exception _e = null;
 		for (String f : ss) {
 			try {
 				SimpleDateFormat sdf = new SimpleDateFormat(f, loc);
 				return sdf.parse(t).getTime();
 			} catch (Exception e) {
-				log.error(t + ", format=" + format, e);
+				_e = e;
 			}
+		}
+
+		if (_e != null) {
+			log.error(t + ", format=" + ss, _e);
 		}
 
 		return 0;
