@@ -311,7 +311,7 @@ public class Language implements Serializable {
 		}
 	}
 
-	private static Map<String, SimpleDateFormat> formats = new HashMap<String, SimpleDateFormat>();
+//	private static Map<String, SimpleDateFormat> formats = new HashMap<String, SimpleDateFormat>();
 
 	/**
 	 * Format.
@@ -322,23 +322,12 @@ public class Language implements Serializable {
 	 */
 	public String format(String t, String format) {
 		try {
-			SimpleDateFormat sdf = formats.get(format);
-			if (sdf == null) {
-				sdf = new SimpleDateFormat(format);
-
-				// if (data.containsKey("date.timezone")) {
-				// sdf.setTimeZone(TimeZone.getTimeZone(get("date.timezone")));
-				// }
-
-				formats.put(format, sdf);
-			}
+			SimpleDateFormat sdf = new SimpleDateFormat(format);
 
 			// parse t to datetime, assume the datetime is
 			// "YYYY ? MM ? dd hh:mm:ss"
 
-			synchronized (sdf) {
-				return sdf.format(new Date(parsetime(t)));
-			}
+			return sdf.format(new Date(parsetime(t)));
 		} catch (Exception e) {
 			log.error(t, e);
 		}
@@ -408,19 +397,9 @@ public class Language implements Serializable {
 		// return X.EMPTY;
 
 		try {
-			SimpleDateFormat sdf = formats.get(format);
-			if (sdf == null) {
-				sdf = new SimpleDateFormat(format);
+			SimpleDateFormat sdf = new SimpleDateFormat(format);
 
-				// if (data.containsKey("date.timezone")) {
-				// sdf.setTimeZone(TimeZone.getTimeZone(get("date.timezone")));
-				// }
-
-				formats.put(format, sdf);
-			}
-			synchronized (sdf) {
-				return sdf.format(new Date(t));
-			}
+			return sdf.format(new Date(t));
 		} catch (Exception e) {
 			log.error(t, e);
 			e.printStackTrace();
@@ -478,22 +457,20 @@ public class Language implements Serializable {
 	 * @param format the format
 	 * @return the long
 	 */
-	public long parse(String t, String format) {
+	public long parse(String t, Object format) {
+
 		if (t == null || "".equals(t))
 			return 0;
 
-		try {
-			SimpleDateFormat sdf = formats.get(format);
-			if (sdf == null) {
-				sdf = new SimpleDateFormat(format);
-				// sdf.setTimeZone(TimeZone.getTimeZone(get("date.timezone")));
-				formats.put(format, sdf);
-			}
-			synchronized (sdf) {
+		List<String> ss = X.asList(format, s -> s.toString());
+
+		for (String f : ss) {
+			try {
+				SimpleDateFormat sdf = new SimpleDateFormat(f);
 				return sdf.parse(t).getTime();
+			} catch (Exception e) {
+				log.error(t + ", format=" + f, e);
 			}
-		} catch (Exception e) {
-			log.error(t + ", format=" + format, e);
 		}
 
 		return 0;
@@ -503,7 +480,7 @@ public class Language implements Serializable {
 		return parse(t, format, new Locale(loc));
 	}
 
-	public long parse(String t, String format, Locale loc) {
+	public long parse(String t, Object format, Locale loc) {
 		if (t == null)
 			return 0;
 
@@ -511,11 +488,15 @@ public class Language implements Serializable {
 		if (X.isEmpty(t))
 			return 0;
 
-		try {
-			SimpleDateFormat sdf = new SimpleDateFormat(format, loc);
-			return sdf.parse(t).getTime();
-		} catch (Exception e) {
-			log.error(t + ", format=" + format, e);
+		List<String> ss = X.asList(format, s -> s.toString());
+
+		for (String f : ss) {
+			try {
+				SimpleDateFormat sdf = new SimpleDateFormat(f, loc);
+				return sdf.parse(t).getTime();
+			} catch (Exception e) {
+				log.error(t + ", format=" + format, e);
+			}
 		}
 
 		return 0;
