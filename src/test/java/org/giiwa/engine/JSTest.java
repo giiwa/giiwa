@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.giiwa.conf.Global;
+import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.task.Task;
 import org.junit.Test;
@@ -54,17 +56,38 @@ public class JSTest {
 	@Test
 	public void testBindings() {
 
-		String code = "a = b + c";
-		JSON j1 = JSON.create();
-		j1.append("b", 1);
-		j1.append("c", 2);
 
-		try {
-			JS.run(code, j1);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		Task[] tt = new Task[2];
+		tt[0] = new Task() {
+
+			int n = 1000;
+			
+			@Override
+			public void onExecute() {
+				
+				String code = "function aaa() {return b + c;};_d1.ret=aaa();";
+				JSON d1 = JSON.create();
+				JSON j1 = JSON.create();
+				j1.append("b", 1);
+				j1.append("c", 2);
+				j1.append("a", 3);
+				j1.append("_d1", d1);
+
+				try {
+					JS.run(code, j1);
+					Object r = d1.get("ret");
+					System.out.println(r);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			}
+			
+			
+		};
+		
+
 	}
 
 }

@@ -1,8 +1,6 @@
 package org.giiwa.engine;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.script.Bindings;
@@ -11,6 +9,7 @@ import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,77 +25,54 @@ public class JS {
 
 	static Log log = LogFactory.getLog(JS.class);
 
+	private static ScriptEngine engine = null;
+
 	public static Object run(String js) throws Exception {
 		return run(js, null);
 	}
 
 	public static Object run(String js, Map<String, Object> params) throws Exception {
 
-		_E e = compile(js);
+		if (engine == null) {
+			ScriptEngineManager manager = new ScriptEngineManager();
+			engine = manager.getEngineByName("JavaScript");
+		}
+
+		CompiledScript cs = compile(js);
+		Bindings bindings = new SimpleBindings();
 
 		Object r = null;
-		Bindings bs = e.get();
 		try {
+
 			if (params != null) {
-				bs.putAll(params);
+				bindings.putAll(params);
 			}
 
-			r = e.compiled.eval(bs);
+			r = cs.eval(bindings);
 
-			System.out.println(r);
-			System.out.println(bs.keySet());
+//			System.out.println(r);
+//			System.out.println(bs.keySet());
+//			System.out.println(params.keySet());
 
 		} catch (Exception e1) {
-			log.error(bs.keySet() + ", " + (params == null ? "[]" : params.keySet()), e1);
-		} finally {
-			e.release(bs);
+			log.error(bindings.keySet() + ", " + (params == null ? "[]" : params.keySet()), e1);
+			throw e1;
 		}
 
 		return r;
 
 	}
 
-	private synchronized static _E compile(String code) throws ScriptException {
+	private static Map<String, CompiledScript> cs_cached = new HashMap<String, CompiledScript>();
+
+	private static CompiledScript compile(String code) throws ScriptException {
 		String id = UID.id(code);
-		_E e = cached.get(id);
+		CompiledScript e = cs_cached.get(id);
 		if (e == null) {
-			if (_E.engine == null) {
-				ScriptEngineManager manager = new ScriptEngineManager();
-				_E.engine = manager.getEngineByName("JavaScript");
-			}
-			e = new _E();
-			e.compiled = ((Compilable) _E.engine).compile(code);
-//			e.engine = engine;
-			cached.put(id, e);
+			e = ((Compilable) engine).compile(code);
+			cs_cached.put(id, e);
 		}
 		return e;
-	}
-
-	private static Map<String, _E> cached = new HashMap<String, _E>();
-
-	static class _E {
-		static ScriptEngine engine;
-		static List<Bindings> l1 = new ArrayList<Bindings>();
-
-		CompiledScript compiled;
-
-		public synchronized Bindings get() {
-
-			if (l1.isEmpty()) {
-				return engine.createBindings();
-			} else {
-				return l1.remove(0);
-			}
-
-		}
-
-		public synchronized void release(Bindings bs) {
-
-			bs.clear();
-			l1.add(bs);
-
-		}
-
 	}
 
 	/**
@@ -117,4 +93,5 @@ public class JS {
 		return f;
 
 	}
+
 }
