@@ -72,6 +72,14 @@ public class SQLTest {
 
 		System.out.println(q.toString());
 
+		q = W.create();
+		q.and("syts_2='0'");
+		System.out.println(q.toString());
+
+		q = W.create();
+		q.and("syts_2=\"0\"");
+		System.out.println(q.toString());
+
 	}
 
 }

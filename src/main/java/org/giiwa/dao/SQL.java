@@ -268,6 +268,13 @@ public class SQL {
 						} else {
 							value = s2;
 						}
+					} else if (c == '"') {
+						String s2 = s1.pair('"');
+						if (s2.indexOf("|") > -1) {
+							value = X.split(s2, "\\|");
+						} else {
+							value = s2;
+						}
 					} else {
 						s1.skip(-1);
 
