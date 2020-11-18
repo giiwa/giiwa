@@ -16,7 +16,9 @@ import javax.script.SimpleBindings;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
 import org.giiwa.task.Task;
 
 /**
@@ -29,7 +31,7 @@ public class JS {
 
 	static Log log = LogFactory.getLog(JS.class);
 
-	public static int MAX_CACHED_COMPILED = 2000;
+	public static int MAX_CACHED_COMPILED = 4000;
 
 	private static ScriptEngine engine = null;
 
@@ -39,22 +41,33 @@ public class JS {
 
 	public static Object run(String js, Map<String, Object> params) throws Exception {
 
-		if (engine == null) {
-			ScriptEngineManager manager = new ScriptEngineManager();
-			engine = manager.getEngineByName("JavaScript");
+		synchronized (JS.class) {
+			if (engine == null) {
+				ScriptEngineManager manager = new ScriptEngineManager();
+				log.debug("factories=" + manager.getEngineFactories());
+				engine = manager.getEngineByName("nashorn");
+//				engine = manager.getEngineByName("graal.js");
+				/**
+				 * graal.js & nashorn, big different between dynamic api, be careful
+				 */
+				log.debug("engine=" + engine);
+			}
 		}
 
-		CompiledScript cs = compile(js);
-		Bindings bindings = new SimpleBindings();
+		js = "function aaa(" + X.join(params.keySet(), ",") + ") {" + js + "};aaa("
+				+ X.join(X.asList(params.keySet(), s -> "p." + s), ",") + ");";
+
+		_E e = compile(js);
+		Bindings bindings = e.get();
 
 		Object r = null;
 		try {
 
 			if (params != null) {
-				bindings.putAll(params);
+				bindings.put("p", params);
 			}
 
-			r = cs.eval(bindings);
+			r = e.cs.eval(bindings);
 
 		} catch (Exception e1) {
 			if (params != null && !params.isEmpty()) {
@@ -69,16 +82,23 @@ public class JS {
 
 	private static Map<String, _E> cached = new HashMap<String, _E>();
 
-	private static CompiledScript compile(String code) throws ScriptException {
+	private static synchronized _E compile(String code) throws ScriptException {
+
 		String id = UID.id(code);
 		_E e = cached.get(id);
 		if (e == null) {
+
+			log.debug("no cache for js code, code=" + code);
+
 			e = new _E();
 			e.id = id;
 			e.cs = ((Compilable) engine).compile(code);
 			cached.put(id, e);
 
 			if (cached.size() > MAX_CACHED_COMPILED) {
+
+				GLog.applog.warn("js", "run", "js cache exceed max, max = " + MAX_CACHED_COMPILED);
+
 				Task.schedule(() -> {
 					List<_E> l1 = new ArrayList<_E>(cached.values());
 					Collections.sort(l1);
@@ -92,13 +112,28 @@ public class JS {
 		}
 		e.last = System.currentTimeMillis();
 
-		return e.cs;
+		return e;
 	}
 
 	static class _E implements Comparable<_E> {
+
 		CompiledScript cs;
+		List<Bindings> _cached = new ArrayList<Bindings>();
+
 		String id;
 		long last;
+
+		public synchronized Bindings get() {
+			if (_cached.isEmpty()) {
+				return new SimpleBindings();
+			}
+
+			return _cached.remove(_cached.size() - 1);
+		}
+
+		public synchronized void release(Bindings bindings) {
+			_cached.add(bindings);
+		}
 
 		@Override
 		public int compareTo(_E o) {

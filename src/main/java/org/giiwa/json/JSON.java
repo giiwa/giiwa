@@ -292,10 +292,13 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 				Object o = list.get(i);
 				if (o instanceof List) {
 					list.set(i, fromObjects(o));
-				} else {
+				} else if (o instanceof Map) {
+					list.set(i, fromObject(o));
+				} else if (o instanceof String) {
 					try {
-						if (o.toString().startsWith("{")) {
-							list.set(i, fromObject(o));
+						String s = (String) o;
+						if (s.startsWith("{")) {
+							list.set(i, fromObject(s));
 						}
 					} catch (Throwable e) {
 						// ignore
