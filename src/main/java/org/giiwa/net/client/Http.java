@@ -423,6 +423,8 @@ public final class Http {
 		CloseableHttpResponse resp = null;
 
 		try {
+			
+//			resp = client.execute(get, context);
 			resp = client.execute(get, context);
 
 			r.status = resp.getStatusLine().getStatusCode();

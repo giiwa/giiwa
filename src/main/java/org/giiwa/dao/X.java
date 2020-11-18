@@ -1489,9 +1489,13 @@ public final class X {
 				}
 			} else if (r instanceof Map) {
 				Map m1 = (Map) r;
+				System.out.println(m1);
+				
 				for (Object name : m1.keySet()) {
+					System.out.println(name);
 					m1.put(name, X.clone(m1.get(name)));
 				}
+				System.out.println(m1);
 			}
 
 			if (data.getClass().isArray()) {
