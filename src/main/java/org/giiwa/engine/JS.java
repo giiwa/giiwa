@@ -74,6 +74,8 @@ public class JS {
 				log.error(bindings.keySet() + ", " + (params == null ? "[]" : params.keySet()), e1);
 			}
 			throw e1;
+		} finally {
+			e.release(bindings);
 		}
 
 		return r;
@@ -88,7 +90,7 @@ public class JS {
 		_E e = cached.get(id);
 		if (e == null) {
 
-			log.debug("no cache for js code, code=" + code);
+			log.warn("no cache for js code, code=" + code);
 
 			e = new _E();
 			e.id = id;
