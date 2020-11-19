@@ -54,10 +54,12 @@ public class JS {
 			}
 		}
 
-		js = "function aaa(" + X.join(params.keySet(), ",") + ") {" + js + "};aaa("
-				+ X.join(X.asList(params.keySet(), s -> "p." + s), ",") + ");";
+		if (params != null && !params.isEmpty()) {
+			js = "function aaa(" + X.join(params.keySet(), ",") + ") {" + js + "};aaa("
+					+ X.join(X.asList(params.keySet(), s -> "p." + s), ",") + ");";
+		}
 
-		_E e = compile(js);
+		_E e = compile(js, params != null);
 		Bindings bindings = e.get();
 
 		Object r = null;
@@ -84,33 +86,36 @@ public class JS {
 
 	private static Map<String, _E> cached = new HashMap<String, _E>();
 
-	private static synchronized _E compile(String code) throws ScriptException {
+	private static synchronized _E compile(String code, boolean cache) throws ScriptException {
 
 		String id = UID.id(code);
 		_E e = cached.get(id);
 		if (e == null) {
 
-			log.warn("no cache for js code, code=" + code);
+			log.debug("no cache for js code, code=" + code);
 
 			e = new _E();
 			e.id = id;
 			e.cs = ((Compilable) engine).compile(code);
-			cached.put(id, e);
+			if (cache) {
+				cached.put(id, e);
 
-			if (cached.size() > MAX_CACHED_COMPILED) {
+				if (cached.size() > MAX_CACHED_COMPILED) {
 
-				GLog.applog.warn("js", "run", "js cache exceed max, max = " + MAX_CACHED_COMPILED);
+					GLog.applog.warn("js", "run", "js cache exceed max, max = " + MAX_CACHED_COMPILED);
 
-				Task.schedule(() -> {
-					List<_E> l1 = new ArrayList<_E>(cached.values());
-					Collections.sort(l1);
-					for (int i = 0; i < l1.size() / 4; i++) {
-						_E e1 = l1.get(i);
-						cached.remove(e1.id);
-					}
+					Task.schedule(() -> {
+						List<_E> l1 = new ArrayList<_E>(cached.values());
+						Collections.sort(l1);
+						for (int i = 0; i < l1.size() / 4; i++) {
+							_E e1 = l1.get(i);
+							cached.remove(e1.id);
+						}
 
-				});
+					});
+				}
 			}
+
 		}
 		e.last = System.currentTimeMillis();
 

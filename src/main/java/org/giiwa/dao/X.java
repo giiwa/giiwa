@@ -190,6 +190,7 @@ public final class X {
 	 * @return long
 	 */
 	public static long toLong(Object v, long defaultValue) {
+
 		if (v != null) {
 			if (v instanceof Number) {
 				return ((Number) v).longValue();
@@ -221,19 +222,20 @@ public final class X {
 					break;
 				}
 			}
-			s = sb.toString();
 
 			if (n > 0) {
+				s = sb.toString();
 				try {
 					if (f) {
 						Object f1 = JS.calculate(s);
-						if (f1 instanceof Number)
+						if (f1 instanceof Number) {
 							return ((Number) f1).longValue();
-
-					} else
+						}
+					} else {
 						return Long.parseLong(s);
-				} catch (Exception e) {
-					log.error(e);
+					}
+				} catch (Throwable e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
@@ -1490,7 +1492,7 @@ public final class X {
 			} else if (r instanceof Map) {
 				Map m1 = (Map) r;
 				System.out.println(m1);
-				
+
 				for (Object name : m1.keySet()) {
 					System.out.println(name);
 					m1.put(name, X.clone(m1.get(name)));

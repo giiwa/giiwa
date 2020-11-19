@@ -978,7 +978,7 @@ public abstract class Task implements Runnable, Serializable {
 
 			if (runningQueue.containsKey(task.getName())) {
 				// there is a copy is running
-				log.warn("run duplicated task:" + task.getName());
+				log.info("run duplicated task:" + task.getName());
 				return false;
 			}
 

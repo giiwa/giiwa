@@ -62,4 +62,11 @@ public class XTest {
 
 	}
 
+	@Test
+	public void testToLong() {
+		String d = "aaa";
+		d = null;
+		System.out.println(X.toLong(d));
+	}
+
 }
