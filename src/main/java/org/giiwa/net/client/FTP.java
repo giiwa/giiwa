@@ -1,9 +1,12 @@
 package org.giiwa.net.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,14 +58,23 @@ public class FTP {
 
 	public File[] list(String path) throws IOException {
 
+		if (log.isDebugEnabled())
+			log.debug("list path=" + path);
+
 		List<File> l1 = new ArrayList<File>();
 
-		FTPFile[] ff = client.listFiles(path);
+		client.changeWorkingDirectory(path);
+		client.enterLocalPassiveMode();
+
+		FTPFile[] ff = client.listFiles();
 
 		_toFile(path, l1, ff);
 
-		ff = client.listDirectories(path);
-		_toFile(path, l1, ff);
+//		ff = client.listDirectories();
+//		_toFile(path, l1, ff);
+
+		if (log.isDebugEnabled())
+			log.debug("get files =" + l1);
 
 		return l1.toArray(new File[l1.size()]);
 	}
@@ -152,39 +164,71 @@ public class FTP {
 	 * 
 	 * @param url the command
 	 * @return the FTPClient
+	 * @throws IOException
+	 * @throws SocketException
 	 */
-	public static FTP create(Url url) {
+	public static FTP create(Url url) throws IOException {
 
 		FTPClient ftp = new FTPClient();
 		FTPClientConfig config = new FTPClientConfig();
 		// config.setXXX(YYY); // change required options
 		// for example config.setServerTimeZoneId("Pacific/Pitcairn")
 		ftp.configure(config);
-		try {
-			int reply;
+		int reply;
 
-			ftp.connect(url.getIp(), url.getPort(21));
-			if (log.isDebugEnabled())
-				log.debug("replaystring=" + ftp.getReplyString());
+		ftp.connect(url.getIp(), url.getPort(21));
+		if (log.isDebugEnabled())
+			log.debug("replaystring=" + ftp.getReplyString());
 
-			// After connection attempt, you should check the reply code to verify
-			// success.
-			reply = ftp.getReplyCode();
-
-			if (!FTPReply.isPositiveCompletion(reply)) {
-				ftp.disconnect();
-				return null;
-			}
-
-			if (ftp.login(url.get("username"), url.get("passwd"))) {
-				FTP f = new FTP();
-				f.client = ftp;
-				return f;
-			}
-		} catch (IOException e) {
-			log.error(url, e);
+		// After connection attempt, you should check the reply code to verify
+		// success.
+		reply = ftp.getReplyCode();
+		if (!FTPReply.isPositiveCompletion(reply)) {
+			ftp.disconnect();
+			return null;
 		}
-		return null;
+
+		if (ftp.login(url.get("username"), url.get("passwd"))) {
+			FTP f = new FTP();
+			f.client = ftp;
+			f.client.setConnectTimeout(10000);
+
+			if (log.isDebugEnabled())
+				log.debug("logined");
+
+			return f;
+		}
+
+		throw new IOException("login failed");
+
+	}
+
+	public void mkdirs(String path) throws IOException {
+		client.mkd(path);
+	}
+
+	public void mv(String filename1, String filename2) throws IOException {
+		if (log.isDebugEnabled())
+			log.debug("move file, " + filename1 + "=>" + filename2);
+
+		client.rename(filename1, filename2);
+	}
+
+	public void cp(String filename1, String filename2) throws IOException {
+
+		if (log.isDebugEnabled())
+			log.debug("copy file, " + filename1 + "=>" + filename2);
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		client.retrieveFile(filename1, out);
+		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+
+		client.makeDirectory(new File(filename2).getParent());
+		client.storeFile(filename2, in);
+		out.flush();
+		out.close();
+		in.close();
+
 	}
 
 }

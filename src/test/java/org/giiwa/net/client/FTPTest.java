@@ -20,8 +20,14 @@ public class FTPTest {
 		try {
 
 			FTP s = FTP.create(Url.create("ftp://188.131.146.157?"));
-			File[] l1 = s.list("/home/ftpuser1");
+			File[] l1 = s.list("/home/ftpuser1/done");
+
 			System.out.println(X.asList(l1, f -> ((File) f).getName()));
+
+//			s.mkdirs("/home/ftpuser1/done");
+//			s.mkdirs("/home/ftpuser1/error");
+//			s.cp("/home/ftpuser1/data/test.jl.zip", "/home/ftpuser1/done/test.jl.zip");
+			s.mv("/home/ftpuser1/done/test.jl.zip", "/home/ftpuser1/error/test.jl.zip");
 
 			s.close();
 
