@@ -49,7 +49,7 @@ public class License extends Bean {
 	public final static BeanDAO<String, License> dao = BeanDAO.create(License.class);
 
 	public static enum LICENSE {
-		free, trial, limited, licensed, issue, personal, professinal, enterprise, unlimited
+		free, trial, limited, licensed, issue, personal, professional, enterprise, unlimited
 	};
 
 	@Column(memo = "唯一序号")
