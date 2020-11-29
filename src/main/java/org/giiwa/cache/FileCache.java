@@ -19,7 +19,9 @@ import java.util.*;
 
 import org.apache.commons.logging.*;
 import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
 import org.giiwa.task.LiveHand;
+import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 
 /**
@@ -60,12 +62,12 @@ class FileCache implements ICacheSystem {
 		 */
 		try {
 			if (cache.containsKey(id)) {
-				return fromBytes(read(id));
+				return _fromBytes(_read(id));
 			} else {
 				/**
 				 * if not in cache, then read from file
 				 */
-				String path = path(id);
+				String path = _path(id);
 				if (new File(path).exists()) {
 					FileInputStream in = null;
 					try {
@@ -73,8 +75,9 @@ class FileCache implements ICacheSystem {
 						byte[] b = new byte[in.available()];
 						in.read(b);
 
-						save(id, b);
-						return fromBytes(b);
+						_cache(id, b);
+
+						return _fromBytes(b);
 					} finally {
 						if (in != null) {
 							in.close();
@@ -100,29 +103,32 @@ class FileCache implements ICacheSystem {
 			if (o == null) {
 				return delete(id);
 			} else {
-				byte[] b = toBytes(o);
+				byte[] b = _toBytes(o);
 
 				/**
 				 * cache it
 				 */
-				save(id, b);
+				_cache(id, b);
 
-				/**
-				 * write to file
-				 */
-				String path = path(id);
-				new File(path).getParentFile().mkdirs();
-				FileOutputStream out = null;
-				try {
-					out = new FileOutputStream(path);
-					out.write(b);
-					out.flush();
-					return true;
-				} finally {
-					if (out != null) {
-						out.close();
+				Task.schedule(() -> {
+
+					/**
+					 * write to file
+					 */
+					String path = _path(id);
+					new File(path).getParentFile().mkdirs();
+					FileOutputStream out = null;
+					try {
+						out = new FileOutputStream(path);
+						out.write(b);
+						out.flush();
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					} finally {
+						X.close(out);
 					}
-				}
+
+				});
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -137,7 +143,7 @@ class FileCache implements ICacheSystem {
 	 * @return the byte[]
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	private static byte[] toBytes(Object o) throws IOException {
+	private static byte[] _toBytes(Object o) throws IOException {
 		ByteArrayOutputStream out = null;
 		ObjectOutputStream d = null;
 
@@ -166,7 +172,7 @@ class FileCache implements ICacheSystem {
 	 * @throws IOException            Signals that an I/O exception has occurred.
 	 * @throws ClassNotFoundException the class not found exception
 	 */
-	private static Object fromBytes(byte[] b) throws IOException, ClassNotFoundException {
+	private static Object _fromBytes(byte[] b) throws IOException, ClassNotFoundException {
 		ByteArrayInputStream in = null;
 		ObjectInputStream d = null;
 		try {
@@ -190,11 +196,13 @@ class FileCache implements ICacheSystem {
 	 * @return true, if successful
 	 */
 	public synchronized boolean delete(String id) {
-		new File(path(id)).delete();
+
+		new File(_path(id)).delete();
 		cache.remove(id);
 		_local.remove(id);
 
-		return queue.remove(id);
+		return true;
+//		return queue.remove(id);
 	}
 
 	/**
@@ -203,7 +211,7 @@ class FileCache implements ICacheSystem {
 	 * @param path the path
 	 * @return the string
 	 */
-	private String path(String path) {
+	private String _path(String path) {
 		long id = Math.abs(UID.hash(path));
 		char p1 = (char) (id % 23 + 'a');
 		char p2 = (char) (id % 13 + 'A');
@@ -220,14 +228,17 @@ class FileCache implements ICacheSystem {
 	 * @param id the id
 	 * @return the byte[]
 	 */
-	private byte[] read(String id) {
-		byte[] b = cache.get(id);
+	private byte[] _read(String id) {
+
+		Object[] oo = cache.get(id);
+		byte[] b = (byte[]) oo[0];
+		oo[1] = System.currentTimeMillis();
 
 		// set to last
-		if (queue.contains(id)) {
-			queue.remove(id);
-			queue.add(id);
-		}
+//		if (queue.contains(id)) {
+//			queue.remove(id);
+//			queue.add(id);
+//		}
 		return b;
 	}
 
@@ -237,17 +248,47 @@ class FileCache implements ICacheSystem {
 	 * @param id the id
 	 * @param b  the b
 	 */
-	private void save(String id, byte[] b) {
-		cache.put(id, b);
+	private void _cache(String id, byte[] b) {
+
+		cache.put(id, new Object[] { b, System.currentTimeMillis(), id });
 
 		// set to last
-		queue.remove(id);
-		queue.add(id);
+//		queue.remove(id);
+//		queue.add(id);
 
-		while (queue.size() > cache_size) {
-			id = queue.remove(0);
+		if (cache.size() > cache_size) {
+			Task.schedule(() -> {
+				_clearup();
+			});
+		}
+	}
+
+	private void _clearup() {
+
+		List<Object[]> l1 = new ArrayList<Object[]>(cache.values());
+		Collections.sort(l1, new Comparator<Object[]>() {
+
+			@Override
+			public int compare(Object[] o1, Object[] o2) {
+
+				long t1 = X.toLong(o1[1]);
+				long t2 = X.toLong(o2[1]);
+
+				if (t1 < t2)
+					return 1;
+				if (t1 > t2)
+					return -1;
+
+				return 0;
+			}
+
+		});
+
+		for (int i = cache_size * 4 / 5; i < l1.size(); i++) {
+			String id = (String) l1.get(i)[2];
 			cache.remove(id);
 		}
+
 	}
 
 	@Override
@@ -259,10 +300,10 @@ class FileCache implements ICacheSystem {
 	int cache_size = 1000;
 
 	/** The cache. */
-	Map<String, byte[]> cache = new HashMap<String, byte[]>();
+	Map<String, Object[]> cache = new HashMap<String, Object[]>();
 
 	/** The queue. */
-	List<String> queue = new ArrayList<String>();
+//	List<String> queue = new ArrayList<String>();
 
 	private static Map<String, LiveHand> _local = new HashMap<String, LiveHand>();
 

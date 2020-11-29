@@ -6,7 +6,7 @@ import java.io.InputStream;
 import org.giiwa.bean.Disk;
 import org.giiwa.net.nio.IoRequest;
 
- class DFileInputStream extends InputStream {
+class DFileInputStream extends InputStream {
 
 	// private static Log log = LogFactory.getLog(DFileInputStream.class);
 
@@ -19,6 +19,11 @@ import org.giiwa.net.nio.IoRequest;
 	int pos = 0;
 	long offset = 0;
 	boolean last = false;
+
+	@Override
+	public int available() throws IOException {
+		return (int) (FileClient.get(url, path).info(filename).length);
+	}
 
 	public static DFileInputStream create(Disk disk, String filename) {
 		DFileInputStream d = new DFileInputStream();
