@@ -58,7 +58,7 @@ public class JSTest {
 	}
 
 	@Test
-	public void testBindings() {
+	public void testScales() {
 
 		_init();
 
