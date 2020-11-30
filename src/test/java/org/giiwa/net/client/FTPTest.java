@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.Properties;
 
 import org.apache.log4j.PropertyConfigurator;
+import org.giiwa.bean.Temp;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 import org.junit.Test;
@@ -48,6 +49,33 @@ public class FTPTest {
 		prop.put("log4j.logger.org.giiwa", "debug");
 
 		PropertyConfigurator.configure(prop);
+
+	}
+
+	@Test
+	public void testGet() {
+
+		init();
+
+		try {
+
+			FTP s = FTP.create(Url.create("ftp://188.131.146.157?username=ftpuser1&passwd=ftp@666"));
+			File[] l1 = s.list("/home/ftpuser1/error");
+			for (File f1 : l1) {
+
+				Temp t = s.get(f1);
+				File f2 = t.getFile();
+
+				System.out.println(f1.length() + "/" + f2.length() + ", filename=" + f2.getAbsolutePath());
+
+			}
+
+			s.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
 
 	}
 

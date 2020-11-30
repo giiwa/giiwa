@@ -51,8 +51,15 @@ public class FTP {
 
 	public Temp get(File remote) throws IOException {
 		Temp t = Temp.create(remote.getName());
+
+//		client.enterLocalPassiveMode();
+		client.setFileType(FTPClient.BINARY_FILE_TYPE);
+
 		OutputStream out = t.getOutputStream();
 		client.retrieveFile(remote.getAbsolutePath(), out);
+		out.flush();
+		out.close();
+
 		return t;
 	}
 
@@ -192,6 +199,7 @@ public class FTP {
 			FTP f = new FTP();
 			f.client = ftp;
 			f.client.setConnectTimeout(10000);
+			f.client.setControlEncoding("UTF-8");
 
 			if (log.isDebugEnabled())
 				log.debug("logined");

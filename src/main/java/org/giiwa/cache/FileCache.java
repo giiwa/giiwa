@@ -129,6 +129,8 @@ class FileCache implements ICacheSystem {
 					}
 
 				});
+
+				return true;
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);

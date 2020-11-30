@@ -55,8 +55,21 @@ public class JS {
 		}
 
 		if (params != null && !params.isEmpty()) {
-			js = "function aaa(" + X.join(params.keySet(), ",") + ") {" + js + "};aaa("
-					+ X.join(X.asList(params.keySet(), s -> "p." + s), ",") + ");";
+
+			List<String> l1 = X.asList(params.keySet(), s -> {
+				if (!X.isEmpty(s)) {
+					String s1 = (String) s;
+					char c = s1.charAt(0);
+					if ((c == '_') || (c >= 'A' && c <= 'z')) {
+						return s1;
+					}
+				}
+				return null;
+			});
+
+			js = "function aaa(" + X.join(l1, ",") + ") {" + js + "};aaa(" + X.join(X.asList(l1, s -> "p." + s), ",")
+					+ ");";
+
 		}
 
 		_E e = compile(js, params != null);

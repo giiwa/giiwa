@@ -6,6 +6,7 @@ import org.giiwa.bean.Data;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Table;
 import org.giiwa.dao.X;
+import org.giiwa.json.JSON;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.web.Controller;
@@ -38,7 +39,7 @@ public class beancontroller extends Controller {
 		bs.count();
 
 		this.set("list", bs.asList(e -> {
-			return e.json();
+			return _refine(e);
 		})).set("total", bs.getTotal()).set("s", s).set("n", n).set("pages", bs.getTotal() / n).send(200);
 
 	}
@@ -101,7 +102,7 @@ public class beancontroller extends Controller {
 		if (d == null) {
 			this.set(X.ERROR, "参数错误, [id]").send(201);
 		} else {
-			this.set("data", d.json()).send(200);
+			this.set("data", _refine(d)).send(200);
 		}
 
 	}
@@ -137,6 +138,10 @@ public class beancontroller extends Controller {
 	protected void _fetch(V v) {
 		// TODO Auto-generated method stub
 
+	}
+
+	protected JSON _refine(Data e) {
+		return e.json();
 	}
 
 	@Path(path = "delete", login = true)
