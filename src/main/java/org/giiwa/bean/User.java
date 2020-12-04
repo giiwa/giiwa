@@ -870,6 +870,7 @@ public class User extends Bean {
 	 * "admin" user, with "admin" as password
 	 */
 	public static void checkAndInit() {
+
 		if (Helper.isConfigured()) {
 			try {
 
@@ -886,16 +887,16 @@ public class User extends Bean {
 				if (!dao.exists(0L)) {
 					List<User> list = User.loadByAccess("access.config.admin");
 					if (list == null || list.size() == 0) {
-						String passwd = UID.random(16);
 						try {
+							String passwd = UID.random(16);
+							User.create("root", V.create("id", 0L).set("name", "root").set("password", passwd)
+									.set("nickname", "root"));
 							PrintStream out = new PrintStream(Controller.GIIWA_HOME + "/root.pwd");
 							out.print(passwd);
 							out.close();
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
-						User.create("root",
-								V.create("id", 0L).set("name", "root").set("password", passwd).set("nickname", "root"));
 					}
 				}
 			} catch (Exception e) {
