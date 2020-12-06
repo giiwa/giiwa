@@ -387,8 +387,8 @@ public final class Html {
 			}
 		}
 
-		Map<String, JSON> l2 = new HashMap<String, JSON>();
-
+//		Map<String, JSON> l2 = new HashMap<String, JSON>();
+		List<JSON> l2 = JSON.createList();
 		List<Element> l1 = select(selector);
 
 		if (l1 != null && l1.size() > 0) {
@@ -422,19 +422,19 @@ public final class Html {
 					href = u1.encodedUrl();
 				}
 
-				if (!l2.containsKey(href) && _match(href, hh)) {
+				if (_match(href, hh)) {
 					JSON a = JSON.create();
 					List<Attribute> l3 = e1.attributes().asList();
 					l3.forEach(e -> {
 						a.put(e.getKey(), e.getValue());
 					});
-					a.append("href", href).append("text", e1.text());
-					l2.put(href, a);
+					a.append("href", href).append("url", href).append("text", e1.text());
+					l2.add(a);
 				}
 			}
 		}
 
-		return new ArrayList<JSON>(l2.values());
+		return l2;
 	}
 
 	/**
