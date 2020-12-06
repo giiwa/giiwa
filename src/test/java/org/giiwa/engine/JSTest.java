@@ -87,7 +87,6 @@ public class JSTest {
 
 					TimeStamp t = TimeStamp.create();
 					String code = "return b + c";
-//					String code = "function aaa() {return b + c;};aaa();";
 					JSON j1 = JSON.create();
 					j1.append("b", n);
 					j1.append("c", 2 * n);
@@ -95,6 +94,9 @@ public class JSTest {
 
 					try {
 						Object r = JS.run(code, j1);
+//						System.out.println(r + ", cost=" + t.past() + ", n=" + n);
+//						Object r = j1.getLong("b") + j1.getLong("c");
+//						Object r = Velocity.parse("#set($a=$b+$c) $a", j1);
 						System.out.println(r + ", cost=" + t.past() + ", n=" + n);
 
 					} catch (Exception e) {
@@ -151,14 +153,14 @@ public class JSTest {
 
 		Task.init(100);
 
-		Properties prop = new Properties();
-		prop.put("log4j.rootLogger", "WARN,Log1");
-		prop.put("log4j.appender.Log1", "org.apache.log4j.ConsoleAppender");
-		prop.put("log4j.appender.Log1.layout", "org.apache.log4j.PatternLayout");
-		prop.put("log4j.appender.G.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
-		prop.put("log4j.logger.org.giiwa", "debug");
-
-		PropertyConfigurator.configure(prop);
+//		Properties prop = new Properties();
+//		prop.put("log4j.rootLogger", "WARN,Log1");
+//		prop.put("log4j.appender.Log1", "org.apache.log4j.ConsoleAppender");
+//		prop.put("log4j.appender.Log1.layout", "org.apache.log4j.PatternLayout");
+//		prop.put("log4j.appender.G.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
+//		prop.put("log4j.logger.org.giiwa", "debug");
+//
+//		PropertyConfigurator.configure(prop);
 
 		Controller.GIIWA_HOME = "/Users/joe/d/";
 

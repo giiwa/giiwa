@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -51,6 +54,7 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.DnsResolver;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.BufferedHttpEntity;
@@ -423,7 +427,7 @@ public final class Http {
 		CloseableHttpResponse resp = null;
 
 		try {
-			
+
 //			resp = client.execute(get, context);
 			resp = client.execute(get, context);
 
@@ -1436,8 +1440,17 @@ public final class Http {
 				return builder.setProxy(new HttpHost(ss[0], X.toInt(ss[1]))).build();
 			}
 		}
+
+		builder.setDnsResolver(dns);
+
 		return builder.build();
 	}
+
+	public void dns(String host, String ip) {
+		dns.addResolve(host, ip);
+	}
+
+	private MyDnsResolver dns = new MyDnsResolver();
 
 	private String getContext(HttpResponse response) {
 
@@ -2062,6 +2075,24 @@ public final class Http {
 		}
 
 		return r;
+	}
+
+	private class MyDnsResolver implements DnsResolver {
+
+		private final Map<String, InetAddress[]> MAPPINGS = new HashMap<String, InetAddress[]>();
+
+		private void addResolve(String host, String ip) {
+			try {
+				MAPPINGS.put(host, new InetAddress[] { InetAddress.getByName(ip) });
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+		}
+
+		@Override
+		public InetAddress[] resolve(String host) throws UnknownHostException {
+			return MAPPINGS.containsKey(host) ? MAPPINGS.get(host) : new InetAddress[] { InetAddress.getByName(host) };
+		}
 	}
 
 }

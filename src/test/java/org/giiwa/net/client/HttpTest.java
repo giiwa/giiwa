@@ -14,4 +14,14 @@ public class HttpTest {
 		System.out.println(r.cookie());
 	}
 
+	@Test
+	public void testDns() {
+		String s = "https://www.doctrine.af.mil/";
+		Http h = Http.create();
+		h.dns("www.doctrine.af.mil", "104.69.79.225");
+		Http.Response r = h.get(s);
+		System.out.println(r.body);
+
+	}
+
 }
