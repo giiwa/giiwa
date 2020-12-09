@@ -105,9 +105,6 @@ public class HelperTest {
 		
 		BeanDAO<Long, Data> dao = BeanDAO.create(Data.class);
 		
-		dao.count(q, group, n)
-		dao.count(name, q)
-		Helper.count(table, name, q)
 	}
 
 }

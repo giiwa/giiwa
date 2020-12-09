@@ -983,24 +983,58 @@ public final class X {
 						jdk.nashorn.api.scripting.ScriptObjectMirror m1 = (jdk.nashorn.api.scripting.ScriptObjectMirror) o2;
 						if (m1.isArray()) {
 							List<?> l1 = JSON.fromObjects(m1);
-							l2.add((T) l1);
+							if (cb != null) {
+								T t = cb.apply(l1);
+								if (t != null) {
+									l2.add(t);
+								}
+							} else {
+								l2.add((T) l1);
+							}
 						} else {
-							l2.add((T) JSON.fromObject(m1));
+							Object e = JSON.fromObject(m1);
+							if (cb != null) {
+								T t = cb.apply(e);
+								if (t != null) {
+									l2.add(t);
+								}
+							} else {
+								l2.add((T) e);
+							}
 						}
 					} else {
-						l2.add((T) o2);
+						if (cb != null) {
+							T t = cb.apply(o2);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) o2);
+						}
 					}
 				}
 			} else {
-				l2.add((T) JSON.fromObject(o));
-			}
-		} else if (o instanceof Iterable) {
-			Collection l1 = (Collection) o;
-			for (Object e : l1) {
+				Object e = JSON.fromObject(o);
 				if (cb != null) {
 					T t = cb.apply(e);
 					if (t != null) {
 						l2.add(t);
+					}
+				} else {
+					l2.add((T) e);
+				}
+			}
+		} else if (o instanceof Iterable) {
+			Collection l1 = (Collection) o;
+			for (Object e : l1) {
+				if (e != null) {
+					if (cb != null) {
+						T t = cb.apply(e);
+						if (t != null) {
+							l2.add(t);
+						}
+					} else {
+						l2.add((T) e);
 					}
 				}
 			}
@@ -1012,80 +1046,138 @@ public final class X {
 			if (X.isSame(name, "[D")) {
 				double[] l1 = (double[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e != null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else if (X.isSame(name, "[I")) {
 				int[] l1 = (int[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e != null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else if (X.isSame(name, "[J")) {
 				long[] l1 = (long[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e != null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else if (X.isSame(name, "[F")) {
 				float[] l1 = (float[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e == null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else if (X.isSame(name, "[B")) {
 				byte[] l1 = (byte[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e != null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else if (X.isSame(name, "[S")) {
 				short[] l1 = (short[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e != null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else if (X.isSame(name, "[C")) {
 				char[] l1 = (char[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e == null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else if (X.isSame(name, "[Z")) {
 				boolean[] l1 = (boolean[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e == null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			} else {
 				Object[] l1 = (Object[]) o;
 				for (Object e : l1) {
-					T t = cb.apply(e);
-					if (t != null) {
-						l2.add(t);
+					if (e == null) {
+						if (cb != null) {
+							T t = cb.apply(e);
+							if (t != null) {
+								l2.add(t);
+							}
+						} else {
+							l2.add((T) e);
+						}
 					}
 				}
 			}
-		} else {
-			T t = cb.apply(o);
-			if (t != null) {
-				l2.add(t);
+		} else if (o != null) {
+			if (cb != null) {
+				T t = cb.apply(o);
+				if (t != null) {
+					l2.add(t);
+				}
+			} else {
+				l2.add((T) o);
 			}
 		}
 		return l2;
