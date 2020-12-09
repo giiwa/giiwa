@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
+import org.giiwa.bean.Data;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
@@ -97,6 +98,16 @@ public class HelperTest {
 //		q = W.create().and("parentid", 95).or("type", new Integer[] { 0, 1 }, W.OP.neq).sort("seq");
 //
 //		System.out.println("q=" + q);
+	}
+
+	@Test
+	public void testGroup() {
+		
+		BeanDAO<Long, Data> dao = BeanDAO.create(Data.class);
+		
+		dao.count(q, group, n)
+		dao.count(name, q)
+		Helper.count(table, name, q)
 	}
 
 }
