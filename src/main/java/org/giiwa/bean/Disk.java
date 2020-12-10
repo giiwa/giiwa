@@ -28,7 +28,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
-import org.giiwa.dfile.MyDFile;
+import org.giiwa.dfile.NioDFile;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.web.Controller;
@@ -250,14 +250,14 @@ public class Disk extends Bean {
 			Beans<Disk> bs = disks(TYPE_DATA);
 
 			for (Disk e : bs) {
-				DFile d = MyDFile.create(e, filename);
+				DFile d = NioDFile.create(e, filename);
 				if (d.exists()) {
 					return d;
 				}
 			}
 
 			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = MyDFile.create(Disk._get(TYPE_DATA), filename);
+			DFile f = NioDFile.create(Disk._get(TYPE_DATA), filename);
 
 			return f;
 		}
@@ -279,7 +279,7 @@ public class Disk extends Bean {
 			Beans<Disk> bs = disks(type);
 			if (bs != null) {
 				for (Disk e : bs) {
-					DFile d = MyDFile.create(e, filename);
+					DFile d = NioDFile.create(e, filename);
 					if (d.exists()) {
 						return d;
 					}
@@ -287,7 +287,7 @@ public class Disk extends Bean {
 			}
 
 			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = MyDFile.create(Disk._get(type), filename);
+			DFile f = NioDFile.create(Disk._get(type), filename);
 
 			return f;
 		}
@@ -301,7 +301,7 @@ public class Disk extends Bean {
 		Beans<Disk> bs = disks(TYPE_DATA);
 
 		for (Disk e : bs) {
-			DFile d = MyDFile.create(e, filename);
+			DFile d = NioDFile.create(e, filename);
 			if (d.exists()) {
 				return true;
 			}
@@ -326,7 +326,7 @@ public class Disk extends Bean {
 		Beans<Disk> bs = disks(TYPE_ALL);
 
 		for (Disk e : bs) {
-			DFile f = MyDFile.create(e, filename);
+			DFile f = NioDFile.create(e, filename);
 			try {
 				if (f.exists()) {
 					DFile[] ff = f.listFiles();
@@ -371,7 +371,7 @@ public class Disk extends Bean {
 
 		for (Disk e : bs) {
 
-			DFile f = MyDFile.create(e, filename);
+			DFile f = NioDFile.create(e, filename);
 
 			f.delete(age);
 

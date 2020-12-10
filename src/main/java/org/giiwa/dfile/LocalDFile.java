@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
@@ -22,20 +21,21 @@ import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 
 /**
- * Demo bean
+ * 
+ * Local File System
  * 
  * @author joe
  * 
  */
 
-public class MyDFile extends DFile {
+public class LocalDFile extends DFile {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static Log log = LogFactory.getLog(MyDFile.class);
+	private static Log log = LogFactory.getLog(LocalDFile.class);
 
 	private long disk;
 
@@ -105,13 +105,13 @@ public class MyDFile extends DFile {
 		return Base32.encode(this.getFilename().getBytes());
 	}
 
-	
 	public boolean delete(long age) {
 		check();
 
 		try {
 
-			return FileClient.get(url, path).delete(filename, age);
+			File f = new File(path + File.separator + filename);
+			return IOUtil.delete(f, age) > 0;
 
 		} catch (Exception e) {
 			log.error(url, e);
@@ -158,7 +158,7 @@ public class MyDFile extends DFile {
 		return true;
 	}
 
-	public MyDFile getParentFile() {
+	public DFile getParentFile() {
 		int i = filename.lastIndexOf("/", filename.length() - 1);
 		if (i > 0) {
 			return create(disk_obj, filename.substring(0, i));
@@ -172,8 +172,18 @@ public class MyDFile extends DFile {
 	private FileInfo getInfo() {
 		if (info == null) {
 			try {
-				info = FileClient.get(url, path).info(filename);
-			} catch (IOException e) {
+
+				File f = new File(path + File.separator + filename);
+
+//				info = FileClient.get(url, path).info(filename);
+
+				FileInfo info = new FileInfo();
+				info.exists = f.exists() ? true : false;
+				info.isfile = f.isFile() ? true : false;
+				info.length = f.length();
+				info.lastmodified = f.lastModified();
+
+			} catch (Exception e) {
 				log.error(url, e);
 				Disk.dao.update(this.disk, V.create("bad", 1));
 
@@ -204,20 +214,37 @@ public class MyDFile extends DFile {
 		return X.EMPTY;
 	}
 
-	public MyDFile[] listFiles() throws IOException {
+	public DFile[] listFiles() throws IOException {
+
 		check();
 
-		List<FileInfo> l1 = FileClient.get(url, path).list(filename);
+//		List<FileInfo> l1 = FileClient.get(url, path).list(filename);
 
-		MyDFile[] l2 = new MyDFile[l1.size()];
-		int i = 0;
+		File f = new File(path + File.separator + filename);
 
-		for (FileInfo j1 : l1) {
-			MyDFile d1 = MyDFile.create(disk_obj, X.getCanonicalPath("/" + filename + "/" + j1.name), j1);
-			l2[i++] = d1;
+		File[] ff = f.listFiles();
+		if (ff != null) {
+
+			DFile[] l2 = new LocalDFile[ff.length];
+
+			for (int i = 0; i < ff.length; i++) {
+
+				File f1 = ff[i];
+
+				FileInfo j1 = new FileInfo();
+				j1.name = f1.getName();
+				info.exists = true;
+				info.isfile = f1.isFile();
+				info.length = f1.length();
+				info.lastmodified = f1.lastModified();
+//				info.creation = a.readLong();
+
+				l2[i] = LocalDFile.create(disk_obj, X.getCanonicalPath("/" + filename + "/" + j1.name), j1);
+
+			}
+			return l2;
 		}
-
-		return l2;
+		return null;
 	}
 
 	public long getCreation() {
@@ -251,7 +278,11 @@ public class MyDFile extends DFile {
 	public boolean move(DFile file) {
 
 		try {
-			return FileClient.get(url, path).move(filename, file.getFilename());
+
+			File f1 = new File(path + File.separator + filename);
+			File f2 = new File(path + File.separator + file.getName());
+
+			return f1.renameTo(f2);
 		} catch (Exception e) {
 			log.error(url, e);
 
@@ -261,13 +292,13 @@ public class MyDFile extends DFile {
 		return false;
 	}
 
-	public static MyDFile create(Disk d, String filename) {
+	public static DFile create(Disk d, String filename) {
 		return create(d, filename, null);
 	}
 
-	public static MyDFile create(Disk d, String filename, FileInfo info) {
+	public static DFile create(Disk d, String filename, FileInfo info) {
 
-		MyDFile e = new MyDFile();
+		LocalDFile e = new LocalDFile();
 
 		e.filename = filename;
 		e.info = info;
@@ -288,16 +319,16 @@ public class MyDFile extends DFile {
 
 	@Override
 	public String toString() {
-		return "DFile [" + url + filename + ", exists=" + this.exists() + ", dir=" + this.isDirectory() + "]";
+		return "LocalDFile [" + url + filename + ", exists=" + this.exists() + ", dir=" + this.isDirectory() + "]";
 	}
 
 	public long count(Consumer<String> moni) {
 		long n = 0;
 		if (this.isDirectory()) {
 			try {
-				MyDFile[] ff = this.listFiles();
+				DFile[] ff = this.listFiles();
 				if (ff != null) {
-					for (MyDFile f : ff) {
+					for (DFile f : ff) {
 						n += f.count(moni);
 					}
 				}
@@ -319,9 +350,9 @@ public class MyDFile extends DFile {
 		long n = 0;
 		if (this.isDirectory()) {
 			try {
-				MyDFile[] ff = this.listFiles();
+				DFile[] ff = this.listFiles();
 				if (ff != null) {
-					for (MyDFile f : ff) {
+					for (DFile f : ff) {
 						n += f.sum(moni);
 					}
 				}

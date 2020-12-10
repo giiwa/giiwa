@@ -21,7 +21,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.dfile.FileServer;
-import org.giiwa.dfile.MyDFile;
+import org.giiwa.dfile.NioDFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Monitor;
@@ -335,7 +335,7 @@ public class dfile extends Controller {
 						Disk.reset();
 
 						if (f == 0) {
-							DFile f = MyDFile.create(d, "/");
+							DFile f = NioDFile.create(d, "/");
 							DFile[] ff = f.listFiles();
 							if (ff != null) {
 								for (DFile f1 : ff) {
