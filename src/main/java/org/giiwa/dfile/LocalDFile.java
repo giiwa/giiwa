@@ -17,7 +17,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.Node;
 import org.giiwa.dao.X;
-import org.giiwa.dao.Helper.V;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 
@@ -71,27 +70,29 @@ public class LocalDFile extends DFile {
 
 		if (disk_obj == null && disk > 0) {
 			disk_obj = Disk.dao.load(disk);
-		}
 
-		if (disk_obj != null) {
-			path = disk_obj.getPath();
-			node_obj = disk_obj.getNode_obj();
+			if (disk_obj != null) {
+				path = disk_obj.getPath();
+				node_obj = disk_obj.getNode_obj();
 
-			if (node_obj != null) {
-				url = node_obj.getUrl();
-
-				return true;
+				if (node_obj != null) {
+					url = node_obj.getUrl();
+					return true;
+				}
 			}
+
 		}
 
-		return false;
+		return disk > 0;
 	}
 
 	public boolean exists() {
+
 		check();
 
 		getInfo();
 		return info != null && info.exists;
+
 	}
 
 	public String getAbsolutePath() {
@@ -117,7 +118,7 @@ public class LocalDFile extends DFile {
 		} catch (Exception e) {
 			log.error(url, e);
 
-			Disk.dao.update(this.disk, V.create("bad", 1));
+//			Disk.dao.update(this.disk, V.create("bad", 1));
 
 		} finally {
 			// dao.delete(W.create("disk", disk).and("filename", filename));
@@ -184,7 +185,7 @@ public class LocalDFile extends DFile {
 			return f.mkdirs();
 		} catch (Exception e) {
 			log.error(url, e);
-			Disk.dao.update(this.disk, V.create("bad", 1));
+//			Disk.dao.update(this.disk, V.create("bad", 1));
 		}
 		return true;
 	}
@@ -206,7 +207,9 @@ public class LocalDFile extends DFile {
 
 				File f = new File(path + File.separator + filename);
 
-				FileInfo info = new FileInfo();
+//				log.debug("f=" + f.getAbsolutePath());
+
+				info = new FileInfo();
 				info.exists = f.exists() ? true : false;
 				info.isfile = f.isFile() ? true : false;
 				info.length = f.length();
@@ -214,7 +217,7 @@ public class LocalDFile extends DFile {
 
 			} catch (Exception e) {
 				log.error(url, e);
-				Disk.dao.update(this.disk, V.create("bad", 1));
+//				Disk.dao.update(this.disk, V.create("bad", 1));
 
 			}
 		}
@@ -260,11 +263,10 @@ public class LocalDFile extends DFile {
 
 				FileInfo j1 = new FileInfo();
 				j1.name = f1.getName();
-				info.exists = true;
-				info.isfile = f1.isFile();
-				info.length = f1.length();
-				info.lastmodified = f1.lastModified();
-//				info.creation = a.readLong();
+				j1.exists = true;
+				j1.isfile = f1.isFile();
+				j1.length = f1.length();
+				j1.lastmodified = f1.lastModified();
 
 				l2[i] = LocalDFile.create(disk_obj, X.getCanonicalPath("/" + filename + "/" + j1.name), j1);
 
@@ -313,7 +315,7 @@ public class LocalDFile extends DFile {
 		} catch (Exception e) {
 			log.error(url, e);
 
-			Disk.dao.update(this.disk, V.create("bad", 1));
+//			Disk.dao.update(this.disk, V.create("bad", 1));
 
 		}
 		return false;
@@ -337,7 +339,7 @@ public class LocalDFile extends DFile {
 			if (d.getNode_obj() != null) {
 				e.url = d.getNode_obj().getUrl();
 			}
-			e.path = d.getPath();
+			e.path = d.path;
 		}
 
 		return e;

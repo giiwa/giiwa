@@ -17,7 +17,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.Node;
 import org.giiwa.dao.X;
-import org.giiwa.dao.Helper.V;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
 
@@ -116,7 +115,7 @@ public class NioDFile extends DFile {
 		} catch (Exception e) {
 			log.error(url, e);
 
-			Disk.dao.update(this.disk, V.create("bad", 1));
+//			Disk.dao.update(this.disk, V.create("bad", 1));
 
 		} finally {
 			// dao.delete(W.create("disk", disk).and("filename", filename));
@@ -161,7 +160,7 @@ public class NioDFile extends DFile {
 			return FileClient.get(url, path).mkdirs(this.filename);
 		} catch (Exception e) {
 			log.error(url, e);
-			Disk.dao.update(this.disk, V.create("bad", 1));
+//			Disk.dao.update(this.disk, V.create("bad", 1));
 		}
 		return true;
 	}
@@ -183,7 +182,7 @@ public class NioDFile extends DFile {
 				info = FileClient.get(url, path).info(filename);
 			} catch (IOException e) {
 				log.error(url, e);
-				Disk.dao.update(this.disk, V.create("bad", 1));
+//				Disk.dao.update(this.disk, V.create("bad", 1));
 
 			}
 		}
@@ -263,7 +262,7 @@ public class NioDFile extends DFile {
 		} catch (Exception e) {
 			log.error(url, e);
 
-			Disk.dao.update(this.disk, V.create("bad", 1));
+//			Disk.dao.update(this.disk, V.create("bad", 1));
 
 		}
 		return false;

@@ -63,7 +63,7 @@ public class Disk extends Bean {
 	String node;
 
 	@Column(memo = "路径")
-	String path;
+	public String path;
 
 	@Column(memo = "type", value = "data, nginx")
 	String type = "data";
@@ -312,11 +312,11 @@ public class Disk extends Bean {
 	}
 
 	public DFile create(String filename) {
-//		if (this.isLocal()) {
-//			return LocalDFile.create(this, filename);
-//		} else {
-		return NioDFile.create(this, filename);
-//		}
+		if (this.isLocal()) {
+			return LocalDFile.create(this, filename);
+		} else {
+			return NioDFile.create(this, filename);
+		}
 	}
 
 	private static Disk _get(String type) throws IOException {

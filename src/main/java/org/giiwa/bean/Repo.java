@@ -276,8 +276,7 @@ public class Repo {
 				file = Disk.seek(path + name);
 			}
 
-			log.debug("id=" + id + ", path=" + path + ", name=" + name + ", file=" + file + ", type="
-					+ file.getDisk_obj().type);
+			log.debug("id=" + id + ", path=" + path + ", name=" + name + ", file=" + file);
 		}
 
 		public long store(long position, InputStream in, long total) throws Exception {
