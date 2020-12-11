@@ -223,7 +223,8 @@ public class f extends Controller {
 			String id = UID.id(login.getId(), filename, total, lastModified);
 
 			if (log.isDebugEnabled())
-				log.debug("storing, id=" + id + ", name=" + filename + ", total=" + total + ", last=" + lastModified);
+				log.debug("storing, id=" + id + ", name=" + filename + ", position=" + position + ", total=" + total
+						+ ", last=" + lastModified);
 
 			Repo.Entity e1 = Repo.get(id, path, filename);
 

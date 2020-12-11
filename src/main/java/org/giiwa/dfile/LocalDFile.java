@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -126,9 +127,15 @@ public class LocalDFile extends DFile {
 	}
 
 	public InputStream getInputStream() {
-		check();
 
-		return DFileInputStream.create(this.getDisk_obj(), filename);
+		try {
+			check();
+
+			return new FileInputStream(new File(path + File.separator + filename));
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	public OutputStream getOutputStream() throws FileNotFoundException {
@@ -139,18 +146,42 @@ public class LocalDFile extends DFile {
 
 		check();
 
-		// if (offset == 0) {
-		// GLog.applog.info(dfile.class, "put", filename, null, null);
-		// }
+		return DFileOutputStream.create(this.getDisk_obj(), filename, offset, (o1, bb, len) -> {
 
-		return DFileOutputStream.create(this.getDisk_obj(), filename, offset);
+			RandomAccessFile a = null;
+
+			try {
+				if (bb != null) {
+
+					File f = new File(path + File.separator + filename);
+
+					if (!f.exists()) {
+						f.getParentFile().mkdirs();
+						f.createNewFile();
+					}
+					a = new RandomAccessFile(f, "rws");
+					a.seek(offset);
+					a.write(bb, 0, len);
+				}
+
+				return o1 + len;
+
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				X.close(a);
+			}
+
+			return o1;
+		});
 	}
 
 	public boolean mkdirs() {
 		check();
 
 		try {
-			return FileClient.get(url, path).mkdirs(this.filename);
+			File f = new File(path + File.separator + filename);
+			return f.mkdirs();
 		} catch (Exception e) {
 			log.error(url, e);
 			Disk.dao.update(this.disk, V.create("bad", 1));
@@ -174,8 +205,6 @@ public class LocalDFile extends DFile {
 			try {
 
 				File f = new File(path + File.separator + filename);
-
-//				info = FileClient.get(url, path).info(filename);
 
 				FileInfo info = new FileInfo();
 				info.exists = f.exists() ? true : false;
@@ -217,8 +246,6 @@ public class LocalDFile extends DFile {
 	public DFile[] listFiles() throws IOException {
 
 		check();
-
-//		List<FileInfo> l1 = FileClient.get(url, path).list(filename);
 
 		File f = new File(path + File.separator + filename);
 

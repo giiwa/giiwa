@@ -143,7 +143,15 @@ public class NioDFile extends DFile {
 		// GLog.applog.info(dfile.class, "put", filename, null, null);
 		// }
 
-		return DFileOutputStream.create(this.getDisk_obj(), filename, offset);
+		return DFileOutputStream.create(this.getDisk_obj(), filename, offset, (o1, bb, len) -> {
+			try {
+				return FileClient.get(url, path).put(filename, o1, bb, len);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+			return o1;
+		});
+
 	}
 
 	public boolean mkdirs() {

@@ -6,24 +6,26 @@ import java.io.OutputStream;
 import org.giiwa.bean.Disk;
 import org.giiwa.net.nio.IoRequest;
 
- class DFileOutputStream extends OutputStream {
+class DFileOutputStream extends OutputStream {
 
 	String url;
 	String path;
 	String filename;
 	Disk disk;
+	FlushFunc flush;
 
 	byte[] bb = new byte[IoRequest.BIG];
 	int pos = 0;
 	long offset = 0;
 
-	public static DFileOutputStream create(Disk disk, String filename, long offset) {
+	public static DFileOutputStream create(Disk disk, String filename, long offset, FlushFunc flush) {
 		DFileOutputStream d = new DFileOutputStream();
 		d.disk = disk;
 		d.filename = filename;
 		d.offset = offset;
 		d.url = disk.getNode_obj().getUrl();
 		d.path = disk.getPath();
+		d.flush = flush;
 		return d;
 	}
 
@@ -59,7 +61,8 @@ import org.giiwa.net.nio.IoRequest;
 	@Override
 	public void flush() throws IOException {
 		if (pos > 0) {
-			offset = FileClient.get(url, path).put(filename, offset, bb, pos);
+			offset = flush.accept(offset, bb, pos);
+//			offset = FileClient.get(url, path).put(filename, offset, bb, pos);
 			pos = 0;
 		}
 	}
@@ -68,6 +71,11 @@ import org.giiwa.net.nio.IoRequest;
 	public void close() throws IOException {
 		flush();
 		super.close();
+	}
+
+	@FunctionalInterface
+	public interface FlushFunc {
+		long accept(long offset, byte[] bb, int len);
 	}
 
 }

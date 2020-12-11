@@ -28,6 +28,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
+import org.giiwa.dfile.LocalDFile;
 import org.giiwa.dfile.NioDFile;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
@@ -250,14 +251,14 @@ public class Disk extends Bean {
 			Beans<Disk> bs = disks(TYPE_DATA);
 
 			for (Disk e : bs) {
-				DFile d = NioDFile.create(e, filename);
+				DFile d = e.create(filename);
 				if (d.exists()) {
 					return d;
 				}
 			}
 
 			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = NioDFile.create(Disk._get(TYPE_DATA), filename);
+			DFile f = Disk._get(TYPE_DATA).create(filename);
 
 			return f;
 		}
@@ -279,7 +280,7 @@ public class Disk extends Bean {
 			Beans<Disk> bs = disks(type);
 			if (bs != null) {
 				for (Disk e : bs) {
-					DFile d = NioDFile.create(e, filename);
+					DFile d = e.create(filename);
 					if (d.exists()) {
 						return d;
 					}
@@ -287,7 +288,7 @@ public class Disk extends Bean {
 			}
 
 			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = NioDFile.create(Disk._get(type), filename);
+			DFile f = Disk._get(type).create(filename);
 
 			return f;
 		}
@@ -301,13 +302,21 @@ public class Disk extends Bean {
 		Beans<Disk> bs = disks(TYPE_DATA);
 
 		for (Disk e : bs) {
-			DFile d = NioDFile.create(e, filename);
+			DFile d = e.create(filename);
 			if (d.exists()) {
 				return true;
 			}
 		}
 
 		return false;
+	}
+
+	public DFile create(String filename) {
+//		if (this.isLocal()) {
+//			return LocalDFile.create(this, filename);
+//		} else {
+		return NioDFile.create(this, filename);
+//		}
 	}
 
 	private static Disk _get(String type) throws IOException {
@@ -326,7 +335,7 @@ public class Disk extends Bean {
 		Beans<Disk> bs = disks(TYPE_ALL);
 
 		for (Disk e : bs) {
-			DFile f = NioDFile.create(e, filename);
+			DFile f = e.create(filename);
 			try {
 				if (f.exists()) {
 					DFile[] ff = f.listFiles();
@@ -371,7 +380,7 @@ public class Disk extends Bean {
 
 		for (Disk e : bs) {
 
-			DFile f = NioDFile.create(e, filename);
+			DFile f = e.create(filename);
 
 			f.delete(age);
 
