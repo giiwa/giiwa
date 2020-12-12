@@ -54,7 +54,10 @@ public class beancontroller extends Controller {
 		if (X.isEmpty(mapping.method())) {
 			return true;
 		}
+
 		List<String> ss = X.asList(X.split(mapping.method(), "[,;]"), s1 -> s1.toString());
+		log.debug("method=" + mapping.method() + ", ss=" + ss);
+
 		return ss.contains(s);
 
 	}

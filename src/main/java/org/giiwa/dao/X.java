@@ -1088,7 +1088,7 @@ public final class X {
 			} else if (X.isSame(name, "[F")) {
 				float[] l1 = (float[]) o;
 				for (Object e : l1) {
-					if (e == null) {
+					if (e != null) {
 						if (cb != null) {
 							T t = cb.apply(e);
 							if (t != null) {
@@ -1130,7 +1130,7 @@ public final class X {
 			} else if (X.isSame(name, "[C")) {
 				char[] l1 = (char[]) o;
 				for (Object e : l1) {
-					if (e == null) {
+					if (e != null) {
 						if (cb != null) {
 							T t = cb.apply(e);
 							if (t != null) {
@@ -1144,7 +1144,7 @@ public final class X {
 			} else if (X.isSame(name, "[Z")) {
 				boolean[] l1 = (boolean[]) o;
 				for (Object e : l1) {
-					if (e == null) {
+					if (e != null) {
 						if (cb != null) {
 							T t = cb.apply(e);
 							if (t != null) {
@@ -1158,7 +1158,7 @@ public final class X {
 			} else {
 				Object[] l1 = (Object[]) o;
 				for (Object e : l1) {
-					if (e == null) {
+					if (e != null) {
 						if (cb != null) {
 							T t = cb.apply(e);
 							if (t != null) {
