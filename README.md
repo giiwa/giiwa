@@ -1,6 +1,13 @@
 ### 轻量级分布式应用框架 
 [https://www.giisoo.com](https://www.giisoo.com)
 
+#### 开发环境
+* openjdk 17+
+* gradle 7.2+
+* ant 1.10+ (模块开发）
+* Eclipse ｜ vscode 
+
+
 #### 支持MVC
 * 支持Web的MVC开发。
 * View支持Velocity，FreeMaker；同时也支持完全分离的前后端开发。
@@ -25,7 +32,6 @@
 
 #### 安装使用
 * [下载giiwa](https://github.com/giiwa/giiwa/releases)
-
 
 #### 获取代码
 所有最新源码已经托管在Github:
