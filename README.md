@@ -1,7 +1,7 @@
 ### 轻量级分布式应用框架 
 [https://www.giisoo.com](https://www.giisoo.com)
 
-#### 开发环境
+#### 环境
 * openjdk 17+
 * gradle 7.2+
 * ant 1.10+ (模块开发）
