@@ -34,6 +34,11 @@ import org.giiwa.web.*;
 public class token extends Controller {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
 	 * Delete.
 	 */
 	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin")

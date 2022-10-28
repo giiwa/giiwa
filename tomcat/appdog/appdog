@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # chkconfig:   2345 90 10
 # description:  appdog is a apps daemon tool
 # version: v0.2
 # author: joe
-# required: above python2.6
+# required: python3
 
 ### BEGIN INIT INFO
 # Provides:          giiwa
@@ -16,447 +16,415 @@
 # Description:       starts appdog using start-stop-daemon
 ### END INIT INFO
 
-import re, os, sys, time, socket, threading, subprocess, ConfigParser, smtplib, httplib,urllib
-from email.mime.text import MIMEText
-# from setuptools.command.install import _install
+import os, sys, time, threading, subprocess, configparser
+import json
+import requests
+import platform
+import psutil, atexit
+from datetime import datetime
+from scapy.config import conf
 
-global running,logfile,conf,sock,shutdown
-running=True
-shutdown=False
+global logfile,conf
+
 logfile="/var/log/appdog.log"
-re_meminfo_parser = re.compile(r'^(?P<key>\S*):\s*(?P<value>\d*)\s*kB')  
 
 def _log(x):
-	global logfile
-	f1=open(logfile, "ab+")
-	print >>f1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),x
-	f1.close()
-
-def _email_notify(x, sub, content):
-	global conf
-	me=conf.get(x, 'smtp_from')
-	to=conf.get(x, 'smtp_to')
-	mail_user=conf.get(x, 'smtp_user')
-	mail_pass=conf.get(x, 'smtp_pass')
-	mail_host=conf.get(x, 'smtp_server')
-	msg = MIMEText('host:' + conf.get(x, 'host') + '/' + socket.gethostname() + '\n' + content + '\n' + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-	msg['Subject'] = sub
-	msg['From'] = me
-	msg['To'] = to
-	try:
-		s = smtplib.SMTP()
-		s.connect(mail_host)
-		s.login(mail_user,mail_pass)
-		s.sendmail(me, to, msg.as_string())
-		s.close()
-		_log('email: ' + to + ', msg:' + msg.as_string())
-		return 0
-	except Exception, e:
-		_log(str(e))
-		return 0
-		
-def _alert_notify(x, sub, content):
-	global conf
-	host = conf.get(x, 'host')
-	url=conf.get(x, 'url')
-	conn=httplib.HTTPConnection(host)
-	data = urllib.urlencode({'@tag': sub, '@content': content}) 
-	conn.request('GET', url, data) 
-	return 0
-		
-def _notify(subject, content):
-	global conf
-	if conf.has_section('notify:alert'):
-		_alert_notify('notify:alert', subject, content)
-	if conf.has_section('notify:email'):
-		_email_notify('notify:email', subject, content)
-	if conf.has_section('notify:sms'):
-		_sms_notify('notify:sms', subject, content)
-
+    global logfile
+    f1=open(logfile, "a+")
+    x1 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ' ' + x
+    print(x1, file=f1)
+    f1.close()
+    print(x1)
+        
 def _load_config():
-	global conf, logfile
-        conf=ConfigParser.ConfigParser()
-	try:
-		if os.path.isfile("/etc/appdog/apps.conf"):
-			conf.read("/etc/appdog/apps.conf")
-		else:
-			conf.read("apps.conf")
-		logfile=conf.get("global", "log")
-	except Exception, e:
-		print 'not found apps.conf in local or /etc/appdog/'
-		_log('not found apps.conf in local or /etc/appdog/')
-		sys.exit(0)
-
-def _callback(arg):
-	print "i'm out", arg
-	
+    global conf, logfile
+    conf=configparser.ConfigParser()
+    try:
+        if os.path.isfile("/etc/appdog.conf"):
+            conf.read("/etc/appdog.conf")
+        else:
+            conf.read("appdog.conf")
+        logfile=conf.get("global", "log")
+    except Exception as e:
+        _log('read error: appdog.conf')
+        print(e)
+        sys.exit(0)
+    
 def _startx(x, u, cwd):
-	global sock, logfile
-	_log("starting:" + x)
-	try:
-		if len(u)>0:
-			c="sudo -E -u " + u + " " + x + ">" + logfile + " 2>&1"
-			_log(c)
-			subprocess.Popen(c, shell=True, cwd=cwd)
-		else:
-			c=x + ">" + logfile + " 2>&1"
-			_log(c)
-			subprocess.Popen(x, shell=True, cwd=cwd)
-	except Exception, e:
-		_log("failed: " + x)
-		print e
-		print "failed:" + x
-		
+    global logfile
+    _log("starting: " + x)
+    try:
+        if len(u)>0:
+            c="sudo -E -u " + u + " " + x + ">" + logfile + " 2>&1"
+            _log(c)
+            subprocess.Popen(c, shell=True, cwd=cwd)
+        else:
+            c=x + ">" + logfile + " 2>&1"
+            _log(c)
+            subprocess.Popen(x, shell=True, cwd=cwd)
+    except Exception as e:
+        _log(str(e));
+   
+def _stopd(x):
+    #docker kill [containid]
+    os.popen('docker kill ' + x)
+    
+def _dockerx(x):
+    #docker inspect [containid]
+    s = "".join(os.popen('docker inspect ' + x).readlines())
+    
+    l1 = json.loads(s)
+    
+    for e in l1:
+      state = e['State']
+      id = e['Id']
+      running = state['Status']
+      if running in ['running']:
+        #check health
+        if 'Health' in state:
+          health = state['Health']
+          if 'Status' in health:
+            status = health['Status']
+            _log('[' +  id + '] ' + status)
+            if status in ['healthy', 'starting']:
+              #ok
+              continue
+            else:
+              #dead
+              _log('[' +  id + '] kill and start')
+              os.popen('docker kill ' + id)
+              os.popen('docker start ' + id)
+    
+        _log('[' +  id + '] running, no health check')
+    
+      else:
+        _log('[' +  id + '] ' + ' start')
+        os.popen('docker start ' + id)
+        
 def _pidx(x, max):
-	try:
-#		pid and cpu
-		s = os.popen("ps aux | grep '"+x+"' | grep -v 'grep' | awk '{print $2,$3}'").readlines()[0];
-		ss = s.split( )
-		pid = int(ss[0])
-		cpu = float(ss[1])
-#check cpu		
-		if max>0 and cpu>=max:
-			subprocess.call("kill -9 " + str(pid), shell=True)
-			s="[" + x +"] was killed for high cpu=" + str(cpu) + "!"		
-			print s
-			_log(s)
-			pid = -1				
-		return pid
-	except:
-		return -1
+    try:
+        #pid and cpu
+        s = os.popen("ps aux | grep '"+x+"' | grep -v 'grep'").readlines()[0];
+        ss = s.split( )
+        pid = int(ss[1])
+        cpu = float(ss[2])
+        
+        #check cpu        
+        if max>0 and cpu>=max:
+            subprocess.call("kill -9 " + str(pid), shell=True)
+            _log("[" + x +"] was killed for high cpu=" + str(cpu) + "!")
+            pid = -1                
+        return pid
+    except:
+        return -1
+        
 def _stopx(x, name):
-	x=x.strip()
-	pid=_pidx(x, -1)
-	if pid>0:
-		subprocess.call("kill -9 " + str(pid), shell=True)
-		s="[" + name +"] was stoped !"		
-		print s
-		_log(s)
-
-def _mem_usage():
-	result={}   
-	try:  
-		fd=open('/proc/meminfo', 'r')  
-		lines=fd.readlines()  
-	finally:  
-		if fd:  
-			fd.close()  
-	for line in lines:  
-		match=re_meminfo_parser.match(line)  
-		if not match:  
-			continue # skip lines that don't parse  
-		key, value=match.groups(['key', 'value'])  
-		result[key]=float(value)  
-	return (result["MemTotal"]-result["MemFree"])/result["MemTotal"] 
-
-def _read_cpu_usage():  
-	try:  
-		fd = open("/proc/stat", 'r')  
-		lines = fd.readlines()  
-	finally:  
-		if fd:  
-			fd.close()  
-	for line in lines:  
-		l = line.split()  
-		if len(l) < 5:  
-			continue  
-		if l[0].startswith('cpu'):  
-			return l  
-	return []
-
-def _cpu_usage():  
-	cpustr=_read_cpu_usage()  
-	if not cpustr:  
-		return 0  
-	usni1=long(cpustr[1])+long(cpustr[2])+long(cpustr[3])+long(cpustr[5])+long(cpustr[6])+long(cpustr[7])+long(cpustr[4])  
-	usn1=long(cpustr[1])+long(cpustr[2])+long(cpustr[3])  
-	time.sleep(1) 
-	cpustr=_read_cpu_usage()  
-	if not cpustr:  
-		return 0  
-	usni2=long(cpustr[1])+long(cpustr[2])+float(cpustr[3])+long(cpustr[5])+long(cpustr[6])+long(cpustr[7])+long(cpustr[4])  
-	usn2=long(cpustr[1])+long(cpustr[2])+long(cpustr[3])  
-	cpupe=(usn2-usn1)/(usni2-usni1)  
-	return cpupe
-def _disk_usage(path):
-        st = os.statvfs(path)
-        total = st.f_blocks * st.f_frsize
-        used = (st.f_blocks - st.f_bfree) * st.f_frsize
-        return used/total
-
-def _mem_main(x):
-	global running,conf
-	threshold=conf.getfloat(x, 'threshold')
-	try:
-		check=conf.getfloat(x, 'check')
-	except:
-		check=60
-	status=-1
-	while running:
-		mem=_mem_usage()
-		if mem>threshold:
-			if status<0:
-				'''warning'''
-				_notify('warning:mem', 'mem is high: ' + '%0.0f'%(mem * 100) + '%, threshold:' + '%0.0f'%(threshold*100) + '%')
-				status=1
-		else:
-			if status>0:
-				'''reback'''
-				_notify('recover:mem', 'mem back: ' + '%0.0f'%(mem * 100) + '%, threshold:' + '%0.0f'%(threshold*100) + '%')
-				status=-1
-		time.sleep(check)
-	else:
-		return 0
-def _disk_main(x):
-	global running,conf
-	threshold=conf.getfloat(x, 'threshold')
-	path=conf.get(x, 'path')
-	try:
-		check=conf.getfloat(x, 'check')
-	except:
-		check=600
-	status=-1
-	while running:
-		disk=_disk_usage(path)
-		if disk>threshold:
-			if status<0:
-				'''warning'''
-				_notify('warning:disk', 'disk is high: ' + '%0.0f'%(disk * 100) + '%, threshold:' + '%0.0f'%(threshold*100) + '%')
-				status=1
-		else:
-			if status>0:
-				'''reback'''
-				_notify('recover:disk', 'disk back: ' + '%0.0f'%(disk * 100) + '%, threshold:' + '%0.0f'%(threshold*100) + '%')
-				status=-1
-		time.sleep(check)
-	else:
-		return 0
-
-def _cpu_main(x):
-	global running,conf
-	threshold=conf.getfloat(x, 'threshold')
-	try:
-		check=conf.getfloat(x, 'check')
-	except:
-		check=60
-	status=-1
-	while running:
-		cpu=_cpu_usage()
-		if cpu>threshold:
-			if status<0:
-				'''warning'''
-				_notify('warning:cpu', 'cpu is high: ' + '%0.0f'%(cpu * 100) + '%, threshold:' + '%0.0f'%(threshold*100) + '%')
-				status=1
-		else:
-			if status>0:
-				'''reback'''
-				_notify('recover:cpu', 'cpu back: ' + '%0.0f'%(cpu * 100) + '%, threshold:' + '%0.0f'%(threshold*100) + '%')
-				status=-1
-		time.sleep(check)
-	else:
-		return 0
-
-def _remote_main():
-	global running, sock,shutdown
-	try:
-		while running:  
-			connection,address = sock.accept()  
-			try:  
-				connection.settimeout(5) 
-				service=True
-				while service:
-					cmd = connection.recv(32)
-					if cmd == 'shutdown':  
-						running=False
-						service=False
-						shutdown=True
-						connection.send('ok!')
-					elif cmd == 'stop':
-						shutdown=False
-						service=False
-						running=False
-						connection.send('ok!') 
-					elif cmd == 'start':
-						_start()
-						connection.send('ok!')
-					elif cmd == 'quit':
-						service=False
-						connection.send('ok!')
-	  			else:
-					connection.close()
-			except socket.timeout:  
-				print 'time out'  
-		else:
-			_log('appdog is down')
-			_notify('warning:appdog', 'appdog is down')	
-	except Exception, e:
-		_log(str(e))
-	finally:
-		sock.shutdown(socket.SHUT_RD)
-		sock.close()
+    x=x.strip()
+    pid=_pidx(x, -1)
+    if pid>0:
+        subprocess.call("kill -9 " + str(pid), shell=True)
+        _log("[" + name +"] was stoped !" )       
 
 def _app_main(x):
-	global conf, running
-	command=conf.get(x, "start")
-	pattern=conf.get(x, "pattern")
-	try:
-		user=conf.get(x, "user")
-	except:
-		user=""
-	try:
-		check=conf.getfloat(x, "check")
-	except:
-		check=0.2
-	try:
-		max_cpu=conf.getfloat(x, "max_cpu")
-	except:
-		max_cpu=-1
-	try:
-		enabled=conf.getint(x, "enabled")
-	except:
-		enabled=1
-	try:
-		path=conf.get(x, "path")
-	except:
-		path=""
-	
-	try:
-		notify=conf.getint(x, "notify")
-	except:
-		notify=0		
-	if enabled>0:
-		while running:	
-			if _pidx(pattern, max_cpu)>0:
-				time.sleep(check)
-			else:
-				if notify>0:
-					_notify("warning:" + x, x + " was down, starting it")
+    global conf
+    
+    try:
+        command=conf.get(x, "start")
+    except:
+        command = ""
+    
+    try:
+        pattern=conf.get(x, "pattern")
+    except:
+        pattern = ""
 
-				_startx(command, user, path)
+    try:
+        docker = conf.get(x, "docker")
+    except:
+        docker = ""
 
-				if check>5:
-					time.sleep(check)
-				else:
-					time.sleep(10)
-		else:
-			if shutdown:
-				_stopx(pattern, x)
+    try:
+        user=conf.get(x, "user")
+    except:
+        user=""
+        
+    try:
+        check=conf.getfloat(x, "check")
+    except:
+        check=3
+        
+    try:
+        max_cpu=conf.getfloat(x, "max_cpu")
+    except:
+        max_cpu=-1
+        
+    try:
+        enabled=conf.getint(x, "enabled")
+    except:
+        enabled=1
+        
+    try:
+        path=conf.get(x, "path")
+    except:
+        path=""
+    
+    if enabled>0:
+        pid = -1
+        while True:
+            try:
+                if docker != "":
+                    _dockerx(docker)
+                else:
+                    if pid == -1:
+                        pid = _pidx(pattern, max_cpu)
+                    try:
+                        p = psutil.Process(pid)
+                        if p.is_running():
+                            time.sleep(check)
+                            continue
+                    except Exception as e:
+                        pass
+                    
+                    _startx(command, user, path)
+                    pid = -1
+            except Exception as e:
+                _log(str(e))
+                
+            time.sleep(check)
 
-def _mon_start(x):
-	if x=="mon:cpu":
-		t = threading.Thread(target=_cpu_main, args=(x,))	
-		###t.setDaemon(True)
-		t.start()
-	elif x=="mon:mem":
-		t = threading.Thread(target=_mem_main, args=(x,))	
-		###t.setDaemon(True)
-		t.start()
-	elif x=="mon:disk":
-		t = threading.Thread(target=_disk_main, args=(x,))	
-		###t.setDaemon(True)
-		t.start()
-		
+def _mon_main(x):
+    global conf
+    
+    try:
+        pattern=conf.get(x, "pattern")
+    except:
+        pattern = ""
+
+    try:
+        report=conf.get(x, "report")
+    except:
+        report = ""
+
+    try:
+        node=conf.get(x, "node")
+    except:
+        node = ""
+
+    try:
+        check=conf.getfloat(x, "check")
+    except:
+        check=3
+        
+    try:
+        enabled=conf.getint(x, "enabled")
+    except:
+        enabled=1
+
+    try:
+        appid=conf.getint(x, "appid")
+    except:
+        appid=""
+
+    try:
+        secret=conf.getint(x, "secret")
+    except:
+        secret=""
+        
+    if enabled>0:
+        name = x.replace('mon:', '')
+        while True:
+            try:
+                if pattern != "":
+                    #cpu, mem
+                    l1 = os.popen("ps -ef | grep '"+ pattern +"'| grep -v 'grep'").readlines();
+                    cpu = 0
+                    mem = 0
+                    for s in l1:
+                        ss = s.split( )
+                        pid = ss[1];
+                        p = psutil.Process((int)(pid))
+                        cpu += float(p.cpu_percent(interval=0.1))
+                        mem += float(p.memory_percent())
+            
+                    j1 = {'node':node, 
+                          'name':name, 
+                          'cpu': cpu, 
+                          'mem': mem,
+                          'appid':appid,
+                          'secret':secret
+                          };
+                    r = requests.post(report, data=j1)
+                    r.close()
+                else:
+                    #node, cpu, mem, os
+    #                 print(psutil.sensors_temperatures())
+                    
+                    mem = psutil.virtual_memory();
+                    j1 = {'node':node, 
+                          'os':platform.platform(), 
+                          'name': 'node', 
+                          'cores':psutil.cpu_count(logical=True), 
+                          'mem': mem.total,
+                          'uptime': datetime.fromtimestamp(psutil.boot_time()),
+                          '_usage':psutil.cpu_percent(), 
+                          '_usage2':(int)(mem.percent),
+                          'appid':appid,
+                          'secret':secret
+                          };
+                    r = requests.post(report, data=j1)
+                    r.close()
+            except Exception as e:
+                _log(str(e))
+        
+            time.sleep(check)
+    
+def _ha_main(x):
+    global conf
+    
+    try:
+        enabled=conf.getint(x, "enabled")
+    except:
+        enabled=1
+    
+    if enabled == 1:
+        ip=conf.get(x, "ip")
+        iface=conf.get(x, "iface")
+        standby=conf.get(x, "standby")
+        try:
+            check=conf.getfloat(x, "check")
+        except:
+            check=3
+            
+        while True:
+            try:
+                resp = os.system("ping -c 1 " + standby)
+                if resp == 0:
+                    resp = os.system("ping -c 1 " + ip)
+                    if resp == 0:
+                        pass
+                    else:
+                        subprocess.call("ip address add " + ip + " dev " + iface, shell=True)
+                else:
+                    subprocess.call("ip address add " + ip + " dev " + iface, shell=True)
+            except Exception as e:
+                _log(str(e))
+                
+            time.sleep(check)
+                        
+        
+def _ha_start(x):
+    try:
+        t = threading.Thread(target=_ha_main, args=(x,))    
+        t.start()
+    except Exception as e:
+        _log(str(e))
+
 def _app_start(x):
-	try:
-		t = threading.Thread(target=_app_main, args=(x,))	
-		###t.setDaemon(True)
-		t.start()
-	except Exception,e:
-		_log(str(e))
-	
+    try:
+        t = threading.Thread(target=_app_main, args=(x,))    
+        t.start()
+    except Exception as e:
+        _log(str(e))
+   
+def _mon_start(x):
+    try:
+        t = threading.Thread(target=_mon_main, args=(x,))
+        t.start()
+    except Exception as e:
+        _log(str(e))
+             
 def _start():
-	global conf, running, sock
-	_load_config()
+    global conf
+    
+    _load_config()
+    pidfile=conf.get("global", "pid")
+    
+    _log("appdog started.")
 
-	pid=os.fork()
-	if pid>0:
-		pidfile=conf.get("global", "pid")
-		try:
-			f=open(pidfile, "wb+")
-			print >>f, pid
-			f.close()
-			sys.exit(0)
-		except Exception, e:
-			print e
-			_log(str(e))
-			sys.exit(0)
+    ##check if the appdog is running
+    try:
+        f=open(pidfile, "r")
+        pid1 = f.readline().strip();
+        f.close()
+        
+        p = psutil.Process(int(pid))
+        if p.is_running():
+            print("already running [" + pid1 + "], abort!")
+            return
 
-	port=conf.getint("global", "port")
-	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-	try:
-		sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		sock.bind(('localhost', port))  
-		sock.listen(1)
-		t = threading.Thread(target=_remote_main, args=())	
-		###t.setDaemon(True)
-		t.start()
-	except Exception,e:
-		_log(str(e))
-		running=False
-		print "already running! aborted"
-		sys.exit(0)
-
-	for s in conf.sections():
-		if "app:" in s:
-			_app_start(s)
-		elif "mon:" in s:
-			_mon_start(s)
-
-	_log("appdog started")
-	print "appdog started"
-	while running:
-		time.sleep(1)
-	else:
-		sys.exit(0)
+    except:
+        pass
+    
+    pid=os.fork()
+    if pid:
+        sys.exit(0)
+    
+    os.chdir('/')
+    os.umask(0)
+    os.setsid()
+    pid=os.fork()
+    if pid:
+        sys.exit(0)
+        
+    sys.stdout.flush()
+    sys.stderr.flush()
+    
+    with open('/dev/null') as read_null, open('/dev/null', 'w') as write_null:
+        os.dup2(read_null.fileno(), sys.stdin.fileno())
+        os.dup2(write_null.fileno(), sys.stdout.fileno())
+        os.dup2(write_null.fileno(), sys.stderr.fileno())
+             
+    with open(pidfile, 'w+') as f:
+        f.write(str(os.getpid()))
+        atexit.register(os.remove, pidfile)
+            
+    for s in conf.sections():
+        if "app:" in s:
+            _app_start(s)
+        elif "mon:" in s:
+            _mon_start(s)
+        elif "ha" == s:
+            _ha_start(s)
 
 def _stop():
-	global conf
-	_load_config()
-	try:	
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-		port=conf.getint("global", "port")	
-		sock.connect(('localhost', port))  
-		sock.send('stop') 
-		print "stoping:" + sock.recv(1024)  
-		sock.close()  	
-	except:
-		print "not running"
-
-def _shutdown():
-	global conf
-	_load_config()
-	try:	
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-		port=conf.getint("global", "port")	
-		sock.connect(('localhost', port))  
-		sock.send('shutdown') 
-		print "stoping all:" + sock.recv(1024)  
-		sock.close() 
-	except:
-		print "not running"
-		
+    global conf
+    _load_config()
+        
+    pidfile=conf.get("global", "pid")
+    
+    ##check if the appdog is running
+    try:
+        f=open(pidfile, "r")
+        pid1 = f.readline().strip();
+        f.close()
+        
+        p = psutil.Process(int(pid1))
+        if p.is_running():
+            subprocess.call("kill -9 " + pid1, shell=True)
+            _log("[" + pid1 +"] was killed by stop!")
+            return
+        
+        print("no running!")
+    except Exception as e:
+        print("no running!")
+                 
 def _usage():
-	print "Help: \nappdog [start|stop|shutdown]"
-	print "\tstop: stop the appdog, but the apps still running"
-	print "\trestart: stop the appdog, and restart the appdog"
-	print "\tshutdown: stop the appdog and all the apps"
-
-def _console():
-	_usage()
+    print("Help: \nappdog [start|stop|restart]")
+    print("\tstop: stop the appdog")
+    print("\tstart: start the appdog")
+    print("\trestart: restart the appdog")
 
 if __name__=="__main__":
-	if len(sys.argv) > 1:
-		a=sys.argv[1]
-	else:
-		a=""
-	if a=="start":
-		_start()
-	elif a=="stop":
-		_stop()
-	elif a=="restart":
-		_stop()
-		_start()
-	elif a=="shutdown":
-		_shutdown()
-	else:
-		_console()
+    if len(sys.argv) > 1:
+        a=sys.argv[1]
+    else:
+        a=""
+    if a=="start":
+        _start()
+    elif a=="stop":
+        _stop()
+    elif a=="restart":
+        _stop()
+        _start()
+    else:
+        _usage()

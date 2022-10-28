@@ -70,6 +70,7 @@ public abstract class View {
 			p.setProperty("directive.set.null.allowed", "true");
 			p.setProperty("resource.loader.file.class", "org.giiwa.web.view.VelocityTemplateLoader");
 
+			Velocity.reset();
 			Velocity.init(p);
 
 		} catch (Exception e) {
@@ -92,7 +93,7 @@ public abstract class View {
 	}
 
 	public static void add(String name, Class<? extends View> clazz) throws Exception {
-		View v = clazz.newInstance();
+		View v = clazz.getDeclaredConstructor().newInstance();
 		views.put(name, v);
 	}
 
@@ -172,7 +173,7 @@ public abstract class View {
 
 	public static String getCanonicalPath(Object file) throws IOException {
 		if (file instanceof DFile) {
-			return ((DFile) file).getCanonicalPath();
+			return ((DFile) file).getFilename();
 		} else {
 			return ((File) file).getCanonicalPath();
 		}

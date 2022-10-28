@@ -1,0 +1,68 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/blacklist?__node=$!__node' class='selected'>$lang.get('a.blacklist')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/blacklist' method='get' #if($s>0) style='display:none' #end >
+		<input type="hidden" name="__node" value="$!__node" />
+		<span><label><h3>$lang.get('blacklist.ip'):</h3><input type='text' name='name' value="$!name" /></label></span>
+		<button type='submit' class='btns1 icon icon-search'></button>
+		<span style="margin-right: 20px;color: #999;float: right;">// $!ip</span>
+	</form>
+	
+	<div class='s1tab #if($s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width:140px">$lang.get('blacklist.ip')</th>
+			<th style="width:200px">$lang.get('blacklist.url')</th>
+			<th style="width:250px">$lang.get('blacklist.memo')</th>
+			<th style="width:100px">$lang.get('blacklist.times')</th>
+			<th style="width:120px">$lang.get('blacklist.created')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$!f.ip</td>
+		<td>$!f.memo</td>
+		<td>$!f.times</td>
+		<td>$!lang.format($f.created, 'yyyy-MM-dd HH:mm')</td>
+		<td class='a'>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/blacklist/edit?id=$f.id&__node=$!__node"><i class='icon-pencil'></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick='_delete("$f.id", this);'><i class="icon-cancel-circle"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+#parse('/widget/goto.page.html')
+
+<div class='btns'>
+	<a class='btn btn-success' href='/admin/blacklist/create?__node=$!__node'>$lang.get('a.create')</a>
+</div>
+
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post('/admin/blacklist/delete?__node=$!__node', {id:id}, function(d){
+			giiwa.processing.hide();
+			if(d.state == 200) {
+				giiwa.reload();
+			} else if(d.message){
+				giiwa.error(d.message);
+			}
+		});
+	}
+}
+</script>

@@ -14,7 +14,14 @@
 <script type="text/javascript" src="/js/jquery-2.1.4.min.js"></script>
 <script type="text/javascript" src="/js/jquery.easing.1.3.js"></script>
 <script type="text/javascript" src='/js/giiwa.js?${module.module("default").build}'></script>
-
+<style>
+#foot{
+position:fixed;
+}
+#foot .center{
+border-top: 1px solid;
+}
+</style>
 </head>
 <body>
 
@@ -29,47 +36,44 @@
 <div id="content">
 	<div class='center' style="overflow: visible;">
 
-		<div id="mongo" class='panel' data-next="db" style="display:block" data-check='check_mongo'>
-			<div class='head'>$lang.get('configure.title.mongo')<label></label></div>	
-			<form method="post">
-				<div><label><h3>$lang.get('setup.label.url')：</h3><input type='text' name='url' value="$!global.getString('mongo[prod].url','')"/><g>mongodb://host1:27017,host2:27017 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g></label></div>
-				<div><label><h3>$lang.get('setup.label.db')：</h3><input type='text' name='db' value="$!global.getString('mongo[prod].db','demo')"/></label></div>
-				<input type='text' style="display:none"/>
-				<div class='btns'>
-					<a class='next btn btn-success'>$lang.get('a.next')</a>
-				</div>
-			</form>
-		</div>
-
-		<div id="db" class='panel' data-next="cache" data-prev='mongo' data-check='check_db'>
-			<div class='head'>$!lang.get('configure.title.rdbs')</div>	
+		<div id="db" class='panel' data-next="cache" data-check='check_db' style="display:block" >
+			<div class='head'>$!lang.get('configure.title.db')</div>	
 			<form method="post">
 				<div><label><h3>$lang.get('setup.label.driver')：</h3>
 					<select name='driver' onchange='_ondriver();'>
-						<option user='0' value=''></option>
-						<option user='0' tips='h2' value='org.h2.Driver' #if($global.getString('db.driver', '') == 'org.h2.Driver') selected #end>$lang.get("db.h2")</option>
-						<option user='0' tips='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>Postgresql</option>
-						<option user='0' tips='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>Mysql</option>
-						<option user='0' tips='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+						<option value=''></option>
+						<option tip='taos' value='taos' #if($global.getString('db.driver', '') == 'taos') selected #end>$lang.get("db.taos")</option>
+						<option tip='mongo' value='mongo' #if($global.getString('db.driver', '') == 'mongo') selected #end>$lang.get("db.mongo")</option>
+						<option tip='postgres' value='org.postgresql.Driver' #if($global.getString('db.driver', '') == 'org.postgresql.Driver') selected #end>PostgreSQL</option>
+						<option tip='mysql' value='com.mysql.jdbc.Driver' #if($global.getString('db.driver', '') == 'com.mysql.jdbc.Driver') selected #end>MySQL</option>
+						<option tip='oracle' value='oracle.jdbc.OracleDriver' #if($global.getString('db.driver', '') == 'oracle.jdbc.OracleDriver') selected #end>Oracle</option>
+						<option tip='greenplum' value='com.pivotal.jdbc.GreenplumDriver' #if($global.getString('db.driver', '') == 'com.pivotal.jdbc.GreenplumDriver') selected #end>Greenplum</option>
+						<option tip='dm' value='dm.jdbc.driver.DmDriver' #if($global.getString('db.driver', '') == 'dm.jdbc.driver.DmDriver') selected #end>DM</option>
 					</select>
 				</label></div>
 				
-				<div class='url'><label><h3>$lang.get('setup.label.url')：</h3>
+				<div class='url'><label><h3>$lang.get('setup.label.url'):</h3>
 					<input style='width:300px' type='text' name='url' value="$!global.getString('db.url', '')"/>
-					<g class='h2' style='display:none' dd='jdbc:h2:file:${home}/db/demo'>jdbc:h2:file:db/demo</g>
-					<g class='postgres' style='display:none' dd=''>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
-					<g class='mysql' style='display:none' dd=''>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
-					<g class='oracle' style='display:none' dd=''>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
+					<g class='taos' style='display:none' dd='jdbc:TAOS://127.0.0.1:6030/test?user=root&password=taosdata'>jdbc:TAOS://127.0.0.1:6030/test?user=root&password=taosdata //about <a href='https://github.com/taosdata/TDengine/tree/master/src/connector/jdbc' target='_blank'>TDengine</a></g>
+					<g class='mongo' style='display:none' dd='mongodb://127.0.0.1:27018'>mongodb://host1:27017,host2:27017 //about <a href='https://www.mongodb.org/downloads' target='_blank'>mongodb</a></g>
+					<g class='postgres' style='display:none' dd='jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password'>jdbc:postgresql://127.0.0.1:5432/demo?user=username&password=password</g>
+					<g class='mysql' style='display:none' dd='jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8'>jdbc:mysql://127.0.0.1:3306/demo?user=username&password=password&useUnicode=true&characterEncoding=UTF-8</g>
+					<g class='oracle' style='display:none' dd='jdbc:oracle:thin:username/password@x.x.x.x:1521/servername'>jdbc:oracle:thin:username/password@x.x.x.x:1521/servername</g>
+					<g class='greenplum' style='display:none' dd='jdbc:pivotal:greenplum://127.0.0.1:5432/demo?user=username&password=password'>jdbc:pivotal:greenplum://127.0.0.1:5432/demo?user=username&password=password</g>
+					<g class='dm' style='display:none' dd='jdbc:dm://127.0.0.1:5236/demo?user=username&password=password'>jdbc:dm://127.0.0.1:5236/demo?user=username&password=password</g>
+				</label></div>
+				<div class='external mongo' style="display: none">
+					<label><h3>$lang.get('setup.label.db'):</h3>
+					<input type='text' name='db' value="demo"/>
 				</label></div>
 				
 				<div class='btns'>
-					<a class='prev btn btn-info'>$lang.get('a.prev')</a>
 					<a class='next btn btn-success'>$lang.get('a.next')</a>
 				</div>
 			</form>
 		</div>
 
-		<div id="cache" class='panel' data-prev="db">
+		<div id="cache" class='panel' data-prev="db" data-check='check_cache' >
 			<div class='head'>$lang.get('setup.title.cache')</div>	
 			<form method="post">
 				<div><label><h3>$lang.get('setup.label.cache.url')：</h3><input type='text' name='url' value="$!config.getString('cache.url', '')"/><g>memcached://host:11211, redis://host:6379</g></label></div>
@@ -84,37 +88,29 @@
 	</div>
 </div>
 
-	<div id='foot'>
+<div id='foot'>
 	<div class='center'>
 		<div class='links'>$lang.get('user.foot.links')</div>
 		<div class='copyright'>
 			<span class='copyright'>$lang.get('copyright')</span> <span
 				class='designed'>$lang.get('powerby')</span>
-			<span>please refer {giiwa.home}/giiwa.properties</span>
+			<span>please check {giiwa.home}/giiwa.properties</span>
 		</div>
 		<div class="foot-shield"></div>
-	</div>
-</div>
-<div id="processing" style="display: none;">
-	<div class="bg"></div>
-	<div class="img">
-		<img src="/images/loading2.gif">
 	</div>
 </div>
 
 <script>
 function _ondriver(){
 	$('#db .url g').hide();
+	$('#db .external').hide();
 	var driver = $('#db select[name=driver]').val();
-	var tips = $('#db select option[value="' + driver + '"]').attr('tips');
-	$('#db .url g.' + tips).show();
+	var tip = $('#db select option[value="' + driver + '"]').attr('tip');
+	$('#db .url g.' + tip).show();
+	$('#db .external.' + tip).show();
 	
-	if(tips == 'h2') {
-		$('#db input[name=url]').hide();
-	} else {
-		$('#db input[name=url]').show();
-	}
-	$('#db input[name=url]').val($('#db .url g.' + tips).attr('dd'));
+	$('#db input[name=url]').show();
+	$('#db input[name=url]').val($('#db .url g.' + tip).attr('dd'));
 }
 $(function(){
 	_ondriver();
@@ -171,16 +167,15 @@ $(function(){
 	$('.panel .btns a.done').click(function(e){
 		//save
 		var p = {};
-		p["db.driver"] = $('#db select[name=driver]').val();
-		p["db.url"] = $('#db input[name=url]').val();
-		p["mongo.url"] = $('#mongo input[name=url]').val();
-		p["mongo.db"] = $('#mongo input[name=db]').val();
+		p["driver"] = $('#db select[name=driver]').val();
+		p["url"] = $('#db input[name=url]').val();
+		p["db"] = $('#db input[name=db]').val();
 		p["code"] = $('#system input[name=code]').val();
 		p["cache.url"] = $('#cache input[name=url]').val();
 		p["cache.group"] = $('#cache input[name=group]').val();
 		
 		giiwa.processing.show();
-		$.post('/admin/setup/save?__node=$!__node', p, function(d){
+		$.post('/admin/setup/save', p, function(d){
 			
 			if(d.state == 200) {
 				setTimeout(function(){
@@ -196,16 +191,16 @@ $(function(){
 	$('#db select[name=driver]').trigger('change');
 	
 })
-var dbadmin = 0;
 function check_db(f){
 	giiwa.processing.show();
-	var  p = {op:'db'};
+	var  p = {};
 	p.driver = $('#db select[name=driver]').val();
 	p.url = $('#db input[name=url]').val();
-	$.post('/admin/setup/check?__node=$!__node', p).done(function(d){
+	p.db = $('#db input[name=db]').val();
+	
+	$.post('/admin/setup/check', p).done(function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {
-			dbadmin = d.admin;
 			f();
 		} else {
 			giiwa.error(d.message);
@@ -215,28 +210,13 @@ function check_db(f){
 		giiwa.error("$lang.get('try.later')");
 	});
 }
-var mongoadmin = 0
-function check_mongo(f){
-	giiwa.processing.show();
-	var  p = {op:'mongo'};
-	p.db = $('#mongo input[name=db]').val();
-	p.url = $('#mongo input[name=url]').val();
-	$.post('/admin/setup/check?__node=$!__node', p, function(d){
-		giiwa.processing.hide();
-		if(d.state == 200) {
-			mongoadmin = d.admin;
-			f && f();
-		} else {
-			giiwa.error(d.message);
-		}
-	})
-}
 function check_cache(f){
 	giiwa.processing.show();
-	var  p = {op:'cache'};
+	var  p = {dirver:'cache'};
 	p.url = $('#cache input[name=url]').val();
 	p.group = $('#cache input[name=group]').val();
-	$.post('/admin/setup/check?__node=$!__node', p, function(d){
+	
+	$.post('/admin/setup/check', p, function(d){
 		giiwa.processing.hide();
 		if(d.state == 200) {
 			f && f();
@@ -245,22 +225,6 @@ function check_cache(f){
 		}
 	})
 }
-function check_admin(f){
-	giiwa.processing.show();
-	var  p = {op:'admin'};
-	$.post('/admin/setup/check?__node=$!__node', p, function(d){
-		giiwa.processing.hide();
-		f();
-	})
-}
-var processing = {
-		show:function(){
-			$('#processing').show();
-		},
-		hide:function(){
-			$('#processing').hide();
-		}
-	};
 </script>
 </body>
 </html>

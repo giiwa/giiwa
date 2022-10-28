@@ -1,7 +1,6 @@
 package org.giiwa.app.web.admin;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
@@ -12,7 +11,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.Node;
-import org.giiwa.bean.Repo;
 import org.giiwa.bean.Temp;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.UID;
@@ -20,8 +18,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
-import org.giiwa.dfile.FileServer;
-import org.giiwa.dfile.NioDFile;
+import org.giiwa.dfile.LocalDFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Monitor;
@@ -30,6 +27,11 @@ import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
 public class dfile extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Path(path = "file/delete", login = true, access = "access.config.admin")
 	public void file_delete() {
@@ -87,10 +89,8 @@ public class dfile extends Controller {
 
 					Temp t = Temp.create(f1.getName() + ".zip");
 					try {
-						File f2 = t.getFile();
-						f2.getParentFile().mkdirs();
 
-						ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f2));
+						ZipOutputStream out = t.getZipOutputStream();
 
 						f1.scan(e -> {
 							try {
@@ -106,16 +106,19 @@ public class dfile extends Controller {
 									out.closeEntry();
 									X.close(in);
 								}
+								return true;
 							} catch (Exception e1) {
 								log.error(e1.getMessage(), e1);
 							}
-						});
+							return true;
+						}, -1);
 
 						X.close(out);
 
 						DFile f3 = Disk.seek("/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/")
 								+ System.currentTimeMillis() + "/" + f1.getName() + ".zip");
-						t.save(f3);
+
+						f3.upload(t.getInputStream());
 
 						state = 200;
 						uri = "/f/d/" + f3.getId() + "/" + f3.getName();
@@ -169,7 +172,9 @@ public class dfile extends Controller {
 		}
 
 		Beans<Disk> bs = Disk.dao.load(q, s, n);
-		bs.count();
+		if (bs != null) {
+			bs.count();
+		}
 
 		this.pages(bs, s, n);
 
@@ -184,20 +189,44 @@ public class dfile extends Controller {
 
 			V v = V.create();
 			String s = this.getString("s");
+			if (X.isEmpty(s)) {
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
+				return;
+			}
+
 			File f = new File(s);
 
 			try {
 				v.append("path", f.getCanonicalPath());
 				v.append("priority", this.getInt("priority"));
-				v.append("node", this.getString("node1"));
+				v.append("url", this.getString("url"));
 				v.append("enabled", this.getInt("enabled"));
-				v.append("type", this.get("type"));
+				String mount = this.get("mount");
+				if (mount == null) {
+					mount = "/";
+				}
+				if (!mount.startsWith("/")) {
+					mount = "/" + mount;
+				}
+				v.append("mount", mount);
+				v.append("_len", mount.length());
+
+//				int encode = this.getInt("encode");
+//				v.append("encode", encode);
+//				if (encode == 1) {
+//					String code = this.getHtml("code");
+//					if (code != null && code.length() % 8 != 0) {
+//						this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "code length!"));
+//						return;
+//					}
+//					v.append("code", code);
+//				}
 
 				Disk.create(v);
-				this.send(JSON.create().append(X.STATE, 200));
 
-				FileServer.reset();
 				Disk.reset();
+
+				this.send(JSON.create().append(X.STATE, 200));
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -218,22 +247,26 @@ public class dfile extends Controller {
 
 		String f = this.getString("f");
 		String repo = this.getString("repo");
-		Repo.Entity e = Repo.load(repo);
-		if (e != null) {
-			try {
-				String name = f != null ? (f + "/" + e.getName()) : ("/" + e.getName());
 
-				DFile f1 = Disk.seek(name);
-				f1.delete();
-				IOUtil.copy(e.getInputStream(), f1.getOutputStream());
+		try {
+			DFile e = Disk.seek(repo);
+//		Repo.Entity e = Repo.load(repo);
+			if (e != null) {
+				try {
+					String name = f != null ? (f + "/" + e.getName()) : ("/" + e.getName());
 
-				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
-				return;
-			} catch (Exception e1) {
-				log.error(e1.getMessage(), e1);
-			} finally {
-				e.delete();
+					DFile f1 = Disk.seek(name);
+					f1.delete();
+					IOUtil.copy(e.getInputStream(), f1.getOutputStream());
+
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "ok"));
+					return;
+				} finally {
+					e.delete();
+				}
 			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
 		}
 		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "failed"));
 
@@ -243,41 +276,49 @@ public class dfile extends Controller {
 	public void file_batch() {
 
 		String repo = this.getString("repo");
-		Repo.Entity e = Repo.load(repo);
-		if (e != null) {
 
-			Task.schedule(() -> {
-				ZipInputStream zip = null;
-				try {
+		try {
+			DFile e = Disk.seek(repo);
 
-					// zip file
-					zip = new ZipInputStream(e.getInputStream());
+//		Repo.Entity e = Repo.load(repo);
+			if (e != null) {
 
-					ZipEntry en = zip.getNextEntry();
-					while (en != null) {
-						if (!en.isDirectory()) {
-							// file, put the file to ...
-							DFile f1 = Disk.seek(en.getName());
-							log.debug("put, filename=" + f1.getFilename());
+				Task.schedule(t -> {
+					ZipInputStream zip = null;
+					try {
 
-							OutputStream out = f1.getOutputStream();
-							IOUtil.copy(zip, out, false);
-							X.close(out);
+						// zip file
+						zip = new ZipInputStream(e.getInputStream());
+
+						ZipEntry en = zip.getNextEntry();
+						while (en != null) {
+							if (!en.isDirectory()) {
+								// file, put the file to ...
+								DFile f1 = Disk.seek(en.getName());
+								if (log.isDebugEnabled())
+									log.debug("put, filename=" + f1.getFilename());
+
+								OutputStream out = f1.getOutputStream();
+								IOUtil.copy(zip, out, false);
+								X.close(out);
+							}
+							en = zip.getNextEntry();
 						}
-						en = zip.getNextEntry();
-					}
 
-				} catch (Exception e1) {
-					log.error(e1.getMessage(), e1);
-				} finally {
-					e.delete();
-					X.close(zip);
-				}
-			});
-			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "正在复制，请稍后刷新..."));
-			return;
+					} catch (Exception e1) {
+						log.error(e1.getMessage(), e1);
+					} finally {
+						e.delete();
+						X.close(zip);
+					}
+				});
+				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "正在复制，请稍后刷新..."));
+				return;
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 		}
-		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "文件错误！"));
 
 	}
 
@@ -291,8 +332,17 @@ public class dfile extends Controller {
 			v.append("priority", this.getInt("priority"));
 			v.append("enabled", this.getInt("enabled"));
 
+			String mount = this.get("mount");
+			if (mount == null) {
+				mount = "/";
+			}
+			if (!mount.startsWith("/")) {
+				mount = "/" + mount;
+			}
+			v.append("mount", mount);
+			v.append("_len", mount.length());
+
 			Disk.dao.update(id, v);
-			FileServer.reset();
 			Disk.reset();
 			this.send(JSON.create().append(X.STATE, 200));
 
@@ -303,6 +353,36 @@ public class dfile extends Controller {
 		this.set("s", s);
 		this.show("/admin/dfile.disk.edit.html");
 
+	}
+
+	@Path(path = "stat", login = true, access = "access.config.admin")
+	public void stat() {
+
+		Beans<Disk> l1 = Disk.dao.load(W.create().and("enabled", 1).sort("url", 1).sort("path", 1), 0, 128);
+		this.set("disks", l1);
+		this.show("/admin/dfile.stat.html");
+	}
+
+	@Path(path = "folder", login = true, access = "access.config.admin")
+	public void folder() {
+
+		try {
+			String p = this.getString("f");
+			if (X.isEmpty(p)) {
+				p = "/";
+			}
+
+			if (!X.isSame(p, "/")) {
+				this.set("f", Disk.seek(p));
+			}
+
+			Collection<DFile> list = Disk.list(p);
+			this.set("list", list);
+
+			this.show("/admin/dfile.folder.html");
+		} catch (Exception e) {
+			this.error(e);
+		}
 	}
 
 	@Path(path = "disk/delete", login = true, access = "access.config.admin")
@@ -331,11 +411,10 @@ public class dfile extends Controller {
 
 					try {
 						Disk.dao.delete(id);
-						FileServer.reset();
 						Disk.reset();
 
 						if (f == 0) {
-							DFile f = NioDFile.create(d, "/");
+							DFile f = LocalDFile.create(d, "/");
 							DFile[] ff = f.listFiles();
 							if (ff != null) {
 								for (DFile f1 : ff) {
@@ -352,7 +431,7 @@ public class dfile extends Controller {
 					try {
 						if (f.isFile()) {
 							try {
-								String filename = f.getCanonicalPath().replace(pre, "");
+								String filename = f.getFilename().replace(pre, "");
 								Disk.copy(f, Disk.seek(filename));
 							} catch (Exception e) {
 								log.error(e.getMessage(), e);
@@ -373,28 +452,6 @@ public class dfile extends Controller {
 			}.schedule(0);
 		}
 		this.send(JSON.create().append(X.STATE, 200));
-	}
-
-	@Path(path = "folder", login = true, access = "access.config.admin")
-	public void folder() {
-
-		try {
-			String p = this.getString("f");
-			if (X.isEmpty(p)) {
-				p = "/";
-			}
-
-			if (!X.isSame(p, "/")) {
-				this.set("f", Disk.seek(p));
-			}
-
-			Collection<DFile> list = Disk.list(p);
-			this.set("list", list);
-
-			this.show("/admin/dfile.folder.html");
-		} catch (Exception e) {
-			this.error(e);
-		}
 	}
 
 }

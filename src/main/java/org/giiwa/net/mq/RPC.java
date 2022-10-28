@@ -2,81 +2,130 @@ package org.giiwa.net.mq;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
-import org.giiwa.dao.X;
 import org.giiwa.net.mq.MQ.Request;
+import org.giiwa.task.Function;
 
 class RPC extends IStub {
 
 //	private static Log log = LogFactory.getLog(RPC.class);
 
-	public static String name = "rpc." + Local.id();
+	private static String name = "rpc." + Local.id();
 
-	private static Map<Long, Object[]> waiter = new HashMap<Long, Object[]>();
+	private static Map<Long, Stack<Request>> waiter = new HashMap<Long, Stack<Request>>();
 
 	public static RPC inst = new RPC();
 
 	private static AtomicLong seq = new AtomicLong(0);
 
-	public RPC() {
+	private RPC() {
 		super(name);
 	}
 
 	@Override
 	public void onRequest(long seq, Request req) {
 
-		Object[] l1 = waiter.get(seq);
+//		log.warn("got seq=" + seq + ", from=" + req.from);
+
+		Stack<Request> l1 = waiter.get(seq);
 		if (l1 != null) {
 			synchronized (l1) {
-				synchronized (l1) {
-					try {
-						l1[0] = req.get();
-						l1[1] = req.type;
-					} catch (Exception e) {
-						l1[0] = e;
-						l1[1] = 500;
-					}
-					l1.notifyAll();
-				}
+				l1.push(req);
+				l1.notifyAll();
 			}
+		} else {
+			// ignore, may caller return once got one result
+//			log.warn("MQ1, not waiter! seq=" + seq + ", " + waiter.keySet());
 		}
 
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> T call(String name, Request req, long timeout) throws Exception {
+	public static <T> T call(String name, Request req, final long timeout) throws Exception {
 
 		TimeStamp t = TimeStamp.create();
 
 		req.from = RPC.name;
 		req.seq = seq.incrementAndGet();
 
-		Object[] oo = new Object[2];
-		waiter.put(req.seq, oo);
+		Stack<Request> l1 = new Stack<Request>();
+		waiter.put(req.seq, l1);
+
+//		log.warn("sending, to=" + name, new Exception());
+
 		MQ.send(name, req);
 
-		synchronized (oo) {
-			if (oo[0] == null) {
-				oo.wait(timeout - t.pastms());
+		try {
+			while (timeout > t.pastms()) {
+				synchronized (l1) {
+					if (l1.isEmpty()) {
+						l1.wait(timeout - t.pastms());
+					}
+				}
+				if (!l1.isEmpty()) {
+					Request r = l1.pop();
+					return r.get();
+				}
 			}
+		} finally {
+			waiter.remove(req.seq);
 		}
 
-		waiter.remove(req.seq);
+		throw new Exception("timeout(" + timeout + "ms)");
+	}
 
-		int state = X.toInt(oo[1]);
-		if (state == 200) {
-			return (T) oo[0];
+	public static boolean call(String name, Request req, final long timeout, Function<Request, Boolean> func)
+			throws Exception {
+
+		req.from = RPC.name;
+		req.seq = seq.incrementAndGet();
+
+//		log.warn("MQ1, call, seq=" + req.seq + ", from=" + req.from);
+
+		Stack<Request> l1 = new Stack<Request>();
+		waiter.put(req.seq, l1);
+
+		MQ.topic(name, req);
+
+		try {
+
+			TimeStamp t = TimeStamp.create();
+
+			if (func != null) {
+				while (timeout > t.pastms()) {
+
+					Request e = null;
+					synchronized (l1) {
+						if (l1.isEmpty()) {
+							l1.wait(timeout - t.pastms());
+						}
+						if (!l1.isEmpty()) {
+							e = l1.pop();
+						}
+					}
+
+					if (e != null) {
+//						log.warn("got response, e=" + e.from);
+						boolean r = func.apply(e);
+						if (r) {
+							// 完成， 结束
+							return true;
+						} // 继续获取下一个
+//					} else {
+//						log.warn("got nothing!");
+					}
+				}
+				throw new Exception("Timeout " + timeout);
+
+			} else {
+				return true;
+			}
+		} finally {
+			waiter.remove(req.seq);
 		}
-
-		if (state > 200) {
-			throw new Exception((String) oo[0]);
-		} else {
-			throw new Exception("Timeout calling [" + name + "]");
-		}
-
 	}
 
 }

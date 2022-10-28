@@ -33,7 +33,7 @@ import org.giiwa.dao.Helper.W;
  *
  */
 @Table(name = "gi_userconfig", memo="GI-用户设置")
-public class UserConfig extends Bean {
+public final class UserConfig extends Bean {
 
 	/**
 	 * 
@@ -73,7 +73,7 @@ public class UserConfig extends Bean {
 	}
 
 	public static String get(long uid, String name) {
-		UserConfig c = dao.load(W.create("uid", uid).and("name", name));
+		UserConfig c = dao.load(W.create().and("uid", uid).and("name", name));
 		if (c != null) {
 			return c.data;
 		}
@@ -81,7 +81,7 @@ public class UserConfig extends Bean {
 	}
 
 	public static void delete(long uid, String name) {
-		dao.delete(W.create("uid", uid).and("name", name));
+		dao.delete(W.create().and("uid", uid).and("name", name));
 	}
 
 }

@@ -8,15 +8,17 @@ import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.Node;
-import org.giiwa.conf.Local;
+import org.giiwa.conf.Config;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Beans;
@@ -29,10 +31,9 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.dfile.LocalDFile;
-import org.giiwa.dfile.NioDFile;
+import org.giiwa.dfile.NfsDFile;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.web.Controller;
 
 /**
  * Demo bean
@@ -41,7 +42,7 @@ import org.giiwa.web.Controller;
  * 
  */
 @Table(name = "gi_disk", memo = "GI-磁盘")
-public class Disk extends Bean {
+public final class Disk extends Bean {
 
 	/**
 	 * 
@@ -50,35 +51,32 @@ public class Disk extends Bean {
 
 	private static Log log = LogFactory.getLog(Disk.class);
 
-	public static BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
-
-	public static final String TYPE_ALL = "all";
-	public static final String TYPE_DATA = "data";
-	public static final String TYPE_NGINX = "nginx";
+	public static final BeanDAO<Long, Disk> dao = BeanDAO.create(Disk.class);
 
 	@Column(memo = "唯一序号")
-	long id;
+	public long id;
 
-	@Column(memo = "节点")
-	String node;
+	@Column(memo = "节点", value = "nfs://host:9091, local://, minio://")
+	public String url;
 
-	@Column(memo = "路径")
+	@Column(memo = "磁盘位置")
 	public String path;
 
-	@Column(memo = "type", value = "data, nginx")
-	String type = "data";
+	@Column(memo = "挂载点", value = "/temp, ...")
+	public String mount;
+
+//	private int _len;
 
 	@Column(memo = "优先级")
 	public int priority;
 
-	@Column(name = "checktime")
+	public String code;
+
+	@Column(memo = "检查时间")
 	long checktime;
 
 	@Column(memo = "开关")
 	public int enabled; // 1: ok, 0: disabled
-
-	@Column(memo = "是否可用", value = "0: ok, 1: bad")
-	int bad; // 0:ok, 1: bad
 
 	@Column(memo = "总空间")
 	public long total;
@@ -97,18 +95,16 @@ public class Disk extends Bean {
 		return free;
 	}
 
-	public boolean isLocal() {
-		return X.isSame(node, Local.id());
-	}
-
-	public boolean getLive() {
-		return (bad != 1) && (this.getNode_obj() != null) && (this.getNode_obj().getState() == 1)
-				&& (System.currentTimeMillis() - this.getNode_obj().getUpdated() < Node.LOST);
-	}
-
-	public long getId() {
-		return id;
-	}
+//	public boolean isLocal() {
+//		return X.isSame(node, Local.id());
+//	}
+//
+//	public boolean getLive() {
+//		boolean b = (this.getNode_obj() != null) && (this.getNode_obj().getState() == 1);
+//		log.debug("disk alive=" + b + ", last="
+//				+ (this.getNode_obj() == null ? null : (System.currentTimeMillis() - this.getNode_obj().getUpdated())));
+//		return b;
+//	}
 
 	public int getPriority() {
 		return priority;
@@ -141,7 +137,7 @@ public class Disk extends Bean {
 		if (file_obj == null) {
 			file_obj = new File(path);
 			if (!file_obj.exists()) {
-				file_obj.mkdirs();
+				X.IO.mkdirs(file_obj);
 			}
 		}
 		return file_obj;
@@ -156,47 +152,8 @@ public class Disk extends Bean {
 		return filestore_obj;
 	}
 
-	public long reloadTotal() {
-
-		File f = this.getFile_obj();
-		if (f.getTotalSpace() > 0) {
-			return f.getTotalSpace();
-		}
-
-		try {
-			FileStore s = this.getFilestore_obj();
-			if (s != null) {
-				return s.getTotalSpace();
-			}
-		} catch (Exception e) {
-			log.error(path, e);
-		}
-		return 0;
-	}
-
-	public long reloadFree() {
-		File f = this.getFile_obj();
-		if (f.getFreeSpace() > 0) {
-			return f.getFreeSpace();
-		}
-
-		try {
-			FileStore s = this.getFilestore_obj();
-			if (s != null) {
-				return s.getUsableSpace();
-			}
-		} catch (Exception e) {
-			log.error(path, e);
-		}
-		return 0;
-
-	}
-
 	// ---------------
 	public long getUsed() {
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).getUsed();
-//		}
 
 		return this.total - this.free;
 	}
@@ -207,10 +164,6 @@ public class Disk extends Bean {
 	}
 
 	public int getUsage() {
-//		if (_disk != null) {
-//			long total = _disk.get(TYPE_DATA).getTotal();
-//			return (int) (_disk.get(TYPE_DATA).getUsed() * 100 / total);
-//		}
 
 		if (this.total > 0) {
 			return (int) ((this.total - this.free) * 100 / this.total);
@@ -219,9 +172,6 @@ public class Disk extends Bean {
 	}
 
 	public static DFile seek(Path filename) throws Exception {
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).seek(filename);
-//		}
 		return seek(filename.toString());
 	}
 
@@ -229,81 +179,90 @@ public class Disk extends Bean {
 		return seek(new String(Base32.decode(id)));
 	}
 
+	/**
+	 * @deprecated
+	 * @param url
+	 * @return
+	 * @throws Exception
+	 */
 	public static DFile getByUrl(String url) throws Exception {
-		if (url.startsWith("/f/g/") || url.startsWith("/f/d/")) {
-			String[] ss = X.split(url, "/");
-			if (ss.length > 2) {
-				return seek(new String(Base32.decode(ss[2])));
-			}
-		}
 		return seek(url);
 	}
 
-	public static DFile seek(String filename) throws Exception {
+	public static DFile seek(String filename) throws IOException {
 
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).seek(filename);
-//		}
-
-		if (Helper.isConfigured()) {
-			filename = X.getCanonicalPath(filename);
-
-			Beans<Disk> bs = disks(TYPE_DATA);
-
-			for (Disk e : bs) {
-				DFile d = e.create(filename);
-				if (d.exists()) {
-					return d;
-				}
+		if (filename.startsWith("/f/g/") || filename.startsWith("/f/d/")) {
+			String[] ss = X.split(filename, "/");
+			if (ss.length > 2) {
+				filename = new String(Base32.decode(ss[2]));
 			}
-
-			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = Disk._get(TYPE_DATA).create(filename);
-
-			return f;
+		} else if (filename.startsWith("/ghp/") || filename.startsWith("/wsf/")) {
+			String[] ss = X.split(filename, "/");
+			if (ss.length > 1) {
+				filename = new String(Base32.decode(ss[1]));
+			}
+		} else if (filename.startsWith("/f/s/")) {
+			filename = filename.substring(4);
 		}
 
-		return null;
+		if (!filename.startsWith("/")) {
+			// trying to decode
+			try {
+				filename = new String(Base32.decode(filename));
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
 
-	}
+		DFile f = null;
 
-	public static DFile seek(String filename, String type) throws Exception {
-
-//		if (_disk != null) {
-//			return _disk.get(type).seek(filename);
-//		}
-
-		if (Helper.isConfigured()) {
+		if (Helper.isConfigured() && !X.isEmpty(filename)) {
 
 			filename = X.getCanonicalPath(filename);
 
-			Beans<Disk> bs = disks(type);
+			Beans<Disk> bs = disks();
+
 			if (bs != null) {
 				for (Disk e : bs) {
 					DFile d = e.create(filename);
-					if (d.exists()) {
-						return d;
+					if (d != null && d.exists()) {
+						if (f == null) {
+							f = d;
+						} else {
+							f.merge(d);
+						}
 					}
 				}
 			}
 
-			// log.debug("seek, not found, filename=" + filename, new Exception());
-			DFile f = Disk._get(type).create(filename);
+			if (f != null) {
+				return f;
+			}
 
-			return f;
 		}
 
-		return null;
+		Disk d1 = Disk._get(filename);
+		if (d1 == null) {
+			return null;
+		}
 
+		f = d1.create(filename);
+		return f;
+
+	}
+
+	private static Disk _get(String filename) throws IOException {
+		Selector s = Selector.get();
+		return s.pick(filename);
 	}
 
 	public static boolean exists(String filename) throws Exception {
 
-		Beans<Disk> bs = disks(TYPE_DATA);
+		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
 			DFile d = e.create(filename);
-			if (d.exists()) {
+			if (d != null && d.exists()) {
 				return true;
 			}
 		}
@@ -312,49 +271,54 @@ public class Disk extends Bean {
 	}
 
 	public DFile create(String filename) {
-		if (this.isLocal()) {
-			return LocalDFile.create(this, filename);
-		} else {
-			return NioDFile.create(this, filename);
-		}
-	}
+		try {
 
-	private static Disk _get(String type) throws IOException {
-		Selector s = Selector.get(type);
-		return s.pick();
+			if (!filename.startsWith("/")) {
+				filename = "/" + filename;
+			}
+
+			if (url.startsWith("local://")) {
+				return LocalDFile.create(this, filename);
+			} else if (url.startsWith("nfs://")) {
+				return NfsDFile.create(this, filename);
+//		} else if (url.startsWith("minio://") || url.startsWith("minios://")) {
+//			return MinioDFile.create(this, filename);
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	public static Collection<DFile> list(String filename) throws Exception {
 
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).list(filename);
-//		}
-
 		Map<String, DFile> l1 = new TreeMap<String, DFile>();
 
-		Beans<Disk> bs = disks(TYPE_ALL);
+		Beans<Disk> bs = disks();
 
-		for (Disk e : bs) {
-			DFile f = e.create(filename);
-			try {
-				if (f.exists()) {
-					DFile[] ff = f.listFiles();
-					if (ff != null) {
-						for (DFile f1 : ff) {
-							String name = (f1.isDirectory() ? 0 : 1) + f1.getName();
-							DFile f2 = l1.get(name);
-							if (f2 == null || f1.lastModified() > f2.lastModified()) {
-								l1.put(name, f1);
+		if (bs != null) {
+			for (Disk e : bs) {
+				DFile f = e.create(filename);
+				try {
+					if (f != null && f.exists()) {
+						DFile[] ff = f.listFiles();
+						if (ff != null) {
+							for (DFile f1 : ff) {
+								String name = (f1.isDirectory() ? 0 : 1) + f1.getName();
+								DFile f2 = l1.get(name);
+								if (f2 == null || f1.lastModified() > f2.lastModified()) {
+									l1.put(name, f1);
+								}
 							}
 						}
+						if (log.isDebugEnabled())
+							log.debug("l1=" + l1);
+					} else {
+						log.info("exists? " + f.exists() + ", filename=" + f.getFilename() + ", path=" + e.path);
 					}
-					if (log.isDebugEnabled())
-						log.debug("l1=" + l1);
-				} else {
-					log.info("exists? " + f.exists() + ", filename=" + f.getCanonicalPath() + ", path=" + e.path);
+				} catch (Exception e1) {
+					log.error(e1.getMessage(), e1);
 				}
-			} catch (Exception e1) {
-				log.error(e1.getMessage(), e1);
 			}
 		}
 
@@ -371,28 +335,20 @@ public class Disk extends Bean {
 
 	public static void delete(String filename, long age, boolean global) throws Exception {
 
-//		if (_disk != null) {
-//			_disk.get(TYPE_DATA).delete(filename, age, global);
-//			return;
-//		}
-
-		Beans<Disk> bs = disks(TYPE_DATA);
+		Beans<Disk> bs = disks();
 
 		for (Disk e : bs) {
 
 			DFile f = e.create(filename);
-
-			f.delete(age);
+			if (f != null) {
+				f.delete(age);
+			}
 
 		}
 
 	}
 
 	public static long move(DFile src, DFile dest) throws Exception {
-
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).move(src, dest);
-//		}
 
 		long len = 0;
 		if (src.isDirectory()) {
@@ -413,10 +369,6 @@ public class Disk extends Bean {
 	}
 
 	public static long copy(DFile src, DFile dest) throws Exception {
-
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).copy(src, dest);
-//		}
 
 		long len = 0;
 
@@ -439,80 +391,63 @@ public class Disk extends Bean {
 		return IOUtil.copy(in, out);
 	}
 
-	private static Map<String, Beans<Disk>> _disks = new HashMap<String, Beans<Disk>>();
+	private static Beans<Disk> _disks = null;
 
-	private static Beans<Disk> disks(String type) throws Exception {
+	private static Beans<Disk> disks() {
 
-		Beans<Disk> d1 = _disks.get(type);
-
-		if (X.isEmpty(d1) || System.currentTimeMillis() - d1.created > X.AMINUTE) {
+		if (X.isEmpty(_disks) || System.currentTimeMillis() - _disks.created > X.AMINUTE) {
 			W q = W.create().and("enabled", 1).sort("priority", -1).sort("path", 1);
-			if (type != TYPE_ALL) {
-				q.and("type", type);
-			}
-
-			d1 = dao.load(q, 0, 100);
-			_disks.put(type, d1);
+			_disks = dao.load(q, 0, 100);
 		}
 
-		if (X.isEmpty(d1)) {
-			throw new Exception("not disk configured! [" + type + "]");
+		if (X.isEmpty(_disks)) {
+			Disk.repair();
 		}
-		return d1;
+
+		return _disks;
 	}
 
 	public static void reset() {
-		_disks.clear();
-	}
-
-	public String getNode() {
-		return node;
-	}
-
-	private transient Node node_obj;
-
-	public Node getNode_obj() {
-		if (node_obj == null) {
-			node_obj = Node.dao.load(node);
+		if (_disks != null) {
+			_disks.clear();
 		}
-		return node_obj;
 	}
 
 	public static void repair() {
 
 		if (Helper.isConfigured()) {
-			int s = 0;
-			W q = W.create().sort("created", 1);
-			Beans<Disk> bs = dao.load(q, s, 10);
-			if (bs == null || bs.isEmpty()) {
-				// add a default
-				try {
-					File f = new File(Controller.GIIWA_HOME + "/data");
-					if (!f.exists()) {
-						f.mkdirs();
-					}
-					Disk.create(V.create("path", f.getCanonicalPath()).append("type", "data").append("enabled", 1)
-							.append("priority", 1).append("node", Local.id()));
+			// migrate
 
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+			try {
+
+				dao.stream(W.create(), 0, e -> {
+					if (X.isEmpty(e.url) || e.create("/") == null) {
+						dao.delete(e.id);
+					}
+					return true;
+				});
+
+				if (!dao.exists(W.create())) {
+					// add a default
+					File f = new File(Config.getConf().getString("dfile.home", "/home/disk1"));
+					if (!f.exists()) {
+						X.IO.mkdirs(f);
+					}
+					Disk.create(V.create("path", f.getCanonicalPath()).append("url", "local://").append("enabled", 1)
+							.append("mount", "/").append("priority", 1));
+
 				}
+
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
-	}
-
-	public void check() {
-
-		V v = V.create("checktime", System.currentTimeMillis());
-		v.append("total", this.reloadTotal()).append("free", this.reloadFree());
-		dao.update(id, v);
-
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = 1;
+		int result = super.hashCode();
 		result = prime * result + (int) (id ^ (id >>> 32));
 		return result;
 	}
@@ -521,7 +456,7 @@ public class Disk extends Bean {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
+		if (!super.equals(obj))
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
@@ -534,106 +469,138 @@ public class Disk extends Bean {
 	static class Selector {
 
 		private long age = System.currentTimeMillis();
-		private static Map<String, Selector> _inst = new HashMap<String, Selector>();
+		private static Selector _inst = null;
 
-		TreeMap<Long, Disk> ss = new TreeMap<Long, Disk>();
+		List<Disk> ss1 = new ArrayList<Disk>(); // sort by mount
 
-		static synchronized Selector get(String type) {
+		static synchronized Selector get() {
 
-			Selector d1 = _inst.get(type);
-
-			if (d1 == null || System.currentTimeMillis() - d1.age > X.AMINUTE) {
-				d1 = new Selector();
+			if (_inst == null || System.currentTimeMillis() - _inst.age > X.AMINUTE) {
+				_inst = new Selector();
 
 				W q = W.create().sort("priority", -1).sort("path", 1);
-				if (type != Disk.TYPE_DATA) {
-					q.and(W.create("type", null).or("type", type));
+				try {
+					Beans<Disk> bs = dao.load(q, 0, 1000);
+					if (bs != null) {
+						for (Disk e : bs) {
+//					long f1 = e.free * e.priority;
+//					_inst.add(e, f1);
+							_inst.ss1.add(e);
+						}
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
-				Beans<Disk> bs = dao.load(q, 0, 1000);
-				for (Disk e : bs) {
-					long f1 = e.free * e.priority;
-					d1.add(e, f1);
-				}
-				_inst.put(type, d1);
+
+				Collections.sort(_inst.ss1, new Comparator<Disk>() {
+
+					@Override
+					public int compare(Disk o1, Disk o2) {
+						long m1 = o1.mount.length();
+						long m2 = o2.mount.length();
+						if (m1 > m2) {
+							return -1;
+						} else if (m1 < m2) {
+							return 1;
+						}
+						return 0;
+					}
+
+				});
+
 			}
 
-			return d1;
+			return _inst;
 		}
 
-		private void add(Disk d, long rate) {
-			ss.put(rate, d);
-		}
+//		private void add(Disk d, long rate) {
+//			d.set("_rate", rate);
+//			d.set("_len", d.mount.length());
+//
+//			ss1.add(d);
+//
+//		}
 
-		Disk pick() throws IOException {
+		Disk pick(String filename) throws IOException {
 
-			if (!ss.isEmpty())
-				return ss.lastEntry().getValue();
+//			List<Disk> dd = new ArrayList<Disk>();
+//			int n = Global.getInt("dfile.copies", 0) + 1;
 
-//			return DEFAULT;
-			throw new IOException("no disk, ss=" + ss.size());
+			for (Disk d1 : ss1) {
+				if (filename.startsWith(d1.mount)) {
+					return d1;
+//					dd.add(d1);
+				}
+//				if (dd.size() >= n) {
+//					break;
+//				}
+			}
+
+			if (ss1 == null || ss1.isEmpty()) {
+				return null;
+			}
+
+			return ss1.get(ss1.size() - 1);
+
+//			if (dd.size() < n) {
+//				for (Disk d1 : ss1) {
+//					if (!dd.contains(d1)) {
+//						dd.add(d1);
+//					}
+//					if (dd.size() >= n) {
+//						break;
+//					}
+//				}
+//			}
+//
+//			return dd.toArray(new Disk[dd.size()]);
 		}
 
 	}
 
 	/**
-	 * @deprecated
 	 * @return
 	 */
 	public static long getTotalSpace() {
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).getTotal();
-//		}
 
-		long total = 0;
+		long[] total = new long[] { 0 };
 		if (Helper.isConfigured()) {
-			int s = 0;
 			W q = W.create().sort("created", 1);
-			Beans<Disk> bs = dao.load(q, s, 10);
-			while (bs != null && !bs.isEmpty()) {
-
-				for (Disk e : bs) {
-					total += e.total;
-				}
-				s += bs.size();
-				bs = dao.load(q, s, 10);
+			try {
+				dao.stream(q, 0, e -> {
+//					if (e.getNode_obj().isAlive()) {
+					total[0] += e.total;
+//					}
+					return true;
+				});
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
-		return total;
+		return total[0];
 	}
 
 	/**
-	 * @deprecated
 	 * @return
 	 */
 	public static long getFreeSpace() {
 
-//		if (_disk != null) {
-//			return _disk.get(TYPE_DATA).getTotal() - _disk.get(TYPE_DATA).getUsed();
-//		}
-
-		long total = 0;
+		long[] total = new long[] { 0 };
 		if (Helper.isConfigured()) {
-			int s = 0;
 			W q = W.create().sort("created", 1);
-			Beans<Disk> bs = dao.load(q, s, 10);
-			while (bs != null && !bs.isEmpty()) {
-
-				for (Disk e : bs) {
-					total += e.free;
-				}
-				s += bs.size();
-				bs = dao.load(q, s, 10);
-
+			try {
+				dao.stream(q, 0, e -> {
+//					if (e.getNode_obj().isAlive()) {
+					total[0] += e.free;
+//					}
+					return true;
+				});
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
-		return total;
-	}
+		return total[0];
 
-	public static void touch() {
-		Beans<Disk> l1 = dao.load(W.create("node", Local.id()), 0, 100);
-		l1.forEach(e -> {
-			e.check();
-		});
 	}
 
 }

@@ -14,18 +14,25 @@ import org.giiwa.json.JSON;
 import org.giiwa.web.Path;
 
 public class times extends portlet {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void get() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "get")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		W q = W.create().and("node", Local.id()).and("name", "get")
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+		_File.Record.dao.optimize(q);
+		
+		Beans<_File.Record> bs = _File.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("list1", bs);
 
-			Beans<_Cache.Record> list2 = _Cache.Record.dao.load(W.create("node", Local.id()).and("name", "down")
+			Beans<_Cache.Record> list2 = _Cache.Record.dao.load(W.create().and("node", Local.id()).and("name", "down")
 					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			Collections.reverse(list2);
 			this.set("list2", list2);
@@ -37,7 +44,7 @@ public class times extends portlet {
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_File.Record> bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "get")
+		Beans<_File.Record> bs = _File.Record.dao.load(W.create().and("node", Local.id()).and("name", "get")
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -52,7 +59,7 @@ public class times extends portlet {
 			p.append("data", l1);
 			data.add(p);
 
-			bs = _File.Record.dao.load(W.create("node", Local.id()).and("name", "down")
+			bs = _File.Record.dao.load(W.create().and("node", Local.id()).and("name", "down")
 					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			if (bs != null && !bs.isEmpty()) {
 				Collections.reverse(bs);
@@ -80,7 +87,7 @@ public class times extends portlet {
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_File.Record> bs = _File.Record.dao.load(
-				W.create("node", Local.id()).and("name", "get").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and("node", Local.id()).and("name", "get").and("created", time, W.OP.gte).sort("created", -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -88,7 +95,7 @@ public class times extends portlet {
 		}
 
 		Beans<_File.Record> list2 = _File.Record.dao.load(
-				W.create("node", Local.id()).and("name", "down").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and("node", Local.id()).and("name", "down").and("created", time, W.OP.gte).sort("created", -1), 0,
 				24 * 60 * 2);
 		if (list2 != null && !list2.isEmpty()) {
 			Collections.reverse(list2);

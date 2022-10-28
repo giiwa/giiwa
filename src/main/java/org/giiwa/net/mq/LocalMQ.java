@@ -25,7 +25,6 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.GLog;
 import org.giiwa.dao.TimeStamp;
 
 class LocalMQ extends MQ {
@@ -79,24 +78,39 @@ class LocalMQ extends MQ {
 			this.name = name;
 			this.cb = cb;
 
-			String name1 = name + ":" + m.name();
+			if (m == Mode.QUEUE || m == Mode.BOTH) {
+				String name1 = name + ":" + Mode.QUEUE.name();
 
-			List<R> l1 = consumers.get(name1);
+				synchronized (consumers) {
+					List<R> l1 = consumers.get(name1);
 
-			if (l1 == null) {
-				l1 = new ArrayList<R>();
-				consumers.put(name1, l1);
+					if (l1 == null) {
+						l1 = new ArrayList<R>();
+						consumers.put(name1, l1);
+					}
+					l1.add(this);
+				}
 			}
-			l1.add(this);
+
+			if (m == Mode.TOPIC || m == Mode.BOTH) {
+				String name1 = name + ":" + Mode.TOPIC.name();
+
+				synchronized (consumers) {
+					List<R> l1 = consumers.get(name1);
+
+					if (l1 == null) {
+						l1 = new ArrayList<R>();
+						consumers.put(name1, l1);
+					}
+					l1.add(this);
+				}
+			}
 
 			cached.add(new WeakReference<R>(this));
 
 		}
 
 		public void onMessage(Request m) {
-//			try {
-			// System.out.println("got a message.., " + t.reset() +
-			// "ms");
 			List<Request> l1 = new LinkedList<Request>();
 			l1.add(m);
 			process(name, l1, cb);
@@ -104,25 +118,17 @@ class LocalMQ extends MQ {
 			if (log.isDebugEnabled())
 				log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
-//			} catch (Exception e) {
-//				log.error(e.getMessage(), e);
-//			}
 		}
 	}
 
 	@Override
 	protected void _bind(String name, IStub stub, Mode mode) throws Exception {
-		GLog.applog.info(org.giiwa.app.web.admin.mq.class, "bind",
-				"[" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
 
 		new R(name, stub, mode);
 	}
 
 	@Override
 	protected long _topic(String to, MQ.Request r) throws Exception {
-
-		// if (X.isEmpty(r.data))
-		// throw new Exception("message can not be empty");
 
 		/**
 		 * get the message producer by destination name
@@ -139,9 +145,6 @@ class LocalMQ extends MQ {
 
 	@Override
 	protected long _send(String to, MQ.Request r) throws Exception {
-
-		// if (X.isEmpty(r.data))
-		// throw new Exception("message can not be empty");
 
 		/**
 		 * get the message producer by destination name
@@ -162,18 +165,10 @@ class LocalMQ extends MQ {
 			return senders.get(name1);
 		}
 
-//			try {
-
 		Sender s = new Sender(name1);
-//				s.schedule(0);
 		senders.put(name1, s);
 
 		return s;
-//			} catch (Exception e) {
-//				log.error(name, e);
-//			}
-
-//		return null;
 	}
 
 	/**
@@ -185,16 +180,10 @@ class LocalMQ extends MQ {
 
 		long last = System.currentTimeMillis();
 		String name;
-//		ArrayBlockingQueue<Request> queue = new ArrayBlockingQueue<Request>(100);
 
 		public void send(Request r) throws JMSException {
 			if (log.isDebugEnabled())
 				log.debug("sending, r=" + r);
-
-//				if (consumers.containsKey(name)) {
-//					queue.add(r);
-//					last = System.currentTimeMillis();
-//				}
 
 			List<R> l1 = consumers.get(name);
 			if (l1 != null && !l1.isEmpty()) {
@@ -205,9 +194,6 @@ class LocalMQ extends MQ {
 					r1.onMessage(r);
 				}
 
-			} else {
-//					log.warn("no consumer for [" + name + "], queue.size=" + queue.size() + ",consumers="
-//							+ consumers);
 			}
 
 		}
@@ -219,51 +205,6 @@ class LocalMQ extends MQ {
 		public String getName() {
 			return "sender." + name;
 		}
-
-//		@Override
-//		public void onExecute() {
-//			try {
-//				Request r = queue.poll(5, TimeUnit.SECONDS);
-//
-//				if (r != null) {
-//
-//					List<R> l1 = consumers.get(name);
-//					if (l1 != null && !l1.isEmpty()) {
-//						if (log.isDebugEnabled())
-//							log.debug("Sending: [" + name + "], consumer=" + l1);
-//
-//						if (l1.size() == 1) {
-//							l1.get(0).onMessage(r);
-//						} else {
-//							l1.parallelStream().forEach(e -> {
-//								e.onMessage(r);
-//							});
-//						}
-//
-//					} else {
-//						log.warn("no consumer for [" + name + "], queue.size=" + queue.size() + ",consumers="
-//								+ consumers);
-//					}
-//
-//				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
-//					synchronized (senders) {
-//						senders.remove(name);
-//					}
-//				}
-//			} catch (Exception e) {
-//				log.error(e.getMessage(), e);
-//			}
-//		}
-
-//		@Override
-//		public void onFinish() {
-//			if (last < System.currentTimeMillis() - X.AMINUTE) {
-//				if (log.isDebugEnabled())
-//					log.debug("sender." + name + " is stopped.");
-//			} else {
-//				this.schedule(0);
-//			}
-//		}
 
 	}
 
@@ -285,6 +226,19 @@ class LocalMQ extends MQ {
 				}
 			}
 		}
+	}
+
+	@Override
+	protected void _stop() {
+		consumers.clear();
+		cached.clear();
+		senders.clear();
+	}
+
+	@Override
+	public void destroy(String name, Mode mode) throws Exception {
+		consumers.remove(name);
+		senders.remove(name);
 	}
 
 }

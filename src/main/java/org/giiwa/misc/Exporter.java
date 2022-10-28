@@ -1,20 +1,20 @@
 package org.giiwa.misc;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
-import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
+import org.giiwa.task.Function;
 
-public class Exporter<V> {
+public class Exporter<V> implements Closeable {
 
 	static Log log = LogFactory.getLog(Exporter.class);
 
@@ -27,37 +27,39 @@ public class Exporter<V> {
 
 	Function<V, Object[]> cols = null;
 
-	public static <V> Exporter<V> create(File file, FORMAT format) {
-		try {
-			if (file.exists()) {
-				return create(new FileOutputStream(file, true), format, false);
-			} else {
-				file.getParentFile().mkdirs();
-				return create(new FileOutputStream(file), format, true);
-			}
-		} catch (FileNotFoundException e) {
-			log.error(e.getMessage(), e);
-		}
-		return null;
+	File file;
+
+	public File getFile() {
+		return file;
 	}
 
-	public static <V> Exporter<V> create(OutputStream out, FORMAT format, boolean init) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static <V> Exporter<V> create(File file, FORMAT format) throws IOException {
 
-		try {
-			if (init && FORMAT.csv == format) {
-				// BOM, UTF-8
-				out.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });
-			}
-
-			Exporter<V> s = new Exporter<V>();
-			s.out = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
-			s.format = format;
-
-			return s;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+		Exporter ex = null;
+		if (file.exists()) {
+			ex = create(new FileOutputStream(file, true), format, false);
+		} else {
+			X.IO.mkdirs(file.getParentFile());
+			ex = create(new FileOutputStream(file), format, true);
 		}
-		return null;
+		ex.file = file;
+		return ex;
+
+	}
+
+	public static <V> Exporter<V> create(OutputStream out, FORMAT format, boolean init) throws IOException {
+
+		if (init && FORMAT.csv == format) {
+			// BOM, UTF-8
+			out.write(new byte[] { (byte) 0xEF, (byte) 0xBB, (byte) 0xBF });
+		}
+
+		Exporter<V> s = new Exporter<V>();
+		s.out = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+		s.format = format;
+
+		return s;
 	}
 
 	public Exporter<V> createSheet(Function<V, Object[]> cols) {
@@ -88,9 +90,6 @@ public class Exporter<V> {
 			throw new IOException("out is null?");
 		}
 
-//		if (log.isDebugEnabled())
-//			log.debug("print, cols=" + Arrays.toString(cols) + ", out=" + out);
-
 		for (int i = 0; i < cols.length; i++) {
 			Object s = cols[i];
 			if (i > 0) {
@@ -104,7 +103,7 @@ public class Exporter<V> {
 					out.write(s.toString());
 				} else {
 					out.write("\"");
-					s = s.toString().replaceAll("\"", "\"\"");// .replaceAll("\n", "").replaceAll("\r", "");
+					s = s.toString().replaceAll("\"", "\"\"");
 					out.write(s.toString());
 					out.write("\"");
 				}

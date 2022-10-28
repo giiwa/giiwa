@@ -45,7 +45,7 @@ public class JspView extends View {
 				log.debug("including jsp page, name=" + name);
 		}
 
-		rd.include(m.req, m.resp);
+		rd.include(m.req.req, m.resp);
 
 		return true;
 	}

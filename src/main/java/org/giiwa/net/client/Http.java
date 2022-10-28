@@ -15,25 +15,24 @@
 package org.giiwa.net.client;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Consumer;
 import java.util.zip.GZIPInputStream;
 
 import javax.net.ssl.SSLContext;
@@ -45,6 +44,9 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -55,19 +57,23 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.DnsResolver;
-import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.ssl.SSLContexts;
+import org.giiwa.bean.Temp;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
@@ -75,6 +81,8 @@ import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.StringFinder;
+import org.giiwa.task.Consumer;
+import org.giiwa.web.QueryString;
 import org.jsoup.nodes.Element;
 
 /**
@@ -95,11 +103,13 @@ public final class Http {
 
 	private BasicCookieStore cookies = new BasicCookieStore();
 	private SSLContext ctx = null;
-	private String proxy = null;
+
+	public String proxy = null;
+	public String user = null;
+	public String passwd = null;
+
 	private CloseableHttpClient client = null;
 	private HttpClientContext localContext = null;
-
-	public static Http owner = create();
 
 	private static String _UA() {
 		int i = (int) (UA.length * Math.random());
@@ -114,7 +124,7 @@ public final class Http {
 	 * @return the http
 	 */
 	public static Http create() {
-		return new Http();
+		return create(Global.getString("http.proxy", ""));
 	}
 
 	/**
@@ -200,6 +210,9 @@ public final class Http {
 	}
 
 	public Response post(String url, Object head, Object params) {
+		if (params instanceof String) {
+			return post(url, head, params.toString());
+		}
 		return post(url, JSON.fromObject(head), JSON.fromObject(params), null, (InputStream) null, X.AMINUTE);
 	}
 
@@ -211,15 +224,17 @@ public final class Http {
 	 * @return
 	 */
 	public Response post(String url, String body) {
+		return post(url, null, body);
+	}
+
+	public Response post(String url, Object head, String body) {
 
 		if (log.isDebugEnabled())
 			log.debug("url=" + url);
 
 		Response r = new Response();
 
-		if (client == null) {
-			client = getClient(url, _UA(), X.AMINUTE);
-		}
+		client = _client(url, null, X.AMINUTE);
 
 		if (localContext == null) {
 			localContext = HttpClientContext.create();
@@ -233,7 +248,14 @@ public final class Http {
 			CloseableHttpResponse resp = null;
 			try {
 
-				post.addHeader("Content-Type", "application/json");
+				if (head != null) {
+					JSON h1 = JSON.fromObject(head);
+					for (String name : h1.keySet()) {
+						post.addHeader(name, h1.getString(name));
+					}
+				} else {
+					post.addHeader("Content-Type", "application/json");
+				}
 
 				if (log.isDebugEnabled())
 					log.debug("post url=" + url);
@@ -243,8 +265,8 @@ public final class Http {
 
 				resp = client.execute(post, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
 				r.headers = resp.getAllHeaders();
+				_parse(resp, r);
 
 				if (log.isDebugEnabled())
 					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -335,13 +357,18 @@ public final class Http {
 	/**
 	 * Gets the.
 	 * 
-	 * @deprecated
 	 * @param url     the url
 	 * @param headers the headers
 	 * @return the response
 	 */
-	public Response get(String url, JSON headers) {
-		return get(url, headers, X.AMINUTE);
+	public Response get(String url, JSON head) {
+		return get(url, head, X.AMINUTE);
+	}
+
+	public String cookie() {
+		return X.join(X.asList(cookies.getCookies(), e -> {
+			return ((Cookie) e).getName() + "=" + ((Cookie) e).getValue();
+		}), ";");
 	}
 
 	/**
@@ -364,10 +391,7 @@ public final class Http {
 			String[] ss = url.split(" ");
 			url = ss[ss.length - 1];
 
-			String ua = (head != null && head.containsKey("user-agent")) ? head.getString("user-agent") : _UA();
-			if (client == null) {
-				client = getClient(url, ua, timeout);
-			}
+			client = _client(url, head, timeout);
 
 			if (localContext == null) {
 				localContext = HttpClientContext.create();
@@ -376,9 +400,8 @@ public final class Http {
 
 			if (client != null) {
 
-//			this.getCookies().forEach(c -> {
-//				log.debug("Cookie: " + c.getName() + "=" + c.getValue());
-//			});
+				if (log.isDebugEnabled())
+					log.debug("proxy = " + proxy);
 
 				HttpGet get = null;
 
@@ -387,15 +410,16 @@ public final class Http {
 
 					if (head != null && head.size() > 0) {
 						for (String s : head.keySet()) {
-							get.addHeader(s, head.getString(s));
+							if (!X.isSame(s, "user-agent")) {
+								get.addHeader(s, head.getString(s));
+							}
 						}
 					}
 
 					if (log.isDebugEnabled())
 						log.debug("get url=" + url);
 
-					Http.Response r = _get(client, localContext, get, timeout - t.pastms());
-					r.url = url;
+					Http.Response r = _get(client, localContext, get, url, timeout - t.pastms());
 					return r;
 
 				} catch (Throwable e) {
@@ -417,7 +441,7 @@ public final class Http {
 
 	}
 
-	private Response _get(CloseableHttpClient client, HttpClientContext context, HttpGet get, long timeout)
+	private Response _get(CloseableHttpClient client, HttpClientContext context, HttpGet get, String url, long timeout)
 			throws IOException {
 
 		TimeStamp t = TimeStamp.create();
@@ -428,24 +452,25 @@ public final class Http {
 
 		try {
 
-//			resp = client.execute(get, context);
 			resp = client.execute(get, context);
 
+			List<URI> l1 = context.getRedirectLocations();
+			if (l1 != null && l1.size() > 0) {
+				r.url = l1.get(l1.size() - 1).toASCIIString();
+			} else {
+				r.url = url;
+			}
 			r.status = resp.getStatusLine().getStatusCode();
-			r.body = getContext(resp);
 			r.headers = resp.getAllHeaders();
+			_parse(resp, r);
 
 			if (timeout > t.pastms()) {
 				r = _redirecting(r, client, context, get, timeout - t.pastms());
 			}
 		} catch (Exception e) {
-			throw new IOException(get.getURI().toString(), e);
+			throw new IOException(e);
 		} finally {
-			try {
-				if (resp != null)
-					resp.close();
-			} catch (IOException e) {
-			}
+			X.close(resp);
 		}
 
 		return r;
@@ -453,6 +478,7 @@ public final class Http {
 
 	private Response _redirecting(Response r, CloseableHttpClient client, HttpClientContext context, HttpGet get,
 			long timeout) throws IOException {
+
 		if (!X.isEmpty(r.body) && r.body.toLowerCase().contains("http-equiv=\"refresh\"")) {
 			Html h = Html.create(r.body);
 
@@ -475,7 +501,7 @@ public final class Http {
 						url = url.substring(0, url.length() - 1);
 					}
 
-					url = format(get.getURI().toString(), url);
+					url = format(r.url, url);
 
 					if (log.isDebugEnabled())
 						log.debug("redirecting, url=" + url);
@@ -489,30 +515,12 @@ public final class Http {
 						}
 					}
 
-					r = _get(client, context, get1, timeout);
-					r.url = url;
+					r = _get(client, context, get1, url, timeout);
 					return r;
 				}
 			}
 		}
 		return r;
-	}
-
-	public static String format(String referer, String url) {
-		if (url.startsWith("//")) {
-			url = Http.protocal(referer) + ":" + url;
-		} else if (url.startsWith("/")) {
-			url = Http.server(referer) + url;
-		} else if (url.startsWith("./")) {
-			url = Http.path(referer) + url;
-		} else if (!url.startsWith("http")) {
-			url = Http.path(referer) + url;
-		}
-		int i = url.indexOf(".");
-		if (i > 0) {
-			url = url.substring(0, i);
-		}
-		return Http.format(url);
 	}
 
 	/**
@@ -522,8 +530,8 @@ public final class Http {
 	 * @param localfile the destination file
 	 * @return the length
 	 */
-	public int download(String url, File file) {
-		return download(url, (JSON) null, file);
+	public long download(String url, OutputStream out) {
+		return download(url, (JSON) null, out);
 	}
 
 	/**
@@ -534,7 +542,7 @@ public final class Http {
 	 * @param localfile the localfile
 	 * @return the length of bytes
 	 */
-	public int download(String url, JSON header, File file) {
+	public long download(String url, JSON head, OutputStream out) {
 
 		TimeStamp t = TimeStamp.create();
 
@@ -545,10 +553,7 @@ public final class Http {
 			String[] ss = url.split(" ");
 			url = ss[ss.length - 1];
 
-			String ua = header != null && header.containsKey("user-agent") ? header.getString("user-agent") : _UA();
-			if (client == null) {
-				client = getClient(url, ua, X.AMINUTE);
-			}
+			client = _client(url, head, X.AMINUTE);
 			if (localContext == null) {
 				localContext = HttpClientContext.create();
 				localContext.setCookieStore(cookies);
@@ -559,9 +564,9 @@ public final class Http {
 				try {
 					get = new HttpGet(url);
 
-					if (header != null && header.size() > 0) {
-						for (String name : header.keySet()) {
-							get.addHeader(name, header.getString(name));
+					if (head != null && head.size() > 0) {
+						for (String name : head.keySet()) {
+							get.addHeader(name, head.getString(name));
 						}
 					}
 
@@ -569,6 +574,13 @@ public final class Http {
 						log.debug("get url=" + url);
 
 					resp = client.execute(get, localContext);
+					{
+						List<URI> l1 = localContext.getRedirectLocations();
+						if (l1 != null && l1.size() > 0) {
+							url = l1.get(l1.size() - 1).toASCIIString();
+						}
+					}
+
 					int status = resp.getStatusLine().getStatusCode();
 
 					if (DEBUG) {
@@ -588,10 +600,7 @@ public final class Http {
 
 						InputStream in = e.getContent();
 
-						file.getParentFile().mkdirs();
-
-						FileOutputStream out = new FileOutputStream(file);
-						int l2 = IOUtil.copy(in, out);
+						long l2 = IOUtil.copy(in, out);
 
 						Header[] hh = resp.getHeaders("Content-Length");
 						if (hh != null && hh.length > 0) {
@@ -600,7 +609,6 @@ public final class Http {
 								// size error
 								log.error("download size error, expect=" + l1 + ", actual=" + l2, new Exception(url));
 								// bad file size
-								IOUtil.delete(file);
 								return 0;
 							}
 						}
@@ -609,6 +617,7 @@ public final class Http {
 					return 0;
 				} catch (Exception e) {
 					log.error("\"" + url + "\"", e);
+//					e.printStackTrace();
 				} finally {
 					if (resp != null)
 						try {
@@ -620,7 +629,7 @@ public final class Http {
 			}
 		} finally {
 			if (log.isInfoEnabled())
-				log.info("download, cost=" + t.past() + ", url=" + url + ", size=" + file.length());
+				log.info("download, cost=" + t.past() + ", url=" + url);
 		}
 
 		return 0;
@@ -630,20 +639,19 @@ public final class Http {
 	 * using post to download
 	 * 
 	 * @param url
+	 * @param head
 	 * @param body
 	 * @param file
 	 * @return
 	 */
-	public int post_download(String url, String body, File file) {
+	public long post_download(String url, JSON head, JSON body, OutputStream out) {
 
 		if (log.isDebugEnabled())
 			log.debug("url=" + url);
 
 		Response r = new Response();
 
-		if (client == null) {
-			client = getClient(url, _UA(), X.AMINUTE);
-		}
+		client = _client(url, head, X.AMINUTE);
 
 		if (localContext == null) {
 			localContext = HttpClientContext.create();
@@ -657,15 +665,38 @@ public final class Http {
 			CloseableHttpResponse resp = null;
 			try {
 
-				post.addHeader("Content-Type", "application/json");
+				if (head != null && head.size() > 0) {
+					if (log.isDebugEnabled())
+						log.debug("head: " + head);
+					for (String s : head.keySet()) {
+						post.addHeader(s, head.getString(s));
+					}
+				}
 
 				if (log.isDebugEnabled())
 					log.debug("post url=" + url);
 
-				StringEntity e1 = new StringEntity(body, "UTF8");
-				post.setEntity(e1);
+				MultipartEntityBuilder b = MultipartEntityBuilder.create();
+				if (body != null) {
+					if (log.isDebugEnabled())
+						log.debug("body: " + body);
+
+					for (String s : body.keySet()) {
+						b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+					}
+
+				}
+				post.setEntity(b.build());
 
 				resp = client.execute(post, localContext);
+				{
+					List<URI> l1 = localContext.getRedirectLocations();
+					if (l1 != null && l1.size() > 0) {
+						r.url = l1.get(l1.size() - 1).toASCIIString();
+					} else {
+						r.url = url;
+					}
+				}
 
 				int status = resp.getStatusLine().getStatusCode();
 
@@ -674,10 +705,7 @@ public final class Http {
 
 					InputStream in = e.getContent();
 
-					file.getParentFile().mkdirs();
-
-					FileOutputStream out = new FileOutputStream(file);
-					int l2 = IOUtil.copy(in, out);
+					long l2 = IOUtil.copy(in, out);
 
 					Header[] hh = resp.getHeaders("Content-Length");
 					if (hh != null && hh.length > 0) {
@@ -686,7 +714,6 @@ public final class Http {
 							// size error
 							log.error("download size error, expect=" + l1 + ", actual=" + l2, new Exception(url));
 							// bad file size
-							IOUtil.delete(file);
 							return 0;
 						}
 					}
@@ -775,9 +802,8 @@ public final class Http {
 	}
 
 	/**
-	 * POST.
+	 * POST stream data to server
 	 * 
-	 * @deprecated
 	 * @param url     the url
 	 * @param headers the headers
 	 * @param body    the body
@@ -795,11 +821,356 @@ public final class Http {
 			if (log.isDebugEnabled())
 				log.debug("url=" + url + ", head=" + head);
 
-			String ua = (head != null && head.containsKey("user-agent")) ? head.getString("user-agent") : _UA();
+			_client(url, head, timeout);
 
-			if (client == null) {
-				client = getClient(url, ua, timeout);
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
 			}
+
+			if (client != null) {
+
+				HttpPost post = new HttpPost(url);
+				CloseableHttpResponse resp = null;
+				try {
+
+					if (head != null && head.size() > 0) {
+						if (log.isDebugEnabled())
+							log.debug("head: " + head);
+						for (String s : head.keySet()) {
+							if (!X.isSame(s, "user-agent")) {
+								post.addHeader(s, head.getString(s));
+							}
+						}
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("post url=" + url);
+
+					if (body != null || in != null) {
+						MultipartEntityBuilder b = MultipartEntityBuilder.create();
+						if (body != null) {
+							if (log.isDebugEnabled())
+								log.debug("body: " + body);
+
+							for (String s : body.keySet()) {
+//						b.addTextBody(name, body.getString(s),
+//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
+								b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+							}
+
+						}
+						if (in != null) {
+							b.addBinaryBody(name, in, ContentType.DEFAULT_BINARY,
+									head == null ? null : head.getString("filename"));
+						}
+						post.setEntity(b.build());
+					}
+
+					resp = client.execute(post, localContext);
+					List<URI> l1 = localContext.getRedirectLocations();
+					if (l1 != null && l1.size() > 0) {
+						r.url = l1.get(l1.size() - 1).toASCIIString();
+					} else {
+						r.url = url;
+					}
+
+					r.status = resp.getStatusLine().getStatusCode();
+
+					r.headers = resp.getAllHeaders();
+					_parse(resp, r);
+
+					if (log.isDebugEnabled())
+						log.debug("got: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+				} catch (Throwable e) {
+					log.error("cost=" + t.past() + ", " + url, e);
+					r.status = 600;
+					r.body = "error: " + e.getMessage();
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+				}
+
+			} else {
+				r.status = 600;
+				r.body = "error: can not init a client";
+			}
+
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("post, cost=" + t.past() + ", url=" + url);
+		}
+		return r;
+	}
+
+	public Response post(String url, JSON head, JSON body, String name, List<File> files, long timeout) {
+
+		TimeStamp t = TimeStamp.create();
+
+		Response r = new Response();
+
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=" + url);
+
+			_client(url, head, timeout);
+
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
+
+			if (client != null) {
+
+				HttpPost post = new HttpPost(url);
+				CloseableHttpResponse resp = null;
+				try {
+
+					if (head != null && head.size() > 0) {
+						if (log.isDebugEnabled())
+							log.debug("header: " + head);
+						for (String s : head.keySet()) {
+							post.addHeader(s, head.getString(s));
+						}
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("post url=" + url);
+
+					MultipartEntityBuilder b = MultipartEntityBuilder.create();
+					if (body != null) {
+						if (log.isDebugEnabled())
+							log.debug("body: " + body);
+
+						for (String s : body.keySet()) {
+//						b.addTextBody(name, body.getString(s),
+//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
+							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+						}
+
+					}
+					if (files != null) {
+						for (File f1 : files) {
+							b.addBinaryBody(name, f1);
+						}
+					}
+					post.setEntity(b.build());
+
+					resp = client.execute(post, localContext);
+					r.status = resp.getStatusLine().getStatusCode();
+					r.url = url;
+					r.headers = resp.getAllHeaders();
+					_parse(resp, r);
+
+					if (log.isDebugEnabled())
+						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+				} catch (Throwable e) {
+					log.error("cost=" + t.past() + ", " + url, e);
+					r.status = 600;
+					r.body = "error: " + e.getMessage();
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+				}
+
+			} else {
+				r.status = 600;
+				r.body = "error: can not init a client";
+			}
+
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("post, cost=" + t.past() + ", url=" + url);
+		}
+		return r;
+	}
+
+	public Response post(String url, JSON head, JSON body, String name, FileItem file, long timeout) {
+		TimeStamp t = TimeStamp.create();
+
+		Response r = new Response();
+
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=" + url);
+
+			_client(url, head, timeout);
+
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
+
+			if (client != null) {
+
+				HttpPost post = new HttpPost(url);
+				CloseableHttpResponse resp = null;
+				try {
+
+					if (head != null && head.size() > 0) {
+						if (log.isDebugEnabled())
+							log.debug("header: " + head);
+						for (String s : head.keySet()) {
+							post.addHeader(s, head.getString(s));
+						}
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("post url=" + url);
+
+					MultipartEntityBuilder b = MultipartEntityBuilder.create();
+					if (body != null) {
+						if (log.isDebugEnabled())
+							log.debug("body: " + body);
+
+						for (String s : body.keySet()) {
+//						b.addTextBody(name, body.getString(s),
+//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
+							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+						}
+
+					}
+					if (file != null) {
+						b.addBinaryBody(name, file.getInputStream(), ContentType.DEFAULT_BINARY, file.getName());
+					}
+					post.setEntity(b.build());
+
+					resp = client.execute(post, localContext);
+					r.status = resp.getStatusLine().getStatusCode();
+					r.url = url;
+					r.headers = resp.getAllHeaders();
+					_parse(resp, r);
+
+					if (log.isDebugEnabled())
+						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+				} catch (Throwable e) {
+					log.error("cost=" + t.past() + ", " + url, e);
+					r.status = 600;
+					r.body = "error: " + e.getMessage();
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+				}
+
+			} else {
+				r.status = 600;
+				r.body = "error: can not init a client";
+			}
+
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("post, cost=" + t.past() + ", url=" + url);
+		}
+		return r;
+
+	}
+
+	public Response post(String url, JSON head, JSON body, String name, byte[] binary, long timeout) {
+		TimeStamp t = TimeStamp.create();
+
+		Response r = new Response();
+
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=" + url);
+
+			_client(url, head, timeout);
+
+			if (localContext == null) {
+				localContext = HttpClientContext.create();
+				localContext.setCookieStore(cookies);
+			}
+
+			if (client != null) {
+
+				HttpPost post = new HttpPost(url);
+				CloseableHttpResponse resp = null;
+				try {
+
+					if (head != null && head.size() > 0) {
+						if (log.isDebugEnabled())
+							log.debug("head: " + head);
+						for (String s : head.keySet()) {
+							post.addHeader(s, head.getString(s));
+						}
+					}
+
+					if (log.isDebugEnabled())
+						log.debug("post url=" + url);
+
+					MultipartEntityBuilder b = MultipartEntityBuilder.create();
+					if (body != null) {
+						if (log.isDebugEnabled())
+							log.debug("body: " + body);
+
+						for (String s : body.keySet()) {
+							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
+						}
+
+					}
+					if (binary != null) {
+						b.addBinaryBody(name, new ByteArrayInputStream(binary), ContentType.DEFAULT_BINARY,
+								head == null ? null : head.getString("filename"));
+					}
+					post.setEntity(b.build());
+
+					resp = client.execute(post, localContext);
+					r.status = resp.getStatusLine().getStatusCode();
+					r.url = url;
+					r.headers = resp.getAllHeaders();
+					_parse(resp, r);
+
+					if (log.isDebugEnabled())
+						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
+
+				} catch (Throwable e) {
+					log.error("cost=" + t.past() + ", " + url, e);
+					r.status = 600;
+					r.body = "error: " + e.getMessage();
+				} finally {
+					if (resp != null)
+						try {
+							resp.close();
+						} catch (IOException e) {
+						}
+				}
+
+			} else {
+				r.status = 600;
+				r.body = "error: can not init a client";
+			}
+
+		} finally {
+			if (log.isInfoEnabled())
+				log.info("post, cost=" + t.past() + ", url=" + url);
+		}
+		return r;
+
+	}
+
+	public Response post(String url, JSON head, JSON body, String name, File file, long timeout) {
+
+		TimeStamp t = TimeStamp.create();
+
+		Response r = new Response();
+
+		try {
+			if (log.isDebugEnabled())
+				log.debug("url=" + url);
+
+			_client(url, head, timeout);
 
 			if (localContext == null) {
 				localContext = HttpClientContext.create();
@@ -835,272 +1206,6 @@ public final class Http {
 						}
 
 					}
-					if (in != null) {
-						b.addBinaryBody(name, in);
-					}
-					post.setEntity(b.build());
-
-					resp = client.execute(post, localContext);
-					r.status = resp.getStatusLine().getStatusCode();
-					r.body = getContext(resp);
-					r.headers = resp.getAllHeaders();
-					r.url = url;
-
-					if (log.isDebugEnabled())
-						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
-
-				} catch (Throwable e) {
-					log.error("cost=" + t.past() + ", " + url, e);
-					r.status = 600;
-					r.body = "error: " + e.getMessage();
-				} finally {
-					if (resp != null)
-						try {
-							resp.close();
-						} catch (IOException e) {
-						}
-				}
-
-			} else {
-				r.status = 600;
-				r.body = "error: can not init a client";
-			}
-
-		} finally {
-			if (log.isInfoEnabled())
-				log.info("post, cost=" + t.past() + ", url=" + url);
-		}
-		return r;
-	}
-
-	public Response post(String url, JSON headers, JSON body, String name, List<File> files, long timeout) {
-
-		TimeStamp t = TimeStamp.create();
-
-		Response r = new Response();
-
-		try {
-			if (log.isDebugEnabled())
-				log.debug("url=" + url);
-
-			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-
-			if (client == null) {
-				client = getClient(url, ua, timeout);
-			}
-
-			if (localContext == null) {
-				localContext = HttpClientContext.create();
-				localContext.setCookieStore(cookies);
-			}
-
-			if (client != null) {
-
-				HttpPost post = new HttpPost(url);
-				CloseableHttpResponse resp = null;
-				try {
-
-					if (headers != null && headers.size() > 0) {
-						if (log.isDebugEnabled())
-							log.debug("header: " + headers);
-						for (String s : headers.keySet()) {
-							post.addHeader(s, headers.getString(s));
-						}
-					}
-
-					if (log.isDebugEnabled())
-						log.debug("post url=" + url);
-
-					MultipartEntityBuilder b = MultipartEntityBuilder.create();
-					if (body != null) {
-						if (log.isDebugEnabled())
-							log.debug("body: " + body);
-
-						for (String s : body.keySet()) {
-//						b.addTextBody(name, body.getString(s),
-//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
-							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
-						}
-
-					}
-					if (files != null) {
-						for (File f1 : files) {
-							b.addBinaryBody(name, f1);
-						}
-					}
-					post.setEntity(b.build());
-
-					resp = client.execute(post, localContext);
-					r.status = resp.getStatusLine().getStatusCode();
-					r.body = getContext(resp);
-					r.headers = resp.getAllHeaders();
-					r.url = url;
-
-					if (log.isDebugEnabled())
-						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
-
-				} catch (Throwable e) {
-					log.error("cost=" + t.past() + ", " + url, e);
-					r.status = 600;
-					r.body = "error: " + e.getMessage();
-				} finally {
-					if (resp != null)
-						try {
-							resp.close();
-						} catch (IOException e) {
-						}
-				}
-
-			} else {
-				r.status = 600;
-				r.body = "error: can not init a client";
-			}
-
-		} finally {
-			if (log.isInfoEnabled())
-				log.info("post, cost=" + t.past() + ", url=" + url);
-		}
-		return r;
-	}
-
-	public Response post(String url, JSON headers, JSON body, String name, FileItem file, long timeout) {
-		TimeStamp t = TimeStamp.create();
-
-		Response r = new Response();
-
-		try {
-			if (log.isDebugEnabled())
-				log.debug("url=" + url);
-
-			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-
-			if (client == null) {
-				client = getClient(url, ua, timeout);
-			}
-
-			if (localContext == null) {
-				localContext = HttpClientContext.create();
-				localContext.setCookieStore(cookies);
-			}
-
-			if (client != null) {
-
-				HttpPost post = new HttpPost(url);
-				CloseableHttpResponse resp = null;
-				try {
-
-					if (headers != null && headers.size() > 0) {
-						if (log.isDebugEnabled())
-							log.debug("header: " + headers);
-						for (String s : headers.keySet()) {
-							post.addHeader(s, headers.getString(s));
-						}
-					}
-
-					if (log.isDebugEnabled())
-						log.debug("post url=" + url);
-
-					MultipartEntityBuilder b = MultipartEntityBuilder.create();
-					if (body != null) {
-						if (log.isDebugEnabled())
-							log.debug("body: " + body);
-
-						for (String s : body.keySet()) {
-//						b.addTextBody(name, body.getString(s),
-//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
-							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
-						}
-
-					}
-					if (file != null) {
-						b.addBinaryBody(name, file.getInputStream(), ContentType.DEFAULT_BINARY, file.getName());
-					}
-					post.setEntity(b.build());
-
-					resp = client.execute(post, localContext);
-					r.status = resp.getStatusLine().getStatusCode();
-					r.body = getContext(resp);
-					r.headers = resp.getAllHeaders();
-					r.url = url;
-
-					if (log.isDebugEnabled())
-						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
-
-				} catch (Throwable e) {
-					log.error("cost=" + t.past() + ", " + url, e);
-					r.status = 600;
-					r.body = "error: " + e.getMessage();
-				} finally {
-					if (resp != null)
-						try {
-							resp.close();
-						} catch (IOException e) {
-						}
-				}
-
-			} else {
-				r.status = 600;
-				r.body = "error: can not init a client";
-			}
-
-		} finally {
-			if (log.isInfoEnabled())
-				log.info("post, cost=" + t.past() + ", url=" + url);
-		}
-		return r;
-
-	}
-
-	public Response post(String url, JSON headers, JSON body, String name, File file, long timeout) {
-
-		TimeStamp t = TimeStamp.create();
-
-		Response r = new Response();
-
-		try {
-			if (log.isDebugEnabled())
-				log.debug("url=" + url);
-
-			String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-
-			if (client == null) {
-				client = getClient(url, ua, timeout);
-			}
-
-			if (localContext == null) {
-				localContext = HttpClientContext.create();
-				localContext.setCookieStore(cookies);
-			}
-
-			if (client != null) {
-
-				HttpPost post = new HttpPost(url);
-				CloseableHttpResponse resp = null;
-				try {
-
-					if (headers != null && headers.size() > 0) {
-						if (log.isDebugEnabled())
-							log.debug("header: " + headers);
-						for (String s : headers.keySet()) {
-							post.addHeader(s, headers.getString(s));
-						}
-					}
-
-					if (log.isDebugEnabled())
-						log.debug("post url=" + url);
-
-					MultipartEntityBuilder b = MultipartEntityBuilder.create();
-					if (body != null) {
-						if (log.isDebugEnabled())
-							log.debug("body: " + body);
-
-						for (String s : body.keySet()) {
-//						b.addTextBody(name, body.getString(s),
-//								ContentType.create("text/plain", headers.getString("ContentType", "UTF-8")));
-							b.addTextBody(s, new String(body.getString(s).getBytes("UTF-8"), "ISO-8859-1"));
-						}
-
-					}
 					if (file != null) {
 						b.addBinaryBody(name, file);
 					}
@@ -1108,9 +1213,9 @@ public final class Http {
 
 					resp = client.execute(post, localContext);
 					r.status = resp.getStatusLine().getStatusCode();
-					r.body = getContext(resp);
-					r.headers = resp.getAllHeaders();
 					r.url = url;
+					r.headers = resp.getAllHeaders();
+					_parse(resp, r);
 
 					if (log.isDebugEnabled())
 						log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -1148,16 +1253,12 @@ public final class Http {
 	 * @param timeout
 	 * @return
 	 */
-	public Response put(String url, JSON headers, String body, long timeout) {
+	public Response put(String url, JSON head, String body, long timeout) {
 		if (log.isDebugEnabled())
 			log.debug("url=" + url);
 		Response r = new Response();
 
-		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-
-		if (client == null) {
-			client = getClient(url, ua, timeout);
-		}
+		_client(url, head, timeout);
 
 		if (localContext == null) {
 			localContext = HttpClientContext.create();
@@ -1170,11 +1271,11 @@ public final class Http {
 			CloseableHttpResponse resp = null;
 			try {
 
-				if (headers != null && headers.size() > 0) {
+				if (head != null && head.size() > 0) {
 					if (log.isDebugEnabled())
-						log.debug("header: " + headers);
-					for (String s : headers.keySet()) {
-						put.addHeader(s, headers.getString(s));
+						log.debug("head: " + head);
+					for (String s : head.keySet()) {
+						put.addHeader(s, head.getString(s));
 					}
 				}
 
@@ -1186,8 +1287,9 @@ public final class Http {
 
 				resp = client.execute(put, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
+				r.url = url;
 				r.headers = resp.getAllHeaders();
+				_parse(resp, r);
 
 				if (log.isDebugEnabled())
 					log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -1213,17 +1315,13 @@ public final class Http {
 		return r;
 	}
 
-	public Response put(String url, String contenttype, JSON headers, JSON body, long timeout) {
+	public Response put(String url, String contenttype, JSON head, JSON body, long timeout) {
 
 		if (log.isDebugEnabled())
 			log.debug("url=" + url);
 		Response r = new Response();
 
-		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-
-		if (client == null) {
-			client = getClient(url, ua, timeout);
-		}
+		_client(url, head, timeout);
 
 		if (localContext == null) {
 			localContext = HttpClientContext.create();
@@ -1236,11 +1334,11 @@ public final class Http {
 			CloseableHttpResponse resp = null;
 			try {
 
-				if (headers != null && headers.size() > 0) {
+				if (head != null && head.size() > 0) {
 					if (log.isDebugEnabled())
-						log.debug("header: " + headers);
-					for (String s : headers.keySet()) {
-						put.addHeader(s, headers.getString(s));
+						log.debug("head: " + head);
+					for (String s : head.keySet()) {
+						put.addHeader(s, head.getString(s));
 					}
 				}
 
@@ -1254,9 +1352,9 @@ public final class Http {
 
 				resp = client.execute(put, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
-				r.headers = resp.getAllHeaders();
 				r.url = url;
+				r.headers = resp.getAllHeaders();
+				_parse(resp, r);
 
 				if (log.isDebugEnabled())
 					log.debug("put: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -1282,21 +1380,19 @@ public final class Http {
 		return r;
 	}
 
-	public Response delete(String url, String contenttype, JSON headers, long timeout) {
+	public Response delete(String url, String contenttype, JSON head, long timeout) {
 
 		if (log.isDebugEnabled())
 			log.debug("url=" + url);
 		Response r = new Response();
 
-		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
+		_client(url, head, timeout);
 
-		if (client == null) {
-			client = getClient(url, ua, timeout);
-		}
 		if (localContext == null) {
 			localContext = HttpClientContext.create();
 			localContext.setCookieStore(cookies);
 		}
+
 		if (client != null) {
 			TimeStamp t = TimeStamp.create();
 
@@ -1304,11 +1400,11 @@ public final class Http {
 			CloseableHttpResponse resp = null;
 			try {
 
-				if (headers != null && headers.size() > 0) {
+				if (head != null && head.size() > 0) {
 					if (log.isDebugEnabled())
-						log.debug("header: " + headers);
-					for (String s : headers.keySet()) {
-						delete.addHeader(s, headers.getString(s));
+						log.debug("head: " + head);
+					for (String s : head.keySet()) {
+						delete.addHeader(s, head.getString(s));
 					}
 				}
 
@@ -1317,9 +1413,9 @@ public final class Http {
 
 				resp = client.execute(delete, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
-				r.headers = resp.getAllHeaders();
 				r.url = url;
+				r.headers = resp.getAllHeaders();
+				_parse(resp, r);
 
 				if (log.isDebugEnabled())
 					log.debug("delete: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -1345,17 +1441,13 @@ public final class Http {
 		return r;
 	}
 
-	public Response head(String url, String contenttype, JSON headers, long timeout) {
+	public Response head(String url, String contenttype, JSON head, long timeout) {
 
 		if (log.isDebugEnabled())
 			log.debug("url=" + url);
 		Response r = new Response();
 
-		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-
-		if (client == null) {
-			client = getClient(url, ua, timeout);
-		}
+		_client(url, head, timeout);
 
 		if (localContext == null) {
 			localContext = HttpClientContext.create();
@@ -1365,25 +1457,26 @@ public final class Http {
 		if (client != null) {
 			TimeStamp t = TimeStamp.create();
 
-			HttpHead head = new HttpHead(url);
+			HttpHead h1 = new HttpHead(url);
 			CloseableHttpResponse resp = null;
 			try {
 
-				if (headers != null && headers.size() > 0) {
+				if (head != null && head.size() > 0) {
 					if (log.isDebugEnabled())
-						log.debug("header: " + headers);
-					for (String s : headers.keySet()) {
-						head.addHeader(s, headers.getString(s));
+						log.debug("header: " + head);
+					for (String s : head.keySet()) {
+						h1.addHeader(s, head.getString(s));
 					}
 				}
 
 				if (log.isDebugEnabled())
 					log.debug("head url=" + url);
 
-				resp = client.execute(head, localContext);
+				resp = client.execute(h1, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
+				r.url = url;
 				r.headers = resp.getAllHeaders();
+				_parse(resp, r);
 
 				if (log.isDebugEnabled())
 					log.debug("head: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -1409,41 +1502,67 @@ public final class Http {
 		return r;
 	}
 
-	private CloseableHttpClient getClient(String url, String ua, long timeout) {
+	private CloseableHttpClient _client(String url, JSON head, long timeout) {
 
-		if (ctx == null) {
-			try {
-				if (url.toLowerCase().startsWith("https")) {
-					ctx = SSLContexts.custom().loadTrustMaterial(null, new TrustStrategy() {
-
-						@Override
-						public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-							// TODO Auto-generated method stub
-							return true;
-						}
-					}).build();
+		if (head != null && head.containsKey("user-agent")) {
+			// close before
+			if (client != null) {
+				X.close(client);
+				client = null;
+			}
+		}
+		if (client == null) {
+			String ua = head != null && head.containsKey("user-agent") ? head.getString("user-agent") : _UA();
+			if (ctx == null) {
+				try {
+					if (url.toLowerCase().startsWith("https")) {
+						ctx = SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-				// e.printStackTrace();
 			}
-		}
-		int t = (int) timeout;
-		RequestConfig config = RequestConfig.custom().setConnectTimeout(t).setSocketTimeout(t)
-				.setConnectionRequestTimeout(t).setCookieSpec(CookieSpecs.STANDARD).build();
-		HttpClientBuilder builder = HttpClients.custom().setSSLContext(ctx).setDefaultRequestConfig(config)
-				.setUserAgent(ua);
 
-		if (!X.isEmpty(proxy)) {
-			String[] ss = X.split(proxy, ":");
-			if (ss != null && ss.length > 1) {
-				return builder.setProxy(new HttpHost(ss[0], X.toInt(ss[1]))).build();
+			int t = (int) timeout;
+			RequestConfig config = RequestConfig.custom().setConnectTimeout(t).setSocketTimeout(t)
+					.setConnectionRequestTimeout(t).setCookieSpec(CookieSpecs.STANDARD).build();
+
+			HttpClientBuilder builder = HttpClients.custom().setSSLContext(ctx).setDefaultRequestConfig(config)
+					.setUserAgent(ua).setMaxConnTotal(200).setMaxConnPerRoute(10);
+			if (!redirect) {
+				builder.disableRedirectHandling();
 			}
+
+			builder.setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+//			builder.setSSLHostnameVerifier(new javax.net.ssl.HostnameVerifier() {
+//				public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
+//					return true;
+//				}
+//			});
+
+			if (!X.isEmpty(proxy)) {
+				String[] ss = X.split(proxy, ":");
+				if (ss != null && ss.length > 1) {
+
+					HttpHost h1 = new HttpHost(ss[0], X.toInt(ss[1]));
+					log.warn("proxy=" + h1);
+
+					builder.setProxy(h1);
+
+					if (!X.isEmpty(user)) {
+						CredentialsProvider credsProvider = new BasicCredentialsProvider();
+						credsProvider.setCredentials(new AuthScope(ss[0], X.toInt(ss[1])),
+								new UsernamePasswordCredentials(user, passwd));
+						builder.setDefaultCredentialsProvider(credsProvider);
+					}
+				}
+			}
+
+			builder.setDnsResolver(dns);
+
+			client = builder.build();
 		}
-
-		builder.setDnsResolver(dns);
-
-		return builder.build();
+		return client;
 	}
 
 	public void dns(String host, String ip) {
@@ -1452,13 +1571,18 @@ public final class Http {
 
 	private MyDnsResolver dns = new MyDnsResolver();
 
-	private String getContext(HttpResponse response) {
+	private void _parse(HttpResponse response, Http.Response r) {
 
 		String cs = "UTF-8";
 		Header[] hh = response.getHeaders("Content-Type");
 		if (hh != null) {
 			for (Header h : hh) {
-				StringFinder sf = StringFinder.create(h.getValue());
+				r.type = h.getValue();
+				if (r.type.contains("application/pdf")) {
+					_stream(response, r);
+					return;
+				}
+				StringFinder sf = StringFinder.create(r.type);
 				String s = sf.get("charset=", ";");
 				if (!X.isEmpty(s)) {
 					cs = s;
@@ -1466,11 +1590,11 @@ public final class Http {
 			}
 		}
 
-		String context = null;
+		r.body = null;
 
-		if (response.getEntity() != null) {
+		HttpEntity entity = response.getEntity();
+		if (entity != null) {
 			try {
-				HttpEntity entity = response.getEntity();
 
 				/**
 				 * fix the bug of http.util of apache
@@ -1488,8 +1612,10 @@ public final class Http {
 
 					ByteBuffer bb = ByteBuffer.allocate(2 * 1024 * 1024);
 
+					GZIPInputStream in = null;
+
 					try {
-						GZIPInputStream in = new GZIPInputStream(bufferedEntity.getContent());
+						in = new GZIPInputStream(bufferedEntity.getContent());
 
 						byte[] buf = new byte[1024];
 						int len = in.read(buf);
@@ -1504,33 +1630,59 @@ public final class Http {
 						if (X.isEmpty(cc)) {
 							cc = cs;
 						}
-						context = new String(b1, 0, bb.position(), cc);
+						r.body = new String(b1, 0, bb.position(), cc);
 
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
+						X.close(in);
 					}
 
 				}
 
-				if (context == null || context.length() == 0) {
-					context = _getContext(entity, cs);
+				if (r.body == null || r.body.length() == 0) {
+					r.body = _getContext(entity, cs);
 				}
 
 				// log.debug(context);
 
 			} catch (Exception e) {
-				log.error(e.getMessage());// , e);
+				log.error(r.type, e);
 			}
+
 		}
-		return context;
+
+	}
+
+	private void _stream(HttpResponse response, Response r) {
+
+		HttpEntity entity = response.getEntity();
+		InputStream in = null;
+		ByteBuffer bb = ByteBuffer.allocate(4 * 1024 * 1024);
+		try {
+			BufferedHttpEntity bufferedEntity = new BufferedHttpEntity(entity);
+			in = bufferedEntity.getContent();
+			byte[] buf = new byte[1024];
+			int len = in.read(buf);
+			while (len > 0) {
+				bb.put(buf, 0, len);
+				len = in.read(buf);
+			}
+			r._body = bb.array();
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			X.close(in);
+		}
 
 	}
 
 	private String _getContext(HttpEntity entity, String cs) {
 
-		ByteBuffer bb = ByteBuffer.allocate(2 * 1024 * 1024);
+		_Buffer bb = _Buffer.create(32 * 1024);
 
 		InputStream reader = null;
+		String cc = null;
 
 		try {
 
@@ -1539,30 +1691,23 @@ public final class Http {
 			byte[] buf = new byte[1024];
 			int len = reader.read(buf);
 			while (len > 0) {
-				bb.put(buf, 0, len);
+				bb.append(buf, 0, len);
 				len = reader.read(buf);
 			}
 
-			byte[] b1 = bb.array();
-			StringFinder sf = StringFinder.create(new String(b1, 0, bb.position()));
-			String cc = sf.get("charset=", "\"");
+			StringFinder sf = StringFinder.create(new String(bb.buf, 0, bb.pos));
+			cc = sf.get("charset=", "\"");
 
-			if (X.isEmpty(cc)) {
+			if (X.isEmpty(cc) || cc.length() > 10) {
 				cc = cs;
 			}
 
-			return new String(b1, 0, bb.position(), cc);
+			return new String(bb.buf, 0, bb.pos, cc);
 
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(cc, e);
 		} finally {
-			if (reader != null) {
-				try {
-					reader.close();
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
+			X.close(reader);
 		}
 
 		return null;
@@ -1584,15 +1729,21 @@ public final class Http {
 
 		public String url;
 
+		public String type; // Content-Type
 		/**
 		 * 返回数据body
 		 */
 		public String body;
+		public byte[] _body;
 
 		/**
 		 * 返回头部信息
 		 */
 		private Header[] headers;
+
+		public static Response create() {
+			return new Response();
+		}
 
 		/**
 		 * 用body 生成StringFinder工具类
@@ -1633,6 +1784,19 @@ public final class Http {
 		 */
 		public JSON json() {
 			return JSON.fromObject(body);
+		}
+
+		/**
+		 * 用body生成json对象
+		 * 
+		 * @return
+		 */
+		public JSON xml() {
+			return JSON.fromXml(body);
+		}
+
+		public List<JSON> jsons() {
+			return JSON.fromObjects(body);
 		}
 
 		/**
@@ -1682,6 +1846,88 @@ public final class Http {
 			}
 			return o;
 		}
+
+		private String _protocol(String url) {
+			int i = url.indexOf("/");
+			if (i > 0) {
+				return url.substring(0, i);
+			}
+			return url;
+		}
+
+		private String _server(String url) {
+			int i = url.indexOf("/", 8);
+			if (i > 0) {
+				return url.substring(0, i);
+			}
+			return url;
+		}
+
+		private String _path2(String url) {
+			int i = url.indexOf("?");
+			if (i > 8) {
+				return url.substring(0, i);
+			}
+			return url;
+		}
+
+		private String _path(String url) {
+			int i = url.lastIndexOf("/");
+			if (i > 8) {
+				return url.substring(0, i + 1);
+			}
+			return url + "/";
+		}
+
+		public String format(String href) {
+
+			String h1 = href.toLowerCase();
+			if (h1.startsWith("http://") || h1.startsWith("https://")) {
+				return href;
+			} else if (href.startsWith("//")) {
+				href = _protocol(url) + href;
+			} else if (href.startsWith("/")) {
+				href = _server(url) + href;
+			} else if (href.startsWith("?")) {
+				href = _path2(url) + href;
+			} else {
+				href = _path(url) + href;
+			}
+			int i = href.indexOf("#");
+			if (i > 0) {
+				href = href.substring(0, i);
+			}
+
+			if (X.isEmpty(href))
+				return null;
+
+			QueryString qs = new QueryString(href);
+//			qs.remove(removals);
+
+			return qs.toString();
+
+		}
+
+		public Temp save(String filename) {
+			Temp t = Temp.create(filename);
+			OutputStream out = null;
+
+			try {
+				out = t.getOutputStream();
+				if (_body != null) {
+					out.write(_body);
+				} else if (body != null) {
+					out.write(body.getBytes());
+				}
+				return t;
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			} finally {
+				X.close(out);
+			}
+			return null;
+		}
+
 	}
 
 	/**
@@ -2006,18 +2252,14 @@ public final class Http {
 	 * @param timeout
 	 * @return
 	 */
-	public Response post(String url, JSON headers, String body, long timeout) {
+	public Response post(String url, JSON head, String body, long timeout) {
 
 		if (log.isDebugEnabled())
 			log.debug("url=" + url);
 
 		Response r = new Response();
 
-		String ua = headers != null && headers.containsKey("user-agent") ? headers.getString("user-agent") : _UA();
-
-		if (client == null) {
-			client = getClient(url, ua, timeout);
-		}
+		client = _client(url, head, timeout);
 
 		if (localContext == null) {
 			localContext = HttpClientContext.create();
@@ -2031,11 +2273,11 @@ public final class Http {
 			CloseableHttpResponse resp = null;
 			try {
 
-				if (headers != null && headers.size() > 0) {
+				if (head != null && head.size() > 0) {
 					if (log.isDebugEnabled())
-						log.debug("header: " + headers);
-					for (String s : headers.keySet()) {
-						post.addHeader(s, headers.getString(s));
+						log.debug("header: " + head);
+					for (String s : head.keySet()) {
+						post.addHeader(s, head.getString(s));
 					}
 				}
 
@@ -2045,13 +2287,11 @@ public final class Http {
 				StringEntity e = new StringEntity(body, "UTF-8");
 				post.setEntity(e);
 
-//				System.out.println("json");
-//				System.out.println(post);
-
 				resp = client.execute(post, localContext);
 				r.status = resp.getStatusLine().getStatusCode();
-				r.body = getContext(resp);
+				r.url = url;
 				r.headers = resp.getAllHeaders();
+				_parse(resp, r);
 
 //				if (log.isDebugEnabled())
 //					log.debug("post: cost=" + t.past() + ", status=" + r.status + ", body=" + r.body);
@@ -2094,5 +2334,44 @@ public final class Http {
 			return MAPPINGS.containsKey(host) ? MAPPINGS.get(host) : new InetAddress[] { InetAddress.getByName(host) };
 		}
 	}
+
+	static class _Buffer {
+
+		byte[] buf;
+		int pos = 0;
+
+		public static _Buffer create(int capicity) {
+			_Buffer b = new _Buffer();
+			b.buf = new byte[capicity];
+			return b;
+		}
+
+		void append(byte[] bb, int pos, int len) {
+			if (this.buf.length - this.pos < len) {
+				byte[] b1 = new byte[this.buf.length + len + 4 * 1024];
+				System.arraycopy(this.buf, 0, b1, 0, this.pos);
+				this.buf = b1;
+			}
+			System.arraycopy(bb, pos, this.buf, this.pos, len);
+			this.pos += len;
+		}
+
+	}
+
+	boolean redirect = true;
+
+	public void redirect(boolean enable) {
+		try {
+			if (redirect != enable && client != null) {
+				client.close();
+				client = null;
+			}
+			redirect = enable;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	public static Http owner = create();
 
 }

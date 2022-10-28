@@ -1,4 +1,4 @@
-<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/cpu/more?__node=$!__node')"><i class='icon-menu'></i></a>
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/cpu/more?__node=$!__node&id=$!id')"><i class='icon-menu'></i></a>
 
 <div id='cpu_$!requestid'></div>
 
@@ -9,7 +9,7 @@ $(function(){
 	        type: 'area'
 	    },
 	    title: {
-	        text: "$lang.get('portlet.cpu.title')($!temp)"
+	        text: "$!name - CPU[$!cores]#if($temp)($!temp)#end"
 	    },
 	    xAxis: {
 	    		type: 'datetime'
@@ -25,12 +25,8 @@ $(function(){
 	          enabled: false
 	        },
 	    tooltip: {
-	    	   formatter:function(){
-	    		      return this.series.name+':<b>' 
-	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
-	    		      + '%</b><br>' 
-	    		      + Highcharts.dateFormat('%H:%M', this.x);
-	    		}
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.y}%</b><br>{point.x:%H:%M}'
 	    },
 		plotOptions : {
 	        series: {
@@ -41,16 +37,16 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-	    				{name: "$lang.get('cpu.usage')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.usage},#end]}
+	    				{name: "$lang.get('cpu.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.usage},#end]}
 	    			], 
 	});
 
 	function reload() {
 		if($('#cpu_$!requestid').length > 0) {
-			$.post('/portlet/cpu/data?__node=$!__node', {}, function(d){
+			$.post('/portlet/cpu/data?__node=$!__node&id=$!id', {}, function(d){
 				if(d.state == 200) {
 					if(d.temp) {
-						t.setTitle({text:"$lang.get('portlet.cpu.title')(" + d.temp + ")"});
+						t.setTitle({text:"$!name - CPU[$!cores](" + d.temp + ")"});
 					}
 					var series=t.series; 
 			        while(series.length > 0){

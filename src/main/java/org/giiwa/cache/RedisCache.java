@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.*;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.giiwa.dao.X;
 
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisShardInfo;
 import redis.clients.jedis.ShardedJedis;
 import redis.clients.jedis.ShardedJedisPool;
@@ -39,8 +39,7 @@ class RedisCache implements ICacheSystem {
 	/** The log. */
 	static Log log = LogFactory.getLog(RedisCache.class);
 
-	public ShardedJedis jedis;
-	public ShardedJedisPool shardedJedisPool;
+	private ShardedJedisPool pool;
 	public String url;
 
 	/**
@@ -49,7 +48,7 @@ class RedisCache implements ICacheSystem {
 	 * @param conf the conf
 	 * @return the i cache system
 	 */
-	public static ICacheSystem create(String server) {
+	public static ICacheSystem create(String server, String user, String pwd) {
 
 		RedisCache r = new RedisCache();
 		r.url = server.substring(Cache.REDIS.length());
@@ -61,17 +60,27 @@ class RedisCache implements ICacheSystem {
 			port = X.toInt(ss[1], 0);
 		}
 
-		JedisPoolConfig config = new JedisPoolConfig();
+		GenericObjectPoolConfig<ShardedJedis> config = new GenericObjectPoolConfig<ShardedJedis>();
 		config.setMaxTotal(20);
 		config.setMaxIdle(5);
 		config.setMaxWaitMillis(1000l);
 		config.setTestOnBorrow(false);
 
 		List<JedisShardInfo> shards = new ArrayList<JedisShardInfo>();
-		shards.add(new JedisShardInfo(host, port, "master"));
+		JedisShardInfo a = new JedisShardInfo(host, port, "master");
+		if (!X.isEmpty(user) && !X.isSame(user, "auth")) {
+			a.setUser(user);
+		}
+		if (!X.isEmpty(pwd)) {
+			a.setPassword(pwd);
+		}
+		shards.add(a);
 
-		r.shardedJedisPool = new ShardedJedisPool(config, shards);
-		r.jedis = r.shardedJedisPool.getResource();
+		r.pool = new ShardedJedisPool(config, shards);
+
+		if (r.pool.isClosed()) {
+			return null;
+		}
 
 		return r;
 	}
@@ -83,9 +92,15 @@ class RedisCache implements ICacheSystem {
 	 * @return the object
 	 */
 	public synchronized Object get(String name) {
-		byte[] bb = jedis.get(name.getBytes());
-		if (bb != null) {
-			return unserialize(bb);
+
+		ShardedJedis e = pool.getResource();
+		try {
+			byte[] bb = e.get(name.getBytes());
+			if (bb != null) {
+				return unserialize(bb);
+			}
+		} finally {
+			e.close();
 		}
 		return null;
 	}
@@ -98,14 +113,17 @@ class RedisCache implements ICacheSystem {
 	 * @return true, if successful
 	 */
 	public synchronized boolean set(String name, Object o, long expired) {
-		try {
-			if (o == null) {
-				return delete(name);
-			} else {
-				return jedis.setex(name.getBytes(), (int) (expired / 1000), serialize(o)) != null;
+		if (o == null) {
+			return delete(name);
+		} else {
+			ShardedJedis e = pool.getResource();
+			try {
+				return e.psetex(name.getBytes(), expired, serialize(o)) != null;
+			} catch (Exception e1) {
+				log.error(e1.getMessage(), e1);
+			} finally {
+				e.close();
 			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 		}
 		return false;
 	}
@@ -117,10 +135,14 @@ class RedisCache implements ICacheSystem {
 	 * @return true, if successful
 	 */
 	public synchronized boolean delete(String name) {
+
+		ShardedJedis e = pool.getResource();
 		try {
-			return jedis.del(name) > 0;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			return e.del(name) > 0;
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		} finally {
+			e.close();
 		}
 		return false;
 	}
@@ -159,24 +181,38 @@ class RedisCache implements ICacheSystem {
 
 	public synchronized boolean trylock(String name) {
 
-		SetParams p = new SetParams();
-		p.ex(12);
-		p.nx();
+		ShardedJedis e = pool.getResource();
+		try {
+			SetParams p = new SetParams();
+			p.ex(12L);
+			p.nx();
 
-		String n = jedis.set(name, "1", p);
-		return X.isSame("OK", n);
-
+			String n = e.set(name, "1", p);
+			return X.isSame("OK", n);
+		} finally {
+			e.close();
+		}
 	}
 
 	public synchronized void expire(String name, long ms) {
-		int sec = (int) (ms / 1000);
-		jedis.expire(name, sec);
+		ShardedJedis e = pool.getResource();
+		try {
+			e.pexpire(name, ms);
+		} finally {
+			e.close();
+		}
 	}
 
 	@Override
 	public synchronized boolean unlock(String name, String value) {
-		jedis.del(name);
-		return true;
+
+		ShardedJedis e = pool.getResource();
+		try {
+			e.del(name);
+			return true;
+		} finally {
+			e.close();
+		}
 	}
 
 }

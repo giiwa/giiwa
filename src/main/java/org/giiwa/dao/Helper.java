@@ -14,6 +14,7 @@
 */
 package org.giiwa.dao;
 
+import java.io.Closeable;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.concurrent.locks.Lock;
 import java.util.regex.Pattern;
 
 import org.apache.commons.configuration2.Configuration;
@@ -36,7 +37,11 @@ import org.giiwa.bean.Data;
 import org.giiwa.conf.Global;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.StringFinder;
+import org.giiwa.task.Consumer;
+import org.giiwa.task.Function;
 import org.giiwa.web.Controller;
+import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.openjdk.nashorn.internal.runtime.Undefined;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -45,7 +50,7 @@ import com.mongodb.BasicDBObject;
  * The {@code Helper} Class is utility class for all database operation.
  * 
  */
-public class Helper implements Serializable {
+public final class Helper implements Serializable {
 
 	/**
 	 * 
@@ -55,15 +60,12 @@ public class Helper implements Serializable {
 	/** The log utility. */
 	protected static Log log = LogFactory.getLog(Helper.class);
 
-	public static IOptimizer monitor = null;
+	public static Optimizer monitor = null;
 
 	/**
 	 * the primary database when there are multiple databases
 	 */
 	public static DBHelper primary = null;
-	private static List<DBHelper> customs = null;
-
-	public static final String DEFAULT = "default";
 
 	/** The conf. */
 	protected static Configuration conf;
@@ -71,6 +73,7 @@ public class Helper implements Serializable {
 	/**
 	 * initialize the Bean with the configuration.
 	 * 
+	 * @deprecated
 	 * @param conf the conf
 	 */
 	public static void init(Configuration conf) {
@@ -78,20 +81,15 @@ public class Helper implements Serializable {
 		/**
 		 * initialize the DB connections pool
 		 */
-		if (conf == null)
+		if (conf == null) {
 			return;
+		}
+
+		log.warn("DBHelper init ...");
 
 		Helper.conf = conf;
 
 		RDB.init();
-
-		String p = conf.getString("primary.db", X.EMPTY);
-
-		if (X.isSame("mongo", p)) {
-			primary = MongoHelper.inst;
-		} else if (X.isSame("rds", p)) {
-			primary = RDSHelper.inst;
-		}
 
 		if (primary == null) {
 
@@ -109,41 +107,47 @@ public class Helper implements Serializable {
 
 	}
 
-	/**
-	 * delete a data from database.
-	 *
-	 * @param id the value of "id"
-	 * @param t  the subclass of Bean
-	 * @return the number was deleted
-	 */
-	public static int delete(Object id, Class<? extends Bean> t) {
-		return delete(W.create(X.ID, id), t);
-	}
+	public static boolean init2(Configuration conf) {
 
-	/**
-	 * delete the data , return the number that was deleted.
-	 *
-	 * @param q the query
-	 * @param t the subclass of the Bean
-	 * @return the number was deleted
-	 */
-	public static int delete(W q, Class<? extends Bean> t) {
-		return delete(q, t, getDB(t));
-	}
+		/**
+		 * initialize the DB connections pool
+		 */
+		if (conf == null) {
+			return false;
+		}
 
-	/**
-	 * Delete.
-	 * 
-	 * @deprecated
-	 *
-	 * @param q  the q
-	 * @param t  the t
-	 * @param db the db
-	 * @return the int
-	 */
-	public static int delete(W q, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return delete(q, table, db);
+		log.warn("DBHelper init2 ...");
+
+		Helper.conf = conf;
+
+		String url = conf.getString("db.url", X.EMPTY);
+		if (X.isEmpty(url)) {
+			log.error("db.url not congiured!");
+			return false;
+		}
+
+		try {
+			if (url.startsWith("mongodb://")) {
+
+				String user = conf.getString("db.user", X.EMPTY);
+				String passwd = conf.getString("db.passwd", X.EMPTY);
+				int conns = conf.getInt("db.conns", 50);
+				int timeout = conf.getInt("db.timeout", 30000);
+
+				primary = MongoHelper.create(url, user, passwd, conns, timeout);
+				MongoHelper.inst = (MongoHelper) primary;
+
+			} else {
+
+				primary = RDSHelper.create(null);
+				RDSHelper.inst = (RDSHelper) primary;
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return primary != null;
+
 	}
 
 	/**
@@ -154,35 +158,16 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static int delete(String table, W q) {
-		return delete(q, table, Helper.DEFAULT);
-	}
 
-	/**
-	 * delete the data in table
-	 * 
-	 * @deprecated
-	 * 
-	 * @param q     the query
-	 * @param table the table name
-	 * @param db    the db name
-	 * @return the items was deleted
-	 */
-	public static int delete(W q, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
 
 				if (monitor != null) {
-					monitor.query(db, table, q);
+					monitor.query(table, q);
 				}
 
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.delete(table, q, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						return h.delete(table, q, db);
-					}
-				}
+				return primary.delete(table, q);
 
 			}
 			return 0;
@@ -193,57 +178,7 @@ public class Helper implements Serializable {
 	}
 
 	public static void repair(String table) {
-		if (table != null) {
-
-			if (primary != null) {
-				primary.repair(table);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					h.repair(table);
-				}
-			}
-
-		}
-	}
-
-	/**
-	 * test if exists for the object.
-	 *
-	 * @param id the value of "id"
-	 * @param t  the subclass of Bean
-	 * @return true: exist
-	 * @throws SQLException throw exception if occur database error
-	 */
-	public static boolean exists(Object id, Class<? extends Bean> t) throws SQLException {
-		return exists(W.create(X.ID, id), t);
-	}
-
-	/**
-	 * test exists.
-	 *
-	 * @param q the query and order
-	 * @param t the class of Bean
-	 * @return true: exists, false: not exists
-	 * @throws SQLException throw Exception if the class declaration error or not db
-	 *                      configured
-	 */
-	public static boolean exists(W q, Class<? extends Bean> t) throws SQLException {
-		return exists(q, t, getDB(t));
-	}
-
-	/**
-	 * Exists.
-	 * 
-	 * @deprecated
-	 * @param q  the q
-	 * @param t  the t
-	 * @param db the db
-	 * @return true, if successful
-	 * @throws SQLException the SQL exception
-	 */
-	public static boolean exists(W q, Class<? extends Bean> t, String db) throws SQLException {
-		String table = getTable(t);
-		return exists(q, table, db);
+		primary.repair(table);
 	}
 
 	/**
@@ -255,44 +190,43 @@ public class Helper implements Serializable {
 	 * @throws SQLException
 	 */
 	public static boolean exists(String table, W q) throws SQLException {
-		return exists(q, table, Helper.DEFAULT);
-	}
-
-	/**
-	 * exists testing
-	 * 
-	 * @deprecated
-	 * @param q     the query
-	 * @param table the table name
-	 * @param db    the db name
-	 * @return the boolean
-	 * @throws SQLException throw SQLException if happen error
-	 */
-	public static boolean exists(W q, String table, String db) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (table != null) {
 
 				if (monitor != null) {
-					monitor.query(db, table, q);
+					monitor.query(table, q);
 				}
 
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.exists(table, q, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.exists(table, q, db);
-						}
-					}
-				}
+				return primary.exists(table, q);
 			}
 		} finally {
 			read.add(t1.pastms());
 
 		}
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
+	}
+
+	public static boolean exists2(String table, W q) {
+
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (table != null) {
+
+				if (monitor != null) {
+					monitor.query(table, q);
+				}
+
+				return primary.exists(table, q);
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			read.add(t1.pastms());
+
+		}
+		return false;
 	}
 
 	/**
@@ -309,17 +243,7 @@ public class Helper implements Serializable {
 		protected final static Object ignore = new Object();
 
 		/** The list. */
-		protected Map<String, Object> m = new LinkedHashMap<String, Object>();
-
-		/**
-		 * To json.
-		 * 
-		 * @deprecated
-		 * @return the json
-		 */
-		public JSON toJSON() {
-			return json();
-		}
+		public Map<String, Object> m = new LinkedHashMap<String, Object>();
 
 		/**
 		 * convert the V to json and return
@@ -469,6 +393,11 @@ public class Helper implements Serializable {
 		 * @return the V
 		 */
 		public V append(String name, Object v) {
+
+			if (v instanceof Undefined) {
+				v = null;
+			}
+
 			if (!X.isEmpty(name)) {
 				name = name.toLowerCase();
 				if (m.containsKey(name)) {
@@ -529,11 +458,21 @@ public class Helper implements Serializable {
 			for (String s : jo.keySet()) {
 				if (jo.containsKey(s)) {
 					Object o = jo.get(s);
+
+					if (o instanceof Undefined) {
+						continue;
+					}
+
 					String s1 = s.replaceAll("\\.", "_");
 					if (X.isEmpty(o)) {
 						set(s1, X.EMPTY);
 					} else {
+//						if (o instanceof Integer || o instanceof Long || o instanceof Short || o instanceof Float
+//								|| o instanceof Double || o instanceof ) {
 						set(s1, o);
+//						} else {
+//							set(s1, o.toString());
+//						}
 					}
 				}
 			}
@@ -722,7 +661,7 @@ public class Helper implements Serializable {
 			eq, gt, gte, lt, lte, like, like_, like_$, neq, none, in, exists, nin, type, mod, all, size, near
 		};
 
-		private IAccess access;
+		public IAccess access;
 
 		/**
 		 * 设置权限过滤器， 只能设置一次
@@ -761,7 +700,7 @@ public class Helper implements Serializable {
 		@SuppressWarnings("rawtypes")
 		private Class t = Data.class;
 
-		public String getTable() {
+		public String getTable() throws SQLException {
 			if (dao != null) {
 				String table = dao.tableName();
 				if (!X.isEmpty(table)) {
@@ -769,6 +708,21 @@ public class Helper implements Serializable {
 				}
 			}
 			return table;
+		}
+
+		public boolean has(OP... ops) {
+			for (W e : queryList) {
+				if (e instanceof Entity) {
+					for (OP o : ops) {
+						if (((Entity) e).op == o) {
+							return true;
+						}
+					}
+				} else {
+					return e.has(ops);
+				}
+			}
+			return false;
 		}
 
 		public W helper(DBHelper h) {
@@ -1028,15 +982,17 @@ public class Helper implements Serializable {
 		 */
 		public String toString() {
 
+//			return this.query().toString();
+
 			StringBuilder sb = new StringBuilder();
-			sb.append("{" + where() + "}=>" + Helper.toString(args()));
+			sb.append("{" + where() + "=>" + Helper.toString(args()));
 			if (!X.isEmpty(order)) {
 				sb.append(", sort=" + order);
 			}
 			if (!X.isEmpty(groupby)) {
 				sb.append(", groupby=" + groupby);
 			}
-
+			sb.append("}");
 			return sb.toString();
 		}
 
@@ -1056,6 +1012,7 @@ public class Helper implements Serializable {
 		 * @return the SQL string
 		 */
 		String where(Map<String, String> tansfers) {
+
 			StringBuilder sb = new StringBuilder();
 			if (!X.isEmpty(connectsql)) {
 				sb.append(connectsql);
@@ -1074,7 +1031,11 @@ public class Helper implements Serializable {
 				sb.append(clause.where(tansfers));
 			}
 
-			return sb.length() == 0 ? X.EMPTY : "(" + sb + ")";
+			if (this.getCondition() == NOT) {
+				return sb.length() == 0 ? X.EMPTY : "!(" + sb + ")";
+			} else {
+				return sb.length() == 0 ? X.EMPTY : "(" + sb + ")";
+			}
 
 		}
 
@@ -1085,6 +1046,18 @@ public class Helper implements Serializable {
 		 */
 		public static W create() {
 			return new W();
+		}
+
+		/**
+		 * create a Where for the table
+		 * 
+		 * @param table the table name
+		 * @return W
+		 */
+		public static W table(String table) {
+			W w = new W();
+			w.table = table;
+			return w;
 		}
 
 		/**
@@ -1191,14 +1164,17 @@ public class Helper implements Serializable {
 			StringBuilder sb = new StringBuilder();
 			for (W clause : queryList) {
 				if (sb.length() > 0) {
-					if (clause.getCondition() == AND) {
+					if (clause.cond == AND) {
 						sb.append(" and ");
-					} else if (clause.getCondition() == OR) {
+					} else if (clause.cond == OR) {
 						sb.append(" or ");
-					} else if (clause.getCondition() == NOT) {
+					} else if (clause.cond == NOT) {
 						sb.append(" and not ");
 					}
+				} else if (clause.cond == NOT) {
+					sb.append(" not ");
 				}
+
 //				clause.where(tansfers);
 				if (clause instanceof Entity) {
 					clause.sql(sb);
@@ -1206,6 +1182,19 @@ public class Helper implements Serializable {
 					sb.append("(");
 					clause.sql(sb);
 					sb.append(")");
+				}
+			}
+			if (!this.order.isEmpty()) {
+				sb.append(" order by ");
+				for (int i = 0, len = this.order.size(); i < len; i++) {
+					if (i > 0) {
+						sb.append(",");
+					}
+					Entity e = this.order.get(i);
+					sb.append(e.name);
+					if (X.isSame(e.value, -1)) {
+						sb.append(" desc");
+					}
 				}
 			}
 //			sql.append("(").append(sb.toString()).append(")");
@@ -1221,13 +1210,13 @@ public class Helper implements Serializable {
 		 */
 		public W and(String sql) {
 			try {
-				W q = SQL.where2W(StringFinder.create(sql));
+				W q = SQL.where2W(sql);
 				if (!q.isEmpty()) {
-					if (this.isEmpty()) {
-						this.copy(q);
-					} else {
-						this.and(q);
-					}
+//					if (this.isEmpty()) {
+//						this.and(q);
+//					} else {
+					this.and(q);
+//					}
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -1245,11 +1234,11 @@ public class Helper implements Serializable {
 			try {
 				W q = SQL.where2W(StringFinder.create(sql));
 				if (!q.isEmpty()) {
-					if (this.isEmpty()) {
-						this.copy(q);
-					} else {
-						this.or(q);
-					}
+//					if (this.isEmpty()) {
+//						this.copy(q);
+//					} else {
+					this.or(q);
+//					}
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -1308,26 +1297,35 @@ public class Helper implements Serializable {
 			return this;
 		}
 
-		private void _and(List<LinkedHashMap<String, Integer>> l1, Entity e) {
-			if (l1.isEmpty()) {
-				l1.add(new LinkedHashMap<String, Integer>());
+		private void _and(List<LinkedHashMap<String, Object>> l1, Entity e) {
+			if (e.op == W.OP.like || e.op == W.OP.like_ || e.op == W.OP.like_$) {
+				return;
 			}
 
-			for (LinkedHashMap<String, Integer> r : l1) {
+			if (l1.isEmpty()) {
+				l1.add(new LinkedHashMap<String, Object>());
+			}
+
+			for (LinkedHashMap<String, Object> r : l1) {
 				if (!r.containsKey(e.name)) {
-					r.put(e.name, 1);
+					if (X.isSame(e.value, -1)) {
+						r.put(e.name, -1);
+					} else {
+						r.put(e.name, 1);
+					}
 				}
 			}
 		}
 
-		private void _and(List<LinkedHashMap<String, Integer>> l1, W e) {
+		private void _and(List<LinkedHashMap<String, Object>> l1, W e) {
 			if (l1.isEmpty()) {
-				l1.add(new LinkedHashMap<String, Integer>());
+				l1.add(new LinkedHashMap<String, Object>());
 			}
 
-			List<LinkedHashMap<String, Integer>> l2 = e.sortkeys();
-			for (LinkedHashMap<String, Integer> r : l1) {
-				for (LinkedHashMap<String, Integer> r2 : l2) {
+			List<LinkedHashMap<String, Object>> l2 = e.sortkeys();
+
+			for (LinkedHashMap<String, Object> r : l1) {
+				for (LinkedHashMap<String, Object> r2 : l2) {
 					for (String name : r2.keySet()) {
 						if (!r.containsKey(name)) {
 							r.put(name, 1);
@@ -1338,13 +1336,22 @@ public class Helper implements Serializable {
 
 		}
 
-		private void _or(List<LinkedHashMap<String, Integer>> l1, Entity e) {
-			LinkedHashMap<String, Integer> r = new LinkedHashMap<String, Integer>();
-			r.put(e.name, 1);
+		private void _or(List<LinkedHashMap<String, Object>> l1, Entity e) {
+
+			if (e.op == W.OP.like || e.op == W.OP.like_ || e.op == W.OP.like_$) {
+				return;
+			}
+
+			LinkedHashMap<String, Object> r = new LinkedHashMap<String, Object>();
+			if (X.isSame(e.value, -1)) {
+				r.put(e.name, -1);
+			} else {
+				r.put(e.name, 1);
+			}
 			l1.add(r);
 		}
 
-		private void _or(List<LinkedHashMap<String, Integer>> l1, W e) {
+		private void _or(List<LinkedHashMap<String, Object>> l1, W e) {
 			l1.addAll(e.sortkeys());
 		}
 
@@ -1353,9 +1360,9 @@ public class Helper implements Serializable {
 		 *
 		 * @return List keys
 		 */
-		public List<LinkedHashMap<String, Integer>> sortkeys() {
+		public List<LinkedHashMap<String, Object>> sortkeys() {
 
-			List<LinkedHashMap<String, Integer>> l1 = new ArrayList<LinkedHashMap<String, Integer>>();
+			List<LinkedHashMap<String, Object>> l1 = new ArrayList<LinkedHashMap<String, Object>>();
 
 //			if (!X.isEmpty(elist))
 //				for (Entity e : elist) {
@@ -1393,13 +1400,22 @@ public class Helper implements Serializable {
 				}
 			}
 
+			List<LinkedHashMap<String, Object>> l2 = new ArrayList<LinkedHashMap<String, Object>>();
+			if (!l1.isEmpty()) {
+				for (LinkedHashMap<String, Object> e : l1) {
+					l2.add(X.clone(e));
+				}
+			}
+
 			// index order too
 			if (!X.isEmpty(order)) {
 				if (l1.isEmpty()) {
-					l1.add(new LinkedHashMap<String, Integer>());
+					l1.add(new LinkedHashMap<String, Object>());
 				}
+
 				for (Entity e : order.toArray(new Entity[order.size()])) {
-					for (LinkedHashMap<String, Integer> m : l1) {
+
+					for (LinkedHashMap<String, Object> m : l1) {
 						if (!m.containsKey(e.name)) {
 							if (X.isSame(e.name, "geo")) {
 								m.put(e.name, 2);
@@ -1414,9 +1430,10 @@ public class Helper implements Serializable {
 						}
 					}
 				}
+				l2.addAll(l1);
 			}
 
-			return l1;
+			return l2;
 		}
 
 		/**
@@ -1450,7 +1467,7 @@ public class Helper implements Serializable {
 				String[] ss = X.split(v.toString(), "[ ]");
 				for (String s1 : ss) {
 					W q = W.create();
-					String[] s2 = X.split(s1, "|");
+					String[] s2 = X.split(s1, "[\\|]");
 					for (String s3 : s2) {
 						for (String s : name) {
 							q.or(s, s3, op, boost);
@@ -1470,6 +1487,26 @@ public class Helper implements Serializable {
 
 		public W and(String[] name, Object v, int[] boost) {
 			return and(name, v, OP.eq, boost);
+		}
+
+		/**
+		 * 
+		 * @param boost
+		 * @return
+		 */
+		public W boost(int... boost) {
+			if (queryList != null) {
+				int n = queryList.size();
+				n = Math.min(n, boost.length);
+				for (int i = 0; i < n; i++) {
+					W w = queryList.get(i);
+					if (w instanceof Entity) {
+						Entity e = (Entity) w;
+						e.boost = boost[i];
+					}
+				}
+			}
+			return this;
 		}
 
 		public W and(String[] name, Object v, OP op, int[] boost) {
@@ -1496,7 +1533,7 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * @deprecated
+		 * @Deprecated
 		 * @param name
 		 * @param v
 		 * @param op
@@ -1524,7 +1561,7 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * @deprecated
+		 * @Deprecated
 		 * @param name
 		 * @param v
 		 * @param op
@@ -1535,7 +1572,7 @@ public class Helper implements Serializable {
 		}
 
 		/**
-		 * @deprecated
+		 * @Deprecated
 		 * @param name
 		 * @param v
 		 * @param op
@@ -1603,19 +1640,22 @@ public class Helper implements Serializable {
 			return this;
 		}
 
-		@SuppressWarnings("restriction")
-		public W scan(jdk.nashorn.api.scripting.ScriptObjectMirror m) {
+		public W scan(ScriptObjectMirror m) {
 			return this.scan(e -> {
 				m.call(e);
 			});
 		}
 
-		@SuppressWarnings("rawtypes")
+		@SuppressWarnings({ "rawtypes" })
 		public W and(String name, Object v, OP op, int boost) {
 			if (X.isEmpty(name))
 				return this;
 
 			name = name.toLowerCase();
+
+			if (v instanceof Undefined) {
+				v = null;
+			}
 
 			if (v != null && v instanceof Collection) {
 				Collection l1 = (Collection) v;
@@ -1710,7 +1750,7 @@ public class Helper implements Serializable {
 			return or(name, v, op, 1);
 		}
 
-		@SuppressWarnings("rawtypes")
+		@SuppressWarnings({ "rawtypes" })
 		public W or(String name, Object v, OP op, int boost) {
 
 			if (X.isEmpty(name))
@@ -1720,6 +1760,10 @@ public class Helper implements Serializable {
 				return and(name, v, op, boost);
 
 			name = name.toLowerCase();
+
+			if (v instanceof Undefined) {
+				v = null;
+			}
 
 			if (v != null && v instanceof Collection) {
 				Collection l1 = (Collection) v;
@@ -1826,7 +1870,7 @@ public class Helper implements Serializable {
 
 		/**
 		 * create a new W with name and parameter, "and" and "EQ" conditions.
-		 *
+		 * 
 		 * @param name the name
 		 * @param v    the v
 		 * @return W
@@ -1837,7 +1881,8 @@ public class Helper implements Serializable {
 
 		/**
 		 * create the W object with the parameters.
-		 *
+		 * 
+		 * @Deprecated
 		 * @param name the field name
 		 * @param v    the value object
 		 * @param op   the operation
@@ -1849,27 +1894,6 @@ public class Helper implements Serializable {
 			return w;
 		}
 
-		/**
-		 * create the W by single sql, this sql is only for RDS
-		 * 
-		 * @param connectsql the sql without parameter
-		 * @return the W
-		 */
-		public static W create(String connectsql) {
-			W w = new W();
-			w.connectsql = connectsql;
-			return w;
-		}
-
-		/**
-		 * get all the condition elements
-		 * 
-		 * @return the all entity
-		 */
-//		public List<Entity> getAll() {
-//			return elist;
-//		}
-
 		public static class Entity extends W {
 
 			public List<W> _queryList;
@@ -1880,8 +1904,6 @@ public class Helper implements Serializable {
 			 * 
 			 */
 			private static final long serialVersionUID = 1L;
-
-//			private W container;
 
 			public String name;
 			public Object value;
@@ -1998,7 +2020,6 @@ public class Helper implements Serializable {
 			}
 
 			public void remove() {
-//				System.out.println(container.queryList);
 				_queryList.remove(_idx);
 			}
 
@@ -2007,7 +2028,7 @@ public class Helper implements Serializable {
 			}
 
 			private List<Object> args(List<Object> list) {
-//				if (value != null) {
+
 				if (value instanceof Object[]) {
 					for (Object o : (Object[]) value) {
 						list.add(o);
@@ -2021,7 +2042,6 @@ public class Helper implements Serializable {
 				} else {
 					list.add(value);
 				}
-//				}
 
 				return list;
 			}
@@ -2038,51 +2058,102 @@ public class Helper implements Serializable {
 			}
 
 			public BasicDBObject query() {
-				if (op == OP.eq) {
-					if (value == null) {
-						return new BasicDBObject(name, new BasicDBObject("$exists", false));
-					} else {
-						return new BasicDBObject(name, value);
+				if (this.cond == NOT) {
+					if (op == OP.eq) {
+						if (value == null) {
+							return new BasicDBObject(name,
+									new BasicDBObject("$not", new BasicDBObject("$exists", false)));
+						} else {
+							return new BasicDBObject(name, new BasicDBObject("$not", value));
+						}
+					} else if (op == OP.gt) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$gt", value)));
+					} else if (op == OP.gte) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$gte", value)));
+					} else if (op == OP.lt) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$lt", value)));
+					} else if (op == OP.lte) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$lte", value)));
+					} else if (op == OP.like) {
+						Pattern p1 = Pattern.compile(value.toString());
+						return new BasicDBObject(name, new BasicDBObject("$not", p1));
+					} else if (op == OP.like_) {
+						Pattern p1 = Pattern.compile("^" + value);
+						return new BasicDBObject(name, new BasicDBObject("$not", p1));
+					} else if (op == OP.like_$) {
+						Pattern p1 = Pattern.compile(value + "$");
+						return new BasicDBObject(name, new BasicDBObject("$not", p1));
+					} else if (op == OP.neq) {
+						if (value == null) {
+							return new BasicDBObject(name,
+									new BasicDBObject("$not", new BasicDBObject("$exists", true)));
+						} else {
+							return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$ne", value)));
+						}
+					} else if (op == OP.exists) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$exists", value)));
+					} else if (op == OP.in) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$in", value)));
+					} else if (op == OP.nin) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$nin", value)));
+					} else if (op == OP.type) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$type", value)));
+					} else if (op == OP.mod) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$mod", value)));
+					} else if (op == OP.all) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$all", value)));
+					} else if (op == OP.size) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$size", value)));
+					} else if (op == OP.near) {
+						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$near", value)));
 					}
-				} else if (op == OP.gt) {
-					return new BasicDBObject(name, new BasicDBObject("$gt", value));
-				} else if (op == OP.gte) {
-					return new BasicDBObject(name, new BasicDBObject("$gte", value));
-				} else if (op == OP.lt) {
-					return new BasicDBObject(name, new BasicDBObject("$lt", value));
-				} else if (op == OP.lte) {
-					return new BasicDBObject(name, new BasicDBObject("$lte", value));
-				} else if (op == OP.like) {
-					Pattern p1 = Pattern.compile(value.toString());
-					return new BasicDBObject(name, p1);
-				} else if (op == OP.like_) {
-					Pattern p1 = Pattern.compile("^" + value);
-					return new BasicDBObject(name, p1);
-				} else if (op == OP.like_$) {
-					Pattern p1 = Pattern.compile(value + "$");
-					return new BasicDBObject(name, p1);
-				} else if (op == OP.neq) {
-					if (value == null) {
-						return new BasicDBObject(name, new BasicDBObject("$exists", true));
-					} else {
-						return new BasicDBObject(name, new BasicDBObject("$ne", value));
+				} else {
+					if (op == OP.eq) {
+						if (value == null) {
+							return new BasicDBObject(name, new BasicDBObject("$exists", false));
+						} else {
+							return new BasicDBObject(name, value);
+						}
+					} else if (op == OP.gt) {
+						return new BasicDBObject(name, new BasicDBObject("$gt", value));
+					} else if (op == OP.gte) {
+						return new BasicDBObject(name, new BasicDBObject("$gte", value));
+					} else if (op == OP.lt) {
+						return new BasicDBObject(name, new BasicDBObject("$lt", value));
+					} else if (op == OP.lte) {
+						return new BasicDBObject(name, new BasicDBObject("$lte", value));
+					} else if (op == OP.like) {
+						Pattern p1 = Pattern.compile(value.toString());
+						return new BasicDBObject(name, p1);
+					} else if (op == OP.like_) {
+						Pattern p1 = Pattern.compile("^" + value);
+						return new BasicDBObject(name, p1);
+					} else if (op == OP.like_$) {
+						Pattern p1 = Pattern.compile(value + "$");
+						return new BasicDBObject(name, p1);
+					} else if (op == OP.neq) {
+						if (value == null) {
+							return new BasicDBObject(name, new BasicDBObject("$exists", true));
+						} else {
+							return new BasicDBObject(name, new BasicDBObject("$ne", value));
+						}
+					} else if (op == OP.exists) {
+						return new BasicDBObject(name, new BasicDBObject("$exists", value));
+					} else if (op == OP.in) {
+						return new BasicDBObject(name, new BasicDBObject("$in", value));
+					} else if (op == OP.nin) {
+						return new BasicDBObject(name, new BasicDBObject("$nin", value));
+					} else if (op == OP.type) {
+						return new BasicDBObject(name, new BasicDBObject("$type", value));
+					} else if (op == OP.mod) {
+						return new BasicDBObject(name, new BasicDBObject("$mod", value));
+					} else if (op == OP.all) {
+						return new BasicDBObject(name, new BasicDBObject("$all", value));
+					} else if (op == OP.size) {
+						return new BasicDBObject(name, new BasicDBObject("$size", value));
+					} else if (op == OP.near) {
+						return new BasicDBObject(name, new BasicDBObject("$near", value));
 					}
-				} else if (op == OP.exists) {
-					return new BasicDBObject(name, new BasicDBObject("$exists", value));
-				} else if (op == OP.in) {
-					return new BasicDBObject(name, new BasicDBObject("$in", value));
-				} else if (op == OP.nin) {
-					return new BasicDBObject(name, new BasicDBObject("$nin", value));
-				} else if (op == OP.type) {
-					return new BasicDBObject(name, new BasicDBObject("$type", value));
-				} else if (op == OP.mod) {
-					return new BasicDBObject(name, new BasicDBObject("$mod", value));
-				} else if (op == OP.all) {
-					return new BasicDBObject(name, new BasicDBObject("$all", value));
-				} else if (op == OP.size) {
-					return new BasicDBObject(name, new BasicDBObject("$size", value));
-				} else if (op == OP.near) {
-					return new BasicDBObject(name, new BasicDBObject("$near", value));
 				}
 				return new BasicDBObject();
 			}
@@ -2112,8 +2183,8 @@ public class Helper implements Serializable {
 
 			public void sql(StringBuilder sql) {
 
-				if (value == null)
-					return;
+//				if (value == null)
+//					return;
 
 				sql.append(name);
 
@@ -2240,19 +2311,22 @@ public class Helper implements Serializable {
 							list.clear();
 							list.add(q);
 						}
-//					} else if (cond == NOT) {
-//						BasicDBObject q = new BasicDBObject("$not", list.clone());
-//						list.clear();
-//						list.add(q);
 					}
 				}
 
 				int c1 = clause.getCondition();
 				if (c1 == W.NOT) {
-
 					if (clause instanceof W) {
-						BasicDBObject q = new BasicDBObject("$not", ((W) clause).query());
-						list.add(q);
+						BasicDBObject o = ((W) clause).query();
+						String key = o.keySet().iterator().next();
+						Object v1 = o.get(key);
+						if (v1 instanceof List) {
+							BasicDBObject q = new BasicDBObject("$not", o);
+							list.add(q);
+						} else {
+							BasicDBObject q = new BasicDBObject(key, new BasicDBObject("$not", v1));
+							list.add(q);
+						}
 					} else {
 						BasicDBObject q = new BasicDBObject("$not", clause);
 						list.add(q);
@@ -2267,7 +2341,6 @@ public class Helper implements Serializable {
 						list.add(clause);
 					}
 				}
-
 			}
 
 			if (list.isEmpty()) {
@@ -2275,15 +2348,13 @@ public class Helper implements Serializable {
 			} else if (list.size() == 1) {
 				return (BasicDBObject) list.get(0);
 			} else {
-				if (cond == AND) {
-					return new BasicDBObject().append("$and", list);
-				} else if (cond == OR) {
+				if (cond == OR) {
 					return new BasicDBObject().append("$or", list);
-//				} else if (cond == NOT) {
-//					return new BasicDBObject().append("$not", list);
+				} else {
+
+					return new BasicDBObject().append("$and", list);
 				}
 			}
-			return new BasicDBObject();
 		}
 
 		/**
@@ -2310,6 +2381,11 @@ public class Helper implements Serializable {
 		 */
 		public W sort(String name) {
 			return sort(name, 1);
+		}
+
+		public W clearSort() {
+			order.clear();
+			return this;
 		}
 
 		public W sort(String name, String type) {
@@ -2357,11 +2433,63 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.exists(this);
 			} else if (!X.isEmpty(table)) {
-				return helper.exists(table, this, Helper.DEFAULT);
+
+				helper.getOptimizer().query(table, this);
+
+				return helper.exists(table, this);
 			} else {
 				throw new SQLException("not set table");
 			}
 
+		}
+
+		public <T extends Bean> boolean stream(Function<T, Boolean> func) throws Exception {
+			return stream(0, func);
+		}
+
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		public <T extends Bean> boolean stream(long offset, Function<T, Boolean> func) throws Exception {
+
+			if (dao != null) {
+
+				return dao.stream(this, offset, (Function) func);
+
+			} else if (!X.isEmpty(table)) {
+				W q = this;
+				if (access != null) {
+					W q1 = access.filter("db", table);
+					if (q1 != null) {
+						if (q.isEmpty()) {
+							q = q1;
+						} else if (!q1.isEmpty()) {
+							q = W.create().and(q).and(q1);
+						}
+					}
+				}
+
+				helper.getOptimizer().query(table, q);
+
+				Cursor c1 = helper.cursor(table, q, offset, Data.class);
+				if (c1 != null) {
+					try {
+						while (c1.hasNext()) {
+							T e = (T) c1.next();
+							if (access != null) {
+								access.read("db", table, e);
+							}
+							if (!func.apply(e)) {
+								return false;
+							}
+						}
+					} catch (Exception e) {
+						throw e;
+					} finally {
+						X.close(c1);
+					}
+				}
+				return true;
+			}
+			return false;
 		}
 
 		/**
@@ -2373,8 +2501,9 @@ public class Helper implements Serializable {
 		@SuppressWarnings("unchecked")
 		public <T> T load() throws SQLException {
 
-			if (log.isDebugEnabled())
+			if (log.isDebugEnabled()) {
 				log.debug("w=" + this);
+			}
 
 			T t1 = null;
 			if (dao != null) {
@@ -2382,7 +2511,7 @@ public class Helper implements Serializable {
 			} else if (!X.isEmpty(table)) {
 				W q = this;
 				if (access != null) {
-					W q1 = access.filter(table);
+					W q1 = access.filter("db", table);
 					if (q1 != null) {
 						if (q.isEmpty()) {
 							q = q1;
@@ -2391,13 +2520,113 @@ public class Helper implements Serializable {
 						}
 					}
 				}
-				t1 = (T) helper.load(table, null, q, t, Helper.DEFAULT);
+
+				helper.getOptimizer().query(table, q);
+
+				t1 = (T) helper.load(table, q, t, false);
 			} else {
 				throw new SQLException("not set table");
 			}
 
 			if (access != null) {
-				access.read(table, t1);
+				access.read("db", table, t1);
+			}
+
+			return t1;
+
+		}
+
+		/**
+		 * load data and trace
+		 * 
+		 * @param <T>
+		 * @param trace, true trace or no
+		 * @return
+		 * @throws SQLException
+		 */
+		@SuppressWarnings("unchecked")
+		public <T> T load(boolean trace) throws SQLException {
+
+			if (log.isDebugEnabled()) {
+				log.debug("w=" + this);
+			}
+
+			T t1 = null;
+			if (dao != null) {
+				t1 = (T) dao.load(this);
+			} else if (!X.isEmpty(table)) {
+				W q = this;
+				if (access != null) {
+					W q1 = access.filter("db", table);
+					if (q1 != null) {
+						if (q.isEmpty()) {
+							q = q1;
+						} else if (!q1.isEmpty()) {
+							q = W.create().and(q).and(q1);
+						}
+					}
+				}
+
+				helper.getOptimizer().query(table, q);
+
+				t1 = (T) helper.load(table, q, t, trace);
+			} else {
+				throw new SQLException("not set table");
+			}
+
+			if (access != null) {
+				access.read("db", table, t1);
+			}
+
+			return t1;
+
+		}
+
+		/**
+		 * atomic load the data and call back the func
+		 * 
+		 * @param <T>
+		 * @param func
+		 * @return
+		 * @throws SQLException
+		 */
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public <T> T load(Consumer<T> func) throws SQLException {
+
+			T t1 = null;
+			if (dao != null) {
+				t1 = (T) dao.load(this, (Consumer) func);
+			} else if (!X.isEmpty(table)) {
+				Lock door = Global.getLock("data." + table);
+				door.lock();
+				try {
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter("db", table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					helper.getOptimizer().query(table, q);
+
+					t1 = (T) helper.load(table, q, t, false);
+					if (t1 != null && func != null) {
+						func.accept(t1);
+					}
+				} finally {
+					door.unlock();
+				}
+			} else {
+				throw new SQLException("not set table");
+			}
+
+			if (access != null) {
+				access.read("db", table, t1);
 			}
 
 			return t1;
@@ -2479,19 +2708,25 @@ public class Helper implements Serializable {
 		 */
 		@SuppressWarnings("unchecked")
 		public <T extends Bean> Beans<T> load(int s, int n) throws SQLException {
-			if (log.isDebugEnabled())
+
+			if (log.isDebugEnabled()) {
 				log.debug("w=" + this);
+			}
 
 			Beans<T> l1 = null;
 
 			if (dao != null) {
-				l1 = (Beans<T>) dao.load(this, s, n);
-				if (l1 != null)
-					l1.dao = dao;
+				try {
+					l1 = (Beans<T>) dao.load(this, s, n);
+				} finally {
+					if (l1 != null) {
+						l1.dao = dao;
+					}
+				}
 			} else if (!X.isEmpty(table)) {
 				W q = this;
 				if (access != null) {
-					W q1 = access.filter(table);
+					W q1 = access.filter("db", table);
 					if (q1 != null) {
 						if (q.isEmpty()) {
 							q = q1;
@@ -2501,15 +2736,73 @@ public class Helper implements Serializable {
 					}
 				}
 
-				l1 = helper.load(table, null, q, s, n, t, Helper.DEFAULT);
-				l1.table = table;
-				l1.q = this;
+				helper.getOptimizer().query(table, q);
+
+				try {
+					l1 = helper.load(table, q, s, n, t);
+				} finally {
+					if (l1 != null) {
+						l1.table = table;
+						l1.q = this;
+					}
+				}
 			} else {
 				throw new SQLException("not set table");
 			}
 
 			if (access != null) {
-				access.read(table, l1);
+				access.read("db", table, l1);
+			}
+
+			return l1;
+		}
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public <T extends Bean> Beans<T> load(int s, int n, Consumer<Beans<T>> func) throws SQLException {
+			if (log.isDebugEnabled())
+				log.debug("w=" + this);
+
+			Beans<T> l1 = null;
+
+			if (dao != null) {
+				l1 = (Beans<T>) dao.load(this, s, n, (Consumer) func);
+				if (l1 != null)
+					l1.dao = dao;
+			} else if (!X.isEmpty(table)) {
+
+				Lock door = Global.getLock("data." + table);
+				door.lock();
+				try {
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter("db", table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					helper.getOptimizer().query(table, q);
+
+					l1 = helper.load(table, q, s, n, t);
+					l1.table = table;
+					l1.q = this;
+					if (func != null && l1 != null && !l1.isEmpty()) {
+						func.accept(l1);
+					}
+
+				} finally {
+					door.unlock();
+				}
+			} else {
+				throw new SQLException("not set table");
+			}
+
+			if (access != null) {
+				access.read("db", table, l1);
 			}
 
 			return l1;
@@ -2521,7 +2814,7 @@ public class Helper implements Serializable {
 			} else if (!X.isEmpty(table)) {
 				W q = this;
 				if (access != null) {
-					W q1 = access.filter(table);
+					W q1 = access.filter("db", table);
 					if (q1 != null) {
 						if (q.isEmpty()) {
 							q = q1;
@@ -2531,7 +2824,9 @@ public class Helper implements Serializable {
 					}
 				}
 
-				return helper.count(table, q, Helper.DEFAULT);
+				helper.getOptimizer().query(table, q);
+
+				return helper.count(table, q);
 			}
 
 			throw new SQLException("not set table");
@@ -2542,10 +2837,10 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.sum(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, name)) {
+				if (access == null || access.read("db", table, name)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2555,7 +2850,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.sum(table, q, name, Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.sum(table, q, name);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2568,10 +2865,10 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.avg(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, name)) {
+				if (access == null || access.read("db", table, name)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2581,7 +2878,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.avg(table, q, name, Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.avg(table, q, name);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2590,14 +2889,15 @@ public class Helper implements Serializable {
 
 		}
 
+		@SuppressWarnings("unchecked")
 		public <T> T min(String name) throws SQLException {
 			if (dao != null) {
 				return dao.min(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, name)) {
+				if (access == null || access.read("db", table, name)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2607,7 +2907,15 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.min(table, q, name, Helper.DEFAULT);
+					q.sort(name);
+
+					helper.getOptimizer().query(table, q);
+
+					Data d = helper.load(table, q, Data.class, false);
+					if (d != null) {
+						return (T) d.get(name);
+					}
+					return null;
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2616,14 +2924,15 @@ public class Helper implements Serializable {
 
 		}
 
+		@SuppressWarnings("unchecked")
 		public <T> T max(String name) throws SQLException {
 			if (dao != null) {
 				return dao.max(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, name)) {
+				if (access == null || access.read("db", table, name)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2633,7 +2942,44 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.max(table, q, name, Helper.DEFAULT);
+					q.sort(name, -1);
+
+					helper.getOptimizer().query(table, q);
+
+					Data d = helper.load(table, q, Data.class, false);
+					if (d != null) {
+						return (T) d.get(name);
+					}
+					return null;
+				} else {
+					throw new SQLException("no privilege!");
+				}
+			}
+			throw new SQLException("not set table");
+
+		}
+
+		public <T> T median(String name) throws SQLException {
+			if (dao != null) {
+				return dao.median(name, this);
+			} else if (!X.isEmpty(table)) {
+				if (access == null || access.read("db", table, name)) {
+					W q = this;
+					if (access != null) {
+						W q1 = access.filter("db", table);
+						if (q1 != null) {
+							if (q.isEmpty()) {
+								q = q1;
+							} else if (!q1.isEmpty()) {
+								q = W.create().and(q).and(q1);
+							}
+						}
+					}
+
+					helper.getOptimizer().query(table, q);
+
+					return helper.median(table, q, name);
+
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2646,11 +2992,11 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.delete(this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.checkWrite(table, null)) {
+				if (access == null || access.checkWrite("db", table, null)) {
 
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2660,7 +3006,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.delete(table, q, Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.delete(table, q);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2682,10 +3030,10 @@ public class Helper implements Serializable {
 				return dao.update(this, v);
 			} else if (!X.isEmpty(table)) {
 
-				if (access == null || access.checkWrite(table, v)) {
+				if (access == null || access.checkWrite("db", table, v)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2695,7 +3043,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.updateTable(table, q, v, Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.updateTable(table, q, v);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2707,10 +3057,10 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.distinct(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, name)) {
+				if (access == null || access.read("db", table, name)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2720,7 +3070,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.distinct(table, name, q, Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.distinct(table, name, q);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2732,10 +3084,10 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.count(this, X.split(group, "[,]"), n);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, group)) {
+				if (access == null || access.read("db", table, group)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2745,7 +3097,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.count(table, q, X.split(group, "[,]"), Helper.DEFAULT, n);
+					helper.getOptimizer().query(table, q);
+
+					return helper.count(table, q, X.split(group, "[,]"), n);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2758,10 +3112,10 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.count(this, X.split(group, "[,]"), n);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, group)) {
+				if (access == null || access.read("db", table, group)) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2771,7 +3125,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.count(table, q, name, X.split(group, "[,]"), Helper.DEFAULT, n);
+					helper.getOptimizer().query(table, q);
+
+					return helper.count(table, q, name, X.split(group, "[,]"), n);
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2784,10 +3140,10 @@ public class Helper implements Serializable {
 			if (dao != null) {
 				return dao.sum(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, Arrays.asList(name, group))) {
+				if (access == null || access.read("db", table, Arrays.asList(name, group))) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2797,7 +3153,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.sum(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.sum(table, q, name, X.split(group, "[,]"));
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2806,39 +3164,22 @@ public class Helper implements Serializable {
 
 		}
 
+		/**
+		 * 分类统计
+		 * 
+		 * @param name
+		 * @param group
+		 * @return
+		 * @throws SQLException
+		 */
 		public List<JSON> aggregate(String name, String group) throws SQLException {
 			if (dao != null) {
 				return dao.aggregate(this, X.split(name, "[,]"), X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, Arrays.asList(name, group))) {
+				if (access == null || access.read("db", table, Arrays.asList(name, group))) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
-					return helper.aggregate(table, X.split(name, "[,]"), q, X.split(group, "[,]"), Helper.DEFAULT);
-				} else {
-					throw new SQLException("no privilege!");
-				}
-			}
-			throw new SQLException("not set table");
-
-		}
-
-		public List<JSON> min(String name, String group) throws SQLException {
-			if (dao != null) {
-				return dao.min(this, name, X.split(group, "[,]"));
-			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, Arrays.asList(name, group))) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2848,7 +3189,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.min(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.aggregate(table, X.split(name, "[,]"), q, X.split(group, "[,]"));
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2857,40 +3200,78 @@ public class Helper implements Serializable {
 
 		}
 
-		public List<JSON> max(String name, String group) throws SQLException {
-			if (dao != null) {
-				return dao.max(this, name, X.split(group, "[,]"));
-			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, Arrays.asList(name, group))) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter(table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+//		public List<JSON> min(String name, String group) throws SQLException {
+//			if (dao != null) {
+//				return dao.min(this, name, X.split(group, "[,]"));
+//			} else if (!X.isEmpty(table)) {
+//				if (access == null || access.read(table, Arrays.asList(name, group))) {
+//					W q = this;
+//					if (access != null) {
+//						W q1 = access.filter(table);
+//						if (q1 != null) {
+//							if (q.isEmpty()) {
+//								q = q1;
+//							} else if (!q1.isEmpty()) {
+//								q = W.create().and(q).and(q1);
+//							}
+//						}
+//					}
+//
+//					// TODO
+//
+////					List<JSON> l1 = JSON.createList();
+////					for (String s : X.split(group, "[,]")) {
+////						Data d = helper.load(table, null, q.copy().sort(name), Data.class, Helper.DEFAULT);
+////						if (d != null) {
+////							l1.add(JSON.create().append(s, d.get(name)));
+////						}
+////					}
+////					return l1;
+//
+//				} else {
+//					throw new SQLException("no privilege!");
+//				}
+//			}
+//			throw new SQLException("not set table");
+//
+//		}
 
-					return helper.max(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
-				} else {
-					throw new SQLException("no privilege!");
-				}
-			}
-			throw new SQLException("not set table");
-
-		}
+//		public List<JSON> max(String name, String group) throws SQLException {
+//			if (dao != null) {
+//				return dao.max(this, name, X.split(group, "[,]"));
+//			} else if (!X.isEmpty(table)) {
+//				if (access == null || access.read(table, Arrays.asList(name, group))) {
+//					W q = this;
+//					if (access != null) {
+//						W q1 = access.filter(table);
+//						if (q1 != null) {
+//							if (q.isEmpty()) {
+//								q = q1;
+//							} else if (!q1.isEmpty()) {
+//								q = W.create().and(q).and(q1);
+//							}
+//						}
+//					}
+//
+//					// TODO
+//
+////					return helper.max(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
+//				} else {
+//					throw new SQLException("no privilege!");
+//				}
+//			}
+//			throw new SQLException("not set table");
+//
+//		}
 
 		public List<JSON> avg(String name, String group) throws SQLException {
 			if (dao != null) {
 				return dao.avg(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read(table, Arrays.asList(name, group))) {
+				if (access == null || access.read("db", table, Arrays.asList(name, group))) {
 					W q = this;
 					if (access != null) {
-						W q1 = access.filter(table);
+						W q1 = access.filter("db", table);
 						if (q1 != null) {
 							if (q.isEmpty()) {
 								q = q1;
@@ -2900,7 +3281,9 @@ public class Helper implements Serializable {
 						}
 					}
 
-					return helper.avg(table, q, name, X.split(group, "[,]"), Helper.DEFAULT);
+					helper.getOptimizer().query(table, q);
+
+					return helper.avg(table, q, name, X.split(group, "[,]"));
 				} else {
 					throw new SQLException("no privilege!");
 				}
@@ -2921,27 +3304,8 @@ public class Helper implements Serializable {
 
 		public <T extends Bean> W bean(Class<T> clazz) {
 			this.t = clazz;
-			String table = Helper.getTable(clazz);
-			if (!X.isEmpty(table)) {
-				this.table = table;
-			}
 			return this;
 		}
-
-	}
-
-	public static interface IOptimizer {
-
-		public static long MIN = 1000;
-
-		/**
-		 * Query.
-		 * 
-		 * @param db    the db name
-		 * @param table the table
-		 * @param q     the W
-		 */
-		public void query(String db, String table, W q);
 
 	}
 
@@ -2952,62 +3316,30 @@ public class Helper implements Serializable {
 	 * @param id  the id
 	 * @param t   the Class of Bean
 	 * @return the Bean
+	 * @throws SQLException
 	 */
-	public static <T extends Bean> T load(Object id, Class<T> t) {
-		return load(W.create(X.ID, id), t);
-	}
-
-	/**
-	 * load the data by the query.
-	 *
-	 * @param <T> the subclass of Bean
-	 * @param q   the query
-	 * @param t   the Class of Bean
-	 * @return the Bean
-	 */
-	public static <T extends Bean> T load(W q, Class<T> t) {
-		return load(q, t, getDB(t));
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param fields
-	 * @param q
-	 * @param t
-	 * @return
-	 */
-	public static <T extends Bean> T load(String[] fields, W q, Class<T> t) {
-		return load(fields, q, t, getDB(t));
+	public static <T extends Bean> T load(Object id, Class<T> t) throws SQLException {
+		return load(W.create().and(X.ID, id), t);
 	}
 
 	/**
 	 * Load.
 	 * 
-	 * @deprecated
 	 * @param <T> the generic type
 	 * @param q   the q
 	 * @param t   the t
 	 * @param db  the db
 	 * @return the t
+	 * @throws SQLException
 	 */
-	public static <T extends Bean> T load(W q, Class<T> t, String db) {
+	static <T extends Bean> T load(W q, Class<T> t) throws SQLException {
 		String table = getTable(t);
-		return load(table, null, q, t, db);
+		return load(table, q, t);
 	}
 
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param fields
-	 * @param q
-	 * @param t
-	 * @param db
-	 * @return
-	 */
-	public static <T extends Bean> T load(String[] fields, W q, Class<T> t, String db) {
+	static <T extends Bean> T load(W q, Class<T> t, boolean trace) throws SQLException {
 		String table = getTable(t);
-		return load(table, fields, q, t, db);
+		return load(table, q, t);
 	}
 
 	/**
@@ -3020,84 +3352,43 @@ public class Helper implements Serializable {
 	 * @return the bean
 	 */
 	public static <T extends Bean> T load(String table, W q, Class<T> t) {
-		return load(table, null, q, t, getDB(t));
+		return load(table, q, t, false);
 	}
 
-	/**
-	 * Load.
-	 * 
-	 * @deprecated
-	 * @param <T>    the generic type
-	 * @param table  the table
-	 * @param fields the fields
-	 * @param q      the query
-	 * @param t      the Bean Class
-	 * @param db     the db
-	 * @return the T
-	 */
-	public static <T extends Bean> T load(String table, String[] fields, W q, Class<T> t, String db) {
+	public static <T extends Bean> T load(String table, W q, Class<T> t, boolean trace) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.load(table, fields, q, t, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.load(table, fields, q, t, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
-			return null;
+
+			return primary.load(table, q, t, trace);
+
 		} finally {
 			read.add(t1.pastms());
 		}
 	}
 
-	/**
-	 * insert into the values by the Class of T.
-	 *
-	 * @param value the value
-	 * @param t     the Class of Bean
-	 * @return the number of inserted, 0: failed
-	 */
-	public static int insert(V value, Class<? extends Bean> t) {
-		return insert(value, t, getDB(t));
-	}
+	public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) throws SQLException {
 
-	/**
-	 * batch insert
-	 * 
-	 * @param values the values
-	 * @param t      the Class of Bean
-	 * @return the number of inserted
-	 */
-	public static int insert(List<V> values, Class<? extends Bean> t) {
-		return insert(values, t, getDB(t));
-	}
+		if (!Helper.isConfigured()) {
+			return null;
+		}
 
-	/**
-	 * batch insert
-	 * 
-	 * @deprecated
-	 * @param values the values
-	 * @param t      the Class of Bean
-	 * @param db     the DB name
-	 * @return the number is inserted
-	 */
-	public static int insert(List<V> values, Class<? extends Bean> t, String db) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
 
-		String table = getTable(t);
-		return insert(values, table, db);
+			if (monitor != null) {
+				monitor.query(table, q);
+			}
+
+			return primary.load(table, q, s, n, t);
+
+		} finally {
+			read.add(t1.pastms());
+		}
 	}
 
 	/**
@@ -3108,141 +3399,39 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static int insert(String table, List<V> values) {
-		return insert(values, table, Helper.DEFAULT);
-	}
-
-	/**
-	 * batch insert
-	 * 
-	 * @deprecated
-	 * @param values the values
-	 * @param table  the table name
-	 * @param db     the db name
-	 * @return the number inserted
-	 */
-	public static int insert(List<V> values, String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (table != null) {
+			for (V value : values) {
+				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
 
-				for (V value : values) {
-					value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
-
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.insertTable(table, values, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.insertTable(table, values, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
 			}
 
-			return 0;
+			return primary.insertTable(table, values);
 		} finally {
 			write.add(t1.pastms());
 		}
-	}
-
-	/**
-	 * Insert.
-	 * 
-	 * @deprecated
-	 * @param value the values
-	 * @param t     the t
-	 * @param db    the db
-	 * @return the int
-	 */
-	public static int insert(V value, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return insert(value, table, db);
-	}
-
-	public static int insert(String table, V value) {
-		return insert(value, table, Helper.DEFAULT);
 	}
 
 	/**
 	 * insert
 	 * 
-	 * @deprecated
 	 * @param value the value
 	 * @param table the table
 	 * @param db    the db name
 	 * @return the number inserted
 	 */
-	public static int insert(V value, String table, String db) {
+	public static int insert(String table, V value) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
-				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
-				value.set("_node", Global.id());
 
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.insertTable(table, value, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.insertTable(table, value, db);
-						}
-					}
-				}
+			return primary.insertTable(table, value);
 
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-			}
-
-			return 0;
 		} finally {
 			write.add(t1.pastms());
 		}
-	}
-
-	/**
-	 * update the values by the id, for the Class of Bean.
-	 *
-	 * @param id     the id of the X.ID
-	 * @param values the values to update
-	 * @param t      the Class of Bean
-	 * @return the number of updated
-	 */
-	public static int update(Object id, V values, Class<? extends Bean> t) {
-		return update(W.create(X.ID, id), values, t);
-	}
-
-	/**
-	 * update the values by the W for the Class of Bean.
-	 * 
-	 * @param q      the query
-	 * @param values the values to update
-	 * @param t      the Class of Ban
-	 * @return the number of updated
-	 */
-	public static int update(W q, V values, Class<? extends Bean> t) {
-		return update(q, values, t, getDB(t));
-	}
-
-	/**
-	 * update the values by the Q for the Class of Bean in the "db".
-	 * 
-	 * @deprecated
-	 *
-	 * @param q      the query
-	 * @param values the values
-	 * @param t      the Class of Bean
-	 * @param db     the database pool name
-	 * @return the number of updated
-	 */
-	public static int update(W q, V values, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return update(table, q, values, db);
 	}
 
 	/**
@@ -3254,78 +3443,19 @@ public class Helper implements Serializable {
 	 * @return the number of updated
 	 */
 	public static int update(String table, W q, V values) {
-		return update(table, q, values, DEFAULT);
-	}
-
-	/**
-	 * update the table by the query with the values.
-	 * 
-	 * @deprecated
-	 *
-	 * @param table  the table
-	 * @param q      the query
-	 * @param values the values
-	 * @param db     the database pool
-	 * @return the number of updated
-	 */
-	public static int update(String table, W q, V values, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				values.set(X.UPDATED, System.currentTimeMillis());
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.updateTable(table, q, values, db);
-
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.updateTable(table, q, values, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
-			return 0;
+
+			return primary.updateTable(table, q, values);
+
 		} finally {
 			write.add(t1.pastms());
 		}
-	}
-
-	/**
-	 * increase
-	 * 
-	 * @param name
-	 * @param n
-	 * @param q
-	 * @param v
-	 * @param t
-	 * @return
-	 */
-	public static int inc(String name, int n, W q, V v, Class<? extends Bean> t) {
-		return inc(q, name, n, v, t);
-	}
-
-	/**
-	 * Inc.
-	 * 
-	 * @deprecated
-	 * @param q    the query
-	 * @param name the name
-	 * @param n    the number
-	 * @param t    the Bean Class
-	 * @return the int
-	 */
-	public static int inc(W q, String name, int n, V v, Class<? extends Bean> t) {
-		String table = getTable(t);
-		return inc(table, q, name, n, v, getDB(t));
 	}
 
 	/**
@@ -3339,67 +3469,19 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static int inc(String table, String name, int n, W q, V v) {
-		return inc(table, q, name, n, v);
-	}
-
-	/**
-	 * Inc.
-	 * 
-	 * @deprecated
-	 * @param table the table
-	 * @param q     the q
-	 * @param name  the name
-	 * @param n     the n
-	 * @return the int
-	 */
-	public static int inc(String table, W q, String name, int n, V v) {
-		return inc(table, q, name, n, v, DEFAULT);
-	}
-
-	/**
-	 * increase the value
-	 * 
-	 * @deprecated
-	 * 
-	 * @param table the table
-	 * @param q     the query
-	 * @param name  the name
-	 * @param n     the number
-	 * @param v     the value object
-	 * @param db    the db name
-	 * @return the new value
-	 */
-	public static int inc(String table, W q, String name, int n, V v, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
-
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.inc(table, q, name, n, v, db);
-
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.inc(table, q, name, n, v, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
-			return 0;
+
+			return primary.inc(table, q, name, n, v);
 		} finally {
 			write.add(t1.pastms());
 
 		}
 	}
-
-	private static boolean _configured = false;
 
 	/**
 	 * test is configured RDS or Mongo
@@ -3408,409 +3490,27 @@ public class Helper implements Serializable {
 	 *         true: configured RDS or Mongo; false: no DB configured
 	 */
 	public static boolean isConfigured() {
-		if (!_configured) {
-			_configured = primary != null && primary.getDB(DEFAULT) != null;
-		}
-		return _configured;
+		return primary != null;
 	}
 
-	/**
-	 * load the data from the table by query, ignore the table definition for the
-	 * Class.
-	 *
-	 * @param <T>   the subclass of Bean
-	 * @param table the table name
-	 * @param q     the query
-	 * @param s     the start
-	 * @param n     the number
-	 * @param t     the Class of Bean
-	 * @return Beans of the T, the "total=-1" always
-	 */
-	public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) {
-		return load(table, q, s, n, t, getDB(t));
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param table
-	 * @param fields
-	 * @param q
-	 * @param s
-	 * @param n
-	 * @param t
-	 * @return
-	 */
-	public static <T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t) {
-		return load(table, fields, q, s, n, t, getDB(t));
-	}
-
-	/**
-	 * Load.
-	 * 
-	 * @deprecated
-	 * @param <T>   the generic type
-	 * @param table the table
-	 * @param q     the q
-	 * @param s     the s
-	 * @param n     the n
-	 * @param t     the t
-	 * @param db    the db
-	 * @return the beans
-	 */
-	public static <T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t, String db) {
-		return _load(table, null, q, s, n, t, db, 1);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param table
-	 * @param fields
-	 * @param q
-	 * @param s
-	 * @param n
-	 * @param t
-	 * @param db
-	 * @return
-	 */
-	public static <T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t,
-			String db) {
-		return _load(table, fields, q, s, n, t, db, 1);
-	}
-
-	private static <T extends Bean> Beans<T> _load(final String table, final String[] fields, final W q, final int s,
-			final int n, final Class<T> t, final String db, int refer) {
+	public static <T extends Bean> Cursor<T> stream(String table, W q, long offset, Class<T> t) {
 
 		TimeStamp t1 = TimeStamp.create();
-		Beans<T> bs = null;
-		try {
-
-			if (primary != null && primary.getDB(db) != null) {
-				bs = primary.load(table, fields, q, s, n, t, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						bs = h.load(table, fields, q, s, n, t, db);
-						break;
-					}
-				}
-			}
-
-			if (bs != null) {
-				bs.q = q;
-				bs.table = table;
-				bs.db = db;
-			}
-
-			return bs;
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		} finally {
-			read.add(t1.pastms());
-
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
-			}
-
-		}
-		return bs;
-	}
-
-	/**
-	 * load the data by query.
-	 *
-	 * @param <T> the subclass of Bean
-	 * @param q   the query
-	 * @param s   the start
-	 * @param n   the number
-	 * @param t   the Class of Bean
-	 * @return Beans of Class
-	 */
-	public static <T extends Bean> Beans<T> load(W q, int s, int n, Class<T> t) {
-		String table = getTable(t);
-		return load(table, q, s, n, t);
-	}
-
-	public static <T extends Bean> BeanStream<T> stream(W q, int s, int n, Class<T> t) {
-		TimeStamp t1 = TimeStamp.create();
-		String table = getTable(t);
-		String db = getDB(t);
 		try {
 
 			if (monitor != null) {
-				monitor.query(db, table, q);
+				monitor.query(table, q);
 			}
 
 			Cursor<T> cur = null;
-			if (primary != null && primary.getDB(db) != null) {
-				cur = primary.query(table, q, s, n, t, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						cur = h.query(table, q, s, n, t, db);
-						break;
-					}
-				}
-			}
+			cur = primary.cursor(table, q, offset, t);
 
-			return BeanStream.create(cur);
+			return cur;
 		} finally {
 			read.add(t1.pastms());
 
 		}
-	}
 
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param fields
-	 * @param q
-	 * @param s
-	 * @param n
-	 * @param t
-	 * @return
-	 */
-	public static <T extends Bean> Beans<T> load(String[] fields, W q, int s, int n, Class<T> t) {
-		String table = getTable(t);
-		return load(table, fields, q, s, n, t);
-	}
-
-	/**
-	 * get the table name from the Class of Bean.
-	 *
-	 * @param t the Class of Bean
-	 * @return the String of the table name
-	 */
-	public static String getTable(Class<? extends Bean> t) {
-		Table table = (Table) t.getAnnotation(Table.class);
-		if (table == null || X.isEmpty(table.name())) {
-			// log.error("table missed/error in [" + t + "] declaretion", new Exception());
-			return null;
-		}
-
-		return table.name();
-	}
-
-	/**
-	 * get the db name
-	 * 
-	 * @param t the Bean class
-	 * @return the db name
-	 */
-	public static String getDB(Class<? extends Bean> t) {
-		Table table = (Table) t.getAnnotation(Table.class);
-		if (table == null || X.isEmpty(table.db())) {
-			return DEFAULT;
-		}
-
-		return table.db();
-	}
-
-	/**
-	 * count the data by the query.
-	 *
-	 * @param q the query
-	 * @param t the Class of Bean
-	 * @return the long of data number
-	 */
-	public static long count(W q, Class<? extends Bean> t) {
-		return count(q, t, getDB(t));
-	}
-
-	/**
-	 * count
-	 * 
-	 * @param name
-	 * @param q
-	 * @param t
-	 * @return
-	 */
-	public static long count(String name, W q, Class<? extends Bean> t) {
-		return count(name, q, t, getDB(t));
-	}
-
-	/**
-	 * sum
-	 * 
-	 * @param <T>
-	 * @param name
-	 * @param q
-	 * @param t
-	 * @return
-	 */
-	public static <T> T sum(String name, W q, Class<? extends Bean> t) {
-		return sum(q, name, t);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @return
-	 */
-	public static <T> T sum(W q, String name, Class<? extends Bean> t) {
-		return sum(q, name, t, getDB(t));
-	}
-
-	/**
-	 * max
-	 * 
-	 * @param <T>
-	 * @param name
-	 * @param q
-	 * @param t
-	 * @return
-	 */
-	public static <T> T max(String name, W q, Class<? extends Bean> t) {
-		return max(q, name, t);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @return
-	 */
-	public static <T> T max(W q, String name, Class<? extends Bean> t) {
-		return max(q, name, t, getDB(t));
-	}
-
-	/**
-	 * min
-	 * 
-	 * @param <T>
-	 * @param name
-	 * @param q
-	 * @param t
-	 * @return
-	 */
-	public static <T> T min(String name, W q, Class<? extends Bean> t) {
-		return min(q, name, t, getDB(t));
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @return
-	 */
-	public static <T> T min(W q, String name, Class<? extends Bean> t) {
-		return min(q, name, t, getDB(t));
-	}
-
-	/**
-	 * average
-	 * 
-	 * @param <T>
-	 * @param name
-	 * @param q
-	 * @param t
-	 * @return
-	 */
-	public static <T> T avg(String name, W q, Class<? extends Bean> t) {
-		return avg(q, name, t, getDB(t));
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @return
-	 */
-	public static <T> T avg(W q, String name, Class<? extends Bean> t) {
-		return avg(q, name, t, getDB(t));
-	}
-
-	/**
-	 * count the items in the db.
-	 * 
-	 * @deprecated
-	 * @param q  the query
-	 * @param t  the Class of Bean
-	 * @param db the name of db pool
-	 * @return the number
-	 */
-	public static long count(W q, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return count(q, table, db);
-	}
-
-	/**
-	 * @deprecated
-	 * @param name
-	 * @param q
-	 * @param t
-	 * @param db
-	 * @return
-	 */
-	public static long count(String name, W q, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return count(name, q, table, db);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @param db
-	 * @return
-	 */
-	public static <T> T sum(W q, String name, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return sum(q, name, table, db);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @param db
-	 * @return
-	 */
-	public static <T> T max(W q, String name, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return max(q, name, table, db);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @param db
-	 * @return
-	 */
-	public static <T> T min(W q, String name, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return min(q, name, table, db);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param t
-	 * @param db
-	 * @return
-	 */
-	public static <T> T avg(W q, String name, Class<? extends Bean> t, String db) {
-		String table = getTable(t);
-		return avg(q, name, table, db);
 	}
 
 	/**
@@ -3821,42 +3521,15 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static long count(String table, W q) {
-		return count(q, table, Helper.DEFAULT);
-	}
-
-	/**
-	 * count the items in table, db
-	 * 
-	 * @deprecated
-	 * @param q     the query
-	 * @param table the table name
-	 * @param db    the db name
-	 * @return long
-	 */
-	public static long count(W q, String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.count(table, q, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.count(table, q, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
 
-			return 0;
+			return primary.count(table, q);
 		} finally {
 			read.add(t1.pastms());
 
@@ -3872,41 +3545,15 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static long count(String table, String name, W q) {
-		return count(name, q, table, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param name
-	 * @param q
-	 * @param table
-	 * @param db
-	 * @return
-	 */
-	public static long count(String name, W q, String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.count(table, q, name, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.count(table, q, name, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
 
-			return 0;
+			return primary.count(table, q, name);
 		} finally {
 			read.add(t1.pastms());
 
@@ -3914,7 +3561,7 @@ public class Helper implements Serializable {
 	}
 
 	/**
-	 * @deprecated
+	 * 
 	 * @param <T>
 	 * @param q
 	 * @param name
@@ -3922,29 +3569,15 @@ public class Helper implements Serializable {
 	 * @param db
 	 * @return
 	 */
-	public static <T> T median(W q, String name, String table, String db) {
+	public static <T> T median(String table, String name, W q) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.median(table, q, name, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.median(table, q, name, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
 
-			return null;
+			return primary.median(table, q, name);
 		} finally {
 			read.add(t1.pastms());
 
@@ -3952,7 +3585,6 @@ public class Helper implements Serializable {
 	}
 
 	/**
-	 * @deprecated
 	 * @param <T>
 	 * @param q
 	 * @param name
@@ -3960,30 +3592,15 @@ public class Helper implements Serializable {
 	 * @param db
 	 * @return
 	 */
-	public static <T> T std_deviation(W q, String name, String table, String db) {
+	public static <T> T std_deviation(W q, String name, String table) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.std_deviation(table, q, name, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.std_deviation(table, q, name, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-			}
-
-			return null;
+			return primary.std_deviation(table, q, name);
 		} finally {
 			read.add(t1.pastms());
 
-			if (t1.pastms() > IOptimizer.MIN && monitor != null) {
-				monitor.query(db, table, q);
+			if (t1.pastms() > Optimizer.MIN && monitor != null) {
+				monitor.query(table, q);
 			}
 
 		}
@@ -3999,41 +3616,15 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static <T> T sum(String table, String name, W q) {
-		return sum(q, name, table, Helper.DEFAULT);
-	}
 
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param table
-	 * @param db
-	 * @return
-	 */
-	public static <T> T sum(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.sum(table, q, name, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.sum(table, q, name, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
 
-			return null;
+			return primary.sum(table, q, name);
 		} finally {
 			read.add(t1.pastms());
 
@@ -4049,46 +3640,13 @@ public class Helper implements Serializable {
 	 * @param q
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T max(String table, String name, W q) {
-		return max(q, name, table, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param table
-	 * @param db
-	 * @return
-	 */
-	public static <T> T max(W q, String name, String table, String db) {
-		TimeStamp t1 = TimeStamp.create();
-		try {
-			if (table != null) {
-
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.max(table, q, name, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.max(table, q, name, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-			}
-
-			return null;
-		} finally {
-			read.add(t1.pastms());
-
+		Data d = load(table, q.copy().sort(name, -1), Data.class);
+		if (d != null) {
+			return (T) d.get(name);
 		}
+		return null;
 	}
 
 	/**
@@ -4101,44 +3659,14 @@ public class Helper implements Serializable {
 	 * @param db
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T min(String table, String name, W q) {
-		return min(q, name, table, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param table
-	 * @param db
-	 * @return
-	 */
-	public static <T> T min(W q, String name, String table, String db) {
-		TimeStamp t1 = TimeStamp.create();
-		try {
-			if (table != null) {
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.min(table, q, name, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.min(table, q, name, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-			}
-
-			return null;
-		} finally {
-			read.add(t1.pastms());
+		Data d = load(table, q.copy().sort(name), Data.class);
+		if (d != null) {
+			return (T) d.get(name);
 		}
+		return null;
+//		return min(q, name, table, Helper.DEFAULT);
 	}
 
 	/**
@@ -4151,73 +3679,35 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static <T> T avg(String table, String name, W q) {
-		return avg(q, name, table, Helper.DEFAULT);
-	}
 
-	/**
-	 * @deprecated
-	 * @param <T>
-	 * @param q
-	 * @param name
-	 * @param table
-	 * @param db
-	 * @return
-	 */
-	public static <T> T avg(W q, String name, String table, String db) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
 
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.avg(table, q, name, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.avg(table, q, name, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
 
-			return null;
+			return primary.avg(table, q, name);
 		} finally {
 			read.add(t1.pastms());
 
 		}
 	}
 
-	/**
-	 * get the distinct list for the name, by the query.
-	 * 
-	 * @param name the column name
-	 * @param q    the query
-	 * @param b    the Bean class
-	 * @return the List of objects
-	 */
-	public static List<?> distinct(String name, W q, Class<? extends Bean> b) {
-		return distinct(name, q, b, getDB(b));
-	}
+	public static List<JSON> avg(String table, String name, W q, String[] group) {
 
-	/**
-	 * Distinct.
-	 * 
-	 * @deprecated
-	 *
-	 * @param name the name
-	 * @param q    the query
-	 * @param b    the bean
-	 * @param db   the db
-	 * @return the list
-	 */
-	public static List<?> distinct(String name, W q, Class<? extends Bean> b, String db) {
-		String table = getTable(b);
-		return distinct(name, q, table, db);
+		TimeStamp t1 = TimeStamp.create();
+		try {
+
+			if (monitor != null) {
+				monitor.query(table, q);
+			}
+
+			return primary.avg(table, q, name, group);
+		} finally {
+			read.add(t1.pastms());
+
+		}
 	}
 
 	/**
@@ -4229,46 +3719,16 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static List<?> distinct(String table, String name, W q) {
-		return distinct(name, q, table, Helper.DEFAULT);
-	}
-
-	/**
-	 * get the distinct data
-	 * 
-	 * @deprecated
-	 * 
-	 * @param name  the column name
-	 * @param q     the query
-	 * @param table the table name
-	 * @param db    the db name
-	 * @return the list
-	 */
-	public static List<?> distinct(String name, W q, String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (table != null) {
-
-				if (monitor != null) {
-					monitor.query(db, table, q);
-				}
-
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.distinct(table, name, q, db);
-
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.distinct(table, name, q, db);
-						}
-					}
-				}
-
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
+			if (monitor != null) {
+				monitor.query(table, q);
 			}
 
-			return null;
+			return primary.distinct(table, name, q);
+
 		} finally {
 			read.add(t1.pastms());
 
@@ -4279,42 +3739,19 @@ public class Helper implements Serializable {
 	 * 
 	 */
 	public static void enableOptmizer() {
-		monitor = new Optimizer();
+		if (Global.getInt("db.optimizer", 1) == 1) {
+			monitor = new Optimizer(Helper.primary);
+		} else {
+			monitor = null;
+		}
 	}
 
-	public static void disableOptmizer() {
-		monitor = null;
-	}
+	public static void createIndex(String table, LinkedHashMap<String, Object> ss, boolean unique) {
 
-	public static void createIndex(String table, LinkedHashMap<String, Integer> ss) {
-		createIndex(Helper.DEFAULT, table, ss);
-	}
-
-	/**
-	 * create index on table
-	 * 
-	 * @deprecated <br>
-	 *             replace by createIndex(String table, LinkedHashMap<String,
-	 *             Integer> ss)
-	 * 
-	 * @param db    the db
-	 * @param table the table
-	 * @param ss    the index info
-	 */
-	public static void createIndex(String db, String table, LinkedHashMap<String, Integer> ss) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (primary != null && primary.getDB(db) != null) {
-				primary.createIndex(table, ss, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						h.createIndex(table, ss, db);
-						break;
-					}
-				}
-			}
+			primary.createIndex(table, ss, unique);
 		} finally {
 			write.add(t1.pastms());
 		}
@@ -4327,58 +3764,22 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static List<Map<String, Object>> getIndexes(String table) {
-		return getIndexes(table, Helper.DEFAULT);
-	}
-
-	/**
-	 * get indexes on table
-	 * 
-	 * @deprecated
-	 * @param table the table
-	 * @param db    the db
-	 * @return the list of indexes
-	 */
-	public static List<Map<String, Object>> getIndexes(String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			if (primary != null && primary.getDB(db) != null) {
-				return primary.getIndexes(table, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						return h.getIndexes(table, db);
-					}
-				}
-			}
-
-			return null;
+			return primary.getIndexes(table);
 		} finally {
 			read.add(t1.pastms());
 		}
 
 	}
 
-	/**
-	 * drop indexes
-	 * 
-	 * @param table the table
-	 * @param name  the index name
-	 * @param db    the db
-	 */
-	public static void dropIndex(String table, String name, String db) {
+	public static void dropIndex(String table, String name) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (primary != null && primary.getDB(db) != null) {
-				primary.dropIndex(table, name, db);
-			} else if (customs != null) {
-				for (DBHelper h : customs) {
-					h.dropIndex(table, name, db);
-					break;
-				}
-			}
+			primary.dropIndex(table, name);
 		} finally {
 			write.add(t1.pastms());
 		}
@@ -4400,13 +3801,8 @@ public class Helper implements Serializable {
 	 * 
 	 * @param helper the db helper
 	 */
-	public static void addCustomHelper(DBHelper helper) {
-		if (customs == null) {
-			customs = new ArrayList<DBHelper>();
-		}
-		if (!customs.contains(helper)) {
-			customs.add(helper);
-		}
+	public static void setHelper(DBHelper helper) {
+		primary = helper;
 	}
 
 	/**
@@ -4421,68 +3817,63 @@ public class Helper implements Serializable {
 
 		void repair(String table);
 
-		List<Map<String, Object>> getIndexes(String table, String db);
+		List<Map<String, Object>> getIndexes(String table);
 
-		void dropIndex(String table, String name, String db);
+		void dropIndex(String table, String name);
 
-		void createIndex(String table, LinkedHashMap<String, Integer> ss, String db);
+		void createIndex(String table, LinkedHashMap<String, Object> ss, boolean unique);
 
-		<T extends Bean> Beans<T> load(String table, String[] fields, W q, int s, int n, Class<T> t, String db)
-				throws SQLException;
+		<T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) throws SQLException;
 
-		<T extends Bean> Cursor<T> query(String table, W q, int s, int n, Class<T> t, String db);
+		<T extends Bean> Cursor<T> cursor(String table, W q, long offset, Class<T> t);
 
-		<T extends Bean> T load(String table, String[] fields, W q, Class<T> clazz, String db);
+		<T extends Bean> T load(String table, W q, Class<T> clazz);
 
-		int delete(String table, W q, String db);
+		<T extends Bean> T load(String table, W q, Class<T> clazz, boolean trace);
 
-		void drop(String table, String db);
+		int delete(String table, W q);
 
-		Object getDB(String db);
+		void drop(String table);
 
-		boolean exists(String table, W q, String db);
+		boolean exists(String table, W q);
 
-		int insertTable(String table, V value, String db);
+		int insertTable(String table, V value);
 
-		int insertTable(String table, List<V> values, String db);
+		int insertTable(String table, List<V> values);
 
-		int updateTable(String table, W q, V values, String db);
+		int updateTable(String table, W q, V values);
 
-		int inc(String table, W q, String name, int n, V v, String db);
+		int inc(String table, W q, String name, int n, V v);
 
-		long count(String table, W q, String name, String db);
+		long count(String table, W q, String name);
 
-		long count(String table, W q, String db);
+		long count(String table, W q);
 
-		List<JSON> count(String table, W q, String[] group, String db, int n);
+		List<JSON> count(String table, W q, String[] group, int n);
 
-		List<JSON> count(String table, W q, String name, String[] group, String db, int n);
+		List<JSON> count(String table, W q, String name, String[] group, int n);
 
-		<T> T sum(String table, W q, String name, String db);
+		<T> T max(String table, W q, String name);
 
-		List<JSON> sum(String table, W q, String name, String[] group, String db);
+		<T> T min(String table, W q, String name);
 
-		<T> T max(String table, W q, String name, String db);
+		<T> T sum(String table, W q, String name);
 
-		List<JSON> max(String table, W q, String name, String[] group, String db);
+		List<JSON> sum(String table, W q, String name, String[] group);
 
-		<T> T min(String table, W q, String name, String db);
+		<T> T avg(String table, W q, String name);
 
-		List<JSON> min(String table, W q, String name, String[] group, String db);
+		<T> T std_deviation(String table, W q, String name);
 
-		<T> T avg(String table, W q, String name, String db);
+		<T> T median(String table, W q, String name);
 
-		<T> T std_deviation(String table, W q, String name, String db);
+		List<JSON> avg(String table, W q, String name, String[] group);
 
-		<T> T median(String table, W q, String name, String db);
+		List<?> distinct(String table, String name, W q);
 
-		List<JSON> avg(String table, W q, String name, String[] group, String db);
+		List<JSON> aggregate(String table, String[] func, W q, String[] group);
 
-		List<?> distinct(String table, String name, W q, String db);
-
-		List<JSON> aggregate(String table, String[] func, W q, String[] group, String db);
-
-		List<JSON> listTables(String db);
+		List<JSON> listTables();
 
 		void close();
 
@@ -4492,18 +3883,80 @@ public class Helper implements Serializable {
 
 		List<JSON> listDB();
 
+		void killOp(Object id);
+
+		/**
+		 * 获取优化器
+		 * 
+		 * @return
+		 */
+		Optimizer getOptimizer();
+
+		/**
+		 * 当前操作
+		 * 
+		 * @return
+		 */
 		List<JSON> listOp();
 
-		long size(String table, String db);
+		/**
+		 * 数据表存储大小
+		 * 
+		 * @param table
+		 * @return
+		 */
+		long size(String table);
+
+		/**
+		 * 数据库统计信息
+		 * 
+		 * @param table
+		 * @return
+		 */
+		JSON stats(String table);
+
+		/**
+		 * 数据库性能状态
+		 * 
+		 * @return
+		 */
+		JSON status();
+
+		/**
+		 * 设置分布式表
+		 * 
+		 * @param table
+		 * @return
+		 */
+		boolean distributed(String table, String key);
+
+		boolean createTable(String table, JSON cols);
+
+		long getTime();
+
 	}
 
 	public static DBHelper getPrimary() {
 		return primary;
 	}
 
-	public interface Cursor<E> extends Iterator<E> {
+	public static abstract class Cursor<E> implements Iterator<E>, Closeable {
 
-		void close();
+		public abstract void close();
+
+		public void forEach(Function<E, Boolean> func) {
+
+			try {
+				while (this.hasNext()) {
+					if (!func.apply(this.next())) {
+						return;
+					}
+				}
+			} finally {
+				this.close();
+			}
+		}
+
 	}
 
 	/**
@@ -4512,27 +3965,10 @@ public class Helper implements Serializable {
 	 * @param table
 	 */
 	public static void drop(String table) {
-		drop(table, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param db
-	 */
-	public static void drop(String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (primary != null && primary.getDB(db) != null) {
-				primary.drop(table, db);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(db) != null) {
-						h.drop(table, db);
-					}
-				}
-			}
+			primary.drop(table);
 		} finally {
 			write.add(t1.pastms());
 		}
@@ -4548,36 +3984,15 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static List<JSON> count(String table, W q, String[] group, int n) {
-		return count(table, q, group, n, Helper.DEFAULT);
-	}
 
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param q
-	 * @param group
-	 * @param n
-	 * @param dbName
-	 * @return
-	 */
-	public static List<JSON> count(String table, W q, String[] group, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
 			if (monitor != null) {
-				monitor.query(dbName, table, q);
+				monitor.query(table, q);
 			}
 
-			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.count(table, q, group, dbName, n);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(dbName) != null) {
-						return h.count(table, q, group, dbName, n);
-					}
-				}
-			}
-			return null;
+			return primary.count(table, q, group, n);
 		} finally {
 			read.add(t1.pastms());
 		}
@@ -4594,39 +4009,20 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static List<JSON> count(String table, String name, W q, String[] group, int n) {
-		return count(table, q, name, group, n, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param q
-	 * @param name
-	 * @param group
-	 * @param n
-	 * @param dbName
-	 * @return
-	 */
-	public static List<JSON> count(String table, W q, String name, String[] group, int n, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (monitor != null) {
-				monitor.query(dbName, table, q);
+				monitor.query(table, q);
 			}
 
-			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.count(table, q, name, group, dbName, n);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(dbName) != null) {
-						return h.count(table, q, name, group, dbName, n);
-					}
-				}
-			}
-			return null;
+			return primary.count(table, q, name, group, n);
 		} finally {
 			read.add(t1.pastms());
 		}
+	}
+
+	public static long getTime() {
+		return primary.getTime();
 	}
 
 	/**
@@ -4639,36 +4035,15 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static List<JSON> sum(String table, String name, W q, String[] group) {
-		return sum(table, q, name, group, Helper.DEFAULT);
-	}
 
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param q
-	 * @param name
-	 * @param group
-	 * @param dbName
-	 * @return
-	 */
-	public static List<JSON> sum(String table, W q, String name, String[] group, String dbName) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
 			if (monitor != null) {
-				monitor.query(dbName, table, q);
+				monitor.query(table, q);
 			}
 
-			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.sum(table, q, name, group, dbName);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(dbName) != null) {
-						return h.sum(table, q, name, group, dbName);
-					}
-				}
-			}
-			return null;
+			return primary.sum(table, q, name, group);
 		} finally {
 			read.add(t1.pastms());
 		}
@@ -4684,38 +4059,15 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static List<JSON> aggregate(String table, String[] func, W q, String[] group) {
-		return aggregate(table, q, func, group, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * 
-	 * @param table
-	 * @param q
-	 * @param func
-	 * @param group
-	 * @param dbName
-	 * @return
-	 */
-	public static List<JSON> aggregate(String table, W q, String[] func, String[] group, String dbName) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
 			if (monitor != null) {
-				monitor.query(dbName, table, q);
+				monitor.query(table, q);
 			}
 
-			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.aggregate(table, func, q, group, dbName);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(dbName) != null) {
-						return h.aggregate(table, func, q, group, dbName);
-					}
-				}
-			}
-			return null;
+			return primary.aggregate(table, func, q, group);
 		} finally {
 			read.add(t1.pastms());
 		}
@@ -4731,199 +4083,47 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static List<JSON> min(String table, String name, W q, String[] group) {
-		return min(table, q, name, group, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param q
-	 * @param name
-	 * @param group
-	 * @param dbName
-	 * @return
-	 */
-	public static List<JSON> min(String table, W q, String name, String[] group, String dbName) {
-		TimeStamp t1 = TimeStamp.create();
-		try {
-
-			if (monitor != null) {
-				monitor.query(dbName, table, q);
-			}
-
-			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.min(table, q, name, group, dbName);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(dbName) != null) {
-						return h.min(table, q, name, group, dbName);
-					}
-				}
-			}
-			return null;
-		} finally {
-			read.add(t1.pastms());
-		}
-	}
-
-	/**
-	 * max
-	 * 
-	 * @param table
-	 * @param name
-	 * @param q
-	 * @param group
-	 * @return
-	 */
-	public static List<JSON> max(String table, String name, W q, String[] group) {
-		return max(table, q, name, group, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param q
-	 * @param name
-	 * @param group
-	 * @param dbName
-	 * @return
-	 */
-	public static List<JSON> max(String table, W q, String name, String[] group, String dbName) {
-
-		TimeStamp t1 = TimeStamp.create();
-		try {
-
-			if (monitor != null) {
-				monitor.query(dbName, table, q);
-			}
-
-			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.max(table, q, name, group, dbName);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(dbName) != null) {
-						return h.max(table, q, name, group, dbName);
-					}
-				}
-			}
-		} finally {
-			read.add(t1.pastms());
-		}
+//		return min(table, q, name, group, Helper.DEFAULT);
+		// TODO
 		return null;
-	}
-
-	/**
-	 * average
-	 * 
-	 * @param table
-	 * @param name
-	 * @param q
-	 * @param group
-	 * @return
-	 */
-	public static List<JSON> avg(String table, String name, W q, String[] group) {
-		return avg(table, q, name, group, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param q
-	 * @param name
-	 * @param group
-	 * @param dbName
-	 * @return
-	 */
-	public static List<JSON> avg(String table, W q, String name, String[] group, String dbName) {
-		TimeStamp t1 = TimeStamp.create();
-		try {
-
-			if (monitor != null) {
-				monitor.query(dbName, table, q);
-			}
-
-			if (primary != null && primary.getDB(dbName) != null) {
-				return primary.avg(table, q, name, group, dbName);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					if (h.getDB(dbName) != null) {
-						return h.avg(table, q, name, group, dbName);
-					}
-				}
-			}
-			return null;
-		} finally {
-			read.add(t1.pastms());
-		}
 	}
 
 	private static Counter read = new Counter("read");
 	private static Counter write = new Counter("write");
 
-	public static JSON statRead() {
+	public static Counter.Stat statRead() {
 		return read.get();
 	}
 
-	public static JSON statWrite() {
+	public static Counter.Stat statWrite() {
 		return write.get();
 	}
 
-	public static List<JSON> listTables(String dbname) {
+	public static List<JSON> listTables() {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (primary != null) {
-				return primary.listTables(dbname);
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					return h.listTables(dbname);
-				}
-			}
+			return primary.listTables();
 		} finally {
 			read.add(t1.pastms());
 		}
-		return null;
 	}
 
 	public static List<JSON> listDB() {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (primary != null) {
-				return primary.listDB();
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					return h.listDB();
-				}
-			}
+			return primary.listDB();
 		} finally {
 			read.add(t1.pastms());
 		}
-		return null;
 	}
 
 	public static List<JSON> listOp() {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (primary != null) {
-				return primary.listOp();
-			} else if (!X.isEmpty(customs)) {
-				for (DBHelper h : customs) {
-					return h.listOp();
-				}
-			}
+			return primary.listOp();
 		} finally {
 			read.add(t1.pastms());
 		}
-		return null;
-	}
-
-	/**
-	 * size
-	 * 
-	 * @param c
-	 * @return
-	 */
-	public static long size(Class<? extends Bean> c) {
-		return size(getTable(c), getDB(c));
 	}
 
 	/**
@@ -4933,46 +4133,95 @@ public class Helper implements Serializable {
 	 * @return
 	 */
 	public static long size(String table) {
-		return size(table, Helper.DEFAULT);
-	}
-
-	/**
-	 * @deprecated
-	 * @param table
-	 * @param db
-	 * @return
-	 */
-	public static long size(String table, String db) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			if (table != null) {
+			return primary.size(table);
+		} finally {
+			read.add(t1.pastms());
+		}
+	}
 
-				if (primary != null && primary.getDB(db) != null) {
-					return primary.size(table, db);
-				} else if (!X.isEmpty(customs)) {
-					for (DBHelper h : customs) {
-						if (h.getDB(db) != null) {
-							return h.size(table, db);
-						}
-					}
-				}
+	public static JSON dbstats() {
+		return stats(null);
+	}
 
-				log.warn("no db configured, please configure the {giiwa}/giiwa.properites");
-			}
+	public static JSON tablestats(String table) {
+		return stats(table);
+	}
 
-			return 0;
+	public static JSON stats(String table) {
+
+		TimeStamp t1 = TimeStamp.create();
+		try {
+
+			return primary.stats(table);
 		} finally {
 			read.add(t1.pastms());
 		}
 	}
 
 	public static void init(String name) {
-		for (String key : new String[] { "id", "created", "updated" }) {
-			LinkedHashMap<String, Integer> m = new LinkedHashMap<String, Integer>();
+
+		for (String key : new String[] { "id" }) {
+			LinkedHashMap<String, Object> m = new LinkedHashMap<String, Object>();
 			m.put(key, 1);
-			Helper.createIndex(Helper.DEFAULT, name, m);
+			Helper.createIndex(name, m, true);
 		}
+
+		for (String key : new String[] { "created", "updated" }) {
+			LinkedHashMap<String, Object> m = new LinkedHashMap<String, Object>();
+			m.put(key, 1);
+			Helper.createIndex(name, m, false);
+
+			m = new LinkedHashMap<String, Object>();
+			m.put(key, -1);
+			Helper.createIndex(name, m, false);
+		}
+
+	}
+
+	public static JSON status() {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+
+			return primary.status();
+		} finally {
+			read.add(t1.pastms());
+		}
+	}
+
+	public static void optimize(String name, W q) {
+		if (monitor != null) {
+			monitor.optimize(name, q);
+		}
+	}
+
+	public static String getTable(Class<? extends Bean> t) throws SQLException {
+		Table table = (Table) t.getAnnotation(Table.class);
+		if (table == null || X.isEmpty(table.name())) {
+			throw new SQLException("table missed/error in [" + t + "] declaretion");
+		}
+
+		return table.name();
+	}
+
+	public static boolean createTable(String table, JSON cols) {
+		return primary.createTable(table, cols);
+	}
+
+	public static boolean distributed(String table, String key) {
+		return primary.distributed(table, key);
+	}
+
+	public static void killOp(Object id) {
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			primary.killOp(id);
+		} finally {
+			read.add(t1.pastms());
+		}
+
 	}
 
 }

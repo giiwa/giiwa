@@ -1,0 +1,30 @@
+<div class='notes' style="display:block;width: initial;">
+	$lang.get('snmp.notes')
+</div>
+
+<div><label><h3>$lang.get('snmp.enabled'):</h3>
+	<input type='checkbox' name='snmp.enabled' #if($local.getInt('snmp.enabled', 0)==1) checked="checked" #end/>
+	<g>$lang.get("snmp.enabled.hint")</g>
+</label></div>
+
+<div><label><h3>$lang.get('snmp.listen'):</h3>
+	<input type='text' name='snmp.listen' value="$!local.getString('snmp.listen', '127.0.0.1')" class='width-20'/>
+</label></div>
+
+<div><label><h3>$lang.get('snmp.port'):</h3>
+	<input type='text' name='snmp.port' value="$!local.getInt('snmp.port', 162)" class='width-20'/>
+</label></div>
+
+<div><label><h3>$lang.get('snmp.version'):</h3>
+	<select name='snmp.version'>
+		<option value='v3'>v3</option>
+	</select>
+</label></div>
+
+<div><label><h3>$lang.get('snmp.username'):</h3>
+	<input type='text' name='snmp.username' value="$!global.getString('snmp.username', 'public')" class='width-20'/>
+</label></div>
+
+<div><label><h3>$lang.get('snmp.password'):</h3>
+	<input type='text' name='snmp.password' value="$!global.getString('snmp.password', '123123')" class='width-20'/>
+</label></div>

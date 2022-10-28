@@ -79,7 +79,7 @@ giiwa
 			
 			upload : function(files, opt) {
 				opt = $.extend({
-					chunksize : 32 * 1024
+					chunksize : 1024 * 1024
 				}, opt);
 
 				// console.log(files);
@@ -315,7 +315,6 @@ giiwa
 						s += e.classes;
 					}
 					s += '"></i>';
-					// s += '<img class="icon" src="/images/loading.gif"/>';
 					if (e.url) {
 						s += '&nbsp;<span><a href="' + e.url
 								+ '" target="_blank">' + e.text + '</a></span>';
@@ -472,12 +471,6 @@ giiwa
 							__url = url + '?' + data;
 						}
 						giiwa.history(__url);
-
-						if (__url.indexOf('?') > 0) {
-							__url += '&' + new Date().getTime();
-						} else {
-							__url += '?' + new Date().getTime();
-						}
 
 						$.get(__url, {}, function(d) {
 							giiwa.processing.hide();
@@ -713,7 +706,7 @@ giiwa
 							giiwa.submit(form, {
 								success : function(d) {
 									if(opt.onsubmit) {
-										opt.onsubmit(d);	
+										opt.onsubmit(d);
 									} else {
 										p.fadeOut(100, function() {
 											p.remove();
@@ -818,10 +811,19 @@ giiwa
 
 			processing : {
 				show : function() {
-					$('#panel').css('filter', 'blur(1px)')
+					var p = $('#processing');
+					if(p.length==0){
+						p = $('<div id="processing" class="k-loader"><div class="bg"></div><div class="k-loader1"><span class="k-loader-segment"></span><span class="k-loader-segment"></span><span class="k-loader-segment"></span><span class="k-loader-segment"></span></div><p></p></div>');
+						$('body').append(p);
+					}
+					p.show();
 				},
 				hide : function() {
-					$('#panel').css('filter', '')
+					$('#processing p').html('');
+					$('#processing').hide();
+				},
+				message: function(s){
+					$('#processing p').html(s);
 				}
 			},
 
@@ -1145,12 +1147,6 @@ giiwa
 
 				// giiwa.history(uri);
 
-				// $('#page').attr('src', uri);
-				if (uri.indexOf('?') > 0) {
-					uri += '&' + new Date().getTime();
-				} else {
-					uri += '?' + new Date().getTime();
-				}
 				$.ajax({
 					url : uri,
 					type : 'GET',
@@ -1178,12 +1174,6 @@ giiwa
 			load1 : function(uri) {
 				giiwa.processing.show();
 
-				// $('#page').attr('src', uri);
-				if (uri.indexOf('?') > 0) {
-					uri += '&' + new Date().getTime();
-				} else {
-					uri += '?' + new Date().getTime();
-				}
 				var s = '<iframe src="' + uri + '"></iframe>';
 				giiwa.processing.hide();
 				giiwa.show(s);
@@ -1206,11 +1196,6 @@ giiwa
 				var p = {};
 				p[name] = s;
 
-				if (o.indexOf('?') > 0) {
-					o += '&' + new Date().getTime();
-				} else {
-					o += '?' + new Date().getTime();
-				}
 				$.get(o, p, function(d) {
 					giiwa.show(d);
 				});
@@ -1377,6 +1362,14 @@ giiwa
 				} else if (element.msRequestFullscreen) {
 					ele.msRequestFullscreen();
 				}
+			},
+			
+			encode: function(s) {
+				return btoa(s);
+			},
+			
+			decode: function(s) {
+				return atob(s);
 			}
 
 		});

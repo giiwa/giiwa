@@ -29,9 +29,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.task.BackupTask;
 import org.giiwa.app.task.CleanupTask;
-import org.giiwa.app.task.NodeLoadStatTask;
 import org.giiwa.app.task.NtpTask;
 import org.giiwa.app.task.RecycleTask;
+import org.giiwa.app.task.SecurityTask;
 import org.giiwa.app.task.PerfMoniterTask;
 import org.giiwa.app.web.admin.dashboard;
 import org.giiwa.app.web.admin.mq;
@@ -41,20 +41,24 @@ import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.License;
 import org.giiwa.bean.Menu;
+import org.giiwa.bean.Node;
 import org.giiwa.bean.User;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
-import org.giiwa.dao.RDB;
 import org.giiwa.dao.RDSHelper;
+import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
-import org.giiwa.dfile.FileServer;
-import org.giiwa.engine.R;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.RDB;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.AES;
 import org.giiwa.misc.Host;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.Shell;
 import org.giiwa.net.mq.MQ;
+import org.giiwa.snmp.SampleAgent;
 import org.giiwa.task.SysTask;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
@@ -67,6 +71,7 @@ import org.giiwa.web.Module;
  * @author joe
  * 
  */
+@SuppressWarnings("deprecation")
 public class DefaultListener implements IListener {
 
 	public static final DefaultListener owner = new DefaultListener();
@@ -83,17 +88,43 @@ public class DefaultListener implements IListener {
 				public void run() {
 					// stop all task
 
-					log.warn("giiwa is stopping");
+					log.warn("giiwa is stopping by hook");
+
+					Node.dao.update(Local.id(), V.create().append("lastcheck", 0));
+
+					MQ.stop();
 
 					Task.stopAll(true);
 
+					log.warn("task is stopped.");
+
 					// stop all modules
-					List<Module> l1 = Module.getAll(true);
-					if (!X.isEmpty(l1)) {
-						for (Module m : l1) {
-							m.stop();
+					{
+						List<Module> l1 = Module.getAll(true);
+						if (!X.isEmpty(l1)) {
+							for (Module m : l1) {
+								m.stop();
+							}
 						}
 					}
+
+					{
+						try {
+							List<JSON> l1 = Host.getProcess(Host.getPid());
+							if (l1 != null && !l1.isEmpty()) {
+								l1.forEach(e -> {
+									long pid = e.getLong("pid");
+									if (pid > 0) {
+										Shell.kill(pid);
+									}
+								});
+							}
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					}
+
+					log.warn("giiwa is stopped.");
 				}
 			});
 
@@ -106,52 +137,37 @@ public class DefaultListener implements IListener {
 
 				@Override
 				public void onExecute() {
-					log.debug("initing mq");
+					if (log.isDebugEnabled()) {
+						log.debug("initing mq");
+					}
 
 					MQ.init();
 					Local.init();
+
 				}
 
 			}.schedule(0);
 
 			Disk.repair();
 
-			FileServer.inst.start();
-
 			/**
 			 * start the optimizer
 			 */
-//			if (Global.getInt("db.optimizer", 1) == 1) {
 			Helper.enableOptmizer();
-//			}
 
 			module.setLicense(License.LICENSE.licensed,
-					"MFEjwN3hxRT8BD8dRGwTY+mod5O9m7gau0MXwwxx+gN7SI2NXKZYGBmyUD65fPmnPgrB3q8/7Y2TwOLsMa3gVVz9bx1OiKN02S9mQtoYvuiy1fD7OwdXJ4EWgilIn1/Rur4LsIu9JCCN5MSO3ucqxaI0Ccu94s+GsIAwWtCQ65M=");
+					"Dz/noswbChPlrVmbT7wNupVME5wHlpJ9YixhEEwQjj6kKmrOrVWXqJ24DHbdLatSDzTePhnehBQgKwxmUXZsEXq452PV1pi64h3wAxW8IGjq5YkPVpPdbXnh90s+6NILWUbmOKJgroDnYh4+/b1ZsWkv9Fe4u7VTb7eAFVq6P8E=");
 
 			dashboard.desk("/admin/dashboard");
 			dashboard.desk("/admin/home.html");
 
-			dashboard.portlet("/portlet/db/read");
-			dashboard.portlet("/portlet/db/write");
-			dashboard.portlet("/portlet/db/times");
-
-			dashboard.portlet("br");
-			dashboard.portlet("/portlet/mq/read");
-			dashboard.portlet("/portlet/mq/write");
-			dashboard.portlet("/portlet/mq/times");
-
-			dashboard.portlet("br");
-			dashboard.portlet("/portlet/cache/read");
-			dashboard.portlet("/portlet/cache/write");
-			dashboard.portlet("/portlet/cache/times");
-
-//			dashboard.portlet("br");
-//			dashboard.portlet("/portlet/file/get1");
-//			dashboard.portlet("/portlet/file/down");
-//			dashboard.portlet("/portlet/file/times");
+//			napp.add("MongoDB", "/portlet/db/conns");
+//			napp.add("MongoDB", "/portlet/db/strw");
+//			napp.add("MongoDB", "/portlet/db/netio");
 
 			setting.register(0, "system", setting.system.class);
 			setting.register(1, "mq", mq.class);
+			setting.register(2, "snmp", setting.snmp.class);
 			setting.register(10, "smtp", setting.smtp.class);
 			// setting.register(11, "counter", setting.counter.class);
 			profile.register(0, "my", profile.my.class);
@@ -171,13 +187,15 @@ public class DefaultListener implements IListener {
 
 			f = new File(Controller.GIIWA_HOME + "/temp/");
 			if (!f.exists()) {
-				f.mkdirs();
+				X.IO.mkdirs(f);
 			}
 
 			IOUtil.cleanup(f);
 
 //			Schema.add("org.giiwa.bean");
 //			Schema.add("org.giiwa.conf");
+
+			AES.init();
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
@@ -197,21 +215,27 @@ public class DefaultListener implements IListener {
 
 		log.warn("giiwa is starting...");
 
-		log.info("global.id: " + Global.id());
-		log.info("local.id: " + Local.id());
-		log.info("server bind: " + Host.getLocalip());
+		if (log.isInfoEnabled()) {
+			log.info(
+					"global.id: " + Global.id() + "\n\tlocal.id: " + Local.id() + "\n\tlocal ip: " + Host.getLocalip());
+		}
 
-		Task.schedule(() -> {
+		Task.schedule(t -> {
 
-			NtpTask.inst.schedule(X.AMINUTE);
 			CleanupTask.init(Config.getConf());
-			RecycleTask.owner.schedule(X.AMINUTE);
-			PerfMoniterTask.owner.schedule(X.AMINUTE);
+			NtpTask.inst.schedule(X.toLong(X.AMINUTE * Math.random()));
+			RecycleTask.owner.schedule(X.toLong(X.AMINUTE * Math.random()));
+			SecurityTask.inst.schedule(X.toLong(X.AMINUTE * Math.random()));
+			PerfMoniterTask.owner.schedule(X.toLong(X.AMINUTE * Math.random()));
 			BackupTask.init();
 
-			NodeLoadStatTask.init();
+			Schema.add("org.giiwa");
 
-			R.serve();
+			Node.init();
+
+//			Schema.init();
+
+			SampleAgent.start();
 
 		});
 
@@ -221,7 +245,6 @@ public class DefaultListener implements IListener {
 
 	@Override
 	public void onStop() {
-		log.warn("giiwa is stopped");
 	}
 
 	/**
@@ -248,6 +271,8 @@ public class DefaultListener implements IListener {
 					String line = in.readLine();
 					while (line != null) {
 						line = line.trim();
+						if (log.isDebugEnabled())
+							log.debug("line=" + line);
 						if (!"".equals(line) && !line.startsWith(".")) {
 
 							sb.append(line).append("\r\n");
@@ -265,9 +290,8 @@ public class DefaultListener implements IListener {
 									}
 								} catch (Exception e) {
 									log.error(sb.toString(), e);
-									GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
-
-									m.setError(e.getMessage());
+									// GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
+									// m.setError(e.getMessage());
 								}
 								s = null;
 								sb = new StringBuilder();
@@ -431,7 +455,7 @@ public class DefaultListener implements IListener {
 					 * convert the string to json array
 					 */
 					List<JSON> arr = JSON.fromObjects(sb.toString());
-					Menu.insertOrUpdate(arr, module.getName());
+					Menu.insertOrUpdate(arr, module);
 
 					module.setStatus("menu.json initialized");
 
@@ -452,7 +476,7 @@ public class DefaultListener implements IListener {
 		} else {
 			if (log.isErrorEnabled()) {
 				log.error("DB is miss configured, please congiure it in [" + Controller.GIIWA_HOME
-						+ "/giiwa/giiwa.properties]");
+						+ "/giiwa.properties]");
 			}
 
 			module.setError("DB is miss configured");

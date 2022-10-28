@@ -91,7 +91,7 @@ public class RecycleTask extends Task {
 	 */
 	private void recycle() {
 		long t = X.toLong(Math.random() * X.AMINUTE, X.AMINUTE);
-		log.warn("going to recycle in [" + t / 1000 + "] seconds");
+		log.warn("restart by recycle in [" + t / 1000 + "] seconds");
 
 		new Task() {
 
@@ -102,7 +102,11 @@ public class RecycleTask extends Task {
 
 			@Override
 			public void onExecute() {
-				System.exit(0);
+				
+				log.warn("recycle ...");
+				Task.schedule(t -> {
+					System.exit(0);
+				}, 1000);
 			}
 
 		}.schedule(t);

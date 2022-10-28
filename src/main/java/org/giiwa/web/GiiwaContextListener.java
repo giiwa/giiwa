@@ -21,13 +21,13 @@ import javax.servlet.*;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.Repo;
 import org.giiwa.bean.Temp;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
 import org.giiwa.task.Task;
+import org.giiwa.web.view.View;
 
 /**
  * the {@code giiwaContextListener} Class listen the life listener of tomcat
@@ -57,21 +57,22 @@ public class GiiwaContextListener implements ServletContextListener {
 	 */
 	public void contextInitialized(ServletContextEvent event) {
 
-		String home = event.getServletContext().getRealPath("/");
+//		String home = event.getServletContext().getRealPath("/");
 
-		init(home, event.getServletContext().getContextPath());
+		init(event.getServletContext());
 
-		log.info("GiiwaContextListener inited.");
+		// log.info("GiiwaContextListener inited.");
 
 	}
 
-	/**
-	 * Inits the.
-	 * 
-	 * @param home        the home
-	 * @param contextPath the context path
-	 */
-	private static void init(String home, String contextPath) {
+	public static boolean INITED = false;
+
+	public final synchronized static void init(ServletContext servletContext) {
+
+		if (INITED)
+			return;
+
+		INITED = true;
 
 		try {
 
@@ -80,21 +81,24 @@ public class GiiwaContextListener implements ServletContextListener {
 			Controller.GIIWA_HOME = System.getenv("GIIWA_HOME");
 
 			if (X.isEmpty(Controller.GIIWA_HOME)) {
-				Config.getLogger()
-						.severe("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
+				System.out.println("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
 				System.exit(-1);
 			}
 
-			Config.getLogger().info("giiwa is starting ...");
-			Config.getLogger().info("giiwa.home=" + Controller.GIIWA_HOME);
+			System.out.println("giiwa.home=" + Controller.GIIWA_HOME);
 
 			System.setProperty("home", Controller.GIIWA_HOME);
 
 			/**
 			 * initialize the configuration
 			 */
-//			System.out.println("init configuration");
 			Config.init(new File(Controller.GIIWA_HOME + "/giiwa.properties"));
+
+			GiiwaServlet.s️ervletContext = servletContext;
+			GiiwaServlet.INITED = true;
+
+			System.out.println("giiwa is initing ...");
+			log.info("giiwa is initing ...");
 
 			Configuration conf = Config.getConf();
 
@@ -104,44 +108,44 @@ public class GiiwaContextListener implements ServletContextListener {
 			/**
 			 * initialize the helper, including RDB and Mongo
 			 */
-//			System.out.println("init db helper");
-			Helper.init(conf);
+			Helper.init2(conf);
+//			 {
+//				Helper.init(conf);
+//			}
 
 			/**
 			 * initialize the cache
 			 */
-//			System.out.println("init cache");
-			Cache.init(conf.getString("cache.url", X.EMPTY));
+			Cache.init(conf.getString("cache.url", X.EMPTY), conf.getString("cache.user", X.EMPTY),
+					conf.getString("cache.passwd", X.EMPTY));
 
-//			System.out.println("init task");
 			Task.init(conf.getInt("thread.number", 20));
-
-			/**
-			 * initialize the controller, this MUST place in the end !:-)
-			 */
-//			System.out.println("init web controller");
-			Controller.init(conf, contextPath);
 
 			/**
 			 * initialize the repo
 			 */
-//			System.out.println("init file repository");
-			Repo.init(conf);
+//			Repo.init(conf);
 
 			/**
 			 * initialize the temp
 			 */
-//			System.out.println("init temp");
 			Temp.init(conf);
 
-//			System.out.println("init finished");
+			/**
+			 * initialize the controller, this MUST place in the end !:-)
+			 */
+			Controller.init(conf, servletContext.getContextPath());
 
-			X.INITED = true;
+			View.init();
 
-		} catch (Exception e) {
+			if (log.isWarnEnabled())
+				log.warn("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
+
+		} catch (Throwable e) {
 			java.util.logging.Logger.getLogger("giiwa").severe(e.getMessage());
 			e.printStackTrace();
 		}
 
 	}
+
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -12,7 +13,7 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.json.JSON;
+import org.giiwa.misc.Host;
 
 @Table(name = "gi_m_disk", memo = "GI-磁盘监测")
 public class _Disk extends Bean {
@@ -55,12 +56,12 @@ public class _Disk extends Bean {
 		return free;
 	}
 
-	public synchronized static void update(String node, List<JSON> l1) {
+	public synchronized static void update(String node, List<Host._DS> l1) {
 
-		for (JSON jo : l1) {
+		for (Host._DS jo : l1) {
 			// insert or update
-			String path = jo.getString("path");
-			String name = jo.getString("name");
+			String path = jo.path;
+			String name = jo.name;
 			if (X.isIn(name, "tmpfs", "devtmpfs")) {
 				continue;
 			}
@@ -70,7 +71,7 @@ public class _Disk extends Bean {
 				break;
 			}
 
-			long total = jo.getLong("total");
+			long total = jo.total;
 			if (total < 10 * 1024 * 1024 * 1024L)
 				continue;
 
@@ -78,16 +79,19 @@ public class _Disk extends Bean {
 			try {
 
 				name = name.replace("[\\\\]", "/");
-				V v = V.fromJSON(jo).append("node", node).force("name", name).remove("_id", X.ID);
+				V v = V.create();
+				v.append("name", jo.name).append("path", jo.path);
+				v.append("total", jo.total).append("free", jo.free).append("used", jo.used);
+				v.append("node", node).force("name", name).remove("_id", X.ID);
 
 				// insert
-				if (dao.exists(id)) {
+				if (dao.exists2(id)) {
 					dao.update(id, v.copy());
 				} else {
 					dao.insert(v.copy().force(X.ID, id));
 				}
 
-				if (!Record.dao.exists(W.create("node", node).and("path", path).and("created",
+				if (!Record.dao.exists(W.create().and("node", node).and("path", path).and("created",
 						System.currentTimeMillis() - X.AHOUR, W.OP.gt))) {
 					// save to record per hour
 					Record.dao
@@ -113,6 +117,26 @@ public class _Disk extends Bean {
 			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AMONTH, W.OP.lt));
 		}
 
+	}
+
+	public static void check() {
+
+		try {
+
+			// disk
+			List<Host._DS> l1 = Host.getDisks();
+			if (l1 != null && !l1.isEmpty()) {
+
+				_Disk.update(Local.id(), l1);
+
+				_DiskIO.update(Local.id(), l1);
+
+				// log.debug("disk=" + l2);
+			}
+			// log.debug("disk=" + l1);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 
 }

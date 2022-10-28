@@ -108,6 +108,15 @@ ulimit -n 10240 >/dev/null 2>&1
 
 source /etc/profile
 CATALINA_PID=/tmp/catalina.pid
+if [ ! -d "/data" ]; then
+	mkdir /data
+fi
+if [ ! -d "/data/logs" ]; then
+	mkdir /data/logs
+fi
+if [ ! -d "/data/temp" ]; then
+	mkdir /data/temp
+fi
 
 # OS specific support.  $var _must_ be set to either true or false.
 cygwin=false
@@ -219,7 +228,7 @@ fi
 
 if [ -z "$CATALINA_TMPDIR" ] ; then
   # Define the java.io.tmpdir to use for Catalina
-  CATALINA_TMPDIR="$CATALINA_BASE"/temp
+  CATALINA_TMPDIR=/data/temp
 fi
 
 # Add tomcat-juli.jar to classpath
@@ -269,7 +278,7 @@ fi
 # Uncomment the following line to make the umask available when using the
 # org.apache.catalina.security.SecurityListener
 #JAVA_OPTS="$JAVA_OPTS -Dorg.apache.catalina.security.SecurityListener.UMASK=`umask`"
-JAVA_OPTS="$JAVA_OPTS -Dplatform.dependencies -Duser.timezone=Asia/Shanghai -Xms512m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=50 -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
+JAVA_OPTS="$JAVA_OPTS -Dplatform.dependencies -Duser.timezone=Asia/Shanghai -Xms1g -Xmx1g -Djava.awt.headless=true -XX:+UseG1GC -XX:ParallelGCThreads=20 -XX:G1HeapRegionSize=32 -XX:-OmitStackTraceInFastThrow -Dio.netty.noUnsafe=true -Dio.netty.noKeySetOptimization=true -Dio.netty.recycler.maxCapacityPerThread=0 -Dio.netty.allocator.type=pooled -Xlog:gc*,gc+age=trace,safepoint:file=/data/logs/gc.log:utctime,pid,tags:filecount=10,filesize=64m -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
 
 if [ -z "$USE_NOHUP" ]; then
     if $hpux; then

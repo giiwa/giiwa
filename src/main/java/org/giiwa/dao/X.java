@@ -14,12 +14,15 @@
 */
 package org.giiwa.dao;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -30,7 +33,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,10 +40,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.CSV;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.misc.Zip;
+import org.giiwa.task.BiConsumer;
+import org.giiwa.task.Function;
 import org.giiwa.web.Language;
+import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.openjdk.nashorn.internal.runtime.Undefined;
 
 /**
  * The {@code X} Class used to define contains.
@@ -114,11 +120,9 @@ public final class X {
 
 	public static final String VERSION = "_version";
 
-	public static final int ITEMS_PER_PAGE = 10;
+	public static final int ITEMS_PER_PAGE = 20;
 
-	public static X inst = new X();
-
-	public static boolean INITED = false;
+	public static final X inst = new X();
 
 	private X() {
 	}
@@ -145,9 +149,13 @@ public final class X {
 			return ((String) s1).equalsIgnoreCase((String) s2);
 		}
 
-		if (s1.getClass().isArray() && s2.getClass().isArray()) {
-			s1 = Arrays.asList((Object[]) (s1));
-			s2 = Arrays.asList((Object[]) s2);
+		if (s1.getClass().isArray()) {
+			s1 = X.asList(s1, e -> e);
+
+		}
+
+		if (s2.getClass().isArray()) {
+			s2 = X.asList(s2, e -> e);
 		}
 
 		if (s1 instanceof Collection && s2 instanceof Collection) {
@@ -192,7 +200,11 @@ public final class X {
 	public static long toLong(Object v, long defaultValue) {
 
 		if (v != null) {
-			if (v instanceof Number) {
+			if (v instanceof Double) {
+				return Math.round((Double) v);
+			} else if (v instanceof Float) {
+				return Math.round((Float) v);
+			} else if (v instanceof Number) {
 				return ((Number) v).longValue();
 			}
 
@@ -205,35 +217,62 @@ public final class X {
 			}
 
 			boolean f = false;
-			int n = 0;
 			StringBuilder sb = new StringBuilder();
+
+			boolean fill = false;
+
 			for (int i = 0; i < s.length(); i++) {
 				char c = X.getNumber(s.charAt(i));
 				if (c >= '0' && c <= '9') {
 					sb.append(c);
-					n++;
+					fill = false;
+				} else if (c == ':') {
+					if (sb.length() == 0) {
+						sb.append('1');
+					}
+					fill = true;
 				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					sb.append(c);
 					if (i > 0)
 						f = true;
 				} else if (c == ',' || c == ' ') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					// skip
-				} else if (n > 0) {
+				} else if (sb.length() > 0) {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					break;
 				}
 			}
+			if (fill) {
+				sb.append('0');
+				fill = false;
+			}
 
-			if (n > 0) {
+			if (sb.length() > 0) {
 				s = sb.toString();
 				try {
 					if (f) {
-						Object f1 = JS.calculate(s);
-						if (f1 instanceof Number) {
-							return ((Number) f1).longValue();
+						v = JS.calculate(s);
+						if (v instanceof Double) {
+							return Math.round((Double) v);
+						} else if (v instanceof Float) {
+							return Math.round((Float) v);
+						} else if (v instanceof Number) {
+							return ((Number) v).longValue();
 						}
-					} else {
-						return Long.parseLong(s);
 					}
+					return Long.parseLong(s);
+
 				} catch (Throwable e) {
 					log.error(e.getMessage(), e);
 				}
@@ -261,7 +300,11 @@ public final class X {
 	 */
 	public static int toInt(Object v, int defaultValue) {
 		if (v != null) {
-			if (v instanceof Number) {
+			if (v instanceof Double) {
+				return (int) Math.round((Double) v);
+			} else if (v instanceof Float) {
+				return Math.round((Float) v);
+			} else if (v instanceof Number) {
 				return ((Number) v).intValue();
 			}
 
@@ -274,34 +317,63 @@ public final class X {
 			}
 
 			boolean f = false;
-			int n = 0;
 			StringBuilder sb = new StringBuilder();
+
+			boolean fill = false;
+
 			for (int i = 0; i < s.length(); i++) {
 				char c = X.getNumber(s.charAt(i));
 				if (c >= '0' && c <= '9') {
 					sb.append(c);
-					n++;
+					fill = false;
+				} else if (c == ':') {
+					if (sb.length() == 0) {
+						sb.append('1');
+					}
+					fill = true;
 				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					sb.append(c);
 					if (i > 0)
 						f = true;
 				} else if (c == ',' || c == ' ') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					// skip
-				} else if (n > 0) {
+				} else if (sb.length() > 0) {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					break;
 				}
 			}
-			s = sb.toString();
+			if (fill) {
+				sb.append('0');
+				fill = false;
+			}
 
-			if (n > 0) {
+			if (sb.length() > 0) {
+
+				s = sb.toString();
 				try {
 					if (f) {
-						Object f1 = JS.calculate(s);
-						if (f1 instanceof Number)
-							return ((Number) f1).intValue();
+						v = JS.calculate(s);
+						if (v instanceof Double) {
+							return (int) Math.round((Double) v);
+						} else if (v instanceof Float) {
+							return Math.round((Float) v);
+						} else if (v instanceof Number) {
+							return ((Number) v).intValue();
+						}
+					}
 
-					} else
-						return Integer.parseInt(s);
+					return Integer.parseInt(s);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -317,13 +389,13 @@ public final class X {
 	 * @param s the object, may string, list, map
 	 * @return boolean, return true if null, or empty
 	 */
-	@SuppressWarnings({ "rawtypes", "restriction" })
+	@SuppressWarnings({ "rawtypes" })
 	public static boolean isEmpty(Object s) {
 		if (s == null) {
 			return true;
 		}
 
-		if (s instanceof jdk.nashorn.internal.runtime.Undefined)
+		if (s instanceof Undefined)
 			return true;
 
 		if (s instanceof String) {
@@ -343,27 +415,15 @@ public final class X {
 	 * @return float
 	 */
 	public static float toFloat(Object v) {
-		return toFloat(v, 0, -1);
+		return toFloat(v, 0);
 	}
 
 	public static float toFloat(Object v, float defaultValue) {
-		return toFloat(v, defaultValue, -1);
-	}
-
-	/**
-	 * safely parse a object to a float, if failed return default value.
-	 * 
-	 * @deprecated
-	 * @param v            the v
-	 * @param defaultValue the default value
-	 * @return float
-	 */
-	public static float toFloat(Object v, float defaultValue, int precision) {
 		if (v != null) {
 			if (v instanceof Number) {
 				float f = ((Number) v).floatValue();
 				if (Float.isFinite(f))
-					return precision < 1 ? f : ((long) (f * precision)) * 1f / precision;
+					return f;
 
 				return defaultValue;
 			}
@@ -373,7 +433,7 @@ public final class X {
 			try {
 				float f = Float.parseFloat(s);
 				if (Float.isFinite(f))
-					return precision < 1 ? f : ((long) (f * precision)) * 1f / precision;
+					return f;
 
 				return defaultValue;
 			} catch (Exception e) {
@@ -381,35 +441,63 @@ public final class X {
 			}
 
 			boolean f = false;
-			int n = 0;
+
 			StringBuilder sb = new StringBuilder();
+
+			boolean fill = false;
 			for (int i = 0; i < s.length(); i++) {
 				char c = X.getNumber(s.charAt(i));
 				if (c >= '0' && c <= '9') {
 					sb.append(c);
-					n++;
+					fill = false;
+				} else if (c == ':') {
+					if (sb.length() == 0) {
+						sb.append('1');
+					}
+					fill = true;
 				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					sb.append(c);
 					if (i > 0)
 						f = true;
 				} else if (c == ',' || c == ' ') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					// skip
 				} else if (c == '.' && sb.indexOf(".") == -1) {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					sb.append(c);
-				} else if (n > 0) {
+				} else if (sb.length() > 0) {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
 					break;
 				}
 			}
-			s = sb.toString();
+			if (fill) {
+				sb.append('0');
+				fill = false;
+			}
 
-			if (n > 0) {
+			if (sb.length() > 0) {
+
+				s = sb.toString();
 				try {
 					if (f) {
 						Object f1 = JS.calculate(s);
 						if (f1 instanceof Number) {
 							float f2 = ((Number) f1).floatValue();
 							if (Float.isFinite(f2))
-								return precision < 1 ? f2 : ((long) (f2 * precision)) * 1f / precision;
+								return f2;
 
 							return defaultValue;
 						}
@@ -417,7 +505,7 @@ public final class X {
 					} else {
 						float f2 = Float.parseFloat(s);
 						if (Float.isFinite(f2))
-							return precision < 1 ? f2 : ((long) (f2 * precision)) * 1f / precision;
+							return f2;
 
 						return defaultValue;
 					}
@@ -429,8 +517,8 @@ public final class X {
 		return defaultValue;
 	}
 
-	private static final char[][] DIGS = { "０１２３４５６７８９".toCharArray(), "零一二三四五六七八九".toCharArray(),
-			"零壹贰叁肆伍陆柒捌玖".toCharArray() };
+	private static final char[][] DIGS = { "０１２３４５６７８９".toCharArray(), "零一二三四五六七八九十".toCharArray(),
+			"零壹贰叁肆伍陆柒捌玖拾".toCharArray() };
 
 	/**
 	 * test the "s" and return a number, that convert Chinese number to real number.
@@ -460,7 +548,7 @@ public final class X {
 	 * @return the double result
 	 */
 	public static double toDouble(Object v) {
-		return toDouble(v, 0, -1);
+		return toDouble(v, 0);
 	}
 
 	/**
@@ -471,7 +559,97 @@ public final class X {
 	 * @return the double
 	 */
 	public static double toDouble(Object v, double defaultValue) {
-		return toDouble(v, defaultValue, -1);
+		if (v != null) {
+			if (v instanceof Number) {
+				double d = ((Number) v).doubleValue();
+				if (Double.isFinite(d))
+					return d;
+				return defaultValue;
+			}
+
+			String s = v.toString();
+
+			try {
+				double d = Double.parseDouble(s);
+				if (Double.isFinite(d))
+					return d;
+				return defaultValue;
+			} catch (Exception e) {
+				// ignore
+			}
+
+			boolean f = false;
+			StringBuilder sb = new StringBuilder();
+
+			boolean fill = false;
+			for (int i = 0; i < s.length(); i++) {
+				char c = X.getNumber(s.charAt(i));
+				if (c >= '0' && c <= '9') {
+					sb.append(c);
+					fill = false;
+				} else if (c == ':') {
+					if (sb.length() == 0) {
+						sb.append('1');
+					}
+					fill = true;
+				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
+					sb.append(c);
+					if (i > 0)
+						f = true;
+				} else if (c == ',' || c == ' ') {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
+					// skip
+				} else if (c == '.' && sb.indexOf(".") == -1) {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
+					sb.append(c);
+				} else if (sb.length() > 0) {
+					if (fill) {
+						sb.append('0');
+						fill = false;
+					}
+					break;
+				}
+			}
+			if (fill) {
+				sb.append('0');
+				fill = false;
+			}
+
+			if (sb.length() > 0) {
+				s = sb.toString();
+				try {
+					if (f) {
+						Object f1 = JS.calculate(s);
+						if (f1 instanceof Number) {
+							double d = ((Number) f1).doubleValue();
+							if (Double.isFinite(d))
+								return d;
+							return defaultValue;
+						}
+
+					} else {
+						double d = Double.parseDouble(s);
+						if (Double.isFinite(d))
+							return d;
+
+						return defaultValue;
+					}
+				} catch (Exception e) {
+					log.error(e);
+				}
+			}
+		}
+		return defaultValue;
 	}
 
 	/**
@@ -483,81 +661,6 @@ public final class X {
 	public static String format(Object v, String format) {
 		DecimalFormat df = new DecimalFormat(format);
 		return df.format(X.toDouble(v));
-	}
-
-	/**
-	 * @deprecated
-	 * @param v
-	 * @param defaultValue
-	 * @param precision
-	 * @return
-	 */
-	public static double toDouble(Object v, double defaultValue, long precision) {
-		if (v != null) {
-			if (v instanceof Number) {
-				double d = ((Number) v).doubleValue();
-				if (Double.isFinite(d))
-					return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
-				return defaultValue;
-			}
-
-			String s = v.toString();
-
-			try {
-				double d = Double.parseDouble(s);
-				if (Double.isFinite(d))
-					return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
-				return defaultValue;
-			} catch (Exception e) {
-				// ignore
-			}
-
-			boolean f = false;
-			int n = 0;
-			StringBuilder sb = new StringBuilder();
-			for (int i = 0; i < s.length(); i++) {
-				char c = X.getNumber(s.charAt(i));
-				if (c >= '0' && c <= '9') {
-					sb.append(c);
-					n++;
-				} else if (c == '-' || c == '/' || c == '+' || c == '*') {
-					sb.append(c);
-					if (i > 0)
-						f = true;
-				} else if (c == ',' || c == ' ') {
-					// skip
-				} else if (c == '.' && sb.indexOf(".") == -1) {
-					sb.append(c);
-				} else if (n > 0) {
-					break;
-				}
-			}
-			s = sb.toString();
-
-			if (n > 0) {
-				try {
-					if (f) {
-						Object f1 = JS.calculate(s);
-						if (f1 instanceof Number) {
-							double d = ((Number) f1).doubleValue();
-							if (Double.isFinite(d))
-								return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
-							return defaultValue;
-						}
-
-					} else {
-						double d = Double.parseDouble(s);
-						if (Double.isFinite(d))
-							return precision < 1 ? d : ((long) (d * precision)) * 1d / precision;
-
-						return defaultValue;
-					}
-				} catch (Exception e) {
-					log.error(e);
-				}
-			}
-		}
-		return defaultValue;
 	}
 
 	/**
@@ -590,6 +693,32 @@ public final class X {
 			} else if (c == '-' && i == 0) {
 				continue;
 			} else if (c < '0' || c > '9') {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * test is ascii
+	 * 
+	 * @param s
+	 * @return
+	 */
+	public static boolean isAscii(Object s) {
+		if (s == null) {
+			return false;
+		}
+
+		String s1 = s.toString();
+		if (s1.length() == 0) {
+			return false;
+		}
+
+		for (int i = 0; i < s1.length(); i++) {
+			char c = s1.charAt(i);
+			if (c < 10 || c > 127) {
 				return false;
 			}
 		}
@@ -692,8 +821,8 @@ public final class X {
 					p2 = p2.substring(1);
 				}
 
-				if (!l1.contains(p1)) {
-					l1.add(p1);
+				if (!l1.contains(prefix + p1)) {
+					l1.add(prefix + p1);
 				}
 
 				String p3 = p1;
@@ -703,8 +832,8 @@ public final class X {
 					}
 					p3 = X.add(p3, 1);
 				}
-				if (!l1.contains(p2)) {
-					l1.add(p2);
+				if (!l1.contains(prefix + p2)) {
+					l1.add(prefix + p2);
 				}
 			}
 		}
@@ -746,105 +875,6 @@ public final class X {
 		return cc;
 	}
 
-	public static Object[] csv(String src) {
-		return csv(src, Arrays.asList(',', ' ', '\t'));
-	}
-
-	public static Object[] csv(String src, List<Character> deli) {
-		if (X.isEmpty(src))
-			return null;
-
-		src = src.trim();
-		if (src.length() == 0)
-			return null;
-
-		List<Object> l1 = new ArrayList<Object>();
-
-		StringBuilder sb = null;
-		int p = 0;
-		int len = src.length();
-		boolean str = false;
-		while (p < len) {
-			char c = src.charAt(p);
-//			System.out.println((int) c);
-			if (c == 65279) {
-				// UTF8 format
-				p++;
-				continue;
-			} else if (c == '"') {
-				str = true;
-				// goto next "
-				p++;
-				c = src.charAt(p);
-//				if (sb == null) {
-				sb = new StringBuilder();
-//				}
-
-				while (c != '"' && p < len) {
-					sb.append(c);
-					if (c == '\\') {
-						sb.append(src.charAt(++p));
-					}
-					p++;
-					c = p == len ? '"' : src.charAt(p);
-				}
-			} else if (deli.contains(c)) {
-				if (sb == null || sb.length() == 0) {
-					if (c == ',')
-						l1.add(X.EMPTY);
-				} else {
-					if (str) {
-						l1.add(sb.toString().trim());
-					} else {
-						l1.add(_parse(sb.toString()));
-					}
-				}
-
-				sb = null;
-				str = false;
-			} else {
-				if (sb == null) {
-					sb = new StringBuilder();
-				}
-				sb.append(c);
-			}
-			p++;
-		}
-		if (sb != null) {
-			if (str) {
-				l1.add(sb.toString().trim());
-			} else {
-				l1.add(_parse(sb.toString()));
-			}
-		}
-
-		return l1.toArray();
-	}
-
-	private static Object _parse(String s) {
-		if (X.isEmpty(s))
-			return s;
-
-		boolean dot = false;
-		for (int i = 0; i < s.length(); i++) {
-			char c = s.charAt(i);
-			if (c == '.') {
-				dot = true;
-			} else if (c >= '0' && c <= '9') {
-				continue;
-			} else if ((c == '+' || c == '-') && i == 0) {
-				continue;
-			} else {
-				return s.trim();
-			}
-		}
-		if (dot) {
-			return X.toDouble(s);
-		} else {
-			return X.toLong(s);
-		}
-	}
-
 	/**
 	 * close all
 	 * 
@@ -877,6 +907,9 @@ public final class X {
 	}
 
 	public static String getCanonicalPath(String path) {
+		if (path == null)
+			return null;
+
 		boolean begin = path.startsWith("\\") || path.startsWith("/");
 		boolean end = path.endsWith("\\") || path.endsWith("/");
 
@@ -931,8 +964,14 @@ public final class X {
 	}
 
 	public static boolean isIn(String s1, String... s2) {
+		if (s1 == null)
+			return false;
+
+		if (s2 == null)
+			return false;
+
 		for (String s : s2) {
-			if (X.isSame(s1, s)) {
+			if (X.isSame(s1, s) || s1.matches(s)) {
 				return true;
 			}
 		}
@@ -940,6 +979,12 @@ public final class X {
 	}
 
 	public static boolean isIn(Object s1, Object... s2) {
+		if (s1 == null)
+			return false;
+
+		if (s2 == null)
+			return false;
+
 		for (Object s : s2) {
 			if (X.isSame(s1, s)) {
 				return true;
@@ -967,7 +1012,7 @@ public final class X {
 	 * @param cb
 	 * @return
 	 */
-	@SuppressWarnings({ "rawtypes", "restriction", "unchecked" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static <T> List<T> asList(Object o, Function<Object, T> cb) {
 		if (o == null) {
 			return new ArrayList<T>();
@@ -975,12 +1020,12 @@ public final class X {
 
 		List<T> l2 = new ArrayList<T>();
 
-		if (o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
-			jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
+		if (o instanceof ScriptObjectMirror) {
+			ScriptObjectMirror m = (ScriptObjectMirror) o;
 			if (m.isArray()) {
 				for (Object o2 : m.values()) {
-					if (o2 instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
-						jdk.nashorn.api.scripting.ScriptObjectMirror m1 = (jdk.nashorn.api.scripting.ScriptObjectMirror) o2;
+					if (o2 instanceof ScriptObjectMirror) {
+						ScriptObjectMirror m1 = (ScriptObjectMirror) o2;
 						if (m1.isArray()) {
 							List<?> l1 = JSON.fromObjects(m1);
 							if (cb != null) {
@@ -1041,7 +1086,6 @@ public final class X {
 		} else if (o.getClass().isArray()) {
 
 			String name = o.getClass().getName();
-//			System.out.println(name);
 
 			if (X.isSame(name, "[D")) {
 				double[] l1 = (double[]) o;
@@ -1217,7 +1261,16 @@ public final class X {
 		return sb.toString();
 	}
 
+	/**
+	 * fill the n with s to max length
+	 * 
+	 * @param s
+	 * @param n
+	 * @param max
+	 * @return
+	 */
 	public static String fill(String s, int n, int max) {
+
 		int len = Integer.toString(max).length();
 		String n1 = Integer.toString(n);
 		StringBuilder sb = new StringBuilder();
@@ -1227,6 +1280,7 @@ public final class X {
 			sb.append(s);
 		}
 		return sb.append(n1).toString();
+
 	}
 
 	/**
@@ -1348,9 +1402,8 @@ public final class X {
 		String s = e.getMessage();
 		if (!X.isEmpty(s)) {
 			s = s.replaceAll("\r", X.EMPTY).replaceAll("\n", X.EMPTY);
-			if (log.isDebugEnabled())
-				log.debug("s=" + s + ", matches?" + s.matches(regex));
-//			System.out.println("s=" + s + ", matches?" + s.matches(regex));
+//			if (log.isDebugEnabled())
+//				log.debug("s=" + s + ", matches?" + s.matches(regex));
 
 			if (s.matches(regex))
 				return true;
@@ -1453,21 +1506,36 @@ public final class X {
 
 	}
 
-	public static List<Object[]> mat(String s, String deli) throws Exception {
+	/**
+	 * 生成矩阵
+	 * 
+	 * @param s
+	 * @return
+	 * @throws Exception
+	 */
+	public static List<Object[]> mat(String s) throws Exception {
 		List<Object[]> l1 = new ArrayList<Object[]>();
-		String[] ss = X.split(s, deli);
-		for (String s1 : ss) {
-			Object[] o = X.csv(s1);
-			l1.add(o);
+		CSV e = null;
+
+		try {
+			e = CSV.create(s, Arrays.asList(',', ' ', '\t'));
+
+			Object[] o = e.next();
+			while (o != null) {
+				l1.add(o);
+				o = e.next();
+			}
+		} finally {
+			X.close(e);
 		}
 		return l1;
 	}
 
-	@SuppressWarnings({ "restriction", "rawtypes" })
+	@SuppressWarnings("rawtypes")
 	public static String toString(Object o) {
 		if (o == null) {
 			return X.EMPTY;
-		} else if (o instanceof Map || o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+		} else if (o instanceof Map || o instanceof ScriptObjectMirror) {
 			return JSON.fromObject(o).toPrettyString();
 		} else if (o instanceof List) {
 			StringBuilder sb = new StringBuilder("[");
@@ -1499,7 +1567,7 @@ public final class X {
 		}
 	}
 
-	public static byte[] getBytes(Object o, boolean zip) throws Exception {
+	public static byte[] getBytes(Object o) throws Exception {
 
 		if (o == null)
 			return null;
@@ -1515,16 +1583,33 @@ public final class X {
 			X.close(bb);
 		}
 
-		if (zip) {
-			return Zip.zip(bb.toByteArray());
-		} else {
-			return bb.toByteArray();
+//		if (zip) {
+//			return Zip.zip(bb.toByteArray());
+//		} else {
+		return bb.toByteArray();
+//		}
+
+	}
+
+	public static void save(Object o, OutputStream out) throws Exception {
+
+		if (o == null)
+			return;
+
+		if (!(o instanceof Serializable))
+			throw new Exception("obj is not Serializable! obj.class=" + o.getClass());
+
+		try {
+			ObjectOutputStream out1 = new ObjectOutputStream(out);
+			out1.writeObject(o);
+		} finally {
+			X.close(out);
 		}
 
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T fromBytes(byte[] data, boolean zip) throws Exception {
+	public static <T> T fromBytes(byte[] data) throws Exception {
 
 		if (data == null || data.length == 0)
 			return null;
@@ -1532,14 +1617,32 @@ public final class X {
 		ByteArrayInputStream bb = null;
 		try {
 
-			if (zip)
-				data = Zip.unzip(data);
+//			if (zip) {
+//				data = Zip.unzip(data);
+//			}
 			bb = new ByteArrayInputStream(data);
 			ObjectInputStream in = new ObjectInputStream(bb);
 			return (T) in.readObject();
 
 		} finally {
 			X.close(bb);
+		}
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T load(InputStream in) throws Exception {
+
+		if (in == null)
+			return null;
+
+		try {
+
+			ObjectInputStream in1 = new ObjectInputStream(in);
+			return (T) in1.readObject();
+
+		} finally {
+			X.close(in);
 		}
 
 	}
@@ -1555,10 +1658,12 @@ public final class X {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static <T> T clone(T data) {
 
-		if (data == null)
+		if (data == null) {
 			return null;
+		}
 
 		if (data instanceof Cloneable) {
+
 			T r = null;
 			if (data.getClass().isArray()) {
 				r = (T) X.asList(data, s -> s);
@@ -1566,12 +1671,10 @@ public final class X {
 				try {
 
 					Method m = data.getClass().getMethod("clone", (Class<?>[]) null);
-//				System.out.println(m);
 
 					r = (T) m.invoke(data, (Object[]) null);
 				} catch (Exception e) {
 					log.error(data.getClass() + ", " + data.toString(), e);
-//				e.printStackTrace();
 					r = data;
 				}
 			}
@@ -1583,13 +1686,10 @@ public final class X {
 				}
 			} else if (r instanceof Map) {
 				Map m1 = (Map) r;
-				System.out.println(m1);
 
 				for (Object name : m1.keySet()) {
-					System.out.println(name);
 					m1.put(name, X.clone(m1.get(name)));
 				}
-				System.out.println(m1);
 			}
 
 			if (data.getClass().isArray()) {
@@ -1601,10 +1701,177 @@ public final class X {
 		}
 
 		return data;
+
 	}
 
 	public static boolean matches(String src, String valid) {
-		return src.matches(valid + "*");
+		return src.matches(valid);
+	}
+
+	public static String toLine(Exception ex, int i) {
+		StringWriter sw = new StringWriter();
+		PrintWriter out = new PrintWriter(sw);
+		((Throwable) ex).printStackTrace(out);
+
+		String[] ss = X.split(sw.toString(), "\n");
+		return ss[i];
+	}
+
+	public static void lines(String s, BiConsumer<String, BufferedReader> func) {
+		IOUtil.lines(s, func);
+	}
+
+	public static int compareTo(Object o1, Object o2) {
+
+		if (o1 == null && o2 == null) {
+			return 0;
+		}
+
+		if (o1 == null) {
+			return -1;
+		} else if (o2 == null) {
+			return 1;
+		}
+
+		if (o1 instanceof Byte || o1 instanceof Short || o1 instanceof Integer) {
+			int c1 = X.toInt(o1);
+			int c2 = X.toInt(o2);
+			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
+		} else if (o1 instanceof Long) {
+			long c1 = X.toLong(o1);
+			long c2 = X.toLong(o2);
+			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
+		} else if (o1 instanceof Float) {
+			float c1 = X.toFloat(o1);
+			float c2 = X.toFloat(o2);
+			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
+		} else if (o1 instanceof Double) {
+			double c1 = X.toDouble(o1);
+			double c2 = X.toDouble(o2);
+			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
+		} else if (o1 instanceof String) {
+			return o1.toString().compareTo(o2.toString());
+		}
+		return 0;
+
+	}
+
+	/**
+	 * 02:00-04:00, 04:00-02:00
+	 * 
+	 * @param range
+	 * @return
+	 */
+	public static boolean timeIn(String range) {
+
+//		if (System.currentTimeMillis() - Controller.UPTIME < X.AMINUTE * 10) {
+//			return true;
+//		}
+
+		if (X.isEmpty(range)) {
+			return true;
+		}
+
+		String[] rr = X.split(range, "[-]");
+		if (rr == null || rr.length != 2) {
+
+			if (log.isInfoEnabled()) {
+				log.info("bad range, rr=" + Arrays.toString(rr));
+			}
+
+			return false;
+		}
+
+		String time = Language.getLanguage().format(System.currentTimeMillis(), "HH:mm");
+
+		String t1 = rr[0];
+		String t2 = rr[1];
+		if (t1.compareTo(t2) < 0) {
+			if (time.compareTo(t1) > 0 && time.compareTo(t2) < 0) {
+				return true;
+			}
+		} else {
+			if (time.compareTo(t1) > 0 || time.compareTo(t2) < 0) {
+				return true;
+			}
+		}
+
+		if (log.isInfoEnabled()) {
+			log.info("false, rr=" + Arrays.toString(rr) + ", time=" + time);
+		}
+
+		return false;
+	}
+
+	public String size(long length) {
+		return size(length, 1024, 1000);
+	}
+
+	/**
+	 * 
+	 * @param s, 2g, 300m
+	 * @return
+	 */
+	public long size(String s) {
+
+		if (X.isEmpty(s)) {
+			return 0;
+		}
+		s = s.trim();
+		long n = X.toInt(s);
+
+		char c = s.charAt(s.length() - 1);
+		if (c == 'K' || c == 'k') {
+			return n * 1024;
+		} else if (c == 'M' || c == 'm') {
+			return n * 1024 * 1000;
+		} else if (c == 'G' || c == 'g') {
+			return n * 1024 * 1000 * 1000;
+		} else if (c == 'T' || c == 't') {
+			return n * 1024 * 1000 * 1000 * 1000;
+		} else if (c == 'P' || c == 'p') {
+			return n * 1024 * 1000 * 1000 * 1000 * 1000;
+		}
+
+		return n;
+
+	}
+
+	private static String[] UNITS = new String[] { "", "k", "M", "G", "T", "P" };
+
+	/**
+	 * Size.
+	 * 
+	 * @param length the length
+	 * @return the string
+	 */
+	public String size(long length, int step1, int step2) {
+
+		if (length > 0.00001 && length < 0.00001) {
+			return X.EMPTY;
+		}
+
+		long step = step1 * step2;
+
+		float d = Math.abs(length);
+
+		int i = 0;
+		while (d > step && i < UNITS.length) {
+			d /= step1;
+			i++;
+		}
+
+		if (d > step2 && i < UNITS.length) {
+			d /= step2;
+			i++;
+		}
+
+		float d1 = d - (int) d;
+		if (d1 > 0.01) {
+			return (length >= 0 ? "" : "-") + X.toLong(d) + UNITS[i];
+		} else {
+			return (length >= 0 ? "" : "-") + ((int) d) + UNITS[i];
+		}
 	}
 
 }

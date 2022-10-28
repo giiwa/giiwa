@@ -11,11 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.task.CleanupTask;
-import org.giiwa.conf.Config;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Column;
@@ -25,7 +23,6 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.dao.Optimizer;
 import org.giiwa.json.JSON;
 import org.giiwa.web.Language;
 
@@ -36,7 +33,7 @@ import org.giiwa.web.Language;
  *
  */
 @Table(name = "gi_stat", memo = "GI-统计")
-public class Stat extends Bean implements Comparable<Stat> {
+public final class Stat extends Bean implements Comparable<Stat> {
 
 	/**
 	* 
@@ -100,30 +97,38 @@ public class Stat extends Bean implements Comparable<Stat> {
 			v = v.copy();
 		}
 
+		String table = table(module);
+
+//		Lock door = Local.getLock("table/" + table);
+//		if (door.tryLock()) {
 		try {
-			String table = table(module);
 			W q = q0.copy().and("date", date).and("size", size.toString()).and("module", module);
 
 			// force optimize
-			Optimizer.optimize(table, q);
+			Helper.optimize(table, q);
+
+//			synchronized (Stat.class) {
 
 			if (!Helper.exists(table, q)) {
 
+//				Helper.optimize(table, W.create().and(X.ID, id));
+
+				v.append("date", date).append("size", size.toString()).append("module", module);
+				for (int i = 0; i < n.length; i++) {
+					v.set("n" + i, n[i]);
+				}
+
+				if (log.isDebugEnabled()) {
+					log.debug("snapshot, v=" + v);
+				}
+
 				long id = UID.hash(module + "_" + date + "_" + size + "_" + q.toString());
-				Optimizer.optimize(table, W.create(X.ID, id));
 
-				if (Helper.exists(table, W.create(X.ID, id))) {
+				if (Helper.exists(table, W.create().and(X.ID, id))) {
 					// update
-					for (int i = 0; i < n.length; i++) {
-						v.set("n" + i, n[i]);
-					}
-					Helper.update(table, W.create(X.ID, id), v);
+					return Helper.update(table, W.create().and(X.ID, id), v);
 				} else {
-					v.append("date", date).force(X.ID, id).append("size", size.toString()).append("module", module);
-					for (int i = 0; i < n.length; i++) {
-						v.set("n" + i, n[i]);
-					}
-
+					v.force(X.ID, id);
 					return Helper.insert(table, v);
 				}
 
@@ -136,26 +141,29 @@ public class Stat extends Bean implements Comparable<Stat> {
 				}
 				return Helper.update(table, q, v);
 			}
+
+//			}
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
 			// cleanup(module, size);
+//				door.unlock();
 		}
+//		}
 
 		return -1;
 	}
 
-	@SuppressWarnings("deprecation")
 	public static void delete(String module, W q) {
 		// delete
 		String table = table(module);
-		Helper.delete(q, table, Helper.DEFAULT);
+		Helper.delete(table, q);
 	}
 
-	@SuppressWarnings("deprecation")
-	public static void cleanup(String module, SIZE size) {
+	public static int cleanup(String table, SIZE size) {
 		// delete old data
-		String table = table(module);
+//		String table = table(module);
 		W q1 = W.create().and("size", size.toString());
 
 		switch (size) {
@@ -191,9 +199,9 @@ public class Stat extends Bean implements Comparable<Stat> {
 			break;
 		}
 
-		Optimizer.optimize(table, q1);
+		Helper.optimize(table, q1);
 
-		Helper.delete(q1, table, Helper.DEFAULT);
+		return Helper.delete(table, q1);
 
 	}
 
@@ -211,7 +219,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param time
 	 * @param name
 	 * @param sizes
@@ -308,7 +316,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param time
 	 * @param name
 	 * @param size
@@ -333,7 +341,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		W q1 = q.and("module", name + "." + Stat.TYPE.snapshot).and("size", size.toString()).and("date", date, W.OP.lt)
 				.sort("time", -1);
-		Optimizer.optimize(table, q1);
+		Helper.optimize(table, q1);
 
 		Stat s1 = Helper.load(table, q1, Stat.class);
 
@@ -349,7 +357,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param time
 	 * @param name
 	 * @param sizes
@@ -447,27 +455,28 @@ public class Stat extends Bean implements Comparable<Stat> {
 
 		_snapshot(time1, name, SIZE.min, q1.copy(), v1.copy(), n);
 
-		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
+//		Stat s1 = Stat.load(name, TYPE.snapshot, SIZE.min, q1.copy().and("time", time1, W.OP.lte).sort("time", -1));
+//
+//		if (s1 != null) {
 
-		if (s1 != null) {
+//			long[] n1 = new long[n.length];
+//			for (int i = 0; i < n1.length; i++) {
+//				n1[i] = s1.getLong("n" + i);
+//			}
 
-			long[] n1 = new long[n.length];
-			for (int i = 0; i < n1.length; i++) {
-				n1[i] = s1.getLong("n" + i);
-			}
+		for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
+				SIZE.season, SIZE.year }) {
 
-			for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
-					SIZE.season, SIZE.year }) {
-
-				long time2 = Stat.parse(time1, s2);
-				_snapshot(time2, name, s2, q1.copy(), v1.copy(), n1);
-			}
+			time1 = Stat.parse(time, s2);
+			_snapshot(time1, name, s2, q1.copy(), v1.copy(), n);
 		}
+
+//		}
 
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param time the long of the timestamp
 	 * @param name the string of the module name
 	 * @param size the SIZE
@@ -484,15 +493,15 @@ public class Stat extends Bean implements Comparable<Stat> {
 		String date = format(time, size);
 		String table = table(name);
 
-		W q1 = q.and("module", name + "." + TYPE.snapshot).and("size", size.toString()).and("date", date, W.OP.lt)
-				.sort("time", -1);
-		Optimizer.optimize(table, q1);
+		W q1 = q.copy().and("module", name + "." + TYPE.snapshot).and("size", size.toString())
+				.and("time", time, W.OP.lt).sort("time", -1);
+		Helper.optimize(table, q1);
 
 		Stat s1 = Helper.load(table, q1, Stat.class);
 
 		long[] d = new long[n.length];
 		for (int i = 0; i < d.length; i++) {
-			d[i] = s1 == null ? n[i] : n[i] - s1.getLong("n" + i);
+			d[i] = (s1 == null) ? 0 : (n[i] - s1.getLong("n" + i));
 		}
 
 		v.append("time", time);
@@ -509,21 +518,29 @@ public class Stat extends Bean implements Comparable<Stat> {
 		q.and("module", name + "." + type).and("size", size.toString());
 
 		String table = table(name);
-		Beans<Stat> l1 = Helper.load(table, q, s, n, Stat.class);
-		if (l1 != null && !l1.isEmpty()) {
-			Set<String> dates = new HashSet<String>();
-			for (int i = l1.size() - 1; i >= 0; i--) {
-				Stat s1 = l1.get(i);
-				String date = s1.getDate();
-				if (dates.contains(date)) {
-					l1.remove(i);
-				} else {
-					dates.add(date);
+
+		Helper.optimize(table, q);
+
+		try {
+			Beans<Stat> l1 = Helper.load(table, q, s, n, Stat.class);
+			if (l1 != null && !l1.isEmpty()) {
+				Set<String> dates = new HashSet<String>();
+				for (int i = l1.size() - 1; i >= 0; i--) {
+					Stat s1 = l1.get(i);
+					String date = s1.getDate();
+					if (dates.contains(date)) {
+						l1.remove(i);
+					} else {
+						dates.add(date);
+					}
 				}
 			}
-		}
 
-		return l1;
+			return l1;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return Beans.create();
 	}
 
 	public static Stat load(String name, TYPE type, SIZE size, W q) {
@@ -535,40 +552,36 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return Helper.load(table(name), q, Stat.class);
 	}
 
-	@SuppressWarnings("deprecation")
 	public static long max(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
 		q.and("module", name + "." + type.toString()).and("size", size.toString());
-		return X.toLong((Object) Helper.max(q, field, table(name), Helper.DEFAULT));
+		return X.toLong((Object) Helper.max(table(name), field, q));
 	}
 
-	@SuppressWarnings("deprecation")
 	public static long sum(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
 		q.and("module", name + "." + type.toString()).and("size", size.toString());
-		return X.toLong((Object) Helper.sum(q, field, table(name), Helper.DEFAULT));
+		return X.toLong((Object) Helper.sum(table(name), field, q));
 	}
 
-	@SuppressWarnings("deprecation")
 	public static long avg(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
 		q.and("module", name + "." + type.toString()).and("size", size.toString());
-		return X.toLong((Object) Helper.avg(q, field, table(name), Helper.DEFAULT));
+		return X.toLong((Object) Helper.avg(table(name), field, q));
 	}
 
-	@SuppressWarnings("deprecation")
 	public static long min(String field, String name, TYPE type, SIZE size, W q) {
 		if (q == null) {
 			q = W.create();
 		}
 		q.and("module", name + "." + type.toString()).and("size", size.toString());
-		return X.toLong((Object) Helper.min(q, field, table(name), Helper.DEFAULT));
+		return X.toLong((Object) Helper.min(table(name), field, q));
 	}
 
 	/**
@@ -655,32 +668,35 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return lang.parse(lang.format(time, "yyyy"), "yyyy");
 	}
 
-	@SuppressWarnings("deprecation")
 	public static List<Stat> merge(String module, W q, String groupby, MergeFunc func) {
 		// load from stat, and group
 
 		String table = table(module);
 
 		List<Stat> l1 = new ArrayList<Stat>();
-		List<?> l2 = Helper.distinct(groupby, q.copy().and(groupby, null, W.OP.neq).and(groupby, X.EMPTY, W.OP.neq),
-				table, Helper.DEFAULT);
+		List<?> l2 = Helper.distinct(table, groupby,
+				q.copy().and(groupby, null, W.OP.neq).and(groupby, X.EMPTY, W.OP.neq));
 		if (l2 != null) {
 			for (Object o : l2) {
-				Beans<Stat> bs = Helper.load(table, q.copy().and(groupby, o), 0, 10000, Stat.class);
-				if (!bs.isEmpty()) {
-					Stat s = bs.get(0);
+				try {
+					Beans<Stat> bs = Helper.load(table, q.copy().and(groupby, o), 0, 10000, Stat.class);
+					if (!bs.isEmpty()) {
+						Stat s = bs.get(0);
 
-					for (String name : s.keySet()) {
-						if (name.startsWith("n")) {
-							Object o1 = s.get(name);
-							if (o1 instanceof Long) {
-								long v = func.call(name, bs);
-								s.set(name, v);
+						for (String name : s.keySet()) {
+							if (name.startsWith("n")) {
+								Object o1 = s.get(name);
+								if (o1 instanceof Long) {
+									long v = func.call(name, bs);
+									s.set(name, v);
+								}
 							}
 						}
-					}
 
-					l1.add(s);
+						l1.add(s);
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
@@ -693,10 +709,9 @@ public class Stat extends Bean implements Comparable<Stat> {
 		public long call(String name, List<Stat> l1);
 	}
 
-	@SuppressWarnings("deprecation")
 	public static List<?> distinct(String module, String field, W q) {
 		String table = table(module);
-		return Helper.distinct(field, q, table, Helper.DEFAULT);
+		return Helper.distinct(table, field, q);
 	}
 
 	public static long tom15() {
@@ -754,49 +769,42 @@ public class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public synchronized static int cleanup() {
-		if (rules == null) {
-			Configuration conf = Config.getConf();
-			rules = new Object[][] { new Object[] { SIZE.min, conf.getInt("stat.cleanup.min", 31) },
-					new Object[] { SIZE.m10, conf.getInt("stat.cleanup.m10", 31) },
-					new Object[] { SIZE.m15, conf.getInt("stat.cleanup.m15", 31) },
-					new Object[] { SIZE.m30, conf.getInt("stat.cleanup.m30", 31) },
-					new Object[] { SIZE.hour, conf.getInt("stat.cleanup.hour", 365) },
-//					new Object[] { SIZE.day, conf.getInt("stat.cleanup.day", 20 * 365) },
-//					new Object[] { SIZE.week, conf.getInt("stat.cleanup.week", 20 * 365) },
-//					new Object[] { SIZE.month, conf.getInt("stat.cleanup.month", 20 * 365) },
-//					new Object[] { SIZE.season, conf.getInt("stat.cleanup.season", 20 * 365) },
-//					new Object[] { SIZE.year, conf.getInt("stat.cleanup.year", -1) },
-			};
-		}
 
 		int n = 0;
-		List<JSON> l1 = Helper.listTables(Helper.DEFAULT);
+		List<JSON> l1 = Helper.listTables();
 		for (JSON j1 : l1) {
-			if (!CleanupTask.inCleanupTime())
-				break;
 
 			String name = j1.getString("table_name");
-			if (name.startsWith("gi_stat_")) {
-				for (Object[] p1 : rules) {
+			if (name.startsWith("gi_stat_") && CleanupTask.inCleanupTime()) {
 
-					if (!CleanupTask.inCleanupTime())
-						break;
+//				task.attach("table", name);
 
-					SIZE s1 = (SIZE) p1[0];
-					int day = (int) p1[1];
-					if (day > 0) {
-						W q = W.create();
-						q.and("size", s1.toString());
-						q.and("time", System.currentTimeMillis() - day * X.ADAY, W.OP.lt);
+				log.warn("cleanup [" + name + "], detail=" + j1);
 
-						Optimizer.optimize(name, q);
+				// delete duty data
+				try {
+					long n1 = Helper.delete(name, W.create().and("time", System.currentTimeMillis(), W.OP.gt));
+					if (n1 > 0) {
+						GLog.applog.info("sys", "cleanup", "table=" + name + ", removed duty=" + n1);
+						n += n1;
+					}
+				} catch (Throwable e) {
+					log.error(e.getMessage(), e);
+					GLog.applog.error("sys", "cleanup", "stat cleanup duty failed", e);
+				}
 
-						n += Helper.delete(name, q);
+				for (SIZE s1 : rules) {
 
-						long c1 = Helper.count(name, W.create());
-						if (c1 == 0) {
-							Helper.drop(name);
+					try {
+						long n1 = cleanup(name, s1);
+						if (n1 > 0) {
+							GLog.applog.info("sys", "cleanup", "table=" + name + ", removed." + s1 + "=" + n1);
+							n += n1;
 						}
+
+					} catch (Throwable e) {
+						log.error(e.getMessage(), e);
+						GLog.applog.error("sys", "cleanup", "stat cleanup failed", e);
 					}
 				}
 			}
@@ -804,6 +812,7 @@ public class Stat extends Bean implements Comparable<Stat> {
 		return n;
 	}
 
-	private static Object[][] rules;
+	private static SIZE[] rules = new SIZE[] { SIZE.year, SIZE.season, SIZE.month, SIZE.week, SIZE.day, SIZE.hour,
+			SIZE.m30, SIZE.m15, SIZE.m10, SIZE.min };
 
 }

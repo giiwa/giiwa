@@ -44,6 +44,11 @@ import org.giiwa.web.Path;
  */
 public class database extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -53,9 +58,16 @@ public class database extends Controller {
 	@Override
 	public void onGet() {
 
+//		int f = this.getInt("f");
+//		if (f == 1) {
 		List<JSON> l2 = Schema.load(lang);
 
-		this.set("list", l2);
+		if (l2 == null) {
+			this.set(X.MESSAGE, lang.get("gi.loading"));
+		} else {
+			this.set("list", l2);
+		}
+//		}
 
 		this.show("/admin/database.index.html");
 
@@ -87,7 +99,7 @@ public class database extends Controller {
 					if (X.isEmpty(s))
 						continue;
 
-					int n = Helper.delete(W.create(), s, Helper.DEFAULT);
+					int n = Helper.delete(s, W.create());
 					GLog.oplog.warn(database.class, "delete", "table=" + s + ", n=" + n, login, database.this.ip());
 				}
 			}
@@ -120,11 +132,16 @@ public class database extends Controller {
 			public void onExecute() {
 				String[] ss = X.split(table, "[,;]");
 				for (String s : ss) {
-					if (X.isEmpty(s))
+					if (X.isEmpty(s)) {
 						continue;
-					Helper.drop(s, Helper.DEFAULT);
+					}
+
+					Helper.drop(s);
 					GLog.oplog.warn(database.class, "drop", "table=" + table, login, database.this.ip());
 				}
+				
+				Schema.clean();
+
 			}
 
 			@Override
@@ -146,29 +163,37 @@ public class database extends Controller {
 		if (method.isPost()) {
 			String[] ss = this.getStrings("name");
 			if (ss != null && ss.length > 0) {
+
 				Temp t = Temp.create("er.csv");
-				Exporter<Bean> e = t.export(Exporter.FORMAT.csv);
 
-				for (String s : ss) {
+				Exporter<Bean> ex = null;
 
-					Class<? extends Bean> c = Schema.bean(s);
-					if (c == null)
-						continue;
+				try {
+					ex = Exporter.create(t.getOutputStream(), Exporter.FORMAT.csv, true);
 
-					try {
+					for (String s : ss) {
+
+						Class<? extends Bean> c = Schema.bean(s);
+						if (c == null) {
+							ex.print(new String[] { "" });
+							ex.print(new String[] { "##", s });
+							ex.print(new String[] { lang.get("column.name"), lang.get("column.type"),
+									lang.get("column.memo"), lang.get("column.value") });
+							continue;
+						}
 
 						Table table = (Table) c.getAnnotation(Table.class);
 						String display = table.memo();
 						if (X.isEmpty(display)) {
 							display = lang.get("name." + c.getName());
 						}
-						Bean b = c.newInstance();
+						Bean b = c.getDeclaredConstructor().newInstance();
 						Map<String, Field> st = b.getFields();
 						st = new TreeMap<String, Field>(st);
 
-						e.print(new String[] { "" });
-						e.print(new String[] { display, s });
-						e.print(new String[] { lang.get("column.name"), lang.get("column.type"),
+						ex.print(new String[] { "" });
+						ex.print(new String[] { display, s });
+						ex.print(new String[] { lang.get("column.name"), lang.get("column.type"),
 								lang.get("column.memo"), lang.get("column.value") });
 
 						for (String s1 : st.keySet()) {
@@ -181,16 +206,17 @@ public class database extends Controller {
 								t1 = t1.substring(i + 1);
 							}
 
-							e.print(new String[] { s1, t1, c1 == null ? X.EMPTY : c1.memo(),
+							ex.print(new String[] { s1, t1, c1 == null ? X.EMPTY : c1.memo(),
 									c1 == null ? X.EMPTY : c1.value() });
 						}
-					} catch (Exception e1) {
-						log.error(e1.getMessage(), e1);
 					}
+				} catch (Exception e1) {
+					log.error(e1.getMessage(), e1);
+				} finally {
+					X.close(ex);
 				}
-				e.close();
 
-				this.send(JSON.create().append(X.STATE, 200).append("file", t.getUri()));
+				this.send(JSON.create().append(X.STATE, 200).append("file", t.getUri(lang)));
 
 			} else {
 
@@ -199,18 +225,39 @@ public class database extends Controller {
 			return;
 		}
 
+//		Schema.init();
+
 		List<Class<? extends Bean>> l1 = Schema.beans;
 		Map<String, JSON> l2 = new TreeMap<String, JSON>();
 		for (Class<? extends Bean> c : l1) {
-			String table = Helper.getTable(c);
-			if (!X.isEmpty(table) && !l2.containsKey(table)) {
-				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
-						Helper.count(W.create(), c));
-				l2.put(table, j);
+
+			try {
+				String table = Helper.getTable(c);
+				if (!X.isEmpty(table) && !l2.containsKey(table)) {
+					JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+							Helper.count(table, W.create()));
+					l2.put(table, j);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
+
 		}
 		this.set("list", l2.values());
 		this.show("/admin/backup.er.html");
+
+	}
+
+	@Path(path = "status", login = true, access = "access.config.admin")
+	public void _status() {
+
+		JSON j1 = Helper.status();
+
+		this.print(j1.toPrettyString());
+
+		j1 = Helper.dbstats();
+
+		this.print(j1.toPrettyString());
 
 	}
 

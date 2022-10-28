@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # chkconfig:   2345 90 10
 # description:  giiwa is a apps daemon tool
 # version: v0.2
 # author: joe
-# required: above python2.6
+# required: above python3
 
 import os, sys, time, subprocess, signal
 #import re, os, sys, time, threading, subprocess, signal
@@ -23,12 +23,12 @@ def onkill(a,b):
 	
 def _startx():
 	global app, home
-	print "Starting: " + app
+	print("Starting: " + app)
 	try:
 		subprocess.Popen(app, shell=True, cwd=home)
-	except Exception, e:
-		print e
-		print "Failed:" + app
+	except Exception as  e:
+		print(e)
+		print("Failed:" + app)
 		
 def _pidx():
 	try:
@@ -36,7 +36,7 @@ def _pidx():
 		pid = f.readline().strip()
 		f.close()
 		os.popen("ps -p " + pid).readlines()[1]
-		return pid
+		return parseInt(pid)
 	except:
 		return -1
 	
@@ -51,11 +51,11 @@ def _start():
 	if pid>0:
 		try:
 			f=open(giiwapid, "wb+")
-			print >>f, pid
+			print(pid, f)
 			f.close()
 			sys.exit(0)
-		except Exception, e:
-			print e
+		except Exception as  e:
+			print(e)
 			sys.exit(0)
 	while running:
 		if _pidx()>0:
@@ -78,55 +78,28 @@ def _stop():
 		f.close()
 		os.popen("ps -p " + pid).readlines()[1]
 		subprocess.call("kill " + pid, shell=True)
-		print "giiwa is stopped."
-	except Exception, e:
-		print "Not found giiwa."
+		print("giiwa is stopped.")
+	except Exception as  e:
+		print("Not found giiwa.")
 	
 def _install():
-		print "Installing appdog ..."
+		print("Installing appdog ...")
 
+		os.system("mkdir /data /data/logs")
 		os.system("cp appdog/appdog /etc/init.d/")
 		os.system("chmod ugo+x /etc/init.d/appdog");
 		os.system("systemctl enable appdog")
-		os.system("mkdir /etc/appdog ");
-		os.system("cp appdog/apps.conf /etc/appdog");
-		print "setup appdog ..."
-		s1 = os.getcwd()
-		f1 = open('/etc/appdog/apps.conf', 'r+')
-		ss = f1.readlines();
-		f1.seek(0,0)
-		for s in ss:
-			s2 = s.replace('/opt/giiwa', s1)
-			f1.write(s2)
-		f1.close()
+		os.system("cp appdog/appdog.conf /etc/");
 		
 		if os.path.isdir("../mongodb"):
 			os.system("cp ./appdog/m.sh ../mongodb/bin/")
 			os.system("chmod ugo+x ../mongodb/bin/m.sh");
-			os.chdir('../mongodb')
-			s1 = os.getcwd()
-			f1 = open('./bin/m.sh', 'r+')
-			ss = f1.readlines();
-			f1.seek(0,0)
-			for s in ss:
-				s2 = s.replace('/opt/mongodb', s1)
-				f1.write(s2)
-			f1.close()
 			
-			s1 = os.getcwd()
-			f1 = open('/etc/appdog/apps.conf', 'r+')
-			ss = f1.readlines();
-			f1.seek(0,0)
-			for s in ss:
-				s2 = s.replace('/opt/mongodb', s1)
-				f1.write(s2)
-			f1.close()
-			
-		print "Install success."
-		print "Please vi /etc/appdog/apps.conf to get more."
+		print("Install success.")
+		print("Please vi /etc/appdog.conf to get more.")
 			
 def _reset_root():
-		print "Reset the root password ..."
+		print("Reset the root password ...")
 		
 		os.chdir(home)
 		f1 = open('giiwa.properties', 'r+')
@@ -137,17 +110,17 @@ def _reset_root():
 		f1.write('reset=1\r\n')
 		f1.close()
 		
-		print "Reset success."
+		print("Reset success.")
 		_stopx()
 
 def _reset_giiwa():
-		print "Reset the giiwa ..."
+		print("Reset the giiwa ...")
 		
 		os.chdir(home)
 		os.system("rm -rf modules/WEB-INF/")
 		os.system("cp -rnf modules/default/WEB-INF/ modules/")
 
-		print "Reset success."
+		print("Reset success.")
 		_stopx()
 		
 if __name__=="__main__":
@@ -157,7 +130,7 @@ if __name__=="__main__":
 		a=""
 	if a=="start":
 		if _pidx()>0:
-			print "giiwa is running."
+			print("giiwa is running.")
 		else:
 			signal.signal(signal.SIGTERM, onkill)
 			_start()
@@ -179,9 +152,9 @@ if __name__=="__main__":
 		elif b == "giiwa":
 			_reset_giiwa()
 		else:
-			print "Help: \n\tgiiwa reset [root|giiwa]"
-			print "\treset root: reset the root password"
-			print "\treset giiwa: repair the giiwa libs\n"
+			print("Help: \n\tgiiwa reset [root|giiwa]")
+			print("\treset root: reset the root password")
+			print("\treset giiwa: repair the giiwa libs\n")
 		
 	else:
-		print "Help: \n\tgiiwa [start|stop|restart|install|reset root|reset giiwa]\n"
+		print("Help: \n\tgiiwa [start|stop|restart|install|reset root|reset giiwa]\n")

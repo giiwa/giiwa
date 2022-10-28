@@ -12,7 +12,7 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.json.JSON;
+import org.giiwa.misc.Host;
 
 @Table(name = "gi_m_diskio", memo = "GI-磁盘IO监测")
 public class _DiskIO extends Bean {
@@ -39,7 +39,7 @@ public class _DiskIO extends Bean {
 	public long readbytes;
 
 	@Column(memo = "读速度")
-	public long reads;
+	public long _reads;
 
 	@Column(memo = "写字节总数")
 	public long writebytes;
@@ -50,15 +50,15 @@ public class _DiskIO extends Bean {
 	@Column(memo = "队列")
 	public double queue;
 
-	public synchronized static void update(String node, List<JSON> l1) {
+	public synchronized static void update(String node, List<Host._DS> l1) {
 
 //		Map<String, JSON> l2 = new HashMap<String, JSON>();
 
-		for (JSON jo : l1) {
+		for (Host._DS jo : l1) {
 
 			// insert or update
-			String path = jo.getString("path");
-			String name = jo.getString("name");
+			String path = jo.path;
+			String name = jo.name;
 			if (X.isIn(name, "tmpfs", "devtmpfs")) {
 				continue;
 			}
@@ -68,7 +68,7 @@ public class _DiskIO extends Bean {
 				break;
 			}
 
-			_Disk d1 = _Disk.dao.load(W.create("node", node).and("path", path));
+			_Disk d1 = _Disk.dao.load(W.create().and("node", node).and("path", path));
 			if (d1 == null)
 				continue;
 
@@ -76,23 +76,28 @@ public class _DiskIO extends Bean {
 			try {
 
 //				name = name.replace("[\\\\]", "/");
-				V v = V.fromJSON(jo).append("node", node).force("name", name).remove("_id", X.ID);
+				V v = V.create();
+				
+				v.append("node", node).force("name", name).remove("_id", X.ID);
 
 				Record r1 = Record.dao.load(W.create().and("node", node).and("path", path).sort("created", -1));
-				if (r1 != null && jo.getLong("readbytes") > r1.readbytes) {
+				if (r1 != null && jo.readbytes > r1.readbytes) {
 					long time = (System.currentTimeMillis() - r1.getCreated()) / 1000;
-					v.force("reads", (jo.getLong("readbytes") - r1.readbytes) / time);
-					v.force("writes", (jo.getLong("writebytes") - r1.writebytes) / time);
+					v.force("_reads", (jo.readbytes - r1.readbytes) / time);
+					v.force("writes", (jo.writebytes - r1.writebytes) / time);
+				} else {
+					v.force("_reads", v.value("reads"));
 				}
+				v.remove("reads");
 
 				// insert
-				if (dao.exists(id)) {
+				if (dao.exists2(id)) {
 					dao.update(id, v.copy());
 				} else {
 					dao.insert(v.copy().force(X.ID, id));
 				}
 
-				if (!Record.dao.exists(W.create("node", node).and("path", path).and("created",
+				if (!Record.dao.exists2(W.create().and("node", node).and("path", path).and("created",
 						System.currentTimeMillis() - X.AMINUTE, W.OP.gt))) {
 					// save to record per hour
 					Record.dao

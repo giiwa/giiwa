@@ -18,11 +18,14 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.task.NtpTask;
 import org.giiwa.cache.Cache;
+import org.giiwa.cache.GlobalLock;
+import org.giiwa.cache.TimingCache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.task.GlobalLock;
+import org.giiwa.zookeeper.ZkLock;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -41,7 +44,7 @@ public final class Global extends Bean {
 	public static final BeanDAO<String, Global> dao = BeanDAO.create(Global.class);
 
 	@Column(memo = "唯一序号")
-	String id;
+	public String id;
 
 	@Column(memo = "字符串值")
 	String s;
@@ -70,19 +73,23 @@ public final class Global extends Bean {
 	 */
 	public static int getInt(String name, int defaultValue) {
 
-		Global c = Cache.get("global/" + name);
+		Global c = TimingCache.get(Global.class, name);
 		if (c == null) {
-			c = dao.load(name);
-			if (c != null) {
-				/**
-				 * avoid restarted, can not load new config
-				 */
-				Cache.set("global/" + name, c, X.AMINUTE);
-				return X.toInt(c.i, defaultValue);
-			} else {
-				c = new Global();
-				c.i = Config.getConf().getInt(name, defaultValue);
-				Cache.set("global/" + name, c, X.AMINUTE);
+			try {
+				c = dao.load(name);
+				if (c != null) {
+					/**
+					 * avoid restarted, can not load new config
+					 */
+					TimingCache.set(Global.class, name, c);
+					return X.toInt(c.i, defaultValue);
+				} else {
+					c = new Global();
+					c.i = Config.getConf().getInt(name, defaultValue);
+					TimingCache.set(Global.class, name, c);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 
@@ -99,29 +106,22 @@ public final class Global extends Bean {
 	 */
 	public static String getString(String name, String defaultValue) {
 
-		Global c = null;
-		try {
-			c = Cache.get("global/" + name);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
+		Global c = TimingCache.get(Global.class, name);
+		if (c == null && Helper.isConfigured()) {
+			try {
+				c = dao.load(name);
+				if (c != null) {
+					/**
+					 * avoid restarted, can not load new config
+					 */
+					TimingCache.set(Global.class, name, c);
 
-		if (c == null) {
-			c = dao.load(name);
-			if (c != null) {
-				/**
-				 * avoid restarted, can not load new config
-				 */
-				Cache.set("global/" + name, c, X.AMINUTE);
-
-				// if (!X.isEmpty(c.memo))
-				// return c.memo;
-				return c.s != null ? c.s : defaultValue;
+					return c.s != null ? c.s : defaultValue;
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
-
-		// if (!X.isEmpty(c.memo))
-		// return c.memo;
 
 		return c != null && c.s != null ? c.s : Config.getConf().getString(name, defaultValue);
 
@@ -129,29 +129,27 @@ public final class Global extends Bean {
 
 	public static String getMemo(String name, String defaultValue) {
 
-		Global c = Cache.get("global/" + name);
+		Global c = TimingCache.get(Global.class, name);
 		if (c == null) {
-			c = dao.load(name);
-			if (c != null) {
-				/**
-				 * avoid restarted, can not load new config
-				 */
-				Cache.set("global/" + name, c, X.AMINUTE);
 
-				// if (!X.isEmpty(c.memo))
-				// return c.memo;
-				return c.memo != null ? c.memo : defaultValue;
+			try {
+				c = dao.load(name);
+				if (c != null) {
+					/**
+					 * avoid restarted, can not load new config
+					 */
+					TimingCache.set(Global.class, name, c);
+
+					return c.memo != null ? c.memo : defaultValue;
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
-
-		// if (!X.isEmpty(c.memo))
-		// return c.memo;
 
 		return c != null && c.memo != null ? c.memo : Config.getConf().getString(name, defaultValue);
 
 	}
-
-	// private static Map<String, Object> cache = new HashMap<String, Object>();
 
 	/**
 	 * get the long value.
@@ -162,24 +160,23 @@ public final class Global extends Bean {
 	 */
 	public static long getLong(String name, long defaultValue) {
 
-		try {
-			Global c = Cache.get("global/" + name);
-			if (c == null) {
+		Global c = TimingCache.get(Global.class, name);
+		if (c == null) {
+			try {
 				c = dao.load(name);
 				if (c != null) {
 					/**
 					 * avoid restarted, can not load new config
 					 */
-					Cache.set("global/" + name, c, X.AMINUTE);
+					TimingCache.set(Global.class, name, c);
 
 					return X.toLong(c.l, defaultValue);
 				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
-			return c != null ? X.toLong(c.l, defaultValue) : Config.getConf().getLong(name, defaultValue);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
 		}
-		return defaultValue;
+		return c != null ? X.toLong(c.l, defaultValue) : Config.getConf().getLong(name, defaultValue);
 	}
 
 	/**
@@ -188,7 +185,16 @@ public final class Global extends Bean {
 	 * @return long of current time
 	 */
 	public static long now() {
-		return System.currentTimeMillis();
+		long t = System.currentTimeMillis();
+		Long c = Cache.get("now");
+		if (c == null || c < t) {
+			if (NtpTask.inst.ok) {
+				Cache.set("now", t, X.AHOUR);
+			}
+		} else {
+			t = c;
+		}
+		return t;
 	}
 
 	/**
@@ -199,12 +205,19 @@ public final class Global extends Bean {
 	 * @param o    the value
 	 */
 	public synchronized static void setConfig(String name, Object o) {
+
 		if (X.isEmpty(name)) {
 			return;
 		}
 
+		TimingCache.remove(Global.class, name);
+
 		if (o == null) {
-			dao.delete(W.create(X.ID, name));
+			try {
+				dao.delete(W.create().and(X.ID, name));
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 			return;
 		}
 
@@ -212,24 +225,16 @@ public final class Global extends Bean {
 			Global g = new Global();
 			V v = V.create();
 			if (o instanceof Integer) {
-				v.set("i", o);
-				g.i = X.toInt(o);
+				g.i = (Integer) o;
+				v.set("i", g.i);
 			} else if (o instanceof Long) {
-				v.set("l", o);
-				g.l = X.toLong(o);
+				g.l = (Long) o;
+				v.set("l", g.l);
 			} else {
 				String s = o.toString();
-				// if (s.length() > 1000) {
-				// v.append("memo", s).append("s", X.EMPTY);
-				// g.memo = s;
-				// g.s = s;
-				// } else {
 				v.append("s", s);
 				g.s = s;
-				// }
 			}
-
-			Cache.set("global/" + name, g, X.AMINUTE);
 
 			if (Helper.isConfigured()) {
 				if (dao.exists(name)) {
@@ -237,6 +242,8 @@ public final class Global extends Bean {
 				} else {
 					dao.insert(v.force(X.ID, name));
 				}
+			} else {
+				TimingCache.set(Global.class, name, g, X.AYEAR);
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -254,7 +261,7 @@ public final class Global extends Bean {
 			v.append("memo", s);
 			g.memo = s;
 
-			Cache.set("global/" + name, g, X.AMINUTE);
+			TimingCache.set(Global.class, name, g);
 
 			if (Helper.isConfigured()) {
 				if (dao.exists(name)) {
@@ -286,7 +293,11 @@ public final class Global extends Bean {
 	 * @return
 	 */
 	public static Lock getLock(String name) {
+		if (ZkLock.isOk()) {
+			return ZkLock.create(name);
+		}
 		return GlobalLock.create(name);
+
 	}
 
 	private static String _id = null;
@@ -297,7 +308,7 @@ public final class Global extends Bean {
 	 * @return
 	 */
 	public static String id() {
-		if (X.isEmpty(_id)) {
+		if (X.isEmpty(_id) && Helper.isConfigured()) {
 			_id = Global.getString("global.id", null);
 			if (X.isEmpty(_id)) {
 				_id = UID.uuid();
@@ -306,5 +317,5 @@ public final class Global extends Bean {
 		}
 		return _id;
 	}
-	
+
 }

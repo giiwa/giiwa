@@ -36,6 +36,11 @@ import org.giiwa.web.*;
 public class role extends Controller {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
 	 * Adds the.
 	 */
 	@Path(path = "create", login = true, access = "access.config.admin|access.config.role.admin")
@@ -45,11 +50,12 @@ public class role extends Controller {
 			String name = this.getString("name");
 			String memo = this.getString("memo");
 			String url = this.getString("url");
-			long id = Role.create(name, memo, V.create("url", url));
+			long id = Role.create(name, memo, V.create("url", url).append("seq", this.getInt("seq")));
 			if (id > 0) {
-				String[] access = this.getStrings("access");
-				if (access != null) {
-					for (String s : access) {
+				String s1 = this.getHtml("access");
+				String[] accesses = X.split(s1, ";");
+				if (accesses != null) {
+					for (String s : accesses) {
 						Role.setAccess(id, s);
 					}
 				}
@@ -128,10 +134,11 @@ public class role extends Controller {
 			Role r = Role.dao.load(id);
 			if (r != null) {
 
-				if (Role.dao.update(id, V.create("name", name).append("url", this.getString("url")).set("memo",
-						this.getString("memo"))) > 0) {
+				if (Role.dao.update(id, V.create("name", name).append("seq", this.getInt("seq"))
+						.append("url", this.getString("url")).set("memo", this.getString("memo"))) > 0) {
 
-					String[] accesses = this.getStrings("access");
+					String s = this.getHtml("access");
+					String[] accesses = X.split(s, ";");
 					r.setAccess(accesses);
 
 				} else {
@@ -151,6 +158,9 @@ public class role extends Controller {
 
 			JSON jo = r.json();
 			this.copy(jo);
+
+			List<?> l1 = r.getAccesses();
+			this.set("access", X.join(l1, ";"));
 
 			Map<String, List<Access>> bs = Access.load();
 			this.set("accesses", bs);

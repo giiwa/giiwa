@@ -29,6 +29,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.misc.Digest;
+import org.giiwa.web.Controller;
 
 /**
  * The App bean, used to store appid and secret table="gi_app"
@@ -37,7 +38,7 @@ import org.giiwa.misc.Digest;
  *
  */
 @Table(name = "gi_app", memo = "GI-应用接入")
-public class App extends Bean {
+public final class App extends Bean {
 
 	/**
 	 * 
@@ -51,14 +52,20 @@ public class App extends Bean {
 	@Column(memo = "唯一序号")
 	public long id;
 
-	@Column(memo = "应用名称")
+	@Column(memo = "应用标识")
 	public String appid;
+
+	@Column(memo = "应用名")
+	public String name;
 
 	@Column(memo = "备注")
 	private String memo;
 
 	@Column(memo = "密钥")
 	public String secret;
+
+	@Column(memo = "允许的IP")
+	public String allowip;
 
 	@Column(memo = "IP地址")
 	private String ip;
@@ -137,6 +144,20 @@ public class App extends Bean {
 		return secret;
 	}
 
+	public boolean isAllow(Controller m) {
+		if (X.isEmpty(allowip)) {
+			return true;
+		}
+
+		String ip = m.ip();
+		if (ip.matches(allowip)) {
+			return true;
+		}
+
+		return false;
+
+	}
+
 	/**
 	 * get the ip who used the appid
 	 * 
@@ -187,8 +208,7 @@ public class App extends Bean {
 	public static String decode(String data, String secret) {
 		try {
 			byte[] bb = Base64.getDecoder().decode(data);
-
-			return new String(Digest.aes_decrypt(bb, secret));
+			return new String(Digest.decode(bb, secret));
 		} catch (Exception e) {
 			log.error("data=" + data + ", secret=" + secret, e);
 		}
@@ -205,7 +225,7 @@ public class App extends Bean {
 	 */
 	public static String encode(String data, String secret) {
 		try {
-			byte[] bb = Digest.aes_encrypt(data.getBytes(), secret);
+			byte[] bb = Digest.encode(data.getBytes(), secret);
 			return Base64.getEncoder().encodeToString(bb);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -239,7 +259,7 @@ public class App extends Bean {
 	 * @return the app
 	 */
 	public static App load(String appid) {
-		App a = dao.load(W.create("appid", appid));
+		App a = dao.load(W.create().and("appid", appid));
 		if (a != null && (a.expired <= 0 || a.expired > System.currentTimeMillis())) {
 			return a;
 		}
@@ -254,7 +274,7 @@ public class App extends Bean {
 	 * @return the int
 	 */
 	public static int update(String appid, V v) {
-		return dao.update(W.create("appid", appid), v);
+		return dao.update(W.create().and("appid", appid), v);
 	}
 
 }

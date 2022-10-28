@@ -2,7 +2,7 @@ package org.giiwa.net.client;
 
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,9 +12,11 @@ import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
+import org.giiwa.task.Function;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
@@ -32,6 +34,9 @@ public class SFTP implements Closeable {
 	private Session session = null;
 	private ChannelSftp sftp = null;
 
+	/**
+	 * 关闭链接
+	 */
 	public void close() {
 		if (sftp != null) {
 			sftp.disconnect();
@@ -50,33 +55,168 @@ public class SFTP implements Closeable {
 	}
 
 	/**
+	 * 设置超时时间
+	 * 
+	 * @param timeout 毫秒
+	 * @return
+	 * @throws JSchException
+	 */
+	public SFTP timeout(int timeout) throws JSchException {
+		session.setTimeout(timeout);
+		return this;
+	}
+
+	/**
+	 * 设置本地缓存大小
+	 * 
+	 * @param size 字节
+	 * @return
+	 * @throws JSchException
+	 */
+	public SFTP buffer(int size) throws JSchException {
+		return this;
+	}
+
+	/**
 	 * 
 	 * @param url, sftp://g01:22?username=,passwd=
 	 * @return
 	 * @throws JSchException
 	 */
 	public static SFTP create(Url url) throws IOException {
+		SFTP s = new SFTP();
+		s.open(url);
+		return s;
+	}
+
+	public static SFTP create() {
+		return new SFTP();
+	}
+
+	/**
+	 * 打开远程链接
+	 * 
+	 * @param url 远程链接，sftp://[host:port]/[path]?username=xxx&passwd=xxx
+	 * @return
+	 * @throws IOException
+	 */
+	public SFTP open(String url) throws IOException {
+		return open(Url.create(url));
+	}
+
+	/**
+	 * 打开远程链接
+	 * 
+	 * @param url 远程链接， sftp://[host:port]/[path]?username=xxx&passwd=xxx
+	 * @return
+	 * @throws IOException
+	 */
+	public SFTP open(Url url) throws IOException {
+
+		close();
+
 		try {
-			SFTP s = new SFTP();
-			s.session = getSession(url);
-			s.sftp = (ChannelSftp) s.session.openChannel("sftp");
-			s.sftp.connect();
-			return s;
+			session = getSession(url);
+			timeout(300 * 1000);
+
+			sftp = (ChannelSftp) session.openChannel("sftp");
+			sftp.connect();
+
+			return this;
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
 
+	/**
+	 * 上传文件
+	 * 
+	 * @param filename 文件路径
+	 * @param in       输入字节流
+	 * @return
+	 * @throws IOException
+	 */
 	public boolean put(String filename, InputStream in) throws IOException {
 		return put(new File(filename), in);
 	}
 
+	public boolean put(File src, String dest, Function<String, Boolean> func) throws IOException {
+
+		try {
+			if (func.apply(src.getAbsolutePath())) {
+				if (src.isDirectory()) {
+					File[] ff = src.listFiles();
+					if (ff != null) {
+						String dest1 = X.getCanonicalPath(dest + "/" + src.getName());
+						this.mkdir(dest1);
+
+						for (File f : ff) {
+							if (X.isIn(f.getName(), ".", ".."))
+								continue;
+
+							put(new FileInputStream(f), dest1 + "/" + f.getName());
+						}
+					}
+				} else if (src.isFile()) {
+					InputStream in = new FileInputStream(src);
+					try {
+						sftp.put(in, X.getCanonicalPath(dest + "/" + src.getName()));
+					} finally {
+						X.close(in);
+					}
+				}
+			}
+
+			return true;
+		} catch (Exception e) {
+			throw new IOException(e);
+		}
+
+	}
+
+	public boolean put(InputStream in, String dest) throws IOException {
+
+		try {
+			sftp.put(in, X.getCanonicalPath(dest));
+			return true;
+		} catch (Exception e) {
+			throw new IOException(e);
+		} finally {
+			X.close(in);
+		}
+
+	}
+
+	private boolean mkdir(String dest) {
+
+		try {
+			sftp.mkdir(dest);
+			return true;
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			return false;
+		}
+
+	}
+
+	public boolean mv(String src, String dest) throws IOException {
+
+		try {
+			this.mkdir(new File(dest).getParent());
+			sftp.rename(src, dest);
+			return true;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			GLog.applog.error("sftp", "mv", "src=" + src + ", dest=" + dest, e);
+			throw new IOException(e);
+		}
+	}
+
 	/**
+	 * 上传文件
 	 * 
-	 * @param url      sftp://g01:22?username=,passwd=
-	 * 
-	 * @param filename
-	 * @param in
+	 * @param f  文件对象
+	 * @param in 输入字节流
 	 * @throws IOException
 	 */
 	public boolean put(File f, InputStream in) throws IOException {
@@ -96,18 +236,42 @@ public class SFTP implements Closeable {
 
 	}
 
+	/**
+	 * 下载文件
+	 * 
+	 * @param filename 文件路径
+	 * @return 临时文件对象
+	 * @throws IOException
+	 */
 	public Temp get(String filename) throws IOException {
 		File f = new File(filename);
 		Temp t = Temp.create(f.getName());
-		get(f, t.getFile().getAbsolutePath());
+		get(f, t.getOutputStream());
 		return t;
 	}
 
-	public void get(String filename, String dest) throws IOException {
-		OutputStream out = null;
+	/**
+	 * 下载文件
+	 * 
+	 * @param file 文件对象
+	 * @return
+	 * @throws IOException
+	 */
+	public Temp get(File file) throws IOException {
+		Temp t = Temp.create(file.getName());
+		get(file, t.getOutputStream());
+		return t;
+	}
+
+	/**
+	 * 下载文件
+	 * 
+	 * @param filename 文件路径
+	 * @param dest     本地文件路径
+	 * @throws IOException
+	 */
+	public void get(String filename, OutputStream out) throws IOException {
 		try {
-			new File(dest).getParentFile().mkdirs();
-			out = new FileOutputStream(dest);
 			sftp.get(filename, out);
 		} catch (Exception e) {
 			throw new IOException(e);
@@ -116,10 +280,24 @@ public class SFTP implements Closeable {
 		}
 	}
 
-	public void get(File filename, String dest) throws IOException {
+	/**
+	 * 下载文件
+	 * 
+	 * @param filename 文件对象
+	 * @param dest     本地文件路径
+	 * @throws IOException
+	 */
+	public void get(File filename, OutputStream dest) throws IOException {
 		get(filename.getAbsolutePath(), dest);
 	}
 
+	/**
+	 * 查询文件列表
+	 * 
+	 * @param src 目录路径
+	 * @return 文件数组
+	 * @throws IOException
+	 */
 	@SuppressWarnings("unchecked")
 	public File[] list(String src) throws IOException {
 
@@ -217,6 +395,12 @@ public class SFTP implements Closeable {
 		}
 	}
 
+	/**
+	 * 删除文件
+	 * 
+	 * @param src 文件路径
+	 * @throws IOException
+	 */
 	public void rm(String src) throws IOException {
 		try {
 			sftp.rm(src);
@@ -225,6 +409,12 @@ public class SFTP implements Closeable {
 		}
 	}
 
+	/**
+	 * 删除目录
+	 * 
+	 * @param src 目录路径
+	 * @throws IOException
+	 */
 	public void rmdir(String src) throws IOException {
 		try {
 			sftp.rmdir(src);
@@ -238,8 +428,19 @@ public class SFTP implements Closeable {
 		JSch jsch = new JSch();
 
 		try {
-			Session session = jsch.getSession(url.get("username"), url.getIp(), url.getPort(22));
-			session.setPassword(url.get("passwd"));
+
+			String username = url.get("username");
+			if (X.isEmpty(username)) {
+				throw new IOException("[username] required");
+			}
+
+			String passwd = url.get("passwd");
+			if (X.isEmpty(passwd)) {
+				throw new IOException("[passwd] required");
+			}
+
+			Session session = jsch.getSession(username, url.getIp(), url.getPort(22));
+			session.setPassword(passwd);
 
 			UserInfo ui = new MyUserInfo() {
 

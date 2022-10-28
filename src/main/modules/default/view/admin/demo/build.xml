@@ -33,7 +33,13 @@
 			</fileset>
 		</zip>
 	</target>
-	
+
+	<target name="archive" description="archive the package" depends="zip">
+		<copy todir="/home/nfs/${module.name}/${module.version}">
+			<fileset file="target/${module.name}_${module.version}_${BUILDNO}.zip" />
+		</copy>
+	</target>
+
 	<target name="src" description="zip the source" depends="compile">
 		<zip destfile="target/${module.name}_${module.version}_src.zip" encoding="UTF-8">
 			<fileset dir=".">
@@ -57,7 +63,7 @@
 
 		<replaceregexp file="target/${module.name}/module.xml" match="build>\d+" replace="build>${BUILDNO}" byline="true" />
 
-		<javac srcdir="src/model/java" destdir="target/classes" debug="true" encoding="utf-8" target='1.8' source="1.8" includeantruntime="false">
+		<javac srcdir="src/model/java" destdir="target/classes" debug="true" encoding="utf-8" target='11' source="11" includeantruntime="false">
 			<classpath refid="classpath" />
 		</javac>
 		<jar destfile="target/${module.name}/WEB-INF/lib/${module.name}-${module.version}.jar" basedir="target/classes" excludes="**/*Test.class" />

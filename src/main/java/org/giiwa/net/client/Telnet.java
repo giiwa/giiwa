@@ -28,22 +28,49 @@ public class Telnet implements Closeable {
 	}
 
 	public static Telnet create(Url url) throws SocketException, IOException {
-
 		Telnet s = new Telnet();
-		try {
-			s.client = new TelnetClient();
-			s.client.connect(url.getIp(), url.getPort(23));
-			s.in = s.client.getInputStream();
-			s.out = new PrintStream(s.client.getOutputStream());
+		s.open(url);
+		return s;
+	}
 
-			if (!login(url.get("username"), url.get("passwd"), s.out, s.in)) {
+	public static Telnet create() {
+		return new Telnet();
+	}
+
+	public Telnet open(String url) throws SocketException, IOException {
+		return open(Url.create(url));
+	}
+
+	public Telnet open(Url url) throws SocketException, IOException {
+
+		close();
+
+		try {
+
+			String username = url.get("username");
+			if (X.isEmpty(username)) {
+				throw new IOException("[username] required");
+			}
+
+			String passwd = url.get("passwd");
+			if (X.isEmpty(passwd)) {
+				throw new IOException("[passwd] required");
+			}
+
+			client = new TelnetClient();
+			client.connect(url.getIp(), url.getPort(23));
+			in = client.getInputStream();
+			out = new PrintStream(client.getOutputStream());
+
+			if (!login(username, passwd, out, in)) {
 				return null;
 			}
+
 		} finally {
-			s.close();
+			close();
 		}
 
-		return s;
+		return this;
 	}
 
 	private static boolean login(String username, String passwd, PrintStream out, InputStream in) {
@@ -62,11 +89,9 @@ public class Telnet implements Closeable {
 						continue;
 					}
 					sb.append((char) ch);
-					// System.out.println(sb.toString());
 
 					String s1 = sb.toString();
 					if (s1.matches(".*\\]\\$") || s1.matches("^Last login:")) {
-						// System.out.println("logined");
 						return true;
 					}
 					if (s1.matches(".*login:$")) {
@@ -108,7 +133,6 @@ public class Telnet implements Closeable {
 						continue;
 					}
 					sb.append(ch);
-					// System.out.println(sb.toString());
 					if (sb.toString().matches(".*\\]\\$$")) {
 						if (text != null) {
 							return text.toString();

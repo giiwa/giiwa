@@ -1,7 +1,6 @@
 <div class='tabs'>
 	<a href='/admin/task?__node=$!__node' class='selected'>$lang.get('a.task')</a>
-	<a href='/admin/task/thread?__node=$!__node'>$lang.get('a.task.thread')</a>
-##	<a href='/admin/task/thread/deadlock?__node=$!__node'>$lang.get('a.task.thread.deadlock')</a>
+	<a href='/admin/task/global?__node=$!__node'>$lang.get('a.task.global')</a>
 </div>
 
 #parse('/widget/widget.message.html')
@@ -38,7 +37,7 @@
 			<td>$i</td>
 			<td class="a">
 				$!f.name
-				<a class="hint hint--bottom" href="javascript:;" onclick='_trace("$f.name")' data-hint="Trace"><i class='icon-download'></i></a>
+				<a class="hint hint--bottom" href="javascript:;" onclick='_trace("$f.name")' data-hint="Trace"><i class='icon-view_headline'></i></a>
 			</td>
 			<td>$!f.class.name</td> 
 			<td #if($f._t=='S') style='color:red' #elseif($f._t=='G') style='color:green' #end>$!f._t</td>
@@ -46,16 +45,16 @@
 			<td style='color: green' class="a">
 				<i class='icon-radio-checked'></i>
 				$!f.state 
-				<a class="hint hint--bottom" href="javascript:;" onclick='_dump("$f.name")' data-hint="Dump"><i class='icon-download'></i></a>
+				<a class="hint hint--bottom" href="javascript:;" onclick='_dump("$f.name")' data-hint="Dump"><i class='icon-reply'></i></a>
 				&nbsp;
-				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-cancel-circle'></i></a>
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
 			</td> 
 			#else
 			<td style="color: #999" class="a">
 				<i class='icon-clock'></i>
 				$!f.state
 				#if($f.state == 'pending')
-				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-cancel-circle'></i></a>
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
 				#end
 			</td> 
 			#end
@@ -83,25 +82,10 @@
 	$(function() {
 		$("#task-table").tablesorter({
 			headers : {
-				0 : {
-					sorter : false
-				},
-				1 : {
-					sorter : false
-				},
 				2 : {
 					sorter : false
 				},
 				3 : {
-					sorter : false
-				},
-				4 : {
-					sorter : false
-				},
-				5 : {
-					sorter : false
-				},
-				6 : {
 					sorter : false
 				},
 				9 : {
@@ -121,7 +105,7 @@
 		}, function(d) {
 			giiwa.processing.hide();
 			if (d.state == 200) {
-				$("#dump div").html(d.message);
+				$("#dump div").html('<pre>' + d.message + '</pre>');
 				$("#dump").show();
 				$.scrollTo("#dump", 500);
 			} else {
@@ -166,7 +150,7 @@
 		}, function(d) {
 			giiwa.processing.hide();
 			if (d.state == 200) {
-				$("#dump div").html(d.message);
+				$("#dump div").html('<pre>' + d.message + '</pre>');
 				$("#dump").show();
 				$.scrollTo("#dump", 500);
 			} else {

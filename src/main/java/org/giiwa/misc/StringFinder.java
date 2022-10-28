@@ -14,6 +14,8 @@
 */
 package org.giiwa.misc;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 import org.giiwa.dao.X;
@@ -34,15 +36,32 @@ public class StringFinder {
 	 * @return the g string
 	 */
 	public static StringFinder create(String s) {
-		return new StringFinder(s);
+		StringFinder s1 = new StringFinder(s);
+		s1.pair('\'');
+		s1.pair('"');
+		return s1;
+	}
+
+	public StringFinder pair(char ch) {
+		_pair.add(new char[] { ch, ch });
+		return this;
+	}
+
+	public StringFinder pair(char ch1, char ch2) {
+		_pair.add(new char[] { ch1, ch2 });
+		return this;
 	}
 
 	public int pos = 0;
 	public int len = 0;
-	String s;
+	public String s;
+	private String s1;
+
+	private List<char[]> _pair = new ArrayList<char[]>();
 
 	private StringFinder(String s) {
 		this.s = s;
+		this.s1 = s == null ? null : s.toLowerCase();
 		pos = 0;
 		len = s == null ? 0 : s.length();
 	}
@@ -123,35 +142,43 @@ public class StringFinder {
 	}
 
 	private int _pos(String s2, int p) {
-		int i = s.indexOf(s2, p);
-		if (i > p) {
-			String s1 = s.substring(pos, i);
-			int n = _count(s1, '\'');
-			if (n % 2 != 0)
-				return _pos(s2, i + 1);
 
-			n = _count(s1, '"');
-			if (n % 2 != 0)
-				return _pos(s2, i + 1);
+		char[] cc = s2.toLowerCase().toCharArray();
+		out: for (int i = p; i < len; i++) {
 
-			return i;
-		}
-		return -1;
-	}
+			char c = s1.charAt(i);
+			if (c == cc[0]) {
+				for (int j = 1; j < cc.length && (i + j < len); j++) {
+					if (s1.charAt(i + j) != cc[j]) {
+						continue out;
+					}
+				}
+				// found
+				return i;
 
-	private int _count(String s1, char c) {
-		int n = 0;
-		int len = s1.length();
-		for (int i = 0; i < len; i++) {
-			char c1 = s1.charAt(i);
-			if (c1 == '\\') {
+			} else if (c == '\'') {
+				//
 				i++;
-				continue;
-			} else if (c1 == c) {
-				n++;
+				for (; i < len - cc.length; i++) {
+					c = s1.charAt(i);
+					if (c == '\'') {
+						break;
+					}
+				}
+			} else if (c == '"') {
+				//
+				i++;
+				for (; i < len - cc.length; i++) {
+					c = s1.charAt(i);
+					if (c == '"') {
+						break;
+					}
+				}
 			}
 		}
-		return n;
+
+		return -1;
+
 	}
 
 	/**
@@ -178,22 +205,22 @@ public class StringFinder {
 	 * @param c
 	 * @return
 	 */
-	public String pair(char c) {
-		StringBuilder sb = new StringBuilder();
-
-		while (hasMore()) {
-			char c1 = next();
-			if (c1 == '\\') {
-				sb.append(next());
-			} else if (c == c1) {
-				break;
-			} else {
-				sb.append(c1);
-			}
-
-		}
-		return sb.toString();
-	}
+//	public String pair(char c) {
+//		StringBuilder sb = new StringBuilder();
+//
+//		while (hasMore()) {
+//			char c1 = next();
+//			if (c1 == '\\') {
+//				sb.append(next());
+//			} else if (c == c1) {
+//				break;
+//			} else {
+//				sb.append(c1);
+//			}
+//
+//		}
+//		return sb.toString();
+//	}
 
 	// private static String wordchars =
 	// "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -204,6 +231,9 @@ public class StringFinder {
 	 * @return the char
 	 */
 	public char next() {
+		if (pos >= s.length())
+			return 0;
+
 		return s.charAt(pos++);
 	}
 
@@ -368,6 +398,10 @@ public class StringFinder {
 		return pos;
 	}
 
+	public String get(int begin, int end) {
+		return s.substring(begin, end);
+	}
+
 	/**
 	 * get the sub string begin to end.
 	 *
@@ -401,6 +435,31 @@ public class StringFinder {
 				e = e1;
 			}
 		}
+		pos = e + end.length();
+		return s.substring(b, e);
+	}
+
+	public String get(String begin, int size) {
+		if (s == null)
+			return null;
+
+		String[] bb = begin.split("\\|");
+
+		int b = this.len;
+		for (String s1 : bb) {
+			int b1 = s.indexOf(s1, pos);
+			if (b1 > -1 && b1 < b) {
+				b = b1 + s1.length();
+			}
+		}
+
+		if (b == this.len)
+			return null;
+
+		int e = b + size;
+		if (e > this.len) {
+			e = this.len;
+		}
 		pos = e;
 		return s.substring(b, e);
 	}
@@ -411,7 +470,6 @@ public class StringFinder {
 	 * @param begin the begin
 	 * @param end   the end
 	 * @return String
-	 * @deprecated
 	 */
 	public String substring(String begin, String end) {
 		return get(begin, end);
@@ -439,7 +497,6 @@ public class StringFinder {
 		StringBuilder sb = new StringBuilder();
 		boolean all = false;
 		for (int i = 0; i < l1 && j < l2;) {
-			// System.out.println(i + ":" + j);
 			if (s1.charAt(i) == s2.charAt(j)) {
 				sb.append(s1.charAt(i));
 				i++;
@@ -458,19 +515,16 @@ public class StringFinder {
 					j += 2;
 				}
 				String c1 = _getmaxstr(s1.substring(i), s2.substring(j));
-				// System.out.println("c1=" + c1);
 				if (c1 == null) {
 					i++;
 					continue;
 				}
 				if (i + 2 < l1) {
 					String c2 = _getmaxstr(s1.substring(i + 1), s2.substring(j));
-					// System.out.println("c2=" + c2);
 					if (c2 == null || c1.length() >= c2.length()) {
 						sb.append(c1);
 						all = false;
 						j = c1.length() + s2.indexOf(c1, j);
-						// System.out.println("j=" + j);
 						continue;
 					} else if (c2 != null) {
 						// skip this letter, but leave to next, the next to next
@@ -490,12 +544,10 @@ public class StringFinder {
 			sb.append(".*");
 		}
 
-		// System.out.println("j=" + j + ", l2=" + l2 + ", all=" + all);
 		return sb.toString();
 	}
 
 	private static String _getmaxstr(String s1, String s2) {
-		// System.out.println("s1=" + s1 + ",s2=" + s2);
 		if (s2.indexOf(s1) > -1) {
 			return s1;
 		}
@@ -545,6 +597,16 @@ public class StringFinder {
 
 	public StringFinder replace(String s1, String r1) {
 		this.s = this.s.replaceFirst(s1, r1);
+		this.s1 = this.s.toLowerCase();
+		this.pos += r1.length();
+		this.len = this.s.length();
+		return this;
+	}
+
+	public StringFinder replace(int start, int end, String r1) {
+		this.s = this.s.substring(0, start) + r1 + this.s.substring(end);
+		this.s1 = this.s.toLowerCase();
+		this.pos = start + r1.length();
 		this.len = this.s.length();
 		return this;
 	}
@@ -554,11 +616,24 @@ public class StringFinder {
 		while (this.hasMore()) {
 			String s1 = s + this.next();
 			if (!s1.matches(regex)) {
+				pos--;
 				return s;
 			}
 			s = s1;
 		}
 		return s;
+	}
+
+	public String remove(int start, int end) {
+		String r = s.substring(start, end);
+		s = s.substring(0, start) + s.substring(end);
+		pos = start;
+		return r;
+	}
+
+	public void add(String str) {
+		s = s.substring(0, pos) + str + s.substring(pos);
+		pos += str.length();
 	}
 
 }

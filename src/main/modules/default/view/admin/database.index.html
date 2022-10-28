@@ -3,8 +3,6 @@
 
 <div class='tabs'>
 	<a href='/admin/database?__node=$!__node' class='selected'>$lang.get('a.database')</a>
-	<a href='/admin/backup?__node=$!__node'>$lang.get('a.backup')</a>
-	<a href='/admin/backup/auto?__node=$!__node'>$lang.get('a.backup.auto')</a>
 </div>
 
 <form id="E$!requestid" action='/admin/database/er?__node=$!__node'  method='post' class='form nospace' style="padding-left: 0;padding-top: 0;">
@@ -13,12 +11,12 @@
 		<thead>
 			<tr>
 				<th style="width: 40px;"></th>
-				<th>$lang.get('table.memo')</th>
-				<th>$lang.get('table.bean')</th>
-				<th>$lang.get('table.name')</th>
+				<th style="width: 250px;">$lang.get('table.memo')</th>
 				<th style="width: 90px;">$lang.get('table.total')</th>
+				<th style="width: 90px;">$lang.get('table.totalsize')</th>
+				<th style="width: 90px;">$lang.get('table.indexsize')</th>
 				<th style="width: 130px;">$lang.get('table.updated')</th>
-				<th style="width: 60px;"></th>
+				<th></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -30,10 +28,10 @@
 				<td>
 					<label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!t.display</label>
 				</td>
-				<td>$!t.name</td>
-				<td>$!t.table</td>
-				<td>$!t.total</td>
-				<td>#if($t.updated>0) $lang.format($t.updated, 'yyyy-MM-dd HH:mm:ss') #end</td>
+				<td>$!t.count</td>
+				<td>$!lang.size($t.totalsize)</td>
+				<td>$!lang.size($t.indexsize)</td>
+				<td>#if($t.updated) $lang.format($t.updated, 'yyyy-MM-dd HH:mm:ss') #end</td>
 				<td class="a">
 					<a class="hint hint--bottom" data-hint="$lang.get('a.delete.table')" href="javascript:;" onclick="_delete('$t.table')"><i class='icon-bin2'></i></a>
 					<a class="hint hint--bottom" data-hint="$lang.get('a.drop.table')" href="javascript:;" onclick="_drop('$t.table')"><i class='icon-cancel-circle'></i></a>
@@ -44,6 +42,7 @@
 	</table>
 
 	<div class='btns'>
+		<!-- a class='btn btn-primary' href="/admin/database?f=1&__node=$!__node">$lang.get('btn.refresh')</a-->
 		<a class='btn btn-success' href="javascript:;" onclick="_submit();">$lang.get('btn.database.er')</a>
 
 		<a style="margin-left: 40px;" class='btn btn-warning' href="javascript:;" onclick="_deleteall();">$lang.get('btn.database.deleteall')</a>

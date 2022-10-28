@@ -71,13 +71,17 @@ $(function(){
 	<div class='logo'><a href="/"><img src="$lang.get('site.logo')"></a>$lang.get('site.title')</div>
 </h1>
 <form id="loginForm" class="form-signin" action="/user/login" method="post" enctype="multipart/form-data">
+    #if($tips2)<p style='color:#bf1717'>$!tips2</p>#end
 	<div class=''>
+		<input type="hidden" name="tips" value="$!tips" /> 
+		<input type="hidden" name="callback" value="$!callback" /> 
 		<label class="input-label icon-user" for="username">$lang.get('user.name')</label>
-		<input type="text" id="username" name="name" value="$!name" class="form-control" required />
+		<input type="text" id="username" name="name" value="" class="form-control" required />
 	</div>
 	<div class=''>
 		<label class="input-label icon-lock" for="password">$lang.get('user.password')</label>
-		<input type="password" id="password" name="pwd" value="$!pwd" class="form-control" required />
+		<input type='hidden' name="pwd1" />
+		<input type="password" id="password" value="" class="form-control" onchange="_pwd();" required />
 	</div>
 	#if($global.getInt('user.captcha', 0) == 1)
 	<div class="validateCode">
@@ -100,12 +104,14 @@ $(function(){
 	</div>
 	#end
 	
-	<button class="btn btn-large btn-primary btn-block" type="submit">$lang.get('btn.ok')</button>
+	<button class="btn btn-large btn-primary btn-block" type="submit" formmethod="post">$lang.get('btn.ok')</button>
 	#if($module.getFile('/user/thirdlogin.html'))
 	#parse('/user/thirdlogin.html')
 	#end
 	<div id="themeSwitch">
+		#if($global.getInt('user.passwd', 0) == 1)
 		<a class="icon-wondering" href="/user/forget">$lang.get('a.forget.user')</a>
+		#end
 		#if($global.getString('user.system', 'close')=='open')
 		&nbsp;&nbsp;<a href="/user/register">$lang.get('a.register.user')</a>
 		#end
@@ -114,8 +120,12 @@ $(function(){
 <div class="footer">
 	$lang.get('copyright') - $lang.get('powerby') 
 </div>
-
-<script type="text/javascript" src='/js/giiwa.js?${module.module("default").build}'></script>
-
+<script>
+function _pwd(){
+	var s = $('#password').val();
+	s = giiwa.encode(s);
+	$('input[name=pwd1]').val(s);
+}
+</script>
 #parse('/user/foot.html')
 

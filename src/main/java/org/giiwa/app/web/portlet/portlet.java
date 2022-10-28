@@ -8,11 +8,16 @@ import org.giiwa.web.Path;
 
 public class portlet extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Path()
 	public final void onGet() {
 
 		login = this.user();
-		W q = W.create("uri", this.uri);
+		W q = W.create().and("uri", this.uri);
 		if (login == null) {
 			q.and("uid", 0);
 		} else {
@@ -26,7 +31,7 @@ public class portlet extends Controller {
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param b
 	 * @return
 	 */

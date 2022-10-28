@@ -33,7 +33,7 @@ public class Result<T> extends IStub implements Closeable {
 
 	public void close() {
 		try {
-			this.unbind();
+			this.destroy();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

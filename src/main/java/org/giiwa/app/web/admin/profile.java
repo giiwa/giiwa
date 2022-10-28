@@ -19,10 +19,16 @@ import org.giiwa.web.Path;
 
 public class profile extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private static List<String> names = new ArrayList<String>();
 	private static Map<String, Class<? extends profile>> settings = new HashMap<String, Class<? extends profile>>();
 
 	final public static void register(int seq, String name, Class<? extends profile> m) {
+
 		if (names.contains(name)) {
 			log.error("duplicated name, name=" + name, new Exception("duplicated name=" + name));
 			return;
@@ -33,15 +39,17 @@ public class profile extends Controller {
 		} else {
 			names.add(seq, name);
 		}
+
 		settings.put(name, m);
+
 	}
 
 	final public static void register(String name, Class<? extends profile> m) {
 		register(-1, name, m);
 	}
 
-	@Path(path = "get/(.*)", login = true)
-	public String get(String name) {
+	@Path(path = "(.*)", login = true)
+	public void get1(String name) {
 
 		Class<? extends profile> c = settings.get(name);
 		if (log.isDebugEnabled())
@@ -49,7 +57,7 @@ public class profile extends Controller {
 
 		if (c != null) {
 			try {
-				profile s = c.newInstance();
+				profile s = c.getDeclaredConstructor().newInstance();
 				s.copy(this);
 				s.get();
 
@@ -68,8 +76,6 @@ public class profile extends Controller {
 				this.show("/admin/profile.html");
 			}
 		}
-
-		return null;
 	}
 
 	/**
@@ -89,7 +95,7 @@ public class profile extends Controller {
 
 		if (c != null) {
 			try {
-				profile s = c.newInstance();
+				profile s = c.getDeclaredConstructor().newInstance();
 				s.copy(this);
 				s.set();
 
@@ -146,6 +152,11 @@ public class profile extends Controller {
 
 	public static class my extends profile {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		/*
 		 * (non-Javadoc)
 		 * 
@@ -160,8 +171,7 @@ public class profile extends Controller {
 
 					login.update(V.create("password", password));
 
-					GLog.securitylog.info(profile.class, "passwd", lang.get("user.passwd.change"), login,
-							this.ip());
+					GLog.securitylog.info(profile.class, "passwd", lang.get("user.passwd.change"), login, this.ip());
 
 					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
@@ -171,6 +181,7 @@ public class profile extends Controller {
 
 					v.append("nickname", this.getString("nickname"));
 					v.append("title", this.getString("title"));
+					v.append("company", this.getString("company"));
 					v.append("desktop", this.getString("desktop"));
 
 					String email = this.getString("email1");
@@ -201,7 +212,7 @@ public class profile extends Controller {
 				log.error(e.getMessage(), e);
 
 				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
-						lang.get("save.failed") + ":" + e.getMessage()));
+						lang.get("save.failed") + ", " + e.getMessage()));
 				return;
 			}
 		}
@@ -213,6 +224,9 @@ public class profile extends Controller {
 		 */
 		@Override
 		public void get() {
+
+//			log.warn("profile/my");
+
 			this.set("desks", dashboard.desks);
 			this.settingPage("/admin/profile.my.html");
 		}

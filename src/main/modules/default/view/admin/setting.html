@@ -7,13 +7,34 @@
 	#end
 </div>
 <div class="">
-	<form action='/admin/setting/set/$name?__node=$!__node' method='post' class='form' enctype="multipart/form-data">
+	<form action='/admin/setting/set/$name' method='post' class='form' enctype="multipart/form-data">
+	
+		<input type="hidden" name="__node" value="$!__node" />
+		
 		#if($page)
 			#parse($page)
 		#end
 		<div class="btns">
 			<button type='submit'>$lang.get('btn.save')</button>
-			<a class='btn btn-danger' href='/admin/setting/reset/$name?__node=$!__node'>$lang.get('a.reset')</a>
+			&nbsp;&nbsp;
+			<a class='btn btn-warning' href='javascript:;' onclick='_reset();'>$lang.get('btn.reset')</a>
 		</div>
+		
 	</form>
 </div>
+
+<script>
+function _reset() {
+	if(confirm("$lang.get('title.are_u_sure_reset')")) {
+		giiwa.processing.show();
+		$.post('/admin/setting/reset/$name?__node=$!__node', {}, function(d){
+			giiwa.processing.hide();
+			if(d.state == 200) {
+				giiwa.reload();
+			} else if(d.message){
+				giiwa.error(d.message);
+			}
+		});
+	}
+}
+</script>

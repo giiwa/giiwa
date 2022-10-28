@@ -1,4 +1,4 @@
-<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/db/read/more?__node=$!__node')"><i class='icon-menu'></i></a>
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/db/read/more?__node=$!__node&id=$!id')"><i class='icon-menu'></i></a>
 
 <div id='db_read_$!requestid'></div>
 
@@ -9,14 +9,16 @@ $(function(){
 	        type: 'line'
 	    },
 	    title: {
-	        text: '$lang.get("portlet.db.read.title")'
+	        text: '$!name1 - $lang.get("portlet.db.read.title")'
 	    },
 	    xAxis: {
 	    		type: 'datetime'
 	    },
 	    yAxis: {
-	    		title: {
-	            text: ''
+	    	max: $max,
+	    	min: 0,
+    		title: {
+    	        text: ''
 	        }
 	    },
 	      legend: {
@@ -47,7 +49,7 @@ $(function(){
 
 	function reload() {
 		if($('#db_read_$!requestid').length > 0) {
-			$.post('/portlet/db/read/data?__node=$!__node', {}, function(d){
+			$.post('/portlet/db/read/data?__node=$!__node&id=$!id', {}, function(d){
 				if(d.state == 200) {
 					var series=t.series; 
 			        while(series.length > 0){

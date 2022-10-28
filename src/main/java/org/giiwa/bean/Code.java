@@ -33,7 +33,7 @@ import org.giiwa.dao.Helper.W;
  *
  */
 @Table(name = "gi_code", memo = "GI-验证码")
-public class Code extends Bean {
+public final class Code extends Bean {
 
 	/**
 	 * 
@@ -79,14 +79,16 @@ public class Code extends Bean {
 	}
 
 	public static Code load(String s1, String s2) {
-		return dao.load(W.create("s1", s1).and("s2", s2).and("expired", System.currentTimeMillis(), W.OP.gt));
+		return dao.load(W.create().and("s1", s1).and("s2", s2).and("expired", System.currentTimeMillis(), W.OP.gt));
 	}
 
 	public static void delete(String s1, String s2) {
-		dao.delete(W.create("s1", s1).and("s2", s2));
+		dao.delete(W.create().and("s1", s1).and("s2", s2));
 	}
 
 	public static int cleanup() {
+		log.warn("cleanup [Code] ...");
+
 		return dao.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lte));
 	}
 

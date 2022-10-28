@@ -2,13 +2,13 @@ package org.giiwa.dao;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.json.JSON;
+import org.giiwa.dao.Helper.V;
 
-public class Counter {
+public final class Counter {
 
 	private static Log log = LogFactory.getLog(Counter.class);
 
-	String name;
+	public String name;
 	long max = 0;
 	long min = -1;
 	long cost = -1;
@@ -25,7 +25,9 @@ public class Counter {
 			if (cost > 1000 && loged == 0) {
 				// log,
 				loged = 1;
-				log.warn("slow [" + name + "], cost=" + cost, new Exception());
+
+				if (log.isInfoEnabled())
+					log.info("slow [" + name + "], cost=" + cost, new Exception());
 			}
 		}
 		if (min == -1 || cost < min) {
@@ -35,16 +37,19 @@ public class Counter {
 		this.times++;
 	}
 
-	public synchronized JSON get() {
-		JSON j = JSON.create();
-		j.append("max", max <= 0 ? 0 : max);
-		j.append("min", min <= 0 ? 0 : min);
-		j.append("times", times);
-		j.append("avg", times > 0 ? cost / times : 0);
+	public synchronized Stat get() {
+
+		Stat e = new Stat();
+
+		e.name = name;
+		e.max = max <= 0 ? 0 : max;
+		e.min = min <= 0 ? 0 : min;
+		e.times = times;
+		e.avg = times > 0 ? cost / times : 0;
 
 		reset();
 
-		return j;
+		return e;
 	}
 
 	public synchronized void reset() {
@@ -53,6 +58,30 @@ public class Counter {
 		max = -1;
 		min = -1;
 		loged = 0;
+	}
+
+	public static class Stat {
+
+		public String name;
+		public long max;
+		public long min;
+		public long times;
+		public long avg;
+
+		public V toV() {
+
+			V v = V.create();
+
+			v.append("name", name);
+			v.append("max", max);
+			v.append("min", min);
+			v.append("times", times);
+			v.append("avg", avg);
+
+			return v;
+
+		}
+
 	}
 
 }

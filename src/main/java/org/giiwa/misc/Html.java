@@ -15,14 +15,12 @@
 package org.giiwa.misc;
 
 import java.util.*;
-import java.util.function.Consumer;
-
-import javax.swing.text.html.parser.ParserDelegator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Consumer;
 import org.giiwa.web.QueryString;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
@@ -36,9 +34,6 @@ import org.jsoup.select.Elements;
  *
  */
 public final class Html {
-
-	/** The delegator. */
-	transient ParserDelegator delegator = new ParserDelegator();
 
 	/** The log. */
 	private static Log log = LogFactory.getLog(Html.class);
@@ -204,11 +199,10 @@ public final class Html {
 	}
 
 	/**
-	 * please refers getTags().
+	 * please refer to getTags().
 	 *
 	 * @param tag the html tag
 	 * @return List of element
-	 * @deprecated
 	 */
 	public List<Element> get(String tag) {
 		return getTags(tag);
@@ -237,7 +231,7 @@ public final class Html {
 	/**
 	 * find the element by the selector <br>
 	 * 
-	 * @deprecated
+	 * @Deprecated please refer to select
 	 *
 	 * @param selector 1, .id for id element<br>
 	 *                 e.g: find(".aaa") <br>
@@ -261,7 +255,7 @@ public final class Html {
 	/**
 	 * find the elements in the node.
 	 * 
-	 * @deprecated
+	 * @Deprecated
 	 * @param e        the element node
 	 * @param selector the selector string
 	 * @return the list of element or null if nothing found
@@ -273,7 +267,7 @@ public final class Html {
 	/**
 	 * find the elements in the elements by the selector.
 	 *
-	 * @deprecated
+	 * @Deprecated
 	 * @param list     the original elements
 	 * @param selector the string of selector, .id, .class, tag
 	 * @return the list of element or null nothing found
@@ -306,6 +300,10 @@ public final class Html {
 		return JSON.fromObject(body);
 	}
 
+	public List<JSON> jsons() {
+		return JSON.fromObjects(body);
+	}
+
 	/**
 	 * Removes the.
 	 * 
@@ -336,7 +334,7 @@ public final class Html {
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param regex
 	 * @return
 	 * @throws Exception
@@ -369,6 +367,7 @@ public final class Html {
 	}
 
 	public List<JSON> link(String selector, String attr, Object regex, Consumer<Url> func) throws Exception {
+
 		if (X.isEmpty(url))
 			throw new Exception("url is not setting");
 
@@ -419,7 +418,7 @@ public final class Html {
 				if (func != null) {
 					Url u1 = Url.create(href);
 					func.accept(u1);
-					href = u1.encodedUrl();
+//					href = u1.encodedUrl();
 				}
 
 				if (_match(href, hh)) {
@@ -444,6 +443,10 @@ public final class Html {
 	 * @return
 	 */
 	public String format(String href) {
+		return format(href, true);
+	}
+
+	public String format(String href, boolean encode) {
 		if (href.startsWith("//")) {
 			href = _protocol(url) + href;
 		} else if (href.startsWith("/")) {
@@ -461,10 +464,27 @@ public final class Html {
 		if (X.isEmpty(href))
 			return null;
 
-		QueryString qs = new QueryString(href);
-//		qs.remove(removals);
+		i = href.indexOf("//", 10);
+		while (i > 0) {
+			href = href.substring(0, i) + href.substring(i + 1);
+			i = href.indexOf("//", 10);
+		}
 
-		return qs.toString();
+		i = href.indexOf("/../");
+		while (i > 0) {
+			int j = href.lastIndexOf("/", i - 1);
+			if (j > 0) {
+				href = href.substring(0, j + 1) + href.substring(i + 4);
+			}
+			i = href.indexOf("/../");
+		}
+
+		if (encode) {
+			QueryString qs = new QueryString(href);
+			return qs.toString();
+		} else {
+			return href;
+		}
 
 	}
 
@@ -493,7 +513,6 @@ public final class Html {
 		for (String s : domains) {
 //			log.debug("href=" + href + ", s=" + s);
 //
-//			System.out.println("href=" + href + ", s=" + s + ", matches?=" + href.matches(s));
 
 			if (href.matches(s)) {
 				return true;

@@ -24,6 +24,11 @@ import org.giiwa.web.Path;
 
 public class mq extends setting {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -34,7 +39,7 @@ public class mq extends setting {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
-		W q = W.create("model", "admin.mq").sort("created", -1);
+		W q = W.create().and("model", "admin.mq").sort("created", -1);
 
 		Beans<GLog> bs = GLog.dao.load(q, s, n);
 		this.pages(bs, s, n);
@@ -49,12 +54,15 @@ public class mq extends setting {
 		Global.setConfig("activemq.user", this.getString("activemq.user"));
 		Global.setConfig("activemq.passwd", this.getString("activemq.passwd"));
 
+		Global.setConfig("dubbomq.url", this.getString("dubbomq.url"));
 		Global.setConfig("rabbitmq.url", this.getString("rabbitmq.url"));
 		// Global.setConfig("rabbitmq.user", this.getString("rabbitmq.user"));
 		// Global.setConfig("rabbitmq.passwd", this.getString("rabbitmq.passwd"));
 
 		Global.setConfig("kafkamq.url", this.getString("kafkamq.url"));
 		Global.setConfig("zoo.url", this.getString("zoo.url"));
+		
+		Global.setConfig("zeromq.url", this.getString("zeromq.url"));
 		// Global.setConfig("zookeeper.url", this.getString("zookeeper.url"));
 
 		// int logger = X.isSame("on", this.getString("mq.logger")) ? 1 : 0;

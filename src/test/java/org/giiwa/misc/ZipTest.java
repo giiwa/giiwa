@@ -12,6 +12,7 @@ public class ZipTest {
 	@Test
 	public void test() {
 		try {
+
 			Zip.zip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/logs"));
 
 			Zip.unzip(new File("/Users/wujun/d/temp/aaa.zip"), new File("/Users/wujun/d/temp/aa"));

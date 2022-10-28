@@ -25,6 +25,7 @@ import java.util.*;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.log4j.PropertyConfigurator;
+import org.giiwa.dao.Helper;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 
@@ -93,7 +94,6 @@ public final class Config {
 				re.close();
 				re = null;
 //				c1.setEncoding("utf-8");
-//				System.out.println("load config: " + file);
 			}
 
 			if (c1 != null) {
@@ -114,7 +114,6 @@ public final class Config {
 			if (list != null && !list.isEmpty()) {
 				Set<String> ss = new HashSet<String>();
 				ss.addAll(X.asList(list, e -> e.toString()));
-//				System.out.println("include:" + ss);
 
 				for (String s : ss) {
 					if (s.startsWith(File.separator)) {
@@ -157,8 +156,6 @@ public final class Config {
 			if (!conf.containsKey("site.name")) {
 				conf.setProperty("site.name", "default");
 			}
-
-//			System.out.println("conf=" + conf);
 
 			Iterator<String> it = conf.getKeys();
 			while (it.hasNext()) {
@@ -222,43 +219,41 @@ public final class Config {
 
 	private static void checkAndUpgrade() {
 
-//		System.out.println("check and update");
-
 		boolean c = false;
 
-		String s = conf.getString("db[default].url", X.EMPTY);
-		if (X.isEmpty(s)) {
-			conf.setProperty("db[default].url", conf.getString("db.url", X.EMPTY));
-			conf.setProperty("db.url", null);
-			c = true;
-		}
-
-		s = conf.getString("db[default].user", X.EMPTY);
-		if (X.isEmpty(s)) {
-			conf.setProperty("db[default].user", conf.getString("db.user", X.EMPTY));
-			conf.setProperty("db.user", null);
-			c = true;
-		}
-
-		s = conf.getString("db[default].passwd", X.EMPTY);
-		if (X.isEmpty(s)) {
-			conf.setProperty("db[default].passwd", conf.getString("db.passwd", X.EMPTY));
-			conf.setProperty("db.passwd", null);
-			c = true;
-		}
-
-		s = conf.getString("mongo[default].url", X.EMPTY);
-		if (X.isEmpty(s)) {
-			conf.setProperty("mongo[default].url", conf.getString("mongo[prod].url", X.EMPTY));
-			conf.setProperty("mongo[prod].url", null);
-			c = true;
-		}
-
-		s = conf.getString("mongo[default].db", X.EMPTY);
-		if (X.isEmpty(s)) {
-			conf.setProperty("mongo[default].db", conf.getString("mongo[prod].db", X.EMPTY));
-			conf.setProperty("mongo[prod].db", null);
-			c = true;
+		if (!conf.containsKey("db.url")) {
+			if (conf.containsKey("mongo[default].url")) {
+				conf.setProperty("db.url",
+						conf.getString("mongo[default].url") + "/" + conf.getString("mongo[default].db"));
+				conf.setProperty("mongo[default].url", null);
+				if (conf.containsKey("mongo[default].user")) {
+					conf.setProperty("db.user", conf.getString("mongo[default].user"));
+					conf.setProperty("mongo[default].user", null);
+				}
+				if (conf.containsKey("mongo[default].passwd")) {
+					conf.setProperty("db.passwd", conf.getString("mongo[default].passwd"));
+					conf.setProperty("mongo[default].passwd", null);
+				}
+				if (conf.containsKey("mongo[default].conns")) {
+					conf.setProperty("db.conns", conf.getString("mongo[default].conns"));
+					conf.setProperty("mongo[default].conns", null);
+				}
+			} else if (conf.containsKey("db[default].url")) {
+				conf.setProperty("db.url", conf.getString("db[default].url") + "/" + conf.getString("db[default].db"));
+				conf.setProperty("db[default].url", null);
+				if (conf.containsKey("db[default].user")) {
+					conf.setProperty("db.user", conf.getString("db[default].user"));
+					conf.setProperty("db[default].user", null);
+				}
+				if (conf.containsKey("db[default].passwd")) {
+					conf.setProperty("db.passwd", conf.getString("db[default].passwd"));
+					conf.setProperty("db[default].passwd", null);
+				}
+				if (conf.containsKey("db[default].conns")) {
+					conf.setProperty("db.conns", conf.getString("db[default].conns"));
+					conf.setProperty("db[default].conns", null);
+				}
+			}
 		}
 
 		if (!conf.containsKey("node.name")) {
@@ -295,7 +290,8 @@ public final class Config {
 	 */
 	public static void save() {
 
-		if (conf != null && confFile != null) {
+		if (conf != null && confFile != null && !Helper.isConfigured()) {
+
 			conf.setProperty("home", null);
 
 			try {
@@ -313,9 +309,16 @@ public final class Config {
 					}
 				}
 
+				String id = c1.getString("node.id");
+				if (X.isEmpty(id)) {
+					id = UID.uuid();
+					c1.setProperty("node.id", id);
+				}
+
 				Writer out = new FileWriter(confFile);
 				c1.getLayout().save(c1, out);
 				out.close();
+
 //				c1.save(confFile);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -323,23 +326,39 @@ public final class Config {
 		}
 	}
 
-	private static String _id = null;
+	public static void save2() {
 
-	/**
-	 * get the name of this node in cluster.
-	 *
-	 * @return string of name
-	 */
-	public static String id() {
-		if (X.isEmpty(_id)) {
-			_id = getConf().getString("node.id", X.EMPTY);
-			if (X.isEmpty(_id)) {
-				_id = UID.uuid();
-				getConf().setProperty("node.id", _id);
-				Config.save();
+		conf.setProperty("home", null);
+
+		try {
+			PropertiesConfiguration c1 = new PropertiesConfiguration();
+//				PropertiesConfiguration c1 = new PropertiesConfiguration(confFile);
+//				c1.setEncoding("utf-8");
+
+			Iterator<String> it = conf.getKeys();
+			while (it.hasNext()) {
+				String name = it.next();
+				Object v1 = conf.getProperty(name);
+				String v2 = c1.getString(name, X.EMPTY);
+				if (v2.indexOf("${") == -1) {
+					c1.setProperty(name, v1);
+				}
 			}
+
+			String id = c1.getString("node.id");
+			if (X.isEmpty(id)) {
+				id = UID.uuid();
+				c1.setProperty("node.id", id);
+			}
+
+			Writer out = new FileWriter(confFile);
+			c1.getLayout().save(c1, out);
+			out.close();
+
+//				c1.save(confFile);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return _id;
 	}
 
 }

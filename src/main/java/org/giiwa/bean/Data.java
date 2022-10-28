@@ -15,7 +15,11 @@
 package org.giiwa.bean;
 
 import java.sql.SQLException;
+import java.util.concurrent.locks.Lock;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper;
@@ -23,6 +27,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Consumer;
 
 /**
  * Load "freedom" data storage, not specify. <br>
@@ -30,17 +35,17 @@ import org.giiwa.json.JSON;
  * @author wujun
  *
  */
-public class Data extends Bean {
+public final class Data extends Bean {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-//	private static Log log = LogFactory.getLog(Data.class);
+	private static Log log = LogFactory.getLog(Data.class);
 
 	/**
-	 * Load data from any table
+	 * Load data from the table
 	 *
 	 * @param table the table
 	 * @param q     the query and order
@@ -49,7 +54,37 @@ public class Data extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Data> load(String table, W q, int s, int n) {
-		return Helper.load(table, q, s, n, Data.class);
+		try {
+			return Helper.load(table, q, s, n, Data.class);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return Beans.create();
+	}
+
+	/**
+	 * atomic load data from the table and run the callback func,
+	 * 
+	 * @param table
+	 * @param q
+	 * @param s
+	 * @param n
+	 * @param func
+	 * @return
+	 */
+	public static Beans<Data> load(String table, W q, int s, int n, Consumer<Beans<Data>> func) {
+		Lock door = Global.getLock("data." + table);
+		door.lock();
+		try {
+
+			Beans<Data> l1 = load(table, q, s, n);
+			if (func != null) {
+				func.accept(l1);
+			}
+			return l1;
+		} finally {
+			door.unlock();
+		}
 	}
 
 	/**
@@ -61,6 +96,28 @@ public class Data extends Bean {
 	 */
 	public static Data load(String table, W q) {
 		return Helper.load(table, q, Data.class);
+	}
+
+	/**
+	 * atomic load the data and call back the func
+	 * 
+	 * @param table
+	 * @param q
+	 * @param func
+	 * @return
+	 */
+	public static Data load(String table, W q, Consumer<Data> func) {
+		Lock door = Global.getLock("data." + table);
+		door.lock();
+		try {
+			Data d = Helper.load(table, q, Data.class);
+			if (func != null) {
+				func.accept(d);
+			}
+			return d;
+		} finally {
+			door.unlock();
+		}
 	}
 
 	/**
@@ -88,7 +145,7 @@ public class Data extends Bean {
 	}
 
 	public static int update(String table, Object id, V data) {
-		return update(table, W.create(X.ID, id), data);
+		return update(table, W.create().and(X.ID, id), data);
 	}
 
 	/**
@@ -137,7 +194,7 @@ public class Data extends Bean {
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param table
 	 * @param q
 	 * @return

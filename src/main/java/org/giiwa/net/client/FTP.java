@@ -30,6 +30,36 @@ public class FTP {
 		return client;
 	}
 
+	/**
+	 * 设置超时时间
+	 * 
+	 * @param timeout 毫秒
+	 * @return
+	 */
+	public FTP timeout(int timeout) {
+		client.setDataTimeout(timeout);
+		client.setConnectTimeout(timeout);
+		return this;
+	}
+
+	/**
+	 * 设置本地数据缓存大小
+	 * 
+	 * @param size 字节
+	 * @return
+	 * @throws SocketException
+	 */
+	public FTP buffer(int size) throws SocketException {
+
+		client.setBufferSize(size);
+		client.setReceiveBufferSize(size);
+
+		return this;
+	}
+
+	/**
+	 * 关闭链接
+	 */
 	public void close() {
 		if (client != null) {
 			try {
@@ -41,28 +71,59 @@ public class FTP {
 		}
 	}
 
+	/**
+	 * 上传文件
+	 * 
+	 * @param remote 文件路径
+	 * @param in     输入流
+	 * @return
+	 * @throws IOException
+	 */
 	public boolean put(String remote, InputStream in) throws IOException {
 		return client.appendFile(remote, in);
 	}
 
+	/**
+	 * 下载文件
+	 * 
+	 * @param remote 文件路径
+	 * @return 临时文件
+	 * @throws IOException
+	 */
 	public Temp get(String remote) throws IOException {
 		return get(new File(remote));
 	}
 
+	/**
+	 * 下载文件
+	 * 
+	 * @param remote 文件路径
+	 * @return 临时文件
+	 * @throws IOException
+	 */
 	public Temp get(File remote) throws IOException {
+
 		Temp t = Temp.create(remote.getName());
 
-//		client.enterLocalPassiveMode();
+//		client.enterRemotePassiveMode();
+		client.enterLocalPassiveMode();
 		client.setFileType(FTPClient.BINARY_FILE_TYPE);
 
 		OutputStream out = t.getOutputStream();
 		client.retrieveFile(remote.getAbsolutePath(), out);
-		out.flush();
+//		out.flush();
 		out.close();
 
 		return t;
 	}
 
+	/**
+	 * 查询文件列表
+	 * 
+	 * @param path 目录路径
+	 * @return 文件数组
+	 * @throws IOException
+	 */
 	public File[] list(String path) throws IOException {
 
 		if (log.isDebugEnabled())
@@ -72,6 +133,7 @@ public class FTP {
 
 		client.changeWorkingDirectory(path);
 		client.enterLocalPassiveMode();
+//		client.enterRemotePassiveMode();
 
 		FTPFile[] ff = client.listFiles();
 
@@ -175,11 +237,49 @@ public class FTP {
 	 * @throws SocketException
 	 */
 	public static FTP create(Url url) throws IOException {
+		FTP f = new FTP();
+		f.open(url, null);
+		return f;
+	}
+
+	public static FTP create() {
+		return new FTP();
+	}
+
+	/**
+	 * 打开远程连接
+	 * 
+	 * @param url 远程链接，ftp://[host:port]/[path]?username=xxx&passwd=xxx
+	 * @return
+	 * @throws IOException
+	 */
+	public FTP open(String url) throws IOException {
+		return open(url, null);
+	}
+
+	public FTP open(String url, String charset) throws IOException {
+		return open(Url.create(url), charset);
+	}
+
+	/**
+	 * 打开远程链接
+	 * 
+	 * @param url 远程链接
+	 * @return
+	 * @throws IOException
+	 */
+	public FTP open(Url url, String charset) throws IOException {
+
+		close();
 
 		FTPClient ftp = new FTPClient();
 		FTPClientConfig config = new FTPClientConfig();
 		// config.setXXX(YYY); // change required options
 		// for example config.setServerTimeZoneId("Pacific/Pitcairn")
+//		if (!X.isEmpty(charset)) {
+//			ftp.setControlEncoding(charset);
+//			config.setServerLanguageCode("zh");
+//		}
 		ftp.configure(config);
 		int reply;
 
@@ -195,26 +295,58 @@ public class FTP {
 			return null;
 		}
 
-		if (ftp.login(url.get("username"), url.get("passwd"))) {
-			FTP f = new FTP();
-			f.client = ftp;
-			f.client.setConnectTimeout(10000);
-			f.client.setControlEncoding("UTF-8");
+		String username = url.get("username");
+		if (X.isEmpty(username)) {
+			throw new IOException("[username] required");
+		}
+
+		String passwd = url.get("passwd");
+		if (X.isEmpty(passwd)) {
+			throw new IOException("[passwd] required");
+		}
+
+		if (ftp.login(username, passwd)) {
+			client = ftp;
+			client.setConnectTimeout(10000);
+			if (!X.isEmpty(charset)) {
+				client.setControlEncoding(charset);
+			} else {
+				client.setControlEncoding("UTF-8");
+			}
+			timeout(300 * 1000);
+			buffer(1024 * 1024);
 
 			if (log.isDebugEnabled())
 				log.debug("logined");
 
-			return f;
+			return this;
 		}
 
 		throw new IOException("login failed");
 
 	}
 
+	/**
+	 * 创建目录
+	 * 
+	 * @param path 文件路径
+	 * @throws IOException
+	 */
 	public void mkdirs(String path) throws IOException {
 		client.mkd(path);
 	}
 
+	public void rm(String filename) throws IOException {
+		client.deleteFile(filename);
+	}
+
+	/**
+	 * 移动文件
+	 * 
+	 * @param filename1 原始文件
+	 * @param filename2 目标文件
+	 * @throws IOException
+	 */
 	public void mv(String filename1, String filename2) throws IOException {
 		if (log.isDebugEnabled())
 			log.debug("move file, " + filename1 + "=>" + filename2);
@@ -222,6 +354,13 @@ public class FTP {
 		client.rename(filename1, filename2);
 	}
 
+	/**
+	 * 复制文件
+	 * 
+	 * @param filename1 原始文件
+	 * @param filename2 目标文件
+	 * @throws IOException
+	 */
 	public void cp(String filename1, String filename2) throws IOException {
 
 		if (log.isDebugEnabled())

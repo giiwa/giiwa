@@ -275,32 +275,94 @@ textarea {
 	background: #f1f1f1;
 }
 
+@keyframes spinner-4-segment-1 { 
+	0%		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+	33.3%	{top: 0;left: 0;transform: translate(0) translateY(0)}
+	66.6%	{top: 0;left: 0;transform: translate(0) translateY(0)}
+	to 		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+}
+@keyframes spinner-4-segment-2 { 
+	0%		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+	33.3%	{top: 0;left: 100%;transform: translate(-100%) translateY(0)}
+	66.6%	{top: 0;left: 100%;transform: translate(-100%) translateY(0)}
+	to 		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+}
+@keyframes spinner-4-segment-3 { 
+	0%		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+	33.3%	{top: 100%;left: 100%;transform: translate(-100%) translateY(-100%)}
+	66.6%	{top: 100%;left: 100%;transform: translate(-100%) translateY(-100%)}
+	to 		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+}
+@keyframes spinner-4-segment-4 { 
+	0%		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+	33.3%	{top: 100%;left: 0;transform: translate(0) translateY(-100%)}
+	66.6%	{top: 100%;left: 0;transform: translate(0) translateY(-100%)}
+	to 		{top: 50%;left: 50%;transform: translate(-50%) translateY(-50%)}
+}
+@keyframes spinner-4 { 
+	0%		{transform: rotate(0)}
+	33.3%	{transform: rotate(0)}
+	66.6%	{transform: rotate(180deg)}
+	to 		{transform: rotate(180deg)}
+}
+
 #processing {
 	position: fixed;
-	left: calc(50% - 75px);
-	top: calc(50% - 30px);
 	z-index: 10100;
-	height: 60px;
-	width: 150px;
 	display: none;
-	box-shadow: 0 1px 4px #bbb;
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    color: #3b8624;
+}
+.k-loader .bg{
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+	background: RGBA(0,0,0,0.2);	
+}
+.k-loader .k-loader1{
+    width: 64px;
+    height: 64px;
+    animation: spinner-4 1.833s ease infinite;
+    display: flex;
+    left: calc(50% - 32px);
+    top: calc(50% - 32px);
+    position: fixed;
+    
 }
 
-#processing .bg {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-	background: #fff;
-	box-shadow: 0 0 2px #666;
-	z-index: 0;
-	border-radius: 6px;
+.k-loader .k-loader-segment{
+	top: 50%;
+    left: 50%;
+    transform: translate(-50%) translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: currentColor;
+    position: absolute;	
+}
+.k-loader .k-loader-segment:nth-child(1){
+	animation: spinner-4-segment-1 1.833s ease infinite;
+}
+.k-loader .k-loader-segment:nth-child(2){
+	animation: spinner-4-segment-2 1.833s ease infinite;
+}
+.k-loader .k-loader-segment:nth-child(3){
+	animation: spinner-4-segment-3 1.833s ease infinite;
+}
+.k-loader .k-loader-segment:nth-child(4){
+	animation: spinner-4-segment-4 1.833s ease infinite;
 }
 
-#processing .img {
-	margin: 25px 45px;
-	position: absolute;
+.k-loader p{
+    left: calc(50% - 33px);
+    top: calc(50% + 20px);
+    position: fixed;
+    color: #fff;
 }
-
 a.disabled {
 	background-color: #eee !important;
 	color: #999 !important;
@@ -1172,15 +1234,15 @@ form label.inline {
 }
 
 #leanmodal .leanmodal-content {
-	left: calc(50% - 150px);
 	top: 40%;
-	position: absolute;
+	position: relative;
 	font-size: 20px;
 	border-radius: 5px;
 	max-width: 300px;
 	line-height: 32px;
 	padding: 20px 40px;
 	word-break: break-all;
+	display: inline-block;
 }
 
 #leanmodal.error .leanmodal-content {
@@ -1207,12 +1269,13 @@ form label.inline {
 	box-shadow: 0 0 6px #C35A22;
 }
 
-label g {
+g {
 	color: #697280;
 	display: inline-block;
 	font-size: 90%;
 	margin-left: 10px;
 	font-style: italic;
+	line-height: 22px;
 }
 
 label g:before {
@@ -2355,10 +2418,17 @@ overflow: auto;
     height: 32px;
     overflow: hidden;
     display: inline-block;  
-    width: 60px;  
+    width: 80px;  
 }
 
 #head .mymenu a:hover{
 	color: #333;
 	border-left-color: #377ee1;
+}
+.text-overflow{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
 }

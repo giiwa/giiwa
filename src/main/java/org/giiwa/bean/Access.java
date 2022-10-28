@@ -36,7 +36,7 @@ import org.giiwa.dao.Helper.W;
  * 
  */
 @Table(name = "gi_access", memo = "GI-权限令牌")
-public class Access extends Bean {
+public final class Access extends Bean {
 	/**
 	* 
 	*/
@@ -93,9 +93,7 @@ public class Access extends Bean {
 				if (ss != null) {
 					for (String s : ss) {
 						if (!exists(s)) {
-							dao.insert(V.create(X.ID, s).append("memo",
-									X.toString(new Exception()).replaceAll(System.lineSeparator(), "<br/>")
-											.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")));
+							dao.insert(V.create(X.ID, s).append("memo", X.toString(new Exception())));
 						}
 					}
 				}

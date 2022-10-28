@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -16,7 +17,6 @@ import javax.script.SimpleBindings;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.GLog;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.task.Task;
@@ -41,16 +41,30 @@ public class JS {
 
 	public static Object run(String js, Map<String, Object> params) throws Exception {
 
+//		TimeStamp t1 = TimeStamp.create();
+
 		synchronized (JS.class) {
 			if (engine == null) {
+
 				ScriptEngineManager manager = new ScriptEngineManager();
-				log.debug("factories=" + manager.getEngineFactories());
+//				log.debug("factories=" + manager.getEngineFactories());
 				engine = manager.getEngineByName("nashorn");
-//				engine = manager.getEngineByName("graal.js");
-				/**
-				 * graal.js & nashorn, big different between dynamic api, be careful
-				 */
-				log.debug("engine=" + engine);
+
+//				System.out.println(engine);
+//				jdk.nashorn.api.scripting.NashornScriptEngineFactory fa = null;
+//				for (ScriptEngineFactory f : manager.getEngineFactories()) {
+//					System.out.println(f.getEngineName());
+//					if (X.isIn(f.getEngineName(), "nashorn", "Oracle Nashorn")) {
+//						fa = (jdk.nashorn.api.scripting.NashornScriptEngineFactory) f;
+//						break;
+//					}
+//				}
+//				String[] stringArray = new String[] { "-doe", "--global-per-engine" };
+//				engine = fa.getScriptEngine(stringArray);
+
+				if (engine == null) {
+					log.error("can not get nashorn engine! factories=" + manager.getEngineFactories());
+				}
 			}
 		}
 
@@ -67,7 +81,7 @@ public class JS {
 				return null;
 			});
 
-			js = "function aaa(" + X.join(l1, ",") + ") {" + js + "};aaa(" + X.join(X.asList(l1, s -> "p." + s), ",")
+			js = "function aaa(" + X.join(l1, ",") + ") {" + js + "\n};aaa(" + X.join(X.asList(l1, s -> "p." + s), ",")
 					+ ");";
 
 		}
@@ -78,19 +92,17 @@ public class JS {
 		Object r = null;
 		try {
 
-			if (params != null) {
-				bindings.put("p", params);
-			}
+			bindings.put("p", params);
 
 			r = e.cs.eval(bindings);
 
+			e.release(bindings);
+
 		} catch (Exception e1) {
 			if (params != null && !params.isEmpty()) {
-				log.error(bindings.keySet() + ", " + (params == null ? "[]" : params.keySet()), e1);
+				log.error((params == null ? "[]" : params.keySet()) + "\r\n" + js, e1);
 			}
 			throw e1;
-		} finally {
-			e.release(bindings);
 		}
 
 		return r;
@@ -105,19 +117,23 @@ public class JS {
 		_E e = cached.get(id);
 		if (e == null) {
 
-			log.debug("no cache for js code, code=" + code);
+			if (log.isDebugEnabled()) {
+				log.debug("no cache for js code, code=" + code);
+			}
 
 			e = new _E();
 			e.id = id;
 			e.cs = ((Compilable) engine).compile(code);
-			if (cache) {
+			if (cache && code.indexOf(";") > 0 || code.indexOf(" ") > 0) {
 				cached.put(id, e);
 
 				if (cached.size() > MAX_CACHED_COMPILED) {
 
-					GLog.applog.warn("js", "run", "js cache exceed max, max = " + MAX_CACHED_COMPILED);
+					if (log.isWarnEnabled()) {
+						log.warn("js cache exceed max, max = " + MAX_CACHED_COMPILED);
+					}
 
-					Task.schedule(() -> {
+					Task.schedule(t -> {
 						List<_E> l1 = new ArrayList<_E>(cached.values());
 						Collections.sort(l1);
 						for (int i = 0; i < l1.size() / 4; i++) {
@@ -129,7 +145,10 @@ public class JS {
 				}
 			}
 
+		} else {
+			e.cached = true;
 		}
+
 		e.last = System.currentTimeMillis();
 
 		return e;
@@ -138,21 +157,27 @@ public class JS {
 	static class _E implements Comparable<_E> {
 
 		CompiledScript cs;
-		List<Bindings> _cached = new ArrayList<Bindings>();
+		Stack<Bindings> _cached = new Stack<Bindings>();
 
 		String id;
 		long last;
+		boolean cached;
 
 		public synchronized Bindings get() {
 			if (_cached.isEmpty()) {
 				return new SimpleBindings();
 			}
 
-			return _cached.remove(_cached.size() - 1);
+			Bindings bs = _cached.pop();
+//			bs.remove("p");
+			bs.clear();
+			return bs;
 		}
 
 		public synchronized void release(Bindings bindings) {
-			_cached.add(bindings);
+			if (_cached.size() < 100) {
+				_cached.push(bindings);
+			}
 		}
 
 		@Override
@@ -162,6 +187,7 @@ public class JS {
 			}
 			return 1;
 		}
+
 	}
 
 	/**

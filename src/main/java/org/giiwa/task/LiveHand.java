@@ -1,6 +1,7 @@
 package org.giiwa.task;
 
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,11 +30,16 @@ public class LiveHand implements Serializable {
 	private boolean live = true;
 	private long timeout = 0;
 	private int max = 0;
-	private int door = 0;
+	private int available = 0;
 
 	private TimeStamp created = TimeStamp.create();
 
 	private transient Map<String, Object> attachs = new HashMap<String, Object>();
+
+	public synchronized void max(int n) {
+		max = n;
+		this.notifyAll();
+	}
 
 	public void timeoutAfter(long timeout) {
 		this.timeout = created.pastms() + timeout;
@@ -41,15 +47,18 @@ public class LiveHand implements Serializable {
 
 	public synchronized void increase() {
 		max++;
-		door++;
+		available++;
 
-		log.debug("max=" + max + ", door=" + door);
+		if (log.isDebugEnabled()) {
+			log.debug("max=" + max + ", available=" + available);
+		}
+
 		this.notifyAll();
 	}
 
 	public synchronized void descrease() {
 		max--;
-		door--;
+		available--;
 		this.notifyAll();
 	}
 
@@ -71,31 +80,59 @@ public class LiveHand implements Serializable {
 	}
 
 	public static LiveHand create(int max) {
-		return create(max, max);
+		return create(null, -1L, max, max);
+	}
+
+	public static LiveHand create(String name, int max) {
+		return create(name, -1L, max, max);
 	}
 
 	public static LiveHand create(int max, int init) {
-		return new LiveHand(-1L, max, init);
+		return create(null, -1L, max, init);
 	}
 
-	public static LiveHand create(long timeout, int max, int init) {
-		return new LiveHand(timeout, max, init);
+	public static LiveHand create(String name, int max, int init) {
+		return create(name, -1L, max, init);
 	}
 
 	public static LiveHand create(long timeout, int max) {
-		return new LiveHand(timeout, max);
+		return create(null, timeout, max, max);
 	}
 
-	public LiveHand(long timeout, int max) {
-		this(timeout, max, max);
+	public static LiveHand create(long timeout, int max, int init) {
+		return create(null, timeout, max, init);
 	}
 
-	public LiveHand(long timeout, int max, int init) {
+	private static Map<String, WeakReference<LiveHand>> _cache = new HashMap<String, WeakReference<LiveHand>>();
+
+	public static synchronized LiveHand create(String name, long timeout, int max, int init) {
+
+		LiveHand h = null;
+		if (X.isEmpty(name)) {
+			h = new LiveHand(timeout, max, init);
+		} else {
+			WeakReference<LiveHand> e = _cache.get(name);
+			if (e != null) {
+				h = e.get();
+			}
+
+			if (h == null) {
+				h = new LiveHand(timeout, max, init);
+				_cache.put(name, new WeakReference<LiveHand>(h));
+			}
+
+		}
+		return h;
+
+	}
+
+	private LiveHand(long timeout, int max, int init) {
 		this.timeout = timeout;
-		if (max < 0)
+		if (max < 0) {
 			max = Integer.MAX_VALUE;
+		}
 		this.max = max;
-		this.door = init;
+		this.available = init;
 	}
 
 	public boolean isLive() {
@@ -104,31 +141,51 @@ public class LiveHand implements Serializable {
 
 	public synchronized void stop() {
 		live = false;
-		door = max;
+		available = max;
 		this.notifyAll();
 	}
 
-	/**
-	 * @return
-	 */
-	public boolean tryHold() {
-		return tryLock();
+	public synchronized boolean tryLock(long timeout) throws InterruptedException {
+
+		TimeStamp t = TimeStamp.create();
+		try {
+
+			while (isLive()) {
+
+				if (log.isDebugEnabled())
+					log.debug("max=" + max + ", available=" + available);
+
+				if (available > 0) {
+					available--;
+					return true;
+				}
+
+				long waittime = X.AMINUTE;
+				if (timeout > 0) {
+					waittime = timeout - t.pastms();
+				}
+
+				if (waittime > 0) {
+					this.wait(waittime);
+				} else {
+					throw new InterruptedException(
+							"timeout [" + timeout + "] for holding the hand, max=" + max + ", available=" + available);
+				}
+			}
+			return false;
+		} finally {
+			if (log.isDebugEnabled())
+				log.debug("hold, cost=" + t.past() + ", available=" + available + ", " + this);
+		}
+
 	}
 
 	public synchronized boolean tryLock() {
-		if (door > 0) {
-			door--;
+		if (available > 0) {
+			available--;
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * @return
-	 * @throws InterruptedException
-	 */
-	public boolean hold() throws InterruptedException {
-		return lock();
 	}
 
 	public synchronized boolean lock() throws InterruptedException {
@@ -138,10 +195,12 @@ public class LiveHand implements Serializable {
 
 			while (isLive()) {
 
-				log.debug("max=" + max + ", door=" + door);
+				if (log.isDebugEnabled()) {
+					log.debug("max=" + max + ", available=" + available);
+				}
 
-				if (door > 0) {
-					door--;
+				if (available > 0) {
+					available--;
 					return true;
 				}
 
@@ -159,24 +218,19 @@ public class LiveHand implements Serializable {
 			return false;
 		} finally {
 			if (log.isDebugEnabled())
-				log.debug("hold, cost=" + t.past() + ", door=" + door + ", " + this);
+				log.debug("hold, cost=" + t.past() + ", available=" + available + ", " + this);
 		}
 	}
 
-	/**
-	 * release the hand
-	 */
-	public void drop() {
-		release();
-	}
-
 	public synchronized void release() {
-		door++;
-		if (door > max)
-			door = max;
+		available++;
+		if (available > max) {
+			available = max;
+		}
 
-		if (log.isDebugEnabled())
-			log.debug("drop, door=" + door + ", " + this);
+		if (log.isDebugEnabled()) {
+			log.debug("release, avaliable=" + available + ", " + this);
+		}
 
 		this.notifyAll();
 	}
@@ -194,9 +248,10 @@ public class LiveHand implements Serializable {
 
 		long t1 = timeout - t.pastms();
 		while (t1 > 0 && isLive()) {
-			if (door >= max) {
-				if (log.isDebugEnabled())
+			if (available >= max) {
+				if (log.isDebugEnabled()) {
 					log.debug("await, cost=" + t.past() + ", " + this);
+				}
 				return true;
 			}
 
@@ -205,8 +260,9 @@ public class LiveHand implements Serializable {
 			t1 = timeout - t.pastms();
 		}
 
-		if (log.isDebugEnabled())
-			log.debug("await timeout, door=" + t.past() + ", " + this);
+		if (log.isDebugEnabled()) {
+			log.debug("await timeout, available=" + t.past() + ", " + this);
+		}
 
 		return isLive();
 	}
@@ -214,7 +270,7 @@ public class LiveHand implements Serializable {
 	@Override
 	public String toString() {
 		return "LiveHand [@" + Integer.toHexString(super.hashCode()) + ", " + (live ? "alive" : "over") + ", " + max
-				+ ">" + door + ", timeout=" + timeout + ", age=" + created.past() + ", attachs=" + attachs + "]";
+				+ ">" + available + ", timeout=" + timeout + ", age=" + created.past() + ", attachs=" + attachs + "]";
 	}
 
 }

@@ -39,7 +39,7 @@
 
 #### 编译和打包
 使用 Gradle 编译, 她会自动编译打包所有依赖包到 giiwa.tgz, giiwa.zip 和升级模块包。
-> gradle clean release
+> gradle clean release -x test
 
 
 

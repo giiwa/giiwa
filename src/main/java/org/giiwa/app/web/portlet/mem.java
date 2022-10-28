@@ -4,7 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.giiwa.bean.m._Memory;
+import org.giiwa.bean.Node;
+import org.giiwa.bean.m._Mem;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -14,31 +15,55 @@ import org.giiwa.web.Path;
 
 public class mem extends portlet {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public void get() {
 
-		long id = this.getLong("id");
-		this.set("id", id);
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name", n.label);
+		} else {
+			this.set("name", id);
+		}
 
-		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id())
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created",
+				-1);
+		_Mem.Record.dao.optimize(q);
+
+		Beans<_Mem.Record> bs = _Mem.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("total", bs.get(0).getLong("total"));
 			this.set("list", bs);
-			this.show("/portlet/mem.html");
 		}
+		this.show("/portlet/mem.html");
 
 	}
 
 	@Path(path = "data", login = true)
 	public void data() {
-		long id = this.getLong("id");
-		this.set("id", id);
 
-		Beans<_Memory.Record> bs = _Memory.Record.dao.load(W.create("node", Local.id())
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		String id = this.get("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+//		Node n = Node.dao.load(id);
+
+		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created",
+				-1);
+
+		Beans<_Mem.Record> bs = _Mem.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -47,20 +72,19 @@ public class mem extends portlet {
 			// {name: "$lang.get('mem.free')", color:'.0dad76', data: [.foreach($c in $list)
 			// {x:$this.time($c), y:$c.free, hint:"$lang.size($c.free)"},.end]}
 
-			JSON p1 = JSON.create().append("name", lang.get("mem.used")).append("color", "#860606");
-			JSON p2 = JSON.create().append("name", lang.get("mem.free")).append("color", "#0dad76");
+			JSON p1 = JSON.create().append("name", lang.get("mem.usage")).append("color", "#0a5ea0");
+//			JSON p2 = JSON.create().append("name", lang.get("mem.free")).append("color", "#0dad76");
 
 			List<JSON> l1 = JSON.createList();
-			List<JSON> l2 = JSON.createList();
+//			List<JSON> l2 = JSON.createList();
 			bs.forEach(e -> {
-				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.getUsed()).append("hint",
-						lang.size(e.getUsed())));
-				l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.getFree()).append("hint",
-						lang.size(e.getFree())));
+				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.usage));
+//				l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.getFree()).append("hint",
+//						lang.size(e.getFree())));
 			});
 			p1.append("data", l1);
-			p2.append("data", l2);
-			this.send(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p1, p2)));
+//			p2.append("data", l2);
+			this.send(JSON.create().append(X.STATE, 200).append("data", Arrays.asList(p1)));
 
 			return;
 
@@ -74,13 +98,25 @@ public class mem extends portlet {
 //		long id = this.getLong("id");
 //		this.set("id", id);
 
+		String id = this.get("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name", n.label);
+		}
+
 		long time = System.currentTimeMillis() - X.AWEEK;
 
-		Beans<_Memory.Record> bs = _Memory.Record.dao
-				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", -1), 0, 60 * 24 * 2);
+		W q = W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1);
+
+		Beans<_Mem.Record> bs = _Mem.Record.dao.load(q, 0, 60 * 24 * 2);
 
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
+			this.set("total", bs.get(0).getLong("total"));
 			this.set("list", bs);
 		}
 		this.show("/portlet/mem.more.html");

@@ -4,7 +4,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.giiwa.bean.m._Memory2;
+import org.giiwa.bean.Node;
+import org.giiwa.bean.m._Mem2;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -14,30 +15,56 @@ import org.giiwa.web.Path;
 
 public class mem2 extends portlet {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public void get() {
 
-		long id = this.getLong("id");
-		this.set("id", id);
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name", n.label);
+		} else {
+			this.set("name", id);
+		}
 
-		Beans<_Memory2.Record> bs = _Memory2.Record.dao.load(W.create("node", Local.id())
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		W q = W.create().and("node", id)
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+		 _Mem2.Record.dao.optimize(q);
+		 
+		Beans<_Mem2.Record> bs = _Mem2.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
-//			this.set("total", bs.get(0).getLong("total"));
 			Collections.reverse(bs);
 
 			this.set("list", bs);
-			this.show("/portlet/mem2.html");
 		}
+
+		long max = X.toLong(1.1 * X.toLong(_Mem2.Record.dao.max("used",
+				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+
+		this.set("max", max);
+
+		this.show("/portlet/mem2.html");
 
 	}
 
 	@Path(path = "data", login = true)
 	public void data() {
-		long id = this.getLong("id");
-		this.set("id", id);
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
 
-		Beans<_Memory2.Record> bs = _Memory2.Record.dao.load(W.create("node", Local.id())
+		Beans<_Mem2.Record> bs = _Mem2.Record.dao.load(W.create().and("node", id)
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -47,7 +74,8 @@ public class mem2 extends portlet {
 			// {name: "$lang.get('mem.free')", color:'.0dad76', data: [.foreach($c in $list)
 			// {x:$this.time($c), y:$c.free, hint:"$lang.size($c.free)"},.end]}
 
-			JSON p1 = JSON.create().append("name", lang.get("mem.used")).append("color", "#860606");
+			JSON p1 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("mem.used"))
+					.append("color", "#0a5ea0");
 
 			List<JSON> l1 = JSON.createList();
 			bs.forEach(e -> {
@@ -69,10 +97,20 @@ public class mem2 extends portlet {
 //		long id = this.getLong("id");
 //		this.set("id", id);
 
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name", n.label);
+		}
+
 		long time = System.currentTimeMillis() - X.AWEEK;
 
-		Beans<_Memory2.Record> bs = _Memory2.Record.dao
-				.load(W.create("node", Local.id()).and("created", time, W.OP.gte).sort("created", -1), 0, 60 * 24 * 2);
+		Beans<_Mem2.Record> bs = _Mem2.Record.dao
+				.load(W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1), 0, 60 * 24 * 2);
 
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);

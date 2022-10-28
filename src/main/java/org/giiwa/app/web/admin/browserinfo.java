@@ -26,6 +26,11 @@ import org.giiwa.web.*;
  */
 public class browserinfo extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	/*
 	 * (non-Javadoc)
 	 * 

@@ -56,8 +56,8 @@ public class Monitor {
 	/**
 	 * start a task in monitor
 	 * 
-	 * @param t the task
-	 * @param 
+	 * @param t      the task
+	 * @param
 	 * @param access
 	 * @return
 	 */
@@ -78,14 +78,14 @@ public class Monitor {
 
 	public static void flush(Task t) {
 
-		long tid = t.attach("tid");
+		long tid = X.toLong(t.attach("tid"));
 		String name = _name(tid);
 
 		Field[] fs = t.getClass().getDeclaredFields();
 		if (fs != null) {
 			JSON jo = JSON.create();
 			jo.put("_access", t.attach("access"));
-			
+
 			for (Field f : fs) {
 				int p = f.getModifiers();
 				if ((p & Modifier.TRANSIENT) != 0 || (p & Modifier.STATIC) != 0 || (p & Modifier.FINAL) != 0)
@@ -117,6 +117,7 @@ public class Monitor {
 
 	/**
 	 * get the state with the access
+	 * 
 	 * @param tid
 	 * @param access
 	 * @return
@@ -127,15 +128,17 @@ public class Monitor {
 
 		Object t = Cache.get(name);
 		if (t != null) {
-			if (t instanceof JSON && X.isSame(access, ((JSON)t).get("_access"))) {
-//				Cache.remove(name);
+			if (t instanceof JSON && X.isSame(access, ((JSON) t).get("_access"))) {
 				JSON j1 = ((JSON) t).copy();
 				j1.remove("_access");
 				return j1;
+			} else {
+				return JSON.create().append("state", 201).append("error", "bad access");
 			}
+		} else {
+			return JSON.create().append("state", 201).append("error", "not found [" + tid + "]");
 		}
 
-		return null;
 	}
 
 }

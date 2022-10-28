@@ -8,15 +8,15 @@ $(function(){
 	        type: 'column'
 	    },
 	    title: {
-	        text: "$!lang.get('disk.title')"
+	        text: "$!name - $!lang.get('disk.title')"
 	    },
 	    xAxis: {
 	   	 	categories: [#foreach($p in $list) '$p.path', #end]
 	    },
 	    yAxis: {
-	    		title: {
-	            text: ''
-	        }
+    		title: {
+            	text: ''
+        	}
 	    },
 	    tooltip: {
 	    		pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.hint}</b> ({point.percentage:.0f}%)<br/>',

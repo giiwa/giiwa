@@ -13,7 +13,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.web.view.View;
 
 public class GiiwaServlet extends HttpServlet {
 
@@ -25,37 +24,20 @@ public class GiiwaServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	static Log log = LogFactory.getLog(GiiwaServlet.class);
 
-	@Override
-	public synchronized void init() {
-
-		try {
-			s️ervletContext = getServletContext();
-
-			if (log.isDebugEnabled())
-				log.debug("init view ...");
-
-			View.init();
-
-//			License.init();
-
-		} catch (Throwable e) {
-			log.error(e.getMessage(), e);
-		}
-
-		log.info("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
-	}
+	public static boolean INITED = false;
 
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-		if (!X.INITED)
+		if (!INITED) {
 			throw new IOException("not inited");
+		}
 
 		Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		TimeStamp t = TimeStamp.create();
 
-		HttpServletRequest r1 = (HttpServletRequest) req;
+		RequestHelper r1 = RequestHelper.create((HttpServletRequest) req);
 		HttpServletResponse r2 = (HttpServletResponse) resp;
 
 		String uri = r1.getRequestURI();
@@ -67,24 +49,27 @@ public class GiiwaServlet extends HttpServlet {
 			log.debug(req.getMethod() + " - " + uri + " - " + _ip(req));
 		}
 
-		if (_domain == null) {
-			_domain = Global.getString("cross.domain", "");
-		}
+		String _domain = Global.getString("cross.domain", "");
+
 		if (!X.isEmpty(_domain)) {
 			r2.addHeader("Access-Control-Allow-Origin", _domain);
 		}
 
+		Controller mo = null;
 		try {
-
-			Controller.process(uri, r1, r2, req.getMethod(), t);
+			mo = Controller.process(uri, r1, r2, req.getMethod(), t);
+		} catch (Exception e) {
+			throw new IOException(e);
 		} finally {
-			if (log.isInfoEnabled())
+			if (t.pastms() > 3000) {
+				log.warn(r1.getMethod() + " - " + uri + ", cost=" + t.past() + " - " + _ip(req) + ", body="
+						+ (mo == null ? null : mo.json()));
+			} else if (log.isInfoEnabled()) {
 				log.info(r1.getMethod() + " - " + uri + ", cost=" + t.past() + " - " + _ip(req));
+			}
 		}
 
 	}
-
-	private static String _domain = null;
 
 	private String _ip(HttpServletRequest req) {
 

@@ -28,7 +28,6 @@ import org.apache.velocity.runtime.resource.Resource;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.util.ExtProperties;
 import org.giiwa.bean.Disk;
-import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.web.Module;
@@ -67,7 +66,9 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 		try {
 			if (f == null) {
 				if (X.isIn(resource, "VM_global_library.vm", "velocimacros.vtl")) {
-					f = Module.home.getFile("/notfound.html");
+					if (Module.home != null) {
+						f = Module.home.getFile("/notfound.html");
+					}
 				} else {
 					f = new File(resource);
 					if (!((File) f).exists()) {
@@ -87,10 +88,10 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 					if (log.isDebugEnabled())
 						log.debug("got resource=" + resource);
 
-					if (Local.getInt("web.debug", 0) == 0) {
-						// not debug
-						cache.put(resource, f);
-					}
+//					if (Local.getInt("web.debug", 0) == 0) {
+					// not debug
+					cache.put(resource, f);
+//					}
 
 				} else if (log.isDebugEnabled()) {
 					// not found the file
@@ -170,16 +171,16 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 
 	@Override
 	public void init(ExtProperties configuration) {
-		
+
 		if (log.isDebugEnabled())
 			log.debug("VelocityTemplateLoader init..." + this.getClassName());
-		
+
 		try {
 			super.init(configuration);
 		} catch (Exception e) {
 			log.warn(e.getMessage(), e);
 		}
-		
+
 	}
 
 }

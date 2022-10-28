@@ -32,6 +32,13 @@ import java.lang.annotation.Target;
 public @interface Column {
 
 	/**
+	 * not table field
+	 * 
+	 * @return boolean
+	 */
+	boolean no() default false;
+
+	/**
 	 * the column name.
 	 *
 	 * @return String

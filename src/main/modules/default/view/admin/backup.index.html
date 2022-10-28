@@ -2,25 +2,23 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/database?__node=$!__node'>$lang.get('a.database')</a>
 	<a href='/admin/backup?__node=$!__node' class='selected'>$lang.get('a.backup.files')</a>
-	<a href='/admin/backup/auto?__node=$!__node'>$lang.get('a.backup.auto')</a>
 </div>
 
 <table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th>Name</th>
-			<th>$lang.get('head.created')</th>
-			<th>Size</th>
-			<th>Satus</th>
+			<th style="width: 200px;">Name</th>
+			<th style="width: 130px;">$lang.get('head.created')</th>
+			<th style="width: 90px;">Size</th>
+			<th style="width: 90px;">Satus</th>
 			<th></th>
 		</tr>
 	</thead>
 	<tbody>
 #foreach($f in $list)
 	<tr>
-		<td class="a">$!f.name <a class="icon-folder-download" href='javascript:;' onclick="_download('$!f.name')"></a></td>
+		<td class="a">$!f.name <a class="icon-folder-download" href="/f/s$root/$!f.name" target="_blank"></a></td>
 		<td>$lang.format($f.lastModified(), 'yyyy-MM-dd HH:m')</td>
 		<td>$!lang.size($f.length())</td>
 		<td>$global.getString("backup/$f.name", '')</td>

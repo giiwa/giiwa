@@ -44,13 +44,6 @@ public @interface Table {
 	String name() default X.EMPTY;
 
 	/**
-	 * specify the dbname
-	 * 
-	 * @return the db name
-	 */
-	String db() default Helper.DEFAULT;
-
-	/**
 	 * comment
 	 * 
 	 * @return
@@ -58,11 +51,19 @@ public @interface Table {
 	String memo() default X.EMPTY;
 
 	/**
-	 * method list <br>
+	 * for beancontroller only, method list <br>
 	 * e.g.: "list, create, edit"
 	 * 
 	 * @return
 	 */
 	String method() default X.EMPTY;
+
+	/**
+	 * mark the tag for modules<br>
+	 * e.g.: "dput,se"
+	 * 
+	 * @return
+	 */
+	String tag() default X.EMPTY;
 
 }

@@ -12,11 +12,23 @@ public class UIDTest {
 	public void test() {
 		try {
 			TimeStamp t = TimeStamp.create();
-			int[] ii = UID.random("12131", 100);
+			int[] ii = UID.random("1234567890", 100);
 			System.out.println("cost=" + t.past() + ", " + Arrays.toString(ii));
+
+			StringBuilder sb = new StringBuilder();
+			sb.append(UID.digital(4));
+			sb.append("-");
+			sb.append(UID.digital(4));
+			sb.append("-");
+			sb.append(UID.digital(4));
+			sb.append("-");
+			sb.append(UID.digital(4));
+
+			System.out.println(sb.toString());
+
 		} catch (Exception e) {
 			e.printStackTrace();
-			
+
 			fail(e.getMessage());
 		}
 	}

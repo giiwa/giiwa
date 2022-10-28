@@ -14,15 +14,12 @@
 */
 package org.giiwa.web.view;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.giiwa.conf.Global;
-import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
@@ -32,7 +29,7 @@ import org.giiwa.web.Language;
 
 public class FileView extends View {
 
-	private String caching = null;
+	private String caching = ".*.(js|css|png|jpg)$";
 
 	/**
 	 * copy the file to front-end, and {giiwa}/html/ too
@@ -47,23 +44,24 @@ public class FileView extends View {
 			/**
 			 * copy the local html first
 			 */
+//			if (Global.getInt("web.debug", 0) == 0) {
+
 			if (caching == null) {
-				caching = Global.getString("web.cache", X.EMPTY);
+				caching = Global.getString("html.source", caching);
 			}
 
-			if (Local.getInt("web.debug", 0) == 0) {
-				// not debug
-				if (!X.isEmpty(caching) && viewname.matches(caching)) {
-
-					File f1 = new File(Controller.GIIWA_HOME + "/html/" + viewname);
-					if (!f1.exists()) {
-						f1.getParentFile().mkdirs();
-						FileOutputStream out1 = new FileOutputStream(f1);
-						IOUtil.copy(in, out1);
-						in = View.getInputStream(file);
-					}
-				}
-			}
+			// not debug
+//				if (viewname.matches(caching)) {
+//
+//					File f1 = new File(Controller.GIIWA_HOME + "/html/" + viewname);
+//					if (!f1.exists()) {
+//						X.IO.mkdirs(f1.getParentFile());
+//						FileOutputStream out1 = new FileOutputStream(f1);
+//						IOUtil.copy(in, out1);
+//						in = View.getInputStream(file);
+//					}
+//				}
+//			}
 
 			String filetype = Controller.getMimeType(View.getName(file));
 			m.setContentType(filetype);

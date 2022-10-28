@@ -14,10 +14,15 @@
 */
 package org.giiwa.misc;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * The Class Base32.
  */
 public class Base32 {
+
+	private static Log log = LogFactory.getLog(Base32.class);
 
 	/** The Constant base32Chars. */
 	private static final String base32Chars = "abcdefghijklmnopqrstuvwxyz234567";
@@ -107,45 +112,55 @@ public class Base32 {
 	 * @return Decoded <code>base32</code> String as a raw byte array.
 	 */
 	static public byte[] decode(String base32) {
-		int i, index, lookup, offset, digit;
-		byte[] bytes = new byte[base32.length() * 5 / 8];
+		if (base32 == null) {
+			return null;
+		}
 
-		for (i = 0, index = 0, offset = 0; i < base32.length(); i++) {
-			lookup = base32.charAt(i) - '0';
+		try {
+			int i, index, lookup, offset, digit;
+			byte[] bytes = new byte[base32.length() * 5 / 8];
 
-			/* Skip chars outside the lookup table */
-			if (lookup < 0 || lookup >= base32Lookup.length) {
-				continue;
-			}
+			for (i = 0, index = 0, offset = 0; i < base32.length(); i++) {
+				lookup = base32.charAt(i) - '0';
 
-			digit = base32Lookup[lookup];
+				/* Skip chars outside the lookup table */
+				if (lookup < 0 || lookup >= base32Lookup.length) {
+					continue;
+				}
 
-			/* If this digit is not in the table, ignore it */
-			if (digit == 0xFF) {
-				continue;
-			}
+				digit = base32Lookup[lookup];
 
-			if (index <= 3) {
-				index = (index + 5) % 8;
-				if (index == 0) {
-					bytes[offset] |= digit;
-					offset++;
-					if (offset >= bytes.length)
-						break;
+				/* If this digit is not in the table, ignore it */
+				if (digit == 0xFF) {
+					continue;
+				}
+
+				if (index <= 3) {
+					index = (index + 5) % 8;
+					if (index == 0) {
+						bytes[offset] |= digit;
+						offset++;
+						if (offset >= bytes.length)
+							break;
+					} else {
+						bytes[offset] |= digit << (8 - index);
+					}
 				} else {
+					index = (index + 5) % 8;
+					bytes[offset] |= (digit >>> index);
+					offset++;
+
+					if (offset >= bytes.length) {
+						break;
+					}
 					bytes[offset] |= digit << (8 - index);
 				}
-			} else {
-				index = (index + 5) % 8;
-				bytes[offset] |= (digit >>> index);
-				offset++;
-
-				if (offset >= bytes.length) {
-					break;
-				}
-				bytes[offset] |= digit << (8 - index);
 			}
+			return bytes;
+		} catch (Exception e) {
+			log.error(base32, e);
 		}
-		return bytes;
+
+		return null;
 	}
 }

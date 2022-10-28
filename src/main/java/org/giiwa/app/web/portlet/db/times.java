@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.giiwa.app.web.portlet.portlet;
+import org.giiwa.bean.Node;
 import org.giiwa.bean.m._DB;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
@@ -13,30 +14,67 @@ import org.giiwa.json.JSON;
 import org.giiwa.web.Path;
 
 public class times extends portlet {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void get() {
 
-		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create("node", Local.id()).and("name", "read")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
+		W q = W.create().and("node", id).and("name", "read")
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+		_DB.Record.dao.optimize(q);
+		
+		Beans<_DB.Record> bs = _DB.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("list1", bs);
 
-			Beans<_DB.Record> list2 = _DB.Record.dao.load(W.create("node", Local.id()).and("name", "write")
+			Beans<_DB.Record> list2 = _DB.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
 					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			Collections.reverse(list2);
 			this.set("list2", list2);
 
-			this.show("/portlet/db/times.html");
 		}
+
+		long max = X.toLong(1.1 * X.toLong(_DB.Record.dao.max("times",
+				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+
+		this.set("max", max);
+
+		this.show("/portlet/db/times.html");
 	}
 
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create("node", Local.id()).and("name", "read")
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
+		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create().and("node", id).and("name", "read")
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -51,7 +89,7 @@ public class times extends portlet {
 			p.append("data", l1);
 			data.add(p);
 
-			bs = _DB.Record.dao.load(W.create("node", Local.id()).and("name", "write")
+			bs = _DB.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
 					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			if (bs != null && !bs.isEmpty()) {
 				Collections.reverse(bs);
@@ -76,19 +114,30 @@ public class times extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(
-				W.create("node", Local.id()).and("name", "read").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and("node", id).and("name", "read").and("created", time, W.OP.gte).sort("created", -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 			this.set("list1", bs);
 		}
 
-		Beans<_DB.Record> list2 = _DB.Record.dao.load(
-				W.create("node", Local.id()).and("name", "write").and("created", time, W.OP.gte).sort("created", -1), 0,
-				24 * 60 * 2);
+		Beans<_DB.Record> list2 = _DB.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
+				.and("created", time, W.OP.gte).sort("created", -1), 0, 24 * 60 * 2);
 		if (list2 != null && !list2.isEmpty()) {
 			Collections.reverse(list2);
 			this.set("list2", list2);

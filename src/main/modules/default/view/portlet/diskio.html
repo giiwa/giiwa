@@ -9,13 +9,14 @@ $(function(){
 	        type: 'line'
 	    },
 	    title: {
-	        text: "$lang.get('diskio.name')($!{name})"
+	        text: "$!name1 - $lang.get('diskio.name')($!{name})"
 	    },
 	    xAxis: {
 	    		type: 'datetime'
 	    },
 	    yAxis: {
-	    		title: {
+	    	min: 0,
+    		title: {
 	            text: ''
 	        }
 	    },
@@ -32,14 +33,14 @@ $(function(){
 	        enabled: false
 	    },
 	    series: [
-	    				{name: "$lang.get('disk.reads')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created,'m'), y:$c.reads, hint:"$!lang.size($c.reads)"},#end]},
+	    				{name: "$lang.get('disk.reads')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created,'m'), y:$c._reads, hint:"$!lang.size($c._reads)"},#end]},
 	    				{name: "$lang.get('disk.writes')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created,'m'), y:$c.writes, hint:"$!lang.size($c.writes)"},#end]}
 	    			], 
 	});
 	
 	function reload() {
 		if($('#diskio_$!requestid').length > 0) {
-			$.post('/portlet/diskio/data?__node=$!__node', {name:"$!name"}, function(d){
+			$.post('/portlet/diskio/data?__node=$!__node', {id:"$!id", name:"$!name"}, function(d){
 				if(d.state == 200) {
 					var series=t.series; 
 			        while(series.length > 0){

@@ -12,6 +12,8 @@ public class MD5Test {
 	public void test() {
 		File f = new File("/Users/wujun/d/workspace/giiwa/README.md");
 		System.out.println(MD5.md5(f));
+		
+		
 	}
 
 }

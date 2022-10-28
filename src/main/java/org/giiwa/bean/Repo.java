@@ -23,6 +23,7 @@ import org.apache.commons.logging.*;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.web.Language;
@@ -31,10 +32,11 @@ import org.giiwa.web.Language;
  * repository of file system bean. <br>
  * table="gi_repo"
  * 
+ * @deprecated
  * @author yjiang
  * 
  */
-public class Repo {
+public final class Repo {
 
 	private static Log log = LogFactory.getLog(Repo.class);
 
@@ -75,7 +77,7 @@ public class Repo {
 	/**
 	 * Store the input data to associated id
 	 * 
-	 * @deprecated
+	 * @Deprecated
 	 * @param id       the id
 	 * @param filename the filename
 	 * @param position the position
@@ -134,7 +136,6 @@ public class Repo {
 	 *
 	 * @param uri the uri
 	 * @return the entity
-	 * @deprecated
 	 */
 	public static Entity loadByUri(String uri) {
 		return load(uri);
@@ -149,7 +150,6 @@ public class Repo {
 	public static Entity load(String id) {
 		try {
 			id = getId(id);
-//			System.out.println("id=" + id);
 			return Entity.load(id, null, null);
 		} catch (Exception e) {
 			log.error(id, e);
@@ -182,14 +182,14 @@ public class Repo {
 	 * 
 	 */
 	@Table(name = "gi_repo", memo = "GI-文件仓库")
-	public static class Entity extends Bean {
+	public final static class Entity extends Bean {
 
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
 
-		public static BeanDAO<String, Entity> dao = BeanDAO.create(Entity.class);
+		public static final BeanDAO<String, Entity> dao = BeanDAO.create(Entity.class);
 
 		@Column(memo = "唯一序号ID")
 		String id;
@@ -201,7 +201,6 @@ public class Repo {
 		String path;
 
 		transient DFile file;
-		transient InputStream in;
 
 		public long length() {
 			return file.length();
@@ -265,26 +264,27 @@ public class Repo {
 				DFile f = Disk.seek(path);
 				DFile[] ff = f.listFiles();
 				if (ff != null && ff.length > 0) {
-					for (DFile f1 : ff) {
-						if (X.isSame(f1.getDisk_obj().type, Disk.TYPE_DATA)) {
-							file = ff[0];
-							break;
-						}
-					}
+					file = ff[0];
 				}
 			} else {
 				file = Disk.seek(path + name);
 			}
 
-			log.debug("id=" + id + ", path=" + path + ", name=" + name + ", file=" + file);
+			if (log.isDebugEnabled()) {
+				log.debug("id=" + id + ", path=" + path + ", name=" + name + ", file=" + file);
+			}
 		}
 
 		public long store(long position, InputStream in, long total) throws Exception {
 
-			file.upload(position, in);
+			long len = file.upload(position, in);
 
-			this.getFile();
-			return file.length();
+			if (Global.getInt("dfile.encode", 0) == 1) {
+				return position + len;
+			} else {
+				this.getFile();
+				return file.length();
+			}
 
 		}
 
@@ -299,19 +299,7 @@ public class Repo {
 		 * @throws IOException occur error where get the inputstream from Repo
 		 */
 		public InputStream getInputStream() throws IOException {
-			if (in == null) {
-				in = file.getInputStream();
-			}
-
-			return in;
-		}
-
-		/**
-		 * Close.
-		 */
-		public synchronized void close() {
-			X.close(in);
-			in = null;
+			return file.getInputStream();
 		}
 
 		/*
@@ -321,7 +309,6 @@ public class Repo {
 		 */
 		@Override
 		protected void finalize() throws Throwable {
-			close();
 			super.finalize();
 		}
 
@@ -378,6 +365,33 @@ public class Repo {
 
 	public static Entity get(String id, String path, String filename) throws Exception {
 		return Entity.load(id, path, filename);
+	}
+
+	public static int cleanup() {
+		int[] n = new int[] { 0 };
+		try {
+			Entity.dao.stream(W.create(), e -> {
+
+				try {
+
+					e.getFile();
+					DFile f1 = e.getDFile();
+					if (f1 == null || !f1.exists()) {
+						Entity.dao.delete(e.id);
+						n[0]++;
+					}
+
+				} catch (Exception e1) {
+					log.error(e1.getMessage(), e1);
+				}
+				return true;
+
+			});
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return n[0];
 	}
 
 }

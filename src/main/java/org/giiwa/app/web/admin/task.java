@@ -16,15 +16,21 @@ package org.giiwa.app.web.admin;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.giiwa.bean.GLog;
+import org.giiwa.bean.Node;
 import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Host;
 import org.giiwa.misc.Shell;
+import org.giiwa.net.mq.MQ;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
 
@@ -37,6 +43,11 @@ import org.giiwa.web.*;
  *
  */
 public class task extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/*
 	 * (non-Javadoc)
@@ -54,6 +65,88 @@ public class task extends Controller {
 		this.set("list", Task.getAll());
 
 		this.show("/admin/task.index.html");
+	}
+
+	@Path(path = "global", login = true, access = "access.config.admin")
+	public void global() {
+
+		AtomicLong pending = new AtomicLong(0);
+		AtomicLong running = new AtomicLong(0);
+		AtomicLong cores = new AtomicLong(0);
+
+		W q = Node.dao.query().and("giiwa", null, W.OP.neq);
+		q.and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte);
+
+		List<JSON> task = new ArrayList<JSON>();
+
+		try {
+
+			AtomicLong has = new AtomicLong(q.count());
+
+//			log.warn("MQ1, has=" + has.get() + ", q=" + q);
+
+			MQ.callTopic(Task.MQNAME, "list", "", 5000, req -> {
+
+				String from = req.from;
+//				log.warn("MQ1, got from=" + from);
+
+				try {
+
+//					GLog.applog.info("task", "global", "from=" + from);
+
+					Task._Status s = req.get();
+					pending.set(s.pending);
+					running.addAndGet(s.running);
+					cores.addAndGet(s.cores);
+					List<Task._Config> l1 = s.list;
+					if (l1 != null) {
+
+						List<JSON> l2 = X.asList(l1, e -> {
+
+							Task._Config e1 = (Task._Config) e;
+							return e1.json();
+
+						});
+						synchronized (task) {
+							task.addAll(l2);
+						}
+					}
+
+				} catch (Exception e) {
+					GLog.applog.error("task", "global", "from=" + from + ", error=" + e.getMessage(), e);
+				}
+
+				has.decrementAndGet();
+				if (has.get() == 0) {
+					return true;
+				} else {
+					return false;
+				}
+			});
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			GLog.applog.error("task", "checking", e.getMessage(), e);
+//			this.set(X.MESSAGE, e.getMessage());
+		}
+
+		Collections.sort(task, new Comparator<JSON>() {
+
+			@Override
+			public int compare(JSON o1, JSON o2) {
+				String name1 = o1.getString("name");
+				String name2 = o2.getString("name");
+				return X.compareTo(name1, name2);
+			}
+
+		});
+		this.set("pending", pending.get());
+		this.set("running", running.get());
+		this.set("cores", cores.get());
+
+		this.set("list", task);
+
+		this.show("/admin/task.global.html");
+
 	}
 
 	@Path(path = "kill", login = true, access = "access.config.admin")
@@ -79,18 +172,19 @@ public class task extends Controller {
 					StackTraceElement[] ss = t1.getStackTrace();
 					sb.append("ID: ").append(t1.getId()).append("(0x").append(Long.toHexString(t1.getId()))
 							.append("), Thread: ").append(t1.getName()).append(", State: <i style='color:green'>")
-							.append(t1.getState()).append("</i>, Task:").append(t.getClass().getName()).append("<br/>");
+							.append(t1.getState()).append("</i>, Task:").append(t.getClass().getName()).append("\r");
 
-					sb.append("<div style='color: .888;'>")
-							.append(t.onDump(new StringBuilder()).toString().replaceAll("\r\n", "<br/>"))
+					sb.append("<div style='color: .888;'>").append(t.onDump(new StringBuilder()).toString())
 							.append("</div>");
 
 					if (ss != null && ss.length > 0) {
 						for (StackTraceElement e : ss) {
 
-							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("<br/>");
+							sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("\r");
 						}
 					}
+				} else {
+					sb.append("thread is null, scheduled=" + t.isScheduled() + ", running=" + t.isRunning());
 				}
 			}
 			if (sb.length() > 0) {
@@ -149,11 +243,11 @@ public class task extends Controller {
 				i++;
 				sb.append(i).append(") ID: ").append(t.getId()).append("(0x").append(Long.toHexString(t.getId()))
 						.append("), Thread: ").append(t.getName()).append(", State: <i style='color:green'>")
-						.append(t.getState()).append("</i>").append("<br/>");
+						.append(t.getState()).append("</i>").append("\r");
 
 				if (ss != null && ss.length > 0) {
 					for (StackTraceElement e : ss) {
-						sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("<br/>");
+						sb.append("&nbsp;&nbsp;&nbsp;&nbsp;").append(e.toString()).append("\r");
 					}
 				}
 			}
@@ -236,7 +330,7 @@ public class task extends Controller {
 					StringBuilder sb2 = new StringBuilder();
 					if (ss != null && ss.length > 0) {
 						for (StackTraceElement e : ss) {
-							sb2.append(e.toString()).append("<br/>");
+							sb2.append(e.toString()).append("\r");
 						}
 					}
 					j.append("trace2", sb2.toString());

@@ -2,23 +2,73 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/database?__node=$!__node'>$lang.get('a.database')</a>
-	<a href='/admin/backup?__node=$!__node'>$lang.get('a.backup.files')</a>
 	<a href='/admin/backup/auto?__node=$!__node' class='selected'>$lang.get('a.backup.auto')</a>
 </div>
 
-<form action='/admin/backup/auto?__node=$!__node'  method='post' class='form' >
+<table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 120px;">$lang.get('backup.auto.name')</th>
+			<th style="width: 80px;">$lang.get('backup.auto.months')</th>
+			<th style="width: 80px;">$lang.get('backup.auto.days')</th>
+			<th style="width: 80px;">$lang.get('backup.auto.dates')</th>
+			<th style="width: 100px;">$lang.get('backup.auto.time')</th>
+			<th style="width: 80px;">$lang.get('backup.type')</th>
+			<th>$lang.get('backup.auto.table')</th>
+			<th style="width: 60px;">$lang.get('backup.auto.url')</th>
+			<th style="width: 60px;">$lang.get('backup.auto.enabled')</th>
+			<th style="width: 120px;">$lang.get('backup.auto.nextime')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$!f.name</td>
+		<td>$!f.months</td>
+		<td>
+			#foreach($d in $!f.day_obj)
+			<p>$lang.get("backup.day_$d")</p>
+			#end
+		</td>
+		<td>$!f.dates</td>
+		<td>$!f.time</td>
+		<td>$!lang.get("backup.type_$!f.type")</td>
+		<td>$!f.table</td>
+		<td>#if($!f.isRemote()) Y #end</td>
+		<td>
+			#if($!f.enabled == 0)
+			<i class='icon icon-radio-unchecked'></i>
+			#elseif($!f.state == 1)
+			<i class='icon icon-radio-checked2' style='color:#67c23a'></i>
+			#else
+			<i class='icon icon-radio-checked' style='color:#67c23a'></i>
+			#end
+		</td>
+		<td>$!lang.format($!f.nextime, 'yyyy-MM-dd HH:mm')</td>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/backup/auto/edit?id=$!f.id"><i class="icon-pencil"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f.name')"><i class="icon-cancel-circle"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
 
-	<div><label><h3>$lang.get('backup.auto'):</h3><input type='checkbox' name='backup.auto' #if($global.getInt('backup.auto', 0) ==1) checked="checked" #end/></label></div>
-	<div style="margin-left:20px;"><label><h3>$lang.get('backup.point'):</h3><input type='text' name='backup.point' value="$global.getString('backup.point', '2:00')"/><g>$lang.get('backup.point.hint')</g></label></div>
-	<div style="margin-left:20px;"><label><h3>$lang.get('backup.url'):</h3><input type='text' name='backup.url' value="$global.getString('backup.url', '')" class="width-60"/><g>$lang.get('backup.url.hint')</g></label></div>
+#parse('/widget/goto.page.html')
 
-	<div><label><h3>$lang.get('backup.clean'):</h3><input type='checkbox' name='backup.clean' #if($global.getInt('backup.clean', 0) ==1) checked="checked" #end/></label></div>
-	<div style="margin-left:20px;"><label><h3>$lang.get('backup.keep.days'):</h3><input type='number' name='backup.keep.days' value="$global.getInt('backup.keep.days', 7)"/><g>$lang.get('backup.keep.days.hint')</g></label></div>
+<div class='btns'>
+	<a class='btn btn-success' href='/admin/backup/auto/create?__node=$!__node'>$lang.get('a.backup.create')</a>
+</div>
 
-	<div class='btns'>
-		<button class='btn btn-success' type='submit'>$lang.get('btn.ok')</button>
-	</div>
-	
-</form>
-
+<script>
+function _delete(name) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post('/admin/backup/delete?__node=$!__node', {name: name}, function(d){
+			giiwa.processing.hide();
+			giiwa.reload();
+		});
+	}
+}
+</script>

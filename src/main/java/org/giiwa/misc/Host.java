@@ -14,14 +14,11 @@
 */
 package org.giiwa.misc;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -30,6 +27,8 @@ import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.hyperic.sigar.CpuInfo;
@@ -64,9 +63,7 @@ public class Host {
 	static Log log = LogFactory.getLog(Host.class);
 
 	public static long getPid() {
-		RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-//		System.out.println(runtimeMXBean.getName());
-		return X.toInt(runtimeMXBean.getName().split("@")[0]);
+		return X.toLong(Shell.pid());
 	}
 
 	public static String getLocalip() {
@@ -83,17 +80,16 @@ public class Host {
 							if (ia instanceof Inet6Address)
 								continue;
 							if (sb.length() > 0) {
-								sb.append(";");
+								sb.append(",");
 							}
-							// System.out.println(ia.getClass());
-
 							sb.append(ia.getHostAddress());
 						}
 					}
 				}
 
-				if (sb.length() > 0)
+				if (sb.length() > 0) {
 					return sb.toString();
+				}
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -194,6 +190,75 @@ public class Host {
 		return l1;
 	}
 
+	public static List<JSON> getProcess(long ppid) {
+
+		_init();
+
+		try {
+			long[] pids = getPids();
+			List<JSON> l1 = new ArrayList<JSON>();
+
+			for (long pid : pids) {
+				JSON jo = JSON.create().append("pid", pid);
+
+				try {
+					ProcCred ce = sigar.getProcCred(pid);
+					jo.append("uid", ce.getUid());
+				} catch (Exception e) {
+					// ignore
+				}
+				try {
+					// ProcExe p = sigar.getProcExe(pid);
+					// jo.append("name", p.getName()).append("cwd", p.getCwd());
+
+					String name = ProcUtil.getDescription(sigar, pid);
+					jo.put("name", name);
+				} catch (Exception e) {
+					// ignore
+				}
+				try {
+
+					ProcCredName cn = sigar.getProcCredName(pid);
+					jo.append("user", cn.getUser());
+				} catch (Exception e) {
+					// ignore
+				}
+				try {
+
+					ProcState st = sigar.getProcState(pid);
+					if (ppid <= 0 || ppid != st.getPpid()) {
+						continue;
+					}
+					jo.append("threads", st.getThreads()).append("ppid", st.getPpid());
+				} catch (Exception e) {
+					// ignore
+				}
+				try {
+
+					ProcMem m = sigar.getProcMem(pid);
+					jo.append("mem", m.getResident());
+				} catch (Exception e) {
+					// ignore
+				}
+				try {
+
+					ProcCpu c = sigar.getProcCpu(pid);
+					jo.append("cpu", c.getPercent()).append("cputotal", c.getTotal());
+
+				} catch (Exception e) {
+					// ignore
+				}
+
+				l1.add(jo);
+			}
+
+			return l1;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
 	public static long[] getPids() throws SigarException {
 		_init();
 
@@ -217,12 +282,14 @@ public class Host {
 		return l1;
 	}
 
-	public static Collection<JSON> getDisks() throws SigarException {
+	public static List<_DS> getDisks() throws SigarException {
 
 		_init();
 
 		FileSystem[] fs = getFileSystem();
-		Map<String, JSON> m1 = new TreeMap<String, JSON>();
+
+		List<_DS> l1 = new ArrayList<_DS>();
+
 		for (FileSystem f : fs) {
 
 			if (Arrays.asList(FileSystem.TYPE_LOCAL_DISK).contains(f.getType())) {
@@ -230,19 +297,49 @@ public class Host {
 
 				// log.debug("p.total=" + p.getTotal());
 				if (p.getTotal() > 0) {
-
-					m1.put(f.getDirName(),
-							JSON.create().append("devname", f.getDevName()).append("dirname", f.getDirName())
-									.append("typename", f.getTypeName()).append("total", 1024 * p.getTotal())
-									.append("used", 1024 * p.getUsed()).append("free", 1024 * p.getFree())
-									.append("files", p.getFiles()).append("usepercent", p.getUsePercent())
-									.append("reads", p.getDiskReads()).append("readbytes", p.getDiskReadBytes())
-									.append("writes", p.getDiskWrites()).append("writebytes", p.getDiskWriteBytes())
-									.append("queue", p.getDiskQueue()));
+					l1.add(_DS.create(f, p));
 				}
 			}
 		}
-		return m1.values();
+		return l1;
+	}
+
+	public static class _DS {
+
+		public String path;
+		public String name;
+		public String typename;
+		public long total;
+		public long used;
+		public long free;
+		public long files;
+		public double usepercent;
+		public long reads;
+		public long readbytes;
+		public long writes;
+		public long writebytes;
+		public double queue;
+
+		public static _DS create(FileSystem f, FileSystemUsage p) {
+
+			_DS e = new _DS();
+			e.name = f.getDevName();
+			e.path = f.getDirName();
+			e.typename = f.getTypeName();
+			e.total = 1024 * p.getTotal();
+			e.used = 1024 * p.getUsed();
+			e.free = 1024 * p.getFree();
+			e.files = p.getFiles();
+			e.usepercent = p.getUsePercent();
+			e.reads = p.getDiskReads();
+			e.readbytes = p.getDiskReadBytes();
+			e.writes = p.getDiskWrites();
+			e.writebytes = p.getDiskWriteBytes();
+			e.queue = p.getDiskQueue();
+			return e;
+
+		}
+
 	}
 
 	public static NetInterfaceConfig[] getIfaces() throws SigarException {
@@ -263,12 +360,12 @@ public class Host {
 		return l1.toArray(new NetInterfaceConfig[l1.size()]);
 	}
 
-	public static Collection<JSON> getIfstats() throws SigarException {
+	public static List<_NS> getIfstats() throws SigarException {
 		_init();
 
 		String[] ifaces = sigar.getNetInterfaceList();
 
-		List<JSON> l1 = new ArrayList<JSON>();
+		List<_NS> l1 = new ArrayList<_NS>();
 		for (int i = 0; i < ifaces.length; i++) {
 			NetInterfaceConfig cfg = sigar.getNetInterfaceConfig(ifaces[i]);
 			if ((cfg.getFlags() & 1L) <= 0L || X.isSame(cfg.getAddress(), "0.0.0.0")) {
@@ -276,14 +373,74 @@ public class Host {
 			}
 
 			NetInterfaceStat s = sigar.getNetInterfaceStat(ifaces[i]);
-			l1.add(JSON.create().append("address", cfg.getAddress()).append("name", cfg.getName())
-					.append("rxbytes", s.getRxBytes()).append("rxdrop", s.getRxDropped())
-					.append("rxerr", s.getRxErrors()).append("rxpackets", s.getRxPackets())
-					.append("speed", s.getSpeed()).append("txbytes", s.getTxBytes()).append("txdrop", s.getTxDropped())
-					.append("txerr", s.getTxErrors()).append("txpackets", s.getTxPackets())
-					.append("created", System.currentTimeMillis()));
+
+			l1.add(_NS.create(cfg, s));
+
 		}
+
 		return l1;
+	}
+
+	public static class _NS {
+		public String address;
+		public String name;
+		public String inet;
+		public String inet6;
+		public long rxbytes;
+		public long rxdrop;
+		public long rxerr;
+		public long rxpackets;
+		public long speed;
+		public long txbytes;
+		public long txdrop;
+		public long txerr;
+		public long txpackets;
+		public long created;
+
+		static _NS create(NetInterfaceConfig cfg, NetInterfaceStat s) {
+
+			_NS e = new _NS();
+
+			e.address = cfg.getAddress();
+			e.name = cfg.getName();
+			e.inet = cfg.getAddress();
+			e.inet6 = cfg.getAddress();
+			e.rxbytes = s.getRxBytes();
+			e.rxdrop = s.getRxDropped();
+			e.rxerr = s.getRxErrors();
+			e.rxpackets = s.getRxPackets();
+			e.speed = s.getSpeed();
+			e.txbytes = s.getTxBytes();
+			e.txdrop = s.getTxDropped();
+			e.txerr = s.getTxErrors();
+			e.txpackets = s.getTxPackets();
+			e.created = System.currentTimeMillis();
+			return e;
+		}
+
+		public V toV() {
+
+			V e = V.create();
+
+			e.append("address", address);
+			e.append("name", name);
+			e.append("inet", inet);
+			e.append("inet6", inet6);
+			e.append("rxbytes", rxbytes);
+			e.append("rxdrop", rxdrop);
+			e.append("rxerr", rxerr);
+			e.append("rxpackets", rxpackets);
+			e.append("speed", speed);
+			e.append("txbytes", txbytes);
+			e.append("txdrop", txdrop);
+			e.append("txerr", txerr);
+			e.append("txpackets", txpackets);
+			e.append("created", created);
+
+			return e;
+
+		}
+
 	}
 
 	public static NetStat getNetStat() throws SigarException {
@@ -342,23 +499,44 @@ public class Host {
 
 	public static List<String> getMAC() {
 
+		TimeStamp t1 = TimeStamp.create();
+
 		List<String> l1 = new ArrayList<String>();
 
 		try {
-			String s = Shell.run("ifconfig |grep ether", 10000);
-			X.IO.lines(s, (line, re) -> {
 
-				String[] ss = X.split(line.trim(), " ");
-				if (ss.length > 1) {
-					l1.add(ss[1]);
+			NetInterfaceConfig[] nn = Host.getIfaces();
+			for (NetInterfaceConfig n : nn) {
+
+				if (!X.isEmpty(n.getAddress()) && !X.isEmpty(n.getHwaddr())) {
+
+//					log.warn("mac: " + n.getAddress() + ", " + n.getHwaddr());
+
+					String ip = n.getAddress();
+					String[] ss = X.split(ip, "\\.");
+					if (!X.isIn(ss[0], "127", "0")) {
+
+						if (!l1.contains(n.getHwaddr())) {
+							l1.add(n.getHwaddr());
+						}
+
+//					} else {
+//						log.warn("ignore, ss[0]=" + ss[0] + ", ip=" + ip);
+					}
 				}
-
-			});
-
+			}
 			Collections.sort(l1);
+
+//			log.warn("mac: " + l1);
+
 		} catch (Exception e) {
-			// ignore
+			log.error(e.getMessage(), e);
 		}
+
+		if (log.isDebugEnabled()) {
+			log.debug("cost=" + t1.past() + ", mac=" + l1);
+		}
+
 		return l1;
 	}
 
@@ -371,7 +549,11 @@ public class Host {
 				String s = Shell.run("sensors", 10 * 1000);
 				StringFinder sf = StringFinder.create(s);
 
-				String temp = sf.get("Core 0:", "(high =");
+				String temp = sf.get("Core 0:", "(high");
+				if (X.isEmpty(temp)) {
+					temp = sf.reset().get("Composite:", "(low");
+				}
+
 				if (!X.isEmpty(temp)) {
 					temp = temp.trim();
 				}
@@ -384,6 +566,20 @@ public class Host {
 			}
 		}
 		return X.EMPTY;
+	}
+
+	public static String getDockerID() {
+
+		String cmd = "head -1 /proc/self/cgroup";
+		String r = Shell.bash(cmd, 3000);
+		if (!X.isEmpty(r) && r.indexOf("docker") > 0) {
+			int i = r.lastIndexOf("/");
+			if (i > 0) {
+				return r.substring(i + 1).trim();
+			}
+		}
+		return null;
+
 	}
 
 }

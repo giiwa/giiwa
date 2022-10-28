@@ -1,0 +1,155 @@
+#!/usr/bin/python2
+
+# chkconfig:   2345 90 10
+# description:  appdog is a apps daemon tool
+# version: v0.2
+# author: joe
+# required: above python2.6
+
+### BEGIN INIT INFO
+# Provides:          giiwa
+# Required-Start:    $local_fs $remote_fs $network $syslog
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the appdog
+# Description:       starts appdog using start-stop-daemon
+### END INIT INFO
+
+import re, os, sys, time, socket, threading, subprocess, ConfigParser, smtplib, httplib,urllib
+
+global running,logfile,conf
+running=True
+logfile="/var/log/appdog.log"
+
+def _log(x):
+	global logfile
+	f1=open(logfile, "ab+")
+	print >>f1, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),x
+	f1.close()
+
+def _load_config():
+    global conf, logfile
+    conf=ConfigParser.ConfigParser()
+    try:
+        if os.path.isfile("/etc/appdog.conf"):
+            conf.read("/etc/appdog.conf")
+        else:
+            conf.read("appdog.conf")
+        logfile=conf.get("global", "log")
+    except Exception as e:
+        _log('not found appdog.conf in local or /etc/')
+        sys.exit(0)
+
+def _startx(x, u, cwd):
+	global sock, logfile
+	_log("starting:" + x)
+	try:
+		if len(u)>0:
+			c="sudo -E -u " + u + " " + x + ">" + logfile + " 2>&1"
+			_log(c)
+			subprocess.Popen(c, shell=True, cwd=cwd)
+		else:
+			c=x + ">" + logfile + " 2>&1"
+			_log(c)
+			subprocess.Popen(x, shell=True, cwd=cwd)
+	except Exception, e:
+		_log("failed: " + x)
+		print e
+		print "failed:" + x
+		
+def _pidx(x):
+	try:
+		s = os.popen("ps aux | grep '"+x+"' | grep -v 'grep' | awk '{print $2,$3}'").readlines()[0];
+		ss = s.split( )
+		pid = int(ss[0])
+		return pid
+	except:
+		return -1
+		
+def _app_main(x):
+	global conf, running
+	command=conf.get(x, "start")
+	pattern=conf.get(x, "pattern")
+	try:
+		user=conf.get(x, "user")
+	except:
+		user=""
+	try:
+		check=conf.getfloat(x, "check")
+	except:
+		check=0.2
+	try:
+		enabled=conf.getint(x, "enabled")
+	except:
+		enabled=1
+	try:
+		path=conf.get(x, "path")
+	except:
+		path=""
+	
+	if enabled>0:
+		while running:	
+			if _pidx(pattern)>0:
+				time.sleep(check)
+			else:
+				if notify>0:
+					_notify("warning:" + x, x + " was down, starting it")
+
+				_startx(command, user, path)
+
+				if check>2:
+					time.sleep(check)
+				else:
+					time.sleep(10)
+				
+def _app_start(x):
+	try:
+		t = threading.Thread(target=_app_main, args=(x,))	
+		t.start()
+	except Exception,e:
+		_log(str(e))
+	
+def _start():
+	global conf, running, sock
+	_load_config()
+
+	pid=os.fork()
+	if pid>0:
+		pidfile=conf.get("global", "pid")
+		try:
+			f=open(pidfile, "wb+")
+			print >>f, pid
+			f.close()
+			sys.exit(0)
+		except Exception, e:
+			print e
+			_log(str(e))
+			sys.exit(0)
+
+	for s in conf.sections():
+		if "app:" in s:
+			_app_start(s)
+
+	_log("appdog started")
+	print "appdog started"
+	while running:
+		time.sleep(1)
+	else:
+		sys.exit(0)
+		
+def _usage():
+	print "Help: \nappdog [start]"
+
+def _console():
+	_usage()
+
+if __name__=="__main__":
+	if len(sys.argv) > 1:
+		a=sys.argv[1]
+	else:
+		a=""
+	if a=="start":
+		_start()
+	else:
+		_console()

@@ -1,0 +1,83 @@
+<div class='tabs'>
+	<a href='/admin/task?__node=$!__node'>$lang.get('a.task')</a>
+	<a href='/admin/task/global?__node=$!__node' class='selected'>$lang.get('a.task.global')</a>
+</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='notes'>
+	<span>Task( <i class='red'>$!running</i>//running, <i
+		class='grey'>$!pending</i>//pending)
+	</span>&nbsp; <span>Cores( <i class='green'>$!cores</i>)
+	</span>
+</div>
+
+<table id='task-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 30px;"></th>
+			<th style="width: 20%;">Name</th>
+			<th>CLASS</th>
+			<th>Node</th>
+			<th style="width: 115px;">STATE</th>
+			<th>SCHEDULED</th>
+			<th>DELAY</th>
+			<th>RT</th>
+			<th>CT</th>
+			<th>DU</th>
+			<th>TIMES</th>
+		</tr>
+	</thead>
+	<tbody>
+		#set($i=0) #foreach($f in $list)
+		<tr>
+			#set($i=$i+1)
+			<td>$i</td>
+			<td class="a">
+				$!f.name
+			</td>
+			<td>$!f.clazzname</td> 
+			<td>$!f.node</td>
+			#if($f.state == 'running')
+			<td style='color: green' class="a">
+				<i class='icon-radio-checked'></i>
+				$!f.state 
+			</td> 
+			#else
+			<td style="color: #999" class="a">
+				<i class='icon-clock'></i>
+				$!f.state
+			</td> 
+			#end
+			<td #if($f.remain<0) style='color:red' #end>$f.remain</td>
+			<td>#if($f.delay>-1)$f.delay#end</td>
+			<td>#if($f.runtime>0)$f.runtime#end</td>
+			<td>#if($f.costing>0)$f.costing#end</td>
+			<td>#if($f.duration>0)$f.duration#end</td>
+			<td>$!f.runtimes</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+
+<script>
+	$(function() {
+		$("#task-table").tablesorter({
+			headers : {
+				2 : {
+					sorter : false
+				},
+				3 : {
+					sorter : false
+				},
+				9 : {
+					sorter : false
+				},
+				10 : {
+					sorter : false
+				}
+			}
+		});
+	})
+</script>

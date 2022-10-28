@@ -13,9 +13,10 @@
 <table id='role-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th>$lang.get('role.name')</th>
-			<th>$lang.get('role.memo')</th>
-			<th>$lang.get('role.url')</th>
+			<th style="width:200px">$lang.get('role.name')</th>
+			<th style="width:200px">$lang.get('role.memo')</th>
+			<th style="width:200px">$lang.get('role.url')</th>
+			<th style="width:100px">$lang.get('role.seq')</th>
 			<th></th>
 		</tr>
 	</thead>
@@ -25,6 +26,7 @@
 		<td>$!f.name</td>
 		<td>$!f.memo</td>
 		<td>$!f.url</td>
+		<td>$!f.seq</td>
 	#if($edit)
 		<td class="a">
 			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/role/edit?__node=$!__node&id=$f.id"><i class="icon-pencil"></i></a>

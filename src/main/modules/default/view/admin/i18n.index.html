@@ -13,7 +13,7 @@
 	<thead>
 		<tr>
 			<th style="width: 200px;">$lang.get("i18n.key")</th>
-			<th>$lang.get("i18n.module")</th>
+			<th style="width: 100px;">$lang.get("i18n.module")</th>
 			<th>$lang.get("i18n.value")</th>
 		</tr>
 	</thead>
@@ -22,7 +22,7 @@
 	<tr>
 		<td>$f</td>
 		<td>$!d.get($f)[1]</td>
-		<td>$!d.get($f)[0]</td>
+		<td>$!d.get($f)[0].replaceAll('<', '&lt;').replaceAll('>', '&gt;')</td>
 	</tr>
 #end
 	</tbody>

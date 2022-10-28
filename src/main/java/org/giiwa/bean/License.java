@@ -38,7 +38,7 @@ import org.giiwa.web.Module;
  * 
  */
 @Table(name = "gi_license", memo = "GI-许可证")
-public class License extends Bean {
+public final class License extends Bean {
 	/**
 	* 
 	*/
@@ -49,7 +49,7 @@ public class License extends Bean {
 	public final static BeanDAO<String, License> dao = BeanDAO.create(License.class);
 
 	public static enum LICENSE {
-		free, trial, limited, licensed, issue, personal, professional, enterprise, unlimited
+		free, trial, limited, licensed, issue, personal, professional, enterprise, unlimited, inactive
 	};
 
 	@Column(memo = "唯一序号")
@@ -104,7 +104,7 @@ public class License extends Bean {
 				String code = new String(RSA.decode(Base64.getDecoder().decode(this.code), key));
 
 				if (!X.isEmpty(code)) {
-					JSON jo = JSON.fromObject(Digest.aes_decrypt(Base64.getDecoder().decode(this.content), code));
+					JSON jo = JSON.fromObject(Digest.decode(Base64.getDecoder().decode(this.content), code));
 					if (jo != null) {
 						keys.put(id, jo);
 						m.setLicense(LICENSE.valueOf(jo.getString("type")), jo.getString("code"));

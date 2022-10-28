@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.giiwa.bean.Node;
 import org.giiwa.bean.m._Net;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
@@ -14,33 +15,67 @@ import org.giiwa.web.Path;
 
 public class net extends portlet {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public void get() {
 
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
 		String name = this.getString("name");
-		this.set("node", Local.id());
 		this.set("name", name);
 
-		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create("node", Local.id()).and("name", name).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1),
-				0, 60);
+		W q = W.create().and("node", id).and("name", name)
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+		_Net.Record.dao.optimize(q);
+		
+		Beans<_Net.Record> bs = _Net.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("inet", bs.get(0).get("inet"));
 			this.set("list", bs);
-			this.show("/portlet/net.html");
 		}
+
+		long max1 = X.toLong(1.1 * X.toLong(_Net.Record.dao.max("rxbytes",
+				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+		long max2 = X.toLong(1.1 * X.toLong(_Net.Record.dao.max("txbytes",
+				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+
+		this.set("max", Math.max(max1, max2));
+
+		this.show("/portlet/net.html");
 
 	}
 
 	@Path(path = "data", login = true)
 	public void data() {
+
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+
 		String name = this.getString("name");
-		this.set("node", Local.id());
 		this.set("name", name);
 
-		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create("node", Local.id()).and("name", name).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1),
-				0, 60);
+		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create().and("node", id).and("name", name)
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -51,8 +86,10 @@ public class net extends portlet {
 			// in $list) {x:$this.time($c), y:$c.txbytes,
 			// hint:"$!lang.size($c.txbytes)"},.end]}
 
-			JSON p1 = JSON.create().append("name", lang.get("net.rxbytes.speed")).append("color", "#0dad76");
-			JSON p2 = JSON.create().append("name", lang.get("net.txbytes.speed")).append("color", "#0a5ea0");
+			JSON p1 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("net.rxbytes.speed"))
+					.append("color", "#0dad76");
+			JSON p2 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("net.txbytes.speed"))
+					.append("color", "#0a5ea0");
 
 			List<JSON> l1 = JSON.createList();
 			List<JSON> l2 = JSON.createList();
@@ -75,15 +112,26 @@ public class net extends portlet {
 
 	@Path(path = "more", login = true)
 	public void more() {
-		long id = this.getLong("id");
-		this.set("id", id);
+
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
 		String name = this.getString("name");
 		this.set("name", name);
 
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_Net.Record> bs = _Net.Record.dao.load(
-				W.create("node", Local.id()).and("name", name).and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create().and("node", id).and("name", name).and("created", time, W.OP.gte).sort("created", 1), 0,
 				7 * 24 * 60);
 
 		if (bs != null && !bs.isEmpty()) {

@@ -14,6 +14,9 @@
 */
 package org.giiwa.net.mq;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.giiwa.net.mq.MQ.Mode;
 import org.giiwa.net.mq.MQ.Request;
 
@@ -29,6 +32,18 @@ public abstract class IStub {
 	 * the service name that will bind on ActiveMQ
 	 */
 	protected String name;
+	protected Mode mode = Mode.QUEUE;
+
+	private Map<String, Object> _attach = new HashMap<String, Object>();
+
+	public void attach(String name, Object obj) {
+		_attach.put(name, obj);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T attach(String name) {
+		return (T) _attach.get(name);
+	}
 
 	public String getName() {
 		return name;
@@ -43,14 +58,21 @@ public abstract class IStub {
 		this.name = name;
 	}
 
+	public IStub(String name, Mode mode) {
+		this.name = name;
+		this.mode = mode;
+	}
+
 	/**
 	 * Bind the stub on the MQ as Queue
 	 *
 	 * @throws Exception the exception
 	 */
-	final public void bind() throws Exception {
-		bind(Mode.QUEUE);
+	public void bind() throws Exception {
+		bindAs(mode);
 	}
+
+	protected boolean bound = false;
 
 	/**
 	 * Bind the stub on the ActiveMQ with the mode
@@ -58,8 +80,16 @@ public abstract class IStub {
 	 * @param m the mode
 	 * @throws Exception the exception
 	 */
-	final public void bind(Mode m) throws Exception {
+	public void bindAs(Mode m) throws Exception {
+		mode = m;
 		MQ.bind(name, this, m);
+		bound = true;
+	}
+
+	public void destroy() throws Exception {
+		MQ.unbind(this);
+		MQ.destroy0(name, mode);
+		bound = false;
 	}
 
 	/**
@@ -67,9 +97,9 @@ public abstract class IStub {
 	 * 
 	 * @throws Exception throw Exception if unbind failed
 	 */
-	final public void unbind() throws Exception {
-		MQ.unbind(this);
-	}
+//	final public void unbind() throws Exception {
+//		MQ.unbind(this);
+//	}
 
 	/**
 	 * Send message to destination

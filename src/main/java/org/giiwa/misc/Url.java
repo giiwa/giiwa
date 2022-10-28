@@ -102,23 +102,58 @@ public class Url {
 		return url;
 	}
 
+	/**
+	 * 获取URL中的协议
+	 * 
+	 * @return
+	 */
 	public String getProto() {
 		return proto;
 	}
 
+	/**
+	 * 获取URL中的域名
+	 * 
+	 * @return
+	 */
+	public String getHost() {
+		return ip;
+	}
+
+	/**
+	 * 获取URL中的域名，IP地址
+	 * 
+	 * @return
+	 */
 	public String getIp() {
 		return ip;
 	}
 
+	/**
+	 * 获取URL中的端口
+	 * 
+	 * @param defaultPort
+	 * @return
+	 */
 	public int getPort(int defaultPort) {
 		int p = X.toInt(port);
 		return p > 0 ? p : defaultPort;
 	}
 
+	/**
+	 * 获取URL中的uri
+	 * 
+	 * @return
+	 */
 	public String getUri() {
 		return uri;
 	}
 
+	/**
+	 * 获取URL中的端口
+	 * 
+	 * @return
+	 */
 	public String getPort() {
 		return port;
 	}
@@ -367,7 +402,7 @@ public class Url {
 
 	public static String encode(String url) {
 		if (X.isEmpty(url)) {
-			return url;
+			return X.EMPTY;
 		}
 
 		try {
@@ -380,7 +415,7 @@ public class Url {
 
 	public static String decode(String url) {
 		if (X.isEmpty(url)) {
-			return url;
+			return X.EMPTY;
 		}
 
 		try {

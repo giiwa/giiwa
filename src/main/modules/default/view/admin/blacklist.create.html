@@ -1,0 +1,16 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/blacklist?__node=$!__node'>$lang.get('a.blacklist')</a>
+	<a href='/admin/blacklist/create?__node=$!__node' class='selected'>$lang.get('a.create')</a>
+</div>
+
+<form action='/admin/blacklist/create?__node=$!__node'  method='post' class='form' >
+	
+	<div><label><h3>$lang.get('blacklist.ip')<r>*</r>:</h3><input type='text' name='ip' value='$!ip' required/></label></div>
+	<div><label><h3>$lang.get('blacklist.url'):</h3><input type='text' name='url' class="width-20" value='$!url'/></label></div>
+	<div><label><h3>$lang.get('blacklist.memo'):</h3><input type='text' class="width-20" name='memo' value='$!memo'/></label></div>
+
+	<div class='btns'><button class='btn btn-success' type='submit'>$lang.get('btn.create')</button></div>
+</form>

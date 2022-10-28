@@ -6,7 +6,8 @@
 </div>
 
 <div class='search'>
-	<form action='/admin/user?__node=$!__node' method='get' #if($s>0) style='display:none' #end >
+	<form action='/admin/user' method='get' #if($s>0) style='display:none' #end >
+		<input type="hidden" name="__node" value="$!__node" />
 		<span><label><h3>$lang.get('user.name'):</h3><input type='text' name='name' value="$!name"/></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
@@ -22,14 +23,15 @@
 	<thead>
 		<tr>
 			<th>$lang.get('user.name')</th>
+			<th>ID</th>
 			<th>$lang.get('user.nickname')</th>
-			<th>$lang.get('user.email')</th>
-			<th>$lang.get('user.phone')</th>
-			<th style="width: 120px;">$lang.get('user.roles')</th>
+			<th style="width:200px">$lang.get('user.email')</th>
+			<th style="width:100px">$lang.get('user.phone')</th>
+			<th>$lang.get('user.roles')</th>
 			<th style="width: 100px;">$lang.get('user.ip')</th>
 			<th style="width: 110px;">$lang.get('user.lastlogintime')</th>
 #if($edit)
-			<th style="width: 60px;"></th>
+			<th></th>
 #end
 		</tr>
 	</thead>
@@ -41,6 +43,7 @@
 			$!f.name
 			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="/admin/user/detail?__node=$!__node&id=$f.id"><i class="icon-file-text2"></i></a>
 		</td>
+		<td>$!f.id</td>
 		<td>$!f.nickname</td>
 		<td>$!f.email</td>
 		<td>$!f.phone</td>

@@ -20,37 +20,28 @@
 <table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th>$lang.get('disk.node')</th>
 			<th>$lang.get('node.url')</th>
-			<th>$lang.get('disk.type')</th>
 			<th>$lang.get('disk.path')</th>
+			<th>$lang.get('disk.mount')</th>
 			<th>$lang.get('disk.priority')</th>
-			<th>$lang.get('disk.enabled')</th>
-			<th>$lang.get('disk.total')</th>
-			<th>$lang.get('disk.free')</th>
-			<th colspan="2">$lang.get('disk.used')</th>
+			<th>$lang.get('disk.state')</th>
 			<th></th>
 		</tr>
 	</thead>
 	<tbody>
 #foreach($f1 in $list)
 	<tr>
-		<td>$!f1.node_obj.label</td>
-		<td>$!f1.node_obj.url</td>
-		<td>$!lang.get("disk.type_$f1.type")</td>
+		<td>$!f1.url</td>
 		<td><i class="icon-folder" style="color: #58b957;"></i>&nbsp;$f1.path</td>
+		<td>$f1.mount</td>
 		<td>$f1.priority</td>
 		<td>
 			#if($f1.enabled>0)
 			<i class='icon-radio-checked' style="color: green"></i>
 			#else
-			<i class='icon-radio-checked' style="color: red"></i>
+			<i class='icon-radio-unchecked'></i>
 			#end
 		</td>
-		<td>$!lang.size($f1.total)</td>
-		<td>$!lang.size($f1.free)</td>
-		<td>$!lang.size($f1.used)</td>
-		<td>${f1.usage}%</td>
 		<td class="a">
 			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.edit')" onclick="_edit('$f1.id')"><i class="icon-pencil"></i></a>
 			#if($list.size()>1)
@@ -73,7 +64,7 @@
 function _edit(id){
 	giiwa.popup('/admin/dfile/disk/edit?__node=$!__node&id=' + id, {
 		width: 500,
-		height: 350,
+		height: 340,
 		moveable: true,
 		max: false,
 		onsubmit: function(){

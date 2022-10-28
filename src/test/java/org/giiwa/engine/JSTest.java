@@ -4,9 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
-import org.apache.log4j.PropertyConfigurator;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
@@ -29,7 +27,7 @@ public class JSTest {
 			Map<String, Object> p2 = new HashMap<String, Object>();
 			p2.put("b", 5);
 
-			Task.schedule(() -> {
+			Task.schedule(t -> {
 				try {
 					System.out.println(JS.run(s, p1));
 				} catch (Exception e) {
@@ -38,7 +36,7 @@ public class JSTest {
 				}
 			});
 
-			Task.schedule(() -> {
+			Task.schedule(t -> {
 				try {
 					System.out.println(JS.run(s, p2));
 				} catch (Exception e) {
@@ -49,6 +47,26 @@ public class JSTest {
 
 			Object r = JS.calculate("2+1.0");
 			System.out.println(r + ", " + r.getClass());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail(e.getMessage());
+
+		}
+	}
+
+	@Test
+	public void testThis() {
+
+		Task.init(10);
+
+		String s = "return that.a";
+		try {
+			Map<String, Object> p1 = new HashMap<String, Object>();
+			p1.put("that", JSON.create().append("a", 10));
+
+			System.out.println(JS.run(s, p1));
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -86,7 +104,7 @@ public class JSTest {
 					n--;
 
 					TimeStamp t = TimeStamp.create();
-					String code = "return b + c";
+					String code = "return (b + c) + '=' + b + ' + ' + c";
 					JSON j1 = JSON.create();
 					j1.append("b", n);
 					j1.append("c", 2 * n);

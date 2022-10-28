@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.giiwa.bean.Node;
 import org.giiwa.bean.m._DiskIO;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
@@ -14,44 +15,75 @@ import org.giiwa.web.Path;
 
 public class diskio extends portlet {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public void get() {
 
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
 		String name = this.getString("name");
-		this.set("node", Local.id());
 		this.set("name", name);
 
-		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(W.create("node", Local.id()).and("path", name)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		W q = W.create().and("node", id).and("path", name)
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+		_DiskIO.Record.dao.optimize(q);
+
+		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.set("path", bs.get(0).get("inet"));
 			this.set("list", bs);
-			this.show("/portlet/diskio.html");
 		}
+
+		this.show("/portlet/diskio.html");
 
 	}
 
 	@Path(path = "data", login = true)
 	public void data() {
+
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+
 		String name = this.getString("name");
-		this.set("node", Local.id());
 		this.set("name", name);
 
-		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(W.create("node", Local.id()).and("path", name)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		W q = W.create().and("node", id).and("path", name)
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+
+		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
-			JSON p1 = JSON.create().append("name", lang.get("disk.reads")).append("color", "#0dad76");
-			JSON p2 = JSON.create().append("name", lang.get("disk.writes")).append("color", "#0a5ea0");
+			JSON p1 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("disk.reads"))
+					.append("color", "#0dad76");
+			JSON p2 = JSON.create().append("name", (n != null ? n.label : "") + " - " + lang.get("disk.writes"))
+					.append("color", "#0a5ea0");
 
 			List<JSON> l1 = JSON.createList();
 			List<JSON> l2 = JSON.createList();
 			bs.forEach(e -> {
-				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.reads).append("hint",
-						lang.size(e.reads)));
+				l1.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e._reads).append("hint",
+						lang.size(e._reads)));
 				l2.add(JSON.create().append("x", lang.time(e.getCreated(), "m")).append("y", e.writes).append("hint",
 						lang.size(e.writes)));
 			});
@@ -68,15 +100,26 @@ public class diskio extends portlet {
 
 	@Path(path = "more", login = true)
 	public void more() {
-		long id = this.getLong("id");
-		this.set("id", id);
+
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
 		String name = this.getString("name");
 		this.set("name", name);
 
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(
-				W.create("node", Local.id()).and("path", name).and("created", time, W.OP.gte).sort("created", 1), 0,
+				W.create().and("node", id).and("path", name).and("created", time, W.OP.gte).sort("created", 1), 0,
 				7 * 24 * 60);
 
 		if (bs != null && !bs.isEmpty()) {

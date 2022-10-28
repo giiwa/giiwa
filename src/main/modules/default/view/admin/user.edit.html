@@ -10,6 +10,7 @@
 	<input type='hidden' name="id" value="$id"/>
 	<div><label><h3>$lang.get('user.name'):</h3><i>$!name</i></label></div>
 	<div><label><h3>$lang.get('user.nickname'):</h3><input type='text' name='nickname' value='$!nickname'/></label></div>
+	<div><label><h3>$lang.get('user.company'):</h3><input type='text' name='company' value='$!company' /></label></div>
 	<div><label><h3>$lang.get('user.title'):</h3><input type='text' name='title' value='$!title' /></label></div>
 	<div><label><h3>$lang.get('user.email'):</h3><input type='email' name='email' value= '$!email' /></label></div>
 	<div><label><h3>$lang.get('user.phone'):</h3><input type='tel' name='phone' value= '$!phone' /></label></div>
@@ -57,7 +58,9 @@
 
 	<div class='btns'>
 		<button class='btn btn-success' type='submit'>$lang.get('btn.save')</button>
-		<a class='btn btn-warning' href='javascript:;' onclick="_showpassword()">$lang.get('a.password')</a>		
+		<a class='btn btn-warning' href='javascript:;' onclick="_showpassword()">$lang.get('a.password')</a>	
+		&nbsp;&nbsp;&nbsp;&nbsp;	
+		<a class='btn btn-primary' href='javascript:;' onclick="_unlock()">$lang.get('a.unlock')</a>		
 	</div>
 	
 </form>
@@ -70,6 +73,19 @@
 </div>
 
 <script>
+function _unlock(){
+	giiwa.processing.show();
+	var p = {};
+	p.id = "$id";
+	$.post('/admin/user/unlock', p, function(d){
+		giiwa.processing.hide();
+		if(d.state == 200) {
+			giiwa.message(d.message);
+		} else {
+			giiwa.error(d.message);
+		}
+	});	
+}
 function _showpassword() {
 	giiwa.dialog($('#password'), {width:300, height: 90, moveable:true});
 }

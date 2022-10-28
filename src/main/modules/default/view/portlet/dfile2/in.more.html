@@ -1,0 +1,43 @@
+
+<div id='chart_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('chart_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+		    title: {
+		        text: '$lang.get("portlet.dfile2.in.title")'
+		    },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	    	   formatter:function(){
+	    		      return this.series.name+':<b>' 
+	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
+	    		      + '</b><br>' 
+	    		      + Highcharts.dateFormat('%H:%M', this.x);
+	    		}
+	       },
+	    series: [
+			{name: "$lang.get('dfile.in')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.in_times},#end]},
+			{name: "$lang.get('dfile.out')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.out_times},#end]},
+   			], 
+	});
+
+})
+</script>
+

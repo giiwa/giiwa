@@ -26,6 +26,10 @@ import org.giiwa.dfile.DFile;
  * 
  */
 class DefaultController extends Controller {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/*
 	 * (non-Javadoc)
@@ -96,10 +100,11 @@ class DefaultController extends Controller {
 
 		// check dfile
 
-		DFile d = Disk.seek(uri);
-		if (d != null && d.exists() && d.isFile()) {
-			// show it
-			this.copy(this.json());
+		try {
+			DFile d = Disk.seek(uri);
+			if (d != null && d.exists() && d.isFile()) {
+				// show it
+				this.copy(this.json());
 
 //			this.put("me", this.getUser());
 //			this.put("lang", lang);
@@ -114,8 +119,11 @@ class DefaultController extends Controller {
 //			this.put("conf", Config.getConf());
 //			this.put("local", Local.getInstance());
 
-			show(uri);
-			return true;
+				show(uri);
+				return true;
+			}
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
 		}
 
 		return false;

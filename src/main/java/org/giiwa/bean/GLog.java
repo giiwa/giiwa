@@ -14,28 +14,36 @@
 */
 package org.giiwa.bean;
 
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
+import org.giiwa.dao.Helper.W;
+import org.giiwa.misc.Host;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
+import org.giiwa.web.Language;
 import org.giiwa.web.Module;
+import org.graylog2.syslog4j.Syslog;
+import org.graylog2.syslog4j.SyslogConstants;
+import org.graylog2.syslog4j.SyslogIF;
 
 /**
  * Operation Log bean. <br>
  * Used to record info/warn/error log in database <br>
  * Beside this, the module also can add personal ILogger for other use by
  * OpLog.addLogger() <br>
- * table="gi_oplog"
  * 
  * @author yjiang
  * 
  */
 @Table(name = "gi_glog", memo = "GI-系统日志")
-public class GLog extends Bean {
+public final class GLog extends Bean {
 
 	private static final long serialVersionUID = 1L;
 
@@ -48,15 +56,33 @@ public class GLog extends Bean {
 	public static final int TYPE_OPLOG = 2;
 	public static final int TYPE_DB = 3;
 
-	private static final int LEVEL_INFO = 0;
-	private static final int LEVEL_WARN = 1;
-	private static final int LEVEL_ERROR = 2;
+	public static final int LEVEL_ERROR = 1;
+	public static final int LEVEL_WARN = 2;
+	public static final int LEVEL_INFO = 3;
 
 	@Column(memo = "唯一序号")
 	String id;
 
 	@Column(name = "type1", memo = "类型")
 	int type;
+
+	@Column(memo = "节点")
+	String node;
+
+	@Column(memo = "模块")
+	String model;
+
+	@Column(memo = "操作")
+	String op;
+
+	@Column(memo = "内容")
+	String message;
+
+	@Column(memo = "线程名称")
+	String thread;
+
+	@Column(memo = "调用栈")
+	String trace;
 
 	public String getId() {
 		return id;
@@ -180,6 +206,8 @@ public class GLog extends Bean {
 
 	public static abstract class ILog {
 
+		public abstract boolean exists(String message);
+
 		/**
 		 * record info log
 		 * 
@@ -204,8 +232,7 @@ public class GLog extends Bean {
 		 * @param ip      the remote ip
 		 */
 		public void info(String model, String op, String message, Throwable trace, User u, String ip) {
-			info(Local.id(), model, op, message, X.toString(trace).replaceAll(System.lineSeparator(), "<br/>")
-					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);
+			info(Local.id(), model, op, message, X.toString(trace), u, ip);
 		}
 
 		/**
@@ -324,16 +351,16 @@ public class GLog extends Bean {
 		 * @param message
 		 */
 		public void error(String model, String op, String message, Throwable e) {
-			
+
 			if (e instanceof OutOfMemoryError) {
-				Task.schedule(() -> {
-					log.error("restart as outofmemory", e);
-					System.exit(0);
-				}, 5000);
+				log.error("restart as outofmemory", e);
+
+				Task.schedule(t -> {
+//					System.exit(0);
+				}, 1000);
 			}
 
-			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
-					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), null, null);
+			error(model, op, message, X.toString(e), null, null);
 		}
 
 		/**
@@ -346,14 +373,13 @@ public class GLog extends Bean {
 		public void error(Class<? extends Controller> model, String op, String message, Throwable e) {
 
 			if (e instanceof OutOfMemoryError) {
-				Task.schedule(() -> {
-					log.error("restart as outofmemory", e);
-					System.exit(0);
+				log.error("restart as outofmemory", e);
+				Task.schedule(t -> {
+//					System.exit(0);
 				}, 5000);
 			}
 
-			error(Module.shortName(model), op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
-					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), null, null);
+			error(Module.shortName(model), op, message, X.toString(e), null, null);
 		}
 
 		/**
@@ -370,36 +396,80 @@ public class GLog extends Bean {
 		protected abstract void info(String node, String model, String op, String message, String trace, User u,
 				String ip);
 
+		private SyslogIF syslog = null;
+
 		protected String _log(int type, int level, String node, String model, String op, String message, String trace,
 				User u, String ip) {
 
-			int l1 = Global.getInt("oplog.level", GLog.LEVEL_WARN);
-			if (type != GLog.TYPE_SECURITY && l1 > level)
+			if (X.isEmpty(message)) {
 				return null;
+			}
+
+			int l1 = Global.getInt("oplog.level", GLog.LEVEL_WARN);
+			if (type != GLog.TYPE_SECURITY && l1 > level) {
+				return null;
+			}
 
 			if (Helper.isConfigured()) {
+
 				if (message != null && message.length() > 1020) {
 					message = message.substring(0, 1024);
 				}
 				if (trace != null && trace.length() > 8192) {
 					trace = trace.substring(0, 8192);
 				}
-				if (!X.isEmpty(trace)) {
-					message = message + "...";
-				}
+//				if (!X.isEmpty(trace)) {
+//					message = message + "...";
+//				}
 
 				String id = UID.uuid();
 				V v = V.create("id", id).set("node", node).set("model", model).set("op", op)
 						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type1", type).append("level", level);
 				v.set("message", message);
-				v.set("trace", trace);
 
-				v.append("logger", _logger());
+				String threadname = Thread.currentThread().getName();
+				v.append("thread", threadname);
+				v.set("trace", trace == null ? null : trace);
+				v.set("iid", UID.id(node, type, message));
+
+				String logger = _logger();
+				v.append("logger", logger);
 				dao.insert(v);
+
+				if (Global.getInt("glog.rsyslog", 0) == 1) {
+					// enabled rsyslog
+					String message1 = message;
+
+					Task.schedule(t -> {
+
+						if (syslog == null) {
+							syslog = Syslog.getInstance(SyslogConstants.UDP);
+							syslog.getConfig().setHost(Global.getString("glog.rsyslog.host", "127.0.0.1"));
+							syslog.getConfig().setPort(X.toInt(Global.getLong("glog.rsyslog.port", 32376)));
+						}
+
+						// <165>1 2003-08-24T05:14:15.000003-07:00 192.0.2.1 myproc 8710 - - %% It's
+						// time to make the do-nuts.
+						StringBuilder sb = new StringBuilder();
+						sb.append("<" + seq.incrementAndGet() + ">");
+						sb.append(level);
+						Language lang = Language.getLanguage();
+						sb.append(" " + lang.format(System.currentTimeMillis(), "yyyy-MM-dd") + "T"
+								+ lang.format(System.currentTimeMillis(), "HH:mm:ss.S"));
+						sb.append(" " + Host.getLocalip());
+						sb.append(" giiwa ").append(Host.getPid());
+						sb.append(" - -");
+						sb.append(" BOM" + message1);
+
+						syslog.log(level, sb.toString(), new Date());
+					});
+				}
 				return id;
 			}
 			return null;
 		}
+
+		private static AtomicLong seq = new AtomicLong(0);
 
 		private String _logger() {
 
@@ -455,8 +525,7 @@ public class GLog extends Bean {
 		 * @param ip
 		 */
 		public void warn(String model, String op, String message, Throwable trace, User u, String ip) {
-			warn(Local.id(), model, op, message, X.toString(trace).replaceAll(System.lineSeparator(), "<br/>")
-					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);
+			warn(Local.id(), model, op, message, X.toString(trace), u, ip);
 		}
 
 		/**
@@ -556,16 +625,13 @@ public class GLog extends Bean {
 				return;
 
 			if (e instanceof OutOfMemoryError) {
-				Task.schedule(() -> {
-
-					log.error("restart as outofmemory", e);
-
-					System.exit(0);
+				log.error("restart as outofmemory", e);
+				Task.schedule(t -> {
+//					System.exit(0);
 				}, 5000);
 			}
 
-			error(model, op, message, X.toString(e).replaceAll(System.lineSeparator(), "<br/>")
-					.replaceAll(" ", "&nbsp;").replaceAll("\t", "&nbsp;&nbsp;&nbsp;&nbsp;"), u, ip);
+			error(model, op, message, X.toString(e), u, ip);
 		}
 
 		/**
@@ -640,13 +706,22 @@ public class GLog extends Bean {
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("warn.security");
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("error.security");
 			_log(GLog.TYPE_SECURITY, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+		}
+
+		@Override
+		public boolean exists(String message) {
+			try {
+				String iid = UID.id(Local.id(), GLog.TYPE_SECURITY, message);
+				return dao.exists(W.create().and("iid", iid));
+			} catch (Exception e) {
+				// ignore
+			}
+			return false;
 		}
 
 	}
@@ -658,13 +733,21 @@ public class GLog extends Bean {
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("warn.op");
 			_log(GLog.TYPE_OPLOG, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("error.op");
 			_log(GLog.TYPE_OPLOG, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
+		}
+
+		public boolean exists(String message) {
+			try {
+				String iid = UID.id(Local.id(), GLog.TYPE_OPLOG, message);
+				return dao.exists(W.create().and("iid", iid));
+			} catch (Exception e) {
+				// ignore
+			}
+			return false;
 		}
 
 	}
@@ -676,26 +759,22 @@ public class GLog extends Bean {
 		}
 
 		protected void warn(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("warn.app");
 			_log(GLog.TYPE_APP, GLog.LEVEL_WARN, node, model, op, message, trace, u, ip);
 		}
 
 		protected void error(String node, String model, String op, String message, String trace, User u, String ip) {
-			Counter.increase("error.app");
 			_log(GLog.TYPE_APP, GLog.LEVEL_ERROR, node, model, op, message, trace, u, ip);
 		}
 
+		public boolean exists(String message) {
+			try {
+				String iid = UID.id(Local.id(), GLog.TYPE_APP, message);
+				return dao.exists(W.create().and("iid", iid));
+			} catch (Exception e) {
+				// ignore
+			}
+			return false;
+		}
+
 	}
-
-	static {
-		Counter.set("error.app", 0);
-		Counter.set("warn.app", 0);
-
-		Counter.set("error.op", 0);
-		Counter.set("warn.op", 0);
-
-		Counter.set("error.security", 0);
-		Counter.set("warn.security", 0);
-	}
-
 }

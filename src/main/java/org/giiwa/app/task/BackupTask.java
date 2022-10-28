@@ -14,8 +14,9 @@
 */
 package org.giiwa.app.task;
 
-import org.giiwa.app.web.admin.backup;
-import org.giiwa.conf.Global;
+import org.giiwa.bean.AutoBackup;
+import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.W;
 import org.giiwa.task.Task;
 
 /**
@@ -31,7 +32,11 @@ public class BackupTask extends Task {
 	/**
 	 * The owner.
 	 */
-	public static BackupTask owner = new BackupTask();
+	public static BackupTask inst = new BackupTask();
+
+	private Object readResolve() {
+		return inst;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -50,14 +55,11 @@ public class BackupTask extends Task {
 	 */
 	@Override
 	public void onExecute() {
-		if (Global.getInt("backup.clean", 0) == 1) {
-			// clean up
-			int days = Global.getInt("backup.keep.days", 7);
-			backup.BackupTask.clean(days);
-		}
 
-		if (Global.getInt("backup.auto", 0) == 1) {
-			new backup.BackupTask(null, Global.getString("backup.url", null)).schedule(0);
+		AutoBackup a = AutoBackup.dao
+				.load(W.create().and("enabled", 1).and("nextime", System.currentTimeMillis(), W.OP.lte));
+		if (a != null) {
+			a.backup();
 		}
 
 	}
@@ -69,16 +71,14 @@ public class BackupTask extends Task {
 	 */
 	@Override
 	public void onFinish() {
-		if (Global.getInt("backup.auto", 0) == 1) {
-			this.schedule(Global.getString("backup.point", "2:00"), true);
-		}
+		this.schedule(X.AMINUTE, true);
 	}
 
 	/**
 	 * Inits the task.
 	 */
 	public static void init() {
-		owner.onFinish();
+		inst.schedule(X.AMINUTE, true);
 	}
 
 }

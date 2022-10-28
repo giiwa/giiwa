@@ -352,10 +352,10 @@ public class QueryString implements Cloneable {
 	 * @return the query string
 	 */
 	public QueryString copy(Controller m) {
-		Enumeration<String> it = m.req.getParameterNames();
+
+		List<String> it = m.req.names();
 		if (it != null) {
-			while (it.hasMoreElements()) {
-				String name = it.nextElement();
+			for (String name : it) {
 				this.set(name, m.getString(name));
 			}
 			q = null;
@@ -425,7 +425,7 @@ public class QueryString implements Cloneable {
 			sb.append(s);
 		}
 
-		return sb.toString();
+		return sb.toString().replaceAll("\\+", "%20");
 
 	}
 

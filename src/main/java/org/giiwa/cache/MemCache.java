@@ -14,12 +14,11 @@
 */
 package org.giiwa.cache;
 
-import java.util.Date;
-
 import org.apache.commons.logging.*;
+import org.giiwa.misc.Url;
 
-import com.whalin.MemCached.MemCachedClient;
-import com.whalin.MemCached.SockIOPool;
+import net.rubyeye.xmemcached.MemcachedClient;
+import net.rubyeye.xmemcached.XMemcachedClient;
 
 /**
  * The Class MemCache is used to memcached cache <br>
@@ -30,9 +29,9 @@ class MemCache implements ICacheSystem {
 	/** The log. */
 	static Log log = LogFactory.getLog(MemCache.class);
 
-	private MemCachedClient memCachedClient;
+	private MemcachedClient memCachedClient;
 
-	private String url;
+	private Url url;
 
 	/**
 	 * Inits the.
@@ -40,27 +39,20 @@ class MemCache implements ICacheSystem {
 	 * @param conf the conf
 	 * @return the i cache system
 	 */
-	public static ICacheSystem create(String server) {
+	public static ICacheSystem create(String server, String user, String pwd) {
 
 		MemCache f = new MemCache();
 
-		f.url = server.substring(Cache.MEMCACHED.length());
-
-		SockIOPool pool = SockIOPool.getInstance();
-		pool.setServers(new String[] { f.url });
-		pool.setFailover(true);
-		pool.setInitConn(10);
-		pool.setMinConn(5);
-		pool.setMaxConn(1000);
-		pool.setMaintSleep(30);
-		pool.setNagle(false);
-		pool.setSocketTO(3000);
-		pool.setAliveCheck(true);
-		pool.initialize();
-
-		f.memCachedClient = new MemCachedClient();
-
-		return f;
+		f.url = Url.create(server);
+		try {
+			f.memCachedClient = new XMemcachedClient(f.url.getIp(), f.url.getPort(11211));
+			if (f.memCachedClient.getConnector() != null && f.memCachedClient.getConnector().isStarted()) {
+				return f;
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -70,8 +62,12 @@ class MemCache implements ICacheSystem {
 	 * @return the object
 	 */
 	public synchronized Object get(String name) {
-//		System.out.println("cache.get, name=" + name);
-		return memCachedClient.get(name);
+		try {
+			return memCachedClient.get(name);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -86,9 +82,8 @@ class MemCache implements ICacheSystem {
 			if (o == null) {
 				return delete(name);
 			} else {
-//				System.out.println("cache.set, name=" + name + ", expired=" + expired);
 //				return memCachedClient.set(name, o, new Date(System.currentTimeMillis() + expired));
-				return memCachedClient.set(name, o, new Date(expired));
+				return memCachedClient.set(name, (int) (expired / 1000), o);
 //				return memCachedClient.set(name, o);
 			}
 		} catch (Exception e) {
@@ -105,7 +100,12 @@ class MemCache implements ICacheSystem {
 	 * @return true, if successful
 	 */
 	public synchronized boolean delete(String name) {
-		return memCachedClient.delete(name);
+		try {
+			return memCachedClient.delete(name);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return false;
 	}
 
 	@Override
@@ -114,19 +114,30 @@ class MemCache implements ICacheSystem {
 	}
 
 	public boolean trylock(String name) {
-//		System.out.println("trylock, name=" + name);
-		return memCachedClient.add(name, 1, new Date(12000));
-
+		try {
+			return memCachedClient.add(name, 12, 1);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return false;
 	}
 
 	public void expire(String name, long ms) {
-		memCachedClient.set(name, 1, new Date(ms));
+		try {
+			memCachedClient.set(name, (int) (ms / 1000), 1);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 //		log.debug("memcached expire, name=" + name + ", value=" + memCachedClient.get(name));
 	}
 
 	@Override
 	public boolean unlock(String name, String value) {
-		memCachedClient.delete(name);
+		try {
+			memCachedClient.delete(name);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 		return true;
 	}
 

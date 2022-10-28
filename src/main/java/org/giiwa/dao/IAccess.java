@@ -6,10 +6,10 @@ import org.giiwa.dao.Helper.W;
 
 public interface IAccess {
 
-	boolean read(String table, Object d);
+	boolean read(String type, String table, Object d);
 
-	boolean checkWrite(String table, Object d) throws SQLException;
+	boolean checkWrite(String type, String table, Object d) throws SQLException;
 
-	W filter(String table);
+	W filter(String type, String table);
 
 }

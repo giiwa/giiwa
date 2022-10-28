@@ -26,7 +26,7 @@ import org.giiwa.dao.Helper.W;
  * @author yjiang
  * 
  */
-public class Roles extends Bean implements IRole {
+public final class Roles extends Bean implements IRole {
 
 	/**
 	* 
@@ -63,7 +63,7 @@ public class Roles extends Bean implements IRole {
 	@SuppressWarnings("unchecked")
 	public Roles(List<Long> roles) {
 		if (roles != null && !roles.isEmpty()) {
-			list = Role.dao.load(W.create().and("id", roles), 0, 100);
+			list = Role.dao.load(W.create().and("id", roles).sort("seq", -1), 0, 100);
 			access = (List<String>) RoleAccess.dao.distinct("name", W.create().and("rid", roles));
 		}
 	}

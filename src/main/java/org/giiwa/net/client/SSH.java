@@ -5,6 +5,7 @@ import java.io.InputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
 import com.jcraft.jsch.ChannelExec;
@@ -41,16 +42,36 @@ public class SSH implements Closeable {
 
 	public static SSH create(Url url) throws JSchException {
 		SSH s = new SSH();
-		s.session = getSession(url);
+		s.open(url);
 		return s;
 	}
 
-	private static Session getSession(Url url) throws JSchException {
+	public static SSH create() {
+		return new SSH();
+	}
+
+	public boolean open(String url) throws JSchException {
+		return open(Url.create(url));
+	}
+
+	public boolean open(Url url) throws JSchException {
+
+		close();
 
 		JSch jsch = new JSch();
 
-		Session session = jsch.getSession(url.get("username"), url.getIp(), url.getPort(22));
-		session.setPassword(url.get("passwd"));
+		String username = url.get("username");
+		if (X.isEmpty(username)) {
+			throw new JSchException("[username] required");
+		}
+
+		String passwd = url.get("passwd");
+		if (X.isEmpty(passwd)) {
+			throw new JSchException("[passwd] required");
+		}
+
+		session = jsch.getSession(username, url.getIp(), url.getPort(22));
+		session.setPassword(passwd);
 
 		UserInfo ui = new MyUserInfo() {
 			public void showMessage(String message) {
@@ -69,7 +90,8 @@ public class SSH implements Closeable {
 		session.setUserInfo(ui);
 		// session.connect();
 		session.connect(30 * 1000);
-		return session;
+
+		return session.isConnected();
 	}
 
 	private static abstract class MyUserInfo implements UserInfo, UIKeyboardInteractive {
@@ -121,7 +143,6 @@ public class SSH implements Closeable {
 		try {
 
 			exec = (ChannelExec) session.openChannel("exec");
-			exec.connect();
 
 			exec.setInputStream(null);
 
@@ -161,11 +182,11 @@ public class SSH implements Closeable {
 			return sb.toString();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			e.printStackTrace();
 		} finally {
 			if (exec != null) {
 				exec.disconnect();
 			}
+			exec = null;
 		}
 		return null;
 	}

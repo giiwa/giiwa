@@ -15,14 +15,15 @@
 package org.giiwa.bean;
 
 import java.awt.Color;
+import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.user;
+import org.giiwa.bean.Session.SID;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
@@ -40,8 +41,6 @@ import org.giiwa.json.JSON;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.Digest;
 import org.giiwa.misc.GImage;
-import org.giiwa.misc.MD5;
-import org.giiwa.web.Controller;
 import org.giiwa.web.Language;
 
 /**
@@ -66,7 +65,7 @@ import org.giiwa.web.Language;
  * 
  */
 @Table(name = "gi_user", memo = "GI-用户")
-public class User extends Bean {
+public final class User extends Bean {
 
 	/**
 	* 
@@ -89,8 +88,13 @@ public class User extends Bean {
 	@Column(memo = "称谓")
 	public String title;
 
-//	private String password;
-//
+	@Column(memo = "用户组", value = "多个以,分隔")
+	public String _group;
+
+	private String password;
+
+	public long passwordtime;
+
 //	private String md5passwd;
 //
 //	private String createdip;
@@ -124,6 +128,10 @@ public class User extends Bean {
 	 */
 	public long getId() {
 		return id;
+	}
+
+	public String getPassword() {
+		return password;
 	}
 
 	/**
@@ -195,7 +203,7 @@ public class User extends Bean {
 	 */
 	public boolean isRole(Role r) {
 		try {
-			return UserRole.dao.exists(W.create("uid", this.getId()).and("rid", r.getId()));
+			return UserRole.dao.exists(W.create().and("uid", this.getId()).and("rid", r.getId()));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -211,19 +219,19 @@ public class User extends Bean {
 			if (X.isSame("name", s)) {
 				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
 				if (!X.isEmpty(rule) && !o.matches(rule)) {
-					throw new Exception(Language.getLanguage().get("user.bad.name"));
+					throw new Exception(Global.getString("user.name.rule.tips", "name MUST 4+ char or digital"));
 				}
 			} else if (X.isSame("password", s)) {
 				String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
 				if (X.isEmpty(o) || (!X.isEmpty(rule) && !o.matches(rule))) {
-					throw new Exception(Language.getLanguage().get("user.bad.passwd"));
+					throw new Exception(Global.getString("user.passwd.rule.tips", "password MUST 6+ char or digital"));
 				}
 			}
 		}
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param v
 	 * @return
 	 * @throws Exception
@@ -244,7 +252,7 @@ public class User extends Bean {
 	 */
 	public synchronized static long create(String name, V v) throws Exception {
 
-		if (dao.exists(W.create("name", name))) {
+		if (dao.exists(W.create().and("name", name))) {
 			throw new Exception(Language.getLanguage().get("user.name.exists"));
 		}
 
@@ -254,8 +262,8 @@ public class User extends Bean {
 
 		String s = (String) v.value("password");
 		if (s != null) {
-			v.force("md5passwd", User.md5encrypt(s));
-			v.force("password", encrypt(s));
+			v.force("password", encrypt2(s));
+			v.append("passwordtime", System.currentTimeMillis());
 		}
 
 		Long id = (Long) v.value("id");
@@ -269,16 +277,19 @@ public class User extends Bean {
 				log.error(e1.getMessage(), e1);
 			}
 		}
-		if (log.isDebugEnabled())
+		if (log.isDebugEnabled()) {
 			log.debug("v=" + v);
+		}
 
 		// check photo
 		_checkphoto(-1, v);
 
+		v.append("deleted", 0);
+
 		dao.insert(
 				v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()));
 
-		GLog.securitylog.info(user.class, "create", "name=" + name + ", nickname=" + v.value("nickname"), dao.load(id),
+		GLog.securitylog.warn(user.class, "create", "name=" + name + ", nickname=" + v.value("nickname"), dao.load(id),
 				(String) v.value("createdip"));
 
 		return id;
@@ -295,7 +306,7 @@ public class User extends Bean {
 
 			User u = dao.load(id);
 			if (u != null && !X.isEmpty(u.photo)) {
-				if (X.isSame(nickname, u.nickname) && Disk.getByUrl(u.photo).exists()) {
+				if (X.isSame(nickname, u.nickname) && Disk.seek(u.photo).exists()) {
 					return;
 				}
 			}
@@ -306,10 +317,11 @@ public class User extends Bean {
 			DFile f = Disk.seek("/user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
 					+ System.currentTimeMillis() + ".png");
 
-			GImage.cover(145, Character.toString(c).toUpperCase(),
-					new Color((int) (128 * Math.random()), (int) (156 * Math.random()), (int) (156 * Math.random())),
-					f.getOutputStream());
-			v.append("photo", "/f/g/" + f.getId() + "/" + f.getName());
+			if (f != null) {
+				GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
+						(int) (156 * Math.random()), (int) (156 * Math.random())), f.getOutputStream());
+				v.append("photo", "/f/g/" + f.getId() + "/" + f.getName());
+			}
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
@@ -322,17 +334,49 @@ public class User extends Bean {
 	 * @param name     the name of the user
 	 * @param password the password
 	 * @return User, if not match anyoone, return null
+	 * @throws Exception
 	 */
-	public static User load(String name, String password) {
+	public static User load(String name, String password, String ip) throws Exception {
 
-		password = encrypt(password);
+		String password2 = encrypt2(password);
+		W q = W.create().and("name", name).and("password", password2).and("deleted", 1, W.OP.neq);
+		User e = dao.load(q);
+//		log.warn("q=" + q + ", e=" + e);
 
-		if (log.isDebugEnabled())
-			log.debug("name=" + name + ", passwd=" + password);
-		// System.out.println("name=" + name + ", passwd=" + password);
+		if (e != null) {
+			if (e.id == 0 && !X.isIn(Config.getConf().getString("root.login", "no"), "yes", "true")) {
+				throw new Exception("root disallow");
+			}
+			return e;
+		}
 
-		return dao.load(W.create("name", name).and("password", password).and("deleted", 1, W.OP.neq));
+		String password1 = encrypt1(password);
+		e = dao.load(W.create().and("name", name).and("password", password1).and("deleted", 1, W.OP.neq));
+		if (e != null) {
 
+			dao.update(e.id, V.create().append("password", password2));
+
+			if (e.id == 0 && !X.isIn(Config.getConf().getString("root.login", "no"), "yes", "true")) {
+				throw new Exception("root disallow");
+			}
+
+			return e;
+		}
+
+		// Compatible old giiwa, 1, manual clean the password in database, 2, using this
+		// method to reset the password
+		e = dao.load(W.create().and("name", name).and("password", "").and("deleted", 1, W.OP.neq));
+		if (e != null) {
+			dao.update(e.id, V.create().append("password", password2));
+
+			if (e.id > 0 || X.isIn(Config.getConf().getString("root.login", "no"), "yes", "true")) {
+				return e;
+			}
+
+			GLog.securitylog.warn(user.class, "passwd", "set password as original is empty!", null, ip);
+		}
+
+		return null;
 	}
 
 	public boolean isDeleted() {
@@ -346,7 +390,7 @@ public class User extends Bean {
 	 * @return User
 	 */
 	public static User load(String name) {
-		return dao.load(W.create("name", name).and("deleted", 1, W.OP.neq).sort(X.UPDATED, -1));
+		return dao.load(W.create().and("name", name).and("deleted", 1, W.OP.neq).sort(X.UPDATED, -1));
 	}
 
 	/**
@@ -379,7 +423,7 @@ public class User extends Bean {
 			l1.add(a.getLong("uid"));
 		}
 
-		Beans<User> us = dao.load(W.create().and("id", l1).and("delete", 1, W.OP.neq).sort("name", 1), 0,
+		Beans<User> us = dao.load(W.create().and("id", l1).and("deleted", 1, W.OP.neq).sort("name", 1), 0,
 				Integer.MAX_VALUE);
 		return us;
 
@@ -399,8 +443,18 @@ public class User extends Bean {
 		if (this.isLocked())
 			return false;
 
-		password = encrypt(password);
-		return get("password") != null && get("password").equals(password);
+		try {
+			String password2 = encrypt2(password);
+			if (get("password") != null && get("password").equals(password2)) {
+				return true;
+			}
+
+			String password1 = encrypt1(password);
+			return get("password") != null && get("password").equals(password1);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return false;
 	}
 
 	/**
@@ -450,7 +504,7 @@ public class User extends Bean {
 	@SuppressWarnings("unchecked")
 	public Roles getRole() {
 		if (role == null) {
-			List<?> l1 = UserRole.dao.distinct("rid", W.create("uid", this.getId()));
+			List<?> l1 = UserRole.dao.distinct("rid", W.create().and("uid", this.getId()));
 			if (l1 != null && !l1.isEmpty()) {
 				role = new Roles((List<Long>) l1);
 			}
@@ -465,8 +519,9 @@ public class User extends Bean {
 	 */
 	public void setRole(long rid) {
 		try {
-			if (!UserRole.dao.exists(W.create("uid", this.getId()).and("rid", rid))) {
-				UserRole.dao.insert(V.create("uid", this.getId()).set("rid", rid));
+			if (!UserRole.dao.exists(W.create().and("uid", this.getId()).and("rid", rid))) {
+				UserRole.dao
+						.insert(V.create("uid", this.getId()).set("rid", rid).append(X.ID, UID.id(this.getId(), rid)));
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -480,7 +535,7 @@ public class User extends Bean {
 	 */
 	public void removeRole(long rid) {
 
-		UserRole.dao.delete(W.create("uid", this.getId()).and("rid", rid));
+		UserRole.dao.delete(W.create().and("uid", this.getId()).and("rid", rid));
 
 		GLog.securitylog.info(user.class, "grant", "remove role", this, null);
 	}
@@ -489,7 +544,7 @@ public class User extends Bean {
 	 * Removes the all roles.
 	 */
 	public void removeAllRoles() {
-		UserRole.dao.delete(W.create("uid", this.getId()));
+		UserRole.dao.delete(W.create().and("uid", this.getId()));
 		GLog.securitylog.info(user.class, "grant", "remove all role", this, null);
 	}
 
@@ -498,19 +553,35 @@ public class User extends Bean {
 	 * 
 	 * @param passwd the password
 	 * @return the string
+	 * @throws Exception
 	 */
-	public static String encrypt(String passwd) {
+	public static String encrypt2(String passwd) throws Exception {
+		if (X.isEmpty(passwd)) {
+			return X.EMPTY;
+		}
+
+		return Base32.encode(Digest.encode(passwd.getBytes(), Key.get("giiwa", 24)));
+	}
+
+	/**
+	 * @deprecated
+	 * 
+	 * @param passwd
+	 * @return
+	 * @throws Exception
+	 */
+	public static String encrypt1(String passwd) throws Exception {
 		if (X.isEmpty(passwd)) {
 			return X.EMPTY;
 		}
 		return UID.id(passwd);
 	}
 
-	public static String md5encrypt(String passwd) {
+	public static String decrypt(String passwd) throws Exception {
 		if (X.isEmpty(passwd)) {
 			return X.EMPTY;
 		}
-		return MD5.md5(passwd);
+		return new String(Digest.decode(Base32.decode(passwd), Key.get("giiwa", 24)));
 	}
 
 	/**
@@ -557,8 +628,7 @@ public class User extends Bean {
 		if (!X.isEmpty(passwd)) {
 
 			_check(v, "password");
-			v.force("md5passwd", md5encrypt(passwd));
-			passwd = encrypt(passwd);
+			passwd = encrypt2(passwd);
 			v.force("password", passwd);
 
 		} else {
@@ -566,8 +636,6 @@ public class User extends Bean {
 		}
 
 		_checkphoto(id, v);
-
-		GLog.securitylog.info(user.class, "update", "v=" + v, dao.load(id), null);
 
 		return dao.update(id, v);
 	}
@@ -589,8 +657,7 @@ public class User extends Bean {
 
 			_check(v, "password");
 
-			v.force("md5passwd", md5encrypt(passwd));
-			passwd = encrypt(passwd);
+			passwd = encrypt2(passwd);
 			v.force("password", passwd);
 		} else {
 			v.remove("password");
@@ -621,11 +688,12 @@ public class User extends Bean {
 	public int failed(String ip, String sid, String useragent) {
 		set("failtimes", getInt("failtimes") + 1);
 
-		if (this.getInt("failtimes") >= 3) {
-			User.dao.update(getId(), V.create("locked", 1));
-		}
+		Lock.locked(id, sid, ip, useragent);
 
-		return Lock.locked(getId(), sid, ip, useragent);
+//		if (isLocked(ip)) {
+//			User.dao.update(getId(), V.create("locked", 1));
+//		}
+		return 1;
 	}
 
 	/**
@@ -648,6 +716,10 @@ public class User extends Bean {
 	 */
 	public int logined(String sid, String ip, V v) {
 
+		if (v == null) {
+			v = V.create();
+		}
+
 		// update
 		set("logintimes", getInt("logintimes") + 1);
 
@@ -656,7 +728,7 @@ public class User extends Bean {
 		/**
 		 * cleanup the old sid for the old logined user
 		 */
-		dao.update(W.create("sid", sid), V.create("sid", X.EMPTY));
+		dao.update(W.create().and("sid", sid), V.create("sid", X.EMPTY));
 
 		return dao.inc(W.create().and(X.ID, getId()), "logintimes", 1,
 				v.append("lastlogintime", System.currentTimeMillis()).append("ip", ip).append("locked", 0)
@@ -723,7 +795,7 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int removed(long uid) {
-			return Lock.dao.delete(W.create("uid", uid));
+			return Lock.dao.delete(W.create().and("uid", uid));
 		}
 
 		/**
@@ -734,7 +806,7 @@ public class User extends Bean {
 		 * @return the int
 		 */
 		public static int removed(long uid, String sid) {
-			return Lock.dao.delete(W.create("uid", uid).and("sid", sid));
+			return Lock.dao.delete(W.create().and("uid", uid).and("sid", sid));
 		}
 
 		/**
@@ -745,8 +817,8 @@ public class User extends Bean {
 		 * @return the list
 		 */
 		public static List<Lock> load(long uid, long time) {
-			Beans<Lock> bs = Lock.dao.load(W.create("uid", uid).and(X.CREATED, time, W.OP.gt).sort(X.CREATED, 1), 0,
-					Integer.MAX_VALUE);
+			Beans<Lock> bs = Lock.dao.load(W.create().and("uid", uid).and(X.CREATED, time, W.OP.gt).sort(X.CREATED, 1),
+					0, Integer.MAX_VALUE);
 			return bs;
 		}
 
@@ -760,22 +832,7 @@ public class User extends Bean {
 		 */
 		public static List<Lock> loadBySid(long uid, long time, String sid) {
 			Beans<Lock> bs = Lock.dao.load(
-					W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("sid", sid).sort(X.CREATED, 1), 0,
-					Integer.MAX_VALUE);
-			return bs;
-		}
-
-		/**
-		 * Load by host.
-		 *
-		 * @param uid  the uid
-		 * @param time the time
-		 * @param host the host
-		 * @return the list
-		 */
-		public static List<Lock> loadByHost(long uid, long time, String host) {
-			Beans<Lock> bs = Lock.dao.load(
-					W.create("uid", uid).and(X.CREATED, time, W.OP.gt).and("host", host).sort(X.CREATED, 1), 0,
+					W.create().and("uid", uid).and(X.CREATED, time, W.OP.gt).and("sid", sid).sort(X.CREATED, 1), 0,
 					Integer.MAX_VALUE);
 			return bs;
 		}
@@ -787,7 +844,7 @@ public class User extends Bean {
 		 * @return the number deleted
 		 */
 		public static int cleanup(long uid) {
-			return Lock.dao.delete(W.create("uid", uid));
+			return Lock.dao.delete(W.create().and("uid", uid));
 		}
 
 		public long getUid() {
@@ -827,7 +884,7 @@ public class User extends Bean {
 
 	public static User loadByToken(String token, long expired) {
 		try {
-			String s = new String(Digest.des_decrypt(Base32.decode(token), "giisoo12"));
+			String s = new String(Digest.decode(Base32.decode(token), "giisoo"));
 			String[] ss = X.split(s, "//");
 			if (ss != null && ss.length == 2) {
 				long id = X.toLong(ss[0]);
@@ -845,7 +902,7 @@ public class User extends Bean {
 	public String token() {
 		try {
 			String s = id + "//" + System.currentTimeMillis();
-			return Base32.encode(Digest.des_encrypt(s.getBytes(), "giisoo12"));
+			return Base32.encode(Digest.encode(s.getBytes(), "giisoo"));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -865,6 +922,30 @@ public class User extends Bean {
 
 	}
 
+	private transient List<SID> sid_obj;
+
+	public List<SID> getSid_obj() {
+		if (sid_obj == null) {
+			Beans<SID> bs = SID.dao.load(W.create().and("uid", id).sort("updated", -1), 0, 10);
+			if (bs != null) {
+				sid_obj = bs;
+			}
+		}
+		return sid_obj;
+	}
+
+	private transient List<GLog> log_obj;
+
+	public List<GLog> getLog_obj() {
+		if (log_obj == null) {
+			Beans<GLog> bs = GLog.dao.load(W.create().and("uid", id).sort("updated", -1), 0, 10);
+			if (bs != null) {
+				log_obj = bs;
+			}
+		}
+		return log_obj;
+	}
+
 	/**
 	 * check the database, if there is no "config.admin" user, then create the
 	 * "admin" user, with "admin" as password
@@ -873,17 +954,6 @@ public class User extends Bean {
 
 		if (Helper.isConfigured()) {
 			try {
-
-				Configuration conf = Config.getConf();
-				if (conf.getInt("reset", 0) == 1) {
-					// remove root
-					dao.delete(0L);
-					Lock.dao.delete(W.create("uid", 0L));
-
-					conf.setProperty("reset", 0);
-					Config.save();
-				}
-
 				if (!dao.exists(0L)) {
 					List<User> list = User.loadByAccess("access.config.admin");
 					if (list == null || list.size() == 0) {
@@ -891,12 +961,25 @@ public class User extends Bean {
 							String passwd = UID.random(16);
 							User.create("root", V.create("id", 0L).set("name", "root").set("password", passwd)
 									.set("nickname", "root"));
-							PrintStream out = new PrintStream(Controller.GIIWA_HOME + "/root.pwd");
+
+							File temp = new File(Temp.ROOT);
+							if (!temp.exists()) {
+								X.IO.mkdirs(temp);
+							}
+							PrintStream out = new PrintStream(Temp.ROOT + "/root.pwd");
 							out.print(passwd);
 							out.close();
+
+							log.warn("checkAndInit, create [root], passwd in [" + Temp.ROOT + "/root.pwd" + "]");
+
 						} catch (Exception e) {
 							log.error(e.getMessage(), e);
 						}
+					} else {
+						log.warn("checkAndInit, admin user [" + X.asList(list, e -> {
+							User u1 = (User) e;
+							return u1.name;
+						}));
 					}
 				}
 			} catch (Exception e) {
@@ -943,6 +1026,7 @@ public class User extends Bean {
 //	}
 
 	public static void repair() throws Exception {
+
 		Beans<User> bs = User.dao.load(W.create().sort("created", 1), 0, 1000);
 		if (bs != null) {
 			for (User u : bs) {
@@ -957,11 +1041,16 @@ public class User extends Bean {
 				}
 			}
 		}
+
 	}
 
 	public List<String> getAccesses() {
 		if (role == null) {
 			getRole();
+		}
+
+		if (role == null) {
+			return new ArrayList<String>();
 		}
 
 		return role.getAccesses();
@@ -971,8 +1060,74 @@ public class User extends Bean {
 	@Override
 	public JSON json() {
 		JSON j1 = super.json();
-		j1.remove("_.*", "password", "md4passwd", "md5passwd", "sid");
+		j1.remove("_.*", "password", "md4passwd", "md5passwd", "sid", "passwd", "passwordtime", "createdua");
+
+		if (this.expired()) {
+			j1.append("passwordexpired", 1);
+		} else {
+			j1.append("passwordexpired", 0);
+		}
+
 		return j1;
+	}
+
+	public boolean isLocked(String host) {
+
+		if (this.isLocked()) {
+			return true;
+		}
+
+		if (Global.getInt("user.login.failed.lock", 1) == 0) {
+			return false;
+		}
+
+		long times = Global.getLong("user.login.failed.times", 3);
+		long time = Global.getLong("user.login.failed.lock.time", 1); // 小时
+		if (time < 1) {
+			time = 1;
+		}
+		String mode = Global.getString("user.login.failed.mode", "ip");
+
+		W q = W.create().and("uid", id).and(X.CREATED, System.currentTimeMillis() - time * X.AHOUR, W.OP.gt);
+		if (X.isSame(mode, "ip")) {
+			q.and("host", host);
+		}
+
+		long n = Lock.dao.count(q);
+		return (n >= times);
+	}
+
+	public long[] failed(String host) {
+
+		if (Global.getInt("user.login.failed.lock", 1) == 0) {
+			return null;
+		}
+
+		long times = Global.getLong("user.login.failed.times", 3);
+		long time = Global.getLong("user.login.failed.lock.time", 1); // 小时
+		if (time <= 0) {
+			time = 1;
+		}
+		String mode = Global.getString("user.login.failed.mode", "ip");
+
+		W q = W.create().and("uid", id).and("created", System.currentTimeMillis() - time * X.AHOUR, W.OP.gt);
+		if (X.isSame(mode, "ip")) {
+			q.and("host", host);
+		}
+
+		long n = Lock.dao.count(q);
+
+//		log.warn("q=" + q + ", n=" + n + ", time=" + time);
+		return new long[] { n, times };
+	}
+
+	public boolean expired() {
+		int days = Global.getInt("user.passwd.expired", 90);
+		if (days == -1) {
+			return false;
+		}
+
+		return System.currentTimeMillis() - passwordtime > days * X.ADAY;
 	}
 
 }

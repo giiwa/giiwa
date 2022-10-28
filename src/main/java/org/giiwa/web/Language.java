@@ -17,17 +17,17 @@ package org.giiwa.web;
 import java.io.File;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Function;
 
 import org.apache.commons.logging.*;
-import org.giiwa.bean.Repo;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.engine.Velocity;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
+import org.giiwa.task.Function;
 
 /**
  * language data which located at /modules/[module]/i18n/
@@ -68,9 +68,9 @@ public class Language implements Serializable {
 
 	public synchronized static Language getLanguage() {
 
-		if (inst == null && Module.home != null)
+		if (inst == null && Module.home != null) {
 			inst = getLanguage(Global.getString("language", "zh_cn"));
-
+		}
 		return inst;
 	}
 
@@ -200,7 +200,9 @@ public class Language implements Serializable {
 	}
 
 	private Language(String locale) {
+
 		this.locale = locale;
+
 		if (Module.home != null && !Module.home.supportLocale(locale)) {
 			this.locale = Global.getString("language", "en_us");
 		}
@@ -311,16 +313,28 @@ public class Language implements Serializable {
 		}
 	}
 
-
 	/**
-	 * Format.
+	 * 时间格式化
 	 * 
-	 * @param t      the t
-	 * @param format the format
-	 * @return the string
+	 * @param t      时间对象， 可以是long， 或 string
+	 * @param format 日期格式：yyyy-MM-dd HH:mm:ss
+	 * @return 格式化后的字符串
 	 */
-	public String format(String t, String format) {
+	public String format(Object t, String format) {
+		if (t instanceof String) {
+			return _format((String) t, format);
+		} else if (t instanceof Number) {
+			return _format(X.toLong(t), format);
+		}
+		return X.EMPTY;
+	}
+
+	private String _format(String t, String format) {
+
 		try {
+			if (X.isEmpty(t))
+				return X.EMPTY;
+
 			SimpleDateFormat sdf = new SimpleDateFormat(format);
 
 			// parse t to datetime, assume the datetime is
@@ -334,64 +348,51 @@ public class Language implements Serializable {
 	}
 
 	public long parsetime(String date) {
+
 		if (X.isEmpty(date)) {
 			return 0;
 		}
 
-		String[] ss = date.split("[-/_:H ]");
+		String[] ss = date.split("[-/_:HTZ ]");
 
-		if (ss.length < 3) {
-			return 0;
-		}
 		Calendar c = Calendar.getInstance();
 		c.setTimeInMillis(0);
-		int[] d = new int[ss.length];
-		for (int i = 0; i < d.length; i++) {
-			d[i] = X.toInt(ss[i]);
-		}
 
-		if (d[0] > 100) {
-			c.set(Calendar.YEAR, d[0]);
-			if (d[1] > 12) {
-				c.set(Calendar.MONTH, d[2] - 1);
-				c.set(Calendar.DATE, d[1]);
+		if (ss.length > 0) {
+			// 年
+			int y = X.toInt(ss[0]);
+			if (y > 100) {
+				c.set(Calendar.YEAR, y);
 			} else {
-				c.set(Calendar.MONTH, d[1] - 1);
-				c.set(Calendar.DATE, d[2]);
-			}
-		} else if (d[2] > 100) {
-			c.set(Calendar.YEAR, d[2]);
-
-			if (d[0] > 12) {
-				c.set(Calendar.MONTH, d[1] - 1);
-				c.set(Calendar.DATE, d[0]);
-			} else {
-				c.set(Calendar.MONTH, d[0] - 1);
-				c.set(Calendar.DATE, d[1]);
+				c.set(Calendar.YEAR, 1900 + y);
 			}
 		}
 
-		if (d.length > 3) {
-			c.set(Calendar.HOUR, d[3]);
+		if (ss.length > 1) {
+			// 月
+			c.set(Calendar.MONTH, X.toInt(ss[1]) - 1);
 		}
-		if (d.length > 4) {
-			c.set(Calendar.MINUTE, d[4]);
+		if (ss.length > 2) {
+			// 日
+			c.set(Calendar.DAY_OF_MONTH, X.toInt(ss[2]));
 		}
-		if (d.length > 5) {
-			c.set(Calendar.SECOND, d[5]);
+
+		if (ss.length > 3) {
+			c.set(Calendar.HOUR, X.toInt(ss[3]));
+		}
+
+		if (ss.length > 4) {
+			c.set(Calendar.MINUTE, X.toInt(ss[4]));
+		}
+
+		if (ss.length > 5) {
+			c.set(Calendar.SECOND, X.toInt(ss[5]));
 		}
 
 		return c.getTimeInMillis();
 	}
 
-	/**
-	 * Format.
-	 * 
-	 * @param t      the t
-	 * @param format the format
-	 * @return the string
-	 */
-	public String format(long t, String format) {
+	private String _format(long t, String format) {
 
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat(format);
@@ -405,7 +406,7 @@ public class Language implements Serializable {
 	}
 
 	/**
-	 * @deprecated
+	 * @Deprecated
 	 * @param t
 	 * @param format
 	 * @return
@@ -417,7 +418,7 @@ public class Language implements Serializable {
 	/**
 	 * Convert.
 	 * 
-	 * @deprecated
+	 * @Deprecated
 	 * @param date   the date
 	 * @param from   the from
 	 * @param format the format
@@ -437,7 +438,7 @@ public class Language implements Serializable {
 	/**
 	 * Convert.
 	 * 
-	 * @deprecated
+	 * @Deprecated
 	 * @param date      the date
 	 * @param oldformat the from
 	 * @param newformat the format
@@ -472,9 +473,9 @@ public class Language implements Serializable {
 		Exception _e = null;
 		for (String f : ss) {
 			try {
-				SimpleDateFormat sdf = new SimpleDateFormat(f);
-				return sdf.parse(t).getTime();
+				return _parse(t, f);
 			} catch (Exception e) {
+				e.printStackTrace();
 				_e = e;
 			}
 		}
@@ -486,35 +487,69 @@ public class Language implements Serializable {
 		return 0;
 	}
 
+	private long _parse(String date, String format) {
+
+		for (Locale e : new Locale[] { Locale.CHINESE, Locale.US, Locale.UK, Locale.ENGLISH, Locale.FRENCH,
+				Locale.GERMANY, Locale.CANADA, Locale.ITALY, Locale.JAPANESE, Locale.KOREAN }) {
+			try {
+				SimpleDateFormat sdf = new SimpleDateFormat(format, e);
+				return sdf.parse(date).getTime();
+			} catch (ParseException e1) {
+				// e1.printStackTrace();
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * 转换日期字符串为时间戳
+	 * 
+	 * @deprecated
+	 * @param t      日期字符串
+	 * @param format 日期格式
+	 * @param loc    语言
+	 * @return
+	 */
 	public long parse(String t, String format, String loc) {
 		return parse(t, format, new Locale(loc));
 	}
 
+	/**
+	 * 转换日期字符串为时间戳
+	 * 
+	 * @deprecated
+	 * @param t      日期字符串
+	 * @param format 日期格式
+	 * @param loc    语言
+	 * @return
+	 */
 	public long parse(String t, Object format, Locale loc) {
-		if (t == null)
-			return 0;
 
-		t = t.trim();
-		if (X.isEmpty(t))
-			return 0;
-
-		List<String> ss = X.asList(format, s -> s.toString());
-
-		Exception _e = null;
-		for (String f : ss) {
-			try {
-				SimpleDateFormat sdf = new SimpleDateFormat(f, loc);
-				return sdf.parse(t).getTime();
-			} catch (Exception e) {
-				_e = e;
-			}
-		}
-
-		if (_e != null) {
-			log.error(t + ", format=" + ss, _e);
-		}
-
-		return 0;
+		return parse(t, format);
+//		if (t == null)
+//			return 0;
+//
+//		t = t.trim();
+//		if (X.isEmpty(t))
+//			return 0;
+//
+//		List<String> ss = X.asList(format, s -> s.toString());
+//
+//		Exception _e = null;
+//		for (String f : ss) {
+//			try {
+//				SimpleDateFormat sdf = new SimpleDateFormat(f, Locale.FRANCE);
+//				return sdf.parse(t).getTime();
+//			} catch (Exception e) {
+//				_e = e;
+//			}
+//		}
+//
+//		if (_e != null) {
+//			log.error(t + ", format=" + ss, _e);
+//		}
+//
+//		return 0;
 	}
 
 	/**
@@ -536,7 +571,37 @@ public class Language implements Serializable {
 	}
 
 	public String size(long length) {
-		return size(length, 1024);
+		return size(length, 1024, 1000);
+	}
+
+	/**
+	 * 
+	 * @param s, 2g, 300m
+	 * @return
+	 */
+	public long size(String s) {
+
+		if (X.isEmpty(s)) {
+			return 0;
+		}
+		s = s.trim();
+		int n = X.toInt(s);
+
+		char c = s.charAt(s.length() - 1);
+		if (c == 'K' || c == 'k') {
+			return n * 1024;
+		} else if (c == 'M' || c == 'm') {
+			return n * 1024 * 1000;
+		} else if (c == 'G' || c == 'g') {
+			return n * 1024 * 1000 * 1000;
+		} else if (c == 'T' || c == 't') {
+			return n * 1024 * 1000 * 1000 * 1000;
+		} else if (c == 'P' || c == 'p') {
+			return n * 1024 * 1000 * 1000 * 1000 * 1000;
+		}
+
+		return n;
+
 	}
 
 	private static String[] UNITS = new String[] { "", "k", "M", "G", "T", "P" };
@@ -547,23 +612,30 @@ public class Language implements Serializable {
 	 * @param length the length
 	 * @return the string
 	 */
-	public String size(long length, int step) {
+	public String size(long length, int step1, int step2) {
 
 		if (length > 0.00001 && length < 0.00001) {
 			return X.EMPTY;
 		}
 
+		long step = step1 * step2;
+
 		float d = Math.abs(length);
 
 		int i = 0;
 		while (d > step && i < UNITS.length) {
-			d /= step;
+			d /= step1;
+			i++;
+		}
+
+		if (d > step2 && i < UNITS.length) {
+			d /= step2;
 			i++;
 		}
 
 		float d1 = d - (int) d;
 		if (d1 > 0.01) {
-			return (length >= 0 ? "" : "-") + String.format("%.1f", d) + UNITS[i];
+			return (length >= 0 ? "" : "-") + X.toLong(d) + UNITS[i];
 		} else {
 			return (length >= 0 ? "" : "-") + ((int) d) + UNITS[i];
 		}
@@ -741,9 +813,9 @@ public class Language implements Serializable {
 		return mime != null && mime.startsWith("image/");
 	}
 
-	public Repo.Entity repo(String repo) {
-		return Repo.load(repo);
-	}
+//	public Repo.Entity repo(String repo) {
+//		return Repo.load(repo);
+//	}
 
 	public String eclipse(String path) {
 		return path.replaceAll("\\\\", "/");
@@ -791,6 +863,30 @@ public class Language implements Serializable {
 
 	public long parse(Timestamp t) {
 		return t.getTime();
+	}
+
+	public static void setLocale(String locale) {
+		if (!X.isSame(inst.locale, locale)) {
+			inst = Language.getLanguage(locale);
+		}
+	}
+
+	public String get(String name, Object... args) {
+		String s = this.get(name);
+		if (X.isEmpty(s)) {
+			return s;
+		}
+		return String.format(s, args);
+	}
+
+	public static void main(String[] args) {
+
+		Language lang = Language.getLanguage("en_us");
+		System.out.println(lang.format(System.currentTimeMillis(), "yyMd"));
+		long t = lang.parse("June 11, 2015", "MMM dd, yyyy");
+		System.out.println(t);
+		System.out.println(lang.format(t, "yyyyMMdd"));
+
 	}
 
 }

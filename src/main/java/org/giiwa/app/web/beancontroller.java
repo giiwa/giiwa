@@ -20,6 +20,11 @@ import org.giiwa.web.Path;
  */
 public class beancontroller extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Path(path = "list", login = true)
 	public void list() {
 
@@ -36,7 +41,9 @@ public class beancontroller extends Controller {
 		_query(q);
 
 		Beans<Data> bs = Data.load(_table(), q, s, n);
-		bs.count();
+		if (bs != null) {
+			bs.count();
+		}
 
 		this.set("list", bs.asList(e -> {
 			return _refine(e);
@@ -56,7 +63,8 @@ public class beancontroller extends Controller {
 		}
 
 		List<String> ss = X.asList(X.split(mapping.method(), "[,;]"), s1 -> s1.toString());
-		log.debug("method=" + mapping.method() + ", ss=" + ss);
+		if (log.isDebugEnabled())
+			log.debug("method=" + mapping.method() + ", ss=" + ss);
 
 		return ss.contains(s);
 
@@ -81,13 +89,18 @@ public class beancontroller extends Controller {
 
 		V v = V.create();
 
-		_fetch(v);
+		if (!_fetch("create", v, true)) {
+			return;
+		}
 
 		for (String name : this.names()) {
 			v.append(name, this.get(name));
 		}
 
 		Data.insert(_table(), v);
+
+		Object id = v.value(X.ID);
+		_done("create", id);
 
 		this.set("id", v.value(X.ID)).set(X.MESSAGE, lang.get("save.success")).send(200);
 	}
@@ -101,7 +114,7 @@ public class beancontroller extends Controller {
 		}
 
 		Object id = _id(this.get("id"));
-		Data d = Data.load(_table(), W.create("id", id));
+		Data d = Data.load(_table(), W.create().and("id", id));
 		if (d == null) {
 			this.set(X.ERROR, "参数错误, [id]").send(201);
 		} else {
@@ -122,13 +135,15 @@ public class beancontroller extends Controller {
 
 		V v = V.create().ignore(X.ID);
 
-		_fetch(v);
+		_fetch("edit", v, false);
 
 		for (String name : this.names()) {
 			v.append(name, this.get(name));
 		}
 
-		Data.update(_table(), W.create("id", id), v);
+		Data.update(_table(), W.create().and("id", id), v);
+
+		_done("edit", id);
 
 		this.set(X.MESSAGE, lang.get("save.success")).send(200);
 	}
@@ -138,9 +153,13 @@ public class beancontroller extends Controller {
 	 * 
 	 * @param v
 	 */
-	protected void _fetch(V v) {
+	protected boolean _fetch(String method, V v, boolean check) {
 		// TODO Auto-generated method stub
+		return true;
+	}
 
+	protected void _done(String method, Object id) {
+		// TODO
 	}
 
 	protected JSON _refine(Data e) {
@@ -157,7 +176,9 @@ public class beancontroller extends Controller {
 
 		Object id = _id(this.get("id"));
 
-		Data.remove(_table(), W.create(X.ID, id));
+		Data.delete(_table(), W.create().and(X.ID, id));
+
+		_done("delete", id);
 
 		this.set(X.MESSAGE, lang.get("delete.success")).send(200);
 

@@ -1,3 +1,10 @@
+#if(!$me.hasAccess('access.config.admin'))
+<script>
+	setTimeout(function(){
+		window.location.href = "/";
+	}, 1000)
+</script>
+#else
 #parse('/admin/head.html')
 
 #parse('/admin/index.toolbar.html')
@@ -9,3 +16,4 @@
 </div>
 
 #parse('/admin/foot.html')
+#end

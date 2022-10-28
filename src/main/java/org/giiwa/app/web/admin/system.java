@@ -14,14 +14,13 @@
 */
 package org.giiwa.app.web.admin;
 
-import java.lang.management.ManagementFactory;
-
 import org.giiwa.bean.User;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
-import org.giiwa.task.SysTask;
+import org.giiwa.misc.Shell;
+import org.giiwa.task.Task;
 import org.giiwa.web.*;
 
 /**
@@ -34,17 +33,22 @@ import org.giiwa.web.*;
  */
 public class system extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Path(path = "info")
 	public void info() {
-		String name = ManagementFactory.getRuntimeMXBean().getName();
+
 		this.send(JSON.create().append(X.STATE, 200).append("uptime", Controller.UPTIME).append("local", Local.id())
-				.append("global", Global.id()).append("pid", X.split(name, "[@]")[0]));
+				.append("global", Global.id()).append("pid", Shell.pid()));
 	}
 
 	/**
 	 * Restart.
 	 */
-	@Path(path = "restart", login = true, access = "access.config.admin|access.config.restart.host")
+	@Path(path = "restart", login = true, access = "access.config.admin")
 	public void restart() {
 
 		JSON jo = new JSON();
@@ -54,19 +58,11 @@ public class system extends Controller {
 		if (me.validate(pwd)) {
 			jo.put("state", "ok");
 
-			new SysTask() {
+			log.warn("restarted by [" + this.ipPath() + "]");
 
-				/**
-				 * 
-				 */
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void onExecute() {
-					System.exit(0);
-				}
-
-			}.schedule(1000);
+			Task.schedule(t -> {
+				System.exit(0);
+			}, 1000);
 
 		} else {
 			jo.put("state", "fail");

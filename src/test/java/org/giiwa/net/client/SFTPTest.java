@@ -22,7 +22,10 @@ public class SFTPTest {
 
 		try {
 
-			SFTP s = SFTP.create(Url.create("sftp://g14"));
+			Url u = Url.create("sftp://g14:55055/home/joe?username=root&passwd=abc&ass");// + Url.encode("abc&bcd"));
+			System.out.println("passwd=" + u.get("passwd"));
+
+			SFTP s = SFTP.create(u);
 			File[] l1 = s.list("/home/demo");
 			System.out.println(X.asList(l1, f -> ((File) f).getAbsolutePath()));
 

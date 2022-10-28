@@ -14,25 +14,33 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.io.File;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.giiwa.app.task.NtpTask;
 import org.giiwa.bean.GLog;
+import org.giiwa.bean.Node;
 import org.giiwa.bean.Role;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
+import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Digest;
 import org.giiwa.misc.Host;
+import org.giiwa.misc.IOUtil;
 import org.giiwa.net.mq.MQ;
+import org.giiwa.net.mq.MQ.Request;
+import org.giiwa.snmp.SampleAgent;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
+import org.giiwa.web.Module;
 
 /**
  * web api: /admin/setting <br>
@@ -45,6 +53,10 @@ import org.giiwa.web.*;
  */
 public class setting extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static List<String> names = new ArrayList<String>();
 	private static Map<String, Class<? extends setting>> settings = new HashMap<String, Class<? extends setting>>();
 
@@ -75,14 +87,14 @@ public class setting extends Controller {
 	 * @return the object
 	 */
 	@Path(path = "reset/(.*)", login = true, access = "access.config.admin")
-	final public Object reset(String name) {
+	final public void reset(String name) {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/reset/" + c);
 
 		if (c != null) {
 			try {
-				setting s = c.newInstance();
+				setting s = c.getDeclaredConstructor().newInstance();
 				s.req = this.req;
 				s.resp = this.resp;
 				s.login = this.login;
@@ -90,21 +102,39 @@ public class setting extends Controller {
 				s.module = this.module;
 				s.reset();
 
-				s.set("lang", lang);
-				s.set("module", module);
-				s.set("name", name);
-				s.set("settings", names);
-				s.show("/admin/setting.html");
+				GLog.oplog.warn("setting", "reset", "reset " + name, login, this.ip());
 
 			} catch (Exception e) {
 				log.error(name, e);
 				GLog.oplog.error(setting.class, "reset", e.getMessage(), e, login, this.ip());
-
-				this.show("/admin/setting.html");
 			}
 		}
+	}
 
-		return null;
+	@Path(path = "getconf", login = true, access = "access.config.admin")
+	final public void getconf() {
+
+		File f1 = new File(Controller.GIIWA_HOME + "/giiwa.properties");
+		if (f1.exists()) {
+			String s = IOUtil.read(f1, "UTF-8");
+			this.set("text", s);
+		}
+
+		this.send(200);
+
+	}
+
+	@Path(path = "editconf", login = true, access = "access.config.admin")
+	final public void editconf() {
+
+		File f1 = new File(Controller.GIIWA_HOME + "/giiwa.properties");
+		String s = this.getHtml("text");
+
+		IOUtil.write(f1, "UTF-8", s);
+		GLog.oplog.warn(setting.class, "editconf", "update giiwa.properties", login, this.ip());
+
+		this.set(X.MESSAGE, lang.get("save.success")).send(200);
+
 	}
 
 	/**
@@ -114,14 +144,14 @@ public class setting extends Controller {
 	 * @return the object
 	 */
 	@Path(path = "get/(.*)", login = true, access = "access.config.admin")
-	public String get(String name) {
+	public String get1(String name) {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/get/" + c);
 
 		if (c != null) {
 			try {
-				setting s = c.newInstance();
+				setting s = c.getDeclaredConstructor().newInstance();
 				s.copy(this);
 				s.get();
 
@@ -150,13 +180,14 @@ public class setting extends Controller {
 	 */
 	@Path(path = "set/(.*)", login = true, access = "access.config.admin")
 	final public void set(String name) {
+
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
 			log.debug("/set/" + c);
 
 		if (c != null) {
 			try {
-				setting s = c.newInstance();
+				setting s = c.getDeclaredConstructor().newInstance();
 				s.copy(this);
 				s.set("lang", lang);
 				s.set("module", module);
@@ -165,10 +196,12 @@ public class setting extends Controller {
 				s.set("settings", names);
 				s.set();
 
+				GLog.oplog.warn(name, "set", "v=" + this.json(), login, this.ip());
+
 				// s.show("/admin/setting.html");
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.ip());
+				GLog.oplog.error(name, "set", e.getMessage() + ", v=" + this.json(), e, login, this.ip());
 
 				this.show("/admin/setting.html");
 			}
@@ -186,7 +219,7 @@ public class setting extends Controller {
 	 * invoked when reset called.
 	 */
 	public void reset() {
-		get();
+		this.set(X.MESSAGE, "ok").send(200);
 	}
 
 	public void settingPage(String view) {
@@ -211,7 +244,7 @@ public class setting extends Controller {
 		if (!names.isEmpty()) {
 			String name = names.get(0);
 			this.set("name", name);
-			get(name);
+			get1(name);
 			return;
 		}
 
@@ -221,6 +254,11 @@ public class setting extends Controller {
 
 	public static class system extends setting {
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		/*
 		 * (non-Javadoc)
 		 * 
@@ -228,8 +266,10 @@ public class setting extends Controller {
 		 */
 		@Override
 		public void set() {
+
 			String lang1 = this.getString("language");
 			Global.setConfig("language", lang1);
+			Language.setLocale(lang1);
 
 			Global.setConfig("admin.ip", this.getHtml("admin.ip"));
 			Global.setConfig("home.uri", this.getHtml("home_uri"));
@@ -239,28 +279,66 @@ public class setting extends Controller {
 			Global.setConfig("uid.next.s1", this.getLong("uid.next.s1"));
 
 			Global.setConfig("site.group", this.getString("site.group"));
-			Global.setConfig("user.name.rule", this.getHtml("user_name"));
-			Global.setConfig("user.passwd.rule", this.getHtml("user_passwd"));
+
+			Global.setConfig("dfile.copies", this.getInt("dfile.copies", 0));
+			Global.setConfig("f.upload.login", X.isSame(this.getString("f.upload.login"), "on") ? 1 : 0);
+			Global.setConfig("f.g.login", X.isSame(this.getString("f.g.login"), "on") ? 1 : 0);
+			Global.setConfig("f.g.online", X.isSame(this.getString("f.g.online"), "on") ? 1 : 0);
+
+			Global.setConfig("zookeeper.server", this.getString("zookeeper.server"));
+
 			Global.setConfig("user.captcha", X.isSame(this.getString("user_captcha"), "on") ? 1 : 0);
 			Global.setConfig("user.token", X.isSame(this.getString("user_token"), "on") ? 1 : 0);
 			Global.setConfig("user.passwd", X.isSame("on", this.getString("user.passwd")) ? 1 : 0);
+			Global.setConfig("session.baseip", X.isSame("on", this.getString("session.baseip")) ? 1 : 0);
+			long alive = this.getLong("session.alive");
+			if (alive == 0) {
+				alive = -1;
+			}
+			Global.setConfig("session.alive", alive);
+
+			Global.setConfig("cookie.samesite", this.get("cookie.samesite"));
+
+			Global.setConfig("user.login.failed.lock",
+					X.isSame("on", this.getString("user.login.failed.lock")) ? 1 : 0);
+			Global.setConfig("user.login.failed.times", this.getLong("user.login.failed.times"));
+
+			long locktime = this.getLong("user.login.failed.lock.time");
+			if (locktime < 1) {
+				locktime = 1;
+			}
+			Global.setConfig("user.login.failed.lock.time", locktime);
+
+			Global.setConfig("user.login.failed.mode", this.get("user.login.failed.mode"));
+
+			Global.setConfig("user.name.rule", this.getHtml("user_name"));
+			Global.setConfig("user.passwd.rule", this.getHtml("user_passwd"));
+
 			Global.setConfig("user.system", this.getString("user_system"));
 			Global.setConfig("user.role", this.getString("user_role"));
+			Global.setConfig("user.name.rule.tips", this.getString("user.name.rule.tips"));
+			Global.setConfig("user.passwd.rule.tips", this.getString("user.passwd.rule.tips"));
+
 			Global.setConfig("cross.domain", this.getString("cross_domain"));
 			Global.setConfig("cross.header", this.getString("cross_header"));
 			Global.setConfig("html.source", this.getHtml("html.source"));
+			Global.setConfig("user.passwd.expired", this.getInt("user.passwd.expired"));
 
-			Global.setConfig("session.alive", this.getLong("session.alive"));
 			Global.setConfig("ntp.server", this.getString("ntpserver"));
+			Global.setConfig("http.proxy", this.getString("http.proxy"));
+
 			Global.setConfig("db.optimizer", X.isSame("on", this.getString("db.optimizer")) ? 1 : 0);
+			Global.setConfig("security.task", X.isSame("on", this.getString("security.task")) ? 1 : 0);
 			Global.setConfig("oplog.level", this.getInt("oplog.level"));
 			Global.setConfig("perf.moniter", X.isSame("on", this.getString("perf.moniter")) ? 1 : 0);
-			Global.setConfig("session.baseip", X.isSame("on", this.getString("session.baseip")) ? 1 : 0);
-			Local.setConfig("web.debug", X.isSame("on", this.getString("web.debug")) ? 1 : 0);
+			Global.setConfig("web.debug", X.isSame("on", this.getString("web.debug")) ? 1 : 0);
 			Global.setConfig("glog.keep.days", this.getInt("glog.keep.days"));
-			Global.setConfig("web.cache", this.getString("web.cache"));
+			Global.setConfig("web.bg.watermark", X.isSame("on", this.getString("web.bg.watermark")) ? 1 : 0);
+			Global.setConfig("iframe.options", this.getString("iframe.options"));
 
-			NtpTask.inst.schedule(0);
+			Global.setConfig("glog.rsyslog", X.isSame("on", this.getString("glog.rsyslog")) ? 1 : 0);
+			Global.setConfig("glog.rsyslog.host", this.getString("glog.rsyslog.host"));
+			Global.setConfig("glog.rsyslog.port", this.getLong("glog.rsyslog.port"));
 
 			String url = this.getString("site_url").trim();
 			while (url.endsWith("/")) {
@@ -268,21 +346,19 @@ public class setting extends Controller {
 			}
 			Global.setConfig("site.url", url);
 			Global.setConfig("site.image", this.getString("site.image"));
-			Global.setConfig("site.browser", this.getString("site_browser"));
-			Global.setConfig("site.browser.nonredirect", this.getString("site_browser_nonredirect"));
-			Global.setConfig("site.browser.ignoreurl", this.getString("site_browser_ignoreurl"));
+
+			Global.setConfig("user.login.sso", X.isSame("on", this.getString("user.login.sso")) ? 1 : 0);
+			Global.setConfig("user.login.sso.mode", this.getString("user.login.sso.mode"));
+			Global.setConfig("user.login.sso.role", this.getString("user.login.sso.role"));
+			Global.setConfig("user.login.sso.expired", this.getLong("user.login.sso.expired"));
 
 			Global.setConfig("module.center", X.isSame(this.getString("module_center"), "on") ? 1 : 0);
 
-//			if (Global.getInt("db.optimizer", 1) == 1) {
-//				Helper.enableOptmizer();
-//			} else {
-//				Helper.disableOptmizer();
-//			}
+			Helper.enableOptmizer();
 
 			try {
 
-				MQ.topic(Task.MQNAME, new Task() {
+				MQ.topic(Task.MQNAME, Request.create().put(new Task() {
 
 					/**
 					 * 
@@ -295,7 +371,7 @@ public class setting extends Controller {
 						Language.getLanguage();
 					}
 
-				}.attach("ms", 0).attach("g", false));
+				}));
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -320,21 +396,55 @@ public class setting extends Controller {
 			this.set("cross_header", Global.getString("cross.header", "Content-Type, accept, Origin"));
 
 			this.set("cache_url", Config.getConf().getString("cache.url", null));
-			this.set("mongo_url", Config.getConf().getString("mongo[default].url", null));
-			this.set("mongo_db", Config.getConf().getString("mongo[default].db", null));
-			this.set("mongo_user", Config.getConf().getString("mongo[default].user", null));
-			this.set("db_url", Config.getConf().getString("db[default].url", null));
-			this.set("db_primary", Helper.primary == null ? X.EMPTY : Helper.primary.getClass().getName());
+			this.set("db_url", Config.getConf().getString("db.url", null));
+			this.set("db_user", Config.getConf().getString("db.user", null));
+
 			this.set("roles", Role.load(0, 100));
 
 			this.set("machineid", Digest.md5(Host.getMAC() + "/" + Local.id()));
 
+			this.set("sso_role", Global.getString("user.login.sso.role", ""));
+
+			try {
+				Beans<Node> l1 = Node.dao.load(
+						W.create().and("lastcheck", System.currentTimeMillis() - X.ADAY, W.OP.gte).sort("created"), 0,
+						1024);
+				String code = "";
+//				for (Node o : l1) {
+				Node o = Local.node();
+				if (!X.isEmpty(o.mac)) {
+					for (String mac : o.mac) {
+						SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+						random.setSeed((o.id + "/" + mac).getBytes());
+						byte s1 = (byte) (random.nextInt(117) + 10);
+						if (!code.contains(Byte.toString(s1))) {
+							code += s1 + "|";
+						}
+					}
+				}
+//				}
+				if (X.isEmpty(code)) {
+					this.set("serial", "nodes=" + l1.size());
+				} else {
+					this.set("serial", code.replaceAll("\\|", X.EMPTY).toString());
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				this.set("serial", e.getMessage());
+			}
+
 			this.settingPage("/admin/setting.system.html");
+
 		}
 
 	}
 
 	public static class smtp extends setting {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
 		/*
 		 * (non-Javadoc)
@@ -367,7 +477,53 @@ public class setting extends Controller {
 
 	}
 
+	public static class snmp extends setting {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.giiwa.app.web.admin.setting.set()
+		 */
+		@Override
+		public void set() {
+
+			Local.setConfig("snmp.enabled", X.isSame(this.getString("snmp.enabled"), "on") ? 1 : 0);
+			Local.setConfig("snmp.listen", this.getString("snmp.listen"));
+			Local.setConfig("snmp.port", this.getInt("snmp.port"));
+
+			Global.setConfig("snmp.version", this.getInt("snmp.version"));
+			Global.setConfig("snmp.username", this.getInt("snmp.username"));
+			Global.setConfig("snmp.password", this.getInt("snmp.password"));
+
+			SampleAgent.start();
+
+			this.send(JSON.create().append(X.MESSAGE, lang.get("save.success")).append(X.STATE, 201));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.giiwa.app.web.admin.setting.get()
+		 */
+		@Override
+		public void get() {
+
+			this.set("page", "/admin/setting.snmp.html");
+		}
+
+	}
+
 	public static class counter extends setting {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
 		/*
 		 * (non-Javadoc)
@@ -392,4 +548,26 @@ public class setting extends Controller {
 			this.set("page", "/admin/setting.counter.html");
 		}
 	}
+
+	@Path(path = "list", login = true, access = "access.config.admin")
+	public final void list() {
+
+	}
+
+	@Path(path = "get1", login = true, access = "access.config.admin")
+	public void get1() {
+		String name = this.get("name");
+		Global e = Global.dao.load(name);
+		if (e != null) {
+			this.print(e.json());
+		}
+	}
+
+	@Path(path = "delete1", login = true, access = "access.config.admin")
+	public void delete1() {
+		String name = this.get("name");
+		Global.dao.delete(name);
+		this.print("ok");
+	}
+
 }

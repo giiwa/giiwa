@@ -5,16 +5,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
@@ -22,6 +21,7 @@ import org.giiwa.dao.Counter;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Function;
 import org.giiwa.task.SysTask;
 import org.giiwa.task.Task;
 
@@ -49,7 +49,7 @@ public abstract class MQ {
 	 *
 	 */
 	public static enum Mode {
-		TOPIC, QUEUE
+		TOPIC, QUEUE, BOTH
 	};
 
 	private static MQ mq = null;
@@ -68,21 +68,23 @@ public abstract class MQ {
 			String type = Global.getString("mq.type", X.EMPTY);
 			if (X.isSame(type, "activemq")) {
 				mq = ActiveMQ.create();
-			} else if (X.isSame(type, "kafkamq")) {
-				mq = KafkaMQ.create();
+//			} else if (X.isSame(type, "kafkamq")) {
+//				mq = KafkaMQ.create();
 			} else {
 				mq = LocalMQ.create();
 			}
 
 			try {
-				new Notify().bind(Mode.TOPIC);
-				new RPC().bind();
+				new Notify().bindAs(Mode.TOPIC);
+				RPC.inst.bind();
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 
-			log.debug("MQ.inited, mq=" + mq);
+			if (log.isDebugEnabled())
+				log.debug("MQ.inited, mq=" + mq);
 		}
+
 		return mq != null;
 	}
 
@@ -127,8 +129,8 @@ public abstract class MQ {
 	 */
 	public static void bind(String name, IStub stub, Mode mode) throws Exception {
 		if (mq == null) {
-			GLog.applog.warn(org.giiwa.app.web.admin.mq.class, "bind",
-					"failed bind, [" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
+//			GLog.applog.warn(org.giiwa.app.web.admin.mq.class, "bind",
+//					"failed bind, [" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
 
 			throw new Exception("MQ not init yet");
 		} else {
@@ -151,6 +153,8 @@ public abstract class MQ {
 	protected abstract void _bind(String name, IStub stub, Mode mode) throws Exception;
 
 	protected abstract void _unbind(IStub stub) throws Exception;
+
+	protected abstract void _stop();
 
 	private static class _Caller extends SysTask {
 
@@ -187,6 +191,7 @@ public abstract class MQ {
 						if (r.tt > 0)
 							read.add(System.currentTimeMillis() - r.tt);
 
+						r._from = cb;
 						cb.onRequest(r.seq, r);
 					}
 				} catch (Exception e) {
@@ -197,25 +202,51 @@ public abstract class MQ {
 
 	}
 
-	// static AtomicInteger caller = new AtomicInteger(0);
-//	static AtomicLong totalSent = new AtomicLong(0);
-//	static AtomicLong totalGot = new AtomicLong(0);
-
 	protected static void process(final String name, final List<Request> rs, final IStub cb) {
-
 		_Caller.call(name, cb, rs);
-
 	}
 
 	protected abstract long _topic(String to, Request req) throws Exception;
 
-	public static long topic(String to, Task task) throws Exception {
-
-		Request req = Request.create();
-		req.put(task);
-
-		return topic(to, req);
-	}
+	/**
+	 * send message to topic and waiting response
+	 * 
+	 * @param to
+	 * @param req
+	 * @param timeout
+	 * @param func
+	 * @return
+	 * @throws Exception
+	 */
+//	public static long topic(String to, JSON req, long timeout, Function<Request, Boolean> func) throws Exception {
+//
+//		LiveHand door = LiveHand.create(1, 0);
+//		String name = to + "_" + System.currentTimeMillis();
+//		IStub st = new IStub(name) {
+//			@Override
+//			public void onRequest(long seq, Request req) {
+//				try {
+//					if (func.apply(req)) {
+//						door.release();
+//					}
+//				} catch (Exception e) {
+//					log.error(e.getMessage(), e);
+//				}
+//			}
+//		};
+//
+//		try {
+//			st.bind();
+//
+//			MQ.topic(Task.MQNAME, Request.create().put(req.append("from", name)));
+//
+//			door.await(timeout);
+//		} finally {
+//			st.destroy();
+//		}
+//		return 0;
+//
+//	}
 
 	/**
 	 * broadcast the message as "topic" to all "dest:to", and return immediately
@@ -227,22 +258,20 @@ public abstract class MQ {
 	 */
 	public static long topic(String to, Request req) throws Exception {
 
-		// FileClient.notify(to, req.get());
-
 		if (mq == null) {
 			throw new Exception("MQ not init yet");
 		}
 
 		TimeStamp t = TimeStamp.create();
 		try {
-			long s1 = seq.incrementAndGet();
-			if (log.isDebugEnabled())
-				log.debug("send topic to [" + to + "], seq=" + s1);
+			if (req.seq <= 0) {
+				long s1 = seq.incrementAndGet();
+				req.seq = s1;
+			}
 
-			req.seq = s1;
 			req.tt = System.currentTimeMillis();
 			mq._topic(to, req);
-			return s1;
+			return req.seq;
 		} finally {
 			write.add(t.pastms());
 		}
@@ -261,19 +290,85 @@ public abstract class MQ {
 	public static long send(String to, Request req) throws Exception {
 		TimeStamp t = TimeStamp.create();
 		try {
+
 			if (req.seq <= 0) {
 				req.seq = seq.incrementAndGet();
 			}
 			req.tt = System.currentTimeMillis();
 
 			return mq._send(to, req);
+
 		} finally {
 			write.add(t.pastms());
 		}
 	}
 
-	public static <T> T call(String name, Request req, long timeout) throws Exception {
+	/**
+	 * send message to MQ and wait response
+	 * 
+	 * @param <T>
+	 * @param name
+	 * @param cmd
+	 * @param obj
+	 * @param timeout
+	 * @return
+	 * @throws Exception
+	 */
+	public static <T> T callQueue(String name, String cmd, Serializable obj, long timeout) throws Exception {
+		Request req = Request.create().put(obj);
+		req.cmd = cmd;
 		return RPC.call(name, req, timeout);
+	}
+
+	/**
+	 * send message to MQ and wait response
+	 * 
+	 * @param <T>
+	 * @param name
+	 * @param req
+	 * @param timeout
+	 * @return
+	 * @throws Exception
+	 */
+	public static <T> T callQueue(String name, Request req, long timeout) throws Exception {
+		return RPC.call(name, req, timeout);
+	}
+
+	/**
+	 * @deprecated
+	 * 
+	 * @param name
+	 * @param req
+	 * @param timeout
+	 * @param func
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean callTopic(String name, JSON req, long timeout, Function<Request, Boolean> func)
+			throws Exception {
+		return callTopic(name, null, req, timeout, func);
+	}
+
+	/**
+	 * 
+	 * @param name
+	 * @param cmd
+	 * @param obj
+	 * @param timeout
+	 * @param func
+	 * @return
+	 * @throws Exception
+	 */
+	public static boolean callTopic(String name, String cmd, Serializable obj, long timeout,
+			Function<Request, Boolean> func) throws Exception {
+		Request r = Request.create().put(obj);
+		r.cmd = cmd;
+		return callTopic(name, r, timeout, func);
+	}
+
+	public static boolean callTopic(String name, Request req, long timeout, Function<Request, Boolean> func)
+			throws Exception {
+		return RPC.call(name, req, timeout, func);
 	}
 
 	public static class Request {
@@ -283,15 +378,18 @@ public abstract class MQ {
 		public int type = 0;
 
 		public long tt = -1; // timestamp
-		public String from;
+		public String from; // reply path
+		public String cmd; // command
 		public int priority = 1;
 		public int ttl = (int) X.AMINUTE * 10;
 		public int persistent = DeliveryMode.PERSISTENT;// NON_PERSISTENT;
 		public byte[] data;
 
+		transient IStub _from;
+
 		@Override
 		public String toString() {
-			return "Request [seq=" + seq + "]";
+			return "Request [seq=" + seq + ", from=" + from + "]";
 		}
 
 		public DataInputStream getInput() {
@@ -309,10 +407,6 @@ public abstract class MQ {
 				}
 
 			};
-		}
-
-		public void setBody(byte[] bb) {
-			data = bb;
 		}
 
 		public static Request create() {
@@ -334,11 +428,6 @@ public abstract class MQ {
 			return this;
 		}
 
-		public Request data(byte[] data) {
-			this.data = data;
-			return this;
-		}
-
 		public Request ttl(long t) {
 			this.ttl = (int) t;
 			return this;
@@ -346,12 +435,22 @@ public abstract class MQ {
 
 		public Request put(Object obj) throws Exception {
 
-			data = X.getBytes(obj, true);
+			this.data = X.getBytes(obj);
+
+			if (log.isDebugEnabled()) {
+				log.debug("put data, size=" + data.length);
+			}
+
+//			log.warn("put data, size=" + data.length);
+
 			return this;
 		}
 
 		public <T> T get() throws Exception {
-			return X.fromBytes(data, true);
+
+//			log.warn("got data, size=" + data.length);
+
+			return X.fromBytes(data);
 		}
 
 		public void response(Object data) throws Exception {
@@ -360,6 +459,23 @@ public abstract class MQ {
 			r.seq = seq;
 			r.ver = ver;
 			r.type = 200;
+
+			r.put(data);
+
+			if (this._from == null) {
+				MQ.send(from, r);
+			} else {
+				this._from.send(from, r);
+			}
+
+		}
+
+		public void responseError(Object data) throws Exception {
+
+			Request r = Request.create();
+			r.seq = seq;
+			r.ver = ver;
+			r.type = 201;
 
 			r.put(data);
 
@@ -381,6 +497,16 @@ public abstract class MQ {
 			} catch (Exception e1) {
 				log.error(e1.getMessage(), e1);
 			}
+		}
+
+		public void reply(Request req) throws Exception {
+			req.seq = seq;
+			MQ.send(from, req);
+		}
+
+		public byte[] packet() {
+
+			return null;
 		}
 
 	}
@@ -431,12 +557,25 @@ public abstract class MQ {
 	private static Counter read = new Counter("read");
 	private static Counter write = new Counter("write");
 
-	public static JSON statRead() {
+	public static Counter.Stat statRead() {
 		return read.get();
 	}
 
-	public static JSON statWrite() {
+	public static Counter.Stat statWrite() {
 		return write.get();
 	}
+
+	public static void stop() {
+		if (mq != null) {
+			mq._stop();
+			mq = null;
+		}
+	}
+
+	static void destroy0(String name, Mode mode) throws Exception {
+		mq.destroy(name, mode);
+	}
+
+	public abstract void destroy(String name, Mode mode) throws Exception;
 
 }

@@ -10,7 +10,7 @@ $(function(){
     	   		range: 3600 * 1000
 	       },
 		    title: {
-		        text: "$lang.get('host.mem.title')($!lang.size($!total)B)"
+		        text: "$!name - ${lang.get('host.mem.title')}[$!lang.size($!total)]"
 		    },
 	       plotOptions: {
 	           series: {
@@ -24,10 +24,11 @@ $(function(){
                enabled: false
            },
 	       tooltip: {
-	           pointFormat: '{series.name}: <b>{point.hint}</b>'
+		        headerFormat: '',
+		        pointFormat: '<b>{series.name}: {point.y}%</b><br>{point.x:%H:%M}'
 	       },
 	    series: [
-					{name: "$lang.get('mem.used')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.used, hint:"$lang.size($c.used)"},#end]}
+				{name: "$lang.get('mem.usage')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c._usage},#end]}
 	    			], 
 	});
 })

@@ -29,6 +29,11 @@ import org.giiwa.web.*;
  */
 public class sysstat extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	/*
 	 * (non-Javadoc)
 	 * 

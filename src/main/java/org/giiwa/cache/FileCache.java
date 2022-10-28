@@ -18,23 +18,30 @@ import java.io.*;
 import java.util.*;
 
 import org.apache.commons.logging.*;
+import org.giiwa.bean.Temp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.task.LiveHand;
 import org.giiwa.task.Task;
-import org.giiwa.web.Controller;
 
 /**
  * The Class FileCache is used to simple cache when no cache configured in
  * system
  */
-class FileCache implements ICacheSystem {
+public class FileCache implements ICacheSystem {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(FileCache.class);
 
 	/** The root. */
 	private String root;
+
+	public static FileCache inst = new FileCache();
+
+	private FileCache() {
+		root = Temp.ROOT + "/_cache/";
+		cache_size = 10000;
+	}
 
 	/**
 	 * Inits the.
@@ -43,10 +50,7 @@ class FileCache implements ICacheSystem {
 	 * @return the i cache system
 	 */
 	public static ICacheSystem create() {
-		FileCache f = new FileCache();
-		f.root = Controller.GIIWA_HOME + "/temp/_cache/";
-		f.cache_size = 10000;
-		return f;
+		return inst;
 	}
 
 	/**
@@ -110,13 +114,13 @@ class FileCache implements ICacheSystem {
 				 */
 				_cache(id, b);
 
-				Task.schedule(() -> {
+				Task.schedule(t -> {
 
 					/**
 					 * write to file
 					 */
 					String path = _path(id);
-					new File(path).getParentFile().mkdirs();
+					X.IO.mkdirs(new File(path).getParentFile());
 					FileOutputStream out = null;
 					try {
 						out = new FileOutputStream(path);
@@ -259,7 +263,7 @@ class FileCache implements ICacheSystem {
 //		queue.add(id);
 
 		if (cache.size() > cache_size) {
-			Task.schedule(() -> {
+			Task.schedule(t -> {
 				_clearup();
 			});
 		}
@@ -318,7 +322,7 @@ class FileCache implements ICacheSystem {
 				_local.put(name, d);
 			}
 
-			if (d.tryHold()) {
+			if (d.tryLock()) {
 				return true;
 			}
 		}
@@ -337,7 +341,7 @@ class FileCache implements ICacheSystem {
 			synchronized (_local) {
 				LiveHand d = _local.remove(name);
 				if (d != null) {
-					d.drop();
+					d.release();
 					return true;
 				}
 			}

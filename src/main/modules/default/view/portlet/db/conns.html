@@ -1,0 +1,45 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/db/conns/more')"><i class='icon-menu'></i></a>
+
+<div id='status_$!requestid' style="height: 160px;width: 180px;"></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('status_$!requestid', {
+	    chart: {
+	        type: 'line'
+	    },
+	    title: {
+	        text: '$lang.get("portlet.db.conns.title")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	min: 0,
+    		title: {
+	            text: ''
+	        }
+	    },
+	      legend: {
+	          enabled: false
+	        },
+	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.y}</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+					{name: "$lang.get('db.conns')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.conns},#end]}
+    			], 
+	});
+	
+})
+</script>
+

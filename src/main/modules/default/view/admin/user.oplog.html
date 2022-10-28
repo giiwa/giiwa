@@ -7,7 +7,8 @@
 </div>
 
 <div class='search'>
-	<form action='/admin/user/oplog?__node=$!__node' method='get' #if($s>0) style='display:none' #end > 
+	<form action='/admin/user/oplog' method='get' #if($s>0) style='display:none' #end > 
+		<input type="hidden" name="__node" value="$!__node" />
 		<span>
 			<label><h3>$lang.get('log.starttime'):</h3>
 				<input type='text' name='starttime' value='$!starttime' />

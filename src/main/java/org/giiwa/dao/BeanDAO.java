@@ -15,20 +15,20 @@
 package org.giiwa.dao;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
+import org.giiwa.cache.TimingCache;
 import org.giiwa.conf.Global;
+import org.giiwa.dao.Helper.Cursor;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Consumer;
+import org.giiwa.task.Function;
 
 /**
  * the DAO helper class, used to access database
@@ -38,17 +38,7 @@ import org.giiwa.json.JSON;
  * @param <I> the type of primary key
  * @param <T> the Bean
  */
-public class BeanDAO<I, T extends Bean> {
-
-	/**
-	 * default 5 seconds
-	 */
-	public static final long EXPIREDTIME = 5000; // 5 seconds
-
-	/**
-	 * default 10 items
-	 */
-	public static final long MAXCACHENUMBER = 10; // 10
+public final class BeanDAO<I, T extends Bean> {
 
 	/** The log utility */
 	protected static Log log = LogFactory.getLog(BeanDAO.class);
@@ -59,49 +49,76 @@ public class BeanDAO<I, T extends Bean> {
 		this.t = t;
 	}
 
+	public T loadBy(String sql) throws SQLException {
+		W q = W.create();
+		q.and(sql);
+		return load(q);
+	}
+
 	/**
 	 * load a Bean from the database
 	 * 
 	 * @param q the condition
 	 * @return
+	 * @throws SQLException
 	 */
 	public T load(W q) {
-		return Helper.load(q, t);
+		try {
+			return Helper.load(q, t);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	public T load(W q, boolean trace) {
+		try {
+			return Helper.load(q, t);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	public T load(String sql, Consumer<T> func) throws SQLException {
+		W q = W.create();
+		q.and(sql);
+		return load(q, func);
+	}
+
+	/**
+	 * atomic load the T and call back the func
+	 * 
+	 * @param q
+	 * @param func
+	 * @return
+	 * @throws SQLException
+	 */
+	public T load(W q, Consumer<T> func) throws SQLException {
+
+		Lock door = Global.getLock("data." + tableName());
+
+		door.lock();
+		try {
+			T t = load(q);
+			if (func != null && t != null) {
+				func.accept(t);
+			}
+			return t;
+		} finally {
+			door.unlock();
+		}
 	}
 
 	/**
 	 * get the tablename of the Bean
 	 * 
 	 * @return
+	 * @throws SQLException
 	 */
-	public String tableName() {
+	public String tableName() throws SQLException {
 		return Helper.getTable(t);
 	}
-
-	/**
-	 * get the db name
-	 * 
-	 * @return
-	 */
-	public String dbName() {
-		return Helper.getDB(t);
-	}
-
-	/**
-	 * load a Bean only fields
-	 * 
-	 * @deprecated <br>
-	 *             replace by load(W q)
-	 * 
-	 * @param fields the fields
-	 * @param q      the condition
-	 * @return
-	 */
-	public T load(String[] fields, W q) {
-		return Helper.load(fields, q, t);
-	}
-
-	private Cache _cache = new Cache();
 
 	/**
 	 * load a Bean by key, it will load from cache first, if not exists then get
@@ -109,32 +126,26 @@ public class BeanDAO<I, T extends Bean> {
 	 * 
 	 * @param id the key of the Bean
 	 * @return
+	 * @throws SQLException
 	 */
 	public T load(I id) {
-		return _cache.get(id);
-		// return Helper.load(id, t);
+		try {
+			T t1 = TimingCache.get(t, id);
+			if (t1 == null) {
+				t1 = Helper.load(id, t);
+				TimingCache.set(t, id, t1);
+			}
+			return copy(t1);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
-	/**
-	 * load Beans only the fields
-	 * 
-	 * @deprecated <br>
-	 *             replace by load(W q, int s, int n);
-	 * 
-	 * 
-	 * @param fields the fields
-	 * @param q      the conditions
-	 * @param s      the offset
-	 * @param n      the limit
-	 * @return
-	 */
-	public Beans<T> load(String[] fields, W q, int s, int n) {
-		Beans<T> bs = Helper.load(fields, q, s, n, t);
-		if (bs != null) {
-			bs.q = q;
-			bs.dao = this;
-		}
-		return bs;
+	public Beans<T> load(String sql, int s, int n) throws SQLException {
+		W q = W.create();
+		q.and(sql);
+		return load(q, s, n);
 	}
 
 	/**
@@ -146,12 +157,47 @@ public class BeanDAO<I, T extends Bean> {
 	 * @return
 	 */
 	public Beans<T> load(W q, int s, int n) {
-		Beans<T> bs = Helper.load(q, s, n, t);
-		if (bs != null) {
-			bs.q = q;
-			bs.dao = this;
+
+		try {
+			Beans<T> bs = Helper.load(tableName(), q, s, n, t);
+			if (bs != null) {
+				bs.q = q;
+				bs.dao = this;
+			}
+			return bs;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
-		return bs;
+		return Beans.create();
+	}
+
+	/**
+	 * atomic load the data and call back the func
+	 * 
+	 * @param q
+	 * @param s
+	 * @param n
+	 * @param func
+	 * @return
+	 * @throws SQLException
+	 */
+	public Beans<T> load(W q, int s, int n, Consumer<Beans<T>> func) throws SQLException {
+
+		Lock door = Global.getLock("data." + tableName());
+		door.lock();
+		try {
+			Beans<T> bs = load(q, s, n);
+			if (func != null && bs != null && !bs.isEmpty()) {
+				func.accept(bs);
+			}
+			return bs;
+		} finally {
+			door.unlock();
+		}
+	}
+
+	public boolean stream(W q, Function<T, Boolean> func) throws Exception {
+		return stream(q, 0, func);
 	}
 
 	/**
@@ -162,9 +208,39 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param n the limit
 	 * @return
 	 */
-	public BeanStream<T> stream(W q, int s, int n) {
-		BeanStream<T> bs = Helper.stream(q, s, n, t);
-		return bs;
+	public boolean stream(W q, long offset, Function<T, Boolean> func) throws Exception {
+
+		String table = tableName();
+
+		Cursor<T> bs = Helper.stream(table, q, offset, t);
+		if (bs != null) {
+			try {
+				while (bs.hasNext()) {
+
+					T e = bs.next();
+
+					if (log.isDebugEnabled())
+						log.debug("e=" + e);
+
+					if (q.access != null) {
+						q.access.read("db", table, e);
+					}
+					if (!func.apply(e)) {
+						return false;
+					}
+
+				}
+
+				if (log.isDebugEnabled())
+					log.debug("end of stream for [" + table + "]");
+
+			} finally {
+				X.close(bs);
+			}
+		} else {
+			log.info("load null, q=" + q);
+		}
+		return true;
 	}
 
 	/**
@@ -175,14 +251,33 @@ public class BeanDAO<I, T extends Bean> {
 	 * @throws SQLException
 	 */
 	public boolean exists(W q) throws SQLException {
-		return Helper.exists(q, t);
+		return Helper.exists(tableName(), q);
+	}
+
+	public boolean exists2(W q) {
+		try {
+			return Helper.exists(tableName(), q);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 	public boolean exists(I id) throws SQLException {
-		if (_cache.exists(id))
+		if (TimingCache.exists(t, id))
 			return true;
 
-		return Helper.exists(id, t);
+		return Helper.exists(tableName(), W.create().and(X.ID, id));
+	}
+
+	public boolean exists2(I id) {
+		if (TimingCache.exists(t, id))
+			return true;
+
+		try {
+			return exists(id);
+		} catch (Throwable e) {
+			return false;
+		}
 	}
 
 	/**
@@ -191,10 +286,17 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param q the conditions
 	 * @param v the value
 	 * @return
+	 * @throws SQLException
 	 */
 	public int update(W q, V v) {
-		_cache.remove();
-		return Helper.update(q, v, t);
+
+		try {
+			TimingCache.remove(t);
+			return Helper.update(tableName(), q, v);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
 	/**
@@ -203,10 +305,15 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param id the key
 	 * @param v  the value
 	 * @return
+	 * @throws SQLException
 	 */
 	public int update(I id, V v) {
-		_cache.remove();
-		return Helper.update(id, v, t);
+		try {
+			return update(W.create().and(X.ID, id), v);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
 	/**
@@ -214,13 +321,19 @@ public class BeanDAO<I, T extends Bean> {
 	 * 
 	 * @param v the value
 	 * @return
+	 * @throws SQLException
 	 */
 	public int insert(V v) {
-		_cache.remove();
-		if (X.isEmpty(v.value(X.ID))) {
-			log.error("v=" + v, new Exception("id missed in V"));
+		try {
+			TimingCache.remove(t);
+			if (X.isEmpty(v.value(X.ID))) {
+				log.error("v=" + v, new Exception("id missed in V"));
+			}
+			return Helper.insert(tableName(), v);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
-		return Helper.insert(v, t);
+		return 0;
 	}
 
 	/**
@@ -228,10 +341,10 @@ public class BeanDAO<I, T extends Bean> {
 	 * 
 	 * @param id the key
 	 * @return
+	 * @throws SQLException
 	 */
 	public int delete(I id) {
-		_cache.remove();
-		return Helper.delete(id, t);
+		return delete(W.create().and(X.ID, id));
 	}
 
 	public long next() throws SQLException {
@@ -245,10 +358,16 @@ public class BeanDAO<I, T extends Bean> {
 	 * 
 	 * @param q the condition
 	 * @return
+	 * @throws SQLException
 	 */
 	public int delete(W q) {
-		_cache.remove();
-		return Helper.delete(q, t);
+		try {
+			TimingCache.remove(t);
+			return Helper.delete(tableName(), q);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
 	/**
@@ -256,13 +375,23 @@ public class BeanDAO<I, T extends Bean> {
 	 * 
 	 * @param q the condition
 	 * @return
+	 * @throws SQLException
 	 */
 	public long count(W q) {
-		return Helper.count(q, t);
+		try {
+			return Helper.count(tableName(), q);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
-	public long count(String name, W q) {
-		return Helper.count(name, q, t);
+	public long count(String name, W q) throws SQLException {
+		return Helper.count(tableName(), name, q);
+	}
+
+	public long size() throws SQLException {
+		return Helper.size(tableName());
 	}
 
 	/**
@@ -271,10 +400,15 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param name the field name
 	 * @param q    the condition
 	 * @return
+	 * @throws SQLException
 	 */
-	@SuppressWarnings("deprecation")
 	public <E> E sum(String name, W q) {
-		return Helper.sum(q, name, t);
+		try {
+			return Helper.sum(tableName(), name, q);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -283,10 +417,24 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param name the field name
 	 * @param q    the condition
 	 * @return
+	 * @throws SQLException
 	 */
-	@SuppressWarnings("deprecation")
 	public <E> E max(String name, W q) {
-		return Helper.max(q, name, t);
+		try {
+			return Helper.max(this.tableName(), name, q);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	public <E> E median(String name, W q) {
+		try {
+			return Helper.median(this.tableName(), name, q);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -295,10 +443,10 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param name the field name
 	 * @param q    the condition
 	 * @return
+	 * @throws SQLException
 	 */
-	@SuppressWarnings("deprecation")
-	public <E> E min(String name, W q) {
-		return Helper.min(q, name, t);
+	public <E> E min(String name, W q) throws SQLException {
+		return Helper.min(this.tableName(), name, q);
 	}
 
 	/**
@@ -307,10 +455,10 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param name the field name
 	 * @param q    the condition
 	 * @return
+	 * @throws SQLException
 	 */
-	@SuppressWarnings("deprecation")
-	public <E> E avg(String name, W q) {
-		return Helper.avg(q, name, t);
+	public <E> E avg(String name, W q) throws SQLException {
+		return Helper.avg(tableName(), name, q);
 	}
 
 	/**
@@ -319,9 +467,15 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param name the field name
 	 * @param q    the condition
 	 * @return
+	 * @throws SQLException
 	 */
 	public List<?> distinct(String name, W q) {
-		return Helper.distinct(name, q, t);
+		try {
+			return Helper.distinct(tableName(), name, q);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
 	/**
@@ -332,23 +486,27 @@ public class BeanDAO<I, T extends Bean> {
 	 * @param n    the number
 	 * @param v    the value
 	 * @return
+	 * @throws SQLException
 	 */
-	@SuppressWarnings("deprecation")
 	public int inc(W q, String name, int n, V v) {
-		_cache.remove();
-		return Helper.inc(q, name, n, v, t);
+		try {
+			TimingCache.remove(t);
+			return Helper.inc(tableName(), name, n, q, v);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
-	/**
-	 * copy the source Bean and create a new one, no store in database
-	 * 
-	 * @param src the source Bean
-	 * @return
-	 */
 	@SuppressWarnings("unchecked")
 	public T copy(Bean src) {
+		if (src == null)
+			return null;
+
 		try {
-			return (T) src.clone();
+			Bean e = t.getDeclaredConstructor().newInstance();
+			e.putAll(src.getAll());
+			return (T) e;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -367,71 +525,6 @@ public class BeanDAO<I, T extends Bean> {
 		return new BeanDAO<D, E>(t);
 	}
 
-	private class Cache {
-
-		private Map<I, O> m = new HashMap<I, O>();
-
-		@SuppressWarnings("unchecked")
-		void set(I id, T t) {
-			while (m.size() > MAXCACHENUMBER) {
-				// remove eldest
-
-				List<O> l1 = new ArrayList<O>(m.values());
-				Collections.sort(l1);
-				m.clear();
-				for (int i = 0; i < MAXCACHENUMBER / 2; i++) {
-					O o = l1.get(i);
-					m.put((I) o.id, o);
-				}
-			}
-			if (t == null) {
-				m.remove(id);
-			} else {
-				m.put(id, new O(id, t));
-			}
-		}
-
-		public boolean exists(I id) {
-			return m.containsKey(id);
-		}
-
-		public void remove() {
-			m.clear();
-		}
-
-		T get(I id) {
-			O o = m.get(id);
-			if (o != null && System.currentTimeMillis() - o.time < EXPIREDTIME) {
-				o.time = System.currentTimeMillis();
-				return (T) copy(o.t);
-			}
-
-			T t1 = Helper.load(id, t);
-			if (t1 != null) {
-				set(id, t1);
-			}
-			return t1;
-		}
-
-	}
-
-	private class O implements Comparable<O> {
-		long time = System.currentTimeMillis();
-		T t;
-		Object id;
-
-		O(Object id, T t) {
-			this.t = t;
-			this.id = id;
-		}
-
-		@Override
-		public int compareTo(O o) {
-			return time > o.time ? -1 : 1;
-		}
-
-	}
-
 	/**
 	 * create a new object
 	 * 
@@ -439,7 +532,7 @@ public class BeanDAO<I, T extends Bean> {
 	 */
 	public T newInstance() {
 		try {
-			return t.newInstance();
+			return t.getDeclaredConstructor().newInstance();
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -448,39 +541,42 @@ public class BeanDAO<I, T extends Bean> {
 
 	/**
 	 * cleanup the data by setting global setting
+	 * 
+	 * @throws SQLException
 	 */
 	public int cleanup() {
-		int n = this.delete(W.create("created",
-				System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt));
+		try {
+			int n = this.delete(W.create().and("created",
+					System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt));
 
-		return n;
+			return n;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
 	/**
 	 * cleanup the data by setting and invoke the func by each
 	 * 
 	 * @param func the consumer func
+	 * @throws SQLException
 	 */
-	public void cleanup(Consumer<T> func) {
+	public void cleanup(Function<T, Boolean> func) throws SQLException {
 
-		W q = W.create("created", System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt)
+		W q = W.create()
+				.and("created", System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt)
 				.sort("created", 1);
 
 		if (func != null) {
-			this.stream(q, -1, -1).parallel().forEach(t -> {
-				func.accept(t);
-			});
+			try {
+				this.stream(q, 0, t -> {
+					return func.apply(t);
+				});
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
-
-		// int s = 0;
-		// Beans<T> bs = this.load(q, s, 100);
-		// while (bs != null && !bs.isEmpty()) {
-		// for (T t : bs) {
-		// func.accept(t);
-		// }
-		// s += bs.size();
-		// bs = this.load(q, s, 100);
-		// }
 
 		int n = this.delete(q);
 		if (n > 0) {
@@ -488,6 +584,11 @@ public class BeanDAO<I, T extends Bean> {
 		}
 	}
 
+	/**
+	 * generate the query object
+	 * 
+	 * @return
+	 */
 	public W query() {
 		W q = W.create();
 		q.dao(this);
@@ -496,38 +597,94 @@ public class BeanDAO<I, T extends Bean> {
 	}
 
 	public List<JSON> count(W q, String[] group, int n) {
-		return Helper.count(this.tableName(), q, group, n);
+		try {
+			return Helper.count(this.tableName(), q, group, n);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 //		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
 
 	public List<JSON> count(W q, String name, String[] group, int n) {
-		return Helper.count(this.tableName(), name, q, group, n);
+		try {
+			return Helper.count(this.tableName(), name, q, group, n);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 //		return Helper.count(this.tableName(), q, group, n, this.dbName());
 	}
 
 	public List<JSON> sum(W q, String name, String[] group) {
-		return Helper.sum(this.tableName(), name, q, group);
-//		return Helper.sum(this.tableName(), q, name, group, this.dbName());
+		try {
+			return Helper.sum(this.tableName(), name, q, group);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
-	@SuppressWarnings("deprecation")
 	public List<JSON> aggregate(W q, String[] name, String[] group) {
-		return Helper.aggregate(this.tableName(), q, name, group, this.dbName());
+		try {
+			return Helper.aggregate(this.tableName(), name, q, group);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
 	}
 
-	@SuppressWarnings("deprecation")
-	public List<JSON> min(W q, String name, String[] group) {
-		return Helper.min(this.tableName(), q, name, group, this.dbName());
-	}
-
-	@SuppressWarnings("deprecation")
-	public List<JSON> max(W q, String name, String[] group) {
-		return Helper.max(this.tableName(), q, name, group, this.dbName());
-	}
-
-	@SuppressWarnings("deprecation")
 	public List<JSON> avg(W q, String name, String[] group) {
-		return Helper.avg(this.tableName(), q, name, group, this.dbName());
+
+		try {
+			return Helper.avg(this.tableName(), name, q, group);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+
+	}
+
+	public void optimize(W q) {
+		try {
+			Helper.optimize(this.tableName(), q);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
+	public boolean tryLock() {
+
+		try {
+			Lock door = Global.getLock("dao/" + this.tableName());
+			return door.tryLock();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return false;
+	}
+
+	public void unlock() {
+
+		try {
+			Lock door = Global.getLock("dao/" + this.tableName());
+			door.unlock();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+	}
+
+	public void lock() {
+
+		try {
+			Lock door = Global.getLock("dao/" + this.tableName());
+			door.lock();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
 	}
 
 }

@@ -13,6 +13,11 @@ import org.giiwa.web.Path;
  */
 public class i18n extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Path(login = true, access = "access.config.admin|access.config.module.admin")
 	public void onGet() {
 		Map<String, String> missed = lang.getMissed();

@@ -20,6 +20,9 @@ import javax.crypto.*;
 import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
+
 /**
  * The Class Digest.
  */
@@ -39,8 +42,7 @@ public class Digest {
 	/**
 	 * Digest.
 	 * 
-	 * @param s
-	 *            the s
+	 * @param s the s
 	 * @return the byte[]
 	 */
 	public static byte[] digest(byte[] s) {
@@ -50,8 +52,7 @@ public class Digest {
 	/**
 	 * Md5.
 	 *
-	 * @param str
-	 *            the str
+	 * @param str the str
 	 * @return the string
 	 */
 	public static String md5(String str) {
@@ -80,13 +81,11 @@ public class Digest {
 	/**
 	 * Decrypt.
 	 *
-	 * @param str
-	 *            the str
-	 * @param code
-	 *            the code
+	 * @deprecated
+	 * @param str  the str
+	 * @param code the code
 	 * @return the byte[]
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public static byte[] des_decrypt(byte[] str, String code) throws Exception {
 		DESKeySpec desKeySpec = new DESKeySpec(code.getBytes());
@@ -103,13 +102,11 @@ public class Digest {
 	/**
 	 * Encrypt.
 	 *
-	 * @param str
-	 *            the str
-	 * @param code
-	 *            the code
+	 * @deprecated
+	 * @param str  the str
+	 * @param code the code
 	 * @return the string
-	 * @throws Exception
-	 *             the exception
+	 * @throws Exception the exception
 	 */
 	public static byte[] des_encrypt(byte[] str, String code) throws Exception {
 		DESKeySpec desKeySpec = new DESKeySpec(code.getBytes());
@@ -122,32 +119,69 @@ public class Digest {
 		return cipher.doFinal(str);
 	}
 
-	public static byte[] aes_decrypt(byte[] content, String code) throws Exception {
+	/**
+	 * AES decode
+	 * 
+	 * @param content
+	 * @param seed    for 128 code
+	 * @return
+	 * @throws Exception
+	 */
+	public static byte[] decode(byte[] content, String seed) throws Exception {
+
 		KeyGenerator kgen = KeyGenerator.getInstance("AES");
 		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-		random.setSeed(code.getBytes());
+		random.setSeed(seed.getBytes());
 		kgen.init(128, random);
 		SecretKey secretKey = kgen.generateKey();
 		byte[] enCodeFormat = secretKey.getEncoded();
 		SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
-		Cipher cipher = Cipher.getInstance("AES");
+
+		Cipher cipher = Cipher.getInstance("AES");// CBC/PKCS5Padding");
 		cipher.init(Cipher.DECRYPT_MODE, key);
 		byte[] result = cipher.doFinal(content);
 		return result;
+
 	}
 
-	public static byte[] aes_encrypt(byte[] content, String code) throws Exception {
+	/**
+	 * AES encode
+	 * 
+	 * @param content
+	 * @param seed    for code
+	 * @return
+	 * @throws Exception
+	 */
+	public static byte[] encode(byte[] content, String seed) throws Exception {
+
 		KeyGenerator kgen = KeyGenerator.getInstance("AES");
+
 		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-		random.setSeed(code.getBytes());
+
+		random.setSeed(seed.getBytes());
 		kgen.init(128, random);
 		SecretKey secretKey = kgen.generateKey();
 		byte[] enCodeFormat = secretKey.getEncoded();
 		SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
-		Cipher cipher = Cipher.getInstance("AES");
+		Cipher cipher = Cipher.getInstance("AES");// CBC/PKCS5Padding");
+
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		byte[] result = cipher.doFinal(content);
 		return result;
+
+	}
+
+	/**
+	 * random code
+	 * 
+	 * @param passwd
+	 * @param len
+	 * @return
+	 * @throws Exception
+	 */
+	public static String code(String passwd, int len) throws Exception {
+		int[] aa = UID.random(passwd, len);
+		return X.join(aa, "");
 	}
 
 }

@@ -9,17 +9,17 @@ import java.util.Stack;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
-import org.giiwa.dao.Beans;
-import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.DBHelper;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.engine.JS;
+import org.giiwa.engine.Velocity;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.StringFinder;
+import org.giiwa.web.Language;
 
-public class SQL {
+public final class SQL {
 
-	static Log log = LogFactory.getLog(SQL.class);
+	static final Log log = LogFactory.getLog(SQL.class);
 
 	/**
 	 * 
@@ -35,8 +35,6 @@ public class SQL {
 
 			if (log.isDebugEnabled())
 				log.debug("q=" + q);
-
-			String cols = q.getString("cols");
 
 			W q1 = where2W(StringFinder.create(q.getString("where")));
 			if (q.containsKey("orderby")) {
@@ -63,8 +61,8 @@ public class SQL {
 				}
 			}
 
-			Beans<Bean> bs = h.load(q.getString("tablename"), X.isSame("*", cols) ? null : X.split(cols, "[,]"), q1,
-					q.getInt("offset", 0), q.getInt("limit", 10), Bean.class, X.EMPTY);
+			Beans<Bean> bs = h.load(q.getString("tablename"), q1, q.getInt("offset", 0), q.getInt("limit", 10),
+					Bean.class);
 
 			return bs;
 
@@ -78,8 +76,10 @@ public class SQL {
 
 	private static JSON _sql(StringFinder sf) throws SQLException {
 
-		if (log.isDebugEnabled())
+		if (log.isDebugEnabled()) {
 			log.debug("select ...");
+		}
+
 		sf.nextTo(" ");
 		sf.trim();
 		String cols = sf.nextTo("from");
@@ -111,12 +111,12 @@ public class SQL {
 
 		if (X.isSame(s, "where")) {
 			sf.trim();
-			String w = sf.nextTo("group|order|offset|limit");
+			String w = sf.nextTo(" group | order | offset | limit ");
 			if (!X.isEmpty(w)) {
 				r.put("where", w);
 				return _condition(sf, r);
 			} else {
-				throw new SQLException("error where [" + w + "]");
+				throw new SQLException("error where [" + sf.s + "]");
 			}
 		} else if (X.isSame(s, "groupby")) {
 			sf.trim();
@@ -125,30 +125,30 @@ public class SQL {
 				r.put("groupby", g);
 				return _condition(sf, r);
 			} else {
-				throw new SQLException("error groupby [" + g + "]");
+				throw new SQLException("error groupby [" + sf.s + "]");
 			}
 		} else if (X.isSame(s, "order")) {
 			sf.trim();
 			String by = sf.nextTo(" ");
 			if (X.isSame("by", by)) {
-				String o = sf.nextTo("offset|limit");
+				String o = sf.nextTo(" offset | limit ");
 				if (!X.isEmpty(o)) {
 					r.put("orderby", o);
 					return _condition(sf, r);
 				} else {
-					throw new SQLException("error order [" + o + "]");
+					throw new SQLException("error order [" + sf.s + "]");
 				}
 			} else {
-				throw new SQLException("error order [" + by + "]");
+				throw new SQLException("error order [" + sf.s + "]");
 			}
 		} else if (X.isSame(s, "offset")) {
 			sf.trim();
-			String o = sf.nextTo("limit");
+			String o = sf.nextTo(" limit ");
 			if (!X.isEmpty(o)) {
 				r.put("offset", X.toInt(o));
 				return _condition(sf, r);
 			} else {
-				throw new SQLException("error offset [" + o + "]");
+				throw new SQLException("error offset [" + sf.s + "]");
 			}
 		} else if (X.isSame(s, "limit")) {
 			sf.trim();
@@ -157,7 +157,7 @@ public class SQL {
 				r.put("limit", X.toInt(o));
 				return _condition(sf, r);
 			} else {
-				throw new SQLException("error limit [" + o + "]");
+				throw new SQLException("error limit [" + sf.s + "]");
 			}
 		} else {
 			throw new SQLException("unknow key [" + s + "]");
@@ -165,6 +165,12 @@ public class SQL {
 	}
 
 	public static W where2W(String cond) throws Exception {
+
+		if (X.isEmpty(cond)) {
+			return W.create();
+		}
+
+//		cond = Velocity.parse(cond, JSON.create().append("lang", Language.getLanguage("zh_cn")));
 
 		String s1 = "select * from ttt where " + cond;
 		JSON j1 = _sql(StringFinder.create(s1));
@@ -223,145 +229,145 @@ public class SQL {
 				return q;
 			} else {
 				s.skip(-1);
-
-				StringFinder s1 = StringFinder.create(s.nextTo("(|)| and | or | not | AND | OR | NOT "));
+				s.mark();
+				StringFinder s1 = StringFinder.create(s.nextTo("(|)| and | or | not | sort "));
 				s.trim();
 
-				// if (!s.hasMore())
-				// throw new Exception("expect [op] more after [" + s1.toString() +
-				// "]");
+				String name = s1.nextTo(" |!|=|>|<| like | !like ");
 
-				String name = s1.nextTo(" |!|=|>|<|like|LIKE|!like|!LIKE");
-
-				s1.trim();
-				c = s1.next();
-				String op = null;
-				if (c == '=') {
-					op = "=";
-				} else if (c == '>' || c == '<' || c == '!') {
-					char c1 = s1.next();
-					if (c1 == '=') {
-						op = Character.toString(c) + c1;
-					} else if (c == '!') {
-						s1.skip(-1);
-						op = c + s1.nextTo(" ").toLowerCase();
-					} else {
-						s1.skip(-1);
-						op = Character.toString(c);
-					}
+				if (X.isSame(name, "sort")) {
+					s.reset();
 				} else {
-					// like ?
-					s1.skip(-1);
-					op = s1.nextTo(" ").toLowerCase();
-				}
-
-				s1.trim();
-
-				Object value = null;// X.EMPTY;
-				if (s1.hasMore()) {
+					s1.trim();
 					c = s1.next();
-
-					if (c == '\'') {
-						String s2 = s1.pair('\'');
-						if (s2.indexOf("|") > -1) {
-							value = X.split(s2, "\\|");
+					String op = null;
+					if (c == '=') {
+						op = "=";
+					} else if (c == '>' || c == '<' || c == '!') {
+						char c1 = s1.next();
+						if (c1 == '=') {
+							op = Character.toString(c) + c1;
+						} else if (c == '!') {
+							s1.skip(-1);
+							op = c + s1.nextTo(" ").toLowerCase();
 						} else {
-							value = s2;
-						}
-					} else if (c == '"') {
-						String s2 = s1.pair('"');
-						if (s2.indexOf("|") > -1) {
-							value = X.split(s2, "\\|");
-						} else {
-							value = s2;
+							s1.skip(-1);
+							op = Character.toString(c);
 						}
 					} else {
+						// like ?
 						s1.skip(-1);
+						op = s1.nextTo(" ").toLowerCase();
+					}
 
-						String s2 = s1.remain();
-						if (s2 != null) {
+					s1.trim();
+
+					Object value = null;// X.EMPTY;
+					if (s1.hasMore()) {
+						c = s1.next();
+
+						if (c == '\'') {
+							String s2 = s1.nextTo("\'");
 							if (s2.indexOf("|") > -1) {
-								value = X.asList(X.split(s2, "\\|"), e -> {
-									try {
-										return JS.calculate(e.toString());
-									} catch (Exception e1) {
-										return e;
-									}
-								});
+								value = X.split(s2, "\\|");
 							} else {
-								try {
-									value = JS.calculate(s2);
-								} catch (Exception e) {
-									value = s2;
+								value = s2;
+							}
+						} else if (c == '"') {
+							String s2 = s1.nextTo("\"");
+							if (s2.indexOf("|") > -1) {
+								value = X.split(s2, "\\|");
+							} else {
+								value = s2;
+							}
+						} else {
+							s1.skip(-1);
+
+							String s2 = s1.remain();
+							if (s2 != null) {
+								if (s2.indexOf("|") > -1) {
+									value = X.asList(X.split(s2, "\\|"), e -> {
+										try {
+											return JS.calculate(e.toString());
+										} catch (Throwable e1) {
+											return e;
+										}
+									});
+								} else {
+									try {
+										value = JS.calculate(s2);
+									} catch (Throwable e) {
+										value = s2;
+									}
 								}
 							}
-						}
 
-						if (s2 == null || X.isSame(s2, "NULL")) {
-							value = null;
+							if (s2 == null || X.isSame(s2, "NULL")) {
+								value = null;
+							}
 						}
 					}
-				}
 
-				String o = conn.isEmpty() ? "and" : conn.pop();
-				if (X.isSame(o, "and")) {
-					if (X.isSame(op, "=")) {
-						q.and(name, value);
-					} else if (X.isSame(op, "!=")) {
-						q.and(name, value, W.OP.neq);
-					} else if (X.isSame(op, ">")) {
-						q.and(name, value, W.OP.gt);
-					} else if (X.isSame(op, ">=")) {
-						q.and(name, value, W.OP.gte);
-					} else if (X.isSame(op, "<")) {
-						q.and(name, value, W.OP.lt);
-					} else if (X.isSame(op, "<=")) {
-						q.and(name, value, W.OP.lte);
-					} else if (X.isSame(op, "<")) {
-						q.and(name, value, W.OP.lt);
-					} else if (X.isSame(op, "like")) {
-						if (!X.isEmpty(value)) {
-							q.and(name, value, W.OP.like);
+					String o = conn.isEmpty() ? "and" : conn.pop();
+					if (X.isSame(o, "and")) {
+						if (X.isSame(op, "=")) {
+							q.and(name, value);
+						} else if (X.isSame(op, "!=")) {
+							q.and(name, value, W.OP.neq);
+						} else if (X.isSame(op, ">")) {
+							q.and(name, value, W.OP.gt);
+						} else if (X.isSame(op, ">=")) {
+							q.and(name, value, W.OP.gte);
+						} else if (X.isSame(op, "<")) {
+							q.and(name, value, W.OP.lt);
+						} else if (X.isSame(op, "<=")) {
+							q.and(name, value, W.OP.lte);
+						} else if (X.isSame(op, "<")) {
+							q.and(name, value, W.OP.lt);
+						} else if (X.isSame(op, "like")) {
+							if (!X.isEmpty(value)) {
+								q.and(name, value, W.OP.like);
+							}
+						} else if (X.isSame(op, "!like")) {
+							q.and(W.create().and(name, value, W.OP.like), W.NOT);
+						} else if (X.isSame(op, "like_")) {
+							if (!X.isEmpty(value)) {
+								q.and(name, value, W.OP.like_);
+							}
+						} else if (X.isSame(op, "like_$")) {
+							if (!X.isEmpty(value)) {
+								q.and(name, value, W.OP.like_$);
+							}
 						}
-					} else if (X.isSame(op, "!like")) {
-						q.and(W.create().and(name, value, W.OP.like), W.NOT);
-					} else if (X.isSame(op, "like_")) {
-						if (!X.isEmpty(value)) {
-							q.and(name, value, W.OP.like_);
-						}
-					} else if (X.isSame(op, "like_$")) {
-						if (!X.isEmpty(value)) {
-							q.and(name, value, W.OP.like_$);
-						}
-					}
-				} else {
-					if (X.isSame(op, "=")) {
-						q.or(name, value);
-					} else if (X.isSame(op, "!=")) {
-						q.or(name, value, W.OP.neq);
-					} else if (X.isSame(op, ">")) {
-						q.or(name, value, W.OP.gt);
-					} else if (X.isSame(op, ">=")) {
-						q.or(name, value, W.OP.gte);
-					} else if (X.isSame(op, "<")) {
-						q.or(name, value, W.OP.lt);
-					} else if (X.isSame(op, "<=")) {
-						q.or(name, value, W.OP.lte);
-					} else if (X.isSame(op, "<")) {
-						q.or(name, value, W.OP.lt);
-					} else if (X.isSame(op, "like")) {
-						if (!X.isEmpty(value)) {
-							q.or(name, value, W.OP.like);
-						}
-					} else if (X.isSame(op, "!like")) {
-						q.and(W.create().and(name, value, W.OP.like), W.NOT);
-					} else if (X.isSame(op, "like_")) {
-						if (!X.isEmpty(value)) {
-							q.or(name, value, W.OP.like_);
-						}
-					} else if (X.isSame(op, "like_$")) {
-						if (!X.isEmpty(value)) {
-							q.or(name, value, W.OP.like_$);
+					} else {
+						if (X.isSame(op, "=")) {
+							q.or(name, value);
+						} else if (X.isSame(op, "!=")) {
+							q.or(name, value, W.OP.neq);
+						} else if (X.isSame(op, ">")) {
+							q.or(name, value, W.OP.gt);
+						} else if (X.isSame(op, ">=")) {
+							q.or(name, value, W.OP.gte);
+						} else if (X.isSame(op, "<")) {
+							q.or(name, value, W.OP.lt);
+						} else if (X.isSame(op, "<=")) {
+							q.or(name, value, W.OP.lte);
+						} else if (X.isSame(op, "<")) {
+							q.or(name, value, W.OP.lt);
+						} else if (X.isSame(op, "like")) {
+							if (!X.isEmpty(value)) {
+								q.or(name, value, W.OP.like);
+							}
+						} else if (X.isSame(op, "!like")) {
+							q.and(W.create().and(name, value, W.OP.like), W.NOT);
+						} else if (X.isSame(op, "like_")) {
+							if (!X.isEmpty(value)) {
+								q.or(name, value, W.OP.like_);
+							}
+						} else if (X.isSame(op, "like_$")) {
+							if (!X.isEmpty(value)) {
+								q.or(name, value, W.OP.like_$);
+							}
 						}
 					}
 				}
@@ -377,7 +383,20 @@ public class SQL {
 
 				s.skip(-1);
 				String s1 = s.nextTo(" ");
-				conn.push(s1);
+				if (X.isIn(s1, "sort")) {
+					s1 = s.remain();
+					String[] ss = X.split(s1, "[,]");
+					for (String s2 : ss) {
+						String[] ss2 = X.split(s2, " ");
+						if (ss2.length == 2) {
+							q.sort(ss2[0], X.isSame(ss2[1], "desc") ? -1 : 1);
+						} else {
+							q.sort(s2);
+						}
+					}
+				} else {
+					conn.push(s1);
+				}
 			}
 
 		}
@@ -412,7 +431,7 @@ public class SQL {
 			} else {
 				s.skip(-1);
 
-				String s1 = s.nextTo("(|)|and|or");
+				String s1 = s.nextTo("(|)| and | or ");
 				s.trim();
 
 				s1 = s1.trim();
@@ -541,7 +560,7 @@ public class SQL {
 				}
 			}
 
-			return h.load(q.getString("tablename"), null, q1, Bean.class, X.EMPTY);
+			return h.load(q.getString("tablename"), q1, Bean.class, false);
 		} catch (Exception e) {
 			log.error(sql, e);
 		}
@@ -549,7 +568,7 @@ public class SQL {
 
 	}
 
-	public static int execute(DBHelper h, String sql) throws SQLException {
+	public static int execute(DBHelper h, String sql) throws Exception {
 
 		Statement stat = null;
 

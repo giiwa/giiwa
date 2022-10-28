@@ -1,70 +1,79 @@
-
-#parse('/widget/widget.message.html')
+ #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/role?__node=$!__node' #if(!$path) class='selected' #end>$lang.get('a.role')</a>
-	<a href='/admin/role/edit?__node=$!__node&id=$r.id' #if( $path == 'edit') class='selected' #end>$lang.get('a.role.edit')</a>
+    <a href='/admin/role?__node=$!__node' #if(!$path) class='selected' #end>$lang.get('a.role')</a>
+    <a href='/admin/role/edit?__node=$!__node&id=$r.id' #if( $path=='edit' ) class='selected' #end>$lang.get('a.role.edit')</a>
 </div>
 
-<form action='/admin/role/edit?__node=$!__node'  method='post' class='form' >
-	<input type='hidden' name="id" value="$r.id"/>
-	<div><label><h3>$lang.get('role.name')(<r>*</r>):</h3><input type='text' onblur="giiwa.verify(this, '/admin/role/verify')" name='name' value='#if($name)$name#end'/></label></div>
-	<div><label><h3>$lang.get('role.memo'):</h3><input type='text' name='memo' value='#if($memo)$memo#end'/></label></div>	
-	<div><label><h3>$lang.get('role.url'):</h3><input type='text' name='url' value=#if($url) '$url' #else '' #end/></label></div>	
-	
-	<div class='accesses'>
-		<div class='access_title'><label><input type='checkbox' onclick='selectall();'>$lang.get('select.all.access')</label></div>
-			<table id='access-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
-				<thead>
-					<tr>
-						<th style="width: 100px;">$lang.get('access.group')</th>
-						<th>$lang.get('access.name')</th>
-					</tr>
-				</thead>
-				<tbody>
-			#foreach($a in $accesses.keySet())
-				<tr>
-					<td>$lang.get("group.$a")</td>
-					<td>
-						#foreach($p in $accesses.get($a))
-							<label style="width: initial;"><input type="checkbox" name="access" value="$p.name" #if($r.has($p.name)) checked="checked" #end/>$lang.get($p.name)</label>
-						#end
-					</td>
-				</tr>
-			#end
-				</tbody>
-			</table>
+<form action='/admin/role/edit?__node=$!__node' method='post' class='form'>
+    <input type='hidden' name="id" value="$r.id" />
+    <input type='hidden' name="access" id="hidden_access" value="$!access" />
+    <div><label><h3>$lang.get('role.name')(<r>*</r>):</h3><input type='text' onblur="giiwa.verify(this, '/admin/role/verify')" name='name' value='#if($name)$name#end'/></label></div>
+    <div><label><h3>$lang.get('role.memo'):</h3><input type='text' name='memo' value='#if($memo)$memo#end'/></label></div>
+    <div><label><h3>$lang.get('role.url'):</h3><input type='text' name='url' value=#if($url) '$url' #else '' #end/></label></div>
+    <div><label><h3>$lang.get('role.seq'):</h3><input type='text' name='seq' value=#if($seq) '$seq' #else '' #end/></label></div>
 
-	</div>
-	<div class='btns'>
-		<button class='btn btn-success' type='submit'>$lang.get('btn.save')</button>
-		#if($me.hasAccess('access.config.admin'))
-		<a class='btn btn-warning' href="javascript:;" onclick="_cleanup();">$lang.get('a.cleanup')</a>
-		#end
-	</div>
+    <div class='accesses'>
+        <div class='access_title'><label><input type='checkbox' onclick='selectall();'>$lang.get('select.all.access')</label></div>
+        <table id='access-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+            <thead>
+                <tr>
+                    <th style="width: 100px;">$lang.get('access.group')</th>
+                    <th>$lang.get('access.name')</th>
+                </tr>
+            </thead>
+            <tbody>
+                #foreach($a in $accesses.keySet())
+                <tr>
+                    <td>$lang.get("group.$a")</td>
+                    <td>
+                        #foreach($p in $accesses.get($a))
+                        <label style="width: initial;"><input type="checkbox" name="access1" onchange="change()" value="$p.name" #if($r.has($p.name)) checked="checked" #end/>$lang.get($p.name)</label> #end
+                    </td>
+                </tr>
+                #end
+            </tbody>
+        </table>
+
+    </div>
+    <div class='btns'>
+        <button class='btn btn-success' type="submit">$lang.get('btn.save')</button> #if($me.hasAccess('access.config.admin'))
+        <a class='btn btn-warning' href="javascript:;" onclick="_cleanup();">$lang.get('a.cleanup')</a> #end
+    </div>
 </form>
 
 <script>
-function _cleanup(){
-	$.post('/admin/role/cleanup?__node=$!__node', {}, function(d){
-		if(d.state == 200) {
-			giiwa.reload();
-		} else if(d.message) {
-			giiwa.error(d.message);
-		}
-	})
-}
-function selectall(){
-	var ch = $('.access_title input[type=checkbox]');
-	if (ch.length > 0) {
-		var en = ch[0].checked;
-		var t = $(this);
-		$('#access-table td input[type=checkbox]').each(function(i, e) {
-			if(! e.disabled) {
-				e.checked = en;
-			}
-		});
-	}
-}
-</script>	
+    function _cleanup() {
+        $.post('/admin/role/cleanup?__node=$!__node', {}, function(d) {
+            if (d.state == 200) {
+                giiwa.reload();
+            } else if (d.message) {
+                giiwa.error(d.message);
+            }
+        })
+    }
 
+    function selectall() {
+        var ch = $('.access_title input[type=checkbox]');
+        if (ch.length > 0) {
+            var en = ch[0].checked;
+            var t = $(this);
+            $('#access-table td input[type=checkbox]').each(function(i, e) {
+                if (!e.disabled) {
+                    e.checked = en;
+                }
+            });
+        }
+    }
+
+    function change() {
+
+        var checkbox = document.querySelectorAll('[name = "access1"]:checked')
+        var arr = []
+        checkbox.forEach(d => {
+            arr.push(d.value)
+        })
+        document.querySelector("#hidden_access").value = arr.join(";")
+            // document.querySelector(".form").submit();
+    }
+</script>

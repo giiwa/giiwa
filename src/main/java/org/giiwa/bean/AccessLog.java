@@ -41,8 +41,8 @@ import org.giiwa.task.Task;
  * @author joe
  * 
  */
-@Table(name = "gi_accesslog", memo="GI-访问日志")
-public class AccessLog extends Bean {
+@Table(name = "gi_accesslog", memo = "GI-访问日志")
+public final class AccessLog extends Bean {
 
 	/**
 	 * 
@@ -95,7 +95,7 @@ public class AccessLog extends Bean {
 	 * @param v   the values
 	 */
 	public static void create(final String ip, final String url, final V v) {
-		Task.schedule(() -> {
+		Task.schedule(t -> {
 			long created = System.currentTimeMillis();
 			String id = UID.id(ip, url, created, node, seq.incrementAndGet());
 			dao.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created));
@@ -124,11 +124,11 @@ public class AccessLog extends Bean {
 	 */
 	public static Map<Object, Long> distinct(String name) {
 
-		List<?> list = dao.distinct(name, W.create("status", 200));
+		List<?> list = dao.distinct(name, W.create().and("status", 200));
 
 		Map<Object, Long> m = new TreeMap<Object, Long>();
 		for (Object v : list) {
-			long d = dao.count(W.create(name, v).and("status", 200));
+			long d = dao.count(W.create().and(name, v).and("status", 200));
 			m.put(v, d);
 		}
 

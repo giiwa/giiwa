@@ -5,11 +5,11 @@
 	#end
 </div>
 
-#if($global.getInt('perf.moniter', 0) == 1)
+#if($global.getInt('perf.moniter', 1) == 1)
 	#if($me.hasAccess('access.config.admin'))
 		<div class="portlet" data-url="/portlet/cpu?__node=$!__node"></div>
-		<div class="portlet" data-url="/portlet/mem2?__node=$!__node"></div>
-		
+		<div class="portlet" data-url="/portlet/mem?__node=$!__node"></div>
+		<div class="portlet" data-url="/portlet/fio?__node=$!__node"></div>
 		<div class="portlet" data-url="/portlet/disk?__node=$!__node"></div>
 		
 		<div class="br"></div>
@@ -24,7 +24,7 @@
 
 		<div class="br"></div>
 		#foreach($p in $portlets)
-		#if($p=='br?')
+		#if($p=='br')
 		<div class="br"></div>
 		#else
 		<div class="portlet" data-url="$p&__node=$!__node"></div>

@@ -30,11 +30,16 @@ import org.giiwa.web.Path;
  * used to access the "accesslog", <br>
  * required "access.logs.admin"
  * 
+ * @deprecated
  * @author joe
  *
  */
-@SuppressWarnings("deprecation")
 public class accesslog extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Path(path = "open", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void open() {

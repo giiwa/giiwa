@@ -29,6 +29,7 @@ import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.engine.Velocity;
 import org.giiwa.json.JSON;
+import org.giiwa.web.Module;
 
 /**
  * Menu bean. <br>
@@ -37,8 +38,8 @@ import org.giiwa.json.JSON;
  * @author yjiang
  * 
  */
-@Table(name = "gi_menu", memo="GI-菜单")
-public class Menu extends Bean {
+@Table(name = "gi_menu", memo = "GI-菜单")
+public final class Menu extends Bean {
 
 	/**
 	* 
@@ -57,26 +58,22 @@ public class Menu extends Bean {
 	 * @param arr the arr
 	 * @param tag the tag
 	 */
-	public static void insertOrUpdate(List<JSON> arr, String tag) {
+	public static void insertOrUpdate(List<JSON> arr, Module mo) {
 		if (arr == null) {
 			return;
 		}
 
 		int len = arr.size();
 
-//		System.out.println("menu insertorupdate, len=" + len);
-
 		for (int i = 0; i < len; i++) {
 			JSON jo = arr.get(i);
-
-//			System.out.println("menu insertorupdate, jo=" + jo);
 
 			/**
 			 * test and create from the "root"
 			 */
 
-			jo.put("tag", tag);
-			insertOrUpdate(jo, 0);
+			jo.put("tag", mo.getName());
+			insertOrUpdate(jo, 0, mo);
 		}
 	}
 
@@ -134,11 +131,9 @@ public class Menu extends Bean {
 	 * @param jo     the jo
 	 * @param parent the parent
 	 */
-	public static void insertOrUpdate(JSON jo, long parent) {
+	public static void insertOrUpdate(JSON jo, long parent, Module mo) {
 		try {
 			// log.info(jo);
-
-//			System.out.println("parent=" + parent + ", jo=" + jo);
 
 			String name = jo.has("name") ? jo.getString("name") : null;
 			if (!X.isEmpty(name)) {
@@ -190,17 +185,13 @@ public class Menu extends Bean {
 					Collection<JSON> arr = jo.getList("childs");
 					if (arr != null) {
 
-//						System.out.println("has childs, arr=" + arr.size());
-
 						for (JSON j : arr) {
 							if (j != null) {
-
-//								System.out.println("has childs, j=" + j);
 
 								if (jo.containsKey("tag")) {
 									j.put("tag", jo.get("tag"));
 								}
-								insertOrUpdate(j, m.getId());
+								insertOrUpdate(j, m.getId(), mo);
 							}
 						}
 					}
@@ -208,16 +199,17 @@ public class Menu extends Bean {
 			} else {
 				// is role ?
 				String role = jo.getString("role");
-//				System.out.println("isrole, role=" + role);
 
 				String access = jo.getString("access");
 				if (!X.isEmpty(role)) {
 					String memo = jo.getString("memo");
 
-					if (log.isInfoEnabled())
+					if (log.isDebugEnabled()) {
 						log.info("create role: role=" + role + ", memo=" + memo);
+					}
 
-					long rid = Role.create(role, memo, V.create().append("url", jo.getString("url")));
+					long rid = Role.create(role, memo,
+							V.create().append("url", jo.getString("url")).append("seq", mo.id));
 					if (rid <= 0) {
 						Role r = Role.loadByName(role);
 						if (r != null) {
@@ -274,8 +266,6 @@ public class Menu extends Bean {
 				while (dao.exists(id)) {
 					id = UID.next("menu.id");
 
-//					System.out.println("menu.id=" + id);
-
 					if (log.isDebugEnabled())
 						log.debug("id=" + id);
 				}
@@ -287,7 +277,7 @@ public class Menu extends Bean {
 			log.error(e1.getMessage(), e1);
 		}
 
-		long count = dao.count(W.create("parent", parent));
+		long count = dao.count(W.create().and("parent", parent));
 		dao.update(parent, V.create("childs", count));
 
 		return dao.load(q);
@@ -305,7 +295,7 @@ public class Menu extends Bean {
 	 */
 	public static Beans<Menu> submenu(long id) {
 		// load it
-		Beans<Menu> bb = dao.load(W.create("parent", id).sort("seq", -1), 0, Integer.MAX_VALUE);
+		Beans<Menu> bb = dao.load(W.create().and("parent", id).sort("seq", -1), 0, Integer.MAX_VALUE);
 		return bb;
 	}
 
@@ -318,7 +308,7 @@ public class Menu extends Bean {
 	 */
 	public static Menu load(long parent, String name) {
 		String node = Local.id();
-		Menu m = dao.load(W.create("parent", parent).and("name", name).and("node", node));
+		Menu m = dao.load(W.create().and("parent", parent).and("name", name).and("node", node));
 		return m;
 	}
 
@@ -426,7 +416,7 @@ public class Menu extends Bean {
 	 */
 	public static void remove(String tag) {
 		String node = Local.id();
-		dao.delete(W.create("tag", tag).and("node", node));
+		dao.delete(W.create().and("tag", tag).and("node", node));
 	}
 
 	/**
@@ -435,7 +425,7 @@ public class Menu extends Bean {
 	public static void reset() {
 		String node = Local.id();
 		// log.debug("node=" + node);
-		dao.update(W.create("node", node), V.create("seq", -1));
+		dao.update(W.create().and("node", node), V.create("seq", -1));
 	}
 
 	/**
@@ -443,7 +433,7 @@ public class Menu extends Bean {
 	 */
 	public static void deleteall() {
 		String node = Local.id();
-		dao.delete(W.create("node", node).and("seq", 0, W.OP.lt));
+		dao.delete(W.create().and("node", node).and("seq", 0, W.OP.lt));
 	}
 
 	public String getStyle() {

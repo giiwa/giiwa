@@ -17,21 +17,20 @@ package org.giiwa.web;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.*;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.fileupload.*;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.*;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.bean.*;
+import org.giiwa.bean.Session.SID;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
@@ -42,9 +41,7 @@ import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
-import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Html;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.Url;
 import org.giiwa.task.Task;
@@ -71,7 +68,12 @@ import org.giiwa.web.view.View;
  * @author yjiang
  * 
  */
-public class Controller {
+public class Controller implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	protected static Log log = LogFactory.getLog(Controller.class);
 
@@ -82,12 +84,17 @@ public class Controller {
 	 */
 	public final static long UPTIME = System.currentTimeMillis();
 
-	private static String ENCODING = "UTF-8";
+	private static AtomicInteger _seq = new AtomicInteger(0);
+
+	int id = _seq.incrementAndGet();
+	long created = System.currentTimeMillis();
 
 	/**
 	 * the request
 	 */
-	public HttpServletRequest req;
+//	public HttpServletRequest req;
+
+	public RequestHelper req;
 
 	/**
 	 * the response
@@ -142,7 +149,8 @@ public class Controller {
 	/**
 	 * contentType of response
 	 */
-	private String contentType;
+	public String contentType = Controller.MIME_HTML;
+	private String _contentType = null;
 
 	/**
 	 * associated login user
@@ -156,21 +164,12 @@ public class Controller {
 	};
 
 	/**
-	 * get the ServletContext
-	 * 
-	 * @return
-	 */
-	public ServletContext context() {
-		return GiiwaServlet.s️ervletContext;
-	}
-
-	/**
 	 * get the response outputstream.
 	 * 
 	 * @return OutputStream
 	 * @throws IOException occur error when get the outputstream from the reqponse.
 	 */
-	public OutputStream getOutputStream() throws IOException {
+	public final OutputStream getOutputStream() throws IOException {
 		return resp.getOutputStream();
 	}
 
@@ -184,7 +183,7 @@ public class Controller {
 	 * 
 	 * @return int of state code
 	 */
-	public int status() {
+	public final int status() {
 		return status;
 	}
 
@@ -193,12 +192,11 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	public String locale() {
+	public final String locale() {
 		if (locale == null) {
 			locale = Global.getString("language", "en_us");
 		}
 
-		// System.out.println("lang:" + locale);
 		return locale;
 	}
 
@@ -213,20 +211,18 @@ public class Controller {
 
 	private Path _process() throws Exception {
 
-		/**
-		 * this is very very important to access other node behind nginx
-		 */
-		String node = this.get("__node");
-		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
-			Node n = Node.dao.load(node);
-			if (n != null) {
-				n.forward(uri, req, resp, method.name);
-				return null;
-			}
-		}
-		// end of forward to other node
+//		log.debug("process => " + this.path);
 
-		if (pathmapping != null) {
+		if (Global.getInt("web.debug", 0) == 1) {
+			this.head("_m", Local.label() + "/" + (this.module == null ? X.EMPTY : this.module.name));
+		}
+		this.head("X-Frame-Options", Global.getString("iframe.options", "SAMEORIGIN"));
+		this.head("X-XSS-Protection", "1");
+		this.head("X-Content-Type-Options", "nosniff");
+
+		if (pathmapping != null)
+
+		{
 
 			String path = this.path;
 			if (X.isEmpty(this.path)) {
@@ -250,122 +246,130 @@ public class Controller {
 //			log.debug(this.method + "|" + path + "=>" + methods);
 
 			if (methods != null) {
-				for (String s : methods.keySet()) {
-					if (X.isEmpty(s)) {
-						continue;
-					}
 
-					if (path == null || !path.matches(s)) {
-						continue;
-					}
+//				log.debug("finding => " + path);
 
-					/**
-					 * catch the exception avoid break the whole block
-					 */
-					try {
+				PathMapping oo = methods.get(path);
+				if (oo == null) {
+					for (String s : methods.keySet()) {
+						if (X.isEmpty(s)) {
+							continue;
+						}
+
+						if (path == null || !path.matches(s)) {
+							continue;
+						}
+
+						/**
+						 * catch the exception avoid break the whole block
+						 */
+//						try {
 						/**
 						 * match test in outside first
 						 */
-//						log.debug(s + "=>" + this.path);
+//						log.debug("found => " + this.path);
 
 						/**
 						 * create the pattern
 						 */
-						PathMapping oo = methods.get(s);
-						if (oo != null) {
-							Pattern p = oo.pattern;
-							Matcher m1 = p.matcher(path);
+						oo = methods.get(s);
 
-							/**
-							 * find
-							 */
-							Object[] params = null;
-							if (m1.find()) {
-								/**
-								 * get all the params
-								 */
-								params = new Object[m1.groupCount()];
-								for (int i = 0; i < params.length; i++) {
-									params[i] = m1.group(i + 1);
-								}
-							}
+//						} catch (Exception e) {
+//							if (log.isErrorEnabled())
+//								log.error(s, e);
+//
+//							GLog.oplog.error(this.getClass(), path, e.getMessage(), e, user(), this.ip());
+//
+//							error(e);
+//							return null;
+//						}
 
-							Path pp = oo.path;
-							/**
-							 * check the access and login status
-							 */
-							if (pp.login()) {
+						break;
 
-								// check the system has been initialized
-								// ?
-								if (!Helper.isConfigured()) {
-									this.redirect("/admin/setup");
-									return null;
-								}
+					}
+				}
 
-								login = this.user();
-								if (login == null) {
-									/**
-									 * login require
-									 */
-									if (!X.isEmpty(pp.demo())) {
-										login = User.load("demo");
-									}
-									if (login == null) {
-										_gotoLogin();
-										return pp;
-									}
-								}
+				if (oo != null) {
+					Pattern p = oo.pattern;
+					Matcher m1 = p.matcher(path);
 
-								if (!X.NONE.equals(pp.access()) && !login.hasAccess(pp.access().split("\\|"))) {
-									/**
-									 * no access
-									 */
-									this.put("lang", lang);
-									this.deny();
-
-									GLog.securitylog.warn(this.getClass(), pp.path(),
-											"deny the access, requred: " + lang.get(pp.access()), user(), this.ip());
-									return pp;
-								}
-							}
-
-							/**
-							 * invoke the method
-							 */
-							Method m = oo.method;
-							// log.debug("invoking: " + m.getName());
-
-							try {
-
-								m.invoke(this, params);
-
-							} catch (Exception e) {
-								if (log.isErrorEnabled())
-									log.error(e.getMessage(), e);
-
-								GLog.oplog.error(this.getClass(), pp.path(), this.json().toString(), e, user(),
-										this.ip());
-
-								error(e);
-							}
-
-							return pp;
+					/**
+					 * find
+					 */
+					Object[] params = null;
+					if (m1.find()) {
+						/**
+						 * get all the params
+						 */
+						params = new Object[m1.groupCount()];
+						for (int i = 0; i < params.length; i++) {
+							params[i] = Url.decode(m1.group(i + 1));
 						}
-
-					} catch (Exception e) {
-						if (log.isErrorEnabled())
-							log.error(s, e);
-
-						GLog.oplog.error(this.getClass(), path, e.getMessage(), e, user(), this.ip());
-
-						error(e);
-						return null;
 					}
 
-					break;
+					Path pp = oo.path;
+					/**
+					 * check the access and login status
+					 */
+					if (pp.login()) {
 
+						// check the system has been initialized
+						// ?
+						if (!Helper.isConfigured()) {
+							this.redirect("/admin/setup");
+							return null;
+						}
+
+						login = this.user();
+						if (login == null) {
+							/**
+							 * login require
+							 */
+							if (!X.isEmpty(pp.demo())) {
+								login = User.load("demo");
+							}
+							if (login == null) {
+								_gotoLogin();
+								return pp;
+							}
+						}
+
+						if (!X.NONE.equals(pp.access()) && !login.hasAccess(pp.access().split("\\|"))) {
+							/**
+							 * no access
+							 */
+							this.put("lang", lang);
+							this.deny();
+
+							GLog.securitylog.warn(this.getClass(), pp.path(),
+									"deny the access, requred: " + lang.get(pp.access()), user(), this.ip());
+							return pp;
+						}
+					}
+
+					/**
+					 * invoke the method
+					 */
+					Method m = oo.method;
+//					log.debug("invoking: " + m);
+
+					try {
+
+						m.invoke(this, params);
+
+					} catch (Exception e) {
+						if (log.isErrorEnabled()) {
+							log.error(e.getMessage(), e);
+						}
+
+						GLog.oplog.error(this.getClass(), pp.path(), this.json().toString(), e, user(), this.ip());
+
+						error(e);
+					}
+
+					return pp;
 				}
+
 			}
 		} // end of "pathmapping is not null
 
@@ -494,16 +498,12 @@ public class Controller {
 
 	}
 
-	final public void init(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
+	final public void init(String uri, RequestHelper req, HttpServletResponse resp, String method) {
 		try {
 			this.uri = uri;
 			this.req = req;
 			this.resp = resp;
 			this.method = HttpMethod.create(method);
-
-			this._multipart = ServletFileUpload.isMultipartContent(req);
-
-			req.setCharacterEncoding(ENCODING);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -519,17 +519,28 @@ public class Controller {
 	 * @param method the method
 	 * @return Path
 	 */
-	Path dispatch(String uri, HttpServletRequest req, HttpServletResponse resp, String method) {
+	Path dispatch(String uri, RequestHelper req, HttpServletResponse resp, String method) {
 
 		// created = System.currentTimeMillis();
 
 		// construct var
 		// init
+
 		try {
+
+//			log.debug("init path=" + path);
+
+			Processing.add(this);
 
 //			_currentmodule.set(module);
 
 			init(uri, req, resp, method);
+
+			String ip = this.ip();
+			if (Blacklist.isBlocked(ip, uri)) {
+				// output nothing
+				return null;
+			}
 
 			if (!Module.home.before(this)) {
 				if (log.isDebugEnabled())
@@ -545,9 +556,14 @@ public class Controller {
 //			_currentmodule.remove();
 
 			Module.home.after(this);
+
+			Processing.remove(this);
+
 		}
 		return null;
 	}
+
+	public Thread thread;
 
 	private void _gotoLogin() {
 		if (this.uri != null && this.uri.indexOf("/user/") < 0) {
@@ -570,6 +586,10 @@ public class Controller {
 
 			jo.put(X.MESSAGE, lang.get("login.required"));
 			jo.put(X.ERROR, lang.get("login.required"));
+
+			GLog.securitylog.warn(this.getClass(), "",
+					"login required, head=" + Arrays.toString(this.heads()) + ", body=" + this.json());
+
 			this.send(jo);
 
 		} else {
@@ -581,10 +601,9 @@ public class Controller {
 	 * get the current session sid, if not present, create a new one, please refer
 	 * {@code sid(boolean)}.
 	 * 
-	 * @deprecated
 	 * @return the string
 	 */
-	public String sid() {
+	public final String sid() {
 		return sid(true);
 	}
 
@@ -604,21 +623,67 @@ public class Controller {
 	 *                   return null
 	 * @return the string
 	 */
+//	final public String sid(boolean newSession) {
+//
+//		if (X.isEmpty(sid)) {
+//			sid = this.cookie("sid");
+//			if (X.isEmpty(sid)) {
+//				sid = this.head("sid");
+//				if (X.isEmpty(sid)) {
+//					sid = this.getString("sid");
+//					if (X.isEmpty(sid)) {
+//						sid = (String) req.getAttribute("sid");
+//						if (X.isEmpty(sid) && newSession) {
+//							do {
+//								sid = UID.random();
+//							} while (Session.exists(sid));
+//
+//							if (log.isDebugEnabled())
+//								log.debug("creeate new sid=" + sid);
+//						}
+//					}
+//				}
+//
+//				/**
+//				 * get session.expired in seconds
+//				 */
+//				if (!X.isEmpty(sid)) {
+//					long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+//					if (expired <= 0) {
+//						cookie("sid", sid, -1);
+//					} else {
+//						cookie("sid", sid, (int) (expired / 1000));
+//					}
+//				}
+//			}
+//
+////			if (!X.isEmpty(sid) && Global.getInt("session.baseip", 0) == 1) {
+////				sid += "/" + this.ip();
+////			}
+//
+//		}
+//
+//		return sid;
+//	}
+
 	final public String sid(boolean newSession) {
+
 		if (X.isEmpty(sid)) {
-			sid = this.cookie("sid");
+			sid = this.getString("sid");
 			if (X.isEmpty(sid)) {
-				sid = this.head("sid");
+				sid = (String) req.getAttribute("sid");
 				if (X.isEmpty(sid)) {
-					sid = this.getString("sid");
+					sid = this.head("sid");
 					if (X.isEmpty(sid)) {
-						sid = (String) req.getAttribute("sid");
+						sid = this.cookie("sid");
 						if (X.isEmpty(sid) && newSession) {
 							do {
 								sid = UID.random();
 							} while (Session.exists(sid));
 
-							log.debug("creeate new sid=" + sid);
+							if (log.isDebugEnabled()) {
+								log.debug("creeate new sid=" + sid);
+							}
 						}
 					}
 				}
@@ -629,18 +694,20 @@ public class Controller {
 				if (!X.isEmpty(sid)) {
 					long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
 					if (expired <= 0) {
-						cookie("sid", sid, (int) expired);
+						cookie("sid", sid, -1);
 					} else {
 						cookie("sid", sid, (int) (expired / 1000));
 					}
 				}
 			}
 
-//			if (!X.isEmpty(sid) && Global.getInt("session.baseip", 0) == 1)
+//			if (!X.isEmpty(sid) && Global.getInt("session.baseip", 0) == 1) {
 //				sid += "/" + this.ip();
+//			}
 
-//			log.debug("sid=" + sid);
 		}
+
+//		log.info("sid=" + sid);
 
 		return sid;
 	}
@@ -650,14 +717,17 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	public String token() {
-		String token = this.cookie("token");
+	public final String token() {
+		String token = this.getString("token");
 		if (token == null) {
 			token = this.head("token");
 			if (token == null) {
-				token = this.getString("token");
+				token = this.cookie("token");
 			}
 		}
+
+//		log.info("token=" + token);
+
 		return token;
 	}
 
@@ -666,9 +736,9 @@ public class Controller {
 	 * 
 	 * @param url the url
 	 */
-	public void redirect(String url) {
+	public final void redirect(String url) {
 
-		if (this.getUser() != null) {
+		if (this.user() != null) {
 			String node = this.getString("__node");
 			if (!X.isEmpty(node)) {
 				if (url.indexOf("?") > 0) {
@@ -708,7 +778,7 @@ public class Controller {
 	 * @param url the url
 	 * @throws IOException
 	 */
-	public void forward(String url) throws IOException {
+	public void forward(String url) throws Exception {
 		req.setAttribute("sid", sid(false));
 		Controller.process(url, req, resp, method.name, TimeStamp.create());
 	}
@@ -719,8 +789,7 @@ public class Controller {
 	 * @param name the name
 	 * @param o    the object
 	 */
-	public Controller put(String name, Object o) {
-		// System.out.println("put:" + name + "=>" + o);
+	public final Controller put(String name, Object o) {
 
 		if (data == null) {
 			data = new HashMap<String, Object>();
@@ -746,7 +815,7 @@ public class Controller {
 	 * 
 	 * @param name the name of data setted in model
 	 */
-	public void remove(String name) {
+	public final void remove(String name) {
 		if (data != null) {
 			data.remove(name);
 		}
@@ -768,21 +837,8 @@ public class Controller {
 	 * @param name
 	 * @return
 	 */
-	public String get(String name) {
-		return this.getHtml(name);
-	}
-
-	/**
-	 * Sets Beans back to Model which accessed by view, it will auto paging
-	 * according the start and number per page.
-	 * 
-	 * @deprecated
-	 * @param bs the Beans
-	 * @param s  the start position
-	 * @param n  the number per page
-	 */
-	public void set(Beans<? extends Bean> bs, int s, int n) {
-		pages(bs, s, n);
+	public final String get(String name) {
+		return this.getString(name);
 	}
 
 	/**
@@ -795,6 +851,7 @@ public class Controller {
 	 * @param n
 	 */
 	public void pages(Beans<? extends Bean> bs, int s, int n) {
+
 		if (bs != null) {
 			this.set("list", bs);
 			int total = (int) bs.getTotal();
@@ -823,7 +880,7 @@ public class Controller {
 	 * @param jo    the map of data
 	 * @param names the names that will be set back to model, if null, will set all
 	 */
-	public void copy(JSON jo, String... names) {
+	public final void copy(JSON jo, String... names) {
 		if (jo == null) {
 			return;
 		}
@@ -844,26 +901,13 @@ public class Controller {
 	}
 
 	/**
-	 * @deprecated
-	 * @param name
-	 * @return
-	 */
-	public String getHeader(String name) {
-		return head(name);
-	}
-
-	/**
 	 * Gets the request header.
 	 * 
 	 * @param name the header name
 	 * @return String of the header
 	 */
-	public String head(String name) {
-		try {
-			return req.getHeader(name);
-		} catch (Exception e) {
-			return null;
-		}
+	public final String head(String name) {
+		return req.head(name);
 	}
 
 	/**
@@ -872,7 +916,7 @@ public class Controller {
 	 * @param name  the name
 	 * @param value the value
 	 */
-	public void head(String name, String value) {
+	public final void head(String name, String value) {
 		try {
 			if (resp.containsHeader(name)) {
 				resp.setHeader(name, value);
@@ -889,101 +933,8 @@ public class Controller {
 	 * @param name the name
 	 * @return the int
 	 */
-	public int getInt(String name) {
+	public final int getInt(String name) {
 		return getInt(name, 0);
-	}
-
-	/**
-	 * Gets the int from the request parameter, if the tag is not presented, then
-	 * get the value from the session, if the value less than minvalue, then get the
-	 * minvalue, and store the value in session
-	 * 
-	 * @deprecated
-	 * @param name         the name
-	 * @param defaultValue the default value
-	 * @param tagInSession the tag in session
-	 * @return the int
-	 */
-	public int getInt(String name, int defaultValue, String tagInSession) {
-		int r = getInt(name);
-		try {
-			if (r < 1) {
-				Session s = this.session(false);
-				r = s == null ? -1 : s.getInt(tagInSession);
-				if (r < 1) {
-					r = defaultValue;
-				}
-			} else {
-				Session s = this.session(false);
-				if (s != null) {
-					s.set(tagInSession, r).store();
-				}
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-
-		// if (r > 500) {
-		// r = 500;
-		// log.error("the page number exceed max[500]: " + r);
-		// }
-		return r;
-	}
-
-	/**
-	 * @deprecated get the parameter from the request, if not presented, then get
-	 *             from session
-	 * 
-	 * @param tag          the name of the parameter in request.
-	 * @param tagInSession associated with the name in session.
-	 * @param defaultValue the default value if not presented in both.
-	 * @return String of the value
-	 */
-	public String getString(String name, String tagInSession, String defaultValue) {
-		String r = getString(name);
-		try {
-			if (X.isEmpty(r)) {
-				Session s = this.session(false);
-				r = s == null ? null : (String) s.get(tagInSession);
-				if (X.isEmpty(r)) {
-					r = defaultValue;
-					s.set(tagInSession, r).store();
-				}
-			} else {
-				Session s = this.session(false);
-				if (s != null)
-					s.set(tagInSession, r).store();
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-
-		return r;
-	}
-
-	/**
-	 * @deprecated
-	 * @param tag
-	 * @param tagInSession
-	 * @param queryfirst
-	 * @return
-	 */
-	public String getString(String name, String tagInSession, boolean queryfirst) {
-		String r = null;
-		try {
-			if (queryfirst) {
-				r = getString(name);
-				Session s = this.session(false);
-				if (s != null)
-					s.set(tagInSession, r).store();
-			} else {
-				Session s = this.session(false);
-				r = s == null ? null : (String) s.get(tagInSession);
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-		return r;
 	}
 
 	/**
@@ -993,21 +944,23 @@ public class Controller {
 	 * @param defaultValue the default value
 	 * @return the int
 	 */
-	public int getInt(String name, int defaultValue) {
-		String v = this.getString(name);
+	public final int getInt(String name, int defaultValue) {
+		String v = this.getHtml(name);
 		return X.toInt(v, defaultValue);
 	}
 
 	/**
 	 * Gets the long parameter by name, if not presented, return the defaultvalue
 	 * 
-	 * @param tag          the name of parameter
+	 * @param name         the name of parameter
 	 * @param defaultvalue the default value when the name not presented.
 	 * @return long
 	 */
-	final public long getLong(String tag, long defaultvalue) {
-		String v = this.getString(tag);
-		return X.toLong(v, defaultvalue);
+	final public long getLong(String name, long defaultvalue) {
+		String v = this.getHtml(name);
+		long v1 = X.toLong(v, defaultvalue);
+//		log.debug("v=" + v + ", v1=" + v1 + ", name=" + name + ", param=" + this.json());
+		return v1;
 	}
 
 	/**
@@ -1016,16 +969,8 @@ public class Controller {
 	 * @param tag the name of parameter in request.
 	 * @return long
 	 */
-	public long getLong(String tag) {
-		return getLong(tag, 0);
-	}
-
-	/**
-	 * @deprecated
-	 * @return
-	 */
-	public Cookie[] getCookie() {
-		return cookies();
+	public final long getLong(String name) {
+		return getLong(name, 0);
 	}
 
 	/**
@@ -1033,17 +978,8 @@ public class Controller {
 	 * 
 	 * @return Cookie[]
 	 */
-	public Cookie[] cookies() {
-		return req.getCookies();
-	}
-
-	/**
-	 * @deprecated
-	 * @param name
-	 * @return
-	 */
-	public String getCookie(String name) {
-		return cookie(name);
+	public final Cookie[] cookies() {
+		return req.cookies();
 	}
 
 	/**
@@ -1052,7 +988,7 @@ public class Controller {
 	 * @param name the name
 	 * @return the cookie
 	 */
-	public String cookie(String name) {
+	public final String cookie(String name) {
 		Cookie[] cc = cookies();
 		if (cc != null) {
 			for (int i = cc.length - 1; i >= 0; i--) {
@@ -1067,31 +1003,11 @@ public class Controller {
 	}
 
 	/**
-	 * get the request
-	 * 
-	 * @deprecated
-	 * @return HttpServletRequest
-	 */
-	public HttpServletRequest getRequest() {
-		return req;
-	}
-
-	/**
-	 * get the response
-	 * 
-	 * @deprecated
-	 * @return HttpServletResponse
-	 */
-	public HttpServletResponse getResponse() {
-		return resp;
-	}
-
-	/**
 	 * get the browser user-agent
 	 * 
 	 * @return the string
 	 */
-	public String browser() {
+	public final String browser() {
 		return this.head("user-agent");
 	}
 
@@ -1102,29 +1018,36 @@ public class Controller {
 	 * @param value         the value of the cookie
 	 * @param expireseconds the expire time of seconds.
 	 */
-	public void cookie(String key, String value, int expireseconds) {
+	public final void cookie(String key, String value, int expireseconds) {
 		if (key == null) {
 			return;
 		}
 
-		Cookie c = new Cookie(key, value);
-		if (expireseconds == 0) {
-			c.setMaxAge(0);
+		StringBuilder sb = new StringBuilder();
+		sb.append(key).append("=").append(value);
+
+		if (expireseconds <= 0) {
+			sb.append("; Max-Age=").append(-1)
+					.append("; Expires=" + new Date(System.currentTimeMillis() + expireseconds * 1000));
 		} else if (expireseconds > 0) {
-			c.setMaxAge(expireseconds);
+			sb.append("; Max-Age=").append(expireseconds)
+					.append("; Expires=" + new Date(System.currentTimeMillis() + expireseconds * 1000));
 		}
-		c.setPath("/");
+		sb.append("; Path=/");
+		sb.append(";httponly");
+		resp.addHeader("Set-Cookie", sb.toString());// 兼容老的浏览器
 
-		/**
-		 * set back to the domain
-		 */
-		// c.setDomain(SystemConfig.s("domain", this.getHeader("Host")));
-		String domain = Module._conf.getString("domain", null);
-		if (!X.isEmpty(domain)) {
-			c.setDomain(domain);
+		String samesite = Global.getString("cookie.samesite", "Strict");
+		sb.append("; SameSite=" + samesite);
+		if (X.isSame(samesite, "None")) {
+			sb.append("; Secure");
 		}
+		sb.append(";httponly");
 
-		resp.addCookie(c);
+		// sid=bee31683-a83a-44c2-9155-f20735d8f1be; Max-Age=604800; Expires=Wed,
+		// 25-May-2022 05:30:21 GMT; Path=/
+		resp.addHeader("Set-Cookie", sb.toString()); // 新的浏览器
+
 	}
 
 	/**
@@ -1132,7 +1055,7 @@ public class Controller {
 	 * 
 	 * @return String
 	 */
-	public String uri() {
+	public final String uri() {
 		if (X.isEmpty(uri)) {
 			uri = req.getRequestURI();
 			while (uri.indexOf("//") > -1) {
@@ -1144,75 +1067,16 @@ public class Controller {
 	}
 
 	/**
-	 * get the sub.path of the uri
-	 * 
-	 * @deprecated
-	 * @return String
-	 */
-	public String getPath() {
-		return path;
-	}
-
-	/**
-	 * @deprecated
-	 * @return
-	 */
-	public String getRemoteHost() {
-		return this.ip();
-	}
-
-	/**
 	 * trying to get the client ip from request header
 	 * 
 	 * @return String
 	 */
-	public String ip() {
-		String remote = this.head("X-Real-IP");
-		if (remote == null) {
-			remote = head("X-Forwarded-For");
-
-			if (remote == null) {
-				remote = req.getRemoteAddr();
-			}
-		}
-
-		return remote;
+	public final String ip() {
+		return req.ip();
 	}
 
-	public String ipPath() {
-
-		StringBuilder sb = new StringBuilder();
-
-		String remote = head("X-Real-IP");
-		if (!X.isEmpty(remote)) {
-			sb.append(remote);
-		}
-
-		remote = this.head("X-Forwarded-For");
-		if (!X.isEmpty(remote)) {
-			if (sb.length() > 0)
-				sb.append("->");
-			sb.append(remote);
-		}
-
-		remote = req.getRemoteAddr();
-		if (!X.isEmpty(remote)) {
-			if (sb.length() > 0)
-				sb.append("->");
-			sb.append(remote);
-		}
-
-		return sb.toString();
-	}
-
-	private JSON _json;
-
-	/**
-	 * @deprecated
-	 * @return
-	 */
-	public JSON getJSON() {
-		return json();
+	public final String ipPath() {
+		return req.ipPath();
 	}
 
 	/**
@@ -1220,40 +1084,8 @@ public class Controller {
 	 * 
 	 * @return JSONObject
 	 */
-	public JSON json() {
-		if (_json == null) {
-			_json = JSON.create();
-			for (String name : this.names()) {
-
-				String s = this.getHtml(name);
-				_json.put(name, s);
-			}
-//			_json.put("ip", this.ip());
-//			_json.put("useragent", this.browser());
-
-		}
-		return _json;
-	}
-
-	/**
-	 * get the request as JSON, it will mix the password key
-	 * 
-	 * @deprecated
-	 * @return JSONObject
-	 */
-	public JSON getJSONNonPassword() {
-		if (_json == null) {
-			json();
-		}
-
-		JSON jo = JSON.fromObject(_json);
-		// mix the password
-		for (Object name : jo.keySet()) {
-			if ("password".equals(name) || "pwd".equals(name) || "passwd".equals(name)) {
-				jo.put(name.toString(), "*******");
-			}
-		}
-		return jo;
+	public final JSON json() {
+		return req.json();
 	}
 
 	/**
@@ -1263,12 +1095,8 @@ public class Controller {
 	 * @param name the name of parameter
 	 * @return string of requested value
 	 */
-	public String getString(String name) {
-		String s = this.getHtml(name);
-		if (s != null) {
-			return s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-		}
-		return null;
+	public final String getString(String name) {
+		return req.getString(name);
 	}
 
 	/**
@@ -1278,38 +1106,8 @@ public class Controller {
 	 * @param maxlength the maxlength
 	 * @return string of value
 	 */
-	public String get(String name, int maxlength) {
-		String s = getString(name);
-		if (!X.isEmpty(s)) {
-			if (s.getBytes().length > maxlength) {
-				s = Html.create(s).text(maxlength);
-			}
-		}
-
-		return s;
-	}
-
-	/**
-	 * Get the parameter by name and truncate by length, if not presented, using the
-	 * default value.
-	 * 
-	 * @deprecated
-	 * @param name         the parameter name
-	 * @param maxlength    the maxlength
-	 * @param defaultvalue the defaultvalue
-	 * @return string of value
-	 */
-	public String get(String name, int maxlength, String defaultvalue) {
-		String s = getString(name);
-		if (!X.isEmpty(s)) {
-			if (s.getBytes().length > maxlength) {
-				s = Html.create(s).text(maxlength);
-			}
-		} else {
-			s = defaultvalue;
-		}
-
-		return s;
+	public final String get(String name, int maxlength) {
+		return req.get(name, maxlength);
 	}
 
 	/**
@@ -1318,107 +1116,10 @@ public class Controller {
 	 * @param name the parameter name
 	 * @return String of value
 	 */
-	public String getHtml(String name) {
+	public final String getHtml(String name) {
 
-		try {
-			String c1 = req.getContentType();
+		return req.getHtml(name);
 
-//			log.debug("get s, name=" + name + ", c1=" + c1);
-
-			if (c1 != null && c1.indexOf("application/json") > -1) {
-
-				if (uploads == null) {
-
-					BufferedReader in = req.getReader();
-
-					StringBuilder sb = new StringBuilder();
-					char[] buff = new char[1024];
-					int len;
-					while ((len = in.read(buff)) != -1) {
-						sb.append(buff, 0, len);
-					}
-
-					JSON jo = JSON.fromObject(sb.toString());
-					if (jo != null) {
-						uploads = new HashMap<String, Object>();
-						uploads.putAll(jo);
-					}
-				}
-
-				if (uploads != null) {
-					Object v1 = uploads.get(name);
-
-//					log.debug("get s=" + v1);
-
-					if (v1 != null) {
-						return v1.toString().trim();
-					}
-				}
-			}
-
-			if (this._multipart) {
-
-				_get_files();
-
-				FileItem i = this.file(name);
-
-				if (i != null && i.isFormField()) {
-					InputStream in = i.getInputStream();
-					byte[] bb = new byte[in.available()];
-					in.read(bb);
-					in.close();
-					return new String(bb, ENCODING);
-				}
-				return null;
-
-			}
-
-			String[] ss = req.getParameterValues(name);
-			if (ss == null || ss.length == 0) {
-				return null;
-			}
-
-			String s = ss[ss.length - 1];
-			s = _decode(s);
-
-//			log.debug("get s = " + s);
-			return s;
-
-		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error("get request parameter " + name + " get exception.", e);
-		}
-
-		return null;
-
-	}
-
-	private String _decode(String s) {
-		try {
-			String t = this.head("Content-Type");
-			if (t == null) {
-				// do nothing
-				// log.debug("get s=" + s);
-
-			} else if (t.indexOf("UTF-8") > -1) {
-				// log.debug("get s=" + s);
-
-			} else if (t.indexOf("urlencoded") > -1) {
-				// do nothing
-//				s = new String(s.getBytes("ISO-8859-1"), ENCODING);
-
-			} else if (t.indexOf("application/json") > -1) {
-//				log.debug("get s=" + s);
-				if (method.isPost()) {
-					s = new String(s.getBytes("ISO-8859-1"), ENCODING);
-				}
-			} else {
-//				log.debug("get s=" + s);
-			}
-		} catch (Exception e) {
-			log.error(s, e);
-		}
-		return s;
 	}
 
 	/**
@@ -1427,7 +1128,7 @@ public class Controller {
 	 * @param name
 	 * @return
 	 */
-	public String[] getStrings(String name) {
+	public final String[] getStrings(String name) {
 		String[] ss = getHtmls(name);
 		if (ss != null) {
 			for (int i = 0; i < ss.length; i++) {
@@ -1443,57 +1144,8 @@ public class Controller {
 	 * @param name the name of the request parameter
 	 * @return String[] of request
 	 */
-	@SuppressWarnings("unchecked")
-	public String[] getHtmls(String name) {
-		try {
-			if (this._multipart) {
-				_get_files();
-
-				Object o = uploads.get(name);
-				if (o instanceof FileItem) {
-					return new String[] { getString(name) };
-				} else if (o instanceof List) {
-					List<FileItem> list = (List<FileItem>) o;
-					String[] ss = new String[list.size()];
-					for (int i = 0; i < ss.length; i++) {
-						FileItem ii = list.get(i);
-						if (ii.isFormField()) {
-							InputStream in = ii.getInputStream();
-							byte[] bb = new byte[in.available()];
-							in.read(bb);
-							in.close();
-							ss[i] = new String(bb, "UTF8").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-						}
-					}
-					return ss;
-				}
-			} else {
-				String[] ss = req.getParameterValues(name);
-				if (ss != null && ss.length > 0) {
-					for (int i = 0; i < ss.length; i++) {
-						if (ss[i] == null)
-							continue;
-
-						ss[i] = _decode(ss[i]);
-
-						ss[i] = ss[i].replaceAll("<", "&lt").replaceAll(">", "&gt").trim();
-					}
-				}
-				return ss;
-			}
-		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error(name, e);
-		}
-		return null;
-	}
-
-	/**
-	 * @deprecated
-	 * @return
-	 */
-	public List<String> getNames() {
-		return names();
+	public final String[] getHtmls(String name) {
+		return req.getHtmls(name);
 	}
 
 	/**
@@ -1501,43 +1153,20 @@ public class Controller {
 	 * 
 	 * @return List of the request names
 	 */
-	public List<String> names() {
-		String c1 = req.getContentType();
-		if (c1 != null && c1.indexOf("application/json") > -1) {
-			this.getString(null);// initialize uploads
-			if (uploads != null) {
-				return new ArrayList<String>(uploads.keySet());
-			}
-		} else if (this._multipart) {
-			_get_files();
-			return new ArrayList<String>(uploads.keySet());
-		}
+	public final List<String> names() {
 
-		Enumeration<?> e = req.getParameterNames();
-		if (e == null) {
-			return Arrays.asList();
-		}
-
-		List<String> list = new ArrayList<String>();
-
-		while (e.hasMoreElements()) {
-			list.add(e.nextElement().toString());
-		}
-		return list;
+		return req.names();
 
 	}
 
-	public List<String> keySet() {
+	public final boolean has(String name) {
+
+		return this.names().contains(name);
+
+	}
+
+	public final List<String> keySet() {
 		return this.names();
-	}
-
-	/**
-	 * @deprecated
-	 * @param newsession
-	 * @return
-	 */
-	public Session getSession(boolean newsession) {
-		return session(newsession);
 	}
 
 	/**
@@ -1546,7 +1175,7 @@ public class Controller {
 	 * 
 	 * @return Session
 	 */
-	public Session session(boolean newsession) {
+	public final Session session(boolean newsession) {
 		return Session.load(sid(newsession), this.ip());
 	}
 
@@ -1554,42 +1183,6 @@ public class Controller {
 	 * indicator of multipart request
 	 */
 	transient boolean _multipart = false;
-
-	/**
-	 * is multipart request
-	 * 
-	 * @return boolean
-	 */
-//	final public boolean isMultipart() {
-//		return _multipart;
-//	}
-
-	/**
-	 * @deprecated
-	 * @return
-	 */
-	public Roles getRoles() {
-		User u = this.user();
-		if (u != null) {
-			return u.getRole();
-		}
-
-		Session s = this.session(false);
-		if (s != null && s.has("roles")) {
-			return s.get("roles");
-		}
-
-		return null;
-	}
-
-	/**
-	 * @deprecated
-	 * @return
-	 */
-
-	public User getUser() {
-		return user();
-	}
 
 	/**
 	 * get the user associated with the session, <br>
@@ -1601,14 +1194,18 @@ public class Controller {
 	final public User user() {
 		if (login == null) {
 			Session s = session(false);
-			login = s == null ? null : s.get("user");
+			login = (s == null) ? null : s.get("user");
 
 			if (login == null) {
+
+				if (log.isDebugEnabled()) {
+					log.debug("login=null, sid=" + (s == null ? null : s.sid()) + ", " + this.ipPath());
+				}
+
 				if (Global.getInt("user.token", 1) == 1) {
-					String sid = sid();
 					String token = token();
-					if (!X.isEmpty(sid) && !X.isEmpty(token)) {
-						AuthToken t = AuthToken.load(sid, token);
+					if (!X.isEmpty(token)) {
+						AuthToken t = AuthToken.load(token);
 						if (t != null) {
 							login = t.getUser_obj();
 							this.user(login, LoginType.ajax);
@@ -1623,14 +1220,15 @@ public class Controller {
 		if (login != null) {
 			if (System.currentTimeMillis() - login.getLong("lastlogined") > X.AMINUTE) {
 
-				User.dao.update(login.id, V.create("lastlogined", System.currentTimeMillis()));
-
 				login.set("lastlogined", System.currentTimeMillis());
 				Session s = session(true);
 				try {
+
 					s.set("user", login);
 					s.store();
+
 				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 
 				V v = V.create("lastlogined", System.currentTimeMillis());
@@ -1642,14 +1240,16 @@ public class Controller {
 					v.append("ajaxlogined", System.currentTimeMillis());
 				}
 
-				Task.schedule(() -> {
+				Task.schedule(t -> {
 					try {
+
 						User.dao.update(login.id, v);
 						login = User.dao.load(login.id);
 						if (login == null || login.isLocked() || login.isDeleted()) {
 							s.remove("user");
 						} else {
 							s.set("user", login);
+							SID.update(sid, login.id, this.ip(), this.browser());
 						}
 						s.store();
 					} catch (Exception e) {
@@ -1673,23 +1273,6 @@ public class Controller {
 	}
 
 	/**
-	 * @deprecated
-	 * @param u
-	 */
-	public void setUser(User u) {
-		this.user(u, LoginType.web);
-	}
-
-	/**
-	 * @deprecated
-	 * @param u
-	 * @param logintype
-	 */
-	public void setUser(User u, LoginType logintype) {
-		this.user(u, logintype);
-	}
-
-	/**
 	 * set the user associated with the session
 	 * 
 	 * @param u the user object associated with the session
@@ -1707,32 +1290,40 @@ public class Controller {
 			if (!X.isEmpty(logintype)) {
 				u.set("logintype", logintype.toString());
 			}
-			if (System.currentTimeMillis() - u.getLong("lastlogined") > X.AMINUTE) {
-				u.set("lastlogined", System.currentTimeMillis());
-				u.set("ip", this.ip());
-
-				V v = V.create();
-				String type = (String) u.get("logintype");
-				if (X.isSame(type, "web")) {
-					v.append("weblogined", System.currentTimeMillis());
-					v.append("ip", this.ip());
-				} else if (X.isSame(type, "ajax")) {
-					v.append("ajaxlogined", System.currentTimeMillis());
-					v.append("ip", this.ip());
-				}
-				if (!v.isEmpty()) {
-					User.dao.update(u.getId(), v);
-				}
-			}
 
 			try {
+
+				if (System.currentTimeMillis() - u.getLong("lastlogined") > X.AMINUTE) {
+					u.set("lastlogined", System.currentTimeMillis());
+					u.set("ip", this.ip());
+
+					V v = V.create();
+					String type = (String) u.get("logintype");
+					if (X.isSame(type, "web")) {
+						v.append("weblogined", System.currentTimeMillis());
+						v.append("ip", this.ip());
+					} else if (X.isSame(type, "ajax")) {
+						v.append("ajaxlogined", System.currentTimeMillis());
+						v.append("ip", this.ip());
+					}
+					if (!v.isEmpty()) {
+						User.dao.update(u.getId(), v);
+					}
+				}
+
 				s.set("user", u);
+
+				SID.update(sid, u.id, this.ip(), this.browser());
+
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
 		} else {
 			log.warn("clear the data in session");
 			s.clear();
+
+			SID.update(sid, -1, this.ip(), this.browser());
+
 		}
 		s.store();
 
@@ -1743,86 +1334,13 @@ public class Controller {
 	}
 
 	/**
-	 * get files or multiple-part request
-	 * 
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	private Map<String, Object> _get_files() {
-
-		if (uploads == null) {
-
-			uploads = new HashMap<String, Object>();
-			DiskFileItemFactory factory = new DiskFileItemFactory();
-
-			// Configure a repository (to ensure a secure temp location is used)
-			File repository = (File) context().getAttribute("javax.servlet.context.tempdir");
-			factory.setRepository(repository);
-
-			// Create a new file upload handler
-			ServletFileUpload upload = new ServletFileUpload(factory);
-
-			// Parse the request
-			try {
-				List<FileItem> items = upload.parseRequest(req);
-				if (items != null && items.size() > 0) {
-					for (FileItem f : items) {
-						if (uploads.containsKey(f.getFieldName())) {
-							Object o = uploads.get(f.getFieldName());
-							if (o instanceof FileItem) {
-								List<FileItem> list = new ArrayList<FileItem>();
-								list.add((FileItem) o);
-								list.add(f);
-								uploads.put(f.getFieldName(), list);
-							} else if (o instanceof List) {
-								((List<FileItem>) o).add(f);
-							}
-						} else {
-							uploads.put(f.getFieldName(), f);
-						}
-					}
-				} else {
-					if (log.isWarnEnabled())
-						log.warn("nothing got!!!");
-				}
-			} catch (FileUploadException e) {
-				// ignore
-//				if (log.isErrorEnabled())
-//					log.error(e.getMessage(), e);
-			}
-		}
-
-		return uploads;
-	}
-
-	/**
-	 * @deprecated
-	 * @param name
-	 * @return
-	 */
-	public FileItem getFile(String name) {
-		return file(name);
-	}
-
-	/**
 	 * Gets the file by name from the request.
 	 * 
 	 * @param name the parameter name
 	 * @return file of value, null if not presented
 	 */
-	@SuppressWarnings("unchecked")
-	public FileItem file(String name) {
-
-		_get_files();
-
-		Object o = uploads.get(name);
-		if (o instanceof FileItem) {
-			return (FileItem) o;
-		} else if (o instanceof List) {
-			List<FileItem> list = (List<FileItem>) o;
-			return list.get(list.size() - 1);
-		}
-		return null;
+	public final FileItem file(String name) {
+		return req.file(name);
 	}
 
 	/**
@@ -1831,25 +1349,9 @@ public class Controller {
 	 * @param name
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public List<FileItem> files(String name) {
-
-		_get_files();
-
-		Object o = uploads.get(name);
-		if (o instanceof FileItem) {
-			return Arrays.asList((FileItem) o);
-		} else if (o instanceof List) {
-			List<FileItem> list = (List<FileItem>) o;
-			return list;
-		}
-		return null;
+	public final List<FileItem> files(String name) {
+		return files(name);
 	}
-
-	/**
-	 * uploaded file
-	 */
-	private Map<String, Object> uploads = null;
 
 	/**
 	 * the path of the uri, http://[host:port]/[class]/[path], usually the
@@ -1864,21 +1366,8 @@ public class Controller {
 	 */
 	public void setContentType(String contentType) {
 		this.contentType = contentType;
+		this._contentType = contentType;
 		resp.setContentType(contentType);
-	}
-
-	/**
-	 * return the contentType
-	 * 
-	 * @deprecated
-	 * @return String of content-type
-	 */
-	public String getResponseContentType() {
-		if (contentType == null) {
-			return MIME_HTML;
-		} else {
-			return contentType;
-		}
 	}
 
 	/**
@@ -1912,7 +1401,7 @@ public class Controller {
 	 * 
 	 * @param arr the array of json
 	 */
-	public void send(List<JSON> arr) {
+	public final void send(List<JSON> arr) {
 		if (arr == null) {
 			_send_json("[]");
 		} else {
@@ -1930,6 +1419,9 @@ public class Controller {
 		this.setContentType(Controller.MIME_JSON);
 
 		try {
+			if (log.isDebugEnabled())
+				log.debug("response=> " + jsonstr);
+
 			PrintWriter writer = resp.getWriter();
 			writer.write(jsonstr);
 			writer.flush();
@@ -2002,14 +1494,14 @@ public class Controller {
 
 				return true;
 			} else {
-				DFile d = Disk.seek(viewname);
-				if (d.exists()) {
-
-					View.merge(d, this, viewname);
-
-					return true;
-				}
-				notfound("page not found, page=" + viewname);
+//				DFile d = Disk.seek(viewname);
+//				if (d.exists()) {
+//
+//					View.merge(d, this, viewname);
+//
+//					return true;
+//				}
+				notfound("page=" + viewname);
 			}
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
@@ -2026,25 +1518,6 @@ public class Controller {
 
 		return false;
 	}
-
-//	final public boolean passup(String viewname) {
-//
-//		try {
-//
-//			File file = module.floor() != null ? module.floor().getFile(viewname) : null;
-//			if (file != null && file.exists()) {
-//				View.merge(file, this, viewname);
-//				return true;
-//			} else {
-//				notfound("page not found, page=" + viewname);
-//			}
-//		} catch (Exception e) {
-//			if (log.isErrorEnabled())
-//				log.error(viewname, e);
-//		}
-//
-//		return false;
-//	}
 
 	/**
 	 * On get requested from HTTP GET method.
@@ -2086,14 +1559,32 @@ public class Controller {
 	 * @return String of mime type
 	 */
 	public static String getMimeType(String uri) {
-		String mime = GiiwaServlet.s️ervletContext.getMimeType(uri);
+
+		String mime = null;
+		if (GiiwaServlet.s️ervletContext != null) {
+			mime = GiiwaServlet.s️ervletContext.getMimeType(uri);
+
+			if (X.isIn(mime, "text/plain", "text/css")) {
+				mime += ";charset=UTF-8";
+			}
+
+		}
+
 		if (mime == null) {
-			if (uri.endsWith(".tgz")) {
-				mime = "application/x-gzip";
+			int i = uri.lastIndexOf(".");
+			if (i > 0) {
+				String ext = uri.substring(i + 1);
+				if (X.isIn(ext, "tgz", "zip", "rar", "7z")) {
+					mime = "application/x-gzip";
+				} else if (X.isIn(ext, "html", "htm")) {
+					mime = "text/html;charset=UTF-8";
+				}
 			}
 		}
+
 		if (log.isDebugEnabled())
 			log.debug("mimetype=" + mime + ", uri=" + uri);
+
 		return mime;
 	}
 
@@ -2103,7 +1594,7 @@ public class Controller {
 	 * 
 	 * @param e the throwable
 	 */
-	public void error(Throwable e) {
+	public final void error(Throwable e) {
 
 		if (log.isErrorEnabled())
 			log.error(e.getMessage(), e);
@@ -2130,6 +1621,8 @@ public class Controller {
 		} else {
 			this.set("me", this.user());
 
+			status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
 			String lineSeparator = System.lineSeparator();
 			s = s.replaceAll(lineSeparator, "<br/>");
 			s = s.replaceAll(" ", "&nbsp;");
@@ -2142,7 +1635,6 @@ public class Controller {
 			} else {
 				this.print(s);
 			}
-			status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
 	}
@@ -2164,14 +1656,17 @@ public class Controller {
 	 * @param message
 	 */
 	public void notfound(String message) {
-		if (log.isWarnEnabled())
-			log.warn(this.getClass().getName() + "[" + this.uri() + "]");
+
+		if (log.isWarnEnabled()) {
+			log.warn(this.getClass().getName() + "[" + this.uri() + "] - [" + this.ipPath() + "]");
+		}
 
 		Controller m = Module.home.getModel(method.name, "/notfound", null);
 
 		if (m != null) {
-			if (log.isDebugEnabled())
+			if (log.isDebugEnabled()) {
 				log.debug("m.class=" + m.getClass() + ", this.class=" + this.getClass());
+			}
 		}
 
 		if (m != null && !m.getClass().equals(this.getClass())) {
@@ -2194,14 +1689,14 @@ public class Controller {
 		}
 
 		if (isAjax()) {
+			this.status(HttpServletResponse.SC_NOT_FOUND);
 			JSON jo = new JSON();
 			jo.put(X.STATE, HttpServletResponse.SC_NOT_FOUND);
 			jo.put(X.MESSAGE, "not found, " + message);
 			this.send(jo);
 		} else {
-			this.set("me", this.user());
-			this.print("not found, " + message);
 			this.status(HttpServletResponse.SC_NOT_FOUND);
+			this.print("not found, " + message);
 		}
 	}
 
@@ -2248,9 +1743,11 @@ public class Controller {
 	 * 
 	 * @param statuscode the status code to response
 	 */
-	public void status(int statuscode) {
+	public final void status(int statuscode) {
 		status = statuscode;
 		resp.setStatus(statuscode);
+
+		log.warn(this.getClass().getName() + "[" + this.uri() + "] - [" + this.ipPath() + "] => " + status);
 
 		// GLog.applog.info("test", "test", "status=" + statuscode, null, null);
 	}
@@ -2271,7 +1768,7 @@ public class Controller {
 		send(j1.append(X.STATE, code));
 	}
 
-	public void error(int code) {
+	public final void error(int code) {
 		try {
 			status = code;
 
@@ -2286,7 +1783,7 @@ public class Controller {
 	 * show deny page to end-user <br>
 	 * if the request is AJAX, then response json back to front
 	 */
-	public void deny() {
+	protected final void deny() {
 		deny(null, lang.get("access.deny"));
 	}
 
@@ -2296,7 +1793,7 @@ public class Controller {
 	 * @param url   the url will be responsed
 	 * @param error the error that will be displaied
 	 */
-	public void deny(String url, String error) {
+	protected void deny(String url, String error) {
 		if (log.isDebugEnabled())
 			log.debug(this.getClass().getName() + "[" + this.uri() + "]", new Exception("deny " + error));
 
@@ -2322,21 +1819,15 @@ public class Controller {
 	}
 
 	/**
-	 * @deprecated
-	 * @return
-	 */
-	public String getMethod() {
-		return method();
-	}
-
-	/**
 	 * get the request method, GET/POST
 	 * 
 	 * @return int
 	 */
-	public String method() {
+	public final String method() {
 		return method.name;
 	}
+
+	private static String ENCODING = "UTF-8";
 
 	/**
 	 * MIME TYPE of JSON
@@ -2353,13 +1844,13 @@ public class Controller {
 	 *
 	 * @param m the model of source
 	 */
-	public void copy(Controller m) {
+	public final void copy(Controller m) {
 
 		this.init(m.uri, m.req, m.resp, m.method.name);
 		this.login = m.login;
 
 		if (this._multipart) {
-			this.uploads = m._get_files();
+			this.req = m.req.copy(m.req);
 		}
 
 	}
@@ -2370,23 +1861,37 @@ public class Controller {
 	Map<String, Map<String, PathMapping>> pathmapping;
 
 	/**
-	 * println the object to end-user
-	 * 
-	 * @param o the object of printing
-	 */
-//	final public void println(Object o) {
-//		print(o + "<br>");
-//	}
-
-	/**
 	 * Print the object to end-user
 	 * 
 	 * @param o the object of printing
 	 */
-	public void print(Object o) {
+	public final void print(Object o) {
+		printText(o);
+
+	}
+
+	public final void printText(Object o) {
 		try {
+			if (X.isEmpty(this._contentType)) {
+				this.setContentType("text/plain;charset=UTF-8");
+			}
 			PrintWriter writer = resp.getWriter();
-			writer.write("<pre>" + X.toString(o) + "</pre>");
+			writer.write(X.toString(o));
+			writer.flush();
+		} catch (Exception e) {
+			if (log.isErrorEnabled())
+				log.error(o, e);
+		}
+	}
+
+	public final void printHtml(Object o) {
+		try {
+			if (X.isEmpty(this._contentType)) {
+				this.setContentType("text/html;charset=UTF-8");
+			}
+
+			PrintWriter writer = resp.getWriter();
+			writer.write(X.toString(o));
 			writer.flush();
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
@@ -2423,60 +1928,13 @@ public class Controller {
 
 	}
 
-//	transient String tostring;
-//
-//	/*
-//	 * (non-Javadoc)
-//	 * 
-//	 * @see java.lang.Object.toString()
-//	 */
-//	@Override
-//	public String toString() {
-//		if (tostring == null) {
-//			tostring = new StringBuilder(this.getClass().getName()).append("[").append(this.uri).append(", path=")
-//					.append(this.path).append("]").toString();
-//		}
-//		return tostring;
-//	}
-
-	/**
-	 * get the name pair from the request query
-	 * 
-	 * @deprecated
-	 * @return NameValue[]
-	 */
-	public NameValue[] getQueries() {
-		Enumeration<String> e = req.getParameterNames();
-		if (e != null) {
-			List<NameValue> list = new ArrayList<NameValue>();
-			while (e.hasMoreElements()) {
-				String n = e.nextElement();
-				list.add(NameValue.create(n, Helper.toString(req.getParameterValues(n))));
-			}
-
-			return list.toArray(new NameValue[list.size()]);
-		}
-		return null;
-	}
-
 	/**
 	 * get the name pair from the request header
 	 * 
 	 * @return NameValue[]
 	 */
-	public NameValue[] heads() {
-		Enumeration<String> e = req.getHeaderNames();
-		if (e != null) {
-			List<NameValue> list = new ArrayList<NameValue>();
-			while (e.hasMoreElements()) {
-				String n = e.nextElement();
-				list.add(NameValue.create(n, req.getHeader(n)));
-			}
-
-			return list.toArray(new NameValue[list.size()]);
-		}
-
-		return null;
+	public final NameValue[] heads() {
+		return req.heads();
 	}
 
 	/**
@@ -2527,6 +1985,23 @@ public class Controller {
 		public static final HttpMethod GET = HttpMethod.create("GET");
 		public static final HttpMethod POST = HttpMethod.create("POST");
 
+		// 集合和资源管理
+		public static final HttpMethod PUT = HttpMethod.create("PUT");
+		public static final HttpMethod DELETE = HttpMethod.create("DELETE");
+		public static final HttpMethod MKCOL = HttpMethod.create("MKCOL");
+
+		// 属性（元数据）处理
+		public static final HttpMethod PROPFIND = HttpMethod.create("PROPFIND");
+		public static final HttpMethod PROPPATCH = HttpMethod.create("PROPPATCH");
+
+		// 锁定
+		public static final HttpMethod LOCK = HttpMethod.create("LOCK");
+		public static final HttpMethod UNLOCK = HttpMethod.create("UNLOCK");
+
+		// 名称空间操作
+		public static final HttpMethod COPY = HttpMethod.create("COPY");
+		public static final HttpMethod MOVE = HttpMethod.create("MOVE");
+
 		public String name;
 
 		public static HttpMethod create(String s) {
@@ -2564,7 +2039,7 @@ public class Controller {
 
 	}
 
-	public void send(String name, InputStream in, long total) {
+	public final void send(String name, InputStream in) {
 
 		try {
 
@@ -2572,48 +2047,49 @@ public class Controller {
 			name = Url.encode(name);
 			this.head("Content-Disposition", "attachment; filename*=UTF-8''" + name);
 
-			String range = this.head("range");
+//			String range = this.head("range");
+//
+//			long start = 0;
+//			long end = total;
+//			if (!X.isEmpty(range)) {
+//				String[] ss = range.split("(=|-)");
+//				if (ss.length > 1) {
+//					start = X.toLong(ss[1]);
+//				}
+//
+//				if (ss.length > 2) {
+//					end = Math.min(total, X.toLong(ss[2]));
+//				}
+//			}
+//
+//			if (end <= start) {
+//				end = start + 1024 * 1024;
+//			}
+//
+//			if (end > total) {
+//				end = total;
+//			}
+//
+//			long length = end - start;
+//
+//			if (end < total) {
+//				this.status(206);
+//			}
+//
+//			if (start == 0) {
+//				this.head("Accept-Ranges", "bytes");
+//			}
+//			this.head("Content-Length", Long.toString(length));
+//			this.head("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
+//
+//			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
+//			if (length > 0) {
+			OutputStream out = this.getOutputStream();
 
-			long start = 0;
-			long end = total;
-			if (!X.isEmpty(range)) {
-				String[] ss = range.split("(=|-)");
-				if (ss.length > 1) {
-					start = X.toLong(ss[1]);
-				}
-
-				if (ss.length > 2) {
-					end = Math.min(total, X.toLong(ss[2]));
-				}
-			}
-
-			if (end <= start) {
-				end = start + 1024 * 1024;
-			}
-
-			if (end > total) {
-				end = total;
-			}
-
-			long length = end - start;
-
-			if (end < total) {
-				this.status(206);
-			}
-
-			if (start == 0) {
-				this.head("Accept-Ranges", "bytes");
-			}
-			this.head("Content-Length", Long.toString(length));
-			this.head("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
-
-			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
-			if (length > 0) {
-				OutputStream out = this.getOutputStream();
-
-				IOUtil.copy(in, out, start, end, false);
-				out.flush();
-			}
+//				IOUtil.copy(in, out, start, end, false);
+			IOUtil.copy(in, out, false);
+			out.flush();
+//			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
@@ -2630,7 +2106,7 @@ public class Controller {
 	 */
 	public static void init(Configuration conf, String path) {
 
-		log.info("controller init ... ");
+		log.warn("Controller init ... ");
 
 //		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
 //				+ System.getProperty("os.arch");
@@ -2640,14 +2116,13 @@ public class Controller {
 		/**
 		 * initialize the module
 		 */
-//		System.out.println("init modules");
 		Module.init(conf);
 
-//		System.out.println("init welcome page");
 		// get welcome list
 		_init_welcome();
 
-		log.info("controller has been initialized.");
+		log.warn("Controller has been initialized.");
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -2689,28 +2164,23 @@ public class Controller {
 	 * @param req    the req
 	 * @param resp   the resp
 	 * @param method the method
-	 * @throws IOException
+	 * @throws Exception
 	 */
-	public static void process(String uri, HttpServletRequest req, HttpServletResponse resp, String method, TimeStamp t)
-			throws IOException {
+	public static Controller process(String uri, RequestHelper req, HttpServletResponse resp, String method,
+			TimeStamp t) throws Exception {
 
 		// log.debug("uri=" + uri);
 
-//		String node = null;
-
-//		String node = req.getParameter("__node");
-//		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
-//			Node n = Node.dao
-//					.load(W.create(X.ID, node).and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte));
-//			if (n != null) {
-//				n.forward(uri, req, resp, method);
-//				return;
-//			}
-//		}
-
-//		if (!uri.endsWith(".js") && !uri.endsWith(".css")) {
-//			uri = Url.decode(uri);
-//		}
+		String node = req.getString("__node");
+		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
+			Node n = Node.dao.load(node);
+			if (n != null) {
+				n.forward(uri, req, resp, method);
+				return null;
+			} else {
+				throw new IOException("bad node");
+			}
+		}
 
 		/**
 		 * test and load from cache first
@@ -2719,21 +2189,23 @@ public class Controller {
 		if (mo != null) {
 //			mo.put("__node", node);
 
-			if (log.isDebugEnabled())
+			if (log.isDebugEnabled()) {
 				log.debug("cost=" + t.past() + ", find model, uri=" + uri + ", model=" + mo);
+			}
 
 			mo.dispatch(uri, req, resp, method);
 
-			return;
+			return mo;
 		}
 
 //		if (log.isDebugEnabled())
 //			log.debug("cost=" + t.past() + ", no model for uri=" + uri);
 
-		Controller m1 = getModel(method, uri, uri);
-		if (m1 != null) {
-			m1.dispatch(uri, req, resp, method);
-			return;
+		mo = getModel(method, uri, uri);
+		if (mo != null) {
+
+			mo.dispatch(uri, req, resp, method);
+			return mo;
 		}
 
 		// parallel
@@ -2750,31 +2222,39 @@ public class Controller {
 				if (log.isDebugEnabled())
 					log.debug("cost " + t.past() + ", find file, uri=" + uri);
 
-				Controller m = new DefaultController();
-				m.req = req;
-				m.resp = resp;
+				mo = new DefaultController();
+				mo.req = req;
+				mo.resp = resp;
+
+				if (Global.getInt("web.debug", 0) == 1) {
+					mo.head("_m", Local.label() + "/" + (mo.module == null ? X.EMPTY : mo.module.name));
+				}
 
 				String source = Global.getString("html.source", ".*(.js$|.css$|.jpg$|.png$|.jpeg$|/javadoc/.*)");
 
 				if (filename.matches(source)) {
-					View.source(f, m, uri);
+					View.source(f, mo, uri);
 				} else {
 //				m.set(m);
 
-					m.put("me", m.user());
-					m.put("lang", m.lang);
-					m.put(X.URI, uri);
-					m.put("module", Module.home);
-					m.put("req", m);
-					m.put("global", Global.getInstance());
-					m.put("conf", Config.getConf());
-					m.put("local", Local.getInstance());
-					m.put("requestid", UID.random(20));
+					mo.head("X-Frame-Options", Global.getString("iframe.options", "SAMEORIGIN"));
+					mo.head("X-XSS-Protection", "1");
+					mo.head("X-Content-Type-Options", "nosniff");
 
-					View.merge(f, m, uri);
+					mo.put("me", mo.user());
+					mo.put("lang", mo.lang);
+					mo.put(X.URI, uri);
+					mo.put("module", Module.home);
+					mo.put("req", mo);
+					mo.put("global", Global.getInstance());
+					mo.put("conf", Config.getConf());
+					mo.put("local", Local.getInstance());
+					mo.put("requestid", UID.random(20));
+
+					View.merge(f, mo, uri);
 				}
 
-				return;
+				return mo;
 			}
 
 			// file in file.repo
@@ -2837,8 +2317,9 @@ public class Controller {
 //			}
 
 			if (m[0] != null) {
+
 				m[0].dispatch(uri, req, resp, method);
-				return;
+				return m[0];
 			}
 		}
 
@@ -2884,7 +2365,7 @@ public class Controller {
 //					}
 
 				// Counter.max("web.request.max", t.past(), uri);
-				return;
+				return mo;
 			}
 			i = uri.lastIndexOf("/", i - 1);
 		}
@@ -2892,8 +2373,9 @@ public class Controller {
 		/**
 		 * not found, then using dummymodel instead, and cache it
 		 */
-		if (log.isDebugEnabled())
+		if (log.isDebugEnabled()) {
 			log.debug("cost " + t.past() + ", no model, using default, uri=" + uri);
+		}
 
 		mo = new DefaultController();
 		mo.module = Module.load(0);
@@ -2905,10 +2387,12 @@ public class Controller {
 		 */
 		// Module.home.modelMap.put(uri, (Class<Model>)
 		// mo.getClass());
+
 		mo.dispatch(uri, req, resp, method);
 
-		if (log.isInfoEnabled())
+		if (log.isInfoEnabled()) {
 			log.info(method + " " + uri + " - " + mo.status() + " - " + t.past() + " -" + mo.ip() + " " + mo);
+		}
 //			if (AccessLog.isOn()) {
 //
 //				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
@@ -2926,6 +2410,7 @@ public class Controller {
 
 		// Counter.max("web.request.max", t.past(), uri);
 
+		return mo;
 	}
 
 }

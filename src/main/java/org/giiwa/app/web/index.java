@@ -13,6 +13,11 @@ import org.giiwa.web.Path;
 
 public class index extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Path()
 	public void onGet() {
 
@@ -24,7 +29,11 @@ public class index extends Controller {
 				if (l1 != null && !l1.isEmpty()) {
 					for (Role r : l1) {
 						if (!X.isEmpty(r.url)) {
-							this.head("due", "role//" + r.id);
+
+							if (Global.getInt("web.debug", 0) == 1) {
+								this.head("due", "role//" + r.id);
+							}
+
 							this.redirect(r.url);
 							return;
 						}
@@ -41,7 +50,9 @@ public class index extends Controller {
 		if (X.isEmpty(h1)) {
 			h1 = Global.getString("home.uri", X.EMPTY);
 			if (!X.isEmpty(h1)) {
-				this.head("due", "global");
+				if (Global.getInt("web.debug", 0) == 1) {
+					this.head("due", "global");
+				}
 			}
 		} else {
 			this.head("due", "node");

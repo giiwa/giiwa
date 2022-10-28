@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -13,6 +14,7 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Host;
 
 @Table(name = "gi_m_net", memo = "GI-网络监测")
 public class _Net extends Bean {
@@ -73,46 +75,46 @@ public class _Net extends Bean {
 		return rxbytes;
 	}
 
-	public synchronized static void update(String node, List<JSON> l1) {
+	public synchronized static void update(String node, List<Host._NS> l1) {
 
-		for (JSON jo : l1) {
+		for (Host._NS jo : l1) {
 			// insert or update
-			String name = jo.getString("name");
+			String name = jo.name;
 			if (X.isEmpty(name)) {
 				log.error(jo, new Exception("name missed"));
 				continue;
 			}
-			String inet = jo.getString("inet");
+			String inet = jo.inet;
 			if (X.isEmpty(inet) || inet.startsWith("127")) {
 				continue;
 			}
 
 			try {
 
-				String type = jo.getString("_type");
+				String type = "snapshot";
 
-				V v = V.fromJSON(jo);
+				V v = jo.toV();
+				v.remove("_id");
+
 				if (X.isSame("snapshot", type)) {
 					v = V.create("name", name).append("_type", "snapshot").append("snapshot", jo.toString());
-					v.append("inet", inet).append("inet6", jo.getString("inet6"));
+					v.append("inet", inet).append("inet6", jo.inet6);
 
-					Record r = Record.dao.load(
-							W.create("node", node).and("name", name).and("_type", "snapshot").sort("created", -1));
+					Record r = Record.dao.load(W.create().and("node", node).and("name", name).and("_type", "snapshot")
+							.sort("created", -1));
 					if (r != null) {
 						JSON p = JSON.fromObject(r.get("snapshot"));
 						if (p != null) {
 							long time = System.currentTimeMillis() - r.getLong("created");
 
-							v.append("rxbytes", X.toLong((jo.getLong("rxbytes") - p.getLong("rxbytes")) * 1000 / time));
-							v.append("rxpackets",
-									X.toLong((jo.getLong("rxpackets") - p.getLong("rxpackets")) * 1000 / time));
-							v.append("rxerr", X.toLong((jo.getLong("rxerr") - p.getLong("rxerr")) * 1000 / time));
-							v.append("rxdrop", X.toLong((jo.getLong("rxdrop") - p.getLong("rxdrop")) * 1000 / time));
-							v.append("txbytes", X.toLong((jo.getLong("txbytes") - p.getLong("txbytes")) * 1000 / time));
-							v.append("txpackets",
-									X.toLong((jo.getLong("txpackets") - p.getLong("txpackets")) * 1000 / time));
-							v.append("txerr", X.toLong((jo.getLong("txerr") - p.getLong("txerr")) * 1000 / time));
-							v.append("txdrop", X.toLong((jo.getLong("txdrop") - p.getLong("txdrop")) * 1000 / time));
+							v.append("rxbytes", X.toLong((jo.rxbytes - p.getLong("rxbytes")) * 1000 / time));
+							v.append("rxpackets", X.toLong((jo.rxpackets - p.getLong("rxpackets")) * 1000 / time));
+							v.append("rxerr", X.toLong((jo.rxerr - p.getLong("rxerr")) * 1000 / time));
+							v.append("rxdrop", X.toLong((jo.rxdrop - p.getLong("rxdrop")) * 1000 / time));
+							v.append("txbytes", X.toLong((jo.txbytes - p.getLong("txbytes")) * 1000 / time));
+							v.append("txpackets", X.toLong((jo.txpackets - p.getLong("txpackets")) * 1000 / time));
+							v.append("txerr", X.toLong((jo.txerr - p.getLong("txerr")) * 1000 / time));
+							v.append("txdrop", X.toLong((jo.txdrop - p.getLong("txdrop")) * 1000 / time));
 						}
 					}
 
@@ -121,7 +123,7 @@ public class _Net extends Bean {
 
 				String id = UID.id(node, name);
 
-				if (dao.exists(id)) {
+				if (dao.exists2(id)) {
 					dao.update(id, v.copy().force("node", node));
 				} else {
 					// insert
@@ -150,6 +152,24 @@ public class _Net extends Bean {
 			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AWEEK, W.OP.lt));
 		}
 
+	}
+
+	public static void check() {
+		try {
+			// net
+			List<Host._NS> l1 = Host.getIfstats();
+			if (l1 != null && !l1.isEmpty()) {
+//				List<JSON> l2 = new ArrayList<JSON>();
+//				for (JSON j1 : n1) {
+//					l2.add(JSON.create().append("name", j1.get("name")).append("inet", j1.get("address")).copy(j1,
+//							"rxbytes", "rxdrop", "rxerr", "rxpackets", "txbytes", "txdrop", "txerr", "txpackets")
+//							.append("_type", "snapshot"));
+//				}
+				_Net.update(Local.id(), l1);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 
 }

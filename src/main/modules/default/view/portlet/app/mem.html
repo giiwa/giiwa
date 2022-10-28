@@ -1,0 +1,71 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/app/mem/more?id=$!id')"><i class='icon-menu'></i></a>
+
+<div id='mem_$!requestid'></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('mem_$!requestid', {
+	    chart: {
+	        type: 'area'
+	    },
+	    title: {
+	        text: "$!name - $lang.get('portlet.mem.title')"
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	max: 100,
+	    	min: 0,
+	    		title: {
+	            text: ''
+	        }
+	    },
+	      legend: {
+	          enabled: false
+	        },
+	    tooltip: {
+	    	   formatter:function(){
+	    		      return this.series.name+':<b>' 
+	    		      + this.y
+	    		      + '%</b><br>' 
+	    		      + Highcharts.dateFormat('%H:%M', this.x);
+	    		}
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+	    				{name: "$lang.get('mem.usage')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.mem},#end]}
+	    			], 
+	});
+
+	function reload() {
+		if($('#mem_$!requestid').length > 0) {
+			$.post('/portlet/app/mem/data?id=$!id', {}, function(d){
+				if(d.state == 200) {
+					if(d.temp) {
+						t.setTitle({text:"$!name - $lang.get('portlet.mem.title')"});
+					}
+					var series=t.series; 
+			        while(series.length > 0){
+			          	series[0].remove(false); 
+			       	}
+			       	t.addSeries(d.data[0]);
+			       	t.redraw();			
+				}
+		    })
+			giiwa.call(reload, 60000);
+		}
+	}
+	
+	giiwa.call(reload, 60000);
+	
+})
+</script>
+

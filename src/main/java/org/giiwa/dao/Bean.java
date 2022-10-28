@@ -14,13 +14,19 @@
 */
 package org.giiwa.dao;
 
+import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,6 +57,10 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	/** The log utility */
 	private static Log log = LogFactory.getLog(Bean.class);
 
+	@Column(no = true)
+	private Object _id;
+
+	@Column(no = true)
 	private boolean _readonly = false;
 
 	/**
@@ -63,9 +73,15 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	/**
 	 * the row number
 	 * 
-	 * @deprecated
 	 */
+	@Column(no = true)
 	public long _rowid;
+
+	@Column(memo = "updated timestamp")
+	private long updated;
+
+	@Column(memo = "created timestamp")
+	private long created;
 
 	/**
 	 * get the created timestamp of the data
@@ -73,7 +89,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return long of the created
 	 */
 	public long getCreated() {
-		return X.toLong((Object) get(X.CREATED));
+		return created;
 	}
 
 	/**
@@ -82,11 +98,13 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return long the of the updated
 	 */
 	public long getUpdated() {
-		return X.toLong((Object) get(X.UPDATED));
+		return updated;
 	}
 
 	/**
-	 * @deprecated <br>
+	 * 
+	 * @deprecated
+	 * 
 	 *             replace by from(JSON jo)
 	 * 
 	 * @param jo
@@ -117,7 +135,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	/**
 	 * get the key-value in the bean to json.<br>
 	 * 
-	 * @deprecated <br>
+	 * @deprecated
+	 * 
 	 *             replace by json()
 	 * @param jo the JSON object
 	 */
@@ -148,34 +167,58 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final Object set(String name, Object value) {
 
-		if (_readonly)
+		if (_readonly) {
 			return null;
-
-		if (value == V.ignore)
-			return null;
-
-		if (data == null) {
-			data = new HashMap<String, Object>();
 		}
 
-		map_obj = null;
+		if (value == V.ignore || value == null) {
+			return null;
+		}
 
 		Object old = null;
 
 		// change all to lower case avoid some database auto change to upper case
 		name = name.toLowerCase();
+
+		if (value instanceof java.sql.Clob) {
+			try {
+				Clob c = (Clob) value;
+				Reader re = c.getCharacterStream();
+				char[] cc = new char[(int) c.length()];
+				re.read(cc);
+				value = new String(cc);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		} else if (value instanceof java.sql.NClob) {
+			try {
+				NClob c = (NClob) value;
+				Reader re = c.getCharacterStream();
+				char[] cc = new char[(int) c.length()];
+				re.read(cc);
+				value = new String(cc);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+		}
+
 		// looking for all the fields
-		Field f1 = getField(name);
+		_F f1 = _getField(name);
 
 		if (f1 != null) {
+
 			try {
+
+//				f1.setAccessible(true);
+
 				// log.debug("f1=" + f1 + ", value=" + value);
-				f1.setAccessible(true);
 				old = f1.get(this);
 
 				Class<?> t1 = f1.getType();
 				// log.debug("t1=" + t1 + ", f1.name=" + f1.getName());
-				if (t1 == long.class) {
+				if (t1.equals(value.getClass())) {
+					f1.set(this, value);
+				} else if (t1 == long.class) {
 					f1.set(this, X.toLong(value));
 				} else if (t1 == int.class) {
 					f1.set(this, X.toInt(value));
@@ -183,6 +226,11 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 					f1.set(this, X.toDouble(value, 0));
 				} else if (t1 == float.class) {
 					f1.set(this, X.toFloat(value, 0));
+				} else if (t1 == String.class) {
+					if (value != null) {
+						value = value.toString();
+					}
+					f1.set(this, value);
 				} else if (List.class.isAssignableFrom(t1) || t1.isArray()) {
 					// change the value to list
 					if (value != null) {
@@ -191,6 +239,13 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 							l1.addAll((List<Object>) value);
 						} else if (value.getClass().isArray()) {
 							l1.add(Arrays.asList(value));
+						} else if (value instanceof String) {
+							String s = (String) value;
+							if (s.startsWith("[") && s.endsWith("]")) {
+								l1.addAll(X.asList(X.split(s, "[\\[\\],]"), s1 -> s1));
+							} else {
+								l1.add(value);
+							}
 						} else {
 							l1.add(value);
 						}
@@ -212,6 +267,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 						f1.set(this, ((Date) value).getTime());
 					} else if (value instanceof Timestamp) {
 						f1.set(this, ((Timestamp) value).getTime());
+					} else if (value instanceof LocalDateTime) {
+						Instant d = ((LocalDateTime) value).atZone(ZoneOffset.ofHours(8)).toInstant();
+						f1.set(this, d.toEpochMilli());
 					} else {
 						f1.set(this, value);
 					}
@@ -220,28 +278,41 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 				log.error(name + "=" + value, e);
 			}
 		} else {
+
+			if (data == null) {
+				data = new HashMap<String, Object>();
+			}
+
 			old = data.get(name);
-			if (value == null) {
-				data.remove(name);
-			} else {
 
-				if (value instanceof Date) {
-					data.put(name, ((Date) value).getTime());
-				} else if (value instanceof Timestamp) {
-					data.put(name, ((Timestamp) value).getTime());
-				} else if (value instanceof Number) {
-					Number n = (Number) value;
-					if (n.toString().indexOf(".") > -1) {
-						data.put(name, n.doubleValue());
-					} else {
-						data.put(name, n.longValue());
-					}
+			if (value instanceof Date) {
+				data.put(name, ((Date) value).getTime());
+			} else if (value instanceof Timestamp) {
+				data.put(name, ((Timestamp) value).getTime());
+			} else if (value instanceof LocalDateTime) {
+				java.util.Date d = Date.from(((LocalDateTime) value).atZone(ZoneOffset.ofHours(8)).toInstant());
+				data.put(name, d.getTime());
+			} else if (value instanceof Number) {
+				Number n = (Number) value;
+				if (n.toString().indexOf(".") > -1) {
+					data.put(name, n.doubleValue());
 				} else {
-					data.put(name, value);
+					data.put(name, n.longValue());
 				}
-
+			} else {
+				data.put(name, value);
 			}
 		}
+
+//		if (X.isIn(name, "_type", "type") && this.getClass().getSimpleName().equals("Page")) {
+//			try {
+//				log.warn(name + "=" + value + ", field=" + f1 + ", value="
+//						+ ((f1 == null) ? data.get(name) : f1.get(this)), new Exception());
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
+
 		return old;
 	}
 
@@ -252,52 +323,100 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return the Field
 	 */
 	public Field getField(String columnname) {
+		_F f = _getField(columnname);
+		return f == null ? null : f.f;
+	}
 
-		Map<String, Field> m = getFields();
+	private _F _getField(String columnname) {
+
+		Map<String, _F> m = _getFields();
 		return m == null ? null : m.get(columnname);
 
 	}
 
-	@SuppressWarnings("unchecked")
 	public Map<String, Field> getFields() {
 
-		Class<? extends Bean> c1 = this.getClass();
-		Map<String, Field> m = _fields.get(c1);
+		Map<String, _F> m = _getFields();
+		Map<String, Field> m1 = new HashMap<String, Field>();
+		if (m != null) {
+			for (String name : m.keySet()) {
+				_F f = m.get(name);
+				m1.put(name, f.f);
+			}
+		}
+		return m1;
+	}
+
+	private Map<String, _F> _getFields() {
+
+		Class<?> c1 = this.getClass();
+		Map<String, _F> m = _fields.get(c1);
 		if (m == null) {
-			m = new HashMap<String, java.lang.reflect.Field>();
+			m = new HashMap<String, _F>();
 
 			int i = 0;
 			for (; c1 != null;) {
 				i++;
-				if (log.isDebugEnabled())
+				if (log.isDebugEnabled()) {
 					log.debug("c1=" + c1);
+				}
 
 				Field[] ff = c1.getDeclaredFields();
 				for (Field f : ff) {
+
 					Column f1 = f.getAnnotation(Column.class);
+					if (f1 != null && f1.no()) {
+						continue;
+					}
+
+//					if (log.isDebugEnabled())
+//						log.debug("f1=" + f1);
+
 					if (f1 != null && !X.isEmpty(f1.name())) {
+						f.setAccessible(true);
 						String name = f1.name().toLowerCase();
-						if (!m.containsKey(name)) {
-							m.put(name, f);
+
+						_F f2 = m.get(name);
+						if (f2 == null) {
+							f2 = _F.create(f);
+							m.put(name, f2);
+						} else {
+							f2.link(f);
+						}
+
+						String name1 = f.getName().toLowerCase();
+						if (!X.isSame(name, name1)) {
+
+							f2 = m.get(name1);
+							if (f2 == null) {
+								f2 = _F.create(f);
+								m.put(name1, f2);
+							} else {
+								f2.link(f);
+							}
 						}
 					} else if ((f.getModifiers() & (Modifier.FINAL | Modifier.STATIC | Modifier.TRANSIENT)) == 0) {
-						m.put(f.getName().toLowerCase(), f);
+						f.setAccessible(true);
+						String name = f.getName().toLowerCase();
+
+						_F f2 = m.get(name);
+						if (f2 == null) {
+							f2 = _F.create(f);
+							m.put(name, f2);
+						} else {
+							f2.link(f);
+						}
+
 					}
 				}
+//				if (log.isDebugEnabled())
+//					log.debug("c1=" + c1);
 
 				if (i > 5) {
 					log.error("c1=" + c1);
 				}
 
-				if (Bean.class.isAssignableFrom(c1.getSuperclass())) {
-					if (c1.getSuperclass().isAssignableFrom(Bean.class)) {
-						c1 = null;
-					} else {
-						c1 = (Class<? extends Bean>) c1.getSuperclass();
-					}
-				} else {
-					c1 = null;
-				}
+				c1 = c1.getSuperclass();
 
 			}
 
@@ -306,7 +425,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return m;
 	}
 
-	private final static Map<Class<? extends Bean>, Map<String, Field>> _fields = new HashMap<Class<? extends Bean>, Map<String, Field>>();
+	private final static Map<Class<? extends Bean>, Map<String, _F>> _fields = new HashMap<Class<? extends Bean>, Map<String, _F>>();
 
 	/**
 	 * get the value by name from bean <br>
@@ -322,10 +441,10 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		}
 
 		String s = name.toString().toLowerCase();
-		Field f = getField(s);
+		_F f = _getField(s);
 		if (f != null) {
 			try {
-				f.setAccessible(true);
+//				f.setAccessible(true);
 				return f.get(this);
 			} catch (Exception e) {
 				log.error(name, e);
@@ -336,11 +455,15 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			return null;
 		}
 
-		if (data.containsKey(s)) {
-			return data.get(s);
+		if (X.isSame(name, "type")) {
+			log.warn("type=" + data.get(name) + ", data=" + data);
 		}
 
-		return null;
+//		if (data.containsKey(s)) {
+		return data.get(s);
+//		}
+//
+//		return null;
 	}
 
 	/**
@@ -414,8 +537,6 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		if (_readonly)
 			return;
 
-		map_obj = null;
-
 		/**
 		 * clear data in data
 		 */
@@ -426,11 +547,11 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		/**
 		 * clear data Annotation by @Column
 		 */
-		Map<String, Field> m1 = this.getFields();
+		Map<String, _F> m1 = this._getFields();
 		if (m1 != null && m1.size() > 0) {
-			for (Field f : m1.values()) {
+			for (_F f : m1.values()) {
 				try {
-					f.setAccessible(true);
+//					f.setAccessible(true);
 					f.set(this, null);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
@@ -516,41 +637,37 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		return X.toDouble(get(name), 0);
 	}
 
-	private transient Map<String, Object> map_obj;
-
 	/**
 	 * get all data, include the field annotation by @Column
 	 * 
 	 * @return Map of data
 	 */
 	public Map<String, Object> getAll() {
-		if (map_obj == null) {
 
-			map_obj = new HashMap<String, Object>();
-			if (data != null && data.size() > 0) {
-				map_obj.putAll(data);
+		Map<String, Object> map_obj = new HashMap<String, Object>();
+		if (data != null && data.size() > 0) {
+			map_obj.putAll(data);
 //				for (String s1 : map_obj.keySet()) {
 //					log.debug(s1 + "=" + map_obj.get(s1) + ", " + map_obj.get(s1).getClass());
 //				}
-			}
+		}
 
-			Map<String, Field> m2 = getFields();
-			if (m2 != null && m2.size() > 0) {
-				for (String name : m2.keySet()) {
-					if (!X.isSame("data", name)) {
-						Field f = m2.get(name);
-						try {
-							f.setAccessible(true);
-							Object o = f.get(this);
-							if (o != null)
-								map_obj.put(name, o);
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-						}
+		Map<String, _F> m2 = _getFields();
+		if (m2 != null && m2.size() > 0) {
+			for (String name : m2.keySet()) {
+				_F f = m2.get(name);
+				try {
+//					f.setAccessible(true);
+					Object o = f.get(this);
+					if (o != null) {
+						map_obj.put(f.getName().toLowerCase(), o);
 					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
 			}
 		}
+
 		return map_obj;
 	}
 
@@ -574,8 +691,6 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		if (_readonly)
 			return;
 
-		map_obj = null;
-
 		if (data != null && names != null) {
 			for (String name : names) {
 				if (name.indexOf("*") > -1) {
@@ -591,6 +706,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		}
 	}
 
+	@Column(no = true)
 	private Map<String, Object> data = null;
 
 //	private transient JSON json_obj;
@@ -616,8 +732,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	}
 
 	/**
-	 * @deprecated <br>
-	 *             replace by json()
+	 * @Deprecated replace by json()
 	 * 
 	 * @return
 	 */
@@ -633,17 +748,10 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @param d      the Document
 	 * @param fields the String[]
 	 */
-	public void load(Document d, String[] fields) {
-		if (fields == null || fields.length == 0) {
-			for (String name : d.keySet()) {
-				Object o = d.get(name);
-				this.set(name, o);
-			}
-		} else {
-			for (String name : fields) {
-				Object o = d.get(name);
-				this.set(name, o);
-			}
+	public void load(Document d) {
+		for (String name : d.keySet()) {
+			Object o = d.get(name);
+			this.set(name, o);
 		}
 	}
 
@@ -656,47 +764,43 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @param fields the String[] of fields
 	 * @throws SQLException the SQL exception
 	 */
-	public void load(ResultSet r, String[] fields) throws SQLException {
-		if (fields == null || fields.length == 0) {
-			ResultSetMetaData m = r.getMetaData();
-			int cols = m.getColumnCount();
-			for (int i = 1; i <= cols; i++) {
-				try {
-					Object o = r.getObject(i);
-					if (o instanceof Date) {
-						Date d = ((Date) o);
-						o = d.getTime();
-					} else if (o instanceof oracle.sql.TIMESTAMP) {
-						o = ((oracle.sql.TIMESTAMP) o).toString();
-					}
+	public void load(ResultSet r) throws SQLException {
+		ResultSetMetaData m = r.getMetaData();
+		int cols = m.getColumnCount();
+		for (int i = 1; i <= cols; i++) {
+			try {
+				Object o = r.getObject(i);
+				if (o instanceof Date) {
+					Date d = ((Date) o);
+					o = d.getTime();
+				} else if (o instanceof oracle.sql.TIMESTAMP) {
+					o = ((oracle.sql.TIMESTAMP) o).toString();
+//					} else if (o instanceof Blob) {
+//						Blob b = (Blob) o;
+//						o = b.getBytes(0, (int) b.length());
+//					} else if (o instanceof Clob) {
+//						Clob b = (Clob) o;
+//						StringBuilder sb = new StringBuilder();
+//						Reader re = b.getCharacterStream();
+//						try {
+//							char[] buffer = new char[(int) b.length()];
+//							int length = 0;
+//							while ((length = re.read(buffer)) != -1) {
+//								sb.append(buffer, 0, length);
+//							}
+//						} finally {
+//							X.close(re);
+//						}
+//						o = sb.toString();
+				}
 
-					String name = m.getColumnName(i);
+				String name = m.getColumnName(i);
 
 //					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
 
-					this.set(name, o);
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-		} else {
-			for (String name : fields) {
-				try {
-					Object o = r.getObject(name);
-					if (o instanceof Date) {
-						o = ((Date) o).getTime();
-					} else if (o instanceof oracle.sql.TIMESTAMP) {
-						o = ((oracle.sql.TIMESTAMP) o).toString();
-					}
-
-					if (log.isDebugEnabled())
-						log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
-
-					this.set(name, o);
-
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
+				this.set(name, o);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -706,8 +810,9 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			Object v0 = get(name);
 			Object v1 = v.value(name);
 			if (!X.isSame(v0, v1)) {
-				log.debug("name=" + name + ", v0=" + v0 + "/" + (v0 == null ? "null" : v0.getClass()) + ", v1=" + v1
-						+ "/" + (v1 == null ? "null" : v1.getClass()));
+				if (log.isDebugEnabled())
+					log.debug("name=" + name + ", v0=" + v0 + "/" + (v0 == null ? "null" : v0.getClass()) + ", v1=" + v1
+							+ "/" + (v1 == null ? "null" : v1.getClass()));
 				return false;
 			}
 		}
@@ -770,8 +875,51 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		JSON j1 = this.json().copy();
 		j1.remove("_.*", "created", "updated");
 		String s1 = j1.toString();
-		log.debug("s1=" + s1);
+
+		if (log.isDebugEnabled())
+			log.debug("s1=" + s1);
+
 		return Digest.md5(s1);
+	}
+
+	private static class _F {
+
+		Field f;
+		_F link;
+
+		void link(Field f) {
+			if (link == null) {
+				link = new _F();
+				link.f = f;
+			}
+		}
+
+		String getName() {
+			return f.getName();
+		}
+
+		Class<?> getType() {
+			return f.getType();
+		}
+
+		static _F create(Field f) {
+			_F e = new _F();
+			e.f = f;
+			return e;
+		}
+
+		Object get(Object that) throws IllegalArgumentException, IllegalAccessException {
+//			f.setAccessible(true);
+			return f.get(that);
+		}
+
+		void set(Object that, Object val) throws IllegalArgumentException, IllegalAccessException {
+//			f.setAccessible(true);
+			f.set(that, val);
+			if (link != null) {
+				link.set(that, val);
+			}
+		}
 	}
 
 }

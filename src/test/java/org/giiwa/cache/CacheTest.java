@@ -8,7 +8,7 @@ public class CacheTest {
 	@Test
 	public void test() {
 		Global.setConfig("group", "demo");
-		Cache.init("memcached://127.0.0.1:11211");
+		Cache.init("memcached://127.0.0.1:11211", null, null);
 //		Cache.init("redis://127.0.0.1:6379");
 
 		String s = Cache.get("a");

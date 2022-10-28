@@ -2,7 +2,6 @@ package org.giiwa.dfile;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,15 +9,16 @@ import java.io.RandomAccessFile;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
-import org.giiwa.bean.Node;
+import org.giiwa.conf.Config;
+import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.task.Consumer;
 
 /**
  * 
@@ -37,66 +37,27 @@ public class LocalDFile extends DFile {
 
 	private static Log log = LogFactory.getLog(LocalDFile.class);
 
-	private long disk;
-
-	private String filename;
-
 	private String url;
 
 	private transient String path;
-	private transient Node node_obj;
+//	private transient Node node_obj;
 	private transient Disk disk_obj;
 	private transient FileInfo info;
 
-	public String getFilename() {
-		return filename;
-	}
-
-	public Node getNode_obj() {
-		if (node_obj == null) {
-			check();
-		}
-		return node_obj;
-	}
-
-	public Disk getDisk_obj() {
-		if (disk_obj == null) {
-			check();
-		}
-		return disk_obj;
-	}
-
-	public boolean check() {
-
-		if (disk_obj == null && disk > 0) {
-			disk_obj = Disk.dao.load(disk);
-
-			if (disk_obj != null) {
-				path = disk_obj.getPath();
-				node_obj = disk_obj.getNode_obj();
-
-				if (node_obj != null) {
-					url = node_obj.getUrl();
-					return true;
-				}
-			}
-
-		}
-
-		return disk > 0;
+	public Disk[] getDisk_obj() {
+		return new Disk[] { disk_obj };
 	}
 
 	public boolean exists() {
 
-		check();
+		TimeStamp t = TimeStamp.create();
+		try {
+			getInfo();
+			return info != null && info.exists;
+		} finally {
+			read.add(t.pastms());
+		}
 
-		getInfo();
-		return info != null && info.exists;
-
-	}
-
-	public String getAbsolutePath() {
-		return X.getCanonicalPath(path + "/" + filename);
 	}
 
 	public boolean delete() {
@@ -108,12 +69,23 @@ public class LocalDFile extends DFile {
 	}
 
 	public boolean delete(long age) {
-		check();
 
+		TimeStamp t = TimeStamp.create();
 		try {
 
-			File f = new File(path + File.separator + filename);
-			return IOUtil.delete(f, age) > 0;
+			File f = new File(path + "/" + filename);
+			return IOUtil.delete(f, age, s -> {
+
+				if (s.startsWith(path)) {
+					String s1 = s.substring(path.length());
+					if (!s1.startsWith("/")) {
+						s1 = "/" + s1;
+					}
+
+					onDelete(s1);
+				}
+
+			}) > 0;
 
 		} catch (Exception e) {
 			log.error(url, e);
@@ -121,71 +93,104 @@ public class LocalDFile extends DFile {
 //			Disk.dao.update(this.disk, V.create("bad", 1));
 
 		} finally {
-			// dao.delete(W.create("disk", disk).and("filename", filename));
+			write.add(t.pastms());
 		}
 
 		return false;
 	}
 
-	public InputStream getInputStream() {
+	public InputStream getInputStream() throws IOException {
 
-		try {
-			check();
-
-			return new FileInputStream(new File(path + File.separator + filename));
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-		return null;
+		return new FileInputStream(new File(path + "/" + filename));
 	}
 
-	public OutputStream getOutputStream() throws FileNotFoundException {
+	public OutputStream getOutputStream() throws IOException {
 		return this.getOutputStream(0);
 	}
 
-	public OutputStream getOutputStream(long offset) throws FileNotFoundException {
+	public OutputStream getOutputStream(long offset) throws IOException {
 
-		check();
+		File f = new File(path + "/" + filename);
 
-		return DFileOutputStream.create(this.getDisk_obj(), filename, offset, (o1, bb, len) -> {
+		try {
+			if (!f.exists()) {
+				X.IO.mkdirs(f.getParentFile());
+				f.createNewFile();
+				f.setReadable(false, false);
+				f.setWritable(false, false);
+				f.setExecutable(false, false);
+			} else if (offset == 0) {
+				f.delete();
+				f.createNewFile();
+				f.setReadable(false, false);
+				f.setWritable(false, false);
+				f.setExecutable(false, false);
+			}
+		} catch (IOException e) {
+			log.error(f.getAbsolutePath(), e);
+			throw e;
+		}
 
-			RandomAccessFile a = null;
+		RandomAccessFile a = new RandomAccessFile(f, "rws");
 
-			try {
-				if (bb != null) {
+		return DFileOutputStream.create(this.getDisk_obj(), a, filename, offset, (o1, bb, len) -> {
 
-					File f = new File(path + File.separator + filename);
-
-					if (!f.exists()) {
-						f.getParentFile().mkdirs();
-						f.createNewFile();
-					}
-					a = new RandomAccessFile(f, "rws");
-					a.seek(offset);
-					a.write(bb, 0, len);
-				}
-
-				return o1 + len;
-
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			} finally {
-				X.close(a);
+			if (log.isDebugEnabled()) {
+				log.debug("local flush, file=" + filename + ", offset=" + o1 + ", len=" + bb.length);
 			}
 
-			return o1;
+			if (bb != null) {
+
+				a.seek(o1);
+				a.write(bb, 0, len);
+				a.getFD().sync(); // not needs
+
+				f.setReadable(true, true);
+				f.setWritable(true, true);
+
+			}
+
+			return o1 + len;
+
 		});
+
+//		long[] size = new long[] { f.length() };
+//		if (offset != size[0]) {
+//			throw new IOException("bad offset[" + offset + "], size=" + size[0] + ", filename=" + filename);
+//		}
+//
+//		OutputStream a = new FileOutputStream(f, true);
+//		return DFileOutputStream.create(this.getDisk_obj(), a, filename, offset, (o1, bb, len) -> {
+//
+//			if (log.isDebugEnabled()) {
+//				log.debug("local flush, file=" + filename + ", offset=" + o1 + ", len=" + bb.length);
+//			}
+//
+//			if (bb != null && o1 == size[0]) {
+//
+//				a.write(bb, 0, len);
+//				size[0] += len;
+//				a.flush();
+//
+//			}
+//
+//			return o1 + len;
+//
+//		});
+
 	}
 
 	public boolean mkdirs() {
-		check();
 
+		TimeStamp t = TimeStamp.create();
 		try {
-			File f = new File(path + File.separator + filename);
-			return f.mkdirs();
+			File f = new File(path + "/" + filename);
+			return X.IO.mkdirs(f);
 		} catch (Exception e) {
 			log.error(url, e);
 //			Disk.dao.update(this.disk, V.create("bad", 1));
+		} finally {
+			write.add(t.pastms());
 		}
 		return true;
 	}
@@ -205,15 +210,15 @@ public class LocalDFile extends DFile {
 		if (info == null) {
 			try {
 
-				File f = new File(path + File.separator + filename);
+				File f = new File(path + "/" + filename);
 
 //				log.debug("f=" + f.getAbsolutePath());
 
 				info = new FileInfo();
 				info.exists = f.exists() ? true : false;
-				info.isfile = f.isFile() ? true : false;
-				info.length = f.length();
-				info.lastmodified = f.lastModified();
+				info.isfile = info.exists && f.isFile() ? true : false;
+				info.length = info.exists ? f.length() : 0;
+				info.lastmodified = info.exists ? f.lastModified() : 0;
 
 			} catch (Exception e) {
 				log.error(url, e);
@@ -225,14 +230,12 @@ public class LocalDFile extends DFile {
 	}
 
 	public boolean isDirectory() {
-		check();
 
 		getInfo();
 		return info != null && !info.isfile;
 	}
 
 	public boolean isFile() {
-		check();
 
 		getInfo();
 		return info != null && info.isfile;
@@ -246,47 +249,46 @@ public class LocalDFile extends DFile {
 		return X.EMPTY;
 	}
 
-	public DFile[] listFiles() throws IOException {
+	protected DFile[] list() throws IOException {
 
-		check();
+		TimeStamp t = TimeStamp.create();
+		try {
+			File f = new File(path + "/" + filename);
 
-		File f = new File(path + File.separator + filename);
+			File[] ff = f.listFiles();
+			if (ff != null) {
 
-		File[] ff = f.listFiles();
-		if (ff != null) {
+				DFile[] l2 = new LocalDFile[ff.length];
 
-			DFile[] l2 = new LocalDFile[ff.length];
+				for (int i = 0; i < ff.length; i++) {
 
-			for (int i = 0; i < ff.length; i++) {
+					File f1 = ff[i];
 
-				File f1 = ff[i];
+					FileInfo j1 = new FileInfo();
+					j1.name = f1.getName();
+					j1.exists = true;
+					j1.isfile = f1.isFile();
+					j1.length = f1.length();
+					j1.lastmodified = f1.lastModified();
 
-				FileInfo j1 = new FileInfo();
-				j1.name = f1.getName();
-				j1.exists = true;
-				j1.isfile = f1.isFile();
-				j1.length = f1.length();
-				j1.lastmodified = f1.lastModified();
+					l2[i] = LocalDFile.create(disk_obj, X.getCanonicalPath("/" + filename + "/" + j1.name), j1);
 
-				l2[i] = LocalDFile.create(disk_obj, X.getCanonicalPath("/" + filename + "/" + j1.name), j1);
-
+				}
+				return l2;
 			}
-			return l2;
+		} finally {
+			read.add(t.pastms());
 		}
 		return null;
 	}
 
 	public long getCreation() {
 
-		check();
-
 		getInfo();
 		return info == null ? 0 : info.creation;
 	}
 
 	public long lastModified() {
-
-		check();
 
 		getInfo();
 		return info == null ? 0 : info.lastmodified;
@@ -297,27 +299,52 @@ public class LocalDFile extends DFile {
 	}
 
 	public long length() {
-		check();
 
 		getInfo();
 
 		return info == null ? 0 : info.length;
 	}
 
+	public boolean move(String filename) throws IOException {
+		filename = X.getCanonicalPath(filename);
+		if (!X.isEmpty(prefix)) {
+			if (!filename.startsWith(prefix)) {
+				throw new IOException("can't move limited file to outside!");
+			}
+		}
+		return move(Disk.seek(filename));
+	}
+
 	public boolean move(DFile file) {
 
+		TimeStamp t = TimeStamp.create();
 		try {
 
-			File f1 = new File(path + File.separator + filename);
-			File f2 = new File(path + File.separator + file.getName());
+			File f1 = new File(path + "/" + filename);
+			File f2 = new File(path + "/" + file.filename);
 
-			return f1.renameTo(f2);
+			f2.getParentFile().mkdirs();
+
+			if (log.isWarnEnabled()) {
+				log.warn("move dfile: " + f1.getAbsolutePath() + " => " + f2.getAbsolutePath());
+			}
+
+			boolean b = f1.renameTo(f2);
+			f2.setReadable(false, false);
+			f2.setWritable(false, false);
+			f2.setExecutable(false, false);
+
+			return b;
+
 		} catch (Exception e) {
 			log.error(url, e);
 
 //			Disk.dao.update(this.disk, V.create("bad", 1));
 
+		} finally {
+			write.add(t.pastms());
 		}
+
 		return false;
 	}
 
@@ -333,45 +360,42 @@ public class LocalDFile extends DFile {
 		e.info = info;
 
 		if (d != null) {
-			e.disk = d.getId();
 			e.disk_obj = d;
-			e.node_obj = d.getNode_obj();
-			if (d.getNode_obj() != null) {
-				e.url = d.getNode_obj().getUrl();
-			}
+			e.url = d.url;
 			e.path = d.path;
+		} else {
+			e.path = Config.getConf().getString("dfile.home", "/home/disk1");
 		}
 
 		return e;
 
 	}
 
-	@Override
-	public String toString() {
-		return "LocalDFile [" + url + filename + ", exists=" + this.exists() + ", dir=" + this.isDirectory() + "]";
-	}
-
 	public long count(Consumer<String> moni) {
+		TimeStamp t = TimeStamp.create();
 		long n = 0;
-		if (this.isDirectory()) {
-			try {
-				DFile[] ff = this.listFiles();
-				if (ff != null) {
-					for (DFile f : ff) {
-						n += f.count(moni);
+		try {
+			if (this.isDirectory()) {
+				try {
+					DFile[] ff = this.listFiles();
+					if (ff != null) {
+						for (DFile f : ff) {
+							n += f.count(moni);
+						}
 					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
 				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+			} else {
+				n++;
 			}
-		} else {
-			n++;
-		}
 
-		if (moni != null) {
-			moni.accept(this.getFilename());
+			if (moni != null) {
+				moni.accept(this.getFilename());
+			}
+		} finally {
+			read.add(t.pastms());
 		}
-
 		return n;
 	}
 
@@ -412,13 +436,44 @@ public class LocalDFile extends DFile {
 	}
 
 	public long save(InputStream in, long pos) throws IOException {
-		if (pos == 0) {
-			if (exists()) {
-				delete();
+
+		TimeStamp t = TimeStamp.create();
+		try {
+			if (pos == 0) {
+				if (exists()) {
+					delete();
+				}
 			}
+
+			return IOUtil.copy(in, getOutputStream(pos));
+		} finally {
+			write.add(t.pastms());
+		}
+	}
+
+	@Override
+	public void refresh() {
+		info = null;
+	}
+
+	public DFile toDFile(File file) {
+
+		String s1 = file.getAbsolutePath().replaceAll("\\\\", "/");
+
+		if (!s1.startsWith(path)) {
+			return null;
+		}
+		String filename = s1.substring(path.length());
+		if (!filename.startsWith("/")) {
+			filename = "/" + filename;
 		}
 
-		return IOUtil.copy(in, getOutputStream(pos));
+		LocalDFile d1 = new LocalDFile();
+		d1.path = path;
+		d1.filename = filename;
+		d1.disk_obj = disk_obj;
+		return d1;
+
 	}
 
 }

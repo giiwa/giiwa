@@ -22,7 +22,6 @@ import org.giiwa.cache.*;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
-import org.giiwa.dao.Beans;
 import org.giiwa.dao.Column;
 import org.giiwa.dao.Table;
 import org.giiwa.dao.X;
@@ -35,7 +34,7 @@ import org.giiwa.dao.Helper.W;
  * @author yjiang
  * 
  */
-public class Session implements Serializable {
+public final class Session implements Serializable {
 
 	/**
 	 * 
@@ -78,6 +77,7 @@ public class Session implements Serializable {
 	public static void delete(String sid) {
 		Cache.remove("session/" + sid);
 		SID.dao.delete(sid);
+//		log.warn("remove session, sid=" + sid);
 	}
 
 	/**
@@ -88,8 +88,9 @@ public class Session implements Serializable {
 	 */
 	public static Session load(String sid, String ip) {
 
-		if (X.isEmpty(sid))
+		if (X.isEmpty(sid)) {
 			return null;
+		}
 
 //		log.debug("new session", new Exception());
 
@@ -108,7 +109,8 @@ public class Session implements Serializable {
 				log.error(e.getMessage(), e);
 			}
 
-			log.debug("new session, sid=" + sid);
+			if (log.isDebugEnabled())
+				log.debug("new session, sid=" + sid);
 
 		}
 
@@ -158,7 +160,8 @@ public class Session implements Serializable {
 	 */
 	public Session store(long expired) {
 
-		log.debug("store session, sid=" + sid + ", expired=" + expired);
+		if (log.isDebugEnabled())
+			log.debug("store session, sid=" + sid + ", expired=" + expired);
 
 		if (!Cache.set("session/" + sid, this, expired)) {
 			log.error("set session failed !", new Exception("store session failed"));
@@ -177,10 +180,6 @@ public class Session implements Serializable {
 	public Session set(String key, Object o) throws Exception {
 		if (a.size() < MAX) {
 			a.put(key, o);
-			if (o instanceof User) {
-				long uid = ((User) o).getId();
-				SID.update(sid, uid);
-			}
 		} else {
 			throw new Exception("exceed the MAX=" + MAX);
 		}
@@ -231,22 +230,25 @@ public class Session implements Serializable {
 	}
 
 	public static void expired(long uid) {
-		W q = W.create().and("uid", uid).sort("sid", 1);
-		Beans<SID> l1 = SID.dao.load(q, 0, 100);
-		while (l1 != null && !l1.isEmpty()) {
-			for (SID e : l1) {
+		try {
+			W q = W.create().and("uid", uid).sort("sid", 1);
+			SID.dao.stream(q, e -> {
 				Session.delete(e.sid);
-			}
-			l1 = SID.dao.load(q, 0, 100);
+				return true;
+			});
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
-
 	}
 
 	@Table(name = "gi_sid")
-	static class SID extends Bean {
+	public static class SID extends Bean {
+
 		private static final long serialVersionUID = 1L;
 
 		public static final BeanDAO<String, SID> dao = BeanDAO.create(SID.class);
+
+		String id;
 
 		@Column(memo = "会话ID")
 		String sid;
@@ -254,12 +256,19 @@ public class Session implements Serializable {
 		@Column(memo = "用户ID")
 		long uid;
 
-		public static void update(String sid, long uid) {
+		@Column(memo = "IP")
+		String ip;
+
+		@Column(memo = "browser")
+		String browser;
+
+		public static void update(String sid, long uid, String ip, String browser) {
 			try {
+				V v = V.create("uid", uid).append("sid", sid).append("ip", ip).append("browser", browser);
 				if (dao.exists(sid)) {
-					dao.update(sid, V.create("uid", uid));
+					dao.update(sid, v);
 				} else {
-					dao.insert(V.create(X.ID, sid).append("sid", sid).append("uid", uid));
+					dao.insert(v.append(X.ID, sid));
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);

@@ -42,14 +42,15 @@ public class Velocity {
 	 * @exception Exception throw exception when occur error
 	 */
 	public static boolean test(String s, Map<String, Object> m) throws Exception {
+		
 		if (log.isDebugEnabled())
 			log.debug("vengine.test ...");
+		
 		if (X.isEmpty(s)) {
 			return true;
 		}
-//    System.out.println(s);
+		
 		s = s.replaceAll("\\$", "\\\\\\$");
-//    System.out.println(s);
 		s = M.replaceAll("sss", s);
 
 		Map<String, Object> b = new HashMap<String, Object>();
@@ -80,6 +81,7 @@ public class Velocity {
 	 * @exception Exception throw exception when occur error
 	 */
 	public static boolean execute(String s, Map<String, Object> m) throws Exception {
+		
 		if (log.isDebugEnabled())
 			log.debug("vengine.execute ...");
 
@@ -90,6 +92,7 @@ public class Velocity {
 			org.apache.velocity.app.Velocity.evaluate(context, out, "ve", s);
 			if (log.isDebugEnabled())
 				log.debug("s=" + s + ", out=" + out);
+			
 			return true;
 		} catch (Exception e) {
 			log.error(s, e);

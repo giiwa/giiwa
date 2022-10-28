@@ -4,11 +4,13 @@
 
 <form action='/admin/dfile/disk/edit?__node=$!__node'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
 	<input type="hidden" name="id" value="$!s.id" />
-	<div><label><h3>$lang.get('node.url'):</h3><i>$!s.node_obj.url</i></label></div>
+	<div><label><h3>$lang.get('node.url'):</h3><i>$!s.url</i></label></div>
 	<div><label><h3>$lang.get('disk.path'):</h3><i>$!s.path</i></label></div>
-	<div><label><h3>$lang.get('disk.priority')(<r>*</r>):</h3><input type='number' name='priority' value="$!s.priority"/><g>$lang.get('disk.priority.hint')</g></label></div>
-	<div><label><h3>$lang.get('disk.enabled')(<r>*</r>):</h3><input type='number' name='enabled' value="1"/><g>$lang.get('disk.enabled.hint')</g></label></div>
-	
+	<div><label><h3>$lang.get('disk.mount'):</h3><input type='text' name='mount' value="$s.mount"/><g>$lang.get('disk.mount.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.priority'):</h3><input type='number' name='priority' value="$!s.priority"/><g>$lang.get('disk.priority.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.enabled'):</h3><input type='number' name='enabled' value="$!s.enabled"/><g>$lang.get('disk.enabled.hint')</g></label></div>
+<!-- 	<div><label><h3>$lang.get('disk.encode'):</h3><i>$!s.encode</i><g>$lang.get('disk.encode.hint')</g></label></div>
+ -->	
 	<div class='btns'>
 		<button type='submit'>$lang.get('btn.ok')</button>
 	</div>

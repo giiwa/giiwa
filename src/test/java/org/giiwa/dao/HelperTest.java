@@ -102,9 +102,21 @@ public class HelperTest {
 
 	@Test
 	public void testGroup() {
-		
+
 		BeanDAO<Long, Data> dao = BeanDAO.create(Data.class);
-		
+
+	}
+
+	@Test
+	public void testArray() {
+		W q = W.create();
+		q.and("type", "1");
+		String name = "abc";
+		if (!X.isEmpty(name)) {
+			q.and(new String[] { "name", "memo", "content" }, name, W.OP.like);
+		}
+
+		System.out.println(q.toSQL());
 	}
 
 }

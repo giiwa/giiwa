@@ -22,7 +22,7 @@ import java.io.Serializable;
  * @author joe
  *
  */
-public class TimeStamp implements Serializable {
+public final class TimeStamp implements Serializable {
 
 	/**
 	 * 
@@ -84,6 +84,7 @@ public class TimeStamp implements Serializable {
 
 	/**
 	 * past ms
+	 * 
 	 * 
 	 * @return the ms of past
 	 */

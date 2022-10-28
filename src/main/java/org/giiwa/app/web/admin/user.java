@@ -43,10 +43,14 @@ import org.giiwa.web.view.View;
 public class user extends Controller {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
 	 * Adds the.
 	 */
-	@SuppressWarnings("deprecation")
-	@Path(path = "create", login = true, access = "access.config.admin|access.config.user.admin")
+	@Path(path = "create", login = true, access = "access.config.admin")
 	public void create() {
 		if (method.isPost()) {
 
@@ -70,6 +74,11 @@ public class user extends Controller {
 					v.remove("role");
 					v.append("createdip", this.ip()).append("createdua", this.browser()).append("createdby",
 							login.getId());
+					v.append("title", this.get("title"));
+					v.append("company", this.get("company"));
+					v.append("phone", this.get("phone"));
+					v.append("email", this.get("email"));
+					v.append("password", this.getHtml("password"));
 
 					long id = User.create(name, v);
 
@@ -92,7 +101,7 @@ public class user extends Controller {
 					/**
 					 * log
 					 */
-					GLog.securitylog.info(user.class, "create", this.getJSONNonPassword().toString(), login, this.ip());
+					GLog.securitylog.warn(user.class, "create", this.json().toString(), login, this.ip());
 
 					if (Global.getInt("user.updated.noti", 1) == 1) {
 						final String email = this.getString("email");
@@ -100,7 +109,7 @@ public class user extends Controller {
 
 						if (!X.isEmpty(email)) {
 
-							Task.schedule(() -> {
+							Task.schedule(t -> {
 
 								if (!X.isEmpty(email)) {
 
@@ -158,8 +167,7 @@ public class user extends Controller {
 	/**
 	 * Delete.
 	 */
-	@SuppressWarnings("deprecation")
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin")
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -167,14 +175,9 @@ public class user extends Controller {
 		long id = this.getLong("id");
 		if (id > 0) {
 			User.delete(id);
-			List<String> list = AuthToken.delete(id);
-			if (list != null) {
-				for (String sid : list) {
-					Session.delete(sid);
-				}
-			}
+			AuthToken.delete(id);
 
-			GLog.securitylog.warn(user.class, "delete", this.getJSONNonPassword().toString(), login, this.ip());
+			GLog.securitylog.warn(user.class, "delete", this.json().toString(), login, this.ip());
 			jo.put(X.STATE, 200);
 		} else {
 			jo.put(X.MESSAGE, lang.get("delete.failed"));
@@ -187,8 +190,7 @@ public class user extends Controller {
 	/**
 	 * Edits the user.
 	 */
-	@SuppressWarnings("deprecation")
-	@Path(path = "edit", login = true, access = "access.config.admin|access.config.user.admin")
+	@Path(path = "edit", login = true, access = "access.config.admin")
 	public void edit() {
 		long id = this.getLong("id");
 
@@ -202,7 +204,7 @@ public class user extends Controller {
 
 					Session.expired(id);
 
-					GLog.securitylog.info(user.class, "passwd", lang.get("user.passwd.change"), login, this.ip());
+					GLog.securitylog.warn(user.class, "passwd", lang.get("user.passwd.change"), login, this.ip());
 
 					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
@@ -238,7 +240,7 @@ public class user extends Controller {
 
 				Session.expired(id);
 
-				GLog.securitylog.info(user.class, "edit", this.getJSONNonPassword().toString(), login, this.ip());
+				GLog.securitylog.info(user.class, "edit", this.json().toString(), login, this.ip());
 
 				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 				return;
@@ -271,10 +273,36 @@ public class user extends Controller {
 		}
 	}
 
+	@Path(path = "unlock", login = true, access = "access.config.admin")
+	public void unlock() {
+		long id = this.getLong("id");
+
+		try {
+
+			V v = V.create();
+
+			User.Lock.removed(id);
+			v.force("locked", 0);
+
+			User.update(id, v);
+			User u = User.dao.load(id);
+
+			GLog.securitylog.warn(user.class, "edit", id + "/" + u.name + "/" + u.nickname, login, this.ip());
+
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			return;
+		} catch (Exception e) {
+			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE,
+					lang.get("save.failed") + ":" + e.getMessage()));
+			return;
+		}
+
+	}
+
 	/**
 	 * Detail.
 	 */
-	@Path(path = "detail", login = true, access = "access.config.admin|access.config.user.admin")
+	@Path(path = "detail", login = true, access = "access.config.admin")
 	public void detail() {
 		String id = this.getString("id");
 		if (id != null) {
@@ -293,18 +321,18 @@ public class user extends Controller {
 		}
 	}
 
-	@Path(path = "oplog", login = true, access = "access.config.admin|access.config.user.admin")
-	public void oplog() {
-
-		int s = this.getInt("s");
-		int n = this.getInt("n", X.ITEMS_PER_PAGE);
-
-		W q = getW(this.json());
-		Beans<GLog> bs = GLog.dao.load(q, s, n);
-		this.pages(bs, s, n);
-
-		this.show("/admin/user.oplog.html");
-	}
+//	@Path(path = "oplog", login = true, access = "access.config.admin")
+//	public void oplog() {
+//
+//		int s = this.getInt("s");
+//		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+//
+//		W q = getW(this.json());
+//		Beans<GLog> bs = GLog.dao.load(q, s, n);
+//		this.pages(bs, s, n);
+//
+//		this.show("/admin/user.oplog.html");
+//	}
 
 //	@Path(path = "accesslog", login = true, access = "access.config.admin|access.config.logs.admin")
 //	public void accesslog() {
@@ -328,7 +356,7 @@ public class user extends Controller {
 	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
 	@Override
-	@Path(login = true, access = "access.config.admin|access.config.user.admin")
+	@Path(login = true, access = "access.config.admin")
 	public void onGet() {
 
 		String name = this.getString("name");
@@ -338,6 +366,9 @@ public class user extends Controller {
 
 			list.or("name", name, W.OP.like);
 			list.or("nickname", name, W.OP.like);
+			if(X.isNumber(name)) {
+				list.or("id", X.toLong(name));
+			}
 			q.and(list);
 
 			this.set("name", name);
@@ -353,52 +384,52 @@ public class user extends Controller {
 		this.show("/admin/user.index.html");
 	}
 
-	private W getW(JSON jo) {
-
-		W q = W.create();
-
-		if (!X.isEmpty(jo.get("op"))) {
-			q.and("op", jo.get("op"));
-		}
-		if (!X.isEmpty(jo.get("ip"))) {
-			q.and("ip", jo.getString("ip"), W.OP.like);
-		}
-		q.and("uid", jo.getLong("uid"));
-		if (!X.isEmpty(jo.get("type"))) {
-			q.and("type", X.toInt(jo.get("type")));
-		}
-
-		if (!X.isEmpty(jo.getString("model"))) {
-			q.and("model", jo.getString("model"));
-		}
-
-		if (!X.isEmpty(jo.getString("node"))) {
-			q.and("node", jo.getString("node"));
-		}
-
-		if (!X.isEmpty(jo.getString("starttime"))) {
-			q.and(X.CREATED, lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
-
-		} else {
-			long today_2 = System.currentTimeMillis() - X.AYEAR * 1;
-			jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
-			q.and(X.CREATED, today_2, W.OP.gte);
-		}
-
-		if (!X.isEmpty(jo.getString("endtime"))) {
-			q.and(X.CREATED, lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.like);
-		}
-
-		String sortby = this.getString("sortby");
-		if (!X.isEmpty(sortby)) {
-			int sortby_type = this.getInt("sortby_type");
-			q.sort(sortby, sortby_type);
-		} else {
-			q.sort(X.CREATED, -1);
-		}
-		this.copy(jo);
-
-		return q;
-	}
+//	private W getW(JSON jo) {
+//
+//		W q = W.create();
+//
+//		if (!X.isEmpty(jo.get("op"))) {
+//			q.and("op", jo.get("op"));
+//		}
+//		if (!X.isEmpty(jo.get("ip"))) {
+//			q.and("ip", jo.getString("ip"), W.OP.like);
+//		}
+//		q.and("uid", jo.getLong("uid"));
+//		if (!X.isEmpty(jo.get("type"))) {
+//			q.and("type", X.toInt(jo.get("type")));
+//		}
+//
+//		if (!X.isEmpty(jo.getString("model"))) {
+//			q.and("model", jo.getString("model"));
+//		}
+//
+//		if (!X.isEmpty(jo.getString("node"))) {
+//			q.and("node", jo.getString("node"));
+//		}
+//
+//		if (!X.isEmpty(jo.getString("starttime"))) {
+//			q.and(X.CREATED, lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
+//
+//		} else {
+//			long today_2 = System.currentTimeMillis() - X.AYEAR * 1;
+//			jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
+//			q.and(X.CREATED, today_2, W.OP.gte);
+//		}
+//
+//		if (!X.isEmpty(jo.getString("endtime"))) {
+//			q.and(X.CREATED, lang.parse(jo.getString("endtime"), "yyyy-MM-dd"), W.OP.like);
+//		}
+//
+//		String sortby = this.getString("sortby");
+//		if (!X.isEmpty(sortby)) {
+//			int sortby_type = this.getInt("sortby_type");
+//			q.sort(sortby, sortby_type);
+//		} else {
+//			q.sort(X.CREATED, -1);
+//		}
+//		this.copy(jo);
+//
+//		return q;
+//	}
 
 }

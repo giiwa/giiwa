@@ -14,39 +14,33 @@
 */
 package org.giiwa.web.view;
 
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 import org.giiwa.json.JSON;
 import org.giiwa.web.Controller;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.IContext;
-import org.thymeleaf.templateresolver.FileTemplateResolver;
+//import org.thymeleaf.TemplateEngine;
+//import org.thymeleaf.context.IContext;
+//import org.thymeleaf.templateresolver.FileTemplateResolver;
 
 public class ThymeleafView extends View {
 
-	private static TemplateEngine _engine;
+//	private static TemplateEngine _engine;
 
 	@Override
 	public synchronized boolean parse(Object file, Controller m, String viewname) {
 		// load
 		try {
 
-			if (_engine == null) {
-				_engine = new TemplateEngine();
-				FileTemplateResolver tt = new FileTemplateResolver();
-				tt.setCharacterEncoding("UTF-8");
-				_engine.setTemplateResolver(tt);
-			}
-
-			Writer out = new OutputStreamWriter(m.getOutputStream());
-
-			_engine.process(View.getCanonicalPath(file), _parse(m.data), out);
-
-			out.flush();
+//			if (_engine == null) {
+//				_engine = new TemplateEngine();
+//				FileTemplateResolver tt = new FileTemplateResolver();
+//				tt.setCharacterEncoding("UTF-8");
+//				_engine.setTemplateResolver(tt);
+//			}
+//
+//			Writer out = new OutputStreamWriter(m.getOutputStream());
+//
+//			_engine.process(View.getCanonicalPath(file), _parse(m.data), out);
+//
+//			out.flush();
 
 			return true;
 		} catch (Exception e) {
@@ -55,30 +49,30 @@ public class ThymeleafView extends View {
 		return false;
 	}
 
-	private IContext _parse(final Map<String, Object> m) {
-		return new IContext() {
-
-			@Override
-			public boolean containsVariable(String name) {
-				return m.containsKey(name);
-			}
-
-			@Override
-			public Locale getLocale() {
-				return Locale.US;
-			}
-
-			@Override
-			public Object getVariable(String name) {
-				return m.get(name);
-			}
-
-			@Override
-			public Set<String> getVariableNames() {
-				return m.keySet();
-			}
-		};
-	}
+//	private IContext _parse(final Map<String, Object> m) {
+//		return new IContext() {
+//
+//			@Override
+//			public boolean containsVariable(String name) {
+//				return m.containsKey(name);
+//			}
+//
+//			@Override
+//			public Locale getLocale() {
+//				return Locale.US;
+//			}
+//
+//			@Override
+//			public Object getVariable(String name) {
+//				return m.get(name);
+//			}
+//
+//			@Override
+//			public Set<String> getVariableNames() {
+//				return m.keySet();
+//			}
+//		};
+//	}
 
 	@Override
 	public String parse(Object file, JSON params) {

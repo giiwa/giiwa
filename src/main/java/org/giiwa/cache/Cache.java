@@ -26,7 +26,6 @@ import org.giiwa.conf.Global;
 import org.giiwa.dao.Counter;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.json.JSON;
 
 /**
  * The {@code Cache} Class Cache used for cache object, the cache was grouped by
@@ -57,24 +56,31 @@ public final class Cache {
 	 *
 	 * @param url the configuration that includes cache configure ("cache.url")
 	 */
-	public static synchronized void init(String url) {
+	public static synchronized void init(String url, String user, String pwd) {
 		/**
 		 * comment it, let's re-conf in running-time
 		 */
+		log.warn("Cache init ..., url=" + url);
+
 		// if (_conf != null)
 		// return;
 		String group = Global.getString("site.group", "demo");
 
 		if (url != null && url.startsWith(MEMCACHED)) {
-			cacheSystem = MemCache.create(url);
+			cacheSystem = MemCache.create(url, user, pwd);
 		} else if (url != null && url.startsWith(REDIS)) {
-			cacheSystem = RedisCache.create(url);
-		} else {
-			log.warn("not configured cache system, using file cache!");
+			cacheSystem = RedisCache.create(url, user, pwd);
+		}
+
+		if (cacheSystem == null) {
+			log.warn("no avaliable cache system, using file cache!");
 			cacheSystem = FileCache.create();
 		}
 
 		GROUP = group + "://";
+
+		log.warn("Cache inited. group=" + GROUP + ", system=" + cacheSystem);
+
 	}
 
 	/**
@@ -138,7 +144,7 @@ public final class Cache {
 	 * cache the object with the id, if exists, then update it, otherwise create new
 	 * in cache.
 	 * 
-	 * @deprecated
+	 * @Deprecated
 	 * @param id   the id of the object
 	 * @param data the object
 	 * @return true, if successful
@@ -178,7 +184,7 @@ public final class Cache {
 	/**
 	 * set the data which exceed 1M
 	 * 
-	 * @deprecated
+	 * @Deprecated
 	 * @param id
 	 * @param data
 	 * @return
@@ -330,11 +336,11 @@ public final class Cache {
 	private static Counter read = new Counter("read");
 	private static Counter write = new Counter("write");
 
-	public static JSON statRead() {
+	public static Counter.Stat statRead() {
 		return read.get();
 	}
 
-	public static JSON statWrite() {
+	public static Counter.Stat statWrite() {
 		return write.get();
 	}
 

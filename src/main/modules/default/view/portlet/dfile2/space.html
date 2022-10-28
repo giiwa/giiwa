@@ -1,0 +1,46 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/dfile2/space/more?__node=$!__node&id=$!id')"><i class='icon-menu'></i></a>
+
+<div id='chart_$!requestid'></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('chart_$!requestid', {
+	    chart: {
+	        type: 'line'
+	    },
+	    title: {
+	        text: '${lang.get("portlet.dfile2.space.title")}[$!total]'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	max: 100,
+	    	min: 0,
+    		title: {
+	            text: ''
+	        }
+	    },
+	      legend: {
+	          enabled: false
+	        },
+	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.y}%</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+    				{name: "$lang.get('dfile.usage')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c._usage},#end]}
+    			], 
+	});
+	
+})
+</script>
+

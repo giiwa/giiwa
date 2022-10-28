@@ -14,23 +14,27 @@
 */
 package org.giiwa.app.web;
 
-import java.io.File;
-import java.io.FileInputStream;
-
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
 import org.giiwa.dao.X;
+import org.giiwa.dfile.DFile;
 import org.giiwa.misc.Url;
 import org.giiwa.web.Controller;
 
 /**
  * web api： /temp <br>
  * used to access temporary file which created by Temp
- * @deprecated
+ * 
+ * @Deprecated
  * @author joe
  * 
  */
 public class temp extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/*
 	 * (non-Javadoc)
@@ -55,12 +59,12 @@ public class temp extends Controller {
 		try {
 
 			String name = ss[1];
-			File f1 = Temp.get(ss[0], name);
+			DFile f1 = Temp.get(ss[0], name);
 			if (!f1.exists()) {
 				this.notfound();
 				return;
 			} else {
-				this.send(name, new FileInputStream(f1), f1.length());
+				this.send(name, f1.getInputStream());// , f1.length());
 			}
 
 		} catch (Exception e) {

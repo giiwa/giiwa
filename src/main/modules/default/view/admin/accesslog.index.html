@@ -6,7 +6,8 @@
 </div>
 
 <div class='search'>
-	<form action='/admin/accesslog?__node=$!__node' method='get' #if($!s>0) style='display:none' #end>
+	<form action='/admin/accesslog' method='get' #if($!s>0) style='display:none' #end>
+		<input type="hidden" name="__node" value="$!__node" />
 		<span><label><h3>URI</h3>:<input type='text' name='guri' value="$!guri" /></label></span>
 		<span><label><h3>SID</h3>:<input type='text' name='gsid' value="$!gsid" /></label></span>
 		<span><label><h3>IP</h3>:<input type='text' name='ip' value="$!ip" /></label></span>

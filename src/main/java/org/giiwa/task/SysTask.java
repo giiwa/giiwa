@@ -18,4 +18,9 @@ public abstract class SysTask extends Task {
 		return true;
 	}
 
+	@Override
+	public int getPriority() {
+		return Thread.MAX_PRIORITY;
+	}
+
 }

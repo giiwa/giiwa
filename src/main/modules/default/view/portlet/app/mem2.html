@@ -1,0 +1,46 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/app/mem2/more?id=$!id')"><i class='icon-menu'></i></a>
+
+<div id='mem_$!requestid'></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('mem_$!requestid', {
+	    chart: {
+	        type: 'line'
+	    },
+	    title: {
+	        text: "$!name - $lang.get('host.mem2.title')"
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	min: 0,
+    		title: {
+	            text: ''
+	        }
+	    },
+	      legend: {
+	          enabled: true
+	        },
+	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.hint}</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+    				{name: "VSZ", color:'#0dad76', data: [#foreach($c in $list) {x:$req.time($c), y:$c.vsz, hint:"$lang.size($c.vsz)"},#end]},
+    				{name: "RSS", color:'#0a5ea0', data: [#foreach($c in $list) {x:$req.time($c), y:$c.rss, hint:"$lang.size($c.rss)"},#end]}
+    			], 
+	});
+	
+})
+</script>
+

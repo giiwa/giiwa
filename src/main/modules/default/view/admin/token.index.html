@@ -6,7 +6,8 @@
 </div>
 
 <div class='search'>
-	<form action='/admin/token?__node=$!__node' method='get' #if($s>0) style='display:none' #end >
+	<form action='/admin/token' method='get' #if($s>0) style='display:none' #end >
+		<input type="hidden" name="__node" value="$!__node" />
 		<span><label><h3>$lang.get('user.uid'):</h3><input type='text' name='name' value="$!name"/></label></span>
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>

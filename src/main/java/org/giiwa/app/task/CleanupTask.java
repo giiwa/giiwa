@@ -15,11 +15,14 @@
 package org.giiwa.app.task;
 
 import java.io.File;
-import java.util.concurrent.locks.Lock;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.web.f;
 import org.giiwa.bean.Code;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Stat;
@@ -28,12 +31,15 @@ import org.giiwa.bean.m._CPU;
 import org.giiwa.bean.m._Cache;
 import org.giiwa.bean.m._DB;
 import org.giiwa.bean.m._Disk;
+import org.giiwa.bean.m._DiskIO;
+import org.giiwa.bean.m._FIO;
+import org.giiwa.bean.m._File;
 import org.giiwa.bean.m._MQ;
-import org.giiwa.bean.m._Memory;
+import org.giiwa.bean.m._Mem;
+import org.giiwa.bean.m._Mem2;
 import org.giiwa.bean.m._Net;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.BeanDAO;
-import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.task.Task;
@@ -72,6 +78,11 @@ public class CleanupTask extends Task {
 		inst.schedule((long) (X.AMINUTE * Math.random()));
 	}
 
+	@Override
+	public int getPriority() {
+		return Thread.MIN_PRIORITY;
+	}
+
 	/**
 	 * Instantiates a new cleanup task.
 	 * 
@@ -97,6 +108,19 @@ public class CleanupTask extends Task {
 		return "gi.cleanup";
 	}
 
+	private static List<BeanDAO<?, ?>> bb = new ArrayList<BeanDAO<?, ?>>(Arrays.asList(new BeanDAO<?, ?>[] { GLog.dao,
+			_CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao, _Disk.dao, _Disk.Record.dao, _Mem.dao, _Mem.Record.dao,
+			_Net.dao, _Net.Record.dao, _MQ.dao, _MQ.Record.dao, _Cache.dao, _Cache.Record.dao, _DiskIO.dao,
+			_DiskIO.Record.dao, _File.dao, _File.Record.dao, _FIO.dao, _FIO.Record.dao, _Mem2.dao, _Mem2.Record.dao }));
+
+	public static void add(BeanDAO<?, ?>... daos) {
+		for (BeanDAO<?, ?> e : daos) {
+			if (!bb.contains(e)) {
+				bb.add(e);
+			}
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -105,58 +129,88 @@ public class CleanupTask extends Task {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public void onExecute() {
-		try {
-			/**
-			 * clean up the local temp files
-			 */
-			count = 0;
 
-			/**
-			 * clean up repo
-			 */
+		/**
+		 * clean up the local temp files
+		 */
+		count = 0;
+
+		log.warn("cleanup starting ...");
+
+		/**
+		 * clean up repo
+		 */
 //			count += Repo.cleanup(X.ADAY);
-			count += Temp.cleanup(X.ADAY);
+		count += Temp.cleanup(X.ADAY);
 
-			/**
-			 * clean temp files in tomcat
-			 */
-			if (!X.isEmpty(Controller.GIIWA_HOME)) {
-				// do it
-				count += cleanup(Controller.GIIWA_HOME + "/work/Catalina/localhost/ROOT", X.ADAY, false);
-				count += cleanup(Controller.GIIWA_HOME + "/logs", X.ADAY * 3, false);
-			}
+		f.clean();
 
-			GLog.applog.info("sys", "cleanup", "cleanup temp files: " + count);
+		/**
+		 * clean temp files in tomcat
+		 */
+		if (!X.isEmpty(Controller.GIIWA_HOME)) {
+			// do it
+			count += cleanup(Controller.GIIWA_HOME + "/work/Catalina/localhost/ROOT", X.ADAY, false);
+//				count += cleanup(Controller.GIIWA_HOME + "/logs", X.ADAY * 3, false);
+		}
 
-			Lock door = Global.getLock("cleanup.glog");
-			if (door.tryLock()) {
-				try {
-					int n = 0;
+		GLog.applog.info("sys", "cleanup", "cleanup temp files: " + count);
 
-					n += Code.cleanup();
+		if (this.tryLock()) {
+			try {
+				int n = 0;
 
-					for (BeanDAO d : new BeanDAO[] { GLog.dao, _CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao,
-							_Disk.dao, _Disk.Record.dao, _Memory.dao, _Memory.Record.dao, _Net.dao, _Net.Record.dao,
-							_MQ.dao, _MQ.Record.dao, _Cache.dao, _Cache.Record.dao }) {
-						if (!inCleanupTime())
-							break;
-						n += d.cleanup();
+				n += Code.cleanup();
+
+				if (inCleanupTime()) {
+
+					log.warn("clean and repair table");
+					GLog.applog.info("sys", "cleanup", "start to clean and repair");
+
+					for (BeanDAO d : bb) {
+
+						try {
+							if (!inCleanupTime()) {
+								log.warn("out of clean time.");
+								GLog.applog.info("sys", "cleanup", "out of clean time. n=" + n);
+								break;
+							}
+
+							log.warn("cleanup [" + d.tableName() + "] ...");
+
+							int n1 = d.cleanup();
+							if (n1 > 0) {
+								GLog.applog.info("sys", "cleanup", "table=" + d.tableName() + ", removed=" + n1);
+								n += n1;
+							}
+						} catch (Throwable e1) {
+							log.error(e1.getMessage(), e1);
+							GLog.applog.error("sys", "cleanup", d.tableName(), e1);
+						}
 					}
 
 					n += Stat.cleanup();
 
-					GLog.applog.info("sys", "cleanup", "cleanup data: " + n);
-				} finally {
-					door.unlock();
+					GLog.applog.info("sys", "cleanup", "end of cleanup, n= " + n);
+
+				} else {
+					GLog.applog.info("sys", "cleanup", "no in cleantime, clean code only, n= " + n);
 				}
+
+			} catch (Exception e) {
+				// eat the exception
+				log.error(e.getMessage(), e);
+				GLog.applog.error("sys", "cleanup", e.getMessage(), e);
+			} finally {
+				this.unlock();
 			}
-		} catch (Exception e) {
-			// eat the exception
+
 		}
+
 	}
 
 	public static boolean inCleanupTime() {
-		String time = Global.getString("gi.clean.time", "02:00-04:00");
+		String time = Global.getString("gi.clean.time", "00:01-06:00");
 		String t = Language.getLanguage().format(System.currentTimeMillis(), "HH:mm");
 		String[] ss = X.split(time, "-");
 		return t.compareTo(ss[0]) >= 0 && t.compareTo(ss[1]) <= 0;
@@ -173,22 +227,22 @@ public class CleanupTask extends Task {
 	private long cleanup(String path, long age, boolean deletefolder) {
 		try {
 
+			log.warn("cleanup [" + path + "] ...");
+
 			File f = new File(path);
 
 			File[] ff = f.listFiles();
 			if (ff != null) {
 				for (File f1 : ff) {
-					IOUtil.delete(f1, age);
+					IOUtil.delete(f1, age, null);
 				}
 			}
 
-			f.mkdirs();
+			X.IO.mkdirs(f);
 
 		} catch (Exception e) {
-			if (log.isErrorEnabled()) {
-				log.error(e.getMessage(), e);
-				GLog.applog.error(this.getName(), "cleanup", e.getMessage(), e, null, null);
-			}
+			log.error(e.getMessage(), e);
+			GLog.applog.error("sys", "cleanup", e.getMessage(), e, null, null);
 		}
 
 		return 0;
@@ -201,19 +255,7 @@ public class CleanupTask extends Task {
 	 */
 	@Override
 	public void onFinish() {
-		this.schedule(X.AHOUR);
-	}
-
-	/**
-	 * Please refer Schema.add
-	 *
-	 * @deprecated
-	 * @param packname the packname
-	 */
-	public static void add(String packname) {
-
-		Schema.add(packname);
-
+		this.schedule(X.AMINUTE * 10);
 	}
 
 }

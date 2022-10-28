@@ -16,12 +16,12 @@ package org.giiwa.dao;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
+import org.giiwa.task.Function;
 
 /**
  * The {@code Beans} Class used to contains the Bean in query. <br>
@@ -49,7 +49,6 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 	transient W q;
 	transient String table;
-	transient String db;
 	transient BeanDAO<?, ?> dao;
 
 	private String id = UID.random(20);
@@ -62,22 +61,30 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return id;
 	}
 
-	@SuppressWarnings("deprecation")
 	public long count() {
-		if (dao != null && total < 0) {
-			total = dao.count(q);
-			log.debug("count, total=" + total + ", q=" + q);
-		} else if (total < 0) {
-			if (!X.isEmpty(q.getTable())) {
-				try {
-					total = q.count();
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+		try {
+			if (dao != null && total < 0) {
+				total = dao.count(q);
+
+				if (log.isDebugEnabled())
+					log.debug("count, total=" + total + ", q=" + q);
+
+			} else if (total < 0) {
+				if (!X.isEmpty(q.getTable())) {
+					try {
+						total = q.count();
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
+				} else {
+					total = Helper.count(table, q);
 				}
-			} else {
-				total = Helper.count(q, table, db);
+
+				if (log.isDebugEnabled())
+					log.debug("count, total=" + total + ", q=" + q + ", table=" + table);
 			}
-			log.debug("count, total=" + total + ", q=" + q + ", table=" + table);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 		return total;
 	}
@@ -140,6 +147,129 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 			}
 		}
 		return l1;
+	}
+
+	/**
+	 * 转为矩阵
+	 * 
+	 * @param heads
+	 * @return
+	 */
+	public List<Object[]> mat(String... heads) {
+
+		List<Object[]> l1 = new ArrayList<Object[]>();
+		l1.add(heads);
+
+		if (!this.isEmpty()) {
+			if (this.size() > 100) {
+				this.parallelStream().forEach(e -> {
+					Object[] ss = new Object[heads.length];
+					for (int i = 0; i < heads.length; i++) {
+						ss[i] = e.get(heads[i]);
+					}
+					l1.add(ss);
+				});
+			} else {
+				for (Bean e : this) {
+					Object[] ss = new Object[heads.length];
+					for (int i = 0; i < heads.length; i++) {
+						ss[i] = e.get(heads[i]);
+					}
+					l1.add(ss);
+				}
+			}
+		}
+		return l1;
+
+	}
+
+	/**
+	 * 数字化
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public Beans<E> digitizing(String name) {
+
+		if (this.isEmpty()) {
+			return this;
+		}
+
+		Map<String, Integer> m = new HashMap<String, Integer>();
+
+		if (this.size() > 100) {
+			this.parallelStream().forEach(e -> {
+				Object s = e.get(name);
+				if (X.isEmpty(s)) {
+					s = X.EMPTY;
+				}
+
+				Integer i = m.get(s.toString());
+				if (i == null) {
+					i = m.size() + 1;
+					m.put(s.toString(), i);
+				}
+				e.set(name, i);
+			});
+		} else {
+
+			for (Bean e : this) {
+				Object s = e.get(name);
+				if (X.isEmpty(s)) {
+					s = X.EMPTY;
+				}
+
+				Integer i = m.get(s.toString());
+				if (i == null) {
+					i = m.size() + 1;
+					m.put(s.toString(), i);
+				}
+				e.set(name, i);
+			}
+		}
+		return this;
+
+	}
+
+	/**
+	 * 替换
+	 * 
+	 * @param name
+	 * @param mapping
+	 * @return
+	 */
+	public Beans<E> replace(String name, Object mapping) {
+
+		if (this.isEmpty()) {
+			return this;
+		}
+
+		JSON m = JSON.fromObject(mapping);
+		if (m == null || m.isEmpty()) {
+			return this;
+		}
+
+		if (this.size() > 100) {
+			this.parallelStream().forEach(e -> {
+				Object s = e.get(name);
+				if (X.isEmpty(s)) {
+					e.set(name, m.get(X.EMPTY));
+				} else {
+					e.set(name, m.get(s.toString()));
+				}
+			});
+		} else {
+			for (Bean e : this) {
+				Object s = e.get(name);
+				if (X.isEmpty(s)) {
+					e.set(name, m.get(X.EMPTY));
+				} else {
+					e.set(name, m.get(s.toString()));
+				}
+			}
+		}
+		return this;
+
 	}
 
 }

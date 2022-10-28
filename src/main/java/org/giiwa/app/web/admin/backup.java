@@ -14,9 +14,6 @@
 */
 package org.giiwa.app.web.admin;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,10 +25,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.giiwa.bean.AutoBackup;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
-import org.giiwa.cache.Cache;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
@@ -40,6 +37,7 @@ import org.giiwa.dao.MongoHelper;
 import org.giiwa.dao.RDSHelper;
 import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
+import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
@@ -62,6 +60,11 @@ import org.giiwa.web.Path;
  *
  */
 public class backup extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/*
 	 * (non-Javadoc)
@@ -95,6 +98,8 @@ public class backup extends Controller {
 				}
 
 			});
+
+			this.set("root", BackupTask.ROOT);
 			this.set("list", list);
 
 			this.show("/admin/backup.index.html");
@@ -117,32 +122,13 @@ public class backup extends Controller {
 			DFile f = Disk.seek(BackupTask.ROOT + "/" + name);
 
 			if (log.isDebugEnabled())
-				log.debug("delete: " + f.getCanonicalPath());
+				log.debug("delete: " + f.getFilename());
 			f.delete();
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.ip());
 		}
-
-	}
-
-	@Path(path = "download", login = true, access = "access.config.admin")
-	public void download() {
-		JSON jo = JSON.create();
-		try {
-			String name = this.getString("name");
-			DFile f = Disk.seek(BackupTask.ROOT + "/" + name);
-
-			jo.put(X.STATE, 200);
-			jo.put("url", f.getFilename());
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			GLog.oplog.error(backup.class, "delete", e.getMessage(), e, login, this.ip());
-			jo.put(X.STATE, 201);
-			jo.put(X.MESSAGE, e.getMessage());
-		}
-		this.send(jo);
 
 	}
 
@@ -161,7 +147,7 @@ public class backup extends Controller {
 
 		try {
 
-			f = Disk.getByUrl(repo);
+			f = Disk.seek(repo);
 
 			DFile f1 = Disk.seek(BackupTask.ROOT + "/" + f.getName());
 
@@ -195,6 +181,7 @@ public class backup extends Controller {
 		// this.getRemoteHost());
 
 		if (method.isPost()) {
+
 			String[] ss = this.getStrings("name");
 			if (ss != null && ss.length > 0) {
 
@@ -209,23 +196,31 @@ public class backup extends Controller {
 		}
 
 		// TODO
-		List<JSON> l2 = Cache.get("db.schema");
+//		List<JSON> l2 = Cache.get("db.schema");
 //		List<Class<? extends Bean>> l1 = Schema.beans;
 //		Map<String, JSON> l2 = new TreeMap<String, JSON>();
 //		for (Class<? extends Bean> c : l1) {
-//			String table = Helper.getTable(c);
-//			if (!X.isEmpty(table) && !l2.containsKey(table)) {
-//				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
-//						Helper.count(W.create(), c));
-//				l2.put(table, j);
+//			try {
+//				String table = Helper.getTable(c);
+//				if (!X.isEmpty(table) && !l2.containsKey(table)) {
+//					JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+//							Helper.count(table, W.create()));
+//					l2.put(table, j);
+//				}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
 //			}
 //		}
 //		this.set("list", l2.values());
+
+		List<JSON> l2 = Schema.load(lang);
 		this.set("list", l2);
+
 		this.show("/admin/backup.create.html");
 
 	}
 
+	@SuppressWarnings("unused")
 	@Path(path = "er", login = true, access = "access.config.admin")
 	public void er() {
 
@@ -235,37 +230,41 @@ public class backup extends Controller {
 		if (method.isPost()) {
 			String[] ss = this.getStrings("name");
 			if (ss != null && ss.length > 0) {
+
 				new BackupTask(ss, null).schedule(0);
 				Temp t = Temp.create("er.csv");
-				Exporter<Bean> e = t.export(Exporter.FORMAT.csv);
+				Exporter<Bean> ex = null;
 
-				for (String s : ss) {
+				// TODO
+				try {
 
-					Class<? extends Bean> c = Schema.bean(s);
-					if (c == null)
-						continue;
+					ex = Exporter.create(t.getOutputStream(), Exporter.FORMAT.csv, true);
 
-					Map<String, Class<?>> st = new TreeMap<String, Class<?>>();
-					Beans<Bean> bs = Helper.load(s, W.create().sort("created", -1), 0, 10, Bean.class, Helper.DEFAULT);
-					for (Bean b : bs) {
-						Map<String, Object> m = b.getAll();
-						for (String name : m.keySet()) {
-							Class<?> c1 = m.get(name).getClass();
-							Class<?> c2 = st.get(name);
-							if (c2 == null) {
-								st.put(name, c1);
-							} else if (!X.isSame(c1, c2)) {
-								st.put(name, Object.class);
+					for (String s : ss) {
+
+						Class<? extends Bean> c = null;// Schema.bean(s);
+						if (c == null)
+							continue;
+
+						Map<String, Class<?>> st = new TreeMap<String, Class<?>>();
+						Beans<Bean> bs = Helper.load(s, W.create().sort("created", -1), 0, 10, Bean.class);
+						for (Bean b : bs) {
+							Map<String, Object> m = b.getAll();
+							for (String name : m.keySet()) {
+								Class<?> c1 = m.get(name).getClass();
+								Class<?> c2 = st.get(name);
+								if (c2 == null) {
+									st.put(name, c1);
+								} else if (!X.isSame(c1, c2)) {
+									st.put(name, Object.class);
+								}
 							}
 						}
-					}
 
-					// TODO
-					try {
-						e.print(new String[] { "" });
-						e.print(new String[] { s });
-						e.print(new String[] { lang.get("name." + c.getName()) });
-						e.print(new String[] { "Field", "Type", "Memo" });
+						ex.print(new String[] { "" });
+						ex.print(new String[] { s });
+						ex.print(new String[] { lang.get("name." + c.getName()) });
+						ex.print(new String[] { "Field", "Type", "Memo" });
 						for (String s1 : st.keySet()) {
 							Class<?> c1 = st.get(s1);
 							String t1 = "text";
@@ -280,15 +279,16 @@ public class backup extends Controller {
 							} else if (c1.isArray()) {
 								t1 = "list";
 							}
-							e.print(new String[] { s1, t1 });
+							ex.print(new String[] { s1, t1 });
 						}
-					} catch (Exception e1) {
-						log.error(e1.getMessage(), e1);
 					}
+				} catch (Exception e1) {
+					log.error(e1.getMessage(), e1);
+				} finally {
+					X.close(ex);
 				}
-				e.close();
 
-				this.send(JSON.create().append(X.STATE, 200).append("file", t.getUri()));
+				this.send(JSON.create().append(X.STATE, 200).append("file", t.getUri(lang)));
 
 			} else {
 
@@ -297,16 +297,24 @@ public class backup extends Controller {
 			return;
 		}
 
+		Schema.init();
+
 		List<Class<? extends Bean>> l1 = Schema.beans;
 		Map<String, JSON> l2 = new TreeMap<String, JSON>();
 		for (Class<? extends Bean> c : l1) {
-			String table = Helper.getTable(c);
-			if (!X.isEmpty(table) && !l2.containsKey(table)) {
-				JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
-						Helper.count(W.create(), c));
-				l2.put(table, j);
+
+			try {
+				String table = Helper.getTable(c);
+				if (!X.isEmpty(table) && !l2.containsKey(table)) {
+					JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
+							Helper.count(table, W.create()));
+					l2.put(table, j);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
+
 		this.set("list", l2.values());
 		this.show("/admin/backup.er.html");
 
@@ -315,21 +323,121 @@ public class backup extends Controller {
 	@Path(path = "auto", login = true, access = "access.config.admin")
 	public void auto() {
 
+		String name = this.get("name");
+		W q = W.create();
+		if (!X.isEmpty(name)) {
+			q.and("name", name, W.OP.like);
+			this.put("name", name);
+		}
+
+		int s = this.getInt("s");
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
+
+		Beans<AutoBackup> bs = AutoBackup.dao.load(q, s, n);
+		if (bs != null) {
+			bs.count();
+		}
+		this.pages(bs, s, n);
+
+		this.show("/admin/backup.auto.html");
+
+	}
+
+	@Path(path = "auto/create", login = true, access = "access.config.admin")
+	public void auto_create() {
+
 		if (method.isPost()) {
-			Global.setConfig("backup.auto", X.isSame("on", this.getString("backup.auto")) ? 1 : 0);
-			Global.setConfig("backup.point", this.getString("backup.point"));
-			Global.setConfig("backup.url", this.getString("backup.url"));
 
-			Global.setConfig("backup.clean", X.isSame("on", this.getString("backup.clean")) ? 1 : 0);
-			Global.setConfig("backup.keep.days", this.getInt("backup.keep.days"));
+			String[] ss = this.getStrings("table");
+			String name = X.join(ss, ",");
 
-			org.giiwa.app.task.BackupTask.init();
+			V v = V.create();
+			v.append("table", name);
 
-			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("save.success")));
+			v.append("enabled", 1);
+			v.append("time", this.get("time"));
+
+			ss = this.getStrings("days");
+			String days = X.join(ss, ",");
+			v.append("days", days);
+
+			v.append("months", this.get("months"));
+			v.append("dates", this.get("dates"));
+			v.append("type", this.getInt("type"));
+
+			String url = this.getHtml("url");
+			if (url != null) {
+				url = url.trim();
+			}
+			v.append("url", url);
+			v.append("name", this.get("name"));
+			v.append("clean", X.isSame("on", this.getString("clean")) ? 1 : 0);
+			v.append("keeps", this.get("keeps"));
+
+			long id = AutoBackup.create(v);
+			AutoBackup a = AutoBackup.dao.load(id);
+			a.next(null);
+
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+			return;
+
+		}
+
+		List<JSON> l2 = Schema.load(lang);
+		this.set("list", l2);
+
+		this.show("/admin/backup.auto.create.html");
+
+	}
+
+	@Path(path = "auto/edit", login = true, access = "access.config.admin")
+	public void auto_edit() {
+
+		long id = this.getLong("id");
+
+		if (method.isPost()) {
+
+			String[] ss = this.getStrings("table");
+			String name = X.join(ss, ",");
+
+			V v = V.create();
+			v.append("table", name);
+			v.append("enabled", X.isSame("on", this.get("enabled")) ? 1 : 0);
+			v.append("time", this.get("time"));
+			v.append("state", 0);
+
+			ss = this.getStrings("days");
+			String days = X.join(ss, ",");
+			v.append("days", days);
+
+			v.append("months", this.get("months"));
+			v.append("dates", this.get("dates"));
+			v.append("type", this.getInt("type"));
+
+			String url = this.getHtml("url");
+			if (url != null) {
+				url = url.trim();
+			}
+			v.append("url", url);
+			v.append("name", this.get("name"));
+			v.append("clean", X.isSame("on", this.get("clean")) ? 1 : 0);
+			v.append("keeps", this.get("keeps"));
+
+			AutoBackup.dao.update(id, v);
+			AutoBackup a = AutoBackup.dao.load(id);
+			a.next(null);
+
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 			return;
 		}
 
-		this.show("/admin/backup.auto.html");
+		AutoBackup a = AutoBackup.dao.load(id);
+		this.set("a", a);
+
+		List<JSON> l2 = Schema.load(lang);
+		this.set("list", l2);
+
+		this.show("/admin/backup.auto.edit.html");
 
 	}
 
@@ -397,10 +505,7 @@ public class backup extends Controller {
 
 				Temp t = Temp.create(name);
 
-				File f = t.getFile();
-				f.getParentFile().mkdirs();
-
-				ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+				ZipOutputStream out = t.getZipOutputStream();
 
 				try {
 					/**
@@ -423,7 +528,7 @@ public class backup extends Controller {
 					X.close(out);
 				}
 
-				t.save(Disk.seek(ROOT + name));
+				Disk.seek(ROOT + name).upload(t.getInputStream());
 
 				Global.setConfig("backup/" + name, 100); // done
 
@@ -434,9 +539,10 @@ public class backup extends Controller {
 						Url u = Url.create(url);
 						FTP f1 = FTP.create(u);
 						if (f1 != null) {
-							InputStream in = new FileInputStream(t.getFile());
+							InputStream in = t.getInputStream();
 							try {
-								log.debug("ftp put, filename=" + u.get("path") + "/" + name);
+								if (log.isDebugEnabled())
+									log.debug("ftp put, filename=" + u.get("path") + "/" + name);
 
 								f1.put(u.get("path") + "/" + name, in);
 
@@ -449,7 +555,7 @@ public class backup extends Controller {
 
 					} else if (url.startsWith("sftp://")) {
 
-						InputStream in = new FileInputStream(t.getFile());
+						InputStream in = t.getInputStream();
 						SFTP s1 = null;
 						try {
 							Url u = Url.create(url);

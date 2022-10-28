@@ -1,12 +1,12 @@
 package org.giiwa.json;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.giiwa.dao.Helper.W;
 import org.giiwa.engine.JS;
+import org.giiwa.net.client.Http;
+import org.giiwa.task.Console;
 import org.junit.Test;
 
 public class JSONTest {
@@ -103,6 +103,68 @@ public class JSONTest {
 		j1.append("ret.a", "2");
 		System.out.println(j2.toPrettyString());
 		System.out.println(j1.toPrettyString());
+	}
+
+	@Test
+	public void testHtml() {
+		String s1 = "<link rel='icon' href='ab   c' />";
+		JSON j1 = JSON.fromObject(s1);
+		System.out.println(j1);
+
+		s1 = "<script>window</script>";
+		j1 = JSON.fromObject(s1);
+		System.out.println(j1);
+
+	}
+
+	@Test
+	public void testXml() {
+
+		System.out.println("starting ...");
+
+		System.out.println();
+
+		Console._DEBUG = true;
+
+		try {
+
+			Http h = Http.create();
+
+			String url = "https://www.rand.org/content/rand/about/people/_jcr_content/par/stafflist.xml";
+
+			Http.Response r1 = h.get(url);
+//			System.out.println(r1.body);
+			JSON j1 = r1.xml();
+
+			System.out.println(j1.toPrettyString());
+
+		} catch (Exception e) {
+			e.printStackTrace(System.out);
+
+		}
+
+	}
+
+	@Test
+	public void testParse() {
+		JSON j1 = JSON.create();
+		j1.append("x", "a,b,c");
+
+		String s1 = j1.parse("var a = $x.split(,).replace(s->'\\'' + s + '\\'').join( + ) + 1");
+
+		System.out.println(s1);
+
+	}
+
+	@Test
+	public void testParse2() {
+		JSON j1 = JSON.create();
+		j1.append("s1", JSON.create().append("temp", "123"));
+
+		String s1 = j1.parse("var s=$s1.temp");
+
+		System.out.println(s1);
+
 	}
 
 }

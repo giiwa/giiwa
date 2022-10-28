@@ -30,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
-import org.giiwa.web.view.View;
 
 public class GiiwaFilter implements Filter {
 
@@ -45,12 +44,12 @@ public class GiiwaFilter implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 			throws IOException, ServletException {
 
-		if (!X.INITED)
+		if (!GiiwaServlet.INITED)
 			throw new IOException("not inited");
 
 		TimeStamp t = TimeStamp.create();
 
-		HttpServletRequest r1 = (HttpServletRequest) req;
+		RequestHelper r1 = RequestHelper.create((HttpServletRequest) req);
 		HttpServletResponse r2 = (HttpServletResponse) resp;
 
 		String uri = r1.getRequestURI();
@@ -72,25 +71,31 @@ public class GiiwaFilter implements Filter {
 			String domain = Global.getString("cross.domain", "");
 
 			if ("GET".equalsIgnoreCase(method)) {
+				
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
 				Controller.process(uri, r1, r2, "GET", t);
 
 			} else if ("POST".equalsIgnoreCase(method)) {
+				
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
 
 				Controller.process(uri, r1, r2, "POST", t);
 
-			} else if ("OPTIONS".equals(method)) {
+			} else if ("OPTIONS".equalsIgnoreCase(method)) {
+				
 				r2.setStatus(200);
 				r2.addHeader("Access-Control-Allow-Origin", domain);
 				r2.addHeader("Access-Control-Allow-Headers", Global.getString("cross.header", "forbidden"));
 				r2.getOutputStream().write(domain.getBytes());
-			} else if ("HEAD".equals(method)) {
+				
+			} else if ("HEAD".equalsIgnoreCase(method)) {
+				
 				log.warn("HEAD - uri=" + uri);
+				
 			}
 
 			// chain.doFilter(req, resp);
@@ -105,26 +110,7 @@ public class GiiwaFilter implements Filter {
 
 	@Override
 	public synchronized void init(FilterConfig c1) throws ServletException {
-		
-		try {
-			
-			if (log.isDebugEnabled())
-				log.debug("filter initing model ...");
-			GiiwaServlet.s️ervletContext = c1.getServletContext();
-
-			if (log.isDebugEnabled())
-				log.debug("filter initing view ...");
-			
-			View.init();
-
-//			License.init();
-
-		} catch (Throwable e) {
-			log.error(e.getMessage(), e);
-		}
-
-		log.info("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
-
+		GiiwaContextListener.init(c1.getServletContext());
 	}
 
 }

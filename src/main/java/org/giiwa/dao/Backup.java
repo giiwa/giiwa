@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.sql.SQLException;
 import java.util.Base64;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -17,18 +15,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Data;
 import org.giiwa.bean.Disk;
-import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.task.BiConsumer;
+import org.giiwa.task.BiFunction;
+import org.giiwa.task.Consumer;
 
-public class Backup {
+public final class Backup {
 
 	private static Log log = LogFactory.getLog(Backup.class);
 
-	public static long backup(String table, ZipOutputStream out) throws IOException {
-		return backup(table, null, Helper.DEFAULT, out, null);
+	public static long backup(String table, ZipOutputStream out) throws IOException, SQLException {
+		return backup(table, null, out, null);
 	}
 
 	public static long write(String filename, byte[] bb, ZipOutputStream out) throws IOException {
@@ -44,10 +44,11 @@ public class Backup {
 
 	}
 
-	public static long backup(String table, W q, String db, ZipOutputStream out, BiFunction<String, Data, JSON> func)
-			throws IOException {
+	public static long backup(String table, W q, ZipOutputStream out, BiFunction<String, Data, JSON> func)
+			throws IOException, SQLException {
 
-		log.debug("backup, table=" + table);
+		if (log.isDebugEnabled())
+			log.debug("backup, table=" + table);
 
 		ZipEntry e = new ZipEntry(table + ".db");
 		try {
@@ -99,7 +100,8 @@ public class Backup {
 			return len;
 		} else if (f.isFile()) {
 
-			log.debug("backup, file=" + f.getFilename());
+			if (log.isDebugEnabled())
+				log.debug("backup, file=" + f.getFilename());
 
 			ZipEntry e = new ZipEntry("/.dfile/" + f.getFilename());
 			out.putNextEntry(e);
@@ -124,7 +126,8 @@ public class Backup {
 			f.delete();
 		}
 
-		log.debug("recover, file=" + f.getFilename());
+		if (log.isDebugEnabled())
+			log.debug("recover, file=" + f.getFilename());
 
 		OutputStream out = f.getOutputStream();
 		try {
@@ -134,9 +137,15 @@ public class Backup {
 		}
 	}
 
-	public static void recover(String table, String db, ZipInputStream in, Consumer<JSON> func) throws IOException {
+	public static void recover(String table, ZipInputStream in, Consumer<JSON> func) throws IOException {
 
-		log.debug("recover, table=" + table);
+		if (log.isDebugEnabled()) {
+			log.debug("recover, table=" + table);
+		}
+
+		if (func == null) {
+			throw new IOException("callback func is null");
+		}
 
 		BufferedReader re = new BufferedReader(new InputStreamReader(in));
 
@@ -144,10 +153,8 @@ public class Backup {
 		while (line != null) {
 			String s1 = new String(Base64.getDecoder().decode(line));
 			JSON j1 = JSON.fromObject(s1);
-			if (func != null) {
-				func.accept(j1);
-			}
-			Helper.insert(table, V.fromJSON(j1));
+			func.accept(j1);
+//			Helper.insert(table, V.fromJSON(j1));
 
 			line = re.readLine();
 		}
@@ -175,7 +182,7 @@ public class Backup {
 //					recover(filename, in1);
 //				} else if (filename.endsWith(".db")) {
 				if (filename.endsWith(".db")) {
-					recover(filename.substring(0, filename.length() - 3), Helper.DEFAULT, in, null);
+					recover(filename.substring(0, filename.length() - 3), in, null);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);

@@ -31,7 +31,8 @@ html, body, table {
 	width: 350px;
 	padding: 25px 29px 29px;
 	margin: 0 auto 20px;
-	background-color: RGBA(255,255,255,0.8);
+	background-color: #fff;
+	border-top: 0;
 	border: 1px solid #e5e5e5;
 	-webkit-border-radius: 5px;
 	-moz-border-radius: 5px;
@@ -104,4 +105,8 @@ input.bad {
 }
 input.good {
 	border-color: #0a8209;
+}
+.nav-tabs>li{
+	margin-bottom: -3px;
+	background: #ddd;
 }

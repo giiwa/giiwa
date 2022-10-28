@@ -62,16 +62,18 @@
 				<label class="input-label" for="phonecode1">$lang.get('user.code')</label>
 				<input type="text" id="phonecode1" name="phonecode1" class="form-control" />
 			</div>
+			<input type='hidden' name="pwd1" />
+			
 			<div id='ppasswd21' class='from-group' style='display:none'>
 				<label class="input-label" for="passwd21">$lang.get('user.passwd1')</label>
-				<input type="password" id="passwd21" name="passwd21" class="form-control" onchange="_passwd2()"/>
+				<input type="password" id="passwd21" class="form-control" onchange="_passwd2()"/>
 			</div>
 			<div id='ppasswd22' class='from-group' style='display:none'>
 				<label class="input-label" for="passwd22">$lang.get('user.passwd2')</label>
-				<input type="password" id="passwd22" name="passwd22" class="form-control" onchange="_passwd2()"/>
+				<input type="password" id="passwd22" class="form-control" onchange="_passwd2()"/>
 			</div>
 					
-			<button class="btn btn-large btn-primary btn-block" onclick="byphone()">$lang.get('btn.ok')</button>
+			<button class="btn btn-large btn-primary btn-block" onclick="byphone()" formmethod="post">$lang.get('btn.ok')</button>
 
 			<div id="themeSwitch">
 				<a class="icon-wink" href="/user/login">$lang.get('a.login')</a>
@@ -99,6 +101,10 @@ function _passwd1() {
 		$('#passwd2').parent().removeClass('has-error');
 		$('#passwd1').parent().addClass('has-success');
 		$('#passwd2').parent().addClass('has-success');
+		
+		p1 = giiwa.encode(p1);
+		$('input[name=pwd1]').val(p1);
+
 	}
 }
 

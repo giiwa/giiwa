@@ -24,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
-import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.json.JSON;
 import org.giiwa.web.Controller;
@@ -33,16 +32,14 @@ public class VelocityView extends View {
 
 	private static Log log = LogFactory.getLog(VelocityView.class);
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean parse(Object file, Controller m, String viewname) throws IOException {
 
 		TimeStamp t = TimeStamp.create();
 		Template template = getTemplate(viewname, file);
 
-		// System.out.println(viewname + "=>" + template);
 		if (template != null) {
-			m.resp.setContentType(m.getResponseContentType());
+			m.resp.setContentType(m.contentType);
 
 			BufferedWriter writer = new BufferedWriter(m.resp.getWriter());
 
@@ -103,19 +100,20 @@ public class VelocityView extends View {
 			/**
 			 * get the template from the top
 			 */
+
 			Template t1 = Velocity.getTemplate(viewname, "UTF-8");
 			t = T.create(t1, View.lastModified(file));
 
-			if (Local.getInt("web.debug", 0) == 0) {
-				// not debug
-				if (cache.size() >= 100) {
-					for (int i = 0; i < 10; i++) {
-						String s1 = cache.keySet().iterator().next();
-						cache.remove(s1);
-					}
+//			if (Local.getInt("web.debug", 0) == 0) {
+			// not debug
+			if (cache.size() >= 500) {
+				for (int i = 0; i < 10; i++) {
+					String s1 = cache.keySet().iterator().next();
+					cache.remove(s1);
 				}
-				cache.put(viewname, t);
 			}
+			cache.put(viewname, t);
+//			}
 		}
 
 		return t == null ? null : t.template;

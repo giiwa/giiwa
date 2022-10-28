@@ -26,10 +26,11 @@ import org.giiwa.conf.Config;
 /**
  * The {@code RDB} Class used to for RDS database layer operation.
  * 
+ * @deprecated
  * @author joe
  *
  */
-public class RDB {
+public final class RDB {
 
 	final private static Log log = LogFactory.getLog(RDB.class);
 
@@ -39,7 +40,7 @@ public class RDB {
 	 * @return boolean, true if configured
 	 */
 	public static boolean isConfigured() {
-		return getDataSource(Helper.DEFAULT) != null;
+		return getDataSource("default") != null;
 	}
 
 	/**
@@ -98,11 +99,13 @@ public class RDB {
 	 * initialize the DB object from the "giiwa.properties"
 	 */
 	public static synchronized void init() {
-		conf = Config.getConf();
-		if (conf == null)
-			return;
 
-		RDB.getDataSource(Helper.DEFAULT);
+		conf = Config.getConf();
+		if (conf == null) {
+			return;
+		}
+
+		RDB.getDataSource("default");
 
 	}
 
@@ -168,7 +171,7 @@ public class RDB {
 	 * @throws SQLException the sQL exception
 	 */
 	public static Connection getConnection() throws SQLException {
-		BasicDataSource ds = getDataSource(Helper.DEFAULT);
+		BasicDataSource ds = getDataSource("default");
 		if (ds != null) {
 			Connection c = ds.getConnection();
 			if (c != null) {
@@ -196,8 +199,18 @@ public class RDB {
 		return getConnectionByUrl(name, url, username, passwd, null);
 	}
 
-	public static Connection getConnectionByUrl(String name, String url, String username, String passwd, String locale)
-			throws SQLException {
+	/**
+	 * 
+	 * @param name
+	 * @param url
+	 * @param username
+	 * @param passwd
+	 * @param locale
+	 * @return
+	 * @throws SQLException
+	 */
+	public synchronized static Connection getConnectionByUrl(String name, String url, String username, String passwd,
+			String locale) throws SQLException {
 
 		String D = _getDiver(url);
 
@@ -215,12 +228,17 @@ public class RDB {
 					}
 					// Locale.setDefault(new Locale(locale));
 				}
-				if (log.isDebugEnabled())
-					log.debug("locale， default=" + oldlocale + ", set=" + Locale.getDefault());
 
-//				Class.forName(D);
+				synchronized (Class.class) {
+					Class.forName(D);
+				}
+
 				DriverManager.setLoginTimeout(10);
 				Connection conn = DriverManager.getConnection(url, username, passwd);
+
+				if (log.isDebugEnabled())
+					log.debug("got connection for [" + url + ", locale=" + Locale.getDefault() + "]");
+
 				return conn;
 			} catch (Exception e) {
 				throw new SQLException(e);
@@ -241,6 +259,7 @@ public class RDB {
 	 * @throws SQLException the SQL exception
 	 */
 	public static Connection getConnection(String name) throws SQLException {
+
 		name = name.trim();
 		BasicDataSource external = dss.get(name);
 		if (external == null) {
@@ -256,6 +275,7 @@ public class RDB {
 				log.error(name, e);
 			}
 		}
+
 		return c;
 	}
 
@@ -312,29 +332,41 @@ public class RDB {
 	}
 
 	private static String _getDiver(String url) {
-		if (url.startsWith("jdbc:hsqldb:")) {
-			return "org.hsqldb.jdbc.JDBCDriver";
-		} else if (url.startsWith("jdbc:h2:")) {
-			return "org.h2.Driver";
-		} else if (url.startsWith("jdbc:derby:")) {
-			return "org.apache.derby.jdbc.EmbeddedDriver";
-		} else if (url.startsWith("jdbc:firebirdsql:")) {
-			return "org.firebirdsql.jdbc.FBDriver";
-		} else if (url.startsWith("jdbc:sqlite:")) {
-			return "org.sqlite.JDBC";
-			// } else if (url.startsWith("jdbc:h2:")) {
-			// return "org.giiwa.h2.jdbc.H2Driver";
-		} else if (url.startsWith("jdbc:mongodb:")) {
+//		if (url.startsWith("jdbc:hsqldb:")) {
+//			return "org.hsqldb.jdbcDriver";
+//		} else if (url.startsWith("jdbc:h2:")) {
+//			return "org.h2.Driver";
+//		} else if (url.startsWith("jdbc:derby:")) {
+//			return "org.apache.derby.jdbc.EmbeddedDriver";
+//		} else if (url.startsWith("jdbc:firebirdsql:")) {
+//			return "org.firebirdsql.jdbc.FBDriver";
+//		} else if (url.startsWith("jdbc:sqlite:")) {
+//			return "org.sqlite.JDBC";
+//			// } else if (url.startsWith("jdbc:h2:")) {
+//			// return "org.giiwa.h2.jdbc.H2Driver";
+//		} else 
+		if (url.startsWith("jdbc:mongodb:")) {
 			return "com.dbschema.MongoJdbcDriver";
+
+		} else if (url.startsWith("jdbc:clickhouse:")) {
+			// jdbc:clickhouse://localhost:8123/test
+			return "cc.blynk.clickhouse.ClickHouseDriver";
 
 		} else if (url.startsWith("jdbc:hive2:")) {
 			return "org.apache.hive.jdbc.HiveDriver";
 
 		} else if (url.startsWith("jdbc:postgresql:")) {
 			return "org.postgresql.Driver";
+		} else if (url.startsWith("jdbc:pivotal:greenplum:")) {
+			return "com.pivotal.jdbc.GreenplumDriver";
+
+		} else if (url.startsWith("jdbc:dm:")) {
+			return "dm.jdbc.driver.DmDriver";
 
 		} else if (url.startsWith("jdbc:mysql:")) {
-			return "com.mysql.jdbc.Driver";
+			return "com.mysql.cj.jdbc.Driver";
+		} else if (url.startsWith("jdbc:mariadb:")) {
+			return "org.mariadb.jdbc.Driver";
 		} else if (url.startsWith("jdbc:oracle:")) {
 			return "oracle.jdbc.OracleDriver";
 		} else if (url.startsWith("jdbc:db2:")) {
@@ -347,8 +379,8 @@ public class RDB {
 			return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 		} else if (url.startsWith("jdbc:sybase:")) {
 			return "net.sourceforge.jtds.jdbc.Driver";
-		} else if (url.startsWith("jdbc:odbc:")) {
-			return "sun.jdbc.odbc.JdbcOdbcDriver";
+//		} else if (url.startsWith("jdbc:odbc:")) {
+//			return "sun.jdbc.odbc.JdbcOdbcDriver";
 		}
 		return null;
 	}

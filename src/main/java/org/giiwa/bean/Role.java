@@ -30,8 +30,8 @@ import org.giiwa.json.JSON;
  * @author yjiang
  * 
  */
-@Table(name = "gi_role", memo="GI-角色")
-public class Role extends Bean {
+@Table(name = "gi_role", memo = "GI-角色")
+public final class Role extends Bean {
 
 	/**
 	* 
@@ -51,8 +51,7 @@ public class Role extends Bean {
 	@Column(memo = "角色首页")
 	public String url; // 首页
 
-	// String memo;
-	// long updated;
+	public int seq;
 
 	/**
 	 * Checks for.
@@ -89,6 +88,7 @@ public class Role extends Bean {
 			/**
 			 * exists, create failded
 			 */
+			dao.update(r.id, v);
 			return r.getId();
 		}
 
@@ -117,7 +117,7 @@ public class Role extends Bean {
 	 */
 	public List<?> getAccesses() {
 		if (accesses == null) {
-			accesses = RoleAccess.dao.distinct("name", W.create("rid", this.getId()));
+			accesses = RoleAccess.dao.distinct("name", W.create().and("rid", this.getId()));
 		}
 
 		return accesses;
@@ -132,10 +132,10 @@ public class Role extends Bean {
 	public static void setAccess(long rid, String name) {
 
 		try {
-			if (!RoleAccess.dao.exists(W.create("rid", rid).and("name", name))) {
+			if (!RoleAccess.dao.exists(W.create().and("rid", rid).and("name", name))) {
 				RoleAccess.dao.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)));
 
-				dao.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
+				dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -150,9 +150,9 @@ public class Role extends Bean {
 	 * @param name the name
 	 */
 	public static void removeAccess(long rid, String name) {
-		dao.delete(W.create("rid", rid).and("name", name));
+		dao.delete(W.create().and("rid", rid).and("name", name));
 
-		dao.update(W.create(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
+		dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
 
 	}
 
@@ -163,7 +163,7 @@ public class Role extends Bean {
 	 * @return the role
 	 */
 	public static Role loadByName(String name) {
-		return dao.load(W.create("name", name));
+		return dao.load(W.create().and("name", name));
 	}
 
 	public long getId() {
@@ -187,7 +187,7 @@ public class Role extends Bean {
 
 	public void setAccess(String[] accesses) {
 		if (accesses != null) {
-			RoleAccess.dao.delete(W.create("rid", this.getId()));
+			RoleAccess.dao.delete(W.create().and("rid", this.getId()));
 
 			for (String a : accesses) {
 				RoleAccess.dao.insert(V.create("rid", this.getId()).set("name", a).set(X.ID, UID.id(this.getId(), a)));
@@ -195,7 +195,7 @@ public class Role extends Bean {
 		}
 	}
 
-	@Table(name = "gi_roleaccess", memo="GI-角色权限")
+	@Table(name = "gi_roleaccess", memo = "GI-角色权限")
 	public static class RoleAccess extends Bean {
 
 		/**
@@ -216,7 +216,7 @@ public class Role extends Bean {
 	 * @return the beans
 	 */
 	public static Beans<Role> loadByAccess(String access, int s, int n) {
-		Beans<RoleAccess> bs = RoleAccess.dao.load(W.create("name", access).sort("rid", 1), 0, 1000);
+		Beans<RoleAccess> bs = RoleAccess.dao.load(W.create().and("name", access).sort("rid", 1), 0, 1000);
 
 		W q = W.create();
 		if (bs == null || bs.isEmpty()) {

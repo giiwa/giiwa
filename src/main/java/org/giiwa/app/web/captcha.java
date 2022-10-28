@@ -14,8 +14,6 @@
 */
 package org.giiwa.app.web;
 
-import java.io.FileOutputStream;
-
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
@@ -31,11 +29,16 @@ import org.giiwa.web.Path;
  * web api: <a href='/captcha' target='_blank'>/captcha</a><br>
  * provides web api to get the captcha image and verify which linked with sid
  * (session key)
- * 
+ *  @Deprecated
  * @author wujun
  *
  */
 public class captcha extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * response the json with uri=[code.jpg]
@@ -47,10 +50,8 @@ public class captcha extends Controller {
 		Temp t = Temp.create("code.jpg");
 		try {
 
-			t.getFile().getParentFile().mkdirs();
-
 			Captcha.create(this.sid(true), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60,
-					new FileOutputStream(t.getFile()), 4);
+					t.getOutputStream(), 4);
 
 			String filename = "/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/")
 					+ System.currentTimeMillis() + "_" + UID.random(10) + ".jpg";

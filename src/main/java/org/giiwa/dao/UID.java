@@ -29,7 +29,6 @@ import org.giiwa.conf.Global;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.misc.*;
-import org.giiwa.task.GlobalLock;
 
 /**
  * The {@code UID} Class used to create unique id, or sequence, random string
@@ -50,7 +49,7 @@ public final class UID {
 	 */
 	public static long next(String key) {
 
-		Lock door = GlobalLock.create("uid." + key);
+		Lock door = Global.getLock("uid." + key);
 
 		try {
 			if (door.tryLock(10, TimeUnit.SECONDS)) {
@@ -81,10 +80,11 @@ public final class UID {
 		Global f = Helper.load(key, Global.class);
 
 		long v = Math.max(1, Global.getLong("uid.next.s1", 1));
-		if (f == null) {
+		if (f == null || X.isEmpty(f.id)) {
 			String linkid = UID.random();
 
-			Helper.insert(V.create(X.ID, key).append("l", v).append("linkid", linkid), Global.class);
+			Global.dao.insert(V.create(X.ID, key).append("l", v).append("linkid", linkid));
+
 			f = Helper.load(key, Global.class);
 			if (f == null) {
 //				log.error("occur error when create unique id, name=" + key);
@@ -94,11 +94,13 @@ public final class UID {
 			}
 
 		} else {
-			// log.debug("v=" + v + ", f=" + f);
+			if (log.isDebugEnabled()) {
+				log.debug("v=" + v + ", f=" + f);
+			}
+
 			long v1 = Math.max(f.getLong("l"), Global.getLong("uid.next.s1", 1));
 
-			if (Helper.update(W.create(X.ID, key).and("l", f.getLong("l")), V.create("l", v1 + 1L),
-					Global.class) <= 0) {
+			if (Global.dao.update(W.create().and(X.ID, key).and("l", f.getLong("l")), V.create("l", v1 + 1L)) <= 0) {
 				return _next(key);
 			}
 			v = v1 + 1;
@@ -113,7 +115,7 @@ public final class UID {
 
 	public static long get(String key) {
 
-		Lock door = GlobalLock.create("uid." + key);
+		Lock door = Global.getLock("uid." + key);
 
 		try {
 			door.lock();
@@ -286,7 +288,6 @@ public final class UID {
 			i++;
 			len--;
 		}
-//		System.out.println(i);
 		return ii;
 	}
 

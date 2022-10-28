@@ -17,7 +17,10 @@ package org.giiwa.app.web;
 import java.io.File;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,7 +29,9 @@ import org.giiwa.bean.AuthToken;
 import org.giiwa.bean.Code;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Role;
+import org.giiwa.bean.Roles;
 import org.giiwa.bean.Session;
+import org.giiwa.bean.Temp;
 import org.giiwa.bean.User;
 import org.giiwa.bean.UserConfig;
 import org.giiwa.conf.Global;
@@ -37,7 +42,9 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Base32;
 import org.giiwa.misc.Captcha;
+import org.giiwa.misc.Url;
 import org.giiwa.misc.noti.Email;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
@@ -51,6 +58,11 @@ import org.giiwa.web.view.View;
  * 
  */
 public class user extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8249276425428015555L;
 
 	/**
 	 * Index.
@@ -79,7 +91,7 @@ public class user extends Controller {
 			this.print("bad appid or data");
 			return;
 		}
-		App a = App.dao.load(W.create("appid", appid));
+		App a = App.dao.load(W.create().and("appid", appid));
 		if (a == null) {
 			this.print("bad appid");
 			return;
@@ -93,6 +105,15 @@ public class user extends Controller {
 				User u = User.load(name);
 				if (u != null) {
 					this.user(u);
+
+					Roles rs = u.getRole();
+					for (Role r1 : rs.getList()) {
+						if (!X.isEmpty(r1.url)) {
+							this.redirect(r1.url);
+							return;
+						}
+					}
+
 					this.redirect("/");
 					return;
 				} else {
@@ -111,6 +132,7 @@ public class user extends Controller {
 	 */
 	@Path(path = "register")
 	public void register() {
+
 		if ("close".equals(Global.getString("user.system", "close"))) {
 			this.redirect("/user/login");
 			return;
@@ -136,7 +158,18 @@ public class user extends Controller {
 				String name = this.getString("name").trim().toLowerCase();
 
 				try {
-					V v = V.create("name", name).copy(this, "password", "nickname", "email", "phone");
+					V v = V.create("name", name).copy(this, "nickname", "email", "phone");
+
+					String pwd = this.get("password");
+					if (X.isEmpty(pwd)) {
+						pwd = this.get("pwd1");
+						if (!X.isEmpty(pwd)) {
+							// decode
+							pwd = new String(Base64.getDecoder().decode(pwd));
+						}
+					}
+					v.append("password", pwd);
+
 					long id = User.create(name, v);
 
 					String role = Global.getString("user.role", "N/A");
@@ -146,8 +179,8 @@ public class user extends Controller {
 						u.setRole(r.getId());
 					}
 					this.user(u, LoginType.web);
-					GLog.securitylog.info(user.class, "register",
-							lang.get("create.success") + ":" + name + ", uid=" + id, login, this.ip());
+					GLog.securitylog.info("user", "register", lang.get("create.success") + ":" + name + ", uid=" + id,
+							login, this.ip());
 
 					if (this.isAjax()) {
 						this.send(JSON.create().append(X.STATE, 200).append("id", u.getId()).append(X.MESSAGE,
@@ -164,7 +197,7 @@ public class user extends Controller {
 					}
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
-					GLog.securitylog.error(user.class, "register", e.getMessage(), e, login, this.ip());
+					GLog.securitylog.error("user", "register", e.getMessage(), e, login, this.ip());
 
 					if (this.isAjax()) {
 						this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
@@ -272,27 +305,298 @@ public class user extends Controller {
 
 	}
 
+	@Path(path = "sso")
+	public void sso() {
+
+//		Global.setConfig("user.login.sso", X.isSame("on", this.getString("user.login.sso")) ? 1 : 0);
+//		Global.setConfig("user.login.sso.mode", this.getString("user.login.sso.mode"));
+//		Global.setConfig("user.login.sso.role", this.getString("user.login.sso.role"));
+//		Global.setConfig("user.login.sso.expired", this.getLong("user.login.sso.expired"));
+
+		if (Global.getInt("user.login.sso", 0) == 0) {
+
+			GLog.securitylog.warn("user", "sso", "failed as disabled", null, this.ip());
+
+			this.print("disabled");
+			return;
+		}
+
+		String s = this.get("_s");
+		s = new String(Base32.decode(s));
+		JSON j0 = JSON.fromObject(s);
+
+		String mode = Global.getString("user.login.sso.mode", X.EMPTY);
+		if (X.isIn(mode, "appid")) {
+			String appid = j0.getString("appid");
+			if (X.isEmpty(appid)) {
+
+				GLog.securitylog.warn("user", "sso", "failed as appid missed", null, this.ip());
+
+				this.print("[appid] missed!");
+				return;
+			}
+
+			App a = App.load(appid);
+			if (a == null) {
+
+				GLog.securitylog.warn("user", "sso", "failed as appid error", null, this.ip());
+
+				this.print("[appid] error!");
+				return;
+			}
+
+			String token = j0.getString("token");
+			if (X.isEmpty(token)) {
+
+				GLog.securitylog.warn("user", "sso", "failed as token missed", null, this.ip());
+
+				this.print("[token] missed!");
+				return;
+			}
+
+			token = token.replaceAll(" ", "+");
+
+			String token1 = App.decode(token, a.secret);
+			if (X.isEmpty(token1)) {
+
+				GLog.securitylog.warn("user", "sso", "failed as token error", null, this.ip());
+
+				this.print("[token] error! ");
+				return;
+			}
+
+			JSON j1 = JSON.fromObject(token1);
+			if (j1 == null || j1.isEmpty()) {
+
+				GLog.securitylog.warn("user", "sso", "failed as token no json", null, this.ip());
+
+				this.print("[token] is not json!");
+				return;
+			}
+
+			if (!j1.containsKey("time")) {
+
+				GLog.securitylog.warn("user", "sso", "failed as time missed in token", null, this.ip());
+
+				this.print("[time] missed in token");
+			}
+
+			long time = j1.getLong("time");
+			long expired = Global.getLong("user.login.sso.expired", 60);
+			if (System.currentTimeMillis() - time > expired * 60 * X.AMINUTE) {
+
+				GLog.securitylog.warn("user", "sso", "failed as exired", null, this.ip());
+
+				this.print("expired");
+				return;
+			}
+
+			String name = j1.getString("name");
+			if (X.isEmpty(name)) {
+
+				GLog.securitylog.warn("user", "sso", "failed as name missed in token", null, this.ip());
+
+				this.print("[name] missed in token");
+				return;
+			}
+
+			String url0 = j0.getString("url");
+			String url = Url.decode(url0);
+
+			User u = User.load(name);
+			if (u != null) {
+				this.user(u);
+
+				if (!X.isEmpty(url)) {
+
+					GLog.securitylog.warn("user", "sso", "redirect [" + url + "], url0=" + url0, u, this.ip());
+
+					this.redirect(url);
+					return;
+				}
+
+				Roles rs = u.getRole();
+				if (rs != null && rs.getList() != null) {
+					for (Role r1 : rs.getList()) {
+						if (!X.isEmpty(r1.url)) {
+
+							GLog.securitylog.warn("user", "sso", "redirect [" + r1.url + "]", u, this.ip());
+
+							this.redirect(r1.url);
+							return;
+						}
+					}
+				}
+
+				GLog.securitylog.warn("user", "sso", "redirect [/]", u, this.ip());
+
+				this.redirect("/");
+				return;
+			}
+
+			V v = V.create();
+			v.append("name", name);
+			v.append("nickname", j1.getString("nickname", name));
+			v.append("createdua", "sso");
+			v.append("password", UID.random(12));
+
+			try {
+				long id = User.create(v);
+
+				GLog.securitylog.warn("sso", "createuser", "name=" + name, null, this.ip());
+
+				u = User.dao.load(id);
+				this.user(u);
+
+				String role = Global.getString("user.login.sso.role", X.EMPTY);
+				if (!X.isEmpty(role)) {
+					Role r1 = Role.loadByName(role);
+					if (r1 != null) {
+						u.setRole(r1.id);
+
+						if (!X.isEmpty(url)) {
+
+							GLog.securitylog.warn("user", "sso", "redirect [" + url + "]", u, this.ip());
+
+							this.redirect(url);
+							return;
+						}
+
+						if (!X.isEmpty(r1.url)) {
+
+							GLog.securitylog.warn("user", "sso", "redirect [" + r1.url + "]", u, this.ip());
+
+							this.redirect(r1.url);
+							return;
+						}
+					}
+				}
+
+				if (!X.isEmpty(url)) {
+
+					GLog.securitylog.warn("user", "sso", "redirect [" + url + "]", u, this.ip());
+
+					this.redirect(url);
+					return;
+				}
+
+				Roles rs = u.getRole();
+				if (rs != null && rs.getList() != null) {
+					for (Role r1 : rs.getList()) {
+						if (!X.isEmpty(r1.url)) {
+
+							GLog.securitylog.warn("user", "sso", "redirect [" + r1.url + "]", u, this.ip());
+
+							this.redirect(r1.url);
+							return;
+						}
+					}
+				}
+
+				GLog.securitylog.warn("user", "sso", "redirect [/]", u, this.ip());
+
+				this.redirect("/");
+				return;
+
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+
+				GLog.securitylog.error("user", "sso", e.getMessage(), e, u, this.ip());
+
+				this.print(X.toString(e));
+			}
+
+			return;
+		}
+
+		// single sign - on
+
+		GLog.securitylog.warn("user", "sso", "redirect [/]", this.user(), this.ip());
+
+		this.redirect("/");
+
+	}
+
+	@Path(path = "ssolink", method = "post")
+	public void ssolink() {
+
+		String appid = this.get("appid");
+//		String secret = this.get("secret");
+		String name = this.get("name");
+
+		if (X.isEmpty(appid)) {
+			this.set(X.ERROR, "[appid] missed").send(201);
+			GLog.securitylog.warn("user", "ssolink", "[appid] missed", null, this.ip());
+			return;
+		}
+
+		App a = App.load(appid);
+		if (a == null) {
+			this.set(X.ERROR, "bad appid [" + appid + "]").send(201);
+			GLog.securitylog.warn("user", "ssolink", "bad appid [" + appid + "]", null, this.ip());
+			return;
+		}
+
+		if (X.isEmpty(name)) {
+			this.set(X.ERROR, "[name] missed, for username").send(201);
+			GLog.securitylog.warn("user", "ssolink", "[name] missed, for username", null, this.ip());
+			return;
+		}
+
+		JSON j1 = JSON.create();
+		j1.append("name", name);
+		j1.append("time", System.currentTimeMillis());
+
+		String url = this.getHtml("url");
+
+		String token = App.encode(j1.toString(), a.getSecret());
+		JSON j2 = JSON.create();
+		j2.append("appid", appid);
+		j2.append("token", token);
+		j2.append("url", Url.encode(url));
+		String s = j2.toString();
+
+		GLog.securitylog.info("user", "ssolink", "s=" + j2, null, this.ip());
+
+		s = Base32.encode(s.getBytes());
+		this.set("url", Global.getString("site.url", "") + "/user/sso?_s=" + s).send(200);
+
+	}
+
 	/**
 	 * Login.
 	 */
 	@Path(path = "login")
 	public void login() {
 
-		if (new File(Controller.GIIWA_HOME + "/root.pwd").exists()) {
+		if (!Helper.isConfigured()) {
+			this.redirect("/admin/setup");
+			return;
+		}
+
+		if (new File(Temp.ROOT + "/root.pwd").exists()) {
 			this.set(X.MESSAGE, lang.get("root.pwd"));
 		}
 
 		if (method.isPost()) {
 
+			String callback = this.getHtml("callback");
+			if (X.isEmpty(callback)) {
+				callback = this.session(true).get("callback");
+
+				log.info("get session, callback=" + callback);
+
+			}
+
 			JSON jo = new JSON();
 			AuthToken a = null;
 			if (Global.getInt("user.token", 0) == 1) {
 				String token = this.getString("token");
-				String sid = this.getString("sid");
-				a = AuthToken.load(sid, token);
+				a = AuthToken.load(token);
 			}
 
 			if (a != null) {
+
 				// ok, logined
 				jo.put(X.STATE, 200);
 				jo.put(X.MESSAGE, "ok");
@@ -301,86 +605,122 @@ public class user extends Controller {
 				User u = a.getUser_obj();
 				this.user(u, LoginType.ajax);
 
-				GLog.securitylog.info(user.class, "login", null, u, this.ip());
+				GLog.securitylog.info("user", "login", null, u, this.ip());
+
+				if (u.expired()) {
+					this.set(X.MESSAGE, lang.get("passwd.expired"));
+
+					log.info("redirect to passwd as expired!");
+					this.redirect("/user/passwd");
+					return;
+				}
+
+				if (!X.isEmpty(callback)) {
+
+					log.info("redirect to callback=" + callback);
+
+					this.redirect(callback);
+					return;
+				}
+
 			} else {
-				String name = this.getString("name");
-				if (name != null) {
-					name = name.toLowerCase();
-				}
-				String pwd = this.getString("pwd");
 
-				Captcha.Result r = Captcha.Result.ok;
-
-				if (Global.getInt("user.captcha", 0) == 1) {
-					String code = this.getString("code");
-					if (code != null) {
-						code = code.toLowerCase();
+				try {
+					String name = this.getString("name");
+					if (name != null) {
+						name = name.toLowerCase().replaceAll("'", X.EMPTY).replaceAll("\"", X.EMPTY);
 					}
-					r = Captcha.verify(this.sid(true), code);
-					Captcha.remove(this.sid(true));
-				}
+					String pwd = this.getString("pwd");
+					if (X.isEmpty(pwd)) {
+						pwd = this.get("pwd1");
+						if (!X.isEmpty(pwd)) {
+							// decode
+							pwd = new String(Base64.getDecoder().decode(pwd));
+						}
+					}
+					if (!X.isEmpty(pwd)) {
+						pwd = pwd.replaceAll("'", X.EMPTY).replaceAll("\"", X.EMPTY);
+					}
 
-				if (Captcha.Result.badcode == r) {
-					jo.put(X.MESSAGE, lang.get("captcha.bad"));
-					jo.put(X.STATE, 202);
+					Captcha.Result r = Captcha.Result.ok;
 
-					GLog.securitylog.error(user.class, "login", lang.get("captcha.bad"), null, this.ip());
+					if (Global.getInt("user.captcha", 0) == 1) {
+						String code = this.getString("code");
+						if (code != null) {
+							code = code.toLowerCase();
+						}
+						r = Captcha.verify(this.sid(true), code);
+						Captcha.remove(this.sid(true));
 
-				} else if (Captcha.Result.expired == r) {
-					jo.put(X.MESSAGE, lang.get("captcha.expired"));
-					jo.put(X.STATE, 203);
+					}
 
-					GLog.securitylog.error(user.class, "login", lang.get("captcha.expired"), null, this.ip());
+					if (Captcha.Result.badcode == r) {
 
-				} else {
+						jo.put(X.MESSAGE, lang.get("captcha.bad"));
+						jo.put(X.STATE, 202);
 
-					User me = User.load(name, pwd);
+						GLog.securitylog.error("user", "login", lang.get("captcha.bad"), null, this.ip());
 
-					log.info("login: " + sid(true) + "-" + me);
+					} else if (Captcha.Result.expired == r) {
 
-					if (me != null) {
+						jo.put(X.MESSAGE, lang.get("captcha.expired"));
+						jo.put(X.STATE, 203);
 
-						long uid = me.getId();
-						long time = System.currentTimeMillis() - X.AHOUR;
-						List<User.Lock> list = User.Lock.loadByHost(uid, time, this.ip());
+						GLog.securitylog.error("user", "login", lang.get("captcha.expired"), null, this.ip());
 
-						if (me.isLocked() || (list != null && list.size() >= 6)) {
-							// locked by the host
-							me.failed(this.ip(), sid(true), this.browser());
-							jo.put(X.MESSAGE, lang.get("account.locked.error"));
+					} else {
 
-							jo.put(X.STATE, 204);
-							jo.put("name", name);
-							jo.put("pwd", pwd);
+						User me = User.load(name, pwd, this.ip());
 
-							GLog.securitylog.error(user.class, "login", lang.get("account.locked.error"), me,
-									this.ip());
+						log.info("login: " + sid(true) + "-" + me);
 
-						} else {
-							list = User.Lock.loadBySid(uid, time, sid(true));
-							if (list != null && list.size() >= 3) {
+						if (me != null) {
+
+							boolean locked = me.isLocked(this.ip());
+							if (locked) {
+
+								// locked by the host
 								me.failed(this.ip(), sid(true), this.browser());
-
 								jo.put(X.MESSAGE, lang.get("account.locked.error"));
+
+								jo.put(X.STATE, 204);
 								jo.put("name", name);
 								jo.put("pwd", pwd);
-								jo.put(X.STATE, 204);
 
-								GLog.securitylog.error(user.class, "login", lang.get("account.locked.error"), me,
+								GLog.securitylog.error("user", "login", lang.get("account.locked.error"), me,
 										this.ip());
+
 							} else {
 
-								GLog.securitylog.info(user.class, "login", null, me, this.ip());
+								GLog.securitylog.info("user", "login", me.name + " login success", me, this.ip());
 
 								if (X.isSame("json", this.getString("type")) || this.isAjax()) {
 
 									this.user(me, LoginType.ajax);
 
-									if (log.isDebugEnabled())
+									if (log.isDebugEnabled()) {
 										log.debug("isAjax login");
+									}
 
-									login.logined(sid(true), this.ip(),
+									me.logined(sid(true), this.ip(),
 											V.create("ajaxlogined", System.currentTimeMillis()));
+
+									if (me.expired()) {
+										this.set(X.MESSAGE, lang.get("passwd.expired"));
+
+										log.info("redirect to passwd as expired");
+
+										this.redirect("/user/passwd");
+										return;
+									}
+
+									if (!X.isEmpty(callback)) {
+
+										log.info("redirect to callback=" + callback);
+
+										this.redirect(callback);
+										return;
+									}
 
 									jo.put("sid", sid(true));
 									jo.put("uid", me.getId());
@@ -388,8 +728,8 @@ public class user extends Controller {
 									/**
 									 * test the configuration is enabled user token and this request is ajax
 									 */
-									if (Global.getInt("user.token", 1) == 1) {
-										AuthToken t = AuthToken.update(me.getId(), sid(true), this.ip());
+									if (Global.getInt("user.token", 0) == 1) {
+										AuthToken t = AuthToken.create(me.getId(), this.ip());
 										if (t != null) {
 											jo.put("token", t.getToken());
 											jo.put("expired", t.getExpired());
@@ -398,6 +738,8 @@ public class user extends Controller {
 											jo.put(X.MESSAGE, "create authtoken error");
 											jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 										}
+									} else {
+										jo.put(X.STATE, HttpServletResponse.SC_OK);
 									}
 									this.send(jo);
 								} else {
@@ -410,71 +752,124 @@ public class user extends Controller {
 									me.logined(sid(true), this.ip(),
 											V.create("weblogined", System.currentTimeMillis()));
 
+									if (me.expired()) {
+										this.set(X.MESSAGE, lang.get("passwd.expired"));
+
+										log.info("redirect to passwd as expired");
+
+										this.redirect("/user/passwd");
+
+										return;
+									}
+
+									if (!X.isEmpty(callback)) {
+
+										log.info("redirect to callback=" + callback);
+
+										this.redirect(callback);
+										return;
+									}
+
+									Roles rs = me.getRole();
+									if (rs != null && rs.getList() != null) {
+										for (Role r1 : rs.getList()) {
+											if (!X.isEmpty(r1.url)) {
+
+												log.info("redirect to role home=" + r1.url);
+
+												this.redirect(r1.url);
+												return;
+											}
+										}
+									}
+
+									log.info("redirect to /");
+
 									this.redirect("/");
 //									this.redirect("/user/go");
 								}
 								return;
 							}
-						}
 
-					} else {
-
-						jo.append(X.STATE, 200).append(X.MESSAGE, "ok");
-
-						User u = User.load(name);
-						if (u == null) {
-							jo.put("message", lang.get("login.name_password.error"));
-							jo.put(X.STATE, 201);
-
-							GLog.securitylog.error(user.class, "login",
-									lang.get("login.name_password.error") + ":" + name, u, this.ip());
 						} else {
 
-							u.failed(this.ip(), sid(true), this.browser());
+							jo.append(X.STATE, 200).append(X.MESSAGE, "ok");
 
-							List<User.Lock> list = User.Lock.loadByHost(u.getId(), System.currentTimeMillis() - X.AHOUR,
-									this.ip());
+							User u = User.load(name);
+							if (u == null) {
+								jo.put("message", lang.get("login.name_password.error"));
+								jo.put(X.STATE, 201);
 
-							if (list != null && list.size() >= 6) {
-								jo.put("message", lang.get("login.locked.error"));
-								jo.put(X.STATE, 204);
-
-								GLog.securitylog.error(user.class, "login", lang.get("login.failed") + ":" + name, u,
-										this.ip());
-
+								GLog.securitylog.error("user", "login",
+										lang.get("login.name_password.error") + ":" + name, u, this.ip());
 							} else {
-								list = User.Lock.loadBySid(u.getId(), System.currentTimeMillis() - X.AHOUR, sid(true));
-								if (list != null && list.size() >= 3) {
+
+								u.failed(this.ip(), sid(true), this.browser());
+
+								boolean locked = u.isLocked(this.ip());
+								if (locked) {
 									jo.put("message", lang.get("login.locked.error"));
 									jo.put(X.STATE, 204);
 
-									GLog.securitylog.error(user.class, "login",
-											lang.get("login.locked.error") + ":" + name, u, this.ip());
-
-								} else {
-									jo.put(X.MESSAGE, String.format(lang.get("login.name_password.error.times"),
-											list == null ? 0 : list.size()));
-									jo.put(X.STATE, 204);
-
-									GLog.securitylog.warn(user.class, "login", jo.getString(X.MESSAGE) + ":" + name, u,
+									GLog.securitylog.error("user", "login", lang.get("login.failed") + ":" + name, u,
 											this.ip());
+								} else {
 
+									long[] n = u.failed(this.ip());
+									if (n != null) {
+										jo.put(X.MESSAGE,
+												String.format(lang.get("login.name_password.error.times"), n[0], n[1]));
+										jo.put(X.STATE, 204);
+									}
+
+									GLog.securitylog.warn("user", "login", jo.getString(X.MESSAGE) + ":" + name, u,
+											this.ip());
 								}
 							}
-						}
 
-						jo.put("name", name);
-						jo.put("pwd", pwd);
+							jo.put("name", name);
+							jo.put("pwd", pwd);
+						}
 					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+					jo.put(X.MESSAGE, e.getMessage());
+					jo.put(X.STATE, 201);
 				}
 			}
 
 			if (X.isSame("json", this.getString("type")) || this.isAjax()) {
+
 				this.send(jo);
 				return;
+
 			} else if (login != null) {
+
+				Roles rs = login.getRole();
+				if (rs != null && rs.getList() != null) {
+					for (Role r1 : rs.getList()) {
+						if (!X.isEmpty(r1.url)) {
+
+							log.info("redirect to role home=" + r1.url);
+
+							this.redirect(r1.url);
+							return;
+						}
+					}
+				}
+
+				if (login.expired()) {
+					this.set(X.MESSAGE, lang.get("passwd.expired"));
+
+					log.info("redirect to passwd as expired");
+
+					this.redirect("/user/passwd");
+					return;
+				}
+
+				log.info("redirect to /");
+
 				this.redirect("/");
-//				this.redirect("/user/go");
 			} else {
 				this.copy(this.json());
 				this.set(X.STATE, jo.getInt(X.STATE));
@@ -483,7 +878,7 @@ public class user extends Controller {
 		} else {
 			String sid = this.getString("sid");
 			if (!X.isEmpty(sid)) {
-				AuthToken.dao.delete(W.create("sid", sid));
+				AuthToken.dao.delete(W.create().and("sid", sid));
 			}
 		}
 
@@ -493,8 +888,25 @@ public class user extends Controller {
 				this.session(true).set("uri", URLDecoder.decode(refer, "UTF-8")).store();
 			} catch (Exception e) {
 				log.error(refer, e);
-				GLog.securitylog.error(user.class, "login", e.getMessage(), e, login, this.ip());
+				GLog.securitylog.error("user", "login", e.getMessage(), e, login, this.ip());
 			}
+		}
+
+		this.user(null);
+
+		String callback = this.getHtml("callback");
+		try {
+			log.info("store in session, callback=" + callback);
+			this.set("callback", callback);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		String tips = this.get("tips");
+		byte[] bb = Base32.decode(tips);
+		if (bb != null) {
+			this.set("tips", tips);
+			this.set("tips2", new String(bb));
 		}
 
 		show("/user/user.login.html");
@@ -515,7 +927,7 @@ public class user extends Controller {
 			 */
 			AuthToken.delete(u.getId(), sid(true));
 
-			GLog.securitylog.info(user.class, "logout", null, u, this.ip());
+			GLog.securitylog.info("user", "logout", null, u, this.ip());
 
 			login.logout();
 
@@ -548,69 +960,69 @@ public class user extends Controller {
 	/**
 	 * Verify.
 	 */
-	@Path(path = "verify", access = "access.config.user.query")
+	@Path(path = "verify")
 	public void verify() {
-		String name = this.getString("name").trim().toLowerCase();
-		String value = this.getString("value").trim().toLowerCase();
+		String name = this.getString("name");
+		String value = this.getString("value");
 
 		if (X.isEmpty(value)) {
 			this.set(X.MESSAGE, lang.get("user.name.format.error")).send(201);
 			return;
 		}
 
-		JSON jo = new JSON();
-		if ("name".equals(name)) {
+//		JSON jo = new JSON();
+		if (X.isSame(name, "name")) {
 			try {
-				if (User.dao.exists(W.create("name", value))) {
+//				if (User.dao.exists(W.create().and("name", value))) {
+//
+//					jo.put(X.STATE, 201);
+//					jo.put(X.MESSAGE, lang.get("user.name.exists"));
+//
+//					GLog.securitylog.info("user", "verify", "name=" + name + ",value=" + value + ",exists", login,
+//							this.ip());
+//
+//				} else {
+				String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
 
-					jo.put(X.STATE, 201);
-					jo.put(X.MESSAGE, lang.get("user.name.exists"));
+				if ((!X.isEmpty(rule) && !value.matches(rule))) {
 
-					GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",exists", login,
+					GLog.securitylog.info("user", "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
 							this.ip());
 
+					this.set(X.MESSAGE, lang.get("user.name.format.error")).send(201);
+					return;
 				} else {
-					String rule = Global.getString("user.name.rule", "^[a-zA-Z0-9]{4,16}$");
-
-					if ((!X.isEmpty(rule) && !value.matches(rule))) {
-
-						GLog.securitylog.info(user.class, "verify",
-								"name=" + name + ",value=" + value + ",rule=" + rule, login, this.ip());
-
-						this.set(X.MESSAGE, lang.get("user.name.format.error")).send(201);
-						return;
-
-					} else {
-						this.send(200);
-						return;
-					}
+					this.send(200);
+					return;
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				jo.append(X.STATE, 500).append(X.MESSAGE, "internal error");
+				this.set(X.MESSAGE, "internal error").send(500);
+				return;
 			}
-		} else if ("password".equals(name)) {
+		} else if (X.isSame(name, "password")) {
 			String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
 			if (!X.isEmpty(rule) && !value.matches(rule)) {
 
-				GLog.securitylog.info(user.class, "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
+				GLog.securitylog.info("user", "verify", "name=" + name + ",value=" + value + ",rule=" + rule, login,
 						this.ip());
 
 				this.set(X.MESSAGE, lang.get("user.name.format.error")).send(201);
 				return;
 
 			} else {
-				jo.put(X.STATE, 200);
+				this.send(200);
+				return;
 			}
 		}
 
-		this.send(jo);
+		this.set(X.MESSAGE, "bad [" + name + "]").send(201);
 	}
 
 	/**
 	 * get user list by "access" token
 	 */
-	@Path(path = "popup2", login = true, access = "access.config.user.query")
+	@Path(path = "popup2", login = true)
 	public void popup2() {
 		String access = this.getString("access");
 		List<User> list = null;
@@ -669,7 +1081,7 @@ public class user extends Controller {
 			if (!X.isEmpty(email)) {
 				if (phase == 0) {
 					// verify email and send a code
-					Code c = Code.dao.load(W.create("s2", email).sort(X.CREATED, -1));
+					Code c = Code.dao.load(W.create().and("s2", email).sort(X.CREATED, -1));
 					if (c != null && c.getUpdated() < X.AMINUTE) {
 
 						jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
@@ -679,7 +1091,7 @@ public class user extends Controller {
 						int s = 0;
 
 						StringBuilder sb = new StringBuilder();
-						W q = W.create("email", email);
+						W q = W.create().and("email", email);
 						Beans<User> bs = User.load(q, s, 10);
 						while (bs != null && !bs.isEmpty()) {
 							for (User u : bs) {
@@ -719,7 +1131,7 @@ public class user extends Controller {
 										if (Email.send(lang.get("mail.validation.code"), body, email)) {
 											jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
 											jo.put(X.STATE, HttpServletResponse.SC_OK);
-											Code.dao.update(W.create("s1", code).and("s2", email),
+											Code.dao.update(W.create().and("s1", code).and("s2", email),
 													V.create(X.UPDATED, System.currentTimeMillis()));
 
 										} else {
@@ -728,7 +1140,7 @@ public class user extends Controller {
 										}
 									} catch (Exception e) {
 										log.error(e.getMessage(), e);
-										GLog.applog.error(user.class, "forget", e.getMessage(), e, login, this.ip());
+										GLog.applog.error("user", "forget", e.getMessage(), e, login, this.ip());
 										jo.put(X.MESSAGE,
 												lang.get("user.forget.email.sent.failed") + ": " + e.getMessage());
 										jo.put(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -760,13 +1172,21 @@ public class user extends Controller {
 						Code.delete(code, email);
 
 						String passwd = this.getString("passwd");
+						if (X.isEmpty(passwd)) {
+							passwd = this.get("pwd1");
+							if (!X.isEmpty(passwd)) {
+								// decode
+								passwd = new String(Base64.getDecoder().decode(passwd));
+							}
+						}
+
 						String rule = Global.getString("user.passwd.rule", "^[a-zA-Z0-9]{6,16}$");
 						if (!X.isEmpty(rule) && !passwd.matches(rule)) {
 							jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
 							jo.put(X.MESSAGE, "user.passwd.format.error");
 						} else {
 							try {
-								User.update(W.create("email", email), V.create("password", passwd));
+								User.update(W.create().and("email", email), V.create("password", passwd));
 								jo.put(X.STATE, HttpServletResponse.SC_OK);
 								jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
 							} catch (Exception e) {
@@ -781,7 +1201,7 @@ public class user extends Controller {
 
 				if (phase == 0) {
 					// verify email and send a code
-					Code c = Code.dao.load(W.create("s2", phone).sort(X.CREATED, -1));
+					Code c = Code.dao.load(W.create().and("s2", phone).sort(X.CREATED, -1));
 					if (c != null && c.getUpdated() < X.AMINUTE) {
 
 						jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
@@ -791,7 +1211,7 @@ public class user extends Controller {
 						int s = 0;
 
 						StringBuilder sb = new StringBuilder();
-						W q = W.create("phone", phone);
+						W q = W.create().and("phone", phone);
 						Beans<User> bs = User.load(q, s, 10);
 						while (bs != null && !bs.isEmpty()) {
 							for (User u : bs) {
@@ -864,7 +1284,7 @@ public class user extends Controller {
 						jo.put(X.MESSAGE, "user.passwd.format.error");
 					} else {
 						try {
-							User.update(W.create("phone", phone), V.create("password", passwd));
+							User.update(W.create().and("phone", phone), V.create("password", passwd));
 							jo.put(X.STATE, HttpServletResponse.SC_OK);
 							jo.put(X.MESSAGE, lang.get("user.passwd.updated"));
 						} catch (Exception e) {
@@ -915,17 +1335,57 @@ public class user extends Controller {
 		User u = this.user();
 		if (u == null) {
 //			this.set(X.ERROR, "login required").send(401);
+			this.send(200);
 			return;
 		}
 
 		u = User.dao.load(login.getId());
-		JSON j1 = JSON.create();
-		j1.append("id", u.id).append("name", u.name).append("nickname", u.nickname).append("title", u.title);
+		JSON j1 = u.json();
 
-		this.send(JSON.create().append(X.STATE, 200).append("data",
-				j1.append("accesses", u.getAccesses()).append("roles", X.asList(u.getRole().getList(), e -> {
-					return ((Role) e).getName();
-				}))));
+		j1.append("ip", this.ip());
+		j1.append("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd"));
+
+		Map<String, JSON> home = new TreeMap<String, JSON>();
+		JSON jo = JSON.create().append(X.STATE, 200).append("data", j1.append("accesses", u.getAccesses())
+				.append("roles", u.getRole() == null ? null : X.asList(u.getRole().getList(), e -> {
+					Role r = (Role) e;
+					if (!X.isEmpty(r.url)) {
+						home.put(r.url, JSON.create().append("url", r.url).append("name", r.getName()));
+					}
+					return r.getName();
+//
+//					JSON j2 = r.json();
+//
+//					return j2;
+				})));
+		if (!home.isEmpty()) {
+			jo.append("home", home.values());
+		}
+		jo.put("home_title", lang.get("home.title"));
+		jo.put("bg.watermark", Global.getInt("web.bg.watermark", 0));
+		jo.put("name", u.name);
+
+		this.send(jo);
+
+	}
+
+	/**
+	 * 修改用户个人信息
+	 */
+	@Path(path = "edit", login = true)
+	public void edit() {
+
+		V v = V.create();
+		for (String name : new String[] { "title", "phone", "email", "nickname", "photo" }) {
+			String s = this.get(name);
+			if (s != null) {
+				v.append(name, s);
+			}
+		}
+		if (!v.isEmpty()) {
+			User.dao.update(login.id, v);
+		}
+		this.set(X.MESSAGE, lang.get("save.success")).send(200);
 
 	}
 
@@ -935,16 +1395,55 @@ public class user extends Controller {
 	@Path(login = true, path = "passwd")
 	public void passwd() {
 
-		try {
-			String passwd = this.getString("passwd");
-			User.dao.update(login.getId(),
-					V.create().append("password", User.encrypt(passwd)).append("md4passwd", User.md5encrypt(passwd)));
-			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "密码修改成功！"));
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			this.send(JSON.create().append(X.STATE, 201).append(X.ERROR, e.getMessage()));
+		if (this.method.isPost()) {
+			try {
+				String pwd1 = this.getString("pwd1");
+				if (X.isEmpty(pwd1)) {
+					pwd1 = this.getString("pwd");
+				} else {
+					pwd1 = new String(Base64.getDecoder().decode(pwd1));
+				}
+
+				User.update(login.getId(),
+						V.create().append("password", pwd1).append("passwordtime", System.currentTimeMillis()));
+
+				GLog.securitylog.warn("user", "passwd", lang.get("user.passwd.change"), login, this.ip());
+
+				if (this.isAjax()) {
+
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "密码修改成功！"));
+
+				} else {
+
+					Roles rs = login.getRole();
+					if (rs != null && rs.getList() != null) {
+						for (Role r1 : rs.getList()) {
+							if (!X.isEmpty(r1.url)) {
+								this.redirect(r1.url);
+								return;
+							}
+						}
+					}
+					this.redirect("/");
+
+				}
+				return;
+			} catch (Exception e) {
+
+				log.error(e.getMessage(), e);
+				this.set(X.MESSAGE, e.getMessage());
+
+			}
 		}
 
+		// 修改密码
+		this.show("/user/user.passwd.html");
+
+	}
+
+	@Path(path = "timestamp")
+	public void timestamp() {
+		this.print(Long.toString(System.currentTimeMillis()));
 	}
 
 }

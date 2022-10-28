@@ -2,30 +2,41 @@ package org.giiwa.dfile;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 
 import org.giiwa.bean.Disk;
-import org.giiwa.net.nio.IoRequest;
 
 class DFileOutputStream extends OutputStream {
 
-	String url;
-	String path;
 	String filename;
-	Disk disk;
+	Disk[] disk;
 	FlushFunc flush;
 
-	byte[] bb = new byte[IoRequest.BIG];
+	byte[] bb = new byte[1024 * 16];
 	int pos = 0;
 	long offset = 0;
 
-	public static DFileOutputStream create(Disk disk, String filename, long offset, FlushFunc flush) {
+	public static DFileOutputStream create(Disk[] disk, RandomAccessFile raf, String filename, long offset,
+			FlushFunc flush) {
 		DFileOutputStream d = new DFileOutputStream();
 		d.disk = disk;
 		d.filename = filename;
 		d.offset = offset;
-		d.url = disk.getNode_obj().getUrl();
-		d.path = disk.getPath();
+		d.raf = raf;
 		d.flush = flush;
+
+		return d;
+	}
+
+	public static DFileOutputStream create(Disk[] disk, OutputStream raf, String filename, long offset,
+			FlushFunc flush) {
+		DFileOutputStream d = new DFileOutputStream();
+		d.disk = disk;
+		d.filename = filename;
+		d.offset = offset;
+//		d.raf = raf;
+		d.flush = flush;
+
 		return d;
 	}
 
@@ -60,22 +71,41 @@ class DFileOutputStream extends OutputStream {
 
 	@Override
 	public void flush() throws IOException {
+
 		if (pos > 0) {
+
 			offset = flush.accept(offset, bb, pos);
-//			offset = FileClient.get(url, path).put(filename, offset, bb, pos);
 			pos = 0;
+
 		}
+
 	}
+
+	private RandomAccessFile raf = null;
+	private OutputStream out = null;
 
 	@Override
 	public void close() throws IOException {
+
 		flush();
-		super.close();
+
+		if (raf != null) {
+			raf.close();
+			raf = null;
+		}
+
+		if (out != null) {
+			out.close();
+			out = null;
+		}
+
+		DFile.onChange(filename);
+
 	}
 
 	@FunctionalInterface
 	public interface FlushFunc {
-		long accept(long offset, byte[] bb, int len);
+		long accept(long offset, byte[] bb, int len) throws IOException;
 	}
 
 }

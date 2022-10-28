@@ -94,7 +94,6 @@ public class GImage {
 	 * @param ph     the height of the destination image
 	 * @param w      the width of the destination image
 	 * @param h      the height of the destination image
-	 * @deprecated
 	 */
 	public static void scale(String source, int x, int y, int w0, int h0, String file, int pw, int ph, int w, int h) {
 		try {
@@ -129,7 +128,6 @@ public class GImage {
 	/**
 	 * Scale the source image to destination image file.
 	 * 
-	 * @deprecated
 	 * @param source the source image file
 	 * @param x      the x of source image
 	 * @param y      the y of source image
@@ -187,20 +185,20 @@ public class GImage {
 
 		try {
 			BufferedImage img = ImageIO.read(src);
-			if (img == null || w < 0 || h < 0)
-				throw new IOException("bad [src, w, h]");
+			if (img == null || w < 0 || h < 0) {
+				throw new IOException("bad [src=" + src + ", w=" + w + ", h=" + h + "]");
+			}
 
 			float h1 = img.getHeight();
 			float w1 = img.getWidth();
 
-//			if (w > w1 || h > h1)
-//				throw new IOException("bad [src, w, h]");
-
 			float f1 = h1 / w1;
-			if (h <= 0)
+			if (h <= 0) {
 				h = X.toInt(w * f1);
-			if (w <= 0)
+			}
+			if (w <= 0) {
 				w = X.toInt(h / f1);
+			}
 
 			float fh = ((float) h1) / h;
 			float fw = ((float) w1) / w;
@@ -212,6 +210,8 @@ public class GImage {
 				int h2 = (int) (h1 / fw);
 				h = h2;
 			}
+
+			log.warn("w/h=" + w + "/" + h + ", h1/w1=" + h1 + "/" + w1 + ", fh/fw=" + fh + "/" + fw);
 
 			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
 																						// TYPE_4BYTE_BGR);
@@ -274,7 +274,7 @@ public class GImage {
 			log.error(e.getMessage(), e);
 //			e.printStackTrace();
 		} finally {
-			X.clone(in);
+			X.close(in);
 //			if (in != null) {
 //				try {
 //					in.close();
@@ -316,8 +316,9 @@ public class GImage {
 
 		try {
 			BufferedImage img = ImageIO.read(src);
-			if (img == null || w < 0 || h < 0)
-				throw new IOException("bad [src, w, h]");
+			if (img == null || w < 0 || h < 0) {
+				throw new IOException("bad [src=" + src + ", w=" + w + ", h=" + h + "]");
+			}
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
@@ -370,7 +371,7 @@ public class GImage {
 		try {
 			BufferedImage img1 = ImageIO.read(src1);
 			if (img1 == null)
-				throw new IOException("bad [src1]");
+				throw new IOException("bad [src1=" + src1 + "]");
 
 			BufferedImage img2 = ImageIO.read(src2);
 
@@ -436,8 +437,9 @@ public class GImage {
 
 		try {
 			BufferedImage img = ImageIO.read(src);
-			if (img == null || w < 0 || h < 0)
-				throw new IOException("bad [src, w, h]");
+			if (img == null || w < 0 || h < 0) {
+				throw new IOException("bad [src=" + src + ", w=" + w + ", h=" + h + "]");
+			}
 
 			int h1 = img.getHeight();
 			int w1 = img.getWidth();
@@ -495,8 +497,9 @@ public class GImage {
 		try {
 
 			BufferedImage img = ImageIO.read(src);
-			if (img == null)
-				throw new IOException("bad [src, w, h]");
+			if (img == null) {
+				throw new IOException("bad [src=" + src + "]");
+			}
 
 			// BufferedImage out = Scalr.resize(img, Scalr.Method.ULTRA_QUALITY,
 			// w, h);// , Scalr.OP_ANTIALIAS);
@@ -510,7 +513,9 @@ public class GImage {
 			if (w <= 0)
 				w = X.toInt(h / f1);
 
-			log.debug("w=" + w + ", h=" + h + ", h1=" + h1 + ", w1=" + w1 + ", f1=" + f1);
+			if (log.isDebugEnabled()) {
+				log.debug("w=" + w + ", h=" + h + ", h1=" + h1 + ", w1=" + w1 + ", f1=" + f1);
+			}
 
 			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
 			// TYPE_4BYTE_BGR);
@@ -540,10 +545,37 @@ public class GImage {
 
 	}
 
+	public static void scale1(InputStream src, OutputStream dest) throws IOException {
+
+		try {
+
+			BufferedImage img = ImageIO.read(src);
+			if (img == null) {
+				throw new IOException("bad [src=" + src + "]");
+			}
+
+			// BufferedImage out = Scalr.resize(img, Scalr.Method.ULTRA_QUALITY,
+			// w, h);// , Scalr.OP_ANTIALIAS);
+
+			int h = img.getHeight();
+			int w = img.getWidth();
+
+			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// .TYPE_3BYTE_BGR);//
+			// TYPE_4BYTE_BGR);
+			Graphics g = out.getGraphics();
+
+			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+			g.drawImage(tmp, 0, 0, w, h, null);
+			ImageIO.write(out, "png", dest);
+		} finally {
+			X.close(src, dest);
+		}
+
+	}
+
 	/**
 	 * Scale the source image in "url" with "referer" to destination image.
 	 * 
-	 * @deprecated
 	 * @param url     the source image url
 	 * @param referer the referer which maybe required when "get" the source image
 	 * @param file    the destination image file
@@ -646,7 +678,6 @@ public class GImage {
 	 * @param h       the height of destination image
 	 * @param sources the source image files, should be 4, or 9
 	 * @throws Exception the exception
-	 * @deprecated
 	 */
 	public static void cover(String dest, int w, int h, List<String> sources) throws Exception {
 		if (sources == null) {
@@ -1329,6 +1360,5 @@ public class GImage {
 		}
 
 	}
-
 
 }

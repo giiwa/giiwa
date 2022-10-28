@@ -14,22 +14,23 @@
 */
 package org.giiwa.conf;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Node;
-import org.giiwa.cache.Cache;
+import org.giiwa.cache.LocalLock;
+import org.giiwa.cache.TimingCache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Shell;
 import org.giiwa.net.mq.IStub;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.net.mq.MQ.Request;
 import org.giiwa.task.SysTask;
 import org.giiwa.task.Task;
-import org.giiwa.web.Module;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -74,28 +75,84 @@ public final class Local extends Bean {
 	 */
 	public static int getInt(String name, int defaultValue) {
 
-		String s = name + "." + Local.id();
-
-		if (!Helper.isConfigured()) {
-			return X.toInt(cache.get(s), defaultValue);
-		}
-
-		Local c = Cache.get("local/" + s);
+		Local c = TimingCache.get(Local.class, name);
 		if (c == null) {
-			c = dao.load(s);
-			if (c != null) {
-				/**
-				 * avoid restarted, can not load new config
-				 */
-				Cache.set("local/" + s, c, X.AMINUTE);
-				return X.toInt(c.i, defaultValue);
-			} else {
-				return Config.getConf().getInt(name, defaultValue);
+
+			String s = name + "." + Local.id();
+			try {
+				c = dao.load(s);
+				if (c != null) {
+					/**
+					 * avoid restarted, can not load new config
+					 */
+					TimingCache.set(Local.class, name, c);
+					return X.toInt(c.i, defaultValue);
+				} else {
+					return Config.getConf().getInt(name, defaultValue);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 
 		return c != null ? X.toInt(c.i, defaultValue) : defaultValue;
 
+	}
+
+	private static int getInt(String node, String name, int defaultValue) {
+
+		String s = name + "." + node;
+		Local c = dao.load(s);
+		try {
+			if (c != null) {
+				return X.toInt(c.i, defaultValue);
+			} else {
+				return Config.getConf().getInt(name, defaultValue);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return c != null ? X.toInt(c.i, defaultValue) : defaultValue;
+
+	}
+
+	public static int getInt(Node e, String name, int defaultValue) {
+
+		String s = name + "." + e.id;
+		try {
+			Local c = dao.load(s);
+			if (c != null) {
+				return X.toInt(c.i, defaultValue);
+			} else {
+				return Config.getConf().getInt(name, defaultValue);
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		}
+		return defaultValue;
+
+	}
+
+	public static long getLong(Node e, String name, long defaultValue) {
+
+		String s = name + "." + e.id;
+		try {
+			Local c = dao.load(s);
+			if (c != null) {
+				return X.toLong(c.l, defaultValue);
+			} else {
+				return Config.getConf().getLong(name, defaultValue);
+			}
+		} catch (Exception e1) {
+			log.error(e1.getMessage(), e1);
+		}
+		return defaultValue;
+
+	}
+
+	public static Lock getLock(String name) {
+		return LocalLock.create(name);
 	}
 
 	/**
@@ -107,25 +164,24 @@ public final class Local extends Bean {
 	 */
 	public static String getString(String name, String defaultValue) {
 
-		// log.debug("loading local." + name);
-
-		String s = name + "." + Local.id();
-
-		if (!Helper.isConfigured()) {
-			return (String) cache.get(s);
-		}
-
-		Local c = Cache.get("local/" + s);
+		Local c = TimingCache.get(Local.class, name);
 		if (c == null) {
-			c = dao.load(s);
-			if (c != null) {
-				/**
-				 * avoid restarted, can not load new config
-				 */
-				Cache.set("local/" + s, c, X.AMINUTE);
-				return c.s;
-			} else {
-				return Config.getConf().getString(name, defaultValue);
+
+			String s = name + "." + Local.id();
+
+			try {
+				c = dao.load(s);
+				if (c != null) {
+					/**
+					 * avoid restarted, can not load new config
+					 */
+					TimingCache.set(Local.class, name, c);
+					return c.s != null ? c.s : defaultValue;
+				} else {
+					return Config.getConf().getString(name, defaultValue);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 
@@ -133,7 +189,24 @@ public final class Local extends Bean {
 
 	}
 
-	private static Map<String, Object> cache = new HashMap<String, Object>();
+	private static String getString(String node, String name, String defaultValue) {
+
+		String s = name + "." + node;
+
+		Local c = dao.load(s);
+		try {
+			if (c != null) {
+				return c.s != null ? c.s : defaultValue;
+			} else {
+				return Config.getConf().getString(name, defaultValue);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return c != null ? c.s : defaultValue;
+
+	}
 
 	/**
 	 * get the long value.
@@ -144,26 +217,45 @@ public final class Local extends Bean {
 	 */
 	public static long getLong(String name, long defaultValue) {
 
-		String s = name + "." + Local.id();
+		Local c = TimingCache.get(Local.class, name);
+		if (c == null) {
 
-		if (!Helper.isConfigured()) {
-			return X.toLong(cache.get(s), defaultValue);
+			String s = name + "." + Local.id();
+			try {
+				c = dao.load(s);
+				if (c != null) {
+					/**
+					 * avoid restarted, can not load new config
+					 */
+					TimingCache.set(Local.class, name, c);
+
+					return X.toLong(c.l, defaultValue);
+				} else {
+					return Config.getConf().getLong(name, defaultValue);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 
-		Local c = Cache.get("local/" + s);
-		if (c == null) {
-			c = dao.load(s);
-			if (c != null) {
-				/**
-				 * avoid restarted, can not load new config
-				 */
-				Cache.set("local/" + s, c, X.AMINUTE);
+		return c != null ? X.toLong(c.l, defaultValue) : defaultValue;
 
+	}
+
+	private static long getLong(String node, String name, long defaultValue) {
+
+		String s = name + "." + node;
+		Local c = dao.load(s);
+		try {
+			if (c != null) {
 				return X.toLong(c.l, defaultValue);
 			} else {
 				return Config.getConf().getLong(name, defaultValue);
 			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
+
 		return c != null ? X.toLong(c.l, defaultValue) : defaultValue;
 
 	}
@@ -181,33 +273,41 @@ public final class Local extends Bean {
 			return;
 		}
 
+		TimingCache.remove(Local.class, name);
+
 		String s = name + "." + Local.id();
-		Cache.remove("local/" + s);
 
 		if (o == null) {
-			dao.delete(s);
-			return;
-		}
-
-		if (!Helper.isConfigured()) {
-			cache.put(s, o);
+			try {
+				dao.delete(s);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 			return;
 		}
 
 		try {
+			Local e = new Local();
 			V v = V.create();
 			if (o instanceof Integer) {
-				v.set("i", o);
+				e.i = (Integer) o;
+				v.set("i", e.i);
 			} else if (o instanceof Long) {
-				v.set("l", o);
+				e.l = (Long) o;
+				v.set("l", e.l);
 			} else {
-				v.set("s", o.toString());
+				e.s = o.toString();
+				v.set("s", e.s);
 			}
 
-			if (dao.exists(s)) {
-				dao.update(s, v);
+			if (Helper.isConfigured()) {
+				if (dao.exists(s)) {
+					dao.update(s, v);
+				} else {
+					dao.insert(v.force(X.ID, s));
+				}
 			} else {
-				dao.insert(v.force(X.ID, s));
+				TimingCache.set(Local.class, name, e, X.AYEAR);
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -224,13 +324,27 @@ public final class Local extends Bean {
 		return getString(name, null);
 	}
 
+	private static String _id;
+
 	/**
 	 * get the unique id of this node in the cluster
 	 * 
 	 * @return
 	 */
 	public static String id() {
-		return Config.id();
+		if (X.isEmpty(_id)) {
+			_id = Config.getConf().getString("node.id", null);
+			if (X.isEmpty(_id)) {
+				// create id
+				log.warn("restarting as node.id=null");
+				
+				Config.save2();
+				Task.schedule(t -> {
+					System.exit(0);
+				}, 1000);
+			}
+		}
+		return _id;
 	}
 
 	public static void init() {
@@ -250,15 +364,22 @@ public final class Local extends Bean {
 						if (j != null && X.isSame(Local.id(), j.getString("node"))) {
 							int power = j.getInt("power");
 							synchronized (Task.class) {
-								if (Task.powerstate != power) {
-									Task.powerstate = power;
-									if (Task.powerstate == 1) {
-										// start
-										Module.startAll();
-									} else {
-										// stop
-										Module.stopAll();
-									}
+								if (power == 1) {
+									// restart service
+									log.warn("restart by admin [" + req.from + "]");
+									Task.schedule(t -> {
+										System.exit(0);
+									}, 1000);
+								} else if (power == 2) {
+									// restart
+									log.warn("poweroff by admin [" + req.from + "]");
+									Task.schedule(t -> {
+										try {
+											Shell.run("halt", X.AMINUTE);
+										} catch (Exception e) {
+											log.error(e.getMessage(), e);
+										}
+									}, 1000);
 								}
 							}
 						}
@@ -268,7 +389,7 @@ public final class Local extends Bean {
 
 				}
 
-			}.bind(MQ.Mode.TOPIC);
+			}.bindAs(MQ.Mode.TOPIC);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -286,30 +407,12 @@ public final class Local extends Bean {
 			@Override
 			public void onExecute() {
 				// checking node load
-				if (System.currentTimeMillis() - t > 10 * X.AMINUTE) {
+				if ((System.currentTimeMillis() - t) > 10 * X.AMINUTE) {
 					Node.touch(true);
 					t = System.currentTimeMillis();
 				} else {
 					Node.touch(false);
 				}
-
-				// check node disk
-//				W q = W.create().and("node", Local.id()).sort("created", 1);
-//				Beans<Disk> l1 = Disk.dao.load(q, 0, 10);
-//				if (l1 != null && !l1.isEmpty()) {
-//					for (Disk d : l1) {
-//
-//						if (d.isLocal()) {
-//							Disk.dao.update(d.getId(),
-//									V.create("bad", 0).append("lasttime", System.currentTimeMillis()));
-//
-//							if (System.currentTimeMillis() - d.getLong("checktime") > X.AMINUTE) {
-//								d.check();
-//							}
-//						}
-//
-//					}
-//				}
 
 			}
 
@@ -324,6 +427,93 @@ public final class Local extends Bean {
 			}
 
 		}.schedule(6000);
+	}
+
+	public static String label() {
+		Node e = Node.dao.load(Local.id());
+		if (e != null && !X.isEmpty(e.label)) {
+			return e.label;
+		}
+		return Local.id();
+	}
+
+	public static Node node() {
+		return Node.dao.load(Local.id());
+	}
+
+	/**
+	 * 
+	 * load("enabled,0", 1, "host,string,abc","port,int,0", "days,long,0")
+	 * 
+	 * @param key
+	 * @param value
+	 * @param name
+	 * @return
+	 */
+	public List<JSON> load(String key, Object value, String... name) {
+
+		Beans<Node> bs = Node.alive();
+		List<JSON> l1 = JSON.createList();
+
+		bs.forEach(e -> {
+			boolean ok = false;
+			if (X.isEmpty(key) || value == null) {
+				// load all
+				ok = true;
+			} else if (value instanceof Integer) {
+				String[] kk = X.split(key, ",");
+				if (kk.length == 2) {
+					int val = X.toInt(value);
+					if (Local.getInt(e.id, kk[0], X.toInt(kk[1])) == val) {
+						ok = true;
+					}
+				}
+			} else if (value instanceof Long) {
+				String[] kk = X.split(key, ",");
+				if (kk.length == 2) {
+					long val = X.toLong(value);
+					if (Local.getLong(e.id, kk[0], X.toLong(kk[1])) == val) {
+						ok = true;
+					}
+				}
+			} else {
+				String[] kk = X.split(key, ",");
+				String val = value.toString();
+				if (Local.getString(e.id, kk[0], kk.length > 1 ? kk[1] : null) == val) {
+					ok = true;
+				}
+			}
+
+			if (ok) {
+				JSON j1 = JSON.create();
+				for (String s : name) {
+					String[] ss = X.split(s, ",");
+					if (ss.length >= 2) {
+						if (X.isIn(ss[1], "int")) {
+							j1.put(ss[0], Local.getInt(e.id, ss[0], ss.length > 2 ? X.toInt(ss[2]) : 0));
+						} else if (X.isIn(ss[1], "long")) {
+							j1.put(ss[0], Local.getLong(e.id, ss[0], ss.length > 2 ? X.toLong(ss[2]) : 0));
+						} else {
+							j1.put(ss[0], Local.getString(e.id, ss[0], ss.length > 2 ? ss[2].toString() : ""));
+						}
+					}
+				}
+				if (!j1.isEmpty()) {
+					if (X.isEmpty(e.label)) {
+						j1.append("label", e.id);
+					} else {
+						j1.append("label", e.label);
+					}
+					j1.append("id", e.id);
+					l1.add(j1);
+				}
+			}
+		});
+
+//		log.warn(JSON.toPrettyString(l1));
+
+		return l1;
+
 	}
 
 }

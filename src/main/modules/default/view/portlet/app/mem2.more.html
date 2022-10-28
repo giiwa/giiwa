@@ -1,0 +1,37 @@
+<div id='mem_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('mem_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: "$!name - $lang.get('host.mem2.title')"
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+		        headerFormat: '',
+		        pointFormat: '<b>{series.name}: {point.hint}</b><br>{point.x:%H:%M}'
+	       },
+	    series: [
+			{name: "VSZ", color:'#0dad76', data: [#foreach($c in $list) {x:$req.time($c), y:$c.vsz, hint:"$lang.size($c.vsz)"},#end]},
+			{name: "RSS", color:'#0a5ea0', data: [#foreach($c in $list) {x:$req.time($c), y:$c.rss, hint:"$lang.size($c.rss)"},#end]}
+	    	], 
+	});
+})
+</script>
+

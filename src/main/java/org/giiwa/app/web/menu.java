@@ -28,11 +28,16 @@ import org.giiwa.web.*;
 /**
  * web api： <a href='/menu' target='_blank'>/menu</a> <br>
  * used to get menu
- * 
+ * @Deprecated
  * @author joe
  * 
  */
 public class menu extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/*
 	 * (non-Javadoc)

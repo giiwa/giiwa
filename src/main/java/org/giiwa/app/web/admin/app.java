@@ -35,21 +35,29 @@ import org.giiwa.web.*;
 public class app extends Controller {
 
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
 	 * Adds the.
 	 */
 	@Path(path = "create", login = true, access = "access.config.admin")
 	public void create() {
+
 		if (method.isPost()) {
 
 			String appid = this.getString("appid");
 			try {
 
-				if (!App.dao.exists(W.create("appid", appid))) {
+				if (!App.dao.exists(W.create().and("appid", appid))) {
 
 					String secret = UID.random(32);
 					V v = V.create();
 					v.append("appid", appid);
 					v.append("secret", secret);
+					v.append("name", this.get("name"));
+					v.append("allowip", this.get("allowip"));
 					String expired = this.getString("expired");
 					if (!X.isEmpty(expired)) {
 						v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
@@ -89,8 +97,10 @@ public class app extends Controller {
 			if (!X.isEmpty(expired)) {
 				v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
 			}
+			v.append("name", this.get("name"));
 			v.append("memo", this.getString("memo"));
 			v.append("access", Arrays.asList(X.split(this.getHtml("access"), "[,;\r\n]")));
+			v.append("allowip", this.get("allowip"));
 
 			String secret = this.get("secret");
 			if (!X.isEmpty(secret)) {
@@ -168,10 +178,13 @@ public class app extends Controller {
 		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		Beans<App> bs = App.dao.load(q, s, n);
-		bs.count();
+		if (bs != null) {
+			bs.count();
+		}
 		this.pages(bs, s, n);
 
 		this.show("/admin/app.index.html");
+
 	}
 
 	@Path(path = "help")

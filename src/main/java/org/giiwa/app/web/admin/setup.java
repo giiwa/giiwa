@@ -25,7 +25,6 @@ import org.giiwa.bean.GLog;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Helper;
-import org.giiwa.dao.RDB;
 import org.giiwa.dao.RDSHelper;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
@@ -36,10 +35,11 @@ import org.giiwa.web.Module;
 import org.giiwa.web.Path;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -51,6 +51,11 @@ import com.mongodb.client.MongoDatabase;
  *
  */
 public class setup extends Controller {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * the default GET handler. <br>
@@ -81,60 +86,62 @@ public class setup extends Controller {
 	 */
 	@Path(path = "save")
 	public void save() {
-		JSON jo = new JSON();
+
 		if (Helper.isConfigured()) {
-			jo.put(X.STATE, 201);
-			jo.put(X.MESSAGE, "already configured, forbidden override, must edit the giiwa.properties by manual");
-			this.send(jo);
+			this.set(X.MESSAGE, "already configured!").send(201);
 			return;
 		}
 
+		JSON jo = new JSON();
 		Configuration conf = Config.getConf();
 
-		String dbdriver = this.getHtml("db.driver");
-		String dburl = this.getHtml("db.url");
-		if (!X.isEmpty(dbdriver)) {
-			conf.setProperty("db[default].driver", dbdriver);
+		String driver = this.getHtml("driver");
+		if (X.isSame(driver, "mongo")) {
+			String url = this.getHtml("url");
+			String db = this.getString("db");
+
+			if (!X.isEmpty(url)) {
+				conf.setProperty("db.url", url + "/" + db);
+			}
+
+			if (!X.isEmpty(db)) {
+				conf.setProperty("site.group", db);
+			}
+
+		} else {
+
+			String url = this.getHtml("url");
+//			if (!X.isEmpty(dbdriver)) {
+//				conf.setProperty("db[default].driver", dbdriver);
+//			}
+
+			if (!X.isEmpty(url)) {
+				conf.setProperty("db.url", url);
+			}
 		}
-
-		if (!X.isEmpty(dburl)) {
-			conf.setProperty("db[default].url", dburl);
-			String user = this.getString("db.user");
-			conf.setProperty("db[default].user", user);
-			conf.setProperty("db[default].passwd", this.getString("db.passwd"));
-
-			conf.setProperty("site.group", UID.id(dburl, user));
-
-		}
-
-		String mongourl = this.getHtml("mongo.url");
-		String mongodb = this.getString("mongo.db");
-
-		if (!X.isEmpty(mongourl)) {
-			conf.setProperty("mongo[default].url", mongourl);
-		}
-
-		if (!X.isEmpty(mongodb)) {
-			conf.setProperty("mongo[default].db", mongodb);
-			conf.setProperty("site.group", mongodb);
-		}
-
 		conf.setProperty("cache.url", this.getString("cache.url"));
 
 		conf.setProperty("cluster.code", this.getLong("cluster.code"));
 
 		Config.save();
-		RDB.init();
-		Helper.init(conf);
+
+		Helper.init2(conf);
+
+//		if (!Helper.init2(conf)) {
+//			RDB.init();
+//			Helper.init(conf);
+//		}
 
 		DefaultListener.owner.upgrade(conf, Module.load("default"));
 
 		jo.put(X.STATE, 200);
 		this.send(jo);
 
-		Task.schedule(() -> {
+		log.warn("save config, restart now!");
+
+		Task.schedule(t -> {
 			System.exit(0);
-		}, 100);
+		}, 1000);
 	}
 
 	/**
@@ -143,58 +150,19 @@ public class setup extends Controller {
 	 */
 	@Path(path = "check")
 	public void check() {
+
+		if (Helper.isConfigured()) {
+			this.set(X.MESSAGE, "already configured!").send(201);
+			return;
+		}
+
 		JSON jo = new JSON();
 
-		// Configuration conf = Config.getConfig();
+		String url = this.getHtml(X.URL).trim();
+		String driver = this.getString("driver");
 
-		String op = this.getString("op");
-		if ("db".equals(op)) {
+		if ("mongo".equals(driver)) {
 
-			String url = this.getHtml(X.URL).trim();
-			String username = this.getString("username");
-			if (!X.isEmpty(username)) {
-				username = username.trim();
-			}
-			String passwd = this.getString("passwd");
-			if (!X.isEmpty(passwd)) {
-				passwd = passwd.trim();
-			}
-
-			// String driver = this.getHtml("driver");
-			// conf.setProperty("db.url", url);
-			// conf.setProperty("db.driver", driver);
-			//
-			try {
-				if (!X.isEmpty(url)) {
-					Connection c1 = RDB.getConnectionByUrl(null, url, username, passwd);
-					Statement stat = c1.createStatement();
-					stat.execute("create table test_ppp(X char(1))");
-					stat.execute("drop table test_ppp");
-					ResultSet r = null;
-					try {
-						r = stat.executeQuery("select * from gi_user where id=0");
-						if (r.next()) {
-							jo.put("admin", 1);
-						} else {
-							jo.put("admin", 0);
-						}
-					} catch (Exception e) {
-						jo.put("admin", 0);
-					} finally {
-						RDSHelper.inst.close(r, stat, c1);
-					}
-				}
-				jo.put(X.STATE, 200);
-			} catch (Exception e1) {
-				log.error(e1.getMessage(), e1);
-				GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.ip());
-
-				jo.put(X.STATE, 201);
-				jo.put(X.MESSAGE, e1.getMessage());
-			}
-
-		} else if ("mongo".equals(op)) {
-			String url = this.getHtml(X.URL).trim();
 			String dbname = this.getString("db").trim();
 
 			if (!X.isEmpty(url) && !X.isEmpty(dbname)) {
@@ -202,9 +170,12 @@ public class setup extends Controller {
 					log.debug("url=" + url + ", db=" + dbname);
 
 				try {
-					MongoClientOptions.Builder opts = new MongoClientOptions.Builder().socketTimeout(5000)
-							.serverSelectionTimeout(1000);
-					MongoClient client = new MongoClient(new MongoClientURI(url, opts));
+
+					ConnectionString connString = new ConnectionString(url);
+					MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(connString)
+							.retryWrites(true).build();
+
+					MongoClient client = MongoClients.create(settings);
 
 					MongoDatabase g = client.getDatabase(dbname);
 					String name = "test_" + UID.digital(5);
@@ -235,11 +206,10 @@ public class setup extends Controller {
 					jo.put(X.MESSAGE, e1.getMessage());
 				}
 			} else {
-				jo.put(X.STATE, 200);
+				jo.append(X.MESSAGE, lang.get("error.db.url.empty")).put(X.STATE, 201);
 			}
 
-		} else if ("cache".equals(op)) {
-			String url = this.getHtml(X.URL).trim();
+		} else if ("cache".equals(driver)) {
 
 			try {
 				if (!X.isEmpty(url)) {
@@ -247,7 +217,7 @@ public class setup extends Controller {
 					conf.setProperty("cache.url", url);
 					conf.setProperty("site.group", "demo");
 
-					Cache.init(url);
+					Cache.init(url, null, null);
 
 					String s1 = "1";
 					Cache.set("test", s1, X.AMINUTE);
@@ -269,7 +239,45 @@ public class setup extends Controller {
 
 		} else {
 
-			jo.put(X.STATE, 201);
+			String username = this.getString("username");
+			if (!X.isEmpty(username)) {
+				username = username.trim();
+			}
+			String passwd = this.getString("passwd");
+			if (!X.isEmpty(passwd)) {
+				passwd = passwd.trim();
+			}
+
+			try {
+				if (!X.isEmpty(url)) {
+					Connection c1 = RDSHelper.getConnection(url, username, passwd, null);
+					Statement stat = c1.createStatement();
+					stat.execute("create table test_ppp(X char(1))");
+					stat.execute("drop table test_ppp");
+					ResultSet r = null;
+					try {
+						r = stat.executeQuery("select * from gi_user where id=0");
+						if (r.next()) {
+							jo.put("admin", 1);
+						} else {
+							jo.put("admin", 0);
+						}
+					} catch (Exception e) {
+						jo.put("admin", 0);
+					} finally {
+						RDSHelper.inst.close(r, stat, c1);
+					}
+					jo.put(X.STATE, 200);
+				} else {
+					jo.append(X.MESSAGE, lang.get("error.db.url.empty")).put(X.STATE, 201);
+				}
+			} catch (Exception e1) {
+				log.error(e1.getMessage(), e1);
+				GLog.oplog.error(setup.class, "check", e1.getMessage(), e1, login, this.ip());
+
+				jo.put(X.STATE, 201);
+				jo.put(X.MESSAGE, e1.getMessage());
+			}
 
 		}
 		this.send(jo);

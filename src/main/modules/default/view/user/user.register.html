@@ -45,7 +45,8 @@
 		<label class="col-sm-4 text-center input-label icon-lock" for="password">$lang.get('user.password')<r>*</r></label>
 		<div class="col-sm-8">
 			<input type="text" style="display:none"/>
-			<input type="password" id="password" name="password" value="$!password" class="form-control" required onblur="verify(this, '/user/verify');"/>
+			<input type='hidden' name="pwd1" />
+			<input type="password" id="password" value="" class="form-control" required onchange="_pwd();"/>
 		</div>
 	</div>
 	
@@ -57,7 +58,7 @@
 		<a href="javascript:" onclick="_oncaptcha();" class="icon-opera validateCodeRefresh " style=""></a>
 		<script>
 			function _oncaptcha() {
-				$.get('/captcha', {}, function(d) {
+				$.get('/f/captcha', {}, function(d) {
 					if (d.state == 200) {
 						$('#validateImg').attr('src', d.uri);
 					}
@@ -70,7 +71,7 @@
 	</div>
 	#end
 	
-	<button class="col-sm-offset-4 col-sm-8 btn btn-large btn-primary" type="submit">$lang.get('btn.register')</button>
+	<button class="col-sm-offset-4 col-sm-8 btn btn-large btn-primary" type="submit" formmethod="post">$lang.get('btn.register')</button>
 	<div id="themeSwitch">
 		<a class="icon-wink" href="/user/login">$lang.get('a.user.login')</a>
 	</div>
@@ -129,7 +130,12 @@ function verify(obj, url) {
 				}
 			});
 }
-	
+function _pwd(){
+	var s = $('#password').val();
+	s = giiwa.encode(s);
+	$('input[name=pwd1]').val(s);
+}
+
 </script>
 #end
 #parse('/user/foot.html')

@@ -20,9 +20,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jms.BytesMessage;
-import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -34,6 +34,7 @@ import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
@@ -42,6 +43,7 @@ import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
+import org.giiwa.task.Task;
 
 class ActiveMQ extends MQ {
 
@@ -49,6 +51,7 @@ class ActiveMQ extends MQ {
 
 	private String group = X.EMPTY;
 	private Session session;
+	private ActiveMQConnection conn;
 
 	/**
 	 * Creates the.
@@ -56,6 +59,7 @@ class ActiveMQ extends MQ {
 	 * @return the mq
 	 */
 	public static MQ create() {
+
 		ActiveMQ m = new ActiveMQ();
 
 		String url = Global.getString("activemq.url", ActiveMQConnection.DEFAULT_BROKER_URL);
@@ -70,20 +74,19 @@ class ActiveMQ extends MQ {
 		try {
 			ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(user, password, url);
 
-			Connection connection = factory.createConnection();
-			connection.start();
+			m.conn = (ActiveMQConnection) factory.createConnection();
+			m.conn.start();
 
-			m.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			m.session = m.conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-			GLog.applog.info(org.giiwa.app.web.admin.mq.class, "startup", "connected ActiveMQ with [" + url + "]", null,
-					null);
+			GLog.applog.info("sys", "startup", "connected ActiveMQ with [" + url + "]", null, null);
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
-			// e.printStackTrace();
-			GLog.applog.warn(org.giiwa.app.web.admin.mq.class, "startup", "failed ActiveMQ with [" + url + "]", null,
-					null);
+			GLog.applog.error("admin.mq", "startup", "failed ActiveMQ with [" + url + "]", e, null, null);
 		}
+
+		m.new Cleanup().schedule(X.AMINUTE);
 
 		return m;
 	}
@@ -100,7 +103,8 @@ class ActiveMQ extends MQ {
 
 		public String name;
 		IStub cb;
-		MessageConsumer consumer;
+		MessageConsumer consumer1;
+		MessageConsumer consumer2;
 		TimeStamp t = TimeStamp.create();
 		int count = 0;
 
@@ -113,9 +117,18 @@ class ActiveMQ extends MQ {
 		 * Close.
 		 */
 		public void close() {
-			if (consumer != null) {
+			if (consumer1 != null) {
 				try {
-					consumer.close();
+					consumer1.close();
+					consumer1 = null;
+				} catch (JMSException e) {
+					log.error(e.getMessage(), e);
+				}
+			}
+			if (consumer2 != null) {
+				try {
+					consumer2.close();
+					consumer2 = null;
 				} catch (JMSException e) {
 					log.error(e.getMessage(), e);
 				}
@@ -127,22 +140,36 @@ class ActiveMQ extends MQ {
 			this.cb = cb;
 
 			if (session != null) {
-				Destination dest = null;
-				if (mode == Mode.QUEUE) {
-					dest = new ActiveMQQueue(group + name);
-				} else {
-					dest = new ActiveMQTopic(group + name);
+
+				if (mode == Mode.QUEUE || mode == Mode.BOTH) {
+					Destination dest = new ActiveMQQueue(group + name);
+					consumer1 = session.createConsumer(dest);
+					consumer1.setMessageListener(this);
+
+					if (log.isWarnEnabled()) {
+						log.warn("bind queue [" + cb.getName() + "]");
+					}
 				}
 
-				consumer = session.createConsumer(dest);
-				consumer.setMessageListener(this);
+				if (mode == Mode.TOPIC || mode == Mode.BOTH) {
+					Destination dest = new ActiveMQTopic(group + name);
+					consumer2 = session.createConsumer(dest);
+					consumer2.setMessageListener(this);
+
+					if (log.isWarnEnabled()) {
+						log.warn("bind topic [" + cb.getName() + "]");
+					}
+				}
 
 				cached.add(new WeakReference<R>(this));
 
 			} else {
-				log.warn("MQ not init yet!");
+				if (log.isDebugEnabled()) {
+					log.debug("MQ not init yet!");
+				}
 				throw new JMSException("MQ not init yet!");
 			}
+
 		}
 
 		/*
@@ -153,8 +180,6 @@ class ActiveMQ extends MQ {
 		@Override
 		public void onMessage(Message m) {
 			try {
-				// System.out.println("got a message.., " + t.reset() +
-				// "ms");
 
 				if (m instanceof BytesMessage) {
 
@@ -186,6 +211,16 @@ class ActiveMQ extends MQ {
 
 						r.type = m1.readInt();
 						pos += Integer.SIZE / Byte.SIZE;
+						
+						len = m1.readInt();
+						if (len > 0) {
+							byte[] bb = new byte[len];
+							m1.readBytes(bb);
+							r.cmd = new String(bb);
+						}
+						pos += Integer.SIZE / Byte.SIZE;
+						pos += len;
+						
 						len = m1.readInt();
 						if (len > 0) {
 							r.data = new byte[len];
@@ -203,8 +238,9 @@ class ActiveMQ extends MQ {
 
 					process(name, l1, cb);
 
-					if (log.isDebugEnabled())
+					if (log.isDebugEnabled()) {
 						log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
+					}
 
 				} else {
 					log.error("unknown message=" + m);
@@ -218,11 +254,12 @@ class ActiveMQ extends MQ {
 
 	@Override
 	protected void _bind(String name, IStub stub, Mode mode) throws Exception {
-		if (session == null)
+		if (session == null) {
 			throw new JMSException("MQ not init yet");
+		}
 
-		GLog.applog.info(org.giiwa.app.web.admin.mq.class, "bind",
-				"[" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
+//		GLog.applog.info(org.giiwa.app.web.admin.mq.class, "bind",
+//				"[" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
 
 		new R(name, stub, mode);
 	}
@@ -284,25 +321,27 @@ class ActiveMQ extends MQ {
 			return senders.get(name1);
 		}
 
-		synchronized (senders) {
-			Destination dest = null;
-			if (MQ.Mode.QUEUE.equals(type)) {
-				dest = new ActiveMQQueue(group + name);
-			} else {
-				dest = new ActiveMQTopic(group + name);
-			}
+		Destination dest = null;
+		if (MQ.Mode.QUEUE.equals(type)) {
+			dest = new ActiveMQQueue(group + name);
+		} else {
+			dest = new ActiveMQTopic(group + name);
+		}
 
-			MessageProducer p = session.createProducer(dest);
+		MessageProducer p = session.createProducer(dest);
 
-			p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-			// p.setTimeToLive(0);
+		p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+		// p.setTimeToLive(0);
 
-			Sender s = new Sender(name1, name, p);
-			senders.put(name1, s);
+		Sender s = new Sender(name1, name, p);
+		senders.put(name1, s);
 //					s.schedule(0);
 
-			return s;
+		if (log.isInfoEnabled()) {
+			log.info("create a new producer, =>" + name + ", mode=" + type + ", senders=" + senders.keySet());
 		}
+
+		return s;
 //		}
 
 //		return null;
@@ -319,6 +358,7 @@ class ActiveMQ extends MQ {
 		String name;
 		String to;
 		MessageProducer p;
+
 //		BytesMessage m = null;
 //		int len = 0;
 //		int priority = 1;
@@ -327,8 +367,11 @@ class ActiveMQ extends MQ {
 
 		public void send(Request r) throws JMSException {
 
-			if (log.isDebugEnabled())
+			last = System.currentTimeMillis();
+
+			if (log.isDebugEnabled()) {
 				log.debug("sending, r=" + r);
+			}
 
 //			if (m == null) {
 //				m = session.createBytesMessage();
@@ -356,6 +399,14 @@ class ActiveMQ extends MQ {
 			m.writeInt(r.type);
 //			len += Integer.SIZE / Byte.SIZE;
 
+			ff = r.cmd == null ? null : r.cmd.getBytes();
+			if (ff == null) {
+				m.writeInt(0);
+			} else {
+				m.writeInt(ff.length);
+				m.writeBytes(ff);
+			}
+
 //			len += Integer.SIZE / Byte.SIZE;
 			if (r.data == null) {
 				m.writeInt(0);
@@ -370,11 +421,20 @@ class ActiveMQ extends MQ {
 //			persistent = r.persistent;
 
 //			if (m != null) {
+
+//			long size = m.getBodyLength();
+			if (r.data != null && r.data.length > 1024 * 1000 * 1) {
+				// > 1M
+				Exception e = new Exception();
+				GLog.applog.warn("mq", "send", "message body[" + r.data.length + "] exceed 1M", e, null, null);
+				log.warn("message body[" + r.data.length + "] exceed 1M", e);
+			}
+
 			p.send(m, r.persistent, r.priority, r.ttl);
 			// p.send(m);
 
 			if (log.isDebugEnabled()) {
-				log.debug("Sending:" + group + name);
+				log.debug("Sending: " + group + name + ", size=" + (r.data == null ? 0 : r.data.length));
 			}
 //			} else if (last < System.currentTimeMillis() - X.AMINUTE) {
 //				senders.remove(name);
@@ -391,6 +451,17 @@ class ActiveMQ extends MQ {
 
 		public String getName() {
 			return "sender." + name;
+		}
+
+		public void close() {
+			try {
+				log.warn("close [" + name + "], dest=" + p.getDestination() + ", senders=" + senders.keySet());
+
+//				conn.destroyDestination(p.getDestination());
+				p.close();
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 
 //		@Override
@@ -440,6 +511,57 @@ class ActiveMQ extends MQ {
 
 	}
 
+	class Cleanup extends Task {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public int getPriority() {
+			return Thread.MIN_PRIORITY;
+		}
+
+		@Override
+		public String getName() {
+			return "mq.cleanup";
+		}
+
+		@Override
+		public void onFinish() {
+			this.schedule(X.AMINUTE);
+		}
+
+		@Override
+		public void onExecute() {
+			Object[] ss = senders.keySet().toArray();
+			for (Object s : ss) {
+				Sender s1 = senders.get(s);
+				if (s1 != null && System.currentTimeMillis() - s1.last > X.AMINUTE) {
+					senders.remove(s);
+					s1.close();
+				}
+			}
+
+//			try {
+//				Set<ActiveMQQueue> l1 = conn.getDestinationSource().getQueues();
+//				for (ActiveMQQueue e : l1) {
+//
+//				}
+//
+//				Set<ActiveMQTopic> l2 = conn.getDestinationSource().getTopics();
+//				for (ActiveMQTopic e : l2) {
+//
+//				}
+//
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+		}
+
+	}
+
 	@Override
 	protected void _unbind(IStub stub) throws Exception {
 		// find R
@@ -457,6 +579,78 @@ class ActiveMQ extends MQ {
 					cached.remove(i);
 				}
 			}
+		}
+	}
+
+	@Override
+	protected void _stop() {
+		if (session != null) {
+			try {
+				session.close();
+			} catch (JMSException e) {
+				log.error(e.getMessage(), e);
+			}
+			session = null;
+		}
+	}
+
+	@Override
+	public void destroy(String name, Mode mode) {
+		if (conn != null) {
+
+			try {
+
+				if (log.isInfoEnabled()) {
+					log.info("destory dest, name=" + name + ", mode=" + mode);
+				}
+
+				if (mode.equals(Mode.QUEUE)) {
+					ActiveMQQueue dest = new ActiveMQQueue(group + name);
+					conn.destroyDestination(dest);
+
+					ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(dest);
+					if (topic != null) {
+						conn.destroyDestination(topic);
+					}
+				} else {
+					ActiveMQTopic dest = new ActiveMQTopic(group + name);
+					conn.destroyDestination(dest);
+
+					ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(dest);
+					if (topic != null) {
+						conn.destroyDestination(topic);
+					}
+
+				}
+			} catch (Exception e) {
+				log.error("destory dest, name=" + name + ", mode=" + mode, e);
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+
+		try {
+			Global.setConfig("activemq.url",
+					"failover:(tcp://g03:61616)?timeout=3000&jms.prefetchPolicy.all=2&jms.useAsyncSend=true");
+			Global.setConfig("mq.type", "activemq");
+
+			ActiveMQ mq = (ActiveMQ) ActiveMQ.create();
+
+			Set<ActiveMQQueue> l1 = mq.conn.getDestinationSource().getQueues();
+			for (ActiveMQQueue e : l1) {
+				System.out.println(e);
+			}
+
+			Set<ActiveMQTopic> l2 = mq.conn.getDestinationSource().getTopics();
+			for (ActiveMQTopic e : l2) {
+				System.out.println(e);
+			}
+
+			System.out.println("done.");
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 

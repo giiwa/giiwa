@@ -26,14 +26,14 @@ import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.TreeMap;
 import java.util.function.BiFunction;
 
 import org.apache.commons.logging.Log;
@@ -43,9 +43,13 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 import org.giiwa.dao.X;
+import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.Digest;
 import org.giiwa.misc.StringFinder;
+import org.giiwa.misc.Url;
+import org.giiwa.task.BiConsumer;
+import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -57,7 +61,7 @@ import com.google.gson.stream.JsonReader;
  * 
  * @author wujun
  */
-public final class JSON extends HashMap<String, Object> implements Cloneable {
+public final class JSON extends HashMap<String, Object> implements Comparable<JSON>, Cloneable {
 
 	/**
 	 * 
@@ -83,16 +87,16 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * @param lenient the boolean of JsonReader.setLenient(lenient)
 	 * @return the json
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes", "restriction" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static JSON fromObject(Object json, boolean lenient) {
 
 		JSON j = null;
 		try {
 			if (json instanceof JSON) {
 				j = (JSON) json;
-			} else if (json instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
+			} else if (json instanceof ScriptObjectMirror) {
 
-				jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) json;
+				ScriptObjectMirror m = (ScriptObjectMirror) json;
 
 				j = JSON.create();
 				for (String key : m.keySet()) {
@@ -104,21 +108,45 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 			} else if (json instanceof String) {
 
 				String s1 = ((String) json).trim();
-
-				if (!X.isEmpty(s1) && s1.charAt(0) == '{') {
-					Gson g = _gson();
-					JsonReader reader = new JsonReader(new StringReader(s1));
-					reader.setLenient(lenient);
-					j = g.fromJson(reader, JSON.class);
-				} else {
-					// a=b&d=a
-					String[] ss = X.split(s1, "[&\r\n]");
-					if (ss != null && ss.length > 0) {
+				if (!X.isEmpty(s1)) {
+					if (s1.charAt(0) == '{') {
+						Gson g = _gson();
+						JsonReader reader = new JsonReader(new StringReader(s1));
+						reader.setLenient(lenient);
+						j = g.fromJson(reader, JSON.class);
+					} else if (s1.charAt(0) == '<') {
+						// <link href='a'>
+						StringFinder sf = StringFinder.create(s1.substring(1));
+						String tag = sf.nextTo(" |>");
 						j = JSON.create();
-						for (String s : ss) {
-							int i = s.indexOf("=");
-							if (i > 0) {
-								j.put(s.substring(0, i), s.substring(i + 1));
+						j.append(tag, JSON.create());
+						char c = sf.next();
+						if (c == ' ') {
+
+							String name = sf.nextTo(" |>");
+							while (name != null) {
+								int i = name.indexOf("=");
+								if (i > 0) {
+									String value = name.substring(i + 1);
+									value = value.replaceAll("['\"]", X.EMPTY);
+									j.append(tag + "." + name.substring(0, i), value);
+								}
+								sf.next();
+								name = sf.nextTo(" |>");
+							}
+
+						}
+					} else {
+						// a=b&d=a
+						s1 = Url.decode(s1);
+						String[] ss = X.split(s1, "[&\r\n]");
+						if (ss != null && ss.length > 0) {
+							j = JSON.create();
+							for (String s : ss) {
+								int i = s.indexOf("=");
+								if (i > 0) {
+									j.put(s.substring(0, i), s.substring(i + 1));
+								}
 							}
 						}
 					}
@@ -178,8 +206,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 					Object o = j.get(name);
 					if (o == null) {
 						j.remove(name);
-					} else if (o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
-						jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
+					} else if (o instanceof ScriptObjectMirror) {
+						ScriptObjectMirror m = (ScriptObjectMirror) o;
 						if (m.isArray()) {
 							j.put(name, JSON.fromObjects(m));
 						} else {
@@ -203,13 +231,35 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 				.serializeSpecialFloatingPointValues().create();
 	}
 
+	public static boolean isArray(Object jsons) {
+
+		if (jsons instanceof Collection) {
+			return true;
+		} else if (jsons instanceof String) {
+			if (((String) jsons).startsWith("{")) {
+				return false;
+			} else {
+				return true;
+			}
+		} else if (jsons instanceof ScriptObjectMirror) {
+			ScriptObjectMirror m = (ScriptObjectMirror) jsons;
+			if (m.isArray()) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
 	/**
 	 * parse the jsons to array of JSON.
 	 *
 	 * @param jsons the jsons
 	 * @return the list
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked", "restriction" })
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static List<JSON> fromObjects(Object jsons) {
 		List list = null;
 		if (jsons instanceof Collection) {
@@ -258,14 +308,14 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
-		} else if (jsons instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
-			jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) jsons;
+		} else if (jsons instanceof ScriptObjectMirror) {
+			ScriptObjectMirror m = (ScriptObjectMirror) jsons;
 			list = JSON.createList();
 			if (m.isArray()) {
 //				JSON j1 = JSON.fromObject(m);
 				for (Object o : m.values()) {
-					if (o instanceof jdk.nashorn.api.scripting.ScriptObjectMirror) {
-						jdk.nashorn.api.scripting.ScriptObjectMirror m1 = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
+					if (o instanceof ScriptObjectMirror) {
+						ScriptObjectMirror m1 = (ScriptObjectMirror) o;
 						if (m1.isArray()) {
 							List<?> l1 = JSON.fromObjects(m1);
 							list.add(l1);
@@ -339,7 +389,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		} else if (json instanceof Map) {
 			try {
 				Map m = (Map) json;
-				T t1 = t.newInstance();
+				T t1 = t.getDeclaredConstructor().newInstance();
 				Field[] fs = t.getDeclaredFields();
 
 				for (Field f : fs) {
@@ -434,6 +484,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return gson.toJson(this);
 	}
 
+	@SuppressWarnings("deprecation")
 	public static JSON decodeBycode(String str, String code) {
 		try {
 			byte[] bb = Base32.decode(str);
@@ -445,6 +496,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return null;
 	}
 
+	@SuppressWarnings("deprecation")
 	public String encodeBycode(String code) {
 		try {
 			String s = this.toString();
@@ -674,12 +726,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	}
 
 	public void test(Object o) {
-//		System.out.println(o.getClass());
 //		jdk.nashorn.api.scripting.ScriptObjectMirror m = (jdk.nashorn.api.scripting.ScriptObjectMirror) o;
-//		System.out.println(m.isArray());
-//		System.out.println(m.get("0").getClass());
 
-		System.out.println(JSON.fromObjects(o));
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -724,6 +772,47 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return this;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public JSON merge2(String name, Object value) {
+		if (value == null)
+			return this;
+
+		Object o = this.get(name);
+		if (o == null) {
+			return this.append(name, value);
+		}
+
+		if (o instanceof List) {
+
+			List l1 = (List) o;
+
+			if (value instanceof List) {
+				for (Object o1 : (List) value) {
+					if (!l1.contains(o1)) {
+						l1.add(o1);
+					}
+				}
+			} else if (!l1.contains(value)) {
+				l1.add(value);
+			}
+
+		} else if (value instanceof List) {
+			List l1 = (List) value;
+			if (!l1.contains(o)) {
+				l1.add(o);
+			}
+			this.append(name, l1);
+		} else {
+			// replace the old value
+			List l1 = new ArrayList();
+			l1.add(o);
+			l1.add(value);
+			this.append(name, l1);
+		}
+
+		return this;
+	}
+
 	/**
 	 * put the value, the different with "put" is it will split the key by "."
 	 * 
@@ -732,6 +821,8 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	 * @return the JSON
 	 */
 	public JSON append(String name, Object value) {
+		if (X.isEmpty(name))
+			return this;
 
 		int i = name.indexOf(".");
 		if (i > 0) {
@@ -826,32 +917,13 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 					if (X.isSame(v1, v2))
 						continue;
 
-					List<Object> l1 = new ArrayList<Object>();
-					if (v1 instanceof List) {
-						l1.addAll((List) v1);
-					} else if (v1.getClass().isArray()) {
-						l1.addAll(Arrays.asList(v1));
+					if (v1 instanceof Map && v2 instanceof Map) {
+						((Map) v1).putAll((Map) v2);
 					} else {
-						l1.add(v1);
+						v1 = v2;
 					}
-					if (v2 instanceof List) {
-						List l2 = (List) v2;
-						for (Object o2 : l2) {
-							if (!l1.contains(o2)) {
-								l1.add(o2);
-							}
-						}
-					} else if (v2.getClass().isArray()) {
-						List l2 = Arrays.asList(v2);
-						for (Object o2 : l2) {
-							if (!l1.contains(o2)) {
-								l1.add(o2);
-							}
-						}
-					} else {
-						l1.add(v2);
-					}
-					this.put(k, l1);
+
+					this.put(k, v1);
 				}
 			}
 		}
@@ -895,21 +967,21 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	}
 
 	@Override
-	public Object get(Object key) {
-
-		String name = key.toString();
+	public synchronized Object get(Object key) {
 
 		Object o = super.get(key);
 		if (o != null) {
 			return o;
 		}
 
+		String name = key.toString();
+
 		int i = name.indexOf(".");
 		if (i > 0) {
 			String s0 = name.substring(0, i);
 			o = get(s0);
-			if (o instanceof JSON) {
-				JSON m = (JSON) o;
+			if (o instanceof Map) {
+				JSON m = JSON.fromObject(o);
 				return m.get(name.substring(i + 1));
 			}
 		}
@@ -978,52 +1050,58 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+//			e.printStackTrace();
 		}
 
 		return null;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static JSON _fromXml(Element r1) {
+	private static Object _fromXml(Element r1) {
+
+		JSON jo = JSON.create();
+		for (int i = 0; i < r1.attributeCount(); i++) {
+			Attribute a = r1.attribute(i);
+			jo.append(a.getName(), a.getValue());
+		}
 
 		List<Element> l1 = r1.elements();
-		if (l1 == null || l1.isEmpty()) {
-			JSON j1 = JSON.create();
-			for (int i = 0; i < r1.attributeCount(); i++) {
-				Attribute a = r1.attribute(i);
-				j1.append(a.getName(), a.getValue());
-			}
-			j1.append("body", r1.getText());
-			return j1;
-		} else {
-			JSON jo = JSON.create();
+		if (l1 != null && !l1.isEmpty()) {
 			for (Element e : l1) {
 
-				for (int i = 0; i < e.attributeCount(); i++) {
-					Attribute a = e.attribute(i);
-					jo.append(a.getName(), a.getValue());
-				}
-
-				String name = e.getName();
-				Object o = jo.get(name);
+				Object j1 = _fromXml(e);
+				Object o = jo.get(e.getName());
 				if (o == null) {
-					// add it
-					jo.append(name, _fromXml(e));
+					jo.put(e.getName(), j1);
 				} else {
-					// add to list
-					Object o1 = _fromXml(e);
 					if (o instanceof List) {
-						((List) o).add(o1);
+						((List) o).add(j1);
 					} else {
-						List<Object> l2 = new ArrayList<Object>();
-						l2.add(o);
-						l2.add(o1);
-						jo.append(name, l2);
+						if (o instanceof String && j1 instanceof JSON) {
+							((JSON) j1).put("body", o);
+						} else if (o instanceof JSON && j1 instanceof String) {
+							((JSON) o).put("body", j1);
+						} else {
+							List l2 = new ArrayList<Object>();
+							l2.add(o);
+							l2.add(j1);
+							jo.put(e.getName(), l2);
+						}
 					}
 				}
 			}
-			return jo;
+		} else {
+			String s = r1.getText();
+			if (jo.isEmpty()) {
+				return s;
+			} else {
+				if (!X.isEmpty(s)) {
+					jo.put("body", s);
+				}
+			}
 		}
+
+		return jo;
 
 	}
 
@@ -1069,7 +1147,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	}
 
 	@SuppressWarnings({ "rawtypes" })
-	private void _scan_list(Object o, BiConsumer<JSON, Entry> func) {
+	private void _scan_list(Object o, BiConsumer<JSON, Map.Entry> func) {
 		X.asList(o, e -> {
 			if (e == null)
 				return null;
@@ -1084,10 +1162,10 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public JSON scan(BiConsumer<JSON, Entry> func) {
+	public JSON scan(BiConsumer<JSON, Map.Entry> func) {
 
-		Entry[] ee = this.entrySet().toArray(new Entry[this.size()]);
-		for (Entry e : ee) {
+		Map.Entry[] ee = this.entrySet().toArray(new Map.Entry[this.size()]);
+		for (Map.Entry e : ee) {
 			func.accept(this, e);
 
 			if (e.getValue() instanceof JSON) {
@@ -1099,8 +1177,7 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return this;
 	}
 
-	@SuppressWarnings("restriction")
-	public JSON scan(jdk.nashorn.api.scripting.ScriptObjectMirror m) {
+	public JSON scan(ScriptObjectMirror m) {
 		return this.scan((p, e) -> {
 			m.call(p, e);
 		});
@@ -1110,84 +1187,62 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 		return this;
 	}
 
-	/**
-	 * @deprecated
-	 */
-	transient JSON _test;
-
-	/**
-	 * @deprecated
-	 * @param name
-	 * @param display
-	 * @return
-	 */
-	public Object test(String name, String display) {
-		return test(name, display, null, null);
-	}
-
-	/**
-	 * @deprecated
-	 * @param name
-	 * @param display
-	 * @param defaultvalue
-	 * @return
-	 */
-	public Object test(String name, String display, Object defaultvalue) {
-		return test(name, display, defaultvalue, null);
-	}
-
-	/**
-	 * @deprecated
-	 * @param name
-	 * @param display
-	 * @param defaultvalue
-	 * @param options
-	 * @return
-	 */
-	public Object test(String name, String display, Object defaultvalue, String options) {
-
-		if (_test == null)
-			_test = JSON.create();
-
-		_test.put(name, JSON.create().append("name", name).append("display", display).append("value", defaultvalue)
-				.append("options", options));
-
-		if (this.containsKey(name)) {
-			return this.get(name);
-		}
-		return defaultvalue;
-	}
-
-	/**
-	 * @deprecated
-	 * @return
-	 */
-	public List<JSON> test() {
-		List<JSON> l1 = JSON.createList();
-		if (_test != null) {
-			for (Object o : _test.values()) {
-				l1.add((JSON) o);
-			}
-		}
-		return l1;
-	}
-
 	public String parse(String template) {
 
-		log.debug("template=" + template);
-		log.debug("json=" + this.toString());
+		if (log.isDebugEnabled()) {
+			log.debug("template=" + template);
+			log.debug("json=" + this.toString());
+		}
 
 		StringFinder sf = StringFinder.create(template);
 		while (sf.find("$") >= 0) {
+			int pos = sf.pos;
 			sf.skip(1);
 			sf.mark();
-			String name = sf.word("[a-zA-Z0-9._]+");
+			String name = sf.word("[a-zA-Z0-9_]+");
 			if (!X.isEmpty(name)) {
+
 				Object o = this.get(name);
 				if (o != null) {
-					sf.reset();
-					sf.skip(-1);
-					sf.replace("\\$" + name, o.toString());
+
+					String s = sf.word("[.a-zA-Z0-9_]+");
+					while (X.isIn(s, ".split", ".replace", ".join")) {
+
+						String s1 = sf.get("(", ")");
+
+						if (X.isIn(s, ".split")) {
+							o = X.split(o.toString(), s1.trim());
+						} else if (X.isIn(s, ".join")) {
+							o = X.join(o, s1);
+						} else if (X.isIn(s, ".replace")) {
+							String[] ss = X.split(s1, "->");
+							if (ss != null && ss.length == 2) {
+								o = X.asList(o, s2 -> {
+									try {
+										return JS.run("return " + ss[1] + ";", JSON.create().append(ss[0], s2));
+									} catch (Exception e) {
+										log.error(e.getMessage(), e);
+									}
+									return s2;
+								});
+							}
+						}
+
+						s = sf.word("[.a-zA-Z0-9_]+");
+					}
+					if (s.startsWith(".")) {
+						Object o1 = this.get(name + s);
+						if (o1 != null) {
+							o = o1;
+						}
+					}
+//					System.out.println(s);
+
+					int end = sf.pos;
+					if (o == null) {
+						o = X.EMPTY;
+					}
+					sf.replace(pos, end, o.toString());
 				}
 			} else {
 				sf.reset();
@@ -1238,6 +1293,71 @@ public final class JSON extends HashMap<String, Object> implements Cloneable {
 	@Override
 	public synchronized void replaceAll(BiFunction<? super String, ? super Object, ? extends Object> function) {
 		super.replaceAll(function);
+	}
+
+	/**
+	 * returne treemap of this
+	 * 
+	 * @return
+	 */
+	public TreeMap<String, Object> treemap() {
+		TreeMap<String, Object> m = new TreeMap<String, Object>();
+		m.putAll(this);
+		return m;
+	}
+
+	public byte[] getBytes(String name) {
+		String s = this.getString(name);
+		if (s != null) {
+			return Base64.getDecoder().decode(s);
+		}
+		return null;
+	}
+
+	public void put(String name, byte[] data) {
+		if (data != null) {
+			this.put(name, new String(Base64.getEncoder().encode(data)));
+		}
+	}
+
+	public JSON append(String name, byte[] data) {
+		this.put(name, data);
+		return this;
+	}
+
+	@Override
+	public int compareTo(JSON o) {
+		if (this == o) {
+			return 0;
+		}
+
+		if (o == null) {
+			return 1;
+		}
+
+		Set<String> k1 = this.keySet();
+		Set<String> k2 = o.keySet();
+
+		if (k1.containsAll(k2)) {
+			if (k2.containsAll(k1)) {
+				for (String name : k1) {
+					Object o1 = this.get(name);
+					Object o2 = o.get(name);
+					int e = X.compareTo(o1, o2);
+					if (e != 0) {
+						return e;
+					}
+				}
+			} else {
+				return 1;
+			}
+		}
+
+		if (k2.containsAll(k1)) {
+			return -1;
+		}
+
+		return 1;
 	}
 
 }

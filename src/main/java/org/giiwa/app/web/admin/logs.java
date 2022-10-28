@@ -33,14 +33,19 @@ import org.giiwa.web.*;
  */
 public class logs extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Path(path = "download", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void download() {
 
 		JSON jo = JSON.create();
 		String f = this.getString("f");
 
-		File f0 = new File(Controller.GIIWA_HOME + "/logs/");
-		File f1 = new File(Controller.GIIWA_HOME + "/logs/" + f);
+		File f0 = new File(Temp.ROOT + "/../logs/");
+		File f1 = new File(Temp.ROOT + "/../logs/" + f);
 		try {
 			if (f1.getCanonicalPath().startsWith(f0.getCanonicalPath())) {
 
@@ -53,7 +58,7 @@ public class logs extends Controller {
 					node = X.EMPTY;
 				}
 
-				jo.put("src", t.getUri() + "&__node=" + node);
+				jo.put("src", t.getUri(lang) + "&__node=" + node);
 			} else {
 				jo.put(X.MESSAGE, "not found, name=" + f);
 				jo.put(X.STATE, 201);
@@ -75,10 +80,9 @@ public class logs extends Controller {
 		JSON jo = new JSON();
 		String f = this.getString("f");
 
-		File f1 = new File(Controller.GIIWA_HOME + "/logs/" + f);
+		File f1 = new File(Temp.ROOT + "/../logs/" + f);
 		try {
-			if (f1.getCanonicalPath().startsWith(new File(Controller.GIIWA_HOME + "/logs/").getCanonicalPath())
-					&& f1.delete()) {
+			if (f1.getCanonicalPath().startsWith(new File("/data/logs/").getCanonicalPath()) && f1.delete()) {
 				GLog.oplog.warn(logs.class, "delete", "deleted=" + f, login, this.ip());
 				jo.put(X.STATE, 200);
 			} else {
@@ -100,7 +104,10 @@ public class logs extends Controller {
 	 */
 	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
 	public void onGet() {
-		File f = new File(Controller.GIIWA_HOME + "/logs");
+
+		File f = new File(Temp.ROOT + "/../logs/");
+
+		this.set("root", X.getCanonicalPath(f.getAbsolutePath()));
 		File[] ff = f.listFiles();
 		this.set("list", ff);
 

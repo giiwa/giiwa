@@ -2,9 +2,7 @@
 #parse('/widget/widget.message.html')
 
 <div class='tabs'>
-	<a href='/admin/database?__node=$!__node'>$lang.get('a.database')</a>
 	<a href='/admin/backup?__node=$!__node'>$lang.get('a.backup.files')</a>
-	<a href='/admin/backup/auto?__node=$!__node'>$lang.get('a.backup.auto')</a>
 	<a href='/admin/backup/create?__node=$!__node' class='selected'>$lang.get('a.backup.create')</a>
 </div>
 
@@ -13,19 +11,29 @@
 	<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 		<thead>
 			<tr>
-				<th>$lang.get('table.memo')</th>
-				<th>$lang.get('table.bean')</th>
-				<th>$lang.get('table.name')</th>
-				<th>$lang.get('table.size')</th>
+				<th style="width: 40px;"></th>
+				<th style="width: 250px;">$lang.get('table.memo')</th>
+				<th style="width: 90px;">$lang.get('table.total')</th>
+				<th style="width: 90px;">$lang.get('table.totalsize')</th>
+				<th style="width: 90px;">$lang.get('table.indexsize')</th>
+				<th style="width: 130px;">$lang.get('table.updated')</th>
+				<th></th>
 			</tr>
 		</thead>
 		<tbody>
+		#set($i=0)
 		#foreach($t in $list)
+			#set($i=$i+1)
 			<tr>
-				<td><label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!t.display</label></label></td>
-				<td>$!t.name</td>
-				<td>$!t.table</td>
-				<td>$!t.size</td>
+				<td>$i</td>
+				<td>
+					<label><input type="checkbox" name="name" value="$t.table" style="margin-top: 0;">$!t.display</label>
+				</td>
+				<td>$!t.count</td>
+				<td>$!lang.size($t.totalsize)</td>
+				<td>$!lang.size($t.indexsize)</td>
+				<td>#if($t.updated) $lang.format($t.updated, 'yyyy-MM-dd HH:mm:ss') #end</td>
+				<td></td>
 			</tr>
 		#end
 		</tbody>

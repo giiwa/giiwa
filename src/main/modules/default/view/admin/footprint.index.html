@@ -17,7 +17,7 @@ td.log_level_2 {
 }
 </style>
 <div class='search'>
-	<form action='/admin/footprint' method='get' #if($s>0) style='display:none' #end > 
+	<form action='/admin/footprint?__node=$!__node' method='post' #if($s>0) style='display:none' #end > 
 		<span><label><h3>$lang.get('footprint.table'):</h3>
 			<input type='text' name='table' value='$!table'  style="width: 80px;"/>
 		</label></span> 

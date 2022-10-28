@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.giiwa.app.web.portlet.portlet;
+import org.giiwa.bean.Node;
 import org.giiwa.bean.m._DB;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
@@ -13,24 +14,60 @@ import org.giiwa.json.JSON;
 import org.giiwa.web.Path;
 
 public class write extends portlet {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	@Override
 	public void get() {
 
-		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create("node", Local.id()).and("name", "write")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
+		W q = W.create().and("node", id).and("name", "write")
+				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+		_DB.Record.dao.optimize(q);
+		
+		Beans<_DB.Record> bs = _DB.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
 			this.put("list", bs);
-			this.show("/portlet/db/write.html");
 		}
+
+		long max = X.toLong(1.1 * X.toLong(_DB.Record.dao.max("max",
+				W.create().and("name", "write").and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+		this.set("max", max);
+
+		this.show("/portlet/db/write.html");
 	}
 
 	@Path(path = "data", login = true)
 	public void data() {
 
-		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create("node", Local.id()).and("name", "write")
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
+		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create().and("node", id).and("name", "write")
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -60,10 +97,22 @@ public class write extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
+		String id = this.getString("id");
+		if (X.isEmpty(id)) {
+			id = Local.id();
+		}
+		this.set(X.ID, id);
+		Node n = Node.dao.load(id);
+		if (n != null) {
+			this.set("name1", n.label);
+		} else {
+			this.set("name1", id);
+		}
+
 		long time = System.currentTimeMillis() - X.AWEEK;
 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(
-				W.create("node", Local.id()).and("name", "write").and("created", time, W.OP.gte).sort("created", -1), 0,
+				W.create().and("node", id).and("name", "write").and("created", time, W.OP.gte).sort("created", -1), 0,
 				24 * 60 * 2);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);

@@ -1,0 +1,18 @@
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/napp?__node=$!__node' class='selected'>$lang.get('a.napp')</a>
+</div>
+
+#foreach($p in $names)
+	<div style="display: inline-block;width: 100%;">
+	<div class="title" style='background:$lang.get("napp.color_$p");color: white;padding: 6px 10px;'>$p</div>
+#foreach($f in $that.ex($p))
+	<div class="portlet" data-url="$f" style="margin-bottom: 20px;margin-top: 20px;"></div>
+#end
+	<div class='br'></div>
+#foreach($f in $that.list($p))
+	<div class="portlet" data-url="/portlet/app/cpu?id=$!f.id" style="margin-bottom: 20px;margin-top: 20px;"></div>
+#end
+	</div>
+#end

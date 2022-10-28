@@ -20,18 +20,18 @@
 						"name": "menu.module",
 						"load": "/admin/module",
 						"seq": 20,
-						"access": "access.config.admin|access.config.module.admin",
+						"access": "access.config.admin",
 						"classes": "icon-google-drive"
 					},
 					{
 						"name": "menu.log",
 						"seq": 30,
 						"classes": "icon-list",
-						"access": "access.config.admin|access.config.logs.admin",
+						"access": "access.config.admin",
 						"childs": [
 							{
-								"name": "menu.syslog",
-								"load": "/admin/syslog",
+								"name": "menu.glog",
+								"load": "/admin/glog",
 								"seq": 10,
 								"classes": "icon-hammer"
 							},
@@ -50,41 +50,73 @@
 						"classes": "icon-hammer",
 						"childs": [
 							{
-								"name": "menu.task",
-								"load": "/admin/task",
-								"seq": 10,
-								"classes": "icon-clock"
-							},
-							{
 								"name": "menu.sysinfo",
-								"load": "/admin/sysinfo/cpu",
-								"seq": 20,
-								"classes": "icon-stats-dots"
-							},
-							{
-								"name": "menu.node",
-								"load": "/admin/node",
-								"seq": 40,
-								"classes": "icon-laptop"
-							},
-							{
-								"name": "menu.dfile",
-								"load": "/admin/dfile/disk",
-								"seq": 50,
-								"classes": "icon-drawer"
+								"load": "/admin/sysinfo1/cpu",
+								"seq": 10,
+								"classes": "icon-display"
 							},
 							{
 								"name": "menu.database",
 								"load": "/admin/database",
-								"seq": 70,
+								"seq": 20,
 								"classes": "icon-database"
+							},
+							{
+								"name": "menu.backup.auto",
+								"load": "/admin/backup/auto",
+								"seq": 30,
+								"classes": "icon-cloud_download"
+							},
+							{
+								"name": "menu.backup",
+								"load": "/admin/backup",
+								"seq": 40,
+								"classes": "icon-settings_backup_restore"
 							},
 							{
 								"name": "menu.i18n",
 								"load": "/admin/i18n",
-								"seq": 80,
+								"seq": 50,
 								"access": "access.config.admin|access.config.module.admin",
 								"classes": "icon-magic-wand"
+							}
+						]
+					},
+					{
+						"name": "menu.cluster",
+						"seq": 50,
+						"access": "access.config.admin",
+						"classes": "icon-tree",
+						"childs": [
+							{
+								"name": "menu.node",
+								"load": "/admin/node",
+								"seq": 10,
+								"classes": "icon-computer-desktop"
+							},
+							{
+								"name": "menu.nstate",
+								"load": "/admin/nstate",
+								"seq": 20,
+								"classes": "icon-stats-dots"
+							},
+							{
+								"name": "menu.task",
+								"load": "/admin/task",
+								"seq": 30,
+								"classes": "icon-clock"
+							},
+							{
+								"name": "menu.mo",
+								"load": "/admin/mo",
+								"seq": 40,
+								"classes": "icon-browser"
+							},
+							{
+								"name": "menu.dfile",
+								"load": "/admin/dfile/folder",
+								"seq": 50,
+								"classes": "icon-folder"
 							}
 						]
 					}
@@ -107,15 +139,22 @@
 						"name": "menu.user",
 						"load": "/admin/user",
 						"access": "access.config.admin|access.config.user.admin",
-						"seq": 20,
+						"seq": 30,
 						"classes": "icon-users"
 					},
 					{
 						"name": "menu.app",
 						"load": "/admin/app",
-						"seq": 30,
+						"seq": 40,
 						"access": "access.config.admin",
 						"classes": "icon-link"
+					},
+					{
+						"name": "menu.blacklist",
+						"load": "/admin/blacklist",
+						"seq": 50,
+						"access": "access.config.admin",
+						"classes": "icon-block"
 					}
 				]
 			}

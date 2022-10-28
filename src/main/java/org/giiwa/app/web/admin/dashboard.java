@@ -14,7 +14,6 @@
 */
 package org.giiwa.app.web.admin;
 
-import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +21,7 @@ import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._Net;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
+import org.giiwa.misc.Shell;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.web.*;
 
@@ -34,6 +34,10 @@ import org.giiwa.web.*;
  */
 public class dashboard extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -42,6 +46,7 @@ public class dashboard extends Controller {
 	@Override
 	@Path(login = true)
 	public void onGet() {
+
 		String _node = this.getString("__node");
 		if (X.isEmpty(_node)) {
 			_node = Local.id();
@@ -58,14 +63,20 @@ public class dashboard extends Controller {
 
 		this.set("me", login);
 
-		String name = ManagementFactory.getRuntimeMXBean().getName();
-		this.set("pid", X.split(name, "[@]")[0]);
+		this.set("pid", Shell.pid());
 		this.set("uptime", Controller.UPTIME);
 
 		if (login != null && login.hasAccess("access.config.admin")) {
 
-			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
-			this.set("disks", _DiskIO.dao.load(W.create("node", Local.id()).sort("path", 1), 0, 100));
+			this.set("nets",
+					_Net.dao.load(W.create().and("node", Local.id())
+							.and("updated", System.currentTimeMillis() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1), 0,
+							100));
+
+			this.set("disks",
+					_DiskIO.dao.load(W.create().and("node", Local.id())
+							.and("updated", System.currentTimeMillis() - X.AMINUTE * 10, W.OP.gte).sort("path", 1), 0,
+							100));
 
 			this.set("portlets", portlets);
 
@@ -83,13 +94,13 @@ public class dashboard extends Controller {
 	@Path(login = true, path = "info")
 	public void info() {
 
-		String name = ManagementFactory.getRuntimeMXBean().getName();
-		this.set("pid", X.split(name, "[@]")[0]);
+		this.set("pid", Shell.pid());
+		
 		this.set("uptime", Controller.UPTIME);
 
 		if (login != null && login.hasAccess("access.config.admin")) {
 
-			this.set("nets", _Net.dao.load(W.create("node", Local.id()).sort("inet", 1), 0, 100));
+			this.set("nets", _Net.dao.load(W.create().and("node", Local.id()).sort("inet", 1), 0, 100));
 
 			this.show("/admin/dashboard.html");
 
@@ -100,14 +111,6 @@ public class dashboard extends Controller {
 		}
 	}
 
-	/**
-	 * @deprecated
-	 * @param url
-	 */
-	public static void add(String url) {
-		desk(url);
-	}
-
 	public static void desk(String url) {
 		if (!desks.contains(url)) {
 			desks.add(url);
@@ -115,11 +118,15 @@ public class dashboard extends Controller {
 	}
 
 	public static void portlet(String url) {
-		if (url.indexOf("?") < 0) {
-			url = url + "?";
-		}
-		if (!portlets.contains(url)) {
+		if (X.isSame(url, "br")) {
 			portlets.add(url);
+		} else {
+			if (url.indexOf("?") < 0) {
+				url = url + "?";
+			}
+			if (!portlets.contains(url)) {
+				portlets.add(url);
+			}
 		}
 	}
 

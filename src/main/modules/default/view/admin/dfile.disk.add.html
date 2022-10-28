@@ -5,22 +5,15 @@
 <form action='/admin/dfile/disk/add?__node=$!__node'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
 
 	<div><label><h3>$lang.get('disk.node')(<r>*</r>):</h3>
-		<select name="node1">
-			#foreach($p in $nodes)
-			<option value="$p.id">$p.url</option>
-			#end
-		</select>
+		<input type='text' name='url' value=""/>
 		<g>$lang.get('disk.node.hint')</g></label></div>
-	<div><label><h3>$lang.get('disk.type')(<r>*</r>):</h3>
-		<select name="type">
-			<option value="data">$lang.get("disk.type_data")</option>
-			<option value="nginx">$lang.get("disk.type_nginx")</option>
-		</select>
-		</label></div>
 	<div><label><h3>$lang.get('disk.path')(<r>*</r>):</h3><input type='text' name='s' value=""/><g>$lang.get('disk.path.hint')</g></label></div>
-	<div><label><h3>$lang.get('disk.priority')(<r>*</r>):</h3><input type='number' name='priority' value="1"/><g>$lang.get('disk.priority.hint')</g></label></div>
-	<div><label><h3>$lang.get('disk.enabled')(<r>*</r>):</h3><input type='number' name='enabled' value="1"/><g>$lang.get('disk.enabled.hint')</g></label></div>
-	
+	<div><label><h3>$lang.get('disk.mount'):</h3><input type='text' name='mount' value=""/><g>$lang.get('disk.mount.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.priority'):</h3><input type='number' name='priority' value="1" style="width: 40px"/><g>$lang.get('disk.priority.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.enabled'):</h3><input type='number' name='enabled' value="1" style="width: 40px"/><g>$lang.get('disk.enabled.hint')</g></label></div>
+<!-- 	<div><label><h3>$lang.get('disk.encode'):</h3><input type='number' name='encode' value="0"/><g>$lang.get('disk.encode.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.code'):</h3><input type='text' name='code' value=""/><g>$lang.get('disk.code.hint')</g></label></div>
+ -->
 	<div class='btns'>
 		<button type='submit'>$lang.get('btn.ok')</button>
 	</div>

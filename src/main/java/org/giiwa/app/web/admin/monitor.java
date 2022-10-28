@@ -8,6 +8,11 @@ import org.giiwa.web.Path;
 
 public class monitor extends Controller {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	@Path(path = "checking", login = true)
 	public void checking() {
 
