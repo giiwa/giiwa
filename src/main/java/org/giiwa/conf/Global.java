@@ -18,14 +18,19 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.app.task.NtpTask;
 import org.giiwa.cache.Cache;
 import org.giiwa.cache.GlobalLock;
 import org.giiwa.cache.TimingCache;
-import org.giiwa.dao.*;
+import org.giiwa.dao.Bean;
+import org.giiwa.dao.BeanDAO;
+import org.giiwa.dao.Column;
+import org.giiwa.dao.Comment;
+import org.giiwa.dao.Helper;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.zookeeper.ZkLock;
+import org.giiwa.dao.Table;
+import org.giiwa.dao.UID;
+import org.giiwa.dao.X;
 
 /**
  * The Class Global is extended of Config, it can be "overrided" by module or
@@ -33,6 +38,7 @@ import org.giiwa.zookeeper.ZkLock;
  * 
  * @author yjiang
  */
+@Comment(text = "全局配置")
 @Table(name = "gi_config", memo = "GI-全局配置")
 public final class Global extends Bean {
 
@@ -43,10 +49,10 @@ public final class Global extends Bean {
 
 	public static final BeanDAO<String, Global> dao = BeanDAO.create(Global.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", size = 100)
 	public String id;
 
-	@Column(memo = "字符串值")
+	@Column(memo = "字符串值", size = 1000)
 	String s;
 
 	@Column(memo = "整数值")
@@ -55,8 +61,8 @@ public final class Global extends Bean {
 	@Column(memo = "长整数值")
 	long l;
 
-	@Column(memo = "备注")
-	String memo;
+	@Column(memo = "字符串值", size = 512)
+	String link;
 
 	private static Global inst = new Global();
 
@@ -71,7 +77,8 @@ public final class Global extends Bean {
 	 * @param defaultValue the default value
 	 * @return the int
 	 */
-	public static int getInt(String name, int defaultValue) {
+	@Comment()
+	public static int getInt(@Comment(text = "name") String name, @Comment(text = "defaultvalue") int defaultValue) {
 
 		Global c = TimingCache.get(Global.class, name);
 		if (c == null) {
@@ -107,6 +114,7 @@ public final class Global extends Bean {
 	public static String getString(String name, String defaultValue) {
 
 		Global c = TimingCache.get(Global.class, name);
+
 		if (c == null && Helper.isConfigured()) {
 			try {
 				c = dao.load(name);
@@ -123,33 +131,40 @@ public final class Global extends Bean {
 			}
 		}
 
-		return c != null && c.s != null ? c.s : Config.getConf().getString(name, defaultValue);
-
-	}
-
-	public static String getMemo(String name, String defaultValue) {
-
-		Global c = TimingCache.get(Global.class, name);
-		if (c == null) {
-
-			try {
-				c = dao.load(name);
-				if (c != null) {
-					/**
-					 * avoid restarted, can not load new config
-					 */
-					TimingCache.set(Global.class, name, c);
-
-					return c.memo != null ? c.memo : defaultValue;
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
+		if (c != null && c.s != null) {
+			return c.s;
+		}
+		if (Config.getConf() != null) {
+			return Config.getConf().getString(name, defaultValue);
 		}
 
-		return c != null && c.memo != null ? c.memo : Config.getConf().getString(name, defaultValue);
+		return defaultValue;
 
 	}
+
+//	public static String getMemo(String name, String defaultValue) {
+//
+//		Global c = TimingCache.get(Global.class, name);
+//		if (c == null) {
+//
+//			try {
+//				c = dao.load(name);
+//				if (c != null) {
+//					/**
+//					 * avoid restarted, can not load new config
+//					 */
+//					TimingCache.set(Global.class, name, c);
+//
+//					return c.memo != null ? c.memo : defaultValue;
+//				}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
+//		}
+//
+//		return c != null && c.memo != null ? c.memo : Config.getConf().getString(name, defaultValue);
+//
+//	}
 
 	/**
 	 * get the long value.
@@ -158,7 +173,8 @@ public final class Global extends Bean {
 	 * @param defaultValue the default value
 	 * @return the long
 	 */
-	public static long getLong(String name, long defaultValue) {
+	@Comment()
+	public static long getLong(@Comment(text = "name") String name, @Comment(text = "defaultvalue") long defaultValue) {
 
 		Global c = TimingCache.get(Global.class, name);
 		if (c == null) {
@@ -185,16 +201,17 @@ public final class Global extends Bean {
 	 * @return long of current time
 	 */
 	public static long now() {
-		long t = System.currentTimeMillis();
-		Long c = Cache.get("now");
-		if (c == null || c < t) {
-			if (NtpTask.inst.ok) {
-				Cache.set("now", t, X.AHOUR);
-			}
-		} else {
-			t = c;
-		}
-		return t;
+		return Cache.currentTimeMillis();
+//		long t = System.currentTimeMillis();
+//		Long c = Cache.get("now");
+//		if (c == null || c < t) {
+//			if (NtpTask.inst.ok) {
+//				Cache.set("now", t, X.AHOUR);
+//			}
+//		} else {
+//			t = c;
+//		}
+//		return t;
 	}
 
 	/**
@@ -226,10 +243,10 @@ public final class Global extends Bean {
 			V v = V.create();
 			if (o instanceof Integer) {
 				g.i = (Integer) o;
-				v.set("i", g.i);
+				v.append("i", g.i);
 			} else if (o instanceof Long) {
 				g.l = (Long) o;
-				v.set("l", g.l);
+				v.append("l", g.l);
 			} else {
 				String s = o.toString();
 				v.append("s", s);
@@ -250,30 +267,30 @@ public final class Global extends Bean {
 		}
 	}
 
-	public synchronized static void setMemo(String name, String s) {
-		if (X.isEmpty(name)) {
-			return;
-		}
-
-		try {
-			Global g = new Global();
-			V v = V.create();
-			v.append("memo", s);
-			g.memo = s;
-
-			TimingCache.set(Global.class, name, g);
-
-			if (Helper.isConfigured()) {
-				if (dao.exists(name)) {
-					dao.update(name, v);
-				} else {
-					dao.insert(v.force(X.ID, name));
-				}
-			}
-		} catch (Exception e1) {
-			log.error(e1.getMessage(), e1);
-		}
-	}
+//	public synchronized static void setMemo(String name, String s) {
+//		if (X.isEmpty(name)) {
+//			return;
+//		}
+//
+//		try {
+//			Global g = new Global();
+//			V v = V.create();
+//			v.append("memo", s);
+//			g.memo = s;
+//
+//			TimingCache.set(Global.class, name, g);
+//
+//			if (Helper.isConfigured()) {
+//				if (dao.exists(name)) {
+//					dao.update(name, v);
+//				} else {
+//					dao.insert(v.force(X.ID, name));
+//				}
+//			}
+//		} catch (Exception e1) {
+//			log.error(e1.getMessage(), e1);
+//		}
+//	}
 
 	/**
 	 * Gets the string value
@@ -293,10 +310,14 @@ public final class Global extends Bean {
 	 * @return
 	 */
 	public static Lock getLock(String name) {
-		if (ZkLock.isOk()) {
-			return ZkLock.create(name);
-		}
-		return GlobalLock.create(name);
+		return getLock(name, false);
+	}
+
+	public static Lock getLock(String name, boolean debug) {
+//		if (ZkLock.isOk()) {
+//			return ZkLock.create(name, debug);
+//		}
+		return GlobalLock.create(name, debug);
 
 	}
 

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.zookeeper;
 
 import java.util.concurrent.TimeUnit;
@@ -15,7 +29,7 @@ import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 
 /**
- * bug, may cause slow
+ * has issue, may cause slow
  * 
  * @author joe
  *
@@ -36,21 +50,22 @@ public class ZkLock implements Lock {
 		}
 
 		if (zkserver == null) {
-			return check() != null;
+			return check(false) != null;
 		}
 
 		return false;
 
 	}
 
-	public static Lock create(String name) {
+	public static Lock create(String name, boolean debug) {
 
-		check();
+		check(debug);
 
 		ZkLock e = new ZkLock();
 		e.name = name.replaceAll("/", "_");
 		String path = "/lock/" + e.name;
 		e.lock = new InterProcessMutex(client, path);
+
 		return e;
 	}
 
@@ -61,7 +76,7 @@ public class ZkLock implements Lock {
 
 	private static String zkserver = null;
 
-	private static CuratorFramework check() {
+	private static CuratorFramework check(boolean debug) {
 
 		if (client == null) {
 
@@ -72,7 +87,9 @@ public class ZkLock implements Lock {
 						.sessionTimeoutMs(5000).connectionTimeoutMs(5000).retryPolicy(retryPolicy).build();
 				zkClient.start();
 
-//				log.warn("zkclient=" + zkClient.getState());
+				if (debug || log.isDebugEnabled()) {
+					log.info("zkclient=" + zkClient.getState());
+				}
 
 				if (CuratorFrameworkState.STARTED.equals(zkClient.getState())) {
 					client = zkClient;

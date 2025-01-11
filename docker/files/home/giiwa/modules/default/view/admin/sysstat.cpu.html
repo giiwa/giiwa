@@ -1,0 +1,52 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysstat/cpu?__node=$!__node' class='selected'>$lang.get('a.sysstat.cpu')</a>
+	<a href='/admin/sysstat/net?__node=$!__node'>$lang.get('a.sysstat.net')</a>
+	<a href='/admin/sysstat/netstat?__node=$!__node'>$lang.get('a.sysstat.netstat')</a>
+	<a href='/admin/sysstat/disk?__node=$!__node'>$lang.get('a.sysstat.disk')</a>
+</div>
+
+<table id='task-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('cpu.sys')</th>
+			<th>$lang.get('cpu.user')</th>
+			<th>$lang.get('cpu.wait')</th>
+			<th>$lang.get('cpu.nice')</th>
+			<th>$lang.get('cpu.idle')</th>
+		</tr>
+	</thead>
+	<tbody id="$!id">
+#set($i=0)
+#foreach($f in $cpuperc)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$lang.percent($!f.sys, '%.1f')</td>
+		<td>$lang.percent($!f.user, '%.1f')</td>
+		<td>$lang.percent($!f.wait, '%.1f')</td>
+		<td>$lang.percent($!f.nice, '%.1f')</td>
+		<td>$lang.percent($!f.idle, '%.1f')</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<script>
+$(function(){
+	setTimeout(_reload, 3000);
+});
+
+function _reload(){
+	if($('#$!id').length > 0) {
+		$.post('/admin/sysstat/cpu/list?__node=$!__node', {}, function(d){
+			$('#$!id').html(d);			
+			setTimeout(_reload, 3000);
+		});
+	}
+}
+
+</script>

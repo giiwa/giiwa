@@ -34,6 +34,7 @@ import org.giiwa.bean.Session;
 import org.giiwa.bean.Temp;
 import org.giiwa.bean.User;
 import org.giiwa.bean.UserConfig;
+import org.giiwa.cache.Cache;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper;
@@ -256,20 +257,28 @@ public class user extends Controller {
 	public void set() {
 
 		try {
+
 			List<String> ss = this.names();
 			if (ss != null && !ss.isEmpty()) {
+
+				String sid = this.sid();
+				long uid = login.id;
+
+				this.set("ss", ss);
+
 				for (String s1 : ss) {
 					String content = this.getHtml(s1);
-					if (content.length() < 4096) {
-						UserConfig.set(login.getId(), s1, content);
+					if (content == null || content.length() < 4096) {
+						UserConfig.set(uid, sid, s1, content);
+						this.set(s1, content);
 					}
 				}
 			}
 
-			this.send(JSON.create().append(X.STATE, 200).append("MAXSIZE", 4096));
+			this.set("MAXSIZE", 4096).send(200);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
-			this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()).append("MAXSIZE", 4096));
+			this.set(X.ERROR, e.getMessage()).set("MAXSIZE", 4096).send(201);
 		}
 	}
 
@@ -292,10 +301,14 @@ public class user extends Controller {
 		JSON jo = JSON.create();
 		String names = this.getString("names");
 		if (names != null) {
+
+			String sid = this.sid();
+			long uid = login.id;
+
 			String[] ss = X.split(names, "[,;]");
 			if (ss != null && ss.length > 0) {
 				for (String s1 : ss) {
-					String v = UserConfig.get(login.getId(), s1);
+					String v = UserConfig.get(uid, sid, s1);
 					jo.put(s1, v);
 				}
 			}
@@ -322,6 +335,10 @@ public class user extends Controller {
 		}
 
 		String s = this.get("_s");
+		if (X.isEmpty(s)) {
+			this.print("[_s] missed");
+			return;
+		}
 		s = new String(Base32.decode(s));
 		JSON j0 = JSON.fromObject(s);
 
@@ -517,11 +534,11 @@ public class user extends Controller {
 
 	}
 
-	@Path(path = "ssolink", method = "post")
+	@Path(path = "ssolink")
 	public void ssolink() {
 
 		String appid = this.get("appid");
-//		String secret = this.get("secret");
+		String secret = this.get("secret");
 		String name = this.get("name");
 
 		if (X.isEmpty(appid)) {
@@ -534,6 +551,12 @@ public class user extends Controller {
 		if (a == null) {
 			this.set(X.ERROR, "bad appid [" + appid + "]").send(201);
 			GLog.securitylog.warn("user", "ssolink", "bad appid [" + appid + "]", null, this.ip());
+			return;
+		}
+
+		if (!X.isSame(secret, a.secret)) {
+			this.set(X.ERROR, "bad secret for [" + appid + "]").send(201);
+			GLog.securitylog.warn("user", "ssolink", "bad secret[" + secret + "] for [" + appid + "]", null, this.ip());
 			return;
 		}
 
@@ -580,15 +603,24 @@ public class user extends Controller {
 
 		if (method.isPost()) {
 
-			String callback = this.getHtml("callback");
+			String callback = this.get("callback");
 			if (X.isEmpty(callback)) {
 				callback = this.session(true).get("callback");
-
 				log.info("get session, callback=" + callback);
-
 			}
 
-			JSON jo = new JSON();
+			if (!X.isEmpty(callback)) {
+				try {
+					String s = new String(Base32.decode(callback));
+					if (!X.isEmpty(s)) {
+						callback = s;
+					}
+				} catch (Exception e) {
+					log.warn(e.getMessage(), e);
+				}
+			}
+
+			JSON jo = JSON.create();
 			AuthToken a = null;
 			if (Global.getInt("user.token", 0) == 1) {
 				String token = this.getString("token");
@@ -605,21 +637,21 @@ public class user extends Controller {
 				User u = a.getUser_obj();
 				this.user(u, LoginType.ajax);
 
-				GLog.securitylog.info("user", "login", null, u, this.ip());
-
 				if (u.expired()) {
 					this.set(X.MESSAGE, lang.get("passwd.expired"));
-
 					log.info("redirect to passwd as expired!");
 					this.redirect("/user/passwd");
+					GLog.securitylog.info("user", "login", "success, " + lang.get("passwd.expired"), u, this.ip());
+
 					return;
 				}
 
-				if (!X.isEmpty(callback)) {
-
+				if (!X.isEmpty(callback) && !callback.startsWith("/user/")) {
+					// 重定向， 禁止重定向到 /user/...
+					// SSO
 					log.info("redirect to callback=" + callback);
-
 					this.redirect(callback);
+					GLog.securitylog.info("user", "login", "success, redirect: " + callback, u, this.ip());
 					return;
 				}
 
@@ -642,6 +674,7 @@ public class user extends Controller {
 						pwd = pwd.replaceAll("'", X.EMPTY).replaceAll("\"", X.EMPTY);
 					}
 
+					User u = User.load(name);
 					Captcha.Result r = Captcha.Result.ok;
 
 					if (Global.getInt("user.captcha", 0) == 1) {
@@ -659,20 +692,20 @@ public class user extends Controller {
 						jo.put(X.MESSAGE, lang.get("captcha.bad"));
 						jo.put(X.STATE, 202);
 
-						GLog.securitylog.error("user", "login", lang.get("captcha.bad"), null, this.ip());
+						GLog.securitylog.error("user", "login", lang.get("captcha.bad"), u, this.ip());
 
 					} else if (Captcha.Result.expired == r) {
 
 						jo.put(X.MESSAGE, lang.get("captcha.expired"));
 						jo.put(X.STATE, 203);
 
-						GLog.securitylog.error("user", "login", lang.get("captcha.expired"), null, this.ip());
+						GLog.securitylog.error("user", "login", lang.get("captcha.expired"), u, this.ip());
 
 					} else {
 
 						User me = User.load(name, pwd, this.ip());
 
-						log.info("login: " + sid(true) + "-" + me);
+						log.info("login: name=" + name + ", sid=" + sid(true) + ", me=" + me);
 
 						if (me != null) {
 
@@ -687,12 +720,11 @@ public class user extends Controller {
 								jo.put("name", name);
 								jo.put("pwd", pwd);
 
-								GLog.securitylog.error("user", "login", lang.get("account.locked.error"), me,
-										this.ip());
+								GLog.securitylog.error("user", "login", lang.get("account.locked.error"), u, this.ip());
 
 							} else {
 
-								GLog.securitylog.info("user", "login", me.name + " login success", me, this.ip());
+								GLog.securitylog.info("user", "login", me.name + " login success", u, this.ip());
 
 								if (X.isSame("json", this.getString("type")) || this.isAjax()) {
 
@@ -710,17 +742,23 @@ public class user extends Controller {
 
 										log.info("redirect to passwd as expired");
 
-										this.redirect("/user/passwd");
+										// this.redirect("/user/passwd");
+
+										GLog.securitylog.info("user", "login", "success, " + lang.get("passwd.expired"),
+												u, this.ip());
+
 										return;
 									}
 
-									if (!X.isEmpty(callback)) {
-
-										log.info("redirect to callback=" + callback);
-
-										this.redirect(callback);
-										return;
-									}
+//									if (!X.isEmpty(callback) && !callback.startsWith("/user/")) {
+//										// 重定向， 禁止重定向到 /user/...
+//										// SSO
+//										log.info("redirect to callback=" + callback);
+//										this.redirect(callback);
+//										GLog.securitylog.info("user", "login", "success, redirect: " + callback, u,
+//												this.ip());
+//										return;
+//									}
 
 									jo.put("sid", sid(true));
 									jo.put("uid", me.getId());
@@ -759,15 +797,21 @@ public class user extends Controller {
 
 										this.redirect("/user/passwd");
 
+										GLog.securitylog.info("user", "login", "success, " + lang.get("passwd.expired"),
+												u, this.ip());
+
 										return;
 									}
 
-									if (!X.isEmpty(callback)) {
-
+									if (!X.isEmpty(callback) && !callback.startsWith("/user/")) {
+										// 重定向， 禁止重定向到 /user/...
+										// SSO
 										log.info("redirect to callback=" + callback);
-
 										this.redirect(callback);
+										GLog.securitylog.info("user", "login", "success, redirect: " + callback, u,
+												this.ip());
 										return;
+
 									}
 
 									Roles rs = me.getRole();
@@ -778,6 +822,10 @@ public class user extends Controller {
 												log.info("redirect to role home=" + r1.url);
 
 												this.redirect(r1.url);
+
+												GLog.securitylog.info("user", "login", "success, home=" + r1.url, u,
+														this.ip());
+
 												return;
 											}
 										}
@@ -787,6 +835,9 @@ public class user extends Controller {
 
 									this.redirect("/");
 //									this.redirect("/user/go");
+
+									GLog.securitylog.info("user", "login", "success, goto /", u, this.ip());
+
 								}
 								return;
 							}
@@ -795,7 +846,6 @@ public class user extends Controller {
 
 							jo.append(X.STATE, 200).append(X.MESSAGE, "ok");
 
-							User u = User.load(name);
 							if (u == null) {
 								jo.put("message", lang.get("login.name_password.error"));
 								jo.put(X.STATE, 201);
@@ -849,9 +899,7 @@ public class user extends Controller {
 				if (rs != null && rs.getList() != null) {
 					for (Role r1 : rs.getList()) {
 						if (!X.isEmpty(r1.url)) {
-
 							log.info("redirect to role home=" + r1.url);
-
 							this.redirect(r1.url);
 							return;
 						}
@@ -860,15 +908,12 @@ public class user extends Controller {
 
 				if (login.expired()) {
 					this.set(X.MESSAGE, lang.get("passwd.expired"));
-
 					log.info("redirect to passwd as expired");
-
 					this.redirect("/user/passwd");
 					return;
 				}
 
 				log.info("redirect to /");
-
 				this.redirect("/");
 			} else {
 				this.copy(this.json());
@@ -894,10 +939,14 @@ public class user extends Controller {
 
 		this.user(null);
 
-		String callback = this.getHtml("callback");
+		String callback = this.get("callback");
 		try {
-			log.info("store in session, callback=" + callback);
-			this.set("callback", callback);
+			if (callback != null) {
+				// TO FIX XSS issue
+				callback = Base32.encode(callback.getBytes());
+				log.info("store in session, callback=" + callback);
+				this.set("callback", callback);
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -934,7 +983,7 @@ public class user extends Controller {
 			/**
 			 * clear the user in session, but still keep the session
 			 */
-			user(null, null);
+			user(null, (User) null);
 
 		}
 
@@ -1444,6 +1493,114 @@ public class user extends Controller {
 	@Path(path = "timestamp")
 	public void timestamp() {
 		this.print(Long.toString(System.currentTimeMillis()));
+	}
+
+	@Path(path = "sso/login", method = "POST")
+	public void sso_login() {
+
+		String appid = this.get("appid");
+		String secret = this.get("secret");
+		String cookiename = this.get("cookiename");
+		String cookievalue = this.get("cookievalue");
+		String username = this.get("username");
+		String nickname = this.get("nickname");
+
+		App a = App.load(appid);
+		if (a == null) {
+			this.set(X.ERROR, "bad appid [" + appid + "]").send(201);
+			return;
+		}
+
+		if (!X.isSame(secret, a.secret)) {
+			this.set(X.ERROR, "bad secret [" + secret + "]").send(201);
+			return;
+		}
+
+		if (X.isEmpty(cookiename)) {
+			this.set(X.ERROR, "bad cookiename [" + cookiename + "]").send(201);
+			return;
+		}
+
+		if (X.isEmpty(cookievalue)) {
+			this.set(X.ERROR, "bad cookievalue [" + cookievalue + "]").send(201);
+			return;
+		}
+
+		if (X.isEmpty(username) || username.length() < 4) {
+			this.set(X.ERROR, "bad username [" + username + "]").send(201);
+			return;
+		}
+
+		if (!X.isSame(Controller.COOKIE_NAME, cookiename)) {
+			log.warn("set cookiename=" + cookiename);
+			GLog.applog.warn(user.class, "sso/login", "set cookiename=" + cookiename);
+			Controller.COOKIE_NAME = cookiename;
+		}
+
+		User u = User.load(username);
+		if (u == null) {
+			// create a new
+			V v = V.create();
+			v.append("name", username);
+			v.append("nickname", nickname);
+			v.append("createdua", "sso");
+			v.append("password", UID.random(12));
+
+			try {
+				long id = User.create(v);
+				GLog.securitylog.warn("sso", "createuser", "name=" + username, null, this.ip());
+
+				u = User.dao.load(id);
+
+				String role = Global.getString("user.login.sso.role", X.EMPTY);
+				if (!X.isEmpty(role)) {
+					Role r1 = Role.loadByName(role);
+					if (r1 != null) {
+						u.setRole(r1.id);
+					}
+				}
+
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				GLog.securitylog.error("sso", "login", "name=" + username, e, null, this.ip());
+				this.set(X.ERROR, e.getMessage()).send(201);
+				return;
+			}
+
+		}
+
+		this.user(cookievalue, u);
+		GLog.securitylog.info("sso", "login", "name=" + username, u, this.ip());
+
+		this.set(X.MESSAGE, "ok").send(200);
+
+	}
+
+	@Path(path = "sso/logout", method = "POST")
+	public void sso_logout() {
+		String appid = this.get("appid");
+		String secret = this.get("secret");
+
+		App a = App.load(appid);
+		if (a == null) {
+			this.set(X.ERROR, "bad appid [" + appid + "]").send(201);
+			return;
+		}
+
+		if (!X.isSame(secret, a.secret)) {
+			this.set(X.ERROR, "bad secret [" + secret + "]").send(201);
+			return;
+		}
+
+		String cookievalue = this.get("cookievalue");
+		Session s = (Session) Cache.get("session/" + cookievalue);
+		User u = s.get("user");
+		this.user(cookievalue, null);
+		if (u != null) {
+			GLog.securitylog.info("sso", "logout", "cookievalue=" + cookievalue, u, this.ip());
+		}
+
+		this.set(X.MESSAGE, "ok").send(200);
 	}
 
 }

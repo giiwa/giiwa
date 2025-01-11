@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.app.web.portlet;
 
 import java.util.Arrays;
@@ -32,6 +46,7 @@ public class cpu extends portlet {
 		if (n != null) {
 			this.set("name", n.label);
 			this.set("cores", n.cores);
+			this.set("ghz", n.ghz);
 		} else {
 			this.set("name", id);
 		}
@@ -60,12 +75,15 @@ public class cpu extends portlet {
 			id = Local.id();
 		}
 		this.set(X.ID, id);
+
+		int hours = this.getInt("n", 1);
+
 		Node n = Node.dao.load(id);
 
-		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created",
-				-1);
+		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte)
+				.sort("created", -1);
 
-		Beans<_CPU.Record> bs = _CPU.Record.dao.load(q, 0, 60);
+		Beans<_CPU.Record> bs = _CPU.Record.dao.load(q, 0, 60 * hours);
 		if (bs != null && !bs.isEmpty()) {
 
 			String temp = bs.get(0).temp;
@@ -80,7 +98,9 @@ public class cpu extends portlet {
 			});
 			p.append("data", l1);
 
-			this.send(JSON.create().append(X.STATE, 200).append("temp", temp).append("data", Arrays.asList(p)));
+			this.send(JSON.create().append(X.STATE, 200)
+					.append("name", (n != null ? n.label : "") + " - " + lang.get("cpu.usage")).append("temp", temp)
+					.append("data", Arrays.asList(p)));
 			return;
 		}
 		this.send(JSON.create().append(X.STATE, 201));
@@ -100,6 +120,7 @@ public class cpu extends portlet {
 		if (n != null) {
 			this.set("cores", n.cores);
 			this.set("name", n.label);
+			this.set("ghz", n.ghz);
 		}
 
 		W q = W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1);

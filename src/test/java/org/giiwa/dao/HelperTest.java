@@ -2,6 +2,7 @@ package org.giiwa.dao;
 
 import static org.junit.Assert.*;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.giiwa.bean.Data;
@@ -13,7 +14,7 @@ import org.junit.Test;
 public class HelperTest {
 
 	@Test
-	public void test() {
+	public void test() throws SQLException {
 		W q = W.create();
 		q.and("a=b").and(W.create("b", "c"));
 
@@ -100,6 +101,7 @@ public class HelperTest {
 //		System.out.println("q=" + q);
 	}
 
+	@SuppressWarnings("unused")
 	@Test
 	public void testGroup() {
 

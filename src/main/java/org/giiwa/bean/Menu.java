@@ -50,7 +50,41 @@ public final class Menu extends Bean {
 
 	public static final BeanDAO<Long, Menu> dao = BeanDAO.create(Menu.class);
 
-	// int id;
+	@Column(memo = "主键", unique = true)
+	long id;
+
+	@Column(memo = "父节点")
+	long parent;
+
+	@Column(memo = "标识", size = 50)
+	String tag;
+
+	@Column(memo = "名称", size = 50)
+	String name;
+
+	@Column(memo = "链接", size = 255)
+	String load1;
+
+	@Column(memo = "链接", size = 255)
+	String url;
+
+	@Column(memo = "子项")
+	int childs;
+
+	@Column(memo = "图标类", size = 50)
+	String classes;
+
+	@Column(memo = "点击链接", size = 255)
+	String click;
+
+	@Column(memo = "序号")
+	int seq;
+
+	@Column(memo = "权限", size = 50)
+	String access;
+
+	@Column(memo = "显示名", size = 100)
+	String content;
 
 	/**
 	 * Insert or update.
@@ -176,6 +210,7 @@ public final class Menu extends Bean {
 				 * cleanup the click and load if not presented
 				 */
 				v.set("click", X.EMPTY).set("load1", X.EMPTY);
+
 				Menu m = insertOrUpdate(parent, name, v);
 
 				/**
@@ -199,8 +234,21 @@ public final class Menu extends Bean {
 			} else {
 				// is role ?
 				String role = jo.getString("role");
-
 				String access = jo.getString("access");
+				String[] ss = X.split(access, "[,]");
+				if (ss != null) {
+					for (String s : ss) {
+						if (!X.isEmpty(s)) {
+							Access.set(s);
+						}
+					}
+				}
+
+				int hide = jo.getInt("hide");
+				if (hide == 1) {
+					return;
+				}
+
 				if (!X.isEmpty(role)) {
 					String memo = jo.getString("memo");
 
@@ -217,11 +265,9 @@ public final class Menu extends Bean {
 						}
 					}
 					if (rid > 0) {
-						String[] ss = X.split(access, "[,]");
 						if (ss != null) {
 							for (String s : ss) {
 								if (!X.isEmpty(s)) {
-									Access.set(s);
 									Role.setAccess(rid, s);
 								}
 							}

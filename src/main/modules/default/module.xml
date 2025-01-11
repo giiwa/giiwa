@@ -3,7 +3,7 @@
 	<id>0</id>
 	<name>default</name>
 	<package>org.giiwa.app.web</package>
-	<version>3.2</version>
+	<version>3.3</version>
 	<build>0</build>
 	<enabled>true</enabled>
 	<readme>Giiwa</readme>

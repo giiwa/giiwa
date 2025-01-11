@@ -20,6 +20,7 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,9 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.Helper.V;
+import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
+import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.hyperic.sigar.CpuInfo;
@@ -97,6 +100,47 @@ public class Host {
 		return "127.0.0.1";
 	}
 
+	public static double getCpuGHz() {
+
+		_init();
+
+		try {
+			String lines = Shell.run("cat /proc/cpuinfo |grep \"model name\"", X.AMINUTE);
+			String[] ss = X.split(lines, "\n");
+			if (ss != null && ss.length > 0) {
+				if (ss[0].indexOf("GHz") > 0) {
+					int i = ss[0].lastIndexOf("@");
+					if (i > 0) {
+						String ghz = ss[0].substring(i + 1).trim();
+						return X.toDouble(ghz);
+					}
+				}
+			}
+
+			lines = Shell.run("cat /proc/cpuinfo |grep \"cpu MHz\"", X.AMINUTE);
+			ss = X.split(lines, "\n");
+			if (ss != null && ss.length > 0) {
+				double max = Double.MIN_VALUE;
+				for (String s : ss) {
+					int i = s.lastIndexOf(":");
+					if (i > 0) {
+						String ghz = s.substring(i + 1).trim();
+						double d = X.toDouble(ghz) / 1000;
+						if (d > max) {
+							max = d;
+						}
+					}
+				}
+				return ((int) (max * 10)) / 10d;
+			}
+
+		} catch (Exception e) {
+			// ignore
+		}
+		return 1;
+
+	}
+
 	public static CpuInfo[] getCpuInfo() throws SigarException {
 		_init();
 		return sigar.getCpuInfoList();
@@ -112,6 +156,30 @@ public class Host {
 		_init();
 		return sigar.getCpuPercList();
 	}
+
+//	private static List<String> _cpuid = null;
+//
+//	public static List<String> getCpuID() {
+//
+//		if (_cpuid == null) {
+//			// linux: dmidecode -t 4 |grep ID
+//			// win10: wmic cpu get processorid
+//			String[] ss = X.split(Shell.bash("dmidecode -t 4|grep ID", 1000), "\r");
+//			List<String> l1 = new ArrayList<String>();
+//
+//			for (String s : ss) {
+//				s = s.replaceAll("ID:", "").trim();
+//				if (!X.isEmpty(s)) {
+//					l1.add(s);
+//				}
+//			}
+//
+//			_cpuid = l1;
+//		}
+//
+//		return _cpuid;
+//
+//	}
 
 	public static Mem getMem() throws SigarException {
 		_init();
@@ -187,6 +255,23 @@ public class Host {
 
 			l1.add(jo);
 		}
+
+		Collections.sort(l1, new Comparator<JSON>() {
+
+			@Override
+			public int compare(JSON o1, JSON o2) {
+				double c1 = o1.getDouble("cpu");
+				double c2 = o2.getDouble("cpu");
+				if (c1 > c2) {
+					return -1;
+				} else if (c1 < c2) {
+					return 1;
+				}
+				return 0;
+			}
+
+		});
+
 		return l1;
 	}
 
@@ -529,12 +614,16 @@ public class Host {
 
 //			log.warn("mac: " + l1);
 
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
 
 		if (log.isDebugEnabled()) {
 			log.debug("cost=" + t1.past() + ", mac=" + l1);
+		}
+
+		if (l1.isEmpty()) {
+			l1.add(UID.id(Local.id()));
 		}
 
 		return l1;

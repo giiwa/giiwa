@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.app.web.portlet;
 
 import java.util.Arrays;
@@ -41,7 +55,7 @@ public class net extends portlet {
 		W q = W.create().and("node", id).and("name", name)
 				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
 		_Net.Record.dao.optimize(q);
-		
+
 		Beans<_Net.Record> bs = _Net.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -70,12 +84,15 @@ public class net extends portlet {
 		}
 		this.set(X.ID, id);
 		Node n = Node.dao.load(id);
+		int hours = this.getInt("n", 1);
 
 		String name = this.getString("name");
 		this.set("name", name);
 
-		Beans<_Net.Record> bs = _Net.Record.dao.load(W.create().and("node", id).and("name", name)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+		Beans<_Net.Record> bs = _Net.Record.dao.load(
+				W.create().and("node", id).and("name", name)
+						.and("created", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte).sort("created", -1),
+				0, 60 * hours);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 

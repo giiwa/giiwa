@@ -1,0 +1,64 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/mem/more?__node=$!__node&id=$!id')"><i class='icon-menu'></i></a>
+
+<div id='mem_$!requestid'></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('mem_$!requestid', {
+	    chart: {
+	        type: 'line'
+	    },
+	    title: {
+	        text: "$!name - ${lang.get('host.mem.title')}[$!lang.size($!total)]"
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	max: 100,
+	    	min: 0,
+	    		title: {
+	            text: ''
+	        }
+	    },
+	      legend: {
+	          enabled: false
+	        },
+	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.y}%</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+    				{name: "$lang.get('mem.usage')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c._usage},#end]}
+	    			], 
+	});
+	
+	function reload() {
+		if($('#mem_$!requestid').length > 0) {
+			$.post('/portlet/mem/data?__node=$!__node', {}, function(d){
+				if(d.state == 200) {
+					var series=t.series; 
+			        while(series.length > 0){
+			          	series[0].remove(false); 
+			       	}
+			       	t.addSeries(d.data[0]);
+			       	t.redraw();			
+				}
+		    })
+			giiwa.call(reload, 60000);
+		}
+	}
+	
+	giiwa.call(reload, 60000);
+
+})
+</script>
+

@@ -17,16 +17,17 @@ td i.icon-image{
 
 <div class='tabs'>
  	<a href='/admin/dfile/disk?__node=$!__node'>$lang.get('a.dfile.disk')</a>
- 	<a href='/admin/dfile/folder?__node=$!__node' class="selected">$lang.get('a.dfile.folder')</a>
+ 	<a href="/admin/dfile/folder?__node=$!__node&f=$!curr" class="selected">$lang.get('a.dfile.folder')</a>
 </div>
 
 <div style="margin: 10px 0 5px;color: #666;">
-	<span>$!f.filename</span>
+	<span>$!curr</span>
 </div>
 
 <table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
+			<th style='width:20px;'></th>
 			<th>$lang.get('file.name')</th>
 			<th>$lang.get('file.size')</th>
 			<th>$lang.get('file.updated')</th>
@@ -34,15 +35,19 @@ td i.icon-image{
 		</tr>
 	</thead>
 	<tbody>
-#if($f)
+#if($back)
 	<tr>
-		<td class='a'><a href="/admin/dfile/folder?f=$!f.getParentFile().filename.replaceAll('\"','&quot;')">
+		<td></td>
+		<td class='a'><a href="/admin/dfile/folder?f=$back">
 			&nbsp;&nbsp;<i class="icon-reply1"></i>&nbsp;...</a></td>
 		<td colspan="4">&nbsp;</td>
 	</tr>
 #end
+#set($i = 0)
 #foreach($f1 in $list)
 	<tr>
+		#set($i = $i + 1)
+		<td>$i</td>
 		<td class='a'>
 			#if($f1.isFile())
 			<a href="/f/s$!f1.filename.replaceAll('\"','&quot;')" target="_blank">
@@ -77,7 +82,7 @@ td i.icon-image{
 
 <div id="m$!requestid" style="display: none">
 	<div style="margin-bottom: 20px;">
-		<label>存储位置:<input type="text" name="name" value="$!f.filename"/></label>
+		<label>存储位置:<input type="text" name="name" value="$!curr"/></label>
 	</div>
 	<input type='hidden' name='repo'/>
 </div>

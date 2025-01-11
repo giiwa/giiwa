@@ -1,6 +1,19 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.web;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -22,9 +35,12 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
+import org.giiwa.conf.Config;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
+import org.giiwa.misc.Url;
 import org.giiwa.web.Controller.NameValue;
 
 public class RequestHelper {
@@ -84,27 +100,22 @@ public class RequestHelper {
 	 */
 	private Map<String, Object> uploads = null;
 
-	public final String getHtml(String name) {
+	public final synchronized String getHtml(String name) {
+
+		if (rewrite != null && rewrite.containsKey(name)) {
+			return rewrite.get(name);
+		}
+
+		String c1 = req.getContentType();
 
 		try {
-			String c1 = req.getContentType();
-
-//			log.debug("get s, name=" + name + ", c1=" + c1);
-
 			if (c1 != null && c1.indexOf("application/json") > -1) {
 
 				if (uploads == null) {
 
-					BufferedReader in = req.getReader();
+					String s = X.IO.read(req.getReader());
 
-					StringBuilder sb = new StringBuilder();
-					char[] buff = new char[1024];
-					int len;
-					while ((len = in.read(buff)) != -1) {
-						sb.append(buff, 0, len);
-					}
-
-					JSON jo = JSON.fromObject(sb.toString());
+					JSON jo = JSON.fromObject(s);
 					if (jo != null) {
 						uploads = new HashMap<String, Object>();
 						uploads.putAll(jo);
@@ -113,8 +124,6 @@ public class RequestHelper {
 
 				if (uploads != null) {
 					Object v1 = uploads.get(name);
-
-//					log.debug("get s=" + v1);
 
 					if (v1 != null) {
 						return v1.toString().trim();
@@ -139,24 +148,38 @@ public class RequestHelper {
 				return null;
 
 			}
-
-			String[] ss = req.getParameterValues(name);
-			if (ss == null || ss.length == 0) {
-				return null;
-			}
-
-			String s = ss[ss.length - 1];
-			s = _decode(s);
-
-//			log.debug("get s = " + s);
-			return s;
-
 		} catch (Exception e) {
-			if (log.isErrorEnabled())
-				log.error("get request parameter " + name + " get exception.", e);
+			log.error(this.getRequestURI(), e);
 		}
 
-		return null;
+		String[] ss = req.getParameterValues(name);
+		if (ss == null || ss.length == 0) {
+			Map<String, String[]> mm = req.getParameterMap();
+			if (mm == null || mm.isEmpty()) {
+				String s = req.getQueryString();
+				if (!X.isEmpty(s)) {
+					uploads = JSON.fromObject(s);
+					if (uploads != null) {
+						Object o = uploads.get(name);
+						if (o != null) {
+							s = Url.decode(o.toString());
+							if (s != null) {
+								return s;
+							}
+						}
+					}
+				}
+			}
+
+//				log.warn("uri=" + this.getRequestURI() + "/" + req.getHeader("i") + ", [" + name + "] is null, mm="
+//						+ mm.keySet() + ", s=" + s);
+			return null;
+		}
+
+		String s = ss[ss.length - 1];
+		s = _decode(s);
+
+		return s;
 
 	}
 
@@ -172,9 +195,22 @@ public class RequestHelper {
 	}
 
 	public final String ip() {
-		String remote = this.head("X-Real-IP");
+
+		String s = Config.getConf().getString("ip.head");
+		if (!X.isEmpty(s)) {
+			String[] ss = X.split(s, "[,;]");
+			for (String s1 : ss) {
+				String remote = this.head(s1);
+				if (!X.isEmpty(remote)) {
+					return remote;
+				}
+			}
+		}
+
+		// compatible old
+		String remote = this.head("X-Forwarded-For");
 		if (remote == null) {
-			remote = head("X-Forwarded-For");
+			remote = head("X-Real-IP");
 
 			if (remote == null) {
 				remote = req.getRemoteAddr();
@@ -188,12 +224,12 @@ public class RequestHelper {
 
 		StringBuilder sb = new StringBuilder();
 
-		String remote = head("X-Real-IP");
+		String remote = head("X-Forwarded-For");
 		if (!X.isEmpty(remote)) {
 			sb.append(remote);
 		}
 
-		remote = this.head("X-Forwarded-For");
+		remote = this.head("X-Real-IP");
 		if (!X.isEmpty(remote)) {
 			if (sb.length() > 0)
 				sb.append("->");
@@ -228,6 +264,7 @@ public class RequestHelper {
 
 	@SuppressWarnings("unchecked")
 	public final String[] getHtmls(String name) {
+
 		try {
 			if (this._multipart) {
 				_get_files();
@@ -282,22 +319,40 @@ public class RequestHelper {
 				}
 			} else if (this._multipart) {
 				_get_files();
-				_names = new ArrayList<String>(uploads.keySet());
-			}
-
-			Enumeration<?> e = req.getParameterNames();
-			if (e == null) {
-				_names = Arrays.asList();
-			}
-
-			if (_names == null) {
-				_names = new ArrayList<String>();
-
-				while (e.hasMoreElements()) {
-					_names.add(e.nextElement().toString());
+				if (uploads != null) {
+					_names = new ArrayList<String>(uploads.keySet());
 				}
 			}
 
+			if (_names == null) {
+				Map<String, String[]> e = req.getParameterMap();
+				if (e != null && !e.isEmpty()) {
+					_names = new ArrayList<String>(e.keySet());
+				} else {
+					String s = req.getQueryString();
+					if (!X.isEmpty(s)) {
+						uploads = JSON.fromObject(s);
+						if (uploads != null) {
+							_names = new ArrayList<String>(uploads.keySet());
+						} else {
+							GLog.applog.error("unknown", "error",
+									"url=" + req.getRequestURI() + ", head=" + Arrays.asList(this.heads()),
+									new Exception("bad querystring, s=" + s));
+						}
+					}
+				}
+			}
+
+			if (_names == null) {
+				_names = Arrays.asList();
+			}
+			if (rewrite != null) {
+				for (String s : rewrite.keySet()) {
+					if (_names.contains(s)) {
+						_names.add(s);
+					}
+				}
+			}
 		}
 
 		return _names;
@@ -341,9 +396,9 @@ public class RequestHelper {
 							uploads.put(f.getFieldName(), f);
 						}
 					}
-				} else {
-					if (log.isWarnEnabled())
-						log.warn("nothing got!!!");
+//				} else {
+//					if (log.isWarnEnabled())
+//						log.warn("nothing got!!!");
 				}
 			} catch (FileUploadException e) {
 				// ignore
@@ -426,8 +481,15 @@ public class RequestHelper {
 
 			} else if (t.indexOf("urlencoded") > -1) {
 				// do nothing
-				// content-type=application/x-www-form-urlencoded
-				String charset = this.head("charset");
+				// content-type=application/x-www-form-urlencoded; charset=utf-8
+				int i = t.indexOf("charset");
+				String charset = null;
+				if (i > 0) {
+					i = t.indexOf("=", i + 1);
+					if (i > 0) {
+						charset = t.substring(i + 1).trim();
+					}
+				}
 				if (X.isEmpty(charset)) {
 					charset = "ISO-8859-1";
 				}
@@ -483,6 +545,15 @@ public class RequestHelper {
 
 	public RequestDispatcher getRequestDispatcher(String name) {
 		return req.getRequestDispatcher(name);
+	}
+
+	private Map<String, String> rewrite = null;
+
+	public void rewrite(String name, String value) {
+		if (rewrite == null) {
+			rewrite = new HashMap<String, String>();
+		}
+		rewrite.put(name, value);
 	}
 
 }

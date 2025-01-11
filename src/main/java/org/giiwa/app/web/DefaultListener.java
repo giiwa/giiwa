@@ -17,22 +17,20 @@ package org.giiwa.app.web;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.app.task.AutodeployTask;
 import org.giiwa.app.task.BackupTask;
 import org.giiwa.app.task.CleanupTask;
 import org.giiwa.app.task.NtpTask;
 import org.giiwa.app.task.RecycleTask;
 import org.giiwa.app.task.SecurityTask;
 import org.giiwa.app.task.PerfMoniterTask;
+import org.giiwa.app.web.admin.autodeploy;
 import org.giiwa.app.web.admin.dashboard;
 import org.giiwa.app.web.admin.mq;
 import org.giiwa.app.web.admin.profile;
@@ -43,15 +41,14 @@ import org.giiwa.bean.License;
 import org.giiwa.bean.Menu;
 import org.giiwa.bean.Node;
 import org.giiwa.bean.User;
+import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Helper;
-import org.giiwa.dao.RDSHelper;
 import org.giiwa.dao.Schema;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
-import org.giiwa.dao.RDB;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.AES;
 import org.giiwa.misc.Host;
@@ -71,7 +68,6 @@ import org.giiwa.web.Module;
  * @author joe
  * 
  */
-@SuppressWarnings("deprecation")
 public class DefaultListener implements IListener {
 
 	public static final DefaultListener owner = new DefaultListener();
@@ -89,6 +85,8 @@ public class DefaultListener implements IListener {
 					// stop all task
 
 					log.warn("giiwa is stopping by hook");
+
+					GLog.applog.warn("sys", "shutdown", "giiwa is stopping by hook");
 
 					Node.dao.update(Local.id(), V.create().append("lastcheck", 0));
 
@@ -150,6 +148,8 @@ public class DefaultListener implements IListener {
 
 			Disk.repair();
 
+			Disk.check0();
+
 			/**
 			 * start the optimizer
 			 */
@@ -161,14 +161,12 @@ public class DefaultListener implements IListener {
 			dashboard.desk("/admin/dashboard");
 			dashboard.desk("/admin/home.html");
 
-//			napp.add("MongoDB", "/portlet/db/conns");
-//			napp.add("MongoDB", "/portlet/db/strw");
-//			napp.add("MongoDB", "/portlet/db/netio");
-
 			setting.register(0, "system", setting.system.class);
 			setting.register(1, "mq", mq.class);
 			setting.register(2, "snmp", setting.snmp.class);
+			setting.register(4, "autodeploy", autodeploy.class);
 			setting.register(10, "smtp", setting.smtp.class);
+
 			// setting.register(11, "counter", setting.counter.class);
 			profile.register(0, "my", profile.my.class);
 
@@ -192,16 +190,15 @@ public class DefaultListener implements IListener {
 
 			IOUtil.cleanup(f);
 
-//			Schema.add("org.giiwa.bean");
-//			Schema.add("org.giiwa.conf");
-
 			AES.init();
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
+			GLog.applog.error("sys", "init", e.getMessage(), e);
 		}
 
 		log.warn("giiwa is inited");
+		GLog.applog.warn("sys", "init", "inited success.");
 
 	}
 
@@ -233,108 +230,21 @@ public class DefaultListener implements IListener {
 
 			Node.init();
 
-//			Schema.init();
-
 			SampleAgent.start();
+
+			AutodeployTask.inst.schedule(X.toLong(X.AMINUTE * Math.random()));
 
 		});
 
 		log.warn("giiwa is started");
+		GLog.applog.warn("sys", "init", "started success.");
 
 	}
 
 	@Override
 	public void onStop() {
-	}
 
-	/**
-	 * Run db script.
-	 *
-	 * @param f the file
-	 * @param m the module
-	 * @throws IOException  Signals that an I/O exception has occurred.
-	 * @throws SQLException the SQL exception
-	 */
-	public static void runDBScript(File f, Module m) throws IOException, SQLException {
-
-		int count = 0;
-
-		BufferedReader in = null;
-		Connection c = null;
-		Statement s = null;
-		try {
-			c = RDSHelper.inst.getConnection();
-			if (c != null) {
-				in = new BufferedReader(new InputStreamReader(new FileInputStream(f), "utf-8"));
-				StringBuilder sb = new StringBuilder();
-				try {
-					String line = in.readLine();
-					while (line != null) {
-						line = line.trim();
-						if (log.isDebugEnabled())
-							log.debug("line=" + line);
-						if (!"".equals(line) && !line.startsWith(".")) {
-
-							sb.append(line).append("\r\n");
-
-							if (line.endsWith(";")) {
-								String sql = sb.toString().trim();
-								sql = sql.substring(0, sql.length() - 1);
-
-								try {
-									if (!X.isEmpty(sql)) {
-										s = c.createStatement();
-										s.executeUpdate(sql);
-										s.close();
-										count++;
-									}
-								} catch (Exception e) {
-									log.error(sb.toString(), e);
-									// GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
-									// m.setError(e.getMessage());
-								}
-								s = null;
-								sb = new StringBuilder();
-							}
-						}
-						line = in.readLine();
-					}
-
-					String sql = sb.toString().trim();
-					if (!"".equals(sql)) {
-						s = c.createStatement();
-						s.executeUpdate(sql);
-					}
-				} catch (Exception e) {
-					if (log.isErrorEnabled()) {
-						log.error(sb.toString(), e);
-						GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
-					}
-
-					m.setError(e.getMessage());
-				}
-			} else {
-				if (log.isWarnEnabled()) {
-					log.warn("database not configured !");
-				}
-
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			GLog.applog.error(m.getName(), "init", e.getMessage(), e, null, null);
-
-			m.setError(e.getMessage());
-
-		} finally {
-			if (in != null) {
-				in.close();
-			}
-			RDSHelper.inst.close(s, c);
-		}
-
-		if (count > 0) {
-			// TODO
-		}
+		Cache.close();
 
 	}
 
@@ -348,79 +258,6 @@ public class DefaultListener implements IListener {
 
 		if (log.isDebugEnabled()) {
 			log.debug(module + " upgrading...");
-		}
-
-		/**
-		 * test database connection has configured?
-		 */
-		try {
-			/**
-			 * test the database has been installed?
-			 */
-			String dbname = RDB.getDriver();
-
-			if (!X.isEmpty(dbname) && RDSHelper.inst.isConfigured()) {
-				/**
-				 * initial the database
-				 */
-				String filename = "../resources/install/" + dbname + "/initial.sql";
-				File f = module.getFile(filename, false, false);
-				if (f == null || !f.exists()) {
-					f = module.getFile("../res/install/" + dbname + "/initial.sql", false, false);
-				}
-				if (f == null || !f.exists()) {
-					f = module.getFile("../init/install/" + dbname + "/initial.sql", false, false);
-				}
-				if (f == null || !f.exists()) {
-					f = module.getFile("../init/install/default/initial.sql", false, false);
-				}
-
-				if (f != null && f.exists()) {
-					String key = module.getName() + ".db.initial." + dbname;
-					// + "." + f.lastModified();
-					// int b = Global.getInt(key, 0);
-					if (Local.getLong(key, 0) != f.lastModified()) {
-						if (log.isWarnEnabled()) {
-							log.warn("db[" + key + "] has not been initialized! initializing...");
-						}
-
-						try {
-							runDBScript(f, module);
-							Local.setConfig(key, f.lastModified());
-
-							if (log.isWarnEnabled()) {
-								log.warn("db[" + key + "] has been initialized! ");
-							}
-
-						} catch (Exception e) {
-							if (log.isErrorEnabled()) {
-								log.error(f.getAbsolutePath(), e);
-								GLog.applog.error(module.getName(), "init", e.getMessage(), e, null, null);
-							}
-							module.setError(e.getMessage());
-						}
-					} else {
-						module.setStatus("db script initialized last time");
-					}
-				} else {
-					if (log.isWarnEnabled()) {
-						log.warn("db[" + module.getName() + "." + dbname + "] not exists ! " + filename);
-					}
-					module.setStatus("RDS configured, db script not exists!");
-				}
-
-			} else {
-
-				module.setStatus("no RDS configured, ignore the db script");
-			}
-		} catch (Exception e) {
-			if (log.isErrorEnabled()) {
-				log.error("no database configured!", e);
-			}
-
-			module.setError(e.getMessage());
-
-			return;
 		}
 
 		if (Helper.isConfigured()) {

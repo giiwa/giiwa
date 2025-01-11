@@ -1,0 +1,10 @@
+
+<div><label><h3>$lang.get('demo.enabled'):</h3>
+	<input type='checkbox' name='demo.enabled' #if($global.getInt('demo.enabled', 0)==1) checked="checked" #end/>
+	<g>$lang.get("demo.enabled.hint")</g>
+</label></div>
+
+<div><label><h3>$lang.get('demo.url'):</h3>
+	<input type='text' name='demo.url' value="$!global.getString('demo.url', '')" />
+	<g>$lang.get("demo.url.hint")</g>
+</label></div>

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.bean.m;
 
 import java.util.List;
@@ -26,13 +40,13 @@ public class _DiskIO extends Bean {
 
 	public static BeanDAO<String, _DiskIO> dao = BeanDAO.create(_DiskIO.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size = 50)
 	String id;
 
-	@Column(memo = "节点")
+	@Column(memo = "节点", size = 50)
 	String node;
 
-	@Column(memo = "路径")
+	@Column(memo = "路径", size = 100)
 	public String path;
 
 	@Column(memo = "读字节总数")
@@ -77,7 +91,7 @@ public class _DiskIO extends Bean {
 
 //				name = name.replace("[\\\\]", "/");
 				V v = V.create();
-				
+
 				v.append("node", node).force("name", name).remove("_id", X.ID);
 
 				Record r1 = Record.dao.load(W.create().and("node", node).and("path", path).sort("created", -1));

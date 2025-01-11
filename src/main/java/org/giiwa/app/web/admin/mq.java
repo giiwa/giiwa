@@ -54,15 +54,15 @@ public class mq extends setting {
 		Global.setConfig("activemq.user", this.getString("activemq.user"));
 		Global.setConfig("activemq.passwd", this.getString("activemq.passwd"));
 
-		Global.setConfig("dubbomq.url", this.getString("dubbomq.url"));
-		Global.setConfig("rabbitmq.url", this.getString("rabbitmq.url"));
+//		Global.setConfig("dubbomq.url", this.getString("dubbomq.url"));
+		Global.setConfig("rocketmq.url", this.getString("rocketmq.url"));
 		// Global.setConfig("rabbitmq.user", this.getString("rabbitmq.user"));
 		// Global.setConfig("rabbitmq.passwd", this.getString("rabbitmq.passwd"));
 
-		Global.setConfig("kafkamq.url", this.getString("kafkamq.url"));
-		Global.setConfig("zoo.url", this.getString("zoo.url"));
-		
-		Global.setConfig("zeromq.url", this.getString("zeromq.url"));
+//		Global.setConfig("kafkamq.url", this.getString("kafkamq.url"));
+//		Global.setConfig("zoo.url", this.getString("zoo.url"));
+//		
+//		Global.setConfig("zeromq.url", this.getString("zeromq.url"));
 		// Global.setConfig("zookeeper.url", this.getString("zookeeper.url"));
 
 		// int logger = X.isSame("on", this.getString("mq.logger")) ? 1 : 0;

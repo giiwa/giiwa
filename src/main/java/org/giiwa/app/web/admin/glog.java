@@ -15,7 +15,6 @@
 package org.giiwa.app.web.admin;
 
 import org.giiwa.bean.GLog;
-import org.giiwa.bean.Node;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
@@ -42,7 +41,7 @@ public class glog extends Controller {
 	/**
 	 * Deleteall.
 	 */
-	@Path(path = "deleteall", login = true, access = "access.config.admin")
+	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true)
 	public void deleteall() {
 
 		JSON jo = new JSON();
@@ -53,9 +52,9 @@ public class glog extends Controller {
 		Task.schedule(t -> {
 			try {
 				int i = GLog.dao.delete(W.create().and("created", System.currentTimeMillis() - X.ADAY, W.OP.lte));
-				GLog.oplog.warn("syslog", "deleteall", lang.get("glog.deleteall", i), login, this.ip());
+				GLog.oplog.warn(this, "deleteall", lang.get("glog.deleteall", i));
 
-				Helper.repair(GLog.dao.tableName());
+				Helper.primary.repair(GLog.dao.tableName());
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -92,7 +91,7 @@ public class glog extends Controller {
 
 		String type = this.get("type");
 		if (!X.isEmpty(type)) {
-			q.and("type1", X.toInt(type));
+			q.and("type", X.toInt(type));
 			this.set("type", type);
 		}
 
@@ -104,17 +103,12 @@ public class glog extends Controller {
 
 		String node = this.get("node");
 		if (!X.isEmpty(node)) {
-			Node n1 = Node.dao.load(W.create().and("label", node));
-			if (n1 != null) {
-				q.and("node", n1.id);
-			} else {
-				q.and("node", "-1");
-			}
+			org.giiwa.bean.Node e = org.giiwa.bean.Node.dao.load(W.create().and("label", node));
+			q.and("node", e.id);
 			this.set("node", node);
 		}
 
 		String model = this.get("model");
-
 		if (!X.isEmpty(model)) {
 			q.and("model", model);
 			this.set("model", model);
@@ -137,9 +131,19 @@ public class glog extends Controller {
 			this.set("endtime", endtime);
 		}
 
-		Beans<GLog> bs = GLog.dao.load(q.sort("created", -1), s, n);
+		String thread = this.getString("thread");
+		if (!X.isEmpty(thread)) {
+			q.and("thread", thread);
+			this.set("thread", thread);
+		}
+
+		q.sort("created", -1);
+
+		GLog.dao.optimize(q);
+
+		Beans<GLog> bs = GLog.dao.load(q, s, n);
+
 		bs.setTotal(GLog.dao.count(W.create()));
-//		bs.count();
 
 		this.pages(bs, s, n);
 

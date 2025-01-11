@@ -1,0 +1,64 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/node/tcpestablished/more?__node=$!__node&id=$!id')"><i class='icon-menu'></i></a>
+
+<div id='n13_$!requestid'></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('n13_$!requestid', {
+	    chart: {
+	        type: 'spline'
+	    },
+	    title: {
+	        text: '$!name1'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	max: $!max,
+	    	min: 0,
+	    		title: {
+	            text: ''
+	        }
+	    },
+	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{point.y}</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+        legend: {
+            enabled: false
+        },
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+	    				{name: "$lang.get('tcp.established')", color:'#25840a', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$c.getLong('n13')},#end]}
+	    			], 
+	});
+
+	function reload() {
+		if($('#n13_$!requestid').length > 0) {
+			$.post('/portlet/node/tcpestablished/data?__node=$!__node&id=$!id', {}, function(d){
+				if(d.state == 200) {
+					var series=t.series; 
+			        while(series.length > 0){
+			          	series[0].remove(false); 
+			       	}
+			       	t.addSeries(d.data[0]);
+			       	t.redraw();			
+				}
+		    })
+			giiwa.call(reload, 60000);
+		}
+	}
+	
+	giiwa.call(reload, 60000);
+	
+})
+</script>
+

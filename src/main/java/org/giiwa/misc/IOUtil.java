@@ -16,6 +16,8 @@ package org.giiwa.misc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -24,7 +26,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -47,6 +54,8 @@ import org.giiwa.web.Language;
 public class IOUtil {
 
 	private static Log log = LogFactory.getLog(IOUtil.class);
+
+	public static int BUFFER_SIZE = 1024 * 1024 * 4;
 
 	/**
 	 * the utility api of copying all data in "inputstream" to "outputstream".
@@ -109,7 +118,42 @@ public class IOUtil {
 		return count;
 	}
 
-	public static int delete(DFile f, long age) throws IOException {
+	public static int delete2(File f, long age, String name) throws IOException {
+
+		int count = 0;
+
+		Language lang = Language.getLanguage();
+
+		if ((f.isFile() || isLink(f)) && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+
+			log.warn("delete file: " + f.getCanonicalPath() + ", age="
+					+ (lang == null ? -1 : lang.past(f.lastModified())) + ", time=" + f.lastModified());
+
+			if (X.isEmpty(name) || f.getName().matches(name)) {
+				f.delete();
+				count++;
+			}
+
+		} else if (f.isDirectory()) {
+			File[] ff = f.listFiles();
+			if (ff != null && ff.length > 0) {
+				for (File f1 : ff) {
+					count += delete2(f1, age, name);
+				}
+			}
+			ff = f.listFiles();
+			if ((ff == null || ff.length == 0) && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+//				log.warn("delete folder as empty: " + f.getCanonicalPath());
+
+				f.delete();
+			}
+
+			count++;
+		}
+		return count;
+	}
+
+	public static int delete(DFile f, long age) throws Exception {
 
 		int count = 0;
 
@@ -127,15 +171,15 @@ public class IOUtil {
 			count++;
 		} else if (f.isDirectory()) {
 
-			DFile[] ff = f.listFiles();
-			if (ff != null && ff.length > 0) {
+			Collection<DFile> ff = Disk.list(f.getFilename());
+			if (ff != null) {
 				for (DFile f1 : ff) {
 					count += delete(f1, age);
 				}
 			}
 
-			ff = f.listFiles();
-			if (ff == null || ff.length == 0) {
+			ff = Disk.list(f.getFilename());
+			if (ff == null || ff.isEmpty()) {
 
 //				GLog.applog.info("dfile", "delete", "delete folder as empty: " + f.getFilename());
 
@@ -166,13 +210,13 @@ public class IOUtil {
 			count++;
 		} else if (f.isDirectory()) {
 			try {
-				DFile[] ff = f.listFiles();
-				if (ff != null && ff.length > 0) {
+				Collection<DFile> ff = Disk.list(f.getFilename());
+				if (ff != null && !ff.isEmpty()) {
 					for (DFile f1 : ff) {
 						count += delete(f1);
+						f1.delete();
 					}
 				}
-				f.delete();
 
 				GLog.applog.info("dfile", "delete", "delete folder: " + f.getFilename() + ", age="
 						+ (lang == null ? -1 : lang.past(f.lastModified())));
@@ -196,6 +240,11 @@ public class IOUtil {
 		return copyDir(src, dest, (BiConsumer) null);
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static int copyDir(File src, DFile dest) throws IOException {
+		return copyDir(src, dest, (BiConsumer) null);
+	}
+
 	/**
 	 * copy files.
 	 *
@@ -205,6 +254,10 @@ public class IOUtil {
 	 * @throws IOException throw exception when copy failed
 	 */
 	public static int copyDir(File src, File dest, BiConsumer<String, Integer> func) throws IOException {
+		return _copyDir(src, dest, 0, func);
+	}
+
+	public static int copyDir(File src, DFile dest, BiConsumer<String, Integer> func) throws IOException {
 		return _copyDir(src, dest, 0, func);
 	}
 
@@ -233,6 +286,34 @@ public class IOUtil {
 		return count;
 	}
 
+	private static int _copyDir(File src, DFile dest, int count, BiConsumer<String, Integer> func) throws IOException {
+
+		dest.mkdirs();
+		if (src.isFile()) {
+			// copy file
+			count++;
+			if (func != null) {
+				func.accept(src.getName(), count);
+			}
+
+			copy(new FileInputStream(src), Disk.seek(dest.getFilename() + "/" + src.getName()).getOutputStream());
+
+		} else if (src.isDirectory()) {
+			// copy dir
+			File[] ff = src.listFiles();
+			if (ff != null && ff.length > 0) {
+				for (File f : ff) {
+					if (f.isFile()) {
+						count += _copyDir(f, dest, count, func);
+					} else {
+						count += _copyDir(f, Disk.seek(dest.getFilename() + "/" + f.getName()), count, func);
+					}
+				}
+			}
+		}
+		return count;
+	}
+
 	public static int copyDir(DFile src, DFile dest) throws IOException {
 		return copyDir(src, dest, null);
 	}
@@ -253,10 +334,18 @@ public class IOUtil {
 
 		} else if (src.isDirectory()) {
 			// copy dir
-			DFile[] ff = src.listFiles();
-			if (ff != null && ff.length > 0) {
+			Collection<DFile> ff = Disk.list(src.getFilename());
+			if (ff != null) {
 				for (DFile f : ff) {
-					count += copyDir(f, Disk.seek(dest.getFilename() + "/" + src.getName()), func);
+					if (f.isFile()) {
+						count++;
+						if (func != null) {
+							func.accept(src.getName(), count);
+						}
+						copy(f, Disk.seek(dest.getFilename() + "/" + f.getName()));
+					} else {
+						count += copyDir(f, Disk.seek(dest.getFilename() + "/" + f.getName()), func);
+					}
 				}
 			}
 		}
@@ -324,7 +413,12 @@ public class IOUtil {
 	}
 
 	public static long copy(DFile src, DFile dest) throws IOException {
-		return copy(src.getInputStream(), dest.getOutputStream(), true);
+		if (src.isDirectory()) {
+			dest.mkdirs();
+			return IOUtil.copyDir(src, dest);
+		} else {
+			return copy(src.getInputStream(), dest.getOutputStream(), true);
+		}
 	}
 
 	/**
@@ -345,7 +439,7 @@ public class IOUtil {
 			if (in == null || out == null)
 				return 0;
 
-			byte[] bb = new byte[1024 * 16];
+			byte[] bb = new byte[BUFFER_SIZE];
 			int total = 0;
 
 			// log.debug("skip=" + start);
@@ -393,7 +487,7 @@ public class IOUtil {
 			if (in == null || out == null)
 				return 0;
 
-			byte[] bb = new byte[1024 * 16];
+			byte[] bb = new byte[BUFFER_SIZE];
 
 			long total = 0;
 			int len = in.read(bb);
@@ -401,9 +495,6 @@ public class IOUtil {
 				out.write(bb, 0, len);
 				total += len;
 				len = in.read(bb);
-//				if (Console._DEBUG) {
-//					Console.inst.log("downloading ... " + len);
-//				}
 			}
 			out.flush();
 			return total;
@@ -412,6 +503,32 @@ public class IOUtil {
 			if (closeAfterDone) {
 				X.close(in, out);
 			}
+		}
+	}
+
+	public static long copy(InputStream in, OutputStream out, BiConsumer<Long, Long> func) throws IOException {
+
+		try {
+			if (in == null || out == null)
+				return 0;
+
+			byte[] bb = new byte[BUFFER_SIZE];
+
+			long total = 0;
+			int len = in.read(bb);
+			while (len > 0) {
+				out.write(bb, 0, len);
+				total += len;
+				len = in.read(bb);
+				if (func != null) {
+					func.accept(total, (long) len);
+				}
+			}
+			out.flush();
+			return total;
+
+		} finally {
+			X.close(in, out);
 		}
 	}
 
@@ -495,6 +612,13 @@ public class IOUtil {
 		}
 	}
 
+	/**
+	 * read the input stream with teh encoding, then close the stream
+	 * 
+	 * @param in
+	 * @param encoding
+	 * @return
+	 */
 	public static String read(InputStream in, String encoding) {
 
 		StringBuilder sb = new StringBuilder();
@@ -512,21 +636,65 @@ public class IOUtil {
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			X.close(in);
 		}
 		return sb.toString();
 
 	}
 
+	/**
+	 * read the input stream , then close the stream
+	 * 
+	 * @param in
+	 * @return
+	 */
 	public static byte[] read(InputStream in) {
+		return read(in, true);
+	}
 
-		byte[] bb = null;
+	public static byte[] read(InputStream in, boolean close) {
+
+		ByteArrayOutputStream out = null;
 		try {
-			bb = new byte[in.available()];
-			in.read(bb, 0, bb.length);
+
+			out = new ByteArrayOutputStream();
+
+			byte[] bb = new byte[16 * 1024];
+			int len = in.read(bb);
+			while (len > 0) {
+				out.write(bb, 0, len);
+				len = in.read(bb);
+			}
+			return out.toByteArray();
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+		} finally {
+			X.close(out);
+			if (close) {
+				X.close(in);
+			}
 		}
-		return bb;
+		return null;
+
+	}
+
+	public static String read(Reader in) throws IOException {
+
+		try {
+
+			StringBuilder sb = new StringBuilder();
+			char[] buff = new char[1024];
+			int len;
+			while ((len = in.read(buff)) != -1) {
+				sb.append(buff, 0, len);
+			}
+
+			return sb.toString();
+		} finally {
+			X.close(in);
+		}
 
 	}
 
@@ -708,16 +876,24 @@ public class IOUtil {
 
 		boolean b = f.mkdirs();
 
-		f.setReadable(false, false);
-		f.setWritable(false, false);
-		f.setExecutable(false, false);
-
-		f.setReadable(true, true);
-		f.setWritable(true, true);
-		f.setExecutable(true, true);
+		try {
+			Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+			perms.add(PosixFilePermission.OWNER_READ);
+			perms.add(PosixFilePermission.OWNER_WRITE);
+			perms.add(PosixFilePermission.OWNER_EXECUTE);
+			Files.setPosixFilePermissions(Paths.get(f.getAbsolutePath()), perms);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
 
 		return b;
 
+	}
+
+	public static InputStream copy(InputStream in) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		copy(in, out);
+		return new ByteArrayInputStream(out.toByteArray());
 	}
 
 }

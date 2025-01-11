@@ -25,18 +25,23 @@
 			<th rowspan="2" style="width: 100px;">$lang.get('node.giiwa')</th>
 			<th rowspan="2">$lang.get('node.modules')</th>
 			<th rowspan="2" style="width: 60px;">$lang.get('node.uptime')</th>
-			<th colspan="2">$lang.get('node.cpu')</th>
+			<th colspan="4">$lang.get('node.cpu')</th>
 			<th rowspan="2" style="width: 50px;">$lang.get('node.mem')</th>
-			<th colspan="2">$lang.get('node.tasks.local')</th>
+			<th colspan="3">$lang.get('node.tasks.local')</th>
+			<th rowspan="2" style="width: 50px;">$lang.get('node.requests')</th>
+			<th rowspan="2" style="width: 50px;">TPS</th>
 			<th rowspan="2" style="width: 80px;">$lang.get('node.timestamp')</th>
 			<th rowspan="2" style="width: 30px;text-align: center">$lang.get('node.state')</th>
-			<th  rowspan="2" style="width: 84px;"></th>
+			<th rowspan="2" style="width: 84px;"></th>
 		</tr>
 		<tr>
 			<th style="width: 40px;">$lang.get('node.cpu.cores')</th>
+			<th style="width: 40px;">$lang.get('node.cpu.ghz')</th>
+			<th style="width: 40px;">$lang.get('node.cpu.computingpower')</th>
 			<th style="width: 60px;">$lang.get('node.cpu.usage')</th>
 			<th style="width: 40px;">$lang.get('node.tasks.local.running')</th>
 			<th style="width: 40px;">$lang.get('node.tasks.local.pending')</th>
+			<th style="width: 40px;">$lang.get('node.tasks.local.delay')</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -52,10 +57,15 @@
 		<td><pre>$!f.modules</pre></td>
 		<td>$!lang.past($f.uptime)</td>
 		<td>$!f.cores</td>
+		<td>$!f.ghz</td>
+		<td>$!f.computingpower</td>
 		<td>$!f.usage</td>
 		<td>$!lang.size($!f.mem)</td>
 		<td>$!f.localrunning</td>
 		<td>$!f.localpending</td>
+		<td style="color: red">#if($!f.localdelay>0)$!f.localdelay#end</td>
+		<td>$!f.online</td>
+		<td>$!f.tps</td>
 		<td>$!f.timestamp</td>
 		<td style="text-align:center">
 			#if($f.state == 1)
@@ -66,11 +76,11 @@
 		</td>
 		<td class="a">
 			#if($f.giiwa)
-			<a class="hint hint--bottom" data-hint="$lang.get('a.restart')" href="javascript:;" onclick="_power('$f.id', 1)"><i class="icon-rotate-cw"></i></a>
-			<a class="hint hint--bottom" data-hint="$lang.get('a.poweroff')" href="javascript:;" onclick="_power('$f.id', 2)"><i class="icon-power2"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.restart')" href="javascript:;" onclick="_power('$!f.id', 1)"><i class="icon-rotate-cw"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.poweroff')" href="javascript:;" onclick="_power('$!f.id', 2)"><i class="icon-power2"></i></a>
 			#end
 			#if($local.id() != $f.id)
-			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f.id')"><i class="icon-cancel-circle"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$!f.id')"><i class="icon-cancel-circle"></i></a>
 			#end
 		</td>
 	</tr>

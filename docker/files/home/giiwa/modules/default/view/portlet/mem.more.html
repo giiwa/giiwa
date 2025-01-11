@@ -1,0 +1,36 @@
+<div id='mem_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('mem_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: "$!name - ${lang.get('host.mem.title')}[$!lang.size($!total)]"
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+		        headerFormat: '',
+		        pointFormat: '<b>{series.name}: {point.y}%</b><br>{point.x:%H:%M}'
+	       },
+	    series: [
+				{name: "$lang.get('mem.usage')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c._usage},#end]}
+	    			], 
+	});
+})
+</script>
+

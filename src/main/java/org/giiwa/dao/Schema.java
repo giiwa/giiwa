@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.dao;
 
 import java.io.Serializable;
@@ -125,9 +139,9 @@ public final class Schema implements Serializable {
 	}
 
 	@SuppressWarnings({ "unused" })
-	public static JSON format(JSON e, Language lang) {
+	public static JSON format(JSON e, Language lang) throws SQLException {
 
-		String tablename = e.getString("table_name");
+		String tablename = e.getString("name");
 
 		Class<? extends Bean> c = null;// bean(tablename);
 
@@ -139,11 +153,11 @@ public final class Schema implements Serializable {
 
 			JSON stat = Helper.stats(tablename);
 
-			j1.append("count", Helper.count(tablename, W.create()))
+			j1.append("count", Helper.primary.count(tablename, W.create()))
 					.append("totalsize", stat == null ? null : stat.getLong("totalSize"))
 					.append("indexsize", stat == null ? null : stat.getLong("totalIndexSize"));
 
-			Data d = Helper.load(tablename, W.create().sort("updated", -1), Data.class);
+			Data d = Helper.primary.load(tablename, W.create().sort("updated", -1), Data.class);
 			if (d != null) {
 				j1.append("updated", d.getUpdated());
 			}
@@ -156,14 +170,14 @@ public final class Schema implements Serializable {
 			display = lang.get("name." + c.getName());
 		}
 
-		JSON stat = Helper.stats(table.name());
+		JSON stat = Helper.primary.stats(table.name());
 
 		JSON j1 = JSON.create().append("name", c.getName()).append("table", table.name()).append("display", display);
-		j1.append("count", Helper.count(table.name(), W.create()))
+		j1.append("count", Helper.primary.count(table.name(), W.create()))
 				.append("totalsize", stat == null ? null : stat.getLong("totalSize"))
 				.append("indexsize", stat == null ? null : stat.getLong("totalIndexSize"));
 
-		Data d = Helper.load(tablename, W.create().sort("updated", -1), Data.class);
+		Data d = Helper.primary.load(tablename, W.create().sort("updated", -1), Data.class);
 		if (d != null) {
 			j1.append("updated", d.getUpdated());
 		}
@@ -185,17 +199,22 @@ public final class Schema implements Serializable {
 		} catch (Throwable e) {
 			// ignore
 		}
+		
 		if (l3 == null) {
 			Lock door = Global.getLock(name);
 			if (door.tryLock()) {
 				try {
 					List<JSON> l4 = JSON.createList();
 
-					List<JSON> l1 = Helper.listTables();
+					List<JSON> l1 = Helper.primary.listTables(null, 10000);
 					if (l1 != null) {
 						Task.forEach(l1, e -> {
-							JSON j1 = Schema.format(e, lang);
-							l4.add(j1);
+							try {
+								JSON j1 = Schema.format(e, lang);
+								l4.add(j1);
+							} catch (Exception err) {
+								log.error(err.getMessage(), err);
+							}
 						});
 					}
 					Collections.sort(l4, new Comparator<JSON>() {

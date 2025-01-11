@@ -28,7 +28,6 @@ import org.giiwa.misc.Host;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Language;
-import org.giiwa.web.Module;
 import org.graylog2.syslog4j.Syslog;
 import org.graylog2.syslog4j.SyslogConstants;
 import org.graylog2.syslog4j.SyslogIF;
@@ -60,29 +59,44 @@ public final class GLog extends Bean {
 	public static final int LEVEL_WARN = 2;
 	public static final int LEVEL_INFO = 3;
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size = 50)
 	String id;
 
-	@Column(name = "type1", memo = "类型")
+	@Column(memo = "消息HASH", size = 50)
+	String iid;
+
+	@Column(name = "_type", memo = "类型")
 	int type;
 
-	@Column(memo = "节点")
+	@Column(memo = "节点", size = 50)
 	String node;
 
-	@Column(memo = "模块")
+	@Column(memo = "模块", size = 50)
 	String model;
 
-	@Column(memo = "操作")
+	@Column(memo = "操作", size = 50)
 	String op;
 
-	@Column(memo = "内容")
+	@Column(memo = "内容", size = 2048)
 	String message;
 
-	@Column(memo = "线程名称")
+	@Column(memo = "线程名称", size = 100)
 	String thread;
 
-	@Column(memo = "调用栈")
+	@Column(memo = "调用栈", size = 2048)
 	String trace;
+
+	@Column(name = "_level", memo = "日志级别")
+	int level;
+
+	@Column(memo = "用户ID")
+	long uid;
+
+	@Column(memo = "IP地址", size = 50)
+	String ip;
+
+	@Column(memo = "调用者", size = 100)
+	String logger;
 
 	public String getId() {
 		return id;
@@ -106,7 +120,7 @@ public final class GLog extends Bean {
 	 * @return string of node
 	 */
 	public String getNode() {
-		return this.getString("node");
+		return node;
 	}
 
 	transient Node node_obj;
@@ -258,7 +272,7 @@ public final class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void info(Class<? extends Controller> model, String op, String message, User u, String ip) {
+		public void info(Class<?> model, String op, String message, User u, String ip) {
 			info(model, op, message, null, u, ip);
 		}
 
@@ -272,9 +286,8 @@ public final class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void info(Class<? extends Controller> model, String op, String message, String trace, User u,
-				String ip) {
-			info(Module.shortName(model), op, message, trace, u, ip);
+		public void info(Class<?> model, String op, String message, String trace, User u, String ip) {
+			info(model.getSimpleName(), op, message, trace, u, ip);
 		}
 
 		/**
@@ -306,8 +319,8 @@ public final class GLog extends Bean {
 		 * @param op
 		 * @param message
 		 */
-		public void info(Class<? extends Controller> model, String op, String message) {
-			info(Module.shortName(model), op, message, null, null);
+		public void info(Class<?> model, String op, String message) {
+			info(model.getSimpleName(), op, message, null, null);
 		}
 
 		/**
@@ -329,7 +342,7 @@ public final class GLog extends Bean {
 		 * @param message
 		 */
 		public void warn(Controller model, String op, String message) {
-			warn(model.getClass(), op, message, model.user(), model.ip());
+			warn(model.getClass().getSimpleName(), op, message, model.user(), model.ip());
 		}
 
 		/**
@@ -339,8 +352,12 @@ public final class GLog extends Bean {
 		 * @param op
 		 * @param message
 		 */
-		public void warn(Class<? extends Controller> model, String op, String message) {
-			warn(Module.shortName(model), op, message, null, null);
+		public void warn(Class<?> model, String op, String message) {
+			warn(model.getSimpleName(), op, message, null, null);
+		}
+
+		public void error(Controller model, String op, String message, Throwable e) {
+			error(model.getClass().getSimpleName(), op, message, model.user(), model.ip());
 		}
 
 		/**
@@ -370,7 +387,7 @@ public final class GLog extends Bean {
 		 * @param op
 		 * @param message
 		 */
-		public void error(Class<? extends Controller> model, String op, String message, Throwable e) {
+		public void error(Class<?> model, String op, String message, Throwable e) {
 
 			if (e instanceof OutOfMemoryError) {
 				log.error("restart as outofmemory", e);
@@ -379,7 +396,7 @@ public final class GLog extends Bean {
 				}, 5000);
 			}
 
-			error(Module.shortName(model), op, message, X.toString(e), null, null);
+			error(model.getSimpleName(), op, message, X.toString(e), null, null);
 		}
 
 		/**
@@ -412,19 +429,16 @@ public final class GLog extends Bean {
 
 			if (Helper.isConfigured()) {
 
-				if (message != null && message.length() > 1020) {
+				if (message != null && message.length() > 1024) {
 					message = message.substring(0, 1024);
 				}
 				if (trace != null && trace.length() > 8192) {
 					trace = trace.substring(0, 8192);
 				}
-//				if (!X.isEmpty(trace)) {
-//					message = message + "...";
-//				}
 
 				String id = UID.uuid();
 				V v = V.create("id", id).set("node", node).set("model", model).set("op", op)
-						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("type1", type).append("level", level);
+						.set("uid", u == null ? -1 : u.getId()).set("ip", ip).set("_type", type).append("level", level);
 				v.set("message", message);
 
 				String threadname = Thread.currentThread().getName();
@@ -477,7 +491,8 @@ public final class GLog extends Bean {
 			StackTraceElement[] ss = e.getStackTrace();
 			if (ss != null) {
 				for (StackTraceElement s : ss) {
-					if (!s.getClassName().startsWith(GLog.class.getName())) {
+					String s1 = s.getClassName();
+					if (!s1.startsWith(GLog.class.getName()) && !s1.startsWith(Controller.class.getName())) {
 						return (s.getClassName() + "." + s.getMethodName() + "(" + s.getFileName() + ":"
 								+ s.getLineNumber() + ")");
 					}
@@ -537,7 +552,7 @@ public final class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void warn(Class<? extends Controller> model, String op, String message, User u, String ip) {
+		public void warn(Class<?> model, String op, String message, User u, String ip) {
 			warn(model, op, message, null, u, ip);
 		}
 
@@ -551,9 +566,8 @@ public final class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void warn(Class<? extends Controller> model, String op, String message, String trace, User u,
-				String ip) {
-			warn(Module.shortName(model), op, message, trace, u, ip);
+		public void warn(Class<?> model, String op, String message, String trace, User u, String ip) {
+			warn(model.getSimpleName(), op, message, trace, u, ip);
 		}
 
 		/**
@@ -579,7 +593,7 @@ public final class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void error(Class<? extends Controller> model, String op, String message, User u, String ip) {
+		public void error(Class<?> model, String op, String message, User u, String ip) {
 			error(model, op, message, (String) null, u, ip);
 		}
 
@@ -605,9 +619,8 @@ public final class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void error(Class<? extends Controller> model, String op, String message, Exception e, User u,
-				String ip) {
-			error(Module.shortName(model), op, message, e, u, ip);
+		public void error(Class<?> model, String op, String message, Exception e, User u, String ip) {
+			error(model.getSimpleName(), op, message, e, u, ip);
 		}
 
 		/**
@@ -625,9 +638,9 @@ public final class GLog extends Bean {
 				return;
 
 			if (e instanceof OutOfMemoryError) {
-				log.error("restart as outofmemory", e);
+				log.error("Restart as OutOfMemory", e);
 				Task.schedule(t -> {
-//					System.exit(0);
+					System.exit(0);
 				}, 5000);
 			}
 
@@ -644,9 +657,8 @@ public final class GLog extends Bean {
 		 * @param u       the user object
 		 * @param ip      the ip address
 		 */
-		public void error(Class<? extends Controller> model, String op, String message, String trace, User u,
-				String ip) {
-			error(Module.shortName(model), op, message, trace, u, ip);
+		public void error(Class<?> model, String op, String message, String trace, User u, String ip) {
+			error(model.getSimpleName(), op, message, trace, u, ip);
 		}
 
 		/**
@@ -717,7 +729,9 @@ public final class GLog extends Bean {
 		public boolean exists(String message) {
 			try {
 				String iid = UID.id(Local.id(), GLog.TYPE_SECURITY, message);
-				return dao.exists(W.create().and("iid", iid));
+				W q = W.create().and("iid", iid);
+				dao.optimize(q);
+				return dao.exists(q);
 			} catch (Exception e) {
 				// ignore
 			}

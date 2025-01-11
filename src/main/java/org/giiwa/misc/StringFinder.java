@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 
 /**
@@ -25,6 +26,7 @@ import org.giiwa.dao.X;
  * @author joe
  *
  */
+@Comment(text = "字符串工具")
 public class StringFinder {
 
 //	private static Log log = LogFactory.getLog(StringFinder.class);
@@ -42,11 +44,13 @@ public class StringFinder {
 		return s1;
 	}
 
+	@Comment(hide = true)
 	public StringFinder pair(char ch) {
 		_pair.add(new char[] { ch, ch });
 		return this;
 	}
 
+	@Comment(hide = true)
 	public StringFinder pair(char ch1, char ch2) {
 		_pair.add(new char[] { ch1, ch2 });
 		return this;
@@ -69,6 +73,7 @@ public class StringFinder {
 	/**
 	 * skip the " " in current position
 	 */
+	@Comment(text = "剪取空, \r, \n, \t")
 	public StringFinder trim() {
 		while (hasMore()) {
 			char c = next();
@@ -87,8 +92,17 @@ public class StringFinder {
 	 * @param sub the sub
 	 * @return int the position
 	 */
-	public int find(String sub) {
+	@Comment(text = "从当前位置开始查找子串，找到后移动到新位置并返回，否则-1")
+	public int find(@Comment(text = "substring") String sub) {
 		int s1 = s != null ? s.toLowerCase().indexOf(sub.toLowerCase(), pos) : -1;
+		if (s1 > -1) {
+			pos = s1;
+		}
+		return s1;
+	}
+
+	public int backfind(@Comment(text = "substring") String sub) {
+		int s1 = s != null ? s.toLowerCase().lastIndexOf(sub.toLowerCase(), pos) : -1;
 		if (s1 > -1) {
 			pos = s1;
 		}
@@ -101,11 +115,13 @@ public class StringFinder {
 	 * @param deli the deli
 	 * @return the string
 	 */
-	public String nextTo(String deli) {
+	@Comment(text = "返回当前位置到下一个字串中间的字符串")
+	public String nextTo(@Comment(text = "deli") String deli) {
 		return get(deli);
 	}
 
-	public String get(int len) {
+	@Comment(text = "返回当前位置开始长度为len的字符串")
+	public String get(@Comment(text = "len") int len) {
 
 		String s1 = null;
 		s1 = s.substring(pos, pos + len);
@@ -114,7 +130,8 @@ public class StringFinder {
 		return s1.trim();
 	}
 
-	public String get(String end) {
+	@Comment(text = "返回当前位置到end子串中间的字符串，字串是｜分隔的多个子串")
+	public String get(@Comment(text = "end") String end) {
 		if (s == null || pos >= len) {
 			return null;
 		}
@@ -186,6 +203,7 @@ public class StringFinder {
 	 *
 	 * @return the string
 	 */
+	@Comment(text = "返回当前位置剩余的所有字串")
 	public String remain() {
 		if (s == null || pos >= s.length()) {
 			return null;
@@ -195,6 +213,7 @@ public class StringFinder {
 		return s1;
 	}
 
+	@Comment(text = "是否还有字符")
 	public boolean hasMore() {
 		return (s != null && pos < s.length());
 	}
@@ -230,6 +249,7 @@ public class StringFinder {
 	 * 
 	 * @return the char
 	 */
+	@Comment(text = "下一个字符")
 	public char next() {
 		if (pos >= s.length())
 			return 0;
@@ -243,7 +263,8 @@ public class StringFinder {
 	 * @param offset the offset
 	 * @return the char
 	 */
-	public char charOf(int offset) {
+	@Comment(text = "下offset位置的字符")
+	public char charOf(@Comment(text = "offset") int offset) {
 		return charAt(pos + offset);
 	}
 
@@ -253,7 +274,8 @@ public class StringFinder {
 	 * @param position the position
 	 * @return the char
 	 */
-	public char charAt(int position) {
+	@Comment(text = "position位置的字符")
+	public char charAt(@Comment(text = "position") int position) {
 		if (s != null && position >= 0 && position < s.length()) {
 			return s.charAt(position);
 		}
@@ -266,7 +288,8 @@ public class StringFinder {
 	 * @param len the len
 	 * @return int the new position
 	 */
-	public int skip(int len) {
+	@Comment(text = "跳过len字符")
+	public int skip(@Comment(text = "len") int len) {
 		pos += len;
 		return pos;
 	}
@@ -278,7 +301,8 @@ public class StringFinder {
 	 * @param end   the end
 	 * @return the string
 	 */
-	public String bracket(char begin, char end) {
+	@Comment(text = "从当前位置开始，begin和end之间的子串")
+	public String bracket(@Comment(text = "begin") char begin, @Comment(text = "end") char end) {
 		if (s == null)
 			return null;
 
@@ -343,7 +367,8 @@ public class StringFinder {
 		return null;
 	}
 
-	public int seek(int pos) {
+	@Comment(text = "移动当前位置到pos")
+	public int seek(@Comment(text = "pos") int pos) {
 		this.pos = pos;
 		return this.pos;
 	}
@@ -354,7 +379,8 @@ public class StringFinder {
 	 * @param c0 the c0
 	 * @return the int
 	 */
-	public int skip(char c0) {
+	@Comment(text = "跳到char的位置")
+	public int skip(@Comment(text = "char") char c0) {
 		char c = s.charAt(pos);
 		while (pos < len) {
 			if (c == c0) {
@@ -376,7 +402,8 @@ public class StringFinder {
 	 * @param str the string
 	 * @return
 	 */
-	public int indexOf(String str) {
+	@Comment(text = "从当前位置，查找substring的位置")
+	public int indexOf(@Comment(text = "substring") String str) {
 		return s.indexOf(str, pos);
 	}
 
@@ -386,7 +413,8 @@ public class StringFinder {
 	 * @param str the string to skip
 	 * @return the new position
 	 */
-	public int skip(String str) {
+	@Comment(text = "跳过substring")
+	public int skip(@Comment(text = "substring") String str) {
 
 		int i = s.indexOf(str, pos);
 		if (i > -1) {
@@ -398,7 +426,8 @@ public class StringFinder {
 		return pos;
 	}
 
-	public String get(int begin, int end) {
+	@Comment(text = "返回begin和end之间的子串")
+	public String get(@Comment(text = "begin") int begin, @Comment(text = "end") int end) {
 		return s.substring(begin, end);
 	}
 
@@ -409,7 +438,8 @@ public class StringFinder {
 	 * @param end   the end
 	 * @return String
 	 */
-	public String get(String begin, String end) {
+	@Comment(text = "从当前位置，返回begin和end之间的子串，begin和end可以是以｜分隔的多个子串")
+	public String get(@Comment(text = "begin") String begin, @Comment(text = "end") String end) {
 		if (s == null)
 			return null;
 
@@ -439,7 +469,8 @@ public class StringFinder {
 		return s.substring(b, e);
 	}
 
-	public String get(String begin, int size) {
+	@Comment(text = "返回begin子串后， 长度是size的子串")
+	public String get(@Comment(text = "begin") String begin, @Comment(text = "size") int size) {
 		if (s == null)
 			return null;
 
@@ -471,7 +502,8 @@ public class StringFinder {
 	 * @param end   the end
 	 * @return String
 	 */
-	public String substring(String begin, String end) {
+	@Comment(text = "返回begin和end之间的子串")
+	public String substring(@Comment(text = "start") String begin, @Comment(text = "end") String end) {
 		return get(begin, end);
 	}
 
@@ -482,6 +514,7 @@ public class StringFinder {
 	 * @param s2 the s2
 	 * @return String the min pattern string
 	 */
+	@Comment(hide = true)
 	public static String merge(String s1, String s2) {
 		if (X.isEmpty(s1) || X.isEmpty(s2)) {
 			return ".*";
@@ -564,12 +597,14 @@ public class StringFinder {
 	}
 
 	@Override
+	@Comment(hide = true)
 	public String toString() {
 		return s;
 	}
 
 	private Stack<Integer> _mark;
 
+	@Comment(text = "标记位置")
 	public StringFinder mark() {
 		if (_mark == null) {
 			_mark = new Stack<Integer>();
@@ -578,6 +613,7 @@ public class StringFinder {
 		return this;
 	}
 
+	@Comment(text = "恢复上次标记的位置")
 	public StringFinder reset() {
 		if (_mark != null && !_mark.isEmpty()) {
 			pos = _mark.pop();
@@ -587,15 +623,18 @@ public class StringFinder {
 		return this;
 	}
 
-	public String[] split(String regex) {
+	@Comment(text = "按照regex分割剩余子串")
+	public String[] split(@Comment(text = "regex") String regex) {
 		return X.split(this.remain(), regex);
 	}
 
-	public boolean startsWith(String str) {
+	@Comment(text = "测试剩余子串是否以substring开始")
+	public boolean startsWith(@Comment(text = "substring") String str) {
 		return this.s.startsWith(str, pos);
 	}
 
-	public StringFinder replace(String s1, String r1) {
+	@Comment(text = "替换substring为replacestring")
+	public StringFinder replace(@Comment(text = "substring") String s1, @Comment(text = "replacestring") String r1) {
 		this.s = this.s.replaceFirst(s1, r1);
 		this.s1 = this.s.toLowerCase();
 		this.pos += r1.length();
@@ -603,7 +642,9 @@ public class StringFinder {
 		return this;
 	}
 
-	public StringFinder replace(int start, int end, String r1) {
+	@Comment(text = "替换start到end之间的子串为replacestring")
+	public StringFinder replace(@Comment(text = "start") int start, @Comment(text = "end") int end,
+			@Comment(text = "replacestring") String r1) {
 		this.s = this.s.substring(0, start) + r1 + this.s.substring(end);
 		this.s1 = this.s.toLowerCase();
 		this.pos = start + r1.length();
@@ -611,7 +652,8 @@ public class StringFinder {
 		return this;
 	}
 
-	public String word(String regex) {
+	@Comment(text = "从当前位置截取到符合regex的子串")
+	public String word(@Comment(text = "regex") String regex) {
 		String s = "";
 		while (this.hasMore()) {
 			String s1 = s + this.next();
@@ -624,16 +666,38 @@ public class StringFinder {
 		return s;
 	}
 
-	public String remove(int start, int end) {
+	@Comment(text = "删除start到end的子串")
+	public String remove(@Comment(text = "start") int start, @Comment(text = "end") int end) {
 		String r = s.substring(start, end);
 		s = s.substring(0, start) + s.substring(end);
 		pos = start;
 		return r;
 	}
 
-	public void add(String str) {
+	@Comment(text = "在当前位置添加子串")
+	public void add(@Comment(text = "string") String str) {
 		s = s.substring(0, pos) + str + s.substring(pos);
 		pos += str.length();
+	}
+
+	@Comment(text = "从当前位置找出所有包含字串的字符串", demo = ".find('.MP4', '.M3U8')")
+	public List<String> find2(String... str) {
+		List<String> l1 = new ArrayList<String>();
+		for (String s : str) {
+			this.mark();
+			int p = this.find(s);
+			if (p > 0) {
+				String s1 = this.s.substring(p + s.length(), p + s.length() + 1);
+				int p1 = this.backfind(s1);
+				if (p1 > 0) {
+					s1 = this.s.substring(p1 + 1, p + s.length());
+					l1.add(s1);
+					pos = p + s.length();
+				}
+			}
+			this.reset();
+		}
+		return l1;
 	}
 
 }

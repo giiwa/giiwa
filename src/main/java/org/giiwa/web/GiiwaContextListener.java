@@ -83,16 +83,24 @@ public class GiiwaContextListener implements ServletContextListener {
 			if (X.isEmpty(Controller.GIIWA_HOME)) {
 				System.out.println("ERROR, did not set GIIWA_HOME, please set GIIWA_HOME=[path of web container]");
 				System.exit(-1);
+				return;
 			}
 
-			System.out.println("giiwa.home=" + Controller.GIIWA_HOME);
+			System.out.println("initing, giiwa.home=" + Controller.GIIWA_HOME);
 
 			System.setProperty("home", Controller.GIIWA_HOME);
 
 			/**
 			 * initialize the configuration
 			 */
-			Config.init(new File(Controller.GIIWA_HOME + "/giiwa.properties"));
+			{
+				File config = new File("/data/etc/giiwa.properties");
+				if (config.exists()) {
+					Config.init(config);
+				} else {
+					Config.init(new File(Controller.GIIWA_HOME + "/giiwa.properties"));
+				}
+			}
 
 			GiiwaServlet.s️ervletContext = servletContext;
 			GiiwaServlet.INITED = true;
@@ -106,25 +114,19 @@ public class GiiwaContextListener implements ServletContextListener {
 			conf.setProperty("home", Controller.GIIWA_HOME);
 
 			/**
+			 * init task first
+			 */
+			Task.init(conf.getInt("thread.number", 20));
+
+			/**
 			 * initialize the helper, including RDB and Mongo
 			 */
 			Helper.init2(conf);
-//			 {
-//				Helper.init(conf);
-//			}
 
 			/**
 			 * initialize the cache
 			 */
-			Cache.init(conf.getString("cache.url", X.EMPTY), conf.getString("cache.user", X.EMPTY),
-					conf.getString("cache.passwd", X.EMPTY));
-
-			Task.init(conf.getInt("thread.number", 20));
-
-			/**
-			 * initialize the repo
-			 */
-//			Repo.init(conf);
+			Cache.init(conf);
 
 			/**
 			 * initialize the temp
@@ -142,7 +144,7 @@ public class GiiwaContextListener implements ServletContextListener {
 				log.warn("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
 
 		} catch (Throwable e) {
-			java.util.logging.Logger.getLogger("giiwa").severe(e.getMessage());
+			log.error(e.getMessage(), e);
 			e.printStackTrace();
 		}
 

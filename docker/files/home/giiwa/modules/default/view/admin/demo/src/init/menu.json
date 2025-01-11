@@ -1,0 +1,22 @@
+[
+	{
+		"name": "admin",
+		"childs": [
+			{
+				"name": "menu.demo",
+				"classes": "icon-gift",
+				"access": "access.demo.admin",
+				"seq": 1040,
+				"childs": [
+					{
+						"name": "menu.demo1",
+						"load": "/admin/demo",
+						"access": "access.demo.admin",
+						"seq": 10,
+						"classes": "icon-glass"
+					}
+				]
+			}
+		]
+	}
+]

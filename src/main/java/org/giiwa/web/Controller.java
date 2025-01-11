@@ -36,6 +36,7 @@ import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
@@ -68,7 +69,8 @@ import org.giiwa.web.view.View;
  * @author yjiang
  * 
  */
-public class Controller implements Serializable {
+@Comment(text = "http request")
+public class Controller extends HashMap<String, Object> implements Serializable {
 
 	/**
 	 * 
@@ -94,12 +96,12 @@ public class Controller implements Serializable {
 	 */
 //	public HttpServletRequest req;
 
-	public RequestHelper req;
+	public transient RequestHelper req;
 
 	/**
 	 * the response
 	 */
-	public HttpServletResponse resp;
+	public transient HttpServletResponse resp;
 
 	/**
 	 * language utility
@@ -114,7 +116,7 @@ public class Controller implements Serializable {
 	/**
 	 * the data which put by "put or set" api, used for HTML view
 	 */
-	public Map<String, Object> data;
+	private Map<String, Object> data;
 
 	/**
 	 * the home of the modules
@@ -125,6 +127,8 @@ public class Controller implements Serializable {
 	 * the home of the giiwa
 	 */
 	public static String GIIWA_HOME;
+
+	public static String COOKIE_NAME = "sid";
 
 	/**
 	 * session id
@@ -199,6 +203,9 @@ public class Controller implements Serializable {
 
 		return locale;
 	}
+
+	private transient Path pp = null;
+	protected Exception err = null;
 
 	/**
 	 * Current module.
@@ -307,7 +314,7 @@ public class Controller implements Serializable {
 						}
 					}
 
-					Path pp = oo.path;
+					pp = oo.path;
 					/**
 					 * check the access and login status
 					 */
@@ -362,7 +369,7 @@ public class Controller implements Serializable {
 							log.error(e.getMessage(), e);
 						}
 
-						GLog.oplog.error(this.getClass(), pp.path(), this.json().toString(), e, user(), this.ip());
+						GLog.oplog.error(this, pp.path(), this.json().toString(), e);
 
 						error(e);
 					}
@@ -462,6 +469,35 @@ public class Controller implements Serializable {
 				}
 			}
 			onPut();
+		} else if (method.isHead()) {
+
+			Method m = this.getClass().getMethod("onHead");
+			if (m != null) {
+				Path p = m.getAnnotation(Path.class);
+				if (p != null) {
+					// check ogin
+					if (p.login()) {
+						if (this.user() == null) {
+							if (!X.isEmpty(p.demo())) {
+								login = User.load("demo");
+							}
+							if (login == null) {
+								_gotoLogin();
+								return null;
+							}
+						}
+
+						// check access
+						if (!X.isEmpty(p.access())) {
+							if (!login.hasAccess(p.access())) {
+								deny();
+								return null;
+							}
+						}
+					}
+				}
+			}
+			onHead();
 		} else if (method.isOptions()) {
 
 			Method m = this.getClass().getMethod("onOptions");
@@ -499,6 +535,7 @@ public class Controller implements Serializable {
 	}
 
 	final public void init(String uri, RequestHelper req, HttpServletResponse resp, String method) {
+
 		try {
 			this.uri = uri;
 			this.req = req;
@@ -509,6 +546,8 @@ public class Controller implements Serializable {
 			log.error(e.getMessage(), e);
 		}
 	}
+
+	private Policy policy;
 
 	/**
 	 * Dispatch.
@@ -536,8 +575,8 @@ public class Controller implements Serializable {
 
 			init(uri, req, resp, method);
 
-			String ip = this.ip();
-			if (Blacklist.isBlocked(ip, uri)) {
+			policy = Policy.matches(this, uri);
+			if (policy != null && !policy.allow(true)) {
 				// output nothing
 				return null;
 			}
@@ -550,7 +589,7 @@ public class Controller implements Serializable {
 
 			return _process();
 
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			error(e);
 		} finally {
 //			_currentmodule.remove();
@@ -587,7 +626,7 @@ public class Controller implements Serializable {
 			jo.put(X.MESSAGE, lang.get("login.required"));
 			jo.put(X.ERROR, lang.get("login.required"));
 
-			GLog.securitylog.warn(this.getClass(), "",
+			GLog.securitylog.warn(this, path,
 					"login required, head=" + Arrays.toString(this.heads()) + ", body=" + this.json());
 
 			this.send(jo);
@@ -604,7 +643,7 @@ public class Controller implements Serializable {
 	 * @return the string
 	 */
 	public final String sid() {
-		return sid(true);
+		return sid(true, false);
 	}
 
 	/**
@@ -626,13 +665,13 @@ public class Controller implements Serializable {
 //	final public String sid(boolean newSession) {
 //
 //		if (X.isEmpty(sid)) {
-//			sid = this.cookie("sid");
+//			sid = this.cookie(COOKIE_NAME);
 //			if (X.isEmpty(sid)) {
-//				sid = this.head("sid");
+//				sid = this.head(COOKIE_NAME);
 //				if (X.isEmpty(sid)) {
-//					sid = this.getString("sid");
+//					sid = this.getString(COOKIE_NAME);
 //					if (X.isEmpty(sid)) {
-//						sid = (String) req.getAttribute("sid");
+//						sid = (String) req.getAttribute(COOKIE_NAME);
 //						if (X.isEmpty(sid) && newSession) {
 //							do {
 //								sid = UID.random();
@@ -650,9 +689,9 @@ public class Controller implements Serializable {
 //				if (!X.isEmpty(sid)) {
 //					long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
 //					if (expired <= 0) {
-//						cookie("sid", sid, -1);
+//						cookie(COOKIE_NAME, sid, -1);
 //					} else {
-//						cookie("sid", sid, (int) (expired / 1000));
+//						cookie(COOKIE_NAME, sid, (int) (expired / 1000));
 //					}
 //				}
 //			}
@@ -666,39 +705,69 @@ public class Controller implements Serializable {
 //		return sid;
 //	}
 
-	final public String sid(boolean newSession) {
+	final public String sid(boolean newsession) {
+		return sid(newsession, false);
+	}
+
+	final public String sid(boolean newsession, boolean renew) {
 
 		if (X.isEmpty(sid)) {
-			sid = this.getString("sid");
+			sid = this.getString(COOKIE_NAME);
 			if (X.isEmpty(sid)) {
-				sid = (String) req.getAttribute("sid");
+				sid = (String) req.getAttribute(COOKIE_NAME);
 				if (X.isEmpty(sid)) {
-					sid = this.head("sid");
+					sid = this.head(COOKIE_NAME);
 					if (X.isEmpty(sid)) {
-						sid = this.cookie("sid");
-						if (X.isEmpty(sid) && newSession) {
+						sid = this.cookie(COOKIE_NAME);
+						if (X.isEmpty(sid) && newsession) {
 							do {
 								sid = UID.random();
 							} while (Session.exists(sid));
 
 							if (log.isDebugEnabled()) {
-								log.debug("creeate new sid=" + sid);
+								log.debug("creeate new " + COOKIE_NAME + "=" + sid);
 							}
+
+							/**
+							 * get session.expired in seconds
+							 */
+							if (!X.isEmpty(sid)) {
+								long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+								if (expired <= 0) {
+									cookie(COOKIE_NAME, sid, -1);
+								} else {
+									cookie(COOKIE_NAME, sid, (int) (expired / 1000));
+								}
+							}
+
+						} else if (renew) {
+
+							Session.delete(sid);
+
+							do {
+								sid = UID.random();
+							} while (Session.exists(sid));
+
+							if (log.isDebugEnabled()) {
+								log.debug("creeate new " + COOKIE_NAME + "=" + sid);
+							}
+
+							/**
+							 * get session.expired in seconds
+							 */
+							if (!X.isEmpty(sid)) {
+								long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+								if (expired <= 0) {
+									cookie(COOKIE_NAME, sid, -1);
+								} else {
+									cookie(COOKIE_NAME, sid, (int) (expired / 1000));
+								}
+							}
+
 						}
 					}
 				}
 
-				/**
-				 * get session.expired in seconds
-				 */
-				if (!X.isEmpty(sid)) {
-					long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
-					if (expired <= 0) {
-						cookie("sid", sid, -1);
-					} else {
-						cookie("sid", sid, (int) (expired / 1000));
-					}
-				}
 			}
 
 //			if (!X.isEmpty(sid) && Global.getInt("session.baseip", 0) == 1) {
@@ -766,7 +835,7 @@ public class Controller implements Serializable {
 			m.copy(this);
 
 			return m._process();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			error(e);
 		}
 		return null;
@@ -779,7 +848,7 @@ public class Controller implements Serializable {
 	 * @throws IOException
 	 */
 	public void forward(String url) throws Exception {
-		req.setAttribute("sid", sid(false));
+		req.setAttribute(COOKIE_NAME, sid(false, false));
 		Controller.process(url, req, resp, method.name, TimeStamp.create());
 	}
 
@@ -832,13 +901,14 @@ public class Controller implements Serializable {
 	}
 
 	/**
-	 * get parameter from request
+	 * set the exception
 	 * 
-	 * @param name
+	 * @param err
 	 * @return
 	 */
-	public final String get(String name) {
-		return this.getString(name);
+	final public Controller set(Exception err) {
+		this.err = err;
+		return this;
 	}
 
 	/**
@@ -851,6 +921,8 @@ public class Controller implements Serializable {
 	 * @param n
 	 */
 	public void pages(Beans<? extends Bean> bs, int s, int n) {
+
+		this.set("s", s).set("n", n);
 
 		if (bs != null) {
 			this.set("list", bs);
@@ -933,7 +1005,8 @@ public class Controller implements Serializable {
 	 * @param name the name
 	 * @return the int
 	 */
-	public final int getInt(String name) {
+	@Comment(text = "get int")
+	public final int getInt(@Comment(text = "name") String name) {
 		return getInt(name, 0);
 	}
 
@@ -969,7 +1042,8 @@ public class Controller implements Serializable {
 	 * @param tag the name of parameter in request.
 	 * @return long
 	 */
-	public final long getLong(String name) {
+	@Comment(text = "get long")
+	public final long getLong(@Comment(text = "name") String name) {
 		return getLong(name, 0);
 	}
 
@@ -1034,7 +1108,9 @@ public class Controller implements Serializable {
 					.append("; Expires=" + new Date(System.currentTimeMillis() + expireseconds * 1000));
 		}
 		sb.append("; Path=/");
-		sb.append(";httponly");
+		if (Global.getInt("session.httponly", 1) == 1) {
+			sb.append(";httponly");
+		}
 		resp.addHeader("Set-Cookie", sb.toString());// 兼容老的浏览器
 
 		String samesite = Global.getString("cookie.samesite", "Strict");
@@ -1042,7 +1118,9 @@ public class Controller implements Serializable {
 		if (X.isSame(samesite, "None")) {
 			sb.append("; Secure");
 		}
-		sb.append(";httponly");
+		if (Global.getInt("session.httponly", 1) == 1) {
+			sb.append(";httponly");
+		}
 
 		// sid=bee31683-a83a-44c2-9155-f20735d8f1be; Max-Age=604800; Expires=Wed,
 		// 25-May-2022 05:30:21 GMT; Path=/
@@ -1071,6 +1149,7 @@ public class Controller implements Serializable {
 	 * 
 	 * @return String
 	 */
+	@Comment(text = "get client ip")
 	public final String ip() {
 		return req.ip();
 	}
@@ -1084,6 +1163,7 @@ public class Controller implements Serializable {
 	 * 
 	 * @return JSONObject
 	 */
+	@Comment(text = "wrap requst as json")
 	public final JSON json() {
 		return req.json();
 	}
@@ -1097,6 +1177,11 @@ public class Controller implements Serializable {
 	 */
 	public final String getString(String name) {
 		return req.getString(name);
+	}
+
+	public final Controller rewrite(String name, String value) {
+		req.rewrite(name, value);
+		return this;
 	}
 
 	/**
@@ -1116,7 +1201,8 @@ public class Controller implements Serializable {
 	 * @param name the parameter name
 	 * @return String of value
 	 */
-	public final String getHtml(String name) {
+	@Comment(text = "get original string")
+	public final String getHtml(@Comment(text = "name") String name) {
 
 		return req.getHtml(name);
 
@@ -1153,20 +1239,13 @@ public class Controller implements Serializable {
 	 * 
 	 * @return List of the request names
 	 */
+	@Comment(text = "get all parameters name")
 	public final List<String> names() {
-
 		return req.names();
-
 	}
 
 	public final boolean has(String name) {
-
 		return this.names().contains(name);
-
-	}
-
-	public final List<String> keySet() {
-		return this.names();
 	}
 
 	/**
@@ -1176,7 +1255,15 @@ public class Controller implements Serializable {
 	 * @return Session
 	 */
 	public final Session session(boolean newsession) {
-		return Session.load(sid(newsession), this.ip());
+		return session(newsession, false);
+	}
+
+	public final Session session(boolean newsession, boolean renew) {
+		return Session.load(sid(newsession, renew), this.ip());
+	}
+
+	public final Session session(String sid) {
+		return Session.load(sid, this.ip());
 	}
 
 	/**
@@ -1191,9 +1278,11 @@ public class Controller implements Serializable {
 	 * 
 	 * @return User
 	 */
+	@Comment(text = "get login user")
 	final public User user() {
+		Session s = null;
 		if (login == null) {
-			Session s = session(false);
+			s = session(false);
 			login = (s == null) ? null : s.get("user");
 
 			if (login == null) {
@@ -1221,7 +1310,7 @@ public class Controller implements Serializable {
 			if (System.currentTimeMillis() - login.getLong("lastlogined") > X.AMINUTE) {
 
 				login.set("lastlogined", System.currentTimeMillis());
-				Session s = session(true);
+				s = session(true);
 				try {
 
 					s.set("user", login);
@@ -1240,24 +1329,39 @@ public class Controller implements Serializable {
 					v.append("ajaxlogined", System.currentTimeMillis());
 				}
 
+				Session s1 = s;
 				Task.schedule(t -> {
 					try {
 
 						User.dao.update(login.id, v);
 						login = User.dao.load(login.id);
 						if (login == null || login.isLocked() || login.isDeleted()) {
-							s.remove("user");
+							s1.remove("user");
 						} else {
-							s.set("user", login);
+							s1.set("user", login);
 							SID.update(sid, login.id, this.ip(), this.browser());
 						}
-						s.store();
+						s1.store();
 					} catch (Exception e) {
 
 					}
 
 				});
 			}
+		}
+
+		if (login != null && login.getLimitip()) {
+			// check limitip
+			if (s == null) {
+				s = session(false);
+			}
+
+			if (!X.isSame(this.ip(), s.get("ip"))) {
+				// 地址被更换
+				GLog.securitylog.warn(this.getClass(), "access", "loginip=" + s.get("ip") + ", accessip=" + this.ip());
+				return null;
+			}
+
 		}
 
 		return login;
@@ -1272,14 +1376,22 @@ public class Controller implements Serializable {
 		this.user(u, LoginType.web);
 	}
 
+	final public void user(String sid, User u) {
+		this.user(sid, u, LoginType.web);
+	}
+
 	/**
 	 * set the user associated with the session
 	 * 
 	 * @param u the user object associated with the session
 	 */
 	final public void user(User u, LoginType logintype) {
+		user(null, u, logintype);
+	}
 
-		Session s = session(true);
+	private void user(String sid, User u, LoginType logintype) {
+
+		Session s = sid == null ? session(true, false) : session(sid);
 		User u1 = s.get("user");
 		if (u != null && u1 != null && u1.getId() != u.getId()) {
 			log.warn("clear the data in session");
@@ -1339,7 +1451,8 @@ public class Controller implements Serializable {
 	 * @param name the parameter name
 	 * @return file of value, null if not presented
 	 */
-	public final FileItem file(String name) {
+	@Comment(text = "get file")
+	public final FileItem file(@Comment(text = "name") String name) {
 		return req.file(name);
 	}
 
@@ -1379,7 +1492,7 @@ public class Controller implements Serializable {
 
 		if (outputed > 0) {
 			Exception e = new Exception("response twice!");
-			GLog.applog.error(this.getClass(), "response", e.getMessage(), e);
+			GLog.applog.error(this, path, e.getMessage(), e);
 			log.error(jo.toString(), e);
 
 			error(e);
@@ -1387,13 +1500,36 @@ public class Controller implements Serializable {
 			return;
 		}
 
-		outputed++;
+		if (jo != null && ((pp != null && pp.oplog()) || err != null)) {
+
+			int state = jo.getInt("state");
+			if (state == 0 || state == 200 || state == 206) {
+				// info
+				GLog.oplog.info(this, path, "message=" + jo.get(X.MESSAGE) + ", params=" + this.json());
+			} else if (state == 403) {
+				// warn
+				GLog.securitylog.warn(this, path, "error=" + jo.get(X.ERROR) + ", params=" + this.json());
+			} else if (err == null) {
+				// warn
+				GLog.oplog.warn(this, path, "error=" + jo.get(X.ERROR) + ", params=" + this.json());
+			} else {
+				GLog.oplog.error(this, path, "error=" + jo.get(X.ERROR) + ", params=" + this.json(), err);
+			}
+
+		}
+
+		if (policy != null) {
+			jo = policy.mix(jo);
+		}
 
 		if (jo == null) {
 			_send_json("{}");
 		} else {
 			_send_json(jo.toString());
 		}
+
+		outputed++;
+
 	}
 
 	/**
@@ -1458,6 +1594,16 @@ public class Controller implements Serializable {
 	 * @return boolean
 	 */
 	final public boolean show(String viewname) {
+		return show(viewname, true);
+	}
+
+	/**
+	 * 
+	 * @param viewname
+	 * @param istemplate, is Template
+	 * @return
+	 */
+	final public boolean show(String viewname, boolean istemplate) {
 
 		try {
 			if (outputed > 0) {
@@ -1490,17 +1636,13 @@ public class Controller implements Serializable {
 			// TimeStamp t1 = TimeStamp.create();
 			File file = Module.home.getFile(viewname);
 			if (file != null && file.exists()) {
-				View.merge(file, this, viewname);
-
+				if (istemplate) {
+					View.merge(file, this, viewname);
+				} else {
+					View.fileview.parse(file, this, viewname);
+				}
 				return true;
 			} else {
-//				DFile d = Disk.seek(viewname);
-//				if (d.exists()) {
-//
-//					View.merge(d, this, viewname);
-//
-//					return true;
-//				}
 				notfound("page=" + viewname);
 			}
 		} catch (Exception e) {
@@ -1531,6 +1673,10 @@ public class Controller implements Serializable {
 	 */
 	public void onPost() {
 
+	}
+
+	public void onHead() {
+		onGet();
 	}
 
 	/**
@@ -1606,6 +1752,13 @@ public class Controller implements Serializable {
 		e.printStackTrace(out);
 		String s = sw.toString();
 
+		if (Global.getInt("web.debug", 0) != 1) {
+			int i = s.indexOf("\n");
+			if (i > 0) {
+				s = s.substring(0, i);
+			}
+		}
+
 		if (isAjax()) {
 			JSON jo = JSON.create();
 			jo.append(X.STATE, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -1636,6 +1789,8 @@ public class Controller implements Serializable {
 				this.print(s);
 			}
 		}
+
+		GLog.oplog.error(this, "error", this.uri, e);
 
 	}
 
@@ -1698,6 +1853,9 @@ public class Controller implements Serializable {
 			this.status(HttpServletResponse.SC_NOT_FOUND);
 			this.print("not found, " + message);
 		}
+
+		GLog.oplog.warn(this, "notfound", this.uri);
+
 	}
 
 	/**
@@ -1747,7 +1905,7 @@ public class Controller implements Serializable {
 		status = statuscode;
 		resp.setStatus(statuscode);
 
-		log.warn(this.getClass().getName() + "[" + this.uri() + "] - [" + this.ipPath() + "] => " + status);
+//		log.warn(this.getClass().getName() + "[" + this.uri() + "] - [" + this.ipPath() + "] => " + status);
 
 		// GLog.applog.info("test", "test", "status=" + statuscode, null, null);
 	}
@@ -1769,12 +1927,19 @@ public class Controller implements Serializable {
 	}
 
 	public final void error(int code) {
+
+		String msg = (String) data.get(X.MESSAGE);
 		try {
 			status = code;
 
-			resp.sendError(code, (String) data.get(X.MESSAGE));
+			resp.setStatus(code);
+			resp.sendError(code, msg);
+
+			GLog.applog.warn(this, path, msg);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			GLog.applog.error(this, path, msg, e);
 		}
 
 	}
@@ -1783,7 +1948,7 @@ public class Controller implements Serializable {
 	 * show deny page to end-user <br>
 	 * if the request is AJAX, then response json back to front
 	 */
-	protected final void deny() {
+	public final void deny() {
 		deny(null, lang.get("access.deny"));
 	}
 
@@ -1793,9 +1958,10 @@ public class Controller implements Serializable {
 	 * @param url   the url will be responsed
 	 * @param error the error that will be displaied
 	 */
-	protected void deny(String url, String error) {
-		if (log.isDebugEnabled())
+	public void deny(String url, String error) {
+		if (log.isDebugEnabled()) {
 			log.debug(this.getClass().getName() + "[" + this.uri() + "]", new Exception("deny " + error));
+		}
 
 		if (isAjax()) {
 
@@ -1906,6 +2072,7 @@ public class Controller implements Serializable {
 	 *
 	 */
 	protected static class PathMapping {
+
 		Pattern pattern;
 		Method method;
 		Path path;
@@ -1980,13 +2147,19 @@ public class Controller implements Serializable {
 //		_currentmodule.set(e);
 //	}
 
-	public static class HttpMethod {
+	public static class HttpMethod implements Serializable {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
 		public static final HttpMethod GET = HttpMethod.create("GET");
 		public static final HttpMethod POST = HttpMethod.create("POST");
 
 		// 集合和资源管理
 		public static final HttpMethod PUT = HttpMethod.create("PUT");
+		public static final HttpMethod HEAD = HttpMethod.create("HEAD");
 		public static final HttpMethod DELETE = HttpMethod.create("DELETE");
 		public static final HttpMethod MKCOL = HttpMethod.create("MKCOL");
 
@@ -2028,6 +2201,10 @@ public class Controller implements Serializable {
 			return is("PUT");
 		}
 
+		public boolean isHead() {
+			return is("HEAD");
+		}
+
 		public boolean isOptions() {
 			return is("OPTIONS");
 		}
@@ -2040,6 +2217,10 @@ public class Controller implements Serializable {
 	}
 
 	public final void send(String name, InputStream in) {
+		send(name, in, -1);
+	}
+
+	public final void send(String name, InputStream in, long total) {
 
 		try {
 
@@ -2047,49 +2228,72 @@ public class Controller implements Serializable {
 			name = Url.encode(name);
 			this.head("Content-Disposition", "attachment; filename*=UTF-8''" + name);
 
-//			String range = this.head("range");
-//
-//			long start = 0;
-//			long end = total;
-//			if (!X.isEmpty(range)) {
-//				String[] ss = range.split("(=|-)");
-//				if (ss.length > 1) {
-//					start = X.toLong(ss[1]);
-//				}
-//
-//				if (ss.length > 2) {
-//					end = Math.min(total, X.toLong(ss[2]));
-//				}
-//			}
-//
-//			if (end <= start) {
-//				end = start + 1024 * 1024;
-//			}
-//
-//			if (end > total) {
-//				end = total;
-//			}
-//
-//			long length = end - start;
-//
-//			if (end < total) {
-//				this.status(206);
-//			}
-//
-//			if (start == 0) {
-//				this.head("Accept-Ranges", "bytes");
-//			}
-//			this.head("Content-Length", Long.toString(length));
-//			this.head("Content-Range", "bytes " + start + "-" + (end - 1) + "/" + total);
-//
-//			log.info("response.stream, bytes " + start + "-" + (end - 1) + "/" + total);
-//			if (length > 0) {
 			OutputStream out = this.getOutputStream();
 
-//				IOUtil.copy(in, out, start, end, false);
-			IOUtil.copy(in, out, false);
+			if (total > 0) {
+
+				String range = this.head("range");
+//				Range: bytes=0-499 表示第 0-499 字节范围的内容 
+//				Range: bytes=500-999 表示第 500-999 字节范围的内容 
+//				Range: bytes=-500 表示最后 500 字节的内容 
+//				Range: bytes=500- 表示从第 500 字节开始到文件结束部分的内容 
+//				Range: bytes=0-0,-1 表示第一个和最后一个字节 
+//				Range: bytes=500-600,601-999 同时指定几个范围
+
+				long start = 0;
+				long end = total - 1;
+
+				if (!X.isEmpty(range)) {
+
+					int i = range.indexOf("=");
+					if (i > 0) {
+						range = range.substring(i + 1).trim();
+					}
+					i = range.indexOf("-");
+					if (i > 0) {
+						start = X.toLong(range.substring(0, i));
+					} else {
+						// total - end
+						start = -1;
+					}
+					String s2 = range.substring(i + 1);
+					if (!X.isEmpty(s2)) {
+						end = Math.min(total - 1, X.toLong(s2));
+						if (start == -1) {
+							start = total - end;
+							end = total - 1;
+						}
+					}
+				}
+
+				if (end <= start) {
+					end = start + 1024 * 32;
+				}
+
+				if (end > total - 1) {
+					end = total - 1;
+				}
+
+				long length = end - start + 1;
+
+				if (end < total - 1) {
+					this.status(206);
+				}
+
+				if (start == 0) {
+					this.head("Accept-Ranges", "bytes");
+				}
+				this.head("Content-Length", Long.toString(length));
+				this.head("Content-Range", "bytes " + start + "-" + end + "/" + total);
+
+				IOUtil.copy(in, out, start, end, false);
+
+			} else {
+				IOUtil.copy(in, out, false);
+			}
+
 			out.flush();
-//			}
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
@@ -2143,6 +2347,9 @@ public class Controller implements Serializable {
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+
+			GLog.applog.error(Controller.class, "init", e.getMessage(), e);
+
 		}
 	}
 
@@ -2175,6 +2382,7 @@ public class Controller implements Serializable {
 		if (!X.isEmpty(node) && !X.isSame(node, Local.id())) {
 			Node n = Node.dao.load(node);
 			if (n != null) {
+				log.info("forward to [" + n.label + "/" + n.id + "] uri=" + uri);
 				n.forward(uri, req, resp, method);
 				return null;
 			} else {
@@ -2344,25 +2552,8 @@ public class Controller implements Serializable {
 //					Path p = 
 				mo.dispatch(u, req, resp, method);
 
-//					if (p == null) {
 				if (log.isInfoEnabled())
-					log.info(method + " " + uri + " - " + mo.status() + " - " + t.past() + " -" + mo.ip() + " " + mo);
-
-//					if (AccessLog.isOn()) {
-//
-//						V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
-//						User u1 = mo.getUser();
-//						if (u1 != null) {
-//							v.set("uid", u1.getId()).set("username", u1.get("name"));
-//						}
-//
-//						AccessLog.create(mo.getRemoteHost(), uri,
-//								v.set("status", mo.getStatus()).set("client", mo.browser())
-//										.set("header", Arrays.toString(mo.getHeaders()))
-//										.set("module", mo.module == null ? X.EMPTY : mo.module.getName())
-//										.set("model", mo.getClass().getName()));
-//					}
-//					}
+					log.info(method + " " + uri + " - " + mo.status() + " - " + t.past() + " -" + mo.ip());
 
 				// Counter.max("web.request.max", t.past(), uri);
 				return mo;
@@ -2379,7 +2570,6 @@ public class Controller implements Serializable {
 
 		mo = new DefaultController();
 		mo.module = Module.load(0);
-//		mo.put("__node", node);
 
 		/**
 		 * do not put in model cache, <br>
@@ -2395,7 +2585,7 @@ public class Controller implements Serializable {
 		}
 //			if (AccessLog.isOn()) {
 //
-//				V v = V.create("method", method.toString()).set("cost", t.past()).set("sid", mo.sid());
+//				V v = V.create("method", method.toString()).set("cost", t.past()).set(COOKIE_NAME, mo.sid());
 //				User u1 = mo.getUser();
 //				if (u1 != null) {
 //					v.set("uid", u1.getId()).set("username", u1.get("name"));
@@ -2411,6 +2601,26 @@ public class Controller implements Serializable {
 		// Counter.max("web.request.max", t.past(), uri);
 
 		return mo;
+	}
+
+	@Override
+	@Comment(hide = true)
+	public boolean containsKey(Object key) {
+		return this.names().contains(key);
+	}
+
+	@Override
+	@Comment(text = "get parameter", demo = "req.name", replacement = "java.lang.String -[name]")
+	public final String get(Object key) {
+		return this.getString(key.toString());
+	}
+
+	public Map<String, Object> getData() {
+		if (policy == null) {
+			return data;
+		}
+
+		return policy.mix(data);
 	}
 
 }

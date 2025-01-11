@@ -16,10 +16,12 @@ package org.giiwa.task;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.cache.Cache;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
@@ -40,16 +42,17 @@ public class Monitor {
 	 * @param t  the t
 	 * @param ms the ms
 	 * @return the long
+	 * @throws Exception
 	 */
-	public static long start(Task t, long ms) {
+	public static long start(Task t, long ms) throws Exception {
 		return start(t, ms, X.EMPTY);
 	}
 
-	public static long start(Task t) {
+	public static long start(Task t) throws Exception {
 		return start(t, 0, X.EMPTY);
 	}
 
-	public static long start(Task t, String access) {
+	public static long start(Task t, String access) throws Exception {
 		return start(t, 0, access);
 	}
 
@@ -60,8 +63,9 @@ public class Monitor {
 	 * @param
 	 * @param access
 	 * @return
+	 * @throws Exception
 	 */
-	public static long start(Task t, long ms, String access) {
+	public static long start(Task t, long ms, String access) throws Exception {
 
 		long tid = UID.next("monitor.id");
 		t.attach("tid", tid);
@@ -80,29 +84,54 @@ public class Monitor {
 
 		long tid = X.toLong(t.attach("tid"));
 		String name = _name(tid);
+		long created = System.currentTimeMillis();
+		long get = System.currentTimeMillis();
 
-		Field[] fs = t.getClass().getDeclaredFields();
-		if (fs != null) {
-			JSON jo = JSON.create();
-			jo.put("_access", t.attach("access"));
-
-			for (Field f : fs) {
-				int p = f.getModifiers();
-				if ((p & Modifier.TRANSIENT) != 0 || (p & Modifier.STATIC) != 0 || (p & Modifier.FINAL) != 0)
-					continue;
-
-				try {
-					if (log.isDebugEnabled())
-						log.debug(f.getName() + "=" + f.getType());
-					f.setAccessible(true);
-					jo.put(f.getName(), f.get(t));
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+		Lock door = Global.getLock("monitor//" + name);
+		door.lock();
+		try {
+			JSON jo = Cache.get(name);
+			if (jo != null) {
+				created = jo.getLong("_created");
+				get = jo.getLong("_get");
+				if (System.currentTimeMillis() - created > X.AMINUTE && System.currentTimeMillis() - get > X.AMINUTE) {
+					// 1分钟没有get， kill掉 t
+					t.stop(true);
+					return;
 				}
 			}
 
-			Cache.set(name, jo, X.AMINUTE * 2);
+			Field[] fs = t.getClass().getDeclaredFields();
+			if (fs != null) {
+				jo = JSON.create();
+				jo.put("_access", t.attach("access"));
+				jo.put("_name", t.getName());
+				jo.put("_created", created);
+				jo.put("_get", get);
+
+				for (Field f : fs) {
+					int p = f.getModifiers();
+					if ((p & Modifier.TRANSIENT) != 0 || (p & Modifier.STATIC) != 0 || (p & Modifier.FINAL) != 0)
+						continue;
+
+					try {
+						if (log.isDebugEnabled())
+							log.debug(f.getName() + "=" + f.getType());
+						f.setAccessible(true);
+						jo.put(f.getName(), f.get(t));
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
+				}
+
+				Cache.set(name, jo, X.AHOUR);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		} finally {
+			door.unlock();
 		}
+
 	}
 
 	/**
@@ -126,17 +155,26 @@ public class Monitor {
 
 		String name = _name(tid);
 
-		Object t = Cache.get(name);
-		if (t != null) {
-			if (t instanceof JSON && X.isSame(access, ((JSON) t).get("_access"))) {
-				JSON j1 = ((JSON) t).copy();
-				j1.remove("_access");
-				return j1;
+		Lock door = Global.getLock("monitor//" + name);
+		door.lock();
+		try {
+			Object t = Cache.get(name);
+			if (t != null) {
+				if (t instanceof JSON && X.isSame(access, ((JSON) t).get("_access"))) {
+					JSON e = (JSON) t;
+					JSON j1 = e.copy();
+					j1.remove("_access", "_created", "_get", "_name");
+					e.put("_get", System.currentTimeMillis());
+					Cache.set(name, e);
+					return j1;
+				} else {
+					return JSON.create().append("state", 201).append("error", "bad access");
+				}
 			} else {
-				return JSON.create().append("state", 201).append("error", "bad access");
+				return JSON.create().append("state", 201).append("error", "not found [" + tid + "]");
 			}
-		} else {
-			return JSON.create().append("state", 201).append("error", "not found [" + tid + "]");
+		} finally {
+			door.unlock();
 		}
 
 	}

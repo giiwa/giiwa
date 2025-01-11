@@ -1,0 +1,31 @@
+<div class='notes' style="display:block;width: initial;">
+	$lang.get('mail.notes')
+</div>
+
+<div>
+	<label><h3>$lang.get('mail.protocol'):</h3>
+		<select name='mail.protocol'>
+			<option value='smtp' #if($global.getString("mail.protocol", "smtp")=='smtp') selected="selected" #end>SMTP</option>
+			<option value='smtps' #if($global.getString("mail.protocol", "smtp")=='smtps') selected="selected" #end>SMTPS</option>
+		</select>
+	</label>
+</div>
+
+<input type='password' name="passwd" style="display:none"/>
+
+<div>
+	<label><h3>$lang.get('mail.host'):</h3><input type='text' name='mail.host' value="$!global.getString('mail.host', '')" /></label>
+</div>
+<div>
+	<label><h3>$lang.get('mail.email'):</h3><input type='text' name='mail.email' value="$!global.getString('mail.email', '')" /></label>
+</div>
+<div>
+	<label><h3>$lang.get('mail.title'):</h3><input type='text' name='mail.title' value="$!global.getString('mail.title', '')" /></label>
+</div>
+<div>
+	<label><h3>$lang.get('mail.user'):</h3><input type='text' name='mail.user' value="$!global.getString('mail.user', '')" /></label>
+</div>
+<div>
+	<label><h3>$lang.get('mail.password'):</h3>
+		<input type='password' name='mail.passwd' value="$!global.getString('mail.passwd', '')" /></label>
+</div>

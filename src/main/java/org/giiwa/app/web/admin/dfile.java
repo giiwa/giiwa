@@ -1,16 +1,34 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.app.web.admin;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.giiwa.bean.Policy;
 import org.giiwa.bean.Disk;
+import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
+import org.giiwa.bean.Stat;
 import org.giiwa.bean.Temp;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.UID;
@@ -33,22 +51,29 @@ public class dfile extends Controller {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Path(path = "file/delete", login = true, access = "access.config.admin")
+	@Path(path = "file/delete", login = true, access = "access.config.admin", oplog = true)
 	public void file_delete() {
 
-		try {
-			String f = this.getString("f");
-			if (!X.isEmpty(f)) {
-				Disk.delete(f);
-			}
+		String f = this.getString("f");
 
-			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "删除成功！"));
-		} catch (Exception e) {
-			this.error(e);
+		GLog.oplog.warn(this, "delete", f);
+		if (!X.isEmpty(f)) {
+			Task.schedule(t -> {
+				try {
+					Disk.delete(f);
+				} catch (Exception e) {
+					log.error("delete failed, file=" + f, e);
+					GLog.oplog.error(this, "delete", "file=" + f, e);
+				}
+			});
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "正在删除，请稍后刷新..."));
+			return;
 		}
+
+		this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "删除错误！"));
 	}
 
-	@Path(path = "file/download", login = true, access = "access.config.admin")
+	@Path(path = "file/download", login = true, access = "access.config.admin", oplog = true)
 	public void file_download() {
 
 		try {
@@ -152,7 +177,7 @@ public class dfile extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", 10);
 
-		W q = W.create().sort("priority", -1).sort("path", 1);
+		W q = W.create().sort("mount", 1).sort("priority", -1).sort("url");
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {
 
@@ -182,25 +207,24 @@ public class dfile extends Controller {
 
 	}
 
-	@Path(path = "disk/add", login = true, access = "access.config.admin")
+	@Path(path = "disk/add", login = true, access = "access.config.admin", oplog = true)
 	public void disk_add() {
 
 		if (method.isPost()) {
 
 			V v = V.create();
-			String s = this.getString("s");
-			if (X.isEmpty(s)) {
-				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
-				return;
-			}
-
-			File f = new File(s);
 
 			try {
+				String s = this.getString("s");
+				if (X.isEmpty(s)) {
+					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
+					return;
+				}
+
+				File f = new File(s);
+
 				v.append("path", f.getCanonicalPath());
-				v.append("priority", this.getInt("priority"));
 				v.append("url", this.getString("url"));
-				v.append("enabled", this.getInt("enabled"));
 				String mount = this.get("mount");
 				if (mount == null) {
 					mount = "/";
@@ -208,22 +232,19 @@ public class dfile extends Controller {
 				if (!mount.startsWith("/")) {
 					mount = "/" + mount;
 				}
+				if (!mount.endsWith("/")) {
+					mount += "/";
+				}
 				v.append("mount", mount);
-				v.append("_len", mount.length());
-
-//				int encode = this.getInt("encode");
-//				v.append("encode", encode);
-//				if (encode == 1) {
-//					String code = this.getHtml("code");
-//					if (code != null && code.length() % 8 != 0) {
-//						this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "code length!"));
-//						return;
-//					}
-//					v.append("code", code);
-//				}
+				v.append("domain", this.get("domain"));
+				v.append("username", this.get("username"));
+				v.append("password", this.get("password"));
+				v.append("priority", this.getInt("priority"));
+				v.append("quota", this.getLong("quota"));
+				v.append("enabled", X.isSame("on", this.get("enabled")) ? 1 : 0);
+				v.append("state", 0);
 
 				Disk.create(v);
-
 				Disk.reset();
 
 				this.send(JSON.create().append(X.STATE, 200));
@@ -242,7 +263,7 @@ public class dfile extends Controller {
 
 	}
 
-	@Path(path = "file/add", login = true, access = "access.config.admin")
+	@Path(path = "file/add", login = true, access = "access.config.admin", oplog = true)
 	public void file_add() {
 
 		String f = this.getString("f");
@@ -272,7 +293,7 @@ public class dfile extends Controller {
 
 	}
 
-	@Path(path = "file/batch", login = true, access = "access.config.admin")
+	@Path(path = "file/batch", login = true, access = "access.config.admin", oplog = true)
 	public void file_batch() {
 
 		String repo = this.getString("repo");
@@ -322,29 +343,62 @@ public class dfile extends Controller {
 
 	}
 
-	@Path(path = "disk/edit", login = true, access = "access.config.admin")
+	@Path(path = "disk/edit", login = true, access = "access.config.admin", oplog = true)
 	public void disk_edit() {
 
 		long id = this.getLong("id");
 
 		if (method.isPost()) {
-			V v = V.create();
-			v.append("priority", this.getInt("priority"));
-			v.append("enabled", this.getInt("enabled"));
 
-			String mount = this.get("mount");
-			if (mount == null) {
-				mount = "/";
-			}
-			if (!mount.startsWith("/")) {
-				mount = "/" + mount;
-			}
-			v.append("mount", mount);
-			v.append("_len", mount.length());
+			try {
+				V v = V.create();
 
-			Disk.dao.update(id, v);
-			Disk.reset();
-			this.send(JSON.create().append(X.STATE, 200));
+				String s = this.getString("s");
+				if (X.isEmpty(s)) {
+					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, "path missed!"));
+					return;
+				}
+
+				File f = new File(s);
+
+				v.append("path", f.getCanonicalPath());
+				v.append("url", this.getString("url"));
+				String mount = this.get("mount");
+				if (mount == null) {
+					mount = "/";
+				}
+				if (!mount.startsWith("/")) {
+					mount = "/" + mount;
+				}
+				if (!mount.endsWith("/")) {
+					mount += "/";
+				}
+				v.append("mount", mount);
+
+				v.append("domain", this.get("domain"));
+				v.append("username", this.get("username"));
+				String password = this.get("password");
+				if (!X.isEmpty(password)) {
+					v.append("password", password);
+				}
+
+				v.append("priority", this.getInt("priority"));
+				v.append("quota", this.getLong("quota"));
+
+				int enabled = X.isSame("on", this.get("enabled")) ? 1 : 0;
+				v.append("enabled", enabled);
+				if (enabled == 0) {
+					v.append("state", 0);
+				}
+
+				Disk.dao.update(id, v);
+				Disk.reset();
+
+				this.send(JSON.create().append(X.STATE, 200));
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
+			}
 
 			return;
 		}
@@ -352,6 +406,23 @@ public class dfile extends Controller {
 		Disk s = Disk.dao.load(id);
 		this.set("s", s);
 		this.show("/admin/dfile.disk.edit.html");
+
+	}
+
+	@Path(path = "disk/stat", login = true, access = "access.config.admin")
+	public void disk_stat() {
+
+		long id = this.getLong("id");
+		Disk d = Disk.dao.load(id);
+		this.set("d", d);
+
+		List<Stat> l1 = Stat.load("disk.stat", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
+				.and("time", System.currentTimeMillis() - X.AWEEK, W.OP.gte).sort("time", -1), 0, 60 * 24 * 7);
+		if (l1 != null && !l1.isEmpty()) {
+			Collections.reverse(l1);
+		}
+		this.set("list", l1);
+		this.show("/admin/dfile.disk.stat.html");
 
 	}
 
@@ -372,11 +443,34 @@ public class dfile extends Controller {
 				p = "/";
 			}
 
+			if (!p.endsWith("/")) {
+				p += "/";
+			}
+
 			if (!X.isSame(p, "/")) {
-				this.set("f", Disk.seek(p));
+				this.set("curr", p);
+				String back = p.substring(0, p.length() - 1);
+				int i = back.lastIndexOf("/");
+				back = back.substring(0, i + 1);
+				this.set("back", back);
 			}
 
 			Collection<DFile> list = Disk.list(p);
+
+			if (list != null) {
+				// check security
+				DFile[] ff = list.toArray(new DFile[list.size()]);
+
+				int times = 0;
+				for (DFile f : ff) {
+					Policy e = Policy.matches(this, "dfile:" + f.getFilename());
+					if (e != null && !e.allow(times == 0)) {
+						list.remove(f);
+						times++;
+					}
+				}
+			}
+
 			this.set("list", list);
 
 			this.show("/admin/dfile.folder.html");
@@ -385,7 +479,7 @@ public class dfile extends Controller {
 		}
 	}
 
-	@Path(path = "disk/delete", login = true, access = "access.config.admin")
+	@Path(path = "disk/delete", login = true, access = "access.config.admin", oplog = true)
 	public void disk_delete() {
 
 		final long id = this.getLong("id");

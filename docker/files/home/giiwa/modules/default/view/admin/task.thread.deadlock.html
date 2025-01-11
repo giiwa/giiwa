@@ -1,0 +1,59 @@
+<div class='tabs'>
+	<a href='/admin/task?__node=$!__node'>$lang.get('a.task')</a>
+	<a href='/admin/task/thread?__node=$!__node'>$lang.get('a.task.thread')</a>
+	<a href='/admin/task/thread/deadlock?__node=$!__node' class='selected'>$lang.get('a.task.thread.deadlock')</a>
+</div>
+
+#parse('/widget/widget.message.html')
+
+<table id='task-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 30px;"></th>
+			<th style="width: 30px;">$lang.get('thread.id')</th>
+			<th>$lang.get('thread.name')</th>
+			<th style="width: 100px;">$lang.get('thread.state')</th>
+			<th style="width: 40px;">$lang.get('thread.priority')</th>
+			<th>$lang.get('thread.trace')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		#set($seq=0)
+		#foreach($f in $list)
+		<tr>
+			#set($seq=$seq+1)
+			<td>$seq</td>
+			<td>$!f.id</td>
+			<td>$!f.name</td>
+			<td>$!f.state</td> 
+			<td>$!f.priority</td>
+			<td>
+				<div>$!f.trace2</div>
+			</td>
+			<td class="a">
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.id")' data-hint="Kill"><i class='icon-cancel-circle'></i></a>
+			</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+
+<script>
+function _kill(id) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post("/admin/task/thread/kill?__node=$!__node", {
+			id : id
+		}, function(d) {
+			giiwa.processing.hide();
+			if (d.state == 200) {
+				giiwa.reload();
+			} else {
+				giiwa.error(d.error);
+			}
+		});
+	}
+}
+</script>

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.net.client;
 
 import java.io.Closeable;
@@ -5,6 +19,7 @@ import java.io.InputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
@@ -15,6 +30,7 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 
+@Comment(text = "SSH工具")
 public class SSH implements Closeable {
 
 	private static Log log = LogFactory.getLog(SSH.class);
@@ -22,6 +38,7 @@ public class SSH implements Closeable {
 	private Session session = null;
 	private ChannelExec exec = null;
 
+	@Comment(hide = true)
 	public void close() {
 
 		if (exec != null) {
@@ -50,11 +67,13 @@ public class SSH implements Closeable {
 		return new SSH();
 	}
 
-	public boolean open(String url) throws JSchException {
+	@Comment(text = "打开远程链接，url=ssh://ip:port?username=&passwd=")
+	public boolean open(@Comment(text = "url") String url) throws JSchException {
 		return open(Url.create(url));
 	}
 
-	public boolean open(Url url) throws JSchException {
+	@Comment(text = "打开远程链接，url=ssh://ip:port?username=&passwd=")
+	public boolean open(@Comment(text = "url") Url url) throws JSchException {
 
 		close();
 
@@ -138,7 +157,8 @@ public class SSH implements Closeable {
 		}
 	}
 
-	public String run(String cmd) {
+	@Comment(text = "执行命令")
+	public String run(@Comment(text = "command") String cmd) {
 
 		try {
 

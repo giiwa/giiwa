@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.dao;
 
 import org.apache.commons.logging.Log;
@@ -19,15 +33,17 @@ public final class Counter {
 		this.name = name;
 	}
 
-	public synchronized void add(long cost) {
+	public synchronized void add(long cost, String format, Object... args) {
 		if (cost > max) {
 			max = cost;
 			if (cost > 1000 && loged == 0) {
 				// log,
 				loged = 1;
 
-				if (log.isInfoEnabled())
-					log.info("slow [" + name + "], cost=" + cost, new Exception());
+				if (log.isInfoEnabled()) {
+					String memo = X.isEmpty(format) ? X.EMPTY : String.format(format, args);
+					log.info("slow [" + name + "], cost=" + cost, new Exception(memo));
+				}
 			}
 		}
 		if (min == -1 || cost < min) {
@@ -35,6 +51,7 @@ public final class Counter {
 		}
 		this.cost += cost;
 		this.times++;
+
 	}
 
 	public synchronized Stat get() {

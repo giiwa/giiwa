@@ -9,7 +9,9 @@
 <form action='/admin/app/create?__node=$!__node'  method='post' class='form' >
 	
 	<div><label><h3>$lang.get('app.appid')<r>*</r>:</h3><input type='text' name='appid' value='$!appid' required/><g>$lang.get("app.appid.hint")</g></label></div>
-	<div><label><h3>$lang.get('app.name')<r>*</r>:</h3><input type='text' name='name' value='$!name' required/><g>$lang.get("app.name.hint")</g></label></div>
+	<div><label><h3>$lang.get('app.contact'):</h3><input type='text' name='contact' value='$!contact'/></label></div>
+	<div><label><h3>$lang.get('app.phone'):</h3><input type='text' class="width-40" name='phone' value='$!phone'/><g>多个逗号分隔</g></label></div>
+	<div><label><h3>$lang.get('app.email'):</h3><input type='text' name='email' value='$!email'/></label></div>
 	<div><label><h3>$lang.get('app.expired'):</h3><input type='text' name='expired' value='$!expired'/><g>yyyy-MM-dd HH:mm</g></label></div>
 	<div><label><h3>$lang.get('app.memo'):</h3><input type='text' class="width-40" name='memo' value='$!memo'/><g>$lang.get("app.memo.hint")</g></label></div>
 	<div><label><h3>$lang.get('app.allowip'):</h3><input type='text' class="width-40" name='allowip' value='$!allowip'/><g>$lang.get("app.allowip.hint")</g></label></div>

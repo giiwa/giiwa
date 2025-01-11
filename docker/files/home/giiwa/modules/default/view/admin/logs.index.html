@@ -1,0 +1,61 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/logs?__node=$!__node' class='selected'>$lang.get('a.logs')</a>
+</div>
+
+<div class='notes'>
+	$!root
+</div>
+
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('file.name')</th>
+			<th>$lang.get('file.size')</th>
+			<th>$lang.get('file.updated')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f1 in $list)
+	<tr>
+		<td class="a">$!f1.name
+			<a href='javascript:;' onclick='_download("$f1.name")' target='_blank' class='icon icon-folder-download' title='/logs/download/$f1.name'></a>
+		</td>
+		<td>
+			#if($f1.isFile())
+			$lang.size($!f1.length())
+			#end
+		</td>
+		<td>$!lang.format($f1.lastModified(), 'yyyy-MM-dd HH:mm:ss')</td>
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href="javascript:;" onclick="_delete('$f1.name', this)"><i class="icon-cancel-circle"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post("/admin/logs/delete?__node=$!__node", {f:id}, function(d){
+			$(o).parent().parent().remove();
+		})
+	}
+}
+function _download(name) {
+	giiwa.processing.show();
+	$.post('/admin/logs/download?__node=$!__node', {f:name}, function(d){
+		giiwa.processing.hide();
+		if(d.state == 200) {
+			giiwa.download(d.src);
+		} else {
+			giiwa.error(d.message);
+		}
+	})
+}
+
+</script>

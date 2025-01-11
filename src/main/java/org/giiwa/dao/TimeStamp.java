@@ -32,6 +32,9 @@ public final class TimeStamp implements Serializable {
 	/** The start. */
 	long start;
 
+	// 初始值
+	long init;
+
 	/**
 	 * Creates the.
 	 *
@@ -56,7 +59,6 @@ public final class TimeStamp implements Serializable {
 	 */
 	public TimeStamp set(long s) {
 		start = s;
-
 		return this;
 	}
 
@@ -89,7 +91,7 @@ public final class TimeStamp implements Serializable {
 	 * @return the ms of past
 	 */
 	public long pastms() {
-		return (System.nanoTime() - start) / 1000000;
+		return pastus() / 1000;
 	}
 
 	/**
@@ -98,7 +100,7 @@ public final class TimeStamp implements Serializable {
 	 * @return
 	 */
 	public long pastus() {
-		return (System.nanoTime() - start) / 1000;
+		return pastns() / 1000;
 	}
 
 	/**
@@ -107,7 +109,11 @@ public final class TimeStamp implements Serializable {
 	 * @return
 	 */
 	public long pastns() {
-		return System.nanoTime() - start;
+		if (start > -1) {
+			return System.nanoTime() - start + init;
+		} else {
+			return init;
+		}
 	}
 
 	/**
@@ -127,7 +133,21 @@ public final class TimeStamp implements Serializable {
 	public long reset() {
 		long r = pastms();
 		start = System.nanoTime();
+		init = 0;
 		return r;
+	}
+
+	public void pause() {
+		if (start > -1) {
+			init += System.nanoTime() - start;
+			start = -1;
+		}
+	}
+
+	public void resume() {
+		if (start == -1) {
+			start = System.nanoTime();
+		}
 	}
 
 }

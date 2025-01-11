@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.bean.m;
 
 import java.lang.management.ManagementFactory;
@@ -15,7 +29,6 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.misc.Host;
 import org.giiwa.misc.Shell;
 
 @Table(name = "gi_m_cpu", memo = "GI-CPU监测")
@@ -30,13 +43,13 @@ public class _CPU extends Bean {
 
 	public static BeanDAO<String, _CPU> dao = BeanDAO.create(_CPU.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size=50)
 	String id;
 
-	@Column(memo = "节点")
+	@Column(memo = "节点", size=50)
 	String node;
 
-	@Column(memo = "名称")
+	@Column(memo = "名称", size=50)
 	String name;
 
 	@Column(memo = "系统")
@@ -57,7 +70,7 @@ public class _CPU extends Bean {
 	@Column(memo = "空闲")
 	double idle;
 
-	@Column(memo = "温度")
+	@Column(memo = "温度", size=50)
 	public String temp;
 
 	public int getUsage() {
@@ -159,7 +172,7 @@ public class _CPU extends Bean {
 		e.user = 0;
 		e.sys = 0;
 		e.usage = usage();
-		e.temp = Host.getCpuTemp();
+//		e.temp = Host.getCpuTemp();
 		e.name = "cpu";
 		e.cores = cores;
 

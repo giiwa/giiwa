@@ -7,9 +7,11 @@
 </div>
 
 <form action='/admin/role/create?__node=$!__node'  method='post' class='form'>
+    <input type='hidden' name="access" id="hidden_access" value="$!access" />
 	<div><label><h3>$lang.get('role.name')(<r>*</r>):</h3><input type='text' name='name' value=#if($name) '$name' #else '' #end/></label></div>
 	<div><label><h3>$lang.get('role.memo'):</h3><input type='text' name='memo' value=#if($memo) '$memo' #else '' #end/></label></div>	
-	<div><label><h3>$lang.get('role.url'):</h3><input type='text' name='url' value=#if($url) '$url' #else '' #end/></label></div>	
+	<div><label><h3>$lang.get('role.url'):</h3><input type='text' class='width-40' name='url' value=#if($url) '$url' #else '' #end/></label></div>	
+	<div><label><h3>$lang.get('role.menu'):</h3><input type='text' name='menu' value=#if($menu) '$menu' #else '' #end/><g>url1->url2</g></label></div>	
 	<div><label><h3>$lang.get('role.seq'):</h3><input type='text' name='seq' value=#if($seq) '$seq' #else '' #end/></label></div>	
 	
 	<div class='accesses'>
@@ -27,7 +29,7 @@
 					<td>$lang.get("group.$a", "$a")</td>
 					<td>
 						#foreach($p in $accesses.get($a))
-							<label style="width: initial;"><input type="checkbox" name="access" value="$p.name" #if($r.has($p)) checked="true" #end/>$lang.get($p.name)</label>
+							<label style="width: initial;"><input type="checkbox" name="access1" onchange="change()" value="$p.name" #if($r.has($p)) checked="true" #end/>$lang.get($p.name)</label>
 						#end
 					</td>
 				</tr>
@@ -51,5 +53,16 @@ function selectall(){
 		});
 	}
 }
+function change() {
+
+    var checkbox = document.querySelectorAll('[name = "access1"]:checked')
+    var arr = []
+    checkbox.forEach(d => {
+        arr.push(d.value)
+    })
+    document.querySelector("#hidden_access").value = arr.join(";")
+        // document.querySelector(".form").submit();
+}
+
 </script>	
 

@@ -22,12 +22,14 @@ import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.task.Function;
+import org.giiwa.task.Task;
 
 /**
  * The {@code Beans} Class used to contains the Bean in query. <br>
  * it's includes the total count for the query
  * 
  */
+@Comment(text = "数据列表")
 public final class Beans<E extends Bean> extends ArrayList<E> implements Serializable {
 
 	/** The Constant serialVersionUID. */
@@ -61,6 +63,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return id;
 	}
 
+	@Comment(text = "统计计数")
 	public long count() {
 		try {
 			if (dao != null && total < 0) {
@@ -69,8 +72,8 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 				if (log.isDebugEnabled())
 					log.debug("count, total=" + total + ", q=" + q);
 
-			} else if (total < 0) {
-				if (!X.isEmpty(q.getTable())) {
+			} else if (total < 0 && q != null) {
+				if (!X.isEmpty(q.table())) {
 					try {
 						total = q.count();
 					} catch (Exception e) {
@@ -89,6 +92,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return total;
 	}
 
+	@Comment(text = "总数")
 	public long getTotal() {
 		return total;
 	}
@@ -138,6 +142,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		return l1;
 	}
 
+	@Comment(text = "转换为列表")
 	public <K> List<K> asList(Function<E, K> cb) {
 		List<K> l1 = new ArrayList<K>();
 		for (E e : this) {
@@ -147,6 +152,44 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 			}
 		}
 		return l1;
+	}
+
+	@Comment(text = "转换为json列表", demo = ".asList('a', 'b', 'c')")
+	public List<JSON> asList(String... names) {
+		List<JSON> l1 = new ArrayList<JSON>();
+		for (E e : this) {
+			JSON j = e.json();
+			l1.add(j.copy(names));
+		}
+		return l1;
+	}
+
+	@Comment(text = "转换为json列表", demo = ".jsons('a', 'b', 'c')")
+	public List<JSON> jsons(String... names) {
+		List<JSON> l1 = new ArrayList<JSON>();
+		for (E e : this) {
+			JSON j = e.json();
+			l1.add(j.copy(names));
+		}
+		return l1;
+	}
+
+	@Comment(text = "转换为json列表", demo = ".jsons()")
+	public List<JSON> jsons() {
+		List<JSON> l1 = new ArrayList<JSON>();
+		for (E e : this) {
+			JSON j = e.json();
+			l1.add(j);
+		}
+		return l1;
+	}
+
+	@Comment(text = "删除列表中字段", demo = ".remove('_id', '_node', 'created')")
+	public Beans<E> remove(String... names) {
+		for (E e : this) {
+			e.remove(names);
+		}
+		return this;
 	}
 
 	/**
@@ -162,7 +205,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 		if (!this.isEmpty()) {
 			if (this.size() > 100) {
-				this.parallelStream().forEach(e -> {
+				Task.forEach(this, e -> {
 					Object[] ss = new Object[heads.length];
 					for (int i = 0; i < heads.length; i++) {
 						ss[i] = e.get(heads[i]);
@@ -198,7 +241,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		Map<String, Integer> m = new HashMap<String, Integer>();
 
 		if (this.size() > 100) {
-			this.parallelStream().forEach(e -> {
+			Task.forEach(this, e -> {
 				Object s = e.get(name);
 				if (X.isEmpty(s)) {
 					s = X.EMPTY;
@@ -250,7 +293,7 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		}
 
 		if (this.size() > 100) {
-			this.parallelStream().forEach(e -> {
+			Task.forEach(this, e -> {
 				Object s = e.get(name);
 				if (X.isEmpty(s)) {
 					e.set(name, m.get(X.EMPTY));

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+#mongo startup shell
+
 if [ -f "/data/db/mongod.lock" ]
 then
 	rm -f /data/db/mongod.lock

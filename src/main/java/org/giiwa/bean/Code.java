@@ -44,7 +44,7 @@ public final class Code extends Bean {
 
 	public static final BeanDAO<String, Code> dao = BeanDAO.create(Code.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size=50)
 	private String id;
 
 	@Column(memo = "名称1")
@@ -79,7 +79,9 @@ public final class Code extends Bean {
 	}
 
 	public static Code load(String s1, String s2) {
-		return dao.load(W.create().and("s1", s1).and("s2", s2).and("expired", System.currentTimeMillis(), W.OP.gt));
+		W q = W.create().and("s1", s1).and("s2", s2).and("expired", System.currentTimeMillis(), W.OP.gt);
+		dao.optimize(q);
+		return dao.load(q);
 	}
 
 	public static void delete(String s1, String s2) {
@@ -89,7 +91,9 @@ public final class Code extends Bean {
 	public static int cleanup() {
 		log.warn("cleanup [Code] ...");
 
-		return dao.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lte));
+		W q = W.create().and("expired", System.currentTimeMillis(), W.OP.lte);
+		dao.optimize(q);
+		return dao.delete(q);
 	}
 
 }

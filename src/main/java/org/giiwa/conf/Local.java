@@ -14,13 +14,18 @@
 */
 package org.giiwa.conf;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Node;
-import org.giiwa.cache.LocalLock;
 import org.giiwa.cache.TimingCache;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
@@ -48,10 +53,10 @@ public final class Local extends Bean {
 
 	public static final BeanDAO<String, Local> dao = BeanDAO.create(Local.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", size=100)
 	String id;
 
-	@Column(memo = "字符串值")
+	@Column(memo = "字符串值", size = 1000)
 	String s;
 
 	@Column(memo = "整数值")
@@ -59,6 +64,9 @@ public final class Local extends Bean {
 
 	@Column(memo = "长整数值")
 	long l;
+
+	@Column(memo = "字符串值", size = 512)
+	String link;
 
 	private static Local inst = new Local();
 
@@ -151,8 +159,17 @@ public final class Local extends Bean {
 
 	}
 
+	private static Map<String, Lock> _all = new HashMap<String, Lock>();
+
 	public static Lock getLock(String name) {
-		return LocalLock.create(name);
+		synchronized (_all) {
+			Lock e = _all.get(name);
+			if (e == null) {
+				e = new ReentrantLock();
+				_all.put(name, e);
+			}
+			return e;
+		}
 	}
 
 	/**
@@ -291,13 +308,13 @@ public final class Local extends Bean {
 			V v = V.create();
 			if (o instanceof Integer) {
 				e.i = (Integer) o;
-				v.set("i", e.i);
+				v.append("i", e.i);
 			} else if (o instanceof Long) {
 				e.l = (Long) o;
-				v.set("l", e.l);
+				v.append("l", e.l);
 			} else {
 				e.s = o.toString();
-				v.set("s", e.s);
+				v.append("s", e.s);
 			}
 
 			if (Helper.isConfigured()) {
@@ -324,7 +341,7 @@ public final class Local extends Bean {
 		return getString(name, null);
 	}
 
-	private static String _id;
+	public static String _id;
 
 	/**
 	 * get the unique id of this node in the cluster
@@ -333,11 +350,12 @@ public final class Local extends Bean {
 	 */
 	public static String id() {
 		if (X.isEmpty(_id)) {
-			_id = Config.getConf().getString("node.id", null);
+			Configuration conf = Config.getConf();
+			_id = (conf != null ? conf.getString("node.id", null) : UID.uuid());
 			if (X.isEmpty(_id)) {
 				// create id
 				log.warn("restarting as node.id=null");
-				
+
 				Config.save2();
 				Task.schedule(t -> {
 					System.exit(0);
@@ -510,7 +528,16 @@ public final class Local extends Bean {
 			}
 		});
 
-//		log.warn(JSON.toPrettyString(l1));
+		Collections.sort(l1, new Comparator<JSON>() {
+
+			@Override
+			public int compare(JSON o1, JSON o2) {
+				String s1 = o1.getString("label");
+				String s2 = o2.getString("label");
+				return X.compareTo(s1, s2);
+			}
+
+		});
 
 		return l1;
 

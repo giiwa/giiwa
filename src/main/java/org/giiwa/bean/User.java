@@ -24,6 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.user;
 import org.giiwa.bean.Session.SID;
+import org.giiwa.cache.TimingCache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
@@ -76,36 +77,47 @@ public final class User extends Bean {
 
 	public static final BeanDAO<Long, User> dao = BeanDAO.create(User.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true)
 	public long id;
 
-	@Column(memo = "登录名")
+	@Column(memo = "登录名", size = 50)
 	public String name;
 
-	@Column(memo = "昵称")
+	@Column(memo = "昵称", size = 50)
 	public String nickname;
 
-	@Column(memo = "称谓")
+	@Column(memo = "称谓", size = 50)
 	public String title;
 
-	@Column(memo = "用户组", value = "多个以,分隔")
-	public String _group;
+	@Column(memo = "用户组", value = "unit.id")
+	public long unitid;
 
+	@Column(memo = "密码", size = 128)
 	private String password;
 
+	@Column(memo = "密码设置时间")
 	public long passwordtime;
+
+	@Column(memo = "删除", value = "1:yes")
+	int deleted;
 
 //	private String md5passwd;
 //
 //	private String createdip;
 
-	@Column(memo = "头像")
+	@Column(memo = "头像", size = 128)
 	public String photo;
 
-	@Column(name = "createdua")
+	@Column(memo = "创建用户UA", size = 255)
 	private String createdua;
 
-	@Column(name = "createdby")
+	@Column(memo = "限制IP", value = "1:yes")
+	private int limitip;
+
+	@Column(memo = "文件仓库限制空间", value = "GB, <0:不限制")
+	public long disklimitsize;
+
+	@Column(memo = "创建用户ID")
 	private long createdby;
 
 	transient User createdby_obj;
@@ -286,8 +298,8 @@ public final class User extends Bean {
 
 		v.append("deleted", 0);
 
-		dao.insert(
-				v.set(X.ID, id).set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis()));
+		dao.insert(v.append(X.ID, id).append(X.CREATED, System.currentTimeMillis()).append(X.UPDATED,
+				System.currentTimeMillis()));
 
 		GLog.securitylog.warn(user.class, "create", "name=" + name + ", nickname=" + v.value("nickname"), dao.load(id),
 				(String) v.value("createdip"));
@@ -423,7 +435,8 @@ public final class User extends Bean {
 			l1.add(a.getLong("uid"));
 		}
 
-		Beans<User> us = dao.load(W.create().and("id", l1).and("deleted", 1, W.OP.neq).sort("name", 1), 0,
+		Beans<User> us = dao.load(
+				W.create().and("id", l1).and("deleted", 1, W.OP.neq).and("locked", 1, W.OP.neq).sort("name", 1), 0,
 				Integer.MAX_VALUE);
 		return us;
 
@@ -473,7 +486,8 @@ public final class User extends Bean {
 	 * @return true, if has anyone
 	 */
 	public boolean hasAccess(String... name) {
-		if (this.getId() == 0L) {
+
+		if (this.id == 0L) {
 			for (String s : name) {
 				if (X.isSame(s, "access.config.admin"))
 					return true;
@@ -490,6 +504,7 @@ public final class User extends Bean {
 			return role.hasAccess(id, name);
 		} catch (Exception e) {
 			// ignore
+			log.error(e.getMessage(), e);
 		}
 		return false;
 	}
@@ -504,10 +519,15 @@ public final class User extends Bean {
 	@SuppressWarnings("unchecked")
 	public Roles getRole() {
 		if (role == null) {
-			List<?> l1 = UserRole.dao.distinct("rid", W.create().and("uid", this.getId()));
-			if (l1 != null && !l1.isEmpty()) {
-				role = new Roles((List<Long>) l1);
+			Roles r = TimingCache.get(Roles.class, id);
+			if (r == null) {
+				List<?> l1 = UserRole.dao.distinct("rid", W.create().and("uid", this.getId()));
+				if (l1 != null && !l1.isEmpty()) {
+					r = new Roles((List<Long>) l1);
+					TimingCache.set(Roles.class, id, r);
+				}
 			}
+			role = r;
 		}
 		return role;
 	}
@@ -520,8 +540,8 @@ public final class User extends Bean {
 	public void setRole(long rid) {
 		try {
 			if (!UserRole.dao.exists(W.create().and("uid", this.getId()).and("rid", rid))) {
-				UserRole.dao
-						.insert(V.create("uid", this.getId()).set("rid", rid).append(X.ID, UID.id(this.getId(), rid)));
+				UserRole.dao.insert(
+						V.create("uid", this.getId()).append("rid", rid).append(X.ID, UID.id(this.getId(), rid)));
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -746,6 +766,9 @@ public final class User extends Bean {
 
 		public static final BeanDAO<String, UserRole> dao = BeanDAO.create(UserRole.class);
 
+		@Column(memo = "主键")
+		String id;
+
 		@Column(memo = "用户ID")
 		long uid;
 
@@ -772,6 +795,21 @@ public final class User extends Bean {
 
 		public static final BeanDAO<String, Lock> dao = BeanDAO.create(Lock.class);
 
+		@Column(memo = "主键")
+		String id;
+
+		@Column(memo = "用户ID")
+		long uid;
+
+		@Column(memo = "会话ID")
+		String sid;
+
+		@Column(memo = "主机")
+		String host;
+
+		@Column(memo = "浏览器")
+		String useragent;
+
 		/**
 		 * Locked.
 		 *
@@ -783,9 +821,9 @@ public final class User extends Bean {
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
 
-			return Lock.dao.insert(
-					V.create("uid", uid).append(X.ID, UID.id(uid, sid, System.currentTimeMillis())).set("sid", sid)
-							.set("host", host).set("useragent", useragent).set(X.CREATED, System.currentTimeMillis()));
+			return Lock.dao.insert(V.create("uid", uid).append(X.ID, UID.id(uid, sid, System.currentTimeMillis()))
+					.append("sid", sid).append("host", host).append("useragent", useragent)
+					.append(X.CREATED, System.currentTimeMillis()));
 		}
 
 		/**
@@ -959,8 +997,8 @@ public final class User extends Bean {
 					if (list == null || list.size() == 0) {
 						try {
 							String passwd = UID.random(16);
-							User.create("root", V.create("id", 0L).set("name", "root").set("password", passwd)
-									.set("nickname", "root"));
+							User.create("root", V.create("id", 0L).append("name", "root").append("password", passwd)
+									.append("nickname", "root"));
 
 							File temp = new File(Temp.ROOT);
 							if (!temp.exists()) {
@@ -1127,7 +1165,20 @@ public final class User extends Bean {
 			return false;
 		}
 
-		return System.currentTimeMillis() - passwordtime > days * X.ADAY;
+		return (System.currentTimeMillis() - passwordtime) > days * X.ADAY;
+	}
+
+	public boolean getLimitip() {
+		return limitip == 1;
+	}
+
+	transient Unit unit_obj;
+
+	public Unit getUnit_obj() {
+		if (unit_obj == null && unitid > 0) {
+			unit_obj = Unit.dao.load(unitid);
+		}
+		return unit_obj;
 	}
 
 }

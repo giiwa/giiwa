@@ -41,7 +41,7 @@ public class token extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.user.admin", oplog = true)
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -54,7 +54,7 @@ public class token extends Controller {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin|access.config.user.admin")
+	@Path(path = "clean", login = true, access = "access.config.admin|access.config.user.admin", oplog = true)
 	public void clean() {
 		JSON jo = JSON.create();
 

@@ -73,7 +73,7 @@
 								"seq": 40,
 								"classes": "icon-settings_backup_restore"
 							},
-							{
+ 							{
 								"name": "menu.i18n",
 								"load": "/admin/i18n",
 								"seq": 50,
@@ -107,15 +107,21 @@
 								"classes": "icon-clock"
 							},
 							{
+								"name": "menu.lock",
+								"load": "/admin/lock",
+								"seq": 40,
+								"classes": "icon-lock-closed"
+							},
+							{
 								"name": "menu.mo",
 								"load": "/admin/mo",
-								"seq": 40,
+								"seq": 50,
 								"classes": "icon-browser"
 							},
 							{
 								"name": "menu.dfile",
 								"load": "/admin/dfile/folder",
-								"seq": 50,
+								"seq": 60,
 								"classes": "icon-folder"
 							}
 						]
@@ -143,16 +149,23 @@
 						"classes": "icon-users"
 					},
 					{
+						"name": "menu.unit",
+						"load": "/admin/unit",
+						"access": "access.config.admin|access.config.user.admin",
+						"seq": 40,
+						"classes": "icon-user-group"
+					},
+					{
 						"name": "menu.app",
 						"load": "/admin/app",
-						"seq": 40,
+						"seq": 50,
 						"access": "access.config.admin",
 						"classes": "icon-link"
 					},
 					{
-						"name": "menu.blacklist",
-						"load": "/admin/blacklist",
-						"seq": 50,
+						"name": "menu.policy",
+						"load": "/admin/policy",
+						"seq": 60,
 						"access": "access.config.admin",
 						"classes": "icon-block"
 					}

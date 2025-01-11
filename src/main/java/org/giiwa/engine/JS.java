@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.engine;
 
 import java.util.ArrayList;
@@ -81,8 +95,12 @@ public class JS {
 				return null;
 			});
 
-			js = "function aaa(" + X.join(l1, ",") + ") {" + js + "\n};aaa(" + X.join(X.asList(l1, s -> "p." + s), ",")
-					+ ");";
+			if (l1 == null || X.isEmpty(l1)) {
+
+			} else {
+				js = "function __aaa(args, " + X.join(l1, ",") + ") {" + js + "\n};__aaa(__p, "
+						+ X.join(X.asList(l1, s -> "__p." + s), ",") + ");";
+			}
 
 		}
 
@@ -92,7 +110,7 @@ public class JS {
 		Object r = null;
 		try {
 
-			bindings.put("p", params);
+			bindings.put("__p", params);
 
 			r = e.cs.eval(bindings);
 
@@ -111,42 +129,51 @@ public class JS {
 
 	private static Map<String, _E> cached = new HashMap<String, _E>();
 
-	private static synchronized _E compile(String code, boolean cache) throws ScriptException {
+	private static _E compile(String code, boolean cache) throws ScriptException {
 
 		String id = UID.id(code);
-		_E e = cached.get(id);
-		if (e == null) {
-
-			if (log.isDebugEnabled()) {
-				log.debug("no cache for js code, code=" + code);
-			}
-
-			e = new _E();
-			e.id = id;
-			e.cs = ((Compilable) engine).compile(code);
-			if (cache && code.indexOf(";") > 0 || code.indexOf(" ") > 0) {
+		_E e = null;
+		synchronized (cached) {
+			e = cached.get(id);
+			if (e == null) {
+				e = new _E();
 				cached.put(id, e);
+			}
+		}
 
-				if (cached.size() > MAX_CACHED_COMPILED) {
+		synchronized (e) {
+			if (e.id == null || e.cs == null) {
 
-					if (log.isWarnEnabled()) {
-						log.warn("js cache exceed max, max = " + MAX_CACHED_COMPILED);
-					}
+				if (log.isDebugEnabled()) {
+					log.debug("no cache for js code, code=" + code);
+				}
 
-					Task.schedule(t -> {
-						List<_E> l1 = new ArrayList<_E>(cached.values());
-						Collections.sort(l1);
-						for (int i = 0; i < l1.size() / 4; i++) {
-							_E e1 = l1.get(i);
-							cached.remove(e1.id);
+				e.id = id;
+				e.cs = ((Compilable) engine).compile(code);
+
+				if (cache && code.indexOf(";") > 0 || code.indexOf(" ") > 0) {
+					cached.put(id, e);
+
+					if (cached.size() > MAX_CACHED_COMPILED) {
+
+						if (log.isWarnEnabled()) {
+							log.warn("js cache exceed max, max = " + MAX_CACHED_COMPILED);
 						}
 
-					});
-				}
-			}
+						Task.schedule(t -> {
+							List<_E> l1 = new ArrayList<_E>(cached.values());
+							Collections.sort(l1);
+							for (int i = 0; i < l1.size() / 4; i++) {
+								_E e1 = l1.get(i);
+								cached.remove(e1.id);
+							}
 
-		} else {
-			e.cached = true;
+						});
+					}
+				}
+			} else {
+				e.cached = true;
+			}
 		}
 
 		e.last = System.currentTimeMillis();

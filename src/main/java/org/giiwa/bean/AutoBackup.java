@@ -21,21 +21,23 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.app.web.admin.backup;
-import org.giiwa.app.web.admin.backup.BackupTask;
+import org.giiwa.app.web.admin.backup._BackupTask;
+import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
 import org.giiwa.dao.MongoHelper;
-import org.giiwa.dao.RDSHelper;
 import org.giiwa.dao.Table;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dfile.DFile;
+import org.giiwa.misc.Shell;
 import org.giiwa.misc.Url;
 import org.giiwa.net.client.FTP;
 import org.giiwa.net.client.SFTP;
@@ -60,13 +62,13 @@ public final class AutoBackup extends Bean {
 
 	public static final BeanDAO<Long, AutoBackup> dao = BeanDAO.create(AutoBackup.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true)
 	public long id;
 
-	@Column(memo = "备份名称")
+	@Column(memo = "备份名称", size=50)
 	public String name;
 
-	@Column(memo = "备份表")
+	@Column(name = "_table", memo = "备份表")
 	public String table;
 
 	@Column(memo = "开启", value = "1=yes")
@@ -80,6 +82,15 @@ public final class AutoBackup extends Bean {
 
 	@Column(memo = "备份时间点", value = "HH:mm")
 	public String time;
+
+	@Column(memo = "备份类型", value = "0=全量, 1=增量,2=外部命令")
+	public int type;
+
+	@Column(memo = "可执行节点", value = "节点名称正则表达式")
+	public String nodes;
+
+	@Column(memo = "外部命令")
+	public String command;
 
 	@Column(memo = "备份星期几，多个','分隔", value = "0,1,2,3,..")
 	public String days;
@@ -149,13 +160,6 @@ public final class AutoBackup extends Bean {
 			v = V.create();
 		}
 
-		List<Integer> days = this.getDay_obj();
-
-		if (days == null || days.isEmpty()) {
-			dao.update(id, v.append("nextime", -1));
-			return;
-		}
-
 		Calendar cal = Calendar.getInstance();
 		cal.setTimeInMillis(System.currentTimeMillis());
 
@@ -168,11 +172,22 @@ public final class AutoBackup extends Bean {
 
 		List<Long> l1 = new ArrayList<Long>();
 
-		for (int d : days) {
-			cal.set(Calendar.DAY_OF_WEEK, d);
+		List<Integer> days = this.getDay_obj();
+
+		if (days != null && !days.isEmpty()) {
+			for (int d : days) {
+				cal.set(Calendar.DAY_OF_WEEK, d);
+				long t1 = cal.getTimeInMillis();
+				if (t1 < System.currentTimeMillis()) {
+					l1.add(t1 + X.AWEEK);
+				} else {
+					l1.add(t1);
+				}
+			}
+		} else {
 			long t1 = cal.getTimeInMillis();
 			if (t1 < System.currentTimeMillis()) {
-				l1.add(t1 + X.AWEEK);
+				l1.add(t1 + X.ADAY);
 			} else {
 				l1.add(t1);
 			}
@@ -187,101 +202,121 @@ public final class AutoBackup extends Bean {
 
 	public void backup() {
 
-		try {
+		if (!X.isEmpty(nodes) && !Local.node().label.matches(nodes)) {
+			// not this node
+			return;
+		}
 
-			dao.update(id, V.create().append("state", 1));
+		Lock door = Global.getLock("backup." + this.name);
 
-			// clean up
-			clean();
-
-			// Module m = Module.home;
-			String name = this.name + "_" + Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm")
-					+ ".zip";
-
+		if (door.tryLock()) {
 			try {
 
-				Temp t = Temp.create(name);
+				this.next(V.create().append("state", 1));
 
-				ZipOutputStream out = t.getZipOutputStream();
+				if (type == 2) {
+					// 外部命令
+					String s = Shell.run(command, X.ADAY);
+					GLog.applog.warn("sys", "backup", s);
+					return;
+				}
+
+				// clean up
+				clean();
+
+				// Module m = Module.home;
+				String name = this.name + "_"
+						+ Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm") + ".zip";
 
 				try {
 
-					String[] cc = this.getTable_obj().toArray(new String[this.getTable_obj().size()]);
+					Temp t = Temp.create(name);
 
-					/**
-					 * 1, backup db
-					 */
-					if (MongoHelper.inst.isConfigured()) {
+					ZipOutputStream out = t.getZipOutputStream();
+
+					try {
+
+						String[] cc = this.getTable_obj().toArray(new String[this.getTable_obj().size()]);
+
+						/**
+						 * 1, backup db
+						 */
+//						if (MongoHelper.inst.isConfigured()) {
 						MongoHelper.inst.backup(out, cc);
-					}
-					if (RDSHelper.inst.isConfigured()) {
-						RDSHelper.inst.backup(out, cc);
-					}
+//						}
 
-					if (log.isDebugEnabled()) {
-						log.debug("zipping, dir=" + out);
-					}
-
-					out.close();
-				} finally {
-					X.close(out);
-				}
-
-				Disk.seek(ROOT + name).upload(t.getInputStream());
-
-				if (!X.isEmpty(url)) {
-					// store in other
-					if (url.startsWith("ftp://")) {
-
-						Url u = Url.create(url);
-						FTP f1 = FTP.create(u);
-						if (f1 != null) {
-							InputStream in = t.getInputStream();
-							try {
-								if (log.isDebugEnabled()) {
-									log.debug("ftp put, filename=" + u.get("path") + "/" + name);
-								}
-
-								f1.put(u.get("path") + "/" + name, in);
-
-								GLog.applog.info("backup", "auto", "backup success, name=" + name + ".zip", null, null);
-							} finally {
-								X.close(in);
-								f1.close();
-							}
+						if (log.isDebugEnabled()) {
+							log.debug("zipping, dir=" + out);
 						}
 
-					} else if (url.startsWith("sftp://")) {
+						out.close();
+					} finally {
+						X.close(out);
+					}
 
-						InputStream in = t.getInputStream();
-						SFTP s1 = null;
-						try {
+					Disk.seek(ROOT + name).upload(t.getInputStream());
+
+					if (!X.isEmpty(url)) {
+						// store in other
+						if (url.startsWith("ftp://")) {
+
 							Url u = Url.create(url);
-							s1 = SFTP.create(u);
-							s1.put(u.get("path") + "/" + name, in);
-						} catch (Exception e) {
-							log.error(e.getMessage(), e);
-						} finally {
-							X.close(in, s1);
-						}
+							FTP f1 = FTP.create(u);
+							if (f1 != null) {
+								InputStream in = t.getInputStream();
+								try {
+									if (log.isDebugEnabled()) {
+										log.debug("ftp put, filename=" + u.get("path") + "/" + name);
+									}
 
+									f1.put(u.get("path") + "/" + name, in);
+
+									GLog.applog.info("backup", "auto", "backup success, name=" + name + ".zip", null,
+											null);
+								} finally {
+									X.close(in);
+									f1.close();
+								}
+							}
+
+						} else if (url.startsWith("sftp://")) {
+
+							InputStream in = t.getInputStream();
+							SFTP s1 = null;
+							try {
+								Url u = Url.create(url);
+								s1 = SFTP.create(u);
+								s1.put(u.get("path") + "/" + name, in);
+							} catch (Exception e) {
+								log.error(e.getMessage(), e);
+							} finally {
+								X.close(in, s1);
+							}
+
+						}
 					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+					GLog.oplog.error("autobackup", "backup", e.getMessage(), e);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				GLog.oplog.error(backup.class, "backup", e.getMessage(), e, null, null);
+				GLog.applog.error("autpbackup", "backup", e.getMessage(), e);
+			} finally {
+				this.next(V.create().append("state", 0));
+				door.unlock();
 			}
-
-		} finally {
-			this.next(V.create().append("state", 0));
 		}
 
 	}
 
 	public void clean() {
 
+		if (clean != 1) {
+			return;
+		}
 		try {
-			DFile f = Disk.seek(BackupTask.ROOT);
+			DFile f = Disk.seek(_BackupTask.ROOT);
 			List<DFile> l1 = new ArrayList<DFile>();
 			if (f.exists()) {
 				DFile[] ff = f.listFiles();

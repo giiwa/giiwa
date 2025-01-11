@@ -23,10 +23,7 @@ import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper;
-import org.giiwa.dao.X;
-import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.json.JSON;
 import org.giiwa.task.Consumer;
 
 /**
@@ -55,7 +52,7 @@ public final class Data extends Bean {
 	 */
 	public static Beans<Data> load(String table, W q, int s, int n) {
 		try {
-			return Helper.load(table, q, s, n, Data.class);
+			return Helper.primary.load(table, q, s, n, Data.class);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -95,7 +92,7 @@ public final class Data extends Bean {
 	 * @return the Data object
 	 */
 	public static Data load(String table, W q) {
-		return Helper.load(table, q, Data.class);
+		return Helper.primary.load(table, q, Data.class);
 	}
 
 	/**
@@ -110,7 +107,7 @@ public final class Data extends Bean {
 		Lock door = Global.getLock("data." + table);
 		door.lock();
 		try {
-			Data d = Helper.load(table, q, Data.class);
+			Data d = Helper.primary.load(table, q, Data.class);
 			if (func != null) {
 				func.accept(d);
 			}
@@ -129,7 +126,7 @@ public final class Data extends Bean {
 	 * @throws SQLException
 	 */
 	public static boolean exists(String table, W q) throws SQLException {
-		return Helper.exists(table, q);
+		return Helper.primary.exists(table, q);
 	}
 
 	/**
@@ -139,14 +136,17 @@ public final class Data extends Bean {
 	 * @param q     the query condition
 	 * @param data  the json data
 	 * @return the number of updated
+	 * @throws SQLException
 	 */
-	public static int update(String table, W q, JSON data) {
-		return Data.update(table, q, V.create().copy(data));
-	}
+//	@Deprecated
+//	public static int update(String table, W q, JSON data) throws SQLException {
+//		return Data.update(table, q, V.create().copy(data));
+//	}
 
-	public static int update(String table, Object id, V data) {
-		return update(table, W.create().and(X.ID, id), data);
-	}
+//	@Deprecated
+//	public static int update(String table, Object id, V data) throws SQLException {
+//		return update(table, W.create().and(X.ID, id), data);
+//	}
 
 	/**
 	 * update the data
@@ -155,10 +155,12 @@ public final class Data extends Bean {
 	 * @param q     the query
 	 * @param data  the data
 	 * @return the num which updated
+	 * @throws SQLException
 	 */
-	public static int update(String table, W q, V data) {
-		return Helper.update(table, q, data);
-	}
+//	@Deprecated
+//	public static int update(String table, W q, V data) throws SQLException {
+//		return Helper.update(table, q, data);
+//	}
 
 	/**
 	 * insert the json data to database
@@ -166,10 +168,12 @@ public final class Data extends Bean {
 	 * @param table the string of tablename
 	 * @param data  the json data
 	 * @return the number of inserted
+	 * @throws SQLException 
 	 */
-	public static int insert(String table, JSON data) {
-		return Data.insert(table, V.create().copy(data));
-	}
+//	@Deprecated
+//	public static int insert(String table, JSON data) throws SQLException {
+//		return Data.insert(table, V.create().copy(data));
+//	}
 
 	/**
 	 * insert a data
@@ -177,10 +181,12 @@ public final class Data extends Bean {
 	 * @param table the table name
 	 * @param data  the data
 	 * @return the num which inserted
+	 * @throws SQLException
 	 */
-	public static int insert(String table, V data) {
-		return Helper.insert(table, data);
-	}
+//	@Deprecated
+//	public static int insert(String table, V data) throws SQLException {
+//		return Helper.insert(table, data);
+//	}
 
 	/**
 	 * delete data by q
@@ -189,9 +195,9 @@ public final class Data extends Bean {
 	 * @param q     the query
 	 * @return the number impacted
 	 */
-	public static int delete(String table, W q) {
-		return Helper.delete(table, q);
-	}
+//	public static int delete(String table, W q) {
+//		return Helper.delete(table, q);
+//	}
 
 	/**
 	 * @Deprecated
@@ -199,8 +205,8 @@ public final class Data extends Bean {
 	 * @param q
 	 * @return
 	 */
-	public static int remove(String table, W q) {
-		return Helper.delete(table, q);
-	}
+//	public static int remove(String table, W q) {
+//		return Helper.delete(table, q);
+//	}
 
 }

@@ -15,11 +15,16 @@
 package org.giiwa.app.web.admin;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
@@ -32,15 +37,13 @@ import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.Digest;
-import org.giiwa.misc.Host;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.Shell;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.net.mq.MQ.Request;
 import org.giiwa.snmp.SampleAgent;
 import org.giiwa.task.Task;
 import org.giiwa.web.*;
-import org.giiwa.web.Module;
 
 /**
  * web api: /admin/setting <br>
@@ -86,7 +89,7 @@ public class setting extends Controller {
 	 * @param name the name
 	 * @return the object
 	 */
-	@Path(path = "reset/(.*)", login = true, access = "access.config.admin")
+	@Path(path = "reset/(.*)", login = true, access = "access.config.admin", oplog = true)
 	final public void reset(String name) {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
@@ -102,19 +105,22 @@ public class setting extends Controller {
 				s.module = this.module;
 				s.reset();
 
-				GLog.oplog.warn("setting", "reset", "reset " + name, login, this.ip());
+				GLog.oplog.warn(this, "reset", "reset " + name);
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "reset", e.getMessage(), e, login, this.ip());
+				GLog.oplog.error(this, "reset", e.getMessage(), e);
 			}
 		}
 	}
 
-	@Path(path = "getconf", login = true, access = "access.config.admin")
+	@Path(path = "getconf", login = true, access = "access.config.admin", oplog = true)
 	final public void getconf() {
 
-		File f1 = new File(Controller.GIIWA_HOME + "/giiwa.properties");
+		File f1 = new File("/data/etc/giiwa.properties");
+		if (!f1.exists()) {
+			f1 = new File(Controller.GIIWA_HOME + "/giiwa.properties");
+		}
 		if (f1.exists()) {
 			String s = IOUtil.read(f1, "UTF-8");
 			this.set("text", s);
@@ -124,14 +130,36 @@ public class setting extends Controller {
 
 	}
 
-	@Path(path = "editconf", login = true, access = "access.config.admin")
+	@Path(path = "editconf", login = true, access = "access.config.admin", oplog = true)
 	final public void editconf() {
 
-		File f1 = new File(Controller.GIIWA_HOME + "/giiwa.properties");
-		String s = this.getHtml("text");
+		log.warn("write giiwa.properties by " + login.name + ", " + this.ipPath());
 
+		File f1 = new File("/data/etc/giiwa.properties");
+		if (f1.exists()) {
+			f1.renameTo(
+					new File("/data/etc/giiwa.properties." + lang.format(System.currentTimeMillis(), "yyyyMMddHHmm")));
+			f1 = new File("/data/etc/giiwa.properties");
+		}
+
+		X.IO.mkdirs(f1.getParentFile());
+
+		String s = this.getHtml("text");
 		IOUtil.write(f1, "UTF-8", s);
-		GLog.oplog.warn(setting.class, "editconf", "update giiwa.properties", login, this.ip());
+
+		try {
+			Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+			perms.add(PosixFilePermission.OWNER_READ);
+			perms.add(PosixFilePermission.OWNER_WRITE);
+			Files.setPosixFilePermissions(Paths.get(f1.getAbsolutePath()), perms);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		Config.init(f1);
+
+		GLog.oplog.warn(this, "editconf", "update giiwa.properties\n" + s);
+		GLog.securitylog.warn(this, "editconf", "update giiwa.properties\n" + s);
 
 		this.set(X.MESSAGE, lang.get("save.success")).send(200);
 
@@ -143,7 +171,7 @@ public class setting extends Controller {
 	 * @param name the name
 	 * @return the object
 	 */
-	@Path(path = "get/(.*)", login = true, access = "access.config.admin")
+	@Path(path = "get/(.*)", login = true, access = "access.config.admin", oplog = true)
 	public String get1(String name) {
 		Class<? extends setting> c = settings.get(name);
 		if (log.isDebugEnabled())
@@ -164,7 +192,7 @@ public class setting extends Controller {
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "get", e.getMessage(), e, login, this.ip());
+				GLog.oplog.error(this, path, e.getMessage(), e);
 
 				this.show("/admin/setting.html");
 			}
@@ -178,7 +206,7 @@ public class setting extends Controller {
 	 *
 	 * @param name the name
 	 */
-	@Path(path = "set/(.*)", login = true, access = "access.config.admin")
+	@Path(path = "set/(.*)", login = true, access = "access.config.admin", oplog = true)
 	final public void set(String name) {
 
 		Class<? extends setting> c = settings.get(name);
@@ -279,11 +307,23 @@ public class setting extends Controller {
 			Global.setConfig("uid.next.s1", this.getLong("uid.next.s1"));
 
 			Global.setConfig("site.group", this.getString("site.group"));
+			Global.setConfig("cache.url", this.getString("cache.url"));
+			Global.setConfig("cache.user", this.getString("cache.user"));
+			{
+				String s = this.getString("cache.passwd");
+				if (!X.isEmpty(s)) {
+					Global.setConfig("cache.passwd", s);
+				}
+			}
 
 			Global.setConfig("dfile.copies", this.getInt("dfile.copies", 0));
 			Global.setConfig("f.upload.login", X.isSame(this.getString("f.upload.login"), "on") ? 1 : 0);
+			Global.setConfig("f.upload.whitelist", this.getHtml("f.upload.whitelist"));
+			Global.setConfig("f.upload.path", this.get("f.upload.path"));
+
 			Global.setConfig("f.g.login", X.isSame(this.getString("f.g.login"), "on") ? 1 : 0);
 			Global.setConfig("f.g.online", X.isSame(this.getString("f.g.online"), "on") ? 1 : 0);
+			Global.setConfig("f.g.whitelist", this.getHtml("f.g.whitelist"));
 
 			Global.setConfig("zookeeper.server", this.getString("zookeeper.server"));
 
@@ -296,6 +336,8 @@ public class setting extends Controller {
 				alive = -1;
 			}
 			Global.setConfig("session.alive", alive);
+
+			Global.setConfig("session.httponly", X.isSame("on", this.getString("session.httponly")) ? 1 : 0);
 
 			Global.setConfig("cookie.samesite", this.get("cookie.samesite"));
 
@@ -335,6 +377,8 @@ public class setting extends Controller {
 			Global.setConfig("glog.keep.days", this.getInt("glog.keep.days"));
 			Global.setConfig("web.bg.watermark", X.isSame("on", this.getString("web.bg.watermark")) ? 1 : 0);
 			Global.setConfig("iframe.options", this.getString("iframe.options"));
+
+			Global.setConfig("temp.max.age", this.getInt("temp.max.age"));
 
 			Global.setConfig("glog.rsyslog", X.isSame("on", this.getString("glog.rsyslog")) ? 1 : 0);
 			Global.setConfig("glog.rsyslog.host", this.getString("glog.rsyslog.host"));
@@ -395,13 +439,19 @@ public class setting extends Controller {
 			this.set("cross_domain", Global.getString("cross.domain", "no"));
 			this.set("cross_header", Global.getString("cross.header", "Content-Type, accept, Origin"));
 
-			this.set("cache_url", Config.getConf().getString("cache.url", null));
-			this.set("db_url", Config.getConf().getString("db.url", null));
+			String dburl = Config.getConf().getString("db.url", null);
+			if (!X.isEmpty(dburl)) {
+				int i = dburl.indexOf("?");
+				if (i > 0) {
+					dburl = dburl.substring(0, i);
+				}
+			}
+			this.set("db_url", dburl);
 			this.set("db_user", Config.getConf().getString("db.user", null));
 
 			this.set("roles", Role.load(0, 100));
 
-			this.set("machineid", Digest.md5(Host.getMAC() + "/" + Local.id()));
+//			this.set("machineid", Digest.md5(Host.getMAC() + "/" + Local.id()));
 
 			this.set("sso_role", Global.getString("user.login.sso.role", ""));
 
@@ -410,19 +460,57 @@ public class setting extends Controller {
 						W.create().and("lastcheck", System.currentTimeMillis() - X.ADAY, W.OP.gte).sort("created"), 0,
 						1024);
 				String code = "";
-//				for (Node o : l1) {
-				Node o = Local.node();
-				if (!X.isEmpty(o.mac)) {
-					for (String mac : o.mac) {
-						SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-						random.setSeed((o.id + "/" + mac).getBytes());
-						byte s1 = (byte) (random.nextInt(117) + 10);
-						if (!code.contains(Byte.toString(s1))) {
-							code += s1 + "|";
+
+//				List<String> cpuids = Host.getCpuID();
+//				if (cpuids != null && !cpuids.isEmpty()) {
+//					for (String s : cpuids) {
+//						SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+//						random.setSeed(s.getBytes());
+//						byte s1 = (byte) (random.nextInt(117) + 10);
+//						if (!code.contains(Byte.toString(s1))) {
+//							code += s1 + "|";
+//						}
+//					}
+//				}
+
+				if (X.isEmpty(code)) {
+					// in docker
+					// cat /proc/self/mountinfo |grep "/etc/resolv.conf"
+					// 673 648 259:2
+					// /var/lib/docker/containers/f6389a4715a8cf6bf8c79ed35bb6198f3db0b77d285e705b7185ef167f71a8d9/resolv.conf
+					// /etc/resolv.conf rw,relatime - ext4 /dev/nvme0n1p2 rw,errors=remount-ro
+					try {
+						String s = Shell.run("cat /proc/self/mountinfo |grep \"/etc/resolv.conf\"", X.AMINUTE);
+						if (!X.isEmpty(s)) {
+							s = X.split(s, " ")[3];
+							SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+							random.setSeed(s.getBytes());
+							byte s1 = (byte) (random.nextInt(117) + 10);
+							if (!code.contains(Byte.toString(s1))) {
+								code += s1 + "|";
+							}
 						}
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
 					}
 				}
-//				}
+
+				if (X.isEmpty(code)) {
+					Node o = Local.node();
+					if (!X.isEmpty(o.mac)) {
+						if (X.isEmpty(code)) {
+							for (String mac : o.mac) {
+								SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
+								random.setSeed((o.id + "/" + mac).getBytes());
+								byte s1 = (byte) (random.nextInt(117) + 10);
+								if (!code.contains(Byte.toString(s1))) {
+									code += s1 + "|";
+								}
+							}
+						}
+
+					}
+				}
 				if (X.isEmpty(code)) {
 					this.set("serial", "nodes=" + l1.size());
 				} else {

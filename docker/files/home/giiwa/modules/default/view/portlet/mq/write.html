@@ -1,0 +1,72 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/mq/write/more?__node=$!__node&id=$!id')"><i class='icon-menu'></i></a>
+
+<div id='mq_write_$!requestid'></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('mq_write_$!requestid', {
+	    chart: {
+	        type: 'line'
+	    },
+	    title: {
+	        text: '$!name1 - $lang.get("portlet.mq.write.title")'
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	max: $max,
+	    	min: 0,
+    		title: {
+	            text: ''
+	        }
+	    },
+	      legend: {
+	          enabled: true
+	        },
+	    tooltip: {
+	    	   formatter:function(){
+	    		      return this.series.name+':<b>' 
+	    		      + Highcharts.numberFormat(this.y,0,'.', ',') 
+	    		      + '</b><br>' 
+	    		      + Highcharts.dateFormat('%H:%M', this.x);
+	    		}
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+    				{name: "$lang.get('mq.write.max')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.max},#end]},
+    				{name: "$lang.get('mq.write.avg')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.avg},#end]},
+    				{name: "$lang.get('mq.write.min')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.min},#end]}
+    			], 
+	});
+
+	function reload() {
+		if($('#mq_write_$!requestid').length > 0) {
+			$.post('/portlet/mq/write/data?__node=$!__node&id=$!id', {}, function(d){
+				if(d.state == 200) {
+					var series=t.series; 
+			        while(series.length > 0){
+			          	series[0].remove(false); 
+			       	}
+			       	t.addSeries(d.data[0]);
+			       	t.addSeries(d.data[1]);
+			       	t.addSeries(d.data[2]);
+			       	t.redraw();			
+				}
+		    })
+			giiwa.call(reload, 60000);
+		}
+	}
+	
+	giiwa.call(reload, 60000);
+	
+})
+</script>
+

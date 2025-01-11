@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.net.mq;
 
 import java.io.ByteArrayInputStream;
@@ -14,6 +28,7 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
@@ -21,9 +36,8 @@ import org.giiwa.dao.Counter;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.MD5;
 import org.giiwa.task.Function;
-import org.giiwa.task.SysTask;
-import org.giiwa.task.Task;
 
 /**
  * the distribute message system, <br>
@@ -68,8 +82,10 @@ public abstract class MQ {
 			String type = Global.getString("mq.type", X.EMPTY);
 			if (X.isSame(type, "activemq")) {
 				mq = ActiveMQ.create();
-//			} else if (X.isSame(type, "kafkamq")) {
-//				mq = KafkaMQ.create();
+			} else if (X.isSame(type, "rocketmq")) {
+				mq = RocketMQ.create();
+			} else if (X.isSame(type, "mqtt")) {
+				mq = MQTT.create();
 			} else {
 				mq = LocalMQ.create();
 			}
@@ -106,6 +122,7 @@ public abstract class MQ {
 	 * @return true if success or false if failed.
 	 */
 	public static boolean init(String node, String group, String url) {
+
 		if (url.startsWith("failover:")) {
 			Global.setConfig("mq.type", "activemq");
 			Global.setConfig("activemq.url", url);
@@ -156,54 +173,24 @@ public abstract class MQ {
 
 	protected abstract void _stop();
 
-	private static class _Caller extends SysTask {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		String name;
-		IStub cb;
-		List<Request> queue;
-
-		@Override
-		public String toString() {
-			return "Caller [name=" + name + ", cb=" + cb + "]";
+	protected static void process(final String name, final List<Request> rs, final IStub cb) {
+		if (cb == null) {
+			return;
 		}
 
-		static Task call(String name, IStub cb, List<Request> l1) {
-			_Caller c = new _Caller();
-			c.cb = cb;
-			c.name = name;
-			c.queue = l1;
-			c.schedule(0);
-			return c;
-		}
+		for (Request r : rs) {
+			try {
+				if (r.tt > 0)
+					read.add(System.currentTimeMillis() - r.tt, null);
 
-		@Override
-		public void onExecute() {
-			while (!queue.isEmpty()) {
-				try {
-					Request r = queue.remove(0);
-					if (r != null) {
+				r._from = cb;
 
-						if (r.tt > 0)
-							read.add(System.currentTimeMillis() - r.tt);
-
-						r._from = cb;
-						cb.onRequest(r.seq, r);
-					}
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				}
+				cb.onRequest(r.seq, r);
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
 			}
 		}
 
-	}
-
-	protected static void process(final String name, final List<Request> rs, final IStub cb) {
-		_Caller.call(name, cb, rs);
 	}
 
 	protected abstract long _topic(String to, Request req) throws Exception;
@@ -273,7 +260,7 @@ public abstract class MQ {
 			mq._topic(to, req);
 			return req.seq;
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), null);
 		}
 	}
 
@@ -299,7 +286,7 @@ public abstract class MQ {
 			return mq._send(to, req);
 
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), null);
 		}
 	}
 
@@ -381,7 +368,7 @@ public abstract class MQ {
 		public String from; // reply path
 		public String cmd; // command
 		public int priority = 1;
-		public int ttl = (int) X.AMINUTE * 10;
+		public final int ttl = (int) X.AMINUTE * 10;
 		public int persistent = DeliveryMode.PERSISTENT;// NON_PERSISTENT;
 		public byte[] data;
 
@@ -428,29 +415,49 @@ public abstract class MQ {
 			return this;
 		}
 
-		public Request ttl(long t) {
-			this.ttl = (int) t;
-			return this;
-		}
+//		public Request ttl(long t) {
+//			this.ttl = (int) t;
+//			return this;
+//		}
 
 		public Request put(Object obj) throws Exception {
 
 			this.data = X.getBytes(obj);
 
-			if (log.isDebugEnabled()) {
-				log.debug("put data, size=" + data.length);
+			if (this.data != null && this.data.length > 1024) {
+				if (log.isDebugEnabled()) {
+					log.debug("data.length=" + data.length + ", class=" + obj.getClass());
+				}
+				String dataid = "mq/=" + MD5.md5(this.data);
+				Cache.set(dataid, this.data, X.AMINUTE);
+				this.data = dataid.getBytes();
 			}
 
-//			log.warn("put data, size=" + data.length);
-
 			return this;
+
 		}
 
 		public <T> T get() throws Exception {
 
-//			log.warn("got data, size=" + data.length);
+			if (data == null || data.length == 0) {
+				return null;
+			}
 
-			return X.fromBytes(data);
+			if (data.length == 36 && data[0] == 'm' && data[1] == 'q' && data[2] == '/' && data[3] == '=') {
+				// 6D712F3D
+				String dataid = new String(data);
+
+				Object o = Cache.get(dataid);
+				T t = X.fromBytes((byte[]) o);
+				return t;
+			}
+			try {
+				return X.fromBytes(data);
+			} catch (Exception e) {
+				log.error("data=" + data.length + ", data=" + new String(data), e);
+				throw e;
+			}
+
 		}
 
 		public void response(Object data) throws Exception {
@@ -501,6 +508,7 @@ public abstract class MQ {
 
 		public void reply(Request req) throws Exception {
 			req.seq = seq;
+			req.from = Local.label();
 			MQ.send(from, req);
 		}
 

@@ -1,4 +1,4 @@
-<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/cpu/more?__node=$!__node&id=$!id')"><i class='icon-menu'></i></a>
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/cpu/more?id=$!id')"><i class='icon-menu'></i></a>
 
 <div id='cpu_$!requestid'></div>
 
@@ -9,7 +9,7 @@ $(function(){
 	        type: 'area'
 	    },
 	    title: {
-	        text: "$!name - CPU[$!cores]#if($temp)($!temp)#end"
+	        text: "$!name - CPU[$!cores]@$!{ghz}GHz"
 	    },
 	    xAxis: {
 	    		type: 'datetime'

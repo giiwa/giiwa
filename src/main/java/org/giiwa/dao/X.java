@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,10 +28,14 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -43,6 +48,7 @@ import org.giiwa.json.JSON;
 import org.giiwa.misc.CSV;
 import org.giiwa.misc.GImage;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.Zip;
 import org.giiwa.task.BiConsumer;
 import org.giiwa.task.Function;
 import org.giiwa.web.Language;
@@ -145,6 +151,24 @@ public final class X {
 			return false;
 		}
 
+		if (s1.equals(s2)) {
+			return true;
+		}
+
+		if (s1 instanceof Number && s2 instanceof Number) {
+			if ((s1 instanceof Short || s1 instanceof Integer || s1 instanceof Long)
+					&& (s2 instanceof Short || s2 instanceof Integer || s2 instanceof Long)) {
+				return X.toLong(s1) == X.toLong(s2);
+			}
+
+			if ((s1 instanceof Float || s1 instanceof Double) && (s2 instanceof Float || s2 instanceof Double)) {
+				double d1 = X.toDouble(s1);
+				double d2 = X.toDouble(s2);
+				// 0.10000000149011612
+				return d1 > (d2 - 0.00000001) && d1 < (d2 + 0.00000001);
+			}
+		}
+
 		if (s1 instanceof String && s2 instanceof String) {
 			return ((String) s1).equalsIgnoreCase((String) s2);
 		}
@@ -173,6 +197,21 @@ public final class X {
 			return true;
 		}
 
+		return s1.equals(s2);
+
+	}
+
+	public static boolean isSame2(Object s1, Object s2) {
+		if (s1 == s2)
+			return true;
+
+		if (s1 == null && s2 == null)
+			return true;
+
+		if (s1 == null || s2 == null) {
+			return false;
+		}
+
 		if (s1 instanceof Number && s2 instanceof Number) {
 			if ((s1 instanceof Short || s1 instanceof Integer || s1 instanceof Long)
 					&& (s2 instanceof Short || s2 instanceof Integer || s2 instanceof Long)) {
@@ -182,8 +221,36 @@ public final class X {
 			if ((s1 instanceof Float || s1 instanceof Double) && (s2 instanceof Float || s2 instanceof Double)) {
 				double d1 = X.toDouble(s1);
 				double d2 = X.toDouble(s2);
-				return d1 > (d2 - 0.0000000001) && d1 < (d2 + 0.0000000001);
+				return d1 > (d2 - 0.00000001) && d1 < (d2 + 0.00000001);
 			}
+		}
+
+		if (s1 instanceof String && s2 instanceof String) {
+			return ((String) s1).equals((String) s2);
+		}
+
+		if (s1.getClass().isArray()) {
+			s1 = X.asList(s1, e -> e);
+
+		}
+
+		if (s2.getClass().isArray()) {
+			s2 = X.asList(s2, e -> e);
+		}
+
+		if (s1 instanceof Collection && s2 instanceof Collection) {
+			Collection<?> c1 = (Collection<?>) s1;
+			Collection<?> c2 = (Collection<?>) s2;
+
+			for (Object o1 : c1) {
+				if (!c2.contains(o1))
+					return false;
+			}
+			for (Object o2 : c2) {
+				if (!c1.contains(o2))
+					return false;
+			}
+			return true;
 		}
 
 		return s1.equals(s2);
@@ -206,6 +273,9 @@ public final class X {
 				return Math.round((Float) v);
 			} else if (v instanceof Number) {
 				return ((Number) v).longValue();
+			} else if (v instanceof byte[]) {
+				byte[] a = (byte[]) v;
+				return ByteBuffer.wrap(a).order(ByteOrder.BIG_ENDIAN).getLong();
 			}
 
 			String s = v.toString();
@@ -281,6 +351,14 @@ public final class X {
 		return defaultValue;
 	}
 
+	public static long toLong2(byte[] v) {
+
+		if (v != null) {
+			return ByteBuffer.wrap(v).order(ByteOrder.LITTLE_ENDIAN).getLong();
+		}
+		return 0;
+	}
+
 	/**
 	 * safely parse the object to integer, if failed return 0.
 	 *
@@ -306,6 +384,9 @@ public final class X {
 				return Math.round((Float) v);
 			} else if (v instanceof Number) {
 				return ((Number) v).intValue();
+			} else if (v instanceof byte[]) {
+				byte[] a = (byte[]) v;
+				return ByteBuffer.wrap(a).order(ByteOrder.BIG_ENDIAN).getInt();
 			}
 
 			String s = v.toString();
@@ -384,6 +465,19 @@ public final class X {
 	}
 
 	/**
+	 * 
+	 * @param v
+	 * @return
+	 */
+	public static int toInt2(byte[] v) {
+		if (v != null) {
+			return ByteBuffer.wrap(v).order(ByteOrder.LITTLE_ENDIAN).getInt();
+		}
+
+		return 0;
+	}
+
+	/**
 	 * test the object is empty? null , empty string, empty collection, empty map.
 	 *
 	 * @param s the object, may string, list, map
@@ -395,8 +489,9 @@ public final class X {
 			return true;
 		}
 
-		if (s instanceof Undefined)
+		if (s instanceof Undefined) {
 			return true;
+		}
 
 		if (s instanceof String) {
 			return X.EMPTY.equals(s);
@@ -405,7 +500,9 @@ public final class X {
 		} else if (s instanceof Map) {
 			return ((Map) s).isEmpty();
 		}
+
 		return false;
+
 	}
 
 	/**
@@ -426,6 +523,9 @@ public final class X {
 					return f;
 
 				return defaultValue;
+			} else if (v instanceof byte[]) {
+				byte[] a = (byte[]) v;
+				return ByteBuffer.wrap(a).order(ByteOrder.BIG_ENDIAN).getFloat();
 			}
 
 			String s = v.toString();
@@ -520,6 +620,11 @@ public final class X {
 	private static final char[][] DIGS = { "０１２３４５６７８９".toCharArray(), "零一二三四五六七八九十".toCharArray(),
 			"零壹贰叁肆伍陆柒捌玖拾".toCharArray() };
 
+	public static final int KB = 1024;
+	public static final int MB = 1000 * KB;
+	public static final int GB = 1000 * MB;
+	public static final int TB = 1000 * GB;
+
 	/**
 	 * test the "s" and return a number, that convert Chinese number to real number.
 	 *
@@ -551,6 +656,14 @@ public final class X {
 		return toDouble(v, 0);
 	}
 
+	public static double toDouble2(byte[] v) {
+		return ByteBuffer.wrap(v).order(ByteOrder.LITTLE_ENDIAN).getDouble();
+	}
+
+	public static float toFloat2(byte[] v) {
+		return ByteBuffer.wrap(v).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+	}
+
 	/**
 	 * safely parse the object to double, if failed return default value.
 	 * 
@@ -565,6 +678,9 @@ public final class X {
 				if (Double.isFinite(d))
 					return d;
 				return defaultValue;
+			} else if (v instanceof byte[]) {
+				byte[] a = (byte[]) v;
+				return ByteBuffer.wrap(a).order(ByteOrder.BIG_ENDIAN).getDouble();
 			}
 
 			String s = v.toString();
@@ -645,7 +761,7 @@ public final class X {
 						return defaultValue;
 					}
 				} catch (Exception e) {
-					log.error(e);
+					log.error("v=" + v, e);
 				}
 			}
 		}
@@ -663,13 +779,8 @@ public final class X {
 		return df.format(X.toDouble(v));
 	}
 
-	/**
-	 * test the "s" is number.
-	 *
-	 * @param s the s
-	 * @return boolean
-	 */
-	public static boolean isNumber(Object s) {
+	public static boolean isFloat(Object s) {
+
 		if (s == null) {
 			return false;
 		}
@@ -691,6 +802,38 @@ public final class X {
 					return false;
 				}
 			} else if (c == '-' && i == 0) {
+				continue;
+			} else if (c < '0' || c > '9') {
+				return false;
+			}
+		}
+
+		return true;
+
+	}
+
+	/**
+	 * test the "s" is number.
+	 *
+	 * @param s the s
+	 * @return boolean
+	 */
+	public static boolean isNumber(Object s) {
+		if (s == null) {
+			return false;
+		}
+		if (s instanceof Number) {
+			return true;
+		}
+
+		String s1 = s.toString();
+		if (s1.length() == 0) {
+			return false;
+		}
+
+		for (int i = 0; i < s1.length(); i++) {
+			char c = s1.charAt(i);
+			if (c == '-' && i == 0) {
 				continue;
 			} else if (c < '0' || c > '9') {
 				return false;
@@ -964,6 +1107,7 @@ public final class X {
 	}
 
 	public static boolean isIn(String s1, String... s2) {
+
 		if (s1 == null)
 			return false;
 
@@ -976,9 +1120,33 @@ public final class X {
 			}
 		}
 		return false;
+
 	}
 
 	public static boolean isIn(Object s1, Object... s2) {
+
+		if (s2 == null)
+			return false;
+
+		for (Object s : s2) {
+			if (X.isArray(s) && !X.isArray(s1)) {
+				for (Object ss : X.asList(s, null)) {
+					if (X.isArray(ss)) {
+						if (X.isIn(s1, ss)) {
+							return true;
+						}
+					} else if (X.isSame(s1, ss)) {
+						return true;
+					}
+				}
+			} else if (X.isSame(s1, s)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isIn2(Object s1, Object... s2) {
 		if (s1 == null)
 			return false;
 
@@ -986,7 +1154,7 @@ public final class X {
 			return false;
 
 		for (Object s : s2) {
-			if (X.isSame(s1, s)) {
+			if (X.isSame2(s1, s)) {
 				return true;
 			}
 		}
@@ -1003,6 +1171,36 @@ public final class X {
 		return l2;
 	}
 
+	public static boolean isArray(Object o) {
+
+		if (o == null) {
+			return false;
+		}
+
+		if (o instanceof ScriptObjectMirror) {
+			ScriptObjectMirror m = (ScriptObjectMirror) o;
+			if (m.isArray()) {
+				return true;
+//				for (Object o2 : m.values()) {
+//					if (o2 instanceof ScriptObjectMirror) {
+//						ScriptObjectMirror m1 = (ScriptObjectMirror) o2;
+//						return m1.isArray();
+//					} else {
+//						return false;
+//					}
+//				}
+			} else {
+				return false;
+			}
+		} else if (o instanceof Iterable) {
+			return true;
+		} else if (o.getClass().isArray()) {
+			return true;
+		}
+		return false;
+
+	}
+
 	/**
 	 * to list
 	 * 
@@ -1014,6 +1212,7 @@ public final class X {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static <T> List<T> asList(Object o, Function<Object, T> cb) {
+
 		if (o == null) {
 			return new ArrayList<T>();
 		}
@@ -1395,15 +1594,22 @@ public final class X {
 		return number.substring(0, number.length() - s.length()) + s;
 	}
 
-	public static boolean isCauseBy(Throwable e, String regex) {
+	public static boolean isCauseBy(Throwable e, String regex, Class<?>... ee) {
 		if (e == null)
 			return false;
 
+		if (ee != null) {
+			for (Class<?> e1 : ee) {
+				if (e.getClass().equals(e1)) {
+					return true;
+				}
+			}
+		}
 		String s = e.getMessage();
 		if (!X.isEmpty(s)) {
 			s = s.replaceAll("\r", X.EMPTY).replaceAll("\n", X.EMPTY);
-//			if (log.isDebugEnabled())
-//				log.debug("s=" + s + ", matches?" + s.matches(regex));
+			if (log.isDebugEnabled())
+				log.debug("s=" + s + ", matches?" + s.matches(regex));
 
 			if (s.matches(regex))
 				return true;
@@ -1558,10 +1764,23 @@ public final class X {
 			sb.append("]");
 			return sb.toString();
 		} else if (o instanceof Throwable) {
+
 			StringWriter sw = new StringWriter();
 			PrintWriter out = new PrintWriter(sw);
 			((Throwable) o).printStackTrace(out);
-			return sw.toString();
+
+			String s = sw.toString();
+			int i = s.indexOf("\n");
+			if (i > 0) {
+				String s1 = s.substring(0, i);
+				int i1 = s1.indexOf(":");
+				if (i1 > 0) {
+					s1 = s1.substring(i1 + 1).trim();
+					s = s1 + s.substring(i);
+					s = s.replaceAll("\t", X.EMPTY);
+				}
+			}
+			return s;
 		} else {
 			return o.toString();
 		}
@@ -1572,8 +1791,9 @@ public final class X {
 		if (o == null)
 			return null;
 
-		if (!(o instanceof Serializable))
+		if (!(o instanceof Serializable)) {
 			throw new Exception("obj is not Serializable! obj.class=" + o.getClass());
+		}
 
 		ByteArrayOutputStream bb = new ByteArrayOutputStream();
 		try {
@@ -1733,19 +1953,11 @@ public final class X {
 			return 1;
 		}
 
-		if (o1 instanceof Byte || o1 instanceof Short || o1 instanceof Integer) {
-			int c1 = X.toInt(o1);
-			int c2 = X.toInt(o2);
-			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
-		} else if (o1 instanceof Long) {
+		if (o1 instanceof Byte || o1 instanceof Short || o1 instanceof Integer || o1 instanceof Long) {
 			long c1 = X.toLong(o1);
 			long c2 = X.toLong(o2);
 			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
-		} else if (o1 instanceof Float) {
-			float c1 = X.toFloat(o1);
-			float c2 = X.toFloat(o2);
-			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
-		} else if (o1 instanceof Double) {
+		} else if (o1 instanceof Float || o1 instanceof Double) {
 			double c1 = X.toDouble(o1);
 			double c2 = X.toDouble(o2);
 			return c1 < c2 ? -1 : (c1 == c2) ? 0 : 1;
@@ -1796,8 +2008,8 @@ public final class X {
 			}
 		}
 
-		if (log.isInfoEnabled()) {
-			log.info("false, rr=" + Arrays.toString(rr) + ", time=" + time);
+		if (log.isDebugEnabled()) {
+			log.debug("false, rr=" + Arrays.toString(rr) + ", time=" + time);
 		}
 
 		return false;
@@ -1872,6 +2084,139 @@ public final class X {
 		} else {
 			return (length >= 0 ? "" : "-") + ((int) d) + UNITS[i];
 		}
+	}
+
+	public static long time(String time) {
+
+		String[] ss = X.split(time, "[-]");
+		if (ss.length == 0) {
+			return X.AMINUTE;
+		}
+
+		long[] tt = new long[ss.length];
+		for (int i = 0; i < tt.length; i++) {
+
+			String s = ss[i];
+			char c = s.charAt(0);
+			if (c == '~' || c == '～') {
+				s = s.substring(1);
+			}
+
+			long t2 = X.AMINUTE;
+			if (s.endsWith("h") || s.endsWith("H")) {
+				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.AHOUR;
+			} else if (s.endsWith("d") || s.endsWith("D")) {
+				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.ADAY;
+			} else if (s.endsWith("m")) {
+				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.AMINUTE;
+			} else if (s.endsWith("M")) {
+				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.AMONTH;
+			} else if (s.endsWith("w") || s.endsWith("W")) {
+				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.AWEEK;
+			} else if (s.endsWith("y") || s.endsWith("Y")) {
+				t2 = X.toInt(s.substring(0, s.length() - 1)) * X.AYEAR;
+			} else if (s.endsWith("s") || s.endsWith("S")) {
+				t2 = X.toInt(s.substring(0, s.length() - 1)) * 1000;
+			} else if (!X.isEmpty(s)) {
+				// micro-seconds
+				t2 = X.toInt(s);
+				if (t2 < 10) {
+					t2 = 10;
+				}
+			}
+
+			if (c == '~' || c == '～') {
+				t2 = X.toLong(t2 + t2 * Math.random()) * 2 / 3;
+			}
+			tt[i] = t2;
+		}
+
+		if (tt.length < 2) {
+			return tt[0];
+		}
+
+		return X.toLong((tt[1] - tt[0]) * Math.random() + tt[0]);
+
+	}
+
+	public static byte[] zip(byte[] bytes) throws IOException {
+		return Zip.zip(bytes);
+	}
+
+	public static byte[] unzip(byte[] bb) throws Exception {
+		return Zip.unzip(bb);
+	}
+
+	public static boolean callBy(String... packages) {
+		Exception e = new Exception();
+		StackTraceElement[] ss = e.getStackTrace();
+		if (ss.length > 1) {
+//		for (StackTraceElement s : ss) {
+			StackTraceElement s = ss[1];
+			for (String pack : packages) {
+				if (s.getClassName().indexOf(pack) > -1) {
+					return true;
+				}
+			}
+//		}
+		}
+
+		return false;
+	}
+
+	public static List<?> sort(List<?> l1, List<?> priority) {
+
+		Collections.sort(l1, new Comparator<Object>() {
+
+			@Override
+			public int compare(Object o1, Object o2) {
+				if (priority.contains(o1)) {
+					return -1;
+				}
+				if (priority.contains(o2)) {
+					return 1;
+				}
+				return X.compareTo(o1, o2);
+			}
+
+		});
+
+		return l1;
+	}
+
+	public static short toShort(byte[] a) {
+		return ByteBuffer.wrap(a).order(ByteOrder.BIG_ENDIAN).getShort();
+	}
+
+	public static short toShort2(byte[] a) {
+		return ByteBuffer.wrap(a).order(ByteOrder.LITTLE_ENDIAN).getShort();
+	}
+
+	/**
+	 * format filename
+	 * 
+	 * @param filename
+	 * @return
+	 */
+	public static String filename(String filename) {
+		File f1 = new File(filename);
+		String name = f1.getName();
+		if (f1.getParent() != null) {
+			return f1.getParent() + "/" + name.replaceAll(FILE_NAME_EXCLUDE, "_");
+		}
+		return name.replaceAll(FILE_NAME_EXCLUDE, "_");
+	}
+
+	private static String FILE_NAME_EXCLUDE = "[\\/:*?\"<>|]";
+
+	public static JSON get(List<JSON> l1, String name, Object value) {
+		for (JSON j1 : l1) {
+			Object v2 = j1.get(name);
+			if (value == v2 || X.isSame(value, v2)) {
+				return j1;
+			}
+		}
+		return null;
 	}
 
 }

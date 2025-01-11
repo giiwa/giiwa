@@ -71,14 +71,14 @@ public class GiiwaFilter implements Filter {
 			String domain = Global.getString("cross.domain", "");
 
 			if ("GET".equalsIgnoreCase(method)) {
-				
+
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
 				Controller.process(uri, r1, r2, "GET", t);
 
 			} else if ("POST".equalsIgnoreCase(method)) {
-				
+
 				if (!X.isEmpty(domain)) {
 					r2.addHeader("Access-Control-Allow-Origin", domain);
 				}
@@ -86,16 +86,27 @@ public class GiiwaFilter implements Filter {
 				Controller.process(uri, r1, r2, "POST", t);
 
 			} else if ("OPTIONS".equalsIgnoreCase(method)) {
-				
+
 				r2.setStatus(200);
 				r2.addHeader("Access-Control-Allow-Origin", domain);
 				r2.addHeader("Access-Control-Allow-Headers", Global.getString("cross.header", "forbidden"));
 				r2.getOutputStream().write(domain.getBytes());
-				
+
 			} else if ("HEAD".equalsIgnoreCase(method)) {
-				
+
 				log.warn("HEAD - uri=" + uri);
-				
+				if (!X.isEmpty(domain)) {
+					r2.addHeader("Access-Control-Allow-Origin", domain);
+				}
+				Controller.process(uri, r1, r2, "HEAD", t);
+
+			} else if ("PUT".equalsIgnoreCase(method)) {
+
+				log.warn("PUT - uri=" + uri);
+				if (!X.isEmpty(domain)) {
+					r2.addHeader("Access-Control-Allow-Origin", domain);
+				}
+				Controller.process(uri, r1, r2, "PUT", t);
 			}
 
 			// chain.doFilter(req, resp);

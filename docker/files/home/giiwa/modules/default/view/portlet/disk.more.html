@@ -1,0 +1,35 @@
+
+<div id='disk_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('disk_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.hint}</b>'
+	       },
+	    series: [
+			{name: "$lang.get('disk.used')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.used, hint:"$lang.size($c.used)"},#end]},
+			{name: "$lang.get('disk.free')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.free, hint:"$lang.size($c.free)"},#end]}
+	    			], 
+	});
+
+})
+</script>
+

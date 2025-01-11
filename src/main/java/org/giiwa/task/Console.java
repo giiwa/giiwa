@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.task;
 
 import java.util.ArrayList;
@@ -8,9 +22,12 @@ import java.util.Stack;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.web.Language;
 
+@Comment()
 public class Console {
 
 	private static Map<String, List<Function<String, Boolean>>> listener = new HashMap<String, List<Function<String, Boolean>>>();
@@ -29,27 +46,31 @@ public class Console {
 
 	Stack<Long> marks = new Stack<Long>();
 
-	public int timeout(int secs) {
+	@Comment()
+	public int timeout(@Comment(text = "seconds") int secs) {
 		marks.push(timeout);
 		int s = X.toInt(timeout / 1000);
 		timeout = secs * 1000;
 		return s;
 	}
 
+	@Comment()
 	public void reset() {
 		if (!marks.isEmpty()) {
 			timeout = marks.pop();
 		}
 	}
 
-	public void timeout(int secs, Consumer<Long> func) {
+	@Comment()
+	public void timeout(@Comment(text = "seconds") int secs, @Comment(text = "timeoutfunc") Consumer<Long> func) {
 		timeout = secs * 1000;
 		timeoutfunc = func;
 		checker.schedule(timeout);
 		System.out.println("timeout checking in [" + timeout + "]ms");
 	}
 
-	public void log(Object message) {
+	@Comment(text = "记录日志")
+	public void log(@Comment(text = "message") Object message) {
 
 		last = System.currentTimeMillis();
 
@@ -64,7 +85,7 @@ public class Console {
 		String threadname = Thread.currentThread().getName();
 
 		if (log.isDebugEnabled()) {
-			log.debug("threadname=" + threadname + ", message=" + message);
+			log.debug("[DEBUG], threadname=" + threadname + ", message=" + message);
 		}
 
 		if (listener.isEmpty()) {
@@ -138,9 +159,11 @@ public class Console {
 
 	}
 
+	@Comment(hide = true)
 	public void exit(int status) {
 
 		log.warn("restart by console.", new Exception("restart"));
+		GLog.applog.warn("sys", "restart", "restart by console. thread=" + Thread.currentThread().getName());
 
 		Task.schedule(t -> {
 			System.exit(status);

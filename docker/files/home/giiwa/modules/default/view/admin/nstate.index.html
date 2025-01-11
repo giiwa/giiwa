@@ -1,0 +1,51 @@
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/nstate?__node=$!__node' class='selected'>$lang.get('a.nstate')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/nstate' method='get' #if($s && $s>0) style='display:none' #end >
+		<input type="hidden" name="__node" value="$!__node" />
+		<span><label><h3>$lang.get('node.label'):</h3><input type='text' name='name' value="$!name" /></label></span>
+		<span><label><h3>$lang.get('node.state.tag'):</h3>
+			<select name='tag'>
+				<option value='cpu' #if($tag=='cpu') selected #end>$lang.get('nstate.tag.cpu')</option>
+				<option value='mem' #if($tag=='mem') selected #end>$lang.get('nstate.tag.mem')</option>
+				<option value='fio' #if($tag=='fio') selected #end>$lang.get('nstate.tag.fio')</option>
+				<option value='disk' #if($tag=='disk') selected #end>$lang.get('nstate.tag.disk')</option>
+ 				<option value='net' #if($tag=='net') selected #end>$lang.get('nstate.tag.network')</option>
+				<option value='diskio' #if($tag=='diskio') selected #end>$lang.get('nstate.tag.diskio')</option>
+ 				<option value='db/read' #if($tag=='db/read') selected #end>$lang.get('nstate.tag.db/read')</option>
+				<option value='db/write' #if($tag=='db/write') selected #end>$lang.get('nstate.tag.db/write')</option>
+				<option value='db/times' #if($tag=='db/times') selected #end>$lang.get('nstate.tag.db/times')</option>
+				<option value='mq/read' #if($tag=='mq/read') selected #end>$lang.get('nstate.tag.mq/read')</option>
+				<option value='mq/write' #if($tag=='mq/write') selected #end>$lang.get('nstate.tag.mq/write')</option>
+				<option value='mq/times' #if($tag=='mq/times') selected #end>$lang.get('nstate.tag.mq/times')</option>
+				<option value='cache/read' #if($tag=='cache/read') selected #end>$lang.get('nstate.tag.cache/read')</option>
+				<option value='cache/write' #if($tag=='cache/write') selected #end>$lang.get('nstate.tag.cache/write')</option>
+				<option value='cache/times' #if($tag=='cache/times') selected #end>$lang.get('nstate.tag.cache/times')</option>
+				<option value='running' #if($tag=='running') selected #end>$lang.get('nstate.tag.running')</option>
+				<option value='pending' #if($tag=='pending') selected #end>$lang.get('nstate.tag.pending')</option>
+				<option value='tcpestablished' #if($tag=='tcpestablished') selected #end>$lang.get('nstate.tag.tcpestablished')</option>
+			</select>
+		</label></span>
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+	
+	<div class='s1tab #if($s && $s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+#foreach($f in $list)
+	#if($f.name($tag))
+	#foreach($n1 in $f.name($tag))
+	<div class="portlet" data-url="/portlet/$!tag?__node=$!__node&id=$!f.id&name=$n1"></div>
+	#end
+	#else
+	<div class="portlet" data-url="/portlet/$!tag?__node=$!__node&id=$!f.id"></div>
+	#end
+#end
+
+#parse('/widget/goto.page.html')

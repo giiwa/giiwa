@@ -6,9 +6,9 @@
 #parse('/widget/widget.message.html')
 
 <div class='notes'>
-	<span>Task( <i class='red'>$!running</i>//running, <i
+	<span>Task=(<i class='red'>$!running</i>//running, <i
 		class='grey'>$!pending</i>//pending)
-	</span>&nbsp; <span>Cores( <i class='green'>$!cores</i>)
+	</span>&nbsp; <span>Cores=(<i class='green'>$!cores</i>)
 	</span>
 </div>
 
@@ -65,16 +65,13 @@
 	$(function() {
 		$("#task-table").tablesorter({
 			headers : {
+				0 : {
+					sorter : false
+				},
 				2 : {
 					sorter : false
 				},
-				3 : {
-					sorter : false
-				},
-				9 : {
-					sorter : false
-				},
-				10 : {
+				4 : {
 					sorter : false
 				}
 			}

@@ -1,0 +1,17 @@
+<div class='tabs'>
+	<a href='/admin/dfile/stat?__node=$!__node' class="selected">$lang.get('a.dfile.stat')</a>
+	<a href='/admin/dfile/disk?__node=$!__node'>$lang.get('a.dfile.disk')</a>
+	<a href='/admin/dfile/folder?__node=$!__node'>$lang.get('a.dfile.folder')</a>
+</div>
+
+#foreach($p in $disks)
+<div style="display: inline-block;width: 100%;">
+	<div class="title" style='background:#23bbb0;color: white;padding: 6px 10px;'>$p.url : $p.path</div>
+	<div class="portlet" data-url="/portlet/dfile2/space?__node=$!__node&id=$p.id" style="margin-bottom: 20px;margin-top: 20px;"></div>
+	<div class="portlet" data-url="/portlet/dfile2/in?__node=$!__node&id=$p.id" style="margin-bottom: 20px;margin-top: 20px;"></div>
+	<div class="portlet" data-url="/portlet/dfile2/out?__node=$!__node&id=$p.id" style="margin-bottom: 20px;margin-top: 20px;"></div>
+	<div class="portlet" data-url="/portlet/dfile2/read?__node=$!__node&id=$p.id" style="margin-bottom: 20px;margin-top: 20px;"></div>
+	<div class="portlet" data-url="/portlet/dfile2/write?__node=$!__node&id=$p.id" style="margin-bottom: 20px;margin-top: 20px;"></div>
+	<div class="portlet" data-url="/portlet/dfile2/times?__node=$!__node&id=$p.id" style="margin-bottom: 20px;margin-top: 20px;"></div>
+</div>
+#end

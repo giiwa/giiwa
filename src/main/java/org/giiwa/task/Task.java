@@ -25,22 +25,17 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
-import java.util.stream.Stream;
 
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
 import org.giiwa.bean.Temp;
-import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
-import org.giiwa.net.mq.IStub;
 import org.giiwa.net.mq.MQ;
-import org.giiwa.net.mq.MQ.Mode;
 import org.giiwa.net.mq.MQ.Request;
 
 /**
@@ -83,7 +78,7 @@ public abstract class Task implements Runnable, Serializable {
 
 	private Map<String, Object> _attached = null;
 
-	private long ms = 0; // schedule ms
+	long ms = 0; // schedule ms
 
 	/** The fast. */
 	private transient boolean fast;
@@ -97,30 +92,37 @@ public abstract class Task implements Runnable, Serializable {
 	private transient long duration = -1;
 	private int runtimes = 0;
 
-	private transient String _t; // the type, "S": sys, "G": global, ""
+	static final String SYSLOCAL = "S";
+	static final String SYSGLOBAL = "SG";
 
-	private transient long startedtime = 0;
-	private transient long scheduledtime = 0;
+	static final String GLOBAL = "G";
+	transient String _t; // the type, "S": sys, "G": global, "": local
+
+	transient long startedtime = 0;
+	transient long scheduledtime = 0;
 	private String parent;
-	private static Configuration conf = null;
-	private static boolean _inited = false;
 
-	private transient Lock _door;
-	private transient ScheduledFuture<?> sf;
+	public boolean debug = false;
 
-	private transient LiveHand finished;
+	transient Lock _door;
+	transient ScheduledFuture<?> sf;
 
 //	public transient float cpu; // 临时变量， CPU耗用
+
+	State state = State.pending;
+	boolean isrunning = false;
 
 	/**
 	 * global cores
 	 */
 	public static int cores = 1;
+	public static int computingpower = 1;
+	public static double ghz = 1;
 
-	private transient Exception e;
+	transient Exception e;
 
 	public enum State {
-		running, pending, finished
+		running, pending, finished, error, delayed
 	};
 
 	public String getTrace() {
@@ -143,10 +145,6 @@ public abstract class Task implements Runnable, Serializable {
 		return this;
 	}
 
-	public String get_t() {
-		return _t;
-	}
-
 	public String getParent() {
 		return parent;
 	}
@@ -159,16 +157,40 @@ public abstract class Task implements Runnable, Serializable {
 	 * set the result and notify
 	 * 
 	 * @param t
+	 * @throws Exception
 	 */
 	protected void result(Object t) {
 
-		if (t instanceof Serializable) {
+//		if (!X.isIn(_t, Task.GLOBAL, Task.SYSGLOBAL)) {
+		// NOT global task
+//			return;
+//		}
 
-			attach("result", t);
-			if (finished != null) {
-				finished.release();
+		try {
+			MQ.Request r = MQ.Request.create();
+			if (t == null) {
+				r.put(null);
+			} else if (t instanceof Serializable) {
+				r.put(t);
+			} else {
+				r.put(new Exception("the result is not serializable, class=" + t.getClass()));
 			}
+			r.cmd = "watch";
+			r.from = this.getName();
+
+			if (log.isDebugEnabled()) {
+				log.debug("response cmd=" + r.cmd + ", from=" + r.from);
+			}
+			MQ.topic(Task.MQNAME, r);
+
+			// fire local watch
+			Runner.fireWatch(r.from, t);
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			GLog.applog.error("sys", "task", "result error", e);
 		}
+
 	}
 
 	/**
@@ -179,39 +201,32 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the Object
 	 */
 
-	@SuppressWarnings("unchecked")
-	public <T> T wait(Runnable prepare) {
-
-		try {
-			finished = LiveHand.create(X.AMINUTE, 1, 0);
-			if (finished.tryLock()) {
-				try {
-					return (T) attach("result");
-				} finally {
-					finished.release();
-				}
-			}
-
-			if (prepare != null) {
-				prepare.run();
-			}
-
-			if (finished != null) {
-				if (finished.lock()) {
-					finished.release();
-					return (T) attach("result");
-				}
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		}
-		return null;
-	}
-
-	private State state = State.pending;
-
 	public State getState() {
-		return state;
+		try {
+//			String name = this.getName();
+			if (state == State.running) {
+//				if (Runner.runningQueue.containsKey(name)) {
+				return State.running;
+//				}
+//				return State.error;
+			} else if (state == State.pending) {
+//				if (Runner.pendingQueue.containsKey(name)) {
+				if (this.sf != null) {
+					long delayed = this.sf.getDelay(TimeUnit.MILLISECONDS);
+					if (delayed > 0) {
+						return State.pending;
+					} else {
+						return State.delayed;
+					}
+				}
+//				}
+				return State.error;
+			}
+			return state;
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+			return State.error;
+		}
 	}
 
 	public long getDelay() {
@@ -330,22 +345,15 @@ public abstract class Task implements Runnable, Serializable {
 	 * called when the worker finished, either re-schedule or let's die.
 	 */
 	public void onFinish() {
-
+//		log.warn("onFinished: " + this.getName());
 	}
 
 	public boolean isEnabled() {
 		return true;
 	}
 
-	/**
-	 * called when the worker stopped.
-	 */
-	public void onStop() {
-		// do nothing, it will be die
-		if (finished != null) {
-			finished.release();
-		}
-
+	public String getPool() {
+		return _t;
 	}
 
 	/**
@@ -355,12 +363,9 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	final public void onStop(boolean fast) {
 
-		onStop();
+		log.warn(getName() + " is stoped");
 
-		if (log.isInfoEnabled())
-			log.info(getName() + " is stoped");
-
-		LocalRunner.remove(this);
+		Runner.remove(this);
 
 	};
 
@@ -383,7 +388,15 @@ public abstract class Task implements Runnable, Serializable {
 	final public void run() {
 
 		if (stopping) {
+			// onstop will remove from pendingqueue
 			onStop(fast);
+			return;
+		}
+
+		if (!this.isSys() && Runner.pause) {
+			String name = this.getName();
+			log.warn("[" + name + "] was removed as pause.");
+			Runner.pendingQueue.remove(name);
 			return;
 		}
 
@@ -392,86 +405,146 @@ public abstract class Task implements Runnable, Serializable {
 			// prepare
 			Thread.currentThread().setPriority(this.getPriority());
 
-			state = State.running;
-
 			startedtime = System.currentTimeMillis();
 			delay = startedtime - scheduledtime;
 
 			_cpuold = _cputime();
 
-			String old = null;
-			Thread who = Thread.currentThread();
-			if (who != null) {
-				old = who.getName();
-				who.setName(this.getName());
-				this.who = who;
-			}
-
-			boolean _run = false;
-
 			/**
 			 * ensure onExecute be executed
 			 */
-			try {
-//				log.debug("running task " + this + ", token=" + attach("token"));
 
-				if (X.isSame(_t, "G")) {
-					// global
-					if (this.tryLock()) {
+			if (debug || log.isDebugEnabled()) {
+				log.info("running task [" + this.getName() + "], _t=" + _t + ", debug=" + debug);
+			}
+
+			if (X.isIn(_t, Task.GLOBAL, Task.SYSGLOBAL)) {
+				// global
+				if (this.tryLock(debug)) {
+					try {
+
+						if (!Runner._switch(this)) {
+							return;
+						}
+
+						// to avoid killed
+						sf = null;
+						isrunning = true;
+						state = State.running;
+
+						runtimes++;
+
+						/**
+						 * send command to other node to kill task in queue
+						 */
 						try {
+							Request r = Request.create().put(this.getName());
+							r.cmd = "kill";
+							MQ.topic(Runner.service.getName(), r);
+						} catch (Throwable e) {
+							// ignore
+						}
 
-							if (!LocalRunner._switch(this)) {
-								return;
-							}
+						if (debug || log.isDebugEnabled()) {
+							log.info("running [" + this.getName() + "], debug=" + debug);
+						}
 
-							_run = true;
-
-							runtimes++;
+						String old = null;
+						Thread who = Thread.currentThread();
+						if (who != null) {
+							old = who.getName();
+							who.setName(this.getName());
+							this.who = who;
+						}
+						try {
 							onExecute();
 						} finally {
-							this.unlock();
+							duration = System.currentTimeMillis() - startedtime;
+
+							isrunning = false;
+							state = State.finished;
+
+							Runner.remove(this);
+
+							this.scheduledtime = 0;
+							this.startedtime = 0;
+
+							if (!Thread.currentThread().isInterrupted()) {
+								onFinish();
+							} else {
+								log.warn("interrupted: " + this.getName());
+							}
+
+							if (who != null && !X.isEmpty(old)) {
+								who.setName(old);
+							}
+
 						}
+					} finally {
+						this.unlock();
 					}
 				} else {
-					if (!LocalRunner._switch(this)) {
-						return;
+					// can not get lock, running by other node
+					// cleanup
+					synchronized (Runner.pendingQueue) {
+						Runner.pendingQueue.remove(this.getName());
 					}
 
-					_run = true;
-					runtimes++;
-					onExecute();
+					if (debug || log.isDebugEnabled()) {
+						log.info("can not got lock [" + this.getName() + "], debug=" + debug);
+					}
 				}
-			} finally {
 
-				duration = System.currentTimeMillis() - startedtime;
+			} else {
 
-				state = State.finished;
-				LocalRunner.remove(this);
+				if (!Runner._switch(this)) {
+					return;
+				}
+
+				if (debug || log.isDebugEnabled()) {
+					log.info("running [" + this.getName() + "], debug=" + debug);
+				}
 
 				sf = null;
+				isrunning = true;
+				state = State.running;
 
+				runtimes++;
+
+				String old = null;
+				Thread who = Thread.currentThread();
+				if (who != null) {
+					old = who.getName();
+					who.setName(this.getName());
+					this.who = who;
+				}
 				try {
+					onExecute();
+				} finally {
+
+					duration = System.currentTimeMillis() - startedtime;
+
+					isrunning = false;
+					state = State.finished;
+
+					Runner.remove(this);
+
 					this.scheduledtime = 0;
 					this.startedtime = 0;
-					if (finished != null) {
-						finished.release();
+
+					if (!Thread.currentThread().isInterrupted()) {
+						onFinish();
+					} else {
+						log.warn("interrupted: " + this.getName());
 					}
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
+					if (who != null && !X.isEmpty(old)) {
+						who.setName(old);
+					}
 				}
-
-				if (who != null && !X.isEmpty(old)) {
-					who.setName(old);
-				}
-
-				if (_run) {
-					onFinish();
-				}
-
 			}
 
 		} catch (Throwable e) {
-			log.error(this.getClass().getName(), e);
+			log.error("failed: " + this.getName(), e);
 		} finally {
 			who = null;
 		}
@@ -485,126 +558,11 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	public static void init(int usernum) {
 
-		log.info("Task init ...");
+		log.warn("Task init ... [" + usernum + "]");
 
-		conf = Config.getConf();
+		Runner.init(usernum);
 
-		LocalRunner.init(usernum);
-
-		_initMQ();
-
-	}
-
-	private static void _initMQ() {
-
-		try {
-			IStub st = new IStub(Task.MQNAME) {
-
-				@Override
-				public void onRequest(long seq, Request req) {
-
-					try {
-
-						Object o = req.get();
-						String cmd = req.cmd;
-
-						if (o instanceof Task) {
-
-							Task t = (Task) o;
-
-							if (log.isDebugEnabled()) {
-								log.debug("got a task, t=" + t);
-							}
-
-							if (!t.isEnabled()) {
-								return;
-							}
-
-							long ms = t.ms;
-
-							String name = t.getName();
-							Task t1 = Task.get(name);
-							if (t1 != null) {
-
-								if (t1.isRunning()) {
-									return;
-								}
-
-								boolean b = t1.cancel();
-								if (log.isInfoEnabled()) {
-
-									log.info("[" + req.from + "] reschedule task [" + name + "], remain="
-											+ t1.getRemain() + "ms, scheduled=" + ms + "ms, cancel=" + b);
-								}
-
-							}
-
-//							t.attach("_from", req.from);
-
-							LocalRunner.schedule(t, ms, true);
-
-						} else {
-
-							// get task state
-							try {
-
-//								log.warn("MQ1, task, from=" + req.from + ", cmd=" + cmd);
-
-								if (X.isSame(cmd, "isrunning")) {
-
-									String name = o.toString();
-									boolean found = LocalRunner.isRunning(name);
-
-									req.reply(Request.create().put(found));
-
-								} else if (X.isSame(cmd, "isscheduled")) {
-
-									String name = o.toString();
-
-									boolean found = LocalRunner.isScheduled(name);
-
-									req.reply(Request.create().put(found));
-
-								} else if (X.isSame(cmd, "list")) {
-//								GLog.applog.info("task", "got", from);
-
-									Node n = Node.dao.load(Local.id());
-									_Status s = new _Status(n);
-
-									req.reply(Request.create().from(n.label).put(s));
-								}
-
-							} catch (Exception e) {
-								log.error(e.getMessage(), e);
-								GLog.applog.error("task", "mq", e.getMessage(), e);
-							}
-						}
-
-					} catch (Throwable e) {
-						// ignore
-						if (log.isWarnEnabled())
-							log.warn("ignore: " + e.getMessage());
-					}
-				}
-
-			};
-
-			st.bindAs(Mode.TOPIC);
-
-			_inited = true;
-
-			if (log.isInfoEnabled())
-				log.info("bind mq[" + st.getName() + "]");
-
-		} catch (Exception e) {
-
-			// eat
-//			log.error(e.getMessage(), e);
-
-			Task.schedule(t -> {
-				_initMQ();
-			}, 3000);
-		}
+		log.warn("Task inited.");
 
 	}
 
@@ -613,8 +571,10 @@ public abstract class Task implements Runnable, Serializable {
 	 *
 	 * @param fast the fast
 	 */
+	@SuppressWarnings("deprecation")
 	final public boolean stop(boolean fast) {
 
+		// only set stopping here
 		stopping = true;
 		this.fast = fast;
 		if (who != null) {
@@ -626,14 +586,18 @@ public abstract class Task implements Runnable, Serializable {
 				// interrupt the thread which may wait a resource or timer;
 				log.warn("stop task=" + this.getName());
 
-				who.interrupt();
+//				who.interrupt(); //无法停止正在运行的任务
+				who.stop();
 
 				// schedule the run a time to clear the resource
 				onStop(fast);
 				return true;
 			}
 		} else {
-			log.warn("who is null, stop failed, name=" + this.getName());
+			if (this.isRunning()) {
+				log.warn("who is null, stop failed, name=" + this.getName());
+			}
+
 			onStop(fast);
 		}
 		return false;
@@ -706,11 +670,6 @@ public abstract class Task implements Runnable, Serializable {
 		return this.schedule(msec, false);
 	}
 
-	public Object reduce(Stream<Object> st, Function<Object, Object> func) {
-		// TODO
-		return null;
-	}
-
 	/**
 	 * schedule a task
 	 * 
@@ -732,7 +691,11 @@ public abstract class Task implements Runnable, Serializable {
 				this.parent = this.parent.substring(0, 27) + "...";
 			}
 
-			if (global && _inited) {
+			if (msec < 0) {
+				msec = 0;
+			}
+
+			if (global && Runner.inited) {
 
 				try {
 
@@ -746,49 +709,69 @@ public abstract class Task implements Runnable, Serializable {
 
 					MQ.topic(Task.MQNAME, r);
 
+					if (debug || log.isDebugEnabled()) {
+						log.info("send task [" + this.getName() + "] to MQ, debug=" + debug);
+					}
+
 				} catch (Throwable e) {
-					log.error(e.getMessage(), e);
+					log.error("schedule [" + this.getName() + "] failed!", e);
 
 					// schedule a local
-					LocalRunner.schedule(this, msec, global);
+					Runner.schedule(this, msec, global);
 				}
 
 			} else {
-				LocalRunner.schedule(this, msec, global);
+
+				if (debug || log.isDebugEnabled()) {
+					log.info("schedule [" + this.getName() + "] in local, debug=" + debug);
+				}
+
+				Runner.schedule(this, msec, global);
 			}
 
 		} catch (Throwable e) {
 			log.error(this, e);
 		}
+
 		return this;
 	}
 
+	/**
+	 * test in local node
+	 * 
+	 * @return
+	 */
 	final public boolean isScheduled() {
-		return LocalRunner.isScheduled(this);
+		return Runner.isScheduled(this);
 	}
 
+	/**
+	 * test in local node
+	 * 
+	 * @return
+	 */
 	final public boolean isRunning() {
-		return LocalRunner.isRunning(this);
+		return isrunning;
 	}
 
-	final public boolean cancel() {
+	final synchronized public boolean cancel() {
 
-		String name = this.getName();
-		synchronized (LocalRunner.class) {
-			if (LocalRunner.pendingQueue.containsKey(name)) {
-
-				Task t = LocalRunner.pendingQueue.remove(name);
-
-				if (t.sf != null) {
-					if (!t.sf.cancel(true)) {
-						log.warn("the task can not be canceled, task=" + t);
-						return false;
-					}
-					t.sf = null;
-				}
-			}
+		if (_door != null) {
+			_door.unlock();
+			_door = null;
 		}
-		return true;
+
+		if (sf != null) {
+			if (!sf.cancel(true)) {
+				log.warn("the task can not be canceled, task=" + this);
+				return false;
+			}
+			sf = null;
+			return true;
+		}
+
+		return false;
+
 	}
 
 	public static Task[] schedule(Task[] tt, long ms, boolean global) {
@@ -811,6 +794,17 @@ public abstract class Task implements Runnable, Serializable {
 		return schedule(cc, 0);
 	}
 
+	final public static void schedule(String name, long ms) {
+		try {
+			MQ.Request r = MQ.Request.create().put(new Object[] { name, ms });
+			r.cmd = "schedule";
+			r.from = Node.dao.load(Local.id()).label;
+			MQ.topic(Task.MQNAME, r);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
+
 	/**
 	 * create a task and schedule in ms
 	 * 
@@ -820,67 +814,60 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	final public static Task schedule(Consumer<Task> cc, long ms) {
 
-		Task t = new Task() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onExecute() {
-				cc.accept(this);
-			}
-
-		};
+		Task t = _Task2.create(Thread.currentThread().getName() + "." + seq.incrementAndGet(), cc);
 
 		// local
 		return t.schedule(ms);
 	}
 
+	/**
+	 * schedule a task to run the consumer<br>
+	 * when reach the maxsize, then wait until a finished
+	 * 
+	 * @param maxsize max size for same task
+	 * @param cc      consumer
+	 * @return
+	 * @throws Exception
+	 */
+	final public synchronized static Task schedule(int maxsize, Consumer<Task> cc) throws Exception {
+
+		Class<?> c1 = cc.getClass();
+		int n = Runner.number(c1);
+
+		while (n > maxsize) {
+			// wait
+			Runner.await(1000);
+			n = Runner.number(c1);
+		}
+
+		Task t = _Task2.create(Thread.currentThread().getName() + "." + seq.incrementAndGet(), cc);
+
+		// local
+		t.attach("cc", c1);
+		return t.schedule(0);
+
+	}
+
 	final public static Task schedule(final Consumer<Task> cc, final boolean global) {
-
-		Task t = new Task() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onExecute() {
-				cc.accept(this);
-			}
-
-		};
-
+		Task t = _Task2.create(Thread.currentThread().getName() + "." + seq.incrementAndGet(), cc);
 		// local
 		return t.schedule(0, global);
 	}
 
 	final public static Task schedule(final String name, final Consumer<Task> cc, final boolean global) {
 
-		Task t = new Task() {
-
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public String getName() {
-				return name;
-			}
-
-			@Override
-			public void onExecute() {
-				cc.accept(this);
-			}
-
-		};
+		Task t = _Task2.create(name, cc);
 
 		// local
-		return t.schedule(0, global);
+		if (global) {
+			if (!Task.isScheduled(name)) {
+				t.schedule(0, true);
+			}
+		} else if (!t.isScheduled()) {
+			t.schedule(0);
+		}
+
+		return t;
 	}
 
 	/**
@@ -889,7 +876,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the int
 	 */
 	public static int activeThread() {
-		return LocalRunner.local.getActiveCount();
+		return Runner.local.getActiveCount();
 	}
 
 	/**
@@ -898,7 +885,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the int
 	 */
 	public static int idleThread() {
-		return LocalRunner.local.getPoolSize() - LocalRunner.local.getActiveCount();
+		return Runner.local.getPoolSize() - Runner.local.getActiveCount();
 	}
 
 	/**
@@ -907,26 +894,32 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the int
 	 */
 	public static int tasksInQueue() {
-		return LocalRunner.pendingQueue.size();
+		return Runner.pendingQueue.size();
 	}
 
-	private static int localTasks() {
+	public static int tasksDelay() {
 		int n = 0;
-		try {
-			Task[] tt = LocalRunner.pendingQueue.values().toArray(new Task[LocalRunner.pendingQueue.size()]);
-			for (Task t : tt) {
-				if (X.isEmpty(t._t)) {
-					n++;
-				}
+
+		Object[] ss = null;
+		synchronized (Runner.pendingQueue) {
+			ss = Runner.pendingQueue.keySet().toArray();
+		}
+
+		for (Object name : ss) {
+			Task t = Runner.pendingQueue.get(name);
+			if (t != null && t.getRemain() < 0) {
+				n++;
 			}
-		} catch (Throwable e) {
-			// ignore
 		}
 		return n;
 	}
 
-	public static int tasksInQueue(String type) {
-		return LocalRunner.tasksInQueue(type);
+	static int numOfTasks() {
+		return Runner.pendingQueue.size() + Runner.runningQueue.size();
+	}
+
+	public static int tasksInQueue(String... types) {
+		return Runner.tasksInQueue(types);
 	}
 
 	/**
@@ -935,15 +928,16 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return the int
 	 */
 	public static int tasksInRunning() {
-		return LocalRunner.tasksInRunning();
+		return Runner.runningQueue.size();
+
 	}
 
-	public static int tasksInRunning(String type) {
-		return LocalRunner.tasksInRunning(type);
+	public static int tasksInRunning(String... types) {
+		return Runner.tasksInRunning(types);
 	}
 
-	public static List<Task> getRunningTask(String type) {
-		return LocalRunner.getRunningTask(type);
+	public static List<Task> getRunningTask(String... types) {
+		return Runner.getRunningTask(types);
 	}
 
 	/**
@@ -977,23 +971,7 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	public static List<Task> getAll() {
 
-		List<Task> l2 = LocalRunner.getAll();
-
-//		List<JSON> l1 = Shell.threads();
-//
-//		log.info("l1=" + l1);
-
-//		for (Task t : l2) {
-//			String name = t.getName();
-//			for (JSON j1 : l1) {
-//				String s1 = j1.getString("name");
-//				if (name.startsWith(s1)) {
-//					t.cpu = j1.getFloat("cpu");
-//					log.info("name=" + name + ", s1=" + s1 + ", cpu=" + t.cpu);
-//					break;
-//				}
-//			}
-//		}
+		List<Task> l2 = Runner.getAll();
 
 		Collections.sort(l2, new Comparator<Task>() {
 
@@ -1014,7 +992,7 @@ public abstract class Task implements Runnable, Serializable {
 	 * @return Task
 	 */
 	public static Task get(String name) {
-		return LocalRunner.get(name);
+		return Runner.get(name);
 	}
 
 	/**
@@ -1040,7 +1018,7 @@ public abstract class Task implements Runnable, Serializable {
 					if (o instanceof Task) {
 						Task t = (Task) o;
 						if (!t.isScheduled()) {
-							t.schedule((long) (X.AMINUTE * Math.random()), "G".equals(t._t));
+							t.schedule((long) (X.AMINUTE * Math.random()), GLOBAL.equals(t._t));
 						}
 					}
 					o = in.readObject();
@@ -1055,393 +1033,21 @@ public abstract class Task implements Runnable, Serializable {
 
 	}
 
-	/**
-	 * run the task and wait the task complete
-	 * 
-	 * @param <T> the SubClass of Task
-	 * @return The Task
-	 */
-	public <T> T startAndJoin(boolean global) {
-		return wait(new Runnable() {
+	public Task watch(Consumer<Object> r) {
 
-			@Override
-			public void run() {
-				Task.this.schedule(0, global);
-			}
+		String name = this.getName();
+		Runner.watch_map.put(name, r);
 
-		});
-	}
-
-//	public void watch(Runnable r) {
-//		Task.schedule(() -> {
-//			wait(null);
-//			r.run();
-//		});
-//	}
-
-	public void watch(Consumer<Object> r) {
-		Task.schedule(t -> {
-			Object o = wait(new Runnable() {
-				@Override
-				public void run() {
-					Task.this.schedule(0, true);
-				}
-			});
-			r.accept(o);
-		});
-	}
-
-	private static class LocalRunner {
-
-		private static Log log = LogFactory.getLog(LocalRunner.class);
-
-		/** The is shutingdown. */
-		public static boolean isShutingdown = false;
-
-		/**
-		 * the max pending task size, default is 1w
-		 */
-		// public static int MAX_TASK_SIZE = 10000;
-
-		static ScheduledThreadPoolExecutor sys;
-
-		/** The executor. */
-		static ScheduledThreadPoolExecutor local;
-
-		/** The executor. */
-		static ScheduledThreadPoolExecutor global;
-
-//		private static Lock lock = new ReentrantLock();
-
-		/** The pending queue. */
-		private static HashMap<String, Task> pendingQueue = new HashMap<String, Task>();
-
-		/** The running queue. */
-		private static HashMap<String, Task> runningQueue = new HashMap<String, Task>();
-
-		public synchronized static boolean remove(Task task) {
-			Task t = pendingQueue.remove(task.getName());
-			if (t != null) {
-				if (t.sf != null)
-					t.sf.cancel(true);
-//				return true;
-			}
-
-			if (runningQueue.remove(task.getName()) != null)
-				return true;
-
-			return true;
-		}
-
-		public synchronized static boolean isRunning(String name) {
-			return runningQueue.containsKey(name);
-		}
-
-		public synchronized static int tasksInRunning() {
-			return runningQueue.size();
-		}
-
-		public synchronized static List<Task> getRunningTask(String type) {
-
-			List<Task> l1 = new ArrayList<Task>();
-			runningQueue.values().forEach(e -> {
-				if (e._t.equals(type)) {
-					l1.add(e);
-				}
-			});
-			return l1;
-
-		}
-
-		public synchronized static int tasksInRunning(String type) {
-			int[] n = { 0 };
-			runningQueue.values().forEach(e -> {
-				if (e._t.equals(type)) {
-					n[0]++;
-				}
-			});
-			return n[0];
-
-		}
-
-		public synchronized static int tasksInQueue(String type) {
-			int[] n = { 0 };
-
-			pendingQueue.values().forEach(e -> {
-				if (e._t.equals(type)) {
-					n[0]++;
-				}
-			});
-			return n[0];
-		}
-
-		public synchronized static List<Task> getAll() {
-			List<Task> l1 = new ArrayList<Task>();
-			l1.addAll(LocalRunner.pendingQueue.values());
-			l1.addAll(LocalRunner.runningQueue.values());
-			return l1;
-		}
-
-		public synchronized static Task get(String name) {
-			Task t = LocalRunner.runningQueue.get(name);
-			if (t != null)
-				return t;
-
-			return LocalRunner.pendingQueue.get(name);
-		}
-
-		public synchronized static boolean isScheduled(Task t) {
-
-			if (runningQueue.containsKey(t.getName())) {
-				return true;
-			}
-
-			if (pendingQueue.containsKey(t.getName())) {
-				return true;
-			}
-
-			return false;
-		}
-
-		public static synchronized boolean isRunning(Task t) {
-
-			if (runningQueue.containsKey(t.getName())) {
-				return true;
-			}
-
-			return false;
-		}
-
-		private synchronized static boolean _switch(Task task) {
-
-			if (isShutingdown)
-				return false;
-
-			pendingQueue.remove(task.getName());
-
-			if (runningQueue.containsKey(task.getName())) {
-				// there is a copy is running
-				log.info("run duplicated task:" + task.getName());
-				return false;
-			}
-
-			runningQueue.put(task.getName(), task);
-			// log.debug(getName() + " is running");
-			return true;
-
-		}
-
-		public static void init(int usernum) {
-			local = new ScheduledThreadPoolExecutor(usernum, new ThreadFactory() {
-
-				AtomicInteger i = new AtomicInteger(1);
-
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread th = new Thread(r);
-					th.setContextClassLoader(Thread.currentThread().getContextClassLoader());
-					th.setName("gi-user-" + i.incrementAndGet());
-					return th;
-				}
-
-			});
-
-			int n = Runtime.getRuntime().availableProcessors();
-			cores = n * conf.getInt("global.turbo", 1);
-
-			sys = new ScheduledThreadPoolExecutor(n, new ThreadFactory() {
-
-				AtomicInteger i = new AtomicInteger(1);
-
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread th = new Thread(r);
-					th.setContextClassLoader(Thread.currentThread().getContextClassLoader());
-					th.setName("gi-sys-" + i.incrementAndGet());
-					th.setPriority(Thread.MAX_PRIORITY);
-					return th;
-				}
-
-			});
-
-			global = new ScheduledThreadPoolExecutor(cores, new ThreadFactory() {
-
-				AtomicInteger i = new AtomicInteger(1);
-
-				@Override
-				public Thread newThread(Runnable r) {
-					Thread th = new Thread(r);
-					th.setContextClassLoader(Thread.currentThread().getContextClassLoader());
-					th.setName("gi-global-" + i.incrementAndGet());
-					return th;
-				}
-
-			});
-
-//			_recover();
-
-		}
-
-		public static synchronized boolean schedule(Task task, long ms, boolean global) {
-
-			if (isShutingdown)
-				return false;
-
-			if (local == null)
-				return false;
-
-			String name = task.getName();
-
-			if (!task.isSys()) {
-
-				String forbidden = conf.getString("task.forbidden", X.EMPTY);
-
-				if (!X.isEmpty(forbidden) && name.matches(forbidden)) {
-					log.info("the task[" + name + "] is forbidden in this node");
-					return false;
-				}
-
-				// local task
-				if (Task.localTasks() > local.getCorePoolSize()) {
-					log.error(
-							"too many task less threads, pending=" + Task.tasksInQueue() + ", poolsize="
-									+ local.getCorePoolSize() + ", pending=" + LocalRunner.pendingQueue,
-							new Exception("the task will not be scheduled"));
-					return false;
-				}
-
-			}
-
-			// running
-			if (runningQueue.containsKey(name)) {
-
-				if (log.isDebugEnabled()) {
-					log.warn("the task is running, ignored: " + name);
-				}
-
-				return false;
-			}
-
-			// scheduled
-			if (pendingQueue.containsKey(name)) {
-				if (log.isDebugEnabled()) {
-					log.warn("the task is scheduled, ignored: [" + name + "]");
-				}
-
-				return false;
-			}
-
-			task.state = State.pending;
-
-			if (task.scheduledtime <= 0) {
-				task.scheduledtime = System.currentTimeMillis();
-			}
-
-			task.e = new Exception("lanuch trace");
-
-			Task t1 = pendingQueue.put(name, task);
-			if (t1 != null) {
-				log.warn("ERROR, why here is a task? task=" + t1);
-			}
-
-			if (ms <= 0) {
-				if (task.scheduledtime <= 0) {
-					task.scheduledtime = System.currentTimeMillis();
-				}
-				task.startedtime = 0;
-				if (task.isSys()) {
-					task._t = "S";
-					sys.execute(task);
-				} else if (global) {
-					task._t = "G";
-					LocalRunner.global.execute(task);
-				} else {
-					task._t = "";
-					local.execute(task);
-				}
-			} else {
-				task.startedtime = 0;
-				task.scheduledtime = System.currentTimeMillis() + ms;
-
-				if (task.isSys()) {
-					task._t = "S";
-					task.sf = sys.schedule(task, ms, TimeUnit.MILLISECONDS);
-				} else if (global) {
-
-					task._t = "G";
-					task.sf = LocalRunner.global.schedule(task, ms, TimeUnit.MILLISECONDS);
-
-				} else {
-					task._t = "";
-					task.sf = local.schedule(task, ms, TimeUnit.MILLISECONDS);
-				}
-			}
-
-			return true;
-
-		}
-
-		public synchronized static void stopAll(boolean fast) {
-			isShutingdown = true;
-			/**
-			 * start another thread to terminate all the thread
-			 */
-			try {
-
-				for (Task t : pendingQueue.values().toArray(new Task[pendingQueue.size()])) {
-					t.stop(fast);
-				}
-
-//				Temp t1 = Temp.get("/_task");
-//				ObjectOutputStream out = new ObjectOutputStream(t1.getOutputStream());
-//
-//				for (Task t : runningQueue.values().toArray(new Task[runningQueue.size()])) {
-//					out.writeObject(t);
-//					t.stop(fast);
-//				}
-//				out.close();
-
-				TimeStamp ts = TimeStamp.create();
-
-				while (runningQueue.size() > 0 && ts.pastms() < X.AMINUTE) {
-					try {
-						log.info("stoping, size=" + runningQueue.size() + ", running task=" + runningQueue);
-
-						for (Task t : runningQueue.values().toArray(new Task[runningQueue.size()])) {
-							t.stop(fast);
-						}
-
-						LocalRunner.class.wait(1000);
-					} catch (InterruptedException e) {
-					}
-				}
-
-			} catch (Exception e) {
-				log.error("running list=" + runningQueue);
-				log.error(e.getMessage(), e);
-			}
-		}
-
-		public synchronized static boolean isScheduled(String name) {
-			if (runningQueue.containsKey(name) || pendingQueue.containsKey(name)) {
-				return true;
-			}
-			return false;
-		}
+		return this;
 
 	}
 
 	public static void stopAll(boolean fast) {
-		LocalRunner.stopAll(fast);
+		Runner.stopAll(fast);
 	}
 
-	public boolean remove() {
-		//
-		stopping = true;
-		this.stop(fast);
-
-		return LocalRunner.remove(this);
-
+	public final boolean tryLock() {
+		return tryLock(false);
 	}
 
 	/**
@@ -1449,17 +1055,19 @@ public abstract class Task implements Runnable, Serializable {
 	 * 
 	 * @return true if lock success, otherwise false
 	 */
-	public synchronized final boolean tryLock() {
+	public synchronized final boolean tryLock(boolean debug) {
 
 		try {
 			if (_door == null) {
-				_door = Global.getLock("global.door." + getName());
+				_door = Global.getLock("global.door." + getName(), debug);
 			}
 			boolean b = _door.tryLock();
 			return b;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			GLog.applog.error("sys", "lock", "failed, lock=" + getName(), e);
 		}
+
 		return false;
 	}
 
@@ -1474,6 +1082,7 @@ public abstract class Task implements Runnable, Serializable {
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			GLog.applog.error("sys", "lock", "unlock failed, lock=" + getName(), e);
 		}
 	}
 
@@ -1519,12 +1128,12 @@ public abstract class Task implements Runnable, Serializable {
 	public static boolean isRunning(String name) {
 
 		try {
-			if (LocalRunner.runningQueue.containsKey(name)) {
+			if (Runner.runningQueue.containsKey(name)) {
 				return true;
 			}
 
-			W q = Node.dao.query().and("giiwa", null, W.OP.neq);
-			q.and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte);
+			W q = Node.dao.query();
+			q.and("lastcheck", System.currentTimeMillis() - Node.LOST, W.OP.gte);
 			AtomicLong has = new AtomicLong(q.count());
 
 			boolean[] found = new boolean[] { false };
@@ -1544,7 +1153,7 @@ public abstract class Task implements Runnable, Serializable {
 				}
 
 				has.decrementAndGet();
-				if (has.get() == 0) {
+				if (has.get() <= 0) {
 					return true;
 				} else {
 					return false;
@@ -1572,35 +1181,51 @@ public abstract class Task implements Runnable, Serializable {
 	 */
 	public static boolean isScheduled(String name) {
 
+		Task t = Runner.isScheduled(name);
+		if (t != null && (t.isRunning() || t.getRemain() > 0)) {
+			return true;
+		}
+
+		W q = Node.dao.query();
+		q.and("lastcheck", System.currentTimeMillis() - Node.LOST, W.OP.gte);
+		long count = -1;
+		AtomicLong has = new AtomicLong(count);
+
+		boolean[] found = new boolean[] { false };
+		Set<String> fr = new HashSet<String>();
+
 		try {
-
-			if (LocalRunner.isScheduled(name)) {
-				return true;
+			// TODO,这个地方有问题
+			count = q.count();
+			if (count <= 1) {
+				return false;
 			}
+			has.set(count);
 
-			W q = Node.dao.query().and("giiwa", null, W.OP.neq);
-			q.and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte);
-			AtomicLong has = new AtomicLong(q.count());
-
-			boolean[] found = new boolean[] { false };
-
-			MQ.callTopic(Task.MQNAME, "isscheduled", name, 5000, req -> {
+			MQ.callTopic(Task.MQNAME, "ischeduled", name, 5000, req -> {
 
 				String from = req.from;
+				fr.add(from);
+
 				try {
+
+					has.decrementAndGet();
 
 					boolean e = req.get();
 					if (e) {
 						found[0] = true;
+//						log.info("from=" + from + ", name=" + name + ", found!");
+						// 停止等待消息
 						return true;
 					}
 
 				} catch (Exception e) {
+					log.error("from=" + from + ", name=" + name, e);
 					GLog.applog.error("task", "global", "from=" + from + ", error=" + e.getMessage(), e);
 				}
 
-				has.decrementAndGet();
-				if (has.get() == 0) {
+				if (has.get() <= 0) {
+					// 停止等待消息
 					return true;
 				} else {
 					return false;
@@ -1608,110 +1233,394 @@ public abstract class Task implements Runnable, Serializable {
 
 			});
 
+			if (found[0] && log.isDebugEnabled()) {
+				log.debug("ischeduled, name=" + name + ", nodes=" + count + ", got=" + has);
+			}
 			return found[0];
 
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			GLog.applog.error("task", "isSchedule", e.getMessage(), e);
+			if (has != null && has.get() <= 0) {
+				if (found[0] && log.isDebugEnabled()) {
+					log.debug("ischeduled, name=" + name + ", nodes=" + count + ", got=" + has);
+				}
+				return found[0];
+			}
+			log.error("name=" + name + ", nodes=" + count + ", got=" + fr, e);
+			GLog.applog.error("task", "isSchedule", e.getMessage() + ", got=" + fr, e);
 		}
 
-		// 直接返回true， 防止消息服务器出现故障后， 任务被重复执行
-		return true;
+		// 直接返回false， 防止消息服务器出现故障后， 任务无法运行
+		return false;
 
 	}
 
-	public static <E> void forEach(List<E> l1, Consumer<E> func) {
-		forEach(l1, Math.min(cores, l1.size()), func);
+	/**
+	 * kill global/local task
+	 * 
+	 * @param name
+	 */
+	public static void kill(String name) {
+
+		try {
+			MQ.callTopic(Task.MQNAME, "kill", name, 0, null);
+		} catch (Exception e) {
+			log.error(name, e);
+			GLog.applog.error("task", "isSchedule", e.getMessage(), e);
+		}
 	}
 
-	public static <E> void forEach(List<E> l1, int numThreads, Consumer<E> func) {
-		if (numThreads > 1) {
-			l1.parallelStream().forEach(func);
+	/**
+	 * 并发执行
+	 * 
+	 * @param <E>
+	 * @param l1         数据列表
+	 * @param numThreads 并发数
+	 * @param global     true=全局
+	 * @param func       执行代码
+	 */
+	public static <E> void forEach(List<E> l1, int parallel, boolean global, Consumer<E> func) {
+
+		if (l1.size() > 1) {
+
+			if (global) {
+				final String threadname = Thread.currentThread().getName();
+				final AtomicInteger seq = new AtomicInteger(1);
+
+				List<Task> l2 = new ArrayList<Task>();
+				for (E e : l1) {
+					Task t = _Task1.create(threadname + "." + seq.incrementAndGet(), e, func);
+					synchronized (l2) {
+						try {
+							while (l2.size() > parallel) {
+								l2.wait(1000);
+							}
+						} catch (Exception err) {
+							log.error(err.getMessage(), err);
+						}
+					}
+					l2.add(t);
+					t.watch(r -> {
+						synchronized (l2) {
+							l2.remove(t);
+							l2.notifyAll();
+						}
+					});
+					log.info("global parallel schedule.1 =" + t);
+					t.schedule(0, true);
+				}
+				log.info("global parallel scheduled l2 =" + l2);
+
+				synchronized (l2) {
+					try {
+						while (l2.size() > 0) {
+							l2.wait(1000);
+							log.info("global parallel, waiting finished, l2=" + l2);
+							for (Task t : l2) {
+								if (!Task.isScheduled(t.getName())) {
+									log.info("global parallel, schduled.2 =" + t);
+									t.schedule(0, true);
+								}
+							}
+						}
+					} catch (Exception err) {
+						log.error(err.getMessage(), err);
+					}
+				}
+			} else {
+
+				int size = l1.size();
+				AtomicInteger idx = new AtomicInteger(0);
+
+				Task[] tt = new Task[Math.min(parallel, size)];
+				for (int i = 0; i < tt.length; i++) {
+					tt[i] = _Task2.create(Thread.currentThread().getName() + "." + i, t -> {
+						int i2 = idx.getAndIncrement();
+						while (i2 < size) {
+							E e = l1.get(i2);
+							try {
+								func.accept(e);
+							} catch (Exception err) {
+								log.error(err.getMessage(), err);
+							}
+							i2 = idx.getAndIncrement();
+						}
+						synchronized (tt) {
+							tt.notifyAll();
+						}
+					});
+				}
+
+				for (Task t : tt) {
+					t.schedule(0);
+				}
+
+				synchronized (tt) {
+					for (Task t : tt) {
+						// waitfor
+						try {
+							while (t.isScheduled()) {
+								tt.wait(1000);
+							}
+						} catch (Exception err) {
+							log.error(err.getMessage(), err);
+						}
+					}
+				}
+			}
 		} else {
 			l1.forEach(func);
 		}
 	}
 
-	public static class _Status implements Serializable {
+	/**
+	 * 
+	 * @param <E>
+	 * @param l1
+	 * @param parallel
+	 * @param global
+	 * @param func
+	 */
+	public static <E> void forEach(List<E> l1, int parallel, boolean global, IFactory<E> func) {
 
+		if (l1.isEmpty()) {
+			return;
+		}
+
+		if (l1.size() == 1) {
+			Task t = func.create(l1.get(0));
+			t.onExecute();
+			return;
+		}
+
+		if (!global || parallel == 1) {
+
+			// 非全局任务
+			if (parallel > 1) {
+				Task.forEach(l1, parallel, e -> {
+					Task t = func.create(e);
+					t.onExecute();
+				});
+
+			} else {
+				l1.forEach(e -> {
+					Task t = func.create(e);
+					t.onExecute();
+				});
+			}
+
+			return;
+		}
+
+		List<Task> l2 = new ArrayList<Task>();
+		for (E e : l1) {
+
+			synchronized (l2) {
+				int n = 0;
+				while (l2.size() < parallel) {
+					try {
+						l2.wait(1000);
+					} catch (Exception err) {
+						log.error(err.getMessage(), err);
+					}
+					n++;
+					if (n > 10) {
+						Task[] tt = l2.toArray(new Task[l2.size()]);
+						for (Task t : tt) {
+							if (!Task.isScheduled(t.getName())) {
+								// 任务已经不存在了，但是没有获取到结果， 重新启动
+								t.schedule(0, true);
+							}
+						}
+					}
+				}
+			}
+
+			Task t = func.create(e);
+			t.watch(r -> {
+				synchronized (l2) {
+					if (log.isInfoEnabled()) {
+						log.info("global parallel, removed, t=" + t);
+					}
+					l2.remove(t);
+					l2.notifyAll();
+				}
+			});
+			l2.add(t);
+			t.schedule(0, true);
+
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("global parallel scheduled l2 =" + l2);
+		}
+
+		// 等所有结果执行完成
+		synchronized (l2) {
+			try {
+				while (l2.size() > 0) {
+					l2.wait(1000);
+					if (log.isDebugEnabled()) {
+						log.debug("global parallel, waiting finished, l2=" + l2);
+					}
+					for (Task t : l2) {
+						if (!Task.isScheduled(t.getName())) {
+							log.info("global parallel, schduled.2 =" + t);
+							t.schedule(0, true);
+						}
+					}
+				}
+			} catch (Exception err) {
+				log.error(err.getMessage(), err);
+			}
+		}
+	}
+
+	/**
+	 * 并发执行，本地运行
+	 * 
+	 * @param <E>
+	 * @param l1       数据队列
+	 * @param parallel 并发数
+	 * @param func     执行代码
+	 */
+	public static <E> void forEach(List<E> l1, int parallel, Consumer<E> func) {
+		forEach(l1, parallel, false, func);
+	}
+
+	/**
+	 * 并发执行，本地运行
+	 * 
+	 * @param <E>
+	 * @param l1       数据队列
+	 * @param parallel 并发数
+	 * @param func     执行代码
+	 */
+	public static <E> void forEach(List<E> l1, int parallel, IFactory<E> factory) {
+		forEach(l1, parallel, false, factory);
+	}
+
+	/**
+	 * 并发执行，本地并发
+	 * 
+	 * @param <E>
+	 * @param l1   数据队列
+	 * @param func 执行代码
+	 */
+	public static <E> void forEach(List<E> l1, Consumer<E> func) {
+		forEach(l1, l1.size(), false, func);
+	}
+
+	/**
+	 * 并发执行
+	 * 
+	 * @param <E>
+	 * @param l1     数据队列
+	 * @param global true=全局
+	 * @param func   执行代码
+	 */
+	@Deprecated
+	public static <E> void forEach(List<E> l1, boolean global, Consumer<E> func) {
+		forEach(l1, l1.size(), global, func);
+	}
+
+	public static void pause() {
+		log.warn("Task was paused by:", new Exception());
+		Runner.pause = true;
+	}
+
+	public static void resume() {
+		log.warn("Task was resumed by:", new Exception());
+		Runner.pause = false;
+	}
+
+	public String getSF() {
+		return sf == null ? null : ("" + sf.isDone());
+	}
+
+	/**
+	 * global task
+	 * 
+	 * @author joe
+	 *
+	 */
+	static class _Task1 extends Task {
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
+		Object e;
+		@SuppressWarnings("rawtypes")
+		Consumer func;
+		String name;
 
-		public int pending;
-		public int running;
-		public int cores;
+		@Override
+		public String getName() {
+			return this.name;
+		}
 
-		public List<_Config> list;
+		public static <E> _Task1 create(String name, E e, Consumer<E> func) {
+			_Task1 t = new _Task1();
+			t.name = name;
+			t.e = e;
+			t.func = func;
+			return t;
+		}
 
-		public _Status(Node n) {
-
-			pending = Task.tasksInQueue("G");
-			running = Task.tasksInRunning("G");
-			cores = Task.cores;
-
-			list = X.asList(Task.getRunningTask("G"), e -> {
-				Task t = (Task) e;
-				return new _Config(n, t);
-			});
-
+		@SuppressWarnings("unchecked")
+		@Override
+		public void onExecute() {
+			try {
+				func.accept(e);
+				this.result(JSON.create().append("message", "ok"));
+			} catch (Throwable err) {
+				log.error(err.getMessage(), err);
+				this.result(JSON.create().append("error", err.getMessage()));
+			}
 		}
 
 	}
 
-	public static class _Config implements Serializable {
-
+	/**
+	 * local task
+	 * 
+	 * @author joe
+	 *
+	 */
+	static class _Task2 extends Task {
 		/**
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
+		Object e;
+		@SuppressWarnings("rawtypes")
+		Consumer func;
+		String name;
 
-		public String name;
-		public String clazzname;
-		public String node;
-		public String state;
-		public long remain;
-		public long delay;
-		public long runtime;
-		public long costing;
-		public long duration;
-		public int runtimes;
-
-		public _Config(Node n, Task t) {
-
-			name = t.getName();
-			clazzname = t.getClass().getName();
-			node = n.label;
-			state = t.getState().toString();
-			remain = t.getRemain();
-			delay = t.getDelay();
-			runtime = t.getRuntime();
-			costing = t.getCosting();
-			duration = t.getDuration();
-			runtimes = t.getRuntimes();
-
+		@Override
+		public String getName() {
+			return this.name;
 		}
 
-		public JSON json() {
-
-			JSON j1 = JSON.create();
-
-			j1.put("name", name);
-			j1.put("clazzname", clazzname);
-			j1.put("node", node);
-			j1.put("state", state);
-			j1.put("remain", remain);
-			j1.put("delay", delay);
-			j1.put("runtime", runtime);
-			j1.put("costing", costing);
-			j1.put("duration", duration);
-			j1.put("runtimes", runtimes);
-
-			return j1;
-
+		public static <E> _Task2 create(String name, Consumer<Task> func) {
+			_Task2 t = new _Task2();
+			t.name = name;
+			t.func = func;
+			return t;
 		}
 
+		@SuppressWarnings("unchecked")
+		@Override
+		public void onExecute() {
+			try {
+				func.accept(this);
+			} catch (Throwable err) {
+				log.error(err.getMessage(), err);
+			}
+		}
+
+	}
+
+	public static interface IFactory<E> extends Serializable {
+		public Task create(E e);
 	}
 
 }

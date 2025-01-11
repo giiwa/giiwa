@@ -2,6 +2,7 @@ package org.giiwa.dao;
 
 import static org.junit.Assert.*;
 
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -18,7 +19,7 @@ public class SQLTest {
 	public void test() {
 		try {
 			String s = "a>10/2*5 and b>11 and (c>1 or r>2)";
-			W q = SQL.where2W(StringFinder.create(s));
+			W q = SQL2.where2W(StringFinder.create(s));
 			System.out.println(q);
 
 			// SQL.query(null, "select *");
@@ -28,7 +29,7 @@ public class SQLTest {
 			// SQL.query(h, sql);
 			s = "11 and (1 or 2) and !12";
 
-			q = SQL.where2W("a", StringFinder.create(s));
+			q = SQL2.where2W("a", StringFinder.create(s));
 			System.out.println(q);
 
 			q = W.create();
@@ -46,15 +47,15 @@ public class SQLTest {
 			System.out.println(q);
 
 			s = "a='a(b)'";
-			q = SQL.where2W(StringFinder.create(s));
+			q = SQL2.where2W(StringFinder.create(s));
 			System.out.println(q);
 
 			s = "a=NULL and b='a'";
-			q = SQL.where2W(StringFinder.create(s));
+			q = SQL2.where2W(StringFinder.create(s));
 			System.out.println(q.query());
 
 			s = "a='1' and b='2' order by c desc";
-			q = SQL.where2W(s);
+			q = SQL2.where2W(s);
 			System.out.println(q);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -69,7 +70,7 @@ public class SQLTest {
 		String word = "pinyin !like 'hz' order by aaa desc";
 
 		try {
-			W q = SQL.where2W(word);
+			W q = SQL2.where2W(word);
 			System.out.println(q.toSQL());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -85,7 +86,7 @@ public class SQLTest {
 	}
 
 	@Test
-	public void testSQL() {
+	public void testSQL() throws SQLException {
 
 		W q = W.create();
 //		q.and("date2>0");
@@ -110,7 +111,7 @@ public class SQLTest {
 	}
 
 	@Test
-	public void testDate() {
+	public void testDate() throws SQLException {
 
 		W q = W.create();
 		q = W.create().and("updated>$lang.parse('2022-01','yyyy-MM')");
@@ -125,7 +126,7 @@ public class SQLTest {
 	}
 
 	@Test
-	public void testSQL2() {
+	public void testSQL2() throws SQLException {
 		W q = W.create();
 		q.and("datastatus !=2");
 		q.and("publisher", Arrays.asList("上海世界图书出版公司", "世界图书出版公司", "世界图书出版公司北京公司", "世界图书出版广东有限公司", "世界图书出版有限公司北京分公司",
@@ -139,7 +140,7 @@ public class SQLTest {
 		W q = W.create();
 		String name = "updated>$time.add('-7d').time";
 		try {
-			q = SQL.where2W(StringFinder.create(name));
+			q = SQL2.where2W(StringFinder.create(name));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -151,12 +152,12 @@ public class SQLTest {
 	public void testSQL4() {
 		try {
 			String name = "pinyin !like 'hz' and pinyin !like 'a'";
-			W q = SQL.where2W(StringFinder.create(name));
+			W q = SQL2.where2W(StringFinder.create(name));
 			System.out.println(q);
 			System.out.println(q.query());
 
 			name = "pinyin !like 'hz' and pinyin like 'a'";
-			q = SQL.where2W(StringFinder.create(name));
+			q = SQL2.where2W(StringFinder.create(name));
 			System.out.println(q);
 			System.out.println(q.query());
 
@@ -170,7 +171,7 @@ public class SQLTest {
 	public void testSQL5() {
 		try {
 			String name = "updated>=-9223372036854775808 and month>=20220000";
-			W q = SQL.where2W(StringFinder.create(name));
+			W q = SQL2.where2W(StringFinder.create(name));
 			System.out.println(q);
 			System.out.println(q.query());
 
@@ -185,7 +186,7 @@ public class SQLTest {
 		String s = "createdate>=\"2022-01-01\" and createdate<\"2022-10-01\"";
 		try {
 			Language lang = Language.getLanguage("zh_cn");
-			W q = SQL.where2W(s);
+			W q = SQL2.where2W(s);
 			System.out.println(q);
 			q.scan(e -> {
 				e.value = lang.parse(e.value.toString(), "yyyy-MM-dd");
@@ -203,7 +204,7 @@ public class SQLTest {
 	public void testSortKey() {
 		try {
 			String sql = "updatetime=1";
-			W q = SQL.where2W(sql);
+			W q = SQL2.where2W(sql);
 			System.out.println(q);
 
 			List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
@@ -215,7 +216,7 @@ public class SQLTest {
 	}
 
 	@Test
-	public void testW2() {
+	public void testW2() throws SQLException {
 
 		W q = W.create();
 		q.and("tag='jd' or tag='tianmao'").and("tab!=0 and tab!=1 and tab!=2 and tab!=4").and("type='A'")
@@ -225,7 +226,16 @@ public class SQLTest {
 	}
 
 	@Test
-	public void testNull() {
+	public void testUUID() throws SQLException {
+
+		W q = W.create();
+		q.and("id=uuid('jd')");
+
+		System.out.println(q.toSQL());
+	}
+
+	@Test
+	public void testNull() throws SQLException {
 		String s = "a!=null or b!=null";
 		W q = W.create();
 		q.and(s);

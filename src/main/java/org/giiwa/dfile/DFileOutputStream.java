@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.dfile;
 
 import java.io.IOException;
@@ -8,15 +22,17 @@ import org.giiwa.bean.Disk;
 
 class DFileOutputStream extends OutputStream {
 
+//	private static Log log = LogFactory.getLog(DFileOutputStream.class);
+
 	String filename;
-	Disk[] disk;
+	Disk disk;
 	FlushFunc flush;
 
-	byte[] bb = new byte[1024 * 16];
+	byte[] bb = new byte[1024 * 1024 * 4];
 	int pos = 0;
 	long offset = 0;
 
-	public static DFileOutputStream create(Disk[] disk, RandomAccessFile raf, String filename, long offset,
+	public static DFileOutputStream create(Disk disk, RandomAccessFile raf, String filename, long offset,
 			FlushFunc flush) {
 		DFileOutputStream d = new DFileOutputStream();
 		d.disk = disk;
@@ -28,13 +44,12 @@ class DFileOutputStream extends OutputStream {
 		return d;
 	}
 
-	public static DFileOutputStream create(Disk[] disk, OutputStream raf, String filename, long offset,
-			FlushFunc flush) {
+	public static DFileOutputStream create(Disk disk, OutputStream out, String filename, long offset, FlushFunc flush) {
 		DFileOutputStream d = new DFileOutputStream();
 		d.disk = disk;
 		d.filename = filename;
 		d.offset = offset;
-//		d.raf = raf;
+		d.out = out;
 		d.flush = flush;
 
 		return d;
@@ -72,11 +87,11 @@ class DFileOutputStream extends OutputStream {
 	@Override
 	public void flush() throws IOException {
 
-		if (pos > 0) {
+//		log.warn("flush, pos=" + pos + ", filename=" + filename);
 
+		if (pos > 0) {
 			offset = flush.accept(offset, bb, pos);
 			pos = 0;
-
 		}
 
 	}
@@ -89,6 +104,8 @@ class DFileOutputStream extends OutputStream {
 
 		flush();
 
+//		log.warn("close, filename=" + filename);
+
 		if (raf != null) {
 			raf.close();
 			raf = null;
@@ -98,8 +115,6 @@ class DFileOutputStream extends OutputStream {
 			out.close();
 			out = null;
 		}
-
-		DFile.onChange(filename);
 
 	}
 

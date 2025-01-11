@@ -1,0 +1,172 @@
+<div class='tabs'>
+	<a href='/admin/task?__node=$!__node' class='selected'>$lang.get('a.task')</a>
+	<a href='/admin/task/global?__node=$!__node'>$lang.get('a.task.global')</a>
+</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='notes'>
+	<span>Task=(<i class='red'>$!running</i>//running, <i
+		class='grey'>$!pending</i>//pending)
+	</span>&nbsp; <span>
+</div>
+
+<table id='task-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 30px;"></th>
+			<th style="width: 20%;">Name</th>
+			<th>CLASS</th>
+			<th>POOL</th>
+			<th style="width: 115px;">STATE</th>
+			<th>SCHEDULED</th>
+			<th>DELAY</th>
+			<th>RT</th>
+			<th>CT</th>
+			<th>DU</th>
+			<th>TIMES</th>
+		</tr>
+	</thead>
+	<tbody>
+		#set($i=0) #foreach($f in $list)
+		<tr>
+			#set($i=$i+1)
+			<td>$i</td>
+			<td class="a">
+				$!f.name
+				<a class="hint hint--bottom" href="javascript:;" onclick='_trace("$f.name")' data-hint="Trace"><i class='icon-view_headline'></i></a>
+			</td>
+			<td>$!f.class.name</td> 
+			<td #if($f.pool=='S' || $f.pool=='SG') style='color:red' #elseif($f.pool=='G') style='color:green' #end>$!f.pool</td>
+			#set($s1 = $f.state)
+			#if($s1 == 'running')
+			<td style='color: green' class="a">
+				<i class='icon-radio-checked'></i>
+				$!s1
+				<a class="hint hint--bottom" href="javascript:;" onclick='_dump("$f.name")' data-hint="Dump"><i class='icon-reply'></i></a>
+				&nbsp;
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
+			</td>
+			#elseif($s1 == 'error')
+			<td style='color: red' class="a">
+				<i class='icon-radio-checked'></i>
+				$!s1
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
+			</td>
+			#elseif($s1 == 'delayed')
+			<td style='color: #e2af47' class="a">
+				<i class='icon-radio-checked'></i>
+				$!s1
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
+			</td>
+			#else
+			<td style="color: #999" class="a">
+				<i class='icon-clock'></i>
+				$!s1
+				#if($s1 == 'pending')
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
+				#end
+			</td>
+			#end
+			<td #if($f.remain<0) style='color:red' #end>$f.remain</td>
+			<td>#if($f.delay>-1)$f.delay#end</td>
+			<td>#if($f.runtime>0)$f.runtime#end</td>
+			<td>#if($f.costing>0)$f.costing#end</td>
+			<td>#if($f.duration>0)$f.duration#end</td>
+			<td>$!f.runtimes</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+
+##<div class='btns'>
+##	<a class="btn btn-success" href="javascript:;" onclick="_dumpall()">$lang.get("a.dumpall")</a>
+##</div>
+
+<div id="dump" style="color: red; margin-top: 40px; display: none">
+	<hr />
+	<div>&nbsp;</div>
+</div>
+
+<script>
+	$(function() {
+		$("#task-table").tablesorter({
+			headers : {
+				2 : {
+					sorter : false
+				},
+				3 : {
+					sorter : false
+				},
+				9 : {
+					sorter : false
+				},
+				10 : {
+					sorter : false
+				}
+			}
+		});
+	})
+
+	function _dump(name) {
+		giiwa.processing.show();
+		$.post("/admin/task/dump?__node=$!__node", {
+			name : name
+		}, function(d) {
+			giiwa.processing.hide();
+			if (d.state == 200) {
+				$("#dump div").html('<pre>' + d.message + '</pre>');
+				$("#dump").show();
+				$.scrollTo("#dump", 500);
+			} else {
+				giiwa.error(d.error);
+			}
+		});
+	}
+	function _trace(name) {
+		giiwa.processing.show();
+		$.post("/admin/task/trace?__node=$!__node", {
+			name : name
+		}, function(d) {
+			giiwa.processing.hide();
+			if (d.state == 200) {
+				$("#dump div").html(d.message);
+				$("#dump").show();
+				$.scrollTo("#dump", 500);
+			} else {
+				giiwa.error(d.error);
+			}
+		});
+	}
+	function _kill(name) {
+		if(confirm("$lang.get('title.are_u_sure_delete')")) {
+			giiwa.processing.show();
+			$.post("/admin/task/kill?__node=$!__node", {
+				name : name
+			}, function(d) {
+				giiwa.processing.hide();
+				if (d.state == 200) {
+					giiwa.reload();
+				} else {
+					giiwa.error(d.error);
+				}
+			});
+		}
+	}
+	function _dumpall() {
+		giiwa.processing.show();
+		$.post("/admin/task/dumpall?__node=$!__node", {
+			name : name
+		}, function(d) {
+			giiwa.processing.hide();
+			if (d.state == 200) {
+				$("#dump div").html('<pre>' + d.message + '</pre>');
+				$("#dump").show();
+				$.scrollTo("#dump", 500);
+			} else {
+				giiwa.error(d.error);
+			}
+		});
+	}
+</script>

@@ -35,7 +35,7 @@ public class AppTest2 {
 		String d = _encode(j1.toString(), secret);
 
 		// 请求数据
-		Http h = Http.owner;
+		Http h = Http.create();
 		Http.Response r = h.post("http://iportal.giisoo.com/f/data/" + appid, JSON.create().append("d", d));
 
 		// 输出请求结果
@@ -66,7 +66,7 @@ public class AppTest2 {
 		return null;
 	}
 
-	//AES解密
+	// AES解密
 	public static byte[] aes_decode(byte[] content, String seed) throws Exception {
 
 		KeyGenerator kgen = KeyGenerator.getInstance("AES");
@@ -86,16 +86,17 @@ public class AppTest2 {
 
 	private static String _encode(String data, String secret) {
 		try {
-			//AES加密
+			// AES加密
 			byte[] bb = aes_encode(data.getBytes(), secret);
-			//Base64编码
+			// Base64编码
 			return Base64.getEncoder().encodeToString(bb);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
-	//AES加密
+
+	// AES加密
 	public static byte[] aes_encode(byte[] content, String seed) throws Exception {
 
 		KeyGenerator kgen = KeyGenerator.getInstance("AES");

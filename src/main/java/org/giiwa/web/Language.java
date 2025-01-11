@@ -203,9 +203,9 @@ public class Language implements Serializable {
 
 		this.locale = locale;
 
-		if (Module.home != null && !Module.home.supportLocale(locale)) {
-			this.locale = Global.getString("language", "en_us");
-		}
+//		if (Module.home != null && !Module.home.supportLocale(locale)) {
+//			this.locale = Global.getString("language", "en_us");
+//		}
 
 		load();
 	}
@@ -250,7 +250,7 @@ public class Language implements Serializable {
 	public String parse(String str, Controller m) {
 
 		try {
-			str = Velocity.parse(str, m.data);
+			str = Velocity.parse(str, m.getData());
 		} catch (Exception e) {
 			log.error(str, e);
 		}
@@ -306,6 +306,8 @@ public class Language implements Serializable {
 		data = new HashMap<String, String[]>();
 		if (Module.home != null) {
 			Module.home.loadLang(data, locale);
+		} else {
+			log.error("load language error, Module.home=null", new Exception("home=null"));
 		}
 
 		if (data.isEmpty()) {
@@ -634,10 +636,10 @@ public class Language implements Serializable {
 		}
 
 		float d1 = d - (int) d;
-		if (d1 > 0.01) {
-			return (length >= 0 ? "" : "-") + X.toLong(d) + UNITS[i];
+		if (d1 >= 0.1) {
+			return (length >= 0 ? "" : "-") + String.format("%.1f", d) + UNITS[i];
 		} else {
-			return (length >= 0 ? "" : "-") + ((int) d) + UNITS[i];
+			return (length >= 0 ? "" : "-") + X.toInt(d) + UNITS[i];
 		}
 	}
 

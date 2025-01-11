@@ -73,7 +73,7 @@ public class AppTest {
 
 		System.out.println(d);
 
-		Http h = Http.owner;
+		Http h = Http.create();
 		Http.Response r = h.post("http://iportal.giisoo.com/f/data/" + appid, JSON.create().append("d", d));
 
 		System.out.println("....");
@@ -150,6 +150,40 @@ public class AppTest {
 		cipher.init(Cipher.ENCRYPT_MODE, key);
 		byte[] result = cipher.doFinal(content);
 		return result;
+
+	}
+
+	@Test
+	public void testEncode2() {
+
+		String s = "abcdefsss";
+		String code = "oW8KN5u0YtwzGYiTLYFwxQgpAyejuwTB";
+		for (int i = 0; i < 5; i++) {
+			s += s;
+		}
+
+		String s1 = App.encode(s, code);
+		String s2 = App.encode2(s, code);
+
+		System.out.println(s1.length());
+		System.out.println(s2.length());
+
+		s = App.decode2(s2, code);
+		System.out.println(s);
+
+	}
+
+	@Test
+	public void testEncode() {
+
+		String s = "abcdefsss";
+		String code = "oW8KN5u0YtwzGYiTLYFwxQgpAyejuwTB";
+		String s1 = App.encode(s, code);
+
+		System.out.println(s1);
+
+		s = App.decode(s1, code);
+		System.out.println(s);
 
 	}
 

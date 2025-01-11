@@ -42,16 +42,19 @@ public final class Role extends Bean {
 
 	public static final BeanDAO<Long, Role> dao = BeanDAO.create(Role.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true)
 	public long id;
 
-	@Column(memo = "名称")
+	@Column(memo = "名称", size = 50)
 	public String name;
 
-	@Column(memo = "角色首页")
+	@Column(memo = "角色首页", size = 255)
 	public String url; // 首页
 
 	public int seq;
+
+	@Column(memo = "菜单文件", value = "/dput/menu.json->dfile:///dput/menu_aaa.json")
+	public String menu; // 首页
 
 	/**
 	 * Checks for.
@@ -92,8 +95,8 @@ public final class Role extends Bean {
 			return r.getId();
 		}
 
-		long id = UID.next("role.id");
 		try {
+			long id = UID.next("role.id");
 			while (dao.exists(id)) {
 				id = UID.next("role.id");
 			}
@@ -204,6 +207,15 @@ public final class Role extends Bean {
 		private static final long serialVersionUID = 1L;
 
 		public static final BeanDAO<String, RoleAccess> dao = BeanDAO.create(RoleAccess.class);
+
+		@Column(memo = "主键", unique = true, size = 50)
+		String id;
+
+		@Column(memo = "权限", size = 50)
+		String name;
+
+		@Column(memo = "角色ID")
+		long rid;
 
 	}
 

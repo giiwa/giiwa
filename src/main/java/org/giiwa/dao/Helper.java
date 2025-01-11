@@ -14,15 +14,15 @@
 */
 package org.giiwa.dao;
 
-import java.io.Closeable;
 import java.io.Serializable;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,11 +34,13 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Data;
+import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
+import org.giiwa.dao.sql.SQL;
 import org.giiwa.json.JSON;
-import org.giiwa.misc.StringFinder;
 import org.giiwa.task.Consumer;
 import org.giiwa.task.Function;
+import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.openjdk.nashorn.internal.runtime.Undefined;
@@ -47,6 +49,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 
 /**
+ * 
  * The {@code Helper} Class is utility class for all database operation.
  * 
  */
@@ -73,7 +76,7 @@ public final class Helper implements Serializable {
 	/**
 	 * initialize the Bean with the configuration.
 	 * 
-	 * @deprecated
+	 * @deprecated by init2
 	 * @param conf the conf
 	 */
 	public static void init(Configuration conf) {
@@ -89,15 +92,11 @@ public final class Helper implements Serializable {
 
 		Helper.conf = conf;
 
-		RDB.init();
-
 		if (primary == null) {
 
-			if (MongoHelper.inst.isConfigured()) {
-				primary = MongoHelper.inst;
-			} else if (RDSHelper.inst.isConfigured()) {
-				primary = RDSHelper.inst;
-			}
+//			if (MongoHelper.inst.isConfigured()) {
+			primary = MongoHelper.inst;
+//			}
 
 			log.warn("db.primary missed, auto choose one, helper=" + primary);
 
@@ -107,7 +106,13 @@ public final class Helper implements Serializable {
 
 	}
 
-	public static boolean init2(Configuration conf) {
+	/**
+	 * init
+	 * 
+	 * @param conf
+	 * @return
+	 */
+	public synchronized static boolean init2(Configuration conf) {
 
 		/**
 		 * initialize the DB connections pool
@@ -116,7 +121,7 @@ public final class Helper implements Serializable {
 			return false;
 		}
 
-		log.warn("DBHelper init2 ...");
+		log.warn("Helper init2 ...");
 
 		Helper.conf = conf;
 
@@ -126,22 +131,66 @@ public final class Helper implements Serializable {
 			return false;
 		}
 
-		try {
-			if (url.startsWith("mongodb://")) {
+		RDSHelper.init();
 
-				String user = conf.getString("db.user", X.EMPTY);
-				String passwd = conf.getString("db.passwd", X.EMPTY);
-				int conns = conf.getInt("db.conns", 50);
+		try {
+			String user = conf.getString("db.user", X.EMPTY);
+			String passwd = conf.getString("db.passwd", X.EMPTY);
+			int conns = conf.getInt("db.conns", 50);
+			log.info("db.conns=" + conns);
+
+			boolean encoded = false;
+			if (passwd != null) {
+				if (passwd.startsWith("$$") && passwd.endsWith("$$")) {
+					passwd = passwd.replaceAll("[\\$]", "");
+					passwd = org.giiwa.web.Module.decode(passwd);
+					encoded = true;
+				}
+			}
+
+			if (url.startsWith("mongodb://") || url.startsWith("jmdb://")) {
+
 				int timeout = conf.getInt("db.timeout", 30000);
 
 				primary = MongoHelper.create(url, user, passwd, conns, timeout);
 				MongoHelper.inst = (MongoHelper) primary;
 
+				log.warn("db inited.");
+
 			} else {
 
-				primary = RDSHelper.create(null);
+				String locale = conf.getString("db.locale", X.EMPTY);
+//				int timeout = conf.getInt("db.timeout", 30000);
+
+				// test driver
+				Connection con = RDSHelper.getConnection(url, user, passwd, locale);
+				RDSHelper.close(con);
+				// tested ok
+
+				primary = RDSHelper.create(url, user, passwd, conns, locale);
 				RDSHelper.inst = (RDSHelper) primary;
+
+				log.warn("db inited.");
+
 			}
+
+			if (Helper.isConfigured() && !encoded) {
+				// encoding
+//				log.info("encoding passwd ...1");
+				String passwd1 = passwd;
+				Task.schedule(t -> {
+//					log.info("encoding passwd ...2");
+					try {
+						String passwd2 = "$$" + org.giiwa.web.Module.encode(passwd1) + "$$";
+						conf.setProperty("db.passwd", passwd2);
+//						log.info("encoded passwd=" + passwd2);
+						Config.save2();
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
+				}, X.AMINUTE);
+			}
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
@@ -172,7 +221,7 @@ public final class Helper implements Serializable {
 			}
 			return 0;
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), "table=%s, q=%s", table, q);
 
 		}
 	}
@@ -202,7 +251,7 @@ public final class Helper implements Serializable {
 				return primary.exists(table, q);
 			}
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, q=%s", table, q.toString());
 
 		}
 		throw new SQLException("no db configured, please configure the {giiwa}/giiwa.properites");
@@ -223,8 +272,7 @@ public final class Helper implements Serializable {
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		} finally {
-			read.add(t1.pastms());
-
+			read.add(t1.pastms(), "table=%s, q=%", table, q);
 		}
 		return false;
 	}
@@ -240,10 +288,12 @@ public final class Helper implements Serializable {
 		 */
 		private static final long serialVersionUID = 1L;
 
-		protected final static Object ignore = new Object();
+		public final static Object ignore = new Object();
 
-		/** The list. */
+		// value
 		public Map<String, Object> m = new LinkedHashMap<String, Object>();
+		// type
+		public Map<String, String> t = new LinkedHashMap<String, String>();
 
 		/**
 		 * convert the V to json and return
@@ -321,11 +371,47 @@ public final class Helper implements Serializable {
 		 * @return the int
 		 */
 		public int size() {
+			int size = 0;
+			for (String name : m.keySet()) {
+				Object o = m.get(name);
+				if (o != null && o != ignore) {
+					if (o instanceof Integer || o instanceof Float || o instanceof Character || o instanceof Short) {
+						size += 4;
+					} else if (o instanceof Long || o instanceof Double) {
+						size += 8;
+					} else if (X.isArray(o)) {
+						for (Object o1 : X.asList(o, s -> s)) {
+							if (o1 instanceof Integer || o1 instanceof Float || o1 instanceof Character
+									|| o1 instanceof Short) {
+								size += 4;
+							} else if (o1 instanceof Long || o1 instanceof Double) {
+								size += 8;
+							} else {
+								size += o1.toString().getBytes().length;
+							}
+						}
+					} else {
+						size += o.toString().getBytes().length;
+					}
+				}
+			}
+			return size;
+		}
+
+		public int length() {
 			return m.size();
 		}
 
 		public boolean isEmpty() {
-			return m.isEmpty();
+			if (m.isEmpty()) {
+				return true;
+			}
+			for (Object v : m.values()) {
+				if (v != V.ignore) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		/**
@@ -380,8 +466,18 @@ public final class Helper implements Serializable {
 		 * @param v    the value object
 		 * @return the V
 		 */
+		@Deprecated
 		public V put(String name, Object v) {
-			return set(name, v);
+			return append(name, v, null);
+		}
+
+		@Deprecated
+		public V put(String name, Object v, String type) {
+			return append(name, v, type);
+		}
+
+		public V append(String name, Object v) {
+			return append(name, v, null);
 		}
 
 		/**
@@ -392,7 +488,7 @@ public final class Helper implements Serializable {
 		 * @param v    the value object
 		 * @return the V
 		 */
-		public V append(String name, Object v) {
+		public V append(String name, Object v, String type) {
 
 			if (v instanceof Undefined) {
 				v = null;
@@ -403,7 +499,13 @@ public final class Helper implements Serializable {
 				if (m.containsKey(name)) {
 					return this;
 				}
+				if (v instanceof String && ((String) v).length() > 16 * X.MB) {
+					throw new RuntimeException("the [" + name + "] size exceed max[16MB]");
+				}
 				m.put(name, v);
+				if (type != null) {
+					t.put(name, type);
+				}
 			}
 			return this;
 		}
@@ -440,6 +542,9 @@ public final class Helper implements Serializable {
 		 */
 		public V force(String name, Object v) {
 			if (name != null && v != null) {
+				if (v instanceof String && ((String) v).length() > 16 * X.MB) {
+					throw new RuntimeException("the [" + name + "] size exceed max[16MB]");
+				}
 				m.put(name, v);
 			}
 			return this;
@@ -459,21 +564,20 @@ public final class Helper implements Serializable {
 				if (jo.containsKey(s)) {
 					Object o = jo.get(s);
 
-					if (o instanceof Undefined) {
-						continue;
-					}
-
 					String s1 = s.replaceAll("\\.", "_");
-					if (X.isEmpty(o)) {
-						set(s1, X.EMPTY);
-					} else {
+					if (o instanceof Undefined) {
+						o = null;
+					}
+//					if (X.isEmpty(o)) {
+//						set(s1, X.EMPTY);
+//					} else {
 //						if (o instanceof Integer || o instanceof Long || o instanceof Short || o instanceof Float
 //								|| o instanceof Double || o instanceof ) {
-						set(s1, o);
+					append(s1, o);
 //						} else {
 //							set(s1, o.toString());
 //						}
-					}
+//					}
 				}
 			}
 
@@ -481,7 +585,7 @@ public final class Helper implements Serializable {
 		}
 
 		public V copy() {
-			return V.create().copy(m);
+			return V.create().copy(this);
 		}
 
 		/**
@@ -521,20 +625,12 @@ public final class Helper implements Serializable {
 			if (names != null && names.length > 0) {
 				for (String s : names) {
 					Object o = v.value(s);
-					if (X.isEmpty(o)) {
-						set(s, X.EMPTY);
-					} else {
-						set(s, o);
-					}
+					append(s, o, v.t.get(s));
 				}
 			} else {
 				for (String name : v.m.keySet()) {
 					Object o = v.m.get(name);
-					if (X.isEmpty(o)) {
-						set(name, X.EMPTY);
-					} else {
-						set(name, o);
-					}
+					append(name, o, v.t.get(name));
 				}
 			}
 
@@ -549,6 +645,14 @@ public final class Helper implements Serializable {
 		 */
 		public Object value(String name) {
 			return m.get(name);
+		}
+
+		public void type(String name, String type) {
+			t.put(name, type);
+		}
+
+		public String type(String name) {
+			return t.get(name);
 		}
 
 		/**
@@ -571,9 +675,13 @@ public final class Helper implements Serializable {
 				String[] ss = this.m.keySet().toArray(new String[this.m.size()]);
 				for (String s : ss) {
 					for (String s1 : name) {
-						if (s.matches(s1)) {
-							m.remove(s);
-							break;
+						try {
+							if (X.isSame(s1, s) || s.matches(s1)) {
+								m.remove(s);
+								break;
+							}
+						} catch (Exception err) {
+							log.error(err.getMessage(), err);
 						}
 					}
 				}
@@ -650,6 +758,7 @@ public final class Helper implements Serializable {
 	 *
 	 * @author joe
 	 */
+	@Comment(text = "查询条件工具")
 	public static class W implements Serializable {
 
 		/**
@@ -661,30 +770,31 @@ public final class Helper implements Serializable {
 			eq, gt, gte, lt, lte, like, like_, like_$, neq, none, in, exists, nin, type, mod, all, size, near
 		};
 
-		public IAccess access;
+		private IAccess access;
 
 		/**
 		 * 设置权限过滤器， 只能设置一次
 		 * 
 		 * @param access， 权限过滤器
 		 */
-		public void access(IAccess access) {
+		public IAccess access(IAccess access) {
 			if (this.access == null) {
 				this.access = access;
 			}
+			return this.access;
 		}
 
 		/**
 		 * "and"
 		 */
-		public static final int AND = 9;
+		public static final int AND = 1;
 
 		/**
 		 * "or"
 		 */
-		public static final int OR = 10;
+		public static final int OR = 2;
 
-		public static final int NOT = 11;
+		public static final int NOT = 4;
 
 		private String connectsql;
 		private List<W> queryList = new ArrayList<W>();
@@ -694,12 +804,17 @@ public final class Helper implements Serializable {
 		public int cond = AND;
 
 		private transient BeanDAO<?, ?> dao = null;
-		private transient String table = null;
+		public String table = null;
 		private transient DBHelper helper = Helper.primary;
 
 		@SuppressWarnings("rawtypes")
 		private Class t = Data.class;
 
+		/**
+		 * @deprecated
+		 * @return
+		 * @throws SQLException
+		 */
 		public String getTable() throws SQLException {
 			if (dao != null) {
 				String table = dao.tableName();
@@ -708,6 +823,33 @@ public final class Helper implements Serializable {
 				}
 			}
 			return table;
+		}
+
+		public String table() throws SQLException {
+			if (dao != null) {
+				String table = dao.tableName();
+				if (!X.isEmpty(table)) {
+					return table;
+				}
+			}
+			return table;
+		}
+
+		String fields;
+
+		public String fields() {
+			return fields;
+		}
+
+		public W fields(String s) {
+			fields = s;
+			return this;
+		}
+
+		@Comment(text = "设置查询列", demo = "select('a,b,c')")
+		public W select(String s) {
+			fields = s;
+			return this;
 		}
 
 		public boolean has(OP... ops) {
@@ -848,8 +990,14 @@ public final class Helper implements Serializable {
 		private W() {
 		}
 
-		public W inc(String name, int n) {
-			Helper.inc(this.table, name, n, this, null);
+		@Comment(text = "增长", demo = ".inc('a', 1)")
+		public W inc(@Comment(text = "name") String name, @Comment(text = "n") int n) throws SQLException {
+
+			if (access != null) {
+				access.checkWrite(table);
+			}
+
+			helper.inc(this.table, this, name, n, null);
 			return this;
 		}
 
@@ -899,6 +1047,7 @@ public final class Helper implements Serializable {
 		 *
 		 * @return W
 		 */
+		@Comment(text = "对象复制")
 		public W copy() {
 
 			W w = new W();
@@ -943,6 +1092,7 @@ public final class Helper implements Serializable {
 		 * 
 		 * @return true if empty
 		 */
+		@Comment(text = "检查是否空条件")
 		public boolean isEmpty() {
 			return X.isEmpty(queryList) && X.isEmpty(order);
 		}
@@ -953,7 +1103,7 @@ public final class Helper implements Serializable {
 		 *
 		 * @return Object[]
 		 */
-		Object[] args() {
+		public Object[] args() {
 			if (!queryList.isEmpty()) {
 				List<Object> l1 = new ArrayList<Object>();
 
@@ -1001,7 +1151,7 @@ public final class Helper implements Serializable {
 		 *
 		 * @return String
 		 */
-		String where() {
+		public String where() {
 			return where(null);
 		}
 
@@ -1032,9 +1182,13 @@ public final class Helper implements Serializable {
 			}
 
 			if (this.getCondition() == NOT) {
-				return sb.length() == 0 ? X.EMPTY : "!(" + sb + ")";
+				return sb.length() == 0 ? X.EMPTY : "not (" + sb + ")";
 			} else {
-				return sb.length() == 0 ? X.EMPTY : "(" + sb + ")";
+//				return sb.length() == 0 ? X.EMPTY : "(" + sb + ")";
+				if (sb.indexOf(" ") > 0) {
+					return "(" + sb + ")";
+				}
+				return sb.length() == 0 ? X.EMPTY : sb.toString();
 			}
 
 		}
@@ -1054,19 +1208,25 @@ public final class Helper implements Serializable {
 		 * @param table the table name
 		 * @return W
 		 */
+		@Comment(text = "设置表")
 		public static W table(String table) {
 			W w = new W();
 			w.table = table;
 			return w;
 		}
 
+		transient String _orderby;
+
 		/**
 		 * get the order by.
 		 *
 		 * @return String
 		 */
-		String orderby() {
-			return orderby(null);
+		public String orderby() {
+			if (_orderby == null) {
+				_orderby = orderby(null);
+			}
+			return _orderby;
 		}
 
 		/**
@@ -1106,11 +1266,14 @@ public final class Helper implements Serializable {
 		 * @param boost, the weight of the
 		 * @return W
 		 */
-		public W and(String name, Object v) {
+		@Comment()
+		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v) {
 			return and(name, v, 1);
 		}
 
-		public W and(String name, Object v, int boost) {
+		@Comment()
+		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+				@Comment(text = "boost") int boost) {
 			return and(name, v, OP.eq, boost);
 		}
 
@@ -1120,9 +1283,14 @@ public final class Helper implements Serializable {
 		 * @param w the w
 		 * @return W
 		 */
-
-		public W and(W w) {
+		@Comment()
+		public W and(@Comment(text = "query") W w) {
 			return and(w, W.AND);
+		}
+
+		@Comment(text = "and (not ....)")
+		public W andnot(@Comment(text = "query") W w) {
+			return and(w, W.NOT);
 		}
 
 		/**
@@ -1131,30 +1299,78 @@ public final class Helper implements Serializable {
 		 * @param cond, and, or, not
 		 * @return
 		 */
-		public W and(W w, int cond) {
+		@Comment()
+		public W and(@Comment(text = "query") W w, @Comment(text = "cond") int cond) {
 
 			if (w.isEmpty())
 				return this;
 
-			if (w.queryList.size() == 1 && (cond == W.AND || cond == W.OR)) {
-				queryList.add(w.queryList.get(0));
-				return this;
+//			if (w.queryList.size() == 1 && (cond == W.AND || cond == W.OR)) {
+//				queryList.add(w.queryList.get(0));
+//				return this;
+//			}
+//
+			if (this.size() > 1 && queryList.get(queryList.size() - 1).cond != cond) {
+				W e = W.create();
+				e.queryList = queryList;
+				this.queryList = new ArrayList<W>();
+				this.queryList.add(e);
 			}
-
-			w.cond = cond;
+			if (w.size() == 1) {
+				w = w.queryList.get(0);
+			}
+			if (cond == NOT) {
+				if (w.cond == NOT) {
+					w.cond = AND;
+				} else {
+					w.cond = cond;
+				}
+			}
 //			if (w instanceof Entity) {
 //				((Entity) w).container = this;
 //			}
 			queryList.add(w);
 
+			if (!w.order.isEmpty()) {
+				for (Entity e : w.order) {
+					if (!this.ordered(e.name)) {
+						this.order.add(e);
+					}
+				}
+			}
+
 			return this;
 		}
 
+		private boolean ordered(String name) {
+			if (this.order == null || this.order.isEmpty()) {
+				return false;
+			}
+
+			for (Entity e : this.order) {
+				if (X.isSame(e.name, name)) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		@Comment(text = "转为SQL，使用=")
 		public String toSQL() {
 
 			StringBuilder sql = new StringBuilder();
 
 			this.sql(sql);
+
+			return sql.toString();
+		}
+
+		@Comment(text = "转为SQL，使用==")
+		public String toSQL2() {
+
+			StringBuilder sql = new StringBuilder();
+
+			this.sql2(sql);
 
 			return sql.toString();
 		}
@@ -1202,25 +1418,68 @@ public final class Helper implements Serializable {
 
 		}
 
+		void sql2(StringBuilder sql) {
+
+			StringBuilder sb = new StringBuilder();
+			for (W clause : queryList) {
+				if (sb.length() > 0) {
+					if (clause.cond == AND) {
+						sb.append(" and ");
+					} else if (clause.cond == OR) {
+						sb.append(" or ");
+					} else if (clause.cond == NOT) {
+						sb.append(" and not ");
+					}
+				} else if (clause.cond == NOT) {
+					sb.append(" not ");
+				}
+
+//				clause.where(tansfers);
+				if (clause instanceof Entity) {
+					clause.sql2(sb);
+				} else {
+					sb.append("(");
+					clause.sql2(sb);
+					sb.append(")");
+				}
+			}
+			if (!this.order.isEmpty()) {
+				sb.append(" order by ");
+				for (int i = 0, len = this.order.size(); i < len; i++) {
+					if (i > 0) {
+						sb.append(",");
+					}
+					Entity e = this.order.get(i);
+					sb.append(e.name);
+					if (X.isSame(e.value, -1)) {
+						sb.append(" desc");
+					}
+				}
+			}
+//			sql.append("(").append(sb.toString()).append(")");
+			sql.append(sb.toString());
+
+		}
+
 		/**
 		 * and a SQL
 		 * 
 		 * @param sql
 		 * @return
+		 * @throws SQLException
 		 */
-		public W and(String sql) {
-			try {
-				W q = SQL.where2W(sql);
-				if (!q.isEmpty()) {
-//					if (this.isEmpty()) {
-//						this.and(q);
-//					} else {
-					this.and(q);
-//					}
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+		@Comment(text = "and条件", demo = ".and('a=1 or b=2')")
+		public W and(@Comment(text = "sql") String sql) throws SQLException {
+//			try {
+			W q = SQL.where(sql);
+			if (!q.isEmpty()) {
+				// System.out.println(q);
+				this.and(q);
+				this.sort(q);
 			}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
 			return this;
 		}
 
@@ -1229,23 +1488,26 @@ public final class Helper implements Serializable {
 		 * 
 		 * @param sql
 		 * @return
+		 * @throws SQLException
 		 */
-		public W or(String sql) {
-			try {
-				W q = SQL.where2W(StringFinder.create(sql));
-				if (!q.isEmpty()) {
+		@Comment(text = "or条件", demo = ".or('a=1 and b=1')")
+		public W or(@Comment(text = "sql") String sql) throws SQLException {
+//			try {
+			W q = SQL.where(sql);
+			if (!q.isEmpty()) {
 //					if (this.isEmpty()) {
 //						this.copy(q);
 //					} else {
-					this.or(q);
+				this.or(q);
 //					}
-				}
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
 			}
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			}
 			return this;
 		}
 
+		@Comment(text = "按照对象复制")
 		public W copy(W q) {
 
 			this.groupby = q.groupby;
@@ -1275,21 +1537,31 @@ public final class Helper implements Serializable {
 		 * @param w the w
 		 * @return W
 		 */
-		public W or(W w) {
+		@Comment()
+		public W or(@Comment(text = "query") W w) {
+			return or(w, W.OR);
+		}
+
+		@Comment(text = "or (not ...)")
+		public W ornot(@Comment(text = "query") W w) {
+			return or(w, W.NOT);
+		}
+
+		@Comment()
+		public W or(@Comment(text = "query") W w, int cond) {
 			if (w.isEmpty())
 				return this;
 
-			if (this.queryList.isEmpty())
-				return and(w);
-
-			if (w.queryList.size() == 1) {
-				W q1 = w.queryList.get(0);
-				q1.cond = OR;
-				queryList.add(q1);
-				return this;
+			if (this.size() > 1 && queryList.get(queryList.size() - 1).cond != cond) {
+				W e = W.create();
+				e.queryList = queryList;
+				this.queryList = new ArrayList<W>();
+				this.queryList.add(e);
 			}
-
-			w.cond = OR;
+			if (w.size() == 1) {
+				w = w.queryList.get(0);
+			}
+			w.cond = cond;
 //			if (w instanceof Entity) {
 //				((Entity) w).container = this;
 //			}
@@ -1309,9 +1581,9 @@ public final class Helper implements Serializable {
 			for (LinkedHashMap<String, Object> r : l1) {
 				if (!r.containsKey(e.name)) {
 					if (X.isSame(e.value, -1)) {
-						r.put(e.name, -1);
+						r.put(e.name.toLowerCase(), -1);
 					} else {
-						r.put(e.name, 1);
+						r.put(e.name.toLowerCase(), 1);
 					}
 				}
 			}
@@ -1328,7 +1600,7 @@ public final class Helper implements Serializable {
 				for (LinkedHashMap<String, Object> r2 : l2) {
 					for (String name : r2.keySet()) {
 						if (!r.containsKey(name)) {
-							r.put(name, 1);
+							r.put(name.toLowerCase(), 1);
 						}
 					}
 				}
@@ -1344,9 +1616,9 @@ public final class Helper implements Serializable {
 
 			LinkedHashMap<String, Object> r = new LinkedHashMap<String, Object>();
 			if (X.isSame(e.value, -1)) {
-				r.put(e.name, -1);
+				r.put(e.name.toLowerCase(), -1);
 			} else {
-				r.put(e.name, 1);
+				r.put(e.name.toLowerCase(), 1);
 			}
 			l1.add(r);
 		}
@@ -1363,24 +1635,6 @@ public final class Helper implements Serializable {
 		public List<LinkedHashMap<String, Object>> sortkeys() {
 
 			List<LinkedHashMap<String, Object>> l1 = new ArrayList<LinkedHashMap<String, Object>>();
-
-//			if (!X.isEmpty(elist))
-//				for (Entity e : elist) {
-//					if (e.cond == AND) {
-//						_and(l1, e);
-//					} else {
-//						_or(l1, e);
-//					}
-//				}
-//
-//			if (!X.isEmpty(wlist))
-//				for (W w : wlist) {
-//					if (w.cond == AND) {
-//						_and(l1, w);
-//					} else {
-//						_or(l1, w);
-//					}
-//				}
 
 			if (!queryList.isEmpty()) {
 				for (W e : queryList) {
@@ -1416,16 +1670,15 @@ public final class Helper implements Serializable {
 				for (Entity e : order.toArray(new Entity[order.size()])) {
 
 					for (LinkedHashMap<String, Object> m : l1) {
-						if (!m.containsKey(e.name)) {
-							if (X.isSame(e.name, "geo")) {
-								m.put(e.name, 2);
+						m.remove(e.name);
+						if (X.isSame(e.name, "geo")) {
+							m.put(e.name, 2);
+						} else {
+							int i = X.toInt(e.value);
+							if (i < 0) {
+								m.put(e.name.toLowerCase(), -1);
 							} else {
-								int i = X.toInt(e.value);
-								if (i < 0) {
-									m.put(e.name, -1);
-								} else {
-									m.put(e.name, 1);
-								}
+								m.put(e.name.toLowerCase(), 1);
 							}
 						}
 					}
@@ -1441,7 +1694,8 @@ public final class Helper implements Serializable {
 		 * @param v
 		 * @return
 		 */
-		public W and(String[] name, Object v) {
+		@Comment()
+		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v) {
 			return and(name, v, W.OP.eq);
 		}
 
@@ -1451,7 +1705,9 @@ public final class Helper implements Serializable {
 		 * @param op
 		 * @return
 		 */
-		public W and(String[] name, Object v, OP op) {
+		@Comment()
+		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op) {
 			return and(name, v, op, 1);
 		}
 
@@ -1462,7 +1718,9 @@ public final class Helper implements Serializable {
 		 * @param boost
 		 * @return
 		 */
-		public W and(String[] name, Object v, OP op, int boost) {
+		@Comment(text = "and", demo = "..and(['a', 'b', 'c'], 'a', 10)")
+		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op, @Comment(text = "boost") int boost) {
 			if (v instanceof String) {
 				String[] ss = X.split(v.toString(), "[ ]");
 				for (String s1 : ss) {
@@ -1485,10 +1743,6 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
-		public W and(String[] name, Object v, int[] boost) {
-			return and(name, v, OP.eq, boost);
-		}
-
 		/**
 		 * 
 		 * @param boost
@@ -1509,7 +1763,37 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
-		public W and(String[] name, Object v, OP op, int[] boost) {
+		/**
+		 * and a group conditions
+		 * 
+		 * @param name  string/array
+		 * @param v     object/array
+		 * @param boost object/array
+		 * @return
+		 */
+		@Comment(text = "and", demo = "..and(['a', 'b', 'c'], 'a', [1000, 100])")
+		public W and(@Comment(text = "name") Object name, @Comment(text = "value") Object v,
+				@Comment(text = "boost") Object boost) {
+			List<String> nn = X.asList(name, s -> s.toString());
+			List<Object> vv = X.asList(v, s -> s);
+			List<Integer> bb = X.asList(boost, s -> X.toInt(s));
+
+			int len = vv.size();
+			for (int i = 0; i < len; i++) {
+				Object v1 = vv.get(i);
+				W q = W.create();
+				for (String n1 : nn) {
+					q.or(n1, v1, bb.size() > i ? bb.get(i) : 1);
+				}
+				this.and(q);
+			}
+			return this;
+
+		}
+
+		@Comment(text = "and", demo = "..and(['a', 'b', 'c'], 'a', [1000, 100])")
+		public W and(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op, @Comment(text = "boost") int[] boost) {
 			if (v instanceof String) {
 				String[] ss = X.split(v.toString(), " ");
 				for (String s1 : ss) {
@@ -1517,7 +1801,7 @@ public final class Helper implements Serializable {
 					String[] s2 = X.split(s1, "\\|");
 					for (String s3 : s2) {
 						for (int i = 0; i < name.length; i++) {
-							q.or(name[i], s3, op, boost[i]);
+							q.or(name[i], s3, op, boost.length > i ? boost[i] : 1);
 						}
 					}
 					this.and(q);
@@ -1525,7 +1809,7 @@ public final class Helper implements Serializable {
 			} else {
 				W q = W.create();
 				for (int i = 0; i < name.length; i++) {
-					q.or(name[i], v, op, boost[i]);
+					q.or(name[i], v, op, boost.length > i ? boost[i] : 1);
 				}
 				this.and(q);
 			}
@@ -1533,12 +1817,13 @@ public final class Helper implements Serializable {
 		}
 
 		/**
-		 * @Deprecated
 		 * @param name
 		 * @param v
 		 * @param op
 		 * @return
 		 */
+		@Comment()
+		@Deprecated
 		public W and(String name, Object v, String op) {
 			if (X.isSame(">", op) || X.isSame("gt", op)) {
 				return and(name, v, W.OP.gt);
@@ -1550,6 +1835,8 @@ public final class Helper implements Serializable {
 				return and(name, v, W.OP.lte);
 			} else if (X.isSame("!=", op) || X.isSame("neq", op)) {
 				return and(name, v, W.OP.neq);
+			} else if (X.isIn(op, "not like", "!like")) {
+				return and(W.create().and(name, v, W.OP.like), W.NOT);
 			} else if (X.isSame("like", op)) {
 				return and(name, v, W.OP.like);
 			} else if (X.isSame("like_", op)) {
@@ -1561,24 +1848,27 @@ public final class Helper implements Serializable {
 		}
 
 		/**
-		 * @Deprecated
 		 * @param name
 		 * @param v
 		 * @param op
 		 * @return
 		 */
+		@Comment()
+		@Deprecated
 		public W or(String name, Object v, String op) {
 			return or(name, v, op, 1);
 		}
 
 		/**
-		 * @Deprecated
+		 * 
 		 * @param name
 		 * @param v
 		 * @param op
 		 * @param boost
 		 * @return
 		 */
+		@Comment()
+		@Deprecated
 		public W or(String name, Object v, String op, int boost) {
 			if (X.isSame(">", op) || X.isSame("gt", op)) {
 				return or(name, v, W.OP.gt, boost);
@@ -1590,6 +1880,8 @@ public final class Helper implements Serializable {
 				return or(name, v, W.OP.lte, boost);
 			} else if (X.isSame("!=", op) || X.isSame("neq", op)) {
 				return or(name, v, W.OP.neq, boost);
+			} else if (X.isIn(op, "not like", "!like")) {
+				return or(W.create().and(name, v, W.OP.like, boost), W.NOT);
 			} else if (X.isSame("like", op)) {
 				return or(name, v, W.OP.like, boost);
 			}
@@ -1604,11 +1896,14 @@ public final class Helper implements Serializable {
 		 * @param op   the operation
 		 * @return the W
 		 */
-		public W and(String name, Object v, OP op) {
+		@Comment()
+		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op) {
 			return and(name, v, op, 1);
 		}
 
-		public W scan(Consumer<Entity> func) {
+		@Comment()
+		public W scan(@Comment(text = "jsfunc") Consumer<Entity> func) {
 
 			for (int i = queryList.size() - 1; i >= 0; i--) {
 				W e = queryList.get(i);
@@ -1637,17 +1932,34 @@ public final class Helper implements Serializable {
 				}
 
 			}
+
+			for (int i = order.size() - 1; i >= 0; i--) {
+				Entity e1 = order.get(i);
+
+				String name = e1.name;
+				Object value = e1.value;
+
+				func.accept(e1);
+
+				if (!X.isSame(e1.value, value) || !X.isSame(name, e1.name)) {
+					e1.replace(e1.value);
+				}
+			}
+
 			return this;
 		}
 
-		public W scan(ScriptObjectMirror m) {
+		@Comment()
+		public W scan(@Comment(text = "jsfunc") ScriptObjectMirror m) {
 			return this.scan(e -> {
 				m.call(e);
 			});
 		}
 
 		@SuppressWarnings({ "rawtypes" })
-		public W and(String name, Object v, OP op, int boost) {
+		@Comment()
+		public W and(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op, @Comment(text = "boost") int boost) {
 			if (X.isEmpty(name))
 				return this;
 
@@ -1708,15 +2020,41 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
-		public W or(String[] name, Object v) {
+		@Comment()
+		public W and(@Comment(text = "names") Object name, @Comment(text = "op") String op,
+				@Comment(text = "values") Object v, @Comment(text = "boosts") Object boost) {
+
+			List<String> nn = X.asList(name, s -> s.toString());
+			List<Object> vv = X.asList(v, s -> s);
+			List<Integer> bb = X.asList(boost, s -> X.toInt(s));
+
+			int len = nn.size();
+			for (int i = 0; i < len; i++) {
+				String s1 = nn.get(i);
+				W q = W.create();
+				for (Object s2 : vv) {
+					q.or(s1, s2, OP.valueOf(op), bb.size() > i ? bb.get(i) : 1);
+				}
+				this.and(q);
+			}
+			return this;
+
+		}
+
+		@Comment()
+		public W or(@Comment(text = "name") String[] name, @Comment(text = "value") Object v) {
 			return or(name, v, W.OP.eq);
 		}
 
-		public W or(String[] name, Object v, OP op) {
+		@Comment()
+		public W or(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op) {
 			return or(name, v, op, 1);
 		}
 
-		public W or(String[] name, Object v, OP op, int boost) {
+		@Comment()
+		public W or(@Comment(text = "name") String[] name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op, @Comment(text = "boost") int boost) {
 			for (String s : name) {
 				this.or(s, v, op, boost);
 			}
@@ -1730,11 +2068,14 @@ public final class Helper implements Serializable {
 		 * @param v    the v
 		 * @return W
 		 */
-		public W or(String name, Object v) {
+		@Comment()
+		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v) {
 			return or(name, v, 1);
 		}
 
-		public W or(String name, Object v, int boost) {
+		@Comment()
+		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+				@Comment(text = "boost") int boost) {
 			return or(name, v, OP.eq, boost);
 		}
 
@@ -1746,12 +2087,16 @@ public final class Helper implements Serializable {
 		 * @param op   the op
 		 * @return W
 		 */
-		public W or(String name, Object v, OP op) {
+		@Comment()
+		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v,
+				@Comment(text = "op") OP op) {
 			return or(name, v, op, 1);
 		}
 
 		@SuppressWarnings({ "rawtypes" })
-		public W or(String name, Object v, OP op, int boost) {
+		@Comment()
+		public W or(@Comment(text = "name") String name, @Comment(text = "value") Object v, @Comment(text = "op") OP op,
+				@Comment(text = "boost") int boost) {
 
 			if (X.isEmpty(name))
 				return this;
@@ -1894,6 +2239,44 @@ public final class Helper implements Serializable {
 			return w;
 		}
 
+		@Comment(text = "creat XY object by xy")
+		public XY xy(String xy, String distance) {
+			return XY.create(xy, distance);
+		}
+
+		@Comment(text = "creat XY object by xy")
+		public XY xy(@Comment(text = "x") double x, @Comment(text = "y") double y, String distance) {
+			return XY.create(x, y, distance);
+		}
+
+		public static class XY {
+
+			public double x;
+			public double y;
+			public String xy;
+			public String distance;
+
+			public static XY create(double x, double y, String distance) {
+				XY e = new XY();
+				e.x = x;
+				e.y = y;
+				e.xy = x + "," + y;
+				e.distance = distance;
+				return e;
+			}
+
+			public static XY create(String xy, String distance) {
+				XY e = new XY();
+				e.xy = xy;
+				String[] ss = X.split(xy, "[,]");
+				e.x = X.toDouble(ss[0]);
+				e.y = X.toDouble(ss[1]);
+				e.distance = distance;
+				return e;
+			}
+
+		}
+
 		public static class Entity extends W {
 
 			public List<W> _queryList;
@@ -2034,11 +2417,26 @@ public final class Helper implements Serializable {
 						list.add(o);
 					}
 				} else if (op == OP.like) {
-					list.add("%" + value + "%");
+					String s = X.isEmpty(value) ? X.EMPTY : value.toString();
+					if (!s.startsWith("%")) {
+						s = "%" + s;
+					}
+					if (!s.endsWith("%")) {
+						s += "%";
+					}
+					list.add(s);
 				} else if (op == OP.like_) {
-					list.add(value + "%");
+					String s = X.isEmpty(value) ? X.EMPTY : value.toString();
+					if (!s.endsWith("%")) {
+						s += "%";
+					}
+					list.add(s);
 				} else if (op == OP.like_$) {
-					list.add("%" + value);
+					String s = X.isEmpty(value) ? X.EMPTY : value.toString();
+					if (!s.startsWith("%")) {
+						s = "%" + s;
+					}
+					list.add(s);
 				} else {
 					list.add(value);
 				}
@@ -2058,13 +2456,20 @@ public final class Helper implements Serializable {
 			}
 
 			public BasicDBObject query() {
+
+				if (value != null) {
+					if (value instanceof Date) {
+						value = ((Date) value).getTime();
+					}
+				}
+
 				if (this.cond == NOT) {
 					if (op == OP.eq) {
 						if (value == null) {
 							return new BasicDBObject(name,
 									new BasicDBObject("$not", new BasicDBObject("$exists", false)));
 						} else {
-							return new BasicDBObject(name, new BasicDBObject("$not", value));
+							return new BasicDBObject(name, new BasicDBObject("$ne", value));
 						}
 					} else if (op == OP.gt) {
 						return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$gt", value)));
@@ -2123,13 +2528,17 @@ public final class Helper implements Serializable {
 					} else if (op == OP.lte) {
 						return new BasicDBObject(name, new BasicDBObject("$lte", value));
 					} else if (op == OP.like) {
-						Pattern p1 = Pattern.compile(value.toString());
+						value = _escapeRegex(value.toString());
+						Pattern p1 = Pattern.compile(".*" + value.toString() + ".*");
+//						System.out.println(p1);
 						return new BasicDBObject(name, p1);
 					} else if (op == OP.like_) {
-						Pattern p1 = Pattern.compile("^" + value);
+						value = _escapeRegex(value.toString());
+						Pattern p1 = Pattern.compile("^" + value + ".*");
 						return new BasicDBObject(name, p1);
 					} else if (op == OP.like_$) {
-						Pattern p1 = Pattern.compile(value + "$");
+						value = _escapeRegex(value.toString());
+						Pattern p1 = Pattern.compile(".*" + value + "$");
 						return new BasicDBObject(name, p1);
 					} else if (op == OP.neq) {
 						if (value == null) {
@@ -2156,6 +2565,27 @@ public final class Helper implements Serializable {
 					}
 				}
 				return new BasicDBObject();
+			}
+
+			private String _escapeRegex(String s) {
+
+				String str1 = "*.?+$^[](){}|\\/";
+
+				StringBuilder sb = new StringBuilder();
+				for (int i = 0; i < s.length(); i++) {
+					char c = s.charAt(i);
+					if (c == '"') {
+						sb.append("\\\\\"");
+					} else {
+						String ss = String.valueOf(c);
+						if (str1.contains(ss)) {
+							ss = "\\" + ss;
+						}
+						sb.append(ss);
+					}
+				}
+
+				return sb.toString();
 			}
 
 			/**
@@ -2213,11 +2643,46 @@ public final class Helper implements Serializable {
 //				return sb.toString();
 			}
 
+			public void sql2(StringBuilder sql) {
+
+//				if (value == null)
+//					return;
+
+				sql.append(name);
+
+				if (op == OP.eq) {
+					sql.append("==");
+				} else if (op == OP.gt) {
+					sql.append(">");
+				} else if (op == OP.gte) {
+					sql.append(">=");
+				} else if (op == OP.lt) {
+					sql.append("<");
+				} else if (op == OP.lte) {
+					sql.append("<=");
+				} else if (op == OP.like || op == OP.like_ || op == OP.like_$) {
+					sql.append(" like ");
+				} else if (op == OP.neq) {
+					sql.append(" <> ");
+				}
+
+				if (value instanceof String) {
+					sql.append("'").append(value).append("'");
+				} else {
+					sql.append(value);
+				}
+
+//				return sb.toString();
+			}
+
 			public String where(Map<String, String> tansfers) {
 				// TODO, for "null" value, some db "is null"
 
 				StringBuilder sb = new StringBuilder();
 
+				if (this.getCondition() == NOT) {
+					sb.append("not ");
+				}
 				if (tansfers != null && tansfers.containsKey(name)) {
 					sb.append(tansfers.get(name));
 				} else {
@@ -2266,13 +2731,19 @@ public final class Helper implements Serializable {
 						sb.append("<=?");
 					} else if (op == OP.like) {
 						sb.append(" like ?");
+					} else if (op == OP.like) {
+						sb.append(" not like ?");
 					} else if (op == OP.neq) {
 						sb.append(" <> ?");
 					}
 
 					sb.append(value);
 
-					tostring = sb.toString();
+					if (this.cond == W.NOT) {
+						tostring = "not " + sb.toString();
+					} else {
+						tostring = sb.toString();
+					}
 				}
 				return tostring;
 			}
@@ -2292,85 +2763,92 @@ public final class Helper implements Serializable {
 			}
 		}
 
-		BasicDBObject query() {
+		transient BasicDBObject _query;
 
-			BasicDBList list = new BasicDBList();
+		public BasicDBObject query() {
+			if (_query == null) {
+				BasicDBList list = new BasicDBList();
 
-			int cond = -1;
-			for (W clause : queryList) {
-				if (!list.isEmpty() && cond != clause.getCondition()) {
-					if (cond == AND) {
-						if (list.size() > 1) {
-							BasicDBObject q = new BasicDBObject("$and", list.clone());
-							list.clear();
-							list.add(q);
-						}
-					} else if (cond == OR) {
-						if (list.size() > 1) {
-							BasicDBObject q = new BasicDBObject("$or", list.clone());
-							list.clear();
-							list.add(q);
+				int cond = -1;
+				for (W clause : queryList) {
+					if (!list.isEmpty() && cond != clause.getCondition()) {
+						if (cond == AND) {
+							if (list.size() > 1) {
+								BasicDBObject q = new BasicDBObject("$and", list.clone());
+								list.clear();
+								list.add(q);
+							}
+						} else if (cond == OR) {
+							if (list.size() > 1) {
+								BasicDBObject q = new BasicDBObject("$or", list.clone());
+								list.clear();
+								list.add(q);
+							}
 						}
 					}
-				}
 
-				int c1 = clause.getCondition();
-				if (c1 == W.NOT) {
-					if (clause instanceof W) {
-						BasicDBObject o = ((W) clause).query();
-						String key = o.keySet().iterator().next();
-						Object v1 = o.get(key);
-						if (v1 instanceof List) {
-							BasicDBObject q = new BasicDBObject("$not", o);
-							list.add(q);
+					int c1 = clause.getCondition();
+					if (c1 == W.NOT) {
+						if (clause instanceof W) {
+							BasicDBObject o = ((W) clause).query();
+							String key = o.keySet().iterator().next();
+							Object v1 = o.get(key);
+							if (v1 instanceof List) {
+								BasicDBObject q = new BasicDBObject("$not", o);
+								list.add(q);
+							} else {
+								BasicDBObject q = new BasicDBObject(key, v1);// new BasicDBObject("$not", v1));
+								list.add(q);
+							}
 						} else {
-							BasicDBObject q = new BasicDBObject(key, new BasicDBObject("$not", v1));
+							BasicDBObject q = new BasicDBObject("$ne", clause);
 							list.add(q);
 						}
+
 					} else {
-						BasicDBObject q = new BasicDBObject("$not", clause);
-						list.add(q);
+						cond = c1;
+
+						if (clause instanceof W) {
+							list.add(((W) clause).query());
+						} else {
+							list.add(clause);
+						}
 					}
+				}
 
+				if (list.isEmpty()) {
+					_query = new BasicDBObject();
+				} else if (list.size() == 1) {
+					_query = (BasicDBObject) list.get(0);
 				} else {
-					cond = c1;
-
-					if (clause instanceof W) {
-						list.add(((W) clause).query());
+					if (cond == OR) {
+						_query = new BasicDBObject().append("$or", list);
 					} else {
-						list.add(clause);
+						_query = new BasicDBObject().append("$and", list);
 					}
 				}
 			}
-
-			if (list.isEmpty()) {
-				return new BasicDBObject();
-			} else if (list.size() == 1) {
-				return (BasicDBObject) list.get(0);
-			} else {
-				if (cond == OR) {
-					return new BasicDBObject().append("$or", list);
-				} else {
-
-					return new BasicDBObject().append("$and", list);
-				}
-			}
+			return _query;
 		}
+
+		transient BasicDBObject _order;
 
 		/**
 		 * Order.
 		 *
 		 * @return the basic db object
 		 */
-		BasicDBObject order() {
-			BasicDBObject q = new BasicDBObject();
-			if (order != null && order.size() > 0) {
-				for (Entity e : order) {
-					q.append(e.name, e.value);
+		public BasicDBObject order() {
+			if (_order == null) {
+				BasicDBObject q = new BasicDBObject();
+				if (order != null && order.size() > 0) {
+					for (Entity e : order) {
+						q.append(e.name, e.value);
+					}
 				}
+				_order = q;
 			}
-
-			return q;
+			return _order;
 		}
 
 		/**
@@ -2379,16 +2857,29 @@ public final class Helper implements Serializable {
 		 * @param name
 		 * @return
 		 */
-		public W sort(String name) {
+		@Comment()
+		public W sort(@Comment(text = "name") String name) {
 			return sort(name, 1);
 		}
 
+		@Comment()
+		public W sort(@Comment(text = "q") W q) {
+			for (Entity e : q.order) {
+				if (!this.ordered(e.name)) {
+					this.order.add(e);
+				}
+			}
+			return this;
+		}
+
+		@Comment(text = "clear sort")
 		public W clearSort() {
 			order.clear();
 			return this;
 		}
 
-		public W sort(String name, String type) {
+		@Comment()
+		public W sort(@Comment(text = "name") String name, @Comment(text = "type") String type) {
 			return sort(name, 1, type);
 		}
 
@@ -2399,16 +2890,22 @@ public final class Helper implements Serializable {
 		 * @param i    the i
 		 * @return the w
 		 */
-		public W sort(String name, int i) {
-			if (X.isEmpty(name))
-				return this;
-			order.add(new Entity(name, i, OP.eq, AND, 0));
-			return this;
+		@Comment()
+		public W sort(@Comment(text = "name") String name, @Comment(text = "i") int i) {
+			return sort(name, i, null);
 		}
 
-		public W sort(String name, int i, String type) {
+		@Comment()
+		public W sort(@Comment(text = "name") String name, @Comment(text = "i") int i,
+				@Comment(text = "type") String type) {
 			if (X.isEmpty(name))
 				return this;
+
+			for (Entity e : order) {
+				if (X.isSame(e.name, name)) {
+					return this;
+				}
+			}
 
 			Entity e = new Entity(name, i, OP.eq, AND, 0);
 			e.type = type;
@@ -2425,6 +2922,7 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
+		@Comment()
 		public boolean exists() throws SQLException {
 
 			if (log.isDebugEnabled())
@@ -2443,12 +2941,19 @@ public final class Helper implements Serializable {
 
 		}
 
-		public <T extends Bean> boolean stream(Function<T, Boolean> func) throws Exception {
+		@Comment(demo = ".stream(function(e){return true})")
+		public boolean stream(@Comment(text = "func") Function<Data, Boolean> func) throws Exception {
 			return stream(0, func);
 		}
 
 		@SuppressWarnings({ "rawtypes", "unchecked" })
-		public <T extends Bean> boolean stream(long offset, Function<T, Boolean> func) throws Exception {
+		@Comment(demo = ".stream(100, function(e){return true})")
+		public boolean stream(@Comment(text = "offset") long offset,
+				@Comment(text = "func") Function<Data, Boolean> func) throws Exception {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
 
 			if (dao != null) {
 
@@ -2456,38 +2961,10 @@ public final class Helper implements Serializable {
 
 			} else if (!X.isEmpty(table)) {
 				W q = this;
-				if (access != null) {
-					W q1 = access.filter("db", table);
-					if (q1 != null) {
-						if (q.isEmpty()) {
-							q = q1;
-						} else if (!q1.isEmpty()) {
-							q = W.create().and(q).and(q1);
-						}
-					}
-				}
 
 				helper.getOptimizer().query(table, q);
 
-				Cursor c1 = helper.cursor(table, q, offset, Data.class);
-				if (c1 != null) {
-					try {
-						while (c1.hasNext()) {
-							T e = (T) c1.next();
-							if (access != null) {
-								access.read("db", table, e);
-							}
-							if (!func.apply(e)) {
-								return false;
-							}
-						}
-					} catch (Exception e) {
-						throw e;
-					} finally {
-						X.close(c1);
-					}
-				}
-				return true;
+				return helper.stream(table, q, offset, func, Data.class);
 			}
 			return false;
 		}
@@ -2499,7 +2976,12 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
+		@Comment(text = "查询1条数据")
 		public <T> T load() throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
 
 			if (log.isDebugEnabled()) {
 				log.debug("w=" + this);
@@ -2510,26 +2992,18 @@ public final class Helper implements Serializable {
 				t1 = (T) dao.load(this);
 			} else if (!X.isEmpty(table)) {
 				W q = this;
-				if (access != null) {
-					W q1 = access.filter("db", table);
-					if (q1 != null) {
-						if (q.isEmpty()) {
-							q = q1;
-						} else if (!q1.isEmpty()) {
-							q = W.create().and(q).and(q1);
-						}
-					}
-				}
 
 				helper.getOptimizer().query(table, q);
 
 				t1 = (T) helper.load(table, q, t, false);
+				if (access != null && t1 != null) {
+					access.decode(table, (Bean) t1);
+//				} else if (log.isWarnEnabled()) {
+//					log.warn("can not decode, access=" + access + ", t1=" + t1);
+				}
+				return t1;
 			} else {
 				throw new SQLException("not set table");
-			}
-
-			if (access != null) {
-				access.read("db", table, t1);
 			}
 
 			return t1;
@@ -2547,6 +3021,10 @@ public final class Helper implements Serializable {
 		@SuppressWarnings("unchecked")
 		public <T> T load(boolean trace) throws SQLException {
 
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (log.isDebugEnabled()) {
 				log.debug("w=" + this);
 			}
@@ -2556,16 +3034,6 @@ public final class Helper implements Serializable {
 				t1 = (T) dao.load(this);
 			} else if (!X.isEmpty(table)) {
 				W q = this;
-				if (access != null) {
-					W q1 = access.filter("db", table);
-					if (q1 != null) {
-						if (q.isEmpty()) {
-							q = q1;
-						} else if (!q1.isEmpty()) {
-							q = W.create().and(q).and(q1);
-						}
-					}
-				}
 
 				helper.getOptimizer().query(table, q);
 
@@ -2574,8 +3042,8 @@ public final class Helper implements Serializable {
 				throw new SQLException("not set table");
 			}
 
-			if (access != null) {
-				access.read("db", table, t1);
+			if (access != null && t1 != null) {
+				access.decode(table, t1);
 			}
 
 			return t1;
@@ -2593,6 +3061,10 @@ public final class Helper implements Serializable {
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public <T> T load(Consumer<T> func) throws SQLException {
 
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			T t1 = null;
 			if (dao != null) {
 				t1 = (T) dao.load(this, (Consumer) func);
@@ -2601,16 +3073,6 @@ public final class Helper implements Serializable {
 				door.lock();
 				try {
 					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
 
 					helper.getOptimizer().query(table, q);
 
@@ -2625,8 +3087,8 @@ public final class Helper implements Serializable {
 				throw new SQLException("not set table");
 			}
 
-			if (access != null) {
-				access.read("db", table, t1);
+			if (access != null && t1 != null) {
+				access.decode(table, t1);
 			}
 
 			return t1;
@@ -2641,7 +3103,8 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		public <T> T load(int offset) throws SQLException {
+		@Comment(text = "查询1条数据", demo = ".load(10)")
+		public <T> T load(@Comment(text = "offset") int offset) throws SQLException {
 			Beans<?> l1 = load(offset, 1);
 			return (T) (l1 == null || l1.isEmpty() ? null : l1.get(0));
 		}
@@ -2707,7 +3170,13 @@ public final class Helper implements Serializable {
 		 * @throws SQLException
 		 */
 		@SuppressWarnings("unchecked")
-		public <T extends Bean> Beans<T> load(int s, int n) throws SQLException {
+		@Comment(text = "查询n条数据", demo = ".load(0, 10)")
+		public <T extends Bean> Beans<T> load(@Comment(text = "offset") int s, @Comment(text = "limit") int n)
+				throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
 
 			if (log.isDebugEnabled()) {
 				log.debug("w=" + this);
@@ -2725,16 +3194,6 @@ public final class Helper implements Serializable {
 				}
 			} else if (!X.isEmpty(table)) {
 				W q = this;
-				if (access != null) {
-					W q1 = access.filter("db", table);
-					if (q1 != null) {
-						if (q.isEmpty()) {
-							q = q1;
-						} else if (!q1.isEmpty()) {
-							q = W.create().and(q).and(q1);
-						}
-					}
-				}
 
 				helper.getOptimizer().query(table, q);
 
@@ -2751,14 +3210,23 @@ public final class Helper implements Serializable {
 			}
 
 			if (access != null) {
-				access.read("db", table, l1);
+				l1.forEach(e -> {
+					access.decode(table, e);
+				});
 			}
 
 			return l1;
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public <T extends Bean> Beans<T> load(int s, int n, Consumer<Beans<T>> func) throws SQLException {
+		@Comment(text = "查询数据")
+		public <T extends Bean> Beans<T> load(@Comment(text = "offset") int s, @Comment(text = "limit") int n,
+				@Comment(text = "jsfunc") Consumer<Beans<T>> func) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (log.isDebugEnabled())
 				log.debug("w=" + this);
 
@@ -2774,16 +3242,6 @@ public final class Helper implements Serializable {
 				door.lock();
 				try {
 					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
 
 					helper.getOptimizer().query(table, q);
 
@@ -2791,6 +3249,11 @@ public final class Helper implements Serializable {
 					l1.table = table;
 					l1.q = this;
 					if (func != null && l1 != null && !l1.isEmpty()) {
+						if (access != null) {
+							l1.forEach(e -> {
+								access.decode(table, e);
+							});
+						}
 						func.accept(l1);
 					}
 
@@ -2801,28 +3264,20 @@ public final class Helper implements Serializable {
 				throw new SQLException("not set table");
 			}
 
-			if (access != null) {
-				access.read("db", table, l1);
-			}
-
 			return l1;
 		}
 
+		@Comment(text = "按照当前条件统计条数")
 		public long count() throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.count(this);
 			} else if (!X.isEmpty(table)) {
 				W q = this;
-				if (access != null) {
-					W q1 = access.filter("db", table);
-					if (q1 != null) {
-						if (q.isEmpty()) {
-							q = q1;
-						} else if (!q1.isEmpty()) {
-							q = W.create().and(q).and(q1);
-						}
-					}
-				}
 
 				helper.getOptimizer().query(table, q);
 
@@ -2833,190 +3288,144 @@ public final class Helper implements Serializable {
 
 		}
 
-		public <T> T sum(String name) throws SQLException {
+		@Comment(text = "按照当前条件求和")
+		public <T> T sum(@Comment(text = "fieldname") String name) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.sum(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, name)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.sum(table, q, name);
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.sum(table, q, name);
 			}
 			throw new SQLException("not set table");
 
 		}
 
-		public <T> T avg(String name) throws SQLException {
+		@Comment()
+		public <T> T avg(@Comment(text = "name") String name) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.avg(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, name)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.avg(table, q, name);
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.avg(table, q, name);
 			}
 			throw new SQLException("not set table");
 
 		}
 
 		@SuppressWarnings("unchecked")
-		public <T> T min(String name) throws SQLException {
+		@Comment(text = "按照当前条件查询最小值", demo = ".min('a')")
+		public <T> T min(@Comment(text = "fieldname") String name) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.min(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, name)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
 
-					q.sort(name);
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				q.sort(name);
 
-					Data d = helper.load(table, q, Data.class, false);
-					if (d != null) {
-						return (T) d.get(name);
-					}
-					return null;
-				} else {
-					throw new SQLException("no privilege!");
+				helper.getOptimizer().query(table, q);
+
+				Data d = helper.load(table, q, Data.class, false);
+				if (d != null) {
+					return (T) d.get(name);
 				}
+				return null;
 			}
 			throw new SQLException("not set table");
 
 		}
 
 		@SuppressWarnings("unchecked")
-		public <T> T max(String name) throws SQLException {
+		@Comment(text = "按照当前条件查询最大值", demo = ".max('a')")
+		public <T> T max(@Comment(text = "fieldname") String name) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.max(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, name)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					q.sort(name, -1);
+				q.sort(name, -1);
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					Data d = helper.load(table, q, Data.class, false);
-					if (d != null) {
-						return (T) d.get(name);
-					}
-					return null;
-				} else {
-					throw new SQLException("no privilege!");
+				Data d = helper.load(table, q, Data.class, false);
+				if (d != null) {
+					return (T) d.get(name);
 				}
+				return null;
 			}
 			throw new SQLException("not set table");
 
 		}
 
-		public <T> T median(String name) throws SQLException {
+		@Comment(text = "按照当前条件查询中位数", demo = ".median('a')")
+		public <T> T median(@Comment(text = "fieldname") String name) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.median(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, name)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.median(table, q, name);
+				return helper.median(table, q, name);
 
-				} else {
-					throw new SQLException("no privilege!");
-				}
 			}
 			throw new SQLException("not set table");
 
 		}
 
+		@Comment(text = "删除", demo = ".delete()")
 		public int delete() throws SQLException {
+
+			if (access != null) {
+				access.checkWrite(table);
+			}
+
 			if (dao != null) {
 				return dao.delete(this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.checkWrite("db", table, null)) {
 
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.delete(table, q);
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.delete(table, q);
 			}
 			throw new SQLException("not set table");
 		}
 
-		public int update(Object o) throws SQLException {
+		@Comment(text = "更新", demo = ".update({'a':1})")
+		public int update(@Comment(text = "object") Object o) throws SQLException {
 
 			V v = null;
 			if (o instanceof V) {
@@ -3026,139 +3435,96 @@ public final class Helper implements Serializable {
 				v = V.fromJSON(j1);
 			}
 
+			if (access != null) {
+				access.checkWrite(table);
+				access.encode(table, v);
+			}
+
 			if (dao != null) {
 				return dao.update(this, v);
 			} else if (!X.isEmpty(table)) {
 
-				if (access == null || access.checkWrite("db", table, v)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.updateTable(table, q, v);
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.updateTable(table, q, v);
 			}
 			throw new SQLException("not set table");
 		}
 
 		public List<?> distinct(String name) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.distinct(name, this);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, name)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.distinct(table, name, q);
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.distinct(table, name, q);
 			}
 			throw new SQLException("not set table");
 		}
 
 		public List<JSON> count(String group, int n) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.count(this, X.split(group, "[,]"), n);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, group)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.count(table, q, X.split(group, "[,]"), n);
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.count(table, q, X.split(group, "[,]"), n);
 			}
 			throw new SQLException("not set table");
 
 		}
 
 		public List<JSON> count(String name, String group, int n) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.count(this, X.split(group, "[,]"), n);
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, group)) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.count(table, q, name, X.split(group, "[,]"), n);
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.count(table, q, name, X.split(group, "[,]"), n);
 			}
 			throw new SQLException("not set table");
 
 		}
 
-		public List<JSON> sum(String name, String group) throws SQLException {
+		@Comment(text = "按照当前条件分组求和")
+		public List<JSON> sum(@Comment(text = "fieldname") String name, @Comment(text = "groupfield") String group)
+				throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.sum(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, Arrays.asList(name, group))) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.sum(table, q, name, X.split(group, "[,]"));
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.sum(table, q, name, X.split(group, "[,]"));
 			}
 			throw new SQLException("not set table");
 
@@ -3173,28 +3539,19 @@ public final class Helper implements Serializable {
 		 * @throws SQLException
 		 */
 		public List<JSON> aggregate(String name, String group) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.aggregate(this, X.split(name, "[,]"), X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, Arrays.asList(name, group))) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.aggregate(table, X.split(name, "[,]"), q, X.split(group, "[,]"));
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.aggregate(table, X.split(name, "[,]"), q, X.split(group, "[,]"));
 			}
 			throw new SQLException("not set table");
 
@@ -3265,28 +3622,19 @@ public final class Helper implements Serializable {
 //		}
 
 		public List<JSON> avg(String name, String group) throws SQLException {
+
+			if (access != null) {
+				access.checkRead(table);
+			}
+
 			if (dao != null) {
 				return dao.avg(this, name, X.split(group, "[,]"));
 			} else if (!X.isEmpty(table)) {
-				if (access == null || access.read("db", table, Arrays.asList(name, group))) {
-					W q = this;
-					if (access != null) {
-						W q1 = access.filter("db", table);
-						if (q1 != null) {
-							if (q.isEmpty()) {
-								q = q1;
-							} else if (!q1.isEmpty()) {
-								q = W.create().and(q).and(q1);
-							}
-						}
-					}
+				W q = this;
 
-					helper.getOptimizer().query(table, q);
+				helper.getOptimizer().query(table, q);
 
-					return helper.avg(table, q, name, X.split(group, "[,]"));
-				} else {
-					throw new SQLException("no privilege!");
-				}
+				return helper.avg(table, q, name, X.split(group, "[,]"));
 			}
 			throw new SQLException("not set table");
 
@@ -3297,7 +3645,8 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
-		public W query(String table) {
+		@Comment(text = "设置查询表")
+		public W query(@Comment(text = "tablename") String table) {
 			this.table = table;
 			return this;
 		}
@@ -3305,6 +3654,32 @@ public final class Helper implements Serializable {
 		public <T extends Bean> W bean(Class<T> clazz) {
 			this.t = clazz;
 			return this;
+		}
+
+		private int offset = 0;
+
+		public W offset(@Comment(text = "offset") int offset) {
+			this.offset = offset;
+			return this;
+		}
+
+		public int offset() {
+			return offset;
+		}
+
+		private int limit = 10;
+
+		public String command;
+
+		public List<Object> params;
+
+		public W limit(int limit) {
+			this.limit = limit;
+			return this;
+		}
+
+		public int limit() {
+			return limit;
 		}
 
 	}
@@ -3333,12 +3708,18 @@ public final class Helper implements Serializable {
 	 * @throws SQLException
 	 */
 	static <T extends Bean> T load(W q, Class<T> t) throws SQLException {
-		String table = getTable(t);
+		String table = q.table();
+		if (X.isEmpty(table)) {
+			table = getTable(t);
+		}
 		return load(table, q, t);
 	}
 
 	static <T extends Bean> T load(W q, Class<T> t, boolean trace) throws SQLException {
-		String table = getTable(t);
+		String table = q.table();
+		if (X.isEmpty(table)) {
+			table = getTable(t);
+		}
 		return load(table, q, t);
 	}
 
@@ -3357,6 +3738,10 @@ public final class Helper implements Serializable {
 
 	public static <T extends Bean> T load(String table, W q, Class<T> t, boolean trace) {
 
+		if (primary == null) {
+			return null;
+		}
+
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
@@ -3367,7 +3752,7 @@ public final class Helper implements Serializable {
 			return primary.load(table, q, t, trace);
 
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, q=%s", table, q);
 		}
 	}
 
@@ -3387,7 +3772,7 @@ public final class Helper implements Serializable {
 			return primary.load(table, q, s, n, t);
 
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, q=%s, offset=%d", table, q, s);
 		}
 	}
 
@@ -3397,20 +3782,21 @@ public final class Helper implements Serializable {
 	 * @param table
 	 * @param values
 	 * @return
+	 * @throws SQLException
 	 */
-	public static int insert(String table, List<V> values) {
+	public static int insert(String table, List<V> values) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
 
-			for (V value : values) {
-				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
-
-			}
+//			for (V value : values) {
+//				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
+//
+//			}
 
 			return primary.insertTable(table, values);
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), "table=%s", table);
 		}
 	}
 
@@ -3421,16 +3807,16 @@ public final class Helper implements Serializable {
 	 * @param table the table
 	 * @param db    the db name
 	 * @return the number inserted
+	 * @throws SQLException
 	 */
-	public static int insert(String table, V value) {
+	public static int insert(String table, V value) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-
 			return primary.insertTable(table, value);
-
 		} finally {
-			write.add(t1.pastms());
+//			Helper.Stat.write(table, t1.pastms());
+			write.add(t1.pastms(), "table=%s", table);
 		}
 	}
 
@@ -3441,8 +3827,9 @@ public final class Helper implements Serializable {
 	 * @param q      the query
 	 * @param values the values
 	 * @return the number of updated
+	 * @throws SQLException
 	 */
-	public static int update(String table, W q, V values) {
+	public static int update(String table, W q, V values) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3454,7 +3841,7 @@ public final class Helper implements Serializable {
 			return primary.updateTable(table, q, values);
 
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), "table=%s, q=%s", table, q);
 		}
 	}
 
@@ -3467,8 +3854,9 @@ public final class Helper implements Serializable {
 	 * @param q
 	 * @param v
 	 * @return
+	 * @throws SQLException
 	 */
-	public static int inc(String table, String name, int n, W q, V v) {
+	public static int inc(String table, String name, int n, W q, V v) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3478,7 +3866,22 @@ public final class Helper implements Serializable {
 
 			return primary.inc(table, q, name, n, v);
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), "table=%s, name=%s, q=%", table, name, q);
+
+		}
+	}
+
+	public static int inc(String table, JSON incvalue, W q, V v) throws SQLException {
+
+		TimeStamp t1 = TimeStamp.create();
+		try {
+			if (monitor != null) {
+				monitor.query(table, q);
+			}
+
+			return primary.inc(table, q, incvalue, v);
+		} finally {
+			write.add(t1.pastms(), "table=%s, name=%s, q=%", table, incvalue, q);
 
 		}
 	}
@@ -3493,34 +3896,15 @@ public final class Helper implements Serializable {
 		return primary != null;
 	}
 
-	public static <T extends Bean> Cursor<T> stream(String table, W q, long offset, Class<T> t) {
-
-		TimeStamp t1 = TimeStamp.create();
-		try {
-
-			if (monitor != null) {
-				monitor.query(table, q);
-			}
-
-			Cursor<T> cur = null;
-			cur = primary.cursor(table, q, offset, t);
-
-			return cur;
-		} finally {
-			read.add(t1.pastms());
-
-		}
-
-	}
-
 	/**
 	 * count the table by query
 	 * 
 	 * @param table
 	 * @param q
 	 * @return
+	 * @throws SQLException
 	 */
-	public static long count(String table, W q) {
+	public static long count(String table, W q) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3531,8 +3915,7 @@ public final class Helper implements Serializable {
 
 			return primary.count(table, q);
 		} finally {
-			read.add(t1.pastms());
-
+			read.add(t1.pastms(), "table=%s, q=%s", table, q);
 		}
 	}
 
@@ -3543,8 +3926,9 @@ public final class Helper implements Serializable {
 	 * @param name
 	 * @param q
 	 * @return
+	 * @throws SQLException
 	 */
-	public static long count(String table, String name, W q) {
+	public static long count(String table, String name, W q) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3555,8 +3939,7 @@ public final class Helper implements Serializable {
 
 			return primary.count(table, q, name);
 		} finally {
-			read.add(t1.pastms());
-
+			read.add(t1.pastms(), "table=%s, name=%s, q=%", table, name, q);
 		}
 	}
 
@@ -3579,8 +3962,7 @@ public final class Helper implements Serializable {
 
 			return primary.median(table, q, name);
 		} finally {
-			read.add(t1.pastms());
-
+			read.add(t1.pastms(), "table=%s, name=%s, q=%s", table, name, q);
 		}
 	}
 
@@ -3597,7 +3979,7 @@ public final class Helper implements Serializable {
 		try {
 			return primary.std_deviation(table, q, name);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, name=%s, q=%s", table, name, q);
 
 			if (t1.pastms() > Optimizer.MIN && monitor != null) {
 				monitor.query(table, q);
@@ -3626,8 +4008,7 @@ public final class Helper implements Serializable {
 
 			return primary.sum(table, q, name);
 		} finally {
-			read.add(t1.pastms());
-
+			read.add(t1.pastms(), "table=%s, name=%s, q=%s", table, name, q);
 		}
 	}
 
@@ -3677,8 +4058,9 @@ public final class Helper implements Serializable {
 	 * @param name
 	 * @param q
 	 * @return
+	 * @throws SQLException
 	 */
-	public static <T> T avg(String table, String name, W q) {
+	public static <T> T avg(String table, String name, W q) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3689,7 +4071,7 @@ public final class Helper implements Serializable {
 
 			return primary.avg(table, q, name);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, name=%s, q=%", table, name, q);
 
 		}
 	}
@@ -3705,7 +4087,7 @@ public final class Helper implements Serializable {
 
 			return primary.avg(table, q, name, group);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, name=%s, q=%", table, name, q);
 
 		}
 	}
@@ -3717,8 +4099,9 @@ public final class Helper implements Serializable {
 	 * @param name
 	 * @param q
 	 * @return
+	 * @throws SQLException
 	 */
-	public static List<?> distinct(String table, String name, W q) {
+	public static List<?> distinct(String table, String name, W q) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3730,7 +4113,7 @@ public final class Helper implements Serializable {
 			return primary.distinct(table, name, q);
 
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, name=%s, q=%", table, name, q);
 
 		}
 	}
@@ -3739,21 +4122,16 @@ public final class Helper implements Serializable {
 	 * 
 	 */
 	public static void enableOptmizer() {
-		if (Global.getInt("db.optimizer", 1) == 1) {
-			monitor = new Optimizer(Helper.primary);
-		} else {
-			monitor = null;
-		}
+		monitor = new Optimizer(Helper.primary);
 	}
 
 	public static void createIndex(String table, LinkedHashMap<String, Object> ss, boolean unique) {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
-
 			primary.createIndex(table, ss, unique);
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), "table=%s", table);
 		}
 	}
 
@@ -3770,7 +4148,7 @@ public final class Helper implements Serializable {
 
 			return primary.getIndexes(table);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s", table);
 		}
 
 	}
@@ -3781,7 +4159,7 @@ public final class Helper implements Serializable {
 		try {
 			primary.dropIndex(table, name);
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), "table=%s, name=%s", table, name);
 		}
 	}
 
@@ -3813,8 +4191,6 @@ public final class Helper implements Serializable {
 	 */
 	public interface DBHelper {
 
-		boolean isConfigured();
-
 		void repair(String table);
 
 		List<Map<String, Object>> getIndexes(String table);
@@ -3825,11 +4201,14 @@ public final class Helper implements Serializable {
 
 		<T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) throws SQLException;
 
-		<T extends Bean> Cursor<T> cursor(String table, W q, long offset, Class<T> t);
+		<T extends Bean> boolean stream(String table, W q, long offset, Function<T, Boolean> func, Class<T> t)
+				throws SQLException;
 
 		<T extends Bean> T load(String table, W q, Class<T> clazz);
 
 		<T extends Bean> T load(String table, W q, Class<T> clazz, boolean trace);
+
+		Connection getConnection();
 
 		int delete(String table, W q);
 
@@ -3837,21 +4216,27 @@ public final class Helper implements Serializable {
 
 		boolean exists(String table, W q);
 
-		int insertTable(String table, V value);
+		int insertTable(String table, V value) throws SQLException;
 
-		int insertTable(String table, List<V> values);
+		int insertTable(String table, JSON value) throws SQLException;
 
-		int updateTable(String table, W q, V values);
+		int insertTable(String table, List<V> values) throws SQLException;
 
-		int inc(String table, W q, String name, int n, V v);
+		int updateTable(String table, W q, V values) throws SQLException;
 
-		long count(String table, W q, String name);
+		int updateTable(String table, W q, JSON value) throws SQLException;
 
-		long count(String table, W q);
+		int inc(String table, W q, String name, int n, V v) throws SQLException;
 
-		List<JSON> count(String table, W q, String[] group, int n);
+		int inc(String table, W q, JSON incvalue, V v) throws SQLException;
 
-		List<JSON> count(String table, W q, String name, String[] group, int n);
+		long count(String table, W q, String name) throws SQLException;
+
+		long count(String table, W q) throws SQLException;
+
+		List<JSON> count(String table, W q, String[] group, int n) throws SQLException;
+
+		List<JSON> count(String table, W q, String name, String[] group, int n) throws SQLException;
 
 		<T> T max(String table, W q, String name);
 
@@ -3861,7 +4246,7 @@ public final class Helper implements Serializable {
 
 		List<JSON> sum(String table, W q, String name, String[] group);
 
-		<T> T avg(String table, W q, String name);
+		<T> T avg(String table, W q, String name) throws SQLException;
 
 		<T> T std_deviation(String table, W q, String name);
 
@@ -3869,11 +4254,11 @@ public final class Helper implements Serializable {
 
 		List<JSON> avg(String table, W q, String name, String[] group);
 
-		List<?> distinct(String table, String name, W q);
+		List<?> distinct(String table, String name, W q) throws SQLException;
 
 		List<JSON> aggregate(String table, String[] func, W q, String[] group);
 
-		List<JSON> listTables();
+		List<JSON> listTables(String tablename, int n);
 
 		void close();
 
@@ -3884,6 +4269,66 @@ public final class Helper implements Serializable {
 		List<JSON> listDB();
 
 		void killOp(Object id);
+
+		/**
+		 * copy data
+		 * 
+		 * @param src
+		 * @param dest
+		 */
+		void copy(String src, String dest, W filter) throws SQLException;
+
+		/**
+		 * create table
+		 * 
+		 * @param tablename
+		 * @throws SQLException
+		 */
+		void createTable(String tablename, String memo, List<JSON> cols) throws SQLException;
+
+		/**
+		 * delete colname
+		 * 
+		 * @param tablename
+		 * @param colname
+		 * @throws SQLException
+		 */
+		void delColumn(String tablename, String colname) throws SQLException;
+
+		/**
+		 * add colname
+		 * 
+		 * @param tablename
+		 * @param colname
+		 * @throws SQLException
+		 */
+		void addColumn(String tablename, JSON col) throws SQLException;
+
+		/**
+		 * alter colname
+		 * 
+		 * @param tablename
+		 * @param colname
+		 * @throws SQLException
+		 */
+		void alterColumn(String tablename, JSON col) throws SQLException;
+
+		/**
+		 * alter table
+		 * 
+		 * @param tablename
+		 * @param partitions
+		 */
+		void alterTable(String tablename, int partitions) throws SQLException;
+
+		/**
+		 * list columns
+		 * 
+		 * @param table
+		 * @return
+		 * @throws SQLException
+		 */
+		List<JSON> listColumns(String table) throws SQLException;
 
 		/**
 		 * 获取优化器
@@ -3900,7 +4345,15 @@ public final class Helper implements Serializable {
 		List<JSON> listOp();
 
 		/**
-		 * 数据表存储大小
+		 * run sql or script, custom for database
+		 * 
+		 * @param sql
+		 * @return
+		 */
+		Object run(String sql) throws SQLException;
+
+		/**
+		 * get the size for table
 		 * 
 		 * @param table
 		 * @return
@@ -3908,7 +4361,7 @@ public final class Helper implements Serializable {
 		long size(String table);
 
 		/**
-		 * 数据库统计信息
+		 * get the stats for table
 		 * 
 		 * @param table
 		 * @return
@@ -3916,21 +4369,19 @@ public final class Helper implements Serializable {
 		JSON stats(String table);
 
 		/**
-		 * 数据库性能状态
+		 * get the database status
 		 * 
 		 * @return
 		 */
 		JSON status();
 
 		/**
-		 * 设置分布式表
+		 * set table as distributed table by key
 		 * 
 		 * @param table
 		 * @return
 		 */
 		boolean distributed(String table, String key);
-
-		boolean createTable(String table, JSON cols);
 
 		long getTime();
 
@@ -3938,25 +4389,6 @@ public final class Helper implements Serializable {
 
 	public static DBHelper getPrimary() {
 		return primary;
-	}
-
-	public static abstract class Cursor<E> implements Iterator<E>, Closeable {
-
-		public abstract void close();
-
-		public void forEach(Function<E, Boolean> func) {
-
-			try {
-				while (this.hasNext()) {
-					if (!func.apply(this.next())) {
-						return;
-					}
-				}
-			} finally {
-				this.close();
-			}
-		}
-
 	}
 
 	/**
@@ -3970,7 +4402,7 @@ public final class Helper implements Serializable {
 		try {
 			primary.drop(table);
 		} finally {
-			write.add(t1.pastms());
+			write.add(t1.pastms(), "table=%s", table);
 		}
 	}
 
@@ -3982,8 +4414,9 @@ public final class Helper implements Serializable {
 	 * @param group
 	 * @param n
 	 * @return
+	 * @throws SQLException
 	 */
-	public static List<JSON> count(String table, W q, String[] group, int n) {
+	public static List<JSON> count(String table, W q, String[] group, int n) throws SQLException {
 
 		TimeStamp t1 = TimeStamp.create();
 		try {
@@ -3994,7 +4427,7 @@ public final class Helper implements Serializable {
 
 			return primary.count(table, q, group, n);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, q=%", table, q);
 		}
 	}
 
@@ -4007,8 +4440,9 @@ public final class Helper implements Serializable {
 	 * @param group
 	 * @param n
 	 * @return
+	 * @throws SQLException
 	 */
-	public static List<JSON> count(String table, String name, W q, String[] group, int n) {
+	public static List<JSON> count(String table, String name, W q, String[] group, int n) throws SQLException {
 		TimeStamp t1 = TimeStamp.create();
 		try {
 			if (monitor != null) {
@@ -4017,7 +4451,7 @@ public final class Helper implements Serializable {
 
 			return primary.count(table, q, name, group, n);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, name=%s, q=%", table, name, q);
 		}
 	}
 
@@ -4045,7 +4479,7 @@ public final class Helper implements Serializable {
 
 			return primary.sum(table, q, name, group);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, name=%s, q=%", table, name, q);
 		}
 	}
 
@@ -4069,7 +4503,7 @@ public final class Helper implements Serializable {
 
 			return primary.aggregate(table, func, q, group);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s, func=%s, q=%", table, Arrays.toString(func), q);
 		}
 	}
 
@@ -4099,12 +4533,12 @@ public final class Helper implements Serializable {
 		return write.get();
 	}
 
-	public static List<JSON> listTables() {
+	public static List<JSON> listTables(String tablename, int n) {
 		TimeStamp t1 = TimeStamp.create();
 		try {
-			return primary.listTables();
+			return primary.listTables(tablename, n);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), null);
 		}
 	}
 
@@ -4113,7 +4547,7 @@ public final class Helper implements Serializable {
 		try {
 			return primary.listDB();
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), null);
 		}
 	}
 
@@ -4122,7 +4556,7 @@ public final class Helper implements Serializable {
 		try {
 			return primary.listOp();
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), null);
 		}
 	}
 
@@ -4138,7 +4572,7 @@ public final class Helper implements Serializable {
 		try {
 			return primary.size(table);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s", table);
 		}
 	}
 
@@ -4157,10 +4591,15 @@ public final class Helper implements Serializable {
 
 			return primary.stats(table);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), "table=%s", table);
 		}
 	}
 
+	/**
+	 * init table
+	 * 
+	 * @param name
+	 */
 	public static void init(String name) {
 
 		for (String key : new String[] { "id" }) {
@@ -4187,7 +4626,7 @@ public final class Helper implements Serializable {
 
 			return primary.status();
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), null);
 		}
 	}
 
@@ -4206,10 +4645,6 @@ public final class Helper implements Serializable {
 		return table.name();
 	}
 
-	public static boolean createTable(String table, JSON cols) {
-		return primary.createTable(table, cols);
-	}
-
 	public static boolean distributed(String table, String key) {
 		return primary.distributed(table, key);
 	}
@@ -4219,9 +4654,58 @@ public final class Helper implements Serializable {
 		try {
 			primary.killOp(id);
 		} finally {
-			read.add(t1.pastms());
+			read.add(t1.pastms(), null);
 		}
 
+	}
+
+	public static class Stat {
+
+		public static void read(String table, long costms) {
+
+			String name = "read/" + table;
+			Counter e = counter.get(name);
+			if (e == null) {
+				e = new Counter(table);
+				counter.put(name, e);
+			}
+			e.add(costms, "table=%s", table);
+		}
+
+		public static void write(String table, long costms) {
+
+			String name = "write/" + table;
+			Counter e = counter.get(name);
+			if (e == null) {
+				e = new Counter(table);
+				counter.put(name, e);
+			}
+			e.add(costms, "table=%s", table);
+		}
+
+		public static Counter.Stat read(String table) {
+
+			String name = "read/" + table;
+			Counter e = counter.get(name);
+			if (e == null) {
+				e = new Counter(table);
+				counter.put(name, e);
+			}
+			return e.get();
+		}
+
+		public static Counter.Stat write(String table) {
+
+			String name = "write/" + table;
+			Counter e = counter.get(name);
+			if (e == null) {
+				e = new Counter(table);
+				counter.put(name, e);
+			}
+			return e.get();
+		}
+
+		static Map<String, Counter> counter = new HashMap<String, Counter>();
 	}
 
 }

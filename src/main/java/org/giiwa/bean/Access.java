@@ -46,10 +46,10 @@ public final class Access extends Bean {
 
 	public final static BeanDAO<String, Access> dao = BeanDAO.create(Access.class);
 
-	@Column(name = X.ID, memo = "名称")
+	@Column(name = X.ID, memo = "名称", unique = true, size=50)
 	private String name;
 
-	@Column(memo = "备注")
+	@Column(memo = "备注", size = 512)
 	private String memo;
 
 	/**
@@ -93,7 +93,7 @@ public final class Access extends Bean {
 				if (ss != null) {
 					for (String s : ss) {
 						if (!exists(s)) {
-							dao.insert(V.create(X.ID, s).append("memo", X.toString(new Exception())));
+							dao.insert(V.create(X.ID, s).append("memo", Thread.currentThread().getName()));
 						}
 					}
 				}

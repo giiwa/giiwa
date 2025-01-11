@@ -37,6 +37,7 @@ import org.giiwa.misc.RSA;
 import org.giiwa.misc.Shell;
 import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
+import org.giiwa.web.Module;
 import org.giiwa.web.Path;
 
 /**
@@ -59,7 +60,7 @@ public class module extends Controller {
 	/**
 	 * create a new module.
 	 */
-	@Path(path = "create", login = true)
+	@Path(path = "create", login = true, oplog = true)
 	public void create() {
 		if (method.isPost()) {
 			/**
@@ -73,7 +74,7 @@ public class module extends Controller {
 				jo.put("file", file);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
-				GLog.oplog.error(module.class, "create", e.getMessage(), e, login, this.ip());
+				GLog.oplog.error(this, "create", e.getMessage(), e);
 
 				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 				return;
@@ -643,7 +644,7 @@ public class module extends Controller {
 	/**
 	 * Adds the.
 	 */
-	@Path(path = "add", login = true, access = "access.config.admin")
+	@Path(path = "add", login = true, access = "access.config.admin", oplog = true)
 	public void add() {
 
 		String url = this.getString(X.URL);
@@ -652,9 +653,19 @@ public class module extends Controller {
 
 		try {
 
+			boolean restart = false;
 			DFile d = Disk.seek(url);
-
-			boolean restart = org.giiwa.web.Module.prepare(d);
+			if (d.getName().endsWith(".jar")) {
+				// upgrade jar file only
+				List<Module> l1 = Module.getAll(true);
+				for (Module m : l1) {
+					if (m.upgrade(d)) {
+						restart = true;
+					}
+				}
+			} else {
+				restart = org.giiwa.web.Module.prepare(d);
+			}
 
 			jo.put("result", "ok");
 
@@ -666,7 +677,7 @@ public class module extends Controller {
 				jo.put(X.WARN, lang.get("restart.required"));
 			}
 
-			GLog.oplog.warn(module.class, "add", d.getName(), login, this.ip());
+			GLog.oplog.warn(this, "add", d.getName());
 
 			if (restart) {
 				Task.schedule(t -> {
@@ -736,8 +747,9 @@ public class module extends Controller {
 	/**
 	 * Download.
 	 */
-	@Path(path = "download", login = true, access = "access.config.admin")
+	@Path(path = "download", login = true, access = "access.config.admin", oplog = true)
 	public void download() {
+		
 		String name = this.getString("name");
 
 		/**
@@ -762,7 +774,7 @@ public class module extends Controller {
 	/**
 	 * Disable.
 	 */
-	@Path(path = "disable", login = true, access = "access.config.admin")
+	@Path(path = "disable", login = true, access = "access.config.admin", oplog = true)
 	public void disable() {
 		String name = this.getString("name");
 
@@ -771,7 +783,7 @@ public class module extends Controller {
 
 		org.giiwa.web.Module.reset();
 
-		GLog.oplog.warn(module.class, "disable", name, login, this.ip());
+		GLog.oplog.warn(this, "disable", name);
 
 		onGet();
 	}
@@ -779,7 +791,7 @@ public class module extends Controller {
 	/**
 	 * Update.
 	 */
-	@Path(path = "update", login = true, access = "access.config.admin")
+	@Path(path = "update", login = true, access = "access.config.admin", oplog = true)
 	public void update() {
 		String name = this.getString("name");
 		int id = this.getInt("id");
@@ -801,7 +813,7 @@ public class module extends Controller {
 	/**
 	 * Enable.
 	 */
-	@Path(path = "enable", login = true, access = "access.config.admin")
+	@Path(path = "enable", login = true, access = "access.config.admin", oplog = true)
 	public void enable() {
 		String name = this.getString("name");
 
@@ -810,12 +822,12 @@ public class module extends Controller {
 
 		org.giiwa.web.Module.reset();
 
-		GLog.oplog.warn(module.class, "enable", name, login, this.ip());
+		GLog.oplog.warn(this, "enable", name);
 
 		onGet();
 	}
 
-	@Path(path = "deletelicense", login = true, access = "access.config.admin")
+	@Path(path = "deletelicense", login = true, access = "access.config.admin", oplog = true)
 	public void deletelicense() {
 		String name = this.getString("name");
 		License.dao.delete(name);
@@ -827,7 +839,7 @@ public class module extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
 	public void delete() {
 		String name = this.getString("name");
 		org.giiwa.web.Module m = org.giiwa.web.Module.load(name);
@@ -835,7 +847,7 @@ public class module extends Controller {
 
 		org.giiwa.web.Module.reset();
 
-		GLog.oplog.warn(module.class, "delete", name, login, this.ip());
+		GLog.oplog.warn(this, "delete", name);
 
 		onGet();
 	}
@@ -849,41 +861,75 @@ public class module extends Controller {
 	public void _query() {
 
 		String repo = Config.getConf().getString("module.repo", "no");
-		if (X.isIn(repo, "yes", "true", "1")) {
+		if (X.isIn(repo, "yes")) {
 			String name = this.getString("name");
 
-			org.giiwa.web.Module m = org.giiwa.web.Module.load(name);
-			if (m == null) {
-				this.set(X.ERROR, "bad name [" + name + "]").send(201);
-				return;
-			}
+			String[] ss = X.split(name, "[,;]");
 
-			repo = Global.getString("module." + name + ".repo", null);
-
-			if (!X.isEmpty(repo)) {
-
-				try {
-					DFile f1 = Disk.seek(repo);
-					if (f1 == null || !f1.exists()) {
-						return;
+//			TimeStamp t = TimeStamp.create();
+			TreeSet<String> l1 = new TreeSet<String>();
+			List<String> ex = new ArrayList<String>();
+			for (String s : ss) {
+				if (X.isSame(s, "*")) {
+					// all
+					List<Module> m1 = org.giiwa.web.Module.getAll(true);
+					for (Module e : m1) {
+						l1.add(e.getName());
 					}
-
-					JSON j1 = JSON.create();
-					j1.append("name", name);
-
-					j1.append("version", m.getVersion());
-					j1.append("build", m.getBuild());
-					j1.append("uri", "/f/d/" + f1.getId() + "/" + f1.getName());
-					j1.append("md5", MD5.md5(f1.getInputStream()));
-					j1.append(X.STATE, 200);
-
-					this.send(j1);
-					return;
-				} catch (Exception e1) {
-					log.error(e1.getMessage(), e1);
-					GLog.applog.error(module.class, "query", e1.getMessage(), e1, null, this.ip());
+				} else if (s.startsWith("-")) {
+					ex.add(s.substring(1));
+				} else {
+					l1.add(s);
 				}
 			}
+			for (String s : ex) {
+				l1.remove(s);
+			}
+			l1.remove("stream");
+//			log.warn("modules, 1=" + l1 + ", name=" + name);
+
+			List<JSON> r1 = JSON.createList();
+
+			for (String s : l1) {
+
+				try {
+					Module m = org.giiwa.web.Module.load(s);
+					repo = Global.getString("module." + s + ".repo", null);
+
+					if (!X.isEmpty(repo)) {
+
+						DFile f1 = Disk.seek(repo);
+						if (f1 != null && f1.exists()) {
+
+							JSON j1 = JSON.create();
+							j1.append("name", s);
+
+							j1.append("version", m.getVersion());
+							j1.append("build", m.getBuild());
+							j1.append("uri", "/f/d/" + f1.getId() + "/" + f1.getName());
+							String md5 = Global.getString("module." + s + ".md5", null);
+							if (X.isEmpty(md5)) {
+								md5 = MD5.md5(f1.getInputStream());
+								Global.setConfig("module." + s + ".md5", md5);
+							}
+							j1.append("md5", md5);
+
+							r1.add(j1);
+						}
+					}
+				} catch (Throwable e1) {
+					log.error(e1.getMessage(), e1);
+				}
+			}
+
+//			log.warn("modules, 3=" + t.past() + ", r1=" + r1);
+//			t.reset();
+
+			this.set("list", r1).send(200);
+
+		} else {
+			this.set(X.ERROR, "module.repo disabled!").send(201);
+			GLog.applog.warn(this, "module", "module.repo disabled!");
 		}
 
 	}

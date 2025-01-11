@@ -21,8 +21,6 @@ import org.apache.commons.logging.*;
 import org.giiwa.bean.Temp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
-import org.giiwa.task.LiveHand;
-import org.giiwa.task.Task;
 
 /**
  * The Class FileCache is used to simple cache when no cache configured in
@@ -40,7 +38,7 @@ public class FileCache implements ICacheSystem {
 
 	private FileCache() {
 		root = Temp.ROOT + "/_cache/";
-		cache_size = 10000;
+//		cache_size = 10000;
 	}
 
 	/**
@@ -65,34 +63,38 @@ public class FileCache implements ICacheSystem {
 		 * test cache first
 		 */
 		try {
-			if (cache.containsKey(id)) {
-				return _fromBytes(_read(id));
-			} else {
-				/**
-				 * if not in cache, then read from file
-				 */
-				String path = _path(id);
-				if (new File(path).exists()) {
-					FileInputStream in = null;
-					try {
-						in = new FileInputStream(path);
-						byte[] b = new byte[in.available()];
-						in.read(b);
+//			if (cache.containsKey(id)) {
+//				return _fromBytes(_read(id));
+//			} else {
+			/**
+			 * if not in cache, then read from file
+			 */
+			String path = _path(id);
+			if (new File(path).exists()) {
+				FileInputStream in = null;
+				try {
+					in = new FileInputStream(path);
+					byte[] b = new byte[in.available()];
+					in.read(b);
 
-						_cache(id, b);
-
-						return _fromBytes(b);
-					} finally {
-						if (in != null) {
-							in.close();
-						}
+					return _fromBytes(b);
+				} finally {
+					if (in != null) {
+						in.close();
 					}
 				}
+//				}
 			}
 		} catch (Exception e) {
 
 		}
 		return null;
+	}
+
+	public void touch(String name, long expired) {
+		String path = _path(name);
+		File f = new File(path);
+		f.setLastModified(System.currentTimeMillis());
 	}
 
 	/**
@@ -112,27 +114,20 @@ public class FileCache implements ICacheSystem {
 				/**
 				 * cache it
 				 */
-				_cache(id, b);
-
-				Task.schedule(t -> {
-
-					/**
-					 * write to file
-					 */
-					String path = _path(id);
-					X.IO.mkdirs(new File(path).getParentFile());
-					FileOutputStream out = null;
-					try {
-						out = new FileOutputStream(path);
-						out.write(b);
-						out.flush();
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
-					} finally {
-						X.close(out);
-					}
-
-				});
+//				_cache(id, b);
+				String path = _path(id);
+				X.IO.mkdirs(new File(path).getParentFile());
+				FileOutputStream out = null;
+				try {
+//					byte[] b = (byte[]) l1.get(i)[0];
+					out = new FileOutputStream(path);
+					out.write(b);
+					out.flush();
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				} finally {
+					X.close(out);
+				}
 
 				return true;
 			}
@@ -204,7 +199,6 @@ public class FileCache implements ICacheSystem {
 	public synchronized boolean delete(String id) {
 
 		new File(_path(id)).delete();
-		cache.remove(id);
 		_local.remove(id);
 
 		return true;
@@ -228,101 +222,24 @@ public class FileCache implements ICacheSystem {
 		return sb.toString();
 	}
 
-	/**
-	 * Read.
-	 *
-	 * @param id the id
-	 * @return the byte[]
-	 */
-	private byte[] _read(String id) {
-
-		Object[] oo = cache.get(id);
-		byte[] b = (byte[]) oo[0];
-		oo[1] = System.currentTimeMillis();
-
-		// set to last
-//		if (queue.contains(id)) {
-//			queue.remove(id);
-//			queue.add(id);
-//		}
-		return b;
-	}
-
-	/**
-	 * Save.
-	 *
-	 * @param id the id
-	 * @param b  the b
-	 */
-	private void _cache(String id, byte[] b) {
-
-		cache.put(id, new Object[] { b, System.currentTimeMillis(), id });
-
-		// set to last
-//		queue.remove(id);
-//		queue.add(id);
-
-		if (cache.size() > cache_size) {
-			Task.schedule(t -> {
-				_clearup();
-			});
-		}
-	}
-
-	private void _clearup() {
-
-		List<Object[]> l1 = new ArrayList<Object[]>(cache.values());
-		Collections.sort(l1, new Comparator<Object[]>() {
-
-			@Override
-			public int compare(Object[] o1, Object[] o2) {
-
-				long t1 = X.toLong(o1[1]);
-				long t2 = X.toLong(o2[1]);
-
-				if (t1 < t2)
-					return 1;
-				if (t1 > t2)
-					return -1;
-
-				return 0;
-			}
-
-		});
-
-		for (int i = cache_size * 4 / 5; i < l1.size(); i++) {
-			String id = (String) l1.get(i)[2];
-			cache.remove(id);
-		}
-
-	}
-
 	@Override
 	public String toString() {
 		return "FileCache [root=" + root + "]";
 	}
 
-	/** The cache_size. */
-	int cache_size = 1000;
-
-	/** The cache. */
-	Map<String, Object[]> cache = new HashMap<String, Object[]>();
-
-	/** The queue. */
-//	List<String> queue = new ArrayList<String>();
-
-	private static Map<String, LiveHand> _local = new HashMap<String, LiveHand>();
+	private static Map<String, Integer> _local = new HashMap<String, Integer>();
 
 	@Override
-	public boolean trylock(String name) {
+	public boolean trylock(String name, boolean debug) {
 		synchronized (_local) {
-			LiveHand d = _local.get(name);
+			Integer d = _local.get(name);
 			if (d == null) {
-				d = LiveHand.create(-1, 1);
-				_local.put(name, d);
+				d = 0;
+				_local.put(name, 0);
 			}
 
-			if (d.tryLock()) {
+			if (d == 0) {
+				_local.put(name, 1);
 				return true;
 			}
 		}
@@ -336,21 +253,48 @@ public class FileCache implements ICacheSystem {
 	}
 
 	@Override
-	public boolean unlock(String name, String value) {
-		try {
-			synchronized (_local) {
-				LiveHand d = _local.remove(name);
-				if (d != null) {
-					d.release();
-					return true;
-				}
-			}
-		} catch (Exception e) {
-			// eat it
-			log.error("unlock error, name=" + name, e);
+	public boolean unlock(String name, String value, boolean debug) {
+		synchronized (_local) {
+			_local.put(name, 0);
 		}
-
 		return true;
+	}
+
+	@Override
+	public void close() {
+
+		// save all cached data
+//		List<Object[]> l1 = null;
+//		synchronized (cache) {
+//			l1 = new ArrayList<Object[]>(cache.values());
+//		}
+//
+//		for (int i = 0; i < l1.size(); i++) {
+//			String id = (String) l1.get(i)[2];
+//
+//			/**
+//			 * write to file
+//			 */
+//			String path = _path(id);
+//			X.IO.mkdirs(new File(path).getParentFile());
+//			FileOutputStream out = null;
+//			try {
+//				byte[] b = (byte[]) l1.get(i)[0];
+//				out = new FileOutputStream(path);
+//				out.write(b);
+//				out.flush();
+//			} catch (Exception e) {
+//				log.error(e.getMessage(), e);
+//			} finally {
+//				X.close(out);
+//			}
+//		}
+
+	}
+
+	@Override
+	public long now() {
+		return System.currentTimeMillis();
 	}
 
 }

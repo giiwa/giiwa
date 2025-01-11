@@ -77,4 +77,11 @@ public @interface Path {
 	 */
 	String demo() default X.EMPTY;
 
+	/**
+	 * auto record oplog
+	 * 
+	 * @return
+	 */
+	boolean oplog() default false;
+
 }

@@ -1,0 +1,45 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/policy?__node=$!__node'>$lang.get('a.policy')</a>
+	<a href='/admin/policy/create?__node=$!__node' class='selected'>$lang.get('a.create')</a>
+</div>
+
+<form action='/admin/policy/create?__node=$!__node'  method='post' class='form' >
+	
+	<div><label><h3>$lang.get('policy.client')<r>*</r>:</h3><input type='text' name='client' required/><g>$lang.get("policy.client.hint")</g></label></div>
+	<div><label><h3>$lang.get('policy.url')<r>*</r>:</h3><input type='text' name='url' class="width-20"/><g>$lang.get("policy.url.hint")</g></label></div>
+	<div><label><h3>$lang.get('policy.action'):</h3>
+		<select name="action1" onchange="_action()">
+			<option value="0" #if($action==0) selected #end>$lang.get("policy.action_0")</option>
+			<option value="1" #if($action==1) selected #end>$lang.get("policy.action_1")</option>
+			<option value="2" #if($action==2) selected #end>$lang.get("policy.action_2")</option>
+			<option value="3" #if($action==3) selected #end>$lang.get("policy.action_3")</option>
+		</select>
+	</label></div>
+	<div style="margin-left:20px">
+		<div class="actionmore action2" style="display: none;">
+			<div><label><h3>$lang.get('policy.min_delay'):</h3><input type='number' name='min_delay' value='10'/></label></div>
+			<div><label><h3>$lang.get('policy.max_delay'):</h3><input type='number' name='max_delay' value='30'/></label></div>
+		</div>
+		<div class="actionmore action3" style="display: none;">
+			<div><label><h3>$lang.get('policy.percent'):</h3><input type='number' name='percent' value='10'/></label></div>
+		</div>
+	</div>
+	<div><label><h3>$lang.get('policy.memo'):</h3><input type='text' class="width-20" name='memo' value='$!memo'/></label></div>
+	<div><label><h3>$lang.get('policy.seq'):</h3><input type='number' name='seq' value="$!seq"/><g>$lang.get("policy.seq.hint")</g></label></div>
+	<div><label><h3>$lang.get('policy.enabled'):</h3><input type='checkbox' name='enabled' #if($s.enabled==1)checked="checked"#end/></label></div>
+
+	<div class='btns'><button class='btn btn-success' type='submit'>$lang.get('btn.create')</button></div>
+</form>
+<script>
+function _action(){
+	var v = $('select[name=action1]').val()
+	$('.actionmore').hide();
+	$('.action' + v).show();
+}
+$(function(){
+	_action();
+})
+</script>

@@ -67,6 +67,13 @@ public @interface Column {
 	int text() default 0;
 
 	/**
+	 * the string type, "text", "clob", "blob",
+	 * 
+	 * @return
+	 */
+	int size() default 0;
+
+	/**
 	 * is Unique column.
 	 *
 	 * @return true, if successful

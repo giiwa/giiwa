@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.misc;
 
 import java.io.BufferedReader;
@@ -8,12 +22,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 
 public class CSV implements Closeable {
 
 	BufferedReader re;
-	int pos;
 	List<Character> deli;
 
 	public static CSV create(String re) {
@@ -47,6 +61,7 @@ public class CSV implements Closeable {
 	 * @throws IOException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Comment(text = "读取下一行，自动转换数字")
 	public Object[] next() throws IOException {
 
 		String line = re.readLine();
@@ -117,12 +132,19 @@ public class CSV implements Closeable {
 
 			if (s1 != null) {
 				if (X.isNumber(s1)) {
+					Object o = s1;
 					if (s1.indexOf(".") > -1) {
-						l1.add(X.toDouble(s1));
+						o = X.toDouble(s1);
 					} else {
-						l1.add(X.toLong(s1));
+						o = X.toLong(s1);
+					}
+					if (X.isSame(s1, o.toString())) {
+						l1.add(o);
+					} else {
+						l1.add(s1);
 					}
 				} else {
+					s1 = s1.replaceAll("\"\"", "\"");
 					l1.add(s1);
 				}
 				s1 = null;
@@ -153,10 +175,16 @@ public class CSV implements Closeable {
 
 		if (s1 != null) {
 			if (X.isNumber(s1)) {
+				Object o = s1;
 				if (s1.indexOf(".") > -1) {
-					l1.add(X.toDouble(s1));
+					o = X.toDouble(s1);
 				} else {
-					l1.add(X.toLong(s1));
+					o = X.toLong(s1);
+				}
+				if (X.isSame(s1, o.toString())) {
+					l1.add(o);
+				} else {
+					l1.add(s1);
 				}
 			} else {
 				l1.add(s1);
@@ -173,14 +201,14 @@ public class CSV implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object[] next2() throws IOException {
+	@Comment(text = "读取下一行，全部为字符串")
+	public String[] next2() throws IOException {
 
 		String line = re.readLine();
 		if (line == null)
 			return null;
 
-		List l1 = new ArrayList();
+		List<String> l1 = new ArrayList<>();
 
 		int i = 0;
 		int start = 0;
@@ -271,10 +299,11 @@ public class CSV implements Closeable {
 		}
 
 		if (s1 != null) {
+			s1 = s1.replaceAll("\"\"", "\"");
 			l1.add(s1);
 		}
 
-		return l1.toArray();
+		return l1.toArray(new String[l1.size()]);
 
 	}
 

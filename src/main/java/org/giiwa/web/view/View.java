@@ -61,6 +61,8 @@ public abstract class View {
 	 */
 	public static void init() {
 
+		log.warn("View init ... ");
+
 		try {
 
 			Properties p = new Properties();
@@ -137,7 +139,7 @@ public abstract class View {
 	}
 
 	private static Map<String, View> views = new HashMap<String, View>();
-	private static FileView fileview = new FileView();
+	public static FileView fileview = new FileView();
 
 	protected static InputStream getInputStream(Object file) throws IOException {
 		if (file instanceof DFile) {

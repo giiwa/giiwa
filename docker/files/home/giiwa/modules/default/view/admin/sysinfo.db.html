@@ -1,0 +1,72 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysinfo1/cpu?__node=$!__node'>$lang.get('a.sysinfo.cpu')</a>
+	<a href='/admin/sysinfo1/db?__node=$!__node' class='selected'>$lang.get('a.sysinfo.db')</a>
+	<a href='/admin/sysinfo1/process?__node=$!__node'>$lang.get('a.sysinfo.process')</a>
+	<a href='/admin/sysinfo1/net?__node=$!__node'>$lang.get('a.sysinfo.net')</a>
+	<a href='/admin/sysinfo1/route?__node=$!__node'>$lang.get('a.sysinfo.route')</a>
+	<a href='/admin/sysinfo1/disk?__node=$!__node'>$lang.get('a.sysinfo.disk')</a>
+</div>
+
+<div class="state" style="display:block;">
+	<div>$lang.get('db.tables'): <i>&nbsp;$!stat.collections</i></div>
+	<div>$lang.get('db.storageSize'): <i>$!stat.storageSize</i></div>
+	<div>$lang.get('db.indexSize'): <i>$!stat.indexSize</i></div>
+	<div>$lang.get('db.totalSize'): <i>$!stat.totalSize</i></div>
+	<div>$lang.get('db.fsTotalSize'): <i>$!stat.fsTotalSize</i></div>	
+</div>
+
+<table id='task-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 30px;"></th>
+			<th style="width: 100px;">$lang.get('db.opid')</th>
+			<th style="width: 140px;">$lang.get('db.client')</th>
+			<th style="width: 60px;">$lang.get('db.cost')</th>
+			<th style="width: 80px;">$lang.get('db.op')</th>
+			<th style="width: 120px;">$lang.get('db.table')</th>
+			<th>$lang.get('db.command')</th>
+			<th style="min-width: 100px;">$lang.get('db.plan')</th>
+			<th style="min-width: 100px;">$lang.get('db.locks')</th>
+			<th style="width: 60px;">$lang.get('db.waitingForLock')</th>
+		</tr>
+	</thead>
+	<tbody>
+#set($i=0)
+#foreach($f in $list)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td class='a'>
+			$!f.opid
+			<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.opid")' data-hint="Kill"><i class='icon-close'></i></a>
+		</td>
+		<td>$!f.client</td>
+		<td>$!f.cost</td>
+		<td>$!f.op</td>
+		<td>$!f.table</td>
+		<td>$!f.command</td>
+		<td>$!f.plan</td>
+		<td>$!f.locks</td>
+		<td>$!f.waitingForLock</td>
+	</tr>
+#end
+	</tbody>
+</table>
+<script>
+function _kill(id) {
+	giiwa.processing.show();
+	$.post("/admin/sysinfo1/db/kill?__node=$!__node", {
+		id : id
+	}, function(d) {
+		giiwa.processing.hide();
+		if (d.state == 200) {
+			giiwa.reload();
+		} else {
+			giiwa.error(d.error);
+		}
+	});
+}
+</script>

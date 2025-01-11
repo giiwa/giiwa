@@ -1,0 +1,48 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/role?__node=$!__node'>$lang.get('a.role')</a>
+	<a href='/admin/role/access?__node=$!__node' class='selected'>$lang.get('a.role.access')</a>
+</div>
+
+<table id='role-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>i18n</th>
+			<th style="width:50%">Trace</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td>$f.name</td>
+		<td>$lang.get($f.name)</td>
+		<td>$!f.memo.replaceAll("\\r", "<br/>")</td>
+		<td>
+			<a class='btn btn-warning btn-xs' href="javascript:;" onclick="_delete('$f.id', this)">$lang.get('a.delete')</a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+<div class='btns'>
+#if($edit)
+	<a class='btn btn-success' href='/admin/role/create?__node=$!__node'>$lang.get('a.create')</a>
+#end
+</div>
+
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post('/admin/role/accessdelete?__node=$!__node', {id: id}, function(d){
+			giiwa.reload();
+		})
+	}
+}
+</script>

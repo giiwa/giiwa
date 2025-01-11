@@ -14,6 +14,16 @@
 	<div><label><h3>$lang.get('user.title'):</h3><input type='text' name='title' value='$!title' /></label></div>
 	<div><label><h3>$lang.get('user.email'):</h3><input type='email' name='email' value= '$!email' /></label></div>
 	<div><label><h3>$lang.get('user.phone'):</h3><input type='tel' name='phone' value= '$!phone' /></label></div>
+	<div><label><h3>$lang.get('user.unit'):</h3>
+		<select name='unitid'>
+			<option value='0'></option>
+			#foreach($p in $units)
+			<option value="$p.id" #if($unitid==$p.id) selected #end>$!{p.no}/$!{p.name}</option>
+			#end
+		</select>
+	</label></div>
+	<div><label><h3>$lang.get('user.disklimitsize'):</h3><input type='number' name='disklimitsize' value= '$!disklimitsize'  /><g>$lang.get("user.disklimitsize.hint")</g></label></div>
+	<div><label><h3>$lang.get('user.limitip'):</h3><input type='number' name='limitip' value= ''  /><g>$lang.get("user.limitip.hint")</g></label></div>
 	<div><label><h3>$lang.get('user.lock'):</h3><input type="checkbox" name='locked' #if($locked=='on' || $locked==1) checked #end /></label></div>
 
 	<table id='user-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
@@ -66,9 +76,9 @@
 </form>
 
 <div id='password' title="$lang.get('user.edit.password')" style="display:none">
-	<div><label><h3>$lang.get('user.new.password'):</h3><input type='password' name='password' value=''/></label></div>
+	<div><label><h3>$lang.get('user.new.password'):</h3><input type='text' name='password' value=''/></label></div>
 	<div class="btns" style="text-align: center">
-		<button onclick='_password(this);'>$lang.get('btn.ok')</button>
+		<button onclick='_password(this);' style="float: left;margin-left: 66px;">$lang.get('btn.ok')</button>
 	</div>
 </div>
 
@@ -87,7 +97,10 @@ function _unlock(){
 	});	
 }
 function _showpassword() {
-	giiwa.dialog($('#password'), {width:300, height: 90, moveable:true});
+	$.post("/admin/user/random", {}, function(e){
+		$('#password input[name=password]').val(e.code);
+		giiwa.dialog($('#password'), {width:300, height: 90, moveable:true});
+	});
 }
 function _password(o) {
 	giiwa.dialog().close();

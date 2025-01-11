@@ -24,10 +24,6 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.logging.*;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.giiwa.dao.X;
 
 import com.google.zxing.BarcodeFormat;
@@ -38,14 +34,13 @@ import com.google.zxing.common.BitMatrix;
 /**
  * The Class GImage is image utility, convert image, create QRCode image
  */
-@SuppressWarnings("deprecation")
 public class GImage {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(GImage.class);
 
 	/** The client. */
-	static HttpClient client = new DefaultHttpClient();
+//	static HttpClient client = new DefaultHttpClient();
 
 	/**
 	 * create QRCode image, and ouput to the file.
@@ -582,64 +577,64 @@ public class GImage {
 	 * @param w       the width of destination image
 	 * @param h       the height of destination image
 	 */
-	public static void scale(String url, String referer, String file, int w, int h) {
-		HttpGet get = null;
-		InputStream in = null;
-		try {
-
-			get = new HttpGet(formatUrl(url, "utf-8"));
-			if (referer != null && referer.length() > 0) {
-				get.addHeader("Referer", referer);
-			}
-
-			HttpResponse agent = client.execute(get);
-
-			in = agent.getEntity().getContent();
-			BufferedImage img = ImageIO.read(in);
-			if (img == null)
-				return;
-
-			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// TYPE_3BYTE_BGR);//
-																						// TYPE_4BYTE_BGR);
-			Graphics g = out.getGraphics();
-			// g.setColor(Color.white);
-			// g.fillRect(0, 0, w, h);
-
-			int w0 = img.getWidth();
-			int h0 = img.getHeight();
-			int sx1 = 0, sx2 = 0 + w0, sy1 = 0, sy2 = 0 + h0, dx1 = 0, dx2 = w, dy1 = 0, dy2 = h;
-
-			float fh = ((float) h0) / h;
-			float fw = ((float) w0) / w;
-
-			if (fh > fw) {
-				int w2 = (int) (w0 / fh);
-				dx1 = (w - w2) / 2;
-				dx2 = dx1 + w2;
-			} else {
-				int h2 = (int) (h0 / fw);
-				dy1 = (h - h2) / 2;
-				dy2 = dy1 + h2;
-			}
-
-			g.drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
-			ImageIO.write(out, "png", new File(file));
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (IOException e) {
-					log.error(e.getMessage(), e);
-				}
-			}
-			if (get != null) {
-				get.abort();
-			}
-		}
-	}
+//	public static void scale(String url, String referer, String file, int w, int h) {
+//		HttpGet get = null;
+//		InputStream in = null;
+//		try {
+//
+//			get = new HttpGet(formatUrl(url, "utf-8"));
+//			if (referer != null && referer.length() > 0) {
+//				get.addHeader("Referer", referer);
+//			}
+//
+//			HttpResponse agent = client.execute(get);
+//
+//			in = agent.getEntity().getContent();
+//			BufferedImage img = ImageIO.read(in);
+//			if (img == null)
+//				return;
+//
+//			BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_4BYTE_ABGR);// TYPE_3BYTE_BGR);//
+//																						// TYPE_4BYTE_BGR);
+//			Graphics g = out.getGraphics();
+//			// g.setColor(Color.white);
+//			// g.fillRect(0, 0, w, h);
+//
+//			int w0 = img.getWidth();
+//			int h0 = img.getHeight();
+//			int sx1 = 0, sx2 = 0 + w0, sy1 = 0, sy2 = 0 + h0, dx1 = 0, dx2 = w, dy1 = 0, dy2 = h;
+//
+//			float fh = ((float) h0) / h;
+//			float fw = ((float) w0) / w;
+//
+//			if (fh > fw) {
+//				int w2 = (int) (w0 / fh);
+//				dx1 = (w - w2) / 2;
+//				dx2 = dx1 + w2;
+//			} else {
+//				int h2 = (int) (h0 / fw);
+//				dy1 = (h - h2) / 2;
+//				dy2 = dy1 + h2;
+//			}
+//
+//			g.drawImage(img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, null);
+//			ImageIO.write(out, "png", new File(file));
+//
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//		} finally {
+//			if (in != null) {
+//				try {
+//					in.close();
+//				} catch (IOException e) {
+//					log.error(e.getMessage(), e);
+//				}
+//			}
+//			if (get != null) {
+//				get.abort();
+//			}
+//		}
+//	}
 
 	/**
 	 * Format url.

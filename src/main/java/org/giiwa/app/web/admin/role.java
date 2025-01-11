@@ -43,21 +43,24 @@ public class role extends Controller {
 	/**
 	 * Adds the.
 	 */
-	@Path(path = "create", login = true, access = "access.config.admin|access.config.role.admin")
+	@Path(path = "create", login = true, access = "access.config.admin|access.config.role.admin", oplog = true)
 	public void create() {
 		if (method.isPost()) {
 
 			String name = this.getString("name");
 			String memo = this.getString("memo");
-			String url = this.getString("url");
-			long id = Role.create(name, memo, V.create("url", url).append("seq", this.getInt("seq")));
+			String url = this.getHtml("url");
+			String menu = this.getHtml("menu");
+			long id = Role.create(name, memo,
+					V.create("url", url).append("menu", menu).append("seq", this.getInt("seq")));
 			if (id > 0) {
+
+//				String[] ss = this.getStrings("access");
 				String s1 = this.getHtml("access");
-				String[] accesses = X.split(s1, ";");
-				if (accesses != null) {
-					for (String s : accesses) {
-						Role.setAccess(id, s);
-					}
+				String[] ss = X.split(s1, ";");
+				if (ss != null) {
+					Role r = Role.dao.load(id);
+					r.setAccess(ss);
 				}
 
 				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
@@ -100,7 +103,7 @@ public class role extends Controller {
 		this.send(jo);
 	}
 
-	@Path(path = "cleanup", login = true, access = "access.config.admin")
+	@Path(path = "cleanup", login = true, access = "access.config.admin", oplog = true)
 	public void cleanup() {
 
 		Map<String, List<Access>> m1 = Access.load();
@@ -125,7 +128,7 @@ public class role extends Controller {
 	/**
 	 * Edits the.
 	 */
-	@Path(path = "edit", login = true, access = "access.config.admin|access.config.role.admin")
+	@Path(path = "edit", login = true, access = "access.config.admin|access.config.role.admin", oplog = true)
 	public void edit() {
 		if (method.isPost()) {
 
@@ -134,8 +137,9 @@ public class role extends Controller {
 			Role r = Role.dao.load(id);
 			if (r != null) {
 
-				if (Role.dao.update(id, V.create("name", name).append("seq", this.getInt("seq"))
-						.append("url", this.getString("url")).set("memo", this.getString("memo"))) > 0) {
+				if (Role.dao.update(id,
+						V.create("name", name).append("seq", this.getInt("seq")).append("url", this.getHtml("url"))
+								.append("menu", this.getHtml("menu")).append("memo", this.getString("memo"))) > 0) {
 
 					String s = this.getHtml("access");
 					String[] accesses = X.split(s, ";");
@@ -173,7 +177,7 @@ public class role extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.role.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.role.admin", oplog = true)
 	public void delete() {
 		String ids = this.getString("id");
 		int updated = 0;
@@ -185,7 +189,7 @@ public class role extends Controller {
 				int i = Role.dao.delete(id);
 				if (i > 0) {
 					updated += i;
-					GLog.oplog.info(role.class, "delete", r.getName(), null, login, this.ip());
+					GLog.oplog.info(this, "delete", r.getName());
 				}
 			}
 		}
@@ -209,7 +213,7 @@ public class role extends Controller {
 	public void onGet() {
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		Beans<Role> bs = Role.load(s, n);
 		bs.count();

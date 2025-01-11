@@ -3,7 +3,7 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 
 group = 'org.giiwa'
-version = '3.2'
+version = '3.3'
 description = 'giiwa distributed web framework'
 
 sourceCompatibility = 11
@@ -13,6 +13,7 @@ def buildno = new Date().format("yyMMddHHmm")
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
+	options.warnings = false
 }
 
 println description
@@ -20,8 +21,12 @@ println 'buildno: ' + buildno
 
 repositories {
      maven { url "https://repo1.maven.org/maven2" }
-     //maven { url "https://artifacts.alfresco.com/nexus/content/repositories/releases" }
-     //mavenCentral()
+     maven { url "https://repo.osgeo.org/repository/release/"}
+     maven { url "https://download.dcache.org/nexus/repository/public/"}
+     maven { url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/" }
+     maven { url "https://artifacts.alfresco.com/nexus/content/repositories/releases/" }
+     
+     mavenCentral()
 }
 
 configurations.all() {
@@ -31,133 +36,195 @@ configurations.all() {
 
 dependencies {
 
-	// https://mvnrepository.com/artifact/org.projectlombok/lombok
-	//compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
-
 	// https://mvnrepository.com/artifact/org.openjdk.nashorn/nashorn-core
-	implementation group: 'org.openjdk.nashorn', name: 'nashorn-core', version: '15.3'
-
+	implementation group: 'org.openjdk.nashorn', name: 'nashorn-core', version: '15.4'
+	
     implementation ('com.jcraft:jsch:0.1.55') {
     	exclude group: 'net.java.dev.jna',module: 'jna'
     }
     
     implementation group: 'commons-net', name: 'commons-net', version:'3.6'
 	
-	// https://mvnrepository.com/artifact/io.minio/minio
-	//implementation ('io.minio:minio:8.3.4'){
-	//	exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-common'
-	//	exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib'
-	//}
-	//implementation ('com.google.guava:guava:30.1.1-jre')
-	//implementation ('org.jetbrains.kotlin:kotlin-stdlib-common:1.3.72')
-	//implementation ('org.jetbrains.kotlin:kotlin-stdlib:1.3.72')
-	
 	// https://mvnrepository.com/artifact/com.emc.ecs/nfs-client
-    implementation ('com.emc.ecs:nfs-client:1.0.3') {
-    	exclude group: 'org.slf4j',module: 'slf4j-api'
+    implementation ('com.emc.ecs:nfs-client:1.1.0') {
+        exclude group: 'org.apache.commons',module: 'commons-lang3'
     }
+        
+	// https://mvnrepository.com/artifact/jcifs/jcifs
+	// implementation group: 'jcifs', name: 'jcifs', version: '1.3.17'
+	// https://mvnrepository.com/artifact/org.codelibs/jcifs
+	implementation ('org.codelibs:jcifs:2.1.36'){
+	}
+
+	// https://mvnrepository.com/artifact/org.littleshoot/littleproxy
+	//implementation ('org.littleshoot:littleproxy:1.1.2'){
+	//	 exclude group: 'org.apache.commons',module: 'commons-lang3'
+	//	 exclude group: 'org.slf4j',module: 'slf4j-api'
+	////	 exclude group: 'com.google.guava',module: 'guava'
+	//	 exclude group: 'io.netty',module: 'netty-all'
+	//}
+
+	implementation ('io.netty:netty-all:4.0.56.Final') {
+	}
+	implementation ('com.google.guava:guava:20.0'){
+	}
+	
+	// https://mvnrepository.com/artifact/javax.media/jai_codec
+	//implementation group: 'javax.media', name: 'jai_codec', version: '1.1.3'
+
+	// https://mvnrepository.com/artifact/javax.media/jai-core
+	//implementation group: 'javax.media', name: 'jai-core', version: '1.1.3'
+
+	// https://mvnrepository.com/artifact/javax.media.jai/mlibwrapper-jai
+	//implementation group: 'javax.media.jai', name: 'mlibwrapper-jai', version: '1.1.3'
+		
+		
+	// https://mvnrepository.com/artifact/be.tarsos.dsp/core
+	//implementation group: 'be.tarsos.dsp', name: 'core', version: '2.5'
+	// https://mvnrepository.com/artifact/be.tarsos.dsp/core
+	//implementation group: 'be.tarsos.dsp', name: 'jvm', version: '2.5'
+
+	// https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-hdfs
+	implementation ('org.apache.hadoop:hadoop-hdfs:3.4.0'){
+        exclude group: 'commons-io',module: 'commons-io'
+        exclude group: 'commons-codec',module: 'commons-codec'
+        exclude group: 'com.google.code.gson',module: 'gson'
+        exclude group: 'com.google.protobuf',module: 'protobuf-java'
+        exclude group: 'org.slf4j',module: 'slf4j-api'
+        exclude group: 'ch.qos.reload4j',module: 'reload4j'
+        exclude group: 'io.netty',module: 'netty-all'
+        exclude group: 'com.fasterxml.jackson.core',module: 'jackson-databind'
+        exclude group: 'io.netty',module: 'netty-handler'
+        exclude group: 'com.fasterxml.jackson.core',module: 'jackson-core'
+        exclude group: 'commons-net',module: 'commons-net'
+        exclude group: 'org.apache.commons',module: 'commons-configuration2'
+        exclude group: 'commons-net',module: 'commons-net'
+        exclude group: 'org.apache.commons',module: 'commons-lang3'
+        exclude group: 'org.apache.commons',module: 'commons-compress'
+        exclude group: 'commons-net',module: 'commons-net'
+        exclude group: 'org.apache.commons',module: 'commons-text'
+        exclude group: 'io.netty',module: 'netty-transport-native-epoll'
+        exclude group: 'org.codehaus.woodstox',module: 'stax2-api'
+        exclude group: 'javax.xml.bind',module: 'jaxb-api'
+        exclude group: 'com.nimbusds',module: 'nimbus-jose-jwt'
+        exclude group: 'com.google.inject',module: 'guice'
+        exclude group: 'org.apache.zookeeper',module: 'zookeeper'
+        exclude group: 'org.apache.commons',module: 'commons-configuration2'
+        exclude group: 'org.jline',module: 'jline'
+	}
+	// https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-client
+	implementation ('org.apache.hadoop:hadoop-client:3.4.0'){
+        exclude group: 'commons-io',module: 'commons-io'
+        exclude group: 'commons-codec',module: 'commons-codec'
+        exclude group: 'com.google.code.gson',module: 'gson'
+        exclude group: 'com.google.protobuf',module: 'protobuf-java'
+        exclude group: 'org.slf4j',module: 'slf4j-api'
+        exclude group: 'ch.qos.reload4j',module: 'reload4j'
+        exclude group: 'io.netty',module: 'netty-all'
+        exclude group: 'com.fasterxml.jackson.core',module: 'jackson-databind'
+        exclude group: 'io.netty',module: 'netty-handler'
+        exclude group: 'com.fasterxml.jackson.core',module: 'jackson-core'
+        exclude group: 'commons-net',module: 'commons-net'
+        exclude group: 'org.apache.commons',module: 'commons-lang3'
+        exclude group: 'org.apache.commons',module: 'commons-compress'
+        exclude group: 'commons-net',module: 'commons-net'
+        exclude group: 'org.apache.commons',module: 'commons-text'
+        exclude group: 'io.netty',module: 'netty-transport-native-epoll'
+        exclude group: 'org.codehaus.woodstox',module: 'stax2-api'
+        exclude group: 'javax.xml.bind',module: 'jaxb-api'
+        exclude group: 'com.nimbusds',module: 'nimbus-jose-jwt'
+        exclude group: 'com.google.inject',module: 'guice'
+        exclude group: 'org.apache.zookeeper',module: 'zookeeper'
+        exclude group: 'org.apache.commons',module: 'commons-configuration2'
+        exclude group: 'org.jline',module: 'jline'
+		exclude group: 'com.google.guava',module: 'guava'
+	}
+	
+	// https://mvnrepository.com/artifact/org.alfresco/alfresco-jlan-embed
+	//implementation ('org.alfresco:alfresco-jlan-embed:7.5'){
+    //    exclude group: 'commons-logging',module: 'commons-logging'
+	//}
+	
+	// https://mvnrepository.com/artifact/org.eclipse.paho/org.eclipse.paho.client.mqttv3
+	implementation group: 'org.eclipse.paho', name: 'org.eclipse.paho.client.mqttv3', version: '1.2.5'
+	
+	// https://mvnrepository.com/artifact/org.dcache/nfs4j-core
+	implementation ('org.dcache:nfs4j-core:0.25.0') {
+    	exclude group: 'org.slf4j',module: 'slf4j-api'
+    	exclude group: 'com.google.guava',module: 'guava'
+	}
+	
+	implementation ('org.codehaus.woodstox:stax2-api:4.2.1'){
+		//cos 腾讯云用到了
+	}
 	
     implementation ('org.fusesource:sigar:1.6.4') {
     	exclude group: 'log4j',module: 'log4j'
     }
         
-    implementation ('redis.clients:jedis:3.6.3') {
-    	exclude group: 'org.slf4j',module: 'slf4j-api'
+	// https://mvnrepository.com/artifact/redis.clients/jedis
+    implementation ('redis.clients:jedis:5.1.0') {
+    	//exclude group: 'org.slf4j',module: 'slf4j-api'
+    	//exclude group: 'org.apache.commons',module: 'commons-pool2'
+    	//exclude group: 'com.google.code.gson',module: 'gson'
     }
+    
+    // https://mvnrepository.com/artifact/org.javassist/javassist
+	implementation group: 'org.javassist', name: 'javassist', version: '3.29.2-GA'
     
     // https://mvnrepository.com/artifact/org.snmp4j/snmp4j-agent
 	implementation group: 'org.snmp4j', name: 'snmp4j-agent', version: '3.5.4'
 
-	implementation group: 'commons-io', name: 'commons-io', version: '2.8.0'
+	implementation group: 'commons-io', name: 'commons-io', version: '2.14.0'
  	// https://mvnrepository.com/artifact/commons-codec/commons-codec
 	implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
  
-	// https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-tiff
-	//implementation group: 'com.twelvemonkeys.imageio', name: 'imageio-tiff', version: '3.8.2'
+ 	// https://mvnrepository.com/artifact/org.apache.commons/commons-math3
+	implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
  
-    implementation ('org.apache.commons:commons-lang3:3.9')
+ 	// https://mvnrepository.com/artifact/org.apache.commons/commons-compress
+	implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.23.0'
+ 
+	// https://mvnrepository.com/artifact/org.yaml/snakeyaml
+	implementation group: 'org.yaml', name: 'snakeyaml', version: '2.2'
+ 
+	 // https://mvnrepository.com/artifact/org.sejda.webp-imageio/webp-imageio-sejda
+	implementation group: 'org.sejda.webp-imageio', name: 'webp-imageio-sejda', version: '0.1.0'
+ 
+    implementation ('org.apache.commons:commons-lang3:3.8.1')
     implementation ('org.apache.commons:commons-configuration2:2.5'){
     	exclude group: 'org.apache.commons',module: 'commons-lang3'
     }
-    implementation ("org.apache.commons:commons-dbcp2:2.6.0") {
-    	exclude group: 'org.apache.commons',module: 'commons-pool2'
+    
+    implementation ("org.apache.commons:commons-dbcp2:2.11.0") {
+    	//exclude group: 'org.apache.commons',module: 'commons-pool2'
     }
-    implementation group: 'org.apache.commons', name: 'commons-pool2', version:'2.9.0'
-
-    implementation ("org.apache.httpcomponents:httpclient:4.5.13") {
-    	exclude group: 'commons-codec',module: 'commons-codec'
-    }
-    implementation ("org.apache.httpcomponents:httpmime:4.5.13") {
-    	exclude group: 'commons-codec',module: 'commons-codec'
-    }
-    implementation ("org.apache.httpcomponents:httpcore:4.4.13") {
-    	exclude group: 'commons-codec',module: 'commons-codec'
-    }
-
-	// https://mvnrepository.com/artifact/org.apache.sshd/sshd-core
-	//implementation ('org.apache.sshd:sshd-core:2.8.0'){
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-	//}
-
-	// https://mvnrepository.com/artifact/org.apache.sshd/sshd-sftp
-	//implementation ('org.apache.sshd:sshd-sftp:0.9.0'){
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-	//}
-	//implementation ('org.apache.sshd:sshd-scp:2.8.0'){
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-	//}
-
-	// https://mvnrepository.com/artifact/org.apache.ftpserver/ftpserver-core
-	//implementation ('org.apache.ftpserver:ftpserver-core:1.2.0'){
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-	//}
-
-	// https://mvnrepository.com/artifact/org.xerial/sqlite-jdbc
-	//implementation group: 'org.xerial', name: 'sqlite-jdbc', version: '3.36.0.3'
-
-	// https://mvnrepository.com/artifact/org.tmatesoft.svnkit/svnkit
-	//implementation ('org.tmatesoft.svnkit:svnkit:1.10.5') {
-    //	exclude group: 'net.java.dev.jna',module: 'jna'
-    //	exclude group: 'com.trilead',module: 'trilead-ssh2'
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-	//}
-	
-	// https://mvnrepository.com/artifact/org.gitlab/java-gitlab-api
-	//implementation group: 'org.gitlab', name: 'java-gitlab-api', version: '4.1.1'
-	//implementation ('org.gitlab:java-gitlab-api:4.1.1') {
-    //	exclude group: 'commons-io',module: 'commons-io'
-    //	exclude group: 'com.fasterxml.jackson.core',module: 'jackson-core'
-    //	exclude group: 'com.fasterxml.jackson.core',module: 'jackson-databind'
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-	//}
-	
-	// https://mvnrepository.com/artifact/org.alfresco/alfresco-jlan-embed
-	//implementation ('org.alfresco:alfresco-jlan-embed:7.1') {
-    //	exclude group: 'commons-logging',module: 'commons-logging'
-	//}
-
-	// https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit
-	//implementation ('org.eclipse.jgit:org.eclipse.jgit:6.1.0.202203080745-r'){
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-	//}
+    implementation group: 'org.apache.commons', name: 'commons-pool2', version:'2.12.0'
 
 	// https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
-	implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.71'
+	implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.74'
 	// https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk18on
-	implementation group: 'org.bouncycastle', name: 'bcpkix-jdk18on', version: '1.71'
+	implementation group: 'org.bouncycastle', name: 'bcpkix-jdk18on', version: '1.74'
+	// https://mvnrepository.com/artifact/org.antlr/antlr4
+	implementation group: 'org.antlr', name: 'antlr4', version: '4.11.1'
 
+	// https://mvnrepository.com/artifact/com.twelvemonkeys.imageio/imageio-jpeg
+	implementation group: 'com.twelvemonkeys.imageio', name: 'imageio-jpeg', version: '3.9.4'
 
-	implementation ('net.java.dev.jna:jna:5.6.0')
-	// https://mvnrepository.com/artifact/org.apache.rocketmq/rocketmq-client
-//	implementation ('org.apache.rocketmq:rocketmq-client:4.8.0'){
-//    	exclude group: 'io.netty',module: 'netty-all'
-//    	exclude group: 'org.apache.commons',module: 'commons-lang3'
-//    	exclude group: 'commons-logging',module: 'commons-logging'
-//    	exclude group: 'commons-collections',module: 'commons-collections'
-//	}
+	implementation ('net.java.dev.jna:jna:5.13.0')
 
     implementation ('org.apache.activemq:activemq-client:5.17.1') {
     	exclude group: 'org.slf4j',module: 'slf4j-api'
+    }
+
+	// https://mvnrepository.com/artifact/org.apache.rocketmq/rocketmq-client
+    implementation ('org.apache.rocketmq:rocketmq-client:5.0.0') {
+    	exclude group: 'commons-codec',module: 'commons-codec'
+    	exclude group: 'org.apache.commons',module: 'commons-lang3'
+    	exclude group: 'com.google.guava',module: 'guava'
+    	//exclude group: 'com.alibaba',module: 'fastjson'
+    	exclude group: 'org.slf4j',module: 'slf4j-api'
+		exclude group: 'io.netty',module: 'netty-all'
     }
 
 	// https://mvnrepository.com/artifact/org.graylog2/syslog4j
@@ -170,76 +237,17 @@ dependencies {
     implementation ('org.apache.curator:curator-recipes:5.2.0') {
     	exclude group: 'org.slf4j',module: 'slf4j-api'
     	exclude group: 'com.google.guava',module: 'guava'
+    	exclude group: 'io.netty',module: '*'
     }
 
-	// https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-hdfs
-	//implementation ('org.apache.hadoop:hadoop-hdfs:3.3.1') {
-    //	exclude group: 'commons-logging',module: 'commons-logging'
-    //	exclude group: 'commons-codec',module: 'commons-codec'
-    //	exclude group: 'com.fasterxml.jackson.core',module: 'jackson-databind'
-	//}
-
-	// https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
-    //implementation ('com.amazonaws:aws-java-sdk-s3:1.12.150') {
-    //	exclude group: 'commons-logging',module: 'commons-logging'
-    //	exclude group: 'commons-codec',module: 'commons-codec'
-    //}
-
-	// https://mvnrepository.com/artifact/com.aliyun.oss/aliyun-sdk-oss
-    //implementation ('com.aliyun.oss:aliyun-sdk-oss:3.14.0') {
-    //	exclude group: 'commons-codec',module: 'commons-codec'
-    //	exclude group: 'com.google.code.gson',module: 'gson'
-    //	exclude group: 'org.apache.httpcomponents',module: 'httpclient'
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-    //}
+    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api
+	implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
     
-	// https://mvnrepository.com/artifact/com.qcloud/cos_api
-    //implementation ('com.qcloud:cos_api:5.6.68') {
-    //	exclude group: 'commons-codec',module: 'commons-codec'
-    //	exclude group: 'com.google.code.gson',module: 'gson'
-    //	exclude group: 'javax.xml.bind',module: 'jaxb-api'
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-    //	exclude group: 'com.squareup.okio',module: 'okio'
-    //}
-
-	// https://mvnrepository.com/artifact/com.huaweicloud/esdk-obs-java
-    //implementation ('com.huaweicloud:esdk-obs-java:3.21.12') {
-    //	exclude group: 'com.fasterxml.jackson.core',module: 'jackson-databind'
-    //	exclude group: 'com.fasterxml.jackson.core',module: 'jackson-core'
-    //	exclude group: 'com.fasterxml.jackson.core',module: 'jackson-annotations'
-    //	exclude group: 'com.fasterxml.jackson',module: 'jackson-bom'
-    //	exclude group: 'com.fasterxml.jackson.core',module: 'jackson-databind'
-    //	exclude group: 'com.squareup.okio',module: 'okio'
-    //	exclude group: 'org.jetbrains.kotlin',module: 'kotlin-stdlib'
-    //	exclude group: 'org.jetbrains.kotlin',module: 'kotlin-stdlib-common'
-    //}
-
-	// https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
-//	implementation ('org.apache.kafka:kafka-clients:3.0.0') {
-//    	exclude group: 'org.slf4j',module: 'slf4j-api'
-//	}
-
-//    compile ('org.apache.kafka:kafka-clients:0.10.2.1') {
-//    	exclude group: 'org.slf4j',module: 'slf4j-api'
-//    }
-    implementation ('log4j:log4j:1.2.17')
     implementation ("org.apache.velocity:velocity-engine-core:2.3"){
     	exclude group: 'org.apache.commons',module: 'commons-lang3'
     	exclude group: 'org.slf4j',module: 'slf4j-api'
     }
     
-//    implementation ('org.thymeleaf:thymeleaf:3.0.11.RELEASE') {
-//    	exclude group: 'org.slf4j',module: 'slf4j-api'
-//    }
-	
-//    implementation group: 'org.freemarker', name: 'freemarker', version:'2.3.28'
-    //compile ('com.whalin:Memcached-Java-Client:3.0.2'){
-    //	exclude group: 'org.slf4j',module: 'slf4j-api'
-    //}
-	// https://mvnrepository.com/artifact/com.googlecode.xmemcached/xmemcached
-    implementation ('com.googlecode.xmemcached:xmemcached:2.4.7'){
-    	exclude group: 'org.slf4j',module: 'slf4j-api'
-    }
     //implementation group: 'org.rosuda.REngine', name: 'Rserve', version:'1.8.1'
     implementation group: 'javax.mail', name: 'mail', version:'1.4'
     implementation ('commons-fileupload:commons-fileupload:1.4'){
@@ -249,66 +257,47 @@ dependencies {
     implementation group: 'dom4j', name: 'dom4j', version:'1.6.1'
     implementation group: 'org.jsoup', name: 'jsoup', version:'1.10.2'
     implementation group: 'com.google.zxing', name: 'core', version:'3.4.1'
-    implementation group: 'com.google.code.gson', name: 'gson', version:'2.8.6'
+    implementation group: 'com.google.code.gson', name: 'gson', version:'2.10.1'
 
 	// https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
-	//compile group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.2.3'
-    implementation group: 'org.mongodb', name: 'mongo-java-driver', version:'3.12.11'
+	// compile group: 'org.mongodb', name: 'mongodb-driver-sync', version: '4.2.3'
+    // implementation group: 'org.mongodb', name: 'mongo-java-driver', version:'3.12.13'
+	// https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
+	implementation group: 'org.mongodb', name: 'mongodb-driver-sync', version: '5.1.0'
     
-    // https://mvnrepository.com/artifact/com.taosdata.jdbc/taos-jdbcdriver
-    //url: "jdbc:TAOS://taosdemo.com:6030/test?user=root&password=taosdata"
-    implementation ('com.taosdata.jdbc:taos-jdbcdriver:2.0.40'){
-    	exclude group: 'commons-codec',module: 'commons-codec'
-    	exclude group: 'org.slf4j',module: 'slf4j-api'
+	// https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
+	implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '1.6.20'
+        
+    // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+	//implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.10.0'
+    implementation ('com.squareup.okhttp3:okhttp:4.12.0'){
+    	exclude group: 'org.jetbrains.kotlin',module: 'kotlin-stdlib'
+    	exclude group: 'org.jetbrains.kotlin',module: 'kotlin-stdlib-jdk7'
+    	exclude group: 'org.jetbrains.kotlin',module: 'kotlin-stdlib-jdk8'
+    	exclude group: 'org.jetbrains.kotlin',module: 'kotlin-stdlib-common'
     }
-    
-    // https://mvnrepository.com/artifact/cc.blynk.clickhouse/clickhouse4j
-	//implementation group: 'cc.blynk.clickhouse', name: 'clickhouse4j', version: '1.4.4'
-    
-    // https://mvnrepository.com/artifact/org.influxdb/influxdb-java
-    //implementation ('org.influxdb:influxdb-java:2.22') {
-    //	exclude group: 'com.squareup.okhttp3', module: 'okhttp'
-    //}
-    
-    //compile group: 'postgresql', name: 'postgresql', version:'9.1-901-1.jdbc4'
-    // https://mvnrepository.com/artifact/org.postgresql/postgresql
-	implementation group: 'org.postgresql', name: 'postgresql', version: '9.4.1212'
-    
-    // https://mvnrepository.com/artifact/mysql/mysql-connector-java
-	implementation group: 'mysql', name: 'mysql-connector-java', version: '6.0.6'
-    
-    // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
-	implementation group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.7.5'
-    
-	// https://mvnrepository.com/artifact/com.dameng/Dm8JdbcDriver18
-	implementation group: 'com.dameng', name: 'Dm8JdbcDriver18', version: '8.1.1.49'
 
 	// https://mvnrepository.com/artifact/com.github.junrar/junrar
 	implementation group: 'com.github.junrar', name: 'junrar', version: '7.5.1'
 
-	// https://mvnrepository.com/artifact/org.jcuda/jcuda
-	//compile group: 'org.jcuda', name: 'jcuda', version: '11.2.0'
-//	compile group: 'org.jcuda', name: 'jcublas', version: '11.2.0'
-//	compile group: 'org.jcuda', name: 'jcufft', version: '11.2.0'
-//	compile group: 'org.jcuda', name: 'jcusparse', version: '11.2.0'
-//	compile group: 'org.jcuda', name: 'jcusolver', version: '11.2.0'
-//	compile group: 'org.jcuda', name: 'jcurand', version: '11.2.0'
-	//compile group: 'org.jcuda', name: 'jnvgraph', version: '11.2.0'
-//	compile group: 'org.jcuda', name: 'jcudnn', version: '11.2.0'
-
     implementation ('org.slf4j:slf4j-log4j12:1.7.36')
     // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
-	//implementation group: 'com.google.protobuf', name: 'protobuf-java', version: '3.12.4'
+	implementation group: 'com.google.protobuf', name: 'protobuf-java', version: '3.19.6'
     
-    // https://mvnrepository.com/artifact/com.sequoiadb/sequoiadb-driver, trouble with mongodb
-	//implementation group: 'com.sequoiadb', name: 'sequoiadb-driver', version: '5.0.2'
-    
-    implementation files('lib/ojdbc8.jar')
-    //implementation files('lib/greenplum_5.1.4.jar')
-    //compile files('lib/DmJdbcDriver18.jar')
+	// https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
+	implementation ('com.mysql:mysql-connector-j:8.4.0'){
+    	exclude group: 'com.google.protobuf',module: 'protobuf-java'
+	}
+	// https://mvnrepository.com/artifact/org.postgresql/postgresql
+	implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.4'
+	
+	// https://mvnrepository.com/artifact/com.dameng/DmJdbcDriver18
+	implementation group: 'com.dameng', name: 'DmJdbcDriver18', version: '8.1.3.140'
+	
     implementation files('tomcat/lib/catalina.jar')
     implementation files('tomcat/lib/servlet-api.jar')
-    
+    //implementation files('lib/Dm8JdbcDriver18-8.1.1.49.jar')
+        
     //testCompile 'junit:junit:4.8.2'
 }
 
@@ -405,7 +394,7 @@ task tgz(type: Tar, dependsOn:prepare) {
 task upgrade(type: Zip,dependsOn:prepare) {
 	from 'build/upgrade'
 	destinationDir file('build')
-	archiveName 'giiwa-' + version + '.' + buildno + '-upgrade.zip'
+	archiveName 'giiwa-' + version + '.' + buildno + '.zip'
 
 	doLast {
 		println 'zip success, archived build/' + archiveName

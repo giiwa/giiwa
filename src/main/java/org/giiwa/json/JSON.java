@@ -20,13 +20,13 @@ import java.io.FileReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +42,7 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.engine.JS;
 import org.giiwa.misc.Base32;
@@ -49,6 +50,7 @@ import org.giiwa.misc.Digest;
 import org.giiwa.misc.StringFinder;
 import org.giiwa.misc.Url;
 import org.giiwa.task.BiConsumer;
+import org.giiwa.web.Language;
 import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import com.google.gson.Gson;
@@ -84,15 +86,22 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 * parse the object to JSON object
 	 *
 	 * @param json    the json
-	 * @param lenient the boolean of JsonReader.setLenient(lenient)
+	 * @param lenient the boolean of JsonReader.setLenient(lenient), <br>
+	 *                if json is inputstream/reader, true not close, false to close
 	 * @return the json
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public static JSON fromObject(Object json, boolean lenient) {
+		return fromObject(json, lenient, 0);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static JSON fromObject(Object json, boolean lenient, int times) {
 
 		JSON j = null;
 		try {
-			if (json instanceof JSON) {
+			if (json == null) {
+				return null;
+			} else if (json instanceof JSON) {
 				j = (JSON) json;
 			} else if (json instanceof ScriptObjectMirror) {
 
@@ -103,8 +112,15 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 					j.put(key, m.get(key));
 				}
 
+			} else if (json.getClass().getName().equals("org.postgresql.util.PGobject")) {
+
+				Object o = json;
+				j = JSON.create().append(o.getClass().getMethod("getType").invoke(o).toString(),
+						o.getClass().getMethod("getValue").invoke(o));
+
 			} else if (json instanceof Map) {
 				j = JSON.create((Map) json);
+
 			} else if (json instanceof String) {
 
 				String s1 = ((String) json).trim();
@@ -152,24 +168,48 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 					}
 				}
 			} else if (json instanceof InputStream) {
-				Gson g = _gson();
-				j = g.fromJson(new InputStreamReader((InputStream) json), JSON.class);
-			} else if (json instanceof File) {
+				InputStream in = (InputStream) json;
 				try {
 					Gson g = _gson();
-					j = g.fromJson(new FileReader((File) json), JSON.class);
+					j = g.fromJson(new InputStreamReader(in), JSON.class);
+				} finally {
+					if (!lenient) {
+						X.close(in);
+					}
+				}
+			} else if (json instanceof File) {
+				Reader re = null;
+				try {
+					re = new FileReader((File) json);
+					Gson g = _gson();
+					j = g.fromJson(re, JSON.class);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
+				} finally {
+					X.close(re);
 				}
 			} else if (json instanceof Reader) {
-				Gson g = _gson();
-				j = g.fromJson((Reader) json, JSON.class);
+				Reader re = (Reader) json;
+				try {
+					Gson g = _gson();
+					j = g.fromJson(re, JSON.class);
+				} finally {
+					if (!lenient) {
+						X.close(re);
+					}
+				}
 			} else if (json instanceof byte[]) {
-				Gson g = _gson();
+
 				byte[] b1 = (byte[]) json;
-				JsonReader reader = new JsonReader(new InputStreamReader(new ByteArrayInputStream(b1)));
-				reader.setLenient(lenient);
-				j = g.fromJson(reader, JSON.class);
+				InputStream in = new ByteArrayInputStream(b1);
+				try {
+					Gson g = _gson();
+					JsonReader reader = new JsonReader(new InputStreamReader(in));
+					reader.setLenient(lenient);
+					j = g.fromJson(reader, JSON.class);
+				} finally {
+					X.close(in);
+				}
 			} else if (json instanceof ResultSet) {
 
 				ResultSet r = (ResultSet) json;
@@ -198,25 +238,30 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 				}
 			}
 
-			_refine(j);
+			_refine(j, 0);
 
 			if (j != null) {
 				Set<String> ss = j.keySet();
 				for (String name : ss) {
 					Object o = j.get(name);
-					if (o == null) {
-						j.remove(name);
-					} else if (o instanceof ScriptObjectMirror) {
+//					if (o == null) {
+//						j.remove(name);
+//					} else 
+					if (o instanceof ScriptObjectMirror) {
 						ScriptObjectMirror m = (ScriptObjectMirror) o;
 						if (m.isArray()) {
 							j.put(name, JSON.fromObjects(m));
 						} else {
-							j.put(name, JSON.fromObject(m));
+							if (times < 64) {
+								j.put(name, JSON.fromObject(m, lenient, times + 1));
+							}
 						}
 					} else if (o instanceof List) {
 						j.put(name, fromObjects(o));
 					} else if (o instanceof Map) {
-						j.put(name, fromObject(o));
+						if (times < 64) {
+							j.put(name, fromObject(o, lenient, times + 1));
+						}
 					}
 				}
 			}
@@ -228,7 +273,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 
 	private static Gson _gson() {
 		return new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY).excludeFieldsWithoutExposeAnnotation()
-				.serializeSpecialFloatingPointValues().create();
+				.serializeSpecialFloatingPointValues().serializeNulls().create();
 	}
 
 	public static boolean isArray(Object jsons) {
@@ -276,19 +321,36 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 				list = g.fromJson((String) jsons, List.class);
 			}
 		} else if (jsons instanceof InputStream) {
-			Gson g = _gson();
-			JsonReader reader = new JsonReader(new InputStreamReader((InputStream) jsons));
-			list = g.fromJson(reader, List.class);
-		} else if (jsons instanceof File) {
+
+			InputStream in = (InputStream) jsons;
 			try {
 				Gson g = _gson();
-				return g.fromJson(new FileReader((File) jsons), List.class);
+				JsonReader reader = new JsonReader(new InputStreamReader(in));
+				list = g.fromJson(reader, List.class);
+			} finally {
+				X.close(in);
+			}
+		} else if (jsons instanceof File) {
+
+			Reader re = null;
+			try {
+				re = new FileReader((File) jsons);
+				Gson g = _gson();
+				return g.fromJson(re, List.class);
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
+			} finally {
+				X.close(re);
 			}
 		} else if (jsons instanceof Reader) {
-			Gson g = _gson();
-			list = g.fromJson((Reader) jsons, List.class);
+
+			Reader re = (Reader) jsons;
+			try {
+				Gson g = _gson();
+				list = g.fromJson(re, List.class);
+			} finally {
+				X.close(re);
+			}
 		} else if (jsons instanceof byte[]) {
 			Gson g = _gson();
 			byte[] b1 = (byte[]) jsons;
@@ -480,7 +542,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	public synchronized String toPrettyString() {
 		Gson gson = new GsonBuilder().registerTypeAdapterFactory(BeanAdapter.FACTORY)
 				.excludeFieldsWithoutExposeAnnotation().serializeSpecialFloatingPointValues().setPrettyPrinting()
-				.create();
+				.serializeNulls().create();
 		return gson.toJson(this);
 	}
 
@@ -509,11 +571,13 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	}
 
 	@SuppressWarnings("unchecked")
-	private static void _refine(Map<String, Object> jo) {
+	private static void _refine(Map<String, Object> jo, int times) {
+
 		if (jo == null) {
 			return;
 		}
 		if (jo.size() > 0) {
+
 			for (String name : jo.keySet()) {
 				Object v = jo.get(name);
 				if (v instanceof Double) {
@@ -523,9 +587,14 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 					} else if (d == d.longValue()) {
 						jo.put(name, d.longValue());
 					}
-				} else if (v instanceof Map) {
-					v = JSON.fromObject(v);
-					_refine((JSON) v);
+				} else if (v instanceof JSON) {
+					if (times < 64) {
+						_refine((JSON) v, times + 1);
+					}
+//				} else if (v instanceof Map) {
+//					v = JSON.fromObject(v);
+//					_refine((JSON) v);
+//					jo.put(name, v);
 				} else if (v instanceof List) {
 					_refine((List<Object>) v);
 				}
@@ -535,6 +604,7 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static List<Object> _refine(List<Object> l1) {
+
 		if (l1 == null) {
 			return null;
 		}
@@ -548,9 +618,12 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 					} else if (d == d.longValue()) {
 						l1.set(i, d.longValue());
 					}
+				} else if (v instanceof JSON) {
+					_refine((JSON) v, 0);
 				} else if (v instanceof Map) {
 					v = JSON.fromObject(v);
-					_refine((Map) v);
+					_refine((Map) v, 0);
+					l1.set(i, v);
 				} else if (v instanceof List) {
 					_refine((List) v);
 				}
@@ -570,7 +643,8 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		JSON j = create();
 		Set<String> m1 = m.keySet();
 		for (String name : m1) {
-			j.put(name, m.get(name));
+			Object o = m.get(name);
+			j.put(name, o);
 		}
 		return j;
 
@@ -619,6 +693,29 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	 */
 	public int getInt(String name) {
 		return getInt(name, 0);
+	}
+
+	/**
+	 * get and format
+	 * 
+	 * @param name
+	 * @param format
+	 * @return
+	 */
+	public Object get(String name, String format) {
+
+		Object v = get(name);
+		if (X.isEmpty(format)) {
+			return v;
+		}
+
+		if (format.matches(".*(yyyy|MM|dd|HH|mm|ss).*")) {
+			// 时间日期格式
+			return Language.getLanguage().format(v, format);
+		}
+
+		return String.format(format, v);
+
 	}
 
 	/**
@@ -834,11 +931,11 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 			}
 			j1.append(name.substring(i + 1), value);
 		} else {
-			if (value == null) {
-				this.remove(name);
-			} else {
-				put(name, value);
-			}
+//			if (value == null) {
+//				this.remove(name);
+//			} else {
+			put(name, value);
+//			}
 		}
 		return this;
 	}
@@ -980,7 +1077,10 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		if (i > 0) {
 			String s0 = name.substring(0, i);
 			o = get(s0);
-			if (o instanceof Map) {
+			if (o instanceof JSON) {
+				JSON m = (JSON) o;
+				return m.get(name.substring(i + 1));
+			} else if (o instanceof Map) {
 				JSON m = JSON.fromObject(o);
 				return m.get(name.substring(i + 1));
 			}
@@ -1072,32 +1172,24 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 				Object j1 = _fromXml(e);
 				Object o = jo.get(e.getName());
 				if (o == null) {
-					jo.put(e.getName(), j1);
+					List l2 = new ArrayList();
+					l2.add(j1);
+					jo.put(e.getName(), l2);
 				} else {
 					if (o instanceof List) {
 						((List) o).add(j1);
 					} else {
-						if (o instanceof String && j1 instanceof JSON) {
-							((JSON) j1).put("body", o);
-						} else if (o instanceof JSON && j1 instanceof String) {
-							((JSON) o).put("body", j1);
-						} else {
-							List l2 = new ArrayList<Object>();
-							l2.add(o);
-							l2.add(j1);
-							jo.put(e.getName(), l2);
-						}
+						List l2 = new ArrayList<Object>();
+						l2.add(o);
+						l2.add(j1);
+						jo.put(e.getName(), l2);
 					}
 				}
 			}
 		} else {
 			String s = r1.getText();
-			if (jo.isEmpty()) {
-				return s;
-			} else {
-				if (!X.isEmpty(s)) {
-					jo.put("body", s);
-				}
+			if (!X.isEmpty(s)) {
+				jo.put("body", s);
 			}
 		}
 
@@ -1146,32 +1238,34 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		return l1;
 	}
 
-	@SuppressWarnings({ "rawtypes" })
-	private void _scan_list(Object o, BiConsumer<JSON, Map.Entry> func) {
+	private void _scan_list(Object o, BiConsumer<JSON, String> func) {
 		X.asList(o, e -> {
 			if (e == null)
 				return null;
 
 			if (e instanceof JSON) {
 				((JSON) e).scan(func);
-			} else if (e instanceof Collection || e.getClass().isArray()) {
+			} else if (X.isArray(e)) {
 				_scan_list(e, func);
 			}
 			return null;
 		});
 	}
 
-	@SuppressWarnings("rawtypes")
-	public JSON scan(BiConsumer<JSON, Map.Entry> func) {
+	public JSON scan(BiConsumer<JSON, String> func) {
 
-		Map.Entry[] ee = this.entrySet().toArray(new Map.Entry[this.size()]);
-		for (Map.Entry e : ee) {
-			func.accept(this, e);
+		String[] ss = this.keySet().toArray(new String[this.size()]);
+		for (String s : ss) {
 
-			if (e.getValue() instanceof JSON) {
-				((JSON) e.getValue()).scan(func);
-			} else if (e.getValue() instanceof List || e.getValue().getClass().isArray()) {
-				_scan_list(e.getValue(), func);
+			func.accept(this, s);
+
+			Object o = this.get(s);
+			if (o != null) {
+				if (o instanceof JSON) {
+					((JSON) o).scan(func);
+				} else if (X.isArray(o)) {
+					_scan_list(o, func);
+				}
 			}
 		}
 		return this;
@@ -1306,24 +1400,26 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 		return m;
 	}
 
-	public byte[] getBytes(String name) {
-		String s = this.getString(name);
-		if (s != null) {
-			return Base64.getDecoder().decode(s);
-		}
-		return null;
-	}
+//	public byte[] getBytes(String name) {
+//		String s = this.getString(name);
+//		if (s != null) {
+//			return Base64.getDecoder().decode(s);
+//		}
+//		return null;
+//	}
 
-	public void put(String name, byte[] data) {
-		if (data != null) {
-			this.put(name, new String(Base64.getEncoder().encode(data)));
-		}
-	}
+//	public void put(String name, byte[] data) {
+//		if (data == null) {
+//			this.put(name, (Object) null);
+//		} else {
+//			this.put(name, new String(Base64.getEncoder().encode(data)));
+//		}
+//	}
 
-	public JSON append(String name, byte[] data) {
-		this.put(name, data);
-		return this;
-	}
+//	public JSON append(String name, byte[] data) {
+//		this.put(name, data);
+//		return this;
+//	}
 
 	@Override
 	public int compareTo(JSON o) {
@@ -1357,7 +1453,106 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 			return -1;
 		}
 
-		return 1;
+		return 0;
+	}
+
+	@Comment(text = "键转大写")
+	@SuppressWarnings("rawtypes")
+	public JSON uppercase() {
+		JSON j1 = JSON.create();
+		for (String name : this.keySet()) {
+			Object o = this.get(name);
+			if (o instanceof Map) {
+				o = _uppercase((Map) o);
+			}
+			j1.put(name.toUpperCase(), o);
+		}
+		return j1;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private Object _uppercase(Map o) {
+		JSON j1 = JSON.create();
+		for (Object name : o.keySet()) {
+			Object o1 = this.get(name);
+			if (o1 instanceof Map) {
+				o1 = _uppercase((Map) o1);
+			}
+			j1.put(name.toString().toUpperCase(), o1);
+		}
+		return j1;
+	}
+
+	@SuppressWarnings("rawtypes")
+	@Comment(text = "键转小写")
+	public JSON lowercase() {
+		JSON j1 = JSON.create();
+		for (String name : this.keySet()) {
+			Object o = this.get(name);
+			if (o instanceof Map) {
+				o = _lowercase((Map) o);
+			}
+			j1.put(name.toLowerCase(), o);
+		}
+		return j1;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private Object _lowercase(Map o) {
+		JSON j1 = JSON.create();
+		for (Object name : o.keySet()) {
+			Object o1 = this.get(name);
+			if (o1 instanceof Map) {
+				o1 = _lowercase((Map) o1);
+			}
+			j1.put(name.toString().toLowerCase(), o1);
+		}
+		return j1;
+	}
+
+	@Comment(text = "修改键名")
+	public void move(@Comment(text = "from") String from, @Comment(text = "to") String to) {
+		this.append(to, this.get(from));
+		this.remove(from);
+	}
+
+	@Comment(text = "转换为可序列化的JSON对象")
+	public JSON serializable() {
+		JSON j1 = JSON.create();
+		for (Entry<String, Object> e : this.entrySet()) {
+			Object v = _serialize(e.getValue());
+			if (v != null) {
+				j1.put(e.getKey(), v);
+			}
+		}
+		return j1;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private Object _serialize(Object v) {
+		if (X.isArray(v)) {
+			List l1 = X.asList(v, s -> s);
+			for (int i = l1.size() - 1; i >= 0; i--) {
+				Object v1 = _serialize(l1.get(i));
+				if (v1 == null) {
+					l1.remove(i);
+				}
+			}
+			return l1;
+		} else if (v instanceof Map) {
+			JSON j1 = JSON.fromObject(v);
+			JSON j2 = JSON.create();
+			for (Entry<String, Object> e : j1.entrySet()) {
+				Object v1 = _serialize(e.getValue());
+				if (v1 != null) {
+					j2.put(e.getKey(), v1);
+				}
+			}
+			return j2;
+		} else if (v instanceof Serializable) {
+			return v;
+		}
+		return null;
 	}
 
 }

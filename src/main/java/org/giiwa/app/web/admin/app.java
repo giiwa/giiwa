@@ -42,7 +42,7 @@ public class app extends Controller {
 	/**
 	 * Adds the.
 	 */
-	@Path(path = "create", login = true, access = "access.config.admin")
+	@Path(path = "create", login = true, access = "access.config.admin", oplog = true)
 	public void create() {
 
 		if (method.isPost()) {
@@ -56,8 +56,11 @@ public class app extends Controller {
 					V v = V.create();
 					v.append("appid", appid);
 					v.append("secret", secret);
-					v.append("name", this.get("name"));
+//					v.append("name", this.get("name"));
 					v.append("allowip", this.get("allowip"));
+					v.append("contact", this.get("contact"));
+					v.append("phone", this.get("phone"));
+					v.append("email", this.get("email"));
 					String expired = this.getString("expired");
 					if (!X.isEmpty(expired)) {
 						v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
@@ -85,7 +88,7 @@ public class app extends Controller {
 		this.show("/admin/app.create.html");
 	}
 
-	@Path(path = "edit", login = true, access = "access.config.admin")
+	@Path(path = "edit", login = true, access = "access.config.admin", oplog = true)
 	public void edit() {
 
 		long id = this.getLong("id");
@@ -97,7 +100,10 @@ public class app extends Controller {
 			if (!X.isEmpty(expired)) {
 				v.append("expired", lang.parse(expired, "yyyy-MM-dd HH:mm"));
 			}
-			v.append("name", this.get("name"));
+//			v.append("name", this.get("name"));
+			v.append("contact", this.get("contact"));
+			v.append("phone", this.get("phone"));
+			v.append("email", this.get("email"));
 			v.append("memo", this.getString("memo"));
 			v.append("access", Arrays.asList(X.split(this.getHtml("access"), "[,;\r\n]")));
 			v.append("allowip", this.get("allowip"));
@@ -123,7 +129,7 @@ public class app extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -136,7 +142,7 @@ public class app extends Controller {
 
 	}
 
-	@Path(path = "reset", login = true, access = "access.config.admin")
+	@Path(path = "reset", login = true, access = "access.config.admin", oplog = true)
 	public void reset() {
 
 		JSON jo = new JSON();
@@ -177,6 +183,8 @@ public class app extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
+		App.dao.optimize(q);
+		
 		Beans<App> bs = App.dao.load(q, s, n);
 		if (bs != null) {
 			bs.count();

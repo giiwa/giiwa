@@ -11,7 +11,7 @@ import org.junit.Test;
 
 public class BeanTest {
 
-	@SuppressWarnings("serial")
+	@SuppressWarnings({ "serial", "unused" })
 	@Test
 	public void test() {
 		try {
@@ -62,10 +62,13 @@ public class BeanTest {
 		});
 	}
 
+	@SuppressWarnings("serial")
 	@Test
 	public void testList() {
 		Bean b = new Bean() {
+			@SuppressWarnings("unused")
 			public List<String> l1;
+			@SuppressWarnings("unused")
 			public List<String> l2;
 		};
 
@@ -95,4 +98,37 @@ public class BeanTest {
 		System.out.println(e.contains(v));
 
 	}
+
+	@Test
+	public void testFilename() {
+		String filename = " 1*2$3?5-6%";
+		filename = filename.replaceAll("[ *$?\\-%]", "_");
+		System.out.println(filename);
+
+		filename = "type.keyword";
+		filename = filename.replace(".keyword", "");
+		System.out.println(filename);
+
+	}
+
+	@Test
+	public void testStartswith() {
+
+		String s1 = "type:1,tag:1";
+		String s2 = "type:1,tag:1,is_military:1";
+
+		System.out.println(s2.startsWith(s1));
+
+	}
+
+	@Test
+	public void testNULL() {
+
+		Bean b = new Bean();
+		b.set("a", null);
+		System.out.println(b.json());
+		System.out.println(b.json().toUrl());
+
+	}
+
 }

@@ -1,0 +1,36 @@
+<div id='net_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('net_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: "$!name1 - $!{name}(B/s)"
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.hint}</b>'
+	       },
+	    series: [
+	    				{name: "$lang.get('net.rxbytes.speed')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.rxbytes, hint:"$lang.size($c.rxbytes)"},#end]},
+	    				{name: "$lang.get('net.txbytes.speed')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.txbytes, hint:"$lang.size($c.txbytes)"},#end]}
+	    			], 
+	});
+})
+</script>
+

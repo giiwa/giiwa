@@ -1,0 +1,193 @@
+<style>
+td.a a{
+	color: #333;
+}
+td i.icon-folder{
+	color: #e2af47;
+}
+td i.icon-html-five{
+	color: #468443;
+}
+td i.icon-image{
+	color: #3d6d16;
+}
+</style>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+ 	<a href='/admin/dfile/disk?__node=$!__node'>$lang.get('a.dfile.disk')</a>
+ 	<a href="/admin/dfile/folder?__node=$!__node&f=$!curr" class="selected">$lang.get('a.dfile.folder')</a>
+</div>
+
+<div style="margin: 10px 0 5px;color: #666;">
+	<span>$!curr</span>
+</div>
+
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('file.name')</th>
+			<th>$lang.get('file.size')</th>
+			<th>$lang.get('file.updated')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#if($back)
+	<tr>
+		<td class='a'><a href="/admin/dfile/folder?f=$back">
+			&nbsp;&nbsp;<i class="icon-reply1"></i>&nbsp;...</a></td>
+		<td colspan="4">&nbsp;</td>
+	</tr>
+#end
+#foreach($f1 in $list)
+	<tr>
+		<td class='a'>
+			#if($f1.isFile())
+			<a href="/f/s$!f1.filename.replaceAll('\"','&quot;')" target="_blank">
+				<i class="$lang.icon($f1.name)"></i>
+				$f1.name.replaceAll('\"','&quot;')
+			</a>
+			#else
+			<a href="/admin/dfile/folder?f=$!{f1.filename.replaceAll('\"','&quot;')}">
+				<i class="icon-folder"></i>
+				$f1.name
+			</a>
+			#end
+		</td>
+		<td>
+			#if($f1.isFile())
+			$lang.size($!f1.length())
+			#end
+		</td>
+		<td>$!lang.format($f1.lastModified(), 'yyyy-MM-dd HH:mm:ss')</td>
+		<td class="a">
+			<a href='javascript:;' class='hint hint--bottom' data-hint="$lang.get('a.delete')" onclick="_delete('$f1.id', '$!f1.filename')"><i class="icon-cancel-circle"></i></a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+<div class='btns'>
+	<a class='btn btn-primary' href="javascript:;" onclick="_addfile();">$lang.get('a.add.file')</a>
+	<!-- <a class='btn btn-success' href="javascript:;" onclick="_addfiles();">$lang.get('a.add.files')</a> -->
+</div>
+
+<div id="m$!requestid" style="display: none">
+	<div style="margin-bottom: 20px;">
+		<label>存储位置:<input type="text" name="name" value="$!curr"/></label>
+	</div>
+	<input type='hidden' name='repo'/>
+</div>
+
+<div id="ms$!requestid" style="display: none">
+	<input type='hidden' name='repo'/>
+</div>
+
+<script>
+function _addfile() {
+	
+	giiwa.dialog($("#m$!requestid"), {
+		width: 350,
+		height: 150,
+		prepare: function(p){
+			p.find('input[name=repo]').upload({
+				caption : "$lang.get('btn.upload.file')",
+				btn_resume : "$lang.get('btn.resume')",
+				btn_delete : "$lang.get('btn.delete')",
+				btn_cancel : "$lang.get('btn.cancel')",
+				msg_stop : "$lang.get('msg.stop')",
+				msg_done : "$lang.get('msg.done')",
+				done : function(url, id) {
+						giiwa.processing.show();
+						$.post('/admin/dfile/file/add', {repo: id, f: p.find('input[name=name]').val()}, function(d){
+							giiwa.processing.hide();
+							giiwa.reload();
+						})
+						giiwa.dialog().close();
+					}
+				})
+			}
+		})
+}
+
+function _addfiles() {
+	
+	giiwa.dialog($("#ms$!requestid"), {
+		width: 350,
+		height: 150,
+		prepare: function(p){
+			p.find('input[name=repo]').upload({
+				caption : "$lang.get('btn.upload.file')",
+				btn_resume : "$lang.get('btn.resume')",
+				btn_delete : "$lang.get('btn.delete')",
+				btn_cancel : "$lang.get('btn.cancel')",
+				msg_stop : "$lang.get('msg.stop')",
+				msg_done : "$lang.get('msg.done')",
+				done : function(url, id) {
+						giiwa.processing.show();
+						$.post('/admin/dfile/file/batch', {repo: id}, function(d){
+							giiwa.processing.hide();
+							giiwa.reload();
+						})
+						giiwa.dialog().close();
+					}
+				})
+			}
+		})
+}
+
+function _delete(id, filename) {
+	if(confirm(filename + ", $lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post("/admin/dfile/file/delete", {id:id, f:filename}, function(d){
+			giiwa.processing.hide();
+			giiwa.hint(d.message);
+			giiwa.reload();
+		})
+	}
+}
+
+function _checking(uri) {
+	$.get(uri, function(d){
+		if(d.data) {
+			if(d.data.state == 200) {
+				giiwa.download(d.data.uri);
+			} else if(d.data.state == 201) {
+				if(d.data.message)
+					giiwa.hint(d.data.message);
+				
+				setTimeout(function(){
+					_checking(uri);				
+				}, 3000);
+			} else {
+				giiwa.error(d.data.message);
+			}
+		} else {
+			setTimeout(function(){
+				_checking(uri);				
+			}, 3000);
+		}
+	});
+}
+
+function _download(id, filename) {
+	giiwa.processing.show();
+	$.post("/admin/dfile/file/download", {id:id, f:filename}, function(d){
+		giiwa.processing.hide();
+		if(d.state == 200) {
+			if(d.checking) {
+				_checking(d.checking);
+			} else if(d.uri) {
+				giiwa.download(d.uri);
+			}
+		} else {
+			giiwa.error(d.message);
+		}
+	})
+}
+
+</script>
+

@@ -1,0 +1,39 @@
+
+<div id='mq_write_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('mq_write_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+		    title: {
+		        text: '$!name1 - $lang.get("portlet.dfile.write.title")'
+		    },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}ms</b>'
+	       },
+	    series: [
+			{name: "$lang.get('dfile.write.max')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.max},#end]},
+			{name: "$lang.get('dfile.write.avg')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.avg},#end]},
+			{name: "$lang.get('dfile.write.min')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$!c.min},#end]}
+   			], 
+	});
+
+})
+</script>
+

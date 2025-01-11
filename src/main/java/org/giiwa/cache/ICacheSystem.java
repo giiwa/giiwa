@@ -41,10 +41,16 @@ interface ICacheSystem {
 	 */
 	boolean set(String name, Object data, long expired);
 
-	boolean trylock(String name);
+	void touch(String name, long expired);
+
+	boolean trylock(String name, boolean debug);
 
 	void expire(String name, long ms);
 
-	boolean unlock(String name, String value);
+	boolean unlock(String name, String value, boolean debug);
+
+	void close();
+
+	long now();
 
 }

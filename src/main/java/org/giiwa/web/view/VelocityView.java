@@ -43,7 +43,7 @@ public class VelocityView extends View {
 
 			BufferedWriter writer = new BufferedWriter(m.resp.getWriter());
 
-			template.merge(new VelocityContext(m.data), writer);
+			template.merge(new VelocityContext(m.getData()), writer);
 			writer.flush();
 
 			if (log.isDebugEnabled())

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.net.mq;
 
 import java.util.HashMap;
@@ -14,7 +28,7 @@ class RPC extends IStub {
 
 //	private static Log log = LogFactory.getLog(RPC.class);
 
-	private static String name = "rpc." + Local.id();
+	public static String name = "rpc_" + Local.id();
 
 	private static Map<Long, Stack<Request>> waiter = new HashMap<Long, Stack<Request>>();
 
@@ -54,8 +68,6 @@ class RPC extends IStub {
 		Stack<Request> l1 = new Stack<Request>();
 		waiter.put(req.seq, l1);
 
-//		log.warn("sending, to=" + name, new Exception());
-
 		MQ.send(name, req);
 
 		try {
@@ -82,11 +94,14 @@ class RPC extends IStub {
 
 		req.from = RPC.name;
 		req.seq = seq.incrementAndGet();
-
+//
 //		log.warn("MQ1, call, seq=" + req.seq + ", from=" + req.from);
-
-		Stack<Request> l1 = new Stack<Request>();
-		waiter.put(req.seq, l1);
+//
+		Stack<Request> l1 = null;
+		if (func != null) {
+			l1 = new Stack<Request>();
+			waiter.put(req.seq, l1);
+		}
 
 		MQ.topic(name, req);
 
@@ -108,17 +123,15 @@ class RPC extends IStub {
 					}
 
 					if (e != null) {
-//						log.warn("got response, e=" + e.from);
 						boolean r = func.apply(e);
 						if (r) {
 							// 完成， 结束
 							return true;
 						} // 继续获取下一个
-//					} else {
-//						log.warn("got nothing!");
 					}
 				}
-				throw new Exception("Timeout " + timeout);
+
+				throw new Exception("Timeout " + timeout + ", name=" + name);
 
 			} else {
 				return true;

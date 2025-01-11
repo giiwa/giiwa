@@ -130,7 +130,7 @@ public class sysstat extends Controller {
 	public void dbop() {
 
 		try {
-			this.set("list", Helper.listOp());
+			this.set("list", Helper.primary.listOp());
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

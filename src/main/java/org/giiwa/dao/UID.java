@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
@@ -45,47 +44,56 @@ public final class UID {
 	 * the number=[cluster.code] + seq
 	 *
 	 * @param key the key
-	 * @return long of the unique sequence
+	 * @return long(52 bits) of the unique sequence
+	 * @throws Exception
 	 */
-	public static long next(String key) {
+	public static long next(String key) throws Exception {
 
 		Lock door = Global.getLock("uid." + key);
 
+//		try {
+		door.lock();
 		try {
-			if (door.tryLock(10, TimeUnit.SECONDS)) {
-				try {
-					return _next(key);
-				} catch (Exception e) {
-					log.error(e.getMessage(), e);
-				} finally {
-					door.unlock();
-				}
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			return _next(key);
+//				} catch (Exception e) {
+//					log.error(e.getMessage(), e);
+		} finally {
+			door.unlock();
 		}
-
-		return -1;
+//		}
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//		}
+//
+//		return -1;
 	}
+
+	private static final long LONG52 = 0x0FFFFFFFFFFFFFL;
+	private static final long MAX = 10000000000000L;
 
 	private static long _next(String key) throws Exception {
 
-		long prefix = Global.getLong("cluster.code", 0) * 10000000000000L;
+		long prefix = Global.getLong("cluster.code", 0) * MAX;
+
+		if (prefix > LONG52) {
+			throw new Exception("the cluster.code [" + prefix + "] exceed max [" + (LONG52 / MAX) + "]");
+		}
 
 		/**
 		 * remove cache
 		 */
 //		Cache.remove("global/" + key);
 
-		Global f = Helper.load(key, Global.class);
+		Global f = Global.dao.load(key);
 
+		// 全局序列起始
 		long v = Math.max(1, Global.getLong("uid.next.s1", 1));
 		if (f == null || X.isEmpty(f.id)) {
 			String linkid = UID.random();
 
 			Global.dao.insert(V.create(X.ID, key).append("l", v).append("linkid", linkid));
 
-			f = Helper.load(key, Global.class);
+			f = Global.dao.load(key);
 			if (f == null) {
 //				log.error("occur error when create unique id, name=" + key);
 				throw new Exception("get uid error! key=" + key);
@@ -98,6 +106,7 @@ public final class UID {
 				log.debug("v=" + v + ", f=" + f);
 			}
 
+			// 全局序列起始
 			long v1 = Math.max(f.getLong("l"), Global.getLong("uid.next.s1", 1));
 
 			if (Global.dao.update(W.create().and(X.ID, key).and("l", f.getLong("l")), V.create("l", v1 + 1L)) <= 0) {
@@ -106,11 +115,14 @@ public final class UID {
 			v = v1 + 1;
 		}
 
-//		long max = Global.getLong("uid.next.s2", -1);
-//		if (max > -1 && v > max) {
-//			throw new Exception("uid.next(" + key + ") is run out, max=" + max + ", cur=" + v);
-//		}
-		return prefix + v;
+		v = prefix + v;
+		if (v > LONG52) {
+			// reback
+			Global.dao.delete(key);
+			return _next(key);
+		}
+
+		return v;
 	}
 
 	public static long get(String key) {
@@ -125,8 +137,7 @@ public final class UID {
 			 */
 			Cache.remove("global/" + key);
 
-			Global f = Helper.load(key, Global.class);
-
+			Global f = Global.dao.load(key);
 			long v = 1;
 			if (f == null) {
 				return 0L;
@@ -149,8 +160,9 @@ public final class UID {
 	 * @param key the key
 	 * @param len the length
 	 * @return the string
+	 * @throws Exception
 	 */
-	public static String next(String key, int len) {
+	public static String next(String key, int len) throws Exception {
 		StringBuilder p = new StringBuilder("00000000000");
 		while (p.length() < len) {
 			p.append("0000000000");
@@ -188,13 +200,20 @@ public final class UID {
 	 * @return string
 	 */
 	public static String id(Object... ss) {
-		StringBuilder sb = new StringBuilder();
-		for (Object s : ss) {
-			if (sb.length() > 0)
-				sb.append("/");
-			sb.append(s);
+		if (ss.length == 1) {
+			if (ss[0] == null) {
+				return id(0);
+			}
+			return id(hash(ss[0].toString()));
+		} else {
+			StringBuilder sb = new StringBuilder();
+			for (Object s : ss) {
+				if (sb.length() > 0)
+					sb.append("/");
+				sb.append(s);
+			}
+			return id(hash(sb.toString()));
 		}
-		return id(hash(sb.toString()));
 	}
 
 	/**
@@ -226,6 +245,28 @@ public final class UID {
 			l = 29 * l + val[i];
 		}
 		return Math.abs(((long) h << 32) | ((long) l & 0x0ffffffffL));
+	}
+
+	/**
+	 * Hash 52 bits
+	 * 
+	 * @param s
+	 * @return
+	 */
+	public static long hash52(String s) {
+		if (s == null) {
+			return 0;
+		}
+
+		int h = 0;
+		int l = 0;
+		int len = s.length();
+		char[] val = s.toCharArray();
+		for (int i = 0; i < len; i++) {
+			h = 31 * h + val[i];
+			l = 29 * l + val[i];
+		}
+		return (((long) h << 32) | ((long) l & 0x0ffffffffL)) & 0xfffffffffffffL;
 	}
 
 	/**

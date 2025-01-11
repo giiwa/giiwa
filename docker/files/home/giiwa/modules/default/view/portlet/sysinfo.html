@@ -1,0 +1,46 @@
+<div class='state' style='display:block;float: left; width: 80%;height:initial;'>
+	<div class='login'>
+		$lang.get('label.gnode'):&nbsp;&nbsp;<i>$!gnode</i>
+	</div>
+	<div class='login'>
+		$lang.get('global.cpu.num'):&nbsp;&nbsp;<i>$!cores</i>
+	</div>
+	#if($dbstats)
+	<div class='login'>
+		$lang.get('db.stats'):&nbsp;&nbsp;$lang.get('label.used'):<i>$!lang.size($!dbstats.totalSize)(S:$!lang.size($!dbstats.storageSize) + I:$!lang.size($!dbstats.indexSize))</i>, $lang.get('label.free'):<i>$!lang.size($!dbstats.fsTotalSize)</i>
+	</div>
+	#end
+	
+	<hr/>
+	<div class='login'>
+		$lang.get('label.node'):&nbsp;&nbsp;<i>$!node</i>
+	</div>
+	<div class='login'>
+		$lang.get('cpu.num'):&nbsp;&nbsp;<i>$!cpus</i>
+	</div>
+	<div class='login'>
+		$lang.get('total.memory'):&nbsp;&nbsp;<i>$!totalmemory</i>
+	</div>
+	<div class='login'>
+		$lang.get('jdk.info'):&nbsp;&nbsp;<i>$!{jdkversion}($!jdkvendor)</i>
+	</div>
+	<div class='login'>
+		$lang.get('memory.total'):&nbsp;&nbsp;<i>$!total</i>, $lang.get('memory.free'):<i>$!free</i>
+	</div>
+	<div class='uptime'>
+		$lang.get('label.uptime'):&nbsp;&nbsp;<i>$uptime</i>, $lang.get('label.past'):<i>$past</i>
+	</div>
+	<div class='release'>
+		$lang.get('label.release'):&nbsp;&nbsp;<i>$!release</i>
+	</div>
+	<div class='build'>
+		$lang.get('label.build'):&nbsp;&nbsp;<i>$!build</i>
+	</div>
+	<div class='build'>
+		$lang.get('label.now'):&nbsp;&nbsp;<i>$!now</i>
+	</div>
+	<div class='build'>
+		$lang.get('label.ippath'):&nbsp;&nbsp;<i>$!ip</i>
+	</div>
+	
+</div>

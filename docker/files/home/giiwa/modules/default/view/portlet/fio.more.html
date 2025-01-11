@@ -1,0 +1,35 @@
+<div id='mem_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('mem_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+		    title: {
+		        text: "$!name - $lang.get('host.fio.title')"
+		    },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: false
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.hint}</b>'
+	       },
+	    series: [
+					{name: "$lang.get('fio.used')", color:'#860606', data: [#foreach($c in $list) {x:$lang.time($c.created, 'm'), y:$c.used, hint:"$lang.size($c.used)"},#end]}
+	    			], 
+	});
+})
+</script>
+

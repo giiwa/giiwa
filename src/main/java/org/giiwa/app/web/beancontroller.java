@@ -1,9 +1,25 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.app.web;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import org.giiwa.bean.Data;
 import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper;
 import org.giiwa.dao.Table;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
@@ -97,7 +113,13 @@ public class beancontroller extends Controller {
 			v.append(name, this.get(name));
 		}
 
-		Data.insert(_table(), v);
+		try {
+			Helper.primary.insertTable(_table(), v);
+		} catch (SQLException err) {
+			log.error(err.getMessage(), err);
+			error(err);
+			return;
+		}
 
 		Object id = v.value(X.ID);
 		_done("create", id);
@@ -141,7 +163,11 @@ public class beancontroller extends Controller {
 			v.append(name, this.get(name));
 		}
 
-		Data.update(_table(), W.create().and("id", id), v);
+		try {
+			Helper.primary.updateTable(_table(), W.create().and("id", id), v);
+		} catch (SQLException err) {
+			log.error(err.getMessage(), err);
+		}
 
 		_done("edit", id);
 
@@ -176,7 +202,7 @@ public class beancontroller extends Controller {
 
 		Object id = _id(this.get("id"));
 
-		Data.delete(_table(), W.create().and(X.ID, id));
+		Helper.primary.delete(_table(), W.create().and(X.ID, id));
 
 		_done("delete", id);
 

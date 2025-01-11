@@ -1,5 +1,20 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.bean.m;
 
+import java.io.File;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -27,17 +42,17 @@ public class _Disk extends Bean {
 
 	public static BeanDAO<String, _Disk> dao = BeanDAO.create(_Disk.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size=50)
 	String id;
 
-	@Column(memo = "节点")
+	@Column(memo = "节点", size=50)
 	String node;
 
-	@Column(memo = "磁盘")
+	@Column(memo = "磁盘", size=50)
 	String disk;
 
-	@Column(memo = "路径")
-	String path;
+	@Column(memo = "路径", size=100)
+	public String path;
 
 	@Column(memo = "总空间")
 	long total;
@@ -71,34 +86,37 @@ public class _Disk extends Bean {
 				break;
 			}
 
-			long total = jo.total;
-			if (total < 10 * 1024 * 1024 * 1024L)
-				continue;
+			if (new File(path).isDirectory()) {
+				long total = jo.total;
+				if (total < 10 * 1024 * 1024 * 1024L)
+					continue;
 
-			String id = UID.id(node, path);
-			try {
+				String id = UID.id(node, path);
+				try {
 
-				name = name.replace("[\\\\]", "/");
-				V v = V.create();
-				v.append("name", jo.name).append("path", jo.path);
-				v.append("total", jo.total).append("free", jo.free).append("used", jo.used);
-				v.append("node", node).force("name", name).remove("_id", X.ID);
+					name = name.replace("[\\\\]", "/");
+					V v = V.create();
+					v.append("name", jo.name).append("path", jo.path);
+					v.append("total", jo.total).append("free", jo.free).append("used", jo.used);
+					v.append("node", node).force("name", name).remove("_id", X.ID);
 
-				// insert
-				if (dao.exists2(id)) {
-					dao.update(id, v.copy());
-				} else {
-					dao.insert(v.copy().force(X.ID, id));
+					// insert
+					if (dao.exists2(id)) {
+						dao.update(id, v.copy());
+					} else {
+						dao.insert(v.copy().force(X.ID, id));
+					}
+
+					if (!Record.dao.exists(W.create().and("node", node).and("path", path).and("created",
+							System.currentTimeMillis() - X.AMINUTE, W.OP.gt))) {
+						// save to record per hour
+						Record.dao.insert(
+								v.copy().force(X.ID, UID.id(id, System.currentTimeMillis())).append("node", node));
+
+					}
+				} catch (Exception e) {
+					log.error(jo, e);
 				}
-
-				if (!Record.dao.exists(W.create().and("node", node).and("path", path).and("created",
-						System.currentTimeMillis() - X.AHOUR, W.OP.gt))) {
-					// save to record per hour
-					Record.dao
-							.insert(v.copy().force(X.ID, UID.id(id, System.currentTimeMillis())).append("node", node));
-				}
-			} catch (Exception e) {
-				log.error(jo, e);
 			}
 		}
 	}
@@ -114,7 +132,7 @@ public class _Disk extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AMONTH, W.OP.lt));
+			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AWEEK, W.OP.lt));
 		}
 
 	}
@@ -129,13 +147,15 @@ public class _Disk extends Bean {
 
 				_Disk.update(Local.id(), l1);
 
-				_DiskIO.update(Local.id(), l1);
+				// TODO, 性能考虑
+//				_DiskIO.update(Local.id(), l1);
 
 				// log.debug("disk=" + l2);
 			}
 			// log.debug("disk=" + l1);
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+		} catch (Throwable e) {
+			// TODO, ignore
+//			log.error(e.getMessage(), e);
 		}
 	}
 

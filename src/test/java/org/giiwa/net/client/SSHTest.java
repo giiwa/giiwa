@@ -10,7 +10,7 @@ public class SSHTest {
 		try {
 			SSH ssh = SSH.create();
 
-			ssh.open("ssh://192.168.2.97?username=root&passwd=j1231234");
+			ssh.open("ssh://192.168.2.97?username=root&passwd=xxxx");
 
 			String s1 = ssh.run("python2 -V");
 			System.out.println(s1);

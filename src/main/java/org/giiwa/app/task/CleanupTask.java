@@ -23,10 +23,14 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.f;
+import org.giiwa.bean.AuthToken;
 import org.giiwa.bean.Code;
 import org.giiwa.bean.GLog;
+import org.giiwa.bean.Message;
+import org.giiwa.bean.S;
 import org.giiwa.bean.Stat;
 import org.giiwa.bean.Temp;
+import org.giiwa.bean.Session.SID;
 import org.giiwa.bean.m._CPU;
 import org.giiwa.bean.m._Cache;
 import org.giiwa.bean.m._DB;
@@ -111,7 +115,8 @@ public class CleanupTask extends Task {
 	private static List<BeanDAO<?, ?>> bb = new ArrayList<BeanDAO<?, ?>>(Arrays.asList(new BeanDAO<?, ?>[] { GLog.dao,
 			_CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao, _Disk.dao, _Disk.Record.dao, _Mem.dao, _Mem.Record.dao,
 			_Net.dao, _Net.Record.dao, _MQ.dao, _MQ.Record.dao, _Cache.dao, _Cache.Record.dao, _DiskIO.dao,
-			_DiskIO.Record.dao, _File.dao, _File.Record.dao, _FIO.dao, _FIO.Record.dao, _Mem2.dao, _Mem2.Record.dao }));
+			_DiskIO.Record.dao, _File.dao, _File.Record.dao, _FIO.dao, _FIO.Record.dao, _Mem2.dao, _Mem2.Record.dao,
+			Message.dao, SID.dao, AuthToken.dao, S.dao }));
 
 	public static void add(BeanDAO<?, ?>... daos) {
 		for (BeanDAO<?, ?> e : daos) {
@@ -141,7 +146,7 @@ public class CleanupTask extends Task {
 		 * clean up repo
 		 */
 //			count += Repo.cleanup(X.ADAY);
-		count += Temp.cleanup(X.ADAY);
+		count += Temp.cleanup(Global.getInt("temp.max.age", 24) * X.AHOUR);
 
 		f.clean();
 

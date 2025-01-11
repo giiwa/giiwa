@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.web;
 
 import java.util.Collections;
@@ -5,9 +19,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.giiwa.json.JSON;
 
 public class Processing {
+
+	private static Log log = LogFactory.getLog(Processing.class);
 
 	public static void remove(Controller mo) {
 		synchronized (_cache) {
@@ -72,10 +90,16 @@ public class Processing {
 
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void kill(Integer id) {
 		Controller mo = _cache.get(id);
 		if (mo != null && mo.thread != null) {
-			mo.thread.interrupt();
+
+//			mo.thread.interrupt();
+			mo.thread.stop();
+
+		} else {
+			log.warn("kill [" + id + "] failed. mo=" + mo + ", mo.thread=" + (mo == null ? null : mo.thread.getName()));
 		}
 	}
 

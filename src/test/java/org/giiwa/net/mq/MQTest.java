@@ -1,8 +1,8 @@
 package org.giiwa.net.mq;
 
-import static org.junit.Assert.*;
+import java.util.Arrays;
 
-import org.apache.activemq.ActiveMQConnection;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.net.mq.MQ.Request;
@@ -12,9 +12,14 @@ public class MQTest {
 
 	@Test
 	public void test() {
-		String type = "queue".toUpperCase();
 
-		System.out.println(MQ.Mode.valueOf(type));
+		String type = "mq/=";
+
+		System.out.println(X.asList(type.getBytes(), e -> Long.toHexString(X.toLong(e))));
+		
+//		MqttClient client = new MqttClient(broker, clientId);
+//		MqttConnectOptions options = new MqttConnectOptions();
+//		client.connect(options);
 	}
 
 	@Test
@@ -29,7 +34,7 @@ public class MQTest {
 //		String password = Global.getString("activemq.passwd", ActiveMQConnection.DEFAULT_PASSWORD);
 
 		MQ mq = ActiveMQ.create();
-		
+
 		try {
 
 			mq.send("ttt", Request.create().put("aaaa"));

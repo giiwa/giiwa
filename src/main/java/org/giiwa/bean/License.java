@@ -52,13 +52,13 @@ public final class License extends Bean {
 		free, trial, limited, licensed, issue, personal, professional, enterprise, unlimited, inactive
 	};
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size=50)
 	private String id; // name
 
 	@Column(memo = "CODE")
 	private String code;
 
-	@Column(memo = "内容")
+	@Column(memo = "内容", size = 2048)
 	private String content;
 
 	public static void init() {
@@ -120,7 +120,7 @@ public final class License extends Bean {
 		return false;
 	}
 
-	public static String get(String name, String key) {
+	public static String get1(String name, String key) {
 		JSON j = keys.get(name);
 		if (j != null) {
 			return j.getString(key);

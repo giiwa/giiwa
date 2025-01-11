@@ -33,6 +33,8 @@ public final class Roles extends Bean implements IRole {
 	*/
 	private static final long serialVersionUID = 1L;
 
+//	private static Log log = LogFactory.getLog(Roles.class);
+
 	private static List<IRole> handlers = new ArrayList<IRole>();
 
 	private List<String> access;
@@ -75,9 +77,11 @@ public final class Roles extends Bean implements IRole {
 	 * @return true, if successful
 	 */
 	public boolean hasAccess(long uid, String... name) throws Exception {
+
 		if (name == null) {
 			return true;
 		}
+
 		if (handlers != null && !handlers.isEmpty()) {
 			for (IRole r : handlers) {
 				if (r.hasAccess(uid, name)) {
@@ -103,16 +107,22 @@ public final class Roles extends Bean implements IRole {
 			/**
 			 * check if has admin ?
 			 */
-			int i = s.lastIndexOf(".");
-			if (i > 0) {
-				String s1 = s.substring(0, i) + ".admin";
-				if (access != null && access.contains(s1)) {
-					return true;
-				}
-			}
+//			int i = s.lastIndexOf(".");
+//			if (i > 0) {
+//				String s1 = s.substring(0, i) + ".admin";
+//				if (access != null && access.contains(s1)) {
+//					return true;
+//				}
+//			}
 		}
 
-		return access != null && access.contains("access.config.admin");
+//		if (X.isIn("access.dput.admin", name)) {
+//			log.warn("access.dput.admin mised, access=" + access, new Exception());
+//		}
+
+		return false;
+
+//		return access != null && access.contains("access.config.admin");
 		// }
 		// return false;
 	}

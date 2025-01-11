@@ -25,6 +25,7 @@ import org.giiwa.web.QueryString;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
+import org.giiwa.dao.Comment;
 
 /**
  * The {@code Html} Class used to string to html, html to plain, or get images
@@ -33,6 +34,7 @@ import org.jsoup.select.Elements;
  * @author joe
  *
  */
+@Comment(text = "HTML")
 public final class Html {
 
 	/** The log. */
@@ -47,6 +49,11 @@ public final class Html {
 		if (html != null) {
 			d = Jsoup.parse(html);
 		}
+	}
+
+	@Override
+	public String toString() {
+		return body;
 	}
 
 	/**
@@ -122,6 +129,7 @@ public final class Html {
 	 *
 	 * @return the string
 	 */
+	@Comment(text = "title")
 	public String title() {
 		if (d != null) {
 			return d.title();
@@ -137,9 +145,16 @@ public final class Html {
 	 * 
 	 * @return the string
 	 */
+	@Comment(text = "body")
 	public String body() {
+		return body(false);
+	}
+
+	public String body(boolean fullbody) {
 		if (body == null && d != null) {
-			d.select("iframe").remove();
+			if (!fullbody) {
+				d.select("iframe").remove();
+			}
 			body = d.html();
 		}
 
@@ -169,6 +184,7 @@ public final class Html {
 	 * 
 	 * @return the string
 	 */
+	@Comment(text = "text")
 	public String text() {
 		if (text == null && d != null) {
 			String s = d.text();
@@ -245,7 +261,8 @@ public final class Html {
 		return select(selector);
 	}
 
-	public Elements select(String selector) {
+	@Comment(text = "select")
+	public Elements select(@Comment(text = "selector") String selector) {
 		if (d == null)
 			return null;
 
@@ -292,16 +309,27 @@ public final class Html {
 		return l1;
 	}
 
+	@Comment(text = "finder")
 	public StringFinder finder() {
 		return StringFinder.create(body);
 	}
 
+	@Comment(text = "json")
 	public JSON json() {
-		return JSON.fromObject(body);
+		try {
+			return JSON.fromObject(body);
+		} catch (Exception e) {
+			throw new RuntimeException(body);
+		}
 	}
 
+	@Comment(text = "jsons")
 	public List<JSON> jsons() {
-		return JSON.fromObjects(body);
+		try {
+			return JSON.fromObjects(body);
+		} catch (Exception e) {
+			throw new RuntimeException(body);
+		}
 	}
 
 	/**
@@ -339,7 +367,8 @@ public final class Html {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<JSON> href(String... regex) throws Exception {
+	@Comment(text = "href")
+	public List<JSON> href(@Comment(text = "regex") String... regex) throws Exception {
 		return a(regex);
 	}
 
@@ -350,11 +379,14 @@ public final class Html {
 	 * @return
 	 * @throws Exception
 	 */
-	public List<JSON> a(Object regex) throws Exception {
+	@Comment(text = "a")
+	public List<JSON> a(@Comment(text = "regex") Object regex) throws Exception {
 		return link("a", "href", regex, (Consumer<Url>) null);
 	}
 
-	public List<JSON> a(Object regex, Consumer<Url> func) throws Exception {
+	@Comment(text = "a")
+	public List<JSON> a(@Comment(text = "regex") Object regex, @Comment(text = "func") Consumer<Url> func)
+			throws Exception {
 		return link("a", "href", regex, func);
 	}
 
@@ -362,11 +394,15 @@ public final class Html {
 //		return link("a", "href", regex, func);
 //	}
 
-	public List<JSON> link(String selector, String attr, Object regex) throws Exception {
+	@Comment(text = "link")
+	public List<JSON> link(@Comment(text = "selector") String selector, @Comment(text = "attr") String attr,
+			@Comment(text = "regex") Object regex) throws Exception {
 		return link(selector, attr, regex, null);
 	}
 
-	public List<JSON> link(String selector, String attr, Object regex, Consumer<Url> func) throws Exception {
+	@Comment(text = "link")
+	public List<JSON> link(@Comment(text = "selector") String selector, @Comment(text = "attr") String attr,
+			@Comment(text = "regex") Object regex, @Comment(text = "func") Consumer<Url> func) throws Exception {
 
 		if (X.isEmpty(url))
 			throw new Exception("url is not setting");
@@ -442,11 +478,13 @@ public final class Html {
 	 * @param href
 	 * @return
 	 */
-	public String format(String href) {
+	@Comment(text = "format")
+	public String format(@Comment(text = "href") String href) {
 		return format(href, true);
 	}
 
-	public String format(String href, boolean encode) {
+	@Comment(text = "format")
+	public String format(@Comment(text = "href") String href, @Comment(text = "encode") boolean encode) {
 		if (href.startsWith("//")) {
 			href = _protocol(url) + href;
 		} else if (href.startsWith("/")) {

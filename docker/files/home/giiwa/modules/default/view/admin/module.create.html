@@ -1,0 +1,47 @@
+
+<div class='tabs'>
+	<a href='/admin/module?__node=$!__node'>$lang.get('a.module')</a>
+	<a href='/admin/module/create?__node=$!__node' class='selected'>$lang.get('a.create')</a>
+</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='notes'>
+	$lang.get('module.create.notes')
+</div>
+
+<div class='form'>
+
+	<div><label><h3>ID:</h3><input type='text' name='id' value='$!id'/><g>$lang.get('module.id.hint')</g></label></div>
+	<div><label><h3>Name:</h3><input type='text' name='name' value='demo'/></label></div>
+	<div><label><h3>Package:</h3><input type='text' name='package' value='org.giiwa.demo.web' /></label></div>
+	<div><label><h3>Readme:</h3><input type='text' name='readme' value='demo'/></label></div>
+
+	<div class='btns'><a class='btn btn-success' href='javascript:;' onclick='oncreate();'>$lang.get('btn.create')</a></div>
+	
+</div>
+
+<iframe id='download' style='display: none'></iframe>
+
+<script>
+function oncreate() {
+	giiwa.processing.show();
+	var p = {};
+	$('div.form input[type=text]').each(function(i, e){
+		e = $(e);
+		p[e.attr('name')] = e.val();
+	})
+	p.includes = $('input[type=checkbox]').prop('checked')?'on':'';
+	$.post('/admin/module/create?__node=$!__node', p, function(d){
+		giiwa.processing.hide();
+		
+		if(d.state == 200) {
+			$('#download').attr('src', d.file);
+		} else if(d.message) {
+			giiwa.error(d.message);
+		} else {
+			giiwa.error('unknown error');
+		}
+	})
+}
+</script>

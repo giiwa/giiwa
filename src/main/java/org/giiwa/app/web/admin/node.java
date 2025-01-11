@@ -48,25 +48,32 @@ public class node extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
 	public void delete() {
 
-		JSON jo = new JSON();
-
 		String id = this.getString("id");
-		Node n = Node.dao.load(id);
-		if (n != null) {
-			Node.dao.delete(id);
-			GLog.oplog.warn("node", "delete", n.label + "/" + n.id, login, node.this.ip());
+		if (X.isEmpty(id)) {
+			Node.dao.load(W.create().and(X.ID, null));
+			this.set(X.ERROR, "缺少参数, [id]").send(201);
+			return;
 		}
 
-		jo.put(X.STATE, 200);
+		Node n = Node.dao.load(id);
+		if (n == null) {
+			this.set(X.ERROR, "参数错误, [id]").send(201);
+			return;
+		}
 
-		this.send(jo);
+		log.warn("delete node, id=" + id);
+
+		Node.dao.delete(id);
+		GLog.oplog.warn(this, "delete", n.label + "/" + n.id);
+
+		this.send(200);
 
 	}
 
-	@Path(path = "power", login = true, access = "access.config.admin")
+	@Path(path = "power", login = true, access = "access.config.admin", oplog = true)
 	public void power() {
 
 		JSON jo = new JSON();
@@ -82,9 +89,9 @@ public class node extends Controller {
 						.put(JSON.create().append("node", id).append("power", power)));
 				jo.put(X.STATE, 200);
 				jo.put(X.MESSAGE, lang.get("sent.node.power." + power));
-				GLog.oplog.info("node", "power", n.label + ", power=" + power, login, node.this.ip());
+				GLog.oplog.info(this, "power", n.label + ", power=" + power);
 			} catch (Exception e) {
-				GLog.oplog.error("node", "power", e.getMessage(), login, node.this.ip());
+				GLog.oplog.error(this, "power", e.getMessage(), e);
 				jo.put(X.STATE, 201);
 				jo.put(X.MESSAGE, e.getMessage());
 			}
@@ -94,14 +101,14 @@ public class node extends Controller {
 
 	}
 
-	@Path(path = "update", login = true, access = "access.config.admin")
+	@Path(path = "update", login = true, access = "access.config.admin", oplog = true)
 	public void update() {
 
 		String label = this.getString("label");
 		String id = this.getString("id");
 		Node.dao.update(id, V.create("label", label));
 
-		GLog.oplog.error(node.class, "update", label + "/" + id, login, node.this.ip());
+		GLog.oplog.error(this, "update", label + "/" + id, null);
 
 		this.send(JSON.create().append(X.STATE, 200));
 
@@ -120,7 +127,7 @@ public class node extends Controller {
 
 	}
 
-	@Path(path = "clean", login = true, access = "access.config.admin")
+	@Path(path = "clean", login = true, access = "access.config.admin", oplog = true)
 	public void clean() {
 		JSON jo = JSON.create();
 
@@ -143,7 +150,7 @@ public class node extends Controller {
 		W q = W.create().sort("label", 1).sort("ip", 1);
 
 		int s = this.getInt("s");
-		int n = this.getInt("n", 10);
+		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
 		String name = this.getString("name");
 		if (!X.isEmpty(name)) {
@@ -164,7 +171,7 @@ public class node extends Controller {
 	}
 
 	@SuppressWarnings("serial")
-	@Path(path = "add", login = true, access = "access.config.admin")
+	@Path(path = "add", login = true, access = "access.config.admin", oplog = true)
 	public void add() {
 
 		if (method.isPost()) {
@@ -193,30 +200,36 @@ public class node extends Controller {
 
 			String access = UID.random(10);
 
-			long tid = Monitor.start(new Task() {
+			try {
+				long tid = Monitor.start(new Task() {
 
-				String message;
-				int state = 0;
+					String message;
+					int state = 0;
 
-				@Override
-				public void onExecute() {
-					Node.add(host, user, passwd, l2, alias, (state, s) -> {
-						this.message = s;
-						this.state = state;
+					@Override
+					public void onExecute() {
+						Node.add(host, user, passwd, l2, alias, (state, s) -> {
+							this.message = s;
+							this.state = state;
+							Monitor.flush(this);
+						});
 						Monitor.flush(this);
-					});
-					Monitor.flush(this);
-					if (state == 200) {
-						GLog.oplog.warn(node.class, "add", message, login, node.this.ip());
-					} else {
-						GLog.oplog.error(node.class, "add", message, login, node.this.ip());
+						if (state == 200) {
+							GLog.oplog.warn(node.this, "add", message);
+						} else {
+							GLog.oplog.error(node.this, "add", message, null);
+						}
 					}
-				}
 
-			}, access);
+				}, access);
 
-			this.send(JSON.create().append(X.STATE, 200).append("url", "/f/t/state?id=" + tid + "&access=" + access));
+				this.send(
+						JSON.create().append(X.STATE, 200).append("url", "/f/t/state?id=" + tid + "&access=" + access));
 
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+				this.error(e);
+			}
 			return;
 		}
 

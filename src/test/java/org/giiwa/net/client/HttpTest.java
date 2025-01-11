@@ -1,9 +1,22 @@
 package org.giiwa.net.client;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
-import java.util.Arrays;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.List;
 
+import org.apache.commons.fileupload.FileItem;
+import org.giiwa.bean.App;
 import org.giiwa.bean.Temp;
+import org.giiwa.conf.Config;
+import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
@@ -14,12 +27,16 @@ public class HttpTest {
 
 	@Test
 	public void testPost() {
-		String url = "https://nh6cusbog5-3.algolianet.com/1/indexes/atlantic-council-search/query?x-algolia-agent=Algolia%20for%20JavaScript%20(3.35.1)%3B%20Browser&x-algolia-application-id=NH6CUSBOG5&x-algolia-api-key=0c875d2890391a0fdc947f4e5a175911";
+		String url = "http://g09:8080/f/echo";
 		Http h = Http.create();
+		JSON j1 = JSON.create();
+		j1.append("a", "测试");
 
-		Http.Response r = h.post(url, JSON.create().append("content-type", "application/x-www-form-urlencoded"),
-				"{\"params\":\"query=ab&filters=&hitsPerPage=10&page=0\"}", X.AMINUTE);
-		System.out.println(r.body);
+//		Http.Response r = h.post(url, j1);
+		Http.Response r = h.post(url, j1, j1);
+//		Http.Response r = h.json(url, j1);
+
+		System.out.println(r.body.replaceAll("<br>", "\r\n"));
 	}
 
 	@Test
@@ -47,10 +64,13 @@ public class HttpTest {
 	@Test
 	public void testSSL() {
 
-		String s = "https://duckduckgo.com/?q=site%3Aglobalsecurity.org&k1=-1&k9=%230101C4&kj=%23913100&km=l&kq=-1&kr=c&kt=h&ku=1&kv=1&ia=web";
+		Config.init();
 
+		String s = "https://duckduckgo.com/?q=site%3Aglobalsecurity.org&k1=-1&k9=%230101C4&kj=%23913100&km=l&kq=-1&kr=c&kt=h&ku=1&kv=1&ia=web";
+		s = "https://codesite-archive.appspot.com/search/query?query&page=1";
+		s = "https://mp.weixin.qq.com/s?__biz=MzU2NzUxODg4MA==&mid=2247522208&idx=1&sn=4cd1044aa49383aab687b2899e2b4b4b&chksm=fde5e50913d9fd77084bfb72d5b5c5d942168b5164143e62fbaeb3e5af300c46bbb53edc8267&scene=0&xtrack=1#rd";
 		Http h = Http.create();
-		h.dns("duckduckgo.com", "104.16.251.55");
+//		h.dns("duckduckgo.com", "104.16.251.55");
 
 		Http.Response r = h.get(s);
 
@@ -73,15 +93,19 @@ public class HttpTest {
 
 		System.out.println("start ...");
 
-		String s = "https://intelshare.intelink.gov/sites/alsacenter/SiteCollectionDocuments/jfire_2019.pdf";
+		Temp.ROOT = "/Users/joe/Downloads/temp/";
+
+//		String s = "https://intelshare.intelink.gov/sites/alsacenter/SiteCollectionDocuments/jfire_2019.pdf";
+		String s = "https://codeload.github.com/freeCodeCamp/freeCodeCamp/zip/refs/heads/i18n-sync-client";
 		Http h = Http.create();
 
-		h.get("https://www.alsa.mil/mttps/jfire/");
+//		h.get("https://www.alsa.mil/mttps/jfire/");
 
 //		h.dns("intelshare.intelink.gov", "67.133.98.35");
-		Temp t = Temp.create("a.pdf");
+//		Temp t = Temp.create("a.pdf");
 		try {
-			h.download(s, t.getOutputStream());
+//			h.download(s, t.getOutputStream());
+			Temp t = h.download(s);
 			File f1 = t.getFile();
 			System.out.println(f1.length());
 			System.out.println(f1.getAbsolutePath());
@@ -175,7 +199,7 @@ public class HttpTest {
 				+ " \"query\": \"query ($repository: String!) {\\n  repository(name: $repository) {\\n    branches {\\n      nodes {\\n        displayName\\n        target {\\n          commit {\\n            oid\\n            author {\\n              date\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    tags {\\n      nodes {\\n        displayName\\n        target {\\n          commit {\\n            oid\\n            author {\\n              date\\n              __typename\\n            }\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    __typename\\n  }\\n}\",\n"
 				+ " \"variables\": {\n" + "  \"repository\": \"github.com/freeCodeCamp/freeCodeCamp\"\n" + " }\n" + "}";
 
-		Http h = Http.owner;
+		Http h = Http.create();
 		Http.Response r = h.post(url, param);
 		System.out.println(r.body);
 
@@ -192,6 +216,274 @@ public class HttpTest {
 
 		JSON j1 = r.xml();
 		System.out.println(j1.toPrettyString());
+
+	}
+
+	@Test
+	public void testEsp() {
+
+		String s = "https://www.rtx.com//sxa/search/results/?l=en&s={C8C0246C-349E-48A6-87B1-76BE3124A567}&itemid={02858F12-F8F2-4E35-9FAB-1389CBD2D883}&sig=newssearchresults&p=8&e=16&o=NewsDate%2CDescending&v=%7B5343FDD1-C9C0-4A7D-8194-1839B7C853A7%7D";
+		Http h = Http.create();
+		Http.Response r = h.get(s);
+		System.out.println(r.body);
+
+	}
+
+	@Test
+	public void testVgg() {
+
+		Http h = Http.create();
+		File f = new File("/Users/joe/Documents/ed57c6ad1302e13de2b7f3bf4bce0080.jpg");
+
+		try {
+
+			String crlf = "\r\n";
+			String twoHyphens = "--";
+			String boundary = "*****";
+
+			HttpURLConnection httpUrlConnection = null;
+			URL url = new URL("http://g10:50000/vector");
+			httpUrlConnection = (HttpURLConnection) url.openConnection();
+			httpUrlConnection.setUseCaches(false);
+			httpUrlConnection.setDoOutput(true);
+
+			httpUrlConnection.setRequestMethod("POST");
+			httpUrlConnection.setRequestProperty("Connection", "Keep-Alive");
+			httpUrlConnection.setRequestProperty("Cache-Control", "no-cache");
+			httpUrlConnection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+
+			DataOutputStream request = new DataOutputStream(httpUrlConnection.getOutputStream());
+
+			request.writeBytes(twoHyphens + boundary + crlf);
+			request.writeBytes("Content-Disposition: form-data; name=\"file\";filename=\"" + f.getName() + "\"" + crlf);
+			request.writeBytes(crlf);
+
+			InputStream in = new FileInputStream(f);
+			byte[] bb = new byte[32 * 1024];
+			int len = in.read(bb);
+			while (len > 0) {
+				request.write(bb, 0, len);
+				len = in.read(bb);
+			}
+			in.close();
+
+			request.writeBytes(crlf);
+			request.writeBytes(twoHyphens + boundary + twoHyphens + crlf);
+			request.flush();
+			request.close();
+
+			InputStream responseStream = new BufferedInputStream(httpUrlConnection.getInputStream());
+
+			BufferedReader responseStreamReader = new BufferedReader(new InputStreamReader(responseStream));
+
+			String line = "";
+			StringBuilder stringBuilder = new StringBuilder();
+
+			while ((line = responseStreamReader.readLine()) != null) {
+				stringBuilder.append(line).append("\n");
+			}
+			responseStreamReader.close();
+
+			String response = stringBuilder.toString();
+			responseStream.close();
+			httpUrlConnection.disconnect();
+
+			System.out.println(response);
+
+//			Http.Response r = h.post("http://g10:50000/vector", null, JSON.create().append("a", 1), "file", f.getName(),
+//					new FileInputStream(f), f.length());
+
+			Http.Response r = h.post("http://g10:50000/vector", JSON.create().append("a", 1).toString());
+
+			System.out.println(r.body);
+
+			JSON j1 = r.json();
+			List<Float> l1 = (List<Float>) j1.get("list");
+
+			System.out.println(l1.size());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testTimeout() {
+
+		String appid = "demo1";
+		String secret = "voeQ1dr1DREMefOf5u4EP1iAlO84lsn7";
+		String api = "https://pdcapitest.capub.cn/api/560/[auth_token]";
+		String body = "text=外国文学&s=0&n=5&type=sale&cate=";
+		String proxy = "";
+
+		TimeStamp t = TimeStamp.create();
+
+		// test
+		Http h = new Http.Builder().proxy(proxy, null, null).timeout(X.AMINUTE).create();
+
+		try {
+
+			FileItem file = null;
+
+			if (!X.isEmpty(appid)) {
+				String time = Long.toString(System.currentTimeMillis());
+				time = App.encode(time, secret);
+				Url u = Url.create(api);
+				u.setUri("/api/auth");
+
+				Http.Response r = h.post(u.encodedUrl(), JSON.create().append("appid", appid).append("time", time));
+				JSON j1 = JSON.fromObject(r.body);
+				if (j1 == null || j1.getInt(X.STATE) != 200) {
+					System.out.println("result=" + r.body);
+				} else {
+					String s = api.replaceAll("\\[auth_token\\]", j1.getString("token"));
+					JSON j2 = JSON.fromObject(body);
+					if (j2 == null) {
+						j2 = JSON.create();
+					}
+					if (file == null) {
+						r = h.post(s, j2.toString());
+					} else {
+						r = h.post(s, JSON.create(), j2, "file", file.getName(), file.getInputStream());
+					}
+					if (r.status == 200) {
+						JSON j3 = JSON.fromObject(r.body);
+						if (j3 == null) {
+							System.out.println("result=" + r.body);
+						} else {
+							System.out.println("result=" + j3.toPrettyString());
+						}
+					} else {
+						System.out.println("result=" + r.body);
+					}
+				}
+			} else {
+				JSON j2 = JSON.fromObject(body);
+				if (j2 == null) {
+					j2 = JSON.create();
+				}
+				Http.Response r = null;
+				if (file == null) {
+					r = h.post(api, j2.toString());
+				} else {
+					r = h.post(api, JSON.create(), j2, "file", file.getName(), file.getInputStream());
+				}
+				if (r.status == 200) {
+					System.out.println("result=" + JSON.fromObject(r.body).toPrettyString());
+				} else {
+					System.out.println("result=" + r.body);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		System.out.println("cost=" + t.past());
+
+	}
+
+	@Test
+	public void testResume() {
+
+		Http h = Http.create();
+
+		String url = "http://g09:8080/f/g/f5sha5luf5qwi3ljnyxwizlnn4xtcltnoa2a/1.mp4";
+
+		Temp.ROOT = "/Users/joe/Downloads/temp";
+
+		try {
+
+			Temp t = h.download(url, true);
+			System.out.println("done: " + t.length() + ", file=" + t.getFile().getAbsolutePath());
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	@Test
+	public void testFormPost() {
+		String cmd = X.IO.read(new File("/Users/joe/workspace/mlp/test/glo.py"), "utf-8");
+//		String cmd = "print('a=1')";
+		Http h = Http.create();
+//		Http.Response r1 = h.get("http://g09:40000/run?cmd=" + Url.encode(cmd));
+		Http.Response r1 = h.post("http://joe.mac:40000/run", JSON.create().append("cmd", cmd));
+		System.out.println(r1.body);
+
+	}
+
+	@Test
+	public void testPostWithFile() {
+
+		String url = "http://g09:8080/f/upload";
+
+		try {
+			FileInputStream in = new FileInputStream("/Users/joe/Downloads/hyperic-sigar-1.6.4.tar.gz");
+
+			Http h = Http.create();
+			Http.Response r = h.post(url, JSON.create(), JSON.create(), "file", "filename", in, true);
+
+			System.out.println(r.body);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void test() {
+
+		Http h = Http.create();
+		String api = "http://g09:8080/api/69/1K9Cndodp2zmsQBwuD16";
+		JSON body = JSON.create();
+		Http.Response r = h.post(api, body);
+		System.out.println(r.json().toPrettyString());
+
+	}
+
+	@Test
+	public void testDownload1() {
+		Http h = Http.create();
+		String url = "https://pdc.capub.cn/file/2022/09/16/1f007b62bfc6501321c466048544da71.png";
+		Temp t = h.download(url);
+		try {
+			System.out.println(t.getFile().getAbsolutePath());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testVideo() {
+
+		System.out.println("start ...");
+
+		Temp.ROOT = "/Users/joe/Downloads/temp/";
+
+		String s = "https://mpvideo.qpic.cn/0b2ebeaceaaayeagm5zonbsvacodeieqaiqa.f10002.mp4?dis_k=bff53759bdcf23d2ab0c19e4a009b517&dis_t=1700128173&play_scene=10120&auth_info=c7GhjaNjNkZWjpeqzHh3LnczOktJMz1LYmAhGDh5E2VVA3duD2trKTQ7AjkaXGAUfQ==&auth_key=2e5879068ac7254084c66548be2624e2&vid=wxv_3153089999635120134&format_id=10002&support_redirect=0&mmversion=false";
+		Http h = Http.create();
+
+		try {
+			Temp t = h.download(s, JSON.create().append("Referer", "https://mp.weixin.qq.com/"));
+			File f1 = t.getFile();
+			System.out.println(f1.length());
+			System.out.println(f1.getAbsolutePath());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testProxy() {
+
+		String url = "https://m.weibo.cn/status/5044505288120827?sourcetype=weixin&jumpfrom=weibocom";
+		Http h = Http.create();
+		h = h.proxy("o848.kdltps.com:15818", "t11565336580533", "o8abcm7s1");
+
+		Http.Response r = h.get(url);
+		System.out.println(r.body);
 
 	}
 

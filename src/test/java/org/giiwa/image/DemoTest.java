@@ -6,11 +6,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
 
-import org.giiwa.bean.Temp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Base32;
+import org.giiwa.misc.GImage;
 import org.junit.Test;
 
 public class DemoTest {
@@ -68,4 +71,36 @@ public class DemoTest {
 
 	}
 
+	@Test
+	public void testTiff() {
+
+		String p1 = "/Users/joe/workspace/giiwa/test/tif";
+		File f1 = new File(p1);
+		File[] ff = f1.listFiles();
+		for (File f : ff) {
+			if (f.getName().endsWith(".tif")) {
+				try {
+					InputStream in = new FileInputStream(f);
+					GImage.scale1(in, new FileOutputStream(f.getAbsolutePath() + "_s1.png"), 400, 400);
+				} catch (Exception e) {
+					System.out.println(f.getName());
+					e.printStackTrace();
+				}
+			}
+		}
+
+	}
+
+	@Test
+	public void testJpg() {
+
+		String s = "/Users/joe/workspace/giiwa/test/jpg/9787559336699-13215368-A1";
+
+		try {
+			GImage.scale1(new FileInputStream(s),
+					new FileOutputStream("/Users/joe/Downloads/9787559336699-13215368-A1.png"), 100, 100);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

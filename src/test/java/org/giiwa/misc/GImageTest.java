@@ -12,6 +12,7 @@ import org.junit.Test;
 
 public class GImageTest {
 
+	@SuppressWarnings("unused")
 	@Test
 	public void test() {
 

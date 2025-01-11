@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.dfile;
 
 import java.io.File;
@@ -39,14 +53,8 @@ public class LocalDFile extends DFile {
 
 	private String url;
 
-	private transient String path;
+	private String path;
 //	private transient Node node_obj;
-	private transient Disk disk_obj;
-	private transient FileInfo info;
-
-	public Disk[] getDisk_obj() {
-		return new Disk[] { disk_obj };
-	}
 
 	public boolean exists() {
 
@@ -55,25 +63,21 @@ public class LocalDFile extends DFile {
 			getInfo();
 			return info != null && info.exists;
 		} finally {
-			read.add(t.pastms());
+			read.add(t.pastms(), "filename=%s", filename);
 		}
 
 	}
 
-	public boolean delete() {
-		return delete(-1);
-	}
-
 	public String getId() {
-		return Base32.encode(this.getFilename().getBytes());
+		return Base32.encode(this.filename.getBytes());
 	}
 
-	public boolean delete(long age) {
+	protected boolean delete0(long age) {
 
 		TimeStamp t = TimeStamp.create();
 		try {
 
-			File f = new File(path + "/" + filename);
+			File f = new File(path + "/" + this.rewrite(filename));
 			return IOUtil.delete(f, age, s -> {
 
 				if (s.startsWith(path)) {
@@ -82,18 +86,14 @@ public class LocalDFile extends DFile {
 						s1 = "/" + s1;
 					}
 
-					onDelete(s1);
 				}
 
 			}) > 0;
 
 		} catch (Exception e) {
-			log.error(url, e);
-
-//			Disk.dao.update(this.disk, V.create("bad", 1));
-
+			log.error(url + ":" + disk_obj.path + ":" + filename, e);
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "filename=%s", filename);
 		}
 
 		return false;
@@ -101,7 +101,8 @@ public class LocalDFile extends DFile {
 
 	public InputStream getInputStream() throws IOException {
 
-		return new FileInputStream(new File(path + "/" + filename));
+		return DFileInputStream.create(this, new FileInputStream(new File(path + "/" + this.rewrite(filename))));
+
 	}
 
 	public OutputStream getOutputStream() throws IOException {
@@ -110,21 +111,17 @@ public class LocalDFile extends DFile {
 
 	public OutputStream getOutputStream(long offset) throws IOException {
 
-		File f = new File(path + "/" + filename);
+		File f = new File(path + "/" + this.rewrite(filename));
 
 		try {
 			if (!f.exists()) {
 				X.IO.mkdirs(f.getParentFile());
 				f.createNewFile();
-				f.setReadable(false, false);
-				f.setWritable(false, false);
-				f.setExecutable(false, false);
 			} else if (offset == 0) {
-				f.delete();
+				if (f.length() > 0) {
+					f.delete();
+				}
 				f.createNewFile();
-				f.setReadable(false, false);
-				f.setWritable(false, false);
-				f.setExecutable(false, false);
 			}
 		} catch (IOException e) {
 			log.error(f.getAbsolutePath(), e);
@@ -141,12 +138,14 @@ public class LocalDFile extends DFile {
 
 			if (bb != null) {
 
-				a.seek(o1);
-				a.write(bb, 0, len);
-				a.getFD().sync(); // not needs
-
-				f.setReadable(true, true);
-				f.setWritable(true, true);
+				long t = System.currentTimeMillis();
+				try {
+					a.seek(o1);
+					a.write(bb, 0, len);
+					a.getFD().sync(); // not needs
+				} finally {
+					Disk.Counter.write(disk_obj).add(len, System.currentTimeMillis() - t);
+				}
 
 			}
 
@@ -184,13 +183,13 @@ public class LocalDFile extends DFile {
 
 		TimeStamp t = TimeStamp.create();
 		try {
-			File f = new File(path + "/" + filename);
+			File f = new File(path + "/" + this.rewrite(filename));
 			return X.IO.mkdirs(f);
 		} catch (Exception e) {
 			log.error(url, e);
 //			Disk.dao.update(this.disk, V.create("bad", 1));
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "filename=%s", filename);
 		}
 		return true;
 	}
@@ -208,23 +207,23 @@ public class LocalDFile extends DFile {
 
 	private FileInfo getInfo() {
 		if (info == null) {
-			try {
+//			try {
 
-				File f = new File(path + "/" + filename);
+			File f = new File(path + "/" + this.rewrite(filename));
 
 //				log.debug("f=" + f.getAbsolutePath());
 
-				info = new FileInfo();
-				info.exists = f.exists() ? true : false;
-				info.isfile = info.exists && f.isFile() ? true : false;
-				info.length = info.exists ? f.length() : 0;
-				info.lastmodified = info.exists ? f.lastModified() : 0;
+			info = new FileInfo();
+			info.exists = f.exists() ? true : false;
+			info.isfile = info.exists && f.isFile() ? true : false;
+			info.length = info.exists ? f.length() : 0;
+			info.lastmodified = info.exists ? f.lastModified() : 0;
 
-			} catch (Exception e) {
-				log.error(url, e);
+//			} catch (Exception e) {
+//				log.error(url, e);
 //				Disk.dao.update(this.disk, V.create("bad", 1));
 
-			}
+//			}
 		}
 		return info;
 	}
@@ -253,7 +252,7 @@ public class LocalDFile extends DFile {
 
 		TimeStamp t = TimeStamp.create();
 		try {
-			File f = new File(path + "/" + filename);
+			File f = new File(path + "/" + this.rewrite(filename));
 
 			File[] ff = f.listFiles();
 			if (ff != null) {
@@ -277,7 +276,7 @@ public class LocalDFile extends DFile {
 				return l2;
 			}
 		} finally {
-			read.add(t.pastms());
+			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return null;
 	}
@@ -320,8 +319,8 @@ public class LocalDFile extends DFile {
 		TimeStamp t = TimeStamp.create();
 		try {
 
-			File f1 = new File(path + "/" + filename);
-			File f2 = new File(path + "/" + file.filename);
+			File f1 = new File(path + "/" + this.rewrite(filename));
+			File f2 = new File(path + "/" + this.rewrite(file.filename));
 
 			f2.getParentFile().mkdirs();
 
@@ -338,11 +337,8 @@ public class LocalDFile extends DFile {
 
 		} catch (Exception e) {
 			log.error(url, e);
-
-//			Disk.dao.update(this.disk, V.create("bad", 1));
-
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "filename=%s", filename);
 		}
 
 		return false;
@@ -364,7 +360,7 @@ public class LocalDFile extends DFile {
 			e.url = d.url;
 			e.path = d.path;
 		} else {
-			e.path = Config.getConf().getString("dfile.home", "/home/disk1");
+			e.path = Config.getConf().getString("dfile.home", "/data/disk1");
 		}
 
 		return e;
@@ -391,10 +387,10 @@ public class LocalDFile extends DFile {
 			}
 
 			if (moni != null) {
-				moni.accept(this.getFilename());
+				moni.accept(this.filename);
 			}
 		} finally {
-			read.add(t.pastms());
+			read.add(t.pastms(), "filename=%s", filename);
 		}
 		return n;
 	}
@@ -417,7 +413,7 @@ public class LocalDFile extends DFile {
 		n += this.length();
 
 		if (moni != null) {
-			moni.accept(this.getFilename());
+			moni.accept(this.filename);
 		}
 
 		return n;
@@ -447,7 +443,7 @@ public class LocalDFile extends DFile {
 
 			return IOUtil.copy(in, getOutputStream(pos));
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "filename=%s", filename);
 		}
 	}
 
@@ -473,6 +469,32 @@ public class LocalDFile extends DFile {
 		d1.filename = filename;
 		d1.disk_obj = disk_obj;
 		return d1;
+
+	}
+
+	@Override
+	public long getFreeSpace() {
+		File f = new File(path + "/" + this.rewrite(filename));
+		return f.getFreeSpace();
+	}
+
+	@Override
+	public long getTotalSpace() {
+		File f = new File(path + "/" + this.rewrite(filename));
+		return f.getTotalSpace();
+	}
+
+	@Override
+	public boolean rename(String name) throws IOException {
+
+		int i = filename.lastIndexOf("/");
+		if (i < 0) {
+			name = "/" + name;
+		} else {
+			name = filename.substring(0, i + 1) + name;
+		}
+
+		return new File(path + "/" + this.rewrite(filename)).renameTo(new File(path + "/" + this.rewrite(name)));
 
 	}
 

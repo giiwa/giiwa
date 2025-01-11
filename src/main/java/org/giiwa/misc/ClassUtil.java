@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.misc;
 
 import java.io.File;
@@ -27,17 +41,18 @@ public class ClassUtil {
 
 		ClassLoader loader = Thread.currentThread().getContextClassLoader();
 
-		_load(l1, loader, packname, t);
+		int n = _load(l1, loader, packname, t);
 
-		if (log.isDebugEnabled()) {
-			log.debug("found class for [" + t + "] in [" + packname + "], list=" + l1);
-		}
+		log.warn("found class/" + n + " for [" + t + "] in [" + packname + "], list=" + l1,
+				new Exception("trace only!"));
 
 		return l1;
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> void _load(List<Class<T>> rlist, ClassLoader loader, List<String> packname, Class<T> t) {
+	private static <T> int _load(List<Class<T>> rlist, ClassLoader loader, List<String> packname, Class<T> t) {
+
+		int n = 0;
 
 		try {
 
@@ -66,6 +81,7 @@ public class ClassUtil {
 
 								try {
 									synchronized (Class.class) {
+										n++;
 										Class<?> c = Class.forName(s.replaceAll("\\.class$", "").replaceAll("/", "."));
 										if (t.isAssignableFrom(c)) {
 											rlist.add((Class<T>) c);
@@ -87,8 +103,11 @@ public class ClassUtil {
 								for (File f1 : ff) {
 									if (f1.isFile()) {
 										try {
-											Class<?> c = Class
-													.forName(packname + "." + f1.getName().replaceAll("\\.class$", ""));
+											n++;
+											String clazzname = packname + "."
+													+ f1.getName().replaceAll("\\.class$", "");
+											clazzname = clazzname.replaceAll("[\\[\\]]", "");
+											Class<?> c = Class.forName(clazzname);
 											if (t.isAssignableFrom(c)) {
 												rlist.add((Class<T>) c);
 											}
@@ -100,7 +119,7 @@ public class ClassUtil {
 										if (!X.isEmpty(packname)) {
 											ch = packname + "." + ch;
 										}
-										_load(rlist, loader, Arrays.asList(ch), t);
+										n += _load(rlist, loader, Arrays.asList(ch), t);
 									}
 								}
 							}
@@ -111,6 +130,9 @@ public class ClassUtil {
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
 		}
+
+		return n;
+
 	}
 
 }

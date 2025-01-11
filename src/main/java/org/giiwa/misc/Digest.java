@@ -137,10 +137,21 @@ public class Digest {
 		byte[] enCodeFormat = secretKey.getEncoded();
 		SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
 
-		Cipher cipher = Cipher.getInstance("AES");// CBC/PKCS5Padding");
-		cipher.init(Cipher.DECRYPT_MODE, key);
-		byte[] result = cipher.doFinal(content);
-		return result;
+		try {
+			// 兼容老的解密方式
+
+			Cipher cipher = Cipher.getInstance("AES");// CBC/PKCS5Padding");
+			cipher.init(Cipher.DECRYPT_MODE, key);
+			byte[] result = cipher.doFinal(content);
+			return result;
+		} catch (Exception e) {
+			// 新的解密方式
+
+			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			cipher.init(Cipher.DECRYPT_MODE, key);
+			byte[] result = cipher.doFinal(content);
+			return result;
+		}
 
 	}
 

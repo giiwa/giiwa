@@ -48,7 +48,7 @@ public class system extends Controller {
 	/**
 	 * Restart.
 	 */
-	@Path(path = "restart", login = true, access = "access.config.admin")
+	@Path(path = "restart", login = true, access = "access.config.admin", oplog = true)
 	public void restart() {
 
 		JSON jo = new JSON();

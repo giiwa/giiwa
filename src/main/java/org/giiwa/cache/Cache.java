@@ -21,7 +21,9 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.*;
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Counter;
 import org.giiwa.dao.TimeStamp;
@@ -45,7 +47,6 @@ public final class Cache {
 	/** The log. */
 	private static Log log = LogFactory.getLog(Cache.class);
 
-	final static String MEMCACHED = "memcached://";
 	final static String REDIS = "redis://";
 	private static String GROUP = "g://";
 
@@ -66,9 +67,7 @@ public final class Cache {
 		// return;
 		String group = Global.getString("site.group", "demo");
 
-		if (url != null && url.startsWith(MEMCACHED)) {
-			cacheSystem = MemCache.create(url, user, pwd);
-		} else if (url != null && url.startsWith(REDIS)) {
+		if (url != null && url.startsWith(REDIS)) {
 			cacheSystem = RedisCache.create(url, user, pwd);
 		}
 
@@ -116,7 +115,7 @@ public final class Cache {
 
 			log.error("nothing get from memcache by " + id + ", remove it!", e);
 		} finally {
-			read.add(t.pastms());
+			read.add(t.pastms(), "id=%s", id);
 		}
 		return null;
 	}
@@ -136,7 +135,7 @@ public final class Cache {
 			}
 			return false;
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "id=%s", id);
 		}
 	}
 
@@ -150,7 +149,7 @@ public final class Cache {
 	 * @return true, if successful
 	 */
 	public static boolean set(String id, Object data) {
-		return set(id, data, (int) X.ADAY);
+		return set(id, data, X.ADAY);
 	}
 
 	/**
@@ -177,7 +176,7 @@ public final class Cache {
 			}
 			return false;
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "id=%s", id);
 		}
 	}
 
@@ -221,7 +220,7 @@ public final class Cache {
 			log.error(e.getMessage(), e);
 		} finally {
 			X.close(in, out);
-			write.add(t.pastms());
+			write.add(t.pastms(), "id=%s", id);
 		}
 		return false;
 	}
@@ -267,7 +266,7 @@ public final class Cache {
 			}
 			return null;
 		} finally {
-			read.add(t.pastms());
+			read.add(t.pastms(), "id=%s", id);
 		}
 	}
 
@@ -280,15 +279,19 @@ public final class Cache {
 	 * @return
 	 */
 	public static boolean trylock(String name) {
+		return trylock(name, false);
+	}
+
+	public static boolean trylock(String name, boolean debug) {
 		TimeStamp t = TimeStamp.create();
 		try {
 			if (cacheSystem != null) {
 				name = GROUP + name;
-				return cacheSystem.trylock(name);
+				return cacheSystem.trylock(name, debug);
 			}
 			return false;
 		} finally {
-			read.add(t.pastms());
+			read.add(t.pastms(), "name=%s", name);
 		}
 	}
 
@@ -307,7 +310,7 @@ public final class Cache {
 				cacheSystem.expire(name, ms);
 			}
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "name=%s", name);
 		}
 	}
 
@@ -319,17 +322,22 @@ public final class Cache {
 	 * @return
 	 */
 	public static boolean unlock(String name, String value) {
+		return unlock(name, value, false);
+	}
+
+	public static boolean unlock(String name, String value, boolean debug) {
 		TimeStamp t = TimeStamp.create();
 		try {
 			if (cacheSystem != null) {
 				name = GROUP + name;
-				return cacheSystem.unlock(name, value);
+				return cacheSystem.unlock(name, value, debug);
 			}
 
 			log.warn("no cache system!");
+			GLog.applog.warn("sys", "unlock", "no cache system!, lock=" + name);
 			return false;
 		} finally {
-			write.add(t.pastms());
+			write.add(t.pastms(), "name=%s", name);
 		}
 	}
 
@@ -342,6 +350,45 @@ public final class Cache {
 
 	public static Counter.Stat statWrite() {
 		return write.get();
+	}
+
+	public static void close() {
+		if (cacheSystem != null) {
+			cacheSystem.close();
+		}
+	}
+
+	public static long currentTimeMillis() {
+		return now();
+	}
+
+	public static long now() {
+		if (cacheSystem != null) {
+			cacheSystem.now();
+		}
+		return System.currentTimeMillis();
+	}
+
+	public static void touch(String name, long expired) {
+		if (cacheSystem != null) {
+			cacheSystem.touch(name, expired);
+		}
+	}
+
+	public static void init(Configuration conf) {
+		log.info("Cache init ...");
+
+		try {
+			String url = Global.getString("cache.url", null);
+			String user = Global.getString("cache.user", null);
+			String passwd = Global.getString("cache.passwd", null);
+
+			log.info("Cache init ... url=" + url);
+			init(url, user, passwd);
+		} catch (Throwable e) {
+			log.error(e.getMessage(), e);
+		}
+
 	}
 
 }

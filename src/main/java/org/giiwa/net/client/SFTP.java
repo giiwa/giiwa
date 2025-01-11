@@ -1,6 +1,21 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.net.client;
 
 import java.io.Closeable;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,6 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Temp;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 import org.giiwa.task.Function;
@@ -27,6 +43,7 @@ import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 
+@Comment(text = "SFTP工具")
 public class SFTP implements Closeable {
 
 	private static Log log = LogFactory.getLog(SFTP.class);
@@ -37,6 +54,7 @@ public class SFTP implements Closeable {
 	/**
 	 * 关闭链接
 	 */
+	@Comment(hide = true)
 	public void close() {
 		if (sftp != null) {
 			sftp.disconnect();
@@ -61,7 +79,8 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws JSchException
 	 */
-	public SFTP timeout(int timeout) throws JSchException {
+	@Comment(text = "设置超时")
+	public SFTP timeout(@Comment(text = "timeout") int timeout) throws JSchException {
 		session.setTimeout(timeout);
 		return this;
 	}
@@ -73,7 +92,8 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws JSchException
 	 */
-	public SFTP buffer(int size) throws JSchException {
+	@Comment(text = "设置缓存")
+	public SFTP buffer(@Comment(text = "size") int size) throws JSchException {
 		return this;
 	}
 
@@ -100,7 +120,8 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-	public SFTP open(String url) throws IOException {
+	@Comment(text = "远程链接，sftp://[host:port]/[path]?username=xxx&passwd=xxx")
+	public SFTP open(@Comment(text = "url") String url) throws IOException {
 		return open(Url.create(url));
 	}
 
@@ -111,7 +132,8 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-	public SFTP open(Url url) throws IOException {
+	@Comment(text = "远程链接，sftp://[host:port]/[path]?username=xxx&passwd=xxx")
+	public SFTP open(@Comment(text = "url") Url url) throws IOException {
 
 		close();
 
@@ -124,7 +146,12 @@ public class SFTP implements Closeable {
 
 			return this;
 		} catch (Exception e) {
-			throw new IOException(e);
+			String s = url.toString();
+			int i = s.indexOf("?");
+			if (i > 0) {
+				s = s.substring(0, i);
+			}
+			throw new IOException(s, e);
 		}
 	}
 
@@ -136,11 +163,15 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-	public boolean put(String filename, InputStream in) throws IOException {
+	@Comment(text = "上传文件")
+	public boolean put(@Comment(text = "filename") String filename, @Comment(text = "in") InputStream in)
+			throws IOException {
 		return put(new File(filename), in);
 	}
 
-	public boolean put(File src, String dest, Function<String, Boolean> func) throws IOException {
+	@Comment(text = "上传文件")
+	public boolean put(@Comment(text = "fileorpath") File src, @Comment(text = "dest") String dest,
+			@Comment(text = "callback") Function<String, Boolean> func) throws IOException {
 
 		try {
 			if (func.apply(src.getAbsolutePath())) {
@@ -174,7 +205,8 @@ public class SFTP implements Closeable {
 
 	}
 
-	public boolean put(InputStream in, String dest) throws IOException {
+	@Comment(text = "上传文件")
+	public boolean put(@Comment(text = "in") InputStream in, @Comment(text = "dest") String dest) throws IOException {
 
 		try {
 			sftp.put(in, X.getCanonicalPath(dest));
@@ -187,7 +219,8 @@ public class SFTP implements Closeable {
 
 	}
 
-	private boolean mkdir(String dest) {
+	@Comment(text = "新建目录")
+	public boolean mkdir(@Comment(text = "dest") String dest) {
 
 		try {
 			sftp.mkdir(dest);
@@ -199,7 +232,8 @@ public class SFTP implements Closeable {
 
 	}
 
-	public boolean mv(String src, String dest) throws IOException {
+	@Comment(text = "移动文件")
+	public boolean mv(@Comment(text = "src") String src, @Comment(text = "dest") String dest) throws IOException {
 
 		try {
 			this.mkdir(new File(dest).getParent());
@@ -219,7 +253,8 @@ public class SFTP implements Closeable {
 	 * @param in 输入字节流
 	 * @throws IOException
 	 */
-	public boolean put(File f, InputStream in) throws IOException {
+	@Comment(text = "上传文件")
+	public boolean put(@Comment(text = "file") File f, @Comment(text = "in") InputStream in) throws IOException {
 
 		try {
 			log.debug("sftp put, filename=" + f.getAbsolutePath());
@@ -243,7 +278,8 @@ public class SFTP implements Closeable {
 	 * @return 临时文件对象
 	 * @throws IOException
 	 */
-	public Temp get(String filename) throws IOException {
+	@Comment(text = "下载文件")
+	public Temp get(@Comment(text = "filename") String filename) throws IOException {
 		File f = new File(filename);
 		Temp t = Temp.create(f.getName());
 		get(f, t.getOutputStream());
@@ -257,7 +293,8 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-	public Temp get(File file) throws IOException {
+	@Comment(text = "下载文件")
+	public Temp get(@Comment(text = "file") File file) throws IOException {
 		Temp t = Temp.create(file.getName());
 		get(file, t.getOutputStream());
 		return t;
@@ -270,7 +307,9 @@ public class SFTP implements Closeable {
 	 * @param dest     本地文件路径
 	 * @throws IOException
 	 */
-	public void get(String filename, OutputStream out) throws IOException {
+	@Comment(text = "下载文件")
+	public void get(@Comment(text = "filename") String filename, @Comment(text = "out") OutputStream out)
+			throws IOException {
 		try {
 			sftp.get(filename, out);
 		} catch (Exception e) {
@@ -287,7 +326,9 @@ public class SFTP implements Closeable {
 	 * @param dest     本地文件路径
 	 * @throws IOException
 	 */
-	public void get(File filename, OutputStream dest) throws IOException {
+	@Comment(text = "下载文件")
+	public void get(@Comment(text = "filename") File filename, @Comment(text = "out") OutputStream dest)
+			throws IOException {
 		get(filename.getAbsolutePath(), dest);
 	}
 
@@ -299,11 +340,13 @@ public class SFTP implements Closeable {
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unchecked")
-	public File[] list(String src) throws IOException {
+	@Comment(text = "列表目录")
+	public File[] list(@Comment(text = "src") String src) throws IOException {
 
 		try {
 			List<File> l1 = new ArrayList<File>();
 			Vector<LsEntry> l2 = sftp.ls(src);
+//			log.info("sftp list, size=" + l2.size() + ", vector=" + l2);
 			_toFile(src, l1, l2);
 			return l1.toArray(new File[l1.size()]);
 		} catch (Exception e) {
@@ -319,8 +362,10 @@ public class SFTP implements Closeable {
 
 		if (ff != null) {
 			for (LsEntry f : ff) {
-				if (X.isIn(f.getFilename(), ".", ".."))
+				String name = f.getFilename();
+				if ("..".equals(name) || ".".equals(name)) {
 					continue;
+				}
 
 				File f1 = new File(path + "/" + f.getFilename()) {
 
@@ -401,7 +446,8 @@ public class SFTP implements Closeable {
 	 * @param src 文件路径
 	 * @throws IOException
 	 */
-	public void rm(String src) throws IOException {
+	@Comment(text = "删除文件")
+	public void rm(@Comment(text = "filename") String src) throws IOException {
 		try {
 			sftp.rm(src);
 		} catch (Exception e) {
@@ -415,7 +461,8 @@ public class SFTP implements Closeable {
 	 * @param src 目录路径
 	 * @throws IOException
 	 */
-	public void rmdir(String src) throws IOException {
+	@Comment(text = "删除目录")
+	public void rmdir(@Comment(text = "path") String src) throws IOException {
 		try {
 			sftp.rmdir(src);
 		} catch (Exception e) {

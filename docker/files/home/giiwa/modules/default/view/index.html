@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>$lang.get('browser.title')</title>
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
+		<meta name="description" content="Giiwa" >
+		<link rel="shortcut icon" href="/giiwa.png" type="image/png" />
+		<link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+
+		<script src="/js/jquery-3.2.1.min.js"></script>
+		<script src="/bootstrap/js/bootstrap.min.js"></script>
+
+		<style>
+			html, body {
+				width: 100%;
+				font-family: 'Open Sans', sans-serif;
+				font-size: 14px;
+				line-height: 23px;
+				text-align: center;
+				background: #fff;
+			}
+			header {
+				background: #112A44;
+				height: 56px;
+				padding: 5px 0;
+			}
+			.header-left {
+				float: left;
+			}
+			img {
+				height: 46px;
+			}
+			#main {
+				margin-top: 100px;
+			}
+			.text-white {
+				color: white;
+			}
+
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class='container'>
+				<div class='header-left'>
+					<img src='/images/giiwa.png'/>
+				</div>
+			</div>
+		</header>
+		<div id="#main">
+			<div class='container'>
+				<div class='col-sm-12'>
+					<h2><code>$lang.get('index.welcome')</code></h2>
+					<h3>$lang.get('index.starting')</h3>
+					<h3><a href="https://wiki.giisoo.com/" target="_blank">$lang.get('index.document')</a>, <a href="/admin/">$lang.get('index.admin')</a></h3>
+					<h4>$lang.get('index.example'):</h4>
+					<p>
+						Velocity: <a href="/hello.html" target="_blank">hello.html</a><br/>
+						Thymeleaf: <a href="/hello.th" target="_blank">hello.th</a><br/>
+						FreeMarker: <a href="/hello.ftl" target="_blank">hello.ftl</a><br/>
+					</p>					
+				</div>
+			</div>
+		</div>
+
+	</body>
+</html>

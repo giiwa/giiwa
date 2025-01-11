@@ -1,0 +1,17 @@
+
+<div class='head'>$lang.get('demo.edit.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/demo' >$lang.get('a.demo')</a>
+	<a href='/admin/demo/edit?id=$id' class='selected'>$lang.get('a.demo')</a>
+</div>
+
+<form action='/admin/demo/edit'  method='post' class='form' enctype="multipart/form-data">
+	<input type='hidden' name='id' value='$id' />
+	<div><label><h3>$lang.get('demo.name')(<r>*</r>):</h3><input type='text' name='name' value="$!name"/></label></div>
+	<div><label><h3>$lang.get('demo.content'):</h3><textarea name='content'>$!content</textarea></label></div>
+	
+	<button type='submit'>$lang.get('btn.save')</button>
+</form>

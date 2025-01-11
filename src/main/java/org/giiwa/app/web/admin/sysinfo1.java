@@ -14,6 +14,8 @@
 */
 package org.giiwa.app.web.admin;
 
+import java.util.List;
+
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
@@ -92,10 +94,10 @@ public class sysinfo1 extends Controller {
 
 		try {
 
-			JSON stat = Helper.dbstats();
+			JSON stat = Helper.primary.stats(null);
 			this.set("stat", stat);
 
-			this.set("list", Helper.listOp());
+			this.set("list", Helper.primary.listOp());
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -109,6 +111,18 @@ public class sysinfo1 extends Controller {
 
 		String id = this.get("id");
 		Helper.killOp(id);
+		this.set(X.MESSAGE, "killed").send(200);
+
+	}
+
+	@Path(path = "db/killall", login = true, access = "access.config.admin")
+	public void db_killall() {
+
+		List<JSON> l1 = Helper.primary.listOp();
+		for (JSON j1 : l1) {
+			String id = j1.getString("opid");
+			Helper.killOp(id);
+		}
 		this.set(X.MESSAGE, "killed").send(200);
 
 	}

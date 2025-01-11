@@ -1,0 +1,61 @@
+<div class='head'>$lang.get('demo.index.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/demo' class='selected'>$lang.get('a.demo')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/demo' method='get' #if($s>0) style='display:none' #end >
+		<span><label><h3>$lang.get('demo.name'):</h3><input type='text' name='name' value='$!name'/></label></span>
+
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+	
+	<div class='s1tab #if($s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+<table id='demo-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('demo.id')</th>
+			<th>$lang.get('demo.name')</th>
+			<th>$lang.get('demo.updated')</th>
+			<th>$lang.get('demo.created')</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr>
+		<td><a href="/admin/demo/detail?id=$f.id">$f.id</a></td>
+		<td>$!f.name</td>
+		<td>$!lang.format($f.updated, 'yyyy-MM-dd HH:mm:ss')</td>
+		<td>$!lang.format($f.created, 'yyyy-MM-dd HH:mm:ss')</td>
+		<td>
+			<a class='btn btn-info btn-xs' href='/admin/demo/edit?id=$f.id'>$lang.get('a.edit')</a>
+			<a class='btn btn-danger btn-xs' href='javascript:;' onclick='_delete("$f.id", this)'>$lang.get('a.delete')</a>
+		</td>
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+<div class='btns'>
+	<a class='btn btn-success' href="/admin/demo/create">$lang.get('a.create')</a>
+</div>
+
+<script>
+function _delete(id, o) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		$.post("/admin/demo/delete", {id:id}, function(d){
+			$(o).parent().parent().remove();
+		})
+	}
+}
+</script>

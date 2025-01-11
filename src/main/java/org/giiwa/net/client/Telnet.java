@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.net.client;
 
 import java.io.Closeable;
@@ -9,9 +23,11 @@ import java.net.SocketException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.telnet.TelnetClient;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
+@Comment(text = "Telnet工具")
 public class Telnet implements Closeable {
 
 	@SuppressWarnings("unused")
@@ -37,11 +53,13 @@ public class Telnet implements Closeable {
 		return new Telnet();
 	}
 
-	public Telnet open(String url) throws SocketException, IOException {
+	@Comment(text = "打开远程链接, url=telnet://ip:port?username=&passwd=")
+	public Telnet open(@Comment(text = "url") String url) throws SocketException, IOException {
 		return open(Url.create(url));
 	}
 
-	public Telnet open(Url url) throws SocketException, IOException {
+	@Comment(text = "打开远程链接, url=telnet://ip:port?username=&passwd=")
+	public Telnet open(@Comment(text = "url") Url url) throws SocketException, IOException {
 
 		close();
 
@@ -110,7 +128,8 @@ public class Telnet implements Closeable {
 		}
 	}
 
-	public String run(String cmd) {
+	@Comment(text = "执行命令")
+	public String run(@Comment(text = "command") String cmd) {
 
 		StringBuilder text = null;
 		try {
@@ -149,6 +168,7 @@ public class Telnet implements Closeable {
 	}
 
 	@Override
+	@Comment(hide = true)
 	public void close() throws IOException {
 		X.close(in, out);
 		in = null;

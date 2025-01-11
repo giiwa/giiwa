@@ -18,6 +18,8 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.Array;
+import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.ResultSet;
@@ -35,13 +37,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.bson.BSONObject;
 import org.bson.Document;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Digest;
+import org.giiwa.web.Language;
+import org.openjdk.nashorn.api.scripting.ScriptObjectMirror;
 
 /**
  * The {@code Bean} Class is entity class that mapping to a table,<br>
@@ -63,6 +69,10 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	@Column(no = true)
 	private boolean _readonly = false;
 
+	public boolean isReadonly() {
+		return _readonly;
+	}
+
 	/**
 	 * set the bean as read only mode
 	 */
@@ -77,10 +87,10 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	@Column(no = true)
 	public long _rowid;
 
-	@Column(memo = "updated timestamp")
+	@Column(memo = "更新时间")
 	private long updated;
 
-	@Column(memo = "created timestamp")
+	@Column(memo = "创建时间")
 	private long created;
 
 	/**
@@ -171,7 +181,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			return null;
 		}
 
-		if (value == V.ignore || value == null) {
+		if (value == V.ignore) {
+//		if (value == V.ignore || value == null) {
 			return null;
 		}
 
@@ -179,26 +190,69 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 
 		// change all to lower case avoid some database auto change to upper case
 		name = name.toLowerCase();
+//		log.warn("field=" + name + ", value=" + value.getClass());
 
-		if (value instanceof java.sql.Clob) {
-			try {
-				Clob c = (Clob) value;
-				Reader re = c.getCharacterStream();
-				char[] cc = new char[(int) c.length()];
-				re.read(cc);
-				value = new String(cc);
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
-			}
-		} else if (value instanceof java.sql.NClob) {
-			try {
-				NClob c = (NClob) value;
-				Reader re = c.getCharacterStream();
-				char[] cc = new char[(int) c.length()];
-				re.read(cc);
-				value = new String(cc);
-			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+		if (value != null) {
+			if (value instanceof java.sql.Clob) {
+				try {
+					Clob c = (Clob) value;
+					Reader re = c.getCharacterStream();
+					char[] cc = new char[(int) c.length()];
+					re.read(cc);
+					value = new String(cc);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			} else if (value instanceof java.sql.NClob) {
+				try {
+					NClob c = (NClob) value;
+					Reader re = c.getCharacterStream();
+					char[] cc = new char[(int) c.length()];
+					re.read(cc);
+					value = new String(cc);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			} else if (value instanceof java.sql.Blob) {
+				try {
+					Blob c = (Blob) value;
+					value = c.getBytes(0, (int) c.length());
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			} else if (value instanceof Array) {
+				try {
+					java.sql.Array c = (Array) value;
+					value = X.asList(c.getArray(), s -> s);
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			} else if (value instanceof ScriptObjectMirror) {
+				// TODO, data.a = []
+				// data.a.push 会报错
+//			ScriptObjectMirror m = (ScriptObjectMirror) value;
+//			if (m.isArray()) {
+//				value = X.asList(m, s -> s);
+//			} else {
+//				value = JSON.fromObject(value);
+//			}
+			} else if (value instanceof Map) {
+				value = JSON.fromObject(value);
+			} else if (value.getClass().getName().equals("org.postgresql.util.PGobject")) {
+				Object o = value;
+				try {
+					value = JSON.create().append(o.getClass().getMethod("getType").invoke(o).toString(),
+							o.getClass().getMethod("getValue").invoke(o));
+				} catch (Exception e) {
+					// ignore
+				}
+			} else if (value instanceof org.bson.BsonTimestamp) {
+				org.bson.BsonTimestamp b = (org.bson.BsonTimestamp) value;
+				value = b.asDateTime().getValue();
+			} else if (value instanceof Date) {
+				value = ((Date) value).getTime();
+//		} else {
+//			log.warn("field=" + name + ", value=" + value.getClass());
 			}
 		}
 
@@ -227,10 +281,15 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 				} else if (t1 == float.class) {
 					f1.set(this, X.toFloat(value, 0));
 				} else if (t1 == String.class) {
-					if (value != null) {
-						value = value.toString();
-					}
+//					if (value != null) {
+//						value = value.toString();
+//					}
+					// allow uuid
+//					if (List.class.isAssignableFrom(f1.getClass())) {
+//						f1.set(this, Arrays.asList(value));
+//					} else {
 					f1.set(this, value);
+//					}
 				} else if (List.class.isAssignableFrom(t1) || t1.isArray()) {
 					// change the value to list
 					if (value != null) {
@@ -241,11 +300,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 							l1.add(Arrays.asList(value));
 						} else if (value instanceof String) {
 							String s = (String) value;
-							if (s.startsWith("[") && s.endsWith("]")) {
-								l1.addAll(X.asList(X.split(s, "[\\[\\],]"), s1 -> s1));
-							} else {
-								l1.add(value);
-							}
+							l1.addAll(X.asList(X.split(s, "[\\[\\],]"), s1 -> s1));
 						} else {
 							l1.add(value);
 						}
@@ -275,7 +330,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 					}
 				}
 			} catch (Exception e) {
-				log.error(name + "=" + value, e);
+				// ignore
+//				log.error(name + "=" + value, e);
 			}
 		} else {
 
@@ -444,7 +500,6 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		_F f = _getField(s);
 		if (f != null) {
 			try {
-//				f.setAccessible(true);
 				return f.get(this);
 			} catch (Exception e) {
 				log.error(name, e);
@@ -455,15 +510,31 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			return null;
 		}
 
-		if (X.isSame(name, "type")) {
-			log.warn("type=" + data.get(name) + ", data=" + data);
+		return data.get(s);
+
+	}
+
+	/**
+	 * get and format
+	 * 
+	 * @param name
+	 * @param format
+	 * @return
+	 */
+	public Object get(String name, String format) {
+
+		Object v = get(name);
+		if (X.isEmpty(format)) {
+			return v;
 		}
 
-//		if (data.containsKey(s)) {
-		return data.get(s);
-//		}
-//
-//		return null;
+		if (format.matches(".*(yyyy|MM|dd|HH|mm|ss).*")) {
+			// 时间日期格式
+			return Language.getLanguage().format(v, format);
+		}
+
+		return String.format(format, v);
+
 	}
 
 	/**
@@ -472,7 +543,18 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return the int
 	 */
 	public final int size() {
-		return getAll().size();
+
+		int n = 0;
+		if (data != null) {
+			n += data.size();
+		}
+
+		Map<String, _F> m2 = _getFields();
+		if (m2 != null) {
+			n += m2.size();
+		}
+
+		return n;
 	}
 
 	/**
@@ -481,7 +563,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return the boolean, true if empty
 	 */
 	public final boolean isEmpty() {
-		return getAll().isEmpty();
+		return false;
 	}
 
 	/*
@@ -489,8 +571,20 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * 
 	 * @see java.util.Map.containsKey(java.lang.Object)
 	 */
-	public final boolean containsKey(Object key) {
-		return getAll().containsKey(key);
+	public boolean containsKey(Object key) {
+
+		if (data != null && data.size() > 0) {
+			if (data.containsKey(key)) {
+				return true;
+			}
+		}
+
+		Map<String, _F> m2 = _getFields();
+		if (m2 != null) {
+			return m2.containsKey(key);
+		}
+
+		return false;
 	}
 
 	/*
@@ -499,7 +593,29 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @see java.util.Map.containsValue(java.lang.Object)
 	 */
 	public final boolean containsValue(Object value) {
-		return getAll().containsValue(value);
+
+		if (data != null && data.size() > 0) {
+			if (data.containsValue(value)) {
+				return true;
+			}
+		}
+
+		Map<String, _F> m2 = _getFields();
+		if (m2 != null && m2.size() > 0) {
+			for (String name : m2.keySet()) {
+				_F f = m2.get(name);
+				try {
+					Object o = f.get(this);
+					if (X.isSame(value, o)) {
+						return true;
+					}
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -551,7 +667,6 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		if (m1 != null && m1.size() > 0) {
 			for (_F f : m1.values()) {
 				try {
-//					f.setAccessible(true);
 					f.set(this, null);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
@@ -568,7 +683,16 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * @return the sets of the names
 	 */
 	public final Set<String> keySet() {
-		return getAll().keySet();
+		Set<String> l1 = new TreeSet<String>();
+		if (data != null && !data.isEmpty()) {
+			l1.addAll(data.keySet());
+		}
+
+		Map<String, _F> m2 = _getFields();
+		if (m2 != null && m2.size() > 0) {
+			l1.addAll(m2.keySet());
+		}
+		return l1;
 	}
 
 	/**
@@ -647,9 +771,6 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		Map<String, Object> map_obj = new HashMap<String, Object>();
 		if (data != null && data.size() > 0) {
 			map_obj.putAll(data);
-//				for (String s1 : map_obj.keySet()) {
-//					log.debug(s1 + "=" + map_obj.get(s1) + ", " + map_obj.get(s1).getClass());
-//				}
 		}
 
 		Map<String, _F> m2 = _getFields();
@@ -657,13 +778,20 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			for (String name : m2.keySet()) {
 				_F f = m2.get(name);
 				try {
-//					f.setAccessible(true);
 					Object o = f.get(this);
-					if (o != null) {
-						map_obj.put(f.getName().toLowerCase(), o);
-					}
+					String name1 = f.getName().toLowerCase();
+					map_obj.put(name1, o);
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
+				}
+			}
+		}
+
+		for (Object name : map_obj.keySet().toArray()) {
+			if (X.isIn(name, "created", "updated")) {
+				Object o = map_obj.get(name);
+				if (X.toLong(o) == 0) {
+					map_obj.remove(name);
 				}
 			}
 		}
@@ -694,15 +822,41 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		if (data != null && names != null) {
 			for (String name : names) {
 				if (name.indexOf("*") > -1) {
-					for (String k : this.getAll().keySet()) {
-						if (k.matches(name)) {
-							this.set(k, null);
+
+					if (data != null) {
+						String[] ss = data.keySet().toArray(new String[data.size()]);
+						for (String k : ss) {
+							if (k.matches(name)) {
+								this._remove(k);
+							}
+						}
+					}
+
+					Map<String, _F> m2 = _getFields();
+					if (m2 != null && m2.size() > 0) {
+						for (String k : m2.keySet()) {
+							if (k.matches(name)) {
+								this._remove(k);
+							}
 						}
 					}
 				} else {
-					this.set(name, null);
+					this._remove(name);
 				}
 			}
+		}
+	}
+
+	private void _remove(String name) {
+		try {
+			_F f1 = _getField(name);
+			if (f1 != null) {
+				f1.set(this, null);
+			} else if (data != null) {
+				data.remove(name);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -716,26 +870,44 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	 * 
 	 * @return JSON
 	 */
+	@Comment(text = "转换为json")
 	public JSON json() {
 
 		JSON json_obj = JSON.fromObject(getAll());
 
-		json_obj.scan((j1, e) -> {
-			Object o = e.getValue();
-			if (!(o instanceof Serializable)) {
-				log.info("bad data, name=" + e.getKey(), new Exception());
-				j1.remove(e.getKey());
+		json_obj.scan((j1, name) -> {
+			Object o = j1.get(name);
+			if (o != null && !(o instanceof Serializable)) {
+				log.info("bad data, name=" + name, new Exception());
+				j1.remove(name);
 			}
 		});
 
 		return json_obj;
 	}
 
+	@Comment(text = "转换为json", demo = ".json('a', 'b', 'c')")
+	public JSON json(String... names) {
+
+		if (X.isEmpty(names)) {
+			return json();
+		}
+
+		JSON json_obj = JSON.create();
+
+		for (String name : names) {
+			json_obj.put(name, this.get(name));
+		}
+
+		return json_obj;
+	}
+
 	/**
-	 * @Deprecated replace by json()
+	 * replace by json()
 	 * 
 	 * @return
 	 */
+	@Deprecated
 	public final JSON getJSON() {
 		return json();
 	}
@@ -755,6 +927,35 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		}
 	}
 
+	public void load(BSONObject d) {
+		for (String name : d.keySet()) {
+			Object o = d.get(name);
+			this.set(name, o);
+		}
+	}
+
+	public void load(Document d, String[] ss) {
+		if (ss == null || ss.length == 0 || X.isIn("*", ss)) {
+			load(d);
+		} else {
+			for (String name : ss) {
+				Object o = d.get(name);
+				this.set(name, o);
+			}
+		}
+	}
+
+	public void load(BSONObject d, String[] ss) {
+		if (ss == null || ss.length == 0 || X.isIn("*", ss)) {
+			load(d);
+		} else {
+			for (String name : ss) {
+				Object o = d.get(name);
+				this.set(name, o);
+			}
+		}
+	}
+
 	/**
 	 * Load data by default, get all fields and set in map.<br>
 	 * it will be invoked when load data from RDBS DB <br>
@@ -770,33 +971,16 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 		for (int i = 1; i <= cols; i++) {
 			try {
 				Object o = r.getObject(i);
-				if (o instanceof Date) {
-					Date d = ((Date) o);
-					o = d.getTime();
-				} else if (o instanceof oracle.sql.TIMESTAMP) {
-					o = ((oracle.sql.TIMESTAMP) o).toString();
-//					} else if (o instanceof Blob) {
-//						Blob b = (Blob) o;
-//						o = b.getBytes(0, (int) b.length());
-//					} else if (o instanceof Clob) {
-//						Clob b = (Clob) o;
-//						StringBuilder sb = new StringBuilder();
-//						Reader re = b.getCharacterStream();
-//						try {
-//							char[] buffer = new char[(int) b.length()];
-//							int length = 0;
-//							while ((length = re.read(buffer)) != -1) {
-//								sb.append(buffer, 0, length);
-//							}
-//						} finally {
-//							X.close(re);
-//						}
-//						o = sb.toString();
+				if (o != null) {
+					if (o instanceof Date) {
+						Date d = ((Date) o);
+						o = d.getTime();
+					} else if (o.getClass().getName().equals("oracle.sql.TIMESTAMP")) {
+						o = o.toString();
+					}
 				}
 
 				String name = m.getColumnName(i);
-
-//					log.debug("name=" + name + ", o=" + (o == null ? null : o.getClass()));
 
 				this.set(name, o);
 			} catch (Exception e) {
@@ -810,14 +994,58 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			Object v0 = get(name);
 			Object v1 = v.value(name);
 			if (!X.isSame(v0, v1)) {
-				if (log.isDebugEnabled())
-					log.debug("name=" + name + ", v0=" + v0 + "/" + (v0 == null ? "null" : v0.getClass()) + ", v1=" + v1
-							+ "/" + (v1 == null ? "null" : v1.getClass()));
 				return false;
 			}
 		}
-
 		return true;
+	}
+
+	public boolean contains(JSON v) {
+		for (Map.Entry<String, Object> e : v.entrySet()) {
+			Object v0 = get(e.getKey());
+			Object v1 = e.getValue();
+			if (!X.isSame(v0, v1)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * clean same value from V
+	 * 
+	 * @param v values
+	 * @return True if removed
+	 */
+	public boolean clean(V v) {
+
+		boolean removed = false;
+		for (String name : v.names()) {
+			Object v0 = get(name);
+			Object v1 = v.value(name);
+			if (X.isSame(v0, v1)) {
+				v.remove(name);
+				removed = true;
+			}
+		}
+		return removed;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public boolean clean(JSON v) {
+
+		boolean removed = false;
+		for (Map.Entry<String, Object> e : v.entrySet().toArray(new Map.Entry[v.size()])) {
+			Object v0 = get(e.getKey());
+			Object v1 = e.getValue();
+			if (X.isSame(v0, v1)) {
+				v.remove(e.getKey());
+				removed = true;
+			}
+		}
+		return removed;
+
 	}
 
 	@Override
@@ -918,6 +1146,26 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			f.set(that, val);
 			if (link != null) {
 				link.set(that, val);
+			}
+		}
+	}
+
+	public void filter(V v) {
+		for (String name : this.keySet()) {
+			Object v1 = this.get(name);
+			Object v2 = v.value(name);
+			if (X.isIn2(v2, v1, V.ignore)) {
+				v.remove(name);
+			}
+		}
+	}
+
+	public void filter(JSON jo) {
+		for (String name : this.keySet()) {
+			Object v1 = this.get(name);
+			Object v2 = jo.get(name);
+			if (X.isSame2(v1, v2)) {
+				jo.remove(name);
 			}
 		}
 	}

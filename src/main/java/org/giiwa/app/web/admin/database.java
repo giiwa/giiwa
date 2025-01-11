@@ -58,29 +58,29 @@ public class database extends Controller {
 	@Override
 	public void onGet() {
 
-//		int f = this.getInt("f");
-//		if (f == 1) {
+		this.show("/admin/database.index.html");
+
+	}
+
+	@Path(login = true, path = "tablelist", access = "access.config.admin")
+	public void tablelist() {
+
 		List<JSON> l2 = Schema.load(lang);
 
-		if (l2 == null) {
-			this.set(X.MESSAGE, lang.get("gi.loading"));
-		} else {
-			this.set("list", l2);
-		}
-//		}
+		this.set("list", l2);
 
-		this.show("/admin/database.index.html");
+		this.show("/admin/database.tablelist.html");
 
 	}
 
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
 	public void delete() {
 
 		String table = this.getString("table");
-		new Task() {
+		Task t = new Task() {
 
 			/**
 			 * 
@@ -99,17 +99,21 @@ public class database extends Controller {
 					if (X.isEmpty(s))
 						continue;
 
-					int n = Helper.delete(s, W.create());
-					GLog.oplog.warn(database.class, "delete", "table=" + s + ", n=" + n, login, database.this.ip());
+					int n = Helper.primary.delete(s, W.create());
+					GLog.oplog.warn(database.this, "delete", "table=" + s + ", n=" + n);
 				}
 			}
 
-		}.schedule(0);
-
-		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
+		};
+		if (!Task.isScheduled(t.getName())) {
+			t.schedule(0);
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
+		} else {
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("in.delete")));
+		}
 	}
 
-	@Path(path = "drop", login = true, access = "access.config.admin")
+	@Path(path = "drop", login = true, access = "access.config.admin", oplog = true)
 	public void drop() {
 
 		String t = Config.getConf().getString("drop.table");
@@ -121,7 +125,7 @@ public class database extends Controller {
 
 		String table = this.getString("table");
 
-		new Task() {
+		Task t1 = new Task() {
 
 			/**
 			 * 
@@ -136,10 +140,10 @@ public class database extends Controller {
 						continue;
 					}
 
-					Helper.drop(s);
-					GLog.oplog.warn(database.class, "drop", "table=" + table, login, database.this.ip());
+					Helper.primary.drop(s);
+					GLog.oplog.warn(database.this, "drop", "table=" + table);
 				}
-				
+
 				Schema.clean();
 
 			}
@@ -149,12 +153,60 @@ public class database extends Controller {
 				return "db.drop." + table;
 			}
 
-		}.schedule(0);
+		};
+		if (!Task.isScheduled(t1.getName())) {
+			t1.schedule(0);
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
+		} else {
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("in.delete")));
+		}
 
-		this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("delete.success")));
 	}
 
-	@Path(path = "er", login = true, access = "access.config.admin")
+	@Path(path = "repair", login = true, access = "access.config.admin", oplog = true)
+	public void repair() {
+
+		String table = this.getString("table");
+
+		Task t1 = new Task() {
+
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void onExecute() {
+				String[] ss = X.split(table, "[,;]");
+				for (String s : ss) {
+					if (X.isEmpty(s)) {
+						continue;
+					}
+
+					Helper.primary.repair(table);
+					GLog.oplog.warn(database.this, "repair", "table=" + table);
+				}
+
+				Schema.clean();
+
+			}
+
+			@Override
+			public String getName() {
+				return "db.repair." + table;
+			}
+
+		};
+		if (!Task.isScheduled(t1.getName())) {
+			t1.schedule(0);
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("repair.success")));
+		} else {
+			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("in.repair")));
+		}
+
+	}
+
+	@Path(path = "er", login = true, access = "access.config.admin", oplog = true)
 	public void er() {
 
 		// GLog.applog.info(backup.class, "create", "method=" + method, login,
@@ -235,7 +287,7 @@ public class database extends Controller {
 				String table = Helper.getTable(c);
 				if (!X.isEmpty(table) && !l2.containsKey(table)) {
 					JSON j = JSON.create().append("name", c.getName()).append("table", table).append("size",
-							Helper.count(table, W.create()));
+							Helper.primary.count(table, W.create()));
 					l2.put(table, j);
 				}
 			} catch (Exception e) {
@@ -251,11 +303,11 @@ public class database extends Controller {
 	@Path(path = "status", login = true, access = "access.config.admin")
 	public void _status() {
 
-		JSON j1 = Helper.status();
+		JSON j1 = Helper.primary.status();
 
 		this.print(j1.toPrettyString());
 
-		j1 = Helper.dbstats();
+		j1 = Helper.primary.stats(null);
 
 		this.print(j1.toPrettyString());
 

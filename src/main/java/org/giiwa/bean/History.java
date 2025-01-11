@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.bean;
 
 import org.apache.commons.logging.Log;
@@ -26,19 +40,22 @@ public final class History extends Bean {
 
 	public static final BeanDAO<Long, History> dao = BeanDAO.create(History.class);
 
-	@Column(memo = "唯一序号, revision")
+	@Column(memo = "主键", unique = true)
 	long id;
 
-	@Column(name = "_table", memo = "数据表")
+	@Column(name = "_table", memo = "数据表", size = 100)
 	String table;
 
-	@Column(memo = "数据ID")
+	@Column(memo = "数据ID", size = 50)
 	String dataid;
 
 	@Column(memo = "用户ID")
 	long uid;
 
-	@Column(name = "data", memo = "数据", value = "json")
+	@Column(memo = "IP地址", size = 50)
+	String ip;
+
+	@Column(name = "data", memo = "数据", value = "json", size = 2048)
 	String data_obj;
 
 	transient User uid_obj;
@@ -51,6 +68,10 @@ public final class History extends Bean {
 	}
 
 	public static boolean create(Bean p, V v, long uid) {
+		return create(p, v, uid, null);
+	}
+
+	public static boolean create(Bean p, V v, long uid, String ip) {
 		/**
 		 * diff each data in V
 		 */
@@ -88,9 +109,39 @@ public final class History extends Bean {
 				}
 			}
 			if (sb.length() > 0) {
-				_create(V.create("_table", table).append("dataid", dataid).append("data", sb.toString()).append("uid",
-						uid));
+				_create(V.create("_table", table).append("dataid", dataid).append("data", sb.toString())
+						.append("uid", uid).append("ip", ip));
 			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+
+		return true;
+	}
+
+	public static boolean create(Bean p, long uid, String ip) {
+		/**
+		 * diff each data in V
+		 */
+		if (p == null) {
+			return false;
+		}
+
+		try {
+			String table = Helper.getTable(p.getClass());
+			if (X.isEmpty(table)) {
+				return false;
+			}
+
+			Object dataid = p.get(X.ID);
+			if (dataid == null) {
+				return false;
+			}
+
+			dataid = dataid.toString();
+
+			_create(V.create("_table", table).append("dataid", dataid).append("data", p.json().toString())
+					.append("uid", uid).append("ip", ip));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}

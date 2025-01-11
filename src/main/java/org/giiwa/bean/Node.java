@@ -21,10 +21,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Stat.SIZE;
 import org.giiwa.bean.m._CPU;
 import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._Net;
@@ -68,6 +68,7 @@ import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Language;
 import org.giiwa.web.Controller.NameValue;
+import org.giiwa.web.GiiwaServlet;
 import org.giiwa.web.Module;
 import org.giiwa.web.RequestHelper;
 import org.hyperic.sigar.CpuPerc;
@@ -95,15 +96,15 @@ public final class Node extends Bean {
 
 	public static final long LOST = 20 * 1000;
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size = 50)
 	public String id;
 
 	public String pid;
 
-	@Column(memo = "IP地址")
+	@Column(memo = "IP地址", size = 50)
 	public String ip;
 
-	@Column(memo = "标签")
+	@Column(memo = "标签", size = 100)
 	public String label;
 
 	@Column(memo = "节点URL")
@@ -118,14 +119,32 @@ public final class Node extends Bean {
 	@Column(memo = "运行的任务数")
 	public int localrunning;
 
+	@Column(memo = "延迟的任务数")
+	public int localdelay;
+
+	@Column(memo = "总请求数")
+	public long totalrequest;
+
+	@Column(memo = "在线请求数")
+	public int online;
+
+	@Column(memo = "TPS")
+	public int tps;
+
 	@Column(memo = "开机时间")
 	public long uptime;
 
-	@Column(memo = "本地时间戳", value = "yyyy-MM-dd HH:mm:ss")
+	@Column(memo = "本地时间戳", value = "yyyy-MM-dd HH:mm:ss", size = 50)
 	public String timestamp;
 
 	@Column(memo = "内核数")
 	public int cores; // cpu cores
+
+	@Column(memo = "内核数")
+	public int computingpower; // cpu cores
+
+	@Column(memo = "CPU主频")
+	public double ghz;
 
 	@Column(name = "_usage")
 	public int usage; // cpu usage
@@ -139,7 +158,7 @@ public final class Node extends Bean {
 	@Column(memo = "内存", value = "字节")
 	public long mem;
 
-	@Column(memo = "版本号")
+	@Column(memo = "版本号", size = 50)
 	public String giiwa;
 
 	@Column(memo = "应用列表")
@@ -164,6 +183,7 @@ public final class Node extends Bean {
 
 	public String color = "green";
 
+	@Column(memo = "最后检查时间")
 	public long lastcheck;
 
 	public String getModules() {
@@ -230,9 +250,12 @@ public final class Node extends Bean {
 			v.append("localthreads", Task.activeThread());
 			v.append("localrunning", Task.tasksInRunning());
 			v.append("localpending", Task.tasksInQueue());
+			v.append("localdelay", Task.tasksDelay());
 			v.append("timestamp", lang.format(System.currentTimeMillis(), "HH:mm:ss") + "<br>"
 					+ lang.format(System.currentTimeMillis(), "yyyy-MM-dd"));
 			v.append("lastcheck", System.currentTimeMillis());
+			v.append("online", GiiwaServlet.online());
+			v.append("tps", GiiwaServlet.tps());
 
 //				NetStat ns = Host.getNetStat();
 //				if (ns != null) {
@@ -242,21 +265,27 @@ public final class Node extends Bean {
 //
 			// v.append("lasttime", System.currentTimeMillis());
 
-			CpuPerc[] cc = Host.getCpuPerc();
-			double user = 0;
-			double sys = 0;
-			for (CpuPerc c : cc) {
-				/**
-				 * user += c1.sys; <br/>
-				 * user += c1.user;<br/>
-				 * wait += c1.wait;<br/>
-				 * nice += c1.nice;<br/>
-				 * idle += c1.idle;<br/>
-				 */
-				user += c.getUser();
-				sys += c.getSys();
+			try {
+				CpuPerc[] cc = Host.getCpuPerc();
+				double user = 0;
+				double sys = 0;
+				for (CpuPerc c : cc) {
+					/**
+					 * user += c1.sys; <br/>
+					 * user += c1.user;<br/>
+					 * wait += c1.wait;<br/>
+					 * nice += c1.nice;<br/>
+					 * idle += c1.idle;<br/>
+					 */
+					user += c.getUser();
+					sys += c.getSys();
+				}
+				v.append("_usage", (int) ((user + sys) * 100 / cc.length));
+			} catch (Throwable e) {
+//				ignore
+				// log.error(e.getMessage(), e);
+
 			}
-			v.append("_usage", (int) ((user + sys) * 100 / cc.length));
 
 			if (dao.exists(id)) {
 				if (force) {
@@ -295,7 +324,8 @@ public final class Node extends Bean {
 			ff[13] = e.getLong("tcp_established");
 			ff[14] = e.getLong("tcp_closewait");
 
-			Stat.snapshot(time, "node.load", W.create().and("dataid", id), V.create().append("dataid", id), ff);
+			Stat.snapshot(time, "node.load", SIZE.min, W.create().and("dataid", id), V.create().append("dataid", id),
+					ff);
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -306,10 +336,11 @@ public final class Node extends Bean {
 
 		try {
 
-			v.append("uptime", Controller.UPTIME).append("ip", Host.getLocalip());
-
+			v.append("cores", Task.cores);
+			v.append("computingpower", Task.computingpower);
+			v.append("ghz", Task.ghz);
+			v.append("giiwa", Module.load("default").getVersion() + "." + Module.load("default").getBuild());
 			v.append("pid", Shell.pid());
-
 			List<org.giiwa.web.Module> actives = new ArrayList<org.giiwa.web.Module>();
 			org.giiwa.web.Module m = org.giiwa.web.Module.home;
 			while (m != null) {
@@ -325,6 +356,11 @@ public final class Node extends Bean {
 				return e1.getName() + ":" + e1.getVersion() + ":" + e1.getBuild();
 			}));
 
+			v.append("uptime", Controller.UPTIME);
+			v.append("_usage", (int) (_CPU.usage()));
+
+			v.append("ip", Host.getLocalip());
+
 			String dockerid = Host.getDockerID();
 			if (!X.isEmpty(dockerid)) {
 				v.append("mac", dockerid);
@@ -332,20 +368,14 @@ public final class Node extends Bean {
 				v.append("mac", Host.getMAC());
 			}
 
-			OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-
-			v.append("cores", os.getAvailableProcessors());
-
-			v.append("giiwa", Module.load("default").getVersion() + "." + Module.load("default").getBuild());
 			v.append("os", Host.getOS().getName());
 			v.append("mem", Host.getMem().getTotal());
 
 //			v.append("url", FileServer.URL.replace("0.0.0.0", Host.getLocalip()));
 
-			v.append("_usage", (int) (_CPU.usage()));
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+		} catch (Throwable e) {
+			// ignore
+//			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -538,6 +568,7 @@ public final class Node extends Bean {
 
 		JSON body = req.json().append("__node", id);
 
+		head.put("X-Real-IP", req.ip());
 		j1.append("head", head);
 		j1.append("body", body);
 
@@ -558,7 +589,7 @@ public final class Node extends Bean {
 		}
 
 		OutputStream out = resp.getOutputStream();
-		byte[] bb = r1.getBytes("out");
+		byte[] bb = Base64.getDecoder().decode(r1.getString("out"));
 		if (bb != null) {
 			out.write(bb);
 		}
@@ -608,7 +639,7 @@ public final class Node extends Bean {
 				JSON r2 = JSON.create();
 				r2.put("status", resp1.status);
 				r2.put("head", resp1.head);
-				r2.put("out", resp1.out.toByteArray());
+				r2.put("out", new String(Base64.getEncoder().encode(resp1.out.toByteArray())));
 
 				Request r3 = Request.create().put(r2);
 

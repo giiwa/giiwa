@@ -95,8 +95,16 @@ public final class Session implements Serializable {
 //		log.debug("new session", new Exception());
 
 		Session o = (Session) Cache.get("session/" + sid);
+		if (o != null) {
+			long expired = Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+			if (expired < 0) {
+				expired = 7 * 24 * X.AHOUR;
+			}
+			Cache.touch("session/" + sid, expired);
+		}
 
 		if (o == null || (Global.getInt("session.baseip", 0) == 1 && !X.isSame(ip, o.get("ip")))) {
+
 			o = new Session();
 
 			/**
@@ -241,28 +249,36 @@ public final class Session implements Serializable {
 		}
 	}
 
-	@Table(name = "gi_sid")
+	@Table(name = "gi_sid", memo = "GI-登录信息")
 	public static class SID extends Bean {
 
 		private static final long serialVersionUID = 1L;
 
-		public static final BeanDAO<String, SID> dao = BeanDAO.create(SID.class);
+		public static final BeanDAO<String, SID> dao = BeanDAO.create(SID.class, time -> {
+			// return cleanup query
+			return W.create().and("created", System.currentTimeMillis() - X.ADAY * 31, W.OP.lte);
+		});
 
+		@Column(memo = "主键", size = 50)
 		String id;
 
-		@Column(memo = "会话ID")
+		@Column(memo = "会话ID", size = 50)
 		String sid;
 
 		@Column(memo = "用户ID")
 		long uid;
 
-		@Column(memo = "IP")
+		@Column(memo = "IP", size = 50)
 		String ip;
 
-		@Column(memo = "browser")
+		@Column(memo = "browser", size = 1000)
 		String browser;
 
 		public static void update(String sid, long uid, String ip, String browser) {
+			if (sid == null) {
+				return;
+			}
+
 			try {
 				V v = V.create("uid", uid).append("sid", sid).append("ip", ip).append("browser", browser);
 				if (dao.exists(sid)) {

@@ -1,0 +1,63 @@
+<a class='more hint hint--bottom' data-hint="$lang.get('portlet.more.hint')" href='javascript:;' onclick="giiwa.popup('/portlet/net/more?__node=$!__node&id=$!id&name=$!name')"><i class='icon-menu'></i></a>
+
+<div id='net_$!requestid'></div>
+
+<script>
+$(function(){
+	var t = Highcharts.chart('net_$!requestid', {
+	    chart: {
+	        type: 'line'
+	    },
+	    title: {
+	        text: "$!name1 - $!{inet}(B/s)"
+	    },
+	    xAxis: {
+	    		type: 'datetime'
+	    },
+	    yAxis: {
+	    	max: $max,
+	    	min: 0,
+    		title: {
+	            text: ''
+	        }
+	    },
+	    tooltip: {
+	        headerFormat: '',
+	        pointFormat: '<b>{series.name}: {point.hint}B/s</b><br>{point.x:%H:%M}'
+	    },
+		plotOptions : {
+	        series: {
+	        		turboThreshold: 0
+	        	}
+		},	    
+	    credits: {
+	        enabled: false
+	    },
+	    series: [
+	    				{name: "$lang.get('net.rxbytes.speed')", color:'#0dad76', data: [#foreach($c in $list) {x:$lang.time($c.created,'m'), y:$c.rxbytes, hint:"$!lang.size($c.rxbytes)"},#end]},
+	    				{name: "$lang.get('net.txbytes.speed')", color:'#0a5ea0', data: [#foreach($c in $list) {x:$lang.time($c.created,'m'), y:$c.txbytes, hint:"$!lang.size($c.txbytes)"},#end]}
+	    			], 
+	});
+	
+	function reload() {
+		if($('#net_$!requestid').length > 0) {
+			$.post('/portlet/net/data?__node=$!__node', {id:"$!id", name:"$!name"}, function(d){
+				if(d.state == 200) {
+					var series=t.series; 
+			        while(series.length > 0){
+			          	series[0].remove(false); 
+			       	}
+			       	t.addSeries(d.data[0]);
+			       	t.addSeries(d.data[1]);
+			       	t.redraw();			
+				}
+		    })
+			giiwa.call(reload, 60000);
+		}
+	}
+	
+	giiwa.call(reload, 60000);
+	
+})
+</script>
+

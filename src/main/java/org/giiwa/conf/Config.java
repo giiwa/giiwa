@@ -20,20 +20,29 @@ import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.PropertyConfigurator;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
+import org.giiwa.web.Controller;
 
 /**
  * The Class Config is whole configuration of system, usually is a copy of
  * "giiwa.properties"
  */
 public final class Config {
+
+	private static Log log = LogFactory.getLog(Config.class);
 
 	/** The conf. */
 	private static PropertiesConfiguration conf;
@@ -60,14 +69,19 @@ public final class Config {
 			PropertyConfigurator.configureAndWatch(confFile.getParent() + File.separator + "log4j.properties",
 					X.AMINUTE);
 		} else {
-			Properties prop = new Properties();
-			prop.setProperty("log4j.rootLogger", "error, stdout");
-			prop.setProperty("log4j.appender.stdout", "org.apache.log4j.ConsoleAppender");
-			prop.setProperty("log4j.appender.stdout.layout", "org.apache.log4j.PatternLayout");
-			prop.setProperty("log4j.appender.stdout.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
-			prop.setProperty("log4j.logger.org.giiwa", "debug");
+			File f1 = new File(Controller.GIIWA_HOME + "/log4j.properties");
+			if (f1.exists()) {
+				PropertyConfigurator.configureAndWatch(f1.getAbsolutePath(), X.AMINUTE);
+			} else {
+				Properties prop = new Properties();
+				prop.setProperty("log4j.rootLogger", "error, stdout");
+				prop.setProperty("log4j.appender.stdout", "org.apache.log4j.ConsoleAppender");
+				prop.setProperty("log4j.appender.stdout.layout", "org.apache.log4j.PatternLayout");
+				prop.setProperty("log4j.appender.stdout.layout.ConversionPattern", "%p [%t] [%d] - %m - [%l]%n");
+				prop.setProperty("log4j.logger.org.giiwa", "debug");
 
-			PropertyConfigurator.configure(prop);
+				PropertyConfigurator.configure(prop);
+			}
 		}
 
 	}
@@ -79,9 +93,18 @@ public final class Config {
 	 */
 	public static void init(File file) {
 
+		System.out.println("init [" + (file == null ? null : file.getAbsolutePath()) + "]");
+
 		Reader re = null;
 		try {
+
 			confFile = file;
+			if (confFile != null) {
+				Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+				perms.add(PosixFilePermission.OWNER_READ);
+				perms.add(PosixFilePermission.OWNER_WRITE);
+				Files.setPosixFilePermissions(Paths.get(confFile.getAbsolutePath()), perms);
+			}
 
 			initLog();
 
@@ -102,9 +125,7 @@ public final class Config {
 				} else {
 					conf.append(c1);
 				}
-			}
-
-			if (conf == null) {
+			} else if (conf == null) {
 				conf = new PropertiesConfiguration();
 			}
 
@@ -279,15 +300,14 @@ public final class Config {
 	 * @return the config
 	 */
 	public static Configuration getConf() {
-		if (conf == null) {
-			conf = new PropertiesConfiguration();
-		}
+		// possible null, let's throw exception
 		return conf;
 	}
 
 	/**
 	 * set the configuration back to the file.
 	 */
+	@Deprecated
 	public static void save() {
 
 		if (conf != null && confFile != null && !Helper.isConfigured()) {
@@ -315,18 +335,34 @@ public final class Config {
 					c1.setProperty("node.id", id);
 				}
 
+				// backup old
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+				File back = new File(confFile.getCanonicalFile() + "." + sdf.format(System.currentTimeMillis()));
+				confFile.renameTo(back);
+
 				Writer out = new FileWriter(confFile);
 				c1.getLayout().save(c1, out);
 				out.close();
 
+				Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+				perms.add(PosixFilePermission.OWNER_READ);
+				perms.add(PosixFilePermission.OWNER_WRITE);
+				Files.setPosixFilePermissions(Paths.get(confFile.getAbsolutePath()), perms);
+
+				log.warn("write giiwa.properties by, conf=" + confFile.getAbsolutePath(), new Exception());
+
 //				c1.save(confFile);
 			} catch (Exception e) {
 				e.printStackTrace();
+				log.error("write giiwa.properties error! ", e);
 			}
 		}
 	}
 
-	public static void save2() {
+	/**
+	 * rename the old properties, and save the new
+	 */
+	public synchronized static void save2() {
 
 		conf.setProperty("home", null);
 
@@ -349,7 +385,13 @@ public final class Config {
 			if (X.isEmpty(id)) {
 				id = UID.uuid();
 				c1.setProperty("node.id", id);
+				conf.setProperty("node.id", id);
 			}
+
+			// backup old
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+			File back = new File(confFile.getCanonicalFile() + "." + sdf.format(System.currentTimeMillis()));
+			confFile.renameTo(back);
 
 			Writer out = new FileWriter(confFile);
 			c1.getLayout().save(c1, out);

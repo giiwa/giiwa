@@ -1,0 +1,24 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/unit?__node=$!__node'>$lang.get('a.unit')</a>
+	<a href='/admin/unit/edit?__node=$!__node&id=$id' class='selected'>$lang.get('a.edit')</a>
+</div>
+
+<form action='/admin/unit/edit?__node=$!__node'  method='post' class='form' >
+	<input type='hidden' name="id" value="$id"/>
+	<div><label><h3>$lang.get('unit.no')(<r>*</r>):</h3><input type='text' name='no' value="$!no" required/></label></div>
+	<div><label><h3>$lang.get('unit.name')(<r>*</r>):</h3><input type='text' name='name' value="$!name" required/></label></div>
+	<div><label><h3>$lang.get('unit.memo'):</h3><input type='text' name='memo' value="$!memo"/></label></div>
+	<div><label><h3>$lang.get('unit.parent'):</h3>
+		<select name='parent'>
+			<option value='0'></option>
+			#foreach($p in $units)
+			<option value="$p.id" #if($parent==$p.id) selected #end>$!{p.no}/$!{p.name}</option>
+			#end
+		</select>
+	</label></div>
+
+	<div class='btns'><button class='btn btn-success' type='submit'>$lang.get('btn.save')</button></div>
+</form>

@@ -30,4 +30,30 @@ public class CacheTest {
 		}
 	}
 
+	@Test
+	public void testNow() {
+		Global.setConfig("group", "demo");
+		Cache.init("redis://g09:6379", "", "");
+
+		String s = Cache.get("a");
+		System.out.println(s);
+
+		Cache.set("a", "Sssss", 10000);
+		s = Cache.get("a");
+//		Cache.remove("a");
+
+//		Cache.remove("aaa");
+
+		System.out.println(s);
+
+		System.out.println(Cache.now());
+
+		if (Cache.trylock("aaa")) {
+//			Object o = Cache.get("aaa");
+			System.out.println("true");
+		} else {
+			System.out.println("false");
+		}
+	}
+
 }

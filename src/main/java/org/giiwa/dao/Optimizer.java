@@ -1,11 +1,27 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.dao;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.commons.logging.Log;
@@ -18,20 +34,21 @@ import org.giiwa.task.Task;
 
 public final class Optimizer {
 
+
 	public static final long MIN = 1000;
 
 	private static Log log = LogFactory.getLog(Optimizer.class);
 
-	private HashSet<String> exists = new HashSet<String>();
+	private HashMap<String, HashMap<String, Object>> exists = new HashMap<String, HashMap<String, Object>>();
 
 	private Queue<Object[]> queue = new ArrayBlockingQueue<Object[]>(20);
 
-	private DBHelper def = null;
+	private DBHelper helper = null;
 
-	public static Optimizer inst = new Optimizer(Helper.primary);
+//	public static Optimizer inst = new Optimizer(Helper.primary);
 
-	public Optimizer(DBHelper db) {
-		def = db;
+	public Optimizer(DBHelper helper) {
+		this.helper = helper;
 	}
 
 	public boolean check(String table, W q) throws SQLException {
@@ -55,22 +72,19 @@ public final class Optimizer {
 				}
 				String id = UID.id(table, sb.toString());
 
-				if (!exists.contains(id)) {
-					_init(table);
+				if (!_exists(table, id, sb.toString())) {
 
-					if (!exists.contains(id)) {
-						StringBuilder sb1 = new StringBuilder();
-						for (String s1 : e.keySet()) {
-							if (sb1.length() > 0) {
-								sb1.append(" and ");
-							}
-							sb1.append(s1).append("=").append(e.get(s1));
+					StringBuilder sb1 = new StringBuilder();
+					for (String s1 : e.keySet()) {
+						if (sb1.length() > 0) {
+							sb1.append(" and ");
 						}
-						if (Global.getInt("db.optimizer", 1) == 0) {
-							throw new SQLException("optimizing required: " + sb1.toString());
-						} else {
-							optimize(table, q);
-						}
+						sb1.append(s1).append("=").append(e.get(s1));
+					}
+					if (Global.getInt("db.optimizer", 1) == 0) {
+						throw new SQLException("optimizing required: " + sb1.toString());
+					} else {
+						query(table, q);
 					}
 				}
 			}
@@ -81,6 +95,11 @@ public final class Optimizer {
 	}
 
 	public void query(final String table, final W q) {
+
+		if (!table.startsWith("gi_") && Global.getInt("db.optimizer", 1) == 0) {
+//			log.warn("optimize rquried for, table=" + table + ", q=" + q);
+			return;
+		}
 
 		if (q != null && !q.isEmpty()) {
 
@@ -104,37 +123,31 @@ public final class Optimizer {
 							sb.append(s).append(":").append(e.get(s));
 						}
 
-//						if (log.isDebugEnabled()) {
-//							log.debug("optimizer.query, table=" + table + ", sb=" + sb);
-//						}
-
 						String id = UID.id(table, sb.toString());
-						if (!exists.contains(id)) {
-							_init(table);
+						if (!_exists(table, id, sb.toString())) {
 
-							if (!exists.contains(id)) {
-								if (queue.size() < 20) {
-									exists.add(id);
-									queue.add(new Object[] { table, e });
+							if (queue.size() < 20) {
 
-									if (log.isWarnEnabled()) {
-										log.warn("optimizer.query, table=" + table + ", query.size=" + queue.size());
-									}
-
-									checker.schedule(0);
-								} else if (log.isDebugEnabled()) {
-									log.debug("optimizer, table=" + table + ", drop the [" + q + "], size="
-											+ queue.size());
+								HashMap<String, Object> m = exists.get(table);
+								if (m == null) {
+									return;
 								}
-							} else if (log.isDebugEnabled()) {
-								log.debug("optimizer, table=" + table + ", exists, q=" + q);
+
+								m.put(id, sb.toString());
+
+								queue.add(new Object[] { table, e });
+
+								if (log.isWarnEnabled()) {
+									log.warn("optimizer.query, table=" + table + ", query.size=" + queue.size());
+								}
+
+								checker.schedule(0);
+							} else if (log.isWarnEnabled()) {
+								log.warn("optimizer, too many pending, table=" + table + ", drop the [" + q
+										+ "], pending=" + queue.size());
 							}
-						} else if (log.isDebugEnabled()) {
-							log.debug("optimizer, table=" + table + ", exists, q=" + q);
 						}
 					});
-				} else if (log.isDebugEnabled()) {
-					log.debug("optimizer, table=" + table + ", sortkey is null, q=" + q);
 				}
 			} catch (Throwable e) {
 				// ignore
@@ -154,55 +167,133 @@ public final class Optimizer {
 
 	}
 
+	private static Set<String> _ignore = new HashSet<String>();
+
 	public void optimize(String table, W q) {
 
-		List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
-		if (l1 != null) {
-			l1.forEach(e -> {
-				StringBuilder sb = new StringBuilder();
-				for (String s : e.keySet()) {
+		synchronized (_ignore) {
+			String id = UID.id(table, q);
+			if (_ignore.contains(id)) {
+				return;
+			}
+			_ignore.add(id);
+		}
 
-					if (X.isIn(s, "_id")) {
-						return;
-					}
+		Task.schedule(t -> {
+			List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
+			if (l1 != null) {
+				l1.forEach(e -> {
+					StringBuilder sb = new StringBuilder();
+					for (String s : e.keySet()) {
 
-					if (X.isIn(s, "id") && e.size() > 1) {
-						return;
-					}
-
-					if (sb.length() > 0)
-						sb.append(",");
-					sb.append(s).append(":").append(e.get(s));
-				}
-				String id = UID.id(table, sb.toString());
-
-				if (!exists.contains(id)) {
-					_init(table);
-
-					if (!exists.contains(id)) {
-						if (queue.size() < 20) {
-							exists.add(id);
-
-							log.warn("create index [" + table + "], e=" + e);
-							Helper.createIndex(table, e, false);
-
-						} else {
-							log.warn("optimizer, table=" + table + ", drop the [" + q + "]");
+						if (X.isIn(s, "_id")) {
+							return;
 						}
+
+						if (X.isIn(s, "id") && e.size() > 1) {
+							return;
+						}
+
+						if (sb.length() > 0)
+							sb.append(",");
+						sb.append(s).append(":").append(e.get(s));
+					}
+					String id = UID.id(table, sb.toString());
+
+					if (!_exists(table, id, sb.toString())) {
+
+						HashMap<String, Object> m = exists.get(table);
+						if (m == null) {
+							// should be bug
+							return;
+						}
+						if (m.size() >= 64) {
+							String err = "the [" + table + "] index[" + m.size()
+									+ "] exceed the max[64], required for [" + sb.toString() + "]";
+							GLog.applog.warn(Optimizer.class, "index", err);
+//							throw new RuntimeException(err);
+						}
+
+						m.put(id, sb.toString());
+
+						log.warn("create index [" + table + "], e=" + e);
+						helper.createIndex(table, e, false);
+
 					} else if (log.isDebugEnabled()) {
 						log.debug("optimizer, table=" + table + ", sortkey exists, q=" + q);
 					}
-				}
-			});
+
+				});
+			}
+
+		});
+
+	}
+
+	private boolean _exists(String table, String id, String keys) {
+
+		HashMap<String, Object> m = null;
+
+		m = exists.get(table);
+		if (m == null) {
+			_init(table);
+			m = exists.get(table);
 		}
+
+		if (m == null) {
+			log.warn("got index failed, table=" + table);
+			return false;
+		}
+
+		if (m.containsKey(id)) {
+			return true;
+		}
+
+		synchronized (m) {
+			// load again, possible optimized by other node
+			if (System.currentTimeMillis() - (long) m.get("_inited") > X.AMINUTE) {
+				_init(table);
+			}
+
+			log.warn("table=" + table + ", m=" + m + ", id=" + id + ", keys=" + keys);
+
+			for (Object o : m.values()) {
+
+				if (o instanceof String) {
+					String s = (String) o;
+					if (s.startsWith(keys)) {
+						m.put(id, keys);
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	private void _init(String table) {
 
-		List<Map<String, Object>> l1 = def.getIndexes(table);
+		if (helper == null) {
+			log.error("table=" + table, new Exception("helper is null"));
+			return;
+		}
 
+		List<Map<String, Object>> l1 = helper.getIndexes(table);
+
+		HashMap<String, Object> m = null;
+		synchronized (exists) {
+			m = exists.get(table);
+			if (m == null) {
+				m = new HashMap<String, Object>();
+				m.put("_inited", System.currentTimeMillis());
+				exists.put(table, m);
+			}
+		}
+
+//		log.info("table=" + table + ", indexes=" + l1);
 		if (l1 != null && !l1.isEmpty()) {
 			for (Map<String, Object> d : l1) {
 				Map<String, Object> keys = (Map<String, Object>) d.get("key");
@@ -214,17 +305,13 @@ public final class Optimizer {
 						sb.append(s).append(":").append(X.toInt(keys.get(s)));
 					}
 
-					// GLog.applog.info("db", "get", "db.index, table=" + table + ", get.index=" +
-					// sb.toString(), null,
-					// null);
-
 					if (log.isDebugEnabled()) {
 						log.debug("db.index, table=" + table + ", get.index=" + sb.toString());
 					}
 
 					String id = UID.id(table, sb.toString());
-					exists.add(id);
-
+					m.put(id, sb.toString());
+					m.put("_inited", System.currentTimeMillis());
 				}
 			}
 		}
@@ -266,9 +353,9 @@ public final class Optimizer {
 
 						if (Global.getInt("db.optimizer", 1) == 1) {
 
-							log.warn("optimizer, table=" + table + ", create.index=" + keys.toString()
-									+ ", queue.size=" + queue.size());
-							Helper.createIndex(table, keys, false);
+							log.warn("optimizer, table=" + table + ", create.index=" + keys.toString() + ", queue.size="
+									+ queue.size());
+							helper.createIndex(table, keys, false);
 						} else {
 
 							if (log.isWarnEnabled()) {

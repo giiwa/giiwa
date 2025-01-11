@@ -1,7 +1,22 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.net.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,15 +32,18 @@ import org.apache.commons.net.ftp.FTPClientConfig;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.giiwa.bean.Temp;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
-public class FTP {
+@Comment(text = "FTP工具")
+public class FTP implements Closeable{
 
 	private static Log log = LogFactory.getLog(FTP.class);
 
 	private FTPClient client;
 
+	@Comment(hide = true)
 	public FTPClient getClient() {
 		return client;
 	}
@@ -36,7 +54,8 @@ public class FTP {
 	 * @param timeout 毫秒
 	 * @return
 	 */
-	public FTP timeout(int timeout) {
+	@Comment(text = "设置超时")
+	public FTP timeout(@Comment(text = "timeout") int timeout) {
 		client.setDataTimeout(timeout);
 		client.setConnectTimeout(timeout);
 		return this;
@@ -49,7 +68,8 @@ public class FTP {
 	 * @return
 	 * @throws SocketException
 	 */
-	public FTP buffer(int size) throws SocketException {
+	@Comment(text = "设置buffer")
+	public FTP buffer(@Comment(text = "size") int size) throws SocketException {
 
 		client.setBufferSize(size);
 		client.setReceiveBufferSize(size);
@@ -60,6 +80,7 @@ public class FTP {
 	/**
 	 * 关闭链接
 	 */
+	@Comment(hide = true)
 	public void close() {
 		if (client != null) {
 			try {
@@ -79,7 +100,9 @@ public class FTP {
 	 * @return
 	 * @throws IOException
 	 */
-	public boolean put(String remote, InputStream in) throws IOException {
+	@Comment(text = "上传文件")
+	public boolean put(@Comment(text = "filename") String remote, @Comment(text = "in") InputStream in)
+			throws IOException {
 		return client.appendFile(remote, in);
 	}
 
@@ -90,7 +113,8 @@ public class FTP {
 	 * @return 临时文件
 	 * @throws IOException
 	 */
-	public Temp get(String remote) throws IOException {
+	@Comment(text = "下载文件")
+	public Temp get(@Comment(text = "filename") String remote) throws IOException {
 		return get(new File(remote));
 	}
 
@@ -101,7 +125,8 @@ public class FTP {
 	 * @return 临时文件
 	 * @throws IOException
 	 */
-	public Temp get(File remote) throws IOException {
+	@Comment(text = "下载文件")
+	public Temp get(@Comment(text = "filename") File remote) throws IOException {
 
 		Temp t = Temp.create(remote.getName());
 
@@ -124,7 +149,8 @@ public class FTP {
 	 * @return 文件数组
 	 * @throws IOException
 	 */
-	public File[] list(String path) throws IOException {
+	@Comment(text = "列表目录")
+	public File[] list(@Comment(text = "path") String path) throws IOException {
 
 		if (log.isDebugEnabled())
 			log.debug("list path=" + path);
@@ -253,11 +279,13 @@ public class FTP {
 	 * @return
 	 * @throws IOException
 	 */
-	public FTP open(String url) throws IOException {
+	@Comment(text = "链接服务器, ftp://[host:port]/[path]?username=xxx&passwd=xxx")
+	public FTP open(@Comment(text = "url") String url) throws IOException {
 		return open(url, null);
 	}
 
-	public FTP open(String url, String charset) throws IOException {
+	@Comment(text = "链接服务器, ftp://[host:port]/[path]?username=xxx&passwd=xxx")
+	public FTP open(@Comment(text = "url") String url, @Comment(text = "charset") String charset) throws IOException {
 		return open(Url.create(url), charset);
 	}
 
@@ -268,7 +296,8 @@ public class FTP {
 	 * @return
 	 * @throws IOException
 	 */
-	public FTP open(Url url, String charset) throws IOException {
+	@Comment(text = "链接服务器, ftp://[host:port]/[path]?username=xxx&passwd=xxx")
+	public FTP open(@Comment(text = "url") Url url, @Comment(text = "charset") String charset) throws IOException {
 
 		close();
 
@@ -332,11 +361,13 @@ public class FTP {
 	 * @param path 文件路径
 	 * @throws IOException
 	 */
-	public void mkdirs(String path) throws IOException {
+	@Comment(text = "新建目录")
+	public void mkdirs(@Comment(text = "path") String path) throws IOException {
 		client.mkd(path);
 	}
 
-	public void rm(String filename) throws IOException {
+	@Comment(text = "删除文件")
+	public void rm(@Comment(text = "filename") String filename) throws IOException {
 		client.deleteFile(filename);
 	}
 
@@ -347,7 +378,9 @@ public class FTP {
 	 * @param filename2 目标文件
 	 * @throws IOException
 	 */
-	public void mv(String filename1, String filename2) throws IOException {
+	@Comment(text = "移动文件")
+	public void mv(@Comment(text = "filename1") String filename1, @Comment(text = "filename2") String filename2)
+			throws IOException {
 		if (log.isDebugEnabled())
 			log.debug("move file, " + filename1 + "=>" + filename2);
 
@@ -361,7 +394,9 @@ public class FTP {
 	 * @param filename2 目标文件
 	 * @throws IOException
 	 */
-	public void cp(String filename1, String filename2) throws IOException {
+	@Comment(text = "复制文件")
+	public void cp(@Comment(text = "filename1") String filename1, @Comment(text = "filename2") String filename2)
+			throws IOException {
 
 		if (log.isDebugEnabled())
 			log.debug("copy file, " + filename1 + "=>" + filename2);

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.app.web.admin;
 
 import java.util.ArrayList;
@@ -48,7 +62,7 @@ public class profile extends Controller {
 		register(-1, name, m);
 	}
 
-	@Path(path = "(.*)", login = true)
+	@Path(path = "(.*)", login = true, oplog = true)
 	public void get1(String name) {
 
 		Class<? extends profile> c = settings.get(name);
@@ -71,9 +85,10 @@ public class profile extends Controller {
 
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "get", e.getMessage(), e, login, this.ip());
+				GLog.oplog.error(this, path, e.getMessage(), e);
 
-				this.show("/admin/profile.html");
+				this.error(e);
+//				this.show("/admin/profile.html");
 			}
 		}
 	}
@@ -83,7 +98,7 @@ public class profile extends Controller {
 	 *
 	 * @param name the name
 	 */
-	@Path(path = "set/(.*)", login = true)
+	@Path(path = "set/(.*)", login = true, oplog = true)
 	final public void set(String name) {
 
 		// this.query.path("/admin/profile/get/" + name);
@@ -106,7 +121,7 @@ public class profile extends Controller {
 				// s.show("/admin/profile.html");
 			} catch (Exception e) {
 				log.error(name, e);
-				GLog.oplog.error(setting.class, "set", e.getMessage(), e, login, this.ip());
+				GLog.oplog.error(this, "set", e.getMessage(), e);
 
 				this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, e.getMessage()));
 			}

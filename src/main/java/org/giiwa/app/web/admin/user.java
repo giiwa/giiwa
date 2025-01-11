@@ -26,6 +26,7 @@ import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
+import org.giiwa.dao.UID;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.noti.Email;
 import org.giiwa.task.Task;
@@ -50,7 +51,7 @@ public class user extends Controller {
 	/**
 	 * Adds the.
 	 */
-	@Path(path = "create", login = true, access = "access.config.admin")
+	@Path(path = "create", login = true, access = "access.config.admin", oplog = true)
 	public void create() {
 		if (method.isPost()) {
 
@@ -58,92 +59,157 @@ public class user extends Controller {
 			final String name = this.getString("name").trim().toLowerCase();
 			try {
 
-				/**
-				 * create the user
-				 */
-				if (User.dao.exists(W.create("name", name))) {
-					/**
-					 * exists, create failded
-					 */
-					this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.exists")));
+				int number = this.getInt("number", 1);
+				if (number > 1) {
+
+					Task.schedule(t -> {
+						int n = 0;
+						try {
+							for (int i = 0; n < number; i++) {
+
+								String name1 = name + "_" + i;
+
+								/**
+								 * create the user
+								 */
+								if (!User.dao.exists(W.create("name", name1))) {
+
+									V v = V.create("name", name1).copy(jo).append("locked", 0);
+									v.remove("role");
+									v.append("createdip", this.ip()).append("createdua", this.browser())
+											.force("createdby", login.getId());
+									v.append("title", this.get("title"));
+									v.append("company", this.get("company"));
+									v.append("phone", this.get("phone"));
+									v.append("email", this.get("email"));
+									v.force("unitid", this.getLong("unitid"));
+									v.append("password", this.getHtml("password"));
+									v.force("limitip", this.getInt("limitip"));
+									v.force("disklimitsize", this.getLong("disklimitsize"));
+
+									long id = User.create(name, v);
+
+									n++;
+
+									/**
+									 * set the role
+									 */
+									String[] roles = this.getStrings("role");
+									if (log.isDebugEnabled())
+										log.debug("roles=" + Helper.toString(roles));
+
+									if (roles != null) {
+										User u = User.dao.load(id);
+										List<Long> list = new ArrayList<Long>();
+										for (String s : roles) {
+											list.add(X.toLong(s));
+										}
+										u.setRoles(list);
+									}
+								}
+							}
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+							GLog.securitylog.error(user.class, "create", e.getMessage(), e, login, this.ip());
+						}
+					});
+
+					GLog.securitylog.warn(user.class, "create", this.json().toString(), login, this.ip());
+					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
 					return;
 
 				} else {
-
-					V v = V.create("name", name).copy(jo).set("locked", 0);
-					v.remove("role");
-					v.append("createdip", this.ip()).append("createdua", this.browser()).append("createdby",
-							login.getId());
-					v.append("title", this.get("title"));
-					v.append("company", this.get("company"));
-					v.append("phone", this.get("phone"));
-					v.append("email", this.get("email"));
-					v.append("password", this.getHtml("password"));
-
-					long id = User.create(name, v);
-
 					/**
-					 * set the role
+					 * create the user
 					 */
-					String[] roles = this.getStrings("role");
-					if (log.isDebugEnabled())
-						log.debug("roles=" + Helper.toString(roles));
+					if (User.dao.exists(W.create("name", name))) {
+						/**
+						 * exists, create failded
+						 */
+						this.send(JSON.create().append(X.STATE, 201).append(X.MESSAGE, lang.get("user.name.exists")));
+						return;
 
-					if (roles != null) {
-						User u = User.dao.load(id);
-						List<Long> list = new ArrayList<Long>();
-						for (String s : roles) {
-							list.add(X.toLong(s));
+					} else {
+
+						V v = V.create("name", name).copy(jo).append("locked", 0);
+						v.remove("role");
+						v.append("createdip", this.ip()).append("createdua", this.browser()).append("createdby",
+								login.getId());
+						v.append("title", this.get("title"));
+						v.append("company", this.get("company"));
+						v.append("phone", this.get("phone"));
+						v.append("email", this.get("email"));
+						v.force("unitid", this.getLong("unitid"));
+						v.append("password", this.getHtml("password"));
+						v.force("limitip", this.getInt("limitip"));
+						v.force("disklimitsize", this.getLong("disklimitsize"));
+
+						long id = User.create(name, v);
+
+						/**
+						 * set the role
+						 */
+						String[] roles = this.getStrings("role");
+						if (log.isDebugEnabled())
+							log.debug("roles=" + Helper.toString(roles));
+
+						if (roles != null) {
+							User u = User.dao.load(id);
+							List<Long> list = new ArrayList<Long>();
+							for (String s : roles) {
+								list.add(X.toLong(s));
+							}
+							u.setRoles(list);
 						}
-						u.setRoles(list);
-					}
 
-					/**
-					 * log
-					 */
-					GLog.securitylog.warn(user.class, "create", this.json().toString(), login, this.ip());
+						/**
+						 * log
+						 */
+						GLog.securitylog.warn(user.class, "create", this.json().toString(), login, this.ip());
 
-					if (Global.getInt("user.updated.noti", 1) == 1) {
-						final String email = this.getString("email");
-						final String passwd = this.getString("password");
+						if (Global.getInt("user.updated.noti", 1) == 1) {
+							final String email = this.getString("email");
+							final String passwd = this.getString("password");
 
-						if (!X.isEmpty(email)) {
+							if (!X.isEmpty(email)) {
 
-							Task.schedule(t -> {
+								Task.schedule(t -> {
 
-								if (!X.isEmpty(email)) {
+									if (!X.isEmpty(email)) {
 
-									File f = module.getFile("/admin/email.creation." + lang.getLocale() + ".template");
-									if (f != null) {
-										JSON j1 = JSON.create();
-										j1.put("email", email);
-										j1.put("account", name);
-										j1.put("passwd", passwd);
-										j1.put("lang", lang);
-										j1.put("global", Global.getInstance());
-										j1.put("local", Local.getInstance());
+										File f = module
+												.getFile("/admin/email.creation." + lang.getLocale() + ".template");
+										if (f != null) {
+											JSON j1 = JSON.create();
+											j1.put("email", email);
+											j1.put("account", name);
+											j1.put("passwd", passwd);
+											j1.put("lang", lang);
+											j1.put("global", Global.getInstance());
+											j1.put("local", Local.getInstance());
 
-										View v1 = View.getVelocity();
-										String body = v1.parse(f, j1);
-										if (body != null) {
-											try {
-												Email.send(lang.get("mail.creation.noti"), body, email);
-											} catch (Exception e) {
-												log.error(e.getMessage(), e);
-												GLog.applog.error(user.class, "create", e.getMessage(), e, login,
-														this.ip());
+											View v1 = View.getVelocity();
+											String body = v1.parse(f, j1);
+											if (body != null) {
+												try {
+													Email.send(lang.get("mail.creation.noti"), body, email);
+												} catch (Exception e) {
+													log.error(e.getMessage(), e);
+													GLog.applog.error(user.class, "create", e.getMessage(), e, login,
+															this.ip());
+												}
 											}
 										}
+
 									}
 
-								}
-
-							}, 10);
+								}, 10);
+							}
 						}
-					}
 
-					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
-					return;
+						this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
+						return;
+					}
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -156,10 +222,12 @@ public class user extends Controller {
 
 		}
 
+		this.set("password", UID.random(12).toLowerCase());
 		Beans<Role> bs = Role.load(0, 1000);
-		if (bs != null) {
-			this.set("roles", bs);
-		}
+		this.set("roles", bs);
+
+		Beans<Unit> l1 = Unit.dao.load(W.create().sort("no"), 0, 1024);
+		this.set("units", l1);
 
 		this.show("/admin/user.create.html");
 	}
@@ -167,7 +235,7 @@ public class user extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin", oplog = true)
 	public void delete() {
 
 		JSON jo = new JSON();
@@ -187,10 +255,30 @@ public class user extends Controller {
 
 	}
 
+	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true)
+	public void deleteall() {
+
+		String name = this.getString("name");
+		W q = W.create();
+		W list = W.create();
+
+		list.or("name", name, W.OP.like);
+		list.or("nickname", name, W.OP.like);
+		if (X.isNumber(name)) {
+			list.or("id", X.toLong(name));
+		}
+		q.and(list);
+		User.dao.delete(q);
+
+		GLog.securitylog.warn(user.class, "deleteall", this.json().toString(), login, this.ip());
+		this.set(X.MESSAGE, lang.get("delete.success")).send(200);
+
+	}
+
 	/**
 	 * Edits the user.
 	 */
-	@Path(path = "edit", login = true, access = "access.config.admin")
+	@Path(path = "edit", login = true, access = "access.config.admin", oplog = true)
 	public void edit() {
 		long id = this.getLong("id");
 
@@ -212,7 +300,8 @@ public class user extends Controller {
 				JSON j = this.json();
 				V v = V.create().copy(j);
 				v.remove("role", X.ID);
-
+				v.force("limitip", this.getInt("limitip"));
+				v.force("unitid", this.getLong("unitid"));
 				v.force("failtimes", this.getInt("failtimes"));
 				if (!"on".equals(this.getString("locked"))) {
 					/**
@@ -235,7 +324,7 @@ public class user extends Controller {
 					}
 
 					u.setRoles(list);
-					v.set("roles", list);
+					v.append("roles", list);
 				}
 
 				Session.expired(id);
@@ -258,9 +347,10 @@ public class user extends Controller {
 				this.set("u", u);
 
 				Beans<Role> bs = Role.load(0, 1000);
-				if (bs != null) {
-					this.set("roles", bs);
-				}
+				this.set("roles", bs);
+
+				Beans<Unit> l1 = Unit.dao.load(W.create().sort("no"), 0, 1024);
+				this.set("units", l1);
 
 				this.set("id", id);
 				this.show("/admin/user.edit.html");
@@ -273,7 +363,7 @@ public class user extends Controller {
 		}
 	}
 
-	@Path(path = "unlock", login = true, access = "access.config.admin")
+	@Path(path = "unlock", login = true, access = "access.config.admin", oplog = true)
 	public void unlock() {
 		long id = this.getLong("id");
 
@@ -302,7 +392,7 @@ public class user extends Controller {
 	/**
 	 * Detail.
 	 */
-	@Path(path = "detail", login = true, access = "access.config.admin")
+	@Path(path = "detail", login = true, access = "access.config.admin", oplog = true)
 	public void detail() {
 		String id = this.getString("id");
 		if (id != null) {
@@ -366,7 +456,7 @@ public class user extends Controller {
 
 			list.or("name", name, W.OP.like);
 			list.or("nickname", name, W.OP.like);
-			if(X.isNumber(name)) {
+			if (X.isNumber(name)) {
 				list.or("id", X.toLong(name));
 			}
 			q.and(list);
@@ -377,8 +467,14 @@ public class user extends Controller {
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
-		Beans<User> bs = User.load(q.and(X.ID, 0, W.OP.gt).sort("name", 1), s, n);
-		bs.count();
+		q.and(X.ID, 0, W.OP.gt).sort("name", 1);
+
+		User.dao.optimize(q);
+
+		Beans<User> bs = User.load(q, s, n);
+		if (bs != null) {
+			bs.count();
+		}
 		this.pages(bs, s, n);
 
 		this.show("/admin/user.index.html");
@@ -431,5 +527,10 @@ public class user extends Controller {
 //
 //		return q;
 //	}
+
+	@Path(path = "random", login = true, access = "access.config.admin")
+	public void random() {
+		this.set("code", UID.random(12).toLowerCase()).send(200);
+	}
 
 }

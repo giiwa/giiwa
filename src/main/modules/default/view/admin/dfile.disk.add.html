@@ -2,15 +2,23 @@
 	<a href='javascript:;' class="selected">$lang.get('a.disk.add')</a>
 </div>
 
-<form action='/admin/dfile/disk/add?__node=$!__node'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;">
+<form action='/admin/dfile/disk/add?__node=$!__node'  method='post' class='form' enctype="multipart/form-data" style="margin-bottom: 0;margin-top: 10px;">
 
 	<div><label><h3>$lang.get('disk.node')(<r>*</r>):</h3>
-		<input type='text' name='url' value=""/>
+		<input type='text' name='url' value="" class="width-60"/>
 		<g>$lang.get('disk.node.hint')</g></label></div>
 	<div><label><h3>$lang.get('disk.path')(<r>*</r>):</h3><input type='text' name='s' value=""/><g>$lang.get('disk.path.hint')</g></label></div>
+		
+	<div style="margin-left: 20px">
+		<div><label><h3>$lang.get('disk.domain'):</h3><input type='text' name='domain' value=""/></label></div>
+		<div><label><h3>$lang.get('disk.username'):</h3><input type='text' name='username' value=""/></label></div>
+		<div><label><h3>$lang.get('disk.password'):</h3><input type='password' name='password' value=""/></label></div>
+	</div>
+	
 	<div><label><h3>$lang.get('disk.mount'):</h3><input type='text' name='mount' value=""/><g>$lang.get('disk.mount.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.quota'):</h3><input type='number' name='quota' value="-1"/><g>$lang.get('disk.quota.hint')</g></label></div>
 	<div><label><h3>$lang.get('disk.priority'):</h3><input type='number' name='priority' value="1" style="width: 40px"/><g>$lang.get('disk.priority.hint')</g></label></div>
-	<div><label><h3>$lang.get('disk.enabled'):</h3><input type='number' name='enabled' value="1" style="width: 40px"/><g>$lang.get('disk.enabled.hint')</g></label></div>
+	<div><label><h3>$lang.get('disk.enabled'):</h3><input type='checkbox' name='enabled' checked="checked" style="width: 40px"/><g>$lang.get('disk.enabled.hint')</g></label></div>
 <!-- 	<div><label><h3>$lang.get('disk.encode'):</h3><input type='number' name='encode' value="0"/><g>$lang.get('disk.encode.hint')</g></label></div>
 	<div><label><h3>$lang.get('disk.code'):</h3><input type='text' name='code' value=""/><g>$lang.get('disk.code.hint')</g></label></div>
  -->

@@ -46,7 +46,7 @@ public class mo extends Controller {
 		this.show("/admin/mo.index.html");
 	}
 
-	@Path(path = "kill", login = true, access = "access.config.admin")
+	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true)
 	public void kill() {
 
 		int id = this.getInt("id");
@@ -56,7 +56,7 @@ public class mo extends Controller {
 
 	}
 
-	@Path(path = "dump", login = true, access = "access.config.admin")
+	@Path(path = "dump", login = true, access = "access.config.admin", oplog = true)
 	public void dump() {
 
 		int id = this.getInt("id");

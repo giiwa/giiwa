@@ -20,12 +20,14 @@
 <table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th>$lang.get('node.url')</th>
-			<th>$lang.get('disk.path')</th>
-			<th>$lang.get('disk.mount')</th>
-			<th>$lang.get('disk.priority')</th>
+			<th style="width: 160px;">$lang.get('node.url')</th>
+			<th style="width: 160px;">$lang.get('disk.path')</th>
+			<th style="width: 160px;">$lang.get('disk.mount')</th>
+			<th style="width: 60px;">$lang.get('disk.priority')</th>
+			<th style="width: 120px;">$lang.get('disk.free')</th>
+			<th style="width: 120px;">$lang.get('disk.stat.rwkbps')</th>
 			<th>$lang.get('disk.state')</th>
-			<th></th>
+			<th style="min-width: 80px;"></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -35,11 +37,18 @@
 		<td><i class="icon-folder" style="color: #58b957;"></i>&nbsp;$f1.path</td>
 		<td>$f1.mount</td>
 		<td>$f1.priority</td>
+		<td>$lang.size($f1.free) / $lang.size($f1.total)</td>
+		<td class='a'>$lang.size($f1.stat_read_avg) / $lang.size($f1.stat_write_avg)
+			<a href='javascript:;' onclick="giiwa.popup('/admin/dfile/disk/stat?id=$f1.id')"><i class="icon-stats-dots"></i></a>
+		</td>
 		<td>
-			#if($f1.enabled>0)
+			#if($f1.state>0)
 			<i class='icon-radio-checked' style="color: green"></i>
 			#else
 			<i class='icon-radio-unchecked'></i>
+			#if($f1.enabled==1)
+			<p>$!f1._error</p>
+			#end
 			#end
 		</td>
 		<td class="a">
@@ -63,8 +72,8 @@
 <script>
 function _edit(id){
 	giiwa.popup('/admin/dfile/disk/edit?__node=$!__node&id=' + id, {
-		width: 500,
-		height: 340,
+		width: 600,
+		height: 540,
 		moveable: true,
 		max: false,
 		onsubmit: function(){
@@ -74,8 +83,8 @@ function _edit(id){
 }
 function _add(){
 	giiwa.popup('/admin/dfile/disk/add?__node=$!__node', {
-		width: 500,
-		height: 350,
+		width: 600,
+		height: 540,
 		moveable: true,
 		max: false,
 		onsubmit: function(){

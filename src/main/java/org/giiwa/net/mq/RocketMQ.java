@@ -14,6 +14,12 @@
 */
 package org.giiwa.net.mq;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,25 +27,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.DeliveryMode;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
+import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
+import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import org.apache.rocketmq.client.exception.MQClientException;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
 import org.giiwa.bean.GLog;
 import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 
@@ -48,7 +49,7 @@ class RocketMQ extends MQ {
 	private static Log log = LogFactory.getLog(RocketMQ.class);
 
 	private String group = X.EMPTY;
-	private Session session;
+	private String url;
 
 	/**
 	 * Creates the.
@@ -59,29 +60,17 @@ class RocketMQ extends MQ {
 
 		RocketMQ m = new RocketMQ();
 
-		String url = Global.getString("activemq.url", ActiveMQConnection.DEFAULT_BROKER_URL);
-		String user = Global.getString("activemq.user", ActiveMQConnection.DEFAULT_USER);
-		String password = Global.getString("activemq.passwd", ActiveMQConnection.DEFAULT_PASSWORD);
+		m.url = Global.getString("rocketmq.url", "localhost:9876");
 
 		m.group = Global.getString("site.group", "demo");
-		if (!m.group.endsWith(".")) {
-			m.group += ".";
-		}
 
 		try {
-			ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(user, password, url);
 
-			Connection connection = factory.createConnection();
-			connection.start();
-
-			m.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-			GLog.applog.info(org.giiwa.app.web.admin.mq.class, "startup", "connected ActiveMQ with [" + url + "]", null,
-					null);
+			GLog.applog.info("sys", "startup", "connected ActiveMQ with [" + m.url + "]", null, null);
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
-			GLog.applog.error("admin.mq", "startup", "failed ActiveMQ with [" + url + "]", e, null, null);
+			GLog.applog.error("admin.mq", "startup", "failed RocketMQ with [" + m.url + "]", e, null, null);
 		}
 
 		return m;
@@ -95,11 +84,12 @@ class RocketMQ extends MQ {
 	 * @author joe
 	 * 
 	 */
-	public class R implements MessageListener {
+	public class R implements MessageListenerConcurrently {
 
-		public String name;
+		long lastime;
+		String name;
 		IStub cb;
-		MessageConsumer consumer;
+		DefaultMQPushConsumer consumer;
 		TimeStamp t = TimeStamp.create();
 		int count = 0;
 
@@ -113,100 +103,117 @@ class RocketMQ extends MQ {
 		 */
 		public void close() {
 			if (consumer != null) {
-				try {
-					consumer.close();
-				} catch (JMSException e) {
-					log.error(e.getMessage(), e);
+				if (log.isDebugEnabled()) {
+					log.info("close [" + group + "/" + name + "]");
 				}
+
+				consumer.shutdown();
+				consumer = null;
 			}
 		}
 
-		private R(String name, IStub cb, Mode mode) throws JMSException {
+		private R(String name, IStub cb, Mode mode) throws Exception {
+
 			this.name = name;
 			this.cb = cb;
 
-			if (session != null) {
+			consumer = new DefaultMQPushConsumer((group + "_" + name).replaceAll("\\.", "_"));
 
-				Destination dest = null;
-				if (mode == Mode.QUEUE) {
-					dest = new ActiveMQQueue(group + name);
+			// 设置NameServer的地址
+			consumer.setNamesrvAddr(url);
+			consumer.setInstanceName(Local.label() + "/" + group + "/" + name + "/" + mode);
+//			consumer.setInstanceName(UID.random());
+
+			try {
+				// 订阅一个或者多个Topic，以及Tag来过滤需要消费的消息
+//				name = name + "_" + mode;
+				consumer.subscribe(name.replaceAll("\\.", "_"), "*");
+				if (Mode.BOTH.equals(mode) || Mode.TOPIC.equals(mode)) {
+					consumer.setMessageModel(MessageModel.BROADCASTING);
 				} else {
-					dest = new ActiveMQTopic(group + name);
+					consumer.setMessageModel(MessageModel.CLUSTERING);
 				}
+				consumer.registerMessageListener(this);
+				consumer.setPullTimeDelayMillsWhenException(0L);
 
-				consumer = session.createConsumer(dest);
-				consumer.setMessageListener(this);
+				// 启动消费者实例
+				consumer.start();
 
 				cached.add(new WeakReference<R>(this));
 
-			} else {
-				log.warn("MQ not init yet!");
-				throw new JMSException("MQ not init yet!");
+				log.info("binded [" + group + "/" + name + "]");
+			} catch (Exception e) {
+				log.warn(name + "/" + mode, e);
+				throw new Exception(e);
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * 
-		 * @see javax.jms.MessageListener.onMessage(javax.jms.Message)
-		 */
 		@Override
-		public void onMessage(Message m) {
+		public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
+
+			if (log.isDebugEnabled()) {
+				log.debug("got [" + msgs.size() + "] message");
+			}
+
+			onMessage(msgs);
+
+			// 标记该消息已经被成功消费
+			return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+		}
+
+		public void onMessage(List<MessageExt> msgs) {
+
 			try {
 
-				if (m instanceof BytesMessage) {
+				List<Request> l1 = new LinkedList<Request>();
+				for (MessageExt m : msgs) {
 
-					BytesMessage m1 = (BytesMessage) m;
+					count++;
 
-					long length = m1.getBodyLength();
-					int pos = 0;
+					Request r = new Request();
 
-					List<Request> l1 = new LinkedList<Request>();
-					while (pos < length) {
+					DataInputStream m1 = new DataInputStream(new ByteArrayInputStream(m.getBody()));
 
-						count++;
+					r.seq = m1.readLong();
+					r.ver = m1.readByte();
+					r.tt = m1.readLong();
+					r.type = m1.readInt();
+					r.priority = m1.readInt();
 
-						Request r = new Request();
-						r.seq = m1.readLong();
-						pos += Long.SIZE / Byte.SIZE;
-						r.ver = m1.readByte();
-						pos++;
-						r.tt = m1.readLong();
-						pos += Long.SIZE / Byte.SIZE;
-						int len = m1.readInt();
-						if (len > 0) {
-							byte[] bb = new byte[len];
-							m1.readBytes(bb);
-							r.from = new String(bb);
-						}
-						pos += Integer.SIZE / Byte.SIZE;
-						pos += len;
-
-						r.type = m1.readInt();
-						pos += Integer.SIZE / Byte.SIZE;
-						len = m1.readInt();
-						if (len > 0) {
-							r.data = new byte[len];
-							m1.readBytes(r.data);
-						}
-						pos += Integer.SIZE / Byte.SIZE;
-						pos += len;
-
-						l1.add(r);
-
-						if (count % 10000 == 0) {
-							log.debug("process the 10000 messages, cost " + t.reset() + "ms");
-						}
+					int len = m1.readInt();
+					if (len > 0) {
+//						log.info("len=" + len);
+						byte[] bb = new byte[len];
+						m1.read(bb);
+						r.from = new String(bb);
 					}
 
-					process(name, l1, cb);
+					len = m1.readInt();
+					if (len > 0) {
+//						log.info("len=" + len);
+						byte[] bb = new byte[len];
+						m1.read(bb);
+						r.cmd = new String(bb);
+					}
 
-					if (log.isDebugEnabled())
-						log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
+					len = m1.readInt();
+					if (len > 0) {
+//						log.info("len=" + len);
+						r.data = new byte[len];
+						m1.read(r.data);
+					}
 
-				} else {
-					log.error("unknown message=" + m);
+					l1.add(r);
+
+					if (count % 10000 == 0) {
+						log.info("process the 10000 messages, cost " + t.reset() + "ms");
+					}
 				}
+
+				process(name, l1, cb);
+
+//				if (log.isDebugEnabled())
+//					log.debug("got: " + l1.size() + " in one packet, name=" + name + ", cb=" + cb);
 
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -216,12 +223,6 @@ class RocketMQ extends MQ {
 
 	@Override
 	protected void _bind(String name, IStub stub, Mode mode) throws Exception {
-		if (session == null)
-			throw new JMSException("MQ not init yet");
-
-//		GLog.applog.info(org.giiwa.app.web.admin.mq.class, "bind",
-//				"[" + name + "], stub=" + stub.getClass().toString() + ", mode=" + mode, null, null);
-
 		new R(name, stub, mode);
 	}
 
@@ -230,11 +231,6 @@ class RocketMQ extends MQ {
 
 		// if (X.isEmpty(r.data))
 		// throw new Exception("message can not be empty");
-
-		if (session == null) {
-			throw new Exception("MQ not init yet");
-		}
-
 		/**
 		 * get the message producer by destination name
 		 */
@@ -254,10 +250,6 @@ class RocketMQ extends MQ {
 		// if (X.isEmpty(r.data))
 		// throw new Exception("message can not be empty");
 
-		if (session == null) {
-			throw new Exception("MQ not init yet");
-		}
-
 		/**
 		 * get the message producer by destination name
 		 */
@@ -271,39 +263,22 @@ class RocketMQ extends MQ {
 
 	}
 
-	private Sender getSender(String name, MQ.Mode type) throws JMSException {
+	private Sender getSender(String name, MQ.Mode type) throws Exception {
 
-		String name1 = name + ":" + type;
-		if (session == null) {
-			return null;
-		}
+//		name = name + "_" + type;
 
-		if (senders.containsKey(name1)) {
-			return senders.get(name1);
+		if (senders.containsKey(name)) {
+			return senders.get(name);
 		}
 
 		synchronized (senders) {
-			Destination dest = null;
-			if (MQ.Mode.QUEUE.equals(type)) {
-				dest = new ActiveMQQueue(group + name);
-			} else {
-				dest = new ActiveMQTopic(group + name);
-			}
 
-			MessageProducer p = session.createProducer(dest);
-
-			p.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-			// p.setTimeToLive(0);
-
-			Sender s = new Sender(name1, name, p);
-			senders.put(name1, s);
-//					s.schedule(0);
+			Sender s = new Sender(name);
+			senders.put(name, s);
 
 			return s;
 		}
-//		}
 
-//		return null;
 	}
 
 	/**
@@ -311,130 +286,86 @@ class RocketMQ extends MQ {
 	 */
 	private Map<String, Sender> senders = new HashMap<String, Sender>();
 
-	class Sender {
+	class Sender implements Closeable {
 
+		DefaultMQProducer producer;
 		long last = System.currentTimeMillis();
 		String name;
-		String to;
-		MessageProducer p;
-//		BytesMessage m = null;
-//		int len = 0;
-//		int priority = 1;
-//		long ttl = (int) X.AMINUTE;
-//		int persistent = DeliveryMode.NON_PERSISTENT;
 
-		public void send(Request r) throws JMSException {
+		public void send(Request r) throws Exception {
 
-			if (log.isDebugEnabled())
-				log.debug("sending, r=" + r);
+			if (log.isDebugEnabled()) {
+				log.debug("sending to [" + group + "/" + name + "], r=" + r);
+			}
 
-//			if (m == null) {
-//				m = session.createBytesMessage();
-//				len = 0;
-//			}
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			DataOutputStream m = new DataOutputStream(out);
 
-			BytesMessage m = session.createBytesMessage();
 			m.writeLong(r.seq);
-//			len += Long.SIZE / Byte.SIZE;
 			m.writeByte(r.ver);
-//			len ++;
 			m.writeLong(r.tt);
-//			len += Long.SIZE / Byte.SIZE;
+			m.writeInt(r.type);
+			m.writeInt(r.priority);
 
-//			len += Integer.SIZE / Byte.SIZE;
-			byte[] ff = r.from == null ? null : r.from.getBytes();
+			byte[] ff = (r.from == null) ? null : r.from.getBytes();
 			if (ff == null) {
 				m.writeInt(0);
 			} else {
 				m.writeInt(ff.length);
-				m.writeBytes(ff);
-//				len += ff.length;
+				m.write(ff);
 			}
 
-			m.writeInt(r.type);
-//			len += Integer.SIZE / Byte.SIZE;
+			ff = (r.cmd == null) ? null : r.cmd.getBytes();
+			if (ff == null) {
+				m.writeInt(0);
+			} else {
+				m.writeInt(ff.length);
+				m.write(ff);
+			}
 
-//			len += Integer.SIZE / Byte.SIZE;
 			if (r.data == null) {
 				m.writeInt(0);
 			} else {
 				m.writeInt(r.data.length);
-				m.writeBytes(r.data);
-//				len += r.data.length;
+				m.write(r.data);
 			}
 
-//			ttl = r.ttl;
-//			priority = r.priority;
-//			persistent = r.persistent;
+			m.close();
 
-//			if (m != null) {
-			p.send(m, r.persistent, r.priority, r.ttl);
-			// p.send(m);
+			Message msg = new Message(name.replaceAll("\\.", "_"), "*", out.toByteArray());
 
-			if (log.isDebugEnabled()) {
-				log.debug("Sending:" + group + name);
-			}
-//			} else if (last < System.currentTimeMillis() - X.AMINUTE) {
-//				senders.remove(name);
-//				p.close();
-//			}
-
+			producer.send(msg);
 		}
 
-		public Sender(String name, String to, MessageProducer p) {
+		public Sender(String name) throws MQClientException {
 			this.name = name;
-			this.to = to;
-			this.p = p;
+
+			producer = new DefaultMQProducer((group + "_" + name).replaceAll("\\.", "_"));
+			// 设置NameServer的地址
+			producer.setNamesrvAddr(url);
+			// 启动Producer实例
+			producer.start();
+			// 异步
+			// producer.setRetryTimesWhenSendAsyncFailed(0);
+
 		}
 
 		public String getName() {
 			return "sender." + name;
 		}
 
-//		@Override
-//		public void onExecute() {
-//			try {
-//				BytesMessage m = null;
-//				synchronized (p) {
-//					while (this.m == null) {
-//						if (last < System.currentTimeMillis() - X.AMINUTE) {
-//							break;
-//						}
-//
-//						p.wait(10000);
-//					}
-//					m = this.m;
-//					this.m = null;
-//					this.len = 0;
-//
-//					p.notify();
-//				}
-//
-//				if (m != null) {
-//					p.send(m, persistent, priority, ttl);
-//					// p.send(m);
-//
-//					if (log.isDebugEnabled()) {
-//						log.debug("Sending:" + group + name);
-//					}
-//				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
-//					senders.remove(name);
-//					p.close();
-//				}
-//			} catch (Exception e) {
-//				log.error(e.getMessage(), e);
-//			}
-//		}
+		@Override
+		public void close() throws IOException {
+			if (producer != null) {
+				try {
+					producer.shutdown();
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+				producer = null;
+			}
 
-//		@Override
-//		public void onFinish() {
-//			if (last < System.currentTimeMillis() - X.AMINUTE) {
-//				if (log.isDebugEnabled())
-//					log.debug("sender." + name + " is stopped.");
-//			} else {
-//				this.schedule(0);
-//			}
-//		}
+		}
 
 	}
 
@@ -459,21 +390,14 @@ class RocketMQ extends MQ {
 	}
 
 	@Override
-	protected void _stop() {
-		if (session != null) {
-			try {
-				session.close();
-			} catch (JMSException e) {
-				log.error(e.getMessage(), e);
-			}
-			session = null;
-		}
+	public void destroy(String name, Mode mode) throws Exception {
+		// TODO Auto-generated method stub
+
 	}
 
 	@Override
-	public void destroy(String name, Mode mode) throws Exception {
-		// TODO Auto-generated method stub
-		
+	protected void _stop() {
+
 	}
 
 }

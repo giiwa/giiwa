@@ -1,0 +1,10 @@
+<div><label><g>$lang.get('global.setting.notes')</g></label></div>
+<hr/>
+<div><label><h3>$lang.get('autodeploy.url'):</h3><input type='text' name='url' value="$!global.getString('autodeploy.url', '')"/><g>$lang.get('autodeploy.url.hint')</g></label></div>
+
+<div><label><g>$lang.get('local.setting.notes')</g></label></div>
+<hr/>
+<div><label><h3>$lang.get('autodeploy.enabled'):</h3><input type='checkbox' name='enabled' #if($local.getInt('autodeploy.enabled',0)==1) checked="checked" #end/><g>$lang.get('autodeploy.enabled.hint')</g></label></div>
+<div><label><h3>$lang.get('autodeploy.timerange'):</h3><input type='text' name='autodeploy.timerange' value="$!local.getString('autodeploy.timerange', '02:00-06:00')"/><g>$lang.get('autodeploy.timerange.hint')</g></label></div>
+<div><label><h3>$lang.get('autodeploy.interval'):</h3><input type='text' name='autodeploy.interval' value="$!local.getInt('autodeploy.interval', 60)"/><g>$lang.get('autodeploy.interval.hint')</g></label></div>
+<div><label><h3>$lang.get('autodeploy.modules'):</h3><input type='text' style='width:40%' name='modules' value="$!local.getString('autodeploy.modules', '')"/><g>$lang.get('autodeploy.modules.hint')</g></label></div>

@@ -33,6 +33,7 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.giiwa.app.web.DefaultListener;
 import org.giiwa.bean.Access;
+import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.License;
 import org.giiwa.bean.Menu;
@@ -171,6 +172,7 @@ public class Module implements Serializable {
 	public static boolean checkAndMerge() {
 
 		if (!new File(Controller.MODULE_HOME + "/default/WEB-INF/lib/").exists()) {
+			log.warn("[default/WEB-INF/lib] missed, cause can not merge!");
 			return false;
 		}
 
@@ -180,6 +182,7 @@ public class Module implements Serializable {
 		Set<String> jars = new HashSet<String>();
 		for (Module m : modules.values()) {
 			if (m.enabled) {
+				// check jar
 				File f = new File(m.path + "/WEB-INF/lib/");
 				if (f.exists()) {
 					String[] ss = f.list();
@@ -194,14 +197,16 @@ public class Module implements Serializable {
 			}
 		}
 
+		// remove unused jar
 		File f = new File(Controller.MODULE_HOME + "/WEB-INF/lib/");
 		File[] ff = f.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
 				if (f1.getName().endsWith(".jar") && !jars.contains(f1.getName())) {
 					try {
-						// TODO, should remove the unused jars in future.
+						// remove the unused jars
 						IOUtil.delete(f1);
+						log.warn("delete unused jar: " + f1.getName());
 						changed = true;
 					} catch (Exception e) {
 						log.error(e.getMessage(), e);
@@ -227,7 +232,6 @@ public class Module implements Serializable {
 		if (!u1.exists()) {
 			X.IO.mkdirs(u1);
 			// copy all
-
 			log.warn("checkAndUpgrade, copy WEB-INF/lib to " + u1.getAbsolutePath());
 
 			try {
@@ -235,10 +239,10 @@ public class Module implements Serializable {
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
-
 		}
 
 		{
+			// finding all jar in WEB/lib/
 			File lib = new File(Controller.MODULE_HOME + "/WEB-INF/lib/");
 			File[] ff = lib.listFiles();
 			if (ff != null) {
@@ -248,6 +252,7 @@ public class Module implements Serializable {
 					}
 				}
 			}
+
 		}
 
 		// upgrade
@@ -268,12 +273,14 @@ public class Module implements Serializable {
 
 							log.info("copy files to [modules]");
 							f1.renameTo(f2);
-							
+
 							f2.setReadable(false, false);
 							f2.setWritable(false, false);
 							f2.setExecutable(false, false);
 
-//						IOUtil.copyDir(f1, new File(Controller.MODULE_HOME));
+							f2.setReadable(true, true);
+							f2.setWritable(true, true);
+							f2.setExecutable(true, true);
 
 							new File(f2.getCanonicalPath() + "/ok").delete();
 
@@ -300,6 +307,8 @@ public class Module implements Serializable {
 				}
 			}
 		} // end of upgrade
+
+		_classes.clear();
 
 		return changed;
 	}
@@ -418,23 +427,32 @@ public class Module implements Serializable {
 			new File(root).renameTo(new File(dest));
 			new File(dest + "/ok").createNewFile();
 
-//			String filename = "/giiwa/module/" + e.getName();
-//			DFile f1 = Disk.seek(filename);
-//			f1.upload(e.getInputStream());
-//			Global.setConfig("module." + t.name + ".repo", "/f/d/" + f1.getId() + "/" + f1.getName());
+			String repo = Config.getConf().getString("module.repo", "no");
+			if (X.isIn(repo, "yes")) {
+				// copy the module
+				Disk.delete("/.modules/" + t.getName() + "/");
 
-			Global.setConfig("module." + t.name + ".repo", "/f/d/" + e.getId() + "/" + e.getName());
+				String filename = "/.modules/" + t.getName() + "/" + e.getName();
+
+				DFile f1 = Disk.seek(filename);
+				f1.upload(e.getInputStream());
+				Global.setConfig("module." + t.name + ".repo", "/f/d/" + f1.getId() + "/" + f1.getName());
+				String md5 = MD5.md5(f1.getInputStream());
+				Global.setConfig("module." + t.name + ".md5", md5);
+
+			}
 
 			return true;
 
 		} else {
+
+			log.warn("store the module in repo: multiple");
+
 			// multiple modules
 			boolean r = false;
 			File r1 = new File(root);
 			File[] ff = r1.listFiles();
 			if (ff != null) {
-
-//				DFile f2 = null;
 
 				for (File f1 : ff) {
 					// move f1 to upgrade
@@ -444,14 +462,19 @@ public class Module implements Serializable {
 							f1.renameTo(new File(Controller.MODULE_HOME + "/upgrade/" + name));
 							new File(Controller.MODULE_HOME + "/upgrade/" + name + "/ok").createNewFile();
 
-//							if (f2 == null) {
-//								String filename = "/giiwa/module/" + e.getName();
-//								f2 = Disk.seek(filename);
-//								f2.upload(e.getInputStream());
-//							}
-//							Global.setConfig("module." + name + ".repo", "/f/d/" + f2.getId() + "/" + f2.getName());
+							// copy the module
+							String repo = Config.getConf().getString("module.repo", "no");
+							if (X.isIn(repo, "yes")) {
+								Disk.delete("/.modules/" + name + "/");
 
-							Global.setConfig("module." + name + ".repo", "/f/d/" + e.getId() + "/" + e.getName());
+								String filename = "/.modules/" + name + "/" + e.getName();
+
+								DFile f2 = Disk.seek(filename);
+								f2.upload(e.getInputStream());
+								Global.setConfig("module." + name + ".repo", "/f/d/" + f2.getId() + "/" + f2.getName());
+								String md5 = MD5.md5(e.getInputStream());
+								Global.setConfig("module." + name + ".md5", md5);
+							}
 
 							r = true;
 						}
@@ -683,7 +706,7 @@ public class Module implements Serializable {
 	 * @return
 	 */
 	public boolean has(String name) {
-		String s1 = License.get(this.name, name);
+		String s1 = License.get1(this.name, name);
 		return !X.isEmpty(s1);
 	}
 
@@ -696,7 +719,7 @@ public class Module implements Serializable {
 	 */
 	public String get(String name, String defaultValue) {
 
-		String s1 = License.get(this.name, name);
+		String s1 = License.get1(this.name, name);
 		if (!X.isEmpty(s1)) {
 			return s1;
 		}
@@ -727,26 +750,56 @@ public class Module implements Serializable {
 	/**
 	 * merge all jars of the module to giiwa
 	 */
-	private boolean mergeJars() {
+	private boolean mergeJars(Map<String, String> merged) {
 
 		boolean changed = false;
 
+		// merge jar
 		File root = new File(path + "/WEB-INF/lib/");
-
 		if (root.exists()) {
+
 			File[] list = root.listFiles();
 			if (list != null) {
 				for (File f : list) {
-					if (f.getName().endsWith(".jar")) {
-						File f1 = new File(Controller.MODULE_HOME + "/WEB-INF/lib/" + f.getName());
+					String name = f.getName();
+					if (name.endsWith(".jar")) {
+						File f1 = new File(Controller.MODULE_HOME + "/WEB-INF/lib/" + name);
 						if (!f1.exists() || f1.length() != f.length() || !X.isSame(MD5.md5(f1), MD5.md5(f))) {
 							// copy to
 							try {
 								IOUtil.copy(f, f1);
+								log.warn("merged jar: " + f.getAbsolutePath() + " => " + f1.getAbsolutePath());
+								String original = merged.get(f1.getAbsolutePath());
+								if (original != null) {
+									// remove
+									log.warn("removed jar: " + f.getAbsolutePath() + " => " + f1.getAbsolutePath());
+									new File(original).delete();
+								}
+								merged.put(f1.getAbsolutePath(), f.getAbsolutePath());
 								changed = true;
 							} catch (Exception e) {
 								log.error(e.getMessage(), e);
 							}
+						}
+					}
+				}
+			}
+		}
+
+		// merge native
+		File f0 = new File(path + "/native/");
+		if (f0.exists()) {
+			File[] l1 = f0.listFiles();
+			if (l1 != null) {
+				for (File f1 : l1) {
+					File f2 = new File(Controller.MODULE_HOME + "/../lib/sigar/" + f1.getName());
+					if (!f2.exists() || f2.length() != f1.length() || !X.isSame(MD5.md5(f1), MD5.md5(f2))) {
+						try {
+							IOUtil.copy(f1, f2);
+							log.warn("merged native: " + f1.getAbsolutePath() + " => " + f2.getAbsolutePath());
+							changed = true;
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
 						}
 					}
 				}
@@ -1011,6 +1064,7 @@ public class Module implements Serializable {
 				Task.schedule(t -> {
 					System.exit(0);
 				}, 1000);
+				return;
 			}
 
 			// load modules
@@ -1041,7 +1095,7 @@ public class Module implements Serializable {
 								 * the module was disabled
 								 */
 								log.info("[" + f1.getName() + "] is disabled");
-								GLog.applog.info("syslog", "init", "[" + f1.getName() + "] is disabled", null, null);
+								GLog.applog.info("sys", "init", "[" + f1.getName() + "] is disabled", null, null);
 
 							} else if (modules.containsKey(m.id)) {
 								/**
@@ -1050,10 +1104,8 @@ public class Module implements Serializable {
 								log.error("the [id] duplicated, [" + m.name + ", " + modules.get(m.id).name
 										+ "], ignore the [" + m.name + "]");
 
-								GLog.applog.error(
-										"syslog", "init", "the [id] duplicated, [" + m.name + ", "
-												+ modules.get(m.id).name + "], ignore the [" + m.name + "]",
-										null, null);
+								GLog.applog.error("sys", "init", "the [id] duplicated, [" + m.name + ", "
+										+ modules.get(m.id).name + "], ignore the [" + m.name + "]", null, null);
 
 							} else if (!X.isSame(m.name, f1.getName())) {
 								/**
@@ -1061,7 +1113,7 @@ public class Module implements Serializable {
 								 */
 								log.error("the [name] is invlaid, folder=" + f1.getName() + ", module=" + m.name);
 
-								GLog.applog.error("syslog", "init",
+								GLog.applog.error("sys", "init",
 										"the [name] is invlaid, folder=" + f1.getName() + ", module=" + m.name, null,
 										null);
 
@@ -1091,12 +1143,14 @@ public class Module implements Serializable {
 			Menu.reset();
 			// log.debug("1 ...");
 
+			Map<String, String> merged = new HashMap<String, String>();
 			for (Module m : modules.values().toArray(new Module[modules.size()])) {
 				/**
 				 * loading the models
 				 */
-				if (m.mergeJars()) {
+				if (m.mergeJars(merged)) {
 					changed = true;
+					log.warn("merged module [" + m.name + "]");
 				}
 
 				// log.debug("2 ...");
@@ -1113,8 +1167,9 @@ public class Module implements Serializable {
 
 			}
 
-			// merge jars
+			// merge native and jars
 			if (checkAndMerge()) {
+				log.warn("merged.");
 				changed = true;
 			}
 
@@ -1161,6 +1216,9 @@ public class Module implements Serializable {
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+
+			GLog.applog.error("sys", "init", e.getMessage(), e);
+
 		} finally {
 			_classes.clear();
 		}
@@ -1733,8 +1791,9 @@ public class Module implements Serializable {
 		 */
 		File f = new File(path + "/i18n/" + locale + ".lang");
 
-		// log.debug("loading:" + f.getAbsolutePath() + ", path=" + path +
-		// ", locale:" + locale + ", lang:" + lang);
+		if (log.isInfoEnabled()) {
+			log.info("loading language:" + ", locale:" + locale + ", file=" + f.getAbsolutePath());
+		}
 
 		if (f.exists()) {
 			try {
@@ -1747,7 +1806,7 @@ public class Module implements Serializable {
 					while (line != null) {
 						if (!line.startsWith(".")) {
 							int i = line.indexOf("=");
-							if (i > 0) {
+							if (i > 1) {
 								String name = line.substring(0, i).trim();
 								String value = line.substring(i + 1).trim();
 								if ("@include".equals(name)) {
@@ -2017,7 +2076,7 @@ public class Module implements Serializable {
 	 * @param text     the text
 	 */
 	public void updateLang(String locale, String langname, String text) {
-		
+
 		File f = new File(path + "/i18n/" + locale + "/" + langname);
 		if (f.exists()) {
 			PrintStream out = null;
@@ -2035,7 +2094,7 @@ public class Module implements Serializable {
 				}
 			}
 		}
-		
+
 	}
 
 	/**
@@ -2073,7 +2132,7 @@ public class Module implements Serializable {
 			m.setStatus(error);
 
 		} else {
-			
+
 			try {
 				/**
 				 * possible the original has been moved to ..., <br/>
@@ -2091,7 +2150,7 @@ public class Module implements Serializable {
 				/**
 				 * loading the models
 				 */
-				m.mergeJars();
+				m.mergeJars(new HashMap<String, String>());
 
 				/**
 				 * initialize the life listener
@@ -2203,6 +2262,10 @@ public class Module implements Serializable {
 				d.setReadable(false, false);
 				d.setWritable(false, false);
 				d.setExecutable(false, false);
+
+				d.setReadable(true, true);
+				d.setWritable(true, true);
+				d.setExecutable(true, true);
 
 			} catch (IOException e) {
 				log.error(e.getMessage(), e);
@@ -2349,37 +2412,42 @@ public class Module implements Serializable {
 		return status;
 	}
 
-	/**
-	 * return the shortname of the class, cut the prefix by module package
-	 * 
-	 * @param model the subclass of model
-	 * @return the shortname of the subclass
-	 */
-	public static String shortName(Class<? extends Controller> model) {
-		if (model == null || home == null) {
-			return X.EMPTY;
-		}
-		return home._shortName(model);
-	}
+//	/**
+//	 * return the shortname of the class, cut the prefix by module package
+//	 * 
+//	 * @param model the subclass of model
+//	 * @return the shortname of the subclass
+//	 */
+//	public static String shortName(Class<? extends Controller> model) {
+//		if (model == null || home == null) {
+//			return X.EMPTY;
+//		}
+//		return home._shortName(model);
+//	}
 
-	private String _shortName(Class<? extends Controller> model) {
-		if (model == null || this.pack == null) {
-			return X.EMPTY;
-		}
+//	private String _shortName(Class<? extends Controller> model) {
+//		if (model == null || this.pack == null) {
+//			return X.EMPTY;
+//		}
+//
+//		String name = model.getName();
+//		if (name.startsWith(this.pack)) {
+//			return name.substring(this.pack.length() + 1);
+//		}
+//
+//		Module m1 = floor();
+//		if (m1 != null) {
+//			return m1._shortName(model);
+//		}
+//		return name;
+//	}
 
-		String name = model.getName();
-		if (name.startsWith(this.pack)) {
-			return name.substring(this.pack.length() + 1);
-		}
+	private static class Required implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 
-		Module m1 = floor();
-		if (m1 != null) {
-			return m1._shortName(model);
-		}
-		return name;
-	}
-
-	private static class Required {
 		String module;
 		String minversion;
 		String maxversion;
@@ -2434,5 +2502,30 @@ public class Module implements Serializable {
 			m._listener.onStop();
 		}
 	}
+
+	@SuppressWarnings("resource")
+	public boolean upgrade(DFile d) throws IOException {
+		File jar = new File(path + "/WEB-INF/lib/" + d.getName());
+		log.info("jar=" + jar.getAbsolutePath() + ", exists=" + jar.exists());
+
+		if (jar.exists()) {
+			// upgrade
+			jar.delete();
+			X.IO.copy(d.getInputStream(), new FileOutputStream(jar));
+			return true;
+		}
+		return false;
+	}
+
+	public static String encode(String passwd) {
+		return Base64.getEncoder().encodeToString(RSA.encode(passwd.getBytes(), pubkey));
+	}
+
+	public static String decode(String code) {
+		return new String(RSA.decode(Base64.getDecoder().decode(code), prikey));
+	}
+
+	private final static String prikey = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAI2ib0F1BnjPpjKKqKMGlHcuwb1DY+p3crIxf/PMEysNt7mAQqKhwcHZHzqkfpOJTotfErgFEXtG1iu2LDmxyA2zbGMEmLulNDMqocXTiOTKO3BsKdzl52RQVx7PdrAdVfSe0GmFV3TsLAslWAodR0RvhQKWW6oa/ehxd7o5/lz9AgMBAAECgYAKvvM//SKuPIWjOgqiFoK3KYYA18HB7VQiGZ1X9aN9Vb9wbz8fBbTPV1Yw5dVwri9BEHKOzFuk2x1ZbatHU/9rOeQ9QiWhXfEOheEa+GWazGZIcfnJLsqgK7WOXIsoLKvRzTGKc4N1Ns7Y+7RHZNSFQvq5+Hwomn52vYKkTZ3SwQJBAP8OYg7Ai2l8njvwsC5SkEfiQoLfq90P2Qa8iIk8qlFwHdeLtKQGkaeVUHBl8A/RLHBdYpi4Vz9sI7ZEiWS+mfECQQCOKJswbD/oHkDGalW8P3M2CydGCVjEr5OcXwy3/6ujXMMKto7Ue9cWLjnLafh++QPbhyHKWjXoINU5k1/GH4fNAkEAjiHMwR3JUsJwR0TMWTQHVRegKuBMHMedEGT1zUxyOSm6Z4hh5NoIRxQtHEWiLp5JHmDb9fEcJaq0h/jPe8W/cQJAVmqKxCnZw2G4oKT9Tz0G7UBkdGe0JYRR6AnDsopiLSFzkyycsMBDZMFe8q+NlqoLVUTVHqwt/tkOpTxYSRjbtQJBANx89oJJgJGZq3Iv2447guGU27fXmtqb9esNK/muAyVNy7kS07pLQXibrZ+vXcqIPQ/fPARlm4EqBbHKGiMc6aQ=";
+	private final static String pubkey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCNom9BdQZ4z6YyiqijBpR3LsG9Q2Pqd3KyMX/zzBMrDbe5gEKiocHB2R86pH6TiU6LXxK4BRF7RtYrtiw5scgNs2xjBJi7pTQzKqHF04jkyjtwbCnc5edkUFcez3awHVX0ntBphVd07CwLJVgKHUdEb4UClluqGv3ocXe6Of5c/QIDAQAB";
 
 }

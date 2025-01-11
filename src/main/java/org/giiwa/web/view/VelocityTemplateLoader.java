@@ -78,7 +78,7 @@ public class VelocityTemplateLoader extends ClasspathResourceLoader {
 
 				if (f == null || !((File) f).exists()) {
 					DFile f1 = Disk.seek(resource);
-					if (f1.exists()) {
+					if (f1 != null && f1.exists()) {
 						f = f1;
 					}
 				}

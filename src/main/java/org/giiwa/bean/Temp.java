@@ -24,6 +24,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -33,11 +35,14 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.task.Consumer;
 import org.giiwa.task.Task;
 import org.giiwa.web.Language;
 
@@ -48,6 +53,7 @@ import org.giiwa.web.Language;
  * @author joe
  *
  */
+@Comment(text = "临时文件")
 public final class Temp {
 
 	static Log log = LogFactory.getLog(Temp.class);
@@ -90,8 +96,14 @@ public final class Temp {
 	public String name = null;
 	private boolean memory = true;
 
+	@Comment()
 	public long size() {
-		return this.bb == null ? 0 : this.bb.length;
+		try {
+			return this.bb == null ? length() : this.bb.length;
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return 0;
 	}
 
 	private Temp() {
@@ -178,7 +190,8 @@ public final class Temp {
 	 * @param f
 	 * @throws Exception
 	 */
-	public void save(DFile f) throws Exception {
+	@Comment()
+	public void save(@Comment(text = "file") DFile f) throws Exception {
 		f.upload(this.getInputStream());
 	}
 
@@ -199,13 +212,15 @@ public final class Temp {
 	 * @return the filename
 	 * @throws IOException
 	 */
+	@Comment(text = "上传本地临时文件到文件仓库临时文件")
 	public DFile upload() throws IOException {
 		DFile f1 = get(id, name);
 		f1.upload(this.getInputStream());
 		return f1;
 	}
 
-	public DFile upload(byte[] bb) throws IOException {
+	@Comment(text = "上传字节到文件仓库临时文件")
+	public DFile upload(@Comment(text = "bytes") byte[] bb) throws IOException {
 		DFile f1 = get(id, name);
 		f1.upload(bb);
 		return f1;
@@ -221,6 +236,11 @@ public final class Temp {
 	 * @throws Exception
 	 */
 	public String saveas(String filename) throws Exception {
+
+		if (X.callBy("nashorn", "jython", "groovy")) {
+			throw new IOException("access deny!");
+		}
+
 		filename = X.getCanonicalPath(filename);
 		for (String s : new String[] { "/etc/", "/dev/", "/usr/sbin/", "/usr/bin/", "/sbin/", "/bin/" }) {
 			if (filename.startsWith(s)) {
@@ -235,20 +255,24 @@ public final class Temp {
 		return filename;
 	}
 
-	public DFile upload(InputStream in) throws IOException {
+	@Comment(text = "上传输入流到文件仓库临时文件")
+	public DFile upload(@Comment(text = "in") InputStream in) throws IOException {
 		DFile f1 = get(id, name);
 		f1.upload(in);
 		return f1;
 	}
 
+	@Comment(text = "复制输入流到本地临时文件")
 	public long copy(InputStream in) throws IOException {
 		return IOUtil.copy(in, this.getOutputStream());
 	}
 
+	@Comment(text = "获取压缩输出流")
 	public ZipOutputStream getZipOutputStream() throws Exception {
 		return new ZipOutputStream(this.getOutputStream());
 	}
 
+	@Comment(text = "获取压缩输出流")
 	public GZIPOutputStream getGZIPOutputStream() throws Exception {
 		return new GZIPOutputStream(this.getOutputStream());
 	}
@@ -256,10 +280,12 @@ public final class Temp {
 	private byte[] bb = null;
 	private boolean newdata = false;
 
+	@Comment(text = "获取输出Writer")
 	public Writer getWriter() throws IOException {
 		return new OutputStreamWriter(this.getOutputStream());
 	}
 
+	@Comment(text = "获取输出流")
 	public OutputStream getOutputStream() throws IOException {
 
 		if (memory) {
@@ -299,11 +325,15 @@ public final class Temp {
 
 			};
 		}
-		X.IO.mkdirs(this.getFile().getParentFile());
-		return new FileOutputStream(this.getFile());
+
+		File f1 = this.getFile();
+		X.IO.mkdirs(f1.getParentFile());
+		f1.createNewFile();
+		return new FileOutputStream(f1);
 
 	}
 
+	@Comment(text = "获取输入流")
 	public InputStream getInputStream() throws IOException {
 		if (memory) {
 			if (bb != null) {
@@ -341,6 +371,7 @@ public final class Temp {
 
 	}
 
+	@Comment(text = "要是当前文件或文件夹")
 	public Temp zip() throws Exception {
 
 		Temp t = Temp.create(name + ".zip");
@@ -396,6 +427,102 @@ public final class Temp {
 
 	}
 
+	public void zip(File f1, Consumer<String> func) throws Exception {
+
+		ZipOutputStream zip = this.getZipOutputStream();
+
+		zip(zip, f1, ".", func);
+
+		X.close(zip);
+	}
+
+	public void zip(ZipOutputStream out, File f, String relative, Consumer<String> func) throws Exception {
+
+		if (f.isFile()) {
+
+			ZipEntry e = new ZipEntry(f.getName());
+			out.putNextEntry(e);
+
+			InputStream in = new FileInputStream(f);
+
+			try {
+				if (func != null) {
+					func.accept(f.getName());
+				}
+
+				IOUtil.copy(in, out, false);
+			} finally {
+				X.close(in);
+				out.closeEntry();
+			}
+
+		} else if (f.isDirectory()) {
+
+			ZipEntry e = new ZipEntry(f.getName());
+			out.putNextEntry(e);
+			out.closeEntry();
+
+			try {
+
+				File[] ff = f.listFiles();
+				if (ff != null) {
+					for (File f2 : ff) {
+						zip(out, f2, relative + "/" + f.getName(), func);
+					}
+				}
+
+			} finally {
+				X.close(out);
+			}
+
+		}
+
+	}
+
+	public void zip(DFile f1, Consumer<String> func) throws Exception {
+
+		ZipOutputStream zip = this.getZipOutputStream();
+
+		_zip(zip, f1, ".", func);
+
+		X.close(zip);
+	}
+
+	private void _zip(ZipOutputStream out, DFile f, String relative, Consumer<String> func) throws Exception {
+
+		if (f.isFile()) {
+
+			ZipEntry e = new ZipEntry(relative + "/" + f.getName());
+			out.putNextEntry(e);
+			InputStream in = f.getInputStream();
+			try {
+				if (func != null) {
+					func.accept(f.getName());
+				}
+
+				IOUtil.copy(in, out, false);
+			} finally {
+				X.close(in);
+				out.closeEntry();
+			}
+
+		} else if (f.isDirectory()) {
+
+//			ZipEntry e = new ZipEntry(f.getName());
+//			out.putNextEntry(e);
+//			out.closeEntry();
+
+			DFile[] ff = f.listFiles();
+			if (ff != null) {
+				for (DFile f2 : ff) {
+					_zip(out, f2, relative + "/" + f.getName(), func);
+				}
+			}
+
+		}
+
+	}
+
 	private void _zip(ZipOutputStream out, File f, String path) throws Exception {
 		if (f.isFile()) {
 			InputStream in = null;
@@ -430,25 +557,15 @@ public final class Temp {
 
 	public File unzip() throws Exception {
 
-		File f1 = this.getFile();
+		Temp t2 = Temp.create(name);
 
-		String name = f1.getName();
-		int i = name.lastIndexOf(".");
-		if (i > 0) {
-			name = name.substring(0, i);
-		}
-		File f2 = new File(name);
-		i = 0;
-		while (f2.exists()) {
-			f2 = new File(name + "_" + (++i));
-		}
-
+		File f2 = t2.getFile();
 		X.IO.mkdirs(f2);
 
 		ZipInputStream in = null;
 
 		try {
-			in = new ZipInputStream(new FileInputStream(f1));
+			in = new ZipInputStream(new FileInputStream(this.getFile()));
 			ZipEntry e = in.getNextEntry();
 			while (e != null) {
 
@@ -496,9 +613,25 @@ public final class Temp {
 		return X.isSame(X.getCanonicalPath(f.getFilename()), X.getCanonicalPath(ROOT));
 	}
 
+	@Comment(text = "临时文件长度")
+	public long length() throws IOException {
+		return this.getFile().length();
+	}
+
+	@Comment(text = "获取文件名")
+	public String getName() {
+		return name;
+	}
+
 	transient File file;
 
+	@Comment(hide = true)
 	public File getFile() throws IOException {
+
+		if (X.callBy("nashorn", "jython", "groovy")) {
+			throw new IOException("access deny!");
+		}
+
 		if (file == null) {
 			// write bb to file
 			file = new File(path(id, name));
@@ -525,6 +658,7 @@ public final class Temp {
 		return file;
 	}
 
+	@Comment(text = "获取文件仓库临时文件")
 	public DFile getDFile() throws IOException {
 		return get(id, name);
 	}
@@ -567,20 +701,17 @@ public final class Temp {
 		return sb.toString();
 	}
 
+	@Comment(text = "保存输入流到临时文件")
 	public void save(InputStream in) throws Exception {
 		X.IO.copy(in, this.getOutputStream());
 	}
 
 	@Override
 	public String toString() {
-		try {
-			return this.getDFile().getFilename();
-		} catch (IOException e) {
-			log.error(e.getMessage(), e);
-		}
-		return null;
+		return "Temp [name=" + name + ", size=" + size() + "]";
 	}
 
+	@Comment(text = "删除临时文件")
 	public void delete() {
 		try {
 			if (memory) {
@@ -632,10 +763,12 @@ public final class Temp {
 			File[] ff = f1.listFiles();
 			if (ff != null) {
 				for (File f2 : ff) {
-					try {
-						count += IOUtil.delete(f2, age, null);
-					} catch (Exception e) {
-						log.error(e.getMessage(), e);
+					if (!X.isIn(f2.getName(), "_cache")) {
+						try {
+							count += IOUtil.delete(f2, age, null);
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
 					}
 				}
 			}
@@ -646,9 +779,8 @@ public final class Temp {
 			Lock door = Global.getLock("temp.cleanup");
 			if (door.tryLock()) {
 				try {
-					for (String r : new String[] { "/temp" }) {
-						DFile f1 = Disk.seek(r);
-						DFile[] ff = f1.listFiles();
+					for (String r : new String[] { "/temp", "/temp1", "/temp2" }) {
+						Collection<DFile> ff = Disk.list(r);
 						if (ff != null) {
 							for (DFile f2 : ff) {
 								try {
@@ -663,6 +795,31 @@ public final class Temp {
 					log.error(e.getMessage(), e);
 				} finally {
 					door.unlock();
+				}
+			}
+		}
+
+		List<?> temp = Config.getConf().getList("cleanup.path", null);
+		if (temp != null) {
+			for (Object o : temp) {
+				String s1 = o.toString();
+
+				if (s1.contains("*")) {
+					int i = s1.lastIndexOf("/");
+					File f2 = new File(s1.substring(0, i));
+					String name = s1.substring(i + 1);
+					try {
+						count += IOUtil.delete2(f2, age, name);
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
+				} else {
+					File f2 = new File(s1);
+					try {
+						count += IOUtil.delete(f2, age, null);
+					} catch (Exception e) {
+						log.error(e.getMessage(), e);
+					}
 				}
 			}
 		}
@@ -682,8 +839,12 @@ public final class Temp {
 		return t;
 	}
 
+	@Comment(text = "改名")
 	public void rename(String name) {
 		try {
+			// 防止name包含"/"
+			name = new File(name).getName();
+
 			File f1 = this.getFile();
 			File f2 = new File(f1.getParentFile() + "/" + name);
 			f1.renameTo(f2);

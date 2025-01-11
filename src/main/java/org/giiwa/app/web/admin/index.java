@@ -16,6 +16,7 @@ package org.giiwa.app.web.admin;
 
 import org.giiwa.bean.*;
 import org.giiwa.conf.Global;
+import org.giiwa.dao.X;
 import org.giiwa.web.*;
 
 /**
@@ -55,11 +56,12 @@ public class index extends Controller {
 	public void onPost() {
 
 		String ip = Global.getString("admin.ip", ".*");
-		if (!this.ipPath().matches(ip)) {
-			this.deny();
+		if (!X.isEmpty(ip) && !X.isIn(ip, "\\*", ".*") && !this.ipPath().matches(ip)) {
+			this.deny(null, "[" + this.ipPath() + "] is denied!");
 			return;
 		}
 
+		// ok
 		if (login.hasAccess("access.config.admin")) {
 			User me = this.user();
 			/**

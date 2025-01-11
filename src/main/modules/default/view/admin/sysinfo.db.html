@@ -28,8 +28,8 @@
 			<th style="width: 80px;">$lang.get('db.op')</th>
 			<th style="width: 120px;">$lang.get('db.table')</th>
 			<th>$lang.get('db.command')</th>
-			<th>$lang.get('db.plan')</th>
-			<th>$lang.get('db.locks')</th>
+			<th style="min-width: 100px;">$lang.get('db.plan')</th>
+			<th style="min-width: 100px;">$lang.get('db.locks')</th>
 			<th style="width: 60px;">$lang.get('db.waitingForLock')</th>
 		</tr>
 	</thead>
@@ -55,6 +55,11 @@
 #end
 	</tbody>
 </table>
+
+<div class='btns'>
+	<a class='btn btn-danger' href='javascript:;' onclick='_allall()'  data-hint="Kill All">$lang.get('a.sysinfo.db.killall')</a>
+</div>
+
 <script>
 function _kill(id) {
 	giiwa.processing.show();

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.dfile;
 
 import java.io.File;
@@ -8,19 +22,30 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
+import org.giiwa.bean.S;
 import org.giiwa.bean.Temp;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.Counter;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
+import org.giiwa.misc.Zip;
 import org.giiwa.task.Consumer;
 import org.giiwa.task.Function;
 import org.giiwa.task.Task;
@@ -41,20 +66,37 @@ public abstract class DFile implements Serializable {
 
 	private static Log log = LogFactory.getLog(DFile.class);
 
+	transient protected Disk disk_obj;
+	transient protected FileInfo info;
+
+	public Disk getDisk_obj() {
+		return disk_obj;
+	}
+
+	private List<DFile> linked;
+
 	protected String filename;
 
 	public String getFilename() {
 		return filename;
 	}
 
-	public abstract Disk[] getDisk_obj();
-
-	public abstract boolean exists();
+	public abstract boolean exists() throws IOException;
 
 	public abstract void refresh();
 
 	protected String prefix;
 
+	protected String rewrite(String filename) {
+		return this.getDisk_obj().filename(filename);
+	}
+
+	/**
+	 * 设置DFile的读写空间路径范围
+	 * 
+	 * @param prefix 前缀名
+	 * @return
+	 */
 	public DFile limit(String prefix) {
 		if (X.isEmpty(this.prefix)) {
 			this.prefix = prefix;
@@ -91,17 +133,50 @@ public abstract class DFile implements Serializable {
 		return this.getFilename().startsWith("/" + root + "/");
 	}
 
-	public abstract boolean delete();
+	public boolean delete() {
+		return delete(-1);
+	}
+
+	public boolean delete(long age) {
+
+		boolean done = false;
+		try {
+			if (!this.getDisk_obj().isOk(filename)) {
+				return false;
+			}
+
+			if (this.isFile()) {
+				done = this.delete0(age);
+			} else if (this.isDirectory()) {
+				Collection<DFile> l1 = Disk.list(filename);
+				if (l1 != null) {
+					for (DFile f1 : l1) {
+						f1.delete0(age);
+					}
+				}
+				done = this.delete0(age);
+			}
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return done;
+	}
 
 	public String getId() {
+		// shortname or fullname
 		return Base32.encode(this.getFilename().getBytes());
 	}
 
-	public abstract boolean delete(long age);
+	protected abstract boolean delete0(long age);
 
 	public abstract InputStream getInputStream() throws IOException;
 
 	public OutputStream getOutputStream() throws IOException {
+		return this.getOutputStream(0);
+	}
+
+	public OutputStream getOut() throws IOException {
 		return this.getOutputStream(0);
 	}
 
@@ -127,7 +202,36 @@ public abstract class DFile implements Serializable {
 
 	public DFile[] listFiles() throws IOException {
 		if (ff == null) {
-			ff = list();
+			Map<String, DFile> m = new TreeMap<String, DFile>();
+			if (this.isDirectory()) {
+				DFile[] ff = list();
+				if (ff != null) {
+					for (DFile f1 : ff) {
+						if (f1.getDisk_obj().isOk(f1.getFilename())) {
+							m.put(f1.filename, f1);
+						}
+					}
+				}
+			}
+
+			if (linked != null) {
+				for (DFile f1 : linked) {
+					if (f1.isDirectory()) {
+						DFile[] ff = f1.list();
+						if (ff != null) {
+							for (DFile f2 : ff) {
+								DFile f3 = m.get(f2.filename);
+								if (f3 != null) {
+									f3.merge(f3);
+								} else {
+									m.put(f2.filename, f2);
+								}
+							}
+						}
+					}
+				}
+			}
+			ff = m.values().toArray(new DFile[m.size()]);
 		}
 		return ff;
 	}
@@ -144,6 +248,27 @@ public abstract class DFile implements Serializable {
 
 	public abstract boolean move(String filename) throws IOException;
 
+	public abstract boolean rename(String name) throws IOException;// {
+
+//	public DFile rename(String name) throws IOException {
+//
+//		String filename = this.getFilename();
+//		int i = filename.lastIndexOf("/");
+//		if (i < 0) {
+//			filename = "/" + name;
+//		} else {
+//			filename = filename.substring(0, i + 1) + name;
+//		}
+//
+//		
+//		DFile f1 = Disk.seek(filename);
+//		if (this.move(f1)) {
+//			return f1;
+//		}
+//		throw new IOException("rename failed!");
+//
+//	}
+
 	/**
 	 * copy the file and upload to disk
 	 * 
@@ -152,11 +277,25 @@ public abstract class DFile implements Serializable {
 	 * @throws IOException
 	 */
 	public long upload(File f) throws IOException {
-		return upload(0, new FileInputStream(f));
+		if (f.isDirectory()) {
+//			Zip.zip(this, f);
+			X.IO.copyDir(f, this);
+			return this.length();
+		} else {
+			return upload(0, new FileInputStream(f), true);
+		}
 	}
 
 	public long upload(InputStream in) throws IOException {
-		return upload(0, in);
+		if (in instanceof ZipInputStream) {
+			return upload(0, in, false);
+		} else {
+			return upload(0, in, true);
+		}
+	}
+
+	public long upload(InputStream in, boolean close) throws IOException {
+		return upload(0, in, close);
 	}
 
 	public int upload(byte[] bb) throws IOException {
@@ -172,7 +311,16 @@ public abstract class DFile implements Serializable {
 	 * @throws IOException
 	 */
 	public long upload(long pos, InputStream in) throws IOException {
-		return IOUtil.copy(in, this.getOutputStream(pos));
+		return upload(pos, in, true);
+	}
+
+	public long upload(long pos, InputStream in, boolean close) throws IOException {
+		OutputStream out = this.getOutputStream(pos);
+		try {
+			return IOUtil.copy(in, out, close);
+		} finally {
+			X.close(out);
+		}
 	}
 
 	public int upload(long pos, byte[] bb) throws IOException {
@@ -187,9 +335,23 @@ public abstract class DFile implements Serializable {
 	 * @return the size
 	 * @throws IOException
 	 */
+	@SuppressWarnings("resource")
 	public long download(File f) throws IOException {
-		X.IO.mkdirs(f.getParentFile());
-		return IOUtil.copy(this.getInputStream(), new FileOutputStream(f));
+		if (this.isFile()) {
+			X.IO.mkdirs(f.getParentFile());
+			return IOUtil.copy(this.getInputStream(), new FileOutputStream(f));
+		} else {
+			// dir
+			X.IO.mkdirs(f);
+			Collection<DFile> ff = Disk.list(filename);
+			long total = 0;
+			if (ff != null) {
+				for (DFile f1 : ff) {
+					total += f1.download(new File(f.getAbsolutePath() + "/" + f1.getName()));
+				}
+			}
+			return total;
+		}
 	}
 
 	/**
@@ -210,7 +372,9 @@ public abstract class DFile implements Serializable {
 
 	public abstract long sum(Consumer<String> moni);
 
-	public abstract Path getPath();
+	public Path getPath() {
+		return Paths.get(filename);
+	}
 
 	/**
 	 * get file size or directory size
@@ -252,8 +416,9 @@ public abstract class DFile implements Serializable {
 	 * @throws IOException
 	 */
 	public void scan(Function<DFile, Boolean> func, int deep) throws IOException {
-		DFile[] ff = this.listFiles();
-		if (ff != null && ff.length > 0 && func != null) {
+
+		Collection<DFile> ff = Disk.list(filename);
+		if (ff != null && !ff.isEmpty() && func != null) {
 			for (DFile f1 : ff) {
 
 				boolean b = func.apply(f1);
@@ -263,26 +428,36 @@ public abstract class DFile implements Serializable {
 				}
 			}
 		}
+
 	}
 
 	public void merge(DFile d) throws IOException {
-		if (this.isDirectory() && d != null && d.isDirectory()) {
-			DFile[] f1 = this.listFiles();
-			List<DFile> l1 = new ArrayList<DFile>();
-			if (f1 != null) {
-				for (DFile f : f1) {
-					l1.add(f);
-				}
-			}
-			DFile[] f2 = d.listFiles();
-			if (f1 != null) {
-				for (DFile f : f2) {
-					if (!l1.contains(f)) {
-						l1.add(f);
-					}
-				}
-			}
+
+		if (linked == null) {
+			linked = new ArrayList<>();
 		}
+		if (!linked.contains(d)) {
+			linked.add(d);
+		}
+		d.linked = linked;
+
+//		if (this.isDirectory() && d != null && d.isDirectory()) {
+//			DFile[] f1 = this.listFiles();
+//			List<DFile> l1 = new ArrayList<DFile>();
+//			if (f1 != null) {
+//				for (DFile f : f1) {
+//					l1.add(f);
+//				}
+//			}
+//			DFile[] f2 = d.listFiles();
+//			if (f1 != null) {
+//				for (DFile f : f2) {
+//					if (!l1.contains(f)) {
+//						l1.add(f);
+//					}
+//				}
+//			}
+//		}
 	}
 
 	/**
@@ -331,6 +506,7 @@ public abstract class DFile implements Serializable {
 				}
 			});
 		}
+
 	}
 
 	static void onDelete(String filename) {
@@ -359,6 +535,111 @@ public abstract class DFile implements Serializable {
 
 		public void onFileDelete(String filename);
 
+	}
+
+	public abstract long getFreeSpace();
+
+	public abstract long getTotalSpace();
+
+	public String getUrl() {
+		return "/f/g/" + this.getId() + "/" + this.getName();
+	}
+
+	public String getDownloadUrl() {
+		return "/f/d/" + this.getId() + "/" + this.getName();
+	}
+
+	public DFile last() {
+		if (linked == null || linked.isEmpty()) {
+			return this;
+		}
+		long time = this.lastModified();
+		DFile last = this;
+		for (DFile e : linked) {
+			long t1 = e.lastModified();
+			if (t1 > time) {
+				time = t1;
+				last = e;
+			}
+		}
+		return last;
+	}
+
+	public static void search(String filename, String word, int deep, Function<DFile, Boolean> func)
+			throws IOException {
+
+		if (func == null) {
+			return;
+		}
+		if (deep < 0) {
+			return;
+		}
+
+		Set<String> checked = new HashSet<String>();
+		List<String> dirs0 = new ArrayList<String>();
+		dirs0.add(filename);
+
+		while (deep >= 0) {
+
+			List<String> dirs1 = new ArrayList<String>();
+			for (String filename1 : dirs0) {
+				Collection<DFile> l1 = Disk.list(filename1);
+				if (l1 != null) {
+					for (DFile f1 : l1) {
+
+						String name = f1.getName();
+						if (name.contains(word) || name.matches(word)) {
+							if (!func.apply(f1)) {
+								return;
+							}
+						}
+
+						if (deep > 0 && f1.isDirectory()) {
+							if (!checked.contains(f1.getFilename())) {
+								checked.add(f1.getFilename());
+								dirs1.add(f1.getFilename());
+							}
+						}
+
+					}
+				}
+			}
+
+			dirs0 = dirs1;
+			deep--;
+		}
+	}
+
+	@Comment(text = "获取访问链接")
+	public String url() {
+		String url = "/f/" + this.getId() + "/" + this.getName();
+		return S.create(url);
+	}
+
+	public Temp zip() throws Exception {
+
+		Temp t = Temp.create(this.getName() + ".zip");
+		ZipOutputStream out = t.getZipOutputStream();
+		_zip(out, this.getName(), this);
+		X.close(out);
+		return t;
+	}
+
+	private void _zip(ZipOutputStream out, String filename, DFile f1) throws IOException {
+		if (f1.isFile()) {
+			ZipEntry e1 = new ZipEntry(filename);
+			out.putNextEntry(e1);
+			InputStream in = f1.getInputStream();
+			X.IO.copy(in, out, false);
+			X.close(in);
+		} else {
+			Collection<DFile> ff = Disk.list(f1.getFilename());
+			if (ff != null) {
+				for (DFile f2 : ff) {
+					_zip(out, filename + "/" + f2.getName(), f2);
+				}
+			}
+		}
 	}
 
 }

@@ -278,7 +278,7 @@ fi
 # Uncomment the following line to make the umask available when using the
 # org.apache.catalina.security.SecurityListener
 #JAVA_OPTS="$JAVA_OPTS -Dorg.apache.catalina.security.SecurityListener.UMASK=`umask`"
-JAVA_OPTS="$JAVA_OPTS -Dplatform.dependencies -Duser.timezone=Asia/Shanghai -Xms1g -Xmx1g -Djava.awt.headless=true -XX:+UseG1GC -XX:ParallelGCThreads=20 -XX:G1HeapRegionSize=32 -XX:-OmitStackTraceInFastThrow -Dio.netty.noUnsafe=true -Dio.netty.noKeySetOptimization=true -Dio.netty.recycler.maxCapacityPerThread=0 -Dio.netty.allocator.type=pooled -Xlog:gc*,gc+age=trace,safepoint:file=/data/logs/gc.log:utctime,pid,tags:filecount=10,filesize=64m -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
+JAVA_OPTS="$JAVA_OPTS -Dplatform.dependencies -Duser.timezone=Asia/Shanghai -Xms1g -Xmx1g -Djava.awt.headless=true -XX:+UseG1GC -XX:ParallelGCThreads=20 -XX:G1HeapRegionSize=32 -XX:-OmitStackTraceInFastThrow -XX:OnOutOfMemoryError=kill -Dio.netty.noUnsafe=true -Dio.netty.noKeySetOptimization=true -Dio.netty.recycler.maxCapacityPerThread=0 -Dio.netty.allocator.type=pooled -Xlog:gc*,gc+age=trace,safepoint:file=/data/logs/gc.log:utctime,pid,tags:filecount=10,filesize=64m -Djava.security.egd=file:/dev/urandom -Djava.library.path=$GIIWA_HOME/lib/sigar"
 
 if [ -z "$USE_NOHUP" ]; then
     if $hpux; then

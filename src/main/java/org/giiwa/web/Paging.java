@@ -274,9 +274,9 @@ public class Paging {
 		if (total < 0 || s < total - ITEM_NUMBER) {
 			list.add(new PageLabel("&gt;", s + ITEM_NUMBER, ITEM_NUMBER, Integer.MAX_VALUE - 1));
 
-			if (next < total) {
-				list.add(new PageLabel("&gt;&gt;", total / ITEM_NUMBER * ITEM_NUMBER, ITEM_NUMBER, Integer.MAX_VALUE));
-			}
+//			if (next < total) {
+//				list.add(new PageLabel("&gt;&gt;", total / ITEM_NUMBER * ITEM_NUMBER, ITEM_NUMBER, Integer.MAX_VALUE));
+//			}
 		}
 
 		Collections.sort(list);

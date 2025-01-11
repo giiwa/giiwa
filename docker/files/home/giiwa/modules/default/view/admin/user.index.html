@@ -1,0 +1,104 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/user?__node=$!__node' class='selected'>$lang.get('a.user.list')</a>
+</div>
+
+<div class='search'>
+	<form action='/admin/user' method='get' #if($s>0) style='display:none' #end >
+		<input type="hidden" name="__node" value="$!__node" />
+		<span><label><h3>$lang.get('user.name'):</h3><input type='text' name='name' value="$!name"/></label></span>
+		<button type='submit' class='btns1 icon icon-search'></button>
+	</form>
+	
+	<div class='s1tab #if($s>0) down #else up #end'>
+		<div class='arrow'></div>
+	</div>
+</div>
+
+#set($edit = $me.hasAccess('access.config.admin','access.config.user.admin'))
+
+<table id='user-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th>$lang.get('user.name')</th>
+			<th>ID</th>
+			<th>$lang.get('user.nickname')</th>
+			<th>$lang.get('user.roles')</th>
+			<th style="width:200px">$lang.get('user.disklimitsize')</th>
+			<th style="width: 100px;">$lang.get('user.ip')</th>
+			<th style="width: 110px;">$lang.get('user.lastlogintime')</th>
+#if($edit)
+			<th></th>
+#end
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $list)
+	<tr #if($f.isLocked()) class='deleted' #end>
+		<td class='a'>
+			<img src="$!f.photo" style="width:32px;border-radius: 50%;"/>
+			$!f.name
+			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="/admin/user/detail?__node=$!__node&id=$f.id"><i class="icon-file-text2"></i></a>
+		</td>
+		<td>$!f.id</td>
+		<td>$!f.nickname</td>
+		<td>#foreach($r in $f.role.list)<div class='icon-shield' style="line-height: 16px;">$r.name</div>#end</td>
+		<td>$!f.disklimitsize</td>
+		<td>$!f.ip</td>
+		<td>
+			#if($f.lastlogintime > 0)
+			$!lang.format($f.lastlogintime, 'yyyy-MM-dd HH:mm')
+			#end
+		</td>
+		#if($edit)
+		<td class="a">
+			<a class="hint hint--bottom" data-hint="$lang.get('a.edit')" href="/admin/user/edit?__node=$!__node&id=$f.id"><i class="icon-pencil"></i></a>
+##			<a class="hint hint--bottom" data-hint="$lang.get('a.oplog')" href="/admin/user/oplog?__node=$!__node&uid=$f.id"><i class="icon-list"></i></a>
+			<a class="hint hint--bottom" data-hint="$lang.get('a.delete')" href='javascript:;' onclick='_delete("$f.id", this);'><i class="icon-cancel-circle"></i></a>
+		</td>
+		#end
+	</tr>
+#end
+	</tbody>
+</table>
+
+ #parse('/widget/goto.page.html')
+
+<div class='btns'>
+#if($edit)
+	<a class='btn btn-success' href='/admin/user/create?__node=$!__node'>$lang.get('a.create')</a>
+	<a class='btn btn-danger' href='javascript:;' onclick="_deleteall()">$lang.get('a.deleteall')</a>
+#end
+</div>
+
+<script>
+function _deleteall() {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		var name = $('input[name=name]').val();
+		giiwa.processing.show();
+		$.post('/admin/user/deleteall', {name:name}, function(d){
+			giiwa.processing.hide();
+			if(d.state == 200) {
+				giiwa.reload();
+			} else if(d.message){
+				giiwa.error(d.message);
+			}
+		});
+	}
+}
+function _delete(id) {
+	if(confirm("$lang.get('title.are_u_sure_delete')")) {
+		giiwa.processing.show();
+		$.post('/admin/user/delete?__node=$!__node', {id:id}, function(d){
+			giiwa.processing.hide();
+			if(d.state == 200) {
+				giiwa.reload();
+			} else if(d.message){
+				giiwa.error(d.message);
+			}
+		});
+	}
+}
+</script>

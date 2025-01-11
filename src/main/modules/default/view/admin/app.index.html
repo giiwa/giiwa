@@ -21,11 +21,14 @@
 	<thead>
 		<tr>
 			<th style="width:100px">$lang.get('app.appid')</th>
-			<th style="width:100px">$lang.get('app.name')</th>
 			<th style="width:200px">$lang.get('app.memo')</th>
 			<th style="width:300px">$lang.get('app.secret')</th>
+			<th style="width:100px">$lang.get('app.contact')</th>
+			<th style="width:200px">$lang.get('app.phone')</th>
+			<th style="width:100px">$lang.get('app.email')</th>
 			<th style="width:100px">$lang.get('app.lastime')</th>
 			<th style="width:120px">$lang.get('app.expired')</th>
+			<th style="width:100px">$lang.get('app.accessed')</th>
 			<th style="width:120px">$lang.get('app.created')</th>
 			<th></th>
 		</tr>
@@ -34,14 +37,17 @@
 #foreach($f in $list)
 	<tr>
 		<td>$!f.appid</td>
-		<td>$!f.name</td>
 		<td>$!f.memo</td>
 		<td class='a'>
 			$!f.secret
 			<a class="hint hint--bottom" data-hint="$lang.get('a.reset')" href="javascript:;" onclick='_reset("$f.appid");'><i class="icon-spinner10"></i></a>
 		</td>
+		<td>$!f.contact</td>
+		<td>$!f.phone</td>
+		<td>$!f.email</td>
 		<td>$!lang.past($f.lastime)</td>
 		<td>#if($f.expired>0) $!lang.format($f.expired, 'yyyy-MM-dd HH:mm') #end</td>
+		<td>$f.accessed</td>
 		<td>$!lang.format($f.created, 'yyyy-MM-dd HH:mm')</td>
 		<td class='a'>
 			#if($me.hasAccess("access.config.debug","access.config.admin"))

@@ -108,6 +108,10 @@ giiwa
 							}
 							xhr.onerror = function(e) {
 								console.log(xhr);
+
+								setTimeout(function(){
+									_next();
+								}, 10000);
 							}
 
 							var _upload = function(bb) {
@@ -279,7 +283,7 @@ giiwa
 
 					_hook(that);
 
-					giiwa.resize();
+					//giiwa.resize();
 				});
 
 				function tohtml(e) {
@@ -365,9 +369,7 @@ giiwa
 					var parent = o.parent();
 					if (o.hasClass('open')) {
 						o.removeClass('open');
-						$(parent.find('.children')[0]).slideUp(500, function() {
-							giiwa.resize();
-						});
+						$(parent.find('.children')[0]).slideUp(500);
 					} else {
 						o.addClass('open');
 						var c = parent.find('.children .item');
@@ -397,15 +399,11 @@ giiwa
 								$(parent.find('.children')[0]).slideDown(500,
 										'easeOutQuad', function() {
 											parent.removeClass('loading');
-
-											giiwa.resize();
 										});
 							})
 						} else {
 							$(parent.find('.children')[0]).slideDown(500,
-									'easeOutQuad', function() {
-										giiwa.resize();
-									});
+									'easeOutQuad');
 						}
 					}
 				}
@@ -1200,29 +1198,6 @@ giiwa
 					giiwa.show(d);
 				});
 			},
-
-			resize : function(e) {
-				var h = $(window).height();
-				var w = $(window).width();
-				var menu = $('#menu');
-				var panel = $('#panel');
-				if (panel.length > 0
-						&& ((panel.width() != w - panel.offset().left) || (panel
-								.height() != h - 92))) {
-					panel.css('width', (w - panel.offset().left) + 'px');
-					panel.css('height', (h - 92) + 'px');
-					
-					try {
-						panel.trigger('panelresize', panel);
-					}catch(e1) {
-						console.error(e1);
-					}
-				}
-
-				if (menu.length > 0) {
-					menu.css('height', (h - 92) + 'px');
-				}
-			},
 			verify : function(obj, url) {
 				var that = $(obj);
 				$.post(url, {
@@ -1365,6 +1340,7 @@ giiwa
 			},
 			
 			encode: function(s) {
+				var pubkey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCNom9BdQZ4z6YyiqijBpR3LsG9Q2Pqd3KyMX/zzBMrDbe5gEKiocHB2R86pH6TiU6LXxK4BRF7RtYrtiw5scgNs2xjBJi7pTQzKqHF04jkyjtwbCnc5edkUFcez3awHVX0ntBphVd07CwLJVgKHUdEb4UClluqGv3ocXe6Of5c/QIDAQAB';
 				return btoa(s);
 			},
 			
@@ -1373,11 +1349,3 @@ giiwa
 			}
 
 		});
-
-$(function() {
-
-	$(window).resize(function() {
-		giiwa.resize();
-	});
-
-});

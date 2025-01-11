@@ -1,0 +1,29 @@
+<div class='head'>$lang.get('i18n.index.title')</div>
+
+#parse('/widget/widget.message.html')
+
+<div class="form">
+	#if($missed)
+	<label><g>$lang.get("lang.missed.hint")</g></label>
+	<p style="color:red">$!missed</p>
+	#end
+</div>
+
+<table class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 200px;">$lang.get("i18n.key")</th>
+			<th style="width: 100px;">$lang.get("i18n.module")</th>
+			<th>$lang.get("i18n.value")</th>
+		</tr>
+	</thead>
+	<tbody>
+#foreach($f in $d.keySet())
+	<tr>
+		<td>$f</td>
+		<td>$!d.get($f)[1]</td>
+		<td>$!d.get($f)[0].replaceAll('<', '&lt;').replaceAll('>', '&gt;')</td>
+	</tr>
+#end
+	</tbody>
+</table>

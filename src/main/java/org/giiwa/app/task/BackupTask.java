@@ -71,14 +71,20 @@ public class BackupTask extends Task {
 	 */
 	@Override
 	public void onFinish() {
-		this.schedule(X.AMINUTE, true);
+		AutoBackup a = AutoBackup.dao.load(W.create().and("enabled", 1));
+		if (a != null) {
+			this.schedule(X.AMINUTE, true);
+		}
 	}
 
 	/**
 	 * Inits the task.
 	 */
 	public static void init() {
-		inst.schedule(X.AMINUTE, true);
+		AutoBackup a = AutoBackup.dao.load(W.create().and("enabled", 1));
+		if (a != null) {
+			inst.schedule(X.AMINUTE, true);
+		}
 	}
 
 }

@@ -1,0 +1,50 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/sysinfo1/cpu?__node=$!__node' class='selected'>$lang.get('a.sysinfo.cpu')</a>
+	<a href='/admin/sysinfo1/db?__node=$!__node'>$lang.get('a.sysinfo.db')</a>
+	<a href='/admin/sysinfo1/process?__node=$!__node'>$lang.get('a.sysinfo.process')</a>
+	<a href='/admin/sysinfo1/net?__node=$!__node'>$lang.get('a.sysinfo.net')</a>
+	<a href='/admin/sysinfo1/route?__node=$!__node'>$lang.get('a.sysinfo.route')</a>
+	<a href='/admin/sysinfo1/disk?__node=$!__node'>$lang.get('a.sysinfo.disk')</a>
+</div>
+
+<div class="state" style="display:block;">
+	<div>$lang.get('cpu.vendor'): <i>$!cpuinfo.vendor</i></div>
+	<div>$lang.get('cpu.model'): <i>$!cpuinfo.model</i></div>
+	<div>$lang.get('cpu.mhz'): <i>$!cpuinfo.mhz</i></div>
+	<div>$lang.get('cpu.totalcores'): <i>$!cpuinfo.totalCores</i></div>
+
+	<div>$lang.get('os.name'): <i>$!os.name, $!os.version, $!os.arch</i></div>
+	<div>$lang.get('os.vendor'): <i>$!os.vendor, $!os.vendorVersion</i></div>
+	
+</div>
+
+<table id='task-table' class='tablesorter' border="0" cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th></th>
+			<th>$lang.get('cpu.sys')</th>
+			<th>$lang.get('cpu.user')</th>
+			<th>$lang.get('cpu.wait')</th>
+			<th>$lang.get('cpu.nice')</th>
+			<th>$lang.get('cpu.idle')</th>
+		</tr>
+	</thead>
+	<tbody>
+#set($i=0)
+#foreach($f in $cpuperc)
+	<tr>
+		#set($i=$i+1)
+		<td>$i</td>
+		<td>$lang.percent($!f.sys, '%.1f')</td>
+		<td>$lang.percent($!f.user, '%.1f')</td>
+		<td>$lang.percent($!f.wait, '%.1f')</td>
+		<td>$lang.percent($!f.nice, '%.1f')</td>
+		<td>$lang.percent($!f.idle, '%.1f')</td>
+	</tr>
+#end
+	</tbody>
+</table>
+

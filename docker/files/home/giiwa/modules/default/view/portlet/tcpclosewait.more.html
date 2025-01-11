@@ -1,0 +1,34 @@
+
+<div id='n14_$!requestid' style="height: 100%; float: left; width: 100%; border: 0;"></div>
+
+<script>
+$(function(){
+	Highcharts.stockChart('n14_$!requestid', {
+		rangeSelector: {
+			enabled: false,
+	       },
+		    xAxis :{
+    	   		range: 3600 * 1000
+	       },
+	       plotOptions: {
+	           series: {
+	        		turboThreshold: 0
+	           }
+	       },
+	       credits: {
+				enabled: false
+	    	   },
+           legend: {
+               enabled: true
+           },
+	       tooltip: {
+	           pointFormat: '{series.name}: <b>{point.y}</b>'
+	       },
+	    series: [
+					{name: "$lang.get('tcp.closewait')", color:'#666', data: [#foreach($c in $list) {x:$lang.time($c.time, 'm'), y:$c.getLong('n14')},#end]}
+	    			], 
+	});
+
+})
+</script>
+

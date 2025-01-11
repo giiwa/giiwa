@@ -1,0 +1,82 @@
+<div class='tabs'>
+	<a href='/admin/lock?__node=$!__node' class='selected'>$lang.get('a.lock')</a>
+</div>
+
+#parse('/widget/widget.message.html')
+
+<table id='task-table' class='tablesorter nospace' border="0"
+	cellpadding="0" cellspacing="1">
+	<thead>
+		<tr>
+			<th style="width: 30px;"></th>
+			<th style="width: 40%;">名称</th>
+			<th>任务</th>
+			<th>节点</th>
+			<th>占用时间</th>
+		</tr>
+	</thead>
+	<tbody>
+		#set($i=0) #foreach($f in $list)
+		<tr>
+			#set($i=$i+1)
+			<td>$i</td>
+			<td class="a">
+				$!f.name
+				<a class="hint hint--bottom" href="javascript:;" onclick='_trace("$f.name")' data-hint="Trace"><i class='icon-view_headline'></i></a>
+				<a class="hint hint--bottom" href="javascript:;" onclick='_kill("$f.name")' data-hint="Kill" style="float: right;margin-top: 5px;"><i class='icon-close'></i></a>
+			</td>
+			<td>$!f.thread</td> 
+			<td>$!f.node</td> 
+			<td>$!lang.format($f.created, "yyyy-MM-dd HH:mm:ss")</td>
+		</tr>
+		#end
+	</tbody>
+</table>
+
+<div id="dump" style="color: red; margin-top: 40px; display: none">
+	<hr />
+	<div>&nbsp;</div>
+</div>
+
+<script>
+	$(function() {
+		$("#task-table").tablesorter({
+			headers : {
+				0 : {
+					sorter : false
+				}
+			}
+		});
+	})
+
+	function _trace(name) {
+		giiwa.processing.show();
+		$.post("/admin/lock/trace?__node=$!__node", {
+			name : name
+		}, function(d) {
+			giiwa.processing.hide();
+			if (d.state == 200) {
+				$("#dump div").html('<pre>' + d.message + '</pre>');
+				$("#dump").show();
+				$.scrollTo("#dump", 500);
+			} else {
+				giiwa.error(d.error);
+			}
+		});
+	}
+	function _kill(name) {
+		if(confirm("$lang.get('title.are_u_sure_delete')")) {
+			giiwa.processing.show();
+			$.post("/admin/lock/kill?__node=$!__node", {
+				name : name
+			}, function(d) {
+				giiwa.processing.hide();
+				if (d.state == 200) {
+					giiwa.reload();
+				} else {
+					giiwa.error(d.error);
+				}
+			});
+		}
+	}
+</script>

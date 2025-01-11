@@ -1,0 +1,46 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/policy?__node=$!__node'>$lang.get('a.policy')</a>
+	<a href='/admin/policy/edit?id=$!a.id&__node=$!__node' class='selected'>$lang.get('a.edit')</a>
+</div>
+
+<form action='/admin/policy/edit?__node=$!__node'  method='post' class='form' >
+	<input type='hidden' name="id" value="$!a.id"/>
+	<div><label><h3>$lang.get('policy.client')<r>*</r>:</h3><input type='text' name='client' class="width-20" value='$!a.client'/><g>$lang.get("policy.client.hint")</g></label></div>
+	<div><label><h3>$lang.get('policy.url')<r>*</r>:</h3><input type='text' name='url' class="width-20" value='$!a.url'/><g>$lang.get("policy.url.hint")</g></label></div>
+	<div><label><h3>$lang.get('policy.action'):</h3>
+		<select name="action1" onchange="_action()">
+			<option value="0" #if($a.action==0) selected #end>$lang.get("policy.action_0")</option>
+			<option value="1" #if($a.action==1) selected #end>$lang.get("policy.action_1")</option>
+			<option value="2" #if($a.action==2) selected #end>$lang.get("policy.action_2")</option>
+			<option value="3" #if($a.action==3) selected #end>$lang.get("policy.action_3")</option>
+		</select>
+	</label></div>
+	<div style="margin-left:20px">
+		<div class="actionmore action2" style="display: none;">
+			<div><label><h3>$lang.get('policy.min_delay'):</h3><input type='number' name='min_delay' value='$a.min_delay'/></label></div>
+			<div><label><h3>$lang.get('policy.max_delay'):</h3><input type='number' name='max_delay' value='$a.max_delay'/></label></div>
+		</div>
+		<div class="actionmore action3" style="display: none;">
+			<div><label><h3>$lang.get('policy.percent'):</h3><input type='number' name='percent' value='$a.percent'/></label></div>
+		</div>
+	</div>
+	<div><label><h3>$lang.get('policy.memo'):</h3><input type='text' class="width-40" name='memo' value='$!a.memo'/></label></div>
+	<div><label><h3>$lang.get('policy.seq'):</h3><input type='number' name='seq' value="$!a.seq"/></label></div>
+	<div><label><h3>$lang.get('policy.enabled'):</h3><input type='checkbox' name='enabled' #if($a.enabled==1)checked="checked"#end/></label></div>
+
+	<div class='btns'><button class='btn btn-success' type='submit'>$lang.get('btn.save')</button></div>
+</form>
+<script>
+function _action(){
+	var v = $('select[name=action1]').val()
+	$('.actionmore').hide();
+	$('.action' + v).show();
+}
+$(function(){
+	_action();
+})
+
+</script>

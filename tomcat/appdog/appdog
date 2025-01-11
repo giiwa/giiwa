@@ -16,21 +16,18 @@
 # Description:       starts appdog using start-stop-daemon
 ### END INIT INFO
 
-import os, sys, time, threading, subprocess, configparser
-import json
+import os, sys, time, threading, configparser
 import requests
-import platform
 import psutil, atexit
-from datetime import datetime
-from scapy.config import conf
 
-global logfile,conf
+global logfile,conf,startup
 
-logfile="/var/log/appdog.log"
+logfile = "/var/log/appdog.log"
+startup = (int)(time.strftime("%H", time.localtime()))
 
 def _log(x):
     global logfile
-    f1=open(logfile, "a+")
+    f1 = open(logfile + '.' + time.strftime("%m", time.localtime()),"a+")
     x1 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + ' ' + x
     print(x1, file=f1)
     f1.close()
@@ -50,232 +47,239 @@ def _load_config():
         print(e)
         sys.exit(0)
     
-def _startx(x, u, cwd):
+def _startapp(x, u):
     global logfile
     _log("starting: " + x)
     try:
         if len(u)>0:
-            c="sudo -E -u " + u + " " + x + ">" + logfile + " 2>&1"
-            _log(c)
-            subprocess.Popen(c, shell=True, cwd=cwd)
+            c="su " + u + " " + x
         else:
-            c=x + ">" + logfile + " 2>&1"
-            _log(c)
-            subprocess.Popen(x, shell=True, cwd=cwd)
+            c=x
+        _log(c)
+        os.system(c)
+        
     except Exception as e:
         _log(str(e));
-   
-def _stopd(x):
-    #docker kill [containid]
-    os.popen('docker kill ' + x)
-    
-def _dockerx(x):
-    #docker inspect [containid]
-    s = "".join(os.popen('docker inspect ' + x).readlines())
-    
-    l1 = json.loads(s)
-    
-    for e in l1:
-      state = e['State']
-      id = e['Id']
-      running = state['Status']
-      if running in ['running']:
-        #check health
-        if 'Health' in state:
-          health = state['Health']
-          if 'Status' in health:
-            status = health['Status']
-            _log('[' +  id + '] ' + status)
-            if status in ['healthy', 'starting']:
-              #ok
-              continue
-            else:
-              #dead
-              _log('[' +  id + '] kill and start')
-              os.popen('docker kill ' + id)
-              os.popen('docker start ' + id)
-    
-        _log('[' +  id + '] running, no health check')
-    
-      else:
-        _log('[' +  id + '] ' + ' start')
-        os.popen('docker start ' + id)
-        
-def _pidx(x, max):
+               
+def _pidx(x):
     try:
         #pid and cpu
         s = os.popen("ps aux | grep '"+x+"' | grep -v 'grep'").readlines()[0];
         ss = s.split( )
         pid = int(ss[1])
         cpu = float(ss[2])
-        
-        #check cpu        
-        if max>0 and cpu>=max:
-            subprocess.call("kill -9 " + str(pid), shell=True)
-            _log("[" + x +"] was killed for high cpu=" + str(cpu) + "!")
-            pid = -1                
-        return pid
+        return pid, cpu
     except:
-        return -1
+        return -1,-1
         
-def _stopx(x, name):
-    x=x.strip()
-    pid=_pidx(x, -1)
-    if pid>0:
-        subprocess.call("kill -9 " + str(pid), shell=True)
-        _log("[" + name +"] was stoped !" )       
-
 def _app_main(x):
-    global conf
+    global conf, startup
     
     try:
-        command=conf.get(x, "start")
+        #start command
+        command = conf.get(x, "start")
     except:
         command = ""
     
     try:
-        pattern=conf.get(x, "pattern")
+        #process name pattern
+        pattern = conf.get(x, "pattern")
     except:
         pattern = ""
 
     try:
-        docker = conf.get(x, "docker")
+        #health
+        health = conf.get(x, "health")
     except:
-        docker = ""
+        health = ""
 
     try:
-        user=conf.get(x, "user")
+        #start user
+        user = conf.get(x, "user")
     except:
-        user=""
+        user = ""
         
     try:
-        check=conf.getfloat(x, "check")
+        #check interval
+        check = conf.getfloat(x, "check")
     except:
-        check=3
+        check = 3
         
     try:
-        max_cpu=conf.getfloat(x, "max_cpu")
+        #max cpu usage, if happen, restart
+        max_cpu = conf.getfloat(x, "max_cpu")
     except:
-        max_cpu=-1
+        max_cpu = -1
         
     try:
-        enabled=conf.getint(x, "enabled")
+        #enabled or disabled
+        enabled = conf.getint(x, "enabled")
     except:
-        enabled=1
+        enabled = 1
         
     try:
-        path=conf.get(x, "path")
+        #recycle time point
+        recycle = conf.getint(x, 'recycle')
     except:
-        path=""
-    
+        recycle = -1
+            
     if enabled>0:
         pid = -1
         while True:
             try:
-                if docker != "":
-                    _dockerx(docker)
-                else:
-                    if pid == -1:
-                        pid = _pidx(pattern, max_cpu)
-                    try:
+                if pid == -1:
+                    pid,cpu = _pidx(pattern)
+                    #check cpu        
+                    if max_cpu>0 and cpu>=max_cpu:
+                        os.system("kill -9 " + str(pid))
+                        _log("[" + x +"] was killed for high cpu=" + str(cpu) + "!")
+                        pid = -1           
+                try:
+                    if pid != -1:
                         p = psutil.Process(pid)
                         if p.is_running():
-                            time.sleep(check)
-                            continue
-                    except Exception as e:
-                        pass
-                    
-                    _startx(command, user, path)
+                            #check recycle
+                            if (recycle>-1 and startup != (int)(time.strftime("%H", time.localtime()))):
+                                #TODO kill -9
+                                os.system("kill -9 " + str(pid))
+                                _log("[" + str(pid) +"] was killed by recycle!")
+                                pid = -1
+                            elif health.startswith("http://"):
+                                #todo
+                                r = requests.get(health, timeout=10)
+                                if (r.status_code == 500):
+                                    os.system("kill -9 " + str(pid))
+                                    _log("[" + str(x) + ":" + str(pid) +"] was killed by health (" + r.text +")!")
+                                    pid = -1
+                            elif health.startswith("fping"):
+                                r = os.system(health)
+                                if r != 0:
+                                    os.system("kill -9 " + str(pid))
+                                    _log("[" + str(x) +":" + str(pid) + "] was killed by health (" + str(r) +")!")
+                                    pid = -1
+                except Exception as e:
+                    os.system("kill -9 " + str(pid))
+                    _log("[" + str(x) +":" + str(pid) + "] was killed by error (" + str(e) +")!")
                     pid = -1
+                    
+                if pid == -1:
+                    _startapp(command, user)
+                    _log("[" + str(x) +":" + str(pid) + "] come back!")
+                    
+            except Exception as e:
+                _log(str(e))
+            
+            time.sleep(check)
+
+def _cron_main(x):
+    global conf
+    
+    try:
+        #start command
+        command = conf.get(x, "start")
+    except:
+        command = ""
+    
+    try:
+        #start user
+        user = conf.get(x, "user")
+    except:
+        user = ""
+        
+    try:
+        #enabled or disabled
+        enabled = conf.getint(x, "enabled")
+    except:
+        enabled = 1
+        
+    try:
+        #time point: 0 0 * * *
+        timepoint = conf.get(x, 'time').split()
+    except:
+        #min hour week days month
+        timepoint = '0 0 0 0 0'.split()
+            
+    if enabled>0:
+        while True:
+            try:
+                check = 40
+                #checking time
+                t1 = time.localtime(time.time())
+                
+                if timepoint[0] == '*' or int(timepoint[0]) == t1.tm_min:
+                    if timepoint[1] == "*" or int(timepoint[1]) == t1.tm_hour:
+                        if timepoint[2] == '*' or int(timepoint[2]) == (t1.tm_wday + 1):
+                            if timepoint[3] == '*' or int(timepoint[3]) == t1.tm_mday:
+                                if timepoint[4] == '*' or int(timepoint[4]) == t1.tm_mon:
+                                    _log('run cron ' + x)
+                                    _startapp(command, user)
+                                    check = 100
             except Exception as e:
                 _log(str(e))
                 
             time.sleep(check)
 
-def _mon_main(x):
+def _docker_main(x):
     global conf
     
     try:
-        pattern=conf.get(x, "pattern")
+        #health checking
+        health = conf.get(x, "health")
     except:
-        pattern = ""
+        health = ""
+    
+    try:
+        #check interval, seconds
+        check = int(conf.getfloat(x, "check"))
+    except:
+        check = 5
 
     try:
-        report=conf.get(x, "report")
+        #retry times if dead happen
+        retry = int(conf.getfloat(x, "retry"))
     except:
-        report = ""
-
-    try:
-        node=conf.get(x, "node")
-    except:
-        node = ""
-
-    try:
-        check=conf.getfloat(x, "check")
-    except:
-        check=3
+        retry = 3
         
     try:
-        enabled=conf.getint(x, "enabled")
+        #enabled or disabled
+        enabled = conf.getint(x, "enabled")
     except:
-        enabled=1
-
-    try:
-        appid=conf.getint(x, "appid")
-    except:
-        appid=""
-
-    try:
-        secret=conf.getint(x, "secret")
-    except:
-        secret=""
-        
+        enabled = 1
+                
     if enabled>0:
-        name = x.replace('mon:', '')
+        name = x.replace('docker:', '')
+        retries = 0
         while True:
             try:
-                if pattern != "":
-                    #cpu, mem
-                    l1 = os.popen("ps -ef | grep '"+ pattern +"'| grep -v 'grep'").readlines();
-                    cpu = 0
-                    mem = 0
-                    for s in l1:
-                        ss = s.split( )
-                        pid = ss[1];
-                        p = psutil.Process((int)(pid))
-                        cpu += float(p.cpu_percent(interval=0.1))
-                        mem += float(p.memory_percent())
-            
-                    j1 = {'node':node, 
-                          'name':name, 
-                          'cpu': cpu, 
-                          'mem': mem,
-                          'appid':appid,
-                          'secret':secret
-                          };
-                    r = requests.post(report, data=j1)
-                    r.close()
+                r = requests.get(health, timeout=5)
+                if(r.status_code < 400):
+                    retries = 0
                 else:
-                    #node, cpu, mem, os
-    #                 print(psutil.sensors_temperatures())
-                    
-                    mem = psutil.virtual_memory();
-                    j1 = {'node':node, 
-                          'os':platform.platform(), 
-                          'name': 'node', 
-                          'cores':psutil.cpu_count(logical=True), 
-                          'mem': mem.total,
-                          'uptime': datetime.fromtimestamp(psutil.boot_time()),
-                          '_usage':psutil.cpu_percent(), 
-                          '_usage2':(int)(mem.percent),
-                          'appid':appid,
-                          'secret':secret
-                          };
-                    r = requests.post(report, data=j1)
-                    r.close()
+                    retries += 1                   
+                _log('[' + name + '] ' + str(retries) + '/' + str(retry) + ', ' + str(r.status_code) + ', ' + r.text)
             except Exception as e:
-                _log(str(e))
-        
+                retries += 1
+                _log('[' + name + '] ' + str(retries) + '/' + str(retry) + ', -, ' + str(e))
+                
+            if(retries > retry):
+                try:
+                    _log('stopping ' + name)
+                    os.system('docker stop ' + name)
+                    time.sleep(check)
+                    
+                    s = os.popen('docker inspect --format="{{.Id}}" ' + name).readlines();
+                    if len(s) > 0:
+                        s = s[0].strip()
+                        pid,cpu = _pidx(s)
+                        if pid > 0:
+                            os.system("kill -9 " + str(pid))
+                    os.system('rm -rf /run/docker/runtime-runc/moby/`docker inspect --format="{{.Id}}" ' + name + '`')
+                    _log('starting ' + name)
+                    os.system('docker start ' + name)
+                    retries = -20
+                except Exception as e:
+                    _log('[' + name + '] ' + str(e))
+
             time.sleep(check)
     
 def _ha_main(x):
@@ -297,15 +301,15 @@ def _ha_main(x):
             
         while True:
             try:
-                resp = os.system("ping -c 1 " + standby)
+                resp = os.system("fping -c1 -t500 " + standby)
                 if resp == 0:
-                    resp = os.system("ping -c 1 " + ip)
+                    resp = os.system("fping -c1 -t500 " + ip)
                     if resp == 0:
                         pass
                     else:
-                        subprocess.call("ip address add " + ip + " dev " + iface, shell=True)
+                        os.popen("ip address add " + ip + " dev " + iface)
                 else:
-                    subprocess.call("ip address add " + ip + " dev " + iface, shell=True)
+                    os.popen("ip address add " + ip + " dev " + iface)
             except Exception as e:
                 _log(str(e))
                 
@@ -325,12 +329,19 @@ def _app_start(x):
         t.start()
     except Exception as e:
         _log(str(e))
-   
-def _mon_start(x):
+
+def _cron_start(x):
     try:
-        t = threading.Thread(target=_mon_main, args=(x,))
+        t = threading.Thread(target=_cron_main, args=(x,))    
         t.start()
     except Exception as e:
+        _log(str(e))
+
+def _docker_start(x):
+    try:
+        t = threading.Thread(target=_docker_main, args=(x,))
+        t.start()
+    except Exception as s:
         _log(str(e))
              
 def _start():
@@ -381,8 +392,10 @@ def _start():
     for s in conf.sections():
         if "app:" in s:
             _app_start(s)
-        elif "mon:" in s:
-            _mon_start(s)
+        elif "docker:" in s:
+            _docker_start(s)
+        elif "cron:" in s:
+            _cron_start(s)
         elif "ha" == s:
             _ha_start(s)
 
@@ -390,7 +403,7 @@ def _stop():
     global conf
     _load_config()
         
-    pidfile=conf.get("global", "pid")
+    pidfile = conf.get("global", "pid")
     
     ##check if the appdog is running
     try:
@@ -400,7 +413,7 @@ def _stop():
         
         p = psutil.Process(int(pid1))
         if p.is_running():
-            subprocess.call("kill -9 " + pid1, shell=True)
+            os.popen("kill -9 " + pid1)
             _log("[" + pid1 +"] was killed by stop!")
             return
         

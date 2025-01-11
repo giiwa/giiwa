@@ -1,0 +1,67 @@
+
+#parse('/widget/widget.message.html')
+
+<div class='tabs'>
+	<a href='/admin/role?__node=$!__node'>$lang.get('a.role')</a>
+	<a href='/admin/role/create?__node=$!__node' class='selected'>$lang.get('a.create')</a>
+</div>
+
+<form action='/admin/role/create?__node=$!__node'  method='post' class='form'>
+    <input type='hidden' name="access" id="hidden_access" value="$!access" />
+	<div><label><h3>$lang.get('role.name')(<r>*</r>):</h3><input type='text' name='name' value=#if($name) '$name' #else '' #end/></label></div>
+	<div><label><h3>$lang.get('role.memo'):</h3><input type='text' name='memo' value=#if($memo) '$memo' #else '' #end/></label></div>	
+	<div><label><h3>$lang.get('role.url'):</h3><input type='text' name='url' value=#if($url) '$url' #else '' #end/></label></div>	
+	<div><label><h3>$lang.get('role.seq'):</h3><input type='text' name='seq' value=#if($seq) '$seq' #else '' #end/></label></div>	
+	
+	<div class='accesses'>
+		<div class='access_title'><label><input type='checkbox' onclick='selectall();'>$lang.get('select.all.access')</label></div>
+			<table id='access-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
+				<thead>
+					<tr>
+						<th style="width: 100px;">$lang.get('access.group')</th>
+						<th>$lang.get('access.name')</th>
+					</tr>
+				</thead>
+				<tbody>
+			#foreach($a in $accesses.keySet())
+				<tr>
+					<td>$lang.get("group.$a", "$a")</td>
+					<td>
+						#foreach($p in $accesses.get($a))
+							<label style="width: initial;"><input type="checkbox" name="access1" onchange="change()" value="$p.name" #if($r.has($p)) checked="true" #end/>$lang.get($p.name)</label>
+						#end
+					</td>
+				</tr>
+			#end
+				</tbody>
+			</table>
+
+	</div>
+	<div class='btns'><button class='btn btn-success' type='submit'>$lang.get('btn.create')</button></div></form>
+
+<script>
+function selectall(){
+	var ch = $('.access_title input[type=checkbox]');
+	if (ch.length > 0) {
+		var en = ch[0].checked;
+		var t = $(this);
+		$('#access-table td input[type=checkbox]').each(function(i, e) {
+			if(! e.disabled) {
+				e.checked = en;
+			}
+		});
+	}
+}
+function change() {
+
+    var checkbox = document.querySelectorAll('[name = "access1"]:checked')
+    var arr = []
+    checkbox.forEach(d => {
+        arr.push(d.value)
+    })
+    document.querySelector("#hidden_access").value = arr.join(";")
+        // document.querySelector(".form").submit();
+}
+
+</script>	
+

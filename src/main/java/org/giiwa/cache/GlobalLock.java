@@ -1,14 +1,32 @@
+/*
+ * Copyright 2015 JIHU, Inc. and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*/
 package org.giiwa.cache;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
+import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.net.mq.MQ;
@@ -26,14 +44,20 @@ public class GlobalLock implements Lock, Serializable {
 	private boolean locked = false;
 	protected String name;
 	private String value;
+	private boolean debug = false;
 
-	protected GlobalLock(String name) {
+	protected GlobalLock(String name, boolean debug) {
 		this.name = name;
 		this.value = Long.toString(System.currentTimeMillis());
+		this.debug = debug;
 	}
 
 	public static Lock create(String name) {
-		return new GlobalLock(name);
+		return create(name, false);
+	}
+
+	public static Lock create(String name, boolean debug) {
+		return new GlobalLock(name, debug);
 	}
 
 	@Override
@@ -77,23 +101,26 @@ public class GlobalLock implements Lock, Serializable {
 		try {
 			while (expire == 0 || expire > t.pastms()) {
 
-				if (Cache.trylock(name)) {
-					heartbeat.add(this);
+				if (Cache.trylock(name, debug)) {
+					heartbeat.add(name, this);
 
-					if (log.isDebugEnabled())
-						log.debug("global locked, name=" + name + ", cost=" + t.past());
+					if (debug || log.isDebugEnabled()) {
+						log.info("global locked, name=" + name + ", cost=" + t.past());
+					}
 
 					_time.reset();
 					locked = true;
 					return true;
 				}
 
-				if (expire == 0 || expire < t.pastms()) {
-					if (log.isDebugEnabled()) {
-						log.debug("global lock failed, name=" + name + ", cost=" + t.past() + ", locked="
-								+ X.asList(LockHeartbeat.locked, e -> ((GlobalLock) e).name));
+				// make sure
+				synchronized (LockHeartbeat.locked) {
+					if (LockHeartbeat.locked.containsKey(name)) {
+						return true;
 					}
+				}
 
+				if (expire == 0 || expire < t.pastms()) {
 					locked = false;
 					return false;
 				}
@@ -102,6 +129,7 @@ public class GlobalLock implements Lock, Serializable {
 			}
 		} catch (Exception e) {
 			log.error("lock failed, global lock=" + name, e);
+			GLog.applog.error("sys", "lock", "failed, name=" + name, e);
 		}
 
 		locked = false;
@@ -122,19 +150,36 @@ public class GlobalLock implements Lock, Serializable {
 	public synchronized void unlock() {
 		if (locked) {
 
-			locked = false;
+			try {
+				locked = false;
 
-			heartbeat.remove(this);
+				heartbeat.remove(name);
 
-			if (Cache.unlock(name, value)) {
-				MQ.notify("lock." + name, 0);
-				if (log.isDebugEnabled())
-					log.debug("global unlocked, name=" + name + ", locked=" + _time.past());
-			} else {
-				if (log.isInfoEnabled())
-					log.info("what's wrong with the lock=" + name);
+				if (Cache.unlock(name, value)) {
+					MQ.notify("lock." + name, 0);
+					if (log.isDebugEnabled()) {
+						log.debug("global unlocked, name=" + name + ", locked=" + _time.past());
+					}
+				} else {
+					GLog.applog.warn("sys", "unlock", "failed, lock=" + name);
+					log.error("what's wrong with the lock=" + name);
+				}
+			} catch (Throwable e) {
+				GLog.applog.error("sys", "unlock", "failed, lock=" + name, e);
 			}
 		}
+	}
+
+	public static List<_Lock> getLocks() {
+		List<_Lock> l1 = new ArrayList<_Lock>();
+		synchronized (LockHeartbeat.locked) {
+			l1.addAll(LockHeartbeat.locked.values());
+		}
+		return l1;
+	}
+
+	public static void kill(String name) {
+		heartbeat.remove(name);
 	}
 
 	@Override
@@ -175,41 +220,49 @@ public class GlobalLock implements Lock, Serializable {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		private static List<Lock> locked = new ArrayList<Lock>();
+		private static Map<String, _Lock> locked = new HashMap<String, _Lock>();
 
 		@Override
 		public String getName() {
 			return "gi.lock.hb";
 		}
 
-		public void add(Lock lock) {
+		public void add(String name, Lock lock) {
 			synchronized (locked) {
-				if (!locked.contains(lock)) {
-					locked.add(lock);
+				if (!locked.containsKey(name)) {
+					_Lock e = new _Lock();
+					e.name = name;
+					e.lock = lock;
+					e.thread = Thread.currentThread().getName();
+//					e.trace = X.toString(new Exception("trace"));
+					locked.put(name, e);
 				}
 			}
 
-			this.schedule(10);
+			if (!this.isScheduled()) {
+				this.schedule(10);
+			}
 		}
 
-		public void remove(Lock lock) {
+		public void remove(String name) {
 			synchronized (locked) {
-				locked.remove(lock);
+				locked.remove(name);
 			}
 		}
 
 		@Override
 		public void onExecute() {
 
+			_Lock[] ll = null;
 			synchronized (locked) {
 				if (!locked.isEmpty()) {
-					for (Lock l : locked) {
-						if (l instanceof GlobalLock) {
-							((GlobalLock) l).touch();
-						}
-					}
+					ll = locked.values().toArray(new _Lock[locked.size()]);
 				}
-				// log.debug("touch name=" + locked);
+			}
+			if (ll != null) {
+				for (_Lock e : ll) {
+					((GlobalLock) e.lock).touch();
+				}
 			}
 		}
 
@@ -224,4 +277,42 @@ public class GlobalLock implements Lock, Serializable {
 
 	}
 
+	public static class _Lock implements Serializable {
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		transient Lock lock;
+
+		public long created = System.currentTimeMillis();
+		public String name;
+		public String thread;
+		public String trace;
+		public String node = Local.label();
+
+		public long getCreated() {
+			return created;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getThread() {
+			return thread;
+		}
+
+		public String getNode() {
+			return node;
+		}
+
+	}
+
+	public static _Lock getLock(String name) {
+		synchronized (LockHeartbeat.locked) {
+			return LockHeartbeat.locked.get(name);
+		}
+	}
 }

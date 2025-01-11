@@ -32,6 +32,8 @@ import org.giiwa.misc.Host;
 import org.giiwa.misc.Shell;
 import org.giiwa.net.mq.MQ;
 import org.giiwa.task.Task;
+import org.giiwa.task.TaskConfig;
+import org.giiwa.task.TaskStatus;
 import org.giiwa.web.*;
 
 /**
@@ -54,20 +56,20 @@ public class task extends Controller {
 	 * 
 	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
-	@Path(login = true, access = "access.config.admin")
+	@Path(login = true, access = "access.config.admin", oplog = true)
 	public void onGet() {
 
 		this.set("pending", Task.tasksInQueue());
 		this.set("running", Task.tasksInRunning());
-		this.set("idle", Task.idleThread());
-		this.set("active", Task.activeThread());
+//		this.set("idle", Task.idleThread());
+//		this.set("active", Task.activeThread());
 
 		this.set("list", Task.getAll());
 
 		this.show("/admin/task.index.html");
 	}
 
-	@Path(path = "global", login = true, access = "access.config.admin")
+	@Path(path = "global", login = true, access = "access.config.admin", oplog = true)
 	public void global() {
 
 		AtomicLong pending = new AtomicLong(0);
@@ -75,7 +77,7 @@ public class task extends Controller {
 		AtomicLong cores = new AtomicLong(0);
 
 		W q = Node.dao.query().and("giiwa", null, W.OP.neq);
-		q.and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte);
+		q.and("lastcheck", System.currentTimeMillis() - Node.LOST, W.OP.gte);
 
 		List<JSON> task = new ArrayList<JSON>();
 
@@ -83,27 +85,25 @@ public class task extends Controller {
 
 			AtomicLong has = new AtomicLong(q.count());
 
-//			log.warn("MQ1, has=" + has.get() + ", q=" + q);
+			GLog.applog.info("sys", "task", "MQ1, has=" + has.get() + ", q=" + q);
 
 			MQ.callTopic(Task.MQNAME, "list", "", 5000, req -> {
 
 				String from = req.from;
-//				log.warn("MQ1, got from=" + from);
 
 				try {
 
-//					GLog.applog.info("task", "global", "from=" + from);
+					TaskStatus s = req.get();
 
-					Task._Status s = req.get();
 					pending.set(s.pending);
 					running.addAndGet(s.running);
 					cores.addAndGet(s.cores);
-					List<Task._Config> l1 = s.list;
+					List<TaskConfig> l1 = s.list;
 					if (l1 != null) {
 
 						List<JSON> l2 = X.asList(l1, e -> {
 
-							Task._Config e1 = (Task._Config) e;
+							TaskConfig e1 = (TaskConfig) e;
 							return e1.json();
 
 						});
@@ -113,11 +113,11 @@ public class task extends Controller {
 					}
 
 				} catch (Exception e) {
-					GLog.applog.error("task", "global", "from=" + from + ", error=" + e.getMessage(), e);
+					GLog.applog.error("sys", "task", "from=" + from + ", error=" + e.getMessage(), e);
 				}
 
 				has.decrementAndGet();
-				if (has.get() == 0) {
+				if (has.get() <= 0) {
 					return true;
 				} else {
 					return false;
@@ -149,7 +149,7 @@ public class task extends Controller {
 
 	}
 
-	@Path(path = "kill", login = true, access = "access.config.admin")
+	@Path(path = "kill", login = true, access = "access.config.admin", oplog = true)
 	public void kill() {
 		String name = this.getString("name");
 		Task t = Task.get(name);
@@ -159,7 +159,7 @@ public class task extends Controller {
 
 	}
 
-	@Path(path = "dump", login = true, access = "access.config.admin")
+	@Path(path = "dump", login = true, access = "access.config.admin", oplog = true)
 	public void dump() {
 		String name = this.getString("name");
 		Task t = Task.get(name);
@@ -184,7 +184,8 @@ public class task extends Controller {
 						}
 					}
 				} else {
-					sb.append("thread is null, scheduled=" + t.isScheduled() + ", running=" + t.isRunning());
+					sb.append("thread is null, scheduled=" + t.isScheduled() + ", isrunning=" + t.isRunning()
+							+ ", runtimes=" + t.getRuntimes() + ", sf=" + t.getSF());
 				}
 			}
 			if (sb.length() > 0) {
@@ -204,7 +205,7 @@ public class task extends Controller {
 
 	}
 
-	@Path(path = "trace", login = true, access = "access.config.admin")
+	@Path(path = "trace", login = true, access = "access.config.admin", oplog = true)
 	public void trace() {
 		String name = this.getString("name");
 		Task t = Task.get(name);
@@ -231,7 +232,7 @@ public class task extends Controller {
 
 	}
 
-	@Path(path = "dumpall", login = true, access = "access.config.admin")
+	@Path(path = "dumpall", login = true, access = "access.config.admin", oplog = true)
 	public void dumpall() {
 		JSON j = JSON.create();
 		StringBuilder sb = new StringBuilder();
@@ -267,7 +268,7 @@ public class task extends Controller {
 		this.send(j);
 	}
 
-	@Path(login = true, path = "thread", access = "access.config.admin")
+	@Path(login = true, path = "thread", access = "access.config.admin", oplog = true)
 	public void thread() {
 
 		try {
@@ -281,7 +282,8 @@ public class task extends Controller {
 
 	}
 
-	@Path(login = true, path = "thread/kill", access = "access.config.admin")
+	@SuppressWarnings("deprecation")
+	@Path(login = true, path = "thread/kill", access = "access.config.admin", oplog = true)
 	public void thread_kill() {
 
 		long id = this.getLong("id");
@@ -290,7 +292,8 @@ public class task extends Controller {
 			Map<Thread, StackTraceElement[]> dumps = Thread.getAllStackTraces();
 			for (Thread t : dumps.keySet()) {
 				if (t.getId() == id) {
-					t.interrupt();
+//					t.interrupt();
+					t.stop();
 					break;
 				}
 			}
@@ -302,7 +305,7 @@ public class task extends Controller {
 
 	}
 
-	@Path(login = true, path = "thread/deadlock", access = "access.config.admin")
+	@Path(login = true, path = "thread/deadlock", access = "access.config.admin", oplog = true)
 	public void thread_deadlock() {
 
 		List<JSON> l1 = JSON.createList();

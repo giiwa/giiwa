@@ -14,6 +14,8 @@
 */
 package org.giiwa.web.view;
 
+import java.util.Map;
+
 import javax.servlet.RequestDispatcher;
 
 import org.giiwa.json.JSON;
@@ -28,9 +30,10 @@ public class JspView extends View {
 			log.debug("viewname=" + name);
 
 		name = name.replaceAll("\\\\", "/");
-		if (m.data != null) {
-			for (String s : m.data.keySet()) {
-				m.req.setAttribute(s, m.data.get(s));
+		Map<String, Object> data = m.getData();
+		if (data != null) {
+			for (String s : data.keySet()) {
+				m.req.setAttribute(s, data.get(s));
 			}
 		}
 		m.req.setAttribute(System.getProperty("org.apache.jasper.Constants.JSP_FILE", "org.apache.catalina.jsp_file"),

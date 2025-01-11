@@ -38,7 +38,7 @@ public class logs extends Controller {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	@Path(path = "download", login = true, access = "access.config.admin|access.config.logs.admin")
+	@Path(path = "download", login = true, access = "access.config.admin|access.config.logs.admin", oplog = true)
 	public void download() {
 
 		JSON jo = JSON.create();
@@ -75,7 +75,7 @@ public class logs extends Controller {
 	/**
 	 * Delete.
 	 */
-	@Path(path = "delete", login = true, access = "access.config.admin|access.config.logs.admin")
+	@Path(path = "delete", login = true, access = "access.config.admin|access.config.logs.admin", oplog = true)
 	public void delete() {
 		JSON jo = new JSON();
 		String f = this.getString("f");
@@ -83,7 +83,7 @@ public class logs extends Controller {
 		File f1 = new File(Temp.ROOT + "/../logs/" + f);
 		try {
 			if (f1.getCanonicalPath().startsWith(new File("/data/logs/").getCanonicalPath()) && f1.delete()) {
-				GLog.oplog.warn(logs.class, "delete", "deleted=" + f, login, this.ip());
+				GLog.oplog.warn(this, "delete", "deleted=" + f);
 				jo.put(X.STATE, 200);
 			} else {
 				jo.put(X.STATE, 201);
@@ -102,7 +102,7 @@ public class logs extends Controller {
 	 * 
 	 * @see org.giiwa.framework.web.Model.onGet()
 	 */
-	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
+	@Path(login = true, access = "access.config.admin|access.config.logs.admin", oplog = true)
 	public void onGet() {
 
 		File f = new File(Temp.ROOT + "/../logs/");

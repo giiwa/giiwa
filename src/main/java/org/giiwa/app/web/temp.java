@@ -69,7 +69,7 @@ public class temp extends Controller {
 
 		} catch (Exception e) {
 			log.error(path, e);
-			GLog.oplog.error(temp.class, "", e.getMessage(), e, login, this.ip());
+			GLog.oplog.error(this, path, e.getMessage(), e);
 		}
 
 		this.notfound();

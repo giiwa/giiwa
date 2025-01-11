@@ -14,8 +14,8 @@
 */
 package org.giiwa.bean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.sql.SQLException;
+
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -32,7 +32,7 @@ import org.giiwa.dao.Helper.W;
  * @author wujun
  *
  */
-@Table(name = "gi_userconfig", memo="GI-用户设置")
+@Table(name = "gi_userconfig", memo = "GI-用户设置")
 public final class UserConfig extends Bean {
 
 	/**
@@ -40,40 +40,39 @@ public final class UserConfig extends Bean {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static Log log = LogFactory.getLog(UserConfig.class);
+//	private static Log log = LogFactory.getLog(UserConfig.class);
 
 	public static final BeanDAO<String, UserConfig> dao = BeanDAO.create(UserConfig.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size = 50)
 	private String id;
 
 	@Column(memo = "用户ID")
 	private long uid;
 
-	@Column(memo = "数据名称")
+	@Column(memo = "会话ID", size = 50)
+	private String sid;
+
+	@Column(memo = "数据名称", size=50)
 	private String name;
 
-	@Column(memo = "数据")
+	@Column(memo = "数据", size = 2048)
 	private String data;
 
-	public static void set(long uid, String name, String value) {
+	public static void set(long uid, String sid, String name, String value) throws SQLException {
 
-		String id = UID.id(uid, name);
-		try {
-			V v = V.create("data", value);
-			if (dao.exists(id)) {
-				// update
-				dao.update(id, v);
-			} else {
-				dao.insert(v.force(X.ID, id).append("uid", uid).append("name", name));
-			}
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+		String id = UID.id(uid, sid, name);
+		V v = V.create("data", value);
+		if (dao.exists(id)) {
+			// update
+			dao.update(id, v);
+		} else {
+			dao.insert(v.force(X.ID, id).append("uid", uid).append("sid", sid).append("name", name));
 		}
 	}
 
-	public static String get(long uid, String name) {
-		UserConfig c = dao.load(W.create().and("uid", uid).and("name", name));
+	public static String get(long uid, String sid, String name) {
+		UserConfig c = dao.load(W.create().and("uid", uid).and("sid", sid).and("name", name));
 		if (c != null) {
 			return c.data;
 		}

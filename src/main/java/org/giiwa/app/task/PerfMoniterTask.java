@@ -16,15 +16,12 @@ package org.giiwa.app.task;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Disk;
 import org.giiwa.bean.m._CPU;
-import org.giiwa.bean.m._Cache;
 import org.giiwa.bean.m._DB;
 import org.giiwa.bean.m._Disk;
 import org.giiwa.bean.m._FIO;
-import org.giiwa.bean.m._File;
-import org.giiwa.bean.m._MQ;
 import org.giiwa.bean.m._Mem;
-import org.giiwa.bean.m._Mem2;
 import org.giiwa.bean.m._Net;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
@@ -79,23 +76,30 @@ public class PerfMoniterTask extends SysTask {
 
 		_Net.check();
 
-		_Mem2.check();
+		// TODO, 性能考虑
+//		_Mem2.check();
 
+		// TODO， 性能考虑
 		_FIO.check();
 
 		_DB.check();
 
-		_MQ.check();
+		// TODO, 性能考虑
+//		_MQ.check();
 
 //		_DFile.check();
 
-		_Cache.check();
+		// TODO， 性能考虑
+//		_Cache.check();
 
-		_File.check();
+		// TODO， 性能考虑
+//		_File.check();
 
 //		_APP.check();
 
 //		_DFile2.check();
+
+		Disk.stat();
 
 	}
 

@@ -40,6 +40,14 @@
 			<td>$!u.phone</td>
 		</tr>
 		<tr>
+			<td>$lang.get('user.unit')</td>
+			<td>
+				#if($u.unit_obj)
+				${u.unit_obj.no}/${u.unit_obj.name}
+				#end
+			</td>
+		</tr>
+		<tr>
 			<td>$lang.get('user.roles')</td>
 			<td>
 				#foreach($r in $u.role.list) 

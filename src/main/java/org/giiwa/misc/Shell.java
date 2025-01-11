@@ -15,6 +15,7 @@
 package org.giiwa.misc;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -30,7 +31,7 @@ import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
-import org.giiwa.task.Console;
+import org.giiwa.task.Task;
 import org.giiwa.web.Language;
 
 /**
@@ -136,41 +137,79 @@ public class Shell {
 	/**
 	 * run a command with the out, err and in.
 	 */
-	@SuppressWarnings("deprecation")
 	public static String run(String cmd, long timeout) throws IOException {
+		return run(cmd, null, null, timeout);
+	}
+
+	public static String run(String cmd, String user, String passwd, long timeout) throws IOException {
 
 		TimeStamp t = TimeStamp.create();
 		BufferedReader out = null;
 		BufferedReader err = null;
+		DataOutputStream os = null;
 
 		StringBuilder sb = new StringBuilder();
 		Process p = null;
 		try {
 
-			p = Runtime.getRuntime().exec(new String[] { "bash", "-c", cmd });
+			if (X.isEmpty(user)) {
+//				p = Runtime.getRuntime().exec(new String[] { "bash", "-c", cmd });
+				p = new ProcessBuilder(new String[] { "bash", "-c", cmd }).start();
+				out = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				err = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
-			out = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			err = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+			} else {
+				p = new ProcessBuilder("su - " + user).start();
+				out = new BufferedReader(new InputStreamReader(p.getInputStream()));
+				err = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
-			String line = out.readLine();
-			while (line != null && t.pastms() < timeout) {
-				Console.inst.log(line);
-				sb.append(line).append("\r\n");
-				line = out.readLine();
+				os = new DataOutputStream(p.getOutputStream());
+				if (passwd != null) {
+					os.writeBytes(passwd + "\n");
+				}
+				os.writeBytes(cmd + "\n");
+				os.writeBytes("exit\n");
+				os.flush();
+				X.close(os);
+				os = null;
 			}
 
-			line = err.readLine();
-			while (line != null && t.pastms() < timeout) {
-				Console.inst.log(line);
-				sb.append(line).append("\r\n");
+			if (timeout > 0) {
+				Process p1 = p;
+				Task.schedule(t1 -> {
+					while (t.pastms() < timeout && p1.isAlive()) {
+						try {
+							synchronized (p1) {
+								p1.wait(1000);
+							}
+						} catch (Exception e) {
+							log.error(e.getMessage(), e);
+						}
+					}
+					if (p1.isAlive()) {
+						p1.destroyForcibly();
+					}
+				});
+
+				String line = out.readLine();
+				while (line != null && t.pastms() < timeout) {
+					sb.append(line).append("\r\n");
+					line = out.readLine();
+				}
+
 				line = err.readLine();
+				while (line != null && t.pastms() < timeout) {
+					sb.append(line).append("\r\n");
+					line = err.readLine();
+				}
+
 			}
 
 		} finally {
 
-			X.close(out, err);
+			X.close(out, err, os);
 
-			if (p != null) {
+			if (p != null && timeout > 0) {
 
 				IOUtils.closeQuietly(p.getOutputStream());
 				IOUtils.closeQuietly(p.getErrorStream());
@@ -182,11 +221,35 @@ public class Shell {
 		return sb.toString();
 	}
 
+	/**
+	 * using bash shell to run the command
+	 * 
+	 * @param cmd     command
+	 * @param timeout timeout for cmd, 0 for backend
+	 * @return
+	 */
 	public static String bash(String cmd, long timeout) {
+		return bash(cmd, null, null, timeout);
+	}
+
+	/**
+	 * using bash shell to run the command
+	 * 
+	 * @param cmd     command
+	 * @param user    user
+	 * @param passwd  password
+	 * @param timeout timeout, 0 for backend
+	 * @return
+	 */
+	public static String bash(String cmd, String user, String passwd, long timeout) {
 
 		StringBuilder sb = new StringBuilder();
 		Temp t1 = Temp.create("a");
 		try {
+			{
+				File f = t1.getFile().getParentFile();
+				f.mkdirs();
+			}
 
 			PrintStream out = new PrintStream(t1.getOutputStream());
 			out.println("#!/bin/bash");
@@ -194,11 +257,14 @@ public class Shell {
 			out.close();
 
 			File f = t1.getFile();
-			Shell.run("chmod ugo+x " + f.getAbsolutePath(), X.AMINUTE);
+			f.setExecutable(true, true);
+			String filename = f.getAbsolutePath();
 
-			sb.append(Shell.run(f.getAbsolutePath(), timeout));
+			log.info("bash file: " + filename);
+//			Shell.run("chmod ugo+x " + filename, X.AMINUTE);
+			sb.append(Shell.run(filename, user, passwd, timeout));
 
-			t1.delete();
+//			t1.delete();
 		} catch (Exception e) {
 			log.error(cmd, e);
 		}
@@ -268,7 +334,13 @@ public class Shell {
 			String line = "lsof -p " + pid + " -n|wc -l";
 			try {
 				String r = run(line, X.AMINUTE);
-				return X.toLong(r);
+				String[] ss = X.split(r, "\n");
+				for (String s : ss) {
+					s = s.trim();
+					if (X.isNumber(s)) {
+						return X.toLong(s);
+					}
+				}
 			} catch (Exception e) {
 				// ignore
 			}

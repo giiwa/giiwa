@@ -23,23 +23,29 @@ td.log_level_1 {
 		<span> <label><h3>$lang.get('log.startime'):</h3>
 				<input type='text' name='startime' value='$!startime'
 				style="width: 90px;" /> </label>
-		</span> <span> <label><h3>$lang.get('log.endtime'):</h3> <input
+		</span> 
+		<span> <label><h3>$lang.get('log.endtime'):</h3> <input
 				type='text' name='endtime' value='$!endtime' style="width: 90px;" />
 		</label>
-		</span> <span> <label><h3>$lang.get('log.node'):</h3> <input
+		</span> 
+		<span> <label><h3>$lang.get('log.node'):</h3> <input
 				type='text' name='node' value='$!node' style="width: 80px;" /> </label>
-		</span> <span> <label><h3>$lang.get('log.model'):</h3> <input
+		</span> 
+		<span> <label><h3>$lang.get('log.model'):</h3> <input
 				type='text' name='model' value='$!model' style="width: 80px;" /> </label>
-		</span> <span> <label><h3>$lang.get('log.op'):</h3> <input
+		</span> 
+		<span> <label><h3>$lang.get('log.op'):</h3> <input
 				type='text' name='op' value='$!op' style="width: 80px;" /> </label>
-		</span> <span> <label><h3>$lang.get('log.type'):</h3> <select
+		</span> 
+		<span> <label><h3>$lang.get('log.type'):</h3> <select
 				name='type'>
 					<option value=''>$lang.get('log.type_all')</option>
 					<option value='0' #if($type== 0) selected #end>$!lang.get('log.type_0')</option>
 					<option value='1' #if($type== 1) selected #end>$!lang.get('log.type_1')</option>
 					<option value='2' #if($type== 2) selected #end>$!lang.get('log.type_2')</option>
 			</select> </label>
-		</span> <span> <label><h3>$lang.get('log.level'):</h3> <select
+		</span> 
+		<span> <label><h3>$lang.get('log.level'):</h3> <select
 				name='level'>
 					<option value=''>$lang.get('log.level_all')</option>
 					<option value='1' #if($level== 1) selected #end>$!lang.get('log.level_1')</option>
@@ -47,7 +53,10 @@ td.log_level_1 {
 					<option value='3' #if($level== 3) selected #end>$!lang.get('log.level_3')</option>
 			</select> </label>
 		</span> 
-
+<!-- 		<span> <label><h3>$lang.get('log.thread'):</h3> <input
+				type='text' name='thread' value='$!thread' style="width: 80px;" /> </label>
+		</span> 
+ -->
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
 
@@ -116,17 +125,4 @@ td.log_level_1 {
 			});
 		}
 	}
-	$(function() {
-		$('input[name=starttime]').datepicker({
-			format : 'yyyy-mm-dd',
-			autoHide : true,
-			autoPick : true,
-			yearFirst : true
-		});
-		$('input[name=endtime]').datepicker({
-			format : 'yyyy-mm-dd',
-			autoHide : true,
-			yearFirst : true
-		});
-	})
 </script>

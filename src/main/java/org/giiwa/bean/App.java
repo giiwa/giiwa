@@ -49,38 +49,51 @@ public final class App extends Bean {
 
 	public static final BeanDAO<Long, App> dao = BeanDAO.create(App.class);
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true)
 	public long id;
 
-	@Column(memo = "应用标识")
+	@Column(memo = "应用标识", size = 50)
 	public String appid;
 
-	@Column(memo = "应用名")
+	@Column(memo = "应用名", size = 50)
 	public String name;
 
-	@Column(memo = "备注")
+	@Column(memo = "备注", size = 1000)
 	private String memo;
 
-	@Column(memo = "密钥")
+	@Column(memo = "密钥", size = 100)
 	public String secret;
 
-	@Column(memo = "允许的IP")
+	@Column(memo = "联系人", size = 50)
+	public String contact;
+
+	@Column(memo = "联系电话", size = 512, value = "多个逗号分隔")
+	public String phone;
+
+	@Column(memo = "联系邮箱", size = 100)
+	public String email;
+
+	@Column(memo = "允许的IP", size = 512)
 	public String allowip;
 
-	@Column(memo = "IP地址")
+	@Column(memo = "IP地址", size = 50)
 	private String ip;
 
-	@Column(memo = "lastime")
+	@Column(memo = "最后访问时间")
 	private long lastime;
 
-	@Column(name = "expired")
+	@Column(memo = "过期时间")
 	private long expired;
 
-	@Column(name = "access")
-	private List<String> access;
+	@Column(memo = "权限")
+	public List<String> access;
+
+	@Column(memo = "访问次数")
+	public long accessed;
 
 	public void touch(String ip) {
-		update(appid, V.create("lastime", System.currentTimeMillis()).set("ip", ip));
+		dao.inc(W.create().and(X.ID, id), "accessed", 1,
+				V.create("lastime", System.currentTimeMillis()).append("ip", ip));
 	}
 
 	/**
@@ -215,6 +228,18 @@ public final class App extends Bean {
 		return null;
 	}
 
+	public static String decode2(String data, String secret) {
+		try {
+			byte[] bb = Base64.getDecoder().decode(data);
+			bb = Digest.decode(bb, secret);
+			bb = X.unzip(bb);
+			return new String(bb);
+		} catch (Exception e) {
+			log.error("data=" + data + ", secret=" + secret, e);
+		}
+		return null;
+	}
+
 	/**
 	 * data = Base64(AES(params)) <br>
 	 * decode, params=AES(Base64(data));
@@ -226,6 +251,18 @@ public final class App extends Bean {
 	public static String encode(String data, String secret) {
 		try {
 			byte[] bb = Digest.encode(data.getBytes(), secret);
+			return Base64.getEncoder().encodeToString(bb);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	public static String encode2(String data, String secret) {
+		try {
+			byte[] bb = X.zip(data.getBytes());
+			bb = Digest.encode(bb, secret);
+
 			return Base64.getEncoder().encodeToString(bb);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -259,6 +296,10 @@ public final class App extends Bean {
 	 * @return the app
 	 */
 	public static App load(String appid) {
+		if (X.isEmpty(appid)) {
+			return null;
+		}
+
 		App a = dao.load(W.create().and("appid", appid));
 		if (a != null && (a.expired <= 0 || a.expired > System.currentTimeMillis())) {
 			return a;

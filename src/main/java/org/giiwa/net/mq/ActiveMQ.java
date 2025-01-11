@@ -211,7 +211,7 @@ class ActiveMQ extends MQ {
 
 						r.type = m1.readInt();
 						pos += Integer.SIZE / Byte.SIZE;
-						
+
 						len = m1.readInt();
 						if (len > 0) {
 							byte[] bb = new byte[len];
@@ -220,7 +220,7 @@ class ActiveMQ extends MQ {
 						}
 						pos += Integer.SIZE / Byte.SIZE;
 						pos += len;
-						
+
 						len = m1.readInt();
 						if (len > 0) {
 							r.data = new byte[len];
@@ -243,11 +243,17 @@ class ActiveMQ extends MQ {
 					}
 
 				} else {
-					log.error("unknown message=" + m);
+					log.error("mq.onmessagem unknown message=" + m);
 				}
 
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				log.error("mq.onmessage error", e);
+			} finally {
+				try {
+					m.acknowledge();
+				} catch (Exception e) {
+					log.error("mq.onmessage error", e);
+				}
 			}
 		}
 	}
@@ -359,12 +365,6 @@ class ActiveMQ extends MQ {
 		String to;
 		MessageProducer p;
 
-//		BytesMessage m = null;
-//		int len = 0;
-//		int priority = 1;
-//		long ttl = (int) X.AMINUTE;
-//		int persistent = DeliveryMode.NON_PERSISTENT;
-
 		public void send(Request r) throws JMSException {
 
 			last = System.currentTimeMillis();
@@ -373,31 +373,20 @@ class ActiveMQ extends MQ {
 				log.debug("sending, r=" + r);
 			}
 
-//			if (m == null) {
-//				m = session.createBytesMessage();
-//				len = 0;
-//			}
-
 			BytesMessage m = session.createBytesMessage();
 			m.writeLong(r.seq);
-//			len += Long.SIZE / Byte.SIZE;
 			m.writeByte(r.ver);
-//			len ++;
 			m.writeLong(r.tt);
-//			len += Long.SIZE / Byte.SIZE;
 
-//			len += Integer.SIZE / Byte.SIZE;
 			byte[] ff = r.from == null ? null : r.from.getBytes();
 			if (ff == null) {
 				m.writeInt(0);
 			} else {
 				m.writeInt(ff.length);
 				m.writeBytes(ff);
-//				len += ff.length;
 			}
 
 			m.writeInt(r.type);
-//			len += Integer.SIZE / Byte.SIZE;
 
 			ff = r.cmd == null ? null : r.cmd.getBytes();
 			if (ff == null) {
@@ -407,22 +396,13 @@ class ActiveMQ extends MQ {
 				m.writeBytes(ff);
 			}
 
-//			len += Integer.SIZE / Byte.SIZE;
 			if (r.data == null) {
 				m.writeInt(0);
 			} else {
 				m.writeInt(r.data.length);
 				m.writeBytes(r.data);
-//				len += r.data.length;
 			}
 
-//			ttl = r.ttl;
-//			priority = r.priority;
-//			persistent = r.persistent;
-
-//			if (m != null) {
-
-//			long size = m.getBodyLength();
 			if (r.data != null && r.data.length > 1024 * 1000 * 1) {
 				// > 1M
 				Exception e = new Exception();
@@ -431,15 +411,10 @@ class ActiveMQ extends MQ {
 			}
 
 			p.send(m, r.persistent, r.priority, r.ttl);
-			// p.send(m);
 
 			if (log.isDebugEnabled()) {
 				log.debug("Sending: " + group + name + ", size=" + (r.data == null ? 0 : r.data.length));
 			}
-//			} else if (last < System.currentTimeMillis() - X.AMINUTE) {
-//				senders.remove(name);
-//				p.close();
-//			}
 
 		}
 

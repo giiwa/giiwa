@@ -44,9 +44,12 @@ public final class AuthToken extends Bean {
 
 	private static Log log = LogFactory.getLog(AuthToken.class);
 
-	public static final BeanDAO<String, AuthToken> dao = BeanDAO.create(AuthToken.class);
+	public static final BeanDAO<String, AuthToken> dao = BeanDAO.create(AuthToken.class, time -> {
+		// return cleanup query
+		return W.create().and("created", System.currentTimeMillis() - X.ADAY * 7, W.OP.lte);
+	});
 
-	@Column(memo = "唯一序号")
+	@Column(memo = "主键", unique = true, size=50)
 	private String id;
 
 	@Column(memo = "用户ID")
@@ -124,7 +127,7 @@ public final class AuthToken extends Bean {
 	public static AuthToken create(long uid, String ip, V v) {
 
 		try {
-			v = v.set("uid", uid).set("ip", ip);
+			v = v.append("uid", uid).append("ip", ip);
 			String token = UID.random(20);
 			while (dao.exists(token)) {
 				// update
@@ -132,7 +135,7 @@ public final class AuthToken extends Bean {
 			}
 
 			// insert
-			dao.insert(v.set(X.ID, token).force("token", token));
+			dao.insert(v.append(X.ID, token).force("token", token));
 			return dao.load(token);
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -209,7 +212,7 @@ public final class AuthToken extends Bean {
 
 		String id = UID.id(uid, sid, ip, token);
 
-		v = v.set("uid", uid).set("sid", sid).set("token", token).set("ip", ip);
+		v = v.append("uid", uid).append("sid", sid).append("token", token).append("ip", ip);
 
 		try {
 			if (dao.exists(id)) {
@@ -217,7 +220,7 @@ public final class AuthToken extends Bean {
 				dao.update(id, v);
 			} else {
 				// insert
-				dao.insert(v.set(X.ID, id));
+				dao.insert(v.append(X.ID, id));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);

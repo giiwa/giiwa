@@ -18,11 +18,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.MessageDigest;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.dao.X;
 
 /**
  * MD5 utility
@@ -31,74 +31,78 @@ import org.apache.commons.logging.LogFactory;
  *
  */
 public class MD5 {
-  private static Log log = LogFactory.getLog(MD5.class);
+	private static Log log = LogFactory.getLog(MD5.class);
 
-  /**
-   * Generate Md5 string for the file.
-   *
-   * @param f
-   *          the file
-   * @return the string
-   */
-  public static String md5(File f) {
-    FileInputStream fis = null;
-    try {
-      fis = new FileInputStream(f);
-      return md5(fis);
-    } catch (Exception e) {
-      log.error("f=" + f.getAbsolutePath(), e);
-    } finally {
-      if (fis != null) {
-        try {
-          fis.close();
-        } catch (IOException e) {
-        }
-      }
-    }
-    return null;
-  }
+	/**
+	 * Generate Md5 string for the file.
+	 *
+	 * @param f the file
+	 * @return the string
+	 */
+	public static String md5(File f) {
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(f);
+			return md5(fis);
+		} catch (Exception e) {
+			log.error("f=" + f.getAbsolutePath(), e);
+		} finally {
+			if (fis != null) {
+				try {
+					fis.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+		return null;
+	}
 
-  /**
-   * Generate Md5 string for the inputstream.
-   *
-   * @param fis
-   *          the inputstream
-   * @return the string
-   * @throws Exception
-   *           the exception
-   */
-  public static String md5(InputStream fis) throws Exception {
-    MessageDigest md = MessageDigest.getInstance("MD5");
+	/**
+	 * Generate Md5 string for the string.
+	 *
+	 * @param target the target
+	 * @return the string
+	 */
+	public static String md5(String target) {
+		return DigestUtils.md5Hex(target);
+	}
 
-    byte[] buffer = new byte[8192];
-    int length;
-    while ((length = fis.read(buffer)) != -1) {
-      md.update(buffer, 0, length);
-    }
+	public static String md5(InputStream fis) throws Exception {
+		try {
+			return DigestUtils.md5Hex(fis);
+		} finally {
+			X.close(fis);
+		}
+	}
 
-    return new String(org.apache.commons.codec.binary.Hex.encodeHex(md.digest()));
-  }
+	public static String md5(byte[] bb) throws Exception {
+		return DigestUtils.md5Hex(bb);
+	}
 
-  /**
-   * Generate Md5 string for the string.
-   *
-   * @param target
-   *          the target
-   * @return the string
-   */
-  public static String md5(String target) {
-    return DigestUtils.md5Hex(target);
-  }
+	/**
+	 * Generate SHA1 string for the string.
+	 *
+	 * @param data the string
+	 * @return the sha1 string
+	 */
+	public static String sha1(String data) {
+		return DigestUtils.sha1Hex(data);
+	}
 
+	public static String sha1(InputStream fis) throws Exception {
+		try {
+			return DigestUtils.sha1Hex(fis);
+		} finally {
+			X.close(fis);
+		}
+	}
 
-  /**
-   * Generate SHA1 string for the string.
-   *
-   * @param data
-   *          the string
-   * @return the sha1 string
-   */
-  public static String sha1(String data) {
-    return DigestUtils.sha1Hex(data);
-  }
+	public static String sha256(InputStream fis) throws Exception {
+		try {
+			return DigestUtils.sha256Hex(fis);
+		} finally {
+			X.close(fis);
+		}
+	}
+
 }

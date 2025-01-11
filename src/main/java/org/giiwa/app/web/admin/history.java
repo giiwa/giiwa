@@ -40,11 +40,11 @@ public class history extends Controller {
 	/**
 	 * Deleteall.
 	 */
-	@Path(path = "deleteall", login = true, access = "access.config.admin")
+	@Path(path = "deleteall", login = true, access = "access.config.admin", oplog = true)
 	public void deleteall() {
 		JSON jo = new JSON();
 		int i = History.dao.delete(W.create());
-		GLog.oplog.warn(history.class, "deleteall", "deleted=" + i, login, this.ip());
+		GLog.oplog.warn(this, "deleteall", "deleted=" + i);
 		jo.put(X.STATE, 200);
 		this.send(jo);
 	}
