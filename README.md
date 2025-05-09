@@ -39,9 +39,6 @@
 使用 *git clone* 源码仓库 (或者在github的官网上直接克隆)， 你就可以获得Giiwa的全部最新代码。
 
 
-#### 
-gradle :dependencyInsight --configuration compileClasspath --dependency netty
-
 #### 编译和打包
 使用 Gradle 编译, 她会自动编译打包所有依赖包到 giiwa.tgz, giiwa.zip 和升级模块包。
 > gradle eclipse
