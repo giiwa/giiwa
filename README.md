@@ -1,5 +1,4 @@
 ### 轻量级分布式应用框架 
-[https://www.giisoo.com](https://www.giisoo.com)
 
 #### 环境
 * openjdk 17+
