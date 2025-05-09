@@ -16,7 +16,7 @@
 
 	<div><label><h3>$lang.get('cache.url'):</h3>
 		<input type='text' name='cache.url' value="$!global.getString('cache.url','')"/>
-		<g>$lang.get('cache.url.hint')</g></label></div>
+		<g><a href='javascript:;' onclick='_testcache();'>测试</a> $lang.get('cache.url.hint')</g></label></div>
 
 	<div style="margin-left: 20px;">
 		<div><label><h3>$lang.get('cache.user'):</h3>
@@ -332,5 +332,16 @@ function _edit_conf(o) {
 		}
 	})
 }
-
+function _testcache(){
+	var url = $('input[name="cache.url"]').val();
+	var user = $('input[name="cache.user"]').val();
+	var pwd = $('input[name="cache.passwd"]').val();
+	$.post('/admin/setting/testcache?__node=$!__node', {url:url, user:user, pwd:pwd}, function(d){
+		if(d.state == 200) {
+			giiwa.message(d.message);
+		} else {
+			giiwa.error(d.message);
+		}
+	})
+}
 </script>	

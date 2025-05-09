@@ -43,7 +43,6 @@ import java.util.UUID;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.Data;
 import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
@@ -68,9 +67,9 @@ import com.mongodb.BasicDBObject;
  * all data access MUST be inherited from it
  * 
  */
-public final class RDSHelper implements Helper.DBHelper {
+public class RDSHelper implements Helper.DBHelper {
 
-	private static Log log = LogFactory.getLog(RDSHelper.class);
+	protected static Log log = LogFactory.getLog(RDSHelper.class);
 
 	/**
 	 * indicated whether is debug model
@@ -81,7 +80,7 @@ public final class RDSHelper implements Helper.DBHelper {
 //	public static RDSHelper inst = new RDSHelper();
 
 	private Pool<Connection> _conn = null;
-	private _Driver driver;
+	protected _Driver driver;
 	public String dbname;
 	public String schema;
 	public String username;
@@ -119,7 +118,7 @@ public final class RDSHelper implements Helper.DBHelper {
 	 * @param o the o
 	 * @throws SQLException the SQL exception
 	 */
-	private void _setParameter(PreparedStatement p, int i, Object o, Connection c) throws SQLException {
+	protected void _setParameter(PreparedStatement p, int i, Object o, Connection c) throws SQLException {
 		if (o == null) {
 			p.setObject(i, null);
 		} else if (o instanceof Integer) {
@@ -144,8 +143,8 @@ public final class RDSHelper implements Helper.DBHelper {
 			p.setObject(i, o);
 		} else if (X.isArray(o)) {
 			List<?> l1 = X.asList(o, s -> s);
-			p.setString(i, l1.toString());
-//			p.setObject(i, driver.createArrayOf(c, l1));
+			String s1 = X.join(l1, ",");
+			p.setString(i, s1);
 		} else {
 			p.setString(i, o.toString());
 		}
@@ -162,9 +161,6 @@ public final class RDSHelper implements Helper.DBHelper {
 	@Override
 	public int delete(String tablename, W q) {
 
-		/**
-		 * update it in database
-		 */
 		Connection c = null;
 		PreparedStatement p = null;
 		int n = -1;
@@ -174,7 +170,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		StringBuilder sql = new StringBuilder();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null)
 				throw new SQLException("get connection failed!");
@@ -226,6 +222,10 @@ public final class RDSHelper implements Helper.DBHelper {
 		} finally {
 			close(p, c);
 
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + sql);
+			}
+
 			Helper.Stat.write(tablename, t.pastms());
 
 		}
@@ -239,7 +239,7 @@ public final class RDSHelper implements Helper.DBHelper {
 	 * @return Connection
 	 * @throws SQLException the SQL exception
 	 */
-	private Connection _getConnection() throws SQLException {
+	public Connection getConnection() throws SQLException {
 
 		Connection c = null;
 		try {
@@ -277,7 +277,6 @@ public final class RDSHelper implements Helper.DBHelper {
 				} else if (o instanceof PreparedStatement) {
 					((PreparedStatement) o).close();
 				} else if (o instanceof Connection) {
-
 					Connection c = (Connection) o;
 					try {
 						if (!c.getAutoCommit()) {
@@ -288,9 +287,6 @@ public final class RDSHelper implements Helper.DBHelper {
 					} finally {
 						c.close();
 					}
-
-//					log.warn("afert clode, active=" + ds.getNumActive() + ", idle=" + ds.getNumIdle());
-
 				}
 			} catch (Throwable e) {
 				if (log.isErrorEnabled())
@@ -322,7 +318,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		StringBuilder sql = new StringBuilder();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null)
 				throw new SQLException("get connection failed!");
@@ -368,7 +364,7 @@ public final class RDSHelper implements Helper.DBHelper {
 			close(r, p, c);
 
 			if (log.isDebugEnabled())
-				log.debug("cost:" + t.past() + ", sql=[" + q);
+				log.debug("cost = " + t.past() + ", sql=" + sql.toString());
 
 			Helper.Stat.read(table, t.pastms());
 
@@ -392,20 +388,12 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		Connection c = null;
 
-		TimeStamp t0 = TimeStamp.create();
-
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null)
 				throw new SQLException("get connection failed!");
-			int n = _updateTable(table, q, v, 0, c);
-
-			if (t0.pastms() > 30000) {
-				log.warn("slow30, cost=" + t0.past() + ", table=" + table + ", q=" + q + ", v=" + v);
-			}
-
-			return n;
+			return _updateTable(table, q, v, 0, c);
 		} finally {
 			close(c);
 		}
@@ -415,11 +403,6 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		if (v == null || v.isEmpty())
 			return 0;
-
-//		if (retries > 10) {
-//			log.error("table=" + table + ", v=" + v, new Exception("exit as retires =" + retries));
-//			return -1;
-//		}
 
 		Object o1 = v.value(X.UPDATED);
 		if (o1 != V.ignore) {
@@ -487,8 +470,9 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		} catch (Exception e) {
 
-			if (retries < 10 && _columnNotExists(e)) {
+			if (retries < 1 && _columnNotExists(e)) {
 				// column missed
+				log.error(sql.toString() + ", q=" + q + ", v=" + v + ", retries=" + retries, e);
 				V v1 = v.copy();
 				q.scan(e1 -> {
 					if (e1.value != null) {
@@ -507,8 +491,8 @@ public final class RDSHelper implements Helper.DBHelper {
 
 			Helper.Stat.write(table, t.pastms());
 
-			if (t.pastms() > 1000 && log.isWarnEnabled()) {
-				log.warn("cost=" + t.past() + ", update [" + table + "], q=" + q + ", v=" + v);
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", update [" + table + "], q=" + q + ", v=" + v);
 			}
 
 		}
@@ -529,36 +513,40 @@ public final class RDSHelper implements Helper.DBHelper {
 		Connection c = null;
 		PreparedStatement p = null;
 		ResultSet r = null;
-		StringBuilder sql = new StringBuilder();
+		String sql = null;
 
 		try {
-			c = _getConnection();
+
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
+//			}
+
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
 			}
 
-			table = driver.fullname(dbname, schema, table);
-
-			if (X.isEmpty(q.fields())) {
-				sql.append("select * from ").append(table);
-			} else {
-				sql.append("select " + q.fields() + " from ").append(table);
-			}
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
+//			}
 
 			String where = _where(q, c);
 			Object[] args = q.args();
 			String orderby = _orderby(q, c);
 
-			if (!X.isEmpty(where)) {
-				sql.append(" where ").append(where);
-			}
+			table = driver.fullname(dbname, schema, table);
+			sql = driver.load(table, q.fields(), where, orderby);
 
-			if (!X.isEmpty(orderby)) {
-				sql.append(" ").append(orderby);
-			}
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
+//			}
 
-			p = c.prepareStatement(sql.toString());
+			p = c.prepareStatement(sql);
+
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
+//			}
 
 			int order = 1;
 			if (args != null) {
@@ -569,38 +557,39 @@ public final class RDSHelper implements Helper.DBHelper {
 				}
 			}
 
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
+//			}
+
 			r = p.executeQuery();
 
-			if (t.pastms() > 30000) {
-				log.warn("slow30, cost=" + t.past() + ", table=" + table + ", q=" + q);
-			}
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
+//			}
 
 			if (r.next()) {
+
+//				if (log.isDebugEnabled()) {
+//					log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
+//				}
+
 				b.load(r);
+
+				if (t.pastms() > 30000) {
+					log.warn("slow30, cost=" + t.past() + ", table=" + table + ", q=" + q);
+				}
 
 				return true;
 			}
 
 		} catch (Exception e) {
-			log.error("cost=" + t.past() + ", sql=" + sql.toString() + ", q=" + q, e);
+			log.error("cost = " + t.past() + ", sql=" + sql + ", q=" + q, e);
 			throw e;
-//			if (tableNotExists(e)) {
-//				// create table
-//				_createTable(table, V.create().append("created", System.currentTimeMillis()).append("updated",
-//						System.currentTimeMillis()), c);
-//
-//			} else if (!columnNotExists(e)) {
-//				log.error(sql, e);
-//				throw e;
-//			}
-
 		} finally {
 			close(r, p, c);
 
-			if (trace) {
-				log.debug("trace, load, cost = " + t.past() + ", sql=" + q + ", result=" + b);
-			} else if (log.isDebugEnabled()) {
-				log.debug("cost = " + t.past() + ", sql=" + q + ", result=" + b);
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q + ", result=" + b);
 			}
 
 			Helper.Stat.read(table, t.pastms());
@@ -648,27 +637,47 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
+
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed, _conn=" + _conn);
 			}
 
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
+
 			String where = _where(q, c);
 			Object[] args = q.args();
 			String orderby = _orderby(q, c);
+
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
 
 			table = driver.fullname(dbname, schema, table);
 
 			sql = driver.load(table, q.fields(), where, orderby, offset, limit);
 
-			if (log.isDebugEnabled()) {
-				log.debug("sql=" + sql.toString());
-			}
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
+
+//			if (log.isDebugEnabled()) {
+//				log.debug("sql=" + sql.toString());
+//			}
 
 //			log.info("sql=" + sql.toString());
 
 			p = c.prepareStatement(sql.toString());
+
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
 
 			if (!(driver instanceof PG)) {
 				p.setQueryTimeout(300);// seconds
@@ -682,10 +691,23 @@ public final class RDSHelper implements Helper.DBHelper {
 				}
 			}
 
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
+
 			r = p.executeQuery();
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
+
 			long rowid = offset;
 			Beans<T> list = new Beans<T>();
 			while (r.next()) {
+
+//				if (log.isDebugEnabled()) {
+//					log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//				}
+
 				T b = clazz.getDeclaredConstructor().newInstance();
 				b.load(r);
 				b._rowid = rowid++;
@@ -696,26 +718,20 @@ public final class RDSHelper implements Helper.DBHelper {
 				log.warn("slow30, cost=" + t.past());
 			}
 
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t.past() + ", sql=" + sql + ", q=" + q);
+//			}
+
 			return list;
 		} catch (Exception e) {
-//
-//			if (tableNotExists(e)) {
-//
-//				// create table
-//				_createTable(table, V.create().append("created", System.currentTimeMillis()).append("updated",
-//						System.currentTimeMillis()), c);
-//
-//			} else if (!columnNotExists(e)) {
-//				log.error("sql=" + sql, e);
-//				GLog.applog.error("db", "load", sql, e);
-			throw new SQLException(e);
-//			}
+			throw new SQLException("table=" + table + ", " + e.getMessage(), e);
 
 		} finally {
 			close(r, p, c);
 
-			if (log.isDebugEnabled())
-				log.debug("cost:" + t.pastms() + "ms, sql=" + q);
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + sql);
+			}
 
 			Helper.Stat.read(table, t.pastms());
 
@@ -756,12 +772,12 @@ public final class RDSHelper implements Helper.DBHelper {
 		TimeStamp t = TimeStamp.create();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null)
 				throw new SQLException("get connection failed!");
 
-			int n = insertTable(table, v, c, 0);
+			int n = _insertTable(table, v, c, 0);
 
 			if (t.pastms() > 30000) {
 				log.warn("slow30, cost=" + t.past());
@@ -770,24 +786,15 @@ public final class RDSHelper implements Helper.DBHelper {
 			return n;
 
 		} catch (SQLException e) {
-			if (log.isErrorEnabled()) {
-				log.error(v.toString(), e);
-			}
+			log.error(v.toString(), e);
 			throw e;
 		} finally {
 			close(c);
-
-			Helper.Stat.write(table, t.pastms());
-
-//			if (t.pastms() > 1000 && log.isWarnEnabled()) {
-//				log.warn("cost=" + t.past() + ", insert [" + table + "], v=" + v);
-//			}
-
 		}
 
 	}
 
-	private int insertTable(final String table, V sets, Connection c, int retries) throws SQLException {
+	private int _insertTable(final String table, V sets, Connection c, int retries) throws SQLException {
 
 		if (sets == null || sets.isEmpty()) {
 			log.warn("not data to insert, ignore");
@@ -854,7 +861,7 @@ public final class RDSHelper implements Helper.DBHelper {
 					if (retries > 9) {
 						log.error("table=" + table + ", v=" + sets, new Exception("exit as retires =" + retries));
 					} else {
-						return insertTable(table, sets, c, retries + 1);
+						return _insertTable(table, sets, c, retries + 1);
 					}
 				}
 			} else if (_tableNotExists(e)) {
@@ -865,7 +872,7 @@ public final class RDSHelper implements Helper.DBHelper {
 					if (retries > 9) {
 						log.error("table=" + table + ", v=" + sets, new Exception("exit as retires =" + retries));
 					}
-					return insertTable(table, sets, c, retries + 1);
+					return _insertTable(table, sets, c, retries + 1);
 				}
 
 			} else {
@@ -908,9 +915,9 @@ public final class RDSHelper implements Helper.DBHelper {
 					continue;
 				}
 
-				StringBuilder sql = new StringBuilder("alter table ").append(table1).append(" add ");
+				String sql = driver.addColumn(table1,
+						JSON.create().append("name", name).append("type", _type(v, name)));
 				try {
-					sql.append(name + " " + _type(v, name));
 					log.warn("add column, sql=" + sql);
 					stat.execute(sql.toString());
 				} catch (Error e) {
@@ -1074,7 +1081,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null)
 				throw new SQLException("get connection failed!");
@@ -1122,8 +1129,8 @@ public final class RDSHelper implements Helper.DBHelper {
 //
 //			if (tableNotExists(e)) {
 //				// create table
-//				_createTable(table, V.create().append("created", System.currentTimeMillis()).append("updated",
-//						System.currentTimeMillis()), c);
+//				_createTable(table, V.create().append("created", Global.now()).append("updated",
+//						Global.now()), c);
 //
 //			} else if (!columnNotExists(e)) {
 //				log.error(q, e);
@@ -1139,14 +1146,14 @@ public final class RDSHelper implements Helper.DBHelper {
 //		return null;
 	}
 
-	private synchronized void _checkDriver(Connection c) {
+	protected synchronized void _checkDriver(Connection c) {
 		if (driver == null) {
 			try {
 
 				String s = (c.getMetaData().getDatabaseProductName() + "//" + c.getMetaData().getDriverName() + "//"
 						+ url).toLowerCase();
 
-				for (_Driver e : _drivers) {
+				for (_Driver e : _AbstractDriver._drivers) {
 					if (e.check(s)) {
 						driver = e;
 						break;
@@ -1172,33 +1179,115 @@ public final class RDSHelper implements Helper.DBHelper {
 	 * @throws SQLException
 	 */
 	@Override
-	public int inc(final String table, W q, String name, int n, V sets) throws SQLException {
+	public int inc(final String table, W q, String name, int n, V v) throws SQLException {
+
+		Connection c = null;
+
+		if (v == null) {
+			v = V.create();
+		}
+		v.force("updated", Global.now());
+
+		TimeStamp t = TimeStamp.create();
+
+		try {
+			c = getConnection();
+			if (c == null)
+				throw new SQLException("get connection failed!");
+
+			int n1 = _inc(table, q, name, n, v, c, 0);
+			if (n1 > 0) {
+				return n1;
+			}
+
+			// insert
+			V v1 = V.create();
+			q.scan(e -> {
+				if (X.isSame(e.name, X.ID)) {
+					v1.append(X.ID, e.value);
+				}
+			});
+			if (v1.isEmpty()) {
+				log.info("no id in query=" + q);
+				return -1;
+			}
+
+			v1.append(name, n);
+			v1.copy(v);
+
+			return insertTable(table, v1);
+
+//		} catch (SQLException e) {
+//
+//			if (tableNotExists(e)) {
+//				// create table
+//				_createTable(table, V.create().append(name, n).append("created", Global.now())
+//						.append("updated", Global.now()), c);
+//
+//			} else if (!columnNotExists(e)) {
+//				log.error(e.getMessage(), e);
+//				throw e;
+//			} else {
+//				throw e;
+//			}
+		} finally {
+			close(c);
+
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + q + ", n=" + n);
+			}
+
+			Helper.Stat.write(table, t.pastms());
+
+		}
+//		return -1;
+
+	}
+
+	public int inc(final String table, W q, String name, float n, V v) throws SQLException {
 
 		Connection c = null;
 
 		TimeStamp t = TimeStamp.create();
 
+		if (v == null) {
+			v = V.create();
+		}
+		v.force("updated", Global.now());
+
 		try {
-			c = _getConnection();
+			c = getConnection();
 			if (c == null)
 				throw new SQLException("get connection failed!");
 
-			int n1 = _inc(table, q, name, n, c, 0);
-			if (sets != null && !sets.isEmpty()) {
-				this.updateTable(table, q, sets);
+			int n1 = _inc(table, q, name, n, v, c, 0);
+			if (n1 > 0) {
+				return n1;
 			}
 
-			if (t.pastms() > 30000) {
-				log.warn("slow30, cost=" + t.past());
+			// insert
+			V v1 = V.create();
+			q.scan(e -> {
+				if (X.isSame(e.name, X.ID)) {
+					v1.append(X.ID, e.value);
+				}
+			});
+			if (v1.isEmpty()) {
+				log.info("no id in query=" + q);
+				return -1;
 			}
 
-			return n1;
+			v1.append(name, n);
+			v1.copy(v);
+
+			return insertTable(table, v1);
+
 //		} catch (SQLException e) {
 //
 //			if (tableNotExists(e)) {
 //				// create table
-//				_createTable(table, V.create().append(name, n).append("created", System.currentTimeMillis())
-//						.append("updated", System.currentTimeMillis()), c);
+//				_createTable(table, V.create().append(name, n).append("created", Global.now())
+//						.append("updated", Global.now()), c);
 //
 //			} else if (!columnNotExists(e)) {
 //				log.error(e.getMessage(), e);
@@ -1216,7 +1305,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 	}
 
-	private int _inc(final String table, W q, String name, int n, Connection c, int retries) {
+	private int _inc(final String table, W q, String name, int n, V v, Connection c, int retries) {
 		/**
 		 * update it in database
 		 */
@@ -1230,7 +1319,10 @@ public final class RDSHelper implements Helper.DBHelper {
 			 * create the sql statement
 			 */
 			String table1 = driver.fullname(dbname, schema, table);
-			sql.append("update ").append(table1).append(" set ").append(name).append("=").append(name).append("+?");
+			sql.append("update ").append(table1).append(" set " + name + "=" + name + "+?");
+			for (String s : v.names()) {
+				sql.append(", " + s + "=?");
+			}
 
 //			boolean isoracle = isOracle(c);
 
@@ -1241,13 +1333,22 @@ public final class RDSHelper implements Helper.DBHelper {
 				sql.append(" where ").append(where);
 			}
 
-			log.info("sql=" + sql);
+			if (log.isDebugEnabled()) {
+				log.debug("sql=" + sql);
+			}
 
 			p = c.prepareStatement(sql.toString());
 
 			int order = 1;
 			_setParameter(p, order++, n, c);
 
+			// set v
+			for (String s : v.names()) {
+				Object v1 = v.value(s);
+				_setParameter(p, order++, v1, c);
+			}
+
+			// set where
 			if (args != null) {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
@@ -1265,7 +1366,7 @@ public final class RDSHelper implements Helper.DBHelper {
 				// column missed
 				if (_alertTable(table, V.create().append(name, n), c)) {
 					if (retries < 2) {
-						return _inc(table, q, name, n, c, retries + 1);
+						return _inc(table, q, name, n, v, c, retries + 1);
 					}
 				}
 			}
@@ -1279,7 +1380,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		return 0;
 	}
 
-	private int _inc(final String table, W q, JSON incvalue, Connection c) {
+	private int _inc(final String table, W q, String name, float n, V v, Connection c, int retries) {
 		/**
 		 * update it in database
 		 */
@@ -1293,15 +1394,99 @@ public final class RDSHelper implements Helper.DBHelper {
 			 * create the sql statement
 			 */
 			String table1 = driver.fullname(dbname, schema, table);
+			sql.append("update ").append(table1).append(" set " + name + "=" + name + "+?");
+			for (String s : v.names()) {
+				sql.append(", " + s + "=?");
+			}
+
+//			boolean isoracle = isOracle(c);
+
+			String where = _where(q, c);
+			Object[] args = q.args();
+
+			if (!X.isEmpty(where)) {
+				sql.append(" where ").append(where);
+			}
+
+			if (log.isDebugEnabled()) {
+				log.debug("sql=" + sql);
+			}
+
+			p = c.prepareStatement(sql.toString());
+
+			int order = 1;
+			_setParameter(p, order++, n, c);
+
+			// set v
+			for (String s : v.names()) {
+				Object v1 = v.value(s);
+				_setParameter(p, order++, v1, c);
+			}
+
+			// set where
+			if (args != null) {
+				for (int i = 0; i < args.length; i++) {
+					Object o = args[i];
+
+					_setParameter(p, order++, o, c);
+				}
+			}
+
+			return p.executeUpdate();
+
+		} catch (Exception e) {
+
+			if (_columnNotExists(e)) {
+
+				// column missed
+				if (_alertTable(table, V.create().append(name, n), c)) {
+					if (retries < 2) {
+						return _inc(table, q, name, n, v, c, retries + 1);
+					}
+				}
+			}
+
+			log.error(sql.toString(), e);
+
+		} finally {
+			close(p, r);
+		}
+
+		return 0;
+	}
+
+	private int _inc(final String table, W q, JSON incvalue, V v, Connection c) {
+		/**
+		 * update it in database
+		 */
+		PreparedStatement p = null;
+		ResultSet r = null;
+		StringBuilder sql = new StringBuilder();
+		TimeStamp t = TimeStamp.create();
+
+		try {
+
+			/**
+			 * create the sql statement
+			 */
+			String table1 = driver.fullname(dbname, schema, table);
 			sql.append("update ").append(table1).append(" set ");
 
 			boolean first = true;
 			for (String name : incvalue.keySet()) {
+				Object v1 = incvalue.get(name);
+				if (X.isSame(v1, 0)) {
+					continue;
+				}
 				if (!first) {
 					sql.append(", ");
 				}
-				sql.append(name).append("=").append(name).append("+?");
+				sql.append(name + "=" + name + "+?");
 				first = false;
+			}
+
+			for (String name : v.names()) {
+				sql.append(", " + name + "=?");
 			}
 
 //			boolean isoracle = isOracle(c);
@@ -1316,14 +1501,23 @@ public final class RDSHelper implements Helper.DBHelper {
 			p = c.prepareStatement(sql.toString());
 
 			int order = 1;
+			// set inc
 			for (String name : incvalue.keySet()) {
+				Object v1 = incvalue.get(name);
+				if (X.isSame(v1, 0)) {
+					continue;
+				}
 				_setParameter(p, order++, incvalue.getInt(name), c);
 			}
-
+			// set v
+			for (String name : v.names()) {
+				Object v1 = v.value(name);
+				_setParameter(p, order++, v1, c);
+			}
+			// set where
 			if (args != null) {
 				for (int i = 0; i < args.length; i++) {
 					Object o = args[i];
-
 					_setParameter(p, order++, o, c);
 				}
 			}
@@ -1339,7 +1533,7 @@ public final class RDSHelper implements Helper.DBHelper {
 				// column missed
 				for (String name : incvalue.keySet()) {
 					if (_alertTable(table, V.create().append(name, incvalue.getInt(name)), c)) {
-						return _inc(table, q, name, incvalue.getInt(name), c, 0);
+						return _inc(table, q, name, incvalue.getInt(name), v, c, 0);
 					}
 				}
 
@@ -1347,6 +1541,10 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		} finally {
 			close(p, r);
+
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + sql + ", value=" + incvalue);
+			}
 		}
 
 		return 0;
@@ -1358,10 +1556,8 @@ public final class RDSHelper implements Helper.DBHelper {
 		Connection c = null;
 		Statement stat = null;
 
-		TimeStamp t0 = TimeStamp.create();
-
 		try {
-			c = _getConnection();
+			c = getConnection();
 			stat = c.createStatement();
 			String sql = driver.createIndex(dbname, schema, table, ss, unique);
 			if (log.isInfoEnabled()) {
@@ -1369,11 +1565,8 @@ public final class RDSHelper implements Helper.DBHelper {
 			}
 			stat.executeUpdate(sql);
 
-			if (t0.pastms() > 30000) {
-				log.warn("slow30, cost=" + t0.past());
-			}
-
 		} catch (Exception e) {
+			// ignore
 			log.error(e.getMessage(), e);
 		} finally {
 			close(stat, c);
@@ -1386,23 +1579,28 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		Connection c = null;
 
-		TimeStamp t0 = TimeStamp.create();
+//		TimeStamp t0 = TimeStamp.create();
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			List<Map<String, Object>> l1 = driver.getIndexes(c, dbname, schema, table);
 
-			if (t0.pastms() > 30000) {
-				log.warn("slow30, cost=" + t0.past());
-			}
+//			if (t0.pastms() > 30000) {
+//				log.warn("slow30, cost=" + t0.past());
+//			}
 			return l1;
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
 			close(c);
+
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t0.past() + ", table=" + table);
+//			}
+
 		}
 		return null;
 
@@ -1417,7 +1615,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 			stat = c.createStatement();
 			stat.executeUpdate("drop index " + name);
 
@@ -1443,20 +1641,34 @@ public final class RDSHelper implements Helper.DBHelper {
 		 */
 		PreparedStatement p = null;
 		Connection c = null;
+		StringBuilder sql = new StringBuilder();
 
 		TimeStamp t = TimeStamp.create();
 		try {
 			if (X.isEmpty(values))
 				return 0;
 
-			c = _getConnection();
+			c = getConnection();
 
 			table = driver.fullname(dbname, schema, table);
+
+			for (V v : values) {
+
+				if (v == null || v.isEmpty())
+					return 0;
+
+				long t1 = Global.now();
+				if (v.value(X.CREATED) != V.ignore) {
+					v.force(X.CREATED, t1);
+				}
+				if (v.value(X.UPDATED) != V.ignore) {
+					v.force(X.UPDATED, t1);
+				}
+			}
 
 			/**
 			 * create the sql statement
 			 */
-			StringBuilder sql = new StringBuilder();
 			sql.append("insert into ").append(table).append(" (");
 			StringBuilder s = new StringBuilder();
 			int total = 0;
@@ -1487,15 +1699,6 @@ public final class RDSHelper implements Helper.DBHelper {
 				if (v == null || v.isEmpty())
 					return 0;
 
-				long t1 = Global.now();
-				if (v.value(X.CREATED) != V.ignore) {
-					v.force(X.CREATED, t1);
-				}
-				if (v.value(X.UPDATED) != V.ignore) {
-					v.force(X.UPDATED, t1);
-				}
-//				v.append("_node", Global.id());
-
 				for (String name : v.names()) {
 					Object v1 = v.value(name);
 					_setParameter(p, order++, v1, c);
@@ -1505,10 +1708,6 @@ public final class RDSHelper implements Helper.DBHelper {
 			}
 
 			int n = X.sum(p.executeBatch());
-
-			if (t.pastms() > 30000) {
-				log.warn("slow30, cost=" + t.past());
-			}
 
 			return n;
 
@@ -1520,11 +1719,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		} finally {
 			close(p, c);
 
-			Helper.Stat.write(table, t.pastms());
-
-			if (t.pastms() > 1000 && log.isWarnEnabled()) {
-				log.warn("cost=" + t.past() + ", insert [" + table + "], v=" + values);
-			}
+			Helper.Stat.write(table, t.pastms() / values.size());
 
 		}
 
@@ -1588,6 +1783,21 @@ public final class RDSHelper implements Helper.DBHelper {
 
 	public static RDSHelper create(Pool<Connection> c, String dbname, String username, String url) {
 
+		if (url != null && url.contains(":doris:")) {
+			RDSHelper d = new DorisHelper();
+			d._conn = c;
+			d.dbname = dbname;
+			d.username = username;
+			d.url = url;
+
+			if (log.isInfoEnabled()) {
+				log.info("create DBHelper from pool, dbname=" + dbname + ", username=" + username + ", con=" + c);
+			}
+
+			return d;
+
+		}
+
 		RDSHelper d = new RDSHelper();
 		d._conn = c;
 		d.dbname = dbname;
@@ -1609,10 +1819,17 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			con = this._getConnection();
+			con = this.getConnection();
 			if (con == null) {
 				log.warn("get connection failed!");
 				return null;
+			}
+
+			if (!X.isEmpty(tablename)) {
+				int n1 = tablename.lastIndexOf(".");
+				if (n1 > 0) {
+					tablename = tablename.substring(n1 + 1);
+				}
 			}
 
 			List<JSON> l1 = driver.listTables(con, dbname, schema, username, tablename, n);
@@ -1650,10 +1867,12 @@ public final class RDSHelper implements Helper.DBHelper {
 		PreparedStatement p = null;
 		ResultSet r = null;
 
+		TimeStamp t = TimeStamp.create();
+
 		String sql = null;
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null)
 				throw new SQLException("get connection failed!");
@@ -1705,6 +1924,10 @@ public final class RDSHelper implements Helper.DBHelper {
 			return true;
 		} finally {
 			close(r, p, c);
+
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + sql);
+			}
 		}
 
 	}
@@ -1718,7 +1941,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		TimeStamp t0 = TimeStamp.create();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			stat = c.createStatement();
 
@@ -1769,7 +1992,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		Object n = 0;
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -1815,8 +2038,9 @@ public final class RDSHelper implements Helper.DBHelper {
 		} finally {
 			close(r, p, c);
 
-			if (log.isDebugEnabled())
-				log.debug("sum, cost:" + t.past() + ", sql=" + q + ", n=" + n);
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + q + ", n=" + n);
+			}
 
 			Helper.Stat.read(table, t.pastms());
 
@@ -1838,9 +2062,14 @@ public final class RDSHelper implements Helper.DBHelper {
 	public static Connection getConnection(String url, String username, String passwd, String locale)
 			throws SQLException {
 
-		String D = _getDiver(url);
+		String url1 = url;
+		if (url1.contains(":doris:")) {
+			url1 = url1.replaceAll(":doris:", ":mysql:");
+		}
 
-		log.info("driver=" + D + ", url=" + url + ", user=" + username);
+		String D = _getDiver(url1);
+
+		log.info("driver=" + D + ", url=" + url1 + ", user=" + username);
 
 		if (!X.isEmpty(D)) {
 			Locale oldlocale = Locale.getDefault();
@@ -1858,14 +2087,14 @@ public final class RDSHelper implements Helper.DBHelper {
 				}
 
 				DriverManager.setLoginTimeout(10);
-				Connection conn = DriverManager.getConnection(url, username, passwd);
+				Connection conn = DriverManager.getConnection(url1, username, passwd);
 
 				if (log.isDebugEnabled())
-					log.debug("got connection for [" + url + ", locale=" + Locale.getDefault() + "]");
+					log.debug("got connection for [" + url1 + ", locale=" + Locale.getDefault() + "]");
 
 				return conn;
 			} catch (Exception e) {
-				log.error(url, e);
+				log.error(url1, e);
 				throw new SQLException(e);
 			} finally {
 				Locale.setDefault(oldlocale);
@@ -1896,7 +2125,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -1932,8 +2161,8 @@ public final class RDSHelper implements Helper.DBHelper {
 //		} catch (SQLException e) {
 //			if (tableNotExists(e)) {
 //				// create table
-//				_createTable(table, V.create().append("created", System.currentTimeMillis()).append("updated",
-//						System.currentTimeMillis()), c);
+//				_createTable(table, V.create().append("created", Global.now()).append("updated",
+//						Global.now()), c);
 //
 //			} else if (!columnNotExists(e)) {
 //				log.error(q, e);
@@ -1974,7 +2203,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 			stat = c.createStatement();
 
 			table = driver.fullname(dbname, schema, table);
@@ -2015,7 +2244,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		long n = 0;
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2099,8 +2328,9 @@ public final class RDSHelper implements Helper.DBHelper {
 		} finally {
 			close(r, p, c);
 
-			if (log.isDebugEnabled())
-				log.debug("cost:" + t.past() + ", sql=" + q + ", n=" + n);
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t.past() + ", sql=" + q + ", n=" + n);
+			}
 
 			Helper.Stat.read(table, t.pastms());
 
@@ -2128,7 +2358,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2213,7 +2443,7 @@ public final class RDSHelper implements Helper.DBHelper {
 			close(r, p, c);
 
 			if (log.isDebugEnabled())
-				log.debug("cost:" + t.past() + ", sql=" + q + ", n=" + n);
+				log.debug("cost = " + t.past() + ", sql=" + q + ", n=" + n);
 
 			Helper.Stat.read(table, t.pastms());
 
@@ -2241,7 +2471,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2358,7 +2588,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		Connection c = null;
 		TimeStamp t0 = TimeStamp.create();
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2373,6 +2603,10 @@ public final class RDSHelper implements Helper.DBHelper {
 			log.error(e.getMessage(), e);
 		} finally {
 			close(c);
+
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t0.past() + ", table=" + table);
+			}
 
 		}
 		return -1;
@@ -2400,7 +2634,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		long n = 0;
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2436,12 +2670,11 @@ public final class RDSHelper implements Helper.DBHelper {
 				log.warn("slow30, cost=" + t.past() + ", sql=" + sql);
 			}
 
-
 		} finally {
 			close(r, p, c);
 
 			if (log.isDebugEnabled())
-				log.debug("cost:" + t.past() + ", sql=" + q + ", n=" + n);
+				log.debug("cost = " + t.past() + ", sql=" + sql.toString() + ", q=" + q);
 
 			Helper.Stat.read(table, t.pastms());
 
@@ -2470,7 +2703,7 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		try {
 
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2539,8 +2772,8 @@ public final class RDSHelper implements Helper.DBHelper {
 //		} catch (SQLException e) {
 //			if (tableNotExists(e)) {
 //				// create table
-//				_createTable(table, V.create().append("created", System.currentTimeMillis()).append("updated",
-//						System.currentTimeMillis()), c);
+//				_createTable(table, V.create().append("created", Global.now()).append("updated",
+//						Global.now()), c);
 //
 //			} else if (!columnNotExists(e)) {
 //				log.error(q, e);
@@ -2553,7 +2786,7 @@ public final class RDSHelper implements Helper.DBHelper {
 			close(r, p, c);
 
 			if (log.isDebugEnabled())
-				log.debug("cost:" + t.past() + ", sql=" + q + ", n=" + n);
+				log.debug("cost = " + t.past() + ", sql=" + q + ", n=" + n);
 
 			Helper.Stat.read(table, t.pastms());
 
@@ -2580,7 +2813,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		TimeStamp t0 = TimeStamp.create();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2611,7 +2844,7 @@ public final class RDSHelper implements Helper.DBHelper {
 	public <T> T max(String table, W q, String name) {
 
 		q = q.copy().clearSort();
-		Data e = this.load(table, q.sort(name, -1), Data.class, false);
+		Bean e = this.load(table, q.sort(name, -1), Bean.class, false);
 		if (e != null) {
 			return (T) e.get(name);
 		}
@@ -2624,7 +2857,7 @@ public final class RDSHelper implements Helper.DBHelper {
 	public <T> T min(String table, W q, String name) {
 
 		q = q.copy().clearSort();
-		Data e = this.load(table, q.sort(name), Data.class, false);
+		Bean e = this.load(table, q.sort(name), Bean.class, false);
 		if (e != null) {
 			return (T) e.get(name);
 		}
@@ -2675,7 +2908,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		TimeStamp t0 = TimeStamp.create();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -2729,14 +2962,14 @@ public final class RDSHelper implements Helper.DBHelper {
 				}
 
 				try {
-					for (_Driver e : _drivers) {
+					for (_Driver e : _AbstractDriver._drivers) {
 						if (X.isSame(e, e.getClass())) {
 							continue;
 						}
 					}
 
 					_Driver h1 = c.getDeclaredConstructor().newInstance();
-					_drivers.add(h1);
+					_AbstractDriver._drivers.add(h1);
 				} catch (Exception e) {
 					log.error(c.toString(), e);
 				}
@@ -2745,8 +2978,6 @@ public final class RDSHelper implements Helper.DBHelper {
 		}
 
 	}
-
-	private static List<_Driver> _drivers = new ArrayList<_Driver>();
 
 	public static RDSHelper inst;
 
@@ -2844,35 +3075,52 @@ public final class RDSHelper implements Helper.DBHelper {
 	}
 
 	@Override
-	public int inc(final String table, W q, JSON incvalue, V sets) throws SQLException {
+	public int inc(final String table, W q, JSON incvalue, V v) throws SQLException {
 
 		Connection c = null;
+
+		if (v == null) {
+			v = V.create();
+		}
+		v.force("updated", Global.now());
 
 		TimeStamp t = TimeStamp.create();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 			if (c == null)
 				throw new SQLException("get connection failed!");
 
-			int n1 = _inc(table, q, incvalue, c);
-			if (sets != null && !sets.isEmpty()) {
-				this.updateTable(table, q, sets);
+			int n1 = _inc(table, q, incvalue, v, c);
+			if (n1 > 0) {
+				return n1;
 			}
 
-			if (t.pastms() > 30000) {
-				log.warn("slow30, cost=" + t.past());
+			// else insert data
+			V v1 = V.create();
+			q.scan(e -> {
+				if (X.isSame(e.name, X.ID)) {
+					v1.append(X.ID, e.value);
+				}
+			});
+			if (v1.isEmpty()) {
+				log.info("no id in query=" + q);
+				return -1;
 			}
 
-			return n1;
+			v1.copy(incvalue);
+			v1.copy(v);
+
+			return this.insertTable(table, v1);
+
 //		} catch (SQLException e) {
 //
 //			if (tableNotExists(e)) {
 //				// create table
 //				for (String name : incvalue.keySet()) {
 //					_createTable(table,
-//							V.create().append(name, incvalue.getInt(name)).append("created", System.currentTimeMillis())
-//									.append("updated", System.currentTimeMillis()),
+//							V.create().append(name, incvalue.getInt(name)).append("created", Global.now())
+//									.append("updated", Global.now()),
 //							c);
 //				}
 //			} else if (!columnNotExists(e)) {
@@ -2903,10 +3151,8 @@ public final class RDSHelper implements Helper.DBHelper {
 
 			StringBuilder sql = new StringBuilder();
 
-			TimeStamp t0 = TimeStamp.create();
-
 			try {
-				c = _getConnection();
+				c = getConnection();
 
 				if (c == null)
 					throw new SQLException("get connection failed!");
@@ -2943,6 +3189,7 @@ public final class RDSHelper implements Helper.DBHelper {
 						ResultSetMetaData md = r.getMetaData();
 						columns = md.getColumnCount();
 
+						sql = new StringBuilder();
 						sql.append("insert into ").append(dest1).append(" (");
 
 						StringBuilder s1 = new StringBuilder();
@@ -2959,6 +3206,12 @@ public final class RDSHelper implements Helper.DBHelper {
 						sql.append("?)");
 
 						p2 = c.prepareStatement(sql.toString());
+
+						// first time using insert, this will check schema
+						Bean b = new Bean();
+						b.load(r);
+						insertTable(dest1, V.fromJSON(b.json()));
+						continue;
 					}
 
 					p2.clearParameters();
@@ -2970,12 +3223,8 @@ public final class RDSHelper implements Helper.DBHelper {
 
 				}
 
-				if (t0.pastms() > 30000) {
-					log.warn("slow30, cost=" + t0.past());
-				}
-
 			} catch (Exception e) {
-				log.error(e.getMessage(), e);
+				log.error(sql.toString(), e);
 				GLog.applog.error("db", "copy", e.getMessage(), e);
 			} finally {
 				close(r, p1, p2, c);
@@ -2989,10 +3238,10 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		Connection c = null;
 		Statement stat = null;
-		TimeStamp t0 = TimeStamp.create();
+//		TimeStamp t0 = TimeStamp.create();
 
 		try {
-			c = this._getConnection();
+			c = this.getConnection();
 			stat = c.createStatement();
 
 			tablename = driver.fullname(dbname, schema, tablename);
@@ -3001,14 +3250,18 @@ public final class RDSHelper implements Helper.DBHelper {
 			log.info(sql);
 			stat.execute(sql);
 
-			driver.comment(c, dbname, schema, tablename, null, Arrays.asList(col));
+//			driver.comment(c, dbname, schema, tablename, null, Arrays.asList(col));
+//
+//			if (t0.pastms() > 30000) {
+//				log.warn("slow30, cost=" + t0.past());
+//			}
 
-			if (t0.pastms() > 30000) {
-				log.warn("slow30, cost=" + t0.past());
+		} catch (SQLException e) {
+			if (e.getMessage().contains("already exists")) {
+				// ignore
+				return;
 			}
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			throw new SQLException(X.getMessage(e));
 		} finally {
 			close(stat, c);
 		}
@@ -3024,7 +3277,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		TimeStamp t0 = TimeStamp.create();
 
 		try {
-			c = this._getConnection();
+			c = this.getConnection();
 			stat = c.createStatement();
 
 			String name = col.getString("name");
@@ -3052,7 +3305,8 @@ public final class RDSHelper implements Helper.DBHelper {
 	}
 
 	@Override
-	public void createTable(final String tablename, String memo, List<JSON> cols) throws SQLException {
+	public void createTable(final String tablename, String memo, List<JSON> cols, JSON properties) throws SQLException {
+
 		// create table
 		Connection con = null;
 		Statement stat = null;
@@ -3062,9 +3316,10 @@ public final class RDSHelper implements Helper.DBHelper {
 		TimeStamp t0 = TimeStamp.create();
 
 		try {
-			con = this._getConnection();
-			if (con == null)
+			con = this.getConnection();
+			if (con == null) {
 				throw new SQLException("get connection failed!");
+			}
 
 			stat = con.createStatement();
 
@@ -3169,11 +3424,14 @@ public final class RDSHelper implements Helper.DBHelper {
 			}
 
 		} catch (SQLException e) {
+			if (e.getMessage().contains("already exists")) {
+				// ignore
+				return;
+			}
 			log.error(sql.toString(), e);
 			throw e;
 		} finally {
 			close(stat, con);
-
 		}
 
 	}
@@ -3184,7 +3442,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		Connection con = null;
 		TimeStamp t0 = TimeStamp.create();
 		try {
-			con = this._getConnection();
+			con = this.getConnection();
 			stat = con.createStatement();
 			tablename = driver.fullname(dbname, schema, tablename);
 			stat.execute("alter table " + tablename + " drop column " + colname);
@@ -3198,35 +3456,49 @@ public final class RDSHelper implements Helper.DBHelper {
 		}
 	}
 
+	/**
+	 * 获取表
+	 */
 	@Override
 	public List<JSON> listColumns(String table) throws SQLException {
 
 		Connection con = null;
+		Statement stat = null;
+		ResultSet r = null;
 
-		TimeStamp t0 = TimeStamp.create();
+//		TimeStamp t0 = TimeStamp.create();
 
 		try {
 
-			con = this._getConnection();
+			con = this.getConnection();
 
+			log.info("dbname=" + dbname + ", schema=" + schema + ", table=" + table);
 			List<JSON> l1 = driver.listColumns(con, dbname, schema, table);
 
-			if (t0.pastms() > 30000) {
-				log.warn("slow30, cost=" + t0.past());
-			}
-
+//			if (t0.pastms() > 30000) {
+//				log.warn("slow30, cost=" + t0.past());
+//			}
+//
 			return l1;
 
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		} finally {
-			close(con);
+			close(r, stat, con);
+
+//			if (log.isDebugEnabled()) {
+//				log.debug("cost = " + t0.past() + ", table=" + table);
+//			}
 
 		}
 		return null;
 	}
 
 	public static interface _Driver {
+
+		String uppercase(String name);
+
+		String load(String table, String fields, String where, String orderby);
 
 		boolean check(String driverinfo);
 
@@ -3274,6 +3546,13 @@ public final class RDSHelper implements Helper.DBHelper {
 
 		protected static Log log = RDSHelper.log;
 //		protected static RDSHelper inst = RDSHelper.inst;
+
+		private static List<_Driver> _drivers = new ArrayList<_Driver>();
+
+		@Override
+		public String uppercase(String name) {
+			return name;
+		}
 
 		@Override
 		public Object createArrayOf(Connection c, List<?> l1) throws SQLException {
@@ -3324,24 +3603,58 @@ public final class RDSHelper implements Helper.DBHelper {
 			return name;
 		}
 
+		/**
+		 * 获取所有表
+		 */
 		@Override
 		public List<JSON> listTables(Connection c, String dbname, String schema, String username, String tablename,
 				int n) throws SQLException {
 
 			List<JSON> list = JSON.createList();
+			if (X.isEmpty(schema)) {
+				schema = username;
+			}
+
+			if (tablename != null) {
+				tablename = tablename.toLowerCase();
+			}
+
+			schema = uppercase(schema);
 
 			ResultSet r = null;
 			try {
 
 				DatabaseMetaData md = c.getMetaData();
-				r = md.getTables(null, null, null, null);
+				r = md.getTables(null, schema, null, null);
+				if (log.isDebugEnabled()) {
+					log.debug("schema=" + schema + ", tablename=" + tablename);
+				}
 
 				while (r.next()) {
 					String name = r.getString("table_name");
-					if (name != null && (X.isEmpty(tablename) || name.matches(tablename))) {
+					if (log.isDebugEnabled()) {
+						log.debug("name=" + name + ", schema=" + schema + ", tablename=" + tablename);
+					}
+					String type = r.getString("table_type");
+					if (X.isIn(type, "SYSTEM VIEW")) {
+						continue;
+					}
+
+					if (name != null && (X.isEmpty(tablename) || name.toLowerCase().matches(tablename))) {
 						Bean b = new Bean();
 						b.load(r);
-						list.add(b.json());
+						JSON j1 = b.json();
+						j1.put("type", type);
+						if (X.isEmpty(r.getString("remarks"))) {
+							j1.put("display", name);
+						} else {
+							j1.put("display", r.getString("remarks"));
+						}
+						if (!X.isEmpty(r.getString("table_schem"))) {
+							name = r.getString("table_schem") + "." + name;
+						}
+						j1.put("name", name);
+						list.add(j1);
 						if (n > 0 && list.size() > n) {
 							break;
 						}
@@ -3365,29 +3678,41 @@ public final class RDSHelper implements Helper.DBHelper {
 			return list;
 		}
 
+		/**
+		 * 获取表字段
+		 */
 		@Override
 		public List<JSON> listColumns(Connection con, String dbname, String schema, String table) throws SQLException {
 
 			List<JSON> l1 = JSON.createList();
 
+//			String fullname = this.fullname(dbname, schema, table);
+
+			Statement stat = null;
 			ResultSet r = null;
 
 			try {
-				if (table.contains(".")) {
-					int i = table.lastIndexOf(".");
-					table = table.substring(i + 1);
+
+				if (table != null) {
+					if (table.contains(".")) {
+						int i = table.lastIndexOf(".");
+						table = table.substring(i + 1);
+					}
 				}
+
+				schema = uppercase(schema);
+				table = uppercase(table);
 
 				Set<String> names = new HashSet<String>();
 				DatabaseMetaData meta = con.getMetaData();
 				Set<String> keys = new HashSet<String>();
-				r = meta.getPrimaryKeys(con.getCatalog(), "%", table);
+				r = meta.getPrimaryKeys(null, schema, table);
 				while (r.next()) {
 					keys.add(r.getString("column_name"));
 				}
 				close(r);
 
-				r = meta.getColumns(con.getCatalog(), "%", table, "%");
+				r = meta.getColumns(null, schema, table, null);
 				while (r.next()) {
 
 					JSON j1 = JSON.create();
@@ -3429,7 +3754,7 @@ public final class RDSHelper implements Helper.DBHelper {
 					l1.add(j1);
 				}
 			} finally {
-				close(r);
+				close(r, stat);
 			}
 			return l1;
 		}
@@ -3492,22 +3817,53 @@ public final class RDSHelper implements Helper.DBHelper {
 		}
 
 		@Override
-		public List<Map<String, Object>> getIndexes(Connection c, String dbname, String schema, String tablename)
+		public String load(String table, String fields, String where, String orderby) {
+			StringBuilder sql = new StringBuilder();
+			sql.append("select ");
+
+			if (X.isEmpty(fields)) {
+				sql.append(" * ");
+			} else {
+				sql.append(" " + fields + " ");
+			}
+
+			sql.append(" from ").append(table);
+			if (!X.isEmpty(where)) {
+				sql.append(" where ").append(where);
+			}
+
+			if (!X.isEmpty(orderby)) {
+				sql.append(" ").append(orderby);
+			}
+
+			return sql.toString();
+		}
+
+		@Override
+		public List<Map<String, Object>> getIndexes(Connection c, String dbname, String schema, String table)
 				throws SQLException {
 
 			List<Map<String, Object>> l1 = new ArrayList<Map<String, Object>>();
 
 			ResultSet r = null;
 			try {
+
+				if (table != null) {
+					if (table.contains(".")) {
+						int i = table.lastIndexOf(".");
+						table = table.substring(i + 1);
+					}
+				}
+
 				DatabaseMetaData d1 = c.getMetaData();
 
-				r = d1.getIndexInfo(null, null, tablename, false, true);
+				r = d1.getIndexInfo(null, null, table, false, true);
 
 				Map<String, Map<String, Object>> indexes = new TreeMap<String, Map<String, Object>>();
 				while (r.next()) {
 
 					String table1 = r.getString("table_name");
-					if (!X.isSame(tablename, table1)) {
+					if (!X.isSame(table, table1)) {
 						continue;
 					}
 
@@ -3532,7 +3888,7 @@ public final class RDSHelper implements Helper.DBHelper {
 				close(r);
 			}
 
-			log.info("got index, table=" + tablename + ", result=" + l1);
+			log.info("got index, table=" + table + ", result=" + l1);
 
 			return l1;
 		}
@@ -3587,12 +3943,12 @@ public final class RDSHelper implements Helper.DBHelper {
 
 			if (X.isIn(type, "string", "varchar", "text", "char")) {
 				if (size <= 0) {
-					return "varchar(512)";
+					return "varchar(128)";
 				} else if (size < 1024) {
 					return "varchar(" + size + ")";
 				}
 				return "text";
-			} else if (X.isIn(type, "long", "int")) {
+			} else if (X.isIn(type, "long", "int", "bigint")) {
 				return "bigint";
 			} else if (X.isIn(type, "double", "float")) {
 				return "decimal(15, " + size + ")";
@@ -3669,7 +4025,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		TimeStamp t0 = TimeStamp.create();
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null) {
 				throw new SQLException("get connection failed!");
@@ -3694,17 +4050,12 @@ public final class RDSHelper implements Helper.DBHelper {
 		} finally {
 			close(r, stat, c);
 
+			if (log.isDebugEnabled()) {
+				log.debug("cost = " + t0.past() + ", sql=" + sql);
+			}
+
 		}
 
-	}
-
-	@Override
-	public Connection getConnection() {
-		try {
-			return _getConnection();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	@Override
@@ -3717,7 +4068,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		Statement stat = null;
 
 		try {
-			c = _getConnection();
+			c = getConnection();
 
 			if (c == null)
 				throw new SQLException("get connection failed!");
@@ -3747,77 +4098,7 @@ public final class RDSHelper implements Helper.DBHelper {
 			return 0;
 		}
 
-		long t1 = Global.now();
-		if (v.get(X.CREATED) != V.ignore) {
-			v.put(X.CREATED, t1);
-		}
-		if (v.get(X.UPDATED) != V.ignore) {
-			v.put(X.UPDATED, t1);
-		}
-
-		/**
-		 * insert it in database
-		 */
-		Connection c = null;
-		TimeStamp t = TimeStamp.create();
-		PreparedStatement p = null;
-		StringBuilder sql = new StringBuilder();
-
-		try {
-			c = _getConnection();
-
-			if (c == null)
-				throw new SQLException("get connection failed!");
-
-			String table1 = driver.fullname(dbname, schema, table);
-
-			/**
-			 * create the sql statement
-			 */
-			sql.append("insert into ").append(table1).append(" (");
-			StringBuilder s = new StringBuilder();
-			int total = 0;
-
-			for (Map.Entry<String, Object> e : v.entrySet()) {
-				if (e.getValue() == V.ignore) {
-					continue;
-				}
-				if (s.length() > 0)
-					s.append(",");
-				s.append(e.getKey());
-				total++;
-			}
-			sql.append(s).append(") values( ");
-
-			for (int i = 0; i < total - 1; i++) {
-				sql.append("?, ");
-			}
-			sql.append("?)");
-
-			p = c.prepareStatement(sql.toString());
-
-			int order = 1;
-			for (Map.Entry<String, Object> e : v.entrySet()) {
-				Object v1 = e.getValue();
-				if (v1 == V.ignore) {
-					continue;
-				}
-				_setParameter(p, order++, v1, c);
-			}
-
-			return p.executeUpdate();
-
-		} catch (SQLException e) {
-			if (log.isErrorEnabled()) {
-				log.error(v.toString(), e);
-			}
-			throw e;
-		} finally {
-			close(c);
-
-			Helper.Stat.write(table, t.pastms());
-
-		}
+		return insertTable(table, V.fromJSON(v));
 
 	}
 
@@ -3827,78 +4108,7 @@ public final class RDSHelper implements Helper.DBHelper {
 		if (v == null || v.isEmpty())
 			return 0;
 
-		Connection c = null;
-
-		PreparedStatement p = null;
-
-		try {
-			c = _getConnection();
-
-			if (c == null)
-				throw new SQLException("get connection failed!");
-
-			Object o1 = v.get(X.UPDATED);
-			if (o1 != V.ignore) {
-				v.put(X.UPDATED, Global.now());
-			}
-			v.remove(X.CREATED);
-
-			/**
-			 * update it in database
-			 */
-			StringBuilder sql = new StringBuilder();
-
-			String table1 = driver.fullname(dbname, schema, table);
-
-			/**
-			 * create the sql statement
-			 */
-			sql.append("update ").append(table1).append(" set ");
-
-			StringBuilder s = new StringBuilder();
-			for (Map.Entry<String, Object> e : v.entrySet()) {
-				if (e.getValue() == V.ignore) {
-					continue;
-				}
-
-				if (s.length() > 0)
-					s.append(",");
-				s.append(e.getKey());
-				s.append("=?");
-			}
-			sql.append(s);
-
-			String where = _where(q, c);
-			Object[] args = q.args();
-
-			if (!X.isEmpty(where)) {
-				sql.append(" where ").append(where);
-			}
-
-			p = c.prepareStatement(sql.toString());
-
-			int order = 1;
-			for (Map.Entry<String, Object> e : v.entrySet()) {
-				Object v1 = e.getValue();
-				if (v1 == V.ignore) {
-					continue;
-				}
-
-				_setParameter(p, order++, v1, c);
-			}
-
-			if (args != null) {
-				for (int i = 0; i < args.length; i++) {
-					Object o = args[i];
-					_setParameter(p, order++, o, c);
-				}
-			}
-
-			return p.executeUpdate();
-
-		} finally {
-			close(p, c);
-		}
+		return updateTable(table, q, V.fromJSON(v));
 
 	}
 

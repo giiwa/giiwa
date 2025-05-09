@@ -18,10 +18,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Session.SID;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Beans;
@@ -51,7 +54,7 @@ public final class Message extends Bean {
 
 	public static final BeanDAO<String, Message> dao = BeanDAO.create(Message.class, time -> {
 		// return cleanup query
-		return W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.lte);
+		return W.create().and("created", Global.now() - X.AHOUR, W.OP.lte);
 	});
 
 	@Column(memo = "主键", unique = true, size = 50)
@@ -115,6 +118,8 @@ public final class Message extends Bean {
 		create(sid, command, message, V.create());
 	}
 
+	static private Lock lock = new ReentrantLock();
+
 	public static void create(String sid, String command, String message, V v) {
 
 		try {
@@ -122,22 +127,26 @@ public final class Message extends Bean {
 				return;
 			}
 
-			String id = UID.id(System.currentTimeMillis(), sid, command, message, v.toString());
-			synchronized (dao) {
-				if (dao.exists(id)) {
-					return;
-				}
+			String id = UID.id(Global.now(), sid, command, message, v.toString());
+			if (lock.tryLock()) {
+				try {
+					if (dao.exists(id)) {
+						return;
+					}
 
-				V v1 = v.copy();
-				v1.append(X.ID, id);
-				v1.append("sid", sid);
-				v1.append("command", command);
-				v1.append(X.MESSAGE, message);
+					V v1 = v.copy();
+					v1.append(X.ID, id);
+					v1.append("sid", sid);
+					v1.append("command", command);
+					v1.append(X.MESSAGE, message);
 
-				dao.insert(v1);
+					dao.insert(v1);
 
-				if (log.isDebugEnabled()) {
-					log.debug("create message, command=" + command + ", message=" + message);
+					if (log.isDebugEnabled()) {
+						log.debug("create message, command=" + command + ", message=" + message);
+					}
+				} finally {
+					lock.unlock();
 				}
 			}
 

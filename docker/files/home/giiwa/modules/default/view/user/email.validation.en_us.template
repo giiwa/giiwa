@@ -1,3 +1,0 @@
-<p>Dear [${account}]</p>
-<p>Validation Code:${code}, expired after a day.</p>
-<p>Giiwa Dev Team</p>

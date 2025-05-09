@@ -21,6 +21,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -28,8 +30,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.logging.Log;
@@ -39,6 +39,7 @@ import org.giiwa.bean.m._CPU;
 import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._Net;
 import org.giiwa.conf.Config;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
@@ -72,6 +73,8 @@ import org.giiwa.web.GiiwaServlet;
 import org.giiwa.web.Module;
 import org.giiwa.web.RequestHelper;
 import org.hyperic.sigar.CpuPerc;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * The code bean, used to store special code linked with s1 and s2 fields
@@ -127,6 +130,9 @@ public final class Node extends Bean {
 
 	@Column(memo = "在线请求数")
 	public int online;
+
+	@Column(memo = "类型", value = "1: 远程节点, 0: 本地节点")
+	public int type;
 
 	@Column(memo = "TPS")
 	public int tps;
@@ -199,7 +205,7 @@ public final class Node extends Bean {
 
 	public int getState() {
 
-		if (System.currentTimeMillis() - this.lastcheck > LOST)
+		if (Global.now() - this.lastcheck > LOST)
 			return 0;
 
 		return 1;
@@ -251,9 +257,9 @@ public final class Node extends Bean {
 			v.append("localrunning", Task.tasksInRunning());
 			v.append("localpending", Task.tasksInQueue());
 			v.append("localdelay", Task.tasksDelay());
-			v.append("timestamp", lang.format(System.currentTimeMillis(), "HH:mm:ss") + "<br>"
-					+ lang.format(System.currentTimeMillis(), "yyyy-MM-dd"));
-			v.append("lastcheck", System.currentTimeMillis());
+			v.append("timestamp",
+					lang.format(Global.now(), "HH:mm:ss") + "<br>" + lang.format(Global.now(), "yyyy-MM-dd"));
+			v.append("lastcheck", Global.now());
 			v.append("online", GiiwaServlet.online());
 			v.append("tps", GiiwaServlet.tps());
 
@@ -263,7 +269,7 @@ public final class Node extends Bean {
 //					v.append("tcp_closewait", ns.getTcpCloseWait() + ns.getTcpTimeWait());
 //				}
 //
-			// v.append("lasttime", System.currentTimeMillis());
+			// v.append("lasttime", Global.now());
 
 			try {
 				CpuPerc[] cc = Host.getCpuPerc();
@@ -336,6 +342,7 @@ public final class Node extends Bean {
 
 		try {
 
+//			v.append("type", Config.getConf().getInt("node.type", 0)); // 默认本地节点
 			v.append("cores", Task.cores);
 			v.append("computingpower", Task.computingpower);
 			v.append("ghz", Task.ghz);
@@ -368,14 +375,18 @@ public final class Node extends Bean {
 				v.append("mac", Host.getMAC());
 			}
 
-			v.append("os", Host.getOS().getName());
-			v.append("mem", Host.getMem().getTotal());
+			v.append("os", System.getProperty("os.name"));
+
+			// 获取物理内存总量（以字节为单位）
+			OperatingSystemMXBean osBean = ManagementFactory.getOperatingSystemMXBean();
+			long total = ((com.sun.management.OperatingSystemMXBean) osBean).getTotalPhysicalMemorySize();
+			v.append("mem", total);
 
 //			v.append("url", FileServer.URL.replace("0.0.0.0", Host.getLocalip()));
 
 		} catch (Throwable e) {
 			// ignore
-//			log.error(e.getMessage(), e);
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -532,14 +543,14 @@ public final class Node extends Bean {
 	public List<?> name(String tag) {
 		// tag=diskio, net
 		if (X.isSame(tag, "diskio")) {
-			List<?> l1 = _DiskIO.dao.distinct("path", W.create().and("node", id)
-					.and("updated", System.currentTimeMillis() - X.AMINUTE * 10, W.OP.gte).sort("path", 1));
+			List<?> l1 = _DiskIO.dao.distinct("path",
+					W.create().and("node", id).and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("path", 1));
 			l1.remove(null);
 			l1.remove(X.EMPTY);
 			return l1;
 		} else if (X.isSame(tag, "net")) {
-			List<?> l1 = _Net.dao.distinct("name", W.create().and("node", id)
-					.and("updated", System.currentTimeMillis() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1));
+			List<?> l1 = _Net.dao.distinct("name",
+					W.create().and("node", id).and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1));
 			l1.remove(null);
 			l1.remove(X.EMPTY);
 			return l1;
@@ -548,7 +559,7 @@ public final class Node extends Bean {
 	}
 
 	public boolean isAlive() {
-		return this.getUpdated() > System.currentTimeMillis() - Node.LOST;
+		return this.getUpdated() > Global.now() - Node.LOST;
 	}
 
 	public void forward(String uri, RequestHelper req, HttpServletResponse resp, String method) throws Exception {
@@ -619,9 +630,9 @@ public final class Node extends Bean {
 			try {
 				JSON r1 = req.get();
 
-				if (log.isDebugEnabled()) {
-					log.debug("got forward: " + r1.toPrettyString());
-				}
+//				if (log.isDebugEnabled()) {
+				log.warn("got node.forward: " + r1.toPrettyString());
+//				}
 
 				String m = r1.getString("m");
 				String uri = r1.getString("uri");
@@ -643,12 +654,12 @@ public final class Node extends Bean {
 
 				Request r3 = Request.create().put(r2);
 
-//				log.warn("resp=" + r1 + ", size=" + r3.data.length + ", r3=" + r3.get());
+				log.warn("node.forward, resp=" + r1 + ", size=" + r3.data.length + ", r3=" + r3.get());
 
 				req.reply(r3);
 
 			} catch (Throwable e1) {
-				log.error(e1.getMessage(), e1);
+				log.error("node.forward", e1);
 			}
 
 		}
@@ -656,7 +667,7 @@ public final class Node extends Bean {
 	};
 
 	public static Beans<Node> alive() {
-		return dao.load(W.create().and("lastcheck", System.currentTimeMillis() - LOST, W.OP.gte), 0, 1024);
+		return dao.load(W.create().and("lastcheck", Global.now() - LOST, W.OP.gte).sort("label"), 0, 1024);
 	}
 
 }

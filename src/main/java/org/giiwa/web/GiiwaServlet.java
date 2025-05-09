@@ -16,12 +16,6 @@ package org.giiwa.web;
 
 import java.io.IOException;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Node;
@@ -31,6 +25,12 @@ import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.task.AtomicShort;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class GiiwaServlet extends HttpServlet {
 
@@ -147,10 +147,10 @@ public class GiiwaServlet extends HttpServlet {
 			now++;
 			online++;
 			total++;
-			if (System.currentTimeMillis() - started > X.AMINUTE) {
+			if (Global.now() - started > X.AMINUTE) {
 				last = now;
 				now = 0;
-				started = System.currentTimeMillis();
+				started = Global.now();
 
 				Node.dao.update(Local.id(), V.create().append("totalrequest", total));
 

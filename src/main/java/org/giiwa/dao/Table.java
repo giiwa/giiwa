@@ -66,4 +66,6 @@ public @interface Table {
 	 */
 	String tag() default X.EMPTY;
 
+	boolean distributed() default false;
+
 }

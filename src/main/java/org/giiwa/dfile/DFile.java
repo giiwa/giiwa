@@ -45,13 +45,12 @@ import org.giiwa.dao.Counter;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Base32;
 import org.giiwa.misc.IOUtil;
-import org.giiwa.misc.Zip;
 import org.giiwa.task.Consumer;
 import org.giiwa.task.Function;
 import org.giiwa.task.Task;
 
 /**
- * Demo bean
+ * DFile bean
  * 
  * @author joe
  * 
@@ -63,6 +62,11 @@ public abstract class DFile implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+
+	/**
+	 * 查询目录中最大文件数量, 防止大量文件死机
+	 */
+	public static final int LIMIT_SIZE = 10000;
 
 	private static Log log = LogFactory.getLog(DFile.class);
 
@@ -209,6 +213,9 @@ public abstract class DFile implements Serializable {
 					for (DFile f1 : ff) {
 						if (f1.getDisk_obj().isOk(f1.getFilename())) {
 							m.put(f1.filename, f1);
+							if (m.size() >= DFile.LIMIT_SIZE) {
+								break;
+							}
 						}
 					}
 				}
@@ -225,7 +232,13 @@ public abstract class DFile implements Serializable {
 									f3.merge(f3);
 								} else {
 									m.put(f2.filename, f2);
+									if (m.size() >= DFile.LIMIT_SIZE) {
+										break;
+									}
 								}
+							}
+							if (m.size() >= DFile.LIMIT_SIZE) {
+								break;
 							}
 						}
 					}

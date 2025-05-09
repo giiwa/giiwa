@@ -50,11 +50,11 @@
 			<thead>
 				<tr>
 					<th style="width: 40px;"></th>
+					<th style="width: 250px;">$lang.get('table.name')</th>
 					<th style="width: 250px;">$lang.get('table.memo')</th>
 					<th style="width: 90px;">$lang.get('table.total')</th>
 					<th style="width: 90px;">$lang.get('table.totalsize')</th>
 					<th style="width: 90px;">$lang.get('table.indexsize')</th>
-					<th style="width: 130px;">$lang.get('table.updated')</th>
 					<th></th>
 				</tr>
 			</thead>
@@ -65,12 +65,12 @@
 				<tr>
 					<td>$i</td>
 					<td>
-						<label><input type="checkbox" name="table" value="$t.table" style="margin-top: 0;" #if($a.table($t.table)) checked="checked" #end>$!t.display</label>
+						<label><input type="checkbox" name="table" value="$t.table" style="margin-top: 0;" #if($a.table($t.table)) checked="checked" #end>$!t.table</label>
 					</td>
+					<td>$!t.display</td>
 					<td>$!t.count</td>
 					<td>$!lang.size($t.totalsize)</td>
 					<td>$!lang.size($t.indexsize)</td>
-					<td>#if($t.updated) $lang.format($t.updated, 'yyyy-MM-dd HH:mm:ss') #end</td>
 					<td></td>
 				</tr>
 			#end

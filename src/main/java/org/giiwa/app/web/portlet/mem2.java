@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._Mem2;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -49,7 +50,7 @@ public class mem2 extends portlet {
 			this.set("name", id);
 		}
 
-		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created",
+		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created",
 				-1);
 		_Mem2.Record.dao.optimize(q);
 
@@ -61,7 +62,7 @@ public class mem2 extends portlet {
 		}
 
 		long max = X.toLong(1.1 * X.toLong(_Mem2.Record.dao.max("used",
-				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+				W.create().and("created", Global.now() - X.AHOUR, W.OP.gte))));
 
 		this.set("max", max);
 
@@ -81,7 +82,7 @@ public class mem2 extends portlet {
 		int hours = this.getInt("n", 1);
 
 		Beans<_Mem2.Record> bs = _Mem2.Record.dao.load(W.create().and("node", id)
-				.and("created", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte).sort("created", -1), 0,
+				.and("created", Global.now() - X.AHOUR * hours, W.OP.gte).sort("created", -1), 0,
 				60 * hours);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -124,7 +125,7 @@ public class mem2 extends portlet {
 			this.set("name", n.label);
 		}
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		Beans<_Mem2.Record> bs = _Mem2.Record.dao
 				.load(W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1), 0, 60 * 24 * 2);

@@ -61,7 +61,7 @@ public final class Cache {
 		/**
 		 * comment it, let's re-conf in running-time
 		 */
-		log.warn("Cache init ..., url=" + url);
+		log.warn("cache.url=" + url);
 
 		// if (_conf != null)
 		// return;
@@ -79,6 +79,20 @@ public final class Cache {
 		GROUP = group + "://";
 
 		log.warn("Cache inited. group=" + GROUP + ", system=" + cacheSystem);
+
+	}
+
+	public static ICacheSystem create(String url, String user, String pwd) throws Exception {
+
+		if (X.isEmpty(url)) {
+			throw new Exception("参数错误, url 不能空！");
+		}
+
+		if (url.startsWith(REDIS)) {
+			return RedisCache.create(url, user, pwd);
+		}
+
+		throw new Exception("参数错误, 不支持的类型！");
 
 	}
 
@@ -362,9 +376,14 @@ public final class Cache {
 		return now();
 	}
 
+	/**
+	 * 全局分布式系统时间
+	 * 
+	 * @return
+	 */
 	public static long now() {
 		if (cacheSystem != null) {
-			cacheSystem.now();
+			return cacheSystem.now();
 		}
 		return System.currentTimeMillis();
 	}
@@ -378,15 +397,16 @@ public final class Cache {
 	public static void init(Configuration conf) {
 		log.info("Cache init ...");
 
+		String url = Global.getString("cache.url", null);
 		try {
-			String url = Global.getString("cache.url", null);
 			String user = Global.getString("cache.user", null);
 			String passwd = Global.getString("cache.passwd", null);
 
-			log.info("Cache init ... url=" + url);
+			log.info("cache.url=" + url);
 			init(url, user, passwd);
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);
+			GLog.applog.error("sys", "init.cache", url, e);
 		}
 
 	}

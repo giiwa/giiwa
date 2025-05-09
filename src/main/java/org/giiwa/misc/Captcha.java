@@ -32,6 +32,7 @@ import javax.imageio.ImageIO;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.cache.Cache;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 
@@ -95,7 +96,7 @@ public class Captcha {
 		} else if (!X.isSame(code, c.code)) {
 			log.warn("is not same, code.server=" + c.code + ", code.client=" + code);
 			return Result.badcode;
-		} else if (c.expired < System.currentTimeMillis()) {
+		} else if (c.expired < Global.now()) {
 			log.warn("expired, expired=" + c.expired);
 			return Result.expired;
 		}
@@ -287,7 +288,7 @@ public class Captcha {
 		 * @return true, if successful
 		 */
 		public boolean expired() {
-			return expired > 0 && System.currentTimeMillis() > expired;
+			return expired > 0 && Global.now() > expired;
 		}
 	}
 }

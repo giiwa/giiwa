@@ -18,6 +18,7 @@ import java.util.Calendar;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
 import org.giiwa.task.Task;
@@ -67,14 +68,14 @@ public class RecycleTask extends Task {
 	@Override
 	public void onExecute() {
 		String s = Local.getString("recycle.task", "-1");
-		if ((!X.isSame(s, "-1")) && System.currentTimeMillis() - Controller.UPTIME > X.AHOUR) {
+		if ((!X.isSame(s, "-1")) && Global.now() - Controller.UPTIME > X.AHOUR) {
 			/**
 			 * recycle.task="-1" or " ", and the server started after 1 hour
 			 */
 			String[] ss = s.split("\\|");
 
 			Calendar c = Calendar.getInstance();
-			c.setTimeInMillis(System.currentTimeMillis());
+			c.setTimeInMillis(Global.now());
 			int hour = c.get(Calendar.HOUR_OF_DAY);
 			for (String s1 : ss) {
 				if (hour == X.toInt(s1, -1)) {

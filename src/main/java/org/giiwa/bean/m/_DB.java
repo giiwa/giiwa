@@ -87,7 +87,7 @@ public class _DB extends Bean {
 				dao.insert(v.copy().force(X.ID, id));
 			}
 
-			Record.dao.insert(v.force(X.ID, UID.id(node, name, System.currentTimeMillis())));
+			Record.dao.insert(v.force(X.ID, UID.id(node, name, Global.now())));
 
 		} catch (Exception e) {
 			log.error(jo, e);
@@ -109,7 +109,7 @@ public class _DB extends Bean {
 				dao.insert(v.copy().force(X.ID, id));
 			}
 
-			long time = Stat.tomin(System.currentTimeMillis());
+			long time = Stat.tomin(Global.now());
 
 			Record e = Record.dao
 					.load(W.create().and("node", node).and("name", name).and("time", time, W.OP.lt).sort("time", -1));
@@ -144,7 +144,7 @@ public class _DB extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}

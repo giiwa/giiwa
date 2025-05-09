@@ -125,6 +125,10 @@ public final class Global extends Bean {
 					TimingCache.set(Global.class, name, c);
 
 					return c.s != null ? c.s : defaultValue;
+				} else {
+					c = new Global();
+					c.s = Config.getConf().getString(name, defaultValue);
+					TimingCache.set(Global.class, name, c);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -185,8 +189,11 @@ public final class Global extends Bean {
 					 * avoid restarted, can not load new config
 					 */
 					TimingCache.set(Global.class, name, c);
-
 					return X.toLong(c.l, defaultValue);
+				} else {
+					c = new Global();
+					c.l = Config.getConf().getLong(name, defaultValue);
+					TimingCache.set(Global.class, name, c);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -196,22 +203,12 @@ public final class Global extends Bean {
 	}
 
 	/**
-	 * get the current time.
+	 * 获取全局当前时间， ns级别性能
 	 *
 	 * @return long of current time
 	 */
 	public static long now() {
-		return Cache.currentTimeMillis();
-//		long t = System.currentTimeMillis();
-//		Long c = Cache.get("now");
-//		if (c == null || c < t) {
-//			if (NtpTask.inst.ok) {
-//				Cache.set("now", t, X.AHOUR);
-//			}
-//		} else {
-//			t = c;
-//		}
-//		return t;
+		return Cache.now();
 	}
 
 	/**

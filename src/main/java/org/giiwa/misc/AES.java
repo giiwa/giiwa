@@ -21,6 +21,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.giiwa.conf.Global;
 
 /**
  * The Class Digest.
@@ -90,7 +91,7 @@ public class AES {
 	public static byte[] aeskey() throws Exception {
 
 		SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-		random.setSeed(Long.toString(System.currentTimeMillis()).getBytes());
+		random.setSeed(Long.toString(Global.now()).getBytes());
 
 		KeyGenerator kgen = KeyGenerator.getInstance("AES");
 		kgen.init(128, random);

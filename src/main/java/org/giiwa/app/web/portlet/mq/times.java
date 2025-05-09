@@ -20,6 +20,7 @@ import java.util.List;
 import org.giiwa.app.web.portlet.portlet;
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._MQ;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -49,7 +50,7 @@ public class times extends portlet {
 		}
 
 		W q = W.create().and("node", id).and("name", "read")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		_MQ.Record.dao.optimize(q);
 		
 		Beans<_MQ.Record> bs = _MQ.Record.dao.load(q, 0, 60);
@@ -59,14 +60,14 @@ public class times extends portlet {
 			this.set("list1", bs);
 
 			Beans<_MQ.Record> list2 = _MQ.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
-					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+					.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			Collections.reverse(list2);
 			this.set("list2", list2);
 
 		}
 
 		long max = X.toLong(1.1 * X.toLong(_MQ.Record.dao.max("times",
-				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+				W.create().and("created", Global.now() - X.AHOUR, W.OP.gte))));
 		this.set("max", max);
 
 		this.show("/portlet/mq/times.html");
@@ -88,7 +89,7 @@ public class times extends portlet {
 		}
 
 		Beans<_MQ.Record> bs = _MQ.Record.dao.load(W.create().and("node", id).and("name", "read")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -103,7 +104,7 @@ public class times extends portlet {
 			data.add(p);
 
 			bs = _MQ.Record.dao.load(W.create().and("node", Local.id()).and("name", "write")
-					.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+					.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 			if (bs != null && !bs.isEmpty()) {
 				Collections.reverse(bs);
 				p = JSON.create();
@@ -139,7 +140,7 @@ public class times extends portlet {
 			this.set("name1", id);
 		}
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		Beans<_MQ.Record> bs = _MQ.Record.dao.load(
 				W.create().and("node", id).and("name", "read").and("created", time, W.OP.gte).sort("created", -1), 0,

@@ -37,7 +37,7 @@ import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
 @Comment(text = "FTP工具")
-public class FTP implements Closeable{
+public class FTP implements Closeable {
 
 	private static Log log = LogFactory.getLog(FTP.class);
 
@@ -296,8 +296,17 @@ public class FTP implements Closeable{
 	 * @return
 	 * @throws IOException
 	 */
-	@Comment(text = "链接服务器, ftp://[host:port]/[path]?username=xxx&passwd=xxx")
-	public FTP open(@Comment(text = "url") Url url, @Comment(text = "charset") String charset) throws IOException {
+	public FTP open(Url url, String charset) throws IOException {
+		return open(url, url.get("username"), url.get("passwd"), charset);
+	}
+
+	@Comment(text = "链接服务器, ftp://[host:port]/[path]", demo = "..open('ftp://[host:port]/[path]', username, passwd, 'utf8')")
+	public FTP open(@Comment(text = "url") String url, @Comment(text = "username") String username,
+			@Comment(text = "passwd") String passwd, @Comment(text = "charset") String charset) throws IOException {
+		return open(Url.create(url), username, passwd, charset);
+	}
+
+	public FTP open(Url url, String username, String passwd, String charset) throws IOException {
 
 		close();
 
@@ -322,16 +331,6 @@ public class FTP implements Closeable{
 		if (!FTPReply.isPositiveCompletion(reply)) {
 			ftp.disconnect();
 			return null;
-		}
-
-		String username = url.get("username");
-		if (X.isEmpty(username)) {
-			throw new IOException("[username] required");
-		}
-
-		String passwd = url.get("passwd");
-		if (X.isEmpty(passwd)) {
-			throw new IOException("[passwd] required");
 		}
 
 		if (ftp.login(username, passwd)) {

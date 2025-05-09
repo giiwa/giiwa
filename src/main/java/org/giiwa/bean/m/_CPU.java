@@ -19,7 +19,7 @@ import java.lang.management.OperatingSystemMXBean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.conf.Config;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
@@ -29,7 +29,6 @@ import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
-import org.giiwa.misc.Shell;
 
 @Table(name = "gi_m_cpu", memo = "GI-CPU监测")
 public class _CPU extends Bean {
@@ -43,14 +42,17 @@ public class _CPU extends Bean {
 
 	public static BeanDAO<String, _CPU> dao = BeanDAO.create(_CPU.class);
 
-	@Column(memo = "主键", unique = true, size=50)
+	@Column(memo = "主键", unique = true, size = 50)
 	String id;
 
-	@Column(memo = "节点", size=50)
+	@Column(memo = "节点", size = 50)
 	String node;
 
-	@Column(memo = "名称", size=50)
+	@Column(memo = "名称", size = 50)
 	String name;
+
+	@Column(memo = "核心数")
+	long cores;
 
 	@Column(memo = "系统")
 	double sys;
@@ -70,7 +72,7 @@ public class _CPU extends Bean {
 	@Column(memo = "空闲")
 	double idle;
 
-	@Column(memo = "温度", size=50)
+	@Column(memo = "温度", size = 50)
 	public String temp;
 
 	public int getUsage() {
@@ -101,7 +103,7 @@ public class _CPU extends Bean {
 				dao.insert(v.copy().force(X.ID, id).force("node", node));
 			}
 
-			String id1 = UID.id(node, name, System.currentTimeMillis() / X.AMINUTE);
+			String id1 = UID.id(node, name, Global.now() / X.AMINUTE);
 			if (!Record.dao.exists(id1)) {
 				Record.dao.insert(v.copy().force(X.ID, id1).force("node", node));
 			}
@@ -133,7 +135,7 @@ public class _CPU extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}
@@ -141,24 +143,13 @@ public class _CPU extends Bean {
 	public static synchronized float usage() {
 
 		OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-
-		if (Config.getConf().getInt("monitor.cpu", 0) == 1) {
-
-			String pid = Shell.pid();
-
-			double[] usage = Shell.usage(pid);
-			if (usage != null) {
-				return X.toFloat(usage[0] / os.getAvailableProcessors());
-			}
-		} else {
-			if (log.isDebugEnabled()) {
-				log.debug("monitor cpu, got whole");
-			}
-
-			return X.toFloat(os.getSystemLoadAverage());
+		
+		if (log.isDebugEnabled()) {
+			log.debug("monitor cpu, got whole");
 		}
 
-		return 0;
+		return X.toFloat(os.getSystemLoadAverage());
+
 	}
 
 	public static void check() {

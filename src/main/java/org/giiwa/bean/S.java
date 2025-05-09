@@ -14,6 +14,7 @@
 */
 package org.giiwa.bean;
 
+import org.giiwa.conf.Global;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
@@ -32,7 +33,7 @@ public final class S extends Bean {
 	private static final long serialVersionUID = 1L;
 
 	public final static BeanDAO<String, S> dao = BeanDAO.create(S.class, time -> {
-		return W.create().and("updated", System.currentTimeMillis() - X.AWEEK, W.OP.lt);
+		return W.create().and("updated", Global.now() - X.AWEEK, W.OP.lt);
 	});
 
 	@Column(memo = "主键", unique = true, size = 50)
@@ -44,9 +45,9 @@ public final class S extends Bean {
 	public static String create(String url) {
 		String id = UID.id(url);
 		if (dao.exists2(id)) {
-			dao.update(id, V.create().append("updated", System.currentTimeMillis()));
+			dao.update(id, V.create().append("updated", Global.now()));
 		} else {
-			dao.insert(V.create().append("id", id).append("url", url).append("expired", System.currentTimeMillis()));
+			dao.insert(V.create().append("id", id).append("url", url).append("expired", Global.now()));
 		}
 		return "/s/" + id;
 	}

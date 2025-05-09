@@ -36,9 +36,15 @@
 								"classes": "icon-hammer"
 							},
 							{
+								"name": "menu.accesslog",
+								"load": "/admin/accesslog",
+								"seq": 20,
+								"classes": "icon-pushpin"
+							},
+							{
 								"name": "menu.logs",
 								"load": "/admin/logs",
-								"seq": 40,
+								"seq": 30,
 								"classes": "icon-drawer"
 							}
 						]
@@ -120,7 +126,7 @@
 							},
 							{
 								"name": "menu.dfile",
-								"load": "/admin/dfile/folder",
+								"load": "/admin/dfile/disk",
 								"seq": 60,
 								"classes": "icon-folder"
 							}

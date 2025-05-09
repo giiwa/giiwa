@@ -468,8 +468,8 @@ public final class GLog extends Bean {
 						sb.append("<" + seq.incrementAndGet() + ">");
 						sb.append(level);
 						Language lang = Language.getLanguage();
-						sb.append(" " + lang.format(System.currentTimeMillis(), "yyyy-MM-dd") + "T"
-								+ lang.format(System.currentTimeMillis(), "HH:mm:ss.S"));
+						sb.append(" " + lang.format(Global.now(), "yyyy-MM-dd") + "T"
+								+ lang.format(Global.now(), "HH:mm:ss.S"));
 						sb.append(" " + Host.getLocalip());
 						sb.append(" giiwa ").append(Host.getPid());
 						sb.append(" - -");

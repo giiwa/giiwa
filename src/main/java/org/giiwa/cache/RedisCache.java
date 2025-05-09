@@ -18,22 +18,23 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.Duration;
 import java.util.List;
 
 import org.apache.commons.logging.*;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.giiwa.bean.GLog;
 import org.giiwa.dao.X;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.params.SetParams;
 
 /**
  * The Class RedisCache is used to redis cache <br>
  * url: redis://host:port
  */
-class RedisCache implements ICacheSystem {
+public class RedisCache implements ICacheSystem {
 
 	/** The log. */
 	static Log log = LogFactory.getLog(RedisCache.class);
@@ -61,11 +62,19 @@ class RedisCache implements ICacheSystem {
 				port = X.toInt(ss[1], 0);
 			}
 
-			GenericObjectPoolConfig<Jedis> config = new GenericObjectPoolConfig<Jedis>();
+			JedisPoolConfig config = new JedisPoolConfig();
+			config.setNumTestsPerEvictionRun(3);
+			config.setTimeBetweenEvictionRunsMillis(Duration.ofMinutes(5).toMillis());
+			config.setMinIdle(5);
 			config.setMaxTotal(20);
-			config.setMaxIdle(5);
-			config.setMaxWaitMillis(1000l);
 			config.setTestOnBorrow(false);
+			config.setTestWhileIdle(true);
+
+//			GenericObjectPoolConfig<Jedis> config = new GenericObjectPoolConfig<Jedis>();
+//			config.setMaxTotal(20);
+//			config.setMaxIdle(5);
+//			config.setMaxWaitMillis(1000l);
+//			config.setTestOnBorrow(false);
 
 			user = X.isEmpty(user) ? null : user;
 			pwd = X.isEmpty(pwd) ? null : pwd;
@@ -85,8 +94,8 @@ class RedisCache implements ICacheSystem {
 			return r;
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
+			return null;
 		}
-		return null;
 	}
 
 	/**
@@ -125,7 +134,7 @@ class RedisCache implements ICacheSystem {
 			try {
 				return e.psetex(name.getBytes(), expired, serialize(o)) != null;
 			} catch (Exception e1) {
-				log.error(e1.getMessage(), e1);
+				log.error("name=" + name + ", o=" + o + ", expired=" + expired, e1);
 			} finally {
 				e.close();
 			}
@@ -235,14 +244,31 @@ class RedisCache implements ICacheSystem {
 
 	}
 
+	private long _lastsync = 0; // last sync time
+	private long _timedelta = 0; // ns
+
 	@Override
 	public long now() {
+
+		if (System.currentTimeMillis() - _lastsync < X.AMINUTE) {
+			return (System.currentTimeMillis() * 1000 - _timedelta) / 1000;
+		}
+
 		Jedis e = pool.getResource();
 		try {
+
 			List<String> l1 = e.time();
-			return X.toLong(l1.get(0)) + X.toLong(l1.get(1)) / 1000;
+			// 微妙
+			long ws = X.toLong(l1.get(0)) * 1000000 + X.toLong(l1.get(1));
+
+			_timedelta = System.currentTimeMillis() * 1000 - ws;
+			_lastsync = System.currentTimeMillis();
+
+			return ws / 1000;
+
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
+			GLog.applog.error("sys", "now", "get time failed", e1);
 		} finally {
 			e.close();
 		}

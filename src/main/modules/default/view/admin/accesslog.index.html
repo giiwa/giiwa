@@ -8,22 +8,8 @@
 <div class='search'>
 	<form action='/admin/accesslog' method='get' #if($!s>0) style='display:none' #end>
 		<input type="hidden" name="__node" value="$!__node" />
-		<span><label><h3>URI</h3>:<input type='text' name='guri' value="$!guri" /></label></span>
-		<span><label><h3>SID</h3>:<input type='text' name='gsid' value="$!gsid" /></label></span>
+		<span><label><h3>URI</h3>:<input type='text' name='url' value="$!uri" /></label></span>
 		<span><label><h3>IP</h3>:<input type='text' name='ip' value="$!ip" /></label></span>
-	
-		<span class='line'></span>
-		<span><label><h3>$lang.get('sort.by'):</h3>
-			<select name='sortby'>
-				<option value='created' #if($sortby == 'created') selected #end>$lang.get('log.created')</option>
-				<option value='node' #if($sortby == 'node') selected #end>$lang.get('log.node')</option>
-				<option value='model' #if($sortby == 'model') selected #end>$lang.get('log.model')</option>
-			</select>
-			<select name='sortby_type'>
-				<option value='1' #if($sortby_type == '1') selected #end>$lang.get('sortby.type_')</option>
-				<option value='-1' #if($sortby_type == '-1') selected #end>$lang.get('sortby.type_desc')</option>
-			</select></label>
-		</span>
 	
 		<button type='submit' class='btns1 icon icon-search'></button>
 	</form>
@@ -35,37 +21,17 @@
 <table id='accesslog-table' class='tablesorter nospace' border="0" cellpadding="0" cellspacing="1">
 	<thead>
 		<tr>
-			<th>URL</th>
-			<th>Module</th>
-			<th style="width: 110px;">Model</th>
-			<th>Method</th>
-			<th>Status</th>
-			<th>Cost(ms)</th>
-			<th style="width: 110px;">SID</th>
-			<th>UID</th>
-			<th>USERNAME</th>
-			<th style="width: 100px;">IP</th>
-			<th style="width: 110px;">Created</th>
-			<th></th>
+			<th>访问链接</th>
+			<th>IP地址</th>
+			<th>时间</th>
 		</tr>
 	</thead>
 	<tbody>
 #foreach($f in $list)
 	<tr>
 		<td>$!f.url</td>
-		<td>$!f.module</td>
-		<td>$!f.model</td>
-		<td>$!f.method</td>
-		<td>$!f.status</td>
-		<td>$!f.cost</td>
-		<td>$!f.sid</td>
-		<td>$!f.uid</td>
-		<td>$!f.username</td>
 		<td>$!f.ip</td>
 		<td>$lang.format($!f.created, 'yyyy-MM-dd HH:mm')</td>
-		<td class="a">
-			<a class="hint hint--bottom" data-hint="$lang.get('a.detail')" href="javascript:;" onclick="giiwa.popup('/admin/accesslog/detail?id=$f.id')"><i class="icon-file-text2"></i></a>
-		</td>
 	</tr>
 #end
 	</tbody>

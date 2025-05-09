@@ -77,7 +77,10 @@ public class FileCache implements ICacheSystem {
 					byte[] b = new byte[in.available()];
 					in.read(b);
 
-					return _fromBytes(b);
+					_D e = (_D) _fromBytes(b);
+					if (!e.expired()) {
+						return e.o;
+					}
 				} finally {
 					if (in != null) {
 						in.close();
@@ -92,9 +95,8 @@ public class FileCache implements ICacheSystem {
 	}
 
 	public void touch(String name, long expired) {
-		String path = _path(name);
-		File f = new File(path);
-		f.setLastModified(System.currentTimeMillis());
+		Object o = get(name);
+		set(name, o, expired);
 	}
 
 	/**
@@ -109,7 +111,8 @@ public class FileCache implements ICacheSystem {
 			if (o == null) {
 				return delete(id);
 			} else {
-				byte[] b = _toBytes(o);
+
+				byte[] b = _toBytes(_D.create(o, expired));
 
 				/**
 				 * cache it
@@ -295,6 +298,27 @@ public class FileCache implements ICacheSystem {
 	@Override
 	public long now() {
 		return System.currentTimeMillis();
+	}
+
+	static class _D implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		Object o;
+		long expired;
+
+		public static _D create(Object o, long expired) {
+			_D e = new _D();
+			e.o = o;
+			e.expired = System.currentTimeMillis() + expired;
+			return e;
+		}
+
+		public boolean expired() {
+			return System.currentTimeMillis() > expired;
+		}
 	}
 
 }

@@ -14,6 +14,7 @@
 */
 package org.giiwa.misc;
 
+import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.task.Function;
 import org.giiwa.web.Language;
@@ -31,13 +32,13 @@ public class TimeRange {
 	}
 
 	public boolean ok() {
-		if (System.currentTimeMillis() > last) {
-			if (System.currentTimeMillis() - last > X.AMINUTE) {
+		if (Global.now() > last) {
+			if (Global.now() - last > X.AMINUTE) {
 				String time = func.apply(null);
 				String[] ss = X.split(time, "-");
 				if (ss.length == 2) {
 					int c = ss[0].compareTo(ss[1]);
-					time = Language.getLanguage().format(System.currentTimeMillis(), "HH:mm");
+					time = Language.getLanguage().format(Global.now(), "HH:mm");
 					if (c > 0) {
 						if (time.compareTo(ss[0]) >= 0 || time.compareTo(ss[1]) <= 0) {
 							_ok = true;
@@ -56,7 +57,7 @@ public class TimeRange {
 				} else {
 					_ok = true;
 				}
-				last = System.currentTimeMillis();
+				last = Global.now();
 			}
 			return _ok;
 

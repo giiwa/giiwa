@@ -69,7 +69,7 @@ public final class Config {
 			PropertyConfigurator.configureAndWatch(confFile.getParent() + File.separator + "log4j.properties",
 					X.AMINUTE);
 		} else {
-			File f1 = new File(Controller.GIIWA_HOME + "/log4j.properties");
+			File f1 = new File(Controller.GIIWA_HOME + "/conf/log4j.properties");
 			if (f1.exists()) {
 				PropertyConfigurator.configureAndWatch(f1.getAbsolutePath(), X.AMINUTE);
 			} else {
@@ -131,78 +131,11 @@ public final class Config {
 
 			// conf.addProperty("home", home);
 
-			List<?> list = conf.getList("@include");
-			if (list != null && !list.isEmpty()) {
-				Set<String> ss = new HashSet<String>();
-				ss.addAll(X.asList(list, e -> e.toString()));
-
-				for (String s : ss) {
-					if (s.startsWith(File.separator)) {
-						if (new File(s).exists()) {
-							PropertiesConfiguration c2 = new PropertiesConfiguration();
-							Reader r2 = new InputStreamReader(new FileInputStream(file), "UTF-8");
-							c2.read(r2);
-//							PropertiesConfiguration c = new PropertiesConfiguration(s);
-//							c.setEncoding("utf-8");
-							// reloader.add(s);
-
-							conf.append(c2);
-						} else {
-							Config.getLogger().warning("Can't find the configuration file, file=" + s);
-						}
-					} else {
-						String s1 = file.getParent() + "/conf/" + s;
-						if (new File(s1).exists()) {
-
-							PropertiesConfiguration c2 = new PropertiesConfiguration();
-							Reader r2 = new InputStreamReader(new FileInputStream(s1), "UTF-8");
-							c2.read(r2);
-//
-//							PropertiesConfiguration c = new PropertiesConfiguration(s1);
-//							c.setEncoding("utf-8");
-							// reloader.add(s1);
-
-							conf.append(c2);
-						} else {
-							Config.getLogger().warning("Can't find the configuration file, file=" + s1);
-						}
-
-					}
-				}
-			}
-
 			/**
 			 * set some default value
 			 */
 			if (!conf.containsKey("site.name")) {
 				conf.setProperty("site.name", "default");
-			}
-
-			Iterator<String> it = conf.getKeys();
-			while (it.hasNext()) {
-				String name = it.next();
-				Object v = conf.getProperty(name);
-				if (v != null && v instanceof String) {
-					String s = (String) v;
-
-					int i = s.indexOf("${");
-					if (i > -1) {
-						while (i > -1) {
-							int j = s.indexOf("}", i + 2);
-							String n = s.substring(i + 2, j);
-							String s1 = System.getProperty(n);
-
-							if (s1 != null) {
-								s = s.substring(0, i) + s1 + s.substring(j + 1);
-								i = s.indexOf("${");
-							}
-						}
-						if (s.indexOf("$") == -1) {
-							conf.setProperty(name, s);
-							it = conf.getKeys();
-						}
-					}
-				}
 			}
 
 			// check and upgrade
@@ -337,7 +270,7 @@ public final class Config {
 
 				// backup old
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-				File back = new File(confFile.getCanonicalFile() + "." + sdf.format(System.currentTimeMillis()));
+				File back = new File(confFile.getCanonicalFile() + "." + sdf.format(Global.now()));
 				confFile.renameTo(back);
 
 				Writer out = new FileWriter(confFile);
@@ -375,10 +308,7 @@ public final class Config {
 			while (it.hasNext()) {
 				String name = it.next();
 				Object v1 = conf.getProperty(name);
-				String v2 = c1.getString(name, X.EMPTY);
-				if (v2.indexOf("${") == -1) {
-					c1.setProperty(name, v1);
-				}
+				c1.setProperty(name, v1);
 			}
 
 			String id = c1.getString("node.id");
@@ -390,7 +320,7 @@ public final class Config {
 
 			// backup old
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
-			File back = new File(confFile.getCanonicalFile() + "." + sdf.format(System.currentTimeMillis()));
+			File back = new File(confFile.getCanonicalFile() + "." + sdf.format(Global.now()));
 			confFile.renameTo(back);
 
 			Writer out = new FileWriter(confFile);

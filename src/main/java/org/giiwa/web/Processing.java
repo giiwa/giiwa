@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.json.JSON;
 
 public class Processing {
@@ -62,7 +63,7 @@ public class Processing {
 					j1.append("ip", mo.ipPath());
 					j1.append("id", mo.id);
 					j1.append("mo", mo.getClass().getName());
-					j1.append("cost", System.currentTimeMillis() - mo.created);
+					j1.append("cost", Global.now() - mo.created);
 					j1.append("thread", mo.thread.getName());
 
 					l1.add(j1);

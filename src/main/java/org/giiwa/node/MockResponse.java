@@ -18,16 +18,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
+
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.WriteListener;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class MockResponse implements HttpServletResponse, Closeable {
 
@@ -169,17 +170,7 @@ public class MockResponse implements HttpServletResponse, Closeable {
 	}
 
 	@Override
-	public String encodeRedirectUrl(String arg0) {
-		return null;
-	}
-
-	@Override
 	public String encodeURL(String arg0) {
-		return null;
-	}
-
-	@Override
-	public String encodeUrl(String arg0) {
 		return null;
 	}
 
@@ -195,6 +186,7 @@ public class MockResponse implements HttpServletResponse, Closeable {
 
 	@Override
 	public void sendRedirect(String url) throws IOException {
+//		log.warn("url=" + url, new Exception("redirect 302"));
 		head.append("location", url);
 		status = 302;
 	}
@@ -214,17 +206,17 @@ public class MockResponse implements HttpServletResponse, Closeable {
 		head.append(name, Integer.toString(v));
 	}
 
-	@Override
-	public void setStatus(int status, String message) {
-		this.status = status;
-		this.message = message;
+//	@Override
+//	public void setStatus(int status, String message) {
+//		this.status = status;
+//		this.message = message;
+//
+//	}
 
-	}
-
-	@Override
-	public void setStatus(int status) {
-		setStatus(status, X.EMPTY);
-	}
+//	@Override
+//	public void setStatus(int status) {
+//		setStatus(status, X.EMPTY);
+//	}
 
 	public static MockResponse create() {
 		return new MockResponse();
@@ -241,27 +233,33 @@ public class MockResponse implements HttpServletResponse, Closeable {
 	}
 
 	@Override
-	public String getHeader(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	public String getHeader(String name) {
+		return head.getString(name);
 	}
 
 	@Override
 	public Collection<String> getHeaderNames() {
-		// TODO Auto-generated method stub
-		return null;
+		return head.keySet();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public Collection<String> getHeaders(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
+	public Collection<String> getHeaders(String name) {
+		Object o = head.get(name);
+		if (X.isArray(o)) {
+			return (Collection<String>) o;
+		}
+		return Arrays.asList(o.toString());
 	}
 
 	@Override
 	public int getStatus() {
-		// TODO Auto-generated method stub
-		return 0;
+		return this.status;
+	}
+
+	@Override
+	public void setStatus(int sc) {
+		this.status = sc;
 	}
 
 }

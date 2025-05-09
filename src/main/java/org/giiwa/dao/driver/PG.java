@@ -158,45 +158,45 @@ public class PG extends RDSHelper._AbstractDriver {
 
 	}
 
-	@Override
-	public List<JSON> listTables(Connection c, String dbname, String schema, String username, String name, int n)
-			throws SQLException {
-
-		Statement stat = null;
-		ResultSet r = null;
-
-		List<JSON> l1 = JSON.createList();
-
-		try {
-
-			stat = c.createStatement();
-
-			String sql = "SELECT table_schema, table_name, table_type FROM information_schema.tables where table_schema='"
-					+ schema + "' or table_schema='public'";
-
-			log.info(sql);
-
-			r = stat.executeQuery(sql);
-			while (r.next()) {
-				String owner = r.getString("table_schema");
-				String tablename = r.getString("table_name");
-				if (!X.isEmpty(owner)) {
-					tablename = owner + "." + tablename;
-				}
-				String type = r.getString("table_type");
-				if (X.isEmpty(name) || tablename.matches(name)) {
-					l1.add(JSON.create().append("type", type).append("name", tablename).append("display", tablename)
-							.append("memo", tablename));
-				}
-				if (n > 0 && l1.size() >= 1000) {
-					break;
-				}
-			}
-		} finally {
-			RDSHelper.close(r, stat);
-		}
-
-		return l1;
-	}
+//	@Override
+//	public List<JSON> listTables(Connection c, String dbname, String schema, String username, String name, int n)
+//			throws SQLException {
+//
+//		Statement stat = null;
+//		ResultSet r = null;
+//
+//		List<JSON> l1 = JSON.createList();
+//
+//		try {
+//
+//			stat = c.createStatement();
+//
+//			String sql = "SELECT table_schema, table_name, table_type FROM information_schema.tables where table_schema='"
+//					+ schema + "' or table_schema='public'";
+//
+//			log.info(sql);
+//
+//			r = stat.executeQuery(sql);
+//			while (r.next()) {
+//				String owner = r.getString("table_schema");
+//				String tablename = r.getString("table_name");
+//				if (!X.isEmpty(owner)) {
+//					tablename = owner + "." + tablename;
+//				}
+//				String type = r.getString("table_type");
+//				if (X.isEmpty(name) || tablename.matches(name)) {
+//					l1.add(JSON.create().append("type", type).append("name", tablename).append("display", tablename)
+//							.append("memo", tablename));
+//				}
+//				if (n > 0 && l1.size() >= 1000) {
+//					break;
+//				}
+//			}
+//		} finally {
+//			RDSHelper.close(r, stat);
+//		}
+//
+//		return l1;
+//	}
 
 }

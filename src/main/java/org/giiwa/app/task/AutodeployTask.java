@@ -156,7 +156,7 @@ public class AutodeployTask extends Task {
 		try {
 			Language lang = Language.getLanguage();
 			DFile f1 = Disk.seek(
-					"/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss") + "/" + f.getName());
+					"/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/ss") + "/" + f.getName());
 			f1.upload(f);
 			boolean restart = Module.prepare(f1);
 			GLog.applog.info(autodeploy.class, "upgrade", "success, name=" + name, null, null);

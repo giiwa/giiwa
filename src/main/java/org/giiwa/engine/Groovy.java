@@ -31,6 +31,7 @@ import javax.script.SimpleBindings;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.UID;
 import org.giiwa.task.Task;
 
@@ -133,7 +134,7 @@ public class Groovy {
 			}
 		}
 
-		e.last = System.currentTimeMillis();
+		e.last = Global.now();
 
 		return e;
 	}

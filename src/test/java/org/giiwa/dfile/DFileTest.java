@@ -61,7 +61,10 @@ public class DFileTest {
 
 		filename = "/dput/admin/temp/";
 		String s = e.filename(filename);
-		System.out.println(s + ", mount=" + e.isMount(filename));
+		System.out.println(s + ", mount=" + e.mount(filename));
+
+		filename = "/dput/admin/";
+		System.out.println(filename + " => mount=" + e.mount(filename));
 
 	}
 

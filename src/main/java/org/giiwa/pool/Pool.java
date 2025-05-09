@@ -19,13 +19,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
 import org.giiwa.task.Task;
@@ -40,16 +38,18 @@ public class Pool<E> {
 
 	static Log log = LogFactory.getLog(Pool.class);
 
-	private ReentrantLock lock = new ReentrantLock();
-	private Condition door = lock.newCondition();
+//	private ReentrantLock lock = new ReentrantLock();
+//	private Condition door = lock.newCondition();
 
 	private List<E> idle = new ArrayList<E>();
+	private Map<E, _O> outside = new HashMap<E, _O>();
 
 	private int initial = 10;
 	private int max = 10;
 	private int created = 0;
+	private long MAX_TIME_OUTSIDE = X.AMINUTE;
 
-	public long activetime = System.currentTimeMillis();
+	public long activetime = Global.now();
 
 	private IPoolFactory<E> factory = null;
 
@@ -68,7 +68,7 @@ public class Pool<E> {
 
 		Pool<E> p = new Pool<E>();
 		p.name = factory.toString();
-		p.initial = initial;
+		p.initial = Math.min(initial, max);
 		p.max = max;
 		p.factory = factory;
 		p.factory.pool = p;
@@ -92,25 +92,16 @@ public class Pool<E> {
 		for (int i = 0; i < initial; i++) {
 			E t = factory.create0();
 			if (t != null) {
-				try {
-					lock.lock();
-
+				synchronized (this) {
 					created++;
 					idle.add(t);
-
-					door.signal();
-				} finally {
-					lock.unlock();
 				}
 			}
 		}
-
-//		this.monitor = new _M();
-//		this.monitor.schedule(0);
-
+		synchronized (this) {
+			this.notifyAll();
+		}
 	}
-
-//	private _M monitor;
 
 	/**
 	 * release a object to the pool.
@@ -119,7 +110,7 @@ public class Pool<E> {
 	 */
 	void release(E t) {
 
-		activetime = System.currentTimeMillis();
+		activetime = Global.now();
 
 		if (log.isDebugEnabled()) {
 			log.debug("release t=" + t);
@@ -128,30 +119,25 @@ public class Pool<E> {
 		if (t == null)
 			return;
 
-		remove(t);
-
-		if (!factory.check0(t)) {
-
-			factory.destroy0(t);
-			log.warn("release a bad one, [" + name + "]");
-
-			created--;
-		} else {
-
-			try {
-				lock.lock();
-
-				if (idle.size() >= max) {
-					log.warn("error, the size[" + idle.size() + "] of exceed max[" + max + "], close this one");
+		synchronized (this) {
+			long otime = _remove(t);
+			if (otime > -1) {
+				if (otime > MAX_TIME_OUTSIDE || !factory.check0(t)) {
 					factory.destroy0(t);
-					return;
-				} else if (!idle.contains(t)) {
-					idle.add(t);
+					log.warn("release a bad one, [" + t + "]");
+					created--;
+				} else {
+					if (outside.size() + idle.size() >= max) {
+						log.warn(
+								"error, the size[" + idle.size() + "] of exceed max[" + max + "], close this one=" + t);
+						factory.destroy0(t);
+						return;
+					} else if (!idle.contains(t)) {
+						idle.add(t);
+					}
 				}
-				door.signal();
-			} finally {
-				lock.unlock();
 			}
+			// still using by
 		}
 	}
 
@@ -159,14 +145,13 @@ public class Pool<E> {
 	 * destroy the pool, and destroy all the object in the pool.
 	 */
 	public void destroy() {
-		synchronized (idle) {
+		synchronized (this) {
 			for (int i = idle.size() - 1; i >= 0; i--) {
-
-				remove(idle.get(i));
-
 				factory.destroy0(idle.get(i));
 			}
+			outside.clear();
 			idle.clear();
+			created = 0;
 		}
 	}
 
@@ -179,41 +164,38 @@ public class Pool<E> {
 	 */
 	public E get(long timeout) throws Exception {
 
-		activetime = System.currentTimeMillis();
+		activetime = Global.now();
 
 		TimeStamp t = TimeStamp.create();
 
 		long t1 = timeout;
 
-		try {
-			lock.lock();
+		synchronized (this) {
 
 			while (t1 > 0) {
+				E e = _outside();
+				if (e != null) {
+					return e;
+				}
+
 				if (!idle.isEmpty()) {
-					E e = idle.remove(0);
+					e = idle.remove(0);
 					if (factory.check0(e)) {
-
-						add(e);
-
+						_add(e);
 						return e;
 					} else {
 						if (log.isInfoEnabled()) {
 							log.info("got bad one, destory, [" + name + "], max=" + max);
 						}
-
-						remove(e);
-
 						factory.destroy0(e);
 						created--;
 					}
 				} else {
 					if (created < max) {
-						E e = factory.create0();
+						e = factory.create0();
 						if (e != null) {
 							created++;
-
-							add(e);
-
+							_add(e);
 							return e;
 						} else {
 							throw new Exception("create E failed, [" + name + "], e=" + e + ", factory=" + factory);
@@ -224,17 +206,37 @@ public class Pool<E> {
 							if (log.isDebugEnabled()) {
 								log.debug("waiting for get, [" + name + "], max=" + max);
 							}
-							door.awaitNanos(TimeUnit.MILLISECONDS.toNanos(t1));
+							this.wait(t1);
 						}
 					}
 				}
 			}
-		} finally {
-			lock.unlock();
 		}
 
-		log.warn("get failed, " + name + ", idle=" + idle.size() + ", created=" + created + ", max=" + max);
+		log.warn("pool.get failed, " + name + ", idle=" + idle.size() + ", created=" + created + ", max=" + max
+				+ ", outside=" + outside);
 
+		return null;
+	}
+
+	private E _outside() {
+		synchronized (this) {
+			if (outside.isEmpty()) {
+				if (created != idle.size()) {
+					log.warn("outside error, empty, idle=" + idle.size() + ", created=" + created);
+					created = idle.size();
+				}
+				return null;
+			}
+
+			// 不同线程不能共享，DM数据库连接共享会卡顿
+			Thread th = Thread.currentThread();
+			for (_O e : outside.values()) {
+				if (th.getId() == e.th.getId()) {
+					return e.get();
+				}
+			}
+		}
 		return null;
 	}
 
@@ -314,98 +316,68 @@ public class Pool<E> {
 		return "Pool [" + name + "=(initial=" + initial + ", created=" + created + ", max=" + max + ")]";
 	}
 
-	private Map<E, _O> outside = new HashMap<E, _O>();
-
-	public void add(E e) {
-		synchronized (outside) {
+	private void _add(E e) {
+		synchronized (this) {
 			if (outside.containsKey(e)) {
-				log.error("slow10, in=true");
+				log.error("outside error, already in outside=" + outside);
 			}
-			outside.put(e, new _O());
+			if (outside.size() >= max) {
+				log.warn("outside put, e=" + e + ", created=" + created + ", max=" + max, new Exception());
+			}
+			outside.put(e, new _O(e));
 		}
 	}
 
-	public void remove(E e) {
-		synchronized (outside) {
-			outside.remove(e);
+	private long _remove(E e) {
+		synchronized (this) {
+			_O o = outside.get(e);
+			if (o == null) {
+				log.warn("outside error, o=null, e=" + e.toString());
+				outside.remove(e);
+				// 这个连接失控了， 关掉
+				return Long.MAX_VALUE;
+			} else if (o.release()) {
+				outside.remove(e);
+				if (log.isDebugEnabled()) {
+					log.debug("outside ok, removed, e=" + e.toString() + ", outside=" + outside + ", idle=" + idle
+							+ ", created=" + created + ", max=" + max);
+				}
+				return o.time.pastms();
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("outside refer=" + o.refer + ", e=" + e.toString());
+				}
+				return -1;
+			}
 		}
 	}
 
 	class _O {
-		Thread th;
+
 		TimeStamp time = TimeStamp.create();
-		String trace;
+		Thread th;
+		E e;
+		int refer = 1;
 
-		_O() {
+		_O(E e) {
+			this.e = e;
+			this.refer = 1;
 			th = Thread.currentThread();
-
-//			Thread t1 = th;
-//			StringBuilder sb = new StringBuilder();
-//			StackTraceElement[] ss = t1.getStackTrace();
-//			sb.append("ID: ").append(t1.getId()).append("(0x").append(Long.toHexString(t1.getId()))
-//					.append("), Thread: ").append(t1.getName()).append(", State: ").append(t1.getState())
-//					.append(", Task:").append(t1.getClass().getName()).append("\r\n");
-//
-//			if (ss != null && ss.length > 0) {
-//				for (StackTraceElement e1 : ss) {
-//
-//					sb.append("    ").append(e1.toString()).append("\r\n");
-//				}
-//			}
-//			trace = sb.toString();
 		}
 
-	}
+		public synchronized E get() {
+			refer++;
+			return e;
+		}
 
-	class _M extends Task {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		public String getName() {
-			return "pool." + name + ".monitor";
+		public synchronized boolean release() {
+			refer--;
+			return refer == 0;
 		}
 
 		@Override
-		public void onExecute() {
-			int i = 0;
-			synchronized (outside) {
-				for (E e : outside.keySet()) {
-					_O o = outside.get(e);
-					if (o.time.pastms() > 10000 || idle.contains(e)) {
-						// dump thread
-//						Thread t1 = o.th;
-//						StringBuilder sb = new StringBuilder();
-//						StackTraceElement[] ss = t1.getStackTrace();
-//						sb.append("ID: ").append(t1.getId()).append("(0x").append(Long.toHexString(t1.getId()))
-//								.append("), Thread: ").append(t1.getName()).append(", State: ").append(t1.getState())
-//								.append(", Task:").append(t1.getClass().getName()).append("\r\n");
-//
-//						if (ss != null && ss.length > 0) {
-//							for (StackTraceElement e1 : ss) {
-//
-//								sb.append("    ").append(e1.toString()).append("\r\n");
-//							}
-//						}
-
-						log.warn("slow10, i=" + i + ", in=" + idle.contains(e) + ", cost=" + o.time.past());
-						i++;
-
-						factory.destroy0(e);
-						log.warn("release a bad one, [" + name + "]");
-
-						created--;
-						// o.th.interrupt();
-					}
-				}
-			}
-		}
-
-		@Override
-		public void onFinish() {
-			this.schedule(X.AMINUTE);
+		public String toString() {
+			return "_O[cost = " + time.past() + ", refer=" + refer + ", thread=" + th.getName() + "]";
 		}
 
 	}

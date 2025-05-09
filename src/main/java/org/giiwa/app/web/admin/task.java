@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
@@ -77,19 +78,22 @@ public class task extends Controller {
 		AtomicLong cores = new AtomicLong(0);
 
 		W q = Node.dao.query().and("giiwa", null, W.OP.neq);
-		q.and("lastcheck", System.currentTimeMillis() - Node.LOST, W.OP.gte);
+		q.and("lastcheck", Global.now() - Node.LOST, W.OP.gte);
 
 		List<JSON> task = new ArrayList<JSON>();
+		List<String> has = new ArrayList<String>();
 
 		try {
 
-			AtomicLong has = new AtomicLong(q.count());
-
-			GLog.applog.info("sys", "task", "MQ1, has=" + has.get() + ", q=" + q);
+			long n = q.count();
 
 			MQ.callTopic(Task.MQNAME, "list", "", 5000, req -> {
 
 				String from = req.from;
+
+				if (log.isInfoEnabled()) {
+					log.info("list task	, from=" + from);
+				}
 
 				try {
 
@@ -116,17 +120,17 @@ public class task extends Controller {
 					GLog.applog.error("sys", "task", "from=" + from + ", error=" + e.getMessage(), e);
 				}
 
-				has.decrementAndGet();
-				if (has.get() <= 0) {
+				has.add(req.from);
+				if (has.size() >= n) {
+					// 结束
 					return true;
 				} else {
 					return false;
 				}
 			});
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			GLog.applog.error("task", "checking", e.getMessage(), e);
-//			this.set(X.MESSAGE, e.getMessage());
+			log.error("got " + has.toString(), e);
+			GLog.applog.error("task", "checking", "got " + has.toString(), e);
 		}
 
 		Collections.sort(task, new Comparator<JSON>() {

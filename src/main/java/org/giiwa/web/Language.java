@@ -148,7 +148,7 @@ public class Language implements Serializable {
 	 * @return the string
 	 */
 	public String now(String format) {
-		return format(System.currentTimeMillis(), format);
+		return format(Global.now(), format);
 	}
 
 	/**
@@ -654,7 +654,7 @@ public class Language implements Serializable {
 			return X.EMPTY;
 		}
 
-		int t = (int) ((System.currentTimeMillis() - base) / 1000);
+		int t = (int) ((Global.now() - base) / 1000);
 		if (t < 60) {
 			return t + get("past.s");
 		}
@@ -742,7 +742,7 @@ public class Language implements Serializable {
 	}
 
 	public long pastms(long t) {
-		return System.currentTimeMillis() - t;
+		return Global.now() - t;
 	}
 
 	/**
@@ -839,12 +839,12 @@ public class Language implements Serializable {
 			theme.append(name, JSON.create());
 		}
 		JSON j = (JSON) theme.get(name);
-		if (System.currentTimeMillis() - j.getLong("created") > min * X.AMINUTE) {
+		if (Global.now() - j.getLong("created") > min * X.AMINUTE) {
 			File f = Module.home.getFile("/images/theme/");
 			if (f != null) {
 				String[] ss = f.list();
 				if (ss != null && ss.length > 0) {
-					j.append("created", System.currentTimeMillis()).append("image",
+					j.append("created", Global.now()).append("image",
 							"/images/theme/" + ss[(int) (ss.length * Math.random())]);
 				}
 			}
@@ -884,7 +884,7 @@ public class Language implements Serializable {
 	public static void main(String[] args) {
 
 		Language lang = Language.getLanguage("en_us");
-		System.out.println(lang.format(System.currentTimeMillis(), "yyMd"));
+		System.out.println(lang.format(Global.now(), "yyMd"));
 		long t = lang.parse("June 11, 2015", "MMM dd, yyyy");
 		System.out.println(t);
 		System.out.println(lang.format(t, "yyyyMMdd"));

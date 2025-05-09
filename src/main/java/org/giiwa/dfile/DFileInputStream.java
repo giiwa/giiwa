@@ -20,9 +20,8 @@ import java.io.OutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.Disk;
 
-class DFileInputStream extends InputStream {
+public class DFileInputStream extends InputStream {
 
 	private static Log log = LogFactory.getLog(DFileInputStream.class);
 
@@ -39,40 +38,29 @@ class DFileInputStream extends InputStream {
 
 	@Override
 	public int read() throws IOException {
-		long t = System.currentTimeMillis();
-		try {
-			return in.read();
-		} finally {
-			Disk.Counter.read(file.getDisk_obj()).add(1, System.currentTimeMillis() - t);
-		}
+		return in.read();
 	}
 
 	@Override
 	public int read(byte[] b) throws IOException {
-		long t = System.currentTimeMillis();
 		int len = 0;
 		try {
 			len = in.read(b);
 		} catch (IOException e) {
 			log.error("disk=" + file.getDisk_obj() + ", filename=" + file.filename, e);
 			throw e;
-		} finally {
-			Disk.Counter.read(file.getDisk_obj()).add(len, System.currentTimeMillis() - t);
 		}
 		return len;
 	}
 
 	@Override
 	public int read(byte[] b, int off, int len) throws IOException {
-		long t = System.currentTimeMillis();
 		int len1 = 0;
 		try {
 			len1 = in.read(b, off, len);
 		} catch (IOException e) {
 			log.error("disk=" + file.getDisk_obj() + ", filename=" + file.filename, e);
 			throw e;
-		} finally {
-			Disk.Counter.read(file.getDisk_obj()).add(len1, System.currentTimeMillis() - t);
 		}
 		return len1;
 
@@ -80,39 +68,19 @@ class DFileInputStream extends InputStream {
 
 	@Override
 	public byte[] readAllBytes() throws IOException {
-		long t = System.currentTimeMillis();
-		byte[] bb = null;
-		try {
-			bb = in.readAllBytes();
-		} finally {
-			Disk.Counter.read(file.getDisk_obj()).add(bb == null ? 0 : bb.length, System.currentTimeMillis() - t);
-		}
+		byte[] bb = in.readAllBytes();
 		return bb;
 
 	}
 
 	@Override
 	public byte[] readNBytes(int len) throws IOException {
-		long t = System.currentTimeMillis();
-		byte[] bb = null;
-		try {
-			in.readNBytes(len);
-		} finally {
-			Disk.Counter.read(file.getDisk_obj()).add(bb == null ? 0 : bb.length, System.currentTimeMillis() - t);
-		}
-		return bb;
+		return in.readNBytes(len);
 	}
 
 	@Override
 	public int readNBytes(byte[] b, int off, int len) throws IOException {
-		long t = System.currentTimeMillis();
-		int len1 = 0;
-		try {
-			len1 = in.readNBytes(b, off, len);
-		} finally {
-			Disk.Counter.read(file.getDisk_obj()).add(len1, System.currentTimeMillis() - t);
-		}
-		return len1;
+		return in.readNBytes(b, off, len);
 	}
 
 	@Override

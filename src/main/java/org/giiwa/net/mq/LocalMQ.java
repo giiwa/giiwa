@@ -25,6 +25,7 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 
 class LocalMQ extends MQ {
@@ -178,7 +179,7 @@ class LocalMQ extends MQ {
 
 	class Sender {
 
-		long last = System.currentTimeMillis();
+		long last = Global.now();
 		String name;
 
 		public void send(Request r) throws JMSException {

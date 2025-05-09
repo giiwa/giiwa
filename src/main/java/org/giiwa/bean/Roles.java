@@ -101,7 +101,7 @@ public final class Roles extends Bean implements IRole {
 			 * test the name exists in while access? if not then add it in DB
 			 */
 			if (!X.isEmpty(s)) {
-				Access.set(s);
+				Access.set(s.trim());
 			}
 
 			/**

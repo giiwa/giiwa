@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.Stat;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -43,7 +44,7 @@ public class pending extends portlet {
 		this.set("n", n);
 
 		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-				.and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
+				.and("time", Global.now() - X.AHOUR, W.OP.gte).sort("time", 1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 
 			this.set("list", bs);
@@ -51,7 +52,7 @@ public class pending extends portlet {
 		}
 
 		long max = X.toLong(1.1 * Stat.max("n4", "node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
-				W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte)));
+				W.create().and("time", Global.now() - X.AHOUR, W.OP.gte)));
 		this.set("max", max);
 
 		this.show("/portlet/pending.html");
@@ -70,12 +71,12 @@ public class pending extends portlet {
 
 		Beans<Stat> bs = Stat.load(
 				"node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-						.and("time", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte).sort("time", 1),
+						.and("time", Global.now() - X.AHOUR * hours, W.OP.gte).sort("time", 1),
 				0, 60 * hours);
 		if (bs != null && !bs.isEmpty()) {
 
 			long max = Stat.max("n4", "node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
-					W.create().and("time", System.currentTimeMillis() - X.AHOUR, W.OP.gte));
+					W.create().and("time", Global.now() - X.AHOUR, W.OP.gte));
 
 			JSON p = JSON.create();
 			p.append("name", (n != null ? n.label : "") + " - " + lang.get("cpu.usage")).append("color", "#25840a");
@@ -105,7 +106,7 @@ public class pending extends portlet {
 			this.set("name1", id);
 		}
 
-		long time = System.currentTimeMillis() - X.AMONTH;
+		long time = Global.now() - X.AMONTH;
 
 		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min,
 				W.create().and("dataid", id).and("time", time, W.OP.gte).sort("time", -1), 0, 30 * 24 * 60);

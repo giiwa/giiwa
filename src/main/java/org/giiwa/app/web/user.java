@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.giiwa.bean.App;
 import org.giiwa.bean.AuthToken;
 import org.giiwa.bean.Code;
@@ -50,6 +48,8 @@ import org.giiwa.misc.noti.Email;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 import org.giiwa.web.view.View;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * web api： /user <br>
@@ -102,7 +102,7 @@ public class user extends Controller {
 		if (jo != null) {
 			long time = jo.getLong("time");
 			String name = jo.getString("name");
-			if (System.currentTimeMillis() - time < X.AMINUTE) {
+			if (Global.now() - time < X.AMINUTE) {
 				User u = User.load(name);
 				if (u != null) {
 					this.user(u);
@@ -400,7 +400,7 @@ public class user extends Controller {
 
 			long time = j1.getLong("time");
 			long expired = Global.getLong("user.login.sso.expired", 60);
-			if (System.currentTimeMillis() - time > expired * 60 * X.AMINUTE) {
+			if (Global.now() - time > expired * 60 * X.AMINUTE) {
 
 				GLog.securitylog.warn("user", "sso", "failed as exired", null, this.ip());
 
@@ -568,7 +568,7 @@ public class user extends Controller {
 
 		JSON j1 = JSON.create();
 		j1.append("name", name);
-		j1.append("time", System.currentTimeMillis());
+		j1.append("time", Global.now());
 
 		String url = this.getHtml("url");
 
@@ -735,7 +735,7 @@ public class user extends Controller {
 									}
 
 									me.logined(sid(true), this.ip(),
-											V.create("ajaxlogined", System.currentTimeMillis()));
+											V.create("ajaxlogined", Global.now()));
 
 									if (me.expired()) {
 										this.set(X.MESSAGE, lang.get("passwd.expired"));
@@ -788,7 +788,7 @@ public class user extends Controller {
 									 * logined, to update the stat data
 									 */
 									me.logined(sid(true), this.ip(),
-											V.create("weblogined", System.currentTimeMillis()));
+											V.create("weblogined", Global.now()));
 
 									if (me.expired()) {
 										this.set(X.MESSAGE, lang.get("passwd.expired"));
@@ -1159,9 +1159,9 @@ public class user extends Controller {
 
 							String code = null;
 
-							if (c == null || c.getExpired() < System.currentTimeMillis()) {
+							if (c == null || c.getExpired() < Global.now()) {
 								code = UID.random(10);
-								Code.create(code, email, V.create("expired", System.currentTimeMillis() + X.ADAY));
+								Code.create(code, email, V.create("expired", Global.now() + X.ADAY));
 							} else {
 								code = c.getString("s1");
 							}
@@ -1181,7 +1181,7 @@ public class user extends Controller {
 											jo.put(X.MESSAGE, lang.get("user.forget.email.sent"));
 											jo.put(X.STATE, HttpServletResponse.SC_OK);
 											Code.dao.update(W.create().and("s1", code).and("s2", email),
-													V.create(X.UPDATED, System.currentTimeMillis()));
+													V.create(X.UPDATED, Global.now()));
 
 										} else {
 											jo.put(X.MESSAGE, lang.get("user.forget.email.sent.failed"));
@@ -1214,7 +1214,7 @@ public class user extends Controller {
 					if (c == null) {
 						jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
 						jo.put(X.MESSAGE, lang.get("email.code.bad"));
-					} else if (c.getExpired() < System.currentTimeMillis()) {
+					} else if (c.getExpired() < Global.now()) {
 						jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
 						jo.put(X.MESSAGE, lang.get("email.code.expired"));
 					} else {
@@ -1279,10 +1279,10 @@ public class user extends Controller {
 
 							String code = null;
 
-							if (c == null || c.getExpired() < System.currentTimeMillis()) {
+							if (c == null || c.getExpired() < Global.now()) {
 								code = UID.digital(4);
 								Code.create(code, phone,
-										V.create("expired", System.currentTimeMillis() + X.AMINUTE * 6));
+										V.create("expired", Global.now() + X.AMINUTE * 6));
 							} else {
 								code = c.getString("s1");
 							}
@@ -1296,7 +1296,7 @@ public class user extends Controller {
 							// jo.put(X.MESSAGE, lang.get("user.forget.phone.sent"));
 							// jo.put(X.STATE, HttpServletResponse.SC_OK);
 							// Code.dao.update(W.create("s1", code).and("s2", phone),
-							// V.create(X.UPDATED, System.currentTimeMillis()));
+							// V.create(X.UPDATED, Global.now()));
 							//
 							// } else {
 							// jo.put(X.MESSAGE, lang.get("user.forget.phone.sent.failed"));
@@ -1316,7 +1316,7 @@ public class user extends Controller {
 					if (c == null) {
 						jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
 						jo.put(X.MESSAGE, lang.get("phone.code.bad"));
-					} else if (c.getExpired() < System.currentTimeMillis()) {
+					} else if (c.getExpired() < Global.now()) {
 						jo.put(X.STATE, HttpServletResponse.SC_BAD_REQUEST);
 						jo.put(X.MESSAGE, lang.get("phone.code.expired"));
 					} else {
@@ -1392,7 +1392,7 @@ public class user extends Controller {
 		JSON j1 = u.json();
 
 		j1.append("ip", this.ip());
-		j1.append("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd"));
+		j1.append("now", lang.format(Global.now(), "yyyy-MM-dd"));
 
 		Map<String, JSON> home = new TreeMap<String, JSON>();
 		JSON jo = JSON.create().append(X.STATE, 200).append("data", j1.append("accesses", u.getAccesses())
@@ -1454,7 +1454,7 @@ public class user extends Controller {
 				}
 
 				User.update(login.getId(),
-						V.create().append("password", pwd1).append("passwordtime", System.currentTimeMillis()));
+						V.create().append("password", pwd1).append("passwordtime", Global.now()));
 
 				GLog.securitylog.warn("user", "passwd", lang.get("user.passwd.change"), login, this.ip());
 
@@ -1492,7 +1492,7 @@ public class user extends Controller {
 
 	@Path(path = "timestamp")
 	public void timestamp() {
-		this.print(Long.toString(System.currentTimeMillis()));
+		this.print(Long.toString(Global.now()));
 	}
 
 	@Path(path = "sso/login", method = "POST")

@@ -1,0 +1,13 @@
+antlr4.antlrRegisteredTools=4.4@/var/folders/63/z884l60s0fzgt96__0hh_2wh0000gq/T/antlr-4.4-complete.jar\:4.11.1@/Users/joe/workspace/antlr4/antlr4-4.11.1-complete.jar
+antlr4.antlrToolPath=/Users/joe/workspace/antlr4/antlr4-4.11.1-complete.jar
+antlr4.encoding=UTF-8
+antlr4.listener=true
+antlr4.visitor=false
+antlr4.vmArgs=
+antlr4ide.is_project_specific=true
+autobuilding=true
+eclipse.preferences.version=1
+is_project_specific=
+outlet.DEFAULT_OUTPUT.cleanupDerived=true
+outlet.DEFAULT_OUTPUT.derived=true
+outlet.DEFAULT_OUTPUT.directory=./src/main/java/

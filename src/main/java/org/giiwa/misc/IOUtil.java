@@ -40,6 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Disk;
 import org.giiwa.bean.GLog;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.dfile.DFile;
 import org.giiwa.task.BiConsumer;
@@ -87,7 +88,7 @@ public class IOUtil {
 
 		Language lang = Language.getLanguage();
 
-		if ((f.isFile() || isLink(f)) && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+		if ((f.isFile() || isLink(f)) && (age < 0 || (Global.now() - f.lastModified() > age))) {
 
 			log.warn("delete file: " + f.getCanonicalPath() + ", age="
 					+ (lang == null ? -1 : lang.past(f.lastModified())) + ", time=" + f.lastModified());
@@ -107,7 +108,7 @@ public class IOUtil {
 				}
 			}
 			ff = f.listFiles();
-			if ((ff == null || ff.length == 0) && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+			if ((ff == null || ff.length == 0) && (age < 0 || (Global.now() - f.lastModified() > age))) {
 //				log.warn("delete folder as empty: " + f.getCanonicalPath());
 
 				f.delete();
@@ -124,7 +125,7 @@ public class IOUtil {
 
 		Language lang = Language.getLanguage();
 
-		if ((f.isFile() || isLink(f)) && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+		if ((f.isFile() || isLink(f)) && (age < 0 || (Global.now() - f.lastModified() > age))) {
 
 			log.warn("delete file: " + f.getCanonicalPath() + ", age="
 					+ (lang == null ? -1 : lang.past(f.lastModified())) + ", time=" + f.lastModified());
@@ -142,7 +143,7 @@ public class IOUtil {
 				}
 			}
 			ff = f.listFiles();
-			if ((ff == null || ff.length == 0) && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+			if ((ff == null || ff.length == 0) && (age < 0 || (Global.now() - f.lastModified() > age))) {
 //				log.warn("delete folder as empty: " + f.getCanonicalPath());
 
 				f.delete();
@@ -159,7 +160,7 @@ public class IOUtil {
 
 		Language lang = Language.getLanguage();
 
-		if (f.isFile() && (age < 0 || (System.currentTimeMillis() - f.lastModified() > age))) {
+		if (f.isFile() && (age < 0 || (Global.now() - f.lastModified() > age))) {
 
 			GLog.applog.info("dfile", "delete",
 					"delete file: " + f.getFilename() + ", age=" + (lang == null ? -1 : lang.past(f.lastModified())));
@@ -400,6 +401,10 @@ public class IOUtil {
 	 */
 	public static long copy(File src, File dest) throws IOException {
 
+		if (src.equals(dest)) {
+			throw new IOException("复制目的地不能本身!");
+		}
+
 		if (src.isDirectory()) {
 			return IOUtil.copyDir(src, dest);
 		} else if (src.isFile()) {
@@ -413,12 +418,18 @@ public class IOUtil {
 	}
 
 	public static long copy(DFile src, DFile dest) throws IOException {
+
+		if (src.equals(dest)) {
+			throw new IOException("复制目的地不能本身!");
+		}
+
 		if (src.isDirectory()) {
 			dest.mkdirs();
 			return IOUtil.copyDir(src, dest);
 		} else {
 			return copy(src.getInputStream(), dest.getOutputStream(), true);
 		}
+
 	}
 
 	/**
@@ -681,6 +692,10 @@ public class IOUtil {
 	}
 
 	public static String read(Reader in) throws IOException {
+
+		if (in == null) {
+			return null;
+		}
 
 		try {
 

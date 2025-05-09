@@ -18,6 +18,7 @@ import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.*;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
@@ -51,10 +52,14 @@ public final class Role extends Bean {
 	@Column(memo = "角色首页", size = 255)
 	public String url; // 首页
 
+	@Column(memo = "序号")
 	public int seq;
 
 	@Column(memo = "菜单文件", value = "/dput/menu.json->dfile:///dput/menu_aaa.json")
 	public String menu; // 首页
+
+	@Column(memo = "备注", size = 255)
+	public String memo;
 
 	/**
 	 * Checks for.
@@ -101,7 +106,7 @@ public final class Role extends Bean {
 				id = UID.next("role.id");
 			}
 			if (dao.insert(v.force(X.ID, id).set("id", id).set("name", name).set("memo", memo).set(X.UPDATED,
-					System.currentTimeMillis())) > 0) {
+					Global.now())) > 0) {
 				return id;
 			}
 		} catch (Exception e1) {
@@ -138,7 +143,7 @@ public final class Role extends Bean {
 			if (!RoleAccess.dao.exists(W.create().and("rid", rid).and("name", name))) {
 				RoleAccess.dao.insert(V.create("rid", rid).set("name", name).set(X.ID, UID.id(rid, name)));
 
-				dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
+				dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, Global.now()));
 			}
 		} catch (Exception e1) {
 			log.error(e1.getMessage(), e1);
@@ -155,7 +160,7 @@ public final class Role extends Bean {
 	public static void removeAccess(long rid, String name) {
 		dao.delete(W.create().and("rid", rid).and("name", name));
 
-		dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, System.currentTimeMillis()));
+		dao.update(W.create().and(X.ID, rid), V.create(X.UPDATED, Global.now()));
 
 	}
 

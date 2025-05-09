@@ -1066,6 +1066,10 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 	@Override
 	public synchronized Object get(Object key) {
 
+		if (key == null) {
+			return null;
+		}
+
 		Object o = super.get(key);
 		if (o != null) {
 			return o;
@@ -1354,6 +1358,9 @@ public final class JSON extends HashMap<String, Object> implements Comparable<JS
 
 	@Override
 	public synchronized Object put(String key, Object value) {
+		if (key == null) {
+			return null;
+		}
 		return super.put(key, value);
 	}
 

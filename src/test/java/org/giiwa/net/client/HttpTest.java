@@ -12,7 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.giiwa.bean.App;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Config;
@@ -477,14 +477,23 @@ public class HttpTest {
 
 	@Test
 	public void testProxy() {
-
+		
+		Config.init();
 		String url = "https://m.weibo.cn/status/5044505288120827?sourcetype=weixin&jumpfrom=weibocom";
 		Http h = Http.create();
 		h = h.proxy("o848.kdltps.com:15818", "t11565336580533", "o8abcm7s1");
-
+		h = h.proxy("172.31.201.12:50002");
+		
 		Http.Response r = h.get(url);
 		System.out.println(r.body);
 
+	}
+
+	@Test
+	public void testText() {
+		String url = "https://blog.csdn.net/qq_59138417/article/details/121885517";
+		String s1 = Http.create().get(url).text();
+		System.out.println(s1);
 	}
 
 }

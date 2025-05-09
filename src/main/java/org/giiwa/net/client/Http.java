@@ -46,6 +46,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Temp;
 import org.giiwa.conf.Global;
+import org.giiwa.dao.Comment;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
@@ -94,15 +95,53 @@ public final class Http {
 	public String user = null;
 	public String passwd = null;
 
+	/**
+	 * 设置超时时间
+	 * 
+	 * @param timeout 毫秒
+	 * @return
+	 */
+	public Http timeout(long timeout) {
+		if (timeout > 0) {
+			builder.callTimeout(timeout, TimeUnit.MILLISECONDS);
+			builder.connectTimeout(timeout, TimeUnit.MILLISECONDS);
+			builder.writeTimeout(timeout, TimeUnit.MILLISECONDS);
+			builder.readTimeout(timeout, TimeUnit.MILLISECONDS);
+		}
+		client = builder.build();
+		return this;
+	}
+
 	public Http proxy(String proxy, String user, String passwd) {
 		if (X.isEmpty(proxy)) {
-			return new Http(null, user, passwd, X.AMINUTE);
+			// clean proxy
+			builder.proxy(null);
+			client = builder.build();
+			return this;
 		} else {
 			String[] ss = X.split(proxy, "[,;]");
-			String s = ss[X.toInt(ss.length * Math.random())];
+			int i = X.toInt(ss.length * Math.random());
+			if (i >= ss.length) {
+				i = ss.length - 1;
+			}
+			String s = ss[i];
 			ss = X.split(s, ":");
 			Proxy p1 = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ss[0], X.toInt(ss[1])));
-			return new Http(p1, user, passwd, X.AMINUTE);
+
+			builder.proxy(p1);
+			if (!X.isEmpty(user)) {
+				builder.proxyAuthenticator(new Authenticator() {
+
+					@Override
+					public Request authenticate(Route route, okhttp3.Response response) throws IOException {
+						String credential = Credentials.basic(user, passwd);
+						return response.request().newBuilder().header("Proxy-Authorization", credential).build();
+					}
+
+				});
+			}
+			client = builder.build();
+			return this;
 		}
 	}
 
@@ -148,7 +187,11 @@ public final class Http {
 					return l1;
 				}
 
-			}).proxy(proxy).cookieJar(new CookieJar() {
+			});
+			if (!X.isEmpty(proxy)) {
+				builder.proxy(proxy);
+			}
+			builder.cookieJar(new CookieJar() {
 
 				@Override
 				public List<okhttp3.Cookie> loadForRequest(HttpUrl url) {
@@ -441,7 +484,7 @@ public final class Http {
 					throw new Exception("field param is null!");
 				}
 
-				String time = Long.toString(System.currentTimeMillis());
+				String time = Long.toString(Global.now());
 				byte[] buf = X.IO.read(in, false);
 				String md5 = MD5.md5(buf);
 
@@ -684,9 +727,7 @@ public final class Http {
 
 		if (!X.isEmpty(body)) {
 			MediaType CC = MediaType.parse("application/json");
-
 			RequestBody bb = RequestBody.create(body, CC);
-
 			request.put(bb);
 		}
 
@@ -1177,6 +1218,7 @@ public final class Http {
 		 * 
 		 * @return StringFinder工具类
 		 */
+		@Comment(text = "StringFinder对象")
 		public StringFinder finder() {
 			return StringFinder.create(body);
 		}
@@ -1191,10 +1233,23 @@ public final class Http {
 		 * 
 		 * @return Html工具类
 		 */
+		@Comment(text = "HTML对象")
 		public Html html() {
 			Html m = Html.create(body);
 			m.url = url;
 			return m;
+		}
+
+		@Comment(text = "纯文本")
+		public String text() {
+			Html m = Html.create(body);
+			return m.text();
+		}
+
+		@Comment(text = "带基本样式纯文本")
+		public String text2() {
+			Html m = Html.create(body);
+			return m.text2();
 		}
 
 		public String cookie() {
@@ -1566,6 +1621,34 @@ public final class Http {
 			return Http.create(proxy, user, passwd, timeout);
 		}
 
+	}
+
+	public void put(String url, JSON head, File file) {
+
+		okhttp3.Response response = null;
+
+		try {
+
+			Request.Builder request = new Request.Builder().url(url).removeHeader("User-Agent").addHeader("User-Agent",
+					_UA());
+
+			if (head != null) {
+				for (String name : head.keySet()) {
+					request.addHeader(name, head.getString(name));
+				}
+			}
+
+			RequestBody body = RequestBody.create(file, MediaType.parse("application/octet-stream"));
+			request.put(body).build();
+
+			response = client.newCall(request.build()).execute();
+			log.info("put, url=" + url + ", head=" + head + ", response=" + response);
+			
+		} catch (Exception e) {
+			log.error(url, e);
+		} finally {
+			X.close(response);
+		}
 	}
 
 }

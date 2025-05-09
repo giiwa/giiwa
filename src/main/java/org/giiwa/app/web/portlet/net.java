@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._Net;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -53,7 +54,7 @@ public class net extends portlet {
 		this.set("name", name);
 
 		W q = W.create().and("node", id).and("name", name)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		_Net.Record.dao.optimize(q);
 
 		Beans<_Net.Record> bs = _Net.Record.dao.load(q, 0, 60);
@@ -65,9 +66,9 @@ public class net extends portlet {
 		}
 
 		long max1 = X.toLong(1.1 * X.toLong(_Net.Record.dao.max("rxbytes",
-				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+				W.create().and("created", Global.now() - X.AHOUR, W.OP.gte))));
 		long max2 = X.toLong(1.1 * X.toLong(_Net.Record.dao.max("txbytes",
-				W.create().and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+				W.create().and("created", Global.now() - X.AHOUR, W.OP.gte))));
 
 		this.set("max", Math.max(max1, max2));
 
@@ -91,7 +92,7 @@ public class net extends portlet {
 
 		Beans<_Net.Record> bs = _Net.Record.dao.load(
 				W.create().and("node", id).and("name", name)
-						.and("created", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte).sort("created", -1),
+						.and("created", Global.now() - X.AHOUR * hours, W.OP.gte).sort("created", -1),
 				0, 60 * hours);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
@@ -145,7 +146,7 @@ public class net extends portlet {
 		String name = this.getString("name");
 		this.set("name", name);
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		Beans<_Net.Record> bs = _Net.Record.dao.load(
 				W.create().and("node", id).and("name", name).and("created", time, W.OP.gte).sort("created", 1), 0,

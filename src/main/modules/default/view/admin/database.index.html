@@ -32,7 +32,7 @@ function _delete(table) {
 		$.post('/admin/database/delete?__node=$!__node', {table: table}, function(d){
 			if(d.state == 200) {
 				giiwa.hint(d.message);
-				giiwa.reload();
+				//giiwa.reload();
 			} else {
 				giiwa.error(d.message);
 			}
@@ -44,7 +44,7 @@ function _drop(table) {
 		$.post('/admin/database/drop?__node=$!__node', {table: table}, function(d){
 			if(d.state == 200) {
 				giiwa.hint(d.message);
-				giiwa.reload();
+				//giiwa.reload();
 			} else {
 				giiwa.error(d.message);
 			}

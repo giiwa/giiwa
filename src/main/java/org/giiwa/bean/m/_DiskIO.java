@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -96,7 +97,7 @@ public class _DiskIO extends Bean {
 
 				Record r1 = Record.dao.load(W.create().and("node", node).and("path", path).sort("created", -1));
 				if (r1 != null && jo.readbytes > r1.readbytes) {
-					long time = (System.currentTimeMillis() - r1.getCreated()) / 1000;
+					long time = (Global.now() - r1.getCreated()) / 1000;
 					v.force("_reads", (jo.readbytes - r1.readbytes) / time);
 					v.force("writes", (jo.writebytes - r1.writebytes) / time);
 				} else {
@@ -112,10 +113,10 @@ public class _DiskIO extends Bean {
 				}
 
 				if (!Record.dao.exists2(W.create().and("node", node).and("path", path).and("created",
-						System.currentTimeMillis() - X.AMINUTE, W.OP.gt))) {
+						Global.now() - X.AMINUTE, W.OP.gt))) {
 					// save to record per hour
 					Record.dao
-							.insert(v.copy().force(X.ID, UID.id(id, System.currentTimeMillis())).append("node", node));
+							.insert(v.copy().force(X.ID, UID.id(id, Global.now())).append("node", node));
 				}
 			} catch (Exception e) {
 				log.error(jo, e);
@@ -134,7 +135,7 @@ public class _DiskIO extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AMONTH, W.OP.lt));
+			dao.delete(W.create().and("created", Global.now() - X.AMONTH, W.OP.lt));
 		}
 
 	}

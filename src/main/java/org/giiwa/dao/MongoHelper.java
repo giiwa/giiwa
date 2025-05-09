@@ -42,7 +42,6 @@ import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.giiwa.bean.Data;
 import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
@@ -91,7 +90,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 //	public boolean isConfigured() {
 //
-//		return init();
+//		return init(); 
 //
 //	}
 
@@ -109,7 +108,8 @@ public final class MongoHelper implements Helper.DBHelper {
 		int conns = conf.getInt("db.conns", 50);
 		int timeout = conf.getInt("db.timeout", X.toInt(X.AMINUTE * 10)); // 10 minutes
 
-		if (!X.isEmpty(url) && (url.startsWith("mongodb://") || url.startsWith("jmdb://"))) {
+		if (!X.isEmpty(url)
+				&& (url.startsWith("mongodb://") || url.startsWith("jmdb://") || url.startsWith("mysql://"))) {
 
 			Url u = Url.create(url);
 			String dbname = u.getPath();
@@ -251,8 +251,9 @@ public final class MongoHelper implements Helper.DBHelper {
 			url = url.substring(0, i);
 		}
 		log.warn("url=" + url + ", db=" + db + ", user=" + user + ", passwd=" + passwd);
-		if (url.startsWith("jmdb://")) {
-			url = "mongodb://" + url.substring(7);
+		if (url.startsWith("jmdb://") || url.startsWith("mysql://")) {
+			i = url.indexOf("://");
+			url = "mongodb" + url.substring(i);
 		}
 
 		MongoClientSettings.Builder setting = MongoClientSettings.builder();
@@ -1107,6 +1108,11 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		TimeStamp t = TimeStamp.create();
 
+		if (v == null) {
+			v = V.create();
+		}
+		v.force("updated", Global.now());
+
 		Document d = new Document();
 
 		try {
@@ -1145,12 +1151,110 @@ public final class MongoHelper implements Helper.DBHelper {
 				r = c.updateMany(q.query(), d2);
 
 			}
+			if (r.getModifiedCount() > 0) {
+				return (int) r.getModifiedCount();
+			}
 
-			if (log.isDebugEnabled())
-				log.debug("updated collection=" + table + ", query=" + q + ", d2=" + d2 + ", n=" + r.getModifiedCount()
-						+ ",result=" + r);
+			// insert
+			V v1 = V.create();
+			q.scan(e -> {
+				if (X.isSame(e.name, X.ID)) {
+					v1.append(X.ID, e.value);
+				}
+			});
+			if (v1.isEmpty()) {
+				log.info("no id in query=" + q);
+				return -1;
+			}
 
-			return (int) r.getModifiedCount();
+			v1.append(name, n);
+			v1.copy(v);
+
+			return insertTable(table, v1);
+
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+
+		} finally {
+			if (t.pastms() > 1000) {
+				log.warn("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+				GLog.applog.warn("sys", "db", "inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+			} else if (log.isDebugEnabled()) {
+				log.debug("inc, cost=" + t.past() + ",  collection=" + table + ", query=" + q);
+			}
+
+			Helper.Stat.write(table, t.pastms());
+
+		}
+		return 0;
+	}
+
+	public int inc(String table, W q, String name, float n, V v) {
+
+		TimeStamp t = TimeStamp.create();
+
+		if (v == null) {
+			v = V.create();
+		}
+		v.force("updated", Global.now());
+
+		Document d = new Document();
+
+		try {
+			d.put(name, n);
+			MongoCollection<Document> c = getCollection(table);
+			Document d2 = new Document("$inc", d);
+
+			Document d1 = new Document();
+			for (String s : v.names()) {
+				Object v1 = v.value(s);
+				d1.append(s, v1);
+			}
+			if (!d1.isEmpty()) {
+				d2.append("$set", d1);
+			}
+
+			UpdateResult r = null;
+
+			try {
+				r = c.updateMany(q.query(), d2);
+			} catch (MongoWriteException e) {
+				// non-numeric type
+				d2 = new Document();
+				d1 = new Document();
+				if (v != null && !v.isEmpty()) {
+					for (String s : v.names()) {
+						Object v1 = v.value(s);
+						d1.append(s, v1);
+					}
+				}
+				d1.append(name, n);
+				d2.append("$set", d1);
+				r = c.updateMany(q.query(), d2);
+			}
+
+			if (r.getModifiedCount() > 0) {
+				return (int) r.getModifiedCount();
+			}
+
+			// insert
+			V v1 = V.create();
+			q.scan(e -> {
+				if (X.isSame(e.name, X.ID)) {
+					v1.append(X.ID, e.value);
+				}
+			});
+			if (v1.isEmpty()) {
+				log.info("no id in query=" + q);
+				return -1;
+			}
+
+			v1.append(name, n);
+			v1.copy(v);
+			v1.append("created", Global.now());
+
+			return insertTable(table, v1);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 
@@ -2187,7 +2291,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		q = q.copy().clearSort();
 
-		Data e = this.load(collection, q.sort(name, -1), Data.class, false);
+		Bean e = this.load(collection, q.sort(name, -1), Bean.class, false);
 		if (e != null) {
 			return (T) e.get(name);
 		}
@@ -2200,7 +2304,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		q = q.copy().clearSort();
 
-		Data e = this.load(collection, q.sort(name), Data.class, false);
+		Bean e = this.load(collection, q.sort(name), Bean.class, false);
 		if (e != null) {
 			return (T) e.get(name);
 		}
@@ -2219,16 +2323,26 @@ public final class MongoHelper implements Helper.DBHelper {
 	}
 
 	@Override
-	public boolean distributed(String table, String key) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean distributed(String tablename, String key) {
+
+		BasicDBObject cmd = new BasicDBObject();
+		MongoDatabase db = getDB();
+		cmd.append("shardCollection", db.getName() + "." + tablename);
+		cmd.append("key", new BasicDBObject().append(key, "hashed"));
+		Document d = admin.runCommand(cmd);
+
+		log.warn("setting distributed for [" + tablename + "] on key[" + key + "], result=" + d);
+
+		return true;
 	}
 
 	@Override
 	public long getTime() {
+
 		MongoDatabase g = getDB();
 		g.runCommand(null);
 		return 0;
+
 	}
 
 	@Override
@@ -2236,34 +2350,64 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		TimeStamp t = TimeStamp.create();
 
+		if (v == null) {
+			v = V.create();
+		}
+		v.force("updated", Global.now());
+
 		Document d = new Document();
 
 		try {
 			for (String name : incvalue.keySet()) {
-				d.put(name, incvalue.getInt(name));
+				Object v1 = incvalue.get(name);
+				if (!X.isIn(v1, null, 0, 0.0f, 0.0d)) {
+					d.put(name, v1);
+				}
 			}
 			MongoCollection<Document> c = getCollection(table);
-			Document d2 = new Document("$inc", d);
-
-			Document d1 = null;
-			if (v != null && !v.isEmpty()) {
-				d1 = new Document();
-				for (String s : v.names()) {
-					Object v1 = v.value(s);
-					d1.append(s, v1);
-				}
-				if (!d1.isEmpty()) {
-					d2.append("$set", d1);
-				}
+			Document d2 = new Document();
+			if (!d.isEmpty()) {
+				d2.append("$inc", d);
 			}
 
+			Document d1 = new Document();
+			for (String s : v.names()) {
+				Object v1 = v.value(s);
+				d1.append(s, v1);
+			}
+			if (!d1.isEmpty()) {
+				d2.append("$set", d1);
+			}
+
+			if (d2.isEmpty()) {
+				// 没有需要更新的
+				return 0;
+			}
 			UpdateResult r = c.updateMany(q.query(), d2);
+			if (r.getModifiedCount() > 0) {
+				return (int) r.getModifiedCount();
+			}
 
-			if (log.isDebugEnabled())
-				log.debug("updated collection=" + table + ", query=" + q + ", d2=" + d2 + ", n=" + r.getModifiedCount()
-						+ ",result=" + r);
+			// insert
+			V v1 = V.create();
+			q.scan(e -> {
+				if (X.isSame(e.name, X.ID)) {
+					v1.append(X.ID, e.value);
+				}
+			});
+			if (v1.isEmpty()) {
+				log.info("no id in query=" + q);
+				return -1;
+			}
 
-			return (int) r.getModifiedCount();
+			for (String name : incvalue.keySet()) {
+				v1.append(name, incvalue.get(name));
+			}
+			v1.copy(v);
+			v1.append("created", Global.now());
+
+			return insertTable(table, v1);
+
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 
@@ -2316,7 +2460,7 @@ public final class MongoHelper implements Helper.DBHelper {
 
 		List<JSON> l1 = JSON.createList();
 
-		Data d = this.load(table, W.create(), Data.class);
+		Bean d = this.load(table, W.create(), Bean.class);
 		if (d != null) {
 			Set<String> key = d.keySet();
 			for (String name : key) {
@@ -2365,8 +2509,11 @@ public final class MongoHelper implements Helper.DBHelper {
 	}
 
 	@Override
-	public void createTable(String tablename, String memo, List<JSON> cols) throws SQLException {
-		// TODO Auto-generated method stub
+	public void createTable(String tablename, String memo, List<JSON> cols, JSON prop) throws SQLException {
+
+		if (prop != null && prop.getInt("distributed") == 1) {
+			distributed(tablename, "id");
+		}
 
 	}
 

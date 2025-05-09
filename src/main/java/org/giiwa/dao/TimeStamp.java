@@ -150,4 +150,9 @@ public final class TimeStamp implements Serializable {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return this.past();
+	}
+
 }

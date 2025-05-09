@@ -1,6 +1,7 @@
 package org.giiwa.pool;
 
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.giiwa.bean.User;
 import org.giiwa.dao.Bean;
@@ -67,6 +68,26 @@ public class PoolTest {
 		public void close() {
 			System.out.println("close me!");
 		}
+	}
+
+	@Test
+	public void testLock() {
+		ReentrantLock lock = new ReentrantLock();
+
+		try {
+			lock.lock();
+			System.out.println("1");
+			lock.lock();
+			System.out.println("2");
+			lock.lock();
+			System.out.println("3");
+
+		} finally {
+			lock.unlock();
+		}
+
+		System.out.println(lock.isLocked());
+
 	}
 
 }

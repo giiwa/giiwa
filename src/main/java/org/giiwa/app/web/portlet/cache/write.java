@@ -20,6 +20,7 @@ import java.util.List;
 import org.giiwa.app.web.portlet.portlet;
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._Cache;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -49,7 +50,7 @@ public class write extends portlet {
 		}
 
 		W q = W.create().and("node", id).and("name", "write")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		_Cache.Record.dao.optimize(q);
 		
 		Beans<_Cache.Record> bs = _Cache.Record.dao.load(q, 0, 60);
@@ -60,7 +61,7 @@ public class write extends portlet {
 		}
 		
 		long max = X.toLong(1.1 *X.toLong(_Cache.Record.dao.max("max",
-				W.create().and("name", "write").and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+				W.create().and("name", "write").and("created", Global.now() - X.AHOUR, W.OP.gte))));
 		this.set("max", max);
 
 		this.show("/portlet/cache/write.html");
@@ -83,7 +84,7 @@ public class write extends portlet {
 		}
 
 		Beans<_Cache.Record> bs = _Cache.Record.dao.load(W.create().and("node", id).and("name", "write")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -124,7 +125,7 @@ public class write extends portlet {
 			this.set("name1", id);
 		}
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		Beans<_Cache.Record> bs = _Cache.Record.dao.load(
 				W.create().and("node", id).and("name", "write").and("created", time, W.OP.gte).sort("created", 1), 0,

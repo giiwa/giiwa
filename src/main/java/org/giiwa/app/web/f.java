@@ -29,9 +29,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.giiwa.bean.App;
 import org.giiwa.bean.Policy;
 import org.giiwa.bean.Data;
@@ -64,6 +62,8 @@ import org.giiwa.task.Task;
 import org.giiwa.web.Controller;
 import org.giiwa.web.GiiwaServlet;
 import org.giiwa.web.Path;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 public class f extends Controller {
 
@@ -576,8 +576,13 @@ public class f extends Controller {
 
 		// String access = Module.home.get("upload.require.access");
 
-		FileItem file = this.file("file");
+		FileItem<?> file = this.file("file");
 		if (file != null) {
+
+			if (log.isInfoEnabled()) {
+				log.info("save file, file=" + file);
+			}
+
 			String filename = this.getString("filename");
 			if (X.isEmpty(filename)) {
 				filename = file.getName();
@@ -604,6 +609,10 @@ public class f extends Controller {
 			_store(file, path, filename, jo);
 
 		} else {
+
+			if (log.isInfoEnabled()) {
+				log.info("file=null， trying base64 ...");
+			}
 
 			String encoder = this.get("encoder");
 			if (X.isIn(encoder, "base64")) {
@@ -632,21 +641,20 @@ public class f extends Controller {
 				_store(bb, path, filename, jo);
 
 			} else {
+
+				log.warn("读取文件失败, param=" + this.json());
+
 				jo.append(X.STATE, HttpServletResponse.SC_BAD_REQUEST)
 						.append(X.ERROR, HttpServletResponse.SC_BAD_REQUEST)
 						.append(X.MESSAGE, lang.get("upload.notfound"));
 			}
 		}
 
-		// /**
-		// * test
-		// */
-		// jo.put("error", "error");
 		this.send(jo.append("path", path).append("node", Local.label()));
 
 	}
 
-	private boolean _store(FileItem file, String path, String filename, JSON jo) {
+	private boolean _store(FileItem<?> file, String path, String filename, JSON jo) {
 //		String tag = this.getString("tag");
 
 		try {
@@ -734,6 +742,7 @@ public class f extends Controller {
 
 				// Session.load(sid()).set("access.repo." + id, 1).store();
 			} else {
+				log.warn("file=" + f1 + ", filename=" + filename);
 				if (jo == null) {
 					this.put(X.ERROR, HttpServletResponse.SC_BAD_REQUEST);
 					this.put(X.MESSAGE, lang.get("repo.locked"));
@@ -923,7 +932,8 @@ public class f extends Controller {
 
 	@Path(path = "alive")
 	public void alive() {
-		if (Local.node().isAlive() && Task.tasksDelay() < 3) {
+		int n = this.getInt("m", 3);
+		if (Local.node().isAlive() && Task.tasksDelay() < n) {
 			this.set("online", GiiwaServlet.online());
 			this.set("uptime", Controller.UPTIME);
 			this.set("tps", GiiwaServlet.tps());
@@ -1062,7 +1072,7 @@ public class f extends Controller {
 		String sid = sid();
 		long t = this.getLong("t");
 		if (t == 0) {
-			t = System.currentTimeMillis();
+			t = Global.now();
 		}
 
 		W q = W.create();
@@ -1111,17 +1121,17 @@ public class f extends Controller {
 		Temp t = Temp.create("code.jpg");
 		try {
 
-			Captcha.create(this.sid(true), System.currentTimeMillis() + 5 * X.AMINUTE, 200, 60, t.getOutputStream(), 4);
+			Captcha.create(this.sid(true), Global.now() + 5 * X.AMINUTE, 200, 60, t.getOutputStream(), 4);
 
-			String filename = "/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/")
-					+ System.currentTimeMillis() + "_" + UID.random(10) + ".jpg";
+			String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd/HH/mm/") + Global.now() + "_"
+					+ UID.random(10) + ".jpg";
 
 			DFile f1 = Disk.seek(filename);
 			f1.upload(t.getInputStream());
 
 			jo.put(X.STATE, 200);
 			jo.put("sid", sid(false));
-			jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + System.currentTimeMillis());
+			jo.put("uri", "/f/g/" + f1.getId() + "/code.jpg?" + Global.now());
 
 		} catch (Exception e1) {
 
@@ -1269,8 +1279,8 @@ public class f extends Controller {
 			return;
 		}
 
-		long tid = System.currentTimeMillis();
-		_cached.put(tid, new Object[] { System.currentTimeMillis(), new ArrayList<String>() });
+		long tid = Global.now();
+		_cached.put(tid, new Object[] { Global.now(), new ArrayList<String>() });
 
 		Console.open(X.split(console, "[, ]"), msg -> {
 			Object[] oo = _cached.get(tid);
@@ -1340,7 +1350,7 @@ public class f extends Controller {
 		for (Long tid : _cached.keySet().toArray(new Long[_cached.size()])) {
 			Object[] o = _cached.get(tid);
 			long time = X.toLong(o[0]);
-			if (System.currentTimeMillis() - time > X.AHOUR) {
+			if (Global.now() - time > X.AHOUR) {
 				_cached.remove(tid);
 			}
 		}

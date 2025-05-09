@@ -14,7 +14,7 @@
 */
 package org.giiwa.cache;
 
-interface ICacheSystem {
+public interface ICacheSystem {
 
 	/**
 	 * Gets the.

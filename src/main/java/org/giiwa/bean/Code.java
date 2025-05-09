@@ -16,6 +16,7 @@ package org.giiwa.bean;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -44,7 +45,7 @@ public final class Code extends Bean {
 
 	public static final BeanDAO<String, Code> dao = BeanDAO.create(Code.class);
 
-	@Column(memo = "主键", unique = true, size=50)
+	@Column(memo = "主键", unique = true, size = 50)
 	private String id;
 
 	@Column(memo = "名称1")
@@ -79,7 +80,7 @@ public final class Code extends Bean {
 	}
 
 	public static Code load(String s1, String s2) {
-		W q = W.create().and("s1", s1).and("s2", s2).and("expired", System.currentTimeMillis(), W.OP.gt);
+		W q = W.create().and("s1", s1).and("s2", s2).and("expired", Global.now(), W.OP.gt);
 		dao.optimize(q);
 		return dao.load(q);
 	}
@@ -91,7 +92,7 @@ public final class Code extends Bean {
 	public static int cleanup() {
 		log.warn("cleanup [Code] ...");
 
-		W q = W.create().and("expired", System.currentTimeMillis(), W.OP.lte);
+		W q = W.create().and("expired", Global.now() - X.AWEEK, W.OP.lte);
 		dao.optimize(q);
 		return dao.delete(q);
 	}

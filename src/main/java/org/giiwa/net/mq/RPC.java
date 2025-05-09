@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.giiwa.bean.GLog;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.net.mq.MQ.Request;
@@ -82,6 +83,9 @@ class RPC extends IStub {
 					return r.get();
 				}
 			}
+		} catch (Exception e) {
+			GLog.applog.error("mq", "call", "call failed", e);
+			throw e;
 		} finally {
 			waiter.remove(req.seq);
 		}
@@ -94,9 +98,7 @@ class RPC extends IStub {
 
 		req.from = RPC.name;
 		req.seq = seq.incrementAndGet();
-//
-//		log.warn("MQ1, call, seq=" + req.seq + ", from=" + req.from);
-//
+		
 		Stack<Request> l1 = null;
 		if (func != null) {
 			l1 = new Stack<Request>();

@@ -23,7 +23,6 @@ import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.Temp;
@@ -74,7 +73,7 @@ public class Shell {
 		StringBuilder sb = new StringBuilder();
 		sb.append(ip).append(deli);
 		sb.append("support").append(deli);
-		sb.append(Language.getLanguage().format(System.currentTimeMillis(), "yyyy-MM-dd hh:mm:ss"));
+		sb.append(Language.getLanguage().format(Global.now(), "yyyy-MM-dd hh:mm:ss"));
 		sb.append(deli).append(level.name()).append(deli).append(message).append(deli).append(module);
 
 		try {
@@ -210,11 +209,7 @@ public class Shell {
 			X.close(out, err, os);
 
 			if (p != null && timeout > 0) {
-
-				IOUtils.closeQuietly(p.getOutputStream());
-				IOUtils.closeQuietly(p.getErrorStream());
-				IOUtils.closeQuietly(p.getInputStream());
-
+				X.close(p.getOutputStream(), p.getErrorStream(), p.getInputStream());
 				p.destroy();
 			}
 		}

@@ -258,18 +258,28 @@ public final class BeanDAO<I, T extends Bean> {
 		}
 	}
 
+	/**
+	 * performance issue
+	 * 
+	 * @param q
+	 * @param func
+	 * @return
+	 * @throws Exception
+	 */
+	@Deprecated
 	public boolean stream(W q, Function<T, Boolean> func) throws Exception {
 		return stream(q, 0, func);
 	}
 
 	/**
-	 * load Beans as stream, MUST close the stream after use
+	 * load Beans as stream
 	 * 
 	 * @param q conditions
 	 * @param s the offset
 	 * @param n the limit
 	 * @return
 	 */
+	@Deprecated
 	public boolean stream(W q, long offset, Function<T, Boolean> func) throws Exception {
 
 		_check(q);
@@ -623,7 +633,7 @@ public final class BeanDAO<I, T extends Bean> {
 			// RDBMS
 			Table table = (Table) t.getAnnotation(Table.class);
 			if (table != null && !X.isEmpty(table.name())) {
-				dao.createTable(table.name(), table.memo());
+				dao.createTable(table.name(), table.memo(), JSON.create().append("distributed", table.distributed()?1:0));
 			}
 		} else {
 			log.info("bean [" + t + "], using " + Helper.primary);
@@ -638,7 +648,7 @@ public final class BeanDAO<I, T extends Bean> {
 			// RDBMS
 			Table table = (Table) t.getAnnotation(Table.class);
 			if (table != null && !X.isEmpty(table.name())) {
-				this.createTable(table.name(), table.memo());
+				this.createTable(table.name(), table.memo(), JSON.create().append("distributed", table.distributed()?1:0));
 			}
 		}
 	}
@@ -689,10 +699,9 @@ public final class BeanDAO<I, T extends Bean> {
 
 				W q = null;
 				if (cleanupfunc != null) {
-					q = cleanupfunc.apply(System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30));
+					q = cleanupfunc.apply(Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30));
 				} else {
-					q = W.create().and("created",
-							System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt);
+					q = W.create().and("created", Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt);
 				}
 
 				this.optimize(q);
@@ -716,8 +725,7 @@ public final class BeanDAO<I, T extends Bean> {
 	 */
 	public void cleanup(Function<T, Boolean> func) throws SQLException {
 
-		W q = W.create()
-				.and("created", System.currentTimeMillis() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt)
+		W q = W.create().and("created", Global.now() - X.ADAY * Global.getInt("glog.keep.days", 30), W.OP.lt)
 				.sort("created", 1);
 
 		if (func != null) {
@@ -870,7 +878,7 @@ public final class BeanDAO<I, T extends Bean> {
 		return _fields;
 	}
 
-	public <E extends Bean> void createTable(String tablename, String memo) {
+	public <E extends Bean> void createTable(String tablename, String memo, JSON prop) {
 
 		try {
 
@@ -932,9 +940,9 @@ public final class BeanDAO<I, T extends Bean> {
 				}
 				if (!l1.isEmpty()) {
 					if (helper == null) {
-						Helper.primary.createTable(tablename, memo, l1);
+						Helper.primary.createTable(tablename, memo, l1, prop);
 					} else {
-						helper.createTable(tablename, memo, l1);
+						helper.createTable(tablename, memo, l1, prop);
 					}
 				} else {
 					log.info("bean [" + t + "], empty cols!");

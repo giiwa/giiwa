@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._FIO;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -50,7 +51,7 @@ public class fio extends portlet {
 		}
 
 		W q = W.create().and("node", id)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		_FIO.Record.dao.optimize(q);
 		
 		Beans<_FIO.Record> bs = _FIO.Record.dao.load(q, 0, 60);
@@ -75,7 +76,7 @@ public class fio extends portlet {
 		Node n = Node.dao.load(id);
 
 		W q = W.create().and("node", id)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		
 		Beans<_FIO.Record> bs = _FIO.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
@@ -119,7 +120,7 @@ public class fio extends portlet {
 			this.set("name", n.label);
 		}
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		W q = W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1);
 		

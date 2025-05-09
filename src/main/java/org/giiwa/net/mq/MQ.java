@@ -28,6 +28,7 @@ import javax.jms.JMSException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.GLog;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
@@ -97,8 +98,8 @@ public abstract class MQ {
 				log.error(e.getMessage(), e);
 			}
 
-			if (log.isDebugEnabled())
-				log.debug("MQ.inited, mq=" + mq);
+			log.info("MQ.inited, mq=" + mq);
+
 		}
 
 		return mq != null;
@@ -181,7 +182,7 @@ public abstract class MQ {
 		for (Request r : rs) {
 			try {
 				if (r.tt > 0)
-					read.add(System.currentTimeMillis() - r.tt, null);
+					read.add(Global.now() - r.tt, null);
 
 				r._from = cb;
 
@@ -208,7 +209,7 @@ public abstract class MQ {
 //	public static long topic(String to, JSON req, long timeout, Function<Request, Boolean> func) throws Exception {
 //
 //		LiveHand door = LiveHand.create(1, 0);
-//		String name = to + "_" + System.currentTimeMillis();
+//		String name = to + "_" + Global.now();
 //		IStub st = new IStub(name) {
 //			@Override
 //			public void onRequest(long seq, Request req) {
@@ -256,7 +257,7 @@ public abstract class MQ {
 				req.seq = s1;
 			}
 
-			req.tt = System.currentTimeMillis();
+			req.tt = Global.now();
 			mq._topic(to, req);
 			return req.seq;
 		} finally {
@@ -281,10 +282,12 @@ public abstract class MQ {
 			if (req.seq <= 0) {
 				req.seq = seq.incrementAndGet();
 			}
-			req.tt = System.currentTimeMillis();
+			req.tt = Global.now();
 
 			return mq._send(to, req);
-
+		} catch(Exception e) {
+			GLog.applog.error("mq", "send", "send failed", e);
+			throw e;
 		} finally {
 			write.add(t.pastms(), null);
 		}
@@ -470,9 +473,9 @@ public abstract class MQ {
 			r.put(data);
 
 			if (this._from == null) {
-				MQ.send(from, r);
+				MQ.send(this.from, r);
 			} else {
-				this._from.send(from, r);
+				this._from.send(this.from, r);
 			}
 
 		}
@@ -500,7 +503,7 @@ public abstract class MQ {
 			try {
 				r.put(e.getMessage());
 
-				MQ.send(from, r);
+				MQ.send(this.from, r);
 			} catch (Exception e1) {
 				log.error(e1.getMessage(), e1);
 			}
@@ -509,7 +512,7 @@ public abstract class MQ {
 		public void reply(Request req) throws Exception {
 			req.seq = seq;
 			req.from = Local.label();
-			MQ.send(from, req);
+			MQ.send(this.from, req);
 		}
 
 		public byte[] packet() {

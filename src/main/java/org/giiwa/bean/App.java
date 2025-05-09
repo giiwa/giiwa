@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -93,7 +94,7 @@ public final class App extends Bean {
 
 	public void touch(String ip) {
 		dao.inc(W.create().and(X.ID, id), "accessed", 1,
-				V.create("lastime", System.currentTimeMillis()).append("ip", ip));
+				V.create("lastime", Global.now()).append("ip", ip));
 	}
 
 	/**
@@ -301,7 +302,7 @@ public final class App extends Bean {
 		}
 
 		App a = dao.load(W.create().and("appid", appid));
-		if (a != null && (a.expired <= 0 || a.expired > System.currentTimeMillis())) {
+		if (a != null && (a.expired <= 0 || a.expired > Global.now())) {
 			return a;
 		}
 		return null;

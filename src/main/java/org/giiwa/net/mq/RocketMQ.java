@@ -289,7 +289,7 @@ class RocketMQ extends MQ {
 	class Sender implements Closeable {
 
 		DefaultMQProducer producer;
-		long last = System.currentTimeMillis();
+		long last = Global.now();
 		String name;
 
 		public void send(Request r) throws Exception {

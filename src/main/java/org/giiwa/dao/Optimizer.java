@@ -34,7 +34,6 @@ import org.giiwa.task.Task;
 
 public final class Optimizer {
 
-
 	public static final long MIN = 1000;
 
 	private static Log log = LogFactory.getLog(Optimizer.class);
@@ -133,7 +132,9 @@ public final class Optimizer {
 									return;
 								}
 
-								m.put(id, sb.toString());
+								synchronized (m) {
+									m.put(id, sb.toString());
+								}
 
 								queue.add(new Object[] { table, e });
 
@@ -179,7 +180,7 @@ public final class Optimizer {
 			_ignore.add(id);
 		}
 
-		Task.schedule(t -> {
+		Task.schedule("optimize." + table, t -> {
 			List<LinkedHashMap<String, Object>> l1 = q.sortkeys();
 			if (l1 != null) {
 				l1.forEach(e -> {
@@ -214,7 +215,9 @@ public final class Optimizer {
 //							throw new RuntimeException(err);
 						}
 
-						m.put(id, sb.toString());
+						synchronized (m) {
+							m.put(id, sb.toString());
+						}
 
 						log.warn("create index [" + table + "], e=" + e);
 						helper.createIndex(table, e, false);
@@ -226,7 +229,7 @@ public final class Optimizer {
 				});
 			}
 
-		});
+		}, false);
 
 	}
 
@@ -251,13 +254,13 @@ public final class Optimizer {
 
 		synchronized (m) {
 			// load again, possible optimized by other node
-			if (System.currentTimeMillis() - (long) m.get("_inited") > X.AMINUTE) {
+			if (Global.now() - (long) m.get("_inited") > X.AMINUTE) {
 				_init(table);
 			}
 
 			log.warn("table=" + table + ", m=" + m + ", id=" + id + ", keys=" + keys);
 
-			for (Object o : m.values()) {
+			for (Object o : m.values().toArray()) {
 
 				if (o instanceof String) {
 					String s = (String) o;
@@ -288,30 +291,32 @@ public final class Optimizer {
 			m = exists.get(table);
 			if (m == null) {
 				m = new HashMap<String, Object>();
-				m.put("_inited", System.currentTimeMillis());
+				m.put("_inited", Global.now());
 				exists.put(table, m);
 			}
 		}
 
 //		log.info("table=" + table + ", indexes=" + l1);
 		if (l1 != null && !l1.isEmpty()) {
-			for (Map<String, Object> d : l1) {
-				Map<String, Object> keys = (Map<String, Object>) d.get("key");
-				if (keys != null && !keys.isEmpty()) {
-					StringBuilder sb = new StringBuilder();
-					for (String s : keys.keySet()) {
-						if (sb.length() > 0)
-							sb.append(",");
-						sb.append(s).append(":").append(X.toInt(keys.get(s)));
-					}
+			synchronized (m) {
+				for (Map<String, Object> d : l1) {
+					Map<String, Object> keys = (Map<String, Object>) d.get("key");
+					if (keys != null && !keys.isEmpty()) {
+						StringBuilder sb = new StringBuilder();
+						for (String s : keys.keySet()) {
+							if (sb.length() > 0)
+								sb.append(",");
+							sb.append(s).append(":").append(X.toInt(keys.get(s)));
+						}
 
-					if (log.isDebugEnabled()) {
-						log.debug("db.index, table=" + table + ", get.index=" + sb.toString());
-					}
+						if (log.isDebugEnabled()) {
+							log.debug("db.index, table=" + table + ", get.index=" + sb.toString());
+						}
 
-					String id = UID.id(table, sb.toString());
-					m.put(id, sb.toString());
-					m.put("_inited", System.currentTimeMillis());
+						String id = UID.id(table, sb.toString());
+						m.put(id, sb.toString());
+						m.put("_inited", Global.now());
+					}
 				}
 			}
 		}
@@ -339,8 +344,6 @@ public final class Optimizer {
 		public void onExecute() {
 
 			// check the db.optimizer=1 ?
-
-//			log.warn("optimizer.check starting");
 
 			Object[] o = queue.isEmpty() ? null : queue.remove();
 			while (o != null) {

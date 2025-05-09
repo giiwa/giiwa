@@ -30,6 +30,7 @@ import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
 import org.giiwa.bean.Stat;
 import org.giiwa.bean.Temp;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
@@ -140,8 +141,8 @@ public class dfile extends Controller {
 
 						X.close(out);
 
-						DFile f3 = Disk.seek("/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd/")
-								+ System.currentTimeMillis() + "/" + f1.getName() + ".zip");
+						DFile f3 = Disk.seek("/temp/" + lang.format(Global.now(), "yyyy/MM/dd/")
+								+ Global.now() + "/" + f1.getName() + ".zip");
 
 						f3.upload(t.getInputStream());
 
@@ -183,7 +184,7 @@ public class dfile extends Controller {
 
 			W q1 = W.create();
 			List<String> l1 = X.asList(Node.dao.distinct("id", W.create()
-					.and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte).and("ip", name, W.OP.like)),
+					.and("updated", Global.now() - Node.LOST, W.OP.gte).and("ip", name, W.OP.like)),
 					e -> e.toString());
 			if (l1 == null || l1.isEmpty()) {
 				q1.or("node", X.EMPTY);
@@ -257,7 +258,7 @@ public class dfile extends Controller {
 		}
 
 		this.set("nodes",
-				Node.dao.load(W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte), 0, 10000));
+				Node.dao.load(W.create().and("updated", Global.now() - Node.LOST, W.OP.gte), 0, 10000));
 
 		this.show("/admin/dfile.disk.add.html");
 
@@ -417,7 +418,7 @@ public class dfile extends Controller {
 		this.set("d", d);
 
 		List<Stat> l1 = Stat.load("disk.stat", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-				.and("time", System.currentTimeMillis() - X.AWEEK, W.OP.gte).sort("time", -1), 0, 60 * 24 * 7);
+				.and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", -1), 0, 60 * 24 * 7);
 		if (l1 != null && !l1.isEmpty()) {
 			Collections.reverse(l1);
 		}

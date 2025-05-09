@@ -356,7 +356,9 @@ public class QueryString implements Cloneable {
 		List<String> it = m.req.names();
 		if (it != null) {
 			for (String name : it) {
-				this.set(name, m.getString(name));
+				if (!X.isEmpty(name)) {
+					this.set(name, m.getString(name));
+				}
 			}
 			q = null;
 		}

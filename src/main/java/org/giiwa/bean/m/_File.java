@@ -17,6 +17,7 @@ package org.giiwa.bean.m;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.f;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
@@ -77,7 +78,7 @@ public class _File extends Bean {
 				dao.insert(v.copy().force(X.ID, id));
 			}
 
-			Record.dao.insert(v.force(X.ID, UID.id(node, name, System.currentTimeMillis())));
+			Record.dao.insert(v.force(X.ID, UID.id(node, name, Global.now())));
 
 		} catch (Exception e) {
 			log.error(jo, e);
@@ -94,7 +95,7 @@ public class _File extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}

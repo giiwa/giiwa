@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import org.giiwa.bean.GLog;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
@@ -51,7 +52,7 @@ public class glog extends Controller {
 
 		Task.schedule(t -> {
 			try {
-				int i = GLog.dao.delete(W.create().and("created", System.currentTimeMillis() - X.ADAY, W.OP.lte));
+				int i = GLog.dao.delete(W.create().and("created", Global.now() - X.ADAY, W.OP.lte));
 				GLog.oplog.warn(this, "deleteall", lang.get("glog.deleteall", i));
 
 				Helper.primary.repair(GLog.dao.tableName());
@@ -120,7 +121,7 @@ public class glog extends Controller {
 			this.set("startime", startime);
 
 		} else {
-			long today_2 = System.currentTimeMillis() - X.ADAY * 2;
+			long today_2 = Global.now() - X.ADAY * 2;
 			q.and(X.CREATED, today_2, W.OP.gte);
 			this.set("startime", lang.format(today_2, "yyyy-MM-dd"));
 		}

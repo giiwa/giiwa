@@ -16,7 +16,7 @@ package org.giiwa.dfile;
 
 import java.io.Serializable;
 
-class FileInfo implements Serializable {
+public class FileInfo implements Serializable {
 
 	/**
 	 * 

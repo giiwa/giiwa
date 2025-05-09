@@ -87,9 +87,9 @@ public final class Access extends Bean {
 	public static void set(String name) {
 		if (Helper.isConfigured()) {
 			if (X.isEmpty(name) || !name.startsWith("access.")) {
-				log.error("error access.name: " + name, new Exception("error access name:" + name));
+				log.error("error access.name: [" + name, new Exception("error access name:" + name));
 			} else {
-				String[] ss = X.split(name, "[\\|｜]");
+				String[] ss = X.split(name, "[\\|｜ ]");
 				if (ss != null) {
 					for (String s : ss) {
 						if (!exists(s)) {

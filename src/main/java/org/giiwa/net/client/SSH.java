@@ -20,7 +20,6 @@ import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.Comment;
-import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
 
 import com.jcraft.jsch.ChannelExec;
@@ -67,27 +66,27 @@ public class SSH implements Closeable {
 		return new SSH();
 	}
 
+	@Comment(text = "打开远程链接，url=ssh://ip:port", demo = "..open('ssh://ip:port', username, passwd)")
+	public boolean open(@Comment(text = "url") String url, @Comment(text = "username") String username,
+			@Comment(text = "passwd") String passwd) throws JSchException {
+		return open(Url.create(url), username, passwd);
+	}
+
 	@Comment(text = "打开远程链接，url=ssh://ip:port?username=&passwd=")
 	public boolean open(@Comment(text = "url") String url) throws JSchException {
 		return open(Url.create(url));
 	}
 
-	@Comment(text = "打开远程链接，url=ssh://ip:port?username=&passwd=")
-	public boolean open(@Comment(text = "url") Url url) throws JSchException {
+	public boolean open(Url url) throws JSchException {
+		return open(url, url.get("username"), url.get("passwd"));
+	}
+
+	public boolean open(Url url, @Comment(text = "username") String username, @Comment(text = "passwd") String passwd)
+			throws JSchException {
 
 		close();
 
 		JSch jsch = new JSch();
-
-		String username = url.get("username");
-		if (X.isEmpty(username)) {
-			throw new JSchException("[username] required");
-		}
-
-		String passwd = url.get("passwd");
-		if (X.isEmpty(passwd)) {
-			throw new JSchException("[passwd] required");
-		}
 
 		session = jsch.getSession(username, url.getIp(), url.getPort(22));
 		session.setPassword(passwd);

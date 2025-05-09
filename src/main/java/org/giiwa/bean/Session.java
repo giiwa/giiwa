@@ -237,6 +237,7 @@ public final class Session implements Serializable {
 		a.clear();
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void expired(long uid) {
 		try {
 			W q = W.create().and("uid", uid).sort("sid", 1);
@@ -256,7 +257,7 @@ public final class Session implements Serializable {
 
 		public static final BeanDAO<String, SID> dao = BeanDAO.create(SID.class, time -> {
 			// return cleanup query
-			return W.create().and("created", System.currentTimeMillis() - X.ADAY * 31, W.OP.lte);
+			return W.create().and("created", Global.now() - X.ADAY * 31, W.OP.lte);
 		});
 
 		@Column(memo = "主键", size = 50)

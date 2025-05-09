@@ -1,0 +1,1 @@
+JAVA_OPTS="-Xms10g -Xmx10g"

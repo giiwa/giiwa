@@ -14,11 +14,14 @@
 */
 package org.giiwa.cache;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
-import org.giiwa.task.SysTask;
 
 public class TimingCache {
 
@@ -34,23 +37,31 @@ public class TimingCache {
 
 		String key = c.getName() + "/" + id;
 
-		_O e = _O.create(o, expired);
+		_O e = _O.create(key, o, expired);
 		if (e == null) {
 			synchronized (_cache) {
-				_cache.remove(key);
+				e = _cache.remove(key);
 			}
 		} else {
 			synchronized (_cache) {
 				_cache.put(key, e);
+
+				if (_cache.size() >= LIMITED) {
+					List<_O> _queue = new ArrayList<_O>();
+					_queue.addAll(_cache.values());
+					Collections.sort(_queue);
+
+					int S = LIMITED / 5;
+					for (int i = 0; i < S; i++) {
+						// remove oldest
+						e = _queue.get(i);
+						_cache.remove(e.key);
+					}
+				}
 			}
 
-			if (_cache.size() >= LIMITED) {
-				cleanup.schedule(0);
-			}
 		}
 	}
-
-	private static _Cleanup cleanup = new _Cleanup();
 
 	/**
 	 * 
@@ -88,24 +99,36 @@ public class TimingCache {
 		return null;
 	}
 
-	static class _O {
+	static class _O implements Comparable<_O> {
 
+		String key;
 		Object o;
-		long created = System.currentTimeMillis();
-		long expired = X.AMINUTE;
+		long created = Global.now();
+		long expired = created;
 
-		static _O create(Object o, long expired) {
+		static _O create(String key, Object o, long expired) {
 			if (o == null) {
 				return null;
 			}
 			_O e = new _O();
+			e.key = key;
 			e.o = o;
-			e.expired = expired;
+			e.expired = Global.now() + expired;
 			return e;
 		}
 
 		public boolean expired() {
-			return System.currentTimeMillis() - created > expired;
+			return Global.now() > expired;
+		}
+
+		@Override
+		public int compareTo(_O o) {
+			if (expired < o.expired) {
+				return -1;
+			} else if (expired > o.expired) {
+				return 1;
+			}
+			return 0;
 		}
 
 	}
@@ -148,39 +171,4 @@ public class TimingCache {
 
 	}
 
-	static class _Cleanup extends SysTask {
-
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void onExecute() {
-			// cleanup, remove expired data
-			Object[] tt = null;
-			synchronized (_cache) {
-				tt = _cache.keySet().toArray();
-			}
-			for (Object t1 : tt) {
-				_O e1 = _cache.get(t1);
-				if (e1 != null && e1.expired()) {
-					synchronized (_cache) {
-						_cache.remove(t1);
-					}
-				}
-			}
-		}
-
-		@Override
-		public String getName() {
-			return "gi.timingcache.cleanup";
-		}
-
-		@Override
-		public void onFinish() {
-			this.schedule(X.AMINUTE);
-		}
-
-	}
 }

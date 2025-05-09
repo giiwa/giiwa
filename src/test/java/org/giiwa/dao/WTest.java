@@ -311,4 +311,30 @@ public class WTest {
 
 	}
 
+	@Test
+	public void testAndOr() {
+
+		try {
+			Config.init();
+			
+			W q = W.create();
+			q.and("a", 1);
+			System.out.println(q.where(null));
+
+			W q1 = W.create();
+			q1.or("a", 1);
+			q1.or("b", 2);
+			q1 = q.copy().and(q1);
+			System.out.println(q1.where(null));
+			System.out.println(q1.query());
+
+			q1 = q.copy().and("a=1 or b=2");
+			System.out.println(q1.where(null));
+			System.out.println(q1.query());
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 }

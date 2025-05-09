@@ -23,6 +23,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.f;
+import org.giiwa.bean.AccessLog;
 import org.giiwa.bean.AuthToken;
 import org.giiwa.bean.Code;
 import org.giiwa.bean.GLog;
@@ -116,7 +117,7 @@ public class CleanupTask extends Task {
 			_CPU.dao, _CPU.Record.dao, _DB.dao, _DB.Record.dao, _Disk.dao, _Disk.Record.dao, _Mem.dao, _Mem.Record.dao,
 			_Net.dao, _Net.Record.dao, _MQ.dao, _MQ.Record.dao, _Cache.dao, _Cache.Record.dao, _DiskIO.dao,
 			_DiskIO.Record.dao, _File.dao, _File.Record.dao, _FIO.dao, _FIO.Record.dao, _Mem2.dao, _Mem2.Record.dao,
-			Message.dao, SID.dao, AuthToken.dao, S.dao }));
+			Message.dao, SID.dao, AuthToken.dao, S.dao, AccessLog.dao }));
 
 	public static void add(BeanDAO<?, ?>... daos) {
 		for (BeanDAO<?, ?> e : daos) {
@@ -142,13 +143,13 @@ public class CleanupTask extends Task {
 
 		log.warn("cleanup starting ...");
 
+		f.clean();
+
 		/**
 		 * clean up repo
 		 */
 //			count += Repo.cleanup(X.ADAY);
 		count += Temp.cleanup(Global.getInt("temp.max.age", 24) * X.AHOUR);
-
-		f.clean();
 
 		/**
 		 * clean temp files in tomcat
@@ -216,7 +217,7 @@ public class CleanupTask extends Task {
 
 	public static boolean inCleanupTime() {
 		String time = Global.getString("gi.clean.time", "00:01-06:00");
-		String t = Language.getLanguage().format(System.currentTimeMillis(), "HH:mm");
+		String t = Language.getLanguage().format(Global.now(), "HH:mm");
 		String[] ss = X.split(time, "-");
 		return t.compareTo(ss[0]) >= 0 && t.compareTo(ss[1]) <= 0;
 	}

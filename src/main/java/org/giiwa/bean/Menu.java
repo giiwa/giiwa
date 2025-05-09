@@ -194,10 +194,10 @@ public final class Menu extends Bean {
 				 */
 				if (jo.containsKey("access")) {
 					String access = jo.getString("access");
-					String[] ss = X.split(access, "[,]");
+					String[] ss = X.split(access, "[, ]");
 					if (ss != null) {
 						for (String s : ss) {
-							Access.set(s);
+							Access.set(s.trim());
 						}
 					}
 				}
@@ -235,11 +235,11 @@ public final class Menu extends Bean {
 				// is role ?
 				String role = jo.getString("role");
 				String access = jo.getString("access");
-				String[] ss = X.split(access, "[,]");
+				String[] ss = X.split(access, "[, ]");
 				if (ss != null) {
 					for (String s : ss) {
 						if (!X.isEmpty(s)) {
-							Access.set(s);
+							Access.set(s.trim());
 						}
 					}
 				}

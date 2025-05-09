@@ -507,7 +507,7 @@ public class user extends Controller {
 //			q.and(X.CREATED, lang.parse(jo.getString("starttime"), "yyyy-MM-dd"), W.OP.gte);
 //
 //		} else {
-//			long today_2 = System.currentTimeMillis() - X.AYEAR * 1;
+//			long today_2 = Global.now() - X.AYEAR * 1;
 //			jo.put("starttime", lang.format(today_2, "yyyy-MM-dd"));
 //			q.and(X.CREATED, today_2, W.OP.gte);
 //		}

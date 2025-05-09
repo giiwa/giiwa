@@ -24,6 +24,7 @@ import org.giiwa.task.Consumer;
 import org.giiwa.web.QueryString;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
+import org.jsoup.safety.Whitelist;
 import org.jsoup.select.Elements;
 import org.giiwa.dao.Comment;
 
@@ -42,11 +43,13 @@ public final class Html {
 
 	/** The d. */
 	transient Document d = null;
+	transient String html;
 
 	public String url;
 
 	private Html(String html) {
 		if (html != null) {
+			this.html = html;
 			d = Jsoup.parse(html);
 		}
 	}
@@ -180,15 +183,28 @@ public final class Html {
 	transient String text;
 
 	/**
-	 * Text.
+	 * 纯文本
 	 * 
 	 * @return the string
 	 */
 	@Comment(text = "text")
 	public String text() {
 		if (text == null && d != null) {
-			String s = d.text();
-			text = s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+			text = d.text();
+		}
+
+		return text;
+	}
+
+	/**
+	 * 带基本样式的纯文本
+	 * 
+	 * @return
+	 */
+	@Comment(text = "text2")
+	public String text2() {
+		if (text == null && d != null) {
+			text = Jsoup.clean(html, Whitelist.basicWithImages());
 		}
 
 		return text;

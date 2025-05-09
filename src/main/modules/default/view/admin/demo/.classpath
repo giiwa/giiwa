@@ -3,8 +3,9 @@
 	<classpathentry kind="src" path="src/model/java"/>
 	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JDK_11.0.9">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk 17">
 		<attributes>
+			<attribute name="module" value="true"/>
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
@@ -24,7 +25,9 @@
 	<classpathentry kind="lib" path="depends/bcpkix-jdk18on-1.74.jar"/>
 	<classpathentry kind="lib" path="depends/bcprov-jdk18on-1.74.jar"/>
 	<classpathentry kind="lib" path="depends/bcutil-jdk18on-1.74.jar"/>
-	<classpathentry kind="lib" path="depends/catalina.jar"/>
+	<classpathentry kind="lib" path="depends/bson-5.1.0.jar"/>
+	<classpathentry kind="lib" path="depends/bson-record-codec-5.1.0.jar"/>
+	<classpathentry kind="lib" path="depends/checker-qual-3.42.0.jar"/>
 	<classpathentry kind="lib" path="depends/common-image-3.9.4.jar"/>
 	<classpathentry kind="lib" path="depends/common-io-3.9.4.jar"/>
 	<classpathentry kind="lib" path="depends/common-lang-3.9.4.jar"/>
@@ -35,8 +38,9 @@
 	<classpathentry kind="lib" path="depends/commons-configuration2-2.5.jar"/>
 	<classpathentry kind="lib" path="depends/commons-dbcp2-2.11.0.jar"/>
 	<classpathentry kind="lib" path="depends/commons-digester-2.1.jar"/>
-	<classpathentry kind="lib" path="depends/commons-fileupload-1.4.jar"/>
-	<classpathentry kind="lib" path="depends/commons-io-2.8.0.jar"/>
+	<classpathentry kind="lib" path="depends/commons-fileupload2-core-2.0.0-M1.jar"/>
+	<classpathentry kind="lib" path="depends/commons-fileupload2-jakarta-2.0.0-M1.jar"/>
+	<classpathentry kind="lib" path="depends/commons-io-2.14.0.jar"/>
 	<classpathentry kind="lib" path="depends/commons-lang3-3.8.1.jar"/>
 	<classpathentry kind="lib" path="depends/commons-logging-1.2.jar"/>
 	<classpathentry kind="lib" path="depends/commons-math3-3.6.1.jar"/>
@@ -44,31 +48,43 @@
 	<classpathentry kind="lib" path="depends/commons-pool2-2.12.0.jar"/>
 	<classpathentry kind="lib" path="depends/commons-text-1.6.jar"/>
 	<classpathentry kind="lib" path="depends/commons-validator-1.7.jar"/>
+	<classpathentry kind="lib" path="depends/config-1.4.3.jar"/>
 	<classpathentry kind="lib" path="depends/core-3.4.1.jar"/>
 	<classpathentry kind="lib" path="depends/curator-client-5.2.0.jar"/>
 	<classpathentry kind="lib" path="depends/curator-framework-5.2.0.jar"/>
 	<classpathentry kind="lib" path="depends/curator-recipes-5.2.0.jar"/>
+	<classpathentry kind="lib" path="depends/DmJdbcDriver11.jar"/>
 	<classpathentry kind="lib" path="depends/dom4j-1.6.1.jar"/>
+	<classpathentry kind="lib" path="depends/fastjson-1.2.69_noneautotype.jar"/>
 	<classpathentry kind="lib" path="depends/geronimo-j2ee-management_1.1_spec-1.0.1.jar"/>
 	<classpathentry kind="lib" path="depends/geronimo-jms_1.1_spec-1.1.1.jar"/>
 	<classpathentry kind="lib" path="depends/giiwa-3.3.jar"/>
 	<classpathentry kind="lib" path="depends/grizzly-framework-4.0.0.jar"/>
 	<classpathentry kind="lib" path="depends/gson-2.10.1.jar"/>
+	<classpathentry kind="lib" path="depends/guava-20.0.jar"/>
 	<classpathentry kind="lib" path="depends/hamcrest-2.1.jar"/>
 	<classpathentry kind="lib" path="depends/hawtbuf-1.11.jar"/>
 	<classpathentry kind="lib" path="depends/icu4j-71.1.jar"/>
 	<classpathentry kind="lib" path="depends/imageio-core-3.9.4.jar"/>
 	<classpathentry kind="lib" path="depends/imageio-jpeg-3.9.4.jar"/>
 	<classpathentry kind="lib" path="depends/imageio-metadata-3.9.4.jar"/>
+	<classpathentry kind="lib" path="depends/jakarta.servlet-api-6.0.0.jar"/>
 	<classpathentry kind="lib" path="depends/jakarta.transaction-api-1.3.3.jar"/>
 	<classpathentry kind="lib" path="depends/javassist-3.29.2-GA.jar"/>
 	<classpathentry kind="lib" path="depends/javax.json-1.1.4.jar"/>
 	<classpathentry kind="lib" path="depends/jcifs-2.1.36.jar"/>
 	<classpathentry kind="lib" path="depends/je-7.3.7.jar"/>
 	<classpathentry kind="lib" path="depends/jedis-5.1.0.jar"/>
+	<classpathentry kind="lib" path="depends/jetty-ee10-servlet-12.0.16.jar"/>
+	<classpathentry kind="lib" path="depends/jetty-http-12.0.16.jar"/>
+	<classpathentry kind="lib" path="depends/jetty-io-12.0.16.jar"/>
+	<classpathentry kind="lib" path="depends/jetty-security-12.0.16.jar"/>
+	<classpathentry kind="lib" path="depends/jetty-server-12.0.16.jar"/>
+	<classpathentry kind="lib" path="depends/jetty-session-12.0.16.jar"/>
+	<classpathentry kind="lib" path="depends/jetty-util-12.0.16.jar"/>
 	<classpathentry kind="lib" path="depends/jna-5.13.0.jar"/>
 	<classpathentry kind="lib" path="depends/joda-time-2.9.9.jar"/>
-	<classpathentry kind="lib" path="depends/jsch-0.1.55.jar"/>
+	<classpathentry kind="lib" path="depends/jsch-0.2.23.jar"/>
 	<classpathentry kind="lib" path="depends/json-20231013.jar"/>
 	<classpathentry kind="lib" path="depends/jsoup-1.10.2.jar"/>
 	<classpathentry kind="lib" path="depends/junrar-7.5.1.jar"/>
@@ -78,10 +94,12 @@
 	<classpathentry kind="lib" path="depends/log4j-api-2.20.0.jar"/>
 	<classpathentry kind="lib" path="depends/lz4-java-1.8.0.jar"/>
 	<classpathentry kind="lib" path="depends/mail-1.4.jar"/>
-	<classpathentry kind="lib" path="depends/mongo-java-driver-3.12.13.jar"/>
+	<classpathentry kind="lib" path="depends/mongodb-driver-core-5.1.0.jar"/>
+	<classpathentry kind="lib" path="depends/mongodb-driver-sync-5.1.0.jar"/>
+	<classpathentry kind="lib" path="depends/mysql-connector-j-8.4.0.jar"/>
 	<classpathentry kind="lib" path="depends/nashorn-core-15.4.jar"/>
 	<classpathentry kind="lib" path="depends/netty-3.10.6.Final.jar"/>
-	<classpathentry kind="lib" path="depends/netty-all-4.1.65.Final.jar"/>
+	<classpathentry kind="lib" path="depends/netty-all-4.0.56.Final.jar"/>
 	<classpathentry kind="lib" path="depends/nfs4j-core-0.25.0.jar"/>
 	<classpathentry kind="lib" path="depends/nfs-client-1.1.0.jar"/>
 	<classpathentry kind="lib" path="depends/okhttp-4.12.0.jar"/>
@@ -89,13 +107,13 @@
 	<classpathentry kind="lib" path="depends/oncrpc4j-core-3.3.0.jar"/>
 	<classpathentry kind="lib" path="depends/org.abego.treelayout.core-1.0.3.jar"/>
 	<classpathentry kind="lib" path="depends/org.eclipse.paho.client.mqttv3-1.2.5.jar"/>
+	<classpathentry kind="lib" path="depends/postgresql-42.7.4.jar"/>
 	<classpathentry kind="lib" path="depends/protobuf-java-3.19.6.jar"/>
 	<classpathentry kind="lib" path="depends/reload4j-1.2.19.jar"/>
 	<classpathentry kind="lib" path="depends/rocketmq-client-5.0.0.jar"/>
 	<classpathentry kind="lib" path="depends/rocketmq-common-5.0.0.jar"/>
 	<classpathentry kind="lib" path="depends/rocketmq-logging-5.0.0.jar"/>
 	<classpathentry kind="lib" path="depends/rocketmq-remoting-5.0.0.jar"/>
-	<classpathentry kind="lib" path="depends/servlet-api.jar"/>
 	<classpathentry kind="lib" path="depends/sigar-1.6.4.jar"/>
 	<classpathentry kind="lib" path="depends/slf4j-api-1.7.36.jar"/>
 	<classpathentry kind="lib" path="depends/slf4j-reload4j-1.7.36.jar"/>
@@ -103,9 +121,10 @@
 	<classpathentry kind="lib" path="depends/snmp4j-3.6.4.jar"/>
 	<classpathentry kind="lib" path="depends/snmp4j-agent-3.5.4.jar"/>
 	<classpathentry kind="lib" path="depends/ST4-4.3.4.jar"/>
+	<classpathentry kind="lib" path="depends/stax2-api-4.2.1.jar"/>
 	<classpathentry kind="lib" path="depends/syslog4j-0.9.60.jar"/>
 	<classpathentry kind="lib" path="depends/velocity-engine-core-2.3.jar"/>
-	<classpathentry kind="lib" path="depends/xmemcached-2.4.7.jar"/>
+	<classpathentry kind="lib" path="depends/webp-imageio-sejda-0.1.0.jar"/>
 	<classpathentry kind="lib" path="depends/xml-apis-1.0.b2.jar"/>
 	<classpathentry kind="lib" path="depends/zookeeper-3.6.3.jar"/>
 	<classpathentry kind="lib" path="depends/zookeeper-jute-3.6.3.jar"/>

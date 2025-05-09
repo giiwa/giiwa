@@ -392,7 +392,7 @@ public class backup extends Controller {
 			long id = AutoBackup.create(v);
 			AutoBackup a = AutoBackup.dao.load(id);
 			a.next(null);
-			
+
 			BackupTask.init();
 
 			this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("save.success")));
@@ -463,8 +463,11 @@ public class backup extends Controller {
 		AutoBackup a = AutoBackup.dao.load(id);
 		this.set("a", a);
 
-		List<JSON> l2 = Schema.load(lang);
-		this.set("list", l2);
+		if (a.type != 2) {
+			// 不是外部命令
+			List<JSON> l2 = Schema.load(lang);
+			this.set("list", l2);
+		}
 
 		this.show("/admin/backup.auto.edit.html");
 
@@ -531,7 +534,7 @@ public class backup extends Controller {
 		@Override
 		public void onExecute() {
 			// Module m = Module.home;
-			String name = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm") + ".zip";
+			String name = Language.getLanguage().format(Global.now(), "yyyyMMddHHmm") + ".zip";
 
 			try {
 
@@ -615,7 +618,7 @@ public class backup extends Controller {
 					DFile[] ff = f.listFiles();
 					if (ff != null && ff.length > 0) {
 						for (DFile f1 : ff) {
-							if (f1.lastModified() < System.currentTimeMillis() - days * X.ADAY) {
+							if (f1.lastModified() < Global.now() - days * X.ADAY) {
 								f1.delete();
 							}
 						}

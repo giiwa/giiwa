@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
@@ -84,6 +85,9 @@ public class _Net extends Bean {
 	@Column(memo = "接收错误")
 	long rxerr;
 
+	@Column(memo = "快照", size = 255)
+	String snapshot;
+
 	public long getTxbytes() {
 		return txbytes;
 	}
@@ -122,7 +126,7 @@ public class _Net extends Bean {
 					if (r != null) {
 						JSON p = JSON.fromObject(r.get("snapshot"));
 						if (p != null) {
-							long time = System.currentTimeMillis() - r.getLong("created");
+							long time = Global.now() - r.getLong("created");
 							if (time <= 0) {
 								// skip
 								continue;
@@ -151,7 +155,7 @@ public class _Net extends Bean {
 					dao.insert(v.copy().force(X.ID, id).force("node", node));
 				}
 
-				Record.dao.insert(v.force(X.ID, UID.id(id, System.currentTimeMillis())).force("node", node));
+				Record.dao.insert(v.force(X.ID, UID.id(id, Global.now())).force("node", node));
 
 			} catch (Exception e) {
 				log.error(jo, e);
@@ -170,7 +174,7 @@ public class _Net extends Bean {
 		public static BeanDAO<String, Record> dao = BeanDAO.create(Record.class);
 
 		public void cleanup() {
-			dao.delete(W.create().and("created", System.currentTimeMillis() - X.AWEEK, W.OP.lt));
+			dao.delete(W.create().and("created", Global.now() - X.AWEEK, W.OP.lt));
 		}
 
 	}

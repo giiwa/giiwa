@@ -53,7 +53,7 @@ public final class Local extends Bean {
 
 	public static final BeanDAO<String, Local> dao = BeanDAO.create(Local.class);
 
-	@Column(memo = "主键", size=100)
+	@Column(memo = "主键", size = 100)
 	String id;
 
 	@Column(memo = "字符串值", size = 1000)
@@ -96,7 +96,9 @@ public final class Local extends Bean {
 					TimingCache.set(Local.class, name, c);
 					return X.toInt(c.i, defaultValue);
 				} else {
-					return Config.getConf().getInt(name, defaultValue);
+					c = new Local();
+					c.i = Config.getConf().getInt(name, defaultValue);
+					TimingCache.set(Local.class, name, c);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -195,7 +197,9 @@ public final class Local extends Bean {
 					TimingCache.set(Local.class, name, c);
 					return c.s != null ? c.s : defaultValue;
 				} else {
-					return Config.getConf().getString(name, defaultValue);
+					c = new Local();
+					c.s = Config.getConf().getString(name, defaultValue);
+					TimingCache.set(Local.class, name, c);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -248,7 +252,9 @@ public final class Local extends Bean {
 
 					return X.toLong(c.l, defaultValue);
 				} else {
-					return Config.getConf().getLong(name, defaultValue);
+					c = new Local();
+					c.l = Config.getConf().getInt(name, (int) defaultValue);
+					TimingCache.set(Local.class, name, c);
 				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
@@ -425,9 +431,9 @@ public final class Local extends Bean {
 			@Override
 			public void onExecute() {
 				// checking node load
-				if ((System.currentTimeMillis() - t) > 10 * X.AMINUTE) {
+				if ((Global.now() - t) > 10 * X.AMINUTE) {
 					Node.touch(true);
-					t = System.currentTimeMillis();
+					t = Global.now();
 				} else {
 					Node.touch(false);
 				}

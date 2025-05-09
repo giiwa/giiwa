@@ -18,11 +18,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
 import org.giiwa.cache.GlobalLock;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
@@ -54,16 +54,14 @@ public class lock extends Controller {
 	public void onGet() {
 
 		W q = Node.dao.query().and("giiwa", null, W.OP.neq);
-		q.and("lastcheck", System.currentTimeMillis() - Node.LOST, W.OP.gte);
+		q.and("lastcheck", Global.now() - Node.LOST, W.OP.gte);
 
 		List<GlobalLock._Lock> lock = new ArrayList<GlobalLock._Lock>();
+		List<String> has = new ArrayList<String>();
 
 		try {
 
-			AtomicLong has = new AtomicLong(q.count());
-
-			GLog.applog.info("sys", "lock", "MQ1, has=" + has.get() + ", q=" + q);
-
+			long n = q.count();
 			MQ.callTopic(Task.MQNAME, "list_lock", "", 5000, req -> {
 
 				String from = req.from;
@@ -80,16 +78,17 @@ public class lock extends Controller {
 					GLog.applog.error("sys", "task", "from=" + from + ", error=" + e.getMessage(), e);
 				}
 
-				has.decrementAndGet();
-				if (has.get() <= 0) {
+				has.add(from);
+				if (has.size() >= n) {
+					// 结束
 					return true;
 				} else {
 					return false;
 				}
 			});
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			GLog.applog.error("task", "checking", e.getMessage(), e);
+			log.error("got " + has.toString(), e);
+			GLog.applog.error("task", "checking", "got " + has.toString(), e);
 		}
 
 		Collections.sort(lock, new Comparator<GlobalLock._Lock>() {

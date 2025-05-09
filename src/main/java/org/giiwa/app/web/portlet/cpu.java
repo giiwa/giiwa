@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._CPU;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -51,7 +52,7 @@ public class cpu extends portlet {
 			this.set("name", id);
 		}
 
-		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created",
+		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created",
 				-1);
 		_CPU.Record.dao.optimize(q);
 
@@ -80,7 +81,7 @@ public class cpu extends portlet {
 
 		Node n = Node.dao.load(id);
 
-		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte)
+		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR * hours, W.OP.gte)
 				.sort("created", -1);
 
 		Beans<_CPU.Record> bs = _CPU.Record.dao.load(q, 0, 60 * hours);
@@ -109,7 +110,7 @@ public class cpu extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		long time = System.currentTimeMillis() - X.ADAY * 2;
+		long time = Global.now() - X.ADAY * 2;
 
 		String id = this.get("id");
 		if (X.isEmpty(id)) {

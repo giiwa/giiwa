@@ -84,8 +84,8 @@ public class Monitor {
 
 		long tid = X.toLong(t.attach("tid"));
 		String name = _name(tid);
-		long created = System.currentTimeMillis();
-		long get = System.currentTimeMillis();
+		long created = Global.now();
+		long get = Global.now();
 
 		Lock door = Global.getLock("monitor//" + name);
 		door.lock();
@@ -94,7 +94,7 @@ public class Monitor {
 			if (jo != null) {
 				created = jo.getLong("_created");
 				get = jo.getLong("_get");
-				if (System.currentTimeMillis() - created > X.AMINUTE && System.currentTimeMillis() - get > X.AMINUTE) {
+				if (Global.now() - created > X.AMINUTE && Global.now() - get > X.AMINUTE) {
 					// 1分钟没有get， kill掉 t
 					t.stop(true);
 					return;
@@ -164,7 +164,7 @@ public class Monitor {
 					JSON e = (JSON) t;
 					JSON j1 = e.copy();
 					j1.remove("_access", "_created", "_get", "_name");
-					e.put("_get", System.currentTimeMillis());
+					e.put("_get", Global.now());
 					Cache.set(name, e);
 					return j1;
 				} else {

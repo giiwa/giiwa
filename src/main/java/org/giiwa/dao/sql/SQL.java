@@ -760,7 +760,7 @@ public class SQL {
 			return W.create();
 		}
 		try {
-			if (sql.toLowerCase().startsWith("order")) {
+			if (sql.toLowerCase().startsWith("order ")) {
 				return parse("select * from " + dump + " " + sql);
 			}
 			return parse("select * from " + dump + " where " + sql);

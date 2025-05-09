@@ -138,14 +138,9 @@ public class LocalDFile extends DFile {
 
 			if (bb != null) {
 
-				long t = System.currentTimeMillis();
-				try {
-					a.seek(o1);
-					a.write(bb, 0, len);
-					a.getFD().sync(); // not needs
-				} finally {
-					Disk.Counter.write(disk_obj).add(len, System.currentTimeMillis() - t);
-				}
+				a.seek(o1);
+				a.write(bb, 0, len);
+				a.getFD().sync(); // not needs
 
 			}
 

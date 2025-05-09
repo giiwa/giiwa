@@ -20,23 +20,11 @@ import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import javax.servlet.AsyncContext;
-import javax.servlet.DispatcherType;
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpUpgradeHandler;
-import javax.servlet.http.Part;
+import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,27 +32,37 @@ import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.web.RequestHelper;
 
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpUpgradeHandler;
+import jakarta.servlet.http.Part;
+
 public class MockRequest implements HttpServletRequest {
 
 	private static Log log = LogFactory.getLog(MockRequest.class);
 
 	String uri;
-	JSON head;
-	JSON body;
+	public JSON head;
+	public JSON body;
 
 	@Override
 	public Object getAttribute(String arg0) {
 		return null;
 	}
 
-//	@Override
-//	public Enumeration<?> getAttributeNames() {
-//		return null;
-//	}
-
 	@Override
 	public String getCharacterEncoding() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -75,7 +73,7 @@ public class MockRequest implements HttpServletRequest {
 
 	@Override
 	public String getContentType() {
-		return null;
+		return "application/json";
 	}
 
 	@Override
@@ -103,29 +101,46 @@ public class MockRequest implements HttpServletRequest {
 		return null;
 	}
 
-//	@Override
-//	public Enumeration<?> getLocales() {
-//		return null;
-//	}
-
 	@Override
 	public String getParameter(String name) {
+		if (!X.isEmpty(name)) {
+			name = name.toLowerCase();
+		}
 		return body.getString(name);
 	}
 
-//	@Override
-//	public Map<?, ?> getParameterMap() {
-//		return body;
-//	}
-//
-//	@Override
-//	public Enumeration<?> getParameterNames() {
-//		Vector<String> l1 = new Vector<String>(body.keySet());
-//		return l1.elements();
-//	}
+	@Override
+	public Map<String, String[]> getParameterMap() {
+		HashMap<String, String[]> mm = new HashMap<String, String[]>();
+		for (String name : body.keySet()) {
+			if (X.isEmpty(name)) {
+				continue;
+			}
+			Object o = body.get(name);
+			if (o != null) {
+				if (X.isArray(o)) {
+					List<String> l1 = X.asList(o, s -> s.toString());
+					mm.put(name, l1.toArray(new String[l1.size()]));
+				} else {
+					mm.put(name, new String[] { o.toString() });
+				}
+			}
+		}
+		return mm;
+	}
+
+	@Override
+	public Enumeration<String> getParameterNames() {
+		Vector<String> l1 = new Vector<String>(body.keySet());
+		return l1.elements();
+	}
 
 	@Override
 	public String[] getParameterValues(String name) {
+
+		if (!X.isEmpty(name)) {
+			name = name.toLowerCase();
+		}
 
 		if (log.isDebugEnabled()) {
 			log.debug("name=" + body.getString(name));
@@ -144,11 +159,6 @@ public class MockRequest implements HttpServletRequest {
 
 	@Override
 	public BufferedReader getReader() throws IOException {
-		return null;
-	}
-
-	@Override
-	public String getRealPath(String arg0) {
 		return null;
 	}
 
@@ -219,11 +229,12 @@ public class MockRequest implements HttpServletRequest {
 
 	@Override
 	public Cookie[] getCookies() {
-		String[] ss = X.split(head.getString("cookie"), "[;]");
+		String[] ss = X.split(head.getString("cookie"), "[; ]");
 		if (ss != null && ss.length > 0) {
 			Cookie[] cc = new Cookie[ss.length];
 			for (int i = 0; i < ss.length; i++) {
-				String[] s1 = X.split(ss[i], "[=]");
+				String[] s1 = X.split(ss[i], "[= ]");
+				log.info("get cookie, [" + s1[0] + "]=" + s1[1]);
 				cc[i] = new Cookie(s1[0], s1[1]);
 			}
 			return cc;
@@ -237,20 +248,37 @@ public class MockRequest implements HttpServletRequest {
 	}
 
 	@Override
-	public String getHeader(String arg0) {
-		return null;
+	public String getHeader(String name) {
+		if (!X.isEmpty(name)) {
+			name = name.toLowerCase();
+		}
+		return head.getString(name);
 	}
 
-//	@Override
-//	public Enumeration<?> getHeaderNames() {
-//		Vector<String> l1 = new Vector<String>(head.keySet());
-//		return l1.elements();
-//	}
-//
-//	@Override
-//	public Enumeration<?> getHeaders(String name) {
-//		return null;
-//	}
+	@Override
+	public Enumeration<String> getHeaderNames() {
+		Vector<String> l1 = new Vector<String>(head.keySet());
+		return l1.elements();
+	}
+
+	@Override
+	public Enumeration<String> getHeaders(String name) {
+		if (!X.isEmpty(name)) {
+			name = name.toLowerCase();
+		}
+		Object o = head.get(name);
+		if (o != null) {
+			Vector<String> l1 = new Vector<String>();
+			if (X.isArray(o)) {
+				List<String> l2 = X.asList(o, s -> s.toString());
+				l1.addAll(l2);
+			} else {
+				l1.add(o.toString());
+			}
+			return l1.elements();
+		}
+		return null;
+	}
 
 	@Override
 	public int getIntHeader(String arg0) {
@@ -328,11 +356,6 @@ public class MockRequest implements HttpServletRequest {
 	}
 
 	@Override
-	public boolean isRequestedSessionIdFromUrl() {
-		return false;
-	}
-
-	@Override
 	public boolean isRequestedSessionIdValid() {
 		return false;
 	}
@@ -345,8 +368,18 @@ public class MockRequest implements HttpServletRequest {
 	public static RequestHelper create(String uri, JSON head, JSON body) {
 		MockRequest r = new MockRequest();
 		r.uri = uri;
-		r.head = head;
-		r.body = body;
+		r.head = JSON.create();
+		for (String name : head.keySet()) {
+			if (!X.isEmpty(name)) {
+				r.head.put(name.toLowerCase(), head.get(name));
+			}
+		}
+		r.body = JSON.create();
+		for (String name : body.keySet()) {
+			if (!X.isEmpty(name)) {
+				r.body.put(name.toLowerCase(), body.get(name));
+			}
+		}
 		return RequestHelper.create(r);
 	}
 
@@ -453,24 +486,18 @@ public class MockRequest implements HttpServletRequest {
 	}
 
 	@Override
-	public Map<String, String[]> getParameterMap() {
+	public String getRequestId() {
 		return null;
 	}
 
 	@Override
-	public Enumeration<String> getParameterNames() {
+	public String getProtocolRequestId() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Enumeration<String> getHeaderNames() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public Enumeration<String> getHeaders(String arg0) {
+	public ServletConnection getServletConnection() {
 		// TODO Auto-generated method stub
 		return null;
 	}

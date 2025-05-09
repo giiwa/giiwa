@@ -29,6 +29,7 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.dao.Helper.V;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.UID;
@@ -499,7 +500,7 @@ public class Host {
 			e.txdrop = s.getTxDropped();
 			e.txerr = s.getTxErrors();
 			e.txpackets = s.getTxPackets();
-			e.created = System.currentTimeMillis();
+			e.created = Global.now();
 			return e;
 		}
 

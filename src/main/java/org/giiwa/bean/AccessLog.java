@@ -14,15 +14,12 @@
 */
 package org.giiwa.bean;
 
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
+import org.giiwa.conf.Local;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Column;
@@ -30,14 +27,11 @@ import org.giiwa.dao.Table;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
-import org.giiwa.dao.Helper.W;
-import org.giiwa.task.Task;
 
 /**
  * The web access log bean. <br>
  * table="gi_accesslog"
  * 
- * @deprecated
  * @author joe
  * 
  */
@@ -55,84 +49,37 @@ public final class AccessLog extends Bean {
 	public static final BeanDAO<String, AccessLog> dao = BeanDAO.create(AccessLog.class);
 
 	static AtomicLong seq = new AtomicLong(0);
-	static String node = Config.getConf().getString("node.name");
 
-	@Column(name = X.ID, index = true, unique = true)
+	@Column(memo = "主键", size = 50)
 	private String id;
 
-	@Column(name = "url", index = true)
+	@Column(memo = "链接", size = 255)
 	private String url;
 
-	@Column(name = "cost", index = true)
-	private long cost;
+	@Column(name = "访问IP", size = 100)
+	private String ip;
 
-	@Column(name = X.CREATED, index = true)
+	@Column(name = "节点", size = 100)
+	private String node;
+
+	@Column(name = X.CREATED)
 	private long created;
-
-	public static boolean isOn() {
-		return Global.getInt("accesslog.on", 0) == 1;
-	}
-
-	/**
-	 * Count.
-	 *
-	 * @param q the q
-	 * @return the long
-	 */
-	public static long count(W q) {
-		return dao.count(q);
-	}
-
-	public String getUrl() {
-		return this.getString(X.URL);
-	}
 
 	/**
 	 * Creates the AccessLog.
 	 * 
 	 * @param ip  the ip address
 	 * @param url the url
-	 * @param v   the values
 	 */
-	public static void create(final String ip, final String url, final V v) {
-		Task.schedule(t -> {
-			long created = System.currentTimeMillis();
-			String id = UID.id(ip, url, created, node, seq.incrementAndGet());
-			dao.insert(v.set(X.ID, id).set("ip", ip).set(X.URL, url).set(X.CREATED, created));
-		}, 0);
-	}
-
-	/**
-	 * Cleanup.
-	 */
-	public void cleanup() {
-		dao.cleanup();
-	}
-
-	/**
-	 * Delete all.
-	 */
-	public static void deleteAll() {
-		dao.delete(W.create());
-	}
-
-	/**
-	 * Distinct.
-	 *
-	 * @param name the name
-	 * @return Map
-	 */
-	public static Map<Object, Long> distinct(String name) {
-
-		List<?> list = dao.distinct(name, W.create().and("status", 200));
-
-		Map<Object, Long> m = new TreeMap<Object, Long>();
-		for (Object v : list) {
-			long d = dao.count(W.create().and(name, v).and("status", 200));
-			m.put(v, d);
+	public static void create(final String url, final String ip) {
+		if (Global.getInt("accesslog.on", 0) == 1) {
+			long created = Global.now();
+			String node = Local.id();
+			String id = UID.id(url, ip, created, node);
+			V v = V.create();
+			v.append("id", id);
+			dao.insert(v.set(X.ID, id).set("ip", ip).append("node", node).append("url", url));
 		}
-
-		return m;
 	}
 
 }

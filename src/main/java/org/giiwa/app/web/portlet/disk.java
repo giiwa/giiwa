@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._Disk;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -48,7 +49,7 @@ public class disk extends portlet {
 			this.set("name", id);
 		}
 
-		W q = W.create().and("node", id).and("updated", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("path", 1);
+		W q = W.create().and("node", id).and("updated", Global.now() - X.AHOUR, W.OP.gte).sort("path", 1);
 		_Disk.dao.optimize(q);
 
 		Beans<_Disk> bs = _Disk.dao.load(q, 0, 100);
@@ -82,7 +83,7 @@ public class disk extends portlet {
 
 		l0.forEach(d -> {
 
-			W q1 = q.copy().and("path", d.path).and("created", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte)
+			W q1 = q.copy().and("path", d.path).and("created", Global.now() - X.AHOUR * hours, W.OP.gte)
 					.sort("created", -1);
 
 			_Disk.Record.dao.optimize(q1);
@@ -127,7 +128,7 @@ public class disk extends portlet {
 		String name = this.getString("name");
 		this.set("name", name);
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		W q = W.create().and("node", Local.id()).and("name", name).and("updated", time, W.OP.gte).sort("created", 1);
 

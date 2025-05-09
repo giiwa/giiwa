@@ -32,6 +32,7 @@ import org.giiwa.task.Consumer;
  * @author wujun
  *
  */
+@Deprecated
 public final class Data extends Bean {
 
 	/**
@@ -168,7 +169,7 @@ public final class Data extends Bean {
 	 * @param table the string of tablename
 	 * @param data  the json data
 	 * @return the number of inserted
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
 //	@Deprecated
 //	public static int insert(String table, JSON data) throws SQLException {

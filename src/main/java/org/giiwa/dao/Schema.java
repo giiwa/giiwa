@@ -24,13 +24,11 @@ import java.util.concurrent.locks.Lock;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.Data;
 import org.giiwa.cache.Cache;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.ClassUtil;
-import org.giiwa.task.Task;
 import org.giiwa.web.Language;
 
 /**
@@ -81,6 +79,7 @@ public final class Schema implements Serializable {
 					Helper.init(table.name());
 					beans.add(t);
 				}
+
 			}
 
 			Collections.sort(beans, new Comparator<Class<? extends Bean>>() {
@@ -143,24 +142,19 @@ public final class Schema implements Serializable {
 
 		String tablename = e.getString("name");
 
-		Class<? extends Bean> c = null;// bean(tablename);
+		Class<? extends Bean> c = bean(tablename);
 
 		Table table = c == null ? null : (Table) c.getAnnotation(Table.class);
 		if (table == null) {
 
 			// log.error("table missed/error in [" + t + "] declaretion", new Exception());
-			JSON j1 = JSON.create().append("table", tablename).append("display", tablename);
+			JSON j1 = JSON.create().append("table", tablename);// .append("display", tablename);
 
 			JSON stat = Helper.stats(tablename);
 
 			j1.append("count", Helper.primary.count(tablename, W.create()))
 					.append("totalsize", stat == null ? null : stat.getLong("totalSize"))
 					.append("indexsize", stat == null ? null : stat.getLong("totalIndexSize"));
-
-			Data d = Helper.primary.load(tablename, W.create().sort("updated", -1), Data.class);
-			if (d != null) {
-				j1.append("updated", d.getUpdated());
-			}
 
 			return j1;
 		}
@@ -176,11 +170,6 @@ public final class Schema implements Serializable {
 		j1.append("count", Helper.primary.count(table.name(), W.create()))
 				.append("totalsize", stat == null ? null : stat.getLong("totalSize"))
 				.append("indexsize", stat == null ? null : stat.getLong("totalIndexSize"));
-
-		Data d = Helper.primary.load(tablename, W.create().sort("updated", -1), Data.class);
-		if (d != null) {
-			j1.append("updated", d.getUpdated());
-		}
 
 		return j1;
 	}
@@ -199,23 +188,25 @@ public final class Schema implements Serializable {
 		} catch (Throwable e) {
 			// ignore
 		}
-		
+
 		if (l3 == null) {
 			Lock door = Global.getLock(name);
 			if (door.tryLock()) {
 				try {
 					List<JSON> l4 = JSON.createList();
 
-					List<JSON> l1 = Helper.primary.listTables(null, 10000);
+					List<JSON> l1 = Helper.primary.listTables(null, 100000);
 					if (l1 != null) {
-						Task.forEach(l1, e -> {
+						for (JSON e : l1) {
+//						Task.forEach(l1, e -> {
 							try {
 								JSON j1 = Schema.format(e, lang);
 								l4.add(j1);
 							} catch (Exception err) {
 								log.error(err.getMessage(), err);
 							}
-						});
+						}
+//						});
 					}
 					Collections.sort(l4, new Comparator<JSON>() {
 

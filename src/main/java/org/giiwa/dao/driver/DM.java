@@ -54,6 +54,14 @@ public class DM extends RDSHelper._AbstractDriver {
 	}
 
 	@Override
+	public String uppercase(String name) {
+		if (!X.isEmpty(name)) {
+			return name.toUpperCase();
+		}
+		return name;
+	}
+
+	@Override
 	public String fullname(String dbname, String schema, String name) {
 //		if (X.isEmpty(schema)) {
 		schema = dbname;
@@ -114,181 +122,181 @@ public class DM extends RDSHelper._AbstractDriver {
 				.asList("ALTER TABLE " + tablename + " MODIFY (" + name.toUpperCase() + " " + type(type, size) + ")");
 	}
 
-	@Override
-	public List<JSON> listColumns(Connection con, String dbname, String schema, String table) throws SQLException {
-
-		List<JSON> l1 = JSON.createList();
-		Statement stat = null;
-		ResultSet r = null;
-
-//		if (X.isEmpty(schema)) {
-		schema = dbname;
-//		}
-//		schema = schema.toUpperCase();
-//		table = table.toUpperCase();
-		String sql = null;
-
-		try {
-			// 获取字段信息
-			{
-				int i = table.lastIndexOf(".");
-				if (i > 0) {
-					table = table.substring(i + 1);
-				}
-			}
-			stat = con.createStatement();
-			sql = "SELECT table_name, column_name, data_type, data_length, data_precision, data_scale,nullable FROM ALL_TAB_COLUMNS where owner='"
-					+ schema + "' and table_name='" + table + "'";
-
-//			log.info(sql);
-			r = stat.executeQuery(sql);
-
-			while (r.next()) {
-				JSON j1 = JSON.create();
-				j1.append("name", r.getString("column_name"));
-				j1.append("nullable", getdata(r, "nullable"));
-
-				String type1 = (String) getdata(r, "data_type");
-				if (!X.isEmpty(type1)) {
-					type1 = type1.toUpperCase();
-				}
-				j1.append("type1", type1);
-				int i = type1.lastIndexOf("(");
-				if (i > 0) {
-					type1 = type1.substring(0, i);
-				}
-				String type = type(type1);
-				j1.append("type", type);
-
-				// get size
-				int size = r.getInt("data_length");
-				if (X.isIn(j1.getString("type"), "double", "decimal", "real", "float")) {
-					size = r.getInt("data_scale");
-				}
-				j1.append("size", size);
-
-				String display = j1.getString("name");
-				j1.put("display", display);
-
-				l1.add(j1);
-			}
-
-			for (JSON j1 : l1) {
-				String name = j1.getString("name");
-
-				sql = "select 1 from all_constraints a, all_cons_columns b where a.owner='" + schema
-						+ "' and a.table_name='" + table
-						+ "' and a.constraint_type='P' and b.owner=a.owner and b.table_name=a.table_name and b.column_name='"
-						+ name + "' ";
-				r = stat.executeQuery(sql);
-				if (r.next()) {
-					j1.put("key", 1);
-				}
-				r.close();
-				r = null;
-
-				sql = "select comments from all_col_comments where owner='" + schema + "' and table_name='" + table
-						+ "' and column_name='" + name + "'";
-				r = stat.executeQuery(sql);
-				if (r.next()) {
-					String display = r.getString("comments");
-					if (!X.isEmpty(display)) {
-						j1.put("display", display);
-					}
-				}
-				r.close();
-				r = null;
-			}
-		} catch (Exception e) {
-			log.error(sql, e);
-			throw e;
-		} finally {
-			RDSHelper.close(r, stat);
-		}
-		return l1;
-	}
-
-	@Override
-	public List<JSON> listTables(Connection c, String dbname, String schema, String username, String tablename, int n)
-			throws SQLException {
-
-		// 达梦数据库
-
-		List<JSON> l1 = JSON.createList();
-		Statement stat = null;
-		ResultSet r = null;
-
-		try {
-			stat = c.createStatement();
-//			if (X.isEmpty(schema)) {
-			schema = dbname;
+//	@Override
+//	public List<JSON> listColumns(Connection con, String dbname, String schema, String table) throws SQLException {
+//
+//		List<JSON> l1 = JSON.createList();
+//		Statement stat = null;
+//		ResultSet r = null;
+//
+////		if (X.isEmpty(schema)) {
+//		schema = dbname;
+////		}
+////		schema = schema.toUpperCase();
+////		table = table.toUpperCase();
+//		String sql = null;
+//
+//		try {
+//			// 获取字段信息
+//			{
+//				int i = table.lastIndexOf(".");
+//				if (i > 0) {
+//					table = table.substring(i + 1);
+//				}
 //			}
-//			schema = schema.toUpperCase();
-			String sql = "select owner, table_name from all_tables where owner='" + schema + "'";
+//			stat = con.createStatement();
+//			sql = "SELECT table_name, column_name, data_type, data_length, data_precision, data_scale,nullable FROM ALL_TAB_COLUMNS where owner='"
+//					+ schema + "' and table_name='" + table + "'";
+//
+////			log.info(sql);
+//			r = stat.executeQuery(sql);
+//
+//			while (r.next()) {
+//				JSON j1 = JSON.create();
+//				j1.append("name", r.getString("column_name"));
+//				j1.append("nullable", getdata(r, "nullable"));
+//
+//				String type1 = (String) getdata(r, "data_type");
+//				if (!X.isEmpty(type1)) {
+//					type1 = type1.toUpperCase();
+//				}
+//				j1.append("type1", type1);
+//				int i = type1.lastIndexOf("(");
+//				if (i > 0) {
+//					type1 = type1.substring(0, i);
+//				}
+//				String type = type(type1);
+//				j1.append("type", type);
+//
+//				// get size
+//				int size = r.getInt("data_length");
+//				if (X.isIn(j1.getString("type"), "double", "decimal", "real", "float")) {
+//					size = r.getInt("data_scale");
+//				}
+//				j1.append("size", size);
+//
+//				String display = j1.getString("name");
+//				j1.put("display", display);
+//
+//				l1.add(j1);
+//			}
+//
+//			for (JSON j1 : l1) {
+//				String name = j1.getString("name");
+//
+//				sql = "select 1 from all_constraints a, all_cons_columns b where a.owner='" + schema
+//						+ "' and a.table_name='" + table
+//						+ "' and a.constraint_type='P' and b.owner=a.owner and b.table_name=a.table_name and b.column_name='"
+//						+ name + "' ";
+//				r = stat.executeQuery(sql);
+//				if (r.next()) {
+//					j1.put("key", 1);
+//				}
+//				r.close();
+//				r = null;
+//
+//				sql = "select comments from all_col_comments where owner='" + schema + "' and table_name='" + table
+//						+ "' and column_name='" + name + "'";
+//				r = stat.executeQuery(sql);
+//				if (r.next()) {
+//					String display = r.getString("comments");
+//					if (!X.isEmpty(display)) {
+//						j1.put("display", display);
+//					}
+//				}
+//				r.close();
+//				r = null;
+//			}
+//		} catch (Exception e) {
+//			log.error(sql, e);
+//			throw e;
+//		} finally {
+//			RDSHelper.close(r, stat);
+//		}
+//		return l1;
+//	}
 
-			log.info(sql);
-
-			r = stat.executeQuery(sql);
-			while (r.next()) {
-				String owner = r.getString("owner");
-				String name = r.getString("table_name");
-				String comments = name;
-				if (X.isEmpty(tablename) || name.matches(tablename)) {
-					l1.add(JSON.create().append("name", name).append("type", "TABLE").append("display", comments)
-							.append("memo", comments).append("owner", owner));
-				}
-				if (n > 0 && l1.size() >= n) {
-					break;
-				}
-			}
-			r.close();
-			r = null;
-
-			if (n < 0 || l1.size() < n) {
-				sql = "select owner, view_name from all_views where owner='" + schema + "'";
-				r = stat.executeQuery(sql);
-				while (r.next()) {
-					String owner = r.getString("owner");
-					String name = r.getString("view_name");
-					String comments = null;
-
-					if (!X.isEmpty(owner)) {
-						name = owner + "." + name;
-					}
-					if (X.isEmpty(tablename) || name.matches(tablename)) {
-						l1.add(JSON.create().append("name", name).append("type", "VIEW").append("display", comments)
-								.append("memo", comments));
-					}
-					if (n > 0 && l1.size() >= n) {
-						break;
-					}
-				}
-				r.close();
-				r = null;
-
-			}
-
-			for (JSON j1 : l1) {
-				String name = j1.getString("name");
-				String type = j1.getString("type");
-				r = stat.executeQuery("select comments from all_tab_comments where owner='" + schema
-						+ "' and table_type='" + type + "' and table_name='" + name + "'");
-				if (r.next()) {
-					String comments = r.getString("comments");
-					if (!X.isEmpty(comments)) {
-						j1.put("display", comments);
-						j1.put("memo", comments);
-					}
-				}
-				r.close();
-				r = null;
-			}
-
-		} finally {
-			RDSHelper.close(r, stat);
-		}
-		return l1;
-	}
+//	@Override
+//	public List<JSON> listTables(Connection c, String dbname, String schema, String username, String tablename, int n)
+//			throws SQLException {
+//
+//		// 达梦数据库
+//
+//		List<JSON> l1 = JSON.createList();
+//		Statement stat = null;
+//		ResultSet r = null;
+//
+//		try {
+//			stat = c.createStatement();
+////			if (X.isEmpty(schema)) {
+//			schema = dbname;
+////			}
+////			schema = schema.toUpperCase();
+//			String sql = "select owner, table_name from all_tables where owner='" + schema + "'";
+//
+//			log.info(sql);
+//
+//			r = stat.executeQuery(sql);
+//			while (r.next()) {
+//				String owner = r.getString("owner");
+//				String name = r.getString("table_name");
+//				String comments = name;
+//				if (X.isEmpty(tablename) || name.matches(tablename)) {
+//					l1.add(JSON.create().append("name", name).append("type", "TABLE").append("display", comments)
+//							.append("memo", comments).append("owner", owner));
+//				}
+//				if (n > 0 && l1.size() >= n) {
+//					break;
+//				}
+//			}
+//			r.close();
+//			r = null;
+//
+//			if (n < 0 || l1.size() < n) {
+//				sql = "select owner, view_name from all_views where owner='" + schema + "'";
+//				r = stat.executeQuery(sql);
+//				while (r.next()) {
+//					String owner = r.getString("owner");
+//					String name = r.getString("view_name");
+//					String comments = null;
+//
+//					if (!X.isEmpty(owner)) {
+//						name = owner + "." + name;
+//					}
+//					if (X.isEmpty(tablename) || name.matches(tablename)) {
+//						l1.add(JSON.create().append("name", name).append("type", "VIEW").append("display", comments)
+//								.append("memo", comments));
+//					}
+//					if (n > 0 && l1.size() >= n) {
+//						break;
+//					}
+//				}
+//				r.close();
+//				r = null;
+//
+//			}
+//
+//			for (JSON j1 : l1) {
+//				String name = j1.getString("name");
+//				String type = j1.getString("type");
+//				r = stat.executeQuery("select comments from all_tab_comments where owner='" + schema
+//						+ "' and table_type='" + type + "' and table_name='" + name + "'");
+//				if (r.next()) {
+//					String comments = r.getString("comments");
+//					if (!X.isEmpty(comments)) {
+//						j1.put("display", comments);
+//						j1.put("memo", comments);
+//					}
+//				}
+//				r.close();
+//				r = null;
+//			}
+//
+//		} finally {
+//			RDSHelper.close(r, stat);
+//		}
+//		return l1;
+//	}
 
 	@Override
 	public String load(String table, String fields, String where, String orderby, int offset, int limit) {
@@ -361,26 +369,36 @@ public class DM extends RDSHelper._AbstractDriver {
 		StringBuilder sql = new StringBuilder();
 		// select * from (select rownum rn,a.* from table_name a where rownum < limit)
 		// where rn >= offset;
-		sql.append("select * from (select ");
-		if (X.isEmpty(orderby)) {
-			sql.append("rownum rn,");
-		} else {
-			sql.append("row_number() over (" + orderby + ") rn,");
-		}
-		sql.append("a.* from ").append(table).append(" a ");
+//		sql.append("select * from (select ");
+//		if (X.isEmpty(orderby)) {
+//			sql.append("rownum rn,");
+//		} else {
+//			sql.append("row_number() over (" + orderby + ") rn,");
+//		}
+//		sql.append("a.* from ").append(table).append(" a ");
+//
+//		if (!X.isEmpty(where)) {
+//			sql.append(" where ");
+//			sql.append("(").append(where).append(") ");
+//		}
+//
+//		sql.append(") where rn>").append(offset);
 
+		sql.append("select * from " + table + " ");
 		if (!X.isEmpty(where)) {
 			sql.append(" where ");
 			sql.append("(").append(where).append(") ");
 		}
-
-		sql.append(") where rn>").append(offset);
+		if (!X.isEmpty(orderby)) {
+			sql.append(orderby);
+		}
+		sql.append(" offset " + offset + " limit " + Long.MAX_VALUE);
 
 		return sql.toString();
 	}
 
-	@Override
-	public List<Map<String, Object>> getIndexes(Connection c, String dbname, String schema, String tablename)
+//	@Override
+	public List<Map<String, Object>> getIndexes2(Connection c, String dbname, String schema, String tablename)
 			throws SQLException {
 
 		List<Map<String, Object>> l1 = new ArrayList<Map<String, Object>>();
@@ -460,7 +478,12 @@ public class DM extends RDSHelper._AbstractDriver {
 		String sql = null;
 		TimeStamp t0 = TimeStamp.create();
 
+		schema = uppercase(schema);
+		table = uppercase(table);
+
 		try {
+
+//			log.info("schema=" + schema + ", table=" + table);
 
 			// 可能性能问题， 不知道啥情况
 			sql = "select bytes from dba_segments where owner='" + schema + "' and segment_name='" + table + "'";
@@ -481,7 +504,7 @@ public class DM extends RDSHelper._AbstractDriver {
 			}
 
 		}
-		return -1;
+		return 0;
 	}
 
 	@Override
@@ -496,6 +519,15 @@ public class DM extends RDSHelper._AbstractDriver {
 		ResultSet r = null;
 		TimeStamp t0 = TimeStamp.create();
 		String sql = null;
+		int i = table.lastIndexOf(".");
+		if (i > 0) {
+			table = table.substring(i + 1);
+		}
+
+		schema = uppercase(schema);
+		table = uppercase(table);
+
+//		log.info("schema=" + schema + ", table=" + table);
 
 		try {
 			JSON j1 = JSON.create();
@@ -518,8 +550,10 @@ public class DM extends RDSHelper._AbstractDriver {
 			for (String name : l2) {
 				size += this.size(c, dbname, schema, name);
 			}
-			j1.append("indexSize", size);
+			j1.append("totalIndexSize", size);
 			j1.append("totalSize", size + j1.getLong("storageSize"));
+
+			log.info("stats=" + j1 + ", schema=" + schema + ", table=" + table);
 
 			return j1;
 		} finally {
@@ -532,4 +566,28 @@ public class DM extends RDSHelper._AbstractDriver {
 		}
 	}
 
+	@Override
+	public String load(String table, String fields, String where, String orderby) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("select ");
+
+		if (X.isEmpty(fields)) {
+			sql.append(" * ");
+		} else {
+			sql.append(" " + fields + " ");
+		}
+
+		sql.append(" from ").append(table);
+		if (!X.isEmpty(where)) {
+			sql.append(" where ").append(where);
+		}
+
+		if (!X.isEmpty(orderby)) {
+			sql.append(" ").append(orderby);
+		}
+		sql.append(" limit 1");
+
+		return sql.toString();
+	}
+	
 }

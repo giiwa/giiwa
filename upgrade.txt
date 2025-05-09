@@ -1,0 +1,14 @@
+1，关闭宿主机的 appdog（不是docker 里面的appdog），如果没有安装， 忽略。 
+	service appdog stop
+2, root等giiwa后台， 升级giiwa包。
+3，登录docker， 查看日否升级完成, 如果该文件不存在，则等待
+	ls /home/giiwa/modules/default/init/upgrade/startup.sh
+4, 复制脚本 update.sh 到 docker中的/home/giiwa目录
+5, 运行upgrade.sh
+	cd /home/giiwa
+	chmod ugo+x upgrade.sh
+	./upgrade.sh
+6, 重启giiwa
+	ps -ef |grep giiwa
+	kill -9 ...
+	

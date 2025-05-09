@@ -32,6 +32,19 @@
 				<exclude name="**/model/**" />
 			</fileset>
 		</zip>
+		<exec executable="git">
+		    <arg line="add ." />
+		</exec>
+		<exec executable="git">
+		    <arg line="commit -m 'auto commit'" />
+		</exec>
+		<exec executable="git">
+		    <arg line="tag ${module.version}.${BUILDNO}" />
+		</exec>
+		<exec executable="git">
+		    <arg line="push --tags" />
+		</exec>
+		
 	</target>
 
 	<target name="archive" description="archive the package" depends="zip">

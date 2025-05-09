@@ -34,7 +34,7 @@ public class strw extends portlet {
 	public void get() {
 
 		W q = W.create().and("node", Global.id()).and("name", "status")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		 _DB.Record.dao.optimize(q);
 		 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(q, 0, 60);
@@ -49,7 +49,7 @@ public class strw extends portlet {
 	@Path(path = "more", login = true)
 	public void more() {
 
-		long time = System.currentTimeMillis() - X.ADAY * 2;
+		long time = Global.now() - X.ADAY * 2;
 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(
 				W.create().and("node", Global.id()).and("name", "status").and("created", time, W.OP.gte).sort("created", -1), 0,

@@ -20,7 +20,7 @@ import java.io.RandomAccessFile;
 
 import org.giiwa.bean.Disk;
 
-class DFileOutputStream extends OutputStream {
+public class DFileOutputStream extends OutputStream {
 
 //	private static Log log = LogFactory.getLog(DFileOutputStream.class);
 

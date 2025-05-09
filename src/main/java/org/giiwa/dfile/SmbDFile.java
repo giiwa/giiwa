@@ -188,14 +188,9 @@ public class SmbDFile extends DFile {
 
 			if (bb != null && o1 == size[0]) {
 
-				long t = System.currentTimeMillis();
-				try {
-					a.write(bb, 0, len);
-					size[0] += len;
-					a.flush();
-				} finally {
-					Disk.Counter.write(disk_obj).add(len, System.currentTimeMillis() - t);
-				}
+				a.write(bb, 0, len);
+				size[0] += len;
+				a.flush();
 
 			}
 

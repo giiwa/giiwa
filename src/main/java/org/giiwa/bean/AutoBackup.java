@@ -161,7 +161,7 @@ public final class AutoBackup extends Bean {
 		}
 
 		Calendar cal = Calendar.getInstance();
-		cal.setTimeInMillis(System.currentTimeMillis());
+		cal.setTimeInMillis(Global.now());
 
 		{
 			String[] ss = X.split(time, ":");
@@ -178,7 +178,7 @@ public final class AutoBackup extends Bean {
 			for (int d : days) {
 				cal.set(Calendar.DAY_OF_WEEK, d);
 				long t1 = cal.getTimeInMillis();
-				if (t1 < System.currentTimeMillis()) {
+				if (t1 < Global.now()) {
 					l1.add(t1 + X.AWEEK);
 				} else {
 					l1.add(t1);
@@ -186,7 +186,7 @@ public final class AutoBackup extends Bean {
 			}
 		} else {
 			long t1 = cal.getTimeInMillis();
-			if (t1 < System.currentTimeMillis()) {
+			if (t1 < Global.now()) {
 				l1.add(t1 + X.ADAY);
 			} else {
 				l1.add(t1);
@@ -226,7 +226,7 @@ public final class AutoBackup extends Bean {
 
 				// Module m = Module.home;
 				String name = this.name + "_"
-						+ Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMddHHmm") + ".zip";
+						+ Language.getLanguage().format(Global.now(), "yyyyMMddHHmm") + ".zip";
 
 				try {
 

@@ -15,6 +15,7 @@
 package org.giiwa.app.task;
 
 import org.giiwa.bean.AutoBackup;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.task.Task;
@@ -57,7 +58,7 @@ public class BackupTask extends Task {
 	public void onExecute() {
 
 		AutoBackup a = AutoBackup.dao
-				.load(W.create().and("enabled", 1).and("nextime", System.currentTimeMillis(), W.OP.lte));
+				.load(W.create().and("enabled", 1).and("nextime", Global.now(), W.OP.lte));
 		if (a != null) {
 			a.backup();
 		}

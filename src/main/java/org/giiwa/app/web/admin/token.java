@@ -14,14 +14,14 @@
 */
 package org.giiwa.app.web.admin;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.giiwa.bean.*;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
 import org.giiwa.web.*;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * web api: /admin/token <br>

@@ -3,7 +3,6 @@ package org.giiwa.dao.sql;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.giiwa.bean.Stat;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.web.Language;
@@ -166,6 +165,8 @@ public class SQLTest {
 
 			test("select * from y1_data where type='IMAGE' and f_tag='ys' and created > today() and upload_status=1");
 
+			test("select * from \"aaa\".\"y1_data\"");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -188,6 +189,17 @@ public class SQLTest {
 		System.out.println("\ttable=" + q.table());
 		System.out.println("\tfield=" + q.fields());
 		System.out.println("\tmongo=" + q.query());
+	}
+
+	@Test
+	public void testKey() {
+		try {
+			W q = W.create();
+			q.and("ordertype='abc'");
+			System.out.println(q);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }

@@ -14,7 +14,6 @@
 */
 package org.giiwa.web;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -24,24 +23,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletContext;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileUploadException;
+import org.apache.commons.fileupload2.jakarta.JakartaServletFileUpload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.giiwa.bean.GLog;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.X;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.Html;
 import org.giiwa.misc.Url;
 import org.giiwa.web.Controller.NameValue;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class RequestHelper {
 
@@ -72,7 +70,7 @@ public class RequestHelper {
 	}
 
 	public boolean isMultipartContent() {
-		return ServletFileUpload.isMultipartContent(req);
+		return JakartaServletFileUpload.isMultipartContent(req);
 	}
 
 	public void setCharacterEncoding(String ENCODING) throws UnsupportedEncodingException {
@@ -98,9 +96,15 @@ public class RequestHelper {
 	/**
 	 * uploaded file
 	 */
-	private Map<String, Object> uploads = null;
+	private JSON _files = null;
+	private JSON _jsons = null;
 
-	public final synchronized String getHtml(String name) {
+	@SuppressWarnings("rawtypes")
+	public final synchronized String getHtml(final String name) {
+
+		if (X.isEmpty(name)) {
+			return null;
+		}
 
 		if (rewrite != null && rewrite.containsKey(name)) {
 			return rewrite.get(name);
@@ -110,21 +114,12 @@ public class RequestHelper {
 
 		try {
 			if (c1 != null && c1.indexOf("application/json") > -1) {
-
-				if (uploads == null) {
-
+				if (_jsons == null) {
 					String s = X.IO.read(req.getReader());
-
-					JSON jo = JSON.fromObject(s);
-					if (jo != null) {
-						uploads = new HashMap<String, Object>();
-						uploads.putAll(jo);
-					}
+					_jsons = JSON.fromObject(s);
 				}
-
-				if (uploads != null) {
-					Object v1 = uploads.get(name);
-
+				if (_jsons != null) {
+					Object v1 = _get(name);
 					if (v1 != null) {
 						return v1.toString().trim();
 					}
@@ -132,12 +127,7 @@ public class RequestHelper {
 			}
 
 			if (this._multipart) {
-
-//				_get_files();
-
 				FileItem i = this.file(name);
-//				log.debug("i=" + i);
-
 				if (i != null && i.isFormField()) {
 					InputStream in = i.getInputStream();
 					byte[] bb = new byte[in.available()];
@@ -145,34 +135,40 @@ public class RequestHelper {
 					in.close();
 					return new String(bb, ENCODING);
 				}
-				return null;
-
 			}
 		} catch (Exception e) {
 			log.error(this.getRequestURI(), e);
 		}
 
+		// get from body
 		String[] ss = req.getParameterValues(name);
+
 		if (ss == null || ss.length == 0) {
-			Map<String, String[]> mm = req.getParameterMap();
-			if (mm == null || mm.isEmpty()) {
-				String s = req.getQueryString();
-				if (!X.isEmpty(s)) {
-					uploads = JSON.fromObject(s);
-					if (uploads != null) {
-						Object o = uploads.get(name);
-						if (o != null) {
-							s = Url.decode(o.toString());
-							if (s != null) {
-								return s;
-							}
+			// get from query
+			String s = req.getQueryString();
+
+			if (!X.isEmpty(s)) {
+				JSON j1 = JSON.fromObject(s);
+				String o = j1.getString(name);
+				if (o != null) {
+					// 模糊大小写
+					for (String key : j1.keySet()) {
+						if (X.isSame(key, name)) {
+							o = j1.getString(key);
+							break;
 						}
 					}
 				}
+				if (o != null) {
+					s = Url.decode(o);
+					if (s != null) {
+						return s;
+					}
+				}
 			}
+		}
 
-//				log.warn("uri=" + this.getRequestURI() + "/" + req.getHeader("i") + ", [" + name + "] is null, mm="
-//						+ mm.keySet() + ", s=" + s);
+		if (ss == null || ss.length == 0) {
 			return null;
 		}
 
@@ -262,14 +258,15 @@ public class RequestHelper {
 		return req.getCookies();
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final String[] getHtmls(String name) {
 
 		try {
 			if (this._multipart) {
-				_get_files();
 
-				Object o = uploads.get(name);
+				_parse_files();
+
+				Object o = _get_file(name);
 				if (o instanceof FileItem) {
 					return new String[] { getString(name) };
 				} else if (o instanceof List) {
@@ -287,20 +284,21 @@ public class RequestHelper {
 					}
 					return ss;
 				}
-			} else {
-				String[] ss = req.getParameterValues(name);
-				if (ss != null && ss.length > 0) {
-					for (int i = 0; i < ss.length; i++) {
-						if (ss[i] == null)
-							continue;
-
-						ss[i] = _decode(ss[i]);
-
-						ss[i] = ss[i].replaceAll("<", "&lt").replaceAll(">", "&gt").trim();
-					}
-				}
-				return ss;
 			}
+
+			String[] ss = req.getParameterValues(name);
+			if (ss != null && ss.length > 0) {
+				for (int i = 0; i < ss.length; i++) {
+					if (ss[i] == null)
+						continue;
+
+					ss[i] = _decode(ss[i]);
+
+					ss[i] = ss[i].replaceAll("<", "&lt").replaceAll(">", "&gt").trim();
+				}
+			}
+			return ss;
+
 		} catch (Exception e) {
 			if (log.isErrorEnabled())
 				log.error(name, e);
@@ -308,44 +306,88 @@ public class RequestHelper {
 		return null;
 	}
 
+	private Object _get(String name) {
+		Object o = _gets(name, _jsons);
+		if (o != null) {
+			if (X.isArray(o)) {
+				try {
+					if (o instanceof List) {
+						return o;
+					}
+					String[] ss = (String[]) o;
+					if (ss.length > 0) {
+						return ss[0];
+					}
+				} catch (Exception e) {
+					log.error(Arrays.asList(o), e);
+				}
+			}
+		}
+		return o;
+	}
+
+	Object _gets(String name, JSON json) {
+		Object o = null;
+		if (json != null) {
+			o = json.get(name);
+			if (o == null) {
+				for (String key : json.keySet()) {
+					if (X.isSame(name, key)) {
+						o = json.get(key);
+						break;
+					}
+				}
+			}
+		}
+		return o;
+	}
+
+	private Object _get_file(String name) {
+		Object o = _gets(name, _files);
+		if (o != null) {
+			if (o instanceof List) {
+				return o;
+			} else if (X.isArray(o)) {
+				String[] ss = (String[]) o;
+				if (ss.length > 0) {
+					return ss[0];
+				}
+			}
+		}
+		return o;
+	}
+
 	public final List<String> names() {
 
 		if (_names == null) {
+			_names = new ArrayList<String>();
 			String c1 = req.getContentType();
 			if (c1 != null && c1.indexOf("application/json") > -1) {
-				this.getString(null);// initialize uploads
-				if (uploads != null) {
-					_names = new ArrayList<String>(uploads.keySet());
+				this.getString("1");// initialize uploads
+				if (_jsons != null && !_jsons.isEmpty()) {
+					_names.addAll(_jsons.keySet());
 				}
-			} else if (this._multipart) {
-				_get_files();
-				if (uploads != null) {
-					_names = new ArrayList<String>(uploads.keySet());
+			}
+			if (this._multipart) {
+				_parse_files();
+				if (_files != null && !_files.isEmpty()) {
+					_names.addAll(_files.keySet());
 				}
 			}
 
-			if (_names == null) {
-				Map<String, String[]> e = req.getParameterMap();
-				if (e != null && !e.isEmpty()) {
-					_names = new ArrayList<String>(e.keySet());
-				} else {
-					String s = req.getQueryString();
-					if (!X.isEmpty(s)) {
-						uploads = JSON.fromObject(s);
-						if (uploads != null) {
-							_names = new ArrayList<String>(uploads.keySet());
-						} else {
-							GLog.applog.error("unknown", "error",
-									"url=" + req.getRequestURI() + ", head=" + Arrays.asList(this.heads()),
-									new Exception("bad querystring, s=" + s));
-						}
+			Map<String, String[]> e = req.getParameterMap();
+			if (e != null && !e.isEmpty()) {
+				_names.addAll(e.keySet());
+			} else {
+				String s = req.getQueryString();
+				if (!X.isEmpty(s)) {
+					JSON j1 = JSON.fromObject(s);
+					if (j1 != null && !j1.isEmpty()) {
+						_names.addAll(j1.keySet());
 					}
 				}
 			}
 
-			if (_names == null) {
-				_names = Arrays.asList();
-			}
 			if (rewrite != null) {
 				for (String s : rewrite.keySet()) {
 					if (_names.contains(s)) {
@@ -359,63 +401,54 @@ public class RequestHelper {
 
 	}
 
-	@SuppressWarnings("unchecked")
-	private Map<String, Object> _get_files() {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private JSON _parse_files() {
 
-		if (uploads == null) {
+		if (_files == null) {
 
-			uploads = new HashMap<String, Object>();
-
-			if (uploader == null) {
-				DiskFileItemFactory factory = new DiskFileItemFactory();
-
-				// Configure a repository (to ensure a secure temp location is used)
-				File repository = (File) context().getAttribute("javax.servlet.context.tempdir");
-				factory.setRepository(repository);
-
-				// Create a new file upload handler
-				uploader = new ServletFileUpload(factory);
-			}
+			_files = JSON.create();
 
 			// Parse the request
 			try {
+
+				if (uploader == null) {
+					DiskFileItemFactory factory = DiskFileItemFactory.builder().setPath("/data/temp/upload/").get();
+					uploader = new JakartaServletFileUpload(factory);
+				}
+
 				List<FileItem> items = uploader.parseRequest(req);
 				if (items != null && items.size() > 0) {
 					for (FileItem f : items) {
-						if (uploads.containsKey(f.getFieldName())) {
-							Object o = uploads.get(f.getFieldName());
+						if (_files.containsKey(f.getFieldName())) {
+							// 多个
+							Object o = _files.get(f.getFieldName());
 							if (o instanceof FileItem) {
 								List<FileItem> list = new ArrayList<FileItem>();
 								list.add((FileItem) o);
 								list.add(f);
-								uploads.put(f.getFieldName(), list);
+								_files.put(f.getFieldName(), list);
 							} else if (o instanceof List) {
 								((List<FileItem>) o).add(f);
 							}
 						} else {
-							uploads.put(f.getFieldName(), f);
+							_files.put(f.getFieldName(), f);
 						}
 					}
-//				} else {
-//					if (log.isWarnEnabled())
-//						log.warn("nothing got!!!");
 				}
 			} catch (FileUploadException e) {
 				// ignore
-//				if (log.isErrorEnabled())
-//					log.error(e.getMessage(), e);
 			}
 		}
 
-		return uploads;
+		return _files;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final FileItem file(String name) {
 
-		_get_files();
+		_parse_files();
 
-		Object o = uploads.get(name);
+		Object o = _get_file(name);
 		if (o instanceof FileItem) {
 			return (FileItem) o;
 		} else if (o instanceof List) {
@@ -425,12 +458,12 @@ public class RequestHelper {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final List<FileItem> files(String name) {
 
-		_get_files();
+		_parse_files();
 
-		Object o = uploads.get(name);
+		Object o = _files.get(name);
 
 		if (o instanceof FileItem) {
 			return Arrays.asList((FileItem) o);
@@ -460,14 +493,15 @@ public class RequestHelper {
 
 		RequestHelper r = new RequestHelper();
 		r.req = req.req;
-		r.uploads = req._get_files();
+		r._files = req._parse_files();
 		return r;
 
 	}
 
 	private List<String> _names = null;
 
-	private static ServletFileUpload uploader;
+	@SuppressWarnings("rawtypes")
+	private static JakartaServletFileUpload uploader;
 
 	private String _decode(String s) {
 		try {

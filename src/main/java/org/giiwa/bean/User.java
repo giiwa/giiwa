@@ -275,7 +275,7 @@ public final class User extends Bean {
 		String s = (String) v.value("password");
 		if (s != null) {
 			v.force("password", encrypt2(s));
-			v.append("passwordtime", System.currentTimeMillis());
+			v.append("passwordtime", Global.now());
 		}
 
 		Long id = (Long) v.value("id");
@@ -298,8 +298,8 @@ public final class User extends Bean {
 
 		v.append("deleted", 0);
 
-		dao.insert(v.append(X.ID, id).append(X.CREATED, System.currentTimeMillis()).append(X.UPDATED,
-				System.currentTimeMillis()));
+		dao.insert(v.append(X.ID, id).append(X.CREATED, Global.now()).append(X.UPDATED,
+				Global.now()));
 
 		GLog.securitylog.warn(user.class, "create", "name=" + name + ", nickname=" + v.value("nickname"), dao.load(id),
 				(String) v.value("createdip"));
@@ -326,8 +326,8 @@ public final class User extends Bean {
 			char c = nickname.toString().charAt(0);
 
 			Language lang = Language.getLanguage();
-			DFile f = Disk.seek("/user/photo/auto/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
-					+ System.currentTimeMillis() + ".png");
+			DFile f = Disk.seek("/user/photo/auto/" + lang.format(Global.now(), "yyyy/MM/dd") + "/"
+					+ Global.now() + ".png");
 
 			if (f != null) {
 				GImage.cover(145, Character.toString(c).toUpperCase(), new Color((int) (128 * Math.random()),
@@ -751,7 +751,7 @@ public final class User extends Bean {
 		dao.update(W.create().and("sid", sid), V.create("sid", X.EMPTY));
 
 		return dao.inc(W.create().and(X.ID, getId()), "logintimes", 1,
-				v.append("lastlogintime", System.currentTimeMillis()).append("ip", ip).append("locked", 0)
+				v.append("lastlogintime", Global.now()).append("ip", ip).append("locked", 0)
 						.append("lockexpired", 0).append("sid", sid));
 
 	}
@@ -821,9 +821,9 @@ public final class User extends Bean {
 		 */
 		public static int locked(long uid, String sid, String host, String useragent) {
 
-			return Lock.dao.insert(V.create("uid", uid).append(X.ID, UID.id(uid, sid, System.currentTimeMillis()))
+			return Lock.dao.insert(V.create("uid", uid).append(X.ID, UID.id(uid, sid, Global.now()))
 					.append("sid", sid).append("host", host).append("useragent", useragent)
-					.append(X.CREATED, System.currentTimeMillis()));
+					.append(X.CREATED, Global.now()));
 		}
 
 		/**
@@ -927,7 +927,7 @@ public final class User extends Bean {
 			if (ss != null && ss.length == 2) {
 				long id = X.toLong(ss[0]);
 				long time = X.toLong(ss[1]);
-				if (System.currentTimeMillis() - time < expired) {
+				if (Global.now() - time < expired) {
 					return dao.load(id);
 				}
 			}
@@ -939,7 +939,7 @@ public final class User extends Bean {
 
 	public String token() {
 		try {
-			String s = id + "//" + System.currentTimeMillis();
+			String s = id + "//" + Global.now();
 			return Base32.encode(Digest.encode(s.getBytes(), "giisoo"));
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
@@ -1126,7 +1126,7 @@ public final class User extends Bean {
 		}
 		String mode = Global.getString("user.login.failed.mode", "ip");
 
-		W q = W.create().and("uid", id).and(X.CREATED, System.currentTimeMillis() - time * X.AHOUR, W.OP.gt);
+		W q = W.create().and("uid", id).and(X.CREATED, Global.now() - time * X.AHOUR, W.OP.gt);
 		if (X.isSame(mode, "ip")) {
 			q.and("host", host);
 		}
@@ -1148,7 +1148,7 @@ public final class User extends Bean {
 		}
 		String mode = Global.getString("user.login.failed.mode", "ip");
 
-		W q = W.create().and("uid", id).and("created", System.currentTimeMillis() - time * X.AHOUR, W.OP.gt);
+		W q = W.create().and("uid", id).and("created", Global.now() - time * X.AHOUR, W.OP.gt);
 		if (X.isSame(mode, "ip")) {
 			q.and("host", host);
 		}
@@ -1165,7 +1165,7 @@ public final class User extends Bean {
 			return false;
 		}
 
-		return (System.currentTimeMillis() - passwordtime) > days * X.ADAY;
+		return (Global.now() - passwordtime) > days * X.ADAY;
 	}
 
 	public boolean getLimitip() {

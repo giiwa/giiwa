@@ -23,6 +23,7 @@ import java.util.Stack;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.web.Language;
@@ -72,11 +73,11 @@ public class Console {
 	@Comment(text = "记录日志")
 	public void log(@Comment(text = "message") Object message) {
 
-		last = System.currentTimeMillis();
+		last = Global.now();
 
 		if (_DEBUG) {
 			String threadname = Thread.currentThread().getName();
-			String message1 = "[" + lang.format(System.currentTimeMillis(), "HH:mm:ss.SSS") + "] - "
+			String message1 = "[" + lang.format(Global.now(), "HH:mm:ss.SSS") + "] - "
 					+ X.toString(message) + " [" + threadname + "]";
 			System.out.println(message1);
 			return;
@@ -102,7 +103,7 @@ public class Console {
 
 		String classname = X.toLine(new Exception(), 2);
 
-		String message1 = "<span style='color: #d6d111;'>[" + lang.format(System.currentTimeMillis(), "HH:mm:ss.SSS")
+		String message1 = "<span style='color: #d6d111;'>[" + lang.format(Global.now(), "HH:mm:ss.SSS")
 				+ "]</span> - " + X.toString(message) + " <span style='color: #91b5e2;'>[" + classname + "]</span>";
 
 		if (log.isDebugEnabled()) {
@@ -179,10 +180,10 @@ public class Console {
 
 		@Override
 		public void onExecute() {
-			if (timeout > 0 && (System.currentTimeMillis() - last > timeout)) {
+			if (timeout > 0 && (Global.now() - last > timeout)) {
 
 				if (timeoutfunc != null) {
-					timeoutfunc.accept((System.currentTimeMillis() - last) / 1000);
+					timeoutfunc.accept((Global.now() - last) / 1000);
 				}
 			}
 		}

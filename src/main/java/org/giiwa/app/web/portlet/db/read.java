@@ -20,6 +20,7 @@ import java.util.List;
 import org.giiwa.app.web.portlet.portlet;
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._DB;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -49,7 +50,7 @@ public class read extends portlet {
 		}
 
 		W q = W.create().and("node", id).and("name", "read")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		_DB.Record.dao.optimize(q);
 		
 		Beans<_DB.Record> bs = _DB.Record.dao.load(q, 0, 60);
@@ -60,7 +61,7 @@ public class read extends portlet {
 		}
 
 		long max = X.toLong(1.1 * X.toLong(_DB.Record.dao.max("max",
-				W.create().and("name", "read").and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte))));
+				W.create().and("name", "read").and("created", Global.now() - X.AHOUR, W.OP.gte))));
 		this.set("max", max);
 
 		this.show("/portlet/db/read.html");
@@ -82,7 +83,7 @@ public class read extends portlet {
 		}
 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(W.create().and("node", id).and("name", "read")
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1), 0, 60);
 		if (bs != null && !bs.isEmpty()) {
 			Collections.reverse(bs);
 
@@ -123,7 +124,7 @@ public class read extends portlet {
 			this.set("name1", id);
 		}
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		Beans<_DB.Record> bs = _DB.Record.dao.load(
 				W.create().and("node", id).and("name", "read").and("created", time, W.OP.gte).sort("created", -1), 0,

@@ -14,8 +14,6 @@
 */
 package org.giiwa.app.web.admin;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.giiwa.bean.AccessLog;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
@@ -25,12 +23,13 @@ import org.giiwa.json.JSON;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Path;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 /**
  * web api: /admin/accesslog <br>
  * used to access the "accesslog", <br>
  * required "access.logs.admin"
  * 
- * @deprecated
  * @author joe
  *
  */
@@ -58,36 +57,28 @@ public class accesslog extends Controller {
 	 */
 	@Path(login = true, access = "access.config.admin|access.config.logs.admin")
 	public void onGet() {
-		String uri = this.getString("guri");
+		String url = this.getString("url");
 		String ip = this.getString("ip");
-		String gsid = this.getString("gsid");
-		String sortby = this.getString("sortby");
-		int sortby_type = this.getInt("sortby_type", -1);
+//		String sortby = this.getString("sortby");
+//		int sortby_type = this.getInt("sortby_type", -1);
 
 		W q = W.create();
-		if (!X.isEmpty(uri)) {
-			q.and(X.URL, uri);
-			this.set("guri", uri);
+		if (!X.isEmpty(url)) {
+			q.and("url", url);
+			this.set("url", url);
 		}
 		if (!X.isEmpty(ip)) {
 			q.and("ip", ip);
 			this.set("ip", ip);
 		}
-		if (!X.isEmpty(gsid)) {
-			q.and("sid", gsid);
-			this.set("gsid", gsid);
-		}
 		int s = this.getInt("s");
 		int n = this.getInt("n", X.ITEMS_PER_PAGE);
 
-		if (X.isEmpty(sortby)) {
-			sortby = X.CREATED;
-		}
-		this.set("sortby", sortby);
-		this.set("sortby_type", sortby_type);
-
-		q.sort(sortby, sortby_type);
+		q.sort("created", -1);
 		Beans<AccessLog> bs = AccessLog.dao.load(q, s, n);
+		if (bs != null) {
+			bs.count();
+		}
 
 		this.pages(bs, s, n);
 
@@ -99,16 +90,7 @@ public class accesslog extends Controller {
 	 */
 	@Path(path = "deleteall", login = true, access = "access.config.admin|access.config.logs.admin")
 	public void deleteall() {
-		AccessLog.deleteAll();
-	}
-
-	@Path(path = "detail", login = true, access = "access.config.admin|access.config.logs.admin")
-	public void detail() {
-		String id = this.getString("id");
-		AccessLog d = AccessLog.dao.load(id);
-		this.set("b", d);
-		this.set("id", id);
-		this.show("/admin/accesslog.detail.html");
+		AccessLog.dao.delete(W.create());
 	}
 
 }

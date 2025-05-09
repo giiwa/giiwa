@@ -266,14 +266,14 @@ public abstract class Task implements Runnable, Serializable {
 
 	public long getRemain() {
 		if (State.pending.equals(state)) {
-			return scheduledtime - System.currentTimeMillis();
+			return scheduledtime - Global.now();
 		}
 		return 0;
 	}
 
 	public long getRuntime() {
 		if (startedtime > 0) {
-			return System.currentTimeMillis() - startedtime;
+			return Global.now() - startedtime;
 		}
 		return 0;
 	}
@@ -396,7 +396,9 @@ public abstract class Task implements Runnable, Serializable {
 		if (!this.isSys() && Runner.pause) {
 			String name = this.getName();
 			log.warn("[" + name + "] was removed as pause.");
-			Runner.pendingQueue.remove(name);
+			synchronized (Runner.pendingQueue) {
+				Runner.pendingQueue.remove(name);
+			}
 			return;
 		}
 
@@ -405,7 +407,7 @@ public abstract class Task implements Runnable, Serializable {
 			// prepare
 			Thread.currentThread().setPriority(this.getPriority());
 
-			startedtime = System.currentTimeMillis();
+			startedtime = Global.now();
 			delay = startedtime - scheduledtime;
 
 			_cpuold = _cputime();
@@ -459,7 +461,7 @@ public abstract class Task implements Runnable, Serializable {
 						try {
 							onExecute();
 						} finally {
-							duration = System.currentTimeMillis() - startedtime;
+							duration = Global.now() - startedtime;
 
 							isrunning = false;
 							state = State.finished;
@@ -522,7 +524,7 @@ public abstract class Task implements Runnable, Serializable {
 					onExecute();
 				} finally {
 
-					duration = System.currentTimeMillis() - startedtime;
+					duration = Global.now() - startedtime;
 
 					isrunning = false;
 					state = State.finished;
@@ -627,31 +629,31 @@ public abstract class Task implements Runnable, Serializable {
 			if (time.startsWith("*")) {
 				String[] ss = time.split(":");
 				Calendar c = Calendar.getInstance();
-				c.setTimeInMillis(System.currentTimeMillis());
+				c.setTimeInMillis(Global.now());
 
 				c.set(Calendar.MINUTE, X.toInt(ss[1], 0));
 				c.set(Calendar.SECOND, 0);
 
-				if (c.getTimeInMillis() <= System.currentTimeMillis()) {
+				if (c.getTimeInMillis() <= Global.now()) {
 					// next hour
 					c.add(Calendar.HOUR_OF_DAY, 1);
 				}
-				return this.schedule(c.getTimeInMillis() - System.currentTimeMillis(), global);
+				return this.schedule(c.getTimeInMillis() - Global.now(), global);
 
 			} else {
 				String[] ss = time.split(":");
 
 				Calendar c = Calendar.getInstance();
-				c.setTimeInMillis(System.currentTimeMillis());
+				c.setTimeInMillis(Global.now());
 				c.set(Calendar.HOUR_OF_DAY, X.toInt(ss[0], 0));
 				c.set(Calendar.MINUTE, X.toInt(ss[1], 0));
 				c.set(Calendar.SECOND, 0);
 
-				if (c.getTimeInMillis() <= System.currentTimeMillis()) {
+				if (c.getTimeInMillis() <= Global.now()) {
 					// next hour
 					c.add(Calendar.DAY_OF_MONTH, 1);
 				}
-				return this.schedule(c.getTimeInMillis() - System.currentTimeMillis(), global);
+				return this.schedule(c.getTimeInMillis() - Global.now(), global);
 			}
 
 		} catch (Throwable e) {
@@ -1133,8 +1135,11 @@ public abstract class Task implements Runnable, Serializable {
 			}
 
 			W q = Node.dao.query();
-			q.and("lastcheck", System.currentTimeMillis() - Node.LOST, W.OP.gte);
-			AtomicLong has = new AtomicLong(q.count());
+			q.and("lastcheck", Global.now() - Node.LOST, W.OP.gte);
+//			q.and("type", 0); // 本地节点
+
+			long n = q.count();
+			List<String> has = new ArrayList<String>();
 
 			boolean[] found = new boolean[] { false };
 
@@ -1152,8 +1157,9 @@ public abstract class Task implements Runnable, Serializable {
 					GLog.applog.error("task", "global", "from=" + from + ", error=" + e.getMessage(), e);
 				}
 
-				has.decrementAndGet();
-				if (has.get() <= 0) {
+				has.add(from);
+				if (has.size() >= n) {
+					// 结束
 					return true;
 				} else {
 					return false;
@@ -1187,29 +1193,27 @@ public abstract class Task implements Runnable, Serializable {
 		}
 
 		W q = Node.dao.query();
-		q.and("lastcheck", System.currentTimeMillis() - Node.LOST, W.OP.gte);
-		long count = -1;
-		AtomicLong has = new AtomicLong(count);
+		q.and("lastcheck", Global.now() - Node.LOST, W.OP.gte);
+//		q.and("type", 0); // 本地节点
+
+		List<String> has = new ArrayList<String>();
 
 		boolean[] found = new boolean[] { false };
-		Set<String> fr = new HashSet<String>();
 
 		try {
 			// TODO,这个地方有问题
-			count = q.count();
-			if (count <= 1) {
+			long n = q.count();
+			if (n <= 1) {
 				return false;
 			}
-			has.set(count);
+
+			TimeStamp cost = TimeStamp.create();
 
 			MQ.callTopic(Task.MQNAME, "ischeduled", name, 5000, req -> {
 
 				String from = req.from;
-				fr.add(from);
 
 				try {
-
-					has.decrementAndGet();
 
 					boolean e = req.get();
 					if (e) {
@@ -1224,7 +1228,8 @@ public abstract class Task implements Runnable, Serializable {
 					GLog.applog.error("task", "global", "from=" + from + ", error=" + e.getMessage(), e);
 				}
 
-				if (has.get() <= 0) {
+				has.add(from);
+				if (has.size() >= n) {
 					// 停止等待消息
 					return true;
 				} else {
@@ -1233,20 +1238,21 @@ public abstract class Task implements Runnable, Serializable {
 
 			});
 
-			if (found[0] && log.isDebugEnabled()) {
-				log.debug("ischeduled, name=" + name + ", nodes=" + count + ", got=" + has);
+			if (log.isDebugEnabled()) {
+				log.debug("ischeduled, cost=" + cost.past() + ", name=" + name + ", nodes=" + n + ", got=" + has
+						+ ", found=" + found[0]);
 			}
 			return found[0];
 
 		} catch (Exception e) {
-			if (has != null && has.get() <= 0) {
+			if (has != null && has.size() <= 0) {
 				if (found[0] && log.isDebugEnabled()) {
-					log.debug("ischeduled, name=" + name + ", nodes=" + count + ", got=" + has);
+					log.debug("ischeduled, name=" + name + ", got=" + has);
 				}
 				return found[0];
 			}
-			log.error("name=" + name + ", nodes=" + count + ", got=" + fr, e);
-			GLog.applog.error("task", "isSchedule", e.getMessage() + ", got=" + fr, e);
+			log.error("name=" + name + ", got=" + has, e);
+			GLog.applog.error("task", "isSchedule", e.getMessage() + ", got=" + has, e);
 		}
 
 		// 直接返回false， 防止消息服务器出现故障后， 任务无法运行

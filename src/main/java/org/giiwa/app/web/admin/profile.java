@@ -23,6 +23,7 @@ import org.giiwa.bean.AuthToken;
 import org.giiwa.bean.Code;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.User;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.UID;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
@@ -253,7 +254,7 @@ public class profile extends Controller {
 		String email = this.getString("email");
 		if (!X.isEmpty(email)) {
 			String code = UID.random(10);
-			Code.create(email, code, V.create("expired", System.currentTimeMillis() + X.AMINUTE * 10));
+			Code.create(email, code, V.create("expired", Global.now() + X.AMINUTE * 10));
 			try {
 				if (Email.send(lang.get("email.verify.subject"), code, email)) {
 					this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, "sent"));
@@ -274,13 +275,13 @@ public class profile extends Controller {
 		String code = this.getString("code");
 		if (!X.isEmpty(email)) {
 			Code e = Code.load(email, code);
-			if (e != null && e.getExpired() > System.currentTimeMillis()) {
+			if (e != null && e.getExpired() > Global.now()) {
 				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
 				return;
 			}
 		} else if (!X.isEmpty(phone)) {
 			Code e = Code.load(phone, code);
-			if (e != null && e.getExpired() > System.currentTimeMillis()) {
+			if (e != null && e.getExpired() > Global.now()) {
 				this.send(JSON.create().append(X.STATE, 200).append(X.MESSAGE, lang.get("validation.ok")));
 				return;
 			}

@@ -1,4 +1,4 @@
-`a.accesslog=访问纪录
+`a.accesslog=访问日志
 a.add=添加
 a.back=返回
 a.backup.files=备份文件
@@ -719,6 +719,7 @@ message.created=时间
 message.detail.title=消息详情
 syslog.index.title=系统日志
 menu.glog=系统日志
+menu.accesslog=访问日志
 a.glog=系统日志
 a.role.access=权限令牌
 role.access.title=权限令牌管理

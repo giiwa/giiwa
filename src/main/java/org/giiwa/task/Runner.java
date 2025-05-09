@@ -32,6 +32,7 @@ import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
 import org.giiwa.cache.GlobalLock;
 import org.giiwa.conf.Config;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
@@ -241,12 +242,14 @@ public final class Runner {
 			return true;
 		}
 
-		Task t1 = pendingQueue.get(t.getName());
-		if (t1 != null) {
-			if (t1.sf == null || t1.sf.isDone()) {
-				pendingQueue.remove(t.getName());
-			} else {
-				return true;
+		synchronized (pendingQueue) {
+			Task t1 = pendingQueue.get(t.getName());
+			if (t1 != null) {
+				if (t1.sf == null || t1.sf.isDone()) {
+					pendingQueue.remove(t.getName());
+				} else {
+					return true;
+				}
 			}
 		}
 
@@ -423,7 +426,7 @@ public final class Runner {
 				task.state = State.pending;
 
 				if (task.scheduledtime <= 0) {
-					task.scheduledtime = System.currentTimeMillis();
+					task.scheduledtime = Global.now();
 				}
 
 				task.e = new Exception("lanuch trace");
@@ -438,8 +441,14 @@ public final class Runner {
 					}
 				}
 
+				// 全局时差, 不用减去时差，因为 ms 只是 计划时间
+//				ms -= System.currentTimeMillis() - Global.now();
+//				if (ms < 0) {
+//					ms = 0;
+//				}
+
 				task.startedtime = 0;
-				task.scheduledtime = System.currentTimeMillis() + ms;
+				task.scheduledtime = Global.now() + ms;
 
 				if (g) {
 					if (task.isSys()) {
@@ -638,6 +647,9 @@ public final class Runner {
 
 						} else if (X.isSame(cmd, "ischeduled")) {
 							// 检测是否scheduled
+							if (log.isDebugEnabled()) {
+								log.debug("ischeduled, MQ.task, from=" + req.from + ", cmd=" + cmd + ", o=" + o);
+							}
 
 							boolean found = false;
 
@@ -686,7 +698,7 @@ public final class Runner {
 							Runner.remove(name, -1);
 
 						} else {
-							log.warn("error command and task!");
+							log.warn("error command [" + cmd + "] and task, from=" + req.from);
 						}
 
 					} catch (Exception e) {

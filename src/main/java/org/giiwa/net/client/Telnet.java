@@ -23,6 +23,7 @@ import java.net.SocketException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.net.telnet.TelnetClient;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Comment;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Url;
@@ -45,7 +46,7 @@ public class Telnet implements Closeable {
 
 	public static Telnet create(Url url) throws SocketException, IOException {
 		Telnet s = new Telnet();
-		s.open(url);
+		s.open(url, url.get("username"), url.get("passwd"));
 		return s;
 	}
 
@@ -55,25 +56,22 @@ public class Telnet implements Closeable {
 
 	@Comment(text = "打开远程链接, url=telnet://ip:port?username=&passwd=")
 	public Telnet open(@Comment(text = "url") String url) throws SocketException, IOException {
-		return open(Url.create(url));
+		Url u = Url.create(url);
+		return open(u, u.get("username"), u.get("passwd"));
 	}
 
-	@Comment(text = "打开远程链接, url=telnet://ip:port?username=&passwd=")
-	public Telnet open(@Comment(text = "url") Url url) throws SocketException, IOException {
+	@Comment(text = "打开远程链接, url=telnet://ip:port", demo = "..open('telnet://ip:port', username, passwd)")
+	public Telnet open(@Comment(text = "url") String url, String username, String passwd)
+			throws SocketException, IOException {
+		return open(Url.create(url), username, passwd);
+	}
+
+	public Telnet open(@Comment(text = "url") Url url, String username, String passwd)
+			throws SocketException, IOException {
 
 		close();
 
 		try {
-
-			String username = url.get("username");
-			if (X.isEmpty(username)) {
-				throw new IOException("[username] required");
-			}
-
-			String passwd = url.get("passwd");
-			if (X.isEmpty(passwd)) {
-				throw new IOException("[passwd] required");
-			}
 
 			client = new TelnetClient();
 			client.connect(url.getIp(), url.getPort(23));
@@ -98,8 +96,8 @@ public class Telnet implements Closeable {
 			// out.flush();
 			int i = -1;
 			StringBuilder sb = new StringBuilder();
-			long startTime = System.currentTimeMillis();
-			while (System.currentTimeMillis() - startTime < timeout) {
+			long startTime = Global.now();
+			while (Global.now() - startTime < timeout) {
 				while ((i = in.read()) > -1) {
 					char ch = (char) i;
 					if (ch == '\n' || ch == '\r') {
@@ -139,10 +137,10 @@ public class Telnet implements Closeable {
 			out.println(cmd);
 			out.flush();
 			StringBuilder sb = new StringBuilder();
-			long startTime = System.currentTimeMillis();
+			long startTime = Global.now();
 			int i = -1;
 
-			while (System.currentTimeMillis() - startTime < timeout) {
+			while (Global.now() - startTime < timeout) {
 				while ((i = in.read()) > -1) {
 					char ch = (char) i;
 					if (text != null)

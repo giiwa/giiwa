@@ -17,8 +17,6 @@ package org.giiwa.web.view;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.giiwa.conf.Global;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
@@ -26,6 +24,8 @@ import org.giiwa.json.JSON;
 import org.giiwa.misc.IOUtil;
 import org.giiwa.web.Controller;
 import org.giiwa.web.Language;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 public class FileView extends View {
 

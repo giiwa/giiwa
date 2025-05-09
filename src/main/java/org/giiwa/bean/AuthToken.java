@@ -46,7 +46,7 @@ public final class AuthToken extends Bean {
 
 	public static final BeanDAO<String, AuthToken> dao = BeanDAO.create(AuthToken.class, time -> {
 		// return cleanup query
-		return W.create().and("created", System.currentTimeMillis() - X.ADAY * 7, W.OP.lte);
+		return W.create().and("created", Global.now() - X.ADAY * 7, W.OP.lte);
 	});
 
 	@Column(memo = "主键", unique = true, size=50)
@@ -112,7 +112,7 @@ public final class AuthToken extends Bean {
 	}
 
 	public static AuthToken create(long uid, String ip) {
-		long expired = System.currentTimeMillis() + Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+		long expired = Global.now() + Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
 
 		return create(uid, ip, V.create("expired", expired));
 	}
@@ -151,7 +151,7 @@ public final class AuthToken extends Bean {
 	 * @return AuthToken
 	 */
 	public static AuthToken load(String token) {
-		return dao.load(W.create().and("token", token).and("expired", System.currentTimeMillis(), W.OP.gt));
+		return dao.load(W.create().and("token", token).and("expired", Global.now(), W.OP.gt));
 	}
 
 	/**
@@ -172,7 +172,7 @@ public final class AuthToken extends Bean {
 	 * @return Beans of the Token
 	 */
 	public static Beans<AuthToken> load(long uid) {
-		return dao.load(W.create().and("uid", uid).and("expired", System.currentTimeMillis(), W.OP.gt), 0, 100);
+		return dao.load(W.create().and("uid", uid).and("expired", Global.now(), W.OP.gt), 0, 100);
 	}
 
 	/**
@@ -189,12 +189,12 @@ public final class AuthToken extends Bean {
 	 * cleanup the expired token
 	 */
 	public void cleanup() {
-		dao.delete(W.create().and("expired", System.currentTimeMillis(), W.OP.lt));
+		dao.delete(W.create().and("expired", Global.now(), W.OP.lt));
 		dao.cleanup();
 	}
 
 	public static AuthToken update(long uid, String sid, String ip) {
-		long expired = System.currentTimeMillis() + Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
+		long expired = Global.now() + Global.getLong("session.alive", X.AWEEK / X.AHOUR) * X.AHOUR;
 
 		return update(uid, sid, ip, V.create("expired", expired));
 	}

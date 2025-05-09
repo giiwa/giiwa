@@ -81,44 +81,44 @@ public class MariaDB extends RDSHelper._AbstractDriver {
 		}
 	}
 
-	@Override
-	public List<JSON> listTables(Connection c, String dbname, String schema, String username, String tablename, int n)
-			throws SQLException {
-
-		List<JSON> l1 = JSON.createList();
-		Statement stat = null;
-		ResultSet r = null;
-
-		try {
-
-			stat = c.createStatement();
-			String sql = "select * from information_schema.tables where table_schema='" + dbname + "'";
-
-			log.info(sql);
-
-			r = stat.executeQuery(sql);
-			while (r.next()) {
-
-				// 修复 麒麟软件 "t-solution" 的bug, schema包含“-”导致获取元数据和SQL查询数据错误
-				// String schema = null;// r.getString("TABLE_SCHEMA");
-				// end of bug
-				String name = r.getString("table_name");
-				name = name.toLowerCase();
-				if (X.isEmpty(tablename) || name.matches(tablename)) {
-					l1.add(JSON.create().append("name", name).append("type", r.getString("table_type"))
-							.append("display", r.getString("TABLE_COMMENT"))
-							.append("memo", r.getString("TABLE_COMMENT")));
-				}
-				if (n > 0 && l1.size() >= n) {
-					break;
-				}
-			}
-		} finally {
-			RDSHelper.close(r, stat);
-		}
-		return l1;
-
-	}
+//	@Override
+//	public List<JSON> listTables(Connection c, String dbname, String schema, String username, String tablename, int n)
+//			throws SQLException {
+//
+//		List<JSON> l1 = JSON.createList();
+//		Statement stat = null;
+//		ResultSet r = null;
+//
+//		try {
+//
+//			stat = c.createStatement();
+//			String sql = "select * from information_schema.tables where table_schema='" + dbname + "'";
+//
+////			log.info(sql);
+//
+//			r = stat.executeQuery(sql);
+//			while (r.next()) {
+//
+//				// 修复 麒麟软件 "t-solution" 的bug, schema包含“-”导致获取元数据和SQL查询数据错误
+//				// String schema = null;// r.getString("TABLE_SCHEMA");
+//				// end of bug
+//				String name = r.getString("table_name");
+//				name = name.toLowerCase();
+//				if (X.isEmpty(tablename) || name.matches(tablename)) {
+//					l1.add(JSON.create().append("name", name).append("type", r.getString("table_type"))
+//							.append("display", r.getString("TABLE_COMMENT"))
+//							.append("memo", r.getString("TABLE_COMMENT")));
+//				}
+//				if (n > 0 && l1.size() >= n) {
+//					break;
+//				}
+//			}
+//		} finally {
+//			RDSHelper.close(r, stat);
+//		}
+//		return l1;
+//
+//	}
 
 	@Override
 	public String addColumn(String tablename, JSON col) {

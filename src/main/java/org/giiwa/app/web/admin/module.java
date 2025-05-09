@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.zip.*;
 
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -653,6 +653,11 @@ public class module extends Controller {
 
 		try {
 
+			if (url == null) {
+				this.set(X.MESSAGE, "参数错误, 请重试!").send(201);
+				return;
+			}
+
 			boolean restart = false;
 			DFile d = Disk.seek(url);
 			if (d.getName().endsWith(".jar")) {
@@ -749,7 +754,7 @@ public class module extends Controller {
 	 */
 	@Path(path = "download", login = true, access = "access.config.admin", oplog = true)
 	public void download() {
-		
+
 		String name = this.getString("name");
 
 		/**
@@ -757,7 +762,7 @@ public class module extends Controller {
 		 */
 		org.giiwa.web.Module m = org.giiwa.web.Module.load(name);
 		String file = ROOT + name + ".zip";
-		File f = m.zipTo(Controller.MODULE_HOME + file);
+		File f = m.zipTo(Controller.GIIWA_HOME + "/modules/" + file);
 		if (f != null && f.exists()) {
 
 			this.set("f", f);
@@ -852,7 +857,7 @@ public class module extends Controller {
 		onGet();
 	}
 
-	@SuppressWarnings("unused")
+	@SuppressWarnings({ "unused", "rawtypes" })
 	private boolean validate(FileItem file) {
 		return false;
 	}
@@ -866,7 +871,6 @@ public class module extends Controller {
 
 			String[] ss = X.split(name, "[,;]");
 
-//			TimeStamp t = TimeStamp.create();
 			TreeSet<String> l1 = new TreeSet<String>();
 			List<String> ex = new ArrayList<String>();
 			for (String s : ss) {
@@ -886,7 +890,6 @@ public class module extends Controller {
 				l1.remove(s);
 			}
 			l1.remove("stream");
-//			log.warn("modules, 1=" + l1 + ", name=" + name);
 
 			List<JSON> r1 = JSON.createList();
 

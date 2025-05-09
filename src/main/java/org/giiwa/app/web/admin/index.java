@@ -17,6 +17,8 @@ package org.giiwa.app.web.admin;
 import org.giiwa.bean.*;
 import org.giiwa.conf.Global;
 import org.giiwa.dao.X;
+import org.giiwa.dao.Beans;
+import org.giiwa.dao.Helper.W;
 import org.giiwa.web.*;
 
 /**
@@ -68,6 +70,25 @@ public class index extends Controller {
 			 * put the user in mode
 			 */
 			this.put("me", me);
+
+			// check ERROR
+			long n = Node.dao.count(W.create());
+			if (n > 0) {
+				// 多节点， 不能出现local磁盘
+				Beans<Disk> bs = Disk.dao.load(W.create(), 0, 128);
+				if (bs != null) {
+					for (Disk e : bs) {
+						if (e.enabled == 1) {
+							if (e.url.startsWith("local://")) {
+								// error
+								this.set(X.ERROR, "文件仓库磁盘配置错误，分布式多节点不能配置local://本地磁盘!");
+								break;
+							}
+						}
+					}
+				}
+
+			}
 
 			/**
 			 * show view ...

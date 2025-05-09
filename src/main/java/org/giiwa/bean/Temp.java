@@ -125,7 +125,7 @@ public final class Temp {
 	public static Temp create(String id, String name, boolean inmemory) {
 		Temp t = new Temp();
 
-		t.id = id;// UID.id(System.currentTimeMillis(), UID.random(), name);
+		t.id = id;// UID.id(Global.now(), UID.random(), name);
 		t.name = name;
 		t.memory = inmemory;
 
@@ -139,7 +139,7 @@ public final class Temp {
 	 * @return the Temp
 	 */
 	public static Temp create(String name) {
-		String id = UID.id(System.currentTimeMillis(), UID.random(), name);
+		String id = UID.id(Global.now(), UID.random(), name);
 		return create(id, name, false);
 	}
 
@@ -151,7 +151,7 @@ public final class Temp {
 	 * @return
 	 */
 	public static Temp create(String name, boolean inmemory) {
-		String id = UID.id(System.currentTimeMillis(), UID.random(), name);
+		String id = UID.id(Global.now(), UID.random(), name);
 		return create(id, name, inmemory);
 	}
 
@@ -171,8 +171,8 @@ public final class Temp {
 	 */
 	public String getUri(Language lang) {
 
-		String filename = "/temp/" + lang.format(System.currentTimeMillis(), "yyyy/MM/dd") + "/"
-				+ System.currentTimeMillis() + "/" + id + "/" + name;
+		String filename = "/temp/" + lang.format(Global.now(), "yyyy/MM/dd") + "/"
+				+ Global.now() + "/" + id + "/" + name;
 		try {
 			DFile f1 = Disk.seek(filename);
 			f1.upload(this.getInputStream());

@@ -14,13 +14,17 @@
 */
 package org.giiwa.dao;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.bean.Temp;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
+import org.giiwa.misc.Exporter;
 import org.giiwa.task.Function;
 import org.giiwa.task.Task;
 
@@ -43,11 +47,13 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 	public JSON stats;
 
-	public long created = System.currentTimeMillis();
+	public long created = Global.now();
 
 	public long cost = -1;
 
-	public List<String> columns = null;
+	private Map<String, JSON> meta = null;
+
+	private String[] selected;
 
 	transient W q;
 	transient String table;
@@ -117,12 +123,20 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		this.cost = cost;
 	}
 
-	public List<String> getColumns() {
-		return columns;
-	}
+//	public Collection<JSON> getMeta() {
+//		return meta.values();
+//	}
 
-	public void setColumns(List<String> columns) {
-		this.columns = columns;
+	public void setMeta(List<JSON> meta) {
+
+		if (meta == null || meta.isEmpty()) {
+			return;
+		}
+
+		this.meta = new HashMap<String, JSON>();
+		for (JSON e : meta) {
+			this.meta.put(e.getString("name"), e);
+		}
 	}
 
 	public List<JSON> toJSON(Function<E, JSON> cb) {
@@ -166,19 +180,28 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 
 	@Comment(text = "转换为json列表", demo = ".jsons('a', 'b', 'c')")
 	public List<JSON> jsons(String... names) {
-		List<JSON> l1 = new ArrayList<JSON>();
-		for (E e : this) {
-			JSON j = e.json();
-			l1.add(j.copy(names));
-		}
-		return l1;
+		select(names);
+		return jsons();
 	}
 
 	@Comment(text = "转换为json列表", demo = ".jsons()")
 	public List<JSON> jsons() {
+
 		List<JSON> l1 = new ArrayList<JSON>();
 		for (E e : this) {
-			JSON j = e.json();
+			JSON j = e.json(selected);
+			if (meta != null) {
+				JSON j2 = JSON.create();
+				for (String name : j.keySet()) {
+					JSON c1 = meta.get(name);
+					if (c1 == null) {
+						j2.put(name, j.get(name));
+					} else {
+						j2.put(c1.getString("display"), j.get(name));
+					}
+				}
+				j = j2;
+			}
 			l1.add(j);
 		}
 		return l1;
@@ -313,6 +336,104 @@ public final class Beans<E extends Bean> extends ArrayList<E> implements Seriali
 		}
 		return this;
 
+	}
+
+	@Comment(text = "排序", demo = ".sort('name')")
+	public Beans<E> sort(@Comment(text = "name") String name) {
+		return sort(name, 1);
+	}
+
+	@Comment(text = "排序", demo = ".sort('name', -1)")
+	public Beans<E> sort(@Comment(text = "name") String name, @Comment(text = "asc") int asc) {
+		Collections.sort(this, new Comparator<E>() {
+
+			@Override
+			public int compare(E o1, E o2) {
+				if (asc >= 0) {
+					return X.compareTo(o1.get(name), o2.get(name));
+				} else {
+					return -X.compareTo(o1.get(name), o2.get(name));
+				}
+			}
+
+		});
+		return this;
+	}
+
+	@Comment(text = "取TOPn", demo = ".top(10)")
+	public Beans<E> top(@Comment(text = "n") int n) {
+		Beans<E> l1 = Beans.create();
+		for (int i = 0; i < n; i++) {
+			l1.add(this.get(i));
+		}
+		return l1;
+	}
+
+	@Comment(text = "反转列表", demo = ".revers()")
+	public Beans<E> reverse() {
+		Collections.reverse(this);
+		return this;
+	}
+
+	@Comment(text = "选择列", demo = ".select('a','b')")
+	public Beans<E> select(String... names) {
+		selected = names;
+		return this;
+	}
+
+	@Comment(text = "输出为CSV文件", demo = ".csv('a','b')")
+	public String csv(String... names) throws IOException {
+		selected = names;
+		return csv();
+	}
+
+	@Comment(text = "输出为CSV文件", demo = ".csv()")
+	public String csv() throws IOException {
+
+		Temp t = Temp.create("a.csv");
+		Exporter<E> ex = Exporter.create(t.getFile(), Exporter.FORMAT.csv);
+
+		// print head
+		String[] cc = null;
+		if (selected != null && !selected.toString().isEmpty()) {
+			cc = selected;
+		} else {
+			if (!this.isEmpty()) {
+				Set<String> names = this.get(0).keySet();
+				cc = names.toArray(new String[names.size()]);
+			}
+		}
+		if (cc != null) {
+			if (meta != null) {
+				String[] ss = new String[cc.length];
+				for (int i = 0; i < cc.length; i++) {
+					String s = cc[i];
+					JSON c = meta.get(s);
+					if (c == null) {
+						ss[i] = s;
+					} else {
+						ss[i] = c.getString("display");
+					}
+				}
+				ex.print(ss);
+			} else {
+				ex.print(cc);
+			}
+
+			String[] cc1 = cc;
+			ex.createSheet(e -> {
+				Object[] v = new Object[cc1.length];
+				for (int i = 0; i < cc1.length; i++) {
+					v[i] = e.get(cc1[i]);
+				}
+				return v;
+			});
+
+			ex.print(this);
+		}
+
+		ex.close();
+		return X.IO.read(t.getFile(), "UTF-8");
 	}
 
 }

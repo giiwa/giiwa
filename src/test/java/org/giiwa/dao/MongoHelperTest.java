@@ -7,6 +7,7 @@ import org.bson.Document;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.json.JSON;
+import org.giiwa.web.Language;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
@@ -26,6 +27,33 @@ public class MongoHelperTest {
 
 		List<JSON> l1 = h.aggregate("gi_user", new String[] { "count(b)", "min(a)" }, W.create(), new String[] { "a" });
 		System.out.println("count=" + l1);
+	}
+
+	@Test
+	public void testQuery() throws SQLException {
+
+		Config.init();
+		MongoHelper h = MongoHelper.create("mongodb://g09:27018/demo", null, null);
+
+		W q = W.create();
+		q.and("a=null");
+		System.out.println("q=" + q);
+		System.out.println("bson=" + q.query());
+		Bean b = h.load("gi_user", q, Bean.class);
+		System.out.println(b);
+
+		q = W.create();
+		q.and("a!=1");
+		System.out.println("bson=" + q.query());
+		b = h.load("gi_user", q, Bean.class);
+		System.out.println(b);
+
+		q = W.create();
+		q.and("name!=null");
+		System.out.println("bson=" + q.query());
+		b = h.load("gi_user", q, Bean.class);
+		System.out.println(b);
+
 	}
 
 	@Test
@@ -124,6 +152,18 @@ public class MongoHelperTest {
 
 		List<JSON> l1 = h.aggregate("gi_user", new String[] { "count(b)", "min(a)" }, W.create(), new String[] { "a" });
 		System.out.println("count=" + l1);
+	}
+
+	@Test
+	public void testStat() throws SQLException {
+
+		Language lang = Language.getLanguage("zh_cn");
+
+		MongoHelper h = MongoHelper.create("mongodb://g90:27018/demo", null, null);
+		for (String name : new String[] { "gi_config", "demo_ptest" }) {
+			JSON j1 = h.stats(name);
+			System.out.println("===" + name + "===\r\n" + lang.size(j1.getLong("storageSize")));
+		}
 	}
 
 }

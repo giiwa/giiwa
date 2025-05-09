@@ -15,6 +15,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.task.CleanupTask;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Bean;
 import org.giiwa.dao.BeanDAO;
 import org.giiwa.dao.Beans;
@@ -84,7 +85,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 		if (!_existsTables.contains(name)) {
 			// create table;
 			if (Helper.primary instanceof RDSHelper) {
-				dao.createTable(name, "GI-统计信息-" + module);
+				dao.createTable(name, "GI-统计信息-" + module, JSON.create().append("distributed", 0));
 			}
 			_existsTables.add(name);
 		}
@@ -194,35 +195,34 @@ public final class Stat extends Bean implements Comparable<Stat> {
 
 		switch (size) {
 		case min:
-			q1.and("time", System.currentTimeMillis() - X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - X.ADAY, W.OP.lt);
 			break;
 		case m10:
-			q1.and("time", System.currentTimeMillis() - 10 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - 2 * X.ADAY, W.OP.lt);
 			break;
 		case m15:
-			q1.and("time", System.currentTimeMillis() - 15 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - 2 * X.ADAY, W.OP.lt);
 			break;
 		case m30:
-			q1.and("time", System.currentTimeMillis() - 30 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - 2 * X.ADAY, W.OP.lt);
 			break;
 		case hour:
-			q1.and("time", System.currentTimeMillis() - 60 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - 7 * X.ADAY, W.OP.lt);
 			break;
 		case day:
-			q1.and("time", System.currentTimeMillis() - 24 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - X.AYEAR, W.OP.lt);
 			break;
 		case week:
-			q1.and("time", System.currentTimeMillis() - 7 * 24 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - X.AYEAR, W.OP.lt);
 			break;
 		case month:
-			q1.and("time", System.currentTimeMillis() - 30 * 24 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - 2 * X.AYEAR, W.OP.lt);
 			break;
 		case season:
-			q1.and("time", System.currentTimeMillis() - 3 * 30 * 24 * X.ADAY, W.OP.lt);
+			q1.and("time", Global.now() - 2 * X.AYEAR, W.OP.lt);
 			break;
 		case year:
-			q1.and("time", System.currentTimeMillis() - 12 * 30 * 24 * X.ADAY, W.OP.lt);
-			break;
+			return 0;
 		}
 
 		Helper.optimize(table, q1);
@@ -490,8 +490,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 //				n1[i] = s1.getLong("n" + i);
 //			}
 
-		for (SIZE s2 : new SIZE[] { SIZE.m10, SIZE.m15, SIZE.m30, SIZE.hour, SIZE.day, SIZE.week, SIZE.month,
-				SIZE.season, SIZE.year }) {
+		for (SIZE s2 : new SIZE[] { SIZE.hour, SIZE.day, SIZE.week, SIZE.month, SIZE.year }) {
 
 			time1 = Stat.parse(time, s2);
 			_snapshot(time1, name, s2, q1.copy(), v1.copy(), n);
@@ -632,11 +631,11 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public static long today() {
-		return today(System.currentTimeMillis());
+		return today(Global.now());
 	}
 
 	public static long tohour() {
-		return tohour(System.currentTimeMillis());
+		return tohour(Global.now());
 	}
 
 	public static long tohour(long time) {
@@ -644,7 +643,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public static long tomin() {
-		return tomin(System.currentTimeMillis());
+		return tomin(Global.now());
 	}
 
 	public static long tomin(long time) {
@@ -657,7 +656,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	 * @return
 	 */
 	public static long toweek() {
-		return toweek(System.currentTimeMillis());
+		return toweek(Global.now());
 	}
 
 	public static long toweek(long time) {
@@ -670,7 +669,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	 * @return
 	 */
 	public static long tomonth() {
-		return tomonth(System.currentTimeMillis());
+		return tomonth(Global.now());
 	}
 
 	public static long tomonth(long time) {
@@ -683,7 +682,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	 * @return
 	 */
 	public static long toseason() {
-		return toseason(System.currentTimeMillis());
+		return toseason(Global.now());
 	}
 
 	public static long toseason(long time) {
@@ -697,7 +696,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	 * @return
 	 */
 	public static long toyear() {
-		return toyear(System.currentTimeMillis());
+		return toyear(Global.now());
 	}
 
 	public static long toyear(long time) {
@@ -757,7 +756,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public static long tom15() {
-		return tom15(System.currentTimeMillis());
+		return tom15(Global.now());
 	}
 
 	public static long tom15(long ms) {
@@ -775,7 +774,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public static long tom30() {
-		return tom30(System.currentTimeMillis());
+		return tom30(Global.now());
 	}
 
 	public static long tom30(long time) {
@@ -789,7 +788,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 	}
 
 	public static long tom10() {
-		return tom10(System.currentTimeMillis());
+		return tom10(Global.now());
 	}
 
 	public static long tom10(long ms) {
@@ -827,7 +826,7 @@ public final class Stat extends Bean implements Comparable<Stat> {
 
 				// delete duty data
 				try {
-					long n1 = Helper.primary.delete(name, W.create().and("time", System.currentTimeMillis(), W.OP.gt));
+					long n1 = Helper.primary.delete(name, W.create().and("time", Global.now(), W.OP.gt));
 					if (n1 > 0) {
 						GLog.applog.info("sys", "cleanup", "table=" + name + ", removed duty=" + n1);
 						n += n1;

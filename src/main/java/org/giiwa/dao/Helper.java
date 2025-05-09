@@ -131,9 +131,12 @@ public final class Helper implements Serializable {
 			return false;
 		}
 
-		RDSHelper.init();
-
 		try {
+
+			log.warn("db.url=" + url);
+
+			RDSHelper.init();
+
 			String user = conf.getString("db.user", X.EMPTY);
 			String passwd = conf.getString("db.passwd", X.EMPTY);
 			int conns = conf.getInt("db.conns", 50);
@@ -148,14 +151,12 @@ public final class Helper implements Serializable {
 				}
 			}
 
-			if (url.startsWith("mongodb://") || url.startsWith("jmdb://")) {
+			if (url.startsWith("mongodb://") || url.startsWith("jmdb://") || url.startsWith("mysql://")) {
 
 				int timeout = conf.getInt("db.timeout", 30000);
 
 				primary = MongoHelper.create(url, user, passwd, conns, timeout);
 				MongoHelper.inst = (MongoHelper) primary;
-
-				log.warn("db inited.");
 
 			} else {
 
@@ -170,9 +171,9 @@ public final class Helper implements Serializable {
 				primary = RDSHelper.create(url, user, passwd, conns, locale);
 				RDSHelper.inst = (RDSHelper) primary;
 
-				log.warn("db inited.");
-
 			}
+
+			log.warn("db inited, primary=" + primary);
 
 			if (Helper.isConfigured() && !encoded) {
 				// encoding
@@ -990,8 +991,7 @@ public final class Helper implements Serializable {
 		private W() {
 		}
 
-		@Comment(text = "增长", demo = ".inc('a', 1)")
-		public W inc(@Comment(text = "name") String name, @Comment(text = "n") int n) throws SQLException {
+		public W inc(String name, int n) throws SQLException {
 
 			if (access != null) {
 				access.checkWrite(table);
@@ -1208,7 +1208,6 @@ public final class Helper implements Serializable {
 		 * @param table the table name
 		 * @return W
 		 */
-		@Comment(text = "设置表")
 		public static W table(String table) {
 			W w = new W();
 			w.table = table;
@@ -1507,7 +1506,6 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
-		@Comment(text = "按照对象复制")
 		public W copy(W q) {
 
 			this.groupby = q.groupby;
@@ -1822,7 +1820,6 @@ public final class Helper implements Serializable {
 		 * @param op
 		 * @return
 		 */
-		@Comment()
 		@Deprecated
 		public W and(String name, Object v, String op) {
 			if (X.isSame(">", op) || X.isSame("gt", op)) {
@@ -1853,7 +1850,6 @@ public final class Helper implements Serializable {
 		 * @param op
 		 * @return
 		 */
-		@Comment()
 		@Deprecated
 		public W or(String name, Object v, String op) {
 			return or(name, v, op, 1);
@@ -1867,7 +1863,6 @@ public final class Helper implements Serializable {
 		 * @param boost
 		 * @return
 		 */
-		@Comment()
 		@Deprecated
 		public W or(String name, Object v, String op, int boost) {
 			if (X.isSame(">", op) || X.isSame("gt", op)) {
@@ -2277,6 +2272,20 @@ public final class Helper implements Serializable {
 
 		}
 
+		public static class Vector {
+
+			@SuppressWarnings("rawtypes")
+			public List value;
+
+			@SuppressWarnings("rawtypes")
+			public static Vector create(List l1) {
+				Vector e = new Vector();
+				e.value = l1;
+				return e;
+			}
+
+		}
+
 		public static class Entity extends W {
 
 			public List<W> _queryList;
@@ -2466,8 +2475,13 @@ public final class Helper implements Serializable {
 				if (this.cond == NOT) {
 					if (op == OP.eq) {
 						if (value == null) {
-							return new BasicDBObject(name,
-									new BasicDBObject("$not", new BasicDBObject("$exists", false)));
+							BasicDBList l1 = new BasicDBList();
+//							l1.add(new BasicDBObject(name, new BasicDBObject("$exists", false)));
+//							l1.add(new BasicDBObject(name, value));
+//							return new BasicDBObject("$not", new BasicDBObject("$or", l1));
+							l1.add(new BasicDBObject(name, new BasicDBObject("$exists", true)));
+							l1.add(new BasicDBObject(name, new BasicDBObject("$ne", value)));
+							return new BasicDBObject("$and", l1);
 						} else {
 							return new BasicDBObject(name, new BasicDBObject("$ne", value));
 						}
@@ -2490,8 +2504,13 @@ public final class Helper implements Serializable {
 						return new BasicDBObject(name, new BasicDBObject("$not", p1));
 					} else if (op == OP.neq) {
 						if (value == null) {
-							return new BasicDBObject(name,
-									new BasicDBObject("$not", new BasicDBObject("$exists", true)));
+							BasicDBList l1 = new BasicDBList();
+//							l1.add(new BasicDBObject(name, new BasicDBObject("$exists", false)));
+//							l1.add(new BasicDBObject(name, value));
+//							return new BasicDBObject("$not", l1);
+							l1.add(new BasicDBObject(name, new BasicDBObject("$exists", true)));
+							l1.add(new BasicDBObject(name, new BasicDBObject("$ne", value)));
+							return new BasicDBObject("$and", l1);
 						} else {
 							return new BasicDBObject(name, new BasicDBObject("$not", new BasicDBObject("$ne", value)));
 						}
@@ -2515,7 +2534,10 @@ public final class Helper implements Serializable {
 				} else {
 					if (op == OP.eq) {
 						if (value == null) {
-							return new BasicDBObject(name, new BasicDBObject("$exists", false));
+							BasicDBList l1 = new BasicDBList();
+							l1.add(new BasicDBObject(name, new BasicDBObject("$exists", false)));
+							l1.add(new BasicDBObject(name, value));
+							return new BasicDBObject("$or", l1);
 						} else {
 							return new BasicDBObject(name, value);
 						}
@@ -2542,7 +2564,14 @@ public final class Helper implements Serializable {
 						return new BasicDBObject(name, p1);
 					} else if (op == OP.neq) {
 						if (value == null) {
-							return new BasicDBObject(name, new BasicDBObject("$exists", true));
+							BasicDBList l1 = new BasicDBList();
+//							l1.add(new BasicDBObject(name, new BasicDBObject("$exists", false)));
+//							l1.add(new BasicDBObject(name, value));
+//							return new BasicDBObject("$not", l1);
+							l1.add(new BasicDBObject(name, new BasicDBObject("$exists", true)));
+							l1.add(new BasicDBObject(name, new BasicDBObject("$ne", value)));
+							return new BasicDBObject("$and", l1);
+
 						} else {
 							return new BasicDBObject(name, new BasicDBObject("$ne", value));
 						}
@@ -2922,7 +2951,6 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
-		@Comment()
 		public boolean exists() throws SQLException {
 
 			if (log.isDebugEnabled())
@@ -2941,15 +2969,12 @@ public final class Helper implements Serializable {
 
 		}
 
-		@Comment(demo = ".stream(function(e){return true})")
-		public boolean stream(@Comment(text = "func") Function<Data, Boolean> func) throws Exception {
+		public boolean stream(Function<Data, Boolean> func) throws Exception {
 			return stream(0, func);
 		}
 
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		@Comment(demo = ".stream(100, function(e){return true})")
-		public boolean stream(@Comment(text = "offset") long offset,
-				@Comment(text = "func") Function<Data, Boolean> func) throws Exception {
+		@SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+		public boolean stream(long offset, Function<Data, Boolean> func) throws Exception {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -2976,7 +3001,6 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		@Comment(text = "查询1条数据")
 		public <T> T load() throws SQLException {
 
 			if (access != null) {
@@ -3103,8 +3127,7 @@ public final class Helper implements Serializable {
 		 * @return
 		 */
 		@SuppressWarnings("unchecked")
-		@Comment(text = "查询1条数据", demo = ".load(10)")
-		public <T> T load(@Comment(text = "offset") int offset) throws SQLException {
+		public <T> T load(int offset) throws SQLException {
 			Beans<?> l1 = load(offset, 1);
 			return (T) (l1 == null || l1.isEmpty() ? null : l1.get(0));
 		}
@@ -3170,9 +3193,7 @@ public final class Helper implements Serializable {
 		 * @throws SQLException
 		 */
 		@SuppressWarnings("unchecked")
-		@Comment(text = "查询n条数据", demo = ".load(0, 10)")
-		public <T extends Bean> Beans<T> load(@Comment(text = "offset") int s, @Comment(text = "limit") int n)
-				throws SQLException {
+		public <T extends Bean> Beans<T> load(int s, int n) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3219,9 +3240,7 @@ public final class Helper implements Serializable {
 		}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		@Comment(text = "查询数据")
-		public <T extends Bean> Beans<T> load(@Comment(text = "offset") int s, @Comment(text = "limit") int n,
-				@Comment(text = "jsfunc") Consumer<Beans<T>> func) throws SQLException {
+		public <T extends Bean> Beans<T> load(int s, int n, Consumer<Beans<T>> func) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3288,8 +3307,7 @@ public final class Helper implements Serializable {
 
 		}
 
-		@Comment(text = "按照当前条件求和")
-		public <T> T sum(@Comment(text = "fieldname") String name) throws SQLException {
+		public <T> T sum(String name) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3308,8 +3326,7 @@ public final class Helper implements Serializable {
 
 		}
 
-		@Comment()
-		public <T> T avg(@Comment(text = "name") String name) throws SQLException {
+		public <T> T avg(String name) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3329,8 +3346,7 @@ public final class Helper implements Serializable {
 		}
 
 		@SuppressWarnings("unchecked")
-		@Comment(text = "按照当前条件查询最小值", demo = ".min('a')")
-		public <T> T min(@Comment(text = "fieldname") String name) throws SQLException {
+		public <T> T min(String name) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3357,8 +3373,7 @@ public final class Helper implements Serializable {
 		}
 
 		@SuppressWarnings("unchecked")
-		@Comment(text = "按照当前条件查询最大值", demo = ".max('a')")
-		public <T> T max(@Comment(text = "fieldname") String name) throws SQLException {
+		public <T> T max(String name) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3383,8 +3398,7 @@ public final class Helper implements Serializable {
 
 		}
 
-		@Comment(text = "按照当前条件查询中位数", demo = ".median('a')")
-		public <T> T median(@Comment(text = "fieldname") String name) throws SQLException {
+		public <T> T median(String name) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3404,7 +3418,6 @@ public final class Helper implements Serializable {
 
 		}
 
-		@Comment(text = "删除", demo = ".delete()")
 		public int delete() throws SQLException {
 
 			if (access != null) {
@@ -3424,8 +3437,7 @@ public final class Helper implements Serializable {
 			throw new SQLException("not set table");
 		}
 
-		@Comment(text = "更新", demo = ".update({'a':1})")
-		public int update(@Comment(text = "object") Object o) throws SQLException {
+		public int update(Object o) throws SQLException {
 
 			V v = null;
 			if (o instanceof V) {
@@ -3509,9 +3521,7 @@ public final class Helper implements Serializable {
 
 		}
 
-		@Comment(text = "按照当前条件分组求和")
-		public List<JSON> sum(@Comment(text = "fieldname") String name, @Comment(text = "groupfield") String group)
-				throws SQLException {
+		public List<JSON> sum(String name, String group) throws SQLException {
 
 			if (access != null) {
 				access.checkRead(table);
@@ -3645,8 +3655,7 @@ public final class Helper implements Serializable {
 			return this;
 		}
 
-		@Comment(text = "设置查询表")
-		public W query(@Comment(text = "tablename") String table) {
+		public W query(String table) {
 			this.table = table;
 			return this;
 		}
@@ -3658,7 +3667,7 @@ public final class Helper implements Serializable {
 
 		private int offset = 0;
 
-		public W offset(@Comment(text = "offset") int offset) {
+		public W offset(int offset) {
 			this.offset = offset;
 			return this;
 		}
@@ -3790,7 +3799,7 @@ public final class Helper implements Serializable {
 		try {
 
 //			for (V value : values) {
-//				value.set(X.CREATED, System.currentTimeMillis()).set(X.UPDATED, System.currentTimeMillis());
+//				value.set(X.CREATED, Global.now()).set(X.UPDATED, Global.now());
 //
 //			}
 
@@ -4201,6 +4210,7 @@ public final class Helper implements Serializable {
 
 		<T extends Bean> Beans<T> load(String table, W q, int s, int n, Class<T> t) throws SQLException;
 
+		@Deprecated
 		<T extends Bean> boolean stream(String table, W q, long offset, Function<T, Boolean> func, Class<T> t)
 				throws SQLException;
 
@@ -4208,7 +4218,7 @@ public final class Helper implements Serializable {
 
 		<T extends Bean> T load(String table, W q, Class<T> clazz, boolean trace);
 
-		Connection getConnection();
+		Connection getConnection() throws SQLException;
 
 		int delete(String table, W q);
 
@@ -4227,6 +4237,8 @@ public final class Helper implements Serializable {
 		int updateTable(String table, W q, JSON value) throws SQLException;
 
 		int inc(String table, W q, String name, int n, V v) throws SQLException;
+
+		int inc(String table, W q, String name, float n, V v) throws SQLException;
 
 		int inc(String table, W q, JSON incvalue, V v) throws SQLException;
 
@@ -4282,9 +4294,12 @@ public final class Helper implements Serializable {
 		 * create table
 		 * 
 		 * @param tablename
+		 * @param memo
+		 * @param cols
+		 * @param properties
 		 * @throws SQLException
 		 */
-		void createTable(String tablename, String memo, List<JSON> cols) throws SQLException;
+		void createTable(String tablename, String memo, List<JSON> cols, JSON properties) throws SQLException;
 
 		/**
 		 * delete colname

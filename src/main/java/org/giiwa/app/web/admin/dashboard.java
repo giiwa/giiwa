@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.giiwa.bean.m._DiskIO;
 import org.giiwa.bean.m._Net;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.X;
 import org.giiwa.misc.Shell;
@@ -70,12 +71,12 @@ public class dashboard extends Controller {
 
 			this.set("nets",
 					_Net.dao.load(W.create().and("node", Local.id())
-							.and("updated", System.currentTimeMillis() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1), 0,
+							.and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("inet", 1), 0,
 							100));
 
 			this.set("disks",
 					_DiskIO.dao.load(W.create().and("node", Local.id())
-							.and("updated", System.currentTimeMillis() - X.AMINUTE * 10, W.OP.gte).sort("path", 1), 0,
+							.and("updated", Global.now() - X.AMINUTE * 10, W.OP.gte).sort("path", 1), 0,
 							100));
 
 			this.set("portlets", portlets);

@@ -402,4 +402,28 @@ public class JSONTest {
 
 	}
 
+	@Test
+	public void testAsList2() {
+
+		try {
+			String js = "var e={}; e.a=['1,2', '2,3'];e;";
+			Object o = JS.run(js);
+			System.out.println(o.getClass());
+			JSON j1 = JSON.fromObject(o);
+			System.out.println(j1.toPrettyString());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	@Test
+	public void testCases() {
+
+		JSON j1 = JSON.create();
+		j1.put("A", "1");
+		System.out.println(j1.toPrettyString());
+		System.out.println(j1.get("a"));
+	}
+
 }

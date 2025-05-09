@@ -72,4 +72,16 @@ public class HtmlTest {
 		System.out.println(h1.format(img));
 	}
 
+	@Test
+	public void testText() {
+
+		Http h = Http.create();
+		Http.Response r = h.get("https://blog.csdn.net/Piconjo/article/details/105473866");
+
+		System.out.println(r.text());
+		System.out.println("========");
+		System.out.println(r.text2());
+
+	}
+
 }

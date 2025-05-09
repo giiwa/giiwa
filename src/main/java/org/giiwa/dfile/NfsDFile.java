@@ -140,7 +140,7 @@ public class NfsDFile extends DFile {
 			if (fs == null) {
 				Url u1 = Url.create(d1.url);
 				fs = new Nfs3(u1.getHost(), d1.path, new CredentialUnix(0, 0, null), 3);
-				
+
 				cached.put(d1.id, fs);
 			}
 
@@ -196,15 +196,12 @@ public class NfsDFile extends DFile {
 
 			if (bb != null && o1 == size[0]) {
 
-				long t = System.currentTimeMillis();
 				try {
 					a.write(bb, 0, len);
 					size[0] += len;
 					a.flush();
 				} catch (Exception e) {
 					log.error("filename=" + filename + ", disk=" + disk_obj, e);
-				} finally {
-					Disk.Counter.write(disk_obj).add(len, System.currentTimeMillis() - t);
 				}
 
 			}

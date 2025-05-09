@@ -63,7 +63,7 @@ public final class Repo {
 	 */
 	public static String append(String path, String filename, InputStream in) throws IOException {
 		try {
-			String id = UID.id(filename, System.currentTimeMillis(), UID.random());
+			String id = UID.id(filename, Global.now(), UID.random());
 
 			append(id, path, filename, 0, in.available(), in, -1, null);
 
@@ -324,9 +324,9 @@ public final class Repo {
 
 	static private String path(String id, String path) {
 		if (!X.isEmpty(path)) {
-			return path + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss/");
+			return path + "/" + Language.getLanguage().format(Global.now(), "yyyy/MM/dd/HH/mm/ss/");
 		}
-		return ROOT + "/" + Language.getLanguage().format(System.currentTimeMillis(), "yyyy/MM/dd/HH/mm/ss/");
+		return ROOT + "/" + Language.getLanguage().format(Global.now(), "yyyy/MM/dd/HH/mm/ss/");
 	}
 
 	private static AtomicLong total = new AtomicLong(0); // byte

@@ -132,13 +132,36 @@ public class SFTP implements Closeable {
 	 * @return
 	 * @throws IOException
 	 */
-	@Comment(text = "远程链接，sftp://[host:port]/[path]?username=xxx&passwd=xxx")
-	public SFTP open(@Comment(text = "url") Url url) throws IOException {
+	public SFTP open(Url url) throws IOException {
 
 		close();
 
 		try {
-			session = getSession(url);
+			session = getSession(url, url.get("username"), url.get("passwd"));
+			timeout(300 * 1000);
+
+			sftp = (ChannelSftp) session.openChannel("sftp");
+			sftp.connect();
+
+			return this;
+		} catch (Exception e) {
+			String s = url.toString();
+			int i = s.indexOf("?");
+			if (i > 0) {
+				s = s.substring(0, i);
+			}
+			throw new IOException(s, e);
+		}
+	}
+
+	@Comment(text = "远程链接，sftp://[host:port]/[path]", demo = "..open('sftp://host1:22', username, passwd)")
+	public SFTP open(@Comment(text = "url") String url, @Comment(text = "username") String username,
+			@Comment(text = "passwd") String passwd) throws IOException {
+
+		close();
+
+		try {
+			session = getSession(Url.create(url), username, passwd);
 			timeout(300 * 1000);
 
 			sftp = (ChannelSftp) session.openChannel("sftp");
@@ -470,21 +493,21 @@ public class SFTP implements Closeable {
 		}
 	}
 
-	private static Session getSession(Url url) throws IOException {
+	private static Session getSession(Url url, String username, String passwd) throws IOException {
 
 		JSch jsch = new JSch();
 
 		try {
 
-			String username = url.get("username");
-			if (X.isEmpty(username)) {
-				throw new IOException("[username] required");
-			}
-
-			String passwd = url.get("passwd");
-			if (X.isEmpty(passwd)) {
-				throw new IOException("[passwd] required");
-			}
+//			String username = url.get("username");
+//			if (X.isEmpty(username)) {
+//				throw new IOException("[username] required");
+//			}
+//
+//			String passwd = url.get("passwd");
+//			if (X.isEmpty(passwd)) {
+//				throw new IOException("[passwd] required");
+//			}
 
 			Session session = jsch.getSession(username, url.getIp(), url.getPort(22));
 			session.setPassword(passwd);

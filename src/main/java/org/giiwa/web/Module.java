@@ -171,7 +171,7 @@ public class Module implements Serializable {
 	 */
 	public static boolean checkAndMerge() {
 
-		if (!new File(Controller.MODULE_HOME + "/default/WEB-INF/lib/").exists()) {
+		if (!new File(Controller.GIIWA_HOME + "/modules/default/WEB-INF/lib/").exists()) {
 			log.warn("[default/WEB-INF/lib] missed, cause can not merge!");
 			return false;
 		}
@@ -198,7 +198,7 @@ public class Module implements Serializable {
 		}
 
 		// remove unused jar
-		File f = new File(Controller.MODULE_HOME + "/WEB-INF/lib/");
+		File f = new File(Controller.GIIWA_HOME + "/lib/");
 		File[] ff = f.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
@@ -228,14 +228,19 @@ public class Module implements Serializable {
 		boolean changed = false;
 
 		// check default/WEB-INF/lib
-		File u1 = new File(Controller.MODULE_HOME + "/default/WEB-INF/");
+		File u1 = new File(Controller.GIIWA_HOME + "/modules/default/WEB-INF/");
 		if (!u1.exists()) {
 			X.IO.mkdirs(u1);
 			// copy all
-			log.warn("checkAndUpgrade, copy WEB-INF/lib to " + u1.getAbsolutePath());
+			log.warn("checkAndUpgrade, copy lib to " + u1.getAbsolutePath());
 
 			try {
-				IOUtil.copyDir(new File(Controller.MODULE_HOME + "/WEB-INF/lib/"), u1);
+				File[] ff = new File(Controller.GIIWA_HOME + "/lib/").listFiles();
+				for (File f1 : ff) {
+					if (f1.isFile() && f1.getName().endsWith(".jar")) {
+						IOUtil.copy(f1, new File(u1.getAbsolutePath() + "/lib/" + f1.getName()));
+					}
+				}
 			} catch (Exception e) {
 				log.error(e.getMessage(), e);
 			}
@@ -243,27 +248,27 @@ public class Module implements Serializable {
 
 		{
 			// finding all jar in WEB/lib/
-			File lib = new File(Controller.MODULE_HOME + "/WEB-INF/lib/");
-			File[] ff = lib.listFiles();
-			if (ff != null) {
-				for (File f : ff) {
-					if (f.getName().toLowerCase().endsWith(".jar")) {
-						_check(f);
-					}
-				}
-			}
+//			File lib = new File(Controller.MODULE_HOME + "/WEB-INF/lib/");
+//			File[] ff = lib.listFiles();
+//			if (ff != null) {
+//				for (File f : ff) {
+//					if (f.getName().toLowerCase().endsWith(".jar")) {
+//						_check(f);
+//					}
+//				}
+//			}
 
 		}
 
 		// upgrade
-		u1 = new File(Controller.MODULE_HOME + "/upgrade/");
+		u1 = new File(Controller.GIIWA_HOME + "/modules/upgrade/");
 		File[] ff = u1.listFiles();
 		if (ff != null) {
 			for (File f1 : ff) {
 				try {
 					String name = f1.getName();
 					if (new File(f1.getCanonicalPath() + "/ok").exists()) {
-						File f2 = new File(Controller.MODULE_HOME + "/" + name);
+						File f2 = new File(Controller.GIIWA_HOME + "/modules/" + name);
 						if (f2.exists()) {
 							log.info("clean up: " + f2.getAbsolutePath());
 							IOUtil.delete(f2);
@@ -288,11 +293,14 @@ public class Module implements Serializable {
 							IOUtil.delete(f1);
 
 							// merge WEB-INF/lib
-							File f3 = new File(f2.getCanonicalPath() + "/WEB-INF");
+							File f3 = new File(f2.getCanonicalPath() + "/WEB-INF/lib/");
 							if (f3.exists()) {
+								File[] ff3 = f3.listFiles();
 								// merge all
-								if (move(name, f3, Controller.MODULE_HOME)) {
-									changed = true;
+								for (File f4 : ff3) {
+									if (move(f4, Controller.GIIWA_HOME + "/lib/")) {
+										changed = true;
+									}
 								}
 							}
 						} else {
@@ -369,8 +377,8 @@ public class Module implements Serializable {
 
 		ZipInputStream in = new ZipInputStream(e.getInputStream());
 
-		String temp = Language.getLanguage().format(System.currentTimeMillis(), "yyyyMMdd");
-		String root = Controller.MODULE_HOME + "/upgrade/" + temp + "/";
+		String temp = Language.getLanguage().format(Global.now(), "yyyyMMdd");
+		String root = Controller.GIIWA_HOME + "/modules/upgrade/" + temp + "/";
 
 		File f0 = new File(root);
 		if (f0.exists()) {
@@ -419,7 +427,7 @@ public class Module implements Serializable {
 			Element r1 = document.getRootElement();
 			Module t = new Module();
 			t._load(r1);
-			String dest = Controller.MODULE_HOME + "/upgrade/" + t.name;
+			String dest = Controller.GIIWA_HOME + "/modules/upgrade/" + t.name;
 			File d1 = new File(dest);
 			if (d1.exists()) {
 				IOUtil.delete(d1);
@@ -459,8 +467,8 @@ public class Module implements Serializable {
 					if (f1.isDirectory()) {
 						if (new File(f1.getCanonicalPath() + "/module.xml").exists()) {
 							String name = f1.getName();
-							f1.renameTo(new File(Controller.MODULE_HOME + "/upgrade/" + name));
-							new File(Controller.MODULE_HOME + "/upgrade/" + name + "/ok").createNewFile();
+							f1.renameTo(new File(Controller.GIIWA_HOME + "/modules/upgrade/" + name));
+							new File(Controller.GIIWA_HOME + "/modules/upgrade/" + name + "/ok").createNewFile();
 
 							// copy the module
 							String repo = Config.getConf().getString("module.repo", "no");
@@ -609,7 +617,7 @@ public class Module implements Serializable {
 	 * Store.
 	 */
 	public void store() {
-		File f = new File(Controller.MODULE_HOME + File.separator + name + File.separator + "module.xml");
+		File f = new File(Controller.GIIWA_HOME + "/modules/" + name + File.separator + "module.xml");
 		try {
 
 			Document doc = DocumentHelper.createDocument();
@@ -763,7 +771,7 @@ public class Module implements Serializable {
 				for (File f : list) {
 					String name = f.getName();
 					if (name.endsWith(".jar")) {
-						File f1 = new File(Controller.MODULE_HOME + "/WEB-INF/lib/" + name);
+						File f1 = new File(Controller.GIIWA_HOME + "/lib/" + name);
 						if (!f1.exists() || f1.length() != f.length() || !X.isSame(MD5.md5(f1), MD5.md5(f))) {
 							// copy to
 							try {
@@ -792,7 +800,7 @@ public class Module implements Serializable {
 			File[] l1 = f0.listFiles();
 			if (l1 != null) {
 				for (File f1 : l1) {
-					File f2 = new File(Controller.MODULE_HOME + "/../lib/sigar/" + f1.getName());
+					File f2 = new File(Controller.GIIWA_HOME + "/lib/sigar/" + f1.getName());
 					if (!f2.exists() || f2.length() != f1.length() || !X.isSame(MD5.md5(f1), MD5.md5(f2))) {
 						try {
 							IOUtil.copy(f1, f2);
@@ -1068,7 +1076,7 @@ public class Module implements Serializable {
 			}
 
 			// load modules
-			File f = new File(Controller.MODULE_HOME);
+			File f = new File(Controller.GIIWA_HOME + "/modules/");
 
 			if (f.exists()) {
 				File[] list = f.listFiles();
@@ -1206,9 +1214,9 @@ public class Module implements Serializable {
 				f1 = f1.floor();
 			}
 
-			if (locale != null) {
-				Locale.setDefault(new Locale(locale));
-			}
+//			if (locale != null) {
+//				Locale.setDefault(new Locale(locale));
+//			}
 
 			if (log.isDebugEnabled()) {
 				log.debug("menu inited. checking unused jar ... changed=" + changed);
@@ -1250,7 +1258,7 @@ public class Module implements Serializable {
 			}
 
 			Module t = new Module();
-			File f = new File(Controller.MODULE_HOME + File.separator + name + "/module.xml");
+			File f = new File(Controller.GIIWA_HOME + "/modules/" + name + "/module.xml");
 			if (f.exists()) {
 				/**
 				 * initialize the module
@@ -1488,7 +1496,7 @@ public class Module implements Serializable {
 		if (enabled) {
 			return new ArrayList<Module>(modules.values());
 		} else {
-			String home = Controller.MODULE_HOME;
+			String home = Controller.GIIWA_HOME + "/modules/";
 			File troot = new File(home);
 			File[] files = troot.listFiles();
 
@@ -1724,11 +1732,13 @@ public class Module implements Serializable {
 			for (Method m : list) {
 				Path p = m.getAnnotation(Path.class);
 				if (p != null) {
+
 					/**
 					 * check the access and insert
 					 */
 					String access = p.access();
 					if (!X.isEmpty(access) && !X.NONE.equals(access)) {
+						access = access.trim();
 						if (access.startsWith("access.")) {
 							if (log.isDebugEnabled())
 								log.debug("access[" + access + "] at " + c.getCanonicalName() + "." + m.getName());
@@ -2140,7 +2150,7 @@ public class Module implements Serializable {
 				 * 
 				 * initialize
 				 */
-				m.path = new File(Controller.MODULE_HOME + File.separator + m.name).getCanonicalPath();
+				m.path = new File(Controller.GIIWA_HOME + "/modules/" + m.name).getCanonicalPath();
 				m.viewroot = new File(m.path + File.separator + "view").getCanonicalPath();
 
 				if (log.isDebugEnabled()) {
@@ -2231,46 +2241,34 @@ public class Module implements Serializable {
 		}
 	}
 
-	private static boolean move(String module, File f, String dest) {
+	private static boolean move(File f, String dest) {
 
 		// log.debug("moving ..." + f.getAbsolutePath());
 
 		boolean r1 = false;
-		if (f.isDirectory()) {
-			File[] list = f.listFiles();
-			if (list != null && list.length > 0) {
-				for (File f1 : list) {
-					if (move(module, f1, dest + File.separator + f.getName())) {
-						r1 = true;
-					}
-				}
-			}
-		} else {
-			/**
-			 * check the file version, and remove all the related version (may newer or
-			 * elder); <br>
-			 * looking for all the "f.getName()" in "classpath", and remove the same package
-			 * but different "version"<br>
-			 */
-			r1 = true;
+		/**
+		 * check the file version, and remove all the related version (may newer or
+		 * elder); <br>
+		 * looking for all the "f.getName()" in "classpath", and remove the same package
+		 * but different "version"<br>
+		 */
+		r1 = true;
 
-			File d = new File(dest + File.separator + f.getName());
-			try {
-				// trying
-				IOUtil.copy(f, d);
+		File d = new File(dest + File.separator + f.getName());
+		try {
+			// trying
+			IOUtil.copy(f, d);
 
-				d.setReadable(false, false);
-				d.setWritable(false, false);
-				d.setExecutable(false, false);
+			d.setReadable(false, false);
+			d.setWritable(false, false);
+			d.setExecutable(false, false);
 
-				d.setReadable(true, true);
-				d.setWritable(true, true);
-				d.setExecutable(true, true);
+			d.setReadable(true, true);
+			d.setWritable(true, true);
+			d.setExecutable(true, true);
 
-			} catch (IOException e) {
-				log.error(e.getMessage(), e);
-			}
-
+		} catch (IOException e) {
+			log.error(e.getMessage(), e);
 		}
 
 		return r1;
@@ -2334,7 +2332,7 @@ public class Module implements Serializable {
 		Map<String, Map<String, Controller.PathMapping>> pathmapping;
 		Module module;
 		String uri;
-		long age = System.currentTimeMillis();
+		long age = Global.now();
 
 		/*
 		 * (non-Javadoc)
@@ -2376,7 +2374,7 @@ public class Module implements Serializable {
 			if (!X.isEmpty(uri)) {
 				m.path = getPath(uri);
 			}
-			age = System.currentTimeMillis();
+			age = Global.now();
 
 			return m;
 		}
@@ -2527,5 +2525,46 @@ public class Module implements Serializable {
 
 	private final static String prikey = "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAI2ib0F1BnjPpjKKqKMGlHcuwb1DY+p3crIxf/PMEysNt7mAQqKhwcHZHzqkfpOJTotfErgFEXtG1iu2LDmxyA2zbGMEmLulNDMqocXTiOTKO3BsKdzl52RQVx7PdrAdVfSe0GmFV3TsLAslWAodR0RvhQKWW6oa/ehxd7o5/lz9AgMBAAECgYAKvvM//SKuPIWjOgqiFoK3KYYA18HB7VQiGZ1X9aN9Vb9wbz8fBbTPV1Yw5dVwri9BEHKOzFuk2x1ZbatHU/9rOeQ9QiWhXfEOheEa+GWazGZIcfnJLsqgK7WOXIsoLKvRzTGKc4N1Ns7Y+7RHZNSFQvq5+Hwomn52vYKkTZ3SwQJBAP8OYg7Ai2l8njvwsC5SkEfiQoLfq90P2Qa8iIk8qlFwHdeLtKQGkaeVUHBl8A/RLHBdYpi4Vz9sI7ZEiWS+mfECQQCOKJswbD/oHkDGalW8P3M2CydGCVjEr5OcXwy3/6ujXMMKto7Ue9cWLjnLafh++QPbhyHKWjXoINU5k1/GH4fNAkEAjiHMwR3JUsJwR0TMWTQHVRegKuBMHMedEGT1zUxyOSm6Z4hh5NoIRxQtHEWiLp5JHmDb9fEcJaq0h/jPe8W/cQJAVmqKxCnZw2G4oKT9Tz0G7UBkdGe0JYRR6AnDsopiLSFzkyycsMBDZMFe8q+NlqoLVUTVHqwt/tkOpTxYSRjbtQJBANx89oJJgJGZq3Iv2447guGU27fXmtqb9esNK/muAyVNy7kS07pLQXibrZ+vXcqIPQ/fPARlm4EqBbHKGiMc6aQ=";
 	private final static String pubkey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCNom9BdQZ4z6YyiqijBpR3LsG9Q2Pqd3KyMX/zzBMrDbe5gEKiocHB2R86pH6TiU6LXxK4BRF7RtYrtiw5scgNs2xjBJi7pTQzKqHF04jkyjtwbCnc5edkUFcez3awHVX0ntBphVd07CwLJVgKHUdEb4UClluqGv3ocXe6Of5c/QIDAQAB";
+
+	/**
+	 * clean up
+	 * 
+	 * @param jarfile  regex
+	 * @param keepfile
+	 */
+	public static void clean(String jarfile, String keepfile) {
+
+		log.warn("clean jarfile=" + jarfile + ", keepfile=" + keepfile, new Exception("traceonly"));
+
+		String root = Controller.GIIWA_HOME + "/modules/";
+
+		if (_clean(new File(root), jarfile, keepfile)) {
+			log.warn("clean jar file, going to restart!");
+			Task.schedule(t -> {
+				System.exit(0);
+			}, 1000);
+		}
+	}
+
+	private static boolean _clean(File file, String jarfile, String keepfile) {
+		boolean r = false;
+		File[] ff = file.listFiles();
+		if (ff != null) {
+			for (File f1 : ff) {
+				if (f1.isFile()) {
+					if (f1.getName().matches(jarfile) && !f1.getName().matches(keepfile)) {
+						log.warn("delete file=" + f1.getAbsolutePath());
+						f1.delete();
+						r = true;
+					}
+				} else if (f1.isDirectory()) {
+					if (_clean(f1, jarfile, keepfile)) {
+						r = true;
+					}
+				}
+			}
+		}
+		return r;
+	}
 
 }

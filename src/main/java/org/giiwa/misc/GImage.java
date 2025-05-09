@@ -18,6 +18,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -534,6 +535,7 @@ public class GImage {
 			Image tmp = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
 			g.drawImage(tmp, ow, oh, w, h, null);
 			ImageIO.write(out, "png", dest);
+			
 		} finally {
 			X.close(src, dest);
 		}
@@ -644,6 +646,7 @@ public class GImage {
 	 * @return the string
 	 * @throws UnsupportedEncodingException the unsupported encoding exception
 	 */
+	@SuppressWarnings("unused")
 	private static String formatUrl(String uri, String charset) throws UnsupportedEncodingException {
 
 		int i = uri.indexOf(".");

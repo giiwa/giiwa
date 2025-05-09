@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._DiskIO;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -53,7 +54,7 @@ public class diskio extends portlet {
 		this.set("name", name);
 
 		W q = W.create().and("node", id).and("path", name)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 		_DiskIO.Record.dao.optimize(q);
 
 		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(q, 0, 60);
@@ -82,7 +83,7 @@ public class diskio extends portlet {
 		this.set("name", name);
 
 		W q = W.create().and("node", id).and("path", name)
-				.and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created", -1);
+				.and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created", -1);
 
 		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(q, 0, 60);
 		if (bs != null && !bs.isEmpty()) {
@@ -130,7 +131,7 @@ public class diskio extends portlet {
 		String name = this.getString("name");
 		this.set("name", name);
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		Beans<_DiskIO.Record> bs = _DiskIO.Record.dao.load(
 				W.create().and("node", id).and("path", name).and("created", time, W.OP.gte).sort("created", 1), 0,

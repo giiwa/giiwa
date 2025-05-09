@@ -69,6 +69,12 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	@Column(no = true)
 	private boolean _readonly = false;
 
+	@Column(no = true)
+	private Map<String, JSON> meta = null;
+
+	@Column(no = true)
+	private String[] selected;
+
 	public boolean isReadonly() {
 		return _readonly;
 	}
@@ -193,6 +199,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 //		log.warn("field=" + name + ", value=" + value.getClass());
 
 		if (value != null) {
+//			log.info("name=" + name + ", value=" + value + ", class=" + value.getClass());
+
 			if (value instanceof java.sql.Clob) {
 				try {
 					Clob c = (Clob) value;
@@ -200,6 +208,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 					char[] cc = new char[(int) c.length()];
 					re.read(cc);
 					value = new String(cc);
+					c.free();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -210,6 +219,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 					char[] cc = new char[(int) c.length()];
 					re.read(cc);
 					value = new String(cc);
+					c.free();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -217,6 +227,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 				try {
 					Blob c = (Blob) value;
 					value = c.getBytes(0, (int) c.length());
+					c.free();
 				} catch (Exception e) {
 					log.error(e.getMessage(), e);
 				}
@@ -255,6 +266,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 //			log.warn("field=" + name + ", value=" + value.getClass());
 			}
 		}
+
+//		log.info("name=" + name + ", value=" + value);
 
 		// looking for all the fields
 		_F f1 = _getField(name);
@@ -496,6 +509,7 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			return null;
 		}
 
+		// 大小写不敏感
 		String s = name.toString().toLowerCase();
 		_F f = _getField(s);
 		if (f != null) {
@@ -873,15 +887,42 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 	@Comment(text = "转换为json")
 	public JSON json() {
 
-		JSON json_obj = JSON.fromObject(getAll());
-
-		json_obj.scan((j1, name) -> {
-			Object o = j1.get(name);
-			if (o != null && !(o instanceof Serializable)) {
-				log.info("bad data, name=" + name, new Exception());
-				j1.remove(name);
+		JSON json_obj = null;
+		if (selected != null && selected.length > 0) {
+			json_obj = JSON.create();
+			for (String s : selected) {
+				Object o = this.get(s);
+				if (o instanceof Serializable) {
+					if (meta == null) {
+						json_obj.put(s, o);
+					} else {
+						JSON c = meta.get(s);
+						if (c == null) {
+							json_obj.put(s, o);
+						} else {
+							json_obj.put(c.getString("display"), o);
+						}
+					}
+				}
 			}
-		});
+		} else {
+			json_obj = JSON.create();
+			for (String s : this.keySet()) {
+				Object o = this.get(s);
+				if (o instanceof Serializable) {
+					if (meta == null) {
+						json_obj.put(s, o);
+					} else {
+						JSON c = meta.get(s);
+						if (c == null) {
+							json_obj.put(s, o);
+						} else {
+							json_obj.put(c.getString("display"), o);
+						}
+					}
+				}
+			}
+		}
 
 		return json_obj;
 	}
@@ -893,13 +934,8 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			return json();
 		}
 
-		JSON json_obj = JSON.create();
-
-		for (String name : names) {
-			json_obj.put(name, this.get(name));
-		}
-
-		return json_obj;
+		selected = names;
+		return json();
 	}
 
 	/**
@@ -1167,6 +1203,18 @@ public class Bean implements Map<String, Object>, Serializable, Cloneable {
 			if (X.isSame2(v1, v2)) {
 				jo.remove(name);
 			}
+		}
+	}
+
+	public void setMeta(List<JSON> meta) {
+
+		if (meta == null || meta.isEmpty()) {
+			return;
+		}
+
+		this.meta = new HashMap<String, JSON>();
+		for (JSON e : meta) {
+			this.meta.put(e.getString("name"), e);
 		}
 	}
 

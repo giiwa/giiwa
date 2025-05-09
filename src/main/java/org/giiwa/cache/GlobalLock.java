@@ -26,6 +26,7 @@ import java.util.concurrent.locks.Lock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.bean.GLog;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.TimeStamp;
 import org.giiwa.dao.X;
@@ -48,7 +49,7 @@ public class GlobalLock implements Lock, Serializable {
 
 	protected GlobalLock(String name, boolean debug) {
 		this.name = name;
-		this.value = Long.toString(System.currentTimeMillis());
+		this.value = Long.toString(Global.now());
 		this.debug = debug;
 	}
 
@@ -286,7 +287,7 @@ public class GlobalLock implements Lock, Serializable {
 
 		transient Lock lock;
 
-		public long created = System.currentTimeMillis();
+		public long created = Global.now();
 		public String name;
 		public String thread;
 		public String trace;

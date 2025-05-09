@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.giiwa.bean.Node;
 import org.giiwa.bean.m._Mem;
+import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
@@ -49,7 +50,7 @@ public class mem extends portlet {
 			this.set("name", id);
 		}
 
-		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR, W.OP.gte).sort("created",
+		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR, W.OP.gte).sort("created",
 				-1);
 		_Mem.Record.dao.optimize(q);
 
@@ -77,7 +78,7 @@ public class mem extends portlet {
 
 		Node n = Node.dao.load(id);
 
-		W q = W.create().and("node", id).and("created", System.currentTimeMillis() - X.AHOUR * hours, W.OP.gte).sort("created",
+		W q = W.create().and("node", id).and("created", Global.now() - X.AHOUR * hours, W.OP.gte).sort("created",
 				-1);
 
 		Beans<_Mem.Record> bs = _Mem.Record.dao.load(q, 0, 60 * hours);
@@ -125,7 +126,7 @@ public class mem extends portlet {
 			this.set("name", n.label);
 		}
 
-		long time = System.currentTimeMillis() - X.AWEEK;
+		long time = Global.now() - X.AWEEK;
 
 		W q = W.create().and("node", id).and("created", time, W.OP.gte).sort("created", -1);
 

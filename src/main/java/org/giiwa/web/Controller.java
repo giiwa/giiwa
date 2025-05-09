@@ -21,14 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.*;
-
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.fileupload.*;
+import org.apache.commons.fileupload2.core.FileItem;
 import org.apache.commons.logging.*;
-import org.dom4j.Document;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
 import org.giiwa.bean.*;
 import org.giiwa.bean.Session.SID;
 import org.giiwa.conf.Config;
@@ -47,6 +42,9 @@ import org.giiwa.misc.IOUtil;
 import org.giiwa.misc.Url;
 import org.giiwa.task.Task;
 import org.giiwa.web.view.View;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * the {@code Controller} Class is base controller, all class that provides web
@@ -79,17 +77,17 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 
 	protected static Log log = LogFactory.getLog(Controller.class);
 
-	protected static List<String> welcomes = new ArrayList<String>();
+	protected static List<String> welcomes = Arrays.asList("index", "index.html", "index.htm", "index.jsp");
 
 	/**
 	 * uptime of the app
 	 */
-	public final static long UPTIME = System.currentTimeMillis();
+	public final static long UPTIME = Global.now();
 
 	private static AtomicInteger _seq = new AtomicInteger(0);
 
 	int id = _seq.incrementAndGet();
-	long created = System.currentTimeMillis();
+	long created = Global.now();
 
 	/**
 	 * the request
@@ -117,11 +115,6 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * the data which put by "put or set" api, used for HTML view
 	 */
 	private Map<String, Object> data;
-
-	/**
-	 * the home of the modules
-	 */
-	public static String MODULE_HOME;
 
 	/**
 	 * the home of the giiwa
@@ -215,6 +208,21 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 //	public static Module currentModule() {
 //		return _currentmodule.get();
 //	}
+
+	boolean keepalive = false;
+
+	public void keepalive() {
+		this.head("Connection", "keep-alive");
+		keepalive = true;
+	}
+
+	public void flush() {
+		try {
+			resp.flushBuffer();
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+	}
 
 	private Path _process() throws Exception {
 
@@ -315,6 +323,10 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 					}
 
 					pp = oo.path;
+
+					// 记录访问日志
+					AccessLog.create(uri, this.ip());
+
 					/**
 					 * check the access and login status
 					 */
@@ -560,7 +572,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 */
 	Path dispatch(String uri, RequestHelper req, HttpServletResponse resp, String method) {
 
-		// created = System.currentTimeMillis();
+		// created = Global.now();
 
 		// construct var
 		// init
@@ -1101,11 +1113,10 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		sb.append(key).append("=").append(value);
 
 		if (expireseconds <= 0) {
-			sb.append("; Max-Age=").append(-1)
-					.append("; Expires=" + new Date(System.currentTimeMillis() + expireseconds * 1000));
+			sb.append("; Max-Age=").append(-1).append("; Expires=" + new Date(Global.now() + expireseconds * 1000));
 		} else if (expireseconds > 0) {
 			sb.append("; Max-Age=").append(expireseconds)
-					.append("; Expires=" + new Date(System.currentTimeMillis() + expireseconds * 1000));
+					.append("; Expires=" + new Date(Global.now() + expireseconds * 1000));
 		}
 		sb.append("; Path=/");
 		if (Global.getInt("session.httponly", 1) == 1) {
@@ -1307,9 +1318,9 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		}
 
 		if (login != null) {
-			if (System.currentTimeMillis() - login.getLong("lastlogined") > X.AMINUTE) {
+			if (Global.now() - login.getLong("lastlogined") > X.AMINUTE) {
 
-				login.set("lastlogined", System.currentTimeMillis());
+				login.set("lastlogined", Global.now());
 				s = session(true);
 				try {
 
@@ -1320,13 +1331,13 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 					log.error(e.getMessage(), e);
 				}
 
-				V v = V.create("lastlogined", System.currentTimeMillis());
+				V v = V.create("lastlogined", Global.now());
 
 				String type = (String) login.get("logintype");
 				if (X.isSame(type, "web")) {
-					v.append("weblogined", System.currentTimeMillis());
+					v.append("weblogined", Global.now());
 				} else if (X.isSame(type, "ajax")) {
-					v.append("ajaxlogined", System.currentTimeMillis());
+					v.append("ajaxlogined", Global.now());
 				}
 
 				Session s1 = s;
@@ -1405,17 +1416,17 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 
 			try {
 
-				if (System.currentTimeMillis() - u.getLong("lastlogined") > X.AMINUTE) {
-					u.set("lastlogined", System.currentTimeMillis());
+				if (Global.now() - u.getLong("lastlogined") > X.AMINUTE) {
+					u.set("lastlogined", Global.now());
 					u.set("ip", this.ip());
 
 					V v = V.create();
 					String type = (String) u.get("logintype");
 					if (X.isSame(type, "web")) {
-						v.append("weblogined", System.currentTimeMillis());
+						v.append("weblogined", Global.now());
 						v.append("ip", this.ip());
 					} else if (X.isSame(type, "ajax")) {
-						v.append("ajaxlogined", System.currentTimeMillis());
+						v.append("ajaxlogined", Global.now());
 						v.append("ip", this.ip());
 					}
 					if (!v.isEmpty()) {
@@ -1452,7 +1463,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @return file of value, null if not presented
 	 */
 	@Comment(text = "get file")
-	public final FileItem file(@Comment(text = "name") String name) {
+	public final FileItem<?> file(@Comment(text = "name") String name) {
 		return req.file(name);
 	}
 
@@ -1462,7 +1473,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * @param name
 	 * @return
 	 */
-	public final List<FileItem> files(String name) {
+	public final List<FileItem<?>> files(String name) {
 		return files(name);
 	}
 
@@ -2024,7 +2035,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	/**
 	 * pathmapping structure: {"method", {"path", Path|Method}}
 	 */
-	Map<String, Map<String, PathMapping>> pathmapping;
+	transient Map<String, Map<String, PathMapping>> pathmapping;
 
 	/**
 	 * Print the object to end-user
@@ -2306,16 +2317,15 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	 * Inits the.
 	 * 
 	 * @param conf the conf
-	 * @param path the path
 	 */
-	public static void init(Configuration conf, String path) {
+	public static void init(Configuration conf) {
 
 		log.warn("Controller init ... ");
 
 //		OS = System.getProperty("os.name").toLowerCase() + "_" + System.getProperty("os.version") + "_"
 //				+ System.getProperty("os.arch");
 
-		Controller.MODULE_HOME = Controller.GIIWA_HOME + "/modules";
+//		Controller.MODULE_HOME = Controller.GIIWA_HOME + "/modules";
 
 		/**
 		 * initialize the module
@@ -2323,35 +2333,34 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 		Module.init(conf);
 
 		// get welcome list
-		_init_welcome();
+//		_init_welcome();
 
 		log.warn("Controller has been initialized.");
 
 	}
 
-	@SuppressWarnings("unchecked")
-	private static void _init_welcome() {
-		try {
-			SAXReader reader = new SAXReader();
-			Document document = reader.read(Controller.MODULE_HOME + "/WEB-INF/web.xml");
-			Element root = document.getRootElement();
-			Element e1 = root.element("welcome-file-list");
-			List<Element> l1 = e1.elements("welcome-file");
-
-			for (Element e2 : l1) {
-				welcomes.add(e2.getText().trim());
-			}
-
-			if (log.isInfoEnabled())
-				log.info("welcome=" + welcomes);
-
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-
-			GLog.applog.error(Controller.class, "init", e.getMessage(), e);
-
-		}
-	}
+//	private static void _init_welcome() {
+//		try {
+//			SAXReader reader = new SAXReader();
+//			Document document = reader.read(Controller.MODULE_HOME + "/WEB-INF/web.xml");
+//			Element root = document.getRootElement();
+//			Element e1 = root.element("welcome-file-list");
+//			List<Element> l1 = e1.elements("welcome-file");
+//
+//			for (Element e2 : l1) {
+//				welcomes.add(e2.getText().trim());
+//			}
+//
+//			if (log.isInfoEnabled())
+//				log.info("welcome=" + welcomes);
+//
+//		} catch (Exception e) {
+//			log.error(e.getMessage(), e);
+//
+//			GLog.applog.error(Controller.class, "init", e.getMessage(), e);
+//
+//		}
+//	}
 
 	/**
 	 * Gets the model.
@@ -2386,7 +2395,8 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 				n.forward(uri, req, resp, method);
 				return null;
 			} else {
-				throw new IOException("bad node");
+				// ignore
+				log.error("bad node, [" + node + "]");
 			}
 		}
 
@@ -2606,7 +2616,7 @@ public class Controller extends HashMap<String, Object> implements Serializable 
 	@Override
 	@Comment(hide = true)
 	public boolean containsKey(Object key) {
-		return this.names().contains(key);
+		return this.get(key) != null;
 	}
 
 	@Override

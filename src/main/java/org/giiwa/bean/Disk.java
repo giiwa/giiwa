@@ -46,7 +46,6 @@ import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.V;
 import org.giiwa.dao.Helper.W;
 import org.giiwa.dfile.DFile;
-import org.giiwa.dfile.HdfsDFile;
 import org.giiwa.dfile.LocalDFile;
 import org.giiwa.dfile.NfsDFile;
 import org.giiwa.dfile.SmbDFile;
@@ -228,10 +227,11 @@ public final class Disk extends Bean {
 
 	public static DFile seek(String filename) throws IOException {
 
-		DFile f = null;// TimingCache.get(DFile.class, filename);
-//		if (f != null) {
-//			return f;
-//		}
+		if (filename == null) {
+			return null;
+		}
+
+		DFile f = null;
 
 		Beans<Disk> bs = null;
 		TimeStamp t = TimeStamp.create();
@@ -268,24 +268,6 @@ public final class Disk extends Bean {
 				if (bs != null) {
 					for (Disk e : bs) {
 						if (e.isOk(filename)) {
-							if (e.isMount(filename)) {
-								// is mount point, should create path in "/" disk
-								Beans<Disk> l1 = disks("/");
-//							log.warn("ismount, created=" + filename + ", disks=" + l1);
-								if (l1 != null) {
-									for (Disk e1 : l1) {
-										DFile d = e1.create(filename);
-										try {
-											if (d != null && !d.exists()) {
-												d.mkdirs();
-											}
-										} catch (Exception err) {
-											log.error(filename, err);
-										}
-									}
-								}
-							}
-
 							DFile d = e.create(filename);
 							try {
 								if (d != null && d.exists()) {
@@ -316,8 +298,6 @@ public final class Disk extends Bean {
 
 			f = d1.create(filename);
 
-//			TimingCache.set(DFile.class, filename, f);
-
 			return f;
 		} finally {
 			if (t.pastms() > 1000) {
@@ -325,20 +305,6 @@ public final class Disk extends Bean {
 			}
 		}
 
-	}
-
-	public boolean isMount(String filename) {
-		if (m == null) {
-			String s1 = "^" + mount + "$";
-			m = Pattern.compile(s1);
-		}
-
-		if (!filename.endsWith("/")) {
-			filename += "/";
-		}
-
-		Matcher m1 = m.matcher(filename);
-		return m1.find();
 	}
 
 	private void bad(String error) {
@@ -359,20 +325,32 @@ public final class Disk extends Bean {
 		return false;
 	}
 
+	private transient String proto;
+
 	public DFile create(String filename) {
 
 		if (!filename.startsWith("/")) {
 			filename = "/" + filename;
 		}
 
-		if (url.startsWith("local://")) {
+		if (proto == null && url != null) {
+			int i = url.indexOf("://");
+			if (i > 0) {
+				proto = url.substring(0, i);
+			}
+		}
+
+		if (X.isSame(proto, "local") || X.isEmpty(proto)) {
 			return LocalDFile.create(this, filename);
-		} else if (url.startsWith("nfs://")) {
+		} else if (X.isSame(proto, "nfs")) {
 			return NfsDFile.create(this, filename);
-		} else if (url.startsWith("smb://")) {
+		} else if (X.isSame(proto, "smb")) {
 			return SmbDFile.create(this, filename);
-		} else if (url.startsWith("hdfs://")) {
-			return HdfsDFile.create(this, filename);
+		} else {
+			IDiskFactory df = _factory.get(proto);
+			if (df != null) {
+				return df.create(this, filename);
+			}
 		}
 
 		return null;
@@ -390,13 +368,22 @@ public final class Disk extends Bean {
 				log.debug("disks=" + bs);
 			}
 
+			if (!filename.endsWith("/")) {
+				filename += "/";
+			}
+
 			for (Disk e : bs) {
 				if (e.isOk(filename)) {
 					DFile f = e.create(filename);
 					try {
 						if (f != null && f.exists()) {
 							if (f.isFile()) {
-								l1.put(f.getName(), f);
+								String name = f.getName();
+								DFile f2 = l1.get(name);
+								if (f2 == null || f.lastModified() > f2.lastModified()) {
+									// 放最近修改的
+									l1.put(name, f);
+								}
 							} else {
 								DFile[] ff = f.listFiles();
 								if (ff != null) {
@@ -406,15 +393,33 @@ public final class Disk extends Bean {
 										if (f2 == null || f1.lastModified() > f2.lastModified()) {
 											// 放最近修改的
 											l1.put(name, f1);
+											if (l1.size() >= DFile.LIMIT_SIZE) {
+												break;
+											}
 										}
 									}
 								}
 							}
-							if (log.isDebugEnabled())
+							if (log.isDebugEnabled()) {
 								log.debug("l1=" + l1);
+							}
 						}
 					} catch (Exception e1) {
 						log.error(e1.getMessage(), e1);
+					}
+					if (l1.size() >= DFile.LIMIT_SIZE) {
+						break;
+					}
+				} else {
+					// mount 目录，自动添加到子目录中
+					DFile f = e.mount(filename);
+					if (f != null) {
+						String name = f.getName();
+						DFile f2 = l1.get(name);
+						if (f2 == null || f.lastModified() > f2.lastModified()) {
+							// 放最近修改的
+							l1.put(name, f);
+						}
 					}
 				}
 			}
@@ -497,7 +502,7 @@ public final class Disk extends Bean {
 
 	private static Beans<Disk> disks() {
 
-		if (X.isEmpty(_disks) || System.currentTimeMillis() - _disks.created > X.AMINUTE) {
+		if (X.isEmpty(_disks) || Global.now() - _disks.created > X.AMINUTE) {
 			W q = W.create().and("enabled", 1).and("state", 1);
 			_disks = dao.load(q, 0, 128);
 		}
@@ -509,10 +514,10 @@ public final class Disk extends Bean {
 		return _disks;
 	}
 
-	private static Beans<Disk> disks(String mount) {
-		W q = W.create().and("mount", mount).and("enabled", 1).and("state", 1);
-		return dao.load(q, 0, 128);
-	}
+//	private static Beans<Disk> disks(String mount) {
+//		W q = W.create().and("mount", mount).and("enabled", 1).and("state", 1);
+//		return dao.load(q, 0, 128);
+//	}
 
 	public static void reset() {
 
@@ -526,6 +531,7 @@ public final class Disk extends Bean {
 
 	}
 
+	@SuppressWarnings("deprecation")
 	public static void repair() {
 
 		if (Helper.isConfigured()) {
@@ -582,9 +588,32 @@ public final class Disk extends Bean {
 
 		_check();
 
+		// filename = "/"
 		Matcher m1 = p.matcher(filename);
 		return m1.find();
+	}
 
+	public DFile mount(String filename) {
+
+		_check();
+
+		int n = mount.length();
+		if (n < 2) {
+			return null;
+		}
+		String s = mount.substring(0, n - 1);
+		int i = s.lastIndexOf("/");
+		if (i > 0) {
+			String s1 = s.substring(0, i + 1);
+			if (filename.matches(s1)) {
+				String name = s.substring(i + 1);
+				if (name.contains("*") || name.contains("|") || name.contains("[") || name.contains("+")) {
+					return null;
+				}
+				return this.create(filename + name);
+			}
+		}
+		return null;
 	}
 
 	private static Disk _pickup(String filename) throws IOException {
@@ -761,7 +790,6 @@ public final class Disk extends Bean {
 			}
 			return 0;
 		}
-
 	}
 
 	// stat
@@ -789,10 +817,8 @@ public final class Disk extends Bean {
 					}
 
 					if (!v.isEmpty()) {
-
 						dao.update(e.id, v);
-
-						Stat.snapshot(System.currentTimeMillis(), "disk.stat", W.create().and("dataid", e.id),
+						Stat.snapshot(Global.now(), "disk.stat", W.create().and("dataid", e.id),
 								V.create().append("dataid", e.id), new long[] { r, w });
 					}
 				}
@@ -804,7 +830,6 @@ public final class Disk extends Bean {
 	}
 
 	private Pattern p = null;
-	private Pattern m = null;
 
 	public String filename(String filename) {
 
@@ -818,7 +843,6 @@ public final class Disk extends Bean {
 		if (!filename.startsWith("/")) {
 			filename = "/" + filename;
 		}
-
 		return filename;
 	}
 
@@ -827,6 +851,27 @@ public final class Disk extends Bean {
 			String s1 = "^" + mount + "(.*)";
 			p = Pattern.compile(s1);
 		}
+	}
+
+	/**
+	 * 注册新磁盘类型
+	 * 
+	 * @param proto
+	 * @param factory
+	 */
+	public static void addFactory(String proto, IDiskFactory factory) {
+		int i = proto.indexOf(":");
+		if (i > 0) {
+			proto = proto.substring(0, i);
+		}
+		_factory.put(proto, factory);
+		log.warn("registry [" + proto + "], factory=" + factory);
+	}
+
+	private static Map<String, IDiskFactory> _factory = new HashMap<String, IDiskFactory>();
+
+	public static interface IDiskFactory {
+		DFile create(Disk disk, String filename);
 	}
 
 }

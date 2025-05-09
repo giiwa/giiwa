@@ -360,14 +360,14 @@ class ActiveMQ extends MQ {
 
 	class Sender {
 
-		long last = System.currentTimeMillis();
+		long last = Global.now();
 		String name;
 		String to;
 		MessageProducer p;
 
 		public void send(Request r) throws JMSException {
 
-			last = System.currentTimeMillis();
+			last = Global.now();
 
 			if (log.isDebugEnabled()) {
 				log.debug("sending, r=" + r);
@@ -445,7 +445,7 @@ class ActiveMQ extends MQ {
 //				BytesMessage m = null;
 //				synchronized (p) {
 //					while (this.m == null) {
-//						if (last < System.currentTimeMillis() - X.AMINUTE) {
+//						if (last < Global.now() - X.AMINUTE) {
 //							break;
 //						}
 //
@@ -465,7 +465,7 @@ class ActiveMQ extends MQ {
 //					if (log.isDebugEnabled()) {
 //						log.debug("Sending:" + group + name);
 //					}
-//				} else if (last < System.currentTimeMillis() - X.AMINUTE) {
+//				} else if (last < Global.now() - X.AMINUTE) {
 //					senders.remove(name);
 //					p.close();
 //				}
@@ -476,7 +476,7 @@ class ActiveMQ extends MQ {
 
 //		@Override
 //		public void onFinish() {
-//			if (last < System.currentTimeMillis() - X.AMINUTE) {
+//			if (last < Global.now() - X.AMINUTE) {
 //				if (log.isDebugEnabled())
 //					log.debug("sender." + name + " is stopped.");
 //			} else {
@@ -513,7 +513,7 @@ class ActiveMQ extends MQ {
 			Object[] ss = senders.keySet().toArray();
 			for (Object s : ss) {
 				Sender s1 = senders.get(s);
-				if (s1 != null && System.currentTimeMillis() - s1.last > X.AMINUTE) {
+				if (s1 != null && Global.now() - s1.last > X.AMINUTE) {
 					senders.remove(s);
 					s1.close();
 				}

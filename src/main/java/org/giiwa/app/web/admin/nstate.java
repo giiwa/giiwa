@@ -15,6 +15,7 @@
 package org.giiwa.app.web.admin;
 
 import org.giiwa.bean.*;
+import org.giiwa.conf.Global;
 import org.giiwa.dao.Beans;
 import org.giiwa.dao.X;
 import org.giiwa.dao.Helper.W;
@@ -42,7 +43,7 @@ public class nstate extends Controller {
 		String id = this.getString("id");
 
 		Beans<Stat> bs = Stat.load("node.load", Stat.TYPE.snapshot, Stat.SIZE.min, W.create().and("dataid", id)
-				.and("time", System.currentTimeMillis() - X.AWEEK, W.OP.gte).sort("time", 1), 0, 24 * 60 * 7);
+				.and("time", Global.now() - X.AWEEK, W.OP.gte).sort("time", 1), 0, 24 * 60 * 7);
 
 		this.set("list", bs);
 		this.show("/admin/node.stat.html");

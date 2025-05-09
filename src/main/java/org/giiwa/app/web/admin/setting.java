@@ -29,6 +29,8 @@ import java.util.Set;
 import org.giiwa.bean.GLog;
 import org.giiwa.bean.Node;
 import org.giiwa.bean.Role;
+import org.giiwa.cache.Cache;
+import org.giiwa.cache.ICacheSystem;
 import org.giiwa.conf.Config;
 import org.giiwa.conf.Global;
 import org.giiwa.conf.Local;
@@ -137,8 +139,7 @@ public class setting extends Controller {
 
 		File f1 = new File("/data/etc/giiwa.properties");
 		if (f1.exists()) {
-			f1.renameTo(
-					new File("/data/etc/giiwa.properties." + lang.format(System.currentTimeMillis(), "yyyyMMddHHmm")));
+			f1.renameTo(new File("/data/etc/giiwa.properties." + lang.format(Global.now(), "yyyyMMddHHmm")));
 			f1 = new File("/data/etc/giiwa.properties");
 		}
 
@@ -162,6 +163,34 @@ public class setting extends Controller {
 		GLog.securitylog.warn(this, "editconf", "update giiwa.properties\n" + s);
 
 		this.set(X.MESSAGE, lang.get("save.success")).send(200);
+
+	}
+
+	@Path(path = "testcache", login = true, access = "access.config.admin", oplog = true)
+	public void testcache() {
+
+		String url = this.getHtml("url");
+		String user = this.get("user");
+		String pwd = this.getHtml("pwd");
+
+		try {
+			ICacheSystem cache = Cache.create(url, user, pwd);
+			if (cache == null) {
+				this.set(X.MESSAGE, "连接缓存服务器失败!").send(201);
+				return;
+			}
+			long n0 = System.currentTimeMillis();
+			cache.set("test_" + n0, n0, X.AMINUTE);
+			long n1 = (Long) cache.get("test_" + n0);
+			if (n0 == n1) {
+				this.set(X.MESSAGE, "连接缓存服务器成功.").send(200);
+				return;
+			}
+			this.set(X.MESSAGE, "缓存数据错误!").send(201);
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+			this.set(X.MESSAGE, e.getMessage()).send(201);
+		}
 
 	}
 
@@ -456,9 +485,8 @@ public class setting extends Controller {
 			this.set("sso_role", Global.getString("user.login.sso.role", ""));
 
 			try {
-				Beans<Node> l1 = Node.dao.load(
-						W.create().and("lastcheck", System.currentTimeMillis() - X.ADAY, W.OP.gte).sort("created"), 0,
-						1024);
+				Beans<Node> l1 = Node.dao
+						.load(W.create().and("lastcheck", Global.now() - X.ADAY, W.OP.gte).sort("created"), 0, 1024);
 				String code = "";
 
 //				List<String> cpuids = Host.getCpuID();

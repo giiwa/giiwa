@@ -15,8 +15,11 @@
 package org.giiwa.web;
 
 import java.io.File;
-
-import javax.servlet.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.logging.Log;
@@ -26,8 +29,14 @@ import org.giiwa.cache.Cache;
 import org.giiwa.conf.Config;
 import org.giiwa.dao.Helper;
 import org.giiwa.dao.X;
+import org.giiwa.misc.Shell;
+import org.giiwa.server.Server;
 import org.giiwa.task.Task;
 import org.giiwa.web.view.View;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
 
 /**
  * the {@code giiwaContextListener} Class listen the life listener of tomcat
@@ -59,6 +68,7 @@ public class GiiwaContextListener implements ServletContextListener {
 
 //		String home = event.getServletContext().getRealPath("/");
 
+		log.warn("context init, event=" + event + ", this=" + this);
 		init(event.getServletContext());
 
 		// log.info("GiiwaContextListener inited.");
@@ -68,6 +78,8 @@ public class GiiwaContextListener implements ServletContextListener {
 	public static boolean INITED = false;
 
 	public final synchronized static void init(ServletContext servletContext) {
+
+		log.warn("context init, event=" + servletContext);
 
 		if (INITED)
 			return;
@@ -87,6 +99,23 @@ public class GiiwaContextListener implements ServletContextListener {
 			}
 
 			System.out.println("initing, giiwa.home=" + Controller.GIIWA_HOME);
+
+			File f1 = new File(Controller.GIIWA_HOME + "/modules/default/view/init/upgrade/upgrade.sh");
+			if (f1.exists()) {
+				try {
+					Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
+					perms.add(PosixFilePermission.OWNER_READ);
+					perms.add(PosixFilePermission.OWNER_WRITE);
+					perms.add(PosixFilePermission.OWNER_EXECUTE);
+					Files.setPosixFilePermissions(Paths.get(f1.getAbsolutePath()), perms);
+
+					log.warn("upgrade shell ...");
+					Shell.run(f1.getAbsolutePath(), X.AMINUTE);
+
+				} catch (Exception e) {
+					log.error(e.getMessage(), e);
+				}
+			}
 
 			System.setProperty("home", Controller.GIIWA_HOME);
 
@@ -136,12 +165,15 @@ public class GiiwaContextListener implements ServletContextListener {
 			/**
 			 * initialize the controller, this MUST place in the end !:-)
 			 */
-			Controller.init(conf, servletContext.getContextPath());
+			Controller.init(conf);
 
 			View.init();
 
-			if (log.isWarnEnabled())
-				log.warn("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
+			log.warn("giiwa is ready for service, modules=" + Module.getAll(true) + ", top=" + Module.getHome());
+
+			Server.startup();
+
+			log.warn("started!");
 
 		} catch (Throwable e) {
 			log.error(e.getMessage(), e);

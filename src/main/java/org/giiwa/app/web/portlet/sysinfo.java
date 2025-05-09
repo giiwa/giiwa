@@ -36,7 +36,7 @@ public class sysinfo extends portlet {
 	public void get() {
 
 		this.set("uptime", lang.format(Controller.UPTIME, "yy-MM-dd HH:mm:ss"));
-		this.set("now", lang.format(System.currentTimeMillis(), "yyyy-MM-dd HH:mm:ss"));
+		this.set("now", lang.format(Global.now(), "yyyy-MM-dd HH:mm:ss"));
 		this.set("past", lang.past(Controller.UPTIME));
 		this.set("node", Local.id());
 		this.set("gnode", Global.id());
@@ -48,7 +48,7 @@ public class sysinfo extends portlet {
 
 		this.set("dbstats", Helper.primary.stats(null));
 		this.set("cores",
-				Node.dao.sum("cores", W.create().and("updated", System.currentTimeMillis() - Node.LOST, W.OP.gte)));
+				Node.dao.sum("cores", W.create().and("updated", Global.now() - Node.LOST, W.OP.gte)));
 //		this.set("dfile", JSON.create().append("free", Disk.getFreeSpace()).append("used",
 //				Disk.getTotalSpace() - Disk.getFreeSpace()));
 

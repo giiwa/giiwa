@@ -24,7 +24,7 @@ public class AppTest {
 
 		App a = new App();
 		a.appid = "1";
-		a.secret = "123123";
+		a.secret = "123123"; 
 
 		JSON j1 = JSON.create();
 		j1.put("name", "1");

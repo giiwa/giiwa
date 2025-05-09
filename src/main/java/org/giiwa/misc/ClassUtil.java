@@ -37,14 +37,15 @@ public class ClassUtil {
 		if (log.isDebugEnabled()) {
 			log.debug("finding class for [" + t + "] in [" + packname + "]");
 		}
+
 		List<Class<T>> l1 = new ArrayList<Class<T>>();
 
-		ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		ClassLoader loader = ClassUtil.class.getClassLoader();
 
 		int n = _load(l1, loader, packname, t);
 
-		log.warn("found class/" + n + " for [" + t + "] in [" + packname + "], list=" + l1,
-				new Exception("trace only!"));
+		log.warn("found class/" + n + " for [" + t + "] in [" + packname + "], list=" + l1 + ", classloader="
+				+ loader.getClass() + "@" + loader.hashCode());
 
 		return l1;
 	}

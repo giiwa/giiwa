@@ -1,4 +1,7 @@
 <div class='head'>
+	#if($error)
+	<b style="color:red">注意: $!error</b>
+	#end
 	$lang.get('title.welcome') <b>$!me.nickname</b> 
 	#if($me.hasAccess('access.config.admin','access.config.restart.host')) 
 		<a href='javascript:;' class='btn btn-danger' onclick="_showrestart()" style='float:right'>$lang.get('a.restart')</a>

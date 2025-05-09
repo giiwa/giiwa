@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.giiwa.conf.Global;
 import org.giiwa.engine.JS;
 import org.giiwa.json.JSON;
 import org.giiwa.misc.CSV;
@@ -880,18 +881,33 @@ public final class X {
 	}
 
 	/**
-	 * split the src string by the regex, and filter the empty.
+	 * 分割字符串，出现转意符则跳过
 	 *
 	 * @param src   the source string
 	 * @param regex the split regex
 	 * @return the String
 	 */
 	public static String[] split(String src, String regex) {
+
 		List<String> l1 = new ArrayList<String>();
 		if (src != null) {
 			String[] ss = src.split(regex);
-			for (String s : ss) {
-				s = s.trim();
+//			int pos = 0;
+			for (int i = 0; i < ss.length; i++) {
+				String s = ss[i];
+//				pos = src.indexOf(s, pos);
+//				while (s.endsWith("\\")) {
+//					// 合并下一个
+//					if (i < ss.length - 1) {
+//						int pos2 = pos + s.length() + 1;
+//						if (!X.isEmpty(ss[i + 1])) {
+//							pos2 = src.indexOf(ss[i + 1], pos + s.length());
+//						}
+//						s = src.substring(pos, pos2 + ss[i + 1].length());
+//						i++;
+//					}
+//				}
+//				s = s.trim().replaceAll("\\\\\\\\", "\\\\");
 				if (!X.isEmpty(s)) {
 					l1.add(s);
 				}
@@ -1634,6 +1650,11 @@ public final class X {
 		for (Object o : l2) {
 			if (sb.length() > 0)
 				sb.append(deli);
+//			if (o instanceof String) {
+//				String s = (String) o;
+//				s = s.replaceAll("\\\\", "\\\\\\\\");
+//				o = s.replaceAll(deli, "\\\\" + deli);
+//			}
 			sb.append(X.isEmpty(o) ? X.EMPTY : o);
 		}
 		return sb.toString();
@@ -1976,7 +1997,7 @@ public final class X {
 	 */
 	public static boolean timeIn(String range) {
 
-//		if (System.currentTimeMillis() - Controller.UPTIME < X.AMINUTE * 10) {
+//		if (Global.now() - Controller.UPTIME < X.AMINUTE * 10) {
 //			return true;
 //		}
 
@@ -1994,7 +2015,7 @@ public final class X {
 			return false;
 		}
 
-		String time = Language.getLanguage().format(System.currentTimeMillis(), "HH:mm");
+		String time = Language.getLanguage().format(Global.now(), "HH:mm");
 
 		String t1 = rr[0];
 		String t2 = rr[1];
@@ -2210,6 +2231,9 @@ public final class X {
 	private static String FILE_NAME_EXCLUDE = "[\\/:*?\"<>|]";
 
 	public static JSON get(List<JSON> l1, String name, Object value) {
+		if (l1 == null) {
+			return null;
+		}
 		for (JSON j1 : l1) {
 			Object v2 = j1.get(name);
 			if (value == v2 || X.isSame(value, v2)) {
@@ -2217,6 +2241,22 @@ public final class X {
 			}
 		}
 		return null;
+	}
+
+	public static String getMessage(Throwable e) {
+		String sb = e.getMessage();
+		if (sb == null) {
+			sb = "";
+		}
+		e = e.getCause();
+		while (e != null) {
+			if (!sb.contains(e.getMessage())) {
+				sb += "//" + e.getMessage();
+			}
+			e = e.getCause();
+		}
+
+		return sb;
 	}
 
 }

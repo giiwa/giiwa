@@ -16,16 +16,17 @@ package org.giiwa.web.view;
 
 import java.util.Map;
 
-import javax.servlet.RequestDispatcher;
-
 import org.giiwa.json.JSON;
 import org.giiwa.web.Controller;
+
+import jakarta.servlet.RequestDispatcher;
 
 public class JspView extends View {
 
 	@Override
 	protected boolean parse(Object file, Controller m, String viewname) throws Exception {
-		String name = View.getCanonicalPath(file).substring(Controller.MODULE_HOME.length());
+		//TODO
+		String name = View.getCanonicalPath(file).substring((Controller.GIIWA_HOME + "/modules/").length());
 		if (log.isDebugEnabled())
 			log.debug("viewname=" + name);
 

@@ -123,12 +123,25 @@ public class XTest {
 			Object o = JS.run(js);
 			System.out.println(o.getClass());
 			List l2 = X.asList(o, e1 -> e1);
-			System.out.println(l2.size());
+			System.out.println(l2);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-//		X.asList(o, e1->e1);
+	}
+
+	@Test
+	public void testAsList2() {
+
+		try {
+			String js = "var l1=['1,2', '2,3'];l1;";
+			Object o = JS.run(js);
+			System.out.println(o.getClass());
+			List l2 = X.asList(o, e1 -> e1);
+			System.out.println(l2.size() + "=>" + l2);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
 
@@ -234,6 +247,11 @@ public class XTest {
 		String[] ss = X.split(s, "/");
 		System.out.println(ss.length);
 
+		ss = X.split("access.dput.user, access.dput.drag, access.dput.dai, access.dput.dproxy, ", "[, ]");
+		for (String s1 : ss) {
+			System.out.println("[" + s1);
+		}
+
 	}
 
 	@Test
@@ -277,6 +295,32 @@ public class XTest {
 		String name = "/aa/?A12*:2<\"2>";
 		String s = X.filename(name);
 		System.out.println(s);
+
+	}
+
+	@Test
+	public void testSplit2() {
+
+		String s1 = "abc abc\\,,aa";
+		String[] ss = X.split(s1, "[ ,]");
+		for (String s : ss) {
+			System.out.println(s);
+		}
+
+		s1 = X.join(Arrays.asList("aaa", "bb,", "bb\\,cc", "bb,cc"), ",");
+		System.out.println(s1);
+		ss = X.split(s1, ",");
+		for (String s : ss) {
+			System.out.println(s);
+		}
+
+	}
+
+	@Test
+	public void testGetMessage() {
+
+		Throwable e = new Exception("a", new Exception("b", new Exception("c")));
+		System.out.println(X.getMessage(e));
 
 	}
 
