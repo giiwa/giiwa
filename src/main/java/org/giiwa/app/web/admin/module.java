@@ -94,6 +94,7 @@ public class module extends Controller {
 	 * @throws Exception the exception
 	 */
 	public String createmodule() throws Exception {
+
 		int id = this.getInt("id");
 		String name = this.getString("name");
 		String package1 = this.getString("package");
@@ -155,10 +156,10 @@ public class module extends Controller {
 			copy(out, f1, list);
 			out.closeEntry();
 
-			create(out, name + "/build.xml");
-			f1 = module.getFile("/admin/demo/build.xml");
+			create(out, name + "/build.gradle");
+			f1 = module.getFile("/admin/demo/build.gradle");
 			if (f1 != null) {
-				copy(out, f1);
+				copy(out, f1, new String[] { "demo", name }, new String[] { "readme", readme });
 			}
 			out.closeEntry();
 
@@ -167,7 +168,7 @@ public class module extends Controller {
 			out.closeEntry();
 
 			create(out, name + "/src/").closeEntry();
-			create(out, name + "/src/README.md");
+			create(out, name + "/README.md");
 			f1 = module.getFile("/admin/demo/README.md");
 			if (f1 != null) {
 				copy(out, f1);
@@ -178,7 +179,7 @@ public class module extends Controller {
 
 			Document doc = DocumentHelper.createDocument();
 			Element root = doc.addElement("module");
-			root.addAttribute("version", "1.0");
+			root.addAttribute("version", "0");
 
 			Element e = root.addElement("id");
 			e.setText(Integer.toString(id));
@@ -190,7 +191,7 @@ public class module extends Controller {
 			e.setText(package1);
 
 			e = root.addElement("version");
-			e.setText("1.0");
+			e.setText("0");
 			e = root.addElement("build");
 			e.setText("0");
 			e = root.addElement("enabled");

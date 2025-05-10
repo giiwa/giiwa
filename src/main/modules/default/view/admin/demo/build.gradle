@@ -1,0 +1,132 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+group = 'org.giiwa'
+version = '1.0'
+description = 'readme'
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+def buildno = new Date().format("yyMMddHHmm")
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8' 
+	options.warnings = false 
+}
+ 
+println description
+println 'version: ' + version
+println 'buildno: ' + buildno
+
+repositories {
+     maven { url "https://repo1.maven.org/maven2" }
+     maven { url "https://repo.osgeo.org/repository/release/"}
+     maven { url "https://download.dcache.org/nexus/repository/public/"}
+     maven { url "https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/" }
+     maven { url "https://artifacts.alfresco.com/nexus/content/repositories/releases/" }
+     
+     mavenCentral()
+}
+
+configurations.all() {
+    Configuration configuration ->
+        configuration.resolutionStrategy.failOnVersionConflict()
+}
+
+sourceSets {
+	main {
+		java {
+			srcDirs = ['src/model/java']
+		}
+		test {
+			java {
+				srcDirs = ['src/test/java']
+			}
+		}
+	}
+}
+
+dependencies {
+
+	// https://mvnrepository.com/artifact/com.google.iot.coap/coap
+	//implementation ('com.google.iot.coap:coap:0.02.01'){
+    //	exclude group: 'org.json',module: 'json'
+    //	exclude group: 'com.google.guava',module: 'guava'
+    //	exclude group: 'org.checkerframework',module: 'checker-qual'
+    //	exclude group: 'com.google.code.findbugs',module: 'jsr305'
+    //	exclude group: 'com.google.errorprone',module: 'error_prone_annotations'
+	//}
+
+    implementation files('depends/*.jar')
+    implementation files('src/WEB-INF/lib/*.jar')
+    
+}
+
+task prepare(dependsOn: [build]) {
+	doLast {
+/*		exec { 
+			commandLine 'git', 'add', '.'
+		}
+		exec {
+			commandLine 'git', 'commit', '-m', 'auto commit'
+		}
+		exec {
+			commandLine 'git', 'tag', version + '.' + buildno
+		}
+		exec { 
+			commandLine 'git', 'push', '--tags'
+		}
+*/		
+		copy{
+			println 'copy source'
+		    from('src')
+		    into('build/demo/')
+		    exclude('model')
+		    exclude('test')
+		    exclude('.DS_Store')
+		}
+		
+		println 'generate module.xml'
+		def xml1 = new BufferedReader(new FileReader(new File('src/module.xml')))
+		def xml2 = new PrintStream(new File('build/demo/module.xml'))
+		def line = xml1.readLine()
+		while( line != null ){
+			if( line.indexOf('>0<')>-1 ){
+				line = line.replace('<version>0</version>', '<version>' + version + '</version>')
+				line = line.replace('<build>0</build>', '<build>' + buildno + '</build>')
+			}
+			xml2.println(line)
+			line = xml1.readLine();
+		}
+		xml1.close();
+		xml2.close();
+
+		copy{
+			println 'merge depends'
+		    from configurations.runtimeClasspath
+		    into('build/libs')
+		    exclude {detail->{
+		    	return detail.file.path.contains('/depends/'); 
+		    }}
+		}
+		copy {
+			println 'copy *.jar to WEB-INF/lib'
+		    from('build/libs')
+		    into('build/demo/WEB-INF/lib')
+		}
+	}
+}
+
+task zip(type: Zip,dependsOn:prepare) {
+	from 'build/demo'
+	destinationDirectory.set(file('build'))
+	archiveName = 'demo_' + version + '_' + buildno + '.zip'
+
+	doLast {
+		println 'build success, build/' + archiveName
+	}
+}
+
+task release(dependsOn: [zip]);
