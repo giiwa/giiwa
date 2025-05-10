@@ -5,7 +5,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.giiwa.app.web.admin.setting;
 import org.giiwa.bean.License;
-import org.giiwa.demo.server.DemoServer;
 import org.giiwa.demo.web.admin.demosetting;
 import org.giiwa.web.IListener;
 import org.giiwa.web.Module;
@@ -28,7 +27,6 @@ public class DemoListener implements IListener {
 		// TODO Auto-generated method stub
 		log.warn("demo is starting ...");
 
-		DemoServer.start();
 	}
 
 	@Override

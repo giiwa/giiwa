@@ -367,17 +367,6 @@ public class module extends Controller {
 			}
 			out.closeEntry();
 
-			// create server
-			create(out, name + "/src/model/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/server/").closeEntry();
-
-			create(out, name + "/src/model/java/" + p1.substring(0, p1.lastIndexOf("/")) + "/server/DemoServer.java");
-			f1 = module.getFile("/admin/demo/src/model/server/DemoServer.java");
-			if (f1 != null) {
-				copy(out, f1, new String[] { "org.giiwa.demo.server",
-						(p1.substring(0, p1.lastIndexOf("/")) + "/server").replaceAll("/", ".") });
-			}
-			out.closeEntry();
-
 			// copy demo model
 			create(out, name + "/src/model/java/" + p1 + "/demo.java");
 			f1 = module.getFile("/admin/demo/src/model/web/demo.java");

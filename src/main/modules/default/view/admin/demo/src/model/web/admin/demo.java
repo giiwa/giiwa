@@ -33,7 +33,7 @@ public class demo extends Controller {
 			Beans<Demo> bs = q.load(s, n);
 
 			// set the data in the model
-			this.set(bs, s, n);
+			this.pages(bs, s, n);
 		} catch (Exception e) {
 			log.error(e.getMessage(), e);
 		}
