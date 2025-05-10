@@ -59,8 +59,8 @@ dependencies {
     //	exclude group: 'com.google.errorprone',module: 'error_prone_annotations'
 	//}
 
-    implementation files('depends/*.jar')
-    implementation files('src/WEB-INF/lib/*.jar')
+    implementation fileTree(dir: 'depends', include:['*.jar'])
+    implementation fileTree(dir: 'src/WEB-INF/lib', include:['*.jar'])
     
 }
 
