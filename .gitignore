@@ -1,6 +1,4 @@
 target
 build
-bin
 /.gradle/
 /.DS_Store
-/null/
