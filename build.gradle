@@ -352,6 +352,11 @@ task prepare(dependsOn: [build]) {
 		    into('build/giiwa/giiwa/lib')
 		}
 		copy {
+			println 'copy build/libs to WEB-INF/lib'
+		    from('build/libs')
+		    into('build/giiwa/giiwa/modules/default/WEB-INF/lib')
+		}
+		copy {
 			println 'copy build/giiwa/giiwa/modules/default to upgrade'
 		    from('build/giiwa/giiwa/modules/default')
 		    into('build/upgrade/default')
