@@ -353,8 +353,9 @@ task prepare(dependsOn: [build]) {
 		}
 		copy {
 			println 'copy build/libs to WEB-INF/lib'
-		    from('build/libs')
+		    from('build/giiwa/giiwa/lib')
 		    into('build/giiwa/giiwa/modules/default/WEB-INF/lib')
+		    exclude('sigar')
 		}
 		copy {
 			println 'copy build/giiwa/giiwa/modules/default to upgrade'
